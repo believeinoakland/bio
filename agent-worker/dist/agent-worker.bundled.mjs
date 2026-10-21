@@ -5764,7 +5764,7 @@ var WORD_ROWS = Object.freeze([
   ["size.mb", "{n} MB", "DEC-309: screens-intake R35, DEC-299 (8)", null, false, "design"],
   ["size.gb", "{n} GB", "DEC-309: screens-intake R35: a file over 1 GB", null, false, "design"],
   ["project.rescue.title.nodate", "Every owner of this project is gone", "DEC-309: screens-inquiry R54: owner_since not held", null, false, "design"],
-  ["screen.request.nooffice.admin", "An administrator can add the office under Settings, Places and offices.", "DEC-309: screens-action R20", null, false, "design"],
+  ["screen.request.nooffice.admin", "If you know which office holds them, name it yourself below.", "DEC-309: screens-action R20; DEC-402 (Bob, DEC-401): a member names the office", null, false, "design"],
   ["screen.help-records.notheld", "Your team's Civicsmith doesn't hold records help for this place yet, so none is shown here. The law's own text is the place to look.", "DEC-309: screens-action R22", "What Civicsmith does with it", false, "design"],
   ["project.notmember", "You aren't in this project. Ask to join, and its owners decide.", "DEC-309: interface-shell R85: projectrequest on project", null, false, "design"],
   ["act.retire.name", "Retire this copy from new work, with a reason", "DEC-309: affordances R64", "Stops using this copy in new work, with a reason. Questions that cite it are told.", false, "design"],
@@ -10856,6 +10856,185 @@ var WORD_ROWS = Object.freeze([
   ["screen.contradiction.flagged.by", "{member} said these two contradict, {date}", "DEC-400: B455: who flagged a contradiction by hand, and when", null, false, "design"],
   ["act.heldcaptures.here.project", "List this project's documents", "DEC-400: B455: the project screen's documents act (heldcaptures with the project), as the registry labels it", "Shows captures waiting for a member to vouch for them before they count.", false, "design"],
   ["screen.document.testify.how", "How you know", "DEC-400: B455: the label of the reason field when naming a subject from a passage (DEC-394 3d)", null, false, "design"],
+  ["screen.request.nameoffice.head", "Name the office yourself", "DEC-402: the fold under the dead end", null, false, "design"],
+  ["screen.request.nameoffice.note", "The office is saved for your team's next request, marked as named by a member until an administrator confirms it.", "DEC-402: what naming does", null, false, "design"],
+  ["screen.request.nameoffice.name", "The agency and office", "DEC-402: field", null, false, "design"],
+  ["screen.request.nameoffice.name.help", "As the agency names the office that answers records requests.", "DEC-402: help", null, false, "design"],
+  ["screen.request.nameoffice.where", "Where requests go", "DEC-402: field", null, false, "design"],
+  ["screen.request.nameoffice.where.help", "Its mailing address, email address or online portal, as the agency publishes it.", "DEC-402: help", null, false, "design"],
+  ["screen.request.nameoffice.law", "The law it goes under", "DEC-402: field", null, false, "design"],
+  ["screen.request.nameoffice.law.help", "The law sets the due date. Choose the one this office answers under.", "DEC-402: help", null, false, "design"],
+  ["screen.request.nameoffice.use.help", "Saves the office for your team, marked as named by you, and chooses it for this request.", "DEC-402: the button's explanation", null, false, "design"],
+  ["screen.request.nameoffice.mark", "Named by a member", "DEC-402: the mark on an office a member named, until an administrator confirms it", null, false, "design"],
+  ["screen.capture.logins.head", "Logins for sites", "DEC-403: B458 1: section on capture", null, false, "design"],
+  ["screen.capture.logins.about1", "Some sites show their records only after a login.", "DEC-403: B458 1: what the section is for", null, false, "design"],
+  ["screen.capture.logins.about2", "A login stored here is used when your team's Civicsmith captures from that site.", "DEC-403: B458 1", null, false, "design"],
+  ["screen.capture.logins.about3", "The secret is sealed and never shown again, to you or to anyone.", "DEC-403: B458 1", null, false, "design"],
+  ["screen.capture.logins.row", "{kind} \xB7 {scope} \xB7 given by {member}, {date}", "DEC-403: B458 1: a stored login's line under its site", null, false, "design"],
+  ["screen.capture.logins.none.head", "When none is stored", "DEC-403: B458 1: fold", null, false, "design"],
+  ["screen.capture.logins.none", "No login is stored yet. Give one below when a site asks for it.", "DEC-403: B458 1: the empty list", null, false, "design"],
+  ["screen.capture.logins.give", "Give a login for a site", "DEC-403: B458 1: fold", null, false, "design"],
+  ["screen.capture.logins.site", "The site", "DEC-403: B458 1: field (host)", null, false, "design"],
+  ["screen.capture.logins.site.help", "Its address, such as records.example-city.gov. The login is used for that site only.", "DEC-403: B458 1: help", null, false, "design"],
+  ["screen.capture.logins.kind", "What the site asks for", "DEC-403: B458 1: field (kind)", null, false, "design"],
+  ["screen.capture.logins.kind.login", "A username and password", "DEC-403: B458 1: kind login", null, false, "design"],
+  ["screen.capture.logins.kind.user-agent", "A browser name the site requires", "DEC-403: B458 1: kind user-agent", null, false, "design"],
+  ["screen.capture.logins.kind.other", "Something else", "DEC-403: B458 1: kind other", null, false, "design"],
+  ["screen.capture.logins.scope", "Who may use it", "DEC-403: B458 1: field (scope)", null, false, "design"],
+  ["screen.capture.logins.scope.help", "Who can capture with it. Nobody ever sees the secret.", "DEC-403: B458 1: help", null, false, "design"],
+  ["screen.capture.logins.scope.member", "Only me", "DEC-403: B458 1: scope member", null, false, "design"],
+  ["screen.capture.logins.scope.project", "This project", "DEC-403: B458 1: scope project", null, false, "design"],
+  ["screen.capture.logins.scope.group", "The whole team", "DEC-403: B458 1: scope group", null, false, "design"],
+  ["screen.capture.logins.name", "Username for this site", "DEC-403: B458 1: field", null, false, "design"],
+  ["screen.capture.logins.secret", "Password or secret for this site", "DEC-403: B458 1: field", null, false, "design"],
+  ["screen.capture.logins.store", "Store this login", "DEC-403: B458 1: the button giving a login ahead of any refused request (capturecredentialsupply, no request to retry)", null, false, "design"],
+  ["screen.registers.title", "Public registers", "DEC-407: h1", null, false, "design"],
+  ["screen.registers.crumb", "Public registers", "DEC-407: crumb", null, false, "design"],
+  ["screen.registers.intro", "Registers that public offices keep, which your team brings in whole or in part, reads ahead, searches, cites and watches. None of it needs the assistant.", "DEC-407: subtitle", null, false, "design"],
+  ["screen.registers.way.watching", "The public registers your team brings in and watches.", "DEC-407: row on the watching screen", null, false, "design"],
+  ["screen.registers.way.add", "Public registers your team brings in and watches.", "DEC-407: row on the Add surface", null, false, "design"],
+  ["screen.registers.way.link", "See public registers", "DEC-407: link text", null, false, "design"],
+  ["screen.registers.way.tip", "Public registers \xB7 registers that public offices keep, brought in whole, searched, cited and watched by a number.", "DEC-407: hover card of the link", null, false, "design"],
+  ["screen.registers.held.head", "Registers your team holds", "DEC-407: section", null, false, "design"],
+  ["screen.registers.held.row", "From {source} \xB7 brought in {date} \xB7 {rows} rows \xB7 next check {date}", "DEC-407: a register line under its name", null, false, "design"],
+  ["screen.registers.held.list", "List the registers your team holds", "DEC-407: button (registerlist)", null, false, "design"],
+  ["screen.registers.held.none.head", "When your team holds none", "DEC-407: fold", null, false, "design"],
+  ["screen.registers.held.none", "Your team holds no register yet. Bring one in below.", "DEC-407: the empty list", null, false, "design"],
+  ["screen.registers.import.head", "Bring in a register", "DEC-407: section", null, false, "design"],
+  ["screen.registers.import.about", "Your team's Civicsmith keeps the whole register as a capture, with its source and the date. It reads the register in the background, and the team is told in the queue when it is ready.", "DEC-407: what an import does", null, false, "design"],
+  ["screen.registers.import.which", "Which register", "DEC-407: field", null, false, "design"],
+  ["screen.registers.import.which.netfile", "Oakland campaign finance (NetFile)", "DEC-407: option", null, false, "design"],
+  ["screen.registers.import.which.calaccess", "California campaign finance (CAL-ACCESS)", "DEC-407: option", null, false, "design"],
+  ["screen.registers.import.which.fec", "Federal campaign finance (FEC)", "DEC-407: option", null, false, "design"],
+  ["screen.registers.import.which.form700", "Economic interest filings (Form 700)", "DEC-407: option", null, false, "design"],
+  ["screen.registers.import.which.lobbyists", "Oakland lobbyist directory", "DEC-407: option", null, false, "design"],
+  ["screen.registers.import.which.licenses", "State license files", "DEC-407: option", null, false, "design"],
+  ["screen.registers.import.go", "Bring in this register", "DEC-407: button (registerimport)", null, false, "design"],
+  ["screen.registers.search.head", "Search the registers", "DEC-407: section", null, false, "design"],
+  ["screen.registers.search.who", "Person or organization", "DEC-407: field", null, false, "design"],
+  ["screen.registers.search.min", "Smallest amount", "DEC-407: field", null, false, "design"],
+  ["screen.registers.search.max", "Largest amount", "DEC-407: field", null, false, "design"],
+  ["screen.registers.search.from", "From this date", "DEC-407: field", null, false, "design"],
+  ["screen.registers.search.to", "Up to this date", "DEC-407: field", null, false, "design"],
+  ["screen.registers.search.in", "In which register", "DEC-407: field", null, false, "design"],
+  ["screen.registers.search.in.all", "Every register your team holds", "DEC-407: option", null, false, "design"],
+  ["screen.registers.search.go", "Search", "DEC-407: button (registersearch)", null, false, "design"],
+  ["screen.registers.search.row", "{register} \xB7 row {row} \xB7 brought in {date}", "DEC-407: a result line under the name", null, false, "design"],
+  ["screen.registers.search.cite", "Cite this row", "DEC-407: button (registerrowcite)", null, false, "design"],
+  ["screen.registers.search.cite.note", "A cited row travels as a labeled extract of the file it came from.", "DEC-407: note", null, false, "design"],
+  ["screen.registers.watch.head", "Watched filers, licenses and dockets", "DEC-407: section", null, false, "design"],
+  ["screen.registers.watch.row.quiet", "{register} \xB7 watched since {date} \xB7 no change yet", "DEC-407: a watch line when nothing has changed", null, false, "design"],
+  ["screen.registers.watch.stop", "Stop watching", "DEC-407: button (registerwatchstop)", null, false, "design"],
+  ["screen.registers.watch.none.head", "When your team watches none", "DEC-407: fold", null, false, "design"],
+  ["screen.registers.watch.none", "Your team watches no filer, license or docket yet.", "DEC-407: the empty list", null, false, "design"],
+  ["screen.registers.watch.in", "In which register", "DEC-407: field", null, false, "design"],
+  ["screen.registers.watch.in.court", "Federal court dockets (CourtListener)", "DEC-407: option", null, false, "design"],
+  ["screen.registers.watch.number", "Filer number, license number or docket number", "DEC-407: field", null, false, "design"],
+  ["screen.registers.watch.go", "Watch it", "DEC-407: button (registerwatch)", null, false, "design"],
+  ["screen.registers.watch.told", "Each change to a watch is one item in your queue, with how many changes there have been since you last looked.", "DEC-407: note", null, false, "design"],
+  ["screen.registers.alerts.head", "Alerts from outside services", "DEC-407: section", null, false, "design"],
+  ["screen.registers.alerts.courtlistener", "CourtListener sends an alert when a federal court docket changes. It needs your team's own key, and a few alerts are free.", "DEC-407: note", null, false, "design"],
+  ["screen.registers.alerts.key", "Your team's CourtListener key", "DEC-407: field", null, false, "design"],
+  ["screen.registers.alerts.key.help", "It is sealed when you give it and never shown again, to you or to anyone.", "DEC-407: help", null, false, "design"],
+  ["screen.registers.alerts.connect", "Connect CourtListener", "DEC-407: button (alertconnect)", null, false, "design"],
+  ["screen.registers.alerts.county", "A county court such as Alameda's cannot be watched automatically. It is re-checked when a member asks.", "DEC-407: note", null, false, "design"],
+  ["screen.registers.ask.head", "Ask across the registers", "DEC-407: section", null, false, "design"],
+  ["screen.registers.ask.title", "Ask in plain words, and have matches and watches proposed", "DEC-407: the paused part", null, false, "design"],
+  ["screen.registers.ask.later", "Comes after the alpha", "DEC-407: the paused part", null, false, "design"],
+  ["screen.registers.ask.field", "Ask in plain words", "DEC-407: field (paused)", null, false, "design"],
+  ["screen.registers.ask.go", "Ask across the registers", "DEC-407: button (registerask, paused)", null, false, "design"],
+  ["screen.registers.ask.match", "Propose matches to your team's subjects", "DEC-407: button (registermatch, paused)", null, false, "design"],
+  ["screen.registers.ask.propose", "Propose watches", "DEC-407: button (registerwatchpropose, paused)", null, false, "design"],
+  ["screen.registers.ask.note", "This needs the assistant, which comes after the alpha, once your team can use more than one AI provider and it has been tested.", "DEC-407: note", null, false, "design"],
+  ["screen.registers.never.head", "What these registers never do", "DEC-407: section", null, false, "design"],
+  ["screen.registers.never.watch", "A watch is always of a named filer, license or docket, never a search for a person.", "DEC-407: guardrail", null, false, "design"],
+  ["screen.registers.never.keep", "An import never copies home addresses or phone numbers. A member may keep one in their own notes, and it is never published.", "DEC-407: guardrail", null, false, "design"],
+  ["screen.registers.never.fec", "The Federal Election Commission's donor data may not be used to ask donors for money or for commercial purposes.", "DEC-407: guardrail", null, false, "design"],
+  ["screen.follow.label", "Follow from here", "DEC-410: the one control on every person, organization, payment, donation, event and document; opens a menu", null, false, "design"],
+  ["screen.follow.tip", "Opens another view of this item in place: the screen for that dimension, already narrowed to it. Nothing starts over.", "DEC-410: the control's explanation", null, false, "design"],
+  ["screen.follow.who.money", "Money given or received", "DEC-410: menu item on a person or organization (owed:followfrom)", null, false, "design"],
+  ["screen.follow.who.offices", "Organizations and offices held", "DEC-410: menu item on a person or organization (owed:followfrom)", null, false, "design"],
+  ["screen.follow.who.events", "Events taken part in", "DEC-410: menu item on a person or organization (owed:followfrom)", null, false, "design"],
+  ["screen.follow.who.docs", "Documents that name them", "DEC-410: menu item on a person or organization (search)", null, false, "design"],
+  ["screen.follow.who.rows", "Register rows that name them", "DEC-410: menu item on a person or organization (registersearch)", null, false, "design"],
+  ["screen.follow.money.who", "Who paid and who received it", "DEC-410: menu item on a payment or donation (owed:followfrom)", null, false, "design"],
+  ["screen.follow.money.more", "Other payments from the same source", "DEC-410: menu item on a payment or donation (owed:followfrom)", null, false, "design"],
+  ["screen.follow.money.events", "Events it is tied to", "DEC-410: menu item on a payment or donation (owed:followfrom)", null, false, "design"],
+  ["screen.follow.money.docs", "Documents that state it", "DEC-410: menu item on a payment or donation (search)", null, false, "design"],
+  ["screen.follow.rows.match", "Register rows that match it", "DEC-410: menu item on a payment, donation or document (registersearch)", null, false, "design"],
+  ["screen.follow.event.who", "Who took part", "DEC-410: menu item on an event (owed:followfrom)", null, false, "design"],
+  ["screen.follow.event.money", "Money that moved around it", "DEC-410: menu item on an event (owed:followfrom)", null, false, "design"],
+  ["screen.follow.event.docs", "Documents that date it", "DEC-410: menu item on an event (search)", null, false, "design"],
+  ["screen.follow.event.rows", "Register rows from that time", "DEC-410: menu item on an event (registersearch)", null, false, "design"],
+  ["screen.follow.document.who", "People and organizations it names", "DEC-410: menu item on a document (owed:followfrom)", null, false, "design"],
+  ["screen.follow.document.money", "Money it states", "DEC-410: menu item on a document (owed:followfrom)", null, false, "design"],
+  ["screen.follow.document.events", "Events it dates", "DEC-410: menu item on a document (owed:followfrom)", null, false, "design"],
+  ["screen.follow.conn", "Connections to\u2026", "DEC-410: menu item on every kind (explore, with this as the start)", null, false, "design"],
+  ["screen.explore.direct.head", "Most direct path", "DEC-410: section", null, false, "design"],
+  ["screen.explore.direct.how.fewest", "The most direct path has the fewest steps.", "DEC-410: how it was chosen, in plain words", null, false, "design"],
+  ["screen.explore.direct.how.tie", "If two are equally short, the one whose weakest step is strongest comes first, then the earlier date.", "DEC-410: how it was chosen, in plain words", null, false, "design"],
+  ["screen.explore.direct.how.fact", "This is a fact about the chains, not a judgment of them.", "DEC-410: how it was chosen, in plain words", null, false, "design"],
+  ["screen.explore.direct.tip.what", "The shortest chain between the two ends, shown first and labeled.", "DEC-410: the section's explanation", null, false, "design"],
+  ["screen.explore.direct.tip.how", "How it was chosen is stated in plain words, so anyone can check it.", "DEC-410: the section's explanation", null, false, "design"],
+  ["screen.explore.direct.label", "most direct", "DEC-410: label on the first chain", null, false, "design"],
+  ["screen.explore.direct.button", "Find the most direct path", "DEC-410: button (owed:explorepath)", null, false, "design"],
+  ["screen.explore.all.head", "Every connection between them", "DEC-410: section", null, false, "design"],
+  ["screen.explore.all.count", "{count} chains found within {depth} steps, fewest steps first.", "DEC-410: under the heading; {count} chains, {depth} the search's bound", null, false, "design"],
+  ["screen.explore.all.first", "The most direct is the first.", "DEC-410: under the heading", null, false, "design"],
+  ["screen.explore.all.hub", "a hub: shown, not walked through", "DEC-410: a chain with a hop through a hub", null, false, "design"],
+  ["screen.explore.all.hubstep", "too common to walk", "DEC-410: a hop through a place linked to too many things to walk", null, false, "design"],
+  ["screen.explore.all.tip.what", "Every chain the search found between the two ends, not only the first.", "DEC-410: the section's explanation", null, false, "design"],
+  ["screen.explore.all.tip.marks", "Each shows its steps, its weakest step and its dates; a step through a place too common to walk, or one declared with no source, is marked.", "DEC-410: the section's explanation", null, false, "design"],
+  ["screen.explore.all.stops", "Chains that stop at a name the record lacks", "DEC-410: section", null, false, "design"],
+  ["screen.explore.all.button", "List every connection", "DEC-410: button (owed:exploreall)", null, false, "design"],
+  ["screen.explore.shorter.head", "A chain you built", "DEC-410: section", null, false, "design"],
+  ["screen.explore.shorter.built", "built by you, step by step", "DEC-410: under a chain a member built", null, false, "design"],
+  ["screen.explore.shorter.see", "See the shorter paths", "DEC-410: button (owed:exploreshorter)", null, false, "design"],
+  ["screen.explore.shorter.keep", "Keep mine", "DEC-410: button (owed:exploreshorter)", null, false, "design"],
+  ["screen.explore.shorter.tip.what", "Where you built a chain step by step, paths with fewer steps between its two ends are shown beside it: evidenced paths first, then leads.", "DEC-410: the section's explanation", null, false, "design"],
+  ["screen.explore.shorter.tip.yours", "Yours is never changed or replaced; you choose.", "DEC-410: the section's explanation", null, false, "design"],
+  ["screen.explore.later.walks", "Combined walks, such as who gave to the official whose department paid this vendor", "DEC-410: the paused part", null, false, "design"],
+  ["screen.explore.later.assist", "Ask the assistant to research this", "DEC-410: the paused part", null, false, "design"],
+  ["screen.explore.later.when", "Comes in the first beta", "DEC-410: the paused parts", null, false, "design"],
+  ["screen.registers.held.filter", "Kept with it, and what watching looks for: {filter}", "DEC-411: a held register line: the filter it was brought in with", null, false, "design"],
+  ["screen.registers.held.row.preread", "From {source} \xB7 read ahead for the team {date} \xB7 {rows} rows \xB7 no project has asked yet", "DEC-411: a register line for a team pre-read", null, false, "design"],
+  ["screen.registers.held.whole", "Read in whole: watching looks for any change", "DEC-411: a held register line: no filter", null, false, "design"],
+  ["screen.registers.known.head", "Registers we know", "DEC-411: section", null, false, "design"],
+  ["screen.registers.known.about", "Each is listed with where it comes from and how big it is.", "DEC-411: note", null, false, "design"],
+  ["screen.registers.known.row", "From {source} \xB7 {url} \xB7 {bytes} bytes \xB7 {rows} rows", "DEC-411: a known register line under its name", null, false, "design"],
+  ["screen.registers.known.officers.tag", "Not in the alpha", "DEC-411: tag on company officers", null, false, "design"],
+  ["screen.registers.known.officers.note", "Bringing in company officers in bulk comes in the beta.", "DEC-411: line under company officers; no import control", null, false, "design"],
+  ["screen.registers.known.door.head", "A register we know that is not listed", "DEC-411: fold", null, false, "design"],
+  ["screen.registers.known.door.note", "Give its name, its address and who publishes it. It is proposed for the list, and nothing is brought in.", "DEC-411: note", null, false, "design"],
+  ["screen.registers.known.door.name", "Name of the register", "DEC-411: field", null, false, "design"],
+  ["screen.registers.known.door.url", "Its address (URL)", "DEC-411: field", null, false, "design"],
+  ["screen.registers.known.door.source", "Who publishes it", "DEC-411: field", null, false, "design"],
+  ["screen.registers.known.door.go", "Propose this register", "DEC-411: button (registerpropose)", null, false, "design"],
+  ["screen.registers.import.mech", "Importing runs by fixed steps and never uses the assistant.", "DEC-411: note", null, false, "design"],
+  ["screen.registers.import.part.head", "Whole or in part", "DEC-411: heading over the filter", null, false, "design"],
+  ["screen.registers.import.part.empty", "Leave every box empty to bring in the whole register.", "DEC-411: note", null, false, "design"],
+  ["screen.registers.import.part.prefill", "Filled in from the project {name}; change it as you like.", "DEC-411: note when a project is open", null, false, "design"],
+  ["screen.registers.import.part.names", "Names or organizations", "DEC-411: field (registerfilter)", null, false, "design"],
+  ["screen.registers.import.part.ids", "Filer numbers", "DEC-411: field (registerfilter)", null, false, "design"],
+  ["screen.registers.import.delta.go", "Work out what it would add", "DEC-411: button (registerdelta)", null, false, "design"],
+  ["screen.registers.import.delta.row", "Compared with what your record holds: {rows} new rows, {bytes} bytes, about {time} to read in.", "DEC-411: the delta before importing", null, false, "design"],
+  ["screen.registers.import.kept", "The filter is kept with the import and shown as what watching looks for.", "DEC-411: note", null, false, "design"],
+  ["screen.registers.import.dropped", "Phone and address columns are left out as it arrives.", "DEC-411: note (DEC-408)", null, false, "design"],
+  ["screen.registers.import.preread", "Read it ahead, for the team", "DEC-411: button (registerpreread)", null, false, "design"],
+  ["screen.registers.import.preread.note", "Reading it ahead keeps the register, whole or in the part you chose, as a resource for the team before any project asks.", "DEC-411: note", null, false, "design"],
+  ["screen.registers.search.cite.extract", "Cited as an extract of {file}, fingerprint {fingerprint}, {date}", "DEC-411: what a cited row shows", null, false, "design"],
+  ["screen.registers.search.fec.notice", "Under 11 CFR 104.15, the names and addresses of contributors may not be sold or used to ask for contributions or for commercial purposes.", "DEC-411: notice on FEC rows", null, false, "design"],
+  ["screen.registers.search.fec.noexport", "Rows from this register cannot be exported as a donor list.", "DEC-411: notice on FEC rows", null, false, "design"],
+  ["screen.registers.watch.auto", "A watch starts by itself only for what a project has said it is interested in, and it is shown with that project and its interest.", "DEC-411: note", null, false, "design"],
+  ["screen.registers.watch.row.project", "{register} \xB7 watched for the project {project}, which has an interest in {interest}", "DEC-411: a watch line started for a project", null, false, "design"],
+  ["screen.registers.watch.changes", "{count} changes since you last looked", "DEC-411: count on a watch", null, false, "design"],
+  ["screen.explore.all.cut", "The explorer stopped after 2 seconds and shows what it found. More may exist.", "DEC-411: when the search was stopped at 2 seconds; never implies completeness", null, false, "design"],
+  ["screen.explore.all.continue", "Keep looking", "DEC-411: button (owed:explorecontinue)", null, false, "design"],
+  ["screen.explore.shorter.note", "Paths with fewer steps join the same two ends.", "DEC-411: beside a member's chain; never says the chain is wrong", null, false, "design"],
+  ["screen.explore.shorter.best", "The best has {short} steps, against your {mine}.", "DEC-411: beside a member's chain", null, false, "design"],
+  ["screen.explore.shorter.evidenced", "Evidenced paths", "DEC-411: sub-heading, first", null, false, "design"],
+  ["screen.explore.shorter.leads", "Leads", "DEC-411: sub-heading, after the evidenced paths", null, false, "design"],
+  ["screen.explore.shorter.lead", "a lead, not evidence", "DEC-411: label on each lead", null, false, "design"],
   ["refusal.GROUP_SLUG_MALFORMED", "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.", "setup, refusal by its code", null, false, "design"],
   ["refusal.GROUP_ALREADY_RECORDED", "Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.", "setup, refusal by its code", null, false, "design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN", "Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.", "setup, refusal by its code", null, false, "design"],
@@ -16761,6 +16940,8 @@ var WORD_ROWS = Object.freeze([
   ["screen.leads.purpose", "Write down something you were told, record who looked into it and what they found, and share it with a project.", null, null, false, "design"],
   ["screen.watching.name", "Watched addresses", null, null, false, "design"],
   ["screen.watching.purpose", "Every address your team watches: what is due to be checked, pausing the watching, and the sweeps that look through a site.", null, null, false, "design"],
+  ["screen.registers.name", "Public registers", null, null, false, "design"],
+  ["screen.registers.purpose", "The public registers your team holds: bring one in whole, search it and cite a row, watch a filer, license or docket by its number, and connect outside alerts.", null, null, false, "design"],
   ["act.bootstrap.label.install", "Continue to Cloudflare", null, "Takes you to Cloudflare's own page to allow this installer into your account, then sets up your team's Civicsmith there under your short name, or updates it. The short name is permanent: it appears in every address and beside every signature.", true, "design"],
   ["act.owed_installupdate.label.install", "Update it", null, "Takes you to the update page for the Civicsmith already in this account, set to the newest release. Its records, members and settings are kept, and nothing changes until you allow it on Cloudflare's page.", true, "design"],
   ["act.owed_installalongside.label.install", "Install alongside it", null, "Installs a second Civicsmith in this same account, for another team, under its own short name and address. The one already here is not touched, and neither can read the other's records.", true, "design"],
@@ -16948,6 +17129,9 @@ var WORD_ROWS = Object.freeze([
   ["act.owed_secondlook.label.finder", "Flag for a second look\u2026", null, "Asks the team to look at what you picked again, with a note saying why. It shows under Flagged for a second look until a member clears the flag.", true, "design"],
   ["act.secondlookclear.label.finder", "Clear", null, "Takes the flag off. No reason is asked; any member who can see the item may clear it.", true, "design"],
   ["act.themeread.label.finder", "Filter by theme", null, "Lists the team's themes, newest first, or what one theme gathers: what was placed in it, then its hunches apart. Documents you cannot open are left out.", true, "design"],
+  ["act.owed_followfrom.label.finder", "Follow this item into another dimension", null, "Opens another view of the item you are on, such as the money it is tied to or the events it took part in, already narrowed to it. You do not start over, and nothing is recorded.", true, "design"],
+  ["act.explore.label.finder", "Explore connections", null, "Looks for chains of links between two people or organizations, each step cited and graded.", true, "design"],
+  ["act.owed_registersearch.label.finder", "Search the registers", null, "Looks through the registers your team holds for a person or an organization, an amount or a date. It records nothing.", true, "design"],
   ["act.acquire.label.capture", "Capture from an address", null, "Has your team's Civicsmith fetch this address itself and keep exactly what the site sent, with when and from where. Progress and the result show on the page.", true, "design"],
   ["act.captureupload.label.capture", "Capture a file or photo", null, "Adds this file or photo to the record, with who made or obtained it and how. It waits in Held captures until vouched for.", true, "design"],
   ["act.testify.label.capture", "Record what you saw or heard", null, "Records what you saw or heard yourself as testimony: grade D, labeled as yours, never changed afterwards.", true, "design"],
@@ -17005,6 +17189,8 @@ var WORD_ROWS = Object.freeze([
   ["act.themewithdraw.label.document", "Reject a hunch, with a reason", null, "Takes a placement out of a theme (the member who placed it, or an administrator) or rejects a hunch (any member). Your reason is required and stays on record.", true, "design"],
   ["act.captureprogressions.label.document", "Read the steps it is threaded to", null, "Shows every step of every matter this document is threaded to, with any finding there.", true, "design"],
   ["act.thread.label.document", "Thread it to a step", null, "Places a document the team holds on a step of a matter it concerns, with the document's own date. Each threading is a new version, so nothing is overwritten.", true, "design"],
+  ["act.owed_followfrom.label.document", "Follow this item into another dimension", null, "Opens another view of the item you are on, such as the money it is tied to or the events it took part in, already narrowed to it. You do not start over, and nothing is recorded.", true, "design"],
+  ["act.owed_registersearch.label.document", "Search the registers", null, "Looks through the registers your team holds for a person or an organization, an amount or a date. It records nothing.", true, "design"],
   ["act.contradictionclarify.label.contradiction", "Say how they differ, or mark one as wrong", null, "Records, in your name, how two passages differ or which one is wrong. Neither passage is changed or removed.", true, "design"],
   ["act.contradictiontakeup.label.contradiction", "Take it up as a question", null, "Opens a question in the project from this contradiction, with both passages as its evidence, so the team can settle it and conclude.", true, "design"],
   ["act.contradictiondismiss.label.contradiction", "Dismiss a lead, with a reason", null, "Closes a lead with the reason you choose. It stays closed, and your name and reason are kept with it.", true, "design"],
@@ -17109,6 +17295,8 @@ var WORD_ROWS = Object.freeze([
   ["act.search.label.people", "Search people and organizations", null, "Searches everything your team holds that you may see: documents, passages, questions, people.", true, "design"],
   ["act.explore.label.people", "Explore connections", null, "Looks for chains of links between two people or organizations, each step cited and graded.", true, "design"],
   ["act.entitycreate.label.people", "Add someone the record follows", null, "Adds something the record does not hold yet, such as an office, an organization or a court case, with a note on where it comes from.", true, "design"],
+  ["act.owed_followfrom.label.people", "Follow this item into another dimension", null, "Opens another view of the item you are on, such as the money it is tied to or the events it took part in, already narrowed to it. You do not start over, and nothing is recorded.", true, "design"],
+  ["act.owed_registersearch.label.people", "Search the registers", null, "Looks through the registers your team holds for a person or an organization, an amount or a date. It records nothing.", true, "design"],
   ["act.explore.label.person", "Explore connections", null, "Looks for chains of links between two people or organizations, each step cited and graded.", true, "design"],
   ["act.recordpersonfact.label.person", "Add a fact from a document", null, "Records a fact about this person from the passage: a position, a credential, an interest. It cites the passage.", true, "design"],
   ["act.recordline.label.person", "Record that an office keeps records", null, "Adds a party to the proceeding by its role, citing where it appears.", true, "design"],
@@ -17136,6 +17324,10 @@ var WORD_ROWS = Object.freeze([
   ["act.proposedispose.label.timeline", "Set a finding aside", null, "Dismisses a suggestion or hint with a reason, kept on the record so the same thing is not raised again without cause.", true, "design"],
   ["act.progression.label.timeline", "Read a progression", null, "Shows a progression: its steps, what each needs before it, how soon, whether it is required, its basis, and every version.", true, "design"],
   ["act.progressiondefine.label.timeline", "Declare or revise a progression", null, "Declares a progression, or a new version of one: its steps and their basis. A revision needs a citation; the old version stays.", true, "design"],
+  ["act.owed_followfrom.label.timeline", "Follow this item into another dimension", null, "Opens another view of the item you are on, such as the money it is tied to or the events it took part in, already narrowed to it. You do not start over, and nothing is recorded.", true, "design"],
+  ["act.search.label.timeline", "Search", null, "Searches everything your team holds that you may see: documents, passages, questions, people.", true, "design"],
+  ["act.explore.label.timeline", "Explore connections", null, "Looks for chains of links between two people or organizations, each step cited and graded.", true, "design"],
+  ["act.owed_registersearch.label.timeline", "Search the registers", null, "Looks through the registers your team holds for a person or an organization, an amount or a date. It records nothing.", true, "design"],
   ["act.recordfact.label.money", "Read a figure into a money fact", null, "Reads this figure into a money fact, with its stage and period, citing where it came from.", true, "design"],
   ["act.createset.label.money", "Start a money trail", null, "Starts a money trail: the figures and transfers that follow one sum through the city's funds.", true, "design"],
   ["act.include.label.money", "Include with a reason", null, "Includes this figure in the trail, with the reason.", true, "design"],
@@ -17150,6 +17342,10 @@ var WORD_ROWS = Object.freeze([
   ["act.acquire.label.money", "Get the city's own copy", null, "Has your team's Civicsmith fetch this address itself and keep exactly what the site sent, with when and from where. Progress and the result show on the page.", true, "design"],
   ["act.checkrequest.label.money", "Ask a member who knows budgets", null, "Asks a member with the right expertise to check this, for example an accountant for figures.", true, "design"],
   ["act.hypothesishold.label.money", "Keep my reading as a hunch", null, "Keeps a hunch beside the question, labeled as yours. A hunch is never evidence and never moves an answer.", true, "design"],
+  ["act.owed_followfrom.label.money", "Follow this item into another dimension", null, "Opens another view of the item you are on, such as the money it is tied to or the events it took part in, already narrowed to it. You do not start over, and nothing is recorded.", true, "design"],
+  ["act.search.label.money", "Search", null, "Searches everything your team holds that you may see: documents, passages, questions, people.", true, "design"],
+  ["act.explore.label.money", "Explore connections", null, "Looks for chains of links between two people or organizations, each step cited and graded.", true, "design"],
+  ["act.owed_registersearch.label.money", "Search the registers", null, "Looks through the registers your team holds for a person or an organization, an amount or a date. It records nothing.", true, "design"],
   ["act.calculationcreate.label.calculation", "Work it out", null, "Works out a figure from the record, with its method shown so anyone can repeat it.", true, "design"],
   ["act.tabledeclare.label.calculation", "Declare the table", null, "Says what a table's columns are, so its figures can be counted through a calculation rather than one by one.", true, "design"],
   ["act.calculationdraw.label.calculation", "Draw a random sample", null, "Draws a random sample to check by hand, recorded so the draw can be repeated.", true, "design"],
@@ -17164,6 +17360,13 @@ var WORD_ROWS = Object.freeze([
   ["act.exploreverify.label.explore", "Check a chain", null, "Checks each step of a chain against its sources and grades it.", true, "design"],
   ["act.stepsource.label.explore", "Attach a source to a declared step", null, "Backs a step someone declared with a passage of a document your team holds that states it. The step then rests on evidence, graded like the document it cites.", true, "design"],
   ["act.promote.label.explore", "Open a question from this chain", null, "Turns what you are looking at into something the team will work on: a hint, chain or suggestion into a question, or a problem into a project. Where it came from is kept with it.", true, "design"],
+  ["act.owed_explorecontinue.label.explore", "Keep looking", null, "Keeps looking for connections after the explorer stopped at 2 seconds, and adds what it finds to what is shown. It never says the list is complete.", true, "design"],
+  ["act.owed_followfrom.label.explore", "Follow this item into another dimension", null, "Opens another view of the item you are on, such as the money it is tied to or the events it took part in, already narrowed to it. You do not start over, and nothing is recorded.", true, "design"],
+  ["act.search.label.explore", "Search", null, "Searches everything your team holds that you may see: documents, passages, questions, people.", true, "design"],
+  ["act.owed_registersearch.label.explore", "Search the registers", null, "Looks through the registers your team holds for a person or an organization, an amount or a date. It records nothing.", true, "design"],
+  ["act.owed_exploreall.label.explore", "List every connection between two ends", null, "Lists every connection found between the two ends within the search's limits, each with its steps, its weakest step and its dates. It says when the search was cut short, and never that the list is complete.", true, "design"],
+  ["act.owed_explorepath.label.explore", "Find the most direct path", null, "Shows the most direct chain between the two ends first: the fewest steps, then the strongest weakest step, then the date. It is a fact about the chains, not a judgment.", true, "design"],
+  ["act.owed_exploreshorter.label.explore", "See a shorter path, or keep your own chain", null, "Puts paths with fewer steps between the same two ends beside the one you built, evidenced paths first and then leads, so you can see them or keep your own. Your chain is never changed.", true, "design"],
   ["act.entitycreate.label.proceeding", "Register the proceeding", null, "Adds something the record does not hold yet, such as an office, an organization or a court case, with a note on where it comes from.", true, "design"],
   ["act.recordline.label.proceeding", "Add a party by role", null, "Adds a party to the proceeding by its role, citing where it appears.", true, "design"],
   ["act.followregister.label.proceeding", "Follow its register", null, "Follows a public register (licenses, filings) and tells you when an entry for this changes.", true, "design"],
@@ -17206,6 +17409,7 @@ var WORD_ROWS = Object.freeze([
   ["act.communicationprepare.label.request", "Prepare the text", null, "Prepares the text that will be sent, from the team's template or a labeled draft.", true, "design"],
   ["act.filingapprove.label.request", "Approve this text", null, "Approves this exact text for sending. Changing it afterwards needs approving again.", true, "design"],
   ["act.filingrecordsent.label.request", "I have sent it", null, "Records that you sent it, when and how. Civicsmith never sends for you; reply deadlines count from here.", true, "design"],
+  ["act.entitycreate.label.request", "Use this office", null, "Adds something the record does not hold yet, such as an office, an organization or a court case, with a note on where it comes from.", true, "design"],
   ["act.actionmove.label.action", "Move the action", null, "Moves the action to its next stage, with what happened.", true, "design"],
   ["act.actioncorrespond.label.action", "Record a reply", null, "Records a reply or letter received, with its date, so deadlines and the timeline follow.", true, "design"],
   ["act.actionpressure.label.action", "Mark a reply as pressure", null, "Marks a reply as pressure (a threat, a demand to stop), kept on the record.", true, "design"],
@@ -17324,6 +17528,23 @@ var WORD_ROWS = Object.freeze([
   ["act.owed_sweepset.label.watching", "Define a sweep", null, "Saves a sweep: the sites it may visit, the pages it starts from, what it keeps, how often it runs and the most it may fetch. It does not run until the project's owner ratifies it.", true, "design"],
   ["act.owed_sweepratify.label.watching", "Ratify or stop a sweep", null, "The project's owner starts a sweep, or any member who can write to the project stops it. Ratifying sends your team's fetches to the named sites, within the scope and budget shown.", true, "design"],
   ["act.writinghelp.label.watching", "Help me write this", null, "Asks the assistant to help word what you are writing, from what you typed. Its words arrive labeled as its draft; nothing is saved until you keep them.", true, "design"],
+  ["act.owed_registerimport.label.registers", "Bring in a register", null, "Brings in a whole public register as one capture, with its source and the date, and reads it in the background. Your team is told in the queue when it is ready. It never keeps a home address or a phone number.", true, "design"],
+  ["act.owed_registerlist.label.registers", "List the registers the team holds", null, "Lists the registers your team holds, with where each came from, when it was brought in, how many rows it has and when it is next checked.", true, "design"],
+  ["act.owed_registersearch.label.registers", "Search the registers", null, "Looks through the registers your team holds for a person or an organization, an amount or a date. It records nothing.", true, "design"],
+  ["act.owed_registerrowcite.label.registers", "Cite a row as evidence", null, "Cites one row of a register as evidence, with the register, its source and the date it was brought in.", true, "design"],
+  ["act.owed_registerwatch.label.registers", "Watch a filer, license or docket by its number", null, "Watches one named filer, license or docket by its number, and tells your team once in the queue when it changes. It never watches a person.", true, "design"],
+  ["act.owed_registerwatchstop.label.registers", "Stop watching", null, "Stops watching one filer, license or docket. What was brought in stays in the record.", true, "design"],
+  ["act.owed_alertconnect.label.registers", "Connect an outside alert service", null, "Connects an outside service that sends an alert when a watched item changes, with your team's own key for it. The key is sealed and never shown again.", true, "design"],
+  ["act.owed_registerask.label.registers", "Ask across the registers", null, "Answers a question asked in plain words across the registers your team holds. It comes after the alpha, with the assistant.", true, "design"],
+  ["act.owed_registermatch.label.registers", "Propose matches to the team's subjects", null, "Proposes matches between names in a register and your team's subjects, for a member to accept or reject. It comes after the alpha, with the assistant.", true, "design"],
+  ["act.owed_registerwatchpropose.label.registers", "Propose watches", null, "Proposes filers, licenses or dockets worth watching, for a member to accept or decline. It comes after the alpha, with the assistant.", true, "design"],
+  ["act.owed_registerfilter.label.registers", "Choose which rows of a register to bring in", null, "Chooses which rows of a register to bring in, by names, organizations, amounts, dates or filer numbers. It starts from what the project you are in is interested in, and you can change it. Leave it empty to bring in the whole register.", true, "design"],
+  ["act.owed_registerdelta.label.registers", "See what an import would add", null, "Shows what bringing in would add to your record before anything is brought in: the new rows, the bytes, and about how long it takes. It changes nothing.", true, "design"],
+  ["act.owed_registerpreread.label.registers", "Read a register ahead, for the team", null, "Reads a register ahead for the team, whole or in the part you chose, as a resource before any project asks. It runs by fixed steps and never uses the assistant.", true, "design"],
+  ["act.owed_registerpropose.label.registers", "Propose a register that is not listed", null, "Proposes a register we know that is not in the list, by its name, its address and who publishes it. Nothing is brought in.", true, "design"],
+  ["act.owed_followfrom.label.registers", "Follow this item into another dimension", null, "Opens another view of the item you are on, such as the money it is tied to or the events it took part in, already narrowed to it. You do not start over, and nothing is recorded.", true, "design"],
+  ["act.search.label.registers", "Search", null, "Searches everything your team holds that you may see: documents, passages, questions, people.", true, "design"],
+  ["act.explore.label.registers", "Explore connections", null, "Looks for chains of links between two people or organizations, each step cited and graded.", true, "design"],
   ["act.owed_casedetailsset.does", "Records one of the case's four details: the area of government, a point of contact, related work or relationships. It sits beside the case, the signature does not cover it, and you can change or clear it later.", null, null, false, "design"],
   ["act.owed_casedetails.does", "Shows the four details of this case as they stand now, and who set each and when. None of them stops a case from being published.", null, null, false, "design"],
   ["act.owed_casedetailspublic.does", "Shows any reader the four details of this case as the team currently states them, with those it has not stated marked Not stated.", null, null, false, "design"],
@@ -17494,6 +17715,25 @@ var WORD_ROWS = Object.freeze([
   ["act.owed_citeimported.does", "Rests one of your team's questions on a finding your team accepted from another team's case, at the edition shown. It carries the fact that they published it, and the grade the edition published, never higher.", null, null, false, "design"],
   ["act.owed_withdrawimported.does", "Takes another team's finding off this question's answer, with your reason. The history keeps it, and so does each version already frozen.", null, null, false, "design"],
   ["act.owed_namedrequests.does", "Lists the requests to gather something on a schedule that you may see, with where each is looked for, when it was last tried and when it is next due.", null, null, false, "design"],
+  ["act.owed_followfrom.does", "Opens another view of the item you are on, such as the money it is tied to or the events it took part in, already narrowed to it. You do not start over, and nothing is recorded.", null, null, false, "design"],
+  ["act.owed_exploreall.does", "Lists every connection found between the two ends within the search's limits, each with its steps, its weakest step and its dates. It says when the search was cut short, and never that the list is complete.", null, null, false, "design"],
+  ["act.owed_explorepath.does", "Shows the most direct chain between the two ends first: the fewest steps, then the strongest weakest step, then the date. It is a fact about the chains, not a judgment.", null, null, false, "design"],
+  ["act.owed_exploreshorter.does", "Puts paths with fewer steps between the same two ends beside the one you built, evidenced paths first and then leads, so you can see them or keep your own. Your chain is never changed.", null, null, false, "design"],
+  ["act.owed_registerimport.does", "Brings in a whole public register as one capture, with its source and the date, and reads it in the background. Your team is told in the queue when it is ready. It never keeps a home address or a phone number.", null, null, false, "design"],
+  ["act.owed_registerlist.does", "Lists the registers your team holds, with where each came from, when it was brought in, how many rows it has and when it is next checked.", null, null, false, "design"],
+  ["act.owed_registersearch.does", "Looks through the registers your team holds for a person or an organization, an amount or a date. It records nothing.", null, null, false, "design"],
+  ["act.owed_registerrowcite.does", "Cites one row of a register as evidence, with the register, its source and the date it was brought in.", null, null, false, "design"],
+  ["act.owed_registerwatch.does", "Watches one named filer, license or docket by its number, and tells your team once in the queue when it changes. It never watches a person.", null, null, false, "design"],
+  ["act.owed_registerfilter.does", "Chooses which rows of a register to bring in, by names, organizations, amounts, dates or filer numbers. It starts from what the project you are in is interested in, and you can change it. Leave it empty to bring in the whole register.", null, null, false, "design"],
+  ["act.owed_registerdelta.does", "Shows what bringing in would add to your record before anything is brought in: the new rows, the bytes, and about how long it takes. It changes nothing.", null, null, false, "design"],
+  ["act.owed_registerpreread.does", "Reads a register ahead for the team, whole or in the part you chose, as a resource before any project asks. It runs by fixed steps and never uses the assistant.", null, null, false, "design"],
+  ["act.owed_registerpropose.does", "Proposes a register we know that is not in the list, by its name, its address and who publishes it. Nothing is brought in.", null, null, false, "design"],
+  ["act.owed_explorecontinue.does", "Keeps looking for connections after the explorer stopped at 2 seconds, and adds what it finds to what is shown. It never says the list is complete.", null, null, false, "design"],
+  ["act.owed_registerwatchstop.does", "Stops watching one filer, license or docket. What was brought in stays in the record.", null, null, false, "design"],
+  ["act.owed_alertconnect.does", "Connects an outside service that sends an alert when a watched item changes, with your team's own key for it. The key is sealed and never shown again.", null, null, false, "design"],
+  ["act.owed_registerask.does", "Answers a question asked in plain words across the registers your team holds. It comes after the alpha, with the assistant.", null, null, false, "design"],
+  ["act.owed_registermatch.does", "Proposes matches between names in a register and your team's subjects, for a member to accept or reject. It comes after the alpha, with the assistant.", null, null, false, "design"],
+  ["act.owed_registerwatchpropose.does", "Proposes filers, licenses or dockets worth watching, for a member to accept or decline. It comes after the alpha, with the assistant.", null, null, false, "design"],
   ["act.owed_namedrequestset.does", "Saves one request to gather something from the places you name, and how often to look, or retires it. It fetches nothing by itself.", null, null, false, "design"],
   ["act.owed_sweepset.does", "Saves a sweep: the sites it may visit, the pages it starts from, what it keeps, how often it runs and the most it may fetch. It does not run until the project's owner ratifies it.", null, null, false, "design"],
   ["act.owed_sweepratify.does", "The project's owner starts a sweep, or any member who can write to the project stops it. Ratifying sends your team's fetches to the named sites, within the scope and budget shown.", null, null, false, "design"],
@@ -18145,6 +18385,7 @@ var WORD_ROWS = Object.freeze([
   ["acquisition.checks.at_and_the_same_condition", "{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472): a folder is not a document to capture and not a document to watch, and one sentence is true of both", null, null, false, "code"],
   ["acquisition.checks.at_and_the_same_condition_2", "{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)", null, null, false, "code"],
   ["acquisition.checks.at_and_the_same_condition_3", "{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)", null, null, false, "code"],
+  ["acquisition.checks.capture_not_kept", "the document arrived in several parts, but Civicsmith could not keep it whole, so nothing was filed; capture it again", null, null, false, "code"],
   ["acquisition.index.a_locator_must_be_https", "a locator must be https on a public host: no bare IP address, no localhost, no credentials in the address", null, null, false, "code"],
   ["acquisition.index.a_sweep_origin_acquire_names", "a sweep-origin acquire names the in-scope prefixes it may reach (link-sweep R1's `sources`); this one named none, so nothing was fetched", null, null, false, "code"],
   ["acquisition.index.an_archive_sourced_capture_names", "an archive-sourced capture names the document address, not a replay locator", null, null, false, "code"],
@@ -18226,6 +18467,15 @@ var WORD_ROWS = Object.freeze([
   ["acquisition.unpack.the_store_handed_in", "the store handed in carries no acquisition instance, so no archive's outcomes can be recorded; nothing was opened", null, null, false, "code"],
   ["acquisition.unpack.these_bytes_are_entry_index", "these bytes are entry {index} ({v1}, the archive's own claim) of the archive {sha} held by your team's Civicsmith, cut out and verified by size and CRC-32 at {at}", null, null, false, "code"],
   ["acquisition.unpack.why_nothing_was_opened", "{why}; nothing was opened", null, null, false, "code"],
+  ["act.captureseenin.does", "Files this held document in the project as well. It stays held under its own project.", null, null, false, "code"],
+  ["act.inboxlist.does", "Lists the knocks in the inbox, newest first, a page at a time. Changes nothing.", null, null, false, "code"],
+  ["act.moneysets.does", "Lists the money sets that concern this project, newest first. Changes nothing.", null, null, false, "code"],
+  ["act.officeconfirm.does", "An administrator confirms an office a member named.", null, null, false, "code"],
+  ["act.origins.does", "Lists, oldest first, every system members have declared this document came from, with who declared it and when. Changes nothing.", null, null, false, "code"],
+  ["act.progressions.does", "Lists the progression definitions. Changes nothing.", null, null, false, "code"],
+  ["act.remindersfor.does", "Lists this action's reminders, each with its day, who set it and its state. Changes nothing.", null, null, false, "code"],
+  ["act.scanmirror.does", "Asks the group's file scanner to check for new signatures now. It answers at once and moves no document.", null, null, false, "code"],
+  ["act.transcriptions.does", "Lists the typings a member has made of this document: each portion typed, who typed it and when. Changes nothing.", null, null, false, "code"],
   ["action-clocks.count.amount_unit_after_anchor", "{amount} {unit} after {anchor}", null, null, false, "code"],
   ["action-clocks.count.amount_unit_before_anchor", "{amount} {unit} before {anchor}", null, null, false, "code"],
   ["action-clocks.count.and_between_candidates", " and ", null, null, false, "code"],
@@ -18242,6 +18492,7 @@ var WORD_ROWS = Object.freeze([
   ["action-clocks.declared.clockadopt", "a member adopts a standing clock proposal, as proposed or amended, as a clock entry with its basis and trace (action-clocks R13)", null, null, false, "code"],
   ["action-clocks.declared.reminderanswer", "personal state, keyed (member, action, clock entry): a member answers their own due reminder, with a further one or none", null, null, false, "code"],
   ["action-clocks.declared.reminderset", "a member asks to be reminded of a dated clock entry on a day, or changes or removes their own reminder (action-clocks R4)", null, null, false, "code"],
+  ["action-clocks.declared.remindersfor", "read: an action's reminders, each with its entry, its day, who set it and its state; writes nothing (action-clocks R26)", null, null, false, "code"],
   ["action-clocks.ics.calendar_name", "Deadlines", null, null, false, "code"],
   ["action-clocks.index.a_deadline_is_put_on", "a deadline is put on an action's clock by a member, in their own act; a machine credential proposes one and never adopts it, and a call that carries nobody is not a member. Nothing was written.", null, null, false, "code"],
   ["action-clocks.index.a_deadline_is_put_on_2", "a deadline is put on an action's clock by a member, in their own act; a machine credential may propose one and never states it, and a call that carries nobody is not a member. Nothing was written.", null, null, false, "code"],
@@ -19518,6 +19769,7 @@ var WORD_ROWS = Object.freeze([
   ["capture.declared.captureaccount", "self-attested-capture-directed: the capturing member appends a signed account of when and how they captured it, keyed by capture sha; refused to anyone else; reached where the case marks the capture self-attested", null, null, false, "code"],
   ["capture.declared.captureaccounts", "read: one capture's signed accounts from its capturing member, keyed by capture sha; writes nothing", null, null, false, "code"],
   ["capture.declared.capturegrade", "read: one capture's grade, keyed by capture sha (`capture` R95); writes nothing", null, null, false, "code"],
+  ["capture.declared.captureseenin", "member-directed: a member records once that she filed a held document in a project; a repeat changes nothing, and no reason is asked (capture R101)", null, null, false, "code"],
   ["capture.declared.gradenote", "read: one capture's grade note, the words op=acquire's answer carries, keyed by capture sha, null for a capture the viewer may not see; writes nothing", null, null, false, "code"],
   ["capture.declared.heldat", "read: whether an address is held and where its capture stands (`capture` R96); its one write is the governor's bookkeeping, and no record", null, null, false, "code"],
   ["capture.declared.heldcaptures", "read: the collected documents not set aside, awaiting a member's decision, as the viewer may see them; writes nothing", null, null, false, "code"],
@@ -19570,6 +19822,9 @@ var WORD_ROWS = Object.freeze([
   ["capture.index.refusal_member_brings_file", "a file is brought into the record by a signed-in member, whose stamp names them; nothing was written", null, null, false, "code"],
   ["capture.index.reuse_posthoc_unverified", "a later direct capture of this host fetched different bytes for this address; this earlier capture reused the old ones, which are now unverified against the source", null, null, false, "code"],
   ["capture.index.say_so_the_file_cannot", "{say}, so the file cannot be held under its own digest; nothing was written", null, null, false, "code"],
+  ["capture.index.seenin_member_act", "filing a document where it is seen is a signed-in member's act, whose stamp names them; nothing was written", null, null, false, "code"],
+  ["capture.index.seenin_not_held", "the record holds no such document that you may see; nothing was written", null, null, false, "code"],
+  ["capture.index.seenin_not_recorded", "the record could not be written, so nothing was filed", null, null, false, "code"],
   ["capture.index.sha_identifies_event", "a capture sha256 identifies the event; a record does not exist yet at capture time", null, null, false, "code"],
   ["capture.index.signature_not_verified", "the signature does not verify over this account's statement against a key of yours that attests, so nothing was written", null, null, false, "code"],
   ["capture.index.the_record_holds_this_copy", "the record holds this copy as retrieved at {asOf} and has no later look at the source; a copy's age is not a look, so whether the site has changed since is not known from the record alone", null, null, false, "code"],
@@ -19992,6 +20247,7 @@ var WORD_ROWS = Object.freeze([
   ["case-disclosures.index.hunch_leg", "{target} leg {ord} on {leg_target}", null, null, false, "code"],
   ["case-disclosures.index.hunch_legs", "{count} basis leg(s) of this case's findings rest on a HUNCH ({legs}). ", null, null, false, "code"],
   ["case-disclosures.index.hunch_unread", "The basis of {unread} could not be read, so whether it rests on a hunch is not known. ", null, null, false, "code"],
+  ["case-disclosures.index.late_proves", "late: proves the bytes existed by {at}, not at capture", null, null, false, "code"],
   ["case-disclosures.index.length_document_s_a_member", "{length} document(s) a member supplied, which a load-bearing finding of this case relies on, cannot be cleaned of the details that could show who made them ({map}), and a member's document travels only as its cleaned copy. Capture each from where it was published, supply a plainer copy, or stop relying on it. Nothing was written.", null, null, false, "code"],
   ["case-disclosures.index.length_document_s_or_observation", "{length} document(s) or observation(s) a load-bearing finding of this case rests on are not held whole by your team's Civicsmith ({map}). Everything a case relies on travels with it in full (DEC-112 (4)): find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written.", null, null, false, "code"],
   ["case-disclosures.index.length_document_s_this_case", "{length} document(s) this case relies on could not be checked for the people and number plates marked in them ({map}), so what the published case would show of them is not known. Try again. Nothing was written.", null, null, false, "code"],
@@ -21271,6 +21527,7 @@ var WORD_ROWS = Object.freeze([
   ["doorbell.checks.your_material_was_not_received", "Your material was not received. This team's inbox is not taking any more material from where you are sending it just now. It is a limit on how fast one sender may knock, not a judgement about you or about what you sent, and it lifts on its own shortly \u2014 the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later and it will arrive. The team can see how often its doorbell turns people away.", null, null, false, "code"],
   ["doorbell.declared.doorbelltally", "read: the doorbell's count-only tally of knocks it turned away, by day, for a member session only; holds no address, time or content, and writes nothing", null, null, false, "code"],
   ["doorbell.declared.inboxget", "read: one knock in the inbox, keyed by knock id; writes nothing", null, null, false, "code"],
+  ["doorbell.declared.inboxlist", "read: the knocks in the inbox, newest first, bounded and paged, sortable by received time, status, secret or project; never a contact in a pulled document; writes nothing", null, null, false, "code"],
   ["doorbell.declared.inboxpull", "knock-directed: a member pulls one knock into the record, keyed by knock id: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled; reached from the inbox, never beside a bundle", null, null, false, "code"],
   ["doorbell.declared.inboxresolve", "inbox disposition, keyed by knock id, with the member's reason on every arm (doorbell R3, RESOLVE_NO_REASON): sets a knock aside or back to new, and its `pulled` arm is the pull, a filing act that answers as op=inboxpull does (doorbell R3, R13)", null, null, false, "code"],
   ["doorbell.declared.knock", "an unauthenticated request to be let in", null, null, false, "code"],
@@ -21386,6 +21643,7 @@ var WORD_ROWS = Object.freeze([
   ["entities.declared.entityalias", "registry write, keyed by entity", null, null, false, "code"],
   ["entities.declared.entitybyalias", "read: the entities holding an alias's fold through a live alias, keyed by alias; writes nothing", null, null, false, "code"],
   ["entities.declared.entitycreate", "registry write, keyed by entity: registers a subject with the declarer's note on who or what it is and why it belongs in the registry, now required (entities R1, C-91.8; DEC-88: `reasoned`)", null, null, false, "code"],
+  ["entities.declared.officeconfirm", "office-directed: an administrator confirms an office a member named; clears the mark and records who confirmed it and when, and changes no name, alias or note (entities R64)", null, null, false, "code"],
   ["entities.declared.relationdeclare", "registry write, keyed by entity pair", null, null, false, "code"],
   ["entities.declared.resolutiondefect", "registry correction, keyed by a resolution: reports with a reason that a recogniser's resolution paired a reference with the wrong entity, and changes no resolution", null, null, false, "code"],
   ["entities.declared.resolutions", "read: a captured document's resolutions, the names it carries and the references no subject holds, keyed by capture sha", null, null, false, "code"],
@@ -21422,8 +21680,10 @@ var WORD_ROWS = Object.freeze([
   ["entities.index.an_entity_needs_a_note", "an entity needs a note in the declarer's own words saying who or what it is and why it is registered", null, null, false, "code"],
   ["entities.index.an_identifier_is_held_in", "an identifier is held in a scheme your team's active jurisdiction profiles name{v1}. Nothing was written.", null, null, false, "code"],
   ["entities.index.an_identifier_is_held_on", "an identifier is held on its cited source or a system's own row", null, null, false, "code"],
+  ["entities.index.an_office_is_confirmed_by", "an office a member named is confirmed by its entity id", null, null, false, "code"],
   ["entities.index.at_most_naming_in_captures", "at most {NAMING_IN_CAPTURES_MAX} captured documents are looked in at once; {length} were named. Nothing was read.", null, null, false, "code"],
   ["entities.index.bad_nothing_was_written", "{bad}. Nothing was written.", null, null, false, "code"],
+  ["entities.index.confirming_an_office_a_member", "confirming an office a member named", null, null, false, "code"],
   ["entities.index.correspondence_the_references_name_label", "correspondence -- the reference's name '{label}' matched an entity alias by name; plausible, never established, flagged for a member to confirm", null, null, false, "code"],
   ["entities.index.documents_are_counted_for_at", "documents are counted for at most {ONLY_BY_IDENTIFIER_IDS_MAX} entity ids at once; {length} were named. Nothing was read.", null, null, false, "code"],
   ["entities.index.explain_query_plan_sql", "EXPLAIN QUERY PLAN {sql}", null, null, false, "code"],
@@ -21434,6 +21694,7 @@ var WORD_ROWS = Object.freeze([
   ["entities.index.labels_are_read_for_entity", "labels are read for entity ids, a list of them", null, null, false, "code"],
   ["entities.index.no_captured_document_the_record", "no captured document the record holds and you can see has that digest, so nothing can be read from it. Nothing was written.", null, null, false, "code"],
   ["entities.index.no_resolution_of_that", "no resolution of that reference of that captured document to that entity is held", null, null, false, "code"],
+  ["entities.index.only_an_office_a_member", "only an office a member named is confirmed, and this subject is a {kind}. Nothing was changed.", null, null, false, "code"],
   ["entities.index.resolve_a_single_reference", "resolve a single reference by its raw kind:key, or omit ref to resolve all", null, null, false, "code"],
   ["entities.index.resolving_this_document_would_record", "; resolving this document would record nothing here, because a stronger identifier on this same reference resolves first", null, null, false, "code"],
   ["entities.index.scheme_identifier_the_reference_v1", "scheme identifier -- the reference {v1}'{value}' is {normal} in the {space} space ({form}), an identifier this entity holds in the scheme {scheme}{v2}", null, null, false, "code"],
@@ -21448,6 +21709,7 @@ var WORD_ROWS = Object.freeze([
   ["entities.index.the_field_has_the_shape", "the {field} has the shape of no form of the {v1} space{v2}{v3}. Nothing was written.", null, null, false, "code"],
   ["entities.index.the_identifier_matches_nothing", "the identifier matches nothing new; resolutions already made through it are kept", null, null, false, "code"],
   ["entities.index.the_identifiers_could_not_be", "the identifiers could not be read: {String}", null, null, false, "code"],
+  ["entities.index.the_law_requests_go_under", "the law requests go under is one your team's active jurisdiction profiles name{v1}. Nothing was written.", null, null, false, "code"],
   ["entities.index.the_name_lookup_is_over", "the name lookup is over a REGISTERED subject, named by its id (op=readingname&entity=ENT-...). It reads the registry's own aliases, which is the only thing that reaches a name a document abbreviates.", null, null, false, "code"],
   ["entities.index.the_name_matches_nothing_new", "the name matches nothing new and no longer finds this entity; resolutions already made through it are kept and marked as resting on a withdrawn name, so a member can re-resolve them", null, null, false, "code"],
   ["entities.index.the_number_number_as_forum", "the number {number} as {forum_label} writes it", null, null, false, "code"],
@@ -21476,8 +21738,11 @@ var WORD_ROWS = Object.freeze([
   ["entities.index.this_entity_holds_no_such_2", "this entity holds no such identifier, so there is nothing to withdraw", null, null, false, "code"],
   ["entities.index.this_is_the_first_list_floor", " THIS IS THE FIRST {cap} AND NOT ALL OF THEM: the answer was cut at the bound this op applied, so a count taken from this list is a floor and never a total.", null, null, false, "code"],
   ["entities.index.this_is_the_first_namingin_floor", ". THIS IS THE FIRST {cap} AND NOT ALL OF THEM, so a count taken from it is a floor.", null, null, false, "code"],
+  ["entities.index.this_office_was_not_named", "this office was not named by a member, so there is nothing to confirm. Nothing was changed.", null, null, false, "code"],
   ["entities.index.v1_has_the_shape_of", "{v1} has the shape of no form of the {label}{v2}", null, null, false, "code"],
   ["entities.index.v1_names_no_captured_document", "{v1} names no captured document this record holds that you can see", null, null, false, "code"],
+  ["entities.index.where_requests_go_and_the", "where requests go and the law they go under are held only by an office; a {kind} carries neither. Nothing was written.", null, null, false, "code"],
+  ["entities.index.where_requests_go_is_a", "where requests go is an address, an email address or an online portal, with its value: {kind, value}, the kind one of {CONTACT_KINDS}. Nothing was written.", null, null, false, "code"],
   ["escalation.checks.reading_what_the_government_answered", "Reading what the government answered is a member's judgment. An assistant may summarise the response; it may not evaluate it. Nothing was written.", null, null, false, "code"],
   ["escalation.checks.the_escalations_stage_moves_only", "The escalation's stage moves only while it is open. A suspended one is resumed first; an ended one never moves again. Nothing was written.", null, null, false, "code"],
   ["escalation.declared.declinetoescalate", "determination-directed: a member declines, with a reason, to escalate a live noncompliant determination, keyed by determination id; prose only, corrected forward, and a later opening supersedes it", null, null, false, "code"],
@@ -21678,15 +21943,21 @@ var WORD_ROWS = Object.freeze([
   ["file-safety.declared.openwithwarning", "file-directed: keyed by a capture's digest, reached from the warning before opening; answers a high-risk original after the member's two confirmations, never under a scan hold; records no one and keeps no confirmation", null, null, false, "code"],
   ["file-safety.declared.releasescanhold", "file-directed: keyed by a capture's digest under a scan hold, reached from the held file; one member's reasoned act of two, never a machine's; moves no bundle", null, null, false, "code"],
   ["file-safety.declared.safeview", "read: a file's safe view, a derived copy so labeled, with what opening the original would answer; writes nothing", null, null, false, "code"],
+  ["file-safety.declared.scanmirror", "setting: the group's file scanner, an administrator's act; asks it to check for new signatures now and answers at once; moves no bundle", null, null, false, "code"],
   ["file-safety.declared.securitytooladd", "setting: the group's security tools, an administrator's act; moves no bundle", null, null, false, "code"],
   ["file-safety.declared.securitytoolremove", "setting: the group's security tools, an administrator's act; moves no bundle", null, null, false, "code"],
   ["file-safety.declared.securitytooltest", "setting: the group's security tools, an administrator's act; moves no bundle", null, null, false, "code"],
+  ["file-safety.index.a_run_was_started_lately", "A check for signatures was made a few minutes ago. No run was started.", null, null, false, "code"],
   ["file-safety.index.a_safe_view_is_made", "A safe view is made of documents, presentations, spreadsheets and plain text only.", null, null, false, "code"],
+  ["file-safety.index.checking_for_new_signatures", "checking for new signatures", null, null, false, "code"],
   ["file-safety.index.file_scanners_r19_refuses_the", "file-scanner's R19 refuses the tool's description.", null, null, false, "code"],
+  ["file-safety.index.no_scanner_so_no_run_started", "Your team's Civicsmith has no file scanner installed. No run was started.", null, null, false, "code"],
   ["file-safety.index.no_tool_of_the_teams", "No tool of the team's has this id.", null, null, false, "code"],
   ["file-safety.index.reading_scanners_state", "reading the scanner's state", null, null, false, "code"],
   ["file-safety.index.reading_security_tools_offered", "reading the security tools offered", null, null, false, "code"],
   ["file-safety.index.reading_teams_security_tools", "reading the team's security tools", null, null, false, "code"],
+  ["file-safety.index.signatures_refused_unnumbered", "The signature service refused the download. The scanner tries again daily; to fix it sooner, an administrator can check that your team's Civicsmith is allowed to reach the service.", null, null, false, "code"],
+  ["file-safety.index.the_scanner_did_not_start", "The scanner did not start a run. Nothing was changed.", null, null, false, "code"],
   ["file-safety.index.the_text_could_not_be", "The text could not be read.", null, null, false, "code"],
   ["file-safety.index.warned_must_be_exactly", "warned must be exactly {own_device: true, no_macros: true}. Nothing was served.", null, null, false, "code"],
   ["file-safety.index.your_teams_civicsmith_could_not", "Your team's Civicsmith could not read the files waiting for a safe view. Nothing was rendered, made or counted.", null, null, false, "code"],
@@ -23266,6 +23537,7 @@ var WORD_ROWS = Object.freeze([
   ["money.declared.createset", "money-set-directed: keyed by a new MSR- id; writes money's rows and moves no bundle", null, null, false, "code"],
   ["money.declared.exclude", "money-set-directed: keyed by (set, fact); writes money's rows and moves no bundle", null, null, false, "code"],
   ["money.declared.include", "money-set-directed: keyed by (set, fact); writes money's rows and moves no bundle", null, null, false, "code"],
+  ["money.declared.moneysets", "read: the money sets that concern an id, such as a project's trails, newest first, bounded; writes nothing", null, null, false, "code"],
   ["money.declared.reconcile", "read: whether two money facts are consistent, or each dimension that differs; writes nothing", null, null, false, "code"],
   ["money.declared.recordfact", "money-directed: keyed by a new MNY- id; holds one source's reading of one amount and moves no bundle", null, null, false, "code"],
   ["money.index.a_balance_class_is_read", "a balance class is read against a fund a party names, and none is named", null, null, false, "code"],
@@ -23301,6 +23573,7 @@ var WORD_ROWS = Object.freeze([
   ["money.index.a_money_set_has_a", "a money set has a label a person can read", null, null, false, "code"],
   ["money.index.a_money_set_is_read", "a money set is read by its id (MSR-...)", null, null, false, "code"],
   ["money.index.a_money_sets_purpose_is", "a money set's purpose is {list}", null, null, false, "code"],
+  ["money.index.a_money_sets_purpose_is_2", "a money set's purpose is {list}", null, null, false, "code"],
   ["money.index.a_period_has_no_field", "a period has no field {extra}", null, null, false, "code"],
   ["money.index.a_period_is_from_to", "a period is {from, to, precision, zone} or {fiscal, body}", null, null, false, "code"],
   ["money.index.a_period_states_its_start", "a period states its start (from)", null, null, false, "code"],
@@ -23321,6 +23594,7 @@ var WORD_ROWS = Object.freeze([
   ["money.index.a_type_funds_classes_are", "a {type} fund's classes are {list}", null, null, false, "code"],
   ["money.index.a_typed_transcription_is_a", "a typed transcription is a member's act; a machine's reading names its method", null, null, false, "code"],
   ["money.index.a_withdrawal_states_why", "a withdrawal states why", null, null, false, "code"],
+  ["money.index.after_names_no_set_in", "after names no set in this list; start again without it", null, null, false, "code"],
   ["money.index.an_actual_amount_names_its", "an actual amount names its stage: one of {list} for {kind}", null, null, false, "code"],
   ["money.index.an_amount_is_an_exact", "an amount is an exact decimal written as a string of digits (thousands separators and one point allowed), unsigned and unscaled; never a number with a binary fraction. The sign is its own field", null, null, false, "code"],
   ["money.index.an_attribution_set_concerns_one", "an attribution set concerns one registered entity of kind contract", null, null, false, "code"],
@@ -23342,6 +23616,7 @@ var WORD_ROWS = Object.freeze([
   ["money.index.kind_is_one_of_list", "kind is one of {list}", null, null, false, "code"],
   ["money.index.kind_is_one_of_list_2", "kind is one of {list}", null, null, false, "code"],
   ["money.index.module_s_listener_failed_on", "{module}'s listener failed on {change} of {factId}: {String}. Nothing was written.", null, null, false, "code"],
+  ["money.index.money_sets_are_listed_by", "money sets are listed by what they concern: name the id (moneysets&concerns=...)", null, null, false, "code"],
   ["money.index.more_than_one", "more than one", null, null, false, "code"],
   ["money.index.name_the_money_facts_by", "name the money facts by their ids", null, null, false, "code"],
   ["money.index.no_authorising_event_is_held", "no authorising event is held for this event", null, null, false, "code"],
@@ -24279,6 +24554,10 @@ var WORD_ROWS = Object.freeze([
   ["record-core.checks.a_part_of_your_teams_9", "A part of your team's Civicsmith tried to reserve an identifier without giving one, so nothing was reserved. {BUILD_FAULT}", null, null, false, "code"],
   ["record-core.checks.allocid_prefix_required", "A part of your team's Civicsmith asked for an id without naming the kind of object it is for, so nothing was allocated. {BUILD_FAULT}", null, null, false, "code"],
   ["record-core.checks.allocid_year_required", "A part of your team's Civicsmith asked for an id without a year, so nothing was allocated. {BUILD_FAULT}", null, null, false, "code"],
+  ["record-core.checks.evidence_digest_mismatch", "The pieces of a large document did not add up to the document that was meant, so it was not kept whole and nothing was written. Capture it again.", null, null, false, "code"],
+  ["record-core.checks.evidence_part_missing", "One piece of a large document was not there when your team's Civicsmith went to put the document together, so the document was not kept whole and nothing was written. Capture it again.", null, null, false, "code"],
+  ["record-core.checks.evidence_parts_malformed", "A part of your team's Civicsmith asked to keep a document whole without naming it and its parts as fingerprints, so nothing was kept. {BUILD_FAULT}", null, null, false, "code"],
+  ["record-core.checks.evidence_store_refused", "The place where your team's Civicsmith keeps documents would not take a large document whole, so it was not kept and nothing was written. Try again; if it happens again, tell whoever hosts your team's Civicsmith.", null, null, false, "code"],
   ["record-core.checks.the_setting_was_not_changed", "The setting was not changed, because the value given is not one it takes. The jurisdictions your team follows are set as a list of profiles, each named once, in the order they apply.", null, null, false, "code"],
   ["record-core.declared.allocid", "substrate: id allocation", null, null, false, "code"],
   ["record-core.index.a_counts_registration_names_its", "a counts registration names its module, a non-empty list of figure names and a function answering them; nothing was registered.", null, null, false, "code"],
@@ -24286,6 +24565,7 @@ var WORD_ROWS = Object.freeze([
   ["record-core.index.a_grammar_names_its_module", "a grammar names its module, a non-empty list of the check ids it raises and a function to run; nothing was registered.", null, null, false, "code"],
   ["record-core.index.a_lease_is_taken_under", "a lease is taken under a named actor \u2014 a member (from a session) or a machine identity (token:<class>). An unnamed writer cannot hold the courtesy lock.", null, null, false, "code"],
   ["record-core.index.a_mint_seed_names_its", "a mint seed names its module and a list of [prefix, table, column] sources, each three non-empty strings; nothing was registered.", null, null, false, "code"],
+  ["record-core.index.a_part_of_the_document", "Part {n} of {parts} of the document was not held. Nothing was kept.", null, null, false, "code"],
   ["record-core.index.a_setting_is_recorded_under", "a setting is recorded under a name, and none was given; nothing was recorded.", null, null, false, "code"],
   ["record-core.index.a_setting_is_recorded_with", "a setting is recorded with who set it, and no one was named; nothing was recorded.", null, null, false, "code"],
   ["record-core.index.a_setting_is_recorded_with_2", "a setting is recorded with a value, and none was given; nothing was recorded.", null, null, false, "code"],
@@ -24293,6 +24573,7 @@ var WORD_ROWS = Object.freeze([
   ["record-core.index.a_statistics_source_names_its", "a statistics source names its module and is a function; nothing was registered.", null, null, false, "code"],
   ["record-core.index.a_store_gate_names_its", "a store gate names its module, a table that module declared and a check to run; nothing was registered.", null, null, false, "code"],
   ["record-core.index.a_store_gate_names_its_2", "a store gate names its module, a table that module declared and a check to run; nothing was registered ({table} is {owner}'s).", null, null, false, "code"],
+  ["record-core.index.a_whole_document_is_named", "A whole document is named by its fingerprint and the fingerprints of its parts, in order, and at least one part. Nothing was kept.", null, null, false, "code"],
   ["record-core.index.allocid_needs_a_prefix", "op=allocid needs a prefix, the kind of object the id is for. Nothing was allocated.", null, null, false, "code"],
   ["record-core.index.allocid_needs_a_year", "op=allocid needs a year, the year the id is for. Nothing was allocated.", null, null, false, "code"],
   ["record-core.index.an_expunge_is_a_members", "an expunge is a member's act, named by that member; a machine or absent actor removes nothing.", null, null, false, "code"],
@@ -24330,6 +24611,8 @@ var WORD_ROWS = Object.freeze([
   ["record-core.index.the_figure_key_is_already", "the figure {key} is already reported by {heldBy}; nothing was registered.", null, null, false, "code"],
   ["record-core.index.the_grammar_claims_part_of", "the grammar claims part of {name}, whose ids are {ids}; a slot is claimed whole. Nothing was registered.", null, null, false, "code"],
   ["record-core.index.the_instances_figures_are_already", "the instance's figures are already supplied by {module}; nothing was registered.", null, null, false, "code"],
+  ["record-core.index.the_parts_do_not_hash", "The parts, read in order, do not hash to the document's fingerprint. Nothing was kept.", null, null, false, "code"],
+  ["record-core.index.the_store_would_not_take", "The store would not take the document whole ({why}). Nothing was kept.", null, null, false, "code"],
   ["record-core.index.your_teams_civicsmith_could_not", "your team's Civicsmith could not find a free {what}: every one it drew was already taken. Nothing was written.", null, null, false, "code"],
   ["record-grammar.bundle.adjust_the_later_record_timestamp_suffix", "adjust the later record timestamp suffix by one second, logged", null, null, false, "code"],
   ["record-grammar.bundle.annotation_file_name_does_not", "annotation file '{name}' does not match its id (expected '{expectedFile}')", null, null, false, "code"],
@@ -24481,6 +24764,9 @@ var WORD_ROWS = Object.freeze([
   ["reevaluation.index.v1_a_withdrawn_leg_supports", "{v1} A withdrawn leg supports nothing here: it adds nothing to strength, gates nothing and counts toward no bar. It is listed because the connection still informs a second look (DEC-70).", null, null, false, "code"],
   ["reevaluation.index.visible_to_chains", "the version chains here are the ones visible to you; a version filed in a project you were not invited to is not in them", null, null, false, "code"],
   ["reevaluation.index.work_products_unread", "the cases a project owns, or their ratified editions, could not be read, so a wp_retraction cause may be missing; that is not the same as none", null, null, false, "code"],
+  ["refusal.CONFIRM_NOT_AN_OFFICE", "Only an office a member named can be confirmed, and this subject is not an office. Nothing was changed.", null, null, false, "code"],
+  ["refusal.NOT_NAMED_BY_A_MEMBER", "This office was not named by a member, so there is nothing to confirm. Nothing was changed.", null, null, false, "code"],
+  ["refusal.SIGNATURES_RUN_RECENT", "Your team's Civicsmith checked for new signatures a few minutes ago, so it did not start another check just now. Try again in a quarter of an hour.", null, null, false, "code"],
   ["retrieval-browse.browse.marks_another_shape", "the registered read of watches and flags answered another shape than its contract's", null, null, false, "code"],
   ["retrieval-browse.browse.marks_not_registered", "no module has registered the watches and flags, so watched and flagged are not read", null, null, false, "code"],
   ["retrieval-browse.browse.marks_not_registered_list", "no module has registered the watches and flags, so which items are watched or flagged is not read", null, null, false, "code"],
@@ -24560,6 +24846,7 @@ var WORD_ROWS = Object.freeze([
   ["review.index.no_case_of_owning_s", "no case of {owning}'s answers to {named}. A draft names an EXISTING case to be its next edition, and a case this project did not publish is answered exactly as one that does not exist.", null, null, false, "code"],
   ["review.index.no_document_of_cid_edition", "no document of {cid} edition {v1} has that approval digest (its sha without the approvals block); an approval names the document it approves. Nothing was recorded.", null, null, false, "code"],
   ["review.index.no_review_copy_answers_to", "no review copy answers to this request. A review copy is read through the grant that was issued for it, or by a member with standing in the project that produced it; a grant that was withdrawn, or whose draft has moved to another edition, answers exactly as one that was never issued.", null, null, false, "code"],
+  ["review.index.not_concluded_yet", "Not concluded yet", null, null, false, "code"],
   ["review.index.set_the_teams_approval_rule", "set the team's approval rule", null, null, false, "code"],
   ["review.index.the_read_secrets_fingerprint_is", "the read secret's fingerprint is set by the control plane and was absent.", null, null, false, "code"],
   ["review.index.the_review_copys_authoring_acts", "the review copy's authoring acts are draft, grant and revoke.", null, null, false, "code"],
@@ -41441,6 +41728,28 @@ var RECORD_CORE_CHECKS = Object.freeze({
     check: "C-102.35",
     where: at("allocIdOp", "is-allocid-input-present"),
     translation: localize("record-core.checks.allocid_year_required", "A part of your team's Civicsmith asked for an id without a year, so nothing was allocated. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) })
+  }),
+  /* New (T51, R87; fix round 3, C5; K4363): a whole object made from parts the store holds. The four refusals of
+     `putFromParts` take the next free numbers of C-102, after C-102.35. */
+  EVIDENCE_PARTS_MALFORMED: Object.freeze({
+    check: "C-102.36",
+    where: at("putFromParts", "is-evidence-parts-refused"),
+    translation: localize("record-core.checks.evidence_parts_malformed", "A part of your team's Civicsmith asked to keep a document whole without naming it and its parts as fingerprints, so nothing was kept. {BUILD_FAULT}", { BUILD_FAULT: String(BUILD_FAULT) })
+  }),
+  EVIDENCE_PART_MISSING: Object.freeze({
+    check: "C-102.37",
+    where: at("putFromParts", "is-evidence-parts-refused"),
+    translation: localize("record-core.checks.evidence_part_missing", "One piece of a large document was not there when your team's Civicsmith went to put the document together, so the document was not kept whole and nothing was written. Capture it again.")
+  }),
+  EVIDENCE_DIGEST_MISMATCH: Object.freeze({
+    check: "C-102.38",
+    where: at("putFromParts", "is-evidence-parts-refused"),
+    translation: localize("record-core.checks.evidence_digest_mismatch", "The pieces of a large document did not add up to the document that was meant, so it was not kept whole and nothing was written. Capture it again.")
+  }),
+  EVIDENCE_STORE_REFUSED: Object.freeze({
+    check: "C-102.39",
+    where: at("putFromParts", "is-evidence-parts-refused"),
+    translation: localize("record-core.checks.evidence_store_refused", "The place where your team's Civicsmith keeps documents would not take a large document whole, so it was not kept and nothing was written. Try again; if it happens again, tell whoever hosts your team's Civicsmith.")
   })
 });
 var PER_ITEM_CHECKS = Object.freeze({
@@ -43432,13 +43741,58 @@ var RecordCore = class _RecordCore {
     if (!bucket) return null;
     const prefix = typeof this.#evidencePrefix === "function" ? this.#evidencePrefix() : this.#evidencePrefix;
     const key = (digest) => `${prefix ?? ""}${String(digest)}`;
-    return {
+    const store = {
       head: (digest) => bucket.head(key(digest)),
       get: (digest) => bucket.get(key(digest)),
       put: (digest, bytes) => bucket.put(key(digest), bytes, { sha256: String(digest) })
     };
+    if (typeof bucket.createMultipartUpload === "function")
+      store.putFromParts = (digest, partDigests) => putFromParts(bucket, key, digest, partDigests);
+    return store;
   }
 };
+var DIGEST = /^[0-9a-f]{64}$/;
+async function putFromParts(bucket, key, digest, partDigests) {
+  if (typeof digest !== "string" || !DIGEST.test(digest) || !Array.isArray(partDigests) || partDigests.length === 0 || !partDigests.every((d) => typeof d === "string" && DIGEST.test(d)))
+    return rowRefusal("EVIDENCE_PARTS_MALFORMED", localize("record-core.index.a_whole_document_is_named", "A whole document is named by its fingerprint and the fingerprints of its parts, in order, and at least one part. Nothing was kept."));
+  try {
+    if (await bucket.head(key(digest))) return { ok: true, already: true };
+  } catch {
+  }
+  let upload = null;
+  const stop = async () => {
+    try {
+      if (upload) await upload.abort();
+    } catch {
+    }
+  };
+  try {
+    upload = await bucket.createMultipartUpload(key(digest));
+    const sha = createSha256(), done = [];
+    let size2 = 0;
+    for (let i = 0; i < partDigests.length; i++) {
+      const o = await bucket.get(key(partDigests[i]));
+      if (!o) {
+        await stop();
+        return rowRefusal("EVIDENCE_PART_MISSING", localize("record-core.index.a_part_of_the_document", "Part {n} of {parts} of the document was not held. Nothing was kept.", { n: String(i + 1), parts: String(partDigests.length) }), { part: i + 1 });
+      }
+      let bytes = new Uint8Array(await o.arrayBuffer());
+      sha.update(bytes);
+      size2 += bytes.length;
+      done.push(await upload.uploadPart(i + 1, bytes));
+      bytes = null;
+    }
+    if (sha.hex() !== digest) {
+      await stop();
+      return rowRefusal("EVIDENCE_DIGEST_MISMATCH", localize("record-core.index.the_parts_do_not_hash", "The parts, read in order, do not hash to the document's fingerprint. Nothing was kept."));
+    }
+    await upload.complete(done);
+    return { ok: true, size: size2 };
+  } catch (e) {
+    await stop();
+    return rowRefusal("EVIDENCE_STORE_REFUSED", localize("record-core.index.the_store_would_not_take", "The store would not take the document whole ({why}). Nothing was kept.", { why: String(e && e.message || e).slice(0, 160) }));
+  }
+}
 var PURGE_REMOVED = Object.freeze([
   "bundles",
   "files",
@@ -48575,6 +48929,8 @@ var oakland_alameda_default = {
       },
       basis: "2026-10-05 time-law"
     },
+    /* R95 (T51, C64): read live 2026-10-21 on the official text, the United States Code (2024 Edition) as govinfo.gov prints
+       it, never from memory (`test/fixtures/foia-text.mjs`); the 20-day determination and the appeal are clause (A)(i)'s and (ii)'s. */
     {
       level: "federal",
       name: "Freedom of Information Act",
@@ -48585,7 +48941,7 @@ var oakland_alameda_default = {
         { stage: "extension_notice", label: "written notice of unusual circumstances", citation: "5 U.S.C. \xA7 552(a)(6)(B)(i)" },
         { stage: "production", label: "records made promptly available", citation: "5 U.S.C. \xA7 552(a)(3)(A)" },
         { stage: "denial", label: "determination denying the request", citation: "5 U.S.C. \xA7 552(a)(6)(A)(i)" },
-        { stage: "appeal", label: "appeal of an adverse determination", citation: "5 U.S.C. \xA7 552(a)(6)(A)(i), (ii)" },
+        { stage: "appeal", label: "appeal of an adverse determination", citation: "5 U.S.C. \xA7 552(a)(6)(A)(i)" },
         { stage: "appeal_decision", label: "determination on the appeal", citation: "5 U.S.C. \xA7 552(a)(6)(A)(ii)" },
         { stage: "court_filing", label: "complaint in the district court", citation: "5 U.S.C. \xA7 552(a)(4)(B)" }
       ],
@@ -48593,9 +48949,9 @@ var oakland_alameda_default = {
         text: "any person; an element of the intelligence community does not make records available to a foreign government entity or its representative",
         citation: "5 U.S.C. \xA7 552(a)(3)(A), (E)",
         status: "researched",
-        basis: "2026-10-11 actions-law"
+        basis: "2026-10-21 foia-text"
       },
-      basis: "2026-10-05 time-law"
+      basis: "2026-10-21 foia-text"
     }
   ],
   standard_sources: [
@@ -54489,8 +54845,9 @@ var ProjectRoster = class _ProjectRoster {
    *  which is an empty list and never a refusal: an empty list is true of what that viewer sees.
    *
    *  `stage` is the project document's recorded `current_state` (record-core R37) as recorded, null when none is: not
-   *  `project-stage`'s derived stage, a later module this one cannot use. `name` is its title (record-core R34). No
-   *  question count: Home takes it from basis-versions' read. `limit` and `truncated` are R9's rule. Writes nothing.
+   *  `project-stage`'s derived stage, a later module this one cannot use. `name` is its title (record-core R34). The
+   *  question count is R42's (it was Home's, from basis-versions' read, one per project). `limit` and `truncated` are
+   *  R9's rule. Writes nothing.
    *
    *  R27 (T47; DEC-201 `projects`): each project's `owner`, the member who opened it (its first author, as the record
    *  states), `{member, handle}`, the founder's as R29 names her, or null when that opener is no
@@ -54501,10 +54858,14 @@ var ProjectRoster = class _ProjectRoster {
    *  R38 (T51; N1184, DEC-340): each row's `mine`, `{in, owner}` (the viewer's own stamp only: `in` joined to it, `owner`
    *  holding its owner flag, membership R54, R65) and `scope` (R23's, `none`, `own` or `counsel_matter`).
    *
+   *  R42 (fix round 3; C14): each row's `question_count` (`#questionCounts`) and `shared_drafts` `{count, newest}` from
+   *  the `sharedDraftsOf` reader the caller hands in (`null` on every row when none is), both null on a row seen only
+   *  at an administrator's EXISTENCE (R39).
+   *
    *  R28 (T47; N1025; DEC-214 (3)): each project's `members`, eight weeks' `activity` and `lastChange`, by the viewer's
    *  sight (`#projectFacts`). */
   projectList(asked3 = {}) {
-    const { viewer = null, limit = null, after = null } = asked3 && typeof asked3 === "object" ? asked3 : {};
+    const { viewer = null, limit = null, after = null, sharedDraftsOf = null } = asked3 && typeof asked3 === "object" ? asked3 : {};
     const gate = viewerPredicate(viewer);
     const cursor = typeof after === "string" && after !== "" ? after : null;
     const cap = _ProjectRoster.#cap(limit, _ProjectRoster.PROJECT_LIST_LIMIT);
@@ -54533,6 +54894,8 @@ var ProjectRoster = class _ProjectRoster {
     const open = new Set(rescue.map((r) => r.id));
     const page = both.filter((r) => !open.has(r.id));
     const { members, activity, lastChange } = this.#projectFacts(page.map((r) => r.id), gate);
+    const questions = this.#questionCounts(page.map((r) => r.id), gate);
+    const shared = this.#sharedDrafts(sharedDraftsOf, page.map((r) => r.id), viewer);
     const me = viewer === ROOT_ADMIN2 ? ROOT_ADMIN2 : gate.member;
     const own5 = new Map(me && page.length ? this.#rows(
       `SELECT project_id, state, owner FROM project_participants WHERE member_id=? AND project_id IN (${page.map(() => "?").join(",")})`,
@@ -54554,7 +54917,9 @@ var ProjectRoster = class _ProjectRoster {
       members: [],
       activity: Array(_ProjectRoster.ACTIVITY_WEEKS).fill(0),
       lastChange: null,
-      rescue_open: true
+      rescue_open: true,
+      question_count: null,
+      shared_drafts: null
     } : {
       id: r.id,
       participation: own5.get(r.id)?.state ?? null,
@@ -54566,7 +54931,9 @@ var ProjectRoster = class _ProjectRoster {
       members: members.get(r.id) ?? [],
       activity: activity.get(r.id) ?? Array(_ProjectRoster.ACTIVITY_WEEKS).fill(0),
       lastChange: lastChange.get(r.id) ?? null,
-      ...admin ? { rescue_open: false } : {}
+      ...admin ? { rescue_open: false } : {},
+      question_count: questions.get(r.id) ?? 0,
+      shared_drafts: shared === null ? null : shared.get(r.id) ?? { count: 0, newest: null }
     });
     return {
       ok: true,
@@ -54601,6 +54968,66 @@ var ProjectRoster = class _ProjectRoster {
     }
     return out;
   }
+  /** R42 (fix round 3; C14, P2.2): THE QUESTION COUNT of each of `ids` (already those the viewer sees at FULL), a Map project
+   *  -> count, in two statements however many projects there are: the inquiries the project draws on, by basis-versions
+   *  R41's own test (its document holds a `cites` reference to the inquiry not marked `severed`), restated here over
+   *  record-core's read contract (R37: `files.content` of `bundle.md`, `bundles.object_type`), since that module is a
+   *  later one. A target counts when the record holds it as an inquiry and the viewer's sight (`gate`, membership R43, the
+   *  rule R50 applies) admits it; distinct targets once. A store without the table, an unreadable document or a failing
+   *  statement reads as none. Writes nothing; never throws. */
+  #questionCounts(ids, gate) {
+    const counts = /* @__PURE__ */ new Map();
+    if (!ids.length) return counts;
+    try {
+      const cited = /* @__PURE__ */ new Map();
+      for (const d of this.#rows(`SELECT bundle_id AS project, content FROM files WHERE path='bundle.md' AND bundle_id IN (${ids.map(() => "?").join(",")})`, ...ids)) {
+        let fm = {};
+        try {
+          fm = typeof d.content === "string" ? parseFrontmatter(d.content).data || {} : {};
+        } catch {
+          fm = {};
+        }
+        const live = [...new Set((Array.isArray(fm.references) ? fm.references : []).filter((x) => x && typeof x === "object" && x.rel === "cites" && x.status !== "severed").map((x) => String(x.target ?? "").trim()).filter(Boolean))];
+        if (live.length) cited.set(d.project, live);
+      }
+      const targets = [...new Set([...cited.values()].flat())];
+      if (!targets.length) return counts;
+      const seen = new Set(this.#rows(
+        `SELECT b.bundle_id AS bundle_id FROM bundles b WHERE b.bundle_id IN (SELECT value FROM json_each(?))
+            AND b.object_type IN (SELECT value FROM json_each(?)) AND (${gate.sql})`,
+        JSON.stringify(targets),
+        _ProjectRoster.INQUIRY_TYPES,
+        ...gate.args
+      ).map((r) => r.bundle_id));
+      for (const [project, live] of cited) counts.set(project, live.filter((t) => seen.has(t)).length);
+    } catch {
+      counts.clear();
+    }
+    return counts;
+  }
+  /** R42: THE SHARED DRAFTS of each of `ids`, a Map project -> `{count, newest}`, from `reader`, the one the caller hands
+   *  in (`review` R43's `sharedDraftsByProject({projectIds, viewer})`, wired by the door, control-plane R118), asked once
+   *  for the whole page. `null` (not a Map) when no reader was handed in or it failed, so every row answers `null`. An
+   *  entry the reader leaves out, or cannot be read as `{count, newest}`, is `{count: 0, newest: null}`. Never throws. */
+  #sharedDrafts(reader, ids, viewer) {
+    if (typeof reader !== "function") return null;
+    const out = /* @__PURE__ */ new Map();
+    if (!ids.length) return out;
+    let got = null;
+    try {
+      got = reader({ projectIds: ids, viewer });
+    } catch {
+      return null;
+    }
+    if (!got || typeof got !== "object") return null;
+    for (const id of ids) {
+      const e = Object.hasOwn(got, id) ? got[id] : null;
+      out.set(id, e && Number.isInteger(e.count) && e.count > 0 ? { count: e.count, newest: typeof e.newest === "string" ? e.newest : null } : { count: 0, newest: null });
+    }
+    return out;
+  }
+  /* Every stored `object_type` spelling of an inquiry, the declared one and its legacy aliases (basis-versions' own). */
+  static INQUIRY_TYPES = JSON.stringify(["inquiry", ...Object.keys(LEGACY_TYPE_ALIASES).filter((t) => LEGACY_TYPE_ALIASES[t] === "inquiry")]);
   /** R35 (T51; N1209): THE VIEWER'S OWN INVITATIONS, each project where her participation is `invited`, `{projectId, name,
    *  invited_by, invited_at}` in project id order; `invited_by` is `{member, handle}` (the founder as R29 names her) or
    *  null when none was recorded or it names no member. Only her own rows; a viewer naming no active member gets an empty
@@ -57173,6 +57600,14 @@ var CAPTURE_CHECKS = Object.freeze({
     check: "C-118.10",
     where: inIndex("uploadCapture", "is-upload-stated"),
     translation: rowWord3("UPLOAD_NO_STATEMENT")
+  }),
+  /* R101 (T51 fix round 3; C9; K4370): the next free row of C-118, awaiting promotion's stamp. The words are the design's
+     `refusal.CAPTURE_NOT_HELD`, read through `localize` as a stand-in until the design adds the key to capture's `reads`
+     (words-reads.json is its file): the list wins, so the sentence is the design's. */
+  CAPTURE_NOT_HELD: Object.freeze({
+    check: "C-118.11",
+    where: inIndex("fileSeenIn", "is-capture-held"),
+    translation: localize("refusal.CAPTURE_NOT_HELD", "Your team's Civicsmith holds no captured document like that, or you cannot see it. Nothing was written.")
   })
 });
 
@@ -57450,13 +57885,21 @@ var ARCHIVE_CHECKS = Object.freeze({
     translation: word("refusal.BAD_FOR")
   })
 });
+var CAPTURE_KEEP_CHECKS = Object.freeze({
+  CAPTURE_NOT_KEPT: Object.freeze({
+    check: "C-154.1",
+    where: at6("is-capture-kept"),
+    translation: localize("acquisition.checks.capture_not_kept", "the document arrived in several parts, but Civicsmith could not keep it whole, so nothing was filed; capture it again")
+  })
+});
 var ACQUISITION_CHECKS = Object.freeze({
   ...CAPTURE_REQUEST_ARM_CHECKS,
   ...RENDER_CAPTURE_CHECKS,
   ...DRIVE_CAPTURE_CHECKS,
   ...INSTALLATION_CHECKS,
   ...SWEEP_SCOPE_CHECKS,
-  ...ARCHIVE_CHECKS
+  ...ARCHIVE_CHECKS,
+  ...CAPTURE_KEEP_CHECKS
 });
 
 // ../bio-plane/src/drive.mjs
@@ -58899,7 +59342,7 @@ function dropElements(markup, isDropped) {
   const open = openTag();
   let out = "", from = 0;
   for (let m = open.exec(markup); m; m = open.exec(markup)) {
-    if (!isDropped(m[1], m[2])) continue;
+    if (!isDropped(m[1], m[2], markup, open.lastIndex)) continue;
     const name = m[1].toLowerCase(), after = m.index + m[0].length;
     let end2 = after;
     if (!VOID_TAG.has(name) && !m[2].endsWith("/")) end2 = endOfElement(markup, name, after)?.end ?? after;
@@ -58919,6 +59362,88 @@ function contentsOf(markup, name) {
   }
   return parts.length ? parts.join("<hr>") : null;
 }
+var NEVER_BY_ATTRIBUTE = /* @__PURE__ */ new Set(["html", "head", "body", "main", "article"]);
+var wordsOfToken = (t) => t.toLowerCase().split(/[-_]+/).filter(Boolean);
+var classTokens = (attrs) => (attrOf(attrs, "class") ?? "").split(/\s+/).filter(Boolean).concat(attrOf(attrs, "id") ?? []);
+var isDialogToken = (t) => /^(?:modal|modal-dialog|dialog)$/i.test(t);
+var isBannerToken = (t) => /(?:usa|gov|government|govt|official)[-_]?banner/i.test(t) || wordsOfToken(t).some((w) => w === "cookie" || w === "cookies" || w === "consent" || w === "gdpr" || w === "ccpa");
+var isShareToken = (t) => wordsOfToken(t).some((w) => w === "share" || w === "shares" || w === "sharing" || w === "sharer") || /^(?:addthis|sharethis|a2a)/i.test(t) || /^social(?:[-_](?:share|sharing|links|media|icons|buttons|bar|nav|follow|networks|menu))?$/i.test(t);
+var DIALOG_ROLE = /* @__PURE__ */ new Set(["dialog", "alertdialog"]);
+var isFurnitureByAttribute = (name, attrs) => {
+  const n = name.toLowerCase();
+  if (NEVER_BY_ATTRIBUTE.has(n)) return false;
+  if (n === "dialog" || DIALOG_ROLE.has(roleOf(attrs)) || (attrOf(attrs, "aria-modal") ?? "").trim().toLowerCase() === "true") return true;
+  return classTokens(attrs).some((t) => isDialogToken(t) || isBannerToken(t) || isShareToken(t));
+};
+var BLOCK_CANDIDATE = /* @__PURE__ */ new Set([
+  "div",
+  "section",
+  "ul",
+  "ol",
+  "li",
+  "p",
+  "form",
+  "fieldset",
+  "menu",
+  "dl",
+  "dd",
+  "dt",
+  "span",
+  "figure"
+]);
+var NOTICE_CANDIDATE = /* @__PURE__ */ new Set([...BLOCK_CANDIDATE, "h1", "h2", "h3", "h4", "h5", "h6", "figcaption", "blockquote"]);
+var CONTROL_TAG = /* @__PURE__ */ new Set(["button", "select", "textarea", "option", "optgroup", "label", "datalist", "output"]);
+var CARD_PART = /* @__PURE__ */ new Set(["p", "h1", "h2", "h3", "h4", "h5", "h6", "div", "ul", "ol", "li", "section", "article", "figure", "blockquote", "table"]);
+var NOTICE_TEXT_MAX = 400;
+var NOTICE_TEXT = [
+  /^skip (?:to|ahead|navigation|the|past)\b/i,
+  /^jump to\b/i,
+  /^exiting\s+[\w.-]+\.[a-z]{2,}\b/i,
+  /^you (?:are|'re) (?:now )?(?:leaving|exiting)\b/i,
+  /^you (?:are|'re) about to (?:leave|exit)\b/i,
+  /^leaving (?:this|the|our)\b.*\b(?:site|website)\b/i
+];
+var tagWalk = () => new RegExp(`<(/?)([A-Za-z][A-Za-z0-9:-]*)(?=[\\s>/])(${TAG_ATTRS})>`, "g");
+function probeBlock(markup, name, after) {
+  const walk = tagWalk(), own5 = name.toLowerCase();
+  walk.lastIndex = after;
+  let depth = 1, at8 = after, inLink = 0, inControl = 0, inCard = 0, loose = false, seen = false, said2 = "";
+  for (let t = walk.exec(markup); t; t = walk.exec(markup)) {
+    const seg = decodeReferences(markup.slice(at8, t.index).replace(/\s+/g, " "));
+    at8 = walk.lastIndex;
+    if (glyphCount(seg) > 0) {
+      said2 += seg;
+      if (!inLink && !inControl || inCard) loose = true;
+      if (loose && said2.length > NOTICE_TEXT_MAX) return null;
+    }
+    const tag2 = t[2].toLowerCase(), closing = t[1] === "/", selfClosed = t[3].endsWith("/");
+    if (tag2 === own5) {
+      if (closing) depth--;
+      else if (!selfClosed) depth++;
+      if (depth === 0) return { loose, seen, text: said2.replace(/\s+/g, " ").trim(), long: said2.length > NOTICE_TEXT_MAX };
+    }
+    if (inLink && CARD_PART.has(tag2)) inCard = Math.max(0, inCard + (closing ? -1 : selfClosed ? 0 : 1));
+    if (tag2 === "a") {
+      inLink = Math.max(0, inLink + (closing ? -1 : selfClosed ? 0 : 1));
+      if (!closing) seen = true;
+    } else if (tag2 === "input") {
+      if (!closing) seen = true;
+    } else if (CONTROL_TAG.has(tag2)) {
+      inControl = Math.max(0, inControl + (closing ? -1 : selfClosed ? 0 : 1));
+      if (!closing && tag2 !== "label") seen = true;
+    }
+  }
+  return null;
+}
+var isFurnitureBlock = (name, attrs, markup, after) => {
+  const n = name.toLowerCase();
+  if (!NOTICE_CANDIDATE.has(n) || attrs.endsWith("/")) return false;
+  const p = probeBlock(markup, name, after);
+  if (!p) return false;
+  if (!p.loose && p.seen && BLOCK_CANDIDATE.has(n)) return true;
+  return !p.long && p.text !== "" && NOTICE_TEXT.some((re) => re.test(p.text));
+};
+var moreFurniture = (name, attrs, markup, after) => isFurnitureByAttribute(name, attrs) || isFurnitureBlock(name, attrs, markup, after);
 var SKIP_LINK = new RegExp(`<a\\b(${TAG_ATTRS})>([\\s\\S]*?)</a\\s*>`, "gi");
 var dropSkipLinks = (markup) => markup.replace(SKIP_LINK, (whole, attrs, inner) => {
   const href = attrOf(attrs, "href");
@@ -58928,7 +59453,10 @@ var dropSkipLinks = (markup) => markup.replace(SKIP_LINK, (whole, attrs, inner) 
 var TEMPLATE_TOKEN = /\{[0-9]+\}|\{[A-Za-z_][A-Za-z0-9_]*\}|##LOC\[[^\]]*\]##/g;
 function visibleTextOfHtml(html) {
   const live = dropElements(html.replace(/<!--[\s\S]*?(?:-->|$)/g, " ").replace(/<(script|style|template|head)\b(?:"[^"]*"|'[^']*'|[^'">])*>[\s\S]*?(?:<\/\1\s*>|$)/gi, " ").replace(/<!\[CDATA\[[\s\S]*?(?:\]\]>|$)/g, " ").replace(/<![^>]*>|<\?[^>]*>/g, " "), isNavigation);
-  const region = contentsOf(live, "main") ?? contentsOf(live, "article") ?? dropElements(live, isFurniture);
+  const region = dropElements(
+    contentsOf(live, "main") ?? contentsOf(live, "article") ?? dropElements(live, isFurniture),
+    moreFurniture
+  );
   const dropped = dropSkipLinks(region).replace(/\s+/g, " ");
   const bare = dropped.replace(new RegExp(`</?(?:${BLOCK_TAG})\\b(?:"[^"]*"|'[^']*'|[^'">])*>`, "gi"), "\n\n").replace(/<br\b(?:"[^"]*"|'[^']*'|[^'">])*>/gi, "\n").replace(/<\/?[A-Za-z][^\s>/]*(?:"[^"]*"|'[^']*'|[^'">])*>/g, "");
   return decodeReferences(bare).replace(TEMPLATE_TOKEN, " ");
@@ -59299,7 +59827,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     }
   } else if (wireable) {
     let i2text = null, wiredTier = null, pageCount = null, pageBoxes = null, pdfPaints = null, wired = null;
-    let chain = null, ocrNote = null, tier2note = null, tier2PerPage = null, t3Wanting = false, aiRead = null;
+    let chain = null, ocrNote = null, tier2note = null, tier2PerPage = null, t3Wanting = false, aiRead = null, structMeta = null;
     try {
       if (typeof entry.text === "function") {
         const parts = typeof entry.parts === "function" ? await entry.parts(bytes) : bytes;
@@ -59313,6 +59841,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         if (st && st.ok) {
           i2text = st.text || null;
           wiredTier = 1;
+          structMeta = st.metadata || null;
           if (Number.isInteger(st.pages) && st.pages > 0) pageCount = st.pages;
           pageBoxes = pageBoxesFrom(st.pageBoxes);
           pdfPaints = {
@@ -59395,7 +59924,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       }
       reading = wired ? readingFromWire({ wired, docType, chain, wiredTier, fmt, retrieved, tier2note, ocrNote, tier3Candidate: t3Wanting }) : { ...failed(doc, docType, [tier2note, ocrNote, localize("reading-pipeline.index.entry_no_text", "the {fmt} entry produced no text from these bytes", { fmt: String(fmt) })].filter(Boolean).join(" \u2014 ")) };
       if (textUnits) Object.assign(reading, textWordsFor(i2text));
-      if (wired && wired.determined) reading.title = titleOfMetadata(i2text && i2text.metadata);
+      if (wired && wired.determined) reading.title = titleOfMetadata(i2text && i2text.metadata) ?? titleOfMetadata(structMeta);
       if (aiRead) reading.ai_transcription = aiRead;
       reading.page_count = Number.isInteger(pageCount) && pageCount > 0 ? pageCount : null;
       reading.page_boxes = pageBoxes;
@@ -59995,6 +60524,50 @@ var Extraction = class _Extraction {
   }
   #composedHere(reading) {
     return !!this.#one(`SELECT 1 AS x FROM composed_readings WHERE reading_sha256=?`, sha256HexSync(JSON.stringify(reading)));
+  }
+  /* ---- reading a held home (R80) ---- */
+  /** R80 (T51 fix round 3, C5; K4356, K4358; amends R20, R27; provenance R4; control-plane R117): an in-process act the
+   *  door calls, not an op. A home the register names (`provenance.homeOf`) that has no `readings` row is read once the
+   *  evidence store holds the object under the digest, whole: the stored document is read as R1 and `read` do, and the
+   *  reading written for that bundle by R19's writer, in one transaction with the history and the index, as a composed
+   *  reading of this instance. Otherwise nothing is written and the answer is `{ok: true, read: false, why}`, `why` a
+   *  stable code: `NO_HOME` (the register names none, or the digest is no digest), `READING_HELD` (a reading, a failed
+   *  one too, is already held) or `NO_WHOLE_OBJECT` (the store holds no object under the digest). It writes no bundle, no
+   *  register row and no promotion, and replaces no reading: a reading that lands while the bytes are read stands (the
+   *  row is looked at again inside the write). A reading that finds nothing is a failed reading, recorded (R45). */
+  async readHeld({ sha = null, storeName = "bio", env = null } = {}) {
+    const digest = typeof sha === "string" ? sha.trim().toLowerCase() : "";
+    const home = /^[0-9a-f]{64}$/.test(digest) && this.#provenance && typeof this.#provenance.homeOf === "function" ? this.#provenance.homeOf(digest) : null;
+    const left2 = (why) => ({ ok: true, read: false, why });
+    if (!home || typeof home.bundleId !== "string" || !home.bundleId) return left2("NO_HOME");
+    if (this.#one(`SELECT 1 AS x FROM readings WHERE capture_sha=?`, digest)) return left2("READING_HELD");
+    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    let whole = null;
+    try {
+      whole = ev ? typeof ev.head === "function" ? await ev.head(digest) : await ev.get(digest) : null;
+    } catch {
+      whole = null;
+    }
+    if (!whole) return left2("NO_WHOLE_OBJECT");
+    const document = this.#storedDocument(home.bundleId, digest) || { capture: { sha256: digest } };
+    const out = await this.read(document, { storeName, env });
+    const prof = document.profile && typeof document.profile === "object" ? document.profile : null;
+    const wrote = this.core.transact(() => {
+      if (this.#one(`SELECT 1 AS x FROM readings WHERE capture_sha=?`, digest)) return null;
+      return this.writeReading({
+        bundleId: home.bundleId,
+        captureSha: digest,
+        reading: out.reading,
+        textUnits: Array.isArray(out.text_units) ? out.text_units : null,
+        textUnitsOverBound: out.text_units_over_bound,
+        textUnitsSkipped: out.text_units_skipped,
+        profileFormat: prof && prof.format && typeof prof.format.format === "string" ? prof.format.format : null,
+        composed: true
+      });
+    });
+    if (!wrote) return left2("READING_HELD");
+    await wrote.afterRead;
+    return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true };
   }
   /* ---- writing (R19–R24) ---- */
   /** R20: promotion's projection. For each document in `data/provenance.json` with a capture digest and a reading

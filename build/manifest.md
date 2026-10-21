@@ -71,7 +71,7 @@ Bob's design of the investigation engine and the project as an investigation (K1
 
 ## Parallel work: the AI design lane (Bob, 2026-10-17; K3717)
 
-How the assistant is architected for several AIs chosen by team, project and member, none of them Anthropic's, is explored in its own session, **AI-DESIGN** (#1, `session_01GLY6Z5UAa6urPzovQPKCkR`, sonnet, started by BOB #204, K3718), writing only `build/plan/lane-ai-design/` (its `CHARTER.md` says how). It decides nothing: its options reach Bob through BOB, and his decisions are K rulings that feed N1220. BOB reads its `HANDOFF.md` (entries `A<n>`) at takeover and at every backstop check. The assistant-hosting study (ASSISTANT-HOSTING, K3538) is ended (K3718); its folder stays as input.
+How the assistant is architected for several AIs chosen by team, project and member, none of them Anthropic's, is explored in its own session, **AI-DESIGN** (#1, `session_01GLY6Z5UAa6urPzovQPKCkR`, sonnet, started by BOB #204, K3718), writing only `build/plan/lane-ai-design/` on its own branch `lane/ai-design` (its `CHARTER.md` says how; BOB reads that branch's `HANDOFF.md`, K4421). It decides nothing: its options reach Bob through BOB, and his decisions are K rulings that feed N1220. BOB reads its `HANDOFF.md` (entries `A<n>`) at takeover and at every backstop check. The assistant-hosting study (ASSISTANT-HOSTING, K3538) is ended (K3718); its folder stays as input.
 
 ## Parallel work: the journeys walk (Bob, 2026-10-16; K3539)
 
