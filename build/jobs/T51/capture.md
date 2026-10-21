@@ -1,6 +1,6 @@
 # capture (T51)
 
-**Status** · session_01T3TLLsdGuDoX11D81FT2G3 · depth 2 · COMPLETE · handled B9
+**Status** · session_0168CdB2iLQAE8ydXTkw6gic · depth 2 · COMPLETE · handled B10
 
 ## J1 · COMPLETE
 
@@ -249,3 +249,29 @@ Size (session_01CbTTqezcoRxwxDi7p8kyVT): test runs 11, module lines 4066
 - format 0; architecture capture 0; coverage 52 of 52; words capture 0 failures; ownership 6 files, 0 failures.
 
 Size (session_01T3TLLsdGuDoX11D81FT2G3): test runs 8, module lines 4079
+
+## J10 · COMPLETE
+
+**COMPLETE** for B10 (fix round 3, wave 1: C9, C14, C16) · commit on `job/T51/capture`.
+
+**Causes met**
+1. **C9, my part (R77 amended, R100)**: `recordSeenIn({captureSha, project, by, at})` and the table `seen_in(capture_sha, project, by, at)`, idempotent on (sha, project) (first instant and member kept), `{recorded: false}` for a bad digest, a blank or over-200 project, or an absent/blank/machine `by`; declared to record-core's purge with capture's other tables (`CAPTURE_PURGED_TABLES`, R87). `heldCaptures({project})` also lists a document seen there: the row carries `also_here: {home}` (the home project as `project` names it); a document whose home is the project carries none; the existing sight predicate runs over the home bundle, so a viewer who cannot see the home is shown nothing (an unseen document reads as an unknown one). The picker row carries `also_here` when it applies. A service, not an op: nothing to declare.
+2. **C14, my part (R77)**: the picker row answers `whole` from the size the register recorded (true up to `MULTIPART_KEEP_MAX`, `acquisition` R10; false past it, held in parts alone; null with no capture or no recorded size) and asks the evidence store nothing for any row. The full list and the one-document read ask the store as before. `fields` was already declared.
+3. **C16, my part (R77)**: `heldCaptures({bundle_id})` (`op=heldcaptures&bundle_id=`), accepted in the declaration, answers that document's row only, the store read for that row alone; an unknown id and one the viewer may not see answer alike (no row, no holder named); blank reads as absent; the other filters still apply.
+
+**Decisions of mine, for BOB to record** (none needs Bob)
+- Picker `whole` from size alone cannot tell a capture kept before C5 in parts (above one part, up to 32 MiB) from one kept whole since: it reads true for such an old capture whose store holds only parts. The full row and the single-document read (what the vouch and OCR screens act on) still ask the store. If BOB wants the picker exact for old captures, the register would need to record the keeping (provenance's, a later entry).
+- `also_here` on a picker row is present only when it applies, so the picker's field set is unchanged for every list that names no seen-in project.
+
+**Proposed requirement text**: none beyond R77 and R100 as written.
+
+**Deferred**: none. **Found in other modules**: none.
+
+**Tests and checks**
+- New `fix3b-t51.test.mjs` (5 tests, seen failing before the change: R100 x2 with the controls, R77 C16 with its unknown/unseen control, R77 C14 with its full-row control, the op route). `fix2-t51.test.mjs`'s `whole` test now holds the full row's store read (the picker's moved to `fix3b`).
+- capture + cap13 + d57: 235 tests, 235 pass, 0 fail.
+- Users: op-declarations 240, op-grades 145, affordances 269, capture-requests 129, ratification 251, instance-setup 217, screens-intake 204, screens-inquiry 447, screens-daily 252, interface-shell 269, control-plane 340: all pass, 0 fail. (`impact.mjs` names 98 modules because `DECLARED_OPS` is a shared table; I ran the readers of `heldcaptures` and of the declarations, two suites at a time.)
+- `checks/run.mjs`: architecture 0, words 0 failures; capture is in no coverage failure (the 15 are other modules'); the one format failure is `build/rulings.md`:4346 (BOB's). `checks/ownership.mjs`: 5 files changed by capture, 0 failures.
+- Not yet on the tranche: op-declarations/screens must pass `bundle_id` on `op=heldcaptures` (declaration accepts it already).
+
+Size (session_0168CdB2iLQAE8ydXTkw6gic): test runs 14, module lines 4140
