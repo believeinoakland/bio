@@ -77,3 +77,10 @@ UNTIL case-grammar R12 (`title`) merges: its writer/reader drops the field, so t
 Ran: case-disclosures 105 pass, 0 fail. Users: case-authoring 222/0, case-account 48/0, case-inputs 71/0, review 86/0, case-check 34/0 (impact.mjs lists 47 modules through the import closure; these are the ones that call the service). `checks/format` 0 failures; `architecture case-disclosures` 0; `coverage case-disclosures` 33 of 33; `words case-disclosures` 0 failures; `ownership case-disclosures origin/tranche/T51` 0 failures (7 files, all mine). setup-words `--check`: stale-rows note names citation's row, not mine.
 Found elsewhere: none.
 Size (session_01NhpmPg6Tvjeaftfvxn46LM): test runs 9, module lines 2427
+
+## J7 · COMPLETE
+
+COMPLETE: CHANGE B6 done (case-grammar R12 merged: tranche/T51 merged into my branch).
+Applied: the three row round-trip tests (R6/R7 materials, R7 photo, R7 member document) now compare `materialsOf(fm).materials` to the written rows whole, `title` included; the tolerant helper `sameRowsButTitle` is removed. New direct test, in the R7 title test: `materialBlockLines` writes both titles into the case document's lines and `materialsOf` reads the rows back equal, `title` included (null titles too). Red first: the same test run with the pre-merge `case-grammar/materials.mjs` restored fails (file fails, 0 pass); green with the merged one. The restore was undone; no case-grammar file is changed.
+Ran: case-disclosures 105 pass, 0 fail. Users: case-authoring 225/0, case-account 48/0, case-inputs 71/0, review 86/0, case-check 34/0. format, architecture, coverage 33 of 33, words, ownership (7 files): 0 failures.
+Size (session_01NhpmPg6Tvjeaftfvxn46LM): test runs 15, module lines 2427
