@@ -103,5 +103,8 @@ export const EXTRA = Object.freeze({
     "screen.actionnew.to.named",
     "screen.people.add.kind.organization",
     "screen.action.remindon",
+    "screen.action.remindon.needed",
+    "screen.reminder.on",
+    "act.reminderset.label.action",
   ],
 });
