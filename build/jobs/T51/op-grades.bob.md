@@ -175,3 +175,9 @@ CHANGE (K4258), with B27 and B28: OP-DECLARATIONS #32 has merged (`strengthbarse
 ## B30 · CHANGE
 
 CHANGE (K4259), with B27–B29: `versionnotice` is a read (op-declarations `mutating: false`; your row at `index.mjs:1012` says "read:") but `marks.mjs:222` marks it `Reasoned/default`, so the shell draws "Asks for a reason" on an act that asks nothing. Mark it as a read's mark (as `sweeps`', K4252), the source a ruling (K4259); state the exception in R46 if R46's "MARKS equals the kit's WEIGHT" would otherwise fail. Line for BOB.
+
+## B31 · CHANGE
+
+CHANGE (K4267): your container's copy of `job/T51/op-grades` was cloned stale (behind origin, with one unpushed "starts" line), so `mail start` could not push. Do not reset and do not force anything. Take this route instead, which discards nothing (the stale commit stays on a local branch of its own):
+  cd /home/user/bio && git fetch origin job/T51/op-grades tranche/T51 && git branch -m job/T51/op-grades stale/op-grades-local && git checkout -b job/T51/op-grades origin/job/T51/op-grades
+Then re-run `mail start` (your session and depth 2), `mail inbox`, and apply every CHANGE past your record's cursor as they say. If a step of this route is refused too, post BLOCKED naming the refused command and wait.
