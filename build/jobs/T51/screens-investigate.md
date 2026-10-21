@@ -165,3 +165,15 @@ COMPLETE (re B14, K4259): the three entries applied; one is a removal BOB should
 - format 175 modules, 0 failures; architecture screens-investigate 33 files, 0 failures; coverage 59 of 59 live ids named, 0 failures; words screens-investigate 0 failures (7 unkeyed); ownership tranche/T51 vs job/T51/screens-investigate: 13 files, 0 failures.
 
 Size (session_01SEkZkEvrW6ukwiw4b8mKpD): test runs 9, module lines 3029
+
+## J13 · COMPLETE
+
+COMPLETE (re B15, K4267): tranche/T51 merged; R10's reference-with-card test is green. Commit pushed on job/T51/screens-investigate.
+
+Applied: the timeline's undated event reference (the `statement` of the fixture) now carries its facts, the event's status and the `screen.timeline.undated.apart` sentence the row already draws, so its card says something. The same test also found one on `money`: the moved-event reference ("the event") in a row's "when it moved" now carries the date the row states. No test exemption was added; both fixes are in the source. R10's text does not change.
+
+Tests/checks: module suite 178 tests, 178 pass, 0 fail. format 0; architecture screens-investigate 0; words 0; coverage 59 of 59; ownership 3 files, 0 failures.
+
+Deferred: none. Other modules: nothing new.
+
+Size (session_01SEkZkEvrW6ukwiw4b8mKpD): test runs 12, module lines 3029
