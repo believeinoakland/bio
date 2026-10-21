@@ -6,7 +6,7 @@
 import "./register.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { interfacePage, checkScreens, RE_POINTS, REF_SCREENS, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, interfaceScript, checkScreens, RE_POINTS, REF_SCREENS, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
 import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { RUNGS, RUNG_ABSENT, IRREVERSIBLE_WEIGHT } from "../../../src/op-grades/index.mjs";
@@ -40,7 +40,7 @@ test("R73 the registry is the design's: RE_POINTS holds only the named exception
   const screens = []; let guide = null;
   for (const m of mods) { const x = await import(`../../../src/${m}/index.mjs`); screens.push(...x.SCREENS); if (x.GUIDE) guide = x.GUIDE; }
   assert.equal(checkScreens(screens), true, "every act of the nine modules' screens is admitted");
-  assert.ok(interfacePage(screens, { guide }).length > 100000);
+  assert.ok(interfaceScript(screens, { guide }).length > 100000);
   const r = (id, ...ops) => ({ id, render: () => "", acts: ops.map((op) => ({ op })) });
   /* control: an op the registry lists on a screen is admitted whatever RE_POINTS holds; one neither lists throws, naming the screen */
   const reg = SCREEN_REGISTRY.find((s) => s.id === "queue");
@@ -501,7 +501,7 @@ test("R86 a first load settles quickly: the working frame is drawn before the fi
   p = await boot({ screens: ALL, run: false, plane: Object.fromEntries(Object.entries(answers).map(([op, v]) => [op, slow(op, v)])) });
   const base = Date.now();
   const FakeDate = class extends Date { static now() { return base + p.clock.at(); } };
-  new Function("window", "setTimeout", "clearTimeout", "Date", scriptOf(p.html))(p.win, p.clock.setTimeout, p.clock.clearTimeout, FakeDate);
+  new Function("window", "setTimeout", "clearTimeout", "Date", scriptOf(p.html, ALL))(p.win, p.clock.setTimeout, p.clock.clearTimeout, FakeDate);
   await settle();
   const frame = p.root().querySelector(".cs-frame");
   assert.ok(frame && frame.getAttribute("data-frame") === "working", "the working frame is drawn before the first answer");

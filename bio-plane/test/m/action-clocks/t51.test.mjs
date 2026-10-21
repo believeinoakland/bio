@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, CLK } from "./fixture.mjs";
 import * as clocks from "../../../src/action-clocks/index.mjs";
+import * as actions from "../../../src/actions/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 
 const M = V("alice");
@@ -114,4 +115,22 @@ test("R2 (C68): a request to a federal office lists the federal law's deadline f
   assert.equal(clocks.officeLevel(null, LEVELLED), null);
   // only the kind's own deadlines, with their citations as before
   assert.deepEqual(clocks.deadlinesFor(LEVELLED, "records_request", to({ role: "Records Officer", body: "Federal Agency" }))[0], { rule: "federal_answer", citation: "Fed. Code § 552(a)(6)(A)(i)" });
+});
+
+/* R26 (fix round 3, C53; K4370): `op=remindersfor` reads an action's reminders after a fresh read, through the op. */
+test("R26 op=remindersfor answers remindersFor's own answer: a reminder a member set, read through a fresh op map; controls: an invisible and an absent action answer as an absent one, the viewer is the stamp not the body", () => {
+  const w = world();
+  w.action(A, ["clock:", ...E("2026-12-01", "group")]);
+  assert.equal(w.c.reminderSet({ target: A, entry: 0, on: "2026-11-20", author: M, viewer: M }).ok, true);
+  const op = (qs, body = null) => clocks.actionClocksOps(w.c, new URL(`https://x/?${qs}`), body).remindersfor();
+  const r = op(`viewer=${M}&action=${A}`);
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.reminders.map((x) => [x.entry, x.on, x.set_by, x.state]), [[0, "2026-11-20", M, "waiting"]]);
+  assert.deepEqual(r, w.c.remindersFor({ action: A, viewer: M }), "the service's own answer");
+  assert.deepEqual(op(`viewer=${M}`, { action: A }), r, "the action from the body when not in the address");
+  assert.deepEqual(op("viewer=nobody&action=" + A), actions.noSuchAction(A), "an invisible action answers as an absent one");
+  assert.deepEqual(op(`viewer=${M}&action=${B}`), actions.noSuchAction(B), "an absent action");
+  assert.deepEqual(op("", { action: A, viewer: M }), actions.noSuchAction(A), "a viewer in the body is not the stamp");
+  assert.equal(JSON.stringify(clocks.DECLARED_OPS.remindersfor.fields), JSON.stringify({ accepts: ["action"], requires: ["action"] }));
+  assert.equal(clocks.DECLARED_OPS.remindersfor.mutating, false);
 });

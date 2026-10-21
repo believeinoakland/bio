@@ -10,6 +10,7 @@ import * as DECLARATIONS from "../op-declarations/index.mjs";
 import { OPS, NEEDS, SESSION_OPS } from "../op-declarations/index.mjs";
 import { RUNGS, RUNG_ABSENT, IRREVERSIBLE_WEIGHT, MARKS, phoneOf } from "../op-grades/index.mjs";
 import { SCREEN_REGISTRY } from "../wizard-scripts/index.mjs";
+import { sha256HexSync } from "../record-grammar/index.mjs";
 import { shellProgram } from "./browser.mjs";
 
 /* R32 (N999; K3052; replaces setup-page R31): the session record's key in the browser's `localStorage`, this module's:
@@ -17,7 +18,8 @@ import { shellProgram } from "./browser.mjs";
    (`own` or `shared`), `w` the handle signed in with. Every tab reads it; nothing else holds the token. */
 export const SESSION_STORE_KEY = "bio-session";
 
-/* R2 (setup-page R28's rule; answer-envelope R6): the literal each script element's nonce holds, filled per response. */
+/* R2 (setup-page R28's rule; answer-envelope R6): the literal each script element's nonce holds, filled per response. The interface
+   page no longer holds it (R1: no inline script, no nonce slot, fix round 3); other pages' slots are `answer-envelope`'s. */
 export const NONCE_SLOT = "__CSP_NONCE__";
 
 /* The phone width (the Terms): `civicsmith.css`' breakpoint, a viewport of 760 px or less. */
@@ -169,6 +171,9 @@ export const ADMIN_ACTS = Object.freeze(new Set([
   /* R101 (T51): a member's signing key added by an administrator (`credentials` R6), and the root of trust's seeding of the
      team (`instance-setup` R4) */
   "signeradd", "instancegroupseed",
+  /* fix round 3 (C64; `file-safety` R49, `entities` R64): an administrator starts a signature run; an administrator confirms an
+     office a member named */
+  "scanmirror", "officeconfirm",
 ]));
 
 /* R107 (T51 fix round; K4197 T-07): the acts that carry the Reasoned mark and no weight (`op-grades` `MARKS`, R64) and that the
@@ -212,6 +217,8 @@ export function checkScreens(screens) {
     /* R87: the shell asks a Reasoned act's reason, or sends the member's own words in the act's `reasonField`; a screen that
        names a `reasonField` that is no field's name supplies neither, so it is never served */
     for (const a of s.acts) if (a && a.reasonField !== undefined && !(typeof a.reasonField === "string" && a.reasonField)) throw new Error(`interface-shell: screen ${id}'s act ${String(a.op)} names a reasonField that is no field's name, so it would send without a reason`);
+    /* R113: an act's `rereads` is a list of read names or "all"; a read's `after` is a list of ops */
+    for (const a of s.acts) if (a && a.rereads != null && a.rereads !== "all" && !(Array.isArray(a.rereads) && a.rereads.every((n) => typeof n === "string"))) throw new Error(`interface-shell: screen ${id}'s act ${String(a.op)} names rereads that are neither a list of reads nor "all"`);
     /* R112: the codes an act names as its success are a list of codes */
     for (const a of s.acts) if (a && a.successCodes !== undefined && !(Array.isArray(a.successCodes) && a.successCodes.every((c) => typeof c === "string" && c))) throw new Error(`interface-shell: screen ${id}'s act ${String(a.op)} names successCodes that are not a list of codes`);
     if (s.words !== undefined && !Array.isArray(s.words)) throw new Error(`interface-shell: screen ${id}'s words is not a list`);
@@ -347,7 +354,7 @@ const STYLE = `html,body.cs{height:100%}body.cs{margin:0;height:100dvh;display:f
 :root:root .cs-main label:has(>input[type=checkbox]),:root:root .cs-main label:has(>input[type=radio]){display:flex;align-items:center;gap:8px;min-height:44px;box-sizing:border-box}
 .cs-main,.cs-main>*,.cs-section,.cs-section>*,.cs-sheet,.cs-row>*,.mk-card,.cs-field,.mk-acts>*{min-width:0;max-width:100%}
 .cs-main :is(p,li,dt,dd,td,th,h1,h2,h3,.rec,.mk-data,.meta,a.cs-ref,code){overflow-wrap:anywhere}
-.mk-cards{grid-template-columns:minmax(0,1fr)}.cs-row .meta,.mk-acts{flex-wrap:wrap}.tw{max-width:100%;overflow-x:auto}
+.mk-people{max-width:100%;flex-wrap:wrap}.mk-next li>span{min-width:0;overflow-wrap:anywhere}.mk-strip .mk-strip-sum{min-width:0;max-width:100%}.mk-cards{grid-template-columns:minmax(0,1fr)}.cs-row .meta,.mk-acts{flex-wrap:wrap}.tw{max-width:100%;overflow-x:auto}
 .cs-field :is(input,select,textarea){box-sizing:border-box;width:100%;max-width:100%;min-width:0}
 .cs-btn{max-width:100%;white-space:normal;text-align:left}
 .cs-path a,.cs-mast a,.cs-mast button,.cs-part>summary{display:inline-flex;align-items:center;box-sizing:border-box;min-height:44px}
@@ -411,23 +418,47 @@ export function checkClasses(screens, guide, program) {
 /* the page's own escaping of a served word */
 const escape = (t) => String(t).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+/* R1, R2 (fix round 3, C15; P2.4): the shell's script, composed from the shell's own functions and each screen's and the guide's; it depends
+   on those alone (the release version and the test-instance band are the page's), so it is the same for a release. Kept for the last
+   screens and guide handed in, so the page and its hash do not build it twice. */
+let SCRIPT = null;
+export function interfaceScript(screens = [], options = {}) {
+  checkScreens(screens);
+  const guide = options && options.guide ? options.guide : null;
+  checkGuide(guide);
+  if (SCRIPT && SCRIPT.screens === screens && SCRIPT.guide === guide) return SCRIPT.source;
+  const program = shellProgram.toString();
+  checkClasses(screens, guide, program);
+  const D = dataOf(screens, guide);
+  const source = `(${program})(${toSource(D)}, ${toSource(screens)}, window, ${toSource(guide)}).start();`;
+  SCRIPT = { screens, guide, source };
+  return source;
+}
+const base64 = (hex) => btoa(hex.match(/../g).map((h) => String.fromCharCode(parseInt(h, 16))).join(""));
+/* R1: the hash the page policy names in place of a nonce (`answer-envelope` R6): `sha256-<base64>` of the script's UTF-8 bytes */
+export function interfaceScriptHash(screens = [], options = {}) {
+  return "sha256-" + base64(sha256HexSync(interfaceScript(screens, options)));
+}
+/* R1: the address that carries the release version (`control-plane` R75 serves the script there, `immutable`) */
+export const scriptPath = (version) => "/app/shell-" + encodeURIComponent(String(version == null || version === "" ? "0" : version)) + ".js";
+export function versionOfScriptPath(pathname) {
+  const m = /^\/app\/shell-([^/]+)\.js$/.exec(String(pathname || ""));
+  if (!m) return null;
+  try { return decodeURIComponent(m[1]); } catch { return null; }
+}
+
 /**
  * R1: the page. One document, `<html lang>` `en` until the member's language is read; `interface-assets`' `civicsmith.css`
  * and then its `shell.css` (R56), both before the shell's own `<style>`; icons referenced from its `icons.svg`; one
- * script, its nonce `NONCE_SLOT`, composed from the shell's program and each screen's functions. No member-facing text
+ * script (R1, fix round 3): external, at the address that carries the release version (`options.version`, also named in the page for the
+ * shell's `interfacewords` request, R5), its hash exported; no inline script and no nonce slot. No member-facing text
  * stands outside the words. R28: `screens` are the nine screen modules' `SCREENS`; R31: `options.guide` is
  * `screens-wizards`' `GUIDE`, the dock's wizard guide; R58: `options.testInstance` true serves the test band in the page
  * itself, above the frame, from first paint (`control-plane` R95). R56: throws for a class no served stylesheet defines.
  */
 export function interfacePage(screens = [], options = {}) {
-  checkScreens(screens);
-  const guide = options && options.guide ? options.guide : null;
-  checkGuide(guide);
-  const program = shellProgram.toString();
-  checkClasses(screens, guide, program);
-  const D = dataOf(screens, guide);
-  const script = `(${program})(${toSource(D)}, ${toSource(screens)}, window, ${toSource(guide)}).start();`
-    .replace(/<\/(script)/gi, "<\\/$1").replace(/<!--/g, "<\\!--");
+  const hash = interfaceScriptHash(screens, options);
+  const version = options && typeof options.version === "string" && options.version ? options.version : null;
   /* R58, R67: the band as served: the design's `.cs-band[data-band="test"]`, the machine icon, `instance.test.band` and
      `instance.test.notice`, in the English of their words until the member's words are read (R5) */
   const band = options && options.testInstance === true
@@ -438,7 +469,7 @@ export function interfacePage(screens = [], options = {}) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title></title>
-<link rel="stylesheet" href="${STYLESHEET}">
+${version ? `<meta name="cs-version" content="${escape(version)}">\n` : ""}<link rel="stylesheet" href="${STYLESHEET}">
 <link rel="stylesheet" href="${SHELL_STYLESHEET}">
 <style>${STYLE}</style>
 </head>
@@ -446,7 +477,7 @@ export function interfacePage(screens = [], options = {}) {
 ${band}<div id="cs-root"></div>
 <div class="sr" id="cs-live" role="status" aria-live="polite"></div>
 <div class="cs-tip" id="cs-tip" role="tooltip" hidden></div>
-<script nonce="${NONCE_SLOT}">${script}</script>
+<script src="${scriptPath(version)}" integrity="${hash}"></script>
 </body>
 </html>
 `;

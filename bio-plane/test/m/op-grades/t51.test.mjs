@@ -40,7 +40,7 @@ test("R48: the three reads are no act (no MACHINE_REFUSALS row, no CONSEQUENCE_S
 test("R77 R78 R79: each read op-declarations declares for T51 has a NON_ACTS reason beginning \"read: \", and no rung, "
    + "ground or machine refusal", () => {
   const ops = Object.keys(T51_NON_ACTS);
-  assert.equal(ops.length, 15, "the fourteen session reads op-declarations declares for T51 (three of them R48's) and publishedfrozen, public");
+  assert.equal(ops.length, 16, "the fourteen session reads op-declarations declares for T51 (three of them R48s), publishedfrozen (public) and remindersfor (action-clocks R26, fix round 3)");
   for (const op of ops) {
     assert.ok(NON_ACTS[op].startsWith("read: "), op);
     assert.equal(RUNGS[op], undefined, op);

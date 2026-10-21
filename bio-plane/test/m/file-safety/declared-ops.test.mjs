@@ -83,3 +83,8 @@ for (const op of ["securitytoolremove", "securitytooltest"]) {
       refusedNaming: named({ toolId: ["NO_SUCH_TOOL"], tool: ["NO_SUCH_TOOL"] }), values: { toolId: "joe-sandbox-1", tool: "joe-sandbox-1" } });
   });
 }
+
+test("R48 file-safety declares scanmirror (R49): it requires nothing, is an administrator's act, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "scanmirror", declaration: DECLARED_OPS.scanmirror, call: mk("scanmirror", { viewer: "member:boss" }, async () => world()),
+    refusedNaming: named(), values: {} });
+});

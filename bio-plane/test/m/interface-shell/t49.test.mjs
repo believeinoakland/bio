@@ -104,6 +104,7 @@ test("R68 explanations close: a card opened by a control closes when the control
   assert.equal(tip(p).hidden, true, "closed when the focus leaves it for the next field");
   assert.equal(act.getAttribute("aria-describedby"), null);
   /* a card opened by the pointer likewise, once the focus goes to a field */
+  p.fire(act, "pointerout", { relatedTarget: p.root() });
   p.fire(act, "pointerover", { pointerType: "mouse" });
   await p.clock.tick(500);
   assert.equal(tip(p).hidden, false);

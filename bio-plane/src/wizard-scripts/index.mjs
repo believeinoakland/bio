@@ -1730,7 +1730,7 @@ export function wizardScriptsOps(m, url, body) {
     wizardeditorgrant: () => m.wizardEditorGrant({ member: pick("member"), by: q("author") }),
     wizardeditorrevoke: () => m.wizardEditorRevoke({ grant: pick("grant"), by: q("author") }),
     wizardretire: () => m.wizardRetire({ script: pick("script"), version: pick("version"), reason: b.reason ?? null, by: q("author"), ...stamps }),
-    wizards: () => m.wizards({ state: q("state"), ...stamps }),
+    wizards: () => m.wizards({ state: pick("state"), ...stamps }),
     wizardread: () => m.wizardRead({ script: q("script"), version: q("version"), ...stamps }),
     wizardsat: () => m.wizardsAt({ screen: q("screen"), ...stamps }),
     wizardcheck: () => m.wizardCheck({ steps: b.steps, ...stamps }),
