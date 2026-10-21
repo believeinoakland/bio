@@ -384,3 +384,12 @@ My suite, 247 tests: 241 pass, 6 fail. Tip (origin/tranche/T51, without my branc
 Checks: format clean; ownership 0 failures; words: 3 failures, all in op-grades (t33.mjs:214, t51.mjs:41 and :45: moneysets' and scanmirror's descriptions copied into op-grades as plain text), not op-declarations; architecture: plane t47.test.mjs imports screens-wizards, which plane does not declare (not this module); coverage: 8 modules red (not op-declarations, which is 82 of 82 per the last run).
 
 Waiting on officeconfirm (ENTITIES) to merge.
+
+## J30 · QUESTION
+
+Re B33 (K4394): the five registry tests (t34:177, t46:303, t47:292, t48:186, t50:391) now read the pinned registry (78fe6f5757): a fixture copied from 43379a1a44, its sha256 checked against SCREEN_REGISTRY_SOURCE (bef84cf1…). Their hand claims cannot stay unchanged under it. Each test lists the same nine acts that the pinned registry does not hold: alertconnect, registerask, registerlist, registermatch, registerrowcite, registersearch, registerwatch, registerwatchpropose and registerwatchstop. They come from the registers screen (DEC-406/407), which is in the live registry and not at 43379a1a44. Under the pinned registry those five tests are red by exactly those nine names (t50 too).
+
+Two options. My recommendation is (a).
+(a) Take the nine names out of the five claim lists, since the product serves the pinned registry and does not serve the registers screen yet. Their claims about the pinned registry then hold. The live design re-adds them when wizard-scripts re-pins.
+(b) Keep the claims and read the live file. This is what B33 asked me to stop doing; it reddens on every design merge.
+I will not change the claim lists until you pick. Current state: 233 tests, 227 pass, 6 red: those five, and t36:306 (capturecredentiallist, per B31).
