@@ -131,6 +131,17 @@ test("R4 R44: CONSEQUENCE_STATEMENTS maps DEC-88's six judgement calls to {frict
 });
 
 /* ---- R5 ------------------------------------------------------------------------------------------------------------ */
+/* K4279 (R5): `export` is a NON_ACT whose sentence is corpus-export's declared description word for word (R50 (b)); its
+   rung-absence stays as the substrate ground, and no machine refusal names it. Control: the reason is a non-empty sentence,
+   and a made-up sentence would differ. */
+test("R5 (K4279): NON_ACTS.export is corpus-export's declared sentence, word for word; export keeps its substrate ground and "
+   + "no machine refusal names it", () => {
+  const OWNER_SENTENCE = "writes an export manifest of what is already there";
+  assert.equal(NON_ACTS.export, OWNER_SENTENCE);
+  assert.notEqual(NON_ACTS.export, "writes an export manifest");
+  assert.equal(RUNG_ABSENT.export.ground, "substrate");
+  assert.equal(Object.hasOwn(MACHINE_REFUSALS, "export"), false);
+});
 test("R5: MACHINE_REFUSALS maps each act refused a machine by name to its code; NON_ACTS gives the reasons R5 names, "
    + "`capture-directed:` exactly for attest, monitor and attesttext", () => {
   const V = "MACHINE_CANNOT_MOVE_VERSION";
