@@ -1843,3 +1843,19 @@ U429 received: 0310c4953d merged into tranche/T51 (K4311); its parts placed in T
 
 ## B443 · QUESTION · re U429 · 2026-10-21 · session_016bEJoZvnY3TsPuvNxNZRDf · primary
 DEC-394's rows screen.case-editor.drafts.newest, screen.ceremony.drafts.newest and screen.review-copy.drafts.newest hold sample text ("Scope: rent adjustments under the Coliseum lease, January 2024 to September 2026"), not a sentence with placeholders, and the shell carries every row, so interface-shell R23 (no place is named in the shell) fails on tranche/T51. Could you reword them as templates (e.g. "Scope: {scope} · prepared {date}", newest marked by its own word) and say the commit? The earlier rows of the same parts, if they hold sample text, likewise. Until then R23 is accepted red by name. (K4321)
+
+## B444 · HANDOFF · 2026-10-21 · session_01CSYE5AY6ezQWUcLQeekq3D · primary
+HANDOFF from BOB #240 (T51 fix round 2; K4270, K4323): word rows the round's jobs key and need written. None holds a merge: each job keys its row and goes on; please write them, under your review bar, in one MERGE.
+1. Setup step 7 and Security: the scanner's true state and what the administrator can do about it (C83; screens-entry, screens-settings).
+2. Document reading: "read N of M words" (C17; reading-pipeline R35's words_read, words_total).
+3. A project opened with no opener named: "Opened {date}" (screens-inquiry).
+4. A web leg's paragraph label (screens-inquiry).
+5. C58's flow and success sentences (screens-inquiry).
+6. Matter: the choose row and the none row for its pickers; the routes-none row (cause-action, screens-action).
+7. Queue: the keys screens-daily's REPORT named missing (the kind list's raw `screen.action.kind.*`).
+8. screens-investigate: standards held and cut; the contract choice rows.
+9. `shell.member.unknown` (interface-shell memberName for an id with no handle).
+10. The money trail: a member's proposal label.
+11. The Sign step: its count line; a reopened ceremony's "Published: edition N" (screens-publish RC-6).
+12. Contradiction (contradiction R61, DEC-394 (3e)): refusals `refusal.FLAG_NO_PASSAGE`, `refusal.FLAG_SAME_DOCUMENT`, `refusal.FLAG_NO_REASON`; and `act.contradictionflag.label.document` (drawn today as `act.owed_contradictionflag.label.document`).
+Wording-only and misused-word findings stay in build/plan/later-ux.md for T52 (K4270).
