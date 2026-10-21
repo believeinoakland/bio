@@ -629,7 +629,7 @@ export class Extraction {
    *  `readings` row is read once the evidence store holds the object under the digest, whole: the stored document is read
    *  as R1 and `read` do, and the reading written for that bundle by R19's writer, in one transaction with the history and
    *  the index, as a composed reading of this instance. Otherwise nothing is written and the answer is
-   *  `{ok: true, read: false, why}`, `why` a stable code: `NO_HOME` (the register names none, the digest is no digest, or
+   *  `{ok: true, read: false, why}`, `why` a stable code: `NO_HOME` (neither the register nor a reading held for the digest names a home bundle, the digest is no digest, or
    *  `viewer` is given and may not see the home bundle: an absent record), `READING_HELD` (a reading is already held) or
    *  `NO_WHOLE_OBJECT` (the store holds no object under the digest). It writes no bundle, no register row and no
    *  promotion, and replaces no reading but one (fix round 4, C5b; K4429): a failed reading that failed for want of the
@@ -640,8 +640,14 @@ export class Extraction {
    *  finds nothing is a failed reading, recorded (R45). */
   async readHeld({ sha = null, storeName = "bio", env = null, viewer = undefined } = {}) {
     const digest = typeof sha === "string" ? sha.trim().toLowerCase() : "";
-    const home = /^[0-9a-f]{64}$/.test(digest) && this.#provenance && typeof this.#provenance.homeOf === "function"
+    let home = /^[0-9a-f]{64}$/.test(digest) && this.#provenance && typeof this.#provenance.homeOf === "function"
       ? this.#provenance.homeOf(digest) : null;
+    /* (fix round 4, C5b; K4440) a multipart capture is registered by its parts, not its whole digest, so the register may
+       name no home for the whole; the bundle of the reading already held for it is its home. */
+    if ((!home || typeof home.bundleId !== "string" || !home.bundleId) && /^[0-9a-f]{64}$/.test(digest)) {
+      const mine = this.#one(`SELECT bundle_id FROM readings WHERE capture_sha=?`, digest);
+      home = mine && typeof mine.bundle_id === "string" && mine.bundle_id ? { bundleId: mine.bundle_id } : null;
+    }
     const left = (why) => ({ ok: true, read: false, why });
     if (!home || typeof home.bundleId !== "string" || !home.bundleId) return left("NO_HOME");
     if (viewer !== undefined && !this.#sees(home.bundleId, viewer)) return left("NO_HOME");

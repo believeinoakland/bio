@@ -17,13 +17,13 @@ const PARTS = [8388608, 8388608, 4259275].map((bytes, i) => ({ sha256: sha(`part
 
 /* A store whose register names INFO-1 the home of a capture promoted in parts with the reading the real chain made of it: the
    whole was not held, so the reading failed. The stored document (`data/provenance.json`) is what the promotion kept. */
-async function promotedFailed({ bundleOpts = {}, parts = PARTS, holdFirst = null, entry = null } = {}) {
+async function promotedFailed({ bundleOpts = {}, parts = PARTS, holdFirst = null, entry = null, registered = true } = {}) {
   const rows = new Map(), evidence = bucket();
   const w = fresh({ evidence, provenance: register(rows) });
   bundle(w.s, "INFO-1", bundleOpts);
   const bytes = new TextEncoder().encode("%PDF-1.7 a packet kept in parts " + Math.random());
   const d = sha(bytes);
-  rows.set(d, row("INFO-1", bytes.length));
+  if (registered) rows.set(d, row("INFO-1", bytes.length));
   const document = doc({ digest: d, bytes: parts ? parts.reduce((n, p) => n + p.bytes, 0) : bytes.length, ct: "application/pdf", format: "pdf", parts });
   if (holdFirst) await evidence.put(`bio/captures/${d}`, bytes);
   const made = await (entry ? withEntry(entry, () => w.x.read(document, { storeName: "bio" })) : w.x.read(document, { storeName: "bio" }));
@@ -166,4 +166,25 @@ test("R80 (N5 control): `op=readheld` of a malformed or absent digest reads noth
   assert.equal((await readheld(w, sha("no such document"), "class:admin")).read, false);
   assert.equal((await readheld(w, "", "class:admin")).reason, "NO_SHA", "R63: a request naming no digest");
   assert.equal(count(w, "readings", sha("no such document")), 0);
+});
+
+test("R80 R45 (C5b; K4440): a multipart capture is registered by its parts, not its whole digest, so the register names no home for the whole; `readHeld` finds the home by the failed reading's own bundle, and still reads nothing for a digest with neither", async () => {
+  const { w, rows, evidence, bytes, d } = await promotedFailed({ registered: false });
+  assert.equal(rows.size, 0, "the register holds no row for the whole digest");
+  await evidence.put(`bio/captures/${d}`, bytes);
+  const r = await withEntry(pdf(TEXT), () => w.x.readHeld({ sha: d }));
+  assert.deepEqual([r.ok, r.read, r.bundle_id], [true, true, "INFO-1"]);
+  assert.match(w.x.readingFor(d, "class:admin").text_units.map((u) => u.text).join(" "), /alpha beta gamma delta/);
+  const again = await withEntry(pdf(TEXT), () => w.x.readHeld({ sha: d }));
+  assert.deepEqual([again.read, again.why], [false, "READING_HELD"]);
+  /* the viewer gate follows the reading's bundle */
+  const hidden = await promotedFailed({ registered: false, bundleOpts: { project: "PROJ-9" } });
+  await hidden.evidence.put(`bio/captures/${hidden.d}`, hidden.bytes);
+  const refused = await withEntry(pdf(TEXT), () => hidden.w.x.readHeld({ sha: hidden.d, viewer: "member:outsider" }));
+  assert.deepEqual([refused.read, refused.why], [false, "NO_HOME"]);
+  assert.equal(readingOf(hidden.w, hidden.d).found, false, "nothing written for a viewer who may not see it");
+  /* control: no home and no reading is still no home */
+  const loose = sha("loose bytes");
+  await evidence.put(`bio/captures/${loose}`, new TextEncoder().encode("loose bytes"));
+  assert.equal((await w.x.readHeld({ sha: loose })).why, "NO_HOME");
 });
