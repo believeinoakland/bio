@@ -12,12 +12,16 @@
 //   PUT  /job/<job>/<i>            one target's copy
 //   DELETE /job/<job>/<i>          a copy whose digest did not hold (R2)
 //   POST /job/<job>/scan?set=<s>   {ok, engine_version, results: {<i>: {result, findings, detail?}}}  then removed
-//   POST /update/<run>             {ok, files: [<name>]} | {ok:false, code, detail}  ClamAV's own `freshclam` fetches the
-//                                  databases into a fresh directory (R6, R34); only the signature-updater instance, the
-//                                  one the Worker starts with internet, can reach the mirror
+//   PUT  /update/<run>/<file>      a file of the set already mirrored, handed over before the run so that `freshclam`
+//                                  brings it up to date and does not fetch it whole (R6)
+//   POST /update/<run>             {ok, files: [<name>], changed: [<name>]} | {ok:false, code, detail}  ClamAV's own
+//                                  `freshclam` fetches the databases into the run's directory (R6, R34); only the
+//                                  signature-updater instance, the one the Worker starts with internet, can reach
+//                                  the mirror; `changed` names what differs from the files handed over
 //   GET  /update/<run>/<file>      one fetched file
 //   DELETE /update/<run>           the run's directory removed
 import { createWriteStream, createReadStream } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { mkdir, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
 import { pipeline } from 'node:stream/promises';
 import { join } from 'node:path';
@@ -90,10 +94,18 @@ export async function verifyFile(path) {
     ...(verified ? {} : { detail: (r.err || r.out).trim().split('\n').pop().slice(0, 200) }) };
 }
 
+const digestOf = (path) => new Promise((resolve, reject) => {
+  const h = createHash('sha256');
+  createReadStream(path).on('data', (d) => h.update(d)).on('end', () => resolve(h.digest('hex'))).on('error', reject);
+});
+const digests = async (dir, names) => Object.fromEntries(await Promise.all(names.map(async (n) => [n, await digestOf(join(dir, n))])));
+
 /** R6, R34: ClamAV's own updater, under its own identity (it states `ClamAV/<version>` itself; no agent is set here),
- *  fetches the three databases from the official host into a fresh directory. Answers the files, or why it did not. */
+ *  brings the databases in the run's directory up to date from the official host: the files handed over before (R6) are
+ *  patched, the rest fetched whole. Answers the files and which of them differ from those handed over, or why it did not. */
 export async function fetchSignatures(dir) {
   await mkdir(dir, { recursive: true });
+  const seeded = await digests(dir, (await readdir(dir)).filter((n) => FETCHED.test(n)));
   const conf = join(dir, 'freshclam.conf');
   const settings = [['DatabaseDirectory', dir], ['DatabaseMirror', MIRROR_HOST], ['DNSDatabaseInfo', 'current.cvd.clamav.net'],
     ['CompressLocalDatabase', 'no'], ['Foreground', 'yes']];
@@ -101,7 +113,10 @@ export async function fetchSignatures(dir) {
   const r = await run(process.env.FRESHCLAM || 'freshclam', [`--config-file=${conf}`, `--datadir=${dir}`, '--stdout', '--no-warnings'], { ms: UPDATE_TIME_MS });
   const files = (await readdir(dir)).filter((n) => FETCHED.test(n)).sort();
   const have = new Set(files.map((n) => n.split('.')[0]));
-  if (r.code === 0 && ['main', 'daily', 'bytecode'].every((d) => have.has(d))) return { ok: true, files };
+  if (r.code === 0 && ['main', 'daily', 'bytecode'].every((d) => have.has(d))) {
+    const now = await digests(dir, files);
+    return { ok: true, files, changed: files.filter((n) => now[n] !== seeded[n]) };
+  }
   const text = (r.timedOut ? 'TIME_LIMIT' : `${r.err}\n${r.out}`).split('\n').map((l) => l.trim()).filter(Boolean)
     .filter((l) => /error|fail|refus|forbidden|403|429|cool|connect|TIME_LIMIT/i.test(l)).slice(-2).join(' | ');
   return { ok: false, code: 'MIRROR_REFUSED', detail: `exit ${r.code}${text ? `: ${text}` : ''}`.replaceAll(dir, '').slice(0, 300) };
@@ -137,6 +152,10 @@ async function routes(req, res, url) {
     } finally { await removeDir(dir); }
   }
   if (p[0] === 'update' && NAME.test(p[1] || '')) {
+    if (p.length === 3 && req.method === 'PUT' && FETCHED.test(p[2])) {
+      await receive(req, join(updateDir(p[1]), p[2]));
+      return json(res, 200, { ok: true });
+    }
     if (p.length === 2 && req.method === 'POST') {
       const dir = updateDir(p[1]);
       const r = await fetchSignatures(dir);
