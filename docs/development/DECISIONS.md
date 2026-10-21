@@ -6323,3 +6323,18 @@ decided: 2026-10-21 · Bob
 the design: as folded in Capability Ladders §2 CONNECTIONS "RULED 2026-10-21": the doctrine (following the trail in every dimension, singly and in combination, is the core, for members and the assistant through the same explorer); the alpha: each dimension's tools, the registers, "Follow from here" from any item into any dimension in place; the first beta: combined walks across dimensions and the assistant's research across every dimension (measured as DEC-405); between two things, every meaningful connection within bounds and the most direct path (fewest hops, then the strongest weakest hop, then date; never a judgment score), and a member's step-by-step chain "simplified" by showing a shorter cited path beside it; robust measured (a real Oakland matter per combined walk, K4354's 2 seconds, acts counted against a target set before the walk).
 reasoning recorded in: this entry; `docs/architecture/BIO_Capability_Ladders_v0_1.md` (Status "Amended 2026-10-21 (DEC-409)"; §2 CONNECTIONS "RULED 2026-10-21").
 owed: BOB: the alpha's plan (with N1259) carries "Follow from here" across the dimension screens and `explore`'s all-connections and most-direct-path reads with the simplified-chain offer, and their tests; the first beta's (with N1258) the combined walks and the assistant's research across dimensions, with the step targets and Oakland test matters. Design: "Follow from here", all connections, most direct path and "a shorter path" drawn (the next DEC).
+
+### DEC-410 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (Bob's DEC-409)
+for: design
+question: How are "Follow from here", every connection, the most direct path and a shorter path drawn?
+why it is Bob's: it is not (P17): drawing beneath his ruling.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: (1) "Follow from here", one control (`follow(kind)` in mock-kit.js) for a person or organization, money, an event and a document, opening a menu of the other dimensions, each opening that screen scoped to the item in place: on `people` rows, `money` figures, `timeline` events, `document`, `finder` results, `registers` result rows (as a donation) and `explore` chains (`owed:followfrom DEC-409`, else existing ops). (2) On `explore`: "List every connection" and "Find the most direct path" beside Explore; "Most direct path" first, with "The most direct path has the fewest steps. If two are equally short, the one whose weakest step is strongest comes first, then the earlier date. This is a fact about the chains, not a judgment of them."; "Every connection between them", each chain with its steps, weakest grade and dates, hub and declared-only steps marked, and "Not every connection was searched: …" when the bounds cut it short; "A chain you built" with "A shorter cited path joins the same two ends." and "See the shorter path" / "Keep mine" (`owed:exploreall`, `owed:explorepath`, `owed:exploreshorter`, DEC-409). (3) Drawn paused, "Comes in the first beta": combined walks; "Ask the assistant to research this". 47 keys (`screen.follow.*`, `screen.explore.direct|all|shorter|later.*`).
+reasoning recorded in: this entry; `screens/mock-kit.js`, `screens/mock-screens.js`, `screens/mock-acts.js`, `screens/registry.src.py`, `screens/words-drawn.src.py`, `screens/page.src.html` (rows noted "DEC-410").
+owed: BOB: the ops above (names are proposals) with DEC-409's requirements. Design, later: "Follow from here" on offices, laws and funds once their screens carry items.

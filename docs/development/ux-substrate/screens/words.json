@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7052,
+  "screen": 7101,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1127,
+  "act": 1155,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -231,8 +231,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 18252,
-  "protected": 1079
+  "total": 18329,
+  "protected": 1103
  },
  "words": [
   {
@@ -76168,6 +76168,349 @@
    "note": "DEC-407: guardrail"
   },
   {
+   "key": "screen.follow.label",
+   "en": "Follow from here",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: the one control on every person, organization, payment, donation, event and document; opens a menu"
+  },
+  {
+   "key": "screen.follow.tip",
+   "en": "Opens another view of this item in place: the screen for that dimension, already narrowed to it. Nothing starts over.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: the control's explanation"
+  },
+  {
+   "key": "screen.follow.who.money",
+   "en": "Money given or received",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a person or organization (owed:followfrom)"
+  },
+  {
+   "key": "screen.follow.who.offices",
+   "en": "Organizations and offices held",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a person or organization (owed:followfrom)"
+  },
+  {
+   "key": "screen.follow.who.events",
+   "en": "Events taken part in",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a person or organization (owed:followfrom)"
+  },
+  {
+   "key": "screen.follow.who.docs",
+   "en": "Documents that name them",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a person or organization (search)"
+  },
+  {
+   "key": "screen.follow.who.rows",
+   "en": "Register rows that name them",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a person or organization (registersearch)"
+  },
+  {
+   "key": "screen.follow.money.who",
+   "en": "Who paid and who received it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a payment or donation (owed:followfrom)"
+  },
+  {
+   "key": "screen.follow.money.more",
+   "en": "Other payments from the same source",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a payment or donation (owed:followfrom)"
+  },
+  {
+   "key": "screen.follow.money.events",
+   "en": "Events it is tied to",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a payment or donation (owed:followfrom)"
+  },
+  {
+   "key": "screen.follow.money.docs",
+   "en": "Documents that state it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a payment or donation (search)"
+  },
+  {
+   "key": "screen.follow.rows.match",
+   "en": "Register rows that match it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a payment, donation or document (registersearch)"
+  },
+  {
+   "key": "screen.follow.event.who",
+   "en": "Who took part",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on an event (owed:followfrom)"
+  },
+  {
+   "key": "screen.follow.event.money",
+   "en": "Money that moved around it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on an event (owed:followfrom)"
+  },
+  {
+   "key": "screen.follow.event.docs",
+   "en": "Documents that date it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on an event (search)"
+  },
+  {
+   "key": "screen.follow.event.rows",
+   "en": "Register rows from that time",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on an event (registersearch)"
+  },
+  {
+   "key": "screen.follow.document.who",
+   "en": "People and organizations it names",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a document (owed:followfrom)"
+  },
+  {
+   "key": "screen.follow.document.money",
+   "en": "Money it states",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a document (owed:followfrom)"
+  },
+  {
+   "key": "screen.follow.document.events",
+   "en": "Events it dates",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on a document (owed:followfrom)"
+  },
+  {
+   "key": "screen.follow.conn",
+   "en": "Connections to…",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: menu item on every kind (explore, with this as the start)"
+  },
+  {
+   "key": "screen.explore.direct.head",
+   "en": "Most direct path",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: section"
+  },
+  {
+   "key": "screen.explore.direct.how.fewest",
+   "en": "The most direct path has the fewest steps.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: how it was chosen, in plain words"
+  },
+  {
+   "key": "screen.explore.direct.how.tie",
+   "en": "If two are equally short, the one whose weakest step is strongest comes first, then the earlier date.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: how it was chosen, in plain words"
+  },
+  {
+   "key": "screen.explore.direct.how.fact",
+   "en": "This is a fact about the chains, not a judgment of them.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: how it was chosen, in plain words"
+  },
+  {
+   "key": "screen.explore.direct.tip.what",
+   "en": "The shortest chain between the two ends, shown first and labeled.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: the section's explanation"
+  },
+  {
+   "key": "screen.explore.direct.tip.how",
+   "en": "How it was chosen is stated in plain words, so anyone can check it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: the section's explanation"
+  },
+  {
+   "key": "screen.explore.direct.label",
+   "en": "most direct",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: label on the first chain"
+  },
+  {
+   "key": "screen.explore.direct.button",
+   "en": "Find the most direct path",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: button (owed:explorepath)"
+  },
+  {
+   "key": "screen.explore.all.head",
+   "en": "Every connection between them",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: section"
+  },
+  {
+   "key": "screen.explore.all.count",
+   "en": "{count} chains found within {depth} steps, fewest steps first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: under the heading; {count} chains, {depth} the search's bound"
+  },
+  {
+   "key": "screen.explore.all.first",
+   "en": "The most direct is the first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: under the heading"
+  },
+  {
+   "key": "screen.explore.all.hub",
+   "en": "a hub: shown, not walked through",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: a chain with a hop through a hub"
+  },
+  {
+   "key": "screen.explore.all.hubstep",
+   "en": "too common to walk",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: a hop through a place linked to too many things to walk"
+  },
+  {
+   "key": "screen.explore.all.cut",
+   "en": "Not every connection was searched: the search stopped at {depth} steps and at {visited} places visited, so there may be others.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: when the search was cut short at its bounds; never implies completeness"
+  },
+  {
+   "key": "screen.explore.all.tip.what",
+   "en": "Every chain the search found between the two ends, not only the first.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: the section's explanation"
+  },
+  {
+   "key": "screen.explore.all.tip.marks",
+   "en": "Each shows its steps, its weakest step and its dates; a step through a place too common to walk, or one declared with no source, is marked.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: the section's explanation"
+  },
+  {
+   "key": "screen.explore.all.stops",
+   "en": "Chains that stop at a name the record lacks",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: section"
+  },
+  {
+   "key": "screen.explore.all.button",
+   "en": "List every connection",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: button (owed:exploreall)"
+  },
+  {
+   "key": "screen.explore.shorter.head",
+   "en": "A chain you built",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: section"
+  },
+  {
+   "key": "screen.explore.shorter.built",
+   "en": "built by you, step by step",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: under a chain a member built"
+  },
+  {
+   "key": "screen.explore.shorter.note",
+   "en": "A shorter cited path joins the same two ends.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: beside a member's chain"
+  },
+  {
+   "key": "screen.explore.shorter.count",
+   "en": "It has {short} steps, against your {mine}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: beside a member's chain"
+  },
+  {
+   "key": "screen.explore.shorter.see",
+   "en": "See the shorter path",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: button (owed:exploreshorter)"
+  },
+  {
+   "key": "screen.explore.shorter.keep",
+   "en": "Keep mine",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: button (owed:exploreshorter)"
+  },
+  {
+   "key": "screen.explore.shorter.tip.what",
+   "en": "Where you built a chain step by step, a shorter cited path between its two ends is shown beside it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: the section's explanation"
+  },
+  {
+   "key": "screen.explore.shorter.tip.yours",
+   "en": "Yours is never changed or replaced; you choose.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: the section's explanation"
+  },
+  {
+   "key": "screen.explore.later.walks",
+   "en": "Combined walks, such as who gave to the official whose department paid this vendor",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: the paused part"
+  },
+  {
+   "key": "screen.explore.later.assist",
+   "en": "Ask the assistant to research this",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: the paused part"
+  },
+  {
+   "key": "screen.explore.later.when",
+   "en": "Comes in the first beta",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-410: the paused parts"
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -116379,6 +116722,24 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_followfrom.label.finder",
+   "en": "Follow this item into another dimension",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.explore.label.finder",
+   "en": "Explore connections",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registersearch.label.finder",
+   "en": "Search the registers",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.acquire.label.capture",
    "en": "Capture from an address",
    "protected": true,
@@ -116717,6 +117078,18 @@
   {
    "key": "act.thread.label.document",
    "en": "Thread it to a step",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_followfrom.label.document",
+   "en": "Follow this item into another dimension",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registersearch.label.document",
+   "en": "Search the registers",
    "protected": true,
    "source": "registry.json"
   },
@@ -117345,6 +117718,18 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_followfrom.label.people",
+   "en": "Follow this item into another dimension",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registersearch.label.people",
+   "en": "Search the registers",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.explore.label.person",
    "en": "Explore connections",
    "protected": true,
@@ -117507,6 +117892,30 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_followfrom.label.timeline",
+   "en": "Follow this item into another dimension",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.search.label.timeline",
+   "en": "Search",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.explore.label.timeline",
+   "en": "Explore connections",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registersearch.label.timeline",
+   "en": "Search the registers",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.recordfact.label.money",
    "en": "Read a figure into a money fact",
    "protected": true,
@@ -117591,6 +118000,30 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_followfrom.label.money",
+   "en": "Follow this item into another dimension",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.search.label.money",
+   "en": "Search",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.explore.label.money",
+   "en": "Explore connections",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registersearch.label.money",
+   "en": "Search the registers",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.calculationcreate.label.calculation",
    "en": "Work it out",
    "protected": true,
@@ -117671,6 +118104,42 @@
   {
    "key": "act.promote.label.explore",
    "en": "Open a question from this chain",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_followfrom.label.explore",
+   "en": "Follow this item into another dimension",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.search.label.explore",
+   "en": "Search",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registersearch.label.explore",
+   "en": "Search the registers",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_exploreall.label.explore",
+   "en": "List every connection between two ends",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_explorepath.label.explore",
+   "en": "Find the most direct path",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_exploreshorter.label.explore",
+   "en": "See a shorter path, or keep your own chain",
    "protected": true,
    "source": "registry.json"
   },
@@ -118701,6 +119170,24 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_followfrom.label.registers",
+   "en": "Follow this item into another dimension",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.search.label.registers",
+   "en": "Search",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.explore.label.registers",
+   "en": "Explore connections",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.owed_casedetailsset.does",
    "en": "Records one of the case's four details: the area of government, a point of contact, related work or relationships. It sits beside the case, the signature does not cover it, and you can change or clear it later.",
    "protected": false,
@@ -119719,6 +120206,30 @@
   {
    "key": "act.owed_namedrequests.does",
    "en": "Lists the requests to gather something on a schedule that you may see, with where each is looked for, when it was last tried and when it is next due.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_followfrom.does",
+   "en": "Opens another view of the item you are on, such as the money it is tied to or the events it took part in, already narrowed to it. You do not start over, and nothing is recorded.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_exploreall.does",
+   "en": "Lists every connection found between the two ends within the search's limits, each with its steps, its weakest step and its dates. It says when the search was cut short, and never that the list is complete.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_explorepath.does",
+   "en": "Shows the most direct chain between the two ends first: the fewest steps, then the strongest weakest step, then the date. It is a fact about the chains, not a judgment.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_exploreshorter.does",
+   "en": "Puts a shorter cited chain between the same two ends beside the one you built, so you can see it or keep your own. Your chain is never changed.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
