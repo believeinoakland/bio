@@ -13,6 +13,7 @@ import { itemWords } from "./item-words.mjs";
 import { queueStates } from "./queue-states.mjs";
 import { doors } from "./doors.mjs";
 import { todos } from "./todos.mjs";
+import { forward } from "./forward.mjs";
 import { routed, ROUTED_REFUSALS } from "./routed.mjs";
 import { OPS } from "../op-declarations/index.mjs";
 
@@ -21,7 +22,7 @@ const OWED = function (spec) { return Object.hasOwn(OPS, spec.op) ? [spec] : [];
 
 export const queue = Object.freeze({
   id: "queue",
-  parts: { sourceItems, itemWords, queueStates, doors, routed, todos },
+  parts: { sourceItems, itemWords, queueStates, doors, routed, todos, forward },
 
   // R2: `queue` R49's sorts; any other subject reads the default (by case, then kind). R59, R61: `/app/queue/answered` reads what the
   // member answered and the set-aside findings; R58: `/app/queue/choose` reads the queue as it is, each item with a box. The queue's
@@ -49,6 +50,8 @@ export const queue = Object.freeze({
       inbox: view.parts.doors().reads().inbox,
       // R17 (B21): the photos she captured and has not vouched for.
       ...view.parts.todos().reads(view),
+      // C75: the members a task may be passed to, a choice.
+      roster: { op: "memberlist", empty: none("members") },
     };
   },
 
@@ -67,6 +70,7 @@ export const queue = Object.freeze({
     const ui = view.ui || {};
     const sub = String(view.subject || "");
     const choosing = sub === "choose";
+    const choosingNow = function () { return choosing || sub === "answered"; };
     const states = view.parts.queueStates();
     // R58: an outcome is shown only on the choosing route; leaving it drops the outcome, so choosing again starts clean.
     if (!choosing && ui.outcome) ui.outcome = null;
@@ -113,7 +117,7 @@ export const queue = Object.freeze({
       const f = "qa-" + (seq++);
       const button = cs.act(op, { label: "act." + op + ".label.queue", data: Object.assign({}, data, { f: f }) });
       return button ? '<details class="mk-details"><summary>' + cs.w("act." + op + ".label.queue") + "</summary>"
-        + fields.map(function (x) { return x[0] === "until" ? states.dayField(cs, f + "-until") : cs.field(f + "-" + x[0], x[1], {}); }).join("")
+        + fields.map(function (x) { return x[0] === "until" ? states.dayField(cs, f + "-until") : x[0] === "to" ? view.parts.forward().field(cs, view, f + "-to") : cs.field(f + "-" + x[0], x[1], {}); }).join("")
         + (OWN.indexOf(op) >= 0 ? own(button) : button) + "</details>" : "";
     };
 
@@ -212,6 +216,8 @@ export const queue = Object.freeze({
         + (on ? " checked" : "") + ' aria-label="' + cs.w("screen.finder.pick", { title: name }) + '">';
     };
     const itemRow = function (it, picking) {
+      // R17, C70: a to-do to vouch for the photos she captured, drawn with the list among what is in no case.
+      if (it.vouch !== undefined) return it.vouch;
       // R58: the choosing state draws a box on each item and its kind beside the words.
       if (picking && !it.sources) {
         const wd0 = iw.words(cs, it);
@@ -224,7 +230,7 @@ export const queue = Object.freeze({
       }
       const cas = caseOf(it);
       // R75: the decisions the record routes to a member: the authority form, an endorsement, an owner vote, an expertise.
-      const rt = view.parts.routed().draw(cs, it, { screen: "queue", id: "qr-" + (seq++), ref: iw.subject(cs, it), mark: own });
+      const rt = view.parts.routed().draw(cs, it, { screen: "queue", id: "qr-" + (seq++), ref: iw.subject(cs, it), mark: own, pick: function (id) { return view.parts.forward().field(cs, view, id); } });
       // A decision with no act of this screen (a vote to remove an owner) leads to its subject's screen with "Open".
       if (rt) return cs.row(cs.mark("kind", CLASS_KIND[it.class] || "status"), rt.summary + '<span class="meta">' + rt.detail + "</span>" + '<span class="mk-acts">' + (rt.acts || (iw.open(it) ? openLink(iw.open(it)) : "")) + "</span>", it.due ? dueOf(it.due) : "", "");
       // R28, R31: the subject by its title, the act by its label; a reply owed and not recorded, never "overdue".
@@ -271,16 +277,21 @@ export const queue = Object.freeze({
       }).join("")), { help: "queue.update.section_says" });
     };
 
-    // The list, by case: the default view (R2) or the choosing state (R58: a box on each item, the source notices not folded).
+    // The list, by case: the default view (R2) or the choosing state (R58: a box on each item, the source notices not folded). C70: her
+    // photos to vouch for are to-dos of hers among what is in no case: counted with the list, placed in the sort the member chose, and drawn
+    // with it, so the list waits for her captures to be read rather than drawing twice.
+    const todos = view.parts.todos();
+    const vouch = choosingNow() ? [] : todos.items(cs, view, "queue");
     const listOf = function (picking) {
-      return cs.state("queue", function (q) {
+      if (!picking && todos.loading(view)) return cs.state({ state: "loading" }, null);
+      const draw = function (q) {
         const all = Array.isArray(q.items) ? q.items : [];
         const updates = picking ? [] : all.filter(function (it) { return it && it.kind === "update-ready"; });
         const others = picking ? all : all.filter(function (it) { return !(it && it.kind === "update-ready"); });
         // R69: an item of a snoozed case is held back from the list, and the snoozed cases are listed apart with "Bring back".
         const held = picking ? [] : others.filter(function (it) { return it && it.snoozed; });
         const rest = picking ? others : others.filter(function (it) { return !(it && it.snoozed); });
-        const items = picking ? rest : src.fold(rest);
+        const items = picking ? rest : todos.merge(src.fold(rest), vouch, sort);
         const groups = [];
         const at = {};
         items.forEach(function (it) {
@@ -289,16 +300,22 @@ export const queue = Object.freeze({
           if (!(key in at)) { at[key] = groups.length; groups.push({ c: c, items: [] }); }
           groups[at[key]].items.push(it);
         });
-        const n = typeof q.item_count === "number" ? q.item_count : items.length;
+        const n = typeof q.item_count === "number" ? q.item_count + vouch.length : items.length;
+        // C73: the line says how the list is sorted: by case it is grouped by case, any other sort is named.
+        const how = sort === "case" ? cs.w("screen.queue.grouped") : cs.w("screen.queue.sorted", { sort: { html: cs.w("screen.queue.sort." + sort) } });
         const head = picking ? '<p class="mk-sub">' + cs.w("queue.multi.head") + " " + cs.w("queue.multi.head2") + "</p>"
           : '<p class="mk-sub"><span>' + (n === 1 ? cs.w("screen.queue.count.one") : cs.w("screen.queue.count.many", { n: String(n) }))
-          + "</span> · <span>" + cs.w("screen.queue.grouped") + "</span></p>";
+          + "</span> · <span>" + how + "</span></p>";
         return head + updateSection(updates) + states.snoozed(cs, held) + groups.map(function (g) {
           const title = g.c ? cs.ref("project", g.c.id, g.c.title || g.c.id, []) : cs.w("screen.queue.nocase");
           const snooze = g.c && !picking ? '<span class="mk-acts">' + actOf("queuesnooze", { project: String(g.c.id) }) + "</span>" : "";
           return '<section class="cs-section mk-sec"><h2>' + title + "</h2>" + snooze + cs.sheet(g.items.map(function (it) { return itemRow(it, picking); }).join("")) + "</section>";
         }).join("") + (q.truncated ? '<p class="mk-note">' + (function (m) { return m === 1 ? cs.w("screen.queue.more.one") : cs.w("screen.queue.more", { n: String(m) }); })(Math.max(0, n - items.length)) + "</p>" : "");
-      }, { empty: "screen.queue.empty" });
+      };
+      const qq = view.data.queue;
+      // Nothing waiting but her photos to vouch for: the list holds them alone.
+      if (!picking && vouch.length && qq && qq.state === "empty") return draw({ items: [] });
+      return cs.state("queue", draw, { empty: "screen.queue.empty" });
     };
 
     // R50 (1): "Muted", at the foot: each kind muted in a project, and each item muted on its own, with "Turn back on". A row
@@ -325,8 +342,9 @@ export const queue = Object.freeze({
       }).filter(Boolean);
       return rows.length ? cs.sec("queue.muted.title", cs.sheet(rows.join("")), { help: "queue.muted.help" }) : "";
     })();
-    const doneNote = typeof ui.done === "string" && ui.done
-      ? '<p class="mk-note" role="status">' + cs.w("queue.done", { what: { html: cs.w("act." + ui.done + ".label.queue") } }) + "</p>" : "";
+    const doneNote = (typeof ui.done === "string" && ui.done
+      ? '<p class="mk-note" role="status">' + cs.w("queue.done", { what: { html: cs.w("act." + ui.done + ".label.queue") } }) + "</p>" : "")
+      + view.parts.routed().shown(cs, ui);
 
     // R41, R60: with nothing waiting and every feed answered, the sentence, each class "none here", the up-to-date row and the door to
     // Home; with a feed that did not answer, the all-clear is withheld and the failed feed named with "Try again".
@@ -365,21 +383,20 @@ export const queue = Object.freeze({
     if (choosing) {
       const picked = Array.isArray(ui["pick:queue"]) ? ui["pick:queue"] : [];
       const have = q && q.state === "ok" && q.value && Array.isArray(q.value.items) ? q.value.items.filter(function (it) { return it && picked.indexOf(String(it.id)) >= 0; }).length : 0;
-      return cs.title(undefined, {}) + doneNote + listOf(true) + (have ? states.strip(cs, have) : "") + '<p class="mk-acts"><a class="cs-btn" data-tone="quiet" data-nav href="/app/queue">' + cs.w("queue.multi.back") + "</a></p>" + mutedPart;
+      return cs.title(undefined, {}) + doneNote + listOf(true) + (have ? states.strip(cs, have, view.parts.forward().field(cs, view, "qm-to")) : "") + '<p class="mk-acts"><a class="cs-btn" data-tone="quiet" data-nav href="/app/queue">' + cs.w("queue.multi.back") + "</a></p>" + mutedPart;
     }
     // R65: the doors to Held captures and the Inbox, on the list and its empty states.
     const doorsHtml = view.parts.doors().draw(cs, view, "queue");
-    // R17 (B21): the photos she captured and has not vouched for are to-dos of hers, drawn above the list, so they are waiting on her.
-    const vouching = view.parts.todos().vouch(cs, view, "queue");
-    const vouchHtml = vouching.n ? cs.sheet(vouching.rows) : "";
+    // R17 (B21, C70): her photos to vouch for are to-dos of hers, in the list, so they are waiting on her.
     if (q && q.state === "empty") {
       if (qv.feeds && qv.all_answered === false) {
-        return cs.title(undefined, {}) + doneNote + '<p class="mk-sub">' + cs.w("queue.allclear.withheld") + "</p>" + failedRow + doorsHtml + vouchHtml + mutedPart;
+        return cs.title(undefined, {}) + doneNote + '<p class="mk-sub">' + cs.w("queue.allclear.withheld") + "</p>" + failedRow + doorsHtml + (vouch.length ? listOf(false) : "") + mutedPart;
       }
-      if (vouching.n) return cs.title(undefined, {}) + doneNote + doorsHtml + vouchHtml + mutedPart;
+      if (vouch.length) return cs.title(undefined, {}) + doneNote + doorsHtml + listOf(false) + mutedPart;
+      if (todos.loading(view)) return cs.title(undefined, {}) + doneNote + doorsHtml + listOf(false) + mutedPart;
       return cs.title(undefined, {}) + doneNote + doorsHtml + listOf(false) + (qv.feeds ? states.allClear(cs, qv) : "") + mutedPart;
     }
-    return cs.title(undefined, {}) + doneNote + (q && q.state === "ok" ? failedRow + states.entry(cs) : "") + doorsHtml + note + sorts + vouchHtml + listOf(false) + mutedPart;
+    return cs.title(undefined, {}) + doneNote + (q && q.state === "ok" ? failedRow + states.entry(cs) : "") + doorsHtml + note + sorts + listOf(false) + mutedPart;
   },
 
   // R3: each act's body from the item it was drawn on (`el.dataset`, the data `cs.act` was handed).
@@ -390,8 +407,9 @@ export const queue = Object.freeze({
     { op: "taskforward", label: "act.taskforward.label.queue",
       send: function (view, el, cs, extra) {
         if (el.dataset.multi) return view.parts.queueStates().run("taskforward", view, el, cs, extra);
-        const to = String(cs.value(el.dataset.f + "-to") || "").trim().replace(/^@/, "");
-        return to ? { body: { id: el.dataset.item, to: to } } : { refuse: "screen.queue.fieldfirst" };
+        // C75: a member chosen from the group's, never oneself.
+        const picked = view.parts.forward().to(cs, view, el.dataset.f + "-to");
+        return picked.to ? { body: { id: el.dataset.item, to: picked.to } } : picked;
       },
       done: function (view, answer, cs) { cs.set("done", "taskforward"); } },
     { op: "proposedispose", label: "act.proposedispose.label.queue",
@@ -498,7 +516,8 @@ export const queue = Object.freeze({
     // R75: the decisions the record routes to a member; each item leaves with the next read.
     { op: "adminendorse", label: "act.adminendorse.label.queue",
       send: function (view, el) { return el.dataset.memberId ? { body: { memberId: el.dataset.memberId } } : null; },
-      done: function (view, answer, cs) { cs.set("done", "adminendorse"); } },
+      // R82: the invitation the answer carries is kept and shown once (as Members does), the done note beside it.
+      done: function (view, answer, cs) { view.parts.routed().keep(view, answer, cs); cs.set("done", "adminendorse"); } },
     { op: "projectowneradd", label: "act.projectowneradd.label.queue",
       send: function (view, el) { return el.dataset.projectId && el.dataset.handle ? { query: { projectId: el.dataset.projectId, handle: el.dataset.handle } } : null; },
       done: function (view, answer, cs) { cs.set("done", "projectowneradd"); } },
