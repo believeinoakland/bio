@@ -280,3 +280,19 @@ Size (session_018BaB4jyWLrTAiLbGV6EXVS): test runs 9, module lines 3,990
 ## J13 · COMPLETE
 
 control-plane fix round 2 complete (C15 R116, C52 pinned, C12 R105/R115 kept state, contradictionflag verified). Suite 340/340, architecture/format/words/coverage 0, ownership only the requirements file. Record: Completion (fix round 2). Reds not mine: affordances catalogue (register-owners lacks contradiction), op-grades R42/R46, plane R24.
+
+## J14 · QUESTION
+
+control-plane T51 fix round 3: ONE thing needs plane (not mine), and I need your reading on two others. My best reading is being built; correct it and I change it.
+
+**Needs plane (2 one-line getters).** The door can reach an owner's in-process act only through the door's own map (`controlPlaneOwnerOps(of, url, body)`, `bio-plane/src/control-plane/owner-ops.mjs`), where `of` is a set of getters that `plane/store.mjs:894` hands it. Two services I must call have no getter:
+1. `extraction.readHeld` (extraction R80; R117): needs `extraction: () => extractionOf(ctx)`.
+2. `project-roster.projectList` with `sharedDraftsOf` (R118): needs `projectRoster: () => projectRosterOf(ctx)`.
+The `env.sharedDraftsOf` that `projectRosterOps(r, url, body, env)` reads (project-roster index.mjs:1419) is the Durable Object's own env, which the door never holds, so the door cannot put a function there. I build: a store-internal arm `readheld` (no spec, so no caller reaches it, as `capturestepproduct`) calling `of.extraction().readHeld({sha, storeName})`, and an arm `projectlist` that replaces project-roster's, calling `of.projectRoster().projectList({viewer, limit, after, sharedDraftsOf: (a) => of.review().sharedDraftsByProject(a)})`. Please send PLANE a CHANGE to add the two getters (`extraction`, `projectRoster`) to that `of`. Until it merges, the real-plane tests of R117 and R118 are red by name (the door-with-doubles tests are green); I work around nothing.
+
+**Readings built (R117).**
+1. The door asks `readHeld` after any `acquire` or `captureupload` answer that is `ok` with `existed: true`, by the digest the answer names (`document.capture.sha256`, else `capture.sha256`), whether or not it carries a document: a registered second upload answers no document (capture index.mjs:738) yet is exactly the "home with no reading" case. A new capture (`existed: false`) is read as R100 reads it; an `existed: true` acquire answer already carries its reading (acquire always reads), so it only gets `readHeld`.
+2. An `existed: true` upload answer WITH a document (capture's interrupted-upload arm) and `readHeld` answering `why: NO_HOME`: the door reads the document as R100 reads a new upload (`extractread`) and answers it with `reading` and `text_units`. A failed read is answered as R100 answers one (the refusal), never an unread document the screen could promote. `READING_HELD` and `NO_WHOLE_OBJECT` leave the answer as it was. A refusal or silence of `readHeld` itself never changes the answer.
+3. No `existed: true` trigger for "kept whole" (acquisition R96 adds no field); if you want one, tell me the field.
+
+**Other.** None for now; I will REPORT anything further in COMPLETE.
