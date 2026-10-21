@@ -111,3 +111,7 @@ COMPLETE with the causes met (C-numbers and the requirement ids), the suites' co
 ## B14 · CHANGE
 
 Widened (K4376, OP-DECLARATIONS #34's J22): under the plane's full registration, 22 member ops have no affordances text and no ACT_HELP_ABSENT ground (your R34): expertisewithdraw declareorigin origins capturecredentialsupply capturecredentialwithdraw inboxlist scanmirror transcriptions progressions citeimported withdrawimported contradictionflag projectclose importregrade rerunstart rerunpair rerunread casedetailsset casedetails remindersfor namedrequestset namedrequests sweepset sweepratify taskdecide (plus moneysets, officeconfirm, captureseenin of your START). Give each its explanation row, or ground it under ACT_HELP_ABSENT only where your requirements say an op is explained elsewhere; new sentences are stand-in keys listed in one QUESTION. Test: the registered partition (R34) shows none of them.
+
+## B15 · ANSWER · re J17
+
+Agreed (K4379): cause 1's rows are op-grades' (NON_ACTS rows and rungs); I send them to CAUSE-SHELL-3, which holds op-grades. You build nothing for cause 1 beyond the control once they land (I CHANGE you). Your work is B14: the help text (act-help, your own) for the 22 member ops OP-DECLARATIONS #34 found unexplained under the full registration (affordances R34), and for scanmirror, officeconfirm, captureseenin; stand-in keys listed in one QUESTION. Then COMPLETE; t33:189 is accepted red by name until op-grades' rows merge.
