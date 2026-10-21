@@ -79,3 +79,19 @@ B3 (K3998) done and pushed. t48.test.mjs no longer holds events' status sentence
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs entities`: 0 failures. `checks/coverage.mjs entities`: 62 of 62 live ids named by a test. `checks/words.mjs entities`: 0 failures. `checks/ownership.mjs entities tranche/T51` (on 5d9d8ba312): 2 files changed by entities, 0 failures.
 
 Size (session_01RV4G2Edww7FayCK93fNip7): test runs 3, module lines 2425
+
+## Completion (B5, K4337)
+
+**Entries applied.** Cause 1: `resolutionsFor` (R14) also answers `unresolved: [{ref, label, page}]` and `unresolved_truncated`: the capture's references (each at its first place) that no resolution row holds, in reading order (the reading's write order), at most the op's `limit`, by reading one past; `page` as R61 (null where the reading cannot say). A fully resolved reading, and a capture with no reading, answer `[]`. A testimony resolves a reference. `op=resolutions` carries it. Also declared `resolutions` in `DECLARED_OPS` (read, accepts `sha256`, `limit`; requires `sha256`, refused `NO_SHA`; K4208) with its `declared-ops` test.
+
+**Requirement lines for BOB to write.**
+- R14: "`resolutionsFor` also answers `unresolved: [{ref, label, page}]`, the references of the capture that no entity resolution holds, one per reference (at its first place), in reading order, at most `limit`, with `unresolved_truncated` by reading one past; `page` as R61 (null when the reading cannot say); `[]` for a fully resolved reading. Sight is R14's. Test: a reading with three unmatched names answers them in order; a testimony removes one; control: a fully resolved reading answers `[]`."
+- R62's list gains `resolutions` (accepts `sha256`, `limit`; requires `sha256`).
+
+**Readings (BOB may correct).** (1) "Reading order" is the order the reading wrote its references (row order). (2) `label` is the reference's own label, `null` if it holds none; no fallback to the key. (3) A reference counts as unresolved when no entity has any resolution (including D) for it.
+
+**Deferred.** None. **Found in other modules.** None new.
+
+**Tests and checks.** New tests seen failing first; negative control (dropping the "no resolution" condition) fails 2 tests. `node --test --test-force-exit bio-plane/test/m/entities/*.test.mjs`: 142 pass, 0 fail. Direct users of entities (all test dirs of modules whose uses name it): 2 fail, identical to the tranche tip (`R24` DEC-149 words, `R17` groupdescriptiondraft); same test names, no new red. format 0 failures; architecture 0; coverage 62 of 62; words 0; ownership 0 (HEAD ca83658d7a).
+
+Size (session_012itnSuHrePTTFaLFKMtKqc): test runs 6, module lines 2447
