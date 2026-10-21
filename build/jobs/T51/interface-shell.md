@@ -236,3 +236,13 @@ COMPLETE for `interface-shell` in T51 (fix round 2, wave 3, START B27, cause 1; 
 **Tests and checks.** Tests (`fixround3.test.mjs`, seen failing before the change): both answer shapes, the controls (not named, real refusal of the same act, 503, no answer, an ordinary success, the next press), the malformed list. `node --test --test-force-exit bio-plane/test/m/interface-shell/`: 268 tests, 268 pass. Users (`impact.mjs origin/tranche/T51 HEAD`): screens-wizards 75/0, screens-entry 96/0, screens-daily 252/0, screens-investigate 211/0, screens-publish 212/0, screens-action 223/0, control-plane 340/0; reds also on the tranche tip with the tranche's own shell (compared by name), none mine: screens-settings R39, screens-inquiry 3 (R5…, R10, R10 entry 25), screens-intake R7 (C28), plane R24. `checks`: format 0, architecture 0, coverage 108 of 108, words 0 (interface-shell), ownership 0.
 
 Size (session_018xL836aY5gPSaoL972peEg): test runs 9, module lines 3004
+
+## J18 · COMPLETE
+
+COMPLETE (B28, K4337, C66) for `interface-shell` in T51, `tranche/T51` merged first.
+
+The frame's own `queue` read (`browser.mjs`, the masthead/rail count) asked `limit: 500`, which the walk saw refused 400; it now asks 200, the limit screens-inquiry's dashproject uses. Test (R7, seen failing: it asked 500): the frame's background queue reads carry `limit` 200; control: a screen's own queue read keeps its limit. The R7 count is unchanged (a list of at most 200 items; the sum of the three kinds is counted from what is read). Requirement line, if BOB wants it written: R7 — the frame's queue read asks `limit` 200.
+
+Module suite 269 of 269; format, architecture, coverage (108 of 108), words 0 failures. The J17 line for R112 stands.
+
+Size (session_018xL836aY5gPSaoL972peEg): test runs 12, module lines 3004
