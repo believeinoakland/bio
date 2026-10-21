@@ -242,3 +242,9 @@ On the live copy: `op=reading&sha256=<the project-less photo's sha>` as the memb
 - Wording-only to `later-ux.md`: **6 new lines** (+ 13 rows already listed). To UX-DESIGN: **1 handoff, 3 asks** (stored login, subject passage and manual flag status, the batch of word rows).
 - Not a defect, not reproducible or not exercised (each with its reason in section 2): the first-try `STORE_DID_NOT_ANSWER`, C87c, S-45's true mark, C4/C71/C89/S-27, C41/C42/C65/C68/C96.
 - Could not place: none. Halves not traced to a line (the START says so; each job asks, P9): C25 for PDFs (reading title), C28 (a knock's name and type), C46's plane half, C53 (the read of reminders), C94's cover-handle field, C51's 37 s stage, C40 (who holds the late attempt).
+
+## 11. The round's word batch (handoff step 5; collected as jobs name stand-ins, sent once to UX-DESIGN)
+
+- file-safety (K4371, J9): `refusal.SIGNATURES_RUN_RECENT`, `file-safety.index.signatures_refused_unnumbered` (rows asked); `file-safety.index.checking_for_new_signatures`, `.no_scanner_so_no_run_started`, `.a_run_was_started_lately`, `.the_scanner_did_not_start` (act words).
+- acquisition (K4373, J10): `refusal.CAPTURE_NOT_KEPT` (stand-in `acquisition.checks.capture_not_kept`); `checks.test.mjs` R29 R31 red by name until it lands.
+- case-disclosures (K4365): `case-disclosures.index.late_proves`. review (K4367): `review.index.not_concluded_yet`. entities (K4364): `refusal.CONFIRM_NOT_AN_OFFICE`, `refusal.NOT_NAMED_BY_A_MEMBER`.
