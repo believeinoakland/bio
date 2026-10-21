@@ -316,3 +316,9 @@ Size (session_01JarNVWj3jh7A31SRkU57RG): test runs 12, module lines 4,076
 ## J15 · COMPLETE
 
 control-plane fix round 3 complete: C15 R75 (versioned immutable script, hash policy), C5/C17 R117 (readHeld, door reads no-home upload), C14 R118 (sharedDraftsOf), routes and page tests current. Reds by name: real-plane R117/R118 tests until PLANE #47; officeconfirm and captureseenin until entities R64 and capture R101 merge; affordances unaccounted. signerregister measured: 9-23 ms whole, nothing to cut. Ask: add money as test-only use. Record has details.
+
+## Re-completion (B20, K4397)
+
+Merged `tranche/T51` (plane R74): the real-plane tests of R117 and R118 and `plane/fix3-r74` pass; `captureseenin` routes. Control-plane suite 356 tests, 354 pass, 2 red and not mine: `officeconfirm` (entities R64, not merged) and affordances' unaccounted (R2, R41, as at baseline).
+
+Size (session_01JarNVWj3jh7A31SRkU57RG): test runs 14, module lines 4,103
