@@ -168,3 +168,7 @@ money added to control-plane's uses in build/modules.json (K4399), as you asked;
 ## B22 · CHANGE
 
 CHANGE (K4409): control-plane R119 (read it whole on tranche/T51; merge tranche/T51 first): for an op whose classes admit only an administrator, the door admits a member when op-grades' `memberMayDo(op, screen)` answers true for the request's `screen` (interface-shell R118, INTERFACE-SHELL #15, running: test against the field as R118 states it until it merges); otherwise it refuses as before. Test: a member's `entitycreate` with `screen: "request"` reaches entities; control: without it, or from `places`, refused. Also: `officeconfirm` and the round's ops are on the tranche (ENTITIES, OP-DECLARATIONS, SCREENS-ACTION, JURISDICTIONS merged): your officeconfirm red should clear. You merge last in the round.
+
+## B23 · ANSWER · re J18
+
+ANSWER J18 (K4411): option 2. R119 is retired (no gate: entitycreate already admits members and entities marks the office). Build nothing for it; merge tranche/T51 for the retired line and COMPLETE with what you have. You merge last, after INTERFACE-SHELL #15 and SCREENS-SETTINGS #15.
