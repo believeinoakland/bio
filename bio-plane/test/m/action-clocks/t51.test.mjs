@@ -93,3 +93,25 @@ test("R2 control: a valid rule is unchanged by the deadlines list, the proposal 
   assert.equal("deadlines" in p, false);
   assert.deepEqual(Object.keys(p).sort(), ["evidence", "ok", "proposal", "says", "target", "weight"]);
 });
+
+/* C68: the deadlines an action's kind offers come in the order of the office's own level, not the view's */
+const LEVELLED = { records_laws: [{ level: "state", name: "State act", citation: "State Code § 7920.000 et seq." }, { level: "federal", name: "Federal act", citation: "Fed. Code § 552" }],
+  counterparties: [{ role: "Registrar", body: "State Registry", level: "state" }, { role: "Records Officer", body: "Federal Agency", level: "federal" }],
+  deadlines: [{ rule: "state_answer", applies_to: "records_request", citation: "State Code § 7922.535(a)" }, { rule: "local_answer", applies_to: "records_request", citation: "Local Code § 2.20.230" },
+    { rule: "federal_answer", applies_to: "records_request", citation: "Fed. Code § 552(a)(6)(A)(i)" }, { rule: "other", applies_to: "other_kind", citation: "Fed. Code § 1" }] };
+const to = (o) => ({ action_kind: "records_request", counterparty: { state: "named", kind: "office", ...o } });
+const rules = (fm) => clocks.deadlinesFor(LEVELLED, "records_request", fm).map((d) => d.rule);
+
+test("R2 (C68): a request to a federal office lists the federal law's deadline first, the others after in the view's order; control: a state office lists the state's first and the federal last", () => {
+  // the level is the office's own as the view lists it, or the one the addressee states
+  assert.deepEqual(rules(to({ role: "Records Officer", body: "Federal Agency" })), ["federal_answer", "state_answer", "local_answer"]);
+  assert.deepEqual(rules(to({ role: "Anyone", body: "Elsewhere", level: "federal" })), ["federal_answer", "state_answer", "local_answer"]);
+  assert.deepEqual(rules(to({ role: "Registrar", body: "State Registry" })), ["state_answer", "local_answer", "federal_answer"]);
+  // controls: an office of no known level, an addressee that is no office and no action keep the view's own order, and the list is the same set
+  for (const fm of [to({ role: "Unlisted", body: "Nowhere" }), { action_kind: "records_request", counterparty: { state: "undetermined", basis: "x" } }, null])
+    assert.deepEqual(rules(fm), ["state_answer", "local_answer", "federal_answer"]);
+  assert.equal(clocks.officeLevel(to({ role: "Records Officer", body: "Federal Agency" }), LEVELLED), "federal");
+  assert.equal(clocks.officeLevel(null, LEVELLED), null);
+  // only the kind's own deadlines, with their citations as before
+  assert.deepEqual(clocks.deadlinesFor(LEVELLED, "records_request", to({ role: "Records Officer", body: "Federal Agency" }))[0], { rule: "federal_answer", citation: "Fed. Code § 552(a)(6)(A)(i)" });
+});

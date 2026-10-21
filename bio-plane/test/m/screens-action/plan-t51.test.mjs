@@ -367,3 +367,40 @@ test("R44 (DEC-387): a scenario's phase reads the design's rows: 'A phase', its 
   said(p, "screen.plan.each.phase.starts.after.something.else");
   said(p, "screen.plan.no.phase.can.start.after.itself");
 });
+
+/* ---------- C53: "Remind me" on a chosen option, and the reminder the record holds ---------- */
+
+const CHOSEN = (reminders, dates = [{ date: "2026-11-30", basis: "law" }]) => withPlan({ options: [
+  { id: "opt-1", summary: "Public comment", category: "legal", subjects: [`outcome:${DET}#STD-1`], dates, disposition: "chosen", dispositions: [], reminders, action: null },
+  { id: "opt-2", summary: "Story with a reporter", category: "awareness", subjects: [`outcome:${DET}#STD-1`], dates: [{ date: "2026-12-15", basis: "law" }], disposition: "open", dispositions: [], reminders: null, action: null }] });
+const remindBtn = (p, option) => main(p).querySelectorAll('button[data-act="optiondispose"]').find((b) => b.dataset.option === option && b.dataset.remind);
+
+test("R1, R44 (c) (C53): a chosen option with dates draws the Set-reminder act and the day it holds, read from the record; the act sends the choice with the reminder; control: an option with none draws the act only", async () => {
+  // a chosen option that holds no reminder draws the act and no reminder sentence
+  const bare = await open(ROUTES.plan, { ...CHOSEN([]), optiondispose: ok({}) });
+  assert.ok(remindBtn(bare, "opt-1"), "a chosen, dated option draws the act");
+  assert.ok(remindBtn(bare, "opt-1").textContent.replace(/\s+/g, " ").trim().startsWith(W("act.reminderset.label.action")));
+  assert.equal(remindBtn(bare, "opt-2"), undefined, "an undecided option draws no such act: it is set while choosing");
+  unsaid(bare, "screen.reminder.on", { date: D("2026-11-25") });
+  // a held reminder is drawn by its day, after a reload as before
+  const held = [{ date: "2026-11-30", on: "2026-11-25" }];
+  const p = await open(ROUTES.plan, { ...CHOSEN(held), optiondispose: ok({}) });
+  said(p, "screen.reminder.on", { date: D("2026-11-25") });
+  assert.ok(remindBtn(p, "opt-1"), "and the act stays, to add another");
+  // the act keeps the choice and carries the held reminders with the new one
+  await press(p, remindBtn(p, "opt-1"), { values: { "plan-rem-date": "opt-1|2026-11-30", "plan-rem-on": "2026-11-28" }, reason: "worth it" });
+  assert.deepEqual(last(p, "optiondispose").body, { plan: PLAN_ID, options: ["opt-1"], disposition: "chosen", reason: "worth it",
+    reminders: [{ option: "opt-1", date: "2026-11-30", on: "2026-11-25" }, { option: "opt-1", date: "2026-11-30", on: "2026-11-28" }] });
+  // an option with one date needs no date chosen; no day asks for the day first and sends nothing
+  const q = await open(ROUTES.plan, { ...CHOSEN([]), optiondispose: ok({}) });
+  await press(q, remindBtn(q, "opt-1"), { values: { "plan-rem-on": "" }, reason: "x" });
+  assert.equal(q.byOp("optiondispose").length, 0);
+  said(q, "screen.action.remindon.needed");
+  await press(q, remindBtn(q, "opt-1"), { values: { "plan-rem-on": "2026-11-27" }, reason: "x" });
+  assert.deepEqual(last(q, "optiondispose").body.reminders, [{ option: "opt-1", date: "2026-11-30", on: "2026-11-27" }]);
+  // control: a chosen option with no dates, a started one and a closed plan draw no such act
+  const undated = await open(ROUTES.plan, CHOSEN([], []));
+  assert.equal(remindBtn(undated, "opt-1"), undefined);
+  const closed = await open(ROUTES.plan, withPlan({ ...CHOSEN([]).plan.json.result, state: "closed" }));
+  assert.equal(remindBtn(closed, "opt-1"), undefined);
+});

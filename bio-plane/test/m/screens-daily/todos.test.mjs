@@ -4,7 +4,7 @@
    by the harness against the owners' declarations. Every sentence is asserted as `word(key, vars)` (R34). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, ok, refused, main, text, ops, button, fill, last, press, beside, word, hasWord, withScreens, MEMBER } from "./page.mjs";
+import { open, ok, refused, main, text, ops, button, fill, last, press, beside, word, hasWord, withScreens, MEMBER, settle } from "./page.mjs";
 
 const WHO = { whoami: ok({ ...MEMBER, capabilities: ["contribute"] }) };
 const SEEN = { groupidentity: ok({ ok: true, group: "lakeshore", display_name: "Lakeshore Tenants" }), lookedsince: ok({ since: "2026-10-01T00:00:00Z" }),
@@ -116,3 +116,40 @@ test("R17 (home): a to-do to vouch counts among the member's own on the strip; a
   assert.ok(!text(first).includes(word("screen.home.needsyou")));
   assert.ok(!ops(first).includes("release"));
 });
+
+// C70 (fix round 2): the vouch to-dos are counted and drawn once with the list.
+const PROJ = (id, title) => ({ state: "determined", ungrouped: false, ancestors: [{ id, type: "project", title, depth: 1 }] });
+const TASKS = [
+  { id: "TSK-1", assignee: "mai", class: "OBLIGATION", kind: "check-requested", case: PROJ("PROJ-1", "Pothole repairs"), subject: { kind: "bundle", id: "INF-7", title: "Work orders" }, summary: "Check the first count", options: [], disposition: { available: false, instead: "taskresolve" } },
+  { id: "TSK-2", assignee: "mai", class: "OBLIGATION", kind: "check-requested", case: NONE, subject: { kind: "bundle", id: "INF-8", title: "Memo" }, summary: "Check the memo", options: [], disposition: { available: false, instead: "taskresolve" } },
+];
+const HELDAT = (id, address, since) => ({ ...ROW(id, address), collected_since: since });
+
+test("R17, C70 (queue): the vouch to-dos are counted with the list and grouped in it, with no case; with none held none is added", async () => {
+  const held = HELD(HELDAT("INF-H1", "https://city.example/gate", "2026-10-02T10:00:00Z"), HELDAT("INF-H2", "https://city.example/lot", "2026-10-03T10:00:00Z"));
+  const p = await open("/app/queue", planeOf({ queue: ok({ items: TASKS, item_count: 2 }), heldcaptures: held }), SCR);
+  assert.ok(text(p).includes(word("screen.queue.count.many", { n: "4" })), "two items and two vouch to-dos are four");
+  const sections = main(p).querySelectorAll("section.mk-sec");
+  const uncased = sections.find((s) => text(p, s.querySelector("h2")) === word("screen.queue.nocase"));
+  assert.equal(uncased.querySelectorAll('button[data-act="release"]').length, 2, "the vouch to-dos are in the group of what is in no case");
+  assert.equal(main(p).querySelectorAll('button[data-act="release"]').length, 2, "each drawn once");
+  const none = await open("/app/queue", planeOf({ queue: ok({ items: TASKS, item_count: 2 }), heldcaptures: HELD() }), SCR);
+  assert.ok(text(none).includes(word("screen.queue.count.many", { n: "2" })), "control: none held adds none");
+});
+
+for (const [where, path] of screens) {
+  test(`R17, C70 (${where}): the list is drawn once, with the vouch to-dos: while her captures are being read it is not drawn without them`, async () => {
+    let open1;
+    const gate = new Promise((r) => { open1 = r; });
+    const p = await open(path, planeOf({ queue: ok({ items: TASKS, item_count: 2 }), heldcaptures: async () => { await gate; return HELD(HELDAT("INF-H1", "https://city.example/gate", "2026-10-02T10:00:00Z")); } }), SCR);
+    assert.ok(!text(p).includes("Check the memo"), "not drawn before her captures are read");
+    assert.ok(!text(p).includes(word("screen.dash-project.next.vouch.one", { place: "https://city.example/gate" })));
+    assert.ok(main(p).querySelector('[data-state="loading"]'), "it says it is loading");
+    if (where === "home") assert.ok(!text(p).includes(word("screen.home.strip.you")), "no strip reading before the count is whole");
+    open1();
+    await settle();
+    assert.ok(text(p).includes("Check the memo") && text(p).includes(word("screen.dash-project.next.vouch.one", { place: "https://city.example/gate" })), "both at once");
+    assert.equal(main(p).querySelectorAll('button[data-act="release"]').length, 1);
+    if (where === "home") assert.ok(text(p).includes(word("screen.home.strip.you")));
+  });
+}

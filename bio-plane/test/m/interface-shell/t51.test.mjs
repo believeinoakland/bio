@@ -65,7 +65,8 @@ test("R90 cs.act(op, {here}) explains the button by act.<op>.here.<place> in pla
   assert.ok(!tip("here").includes(h(word("act.promote.does"))), "in place of .does");
   assert.ok(tip("plain").includes(h(word("act.promote.does"))), "no here is .does");
   assert.ok(tip("gone").includes(h(word("act.promote.does"))), "a here word the table lacks falls back to .does");
-  assert.ok(tip("here").includes(word("weight.reasoned.name")) || tip("here").includes(h(word("weight.reasoned.means"))), "the weight line follows");
+  /* fix round 2, C76: `promote` is marked Reasoned and asks nothing, so it carries no weight line */
+  assert.ok(!tip("here").includes(h(word("weight.reasoned.means"))), "no weight line for an act that asks nothing");
 });
 
 test("R90 a strip reading's says closes that reading's own explanation after its label in bold; the phone's one chip carries no reading's says; a reading with none explains nothing; the cap of four stays", async () => {
@@ -643,8 +644,8 @@ test("R102 every screen of the registry has its tab title (page.title with scree
     assert.equal(p.root().querySelectorAll(".cs-pips, .w, [data-weighed]").length, 0, id + " carries no weight mark");
     if (ops.length) assert.ok(p.root().querySelectorAll("button[data-act]").length > 0 || !sessionless, id + ": its acts are drawn");
   }
-  const home = await boot({ screens: ALL });
-  assert.ok(home.root().querySelector('button[data-act="promote"] .cs-pips'), "a working screen keeps its marks");
+  const home = await boot({ screens: ALL, path: "/app/members", plane: { whoami: ok(ADMIN) } });
+  assert.ok(home.root().querySelector('button[data-act="memberadd"] .cs-pips'), "a working screen keeps its marks (an act that asks)");
   const long = "A very long team name that has to wrap and never be cut, however many words it takes to say it in full";
   const wrapped = await boot({ screens: ALL, plane: { groupidentity: ok({ ok: true, display_name: long }) } });
   assert.equal(wrapped.root().querySelector(".cs-mast .mk-grp").textContent, long, "whole");

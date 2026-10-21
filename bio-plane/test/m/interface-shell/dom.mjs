@@ -110,7 +110,8 @@ export class Element extends Node {
   get outerHTML() { return serialize(this); }
   matches(sel) { return compile(sel)(this); }
   closest(sel) { const m = compile(sel); for (let x = this; x && x.nodeType === 1; x = x.parentNode) if (m(x)) return x; return null; }
-  focus() { const d = this.ownerDocument; const was = d.activeElement; if (was === this) return; d.activeElement = this;
+  /* a focus without `preventScroll` scrolls the element into view, as a browser's does (recorded as `scrolledTo`, like `scrollIntoView`) */
+  focus(o) { const d = this.ownerDocument; const was = d.activeElement; if (!(o && o.preventScroll)) d.scrolledTo = this; if (was === this) return; d.activeElement = this;
     if (was && was !== d.body) was.dispatchEvent(new Event("focusout", { relatedTarget: this })); this.dispatchEvent(new Event("focusin")); }
   blur() { const d = this.ownerDocument; if (d.activeElement === this) { d.activeElement = d.body; this.dispatchEvent(new Event("focusout")); } }
   click() { this.dispatchEvent(new Event("click")); }

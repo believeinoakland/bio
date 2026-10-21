@@ -62,8 +62,22 @@ export const DETAILS_PUBLIC = (o = {}) => {
   return { area: none, contact: none, related: none, relationships: none, ...o };
 };
 
+/** The case `publishedcase` answers for the public page (the edition, its findings, evidence and corrections). */
+export const PUBLISHED_CASE = { caseId: C, edition: 2, scope: "The Coliseum lease", signed_at: "2026-11-18T10:00:00Z", published_at: "2026-11-19T14:00:00Z",
+  editions: [1, 2], edition_index: [{ edition: 1, ratified_at: "2026-07-02T10:00:00Z", published_at: "2026-07-02T14:00:00Z" },
+    { edition: 2, ratified_at: "2026-11-18T10:00:00Z", published_at: "2026-11-19T14:00:00Z" }], manifest_sha: SHA,
+  files: [{ path: "FND-2026-0031/snapshots/minutes.pdf", sha256: E1, kind: "capture", bytes: 512, finding: "FND-2026-0031" }],
+  findings: [{ bundle_id: "FND-2026-0031", body: { conclusion: "The 2024 adjustments were made without the council vote the lease requires." },
+    strength: [{ axis: "capture", grade: "B" }, { axis: "connection", grade: "C" }],
+    standing: { role: "load_bearing", bar: { capture: "B", connection: "C" }, meets: true, short: [], line: "" } }],
+  method: { timeline: [{ what: "Council approves amendment 1", at: "2024-01-12" }] },
+  people: [{ shown: "The City Administrator", reason: "signed the March 2024 adjustment" }],
+  captures: [{ title: "Council minutes, 12 January 2024", sha256: E1 }], corrections: { count: 0, last: null } };
+
 /** The plane every screen reads from, keyed by op. */
 export function plane(o = {}) {
+  /* publication R1: a case edition never authored answers NO_CASE_DOCUMENT; `publish` prepares it, and from then on the record holds its document */
+  let prepared = false;
   return {
     whoami: ok({ ...MEMBER, member: "dev", handle: "dev", capabilities: ["contribute", "create_projects", "publish"] }),
     image: ok({ "bundle.md": projectMd }),
@@ -71,26 +85,18 @@ export function plane(o = {}) {
     casedrafts: ok({ kind: "review-drafts", project: P, drafts: [{ draft_id: DR, case: { case_id: C, edition: 2, identity: "The Coliseum lease" }, created_by: "dev", updated_by: "dev" }] }),
     reviewcopy: ok(COPY()),
     casecheck: ok({ state: "held", case: C, edition: 2 }),
-    casedocument: ok(DOCUMENT()),
+    casedocument: () => (prepared ? ok(DOCUMENT()) : refusedIn("NO_CASE_DOCUMENT")),
     whatchangeddrafts: ok({ case: C, truncated: false, drafts: [{ id: "WCD-2026-0001", text: "Adds the 2025 rent schedules.", label: { machine: true }, at: "2026-10-06T09:00:00Z" }] }),
     reviewcomments: ok({ kind: "review-comments", comments: [{ comment_id: "RVC-1", draft_id: DR, reviewer: "Prof. N. Iyer", reviewer_kind: "recipient", text: "Finding 1 should say which schedule the council approved.", at: "2026-10-07T09:00:00Z" }] }),
     publishpreflight: ok(PREFLIGHT()),
     publishtensions: ok({ wrote: false, project: P, count: 2, candidates: [{ candidate: "CAND-1", finding: "FND-2026-0031", says: "Two documents date the rent notice differently." }], says: "" }),
     photomarks: ok({ capture: PHOTO, photo: true, state: "unchecked", copy: null, refused: false, marks: [] }),
     publishschedule: ok({ editions: [], limit: 500, cursor: null }),
-    publish: ok({ caseId: C, edition: 2, minted: false, caseDocument: { case_id: C, edition: 2, doc_sha: SHA, bytes: 10 }, findings: [{ target: "FND-2026-0031", bundleSha: B1 }] }),
+    publish: () => { prepared = true; return ok({ caseId: C, edition: 2, minted: false, caseDocument: { case_id: C, edition: 2, doc_sha: SHA, bytes: 10 }, findings: [{ target: "FND-2026-0031", bundleSha: B1 }] }); },
     caseratify: ok({ caseId: C, edition: 2, sitting: [{ bundleId: "FND-2026-0031" }, { bundleId: "INFO-2026-0004" }] }),
     publishat: ok({ case: C, edition: 2, state: "waiting", at: { date: "2026-11-19", time: "06:00", zone: "America/Los_Angeles" } }),
-    publishedcase: ok({ caseId: C, edition: 2, scope: "The Coliseum lease", signed_at: "2026-11-18T10:00:00Z", published_at: "2026-11-19T14:00:00Z",
-      editions: [1, 2], edition_index: [{ edition: 1, ratified_at: "2026-07-02T10:00:00Z", published_at: "2026-07-02T14:00:00Z" },
-        { edition: 2, ratified_at: "2026-11-18T10:00:00Z", published_at: "2026-11-19T14:00:00Z" }], manifest_sha: SHA,
-      files: [{ path: "FND-2026-0031/snapshots/minutes.pdf", sha256: E1, kind: "capture", bytes: 512, finding: "FND-2026-0031" }],
-      findings: [{ bundle_id: "FND-2026-0031", body: { conclusion: "The 2024 adjustments were made without the council vote the lease requires." },
-        strength: [{ axis: "capture", grade: "B" }, { axis: "connection", grade: "C" }],
-        standing: { role: "load_bearing", bar: { capture: "B", connection: "C" }, meets: true, short: [], line: "" } }],
-      method: { timeline: [{ what: "Council approves amendment 1", at: "2024-01-12" }] },
-      people: [{ shown: "The City Administrator", reason: "signed the March 2024 adjustment" }],
-      captures: [{ title: "Council minutes, 12 January 2024", sha256: E1 }], corrections: { count: 0, last: null } }),
+    /* the ceremony asks for a case's published editions by `caseId` alone: the draft under it has not been published, so the case answers NOT_PUBLISHED */
+    publishedcase: (req) => ((req.query || {}).caseId && !(req.query || {}).id && !(req.query || {}).sha256 ? refusedIn("NOT_PUBLISHED") : ok(PUBLISHED_CASE)),
     publishedbytes: bytes("%PDF-1.7", "application/pdf"),
     verify: ok({ published: true, sha256: SHA, matches: [{ bundle_id: C, path: "manifest", kind: "manifest", published: true }] }),
     importedcases: ok({ imports: [{ import: "IMP-2026-0001", group: "West Oakland Neighbors", case: "Port lease revenue", latest_edition: 2,

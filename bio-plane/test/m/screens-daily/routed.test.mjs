@@ -5,7 +5,7 @@
 import "./register-tasks.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
-const { open, ok, text, ops, button, press, beside, last, main, word, hasWord, withScreens } = await import("./page.mjs");
+const { open, ok, text, ops, button, press, beside, last, main, word, hasWord, withScreens, dmy } = await import("./page.mjs");
 const { ADMIN } = await import("../interface-shell/harness.mjs");
 
 const NONE = { ungrouped: true, ancestors: [] };
@@ -101,6 +101,30 @@ for (const where of screens) {
     await press(p, "expertiseconfirm", { reason: "I have read her cases" });
     assert.equal(last(p, "expertiseconfirm").body.memberId, "M-9");
     assert.equal(last(p, "expertiseconfirm").body.label, "tenant law");
+  });
+
+  test(`R75 (${where}), C75: passing a task on to oneself is refused in words, nothing sent`, async () => {
+    const p = await open(at[where], planeOf([AUTH], { taskforward: ok({ ok: true }) }), SCR);
+    const self = await press(p, "taskforward", { values: { [button(p, "taskforward").dataset.f + "-to"]: "@rosa" } });
+    assert.equal(p.byOp("taskforward").length, 0);
+    assert.equal(beside(p, self), word("refusal.ALREADY_THEIRS"));
+  });
+
+  test(`R82 (${where}): endorsing the last administrator keeps the invitation the answer carries and shows it once, with the sentence that no email is sent`, async () => {
+    const answer = { ok: true, memberId: "M-9", invite: "TOK/en+1", expires: "2026-11-01T00:00:00Z" };
+    let reply = answer;
+    const p = await open(at[where], planeOf([ENDORSE], { adminendorse: () => ok(reply) }), SCR);
+    assert.ok(!text(p).includes("#invite="), "control: nothing is drawn before the act");
+    await press(p, "adminendorse", { reason: "I know her work" });
+    const link = "/#invite=" + encodeURIComponent(answer.invite);
+    assert.equal(main(p).querySelectorAll("code").filter((c) => c.textContent.endsWith(link)).length, 1, "the link is drawn once");
+    assert.ok(text(p).includes(word("screen.members.invite.noemail")), "with the sentence that the group's Civicsmith sends no email");
+    assert.ok(text(p).includes(word("screen.members.invite.shown", { handle: "M-9", expires: dmy("2026-11-01") })), "and who it is for and when it expires");
+    // the next endorsement answers with no invitation: the link is not drawn any more
+    reply = { ok: true };
+    await press(p, "adminendorse", { reason: "I know her work" });
+    assert.equal(main(p).querySelectorAll("code").filter((c) => c.textContent.includes("#invite=")).length, 0, "control: an answer with no invite draws none, and the earlier one is gone");
+    assert.ok(!text(p).includes(word("screen.members.invite.noemail")));
   });
 
   test(`R75 (${where}): nobody agreed or awaited is "no one yet"; with no handle in fills the member's id is drawn`, async () => {

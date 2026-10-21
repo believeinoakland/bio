@@ -21,6 +21,7 @@ function reads(view) {
     people: { op: "peopledirectory", query: { limit: "200" } },
     questions: { op: "list", query: { type: "inquiry", limit: "500" } },
     docs: { op: "heldcaptures", query: { project: id, limit: "200", state: "held_and_vouched" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
+    vocab: { op: "affordances", query: {} },
   };
   if (mode === "matter" && key && eid) out.matter = { op: "instance", query: { key, id: eid } };
   if (mode === "progression" && key) out.def = { op: "progression", query: { key } };
@@ -90,6 +91,13 @@ function render(cs, view) {
   const tl = doc && (set.length || shas.length) ? P.later(cs, view, "timeline", "timeline", { query: q }) : null;
   const titleOf = (sha) => { const r = docsRead.find((x) => x && x.capture && x.capture.sha256 === sha); return (r && r.title) || ""; };
   const kinds = ["meeting", "adopted", "effective", "signed", "issued", "published", "received", "entered", "hearing", "period_covered", "edited"];
+  /* R34, C56: the kinds the form offers are the kinds `events` accepts, as `affordances` answers them (its R39), never a list copied
+     here: a kind with a word of the design's is worded by it, any other by the owner's own word as record data; an unread
+     vocabulary draws the choice failed, not a guess */
+  const vk = view.data.vocab && view.data.vocab.state === "ok" && view.data.vocab.value && view.data.vocab.value.vocabularies ? view.data.vocab.value.vocabularies.event_kinds : null;
+  const kindOptions = vk && Array.isArray(vk.values) ? vk.values.map((k) => (cs.w(S + "evkind." + k) !== cs.esc(S + "evkind." + k) ? [k, S + "evkind." + k]
+    : { value: k, text: String((vk.words && vk.words[k] && vk.words[k].word) || k) })) : null;
+  const kindChoice = kindOptions ? cs.choice("tl-kind", S + "evkind", kindOptions, {}) : cs.state("vocab", view, () => `<p class="cs-state" data-state="failed" role="alert">${cs.w("state.failed", { reason: cs.w("shell.noanswer") })}</p>`);
   const precisions = ["day", "minute", "second", "edtf"];
   const datedRow = (f) => cs.row("", `<span class="mk-date">${P.when(cs, f.upper_bound ? { precision: "upper_bound", end: f.value } : { value: f.value, precision: f.precision })}</span>`
     + (kinds.includes(f.kind) ? ` <b>${cs.w(S + "datekind." + f.kind)}</b>` : ""), "",
@@ -137,7 +145,7 @@ function render(cs, view) {
   if (proj && proj.state === "ok") out.push(view.parts.defineFold(cs));
   out.push(cs.sec(S + "record.head",
     P.docChoice(cs, view, "tl-doc")
-    + cs.choice("tl-kind", S + "evkind", ["vote", "meeting", "decision", "award", "statement", "filing", "other"].map((k) => [k, S + "evkind." + k]), {})
+    + kindChoice
     + cs.act("createevent", { label: "act.createevent.label.timeline", tone: "primary" })
     + evChoice("tl-event", S + "event") + cs.choice("tl-who", S + "who", view.parts.options(view, "people", (v) => v.rows, (r) => ({ value: r.entity, text: r.name || r.entity })), {})
     + cs.choice("tl-role", S + "rolepick", ["decider", "voted", "signatory", "actor", "party", "present", "speaker", "author"].map((r) => [r, S + "roles." + r]), {})
@@ -263,7 +271,7 @@ const TIMELINE_KEYS = [
   "screen.timeline.lane.ours", "screen.timeline.lane.failed", "screen.timeline.more", "screen.timeline.undated.head",
   "screen.timeline.undated.apart", "screen.timeline.record.head", "screen.timeline.record.head.holds", "screen.timeline.sha",
   "screen.timeline.sha.help", "screen.timeline.page", "screen.timeline.evkind", "screen.timeline.evkind.vote", "screen.timeline.evkind.meeting",
-  "screen.timeline.evkind.decision", "screen.timeline.evkind.award", "screen.timeline.evkind.statement", "screen.timeline.evkind.filing",
+  "screen.timeline.evkind.award", "screen.timeline.evkind.statement", "screen.timeline.evkind.filing",
   "screen.timeline.evkind.other", "screen.timeline.event", "screen.timeline.who", "screen.timeline.rolepick", "screen.timeline.roles.decider",
   "screen.timeline.roles.voted", "screen.timeline.roles.signatory", "screen.timeline.roles.actor", "screen.timeline.roles.party",
   "screen.timeline.roles.present", "screen.timeline.roles.speaker", "screen.timeline.roles.author", "screen.timeline.vote", "screen.timeline.to",

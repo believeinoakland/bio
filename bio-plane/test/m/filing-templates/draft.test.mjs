@@ -210,3 +210,18 @@ test("R21 TEMPLATE_STATES, TEMPLATE_USES and REVIEW_OUTCOMES are exported frozen
   const seen = new Set(w.ft.templatesFor({ state: "in_review", viewer: A }).templates.flatMap((t) => t.versions.map((v) => v.state)));
   for (const s of seen) assert.ok(ft.TEMPLATE_STATES.includes(s));
 });
+
+test("R3 (C65): a template kept from a filing is accepted for the project's owner and for a joined member, in the project the action belongs to; a member outside it, an invited one and a filing with no project are refused", () => {
+  const w = seeded();
+  const keep = (who, project, name) => w.ft.templateDraft({ project, kind: "records_request", use: "file", profiles: [TEST], name, text: TEXT,
+    from: { filing: "FIL-2026-0001", sha: sha(TEXT) }, author: V(who), viewer: V(who) });
+  // alice owns P, frank is a joined member of it
+  for (const who of ["alice", "bob", "frank"]) {
+    const r = keep(who, w.P, `kept by ${who}`);
+    assert.equal(r.ok, true, `${who}: ${JSON.stringify(r).slice(0, 200)}`);
+    assert.deepEqual(w.ft.templateRead({ template: r.template, viewer: V(who) }).template.scope, { project: w.P });
+  }
+  // control: dave is outside P, carol is invited and not joined, and a filing that names no project has no scope at all
+  for (const who of ["dave", "carol"]) refused(keep(who, w.P, `by ${who}`), "TEMPLATE_SCOPE_REFUSED");
+  refused(keep("alice", null, "no project"), "TEMPLATE_SCOPE_REFUSED");
+});

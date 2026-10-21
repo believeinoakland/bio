@@ -14,7 +14,8 @@ export const startSend = Object.freeze({
   id: "start-send",
 
   place: function (view) {
-    const p = view.data.plan;
+    // step 1 reads the plan, step 2 the action; both name their project, whose title `list` answers (C62)
+    const p = String(view.subject || "").indexOf("~") < 0 ? view.data.action : view.data.plan;
     const v = p && p.state === "ok" ? p.value : null;
     if (!v || !v.project) return {};
     const l = view.data.projects;
@@ -33,6 +34,7 @@ export const startSend = Object.freeze({
       stake: { op: "stakeatpreparation", query: { action: s }, empty: function () { return false; } },
       identity: { op: "groupidentity", empty: function () { return false; } },
       vocab: { op: "affordances", query: {}, empty: function () { return false; } },
+      projects: { op: "list", query: { type: "project", limit: "500" } },
     };
     const plan = s.slice(0, at), option = s.slice(at + 1);
     const body = { plan: plan, option: option, kind: view.ui.kind || "records_request", breach: view.ui.breach === true };

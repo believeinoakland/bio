@@ -128,6 +128,14 @@ export const plan = Object.freeze({
       if (code && cs.w(key) !== cs.esc(key)) return cs.w(key);
       return typeof a.translation === "string" && a.translation ? cs.esc(a.translation) : cs.w("shell.unread");
     },
+    // C53: the reminders the plan read holds for a chosen option, `{date, on}` each, as the record answers them
+    heldReminders: function (o) {
+      return o && o.disposition === "chosen" && Array.isArray(o.reminders) ? o.reminders.filter(function (r) { return r && r.on; }) : [];
+    },
+    // C53: an option's regulated dates
+    datesOf: function (o) {
+      return (Array.isArray(o && o.dates) ? o.dates : []).map(function (d) { return d && d.date ? String(d.date) : ""; }).filter(Boolean);
+    },
     // The option's regulated end: the latest of its dates (the order R1 sorts on), or none.
     endOf: function (o) {
       const ds = Array.isArray(o.dates) ? o.dates.map(function (d) { return String(d && d.date || ""); }).filter(Boolean).sort() : [];
@@ -149,6 +157,26 @@ export const plan = Object.freeze({
         }, function () { settle({ state: "failed", refusal: null }); });
       }
       return L[key];
+    },
+    // C63: a check drawn by the key of its sentence, with the option or phase it names called by its place in the list; "" where the
+    // check's data does not carry what its sentence needs (the plan's own sentence is drawn)
+    checkSays: function (cs, P, c, options, scenarios) {
+      const at = options.findIndex(function (x) { return x.id === c.option; });
+      const opt = at >= 0 ? P.optName(cs, options[at], at) : "";
+      const sc = (Array.isArray(scenarios) ? scenarios : []).find(function (x) { return String(x.scenario) === String(c.scenario); });
+      const phs = sc && Array.isArray(sc.phases) ? sc.phases : [];
+      const pi = phs.findIndex(function (x) { return x.id === c.phase; });
+      const ph = pi >= 0 ? P.phName(cs, phs[pi], pi) : "";
+      if (c.state === "undetermined") return "";
+      if (c.check === "date_past" && opt) {
+        const d = (Array.isArray(options[at].dates) ? options[at].dates : []).find(function (x) { return x && x.date === c.date; });
+        return d && typeof d.basis === "string" ? cs.w("action-plans.says.regulated_date_passed", { id: { html: opt }, date: { html: cs.date(c.date) }, basis: d.basis }) : "";
+      }
+      if (c.check === "subjects_not_live" && opt) return cs.w("action-plans.says.matter_serves_longer", { id: { html: opt } });
+      if (c.check === "outward_on_hypothesis" && opt) return cs.w("action-plans.says.addresses_someone_outside", { id: { html: opt } });
+      if (c.check === "enforces_superseded" && opt) return cs.w("action-plans.says.requirement_seeks_enforced", { id: { html: opt } });
+      if (c.check === "no_hostile_branch" && ph) return cs.w("action-plans.index.phase_id_addresses_someone_outside", { id: { html: ph } });
+      return "";
     },
     // R53: an option with no summary is named by its place in the list, a phase with no name by its place in its scenario;
     // never by an id.
@@ -229,7 +257,9 @@ export const plan = Object.freeze({
                 return "<p>" + cs.w("action-plans.says.phase_checkpoint_leads", { id: { html: nm }, miss: cs.w("screen.plan.judged." + (m === "met" ? "met" : "not_met")) }) + "</p>";
               }).join("");
             }
-            return "<p>" + cs.esc(c.says || c.check || "") + "</p>";
+            // C63: the other checks name an option or a phase by its place in the list, never by its id ("opt-1", "p1")
+            const said = P.checkSays(cs, P, c, options, p.scenarios);
+            return "<p>" + (said || cs.esc(c.says || c.check || "")) + "</p>";
           }).join("") + "</div>"
         : "";
 
@@ -290,7 +320,9 @@ export const plan = Object.freeze({
             end ? cs.date(end) : cs.w("screen.plan.noend"),
             cs.esc(P.subjectKeys(o).map(titles.ofKey).filter(Boolean).join(", ")),
             cs.w("screen.plan.disposition." + disp) + (last && last.reason ? " · " + cs.esc(last.reason) : "")
-              + (o.action && o.action.id ? " · " + cs.w("screen.plan.started") : "")];
+              + (o.action && o.action.id ? " · " + cs.w("screen.plan.started") : "")
+              // C53: the reminders the record holds for this option, each by the day it fires
+              + P.heldReminders(o).map(function (r) { return " · " + cs.w("screen.reminder.on", { date: { html: cs.date(r.on) } }); }).join("")];
         },
         acts: function (o) {
           if (!open) return "";
@@ -302,6 +334,8 @@ export const plan = Object.freeze({
             + (!started && o.disposition !== "done" ? cs.act("optiondispose", { label: "screen.plan.dispose.done", data: { option: o.id, disposition: "done" } }) : "")
             + (!started && o.disposition !== "blocked" ? cs.act("optiondispose", { label: "screen.plan.dispose.blocked", data: { option: o.id, disposition: "blocked" } }) : "")
             + (!started && o.disposition && o.disposition !== "open" ? cs.act("optiondispose", { label: "screen.plan.dispose.open", data: { option: o.id, disposition: "open" } }) : "")
+            // C53: a chosen option with dates that binds it draws "Remind me", which keeps the choice and sets the reminder on the day asked
+            + (!started && o.disposition === "chosen" && P.datesOf(o).length ? cs.act("optiondispose", { label: "act.reminderset.label.action", data: { option: o.id, disposition: "chosen", remind: "1" } }) : "")
             + (!started && o.disposition === "chosen" ? cs.act("optionstartpreview", { label: "act.optionstartpreview.label.plan", tone: "primary", data: { option: o.id } }) : "");
         },
         hold: function () {
@@ -551,6 +585,17 @@ export const plan = Object.freeze({
         const body = { plan: view.subject, options: options, disposition: el.dataset.disposition };
         // R44 (c): a reminder, when one is asked: which date of an option, and on what day
         const at = String(cs.value("plan-rem-date") || ""), on = String(cs.value("plan-rem-on") || "").trim();
+        if (el.dataset.remind) {
+          // C53: "Remind me" on one chosen option keeps the choice and adds this reminder to the ones the record holds
+          const opt = (Array.isArray(view.data.plan && view.data.plan.value && view.data.plan.value.options) ? view.data.plan.value.options : []).find(function (x) { return x.id === options[0]; }) || {};
+          const dates = view.parts.datesOf(opt);
+          const cut = at.lastIndexOf("|");
+          const date = at && at.slice(0, cut) === options[0] ? at.slice(cut + 1) : dates.length === 1 ? dates[0] : "";
+          if (!on || !date) return { refuse: "screen.action.remindon.needed" };
+          body.reminders = view.parts.heldReminders(opt).map(function (r) { return { option: options[0], date: r.date, on: r.on }; }).filter(function (r) { return !(r.date === date && r.on === on); })
+            .concat([{ option: options[0], date: date, on: on }]);
+          return { body: body };
+        }
         if (at || on) {
           const cut = at.lastIndexOf("|");
           body.reminders = [at ? { option: at.slice(0, cut), date: at.slice(cut + 1), on: on } : { date: "", on: on }];

@@ -45,6 +45,8 @@ export const BASIS_GRADE = Object.freeze({ identifier: "A", corroborated_name: "
 export const CLAIM_ENTITY_KINDS = Object.freeze(["person", ...ORGANISATION_KINDS]);
 export const FACT_KINDS = Object.freeze(["name", "birth", "death", "locality", "address", "contact"]);
 export const CONTACT_KINDS = Object.freeze(["address", "contact"]);
+/* R9 (C7, K4303): the fact kinds an organisation (institution, body, movement) takes; birth, death and locality are a person's. */
+export const ORGANISATION_FACT_KINDS = Object.freeze(["name", "address", "contact"]);
 export const TIE_KINDS = Object.freeze(["employer", "relative", "business", "other"]);
 /* R20 (K1490; case-disclosures R27): the attribution levels a member chooses for a tie's disclosure. */
 export const ATTRIBUTION_LEVELS = Object.freeze(["group", "project", "cover", "name"]);
@@ -738,9 +740,12 @@ export class People {
   recordPersonFact({ person, kind, value, valid, citation: given, question = null, by = null } = {}) {
     const citation = People.#cited(given);
     if (!filled(person)) return noSuchEntity(person ?? null);
-    const bad = this.#personRefusal(person);
-    if (bad) return bad;
+    /* R9: a person or an organisation; an organisation takes only ORGANISATION_FACT_KINDS (C7, K4303) */
+    const bad = this.#claimableRefusal(person);
+    if (bad) return bad.reason === "NOT_A_PERSON" ? this.#personRefusal(person) : bad;
     if (!FACT_KINDS.includes(kind)) return refuse("UNKNOWN_FACT_KIND", `a person fact is one of ${FACT_KINDS.join(", ")}`, { kinds: [...FACT_KINDS] });
+    if (this.#entity(person).kind !== "person" && !ORGANISATION_FACT_KINDS.includes(kind))
+      return refuse("NOT_A_PERSON", localize("people.index.org_fact_kinds", "{id} is an organisation, which takes a name, address or contact fact; a {kind} fact is a person's", { id: String(person), kind: String(kind) }), { entity_id: person });
     const contact = CONTACT_KINDS.includes(kind);
     /* R10 (K1485 row 9, K1493): an address or contact enters only by a member's act, never an import. */
     if (contact && (isMachineIdentity(by) || !memberOf(by)))

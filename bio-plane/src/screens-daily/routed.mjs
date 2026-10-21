@@ -55,7 +55,7 @@ export function routed() {
         + cs.field(f + "-tried", "screen.queue.routed.auth.tried.label", { help: ["screen.queue.routed.auth.tried.help1", "screen.queue.routed.auth.tried.help"], max: 2000 })
         + '<p class="mk-small muted">' + cs.w("screen.queue.routed.auth.fine1") + " " + cs.w("screen.queue.routed.auth.fine2") + "</p>" + decide + "</details>";
       const forward = pass ? '<details class="mk-details"><summary>' + cs.w(label("taskforward")) + "</summary>"
-        + cs.field(g + "-to", "screen.queue.forward.to", {}) + pass + "</details>" : "";
+        + (typeof o.pick === "function" ? o.pick(g + "-to") : cs.field(g + "-to", "screen.queue.forward.to", {})) + pass + "</details>" : "";
       return { summary: cs.w("screen.queue.routed.auth.item") + (o.ref ? " " + o.ref : ""), detail: cs.w("screen.queue.routed.auth.leaves"), acts: form + forward };
     }
     const basis = it.basis && typeof it.basis === "object" ? it.basis : {};
@@ -101,7 +101,20 @@ export function routed() {
     }
     return { refuse: "screen.queue.fieldfirst" };
   };
-  return { kindOf: kindOf, draw: draw, decide: decide };
+  // R82 (C4): endorsing the last administrator answers the invitation (`result.invite`), which Members keeps and shows once; so do
+  // Home and the queue. `keep` is the act's `done`: it holds the invitation in the page's memory (never the record), and an answer
+  // with none clears the earlier one. `shown` draws it, with the sentence that no email is sent, under the act's own redraw.
+  const keep = function (view, answer, cs) {
+    const a = answer && answer.result !== undefined ? answer.result : answer;
+    cs.set("invite", a && a.invite ? { memberId: a.memberId, expires: a.expires, link: (view.origin || "") + "/#invite=" + encodeURIComponent(a.invite) } : undefined);
+  };
+  const shown = function (cs, ui) {
+    const v = ui && ui.invite;
+    if (!v || !v.link) return "";
+    return '<div class="mk-msg" data-shown="invite"><p>' + cs.w("screen.members.invite.shown", { handle: String(v.memberId || ""), expires: { html: cs.date(String(v.expires || ""), { year: true }) } })
+      + "</p><p><code>" + cs.esc(v.link) + '</code></p><p class="mk-note">' + cs.w("screen.members.invite.noemail") + "</p></div>";
+  };
+  return { kindOf: kindOf, draw: draw, decide: decide, keep: keep, shown: shown };
 }
 
 // The refusals of the decision, in their own words (the plane's codes; `provenance` R65, `tasks` R20). Each is self-contained: the

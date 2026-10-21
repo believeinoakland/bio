@@ -1,6 +1,6 @@
 # screens-daily (T51)
 
-**Status** · session_01529AmD3t2nQgB7HFWQs2QU · depth 2 · COMPLETE · handled B22
+**Status** · session_01Ak8ZoKSctRCDeuHjPSUWJP · depth 2 · COMPLETE · handled B24
 
 ## Completion (SCREENS-DAILY #14, B21)
 
@@ -255,3 +255,42 @@ COMPLETE (B21): `home` and `queue` now draw `release` and `filingapprove` as the
 ## J13 · COMPLETE
 
 COMPLETE (B22): R74 done: a conflict seen in part opens /app/contradiction/<candidate>/<project> (project from parties[0] or between_projects[0], slash unescaped); a whole-seen candidate still opens by id. Test seen failing first; module suite 223/223; format, architecture, coverage 79/79, words, ownership 0 failures. Amended R74 line is in the record's Completion (#14, B21) section. B21's COMPLETE (J12) stands.
+
+## Completion (SCREENS-DAILY #15, B23: fix round 2, wave 1)
+
+Merged `tranche/T51` first. Each cause: one test written first and seen failing, at the module's interface, with its control.
+
+**Causes met (C-number, requirement ids, test)**
+1. **C4** (R82, R75): `adminendorse` on Home and the queue keeps the invitation its answer carries (`routed.mjs` `keep`/`shown`, the act's `done`) and draws it once, with `screen.members.invite.shown` and the sentence that no email is sent (`screen.members.invite.noemail`, the rows Members uses); an answer with no invite clears it, so the link is not drawn after the next endorsement. Test: `routed.test.mjs` "R82 (queue|home)".
+2. **C22** (R67, R4): `finder-states.mjs` `frontier`: each place by its name (title, name, label, referent, detail; for the document level an address, for the internet level a lead's words); a place with no name or only a digest draws no `<li>`, and a level with none draws no list; the tally's states are words (the log's `PRESENT` is "looked, found", `LOOKED_INDETERMINATE` is `refusal.LOOKED_INDETERMINATE`), never their codes. Test: `finder.test.mjs` "R67, R4 (C22)".
+3. **C23** Find's part (R44, R54, R55): the list says how many the filter holds (`screen.finder.table.count.*` over `total`, which follows Show and Only); an empty list under a filter names the filter; the table has a box on each row (so Hold and Watch work there, still four columns); the words box is a full-width field with its button below it (no flex row); each help line sits with the control it explains. Tests: `browse.test.mjs` four "(C23)" tests. Not Find's: the Held half (screens-intake, REPORT below), and "three documents titled alike" (the title is the plane's; no change made).
+4. **C35** find-in's part (R48 (7)): with no project scope each question is listed with its project's name (`projectlist`, then each project's `projectquestions` once, page memory `qs:<id>`), each question once. Test: `find-in.test.mjs` "R48 (7), C35". The watch form's empty first option is screens-inquiry's.
+5. **C70** (R17, R3): the vouch to-dos are queue items with no case (`todos.mjs` `items`, `merge`, `loading`): counted with the list, grouped among what is in no case and placed by the sort; the queue draws its list once, whole, after her captures are read (not before); Home draws neither its strip nor "Needs you" until the count is whole. Tests: `todos.test.mjs` "C70" (queue count and group, one draw on Home and the queue; none held adds none).
+6. **C71** (R58): every kept row of a set act says why: the design's letter and check reasons, the owner's own `check` or `translation`, else `queue.multi.done.help2` (the design's sentence for an item that needs the member to read, check or decide it herself). Test: `queue-states.test.mjs` "R58, C71".
+7. **C73** (R2): after a sort the line is `screen.queue.sorted` with the sort's name; by case it is still "grouped by case"; the vouch to-dos follow the sort (`merge`). Test: `queue.test.mjs` "R2, C73". The list is still drawn by case in the order the sort gives the cases.
+8. **C74** (R29, R17): Home draws an invitation once (the project row; the queue's `project-invitation` item for a project listed as invited is dropped from Needs you and Needs the group); a row's Open opens its subject, and a subject that opens nothing draws no Open (not a link to the queue). Tests: `home.test.mjs` "C74" (two).
+9. **C75** (R3, R58, R75): forwarding is a choice of the group's active members who have a handle (`forward.mjs`, `memberlist` read as `roster` on the queue), on the item, the authority form and the choosing strip; forwarding to oneself is refused in words (`refusal.ALREADY_THEIRS`) before anything is sent, on the queue and on Home; with no roster answered the handle is typed as before. Tests: `queue.test.mjs` "R3, C75", `routed.test.mjs` "C75".
+10. **C79** screens-daily's part: started a project **opens the project on success** (R1, R30, existing tests, unchanged). **No sentence says it was started: not done, see QUESTION/REPORT 1.**
+11. **C96** (R29): each Join on Home (the project row, the "Getting into a project" rows, and a queue invitation item) carries an accessible name `Join <project>`. Test: `home.test.mjs` "R29, C96". Join on `projects` and on the queue's own item is unchanged (cause source was `home.mjs`).
+
+**Suites and checks**
+- `node --test --test-force-exit bio-plane/test/m/screens-daily/`: 242 tests, 242 pass (was 223 at B22's close; 19 new).
+- Users of what I changed (`impact.mjs origin/tranche/T51 HEAD`): control-plane `totality`, `declarations`, `declared-ops`, `t51-door`, `t46-app`: 17 of 17; plane `declarations`, `t51`: pass; journey-check `pseudo.test.mjs`: 7 of 7 after `npm ci` in `bio-plane/src/journey-check` (it was red only for a missing `playwright-core`, K4113).
+- `checks/run.mjs`: architecture 0, words 0, coverage 0 in screens-daily (R82 is named by `routed.test.mjs`); the one format failure is `build/rulings.md:4298` (K4301's standing-list line), not this module's. `setup-words/build.mjs --check`: clean. `ownership.mjs`: 19 files, 0 failures.
+
+**For BOB (REPORTs, each a key or a decision the design lane or a module not mine holds)**
+1. **C79, the sentence.** The kit has no hand-over of a note across a navigation (`cs.go` only navigates), and no held key says "the project was started" (`project.visibility.started` "started {setting}, {date}" and `screen.project.opened` are the project page's, screens-inquiry's). R1 and R30 bind opening the project on success, so a confirmation drawn on this screen would never be seen. Options: (a) screens-inquiry's `project` draws `project.visibility.started` for a project opened this minute, (b) interface-shell gives `cs.go` a note carried to the destination and the design holds `project.start.done` ("Started {project}."), (c) the screen stays and confirms (R1, R30 amended). Recommendation: (b), with (a) as the interim. I did not invent a sentence.
+2. **Missing keys, for the design lane:** `queue.multi.why.reason` (the reason an item stays that needs the member's own reason: used `queue.multi.done.help2`, the design's general sentence, meanwhile); `screen.answers.state.LOOKED_INDETERMINATE` ("looked, could not tell": used the log's `refusal.LOOKED_INDETERMINATE`); `screen.queue.forward.to` still says "(the member's handle)" though it is now a choice; a dedicated self-forward refusal (used `refusal.ALREADY_THEIRS`); a sentence for an empty list under a filter, and a count line for the list view (used `state.empty` beside the filter's name, and the table's `screen.finder.table.count.*`).
+3. **RC-7's wording** (R82): the act's done note on the queue is still `queue.done`; the no-email sentence is drawn beside the link, not in the note. If the note itself must say it, a key is owed.
+4. **Another module's, C23:** Held's own vocabulary ("held until you vouch") against Find's state chips (`review`, `reviewed`, from `record-grammar` R35): one word per state needs screens-intake to adopt `state.item.review.name` or the design to rename; Held's tall "Open the file" control and its list of every project's captures are screens-intake's (`held.mjs`). `answers.mjs` still draws its words box in a `.mk-search` flex row (its field is the same width as Find's was): not in my causes.
+5. **Not done, by the plan:** the cheap picker read for the vouch rows (C14), the member-name helper (C94): screens-daily-2, wave 2. `projects.mjs`'s Join and the queue item's own Join carry no project name in their accessible name yet (C96's source was `home.mjs`).
+
+Size (session_01Ak8ZoKSctRCDeuHjPSUWJP): test runs 31, module lines 4062
+
+## J14 · COMPLETE
+
+COMPLETE (SCREENS-DAILY #15), re B23 (fix round 2, wave 1). Pushed @ job/T51/screens-daily; the detail, the REPORT items and the check lines are in my record ("Completion (SCREENS-DAILY #15, B23)").
+Causes met, each with a test written first: C4 (R82: adminendorse keeps and shows the invitation once on Home and the queue), C22 (R67: places by name, no empty li, no raw look code), C23 Find's part (count follows the filter, empty filter named, table boxes, full-width words box, help lines with their controls), C35 find-in's part (questions with their project's name), C70 (vouch to-dos counted, grouped, placed by the sort, drawn once with the list), C71 (a reason on every kept row), C73 (the sorted line), C74 (one invitation, Open opens the subject), C75 (member pick list, self refused), C96 (Join names its project).
+NOT done: C79's sentence (no held key, no kit hand-over across navigation; opening the project on success is met): QUESTION-grade decision for you in the record (REPORT 1: options a, b, c; I recommend b with a as interim).
+Suite 242 of 242. Users of what I changed (control-plane totality/declarations/declared-ops/t51-door/t46-app, plane declarations/t51, journey-check pseudo after npm ci): pass. checks/run.mjs: architecture 0, words 0, coverage 0 in screens-daily; the one format failure is build/rulings.md:4298 (K4301), not mine. setup-words --check clean; ownership 0.
+Size (session_01Ak8ZoKSctRCDeuHjPSUWJP): test runs 31, module lines 4062

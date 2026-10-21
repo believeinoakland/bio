@@ -199,3 +199,60 @@ test("R54, R93 (interface-shell R93): Find's browse re-reads itself every 45 sec
   await quiet.clock.tick(120000); await settle();
   assert.equal(browseReqs(quiet).length, 0, "control: a search is not a browse and is never re-read");
 });
+
+// C23, Find's part (fix round 2): the defects the walk found in Find's browse.
+const helpOf = (p, key) => main(p).querySelectorAll("p").find((e) => e.textContent.includes(word(key)));
+
+test("R44, R54 (C23): the list says how many the filter holds, and the count follows the filter, not the page", async () => {
+  const ten = Array.from({ length: 3 }, (_, i) => ({ kind: "document", id: `INF-${i + 1}`, title: `Doc ${i + 1}`, last_changed: "2026-10-12T10:00:00Z", new: false, watched: false, flagged: null }));
+  const p = await open("/app/finder", { ...PLANE, browse: (req) => BROWSE(ten, req.query.kinds === "document" ? { total: 40, awaiting_review: 12, truncated: true, next: "INF-3" } : { total: 76, awaiting_review: 19, truncated: true, next: "INF-3" }) });
+  assert.ok(text(p).includes(word("screen.finder.table.count.other", { n: "76", m: "19" })), "the whole record's count");
+  await choose(p, "finder-kind", "document");
+  assert.ok(text(p).includes(word("screen.finder.table.count.other", { n: "40", m: "12" })), "after choosing Documents the count is the documents'");
+  assert.ok(!text(p).includes(word("screen.finder.table.count.other", { n: "76", m: "19" })));
+  // Control: an answer with no count draws none; a count of zero draws none (R21).
+  const none = await open("/app/finder", PLANE);
+  assert.doesNotMatch(text(none), /awaiting review/i);
+  const zero = await open("/app/finder", { ...PLANE, browse: BROWSE([], { total: 0, awaiting_review: 0 }) });
+  assert.ok(!text(zero).includes(word("screen.finder.table.count.other", { n: "0", m: "0" })));
+});
+
+test("R44, R54 (C23): an empty list under a filter says which filter found nothing; with no filter it says only that nothing is here", async () => {
+  const p = await open("/app/finder/~all~new_since", { ...PLANE, browse: BROWSE([], { total: 0, awaiting_review: 0 }) });
+  const empty = main(p).querySelector('[data-state="empty"]');
+  assert.ok(empty.textContent.includes(word("find.state.new")) && empty.textContent.includes(word("state.empty")), "names New since you last looked and says there is nothing");
+  const docs = await open("/app/finder/~document", { ...PLANE, browse: BROWSE([], { total: 0, awaiting_review: 0 }) });
+  assert.ok(main(docs).querySelector('[data-state="empty"]').textContent.includes(word("find.kind.document")));
+  const plain = await open("/app/finder", { ...PLANE, browse: BROWSE([], { total: 0, awaiting_review: 0 }) });
+  const text0 = main(plain).querySelector('[data-state="empty"]').textContent;
+  assert.equal(text0, word("state.empty"), "control: no filter, no filter named");
+});
+
+test("R55 (C23): the table has a box on each row, so the rows can be held and watched there as in the list", async () => {
+  const p = await open("/app/finder", { ...PLANE, select: ok({ ok: true, handle: "sel-t", n: 1 }), selection: ok({ ok: true, handle: "sel-t", n: 1, members: ["INF-1"], expires: "2026-10-12T16:40:00Z" }) });
+  await choose(p, "finder-view", "table");
+  const rows = main(p).querySelectorAll("tbody tr");
+  assert.equal(rows.length, 3);
+  assert.ok(rows.every((r) => r.querySelector('input[type="checkbox"]')), "a box on each row");
+  assert.equal(rows[0].querySelector('input[type="checkbox"]').getAttribute("aria-label"), word("screen.finder.pick", { title: "Work orders FY2025" }));
+  assert.equal(main(p).querySelectorAll("thead th").length, 4, "still four columns");
+  assert.ok(main(p).querySelector('.cs-hold button[data-act="watchitem"]'), "Watch is offered in the table");
+  await press(p, "select", { nth: stripIndex(p, "select"), values: pick(["INF-1"]) });
+  assert.deepEqual(last(p, "select").body.ids, ["INF-1"], "the picked row is held");
+});
+
+test("R54 (C23): the words box is a full-width field with its button below it, and each help line sits under the control it explains", async () => {
+  const p = await open("/app/finder", { ...PLANE, themeread: ok({ ok: true, themes: [{ theme_id: "TH-1", name: "Street repair" }] }) });
+  const q = p.doc.getElementById("finder-q");
+  const ancestors = []; for (let n = q.parentNode; n && n !== main(p); n = n.parentNode) ancestors.push(n.className || "");
+  assert.ok(!ancestors.some((c) => /\bmk-search\b/.test(c)), "no row that leaves the field its content's width");
+  const html = main(p).innerHTML;
+  assert.ok(html.indexOf('id="finder-q"') >= 0 && html.indexOf('id="finder-q"') < html.indexOf('data-act="search"'), "the button follows the field");
+  assert.ok(helpOf(p, "screen.finder.table.view.help").querySelector("#finder-view") === null && helpOf(p, "screen.finder.table.view.help").parentNode.querySelector("#finder-view"), "Show as's help is with Show as");
+  assert.ok(helpOf(p, "find.browse.new.means").parentNode.querySelector("#finder-state"), "New since's help is with Only");
+  assert.ok(helpOf(p, "theme.filter.help").parentNode.querySelector("#finder-theme"), "Theme's help is with Theme");
+  // Control: with no earlier visit there is no "new" choice and the help that says why is with Only.
+  const none = await open("/app/finder", { ...PLANE, lookedat: ok({ since: null }) });
+  assert.ok(text(none, helpOf(none, "find.browse.nosince").parentNode).length > 0 && helpOf(none, "find.browse.nosince").parentNode.querySelector("#finder-state"));
+  assert.ok(!helpOf(none, "find.browse.new.means"));
+});

@@ -11,6 +11,9 @@ import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS,
          LARGER_SCREEN_ACTS, OP_ALIASES, phoneOf, MARKS, MARK_SOURCES } from "../../../src/op-grades/index.mjs";
 import * as T48 from "../../../src/op-grades/t48.mjs";
 import { MARKS_KIT_COMMIT } from "../../../src/op-grades/marks.mjs";
+
+/* the source the marks of reads name (K4259; fix round 2, C76): a read asks no reason, so its mark is Reversible */
+const READ_RULING = "K4259, a ruling";
 import { reqText, ticked, readRows, asksNotTheAccount, declaredSentence, doesSentence, registeredOpGrades } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
@@ -262,7 +265,7 @@ test("R42: every value is the design kit's WEIGHT for the op (the kit's `owed_` 
   for (const op of Object.keys(MARKS)) {
     /* notewrite is the one entry a ruling, not the kit, sets (R46, DEC-300 (5)); t50.test.mjs names it. versionnotice is a
        read, marked by its ruling (K4259, B30); t50.test.mjs names it. */
-    if (op === "notewrite" || op === "versionnotice") continue;
+    if (op === "notewrite" || MARK_SOURCES[op].startsWith(READ_RULING)) continue;
     const w = KIT_WEIGHT[op] ?? KIT_WEIGHT[`owed_${op}`];
     assert.equal(MARKS[op], WNAME[w ?? 2], op);
     assert.match(MARK_SOURCES[op], w ? /^mock-kit\.js WEIGHT at aa8bdcd0b4$/ : /^kit default at aa8bdcd0b4/, op);
@@ -280,7 +283,7 @@ test("R42: every value is the design kit's WEIGHT for the op (the kit's `owed_` 
   assert.equal(MARKS.queuemute, "Reversible");
   assert.equal(MARKS.claim, "Signed");
   /* an op the kit does not name is Reasoned (control) */
-  const unnamed = Object.keys(MARKS).filter((op) => op !== "notewrite" && op !== "versionnotice" && KIT_WEIGHT[op] === undefined
+  const unnamed = Object.keys(MARKS).filter((op) => op !== "notewrite" && !MARK_SOURCES[op].startsWith(READ_RULING) && KIT_WEIGHT[op] === undefined
     && KIT_WEIGHT[`owed_${op}`] === undefined);
   assert.ok(unnamed.length > 0);
   for (const op of unnamed) assert.equal(MARKS[op], "Reasoned", op);

@@ -29,9 +29,10 @@ test("R11 each act is a button labelled act.<op>.label.<screen>, carrying its we
   assert.equal(btn(p, "cite").querySelector(".w"), null, "R77: a Reversible act draws no weight");
   assert.equal(btn(p, "cite").querySelectorAll(".cs-pips").length, 0);
   assert.ok(!(btn(p, "cite").getAttribute("data-tip") || "").includes(word("weight.reversible.name")), "nor in its explanation");
-  /* R64 amends: promote, RUNG_ABSENT under substrate, carries no weight of its own, only the design kit's mark */
+  /* R64 amends: promote, RUNG_ABSENT under substrate, carries no weight of its own, only the design kit's mark; (fix round 2, C76) the
+     kit's mark is Reasoned and the shell asks no reason for it, so it is not drawn: the mark and the asking agree */
   const h = await boot({ screens: ALL, plane: PLANE });
-  assert.equal(btn(h, "promote").querySelector(".w").getAttribute("data-mark"), "reasoned");
+  assert.equal(btn(h, "promote").querySelector(".w"), null, "C76: marked Reasoned, asking nothing, so no mark is drawn");
   assert.ok(btn(h, "promote").textContent.startsWith(word("act.promote.label.home")));
 });
 

@@ -261,8 +261,10 @@ async function sha256Hex(u8) {
 
 /** The tilt searched, in degrees either way. */
 export const PREPARE_TILT_MAX = 10;
-/** The text line height, in pixels, a small-print picture is enlarged to. */
-export const PREPARE_LINE_PX = 40;
+/** The text line height, in pixels, a small-print picture is enlarged to. 20, not 40 (T51 fix round 2, C18): enlarging a
+ *  blurred page further only enlarges its blur. Measured through the engine on the hard photograph (231 words, 110 dpi,
+ *  blur): lines to 40 px read 48 percent, to 20 px 56; the clean and noisy photographs read 97-100 percent at either. */
+export const PREPARE_LINE_PX = 20;
 /** The largest enlargement. */
 export const PREPARE_SCALE_MAX = 4;
 /** A tilt under this many degrees is left as it is (no turn). */

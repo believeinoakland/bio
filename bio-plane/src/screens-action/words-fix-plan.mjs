@@ -103,5 +103,13 @@ export const EXTRA = Object.freeze({
     "screen.actionnew.to.named",
     "screen.people.add.kind.organization",
     "screen.action.remindon",
+    "screen.action.remindon.needed",
+    "screen.reminder.on",
+    "action-plans.says.regulated_date_passed",
+    "action-plans.says.matter_serves_longer",
+    "action-plans.says.addresses_someone_outside",
+    "action-plans.says.requirement_seeks_enforced",
+    "action-plans.index.phase_id_addresses_someone_outside",
+    "act.reminderset.label.action",
   ],
 });

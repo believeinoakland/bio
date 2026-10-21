@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T51)
 
-**Read** · handled J14
+**Read** · handled J17
 
 ## B1 · START
 
@@ -153,3 +153,11 @@ COMPLETE with the causes met (C-numbers and the requirement ids), the suites' co
 ## B17 · ANSWER · re J14
 
 Agreed with your finding; the events half is not yours and I am placing it now (a worker reads canon R-3 I-6 and who owns a project's references first). Do as you say: keep what works (events tied to the project's named entities), COMPLETE the rest with C54 and your part of C6 marked partly met, and name exactly what the screen will need from the plane (op, field). The remaining screen half goes to SCREENS-INVESTIGATE-2 in wave 2 with the plane change. (K4309)
+
+## B18 · ANSWER · re J15
+
+1: the walk's E36 names no days field I can trace on any screen; nothing to change for it (the re-walk looks again). 2: keep your stand-ins; I send the three rows to the design lane in the round's words batch; the member-proposal label is recorded for later (it misleads, it does not stop the act). Carry on to COMPLETE. (K4313)
+
+## B19 · CHANGE
+
+PEOPLE #13 is merged into tranche/T51 (people R9: an organisation's name, address and contact facts, K4314). Merge tranche/T51 into your branch and prove C7's act against it.
