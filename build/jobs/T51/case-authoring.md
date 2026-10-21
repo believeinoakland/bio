@@ -249,3 +249,13 @@ Address: no builder exists in public-read (only `docketAddress`); see my QUESTIO
 Tests: `editions.test.mjs` +1 (R83/K4363: by case, by draft id, by row, never prepared, published, equals the pre-flight's answer, unknown case). case-authoring 221/221; review 76/76; architecture and words 0 failures; ownership 0 failures; format's one failure is `build/rulings.md` (not mine). Merged `origin/tranche/T51` first.
 
 Size (session_01Czk6fsMgDJE7nbPVmgPw5X): test runs 12, module lines 2938
+
+## J15 · COMPLETE · re B17
+
+COMPLETE (B17, K4365; C40's last hop). Merged tranche/T51 first (case-disclosures R2 amended). `#notCoAttested` now builds each `not_co_attested` row as `{capture, by, findings, timestamp_at, co_archive, missing, late, timestamp_late, late_words}`, the last six from the capture row it already carries, so screens-publish can say which proof exists late and which is missing.
+
+Test (seen failing first): `fixround2.test.mjs`, R82/C40: with no attempt the row misses both (`["timestamp","co_archive"]`), not late, no words (control); after a late timestamp it is `timestamp_late: true`, `late: true`, `missing: ["co_archive"]`, `timestamp_at` set, `late_words` naming it. Three older R82 tests deep-equal on the original three fields; they now compare those three through a `core` helper (the row grew, their claim is unchanged).
+
+case-authoring 222/222; screens-publish 210 pass 0 fail; review 76/76; architecture, words, ownership 0 failures; format's one failure is build/rulings.md (not mine).
+
+Size (session_01Czk6fsMgDJE7nbPVmgPw5X): test runs 16, module lines 2943
