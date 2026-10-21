@@ -10,8 +10,6 @@ function heldReads(view) {
   return { held: { op: "heldcaptures", query: { limit: 50, ...filter }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
            /* R13 (capture R88): the documents set aside, in an earlier visit or this one */
            aside: { op: "heldcaptures", query: { limit: 50, state: "set_aside", ...filter }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
-           /* R40 (membership R17, R147): the handles an upload's uploader is named by; the stamp names a member by id */
-           members: { op: "memberlist" },
            /* B6: a row names its project by the project's name, never by its record id */
            projects: { op: "projectlist" } };
 }
@@ -70,14 +68,13 @@ function renderHeld(cs, view) {
     if (!p || !p.name) return r.project ? "" : cs.w("screen.held.noproject");
     return cs.w("screen.held.project", { project: filtered ? p.name : { html: `<a href="/app/held/${encodeURIComponent(r.project)}" data-nav>${cs.esc(p.name)}</a>` } });
   };
-  const roster = view.data.members && view.data.members.state === "ok" && view.data.members.value && Array.isArray(view.data.members.value.members)
-    ? view.data.members.value.members : [];
   const source = (r) => {
     const s = r.source;
     if (!s || !s.address) return "";
     if (!(s.via === "upload" || /^upload:/.test(String(s.address)))) return ` · ${cs.w("screen.held.from", { address: s.address })}`;
+    /* C94 (interface-shell R111): the uploader is named by the shell's name for her id (her handle; a fallback word where none is known), never the id */
     const id = typeof r.actor === "string" ? r.actor.replace(/^member:/, "") : "";
-    const handle = id ? ((roster.find((m) => m && m.member_id === id) || {}).handle || "") : "";
+    const handle = id ? cs.memberName(id) : "";
     const n = Number.isFinite(r.bytes) ? r.bytes : null;
     const size = n === null ? "" : n < 1024 ? cs.w("size.small") : n >= 1048576 ? cs.w("size.mb", { n: (n / 1048576).toFixed(1) }) : cs.w("size.kb", { n: String(Math.round(n / 1024)) });
     const by = handle && r.retrieved ? cs.w("document.uploaded.by", { member: handle, date: { html: cs.date(r.retrieved) } }) : "";

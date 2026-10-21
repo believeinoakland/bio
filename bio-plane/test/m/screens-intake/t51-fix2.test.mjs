@@ -208,7 +208,7 @@ test("R25 (C45) \"For which question\" shows the question's title, not its id; a
 test("R47 (C78) the explanation of \"Show the stored logins\" sits directly under its own button, before the list it explains", async () => {
   const entries = [{ credential: "c1", host: "records.example.gov", supplied_by: "member:mai", supplied_at: "2026-10-01T10:00:00Z" }];
   const p = await open("/app/capture/address", { plane: { capturecredentiallist: ok({ ok: true, entries }), capturerequests: ok({ ok: true, requests: [], truncated: false }), memberlist: ok({ members: [] }) } });
-  assert.ok(!says(p, "screen.capture.cred.listnote1"), "nothing is explained before the button is pressed");
+  assert.ok(btn(p, "capturecredentiallist").closest(".mk-acts").nextElementSibling.textContent.includes(word("screen.capture.cred.listnote1")), "it stands under its button before the press too (the shell closes the tip on the press, fix round 3, C78)");
   await press(p, "capturecredentiallist");
   const under = btn(p, "capturecredentiallist").closest(".mk-acts").nextElementSibling;
   assert.ok(under && under.textContent.includes(word("screen.capture.cred.listnote1")), "the note is the next thing under the button");

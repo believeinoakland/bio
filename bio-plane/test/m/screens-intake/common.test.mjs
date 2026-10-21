@@ -137,7 +137,7 @@ test("R9 no act or read records which member opened which file: every request is
   /* the shell's own frame reads, `bootstrap` among them (interface-shell R36: public, once, for the test-instance band), read from
      the shell's declaration of them (N1073) */
   const FRAME = new Set(SHELL_OPS);
-  const ours = new Set([...SCREENS.flatMap((s) => s.acts.map((a) => a.op)), ...READS, "allocid", "promote", "select", "image", "heldat"]);
+  const ours = new Set([...SCREENS.flatMap((s) => s.acts.map((a) => a.op)), ...READS, "allocid", "promote", "select", "image", "heldat", "projectquestions", "captureseenin"]);
   const plane = { ...Object.fromEntries(READS.map((op) => [op, ok(VALUES[op])])),
                   openoriginal: { status: 200, bytes: "b", type: "application/pdf" }, openwithwarning: { status: 200, bytes: "b", type: "application/pdf" } };
   const pages = [];

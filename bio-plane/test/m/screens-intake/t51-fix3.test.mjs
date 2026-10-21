@@ -2,7 +2,7 @@
  * FC-23 and N4 (R57 proposed), C81. A sentence is asserted by its key (R26), never by its English. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open as openPage, text, main, btn, fill, press, ok, refused, word, says, saysIn, DOCUMENT_STUB, MEMBER } from "./page.mjs";
+import { open as openPage, text, html, main, btn, fill, press, ok, refused, word, says, saysIn, DOCUMENT_STUB, MEMBER } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
 
@@ -269,4 +269,145 @@ test("R7 (C28) the knocker's other material (`knocksof`) draws each knock's stat
   assert.ok(sec.textContent.includes("photo.jpg") && sec.textContent.includes("image/jpeg"));
   const none = Array.from(sec.querySelectorAll('[role="listitem"]')).find((r) => r.querySelector(`a[href*="${KB.knock_id}"]`));
   assert.equal(none.querySelectorAll(".mk-data").length, 0, "a knock with neither draws neither");
+});
+
+/* ---------- C35: R29 ("For which question" tells questions of the same title apart) ---------- */
+
+const QA = "INQ-2026-0001-seven-days", QB = "INQ-2026-0002-seven-days", QC = "INQ-2026-0003-lighting";
+const QPLANE2 = {
+  search: ok({ hits: [{ bundle_id: QA, title: "Seven days" }, { bundle_id: QB, title: "Seven days" }, { bundle_id: QA, title: "Seven days" }, { bundle_id: QC, title: "Street lighting" }] }),
+  projectlist: ok({ projects: [{ id: MINE, name: "Pothole repairs" }, { id: HOME, name: "Housing repairs" }] }),
+  projectquestions: (r) => ok({ ok: true, items: r.query.project === MINE ? [{ inquiry: QA, title: "Seven days" }, { inquiry: QC, title: "Street lighting" }] : [{ inquiry: QB, title: "Seven days" }] }),
+  image: (r) => ok(r.query.id === QA ? { "bundle.md": md("Seven days", [`project: ${MINE}`]) } : r.query.id === MINE ? { "bundle.md": md("Pothole repairs") } : null),
+};
+const options = (p) => Array.from(main(p).querySelectorAll("select#ci-for option, #ci-for option")).map((o) => o.textContent);
+
+test("R29 (C35) two questions of different projects with the same title are told apart by project, one row per question", async () => {
+  const p = await open(`/app/capture/address/${QA}`, { plane: { ...QPLANE2 } });
+  await p.settle();
+  const o = options(p);
+  assert.equal(o.filter((t) => t.includes("Seven days")).length, 2, "one row per question: the repeated hit is listed once");
+  assert.ok(o.some((t) => t.includes("Seven days") && t.includes("Pothole repairs")) && o.some((t) => t.includes("Seven days") && t.includes("Housing repairs")), JSON.stringify(o));
+});
+
+test("R29 (C35) control: a question whose project no read names is listed by its title alone, as before", async () => {
+  const p = await open(`/app/capture/address/${QA}`, { plane: { ...QPLANE2, projectlist: ok({ projects: [] }) } });
+  await p.settle();
+  const o = options(p);
+  assert.ok(o.includes("Street lighting"), JSON.stringify(o));
+  assert.equal(o.filter((t) => t === "Seven days").length, 2, "unchanged: both titles as the hits give them");
+});
+
+/* ---------- FC-23, N4, C78, C94: the logins section (DEC-403) and the requests for later; R57 (proposed) ---------- */
+
+const MEMBERS = ok({ members: [{ member_id: "rosa", handle: "Rosa-h", role: "member", status: "active" }, { member_id: "mai", handle: "Mai-h", role: "member", status: "active" }] });
+const LOGIN = { credential: "CRED-1", kind: "login", host: "records.example-city.gov", scope: "group", project: null, supplied_by: "member:rosa", supplied_at: "2026-10-16T09:00:00Z", withdrawn_at: null, withdrawn_by: null };
+const LOGIN2 = { credential: "CRED-2", kind: "user-agent", host: "agendas.example.org", scope: "member", project: null, supplied_by: "member:ghost", supplied_at: "2026-10-17T09:00:00Z", withdrawn_at: null, withdrawn_by: null };
+const entries = (...e) => ok({ ok: true, entries: e, limit: 200, truncated: false });
+const addr = (o = {}) => open("/app/capture/address", { ...o, plane: { memberlist: MEMBERS, capturerequests: ok({ ok: true, requests: [] }), ...(o.plane || {}) } });
+const SECRET = "p4ss-w0rd-X";
+const sectionOf = (p, key) => main(p).querySelectorAll("section.cs-section").find((s) => s.querySelector("h2") && s.querySelector("h2").textContent.includes(word(key)));
+
+test("FC-23 the logins button with none stored says none; nothing is drawn before it is pressed", async () => {
+  const p = await addr({ plane: { capturecredentiallist: entries() } });
+  const sec = sectionOf(p, "screen.capture.logins.head");
+  assert.ok(sec, "the section is drawn");
+  for (const k of ["screen.capture.logins.about1", "screen.capture.logins.about2", "screen.capture.logins.about3"]) assert.ok(saysIn(sec, k), k);
+  assert.ok(!says(p, "screen.capture.logins.none"), "control: nothing before the press");
+  assert.equal(p.byOp("capturecredentiallist").length, 0, "and no read before the press");
+  await press(p, "capturecredentiallist");
+  assert.ok(says(p, "screen.capture.logins.none"));
+});
+
+test("FC-23 the logins button with some stored draws the list: site, what it asks for, who may use it, who gave it and when; a login is withdrawn and the list read again", async () => {
+  let list = [LOGIN, LOGIN2];
+  const p = await addr({ plane: { capturecredentiallist: () => entries(...list), capturecredentialwithdraw: () => { list = [LOGIN2]; return ok({ ok: true }); } } });
+  await press(p, "capturecredentiallist");
+  assert.ok(!says(p, "screen.capture.logins.none"));
+  const rows = Array.from(sectionOf(p, "screen.capture.logins.head").querySelectorAll(".cs-row"));
+  assert.equal(rows.length, 2);
+  assert.ok(rows[0].textContent.includes("records.example-city.gov") && rows[0].textContent.includes(word("screen.capture.logins.kind.login")) && rows[0].textContent.includes(word("screen.capture.logins.scope.group")) && rows[0].textContent.includes("Rosa-h"), "the row names site, kind, scope and giver");
+  assert.ok(rows[1].textContent.includes(word("screen.capture.logins.kind.user-agent")) && rows[1].textContent.includes(word("screen.capture.logins.scope.member")));
+  assert.ok(!text(p).includes("rosa") || text(p).includes("Rosa-h"), "no member id where a handle is known");
+  await press(p, "capturecredentialwithdraw", { reason: "No longer needed." });
+  assert.deepEqual(p.byOp("capturecredentialwithdraw").map((r) => r.body.credential), ["CRED-1"]);
+  assert.equal(Array.from(sectionOf(p, "screen.capture.logins.head").querySelectorAll(".cs-row")).length, 1, "the list is read again");
+});
+
+test("C78 the stored-logins explanation is the node after its own button; the other button, requests for later, has none", async () => {
+  const p = await addr({ plane: { capturecredentiallist: entries(LOGIN) } });
+  const sec = sectionOf(p, "screen.capture.logins.head");
+  const button = sec.querySelector('button[data-act="capturecredentiallist"]');
+  assert.ok(button);
+  let at = button.closest(".mk-acts") || button;
+  const next = at.nextElementSibling;
+  assert.ok(next && saysIn(next, "screen.capture.cred.listnote1") && saysIn(next, "screen.capture.cred.listnote2"), "the explanation follows its button");
+  const later = main(p).querySelector('button[data-act="capturerequests"]');
+  const after = (later.closest(".mk-acts") || later).nextElementSibling;
+  assert.ok(!after || (!saysIn(after, "screen.capture.cred.listnote1") && !saysIn(after, "screen.capture.logins.about1")), "control: the other button has no such explanation");
+});
+
+test("FC-23 giving a login for a site sends kind, host, secret, scope (and the project for 'this project'); a login's secret is `username:secret`; no request is retried", async () => {
+  const p = await open(`/app/capture/address/${MINE}`, { plane: { memberlist: MEMBERS, capturerequests: ok({ ok: true, requests: [] }), image: IMAGE, capturecredentialsupply: ok({ ok: true, credential: "CRED-9" }), capturecredentiallist: entries(LOGIN) } });
+  fill(p, { "cl-host": "Records.Example-City.gov", "cl-name": "mai", "cl-secret": SECRET });
+  p.doc.getElementById("cl-scope").value = "project";
+  await press(p, "capturecredentialsupply", { reason: "The team needs this site.", sel: '[data-general="1"]' });
+  const sent = p.byOp("capturecredentialsupply");
+  assert.equal(sent.length, 1);
+  const { reason, ...body } = sent[0].body;
+  assert.deepEqual(body, { kind: "login", host: "records.example-city.gov", secret: `mai:${SECRET}`, scope: "project", project: MINE });
+  assert.equal(p.byOp("capturerequestretry").length, 0, "needs no refused request");
+  assert.ok(!html(p).includes(SECRET), "the secret is not drawn back");
+  for (const r of p.requests) if (r.op !== "capturecredentialsupply") assert.ok(!JSON.stringify(r).includes(SECRET), `${r.op} carries no secret`);
+  assert.ok(sectionOf(p, "screen.capture.logins.head").querySelectorAll(".cs-row").length >= 1, "the list is read again and drawn");
+});
+
+test("FC-23 a browser name or something else is sent as the secret alone; a missing site, username (for a login) or secret sends nothing and says which", async () => {
+  const p = await addr({ plane: { capturecredentialsupply: ok({ ok: true }), capturecredentiallist: entries() } });
+  fill(p, { "cl-host": "agendas.example.org", "cl-secret": "Civicsmith-Reader/1" });
+  p.doc.getElementById("cl-kind").value = "user-agent";
+  await press(p, "capturecredentialsupply", { reason: "r", sel: '[data-general="1"]' });
+  const { reason, ...body } = p.byOp("capturecredentialsupply")[0].body;
+  assert.deepEqual(body, { kind: "user-agent", host: "agendas.example.org", secret: "Civicsmith-Reader/1", scope: "group" });
+  const q = await addr({ plane: { capturecredentialsupply: ok({ ok: true }) } });
+  fill(q, { "cl-host": "", "cl-name": "mai", "cl-secret": SECRET });
+  const a = await press(q, "capturecredentialsupply", { reason: "r", sel: '[data-general="1"]' });
+  assert.ok(saysIn(a.slot(), "capture.fieldneeded", { field: word("screen.capture.logins.site") }));
+  fill(q, { "cl-host": "x.example.org", "cl-name": "", "cl-secret": SECRET });
+  const b = await press(q, "capturecredentialsupply", { reason: "r", sel: '[data-general="1"]' });
+  assert.ok(saysIn(b.slot(), "capture.fieldneeded", { field: word("screen.capture.logins.name") }));
+  fill(q, { "cl-name": "mai", "cl-secret": "" });
+  const c = await press(q, "capturecredentialsupply", { reason: "r", sel: '[data-general="1"]' });
+  assert.ok(saysIn(c.slot(), "capture.fieldneeded", { field: word("screen.capture.logins.secret") }));
+  assert.equal(q.byOp("capturecredentialsupply").length, 0);
+});
+
+test("N4 'Show my requests for later' with none says none; with some it draws them; nothing is drawn before it is pressed", async () => {
+  const p = await addr({ plane: { capturerequests: ok({ ok: true, requests: [] }) } });
+  assert.ok(!main(p).textContent.includes(word("screen.capture.later.head")), "control: nothing before the press");
+  await press(p, "capturerequests");
+  const sec = sectionOf(p, "screen.capture.later.head");
+  assert.ok(sec, "the section is drawn once asked");
+  assert.ok(sec.textContent.includes(word(hasKey("screen.capture.later.none") ? "screen.capture.later.none" : "state.empty")), "and says there are none");
+  const mine = { request: "CR-1", host: "records.example-city.gov", address: "https://records.example-city.gov/a", state: "requested", requested_at: "2026-10-15T10:00:00Z", principal_plane: "member:x" };
+  const q = await open("/app/capture/address", { me: { ...MEMBER, member: "x" }, plane: { memberlist: MEMBERS, capturerequests: ok({ ok: true, requests: [mine] }) } });
+  const draws = sectionOf(q, "screen.capture.later.head");
+  assert.ok(draws && draws.textContent.includes("records.example-city.gov") && !draws.textContent.includes(word(hasKey("screen.capture.later.none") ? "screen.capture.later.none" : "state.empty")));
+});
+
+test("C94 a member is named by handle where the capture screen names one (link and name), never by id; a member with no handle draws the fallback word", async () => {
+  const addrHeld = (document, actor) => holder(SHA, "INFO-2026-0042-held", HOME);
+  const p = await open("/app/capture/address", { plane: { memberlist: MEMBERS, capturerequests: ok({ ok: true, requests: [] }), image: IMAGE, heldat: (req) => ok({ ok: true, held: true, copy: { sha256: SHA, document: HOLDER, project: HOME, retrieved: "2026-10-01T10:00:00Z", actor: "member:rosa", grade: null, address: ADDRESS }, versions: 1, truncated: false, changed: { state: "unchanged", basis: "x", as_of: null, earlier_differs: false } }),
+    heldcaptures: ok({ ok: true, held: [{ bundle_id: HOLDER, title: "Board minutes", project: HOME, capture: { sha256: SHA }, standing: "held_and_vouched" }], truncated: false }), acquire: ok({ ok: true, document: DOC }) } });
+  fill(p, { "ci-address": ADDRESS });
+  await press(p, "acquire");
+  const link = Array.from(main(p).querySelectorAll("a")).find((a) => String(a.getAttribute("href")).includes("/app/members/"));
+  assert.ok(link, "the member is linked");
+  assert.equal(link.getAttribute("href"), "/app/members/Rosa-h", "by handle");
+  assert.equal(link.textContent, "Rosa-h");
+  assert.ok(!/\brosa\b/.test(text(p)), "no member id drawn");
+  const q = await addr({ plane: { capturecredentiallist: entries(LOGIN2) } });
+  await press(q, "capturecredentiallist");
+  assert.ok(sectionOf(q, "screen.capture.logins.head").textContent.includes(word("shell.card.member")), "no handle known: the fallback word");
+  assert.ok(!text(q).includes("ghost"), "never the id");
 });
