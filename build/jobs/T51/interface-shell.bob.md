@@ -223,3 +223,11 @@ COMPLETE with the causes met (C-numbers and the requirement ids), the suites' co
 ## B31 · CHANGE
 
 CHANGE (K4409): interface-shell R118 is added to your job (read it whole on tranche/T51; merge tranche/T51 first): every act request the shell sends carries the id of the screen it was drawn on as one field `screen`, which the door reads (control-plane R119, CONTROL-PLANE #44). Test: an act pressed on `request` sends `screen: "request"`; control: the same op from another screen sends that screen's id. Check that no op's declared fields refuse an extra `screen` (op-declarations' guard); if one would, say so in your COMPLETE. Merge order: you, then SCREENS-SETTINGS, then CONTROL-PLANE.
+
+## B32 · CHANGE
+
+CHANGE (K4410): interface-shell R119 joins your job (read it whole on tranche/T51; merge it first): an act may name an optional `ready(view, el, cs)` run on the press before any reason box opens; `{refuse: <key>}` draws that refusal beside the act and asks nothing; `{fills}` passes values to the send; nothing proceeds as today. Test with its control as R119 states. Your job now holds R117, R118, R119; SCREENS-SETTINGS #15 adopts R119 after you merge.
+
+## B33 · CHANGE
+
+CHANGE (K4411): interface-shell R118 is retired (the door needs no screen id). Drop it if built (remove the field and its test), keep R117 and R119; merge tranche/T51 for the retired line before COMPLETE.

@@ -1,6 +1,6 @@
 # BOB to screens-settings (T51)
 
-**Read** · handled J20
+**Read** · handled J21
 
 ## B1 · START
 
@@ -291,3 +291,7 @@ COMPLETE with the causes met (C-numbers and the requirement ids), the suites' co
 ## B32 · ANSWER · re J20
 
 ANSWER J20 (K4408): (1) as you read it: INTERFACE-SHELL #15 adds R117's two re-points (security: scanmirror; places: officeconfirm), merged before you; OP-DECLARATIONS #34 is merged (both ops in OPS). Prove against local stubs meanwhile; when I send the CHANGE, merge tranche/T51 and drop the stubs before COMPLETE. (2) your five keys join the round's batch to the design; draw them as keys. (3) both readings accepted.
+
+## B33 · ANSWER · re J21
+
+ANSWER J21 (K4410): (1) correction accepted: nearest existing rows until the design writes yours. (2) as you read it: interface-shell R119 (an act's `ready` hook before the reason box) is INTERFACE-SHELL #15's, with R117 and R118; when I send the CHANGE that it merged, merge tranche/T51, adopt `ready` for groupdescriptionset and any reasoned act with a required box, and COMPLETE; meanwhile finish the rest. (3) I write your lines at the merge.
