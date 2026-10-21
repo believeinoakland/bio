@@ -218,3 +218,15 @@ Requirement lines: control-plane R121 (`Server-Timing`, the door's phase clock) 
 Read in full: the lines above, the code your causes name, the tests naming your ids, `build/layers.md`; other tests are run. A flaw in a module you do not hold goes to BOB (P9). One test per cause, written first, seen failing, with a control, naming its requirement id (K874). Words (K3810): by key or `localize`; tests assert the key; a missing row: stand-in key, one QUESTION. Declare every census op you own (K4208). No generated artifact edited (manifest §14).
 Run: your suite (`node --test --test-force-exit bio-plane/test/m/<module>/`), then `node build/plan/impact.mjs tranche/T51 HEAD`'s users; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (0 findings for your files; reds also on the tranche tip are named, not fixed); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio control-plane tranche/T51 job/T51/control-plane`.
 COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BOB's release), (2) test-gap fix merged, (3) the failing-first test for the walker's row, red then green with the evidence, (4) the platform check L/P/F/N and its numbers; then requirement ids met, suite counts, each QUESTION with BOB's answer (none open), and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: held modules' own code).
+
+## B25 · CHANGE
+
+CHANGE (BOB #244; K4433): the plane provides a store-internal route `pendingadd` (`kind=reading&sha=`), reachable only from the door, which registers a deferred reading for its alarm (plane R75). Your use of it belongs to R120 (a reading too long for the bound follows), which is HELD until your C5a step-0 report shows the reading is the slow phase: do not call it before BOB writes R120.
+
+## B26 · CHANGE
+
+CHANGE (BOB #244; K4434): control-plane R120 is RELEASED and written on tranche/T51 (merge it): EXTRACTION #30 measured the reading as the slow phase (1.5 s, 3.4 s, 14-21 s for 2.4, 8.4, 15.2 MiB PDFs) and its memory as the cause of the 2.5 MB failure (pdf-reader R41 bounds it, PDF-READER #8). Build R120: a capture whose reading will not fit what is left of the bound (25 s less 8 s) or a PDF over 2 MB is answered when kept with `reading_pending: true`; the reading follows by `readHeld`, after the screen's promotion and by the plane's `pendingadd` / alarm (PLANE #48). Your phase clock (R121) still ships with it.
+
+## B27 · CHANGE
+
+CHANGE (BOB #244; K4435): your test "R81 end to end: Home draws the group's projects ... each with its question count paged from the real `projectquestions`" is stale at 753ea4db8a: Home now draws counts from the roster row's `question_count` (C14, screens-daily `project-rows.mjs:4-21`), so no `projectquestions` read is made. Bring R81's test to what R81 and C14 now require (counts from the roster row, no per-project read: that is also your P9 read-set test), in your job.

@@ -183,6 +183,7 @@ Every job: medium effort; its suites then `build/plan/impact.mjs tranche/T51 HEA
 | public-read | sonnet | 1 | 13 | public-read | C47*, C48* (`publishedAddress`) |
 | queue-producers | haiku | 1 | 14 | queue-producers | C69 |
 | queue | sonnet | 1 | 15 | queue | P9 (count for the frame) |
+| journey-check | sonnet | 1 | 17 | journey-check | the local arm's moved fixture, R30 (K4435) |
 | cause-shell-4 | sonnet | 1 | 16 | interface-assets, interface-shell | C81 (S), C14*, C51*, C59* |
 | screens-settings | sonnet | 2 | 1 | screens-settings | words of C84, C14* |
 | screens-intake | sonnet | 2 | 2 | screens-intake | C9 (S), FC-23, C14* |
