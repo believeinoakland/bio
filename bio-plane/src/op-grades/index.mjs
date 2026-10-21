@@ -1611,6 +1611,12 @@ export const MACHINE_REFUSALS = declared.guard(MACHINE_REFUSALS_DATA);
 export const NON_ACTS = declared.guard(NON_ACTS_DATA);
 export const registerDeclaredOps = declared.register;
 
+/* fix round 3 (C64; `entities` R63; K4356, K4364): THE ACTS A MEMBER WHO DOES NOT ADMINISTER MAY DO ON ONE SCREEN ONLY. An office named from a
+ * request is a member's act on `request` and on no other screen: `entitycreate` keeps its grade (Reasoned) and is admitted there to
+ * a member; on another screen it is as it was. `memberMayDo(op, screen)` answers whether `screen` is one of the op's. Data only. */
+export const MEMBER_SCREEN_ACTS = Object.freeze({ entitycreate: Object.freeze(["request"]) });
+export const memberMayDo = (op, screen) => Object.hasOwn(MEMBER_SCREEN_ACTS, op) && MEMBER_SCREEN_ACTS[op].includes(screen);
+
 /* R18 (DEC-122 (1); K1363 B5): the advisory phone flag — false at the rungs `terminal`, `attested` and `irreversible`,
  * for an absence on the `credential` ground, (T37; DEC-181) for every op in `IRREVERSIBLE_WEIGHT`, read from that set at
  * the call and never copied, so an op later given the weight leaves the phone with no change here, and for
