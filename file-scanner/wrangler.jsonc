@@ -38,13 +38,13 @@
   "containers": [
     {
       "class_name": "FileScanner",
-      "image": "docker.io/civicsmith/file-scanner-scanner@sha256:293e2fce0a0de51e2753323d270c3de209c295ecd6f1dde0a37fd977dad487d5",
+      "image": "docker.io/civicsmith/file-scanner-scanner@sha256:33dae2681b82e1c4da7ce170b693944bcdd1a1313e15ae2f7f2d43df202a1410",
       "instance_type": "standard-1",
       "max_instances": 3
     },
     {
       "class_name": "SafeViewRenderer",
-      "image": "docker.io/civicsmith/file-scanner-renderer@sha256:8817aefd13a90bbf25c59914cd70d701536ec8b245a9cdb39939a0508cb05bf9",
+      "image": "docker.io/civicsmith/file-scanner-renderer@sha256:2e86dc547803b3864eb43082ab9aa02a4190e5f2ba56caa90d3ef61854c6bc7a",
       "instance_type": "standard-1",
       "max_instances": 3
     }

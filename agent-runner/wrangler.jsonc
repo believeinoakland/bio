@@ -26,7 +26,7 @@
   "containers": [
     {
       "class_name": "AgentRunner",
-      "image": "docker.io/civicsmith/agent-runner@sha256:78b09547d8a2e9962f7d1ee373e5f9d80c0e730a8fc97613b3599a92c81bbb63",
+      "image": "docker.io/civicsmith/agent-runner@sha256:d6694d2c50094ad13d0690a65d6795f92ad7e7d7bc3ad204dfa67f96edabad78",
       // R33: 1/2 vCPU, 4 GiB. At the default size (1/16 vCPU, 256 MiB) one conversation's start-up took 27 s (study-assistant-link T1-T2).
       "instance_type": "standard-1",
       "max_instances": 10
