@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (18130 design words, 1068 protected; SHA-256
-   1709a4a9043d932ffec7a0bbaf91351c5aacae744d05915172dffd503b801d1f) followed by 7140 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (18141 design words, 1069 protected; SHA-256
+   21fa01c6df89845a6f011f421a45be8e233e35e151faabfeaea71df1f1616300) followed by 7140 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "1709a4a904";
+export const WORDS_COMMIT = "21fa01c6df";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -5766,7 +5766,7 @@ export const WORD_ROWS = Object.freeze([
   ["size.mb","{n} MB","DEC-309: screens-intake R35, DEC-299 (8)",null,false,"design"],
   ["size.gb","{n} GB","DEC-309: screens-intake R35: a file over 1 GB",null,false,"design"],
   ["project.rescue.title.nodate","Every owner of this project is gone","DEC-309: screens-inquiry R54: owner_since not held",null,false,"design"],
-  ["screen.request.nooffice.admin","An administrator can add the office under Settings, Places and offices.","DEC-309: screens-action R20",null,false,"design"],
+  ["screen.request.nooffice.admin","If you know which office holds them, name it yourself below.","DEC-309: screens-action R20; DEC-402 (Bob, DEC-401): a member names the office",null,false,"design"],
   ["screen.help-records.notheld","Your team's Civicsmith doesn't hold records help for this place yet, so none is shown here. The law's own text is the place to look.","DEC-309: screens-action R22","What Civicsmith does with it",false,"design"],
   ["project.notmember","You aren't in this project. Ask to join, and its owners decide.","DEC-309: interface-shell R85: projectrequest on project",null,false,"design"],
   ["act.retire.name","Retire this copy from new work, with a reason","DEC-309: affordances R64","Stops using this copy in new work, with a reason. Questions that cite it are told.",false,"design"],
@@ -10858,6 +10858,16 @@ export const WORD_ROWS = Object.freeze([
   ["screen.contradiction.flagged.by","{member} said these two contradict, {date}","DEC-400: B455: who flagged a contradiction by hand, and when",null,false,"design"],
   ["act.heldcaptures.here.project","List this project's documents","DEC-400: B455: the project screen's documents act (heldcaptures with the project), as the registry labels it","Shows captures waiting for a member to vouch for them before they count.",false,"design"],
   ["screen.document.testify.how","How you know","DEC-400: B455: the label of the reason field when naming a subject from a passage (DEC-394 3d)",null,false,"design"],
+  ["screen.request.nameoffice.head","Name the office yourself","DEC-402: the fold under the dead end",null,false,"design"],
+  ["screen.request.nameoffice.note","The office is saved for your team's next request, marked as named by a member until an administrator confirms it.","DEC-402: what naming does",null,false,"design"],
+  ["screen.request.nameoffice.name","The agency and office","DEC-402: field",null,false,"design"],
+  ["screen.request.nameoffice.name.help","As the agency names the office that answers records requests.","DEC-402: help",null,false,"design"],
+  ["screen.request.nameoffice.where","Where requests go","DEC-402: field",null,false,"design"],
+  ["screen.request.nameoffice.where.help","Its mailing address, email address or online portal, as the agency publishes it.","DEC-402: help",null,false,"design"],
+  ["screen.request.nameoffice.law","The law it goes under","DEC-402: field",null,false,"design"],
+  ["screen.request.nameoffice.law.help","The law sets the due date. Choose the one this office answers under.","DEC-402: help",null,false,"design"],
+  ["screen.request.nameoffice.use.help","Saves the office for your team, marked as named by you, and chooses it for this request.","DEC-402: the button's explanation",null,false,"design"],
+  ["screen.request.nameoffice.mark","Named by a member","DEC-402: the mark on an office a member named, until an administrator confirms it",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],
@@ -17208,6 +17218,7 @@ export const WORD_ROWS = Object.freeze([
   ["act.communicationprepare.label.request","Prepare the text",null,"Prepares the text that will be sent, from the team's template or a labeled draft.",true,"design"],
   ["act.filingapprove.label.request","Approve this text",null,"Approves this exact text for sending. Changing it afterwards needs approving again.",true,"design"],
   ["act.filingrecordsent.label.request","I have sent it",null,"Records that you sent it, when and how. Civicsmith never sends for you; reply deadlines count from here.",true,"design"],
+  ["act.entitycreate.label.request","Use this office",null,"Adds something the record does not hold yet, such as an office, an organization or a court case, with a note on where it comes from.",true,"design"],
   ["act.actionmove.label.action","Move the action",null,"Moves the action to its next stage, with what happened.",true,"design"],
   ["act.actioncorrespond.label.action","Record a reply",null,"Records a reply or letter received, with its date, so deadlines and the timeline follow.",true,"design"],
   ["act.actionpressure.label.action","Mark a reply as pressure",null,"Marks a reply as pressure (a threat, a demand to stop), kept on the record.",true,"design"],
