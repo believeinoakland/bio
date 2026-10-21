@@ -130,3 +130,10 @@ Size (session_01Y3snL5ogNuP2LEHaz82PG4): test runs 14, module lines 3426
 B8 applied: `tranche/T51` merged (host-governor R29's peek is on it). The render arm already passes `peek: true` (index.mjs:961); R97 is now also proved through the real `HostGovernor` (new test in fix3-t51.test.mjs: one render-arm visit leaves `granted` at 1; a peek creates no state), beside the stand-in test. One flake found after the merge under load (the 2 s late-attestation wait, 6 s) was widened to 20 s in the test only. Acquisition suite 193 of 193 on two runs, then 194 with the new test in the file (12 of 12 in fix3). Checks unchanged: ownership lists only `build/requirements/acquisition.md`.
 
 Size (session_01Y3snL5ogNuP2LEHaz82PG4): test runs 18, module lines 3430
+
+## J10 · QUESTION
+
+QUESTION (K4370), two items for the design stream and BOB; my job carries on with stand-ins.
+
+1. The word table has no row `refusal.CAPTURE_NOT_KEPT`. CAPTURE_NOT_KEPT's row (acquisition/checks.mjs, `CAPTURE_KEEP_CHECKS`) reads its translation by `localize('acquisition.checks.capture_not_kept', <default>)`; the default is a stand-in: "the document arrived in several parts, but Civicsmith could not keep it whole, so nothing was filed; capture it again". When the design's row lands, the row switches to `word("refusal.CAPTURE_NOT_KEPT")`. Until then checks.test.mjs (R29 R31) is red by name on `hasWord('refusal.CAPTURE_NOT_KEPT')`.
+2. The check number is my choice: C-154.1 (C-154 is in no file; the series reaches C-153). Please confirm it or name the number, and I will change it.
