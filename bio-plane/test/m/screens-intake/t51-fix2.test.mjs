@@ -311,3 +311,16 @@ test("R7 (C28) a discarded knock offers put-back once the design's keys exist, s
   const n = await at({ ...K, status: "new" });
   assert.ok(btn(n, "inboxresolve") && btn(n, "inboxpull"), "control: a new knock offers discard");
 });
+
+test("R4 (capture R77 whole) a held row with no object under its fingerprint is marked refused and is never sent to release; control: whole true is", async () => {
+  const rows = (req) => ok({ ok: true, truncated: false, held: req.query.state === "set_aside" ? [] : [{ ...ROW("INFO-2026-0003-a", "Whole one", null), whole: true }, { ...ROW("INFO-2026-0004-b", "Parts only", null), whole: false }] });
+  const p = await open("/app/held", { plane: { heldcaptures: rows, projectlist: ok({ projects: [] }), memberlist: ok({ members: [] }), select: ok({ ok: true, handle: "h1" }), release: ok({ ok: true, released: [] }) } });
+  const picks = Array.from(main(p).querySelectorAll('input[type="checkbox"]'));
+  for (const c of picks) c.checked = true;
+  for (const c of picks) p.fire(c, "change");
+  fill(p, { "ch-ack": "I read it.", "ch-mitigation": "I compared it." });
+  await press(p, "release", { reason: "x" });
+  const sel = p.byOp("select");
+  assert.ok(sel.every((r) => !r.body.ids.includes("INFO-2026-0004-b")), "the parts-only document is never selected");
+  assert.ok(sel.some((r) => r.body.ids.includes("INFO-2026-0003-a")), "the whole one is");
+});

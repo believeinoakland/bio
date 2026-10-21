@@ -24,6 +24,7 @@ function renderHeld(cs, view) {
   /* R23: a row's refusal is drawn by its words: the class `ratification` names (`CRUCIAL_IN_BATCH`, `CONTESTED_IN_BATCH`, in
      the case it gives them), never the catalogue's sentence for it, which is not the member's */
   const eligibility = (r) => {
+    if (r.whole === false) return `${cs.mark("gap", "refused")}`;
     if (r.eligible === true) return "";
     if (r.eligible !== false) return `${cs.mark("gap", "undetermined")} ${cs.w("screen.held.eligibility.undetermined")}`;
     const why = String(r.class || "").toUpperCase();
@@ -153,7 +154,10 @@ function renderHeld(cs, view) {
  * (`op=select`, retrieval R18; K2996), then the release over its handle, with the acknowledgment and mitigation the
  * signed act's dialog asks, each checked as R20 bounds it before anything is sent. */
 async function sendRelease(view, el, cs, extra) {
-  const ids = (extra && Array.isArray(extra.picked) ? extra.picked : []).filter((x) => typeof x === "string" && x);
+  /* capture R77 `whole` (CAPTURE #41): a document with no object under its fingerprint (`whole: false`) is not vouched for */
+  const rows = view.data && view.data.held && view.data.held.state === "ok" && Array.isArray(view.data.held.value.held) ? view.data.held.value.held : [];
+  const partial = new Set(rows.filter((r) => r && r.whole === false).map((r) => r.bundle_id));
+  const ids = (extra && Array.isArray(extra.picked) ? extra.picked : []).filter((x) => typeof x === "string" && x && !partial.has(x));
   const ack = String(cs.value("ch-ack") || "").trim(), mitigation = String(cs.value("ch-mitigation") || "").trim();
   if (!ids.length) return { refuse: "screen.held.none" };
   const missing = [!ack && "screen.held.ack", !mitigation && "screen.held.mitigation"].filter(Boolean);
