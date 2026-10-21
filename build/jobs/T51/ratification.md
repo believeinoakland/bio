@@ -86,3 +86,24 @@ Tests and checks (run on job/T51/ratification after the commit):
 - `node checks/ownership.mjs /home/user/bio ratification tranche/T51 job/T51/ratification`: 7 files, 1 failure, `build/requirements/ratification.md` (accepted at merge, B4).
 
 Size (session_017fBDjJ7yCsJ4GrHnDn78Xw): test runs 5, module lines 3691
+
+## J6 · QUESTION
+
+QUESTION · P10 (d) step 0, the measurement (B6 (1)); the fix waits for BOB's release.
+
+Probe: real `contradiction` (migrated tables) and real `ratification.examineMember` on retrieval's fixture world (node:sqlite, the fixture's workerd-shaped cursor), 27 collected Information documents, `contradiction_candidates` seeded with N rows none naming those documents (each with `a_bundle_id`, `b_bundle_id`, `a_side`, `b_side` JSON as `#append` writes them), 20 timed passes over all 27 documents, median. The probe script is not committed (a scratch file); its method is this paragraph.
+
+| table rows | one `candidatesFor` (one state) | the 3 calls per document | `examineMember` per document, as is | `examineMember` per document, reads stubbed |
+| --- | --- | --- | --- | --- |
+| 2,000 | 1.35 ms | 4.1 ms | 4.7 ms (128 ms for 27) | 0.08 ms (2.1 ms for 27) |
+| 20,000 | 12.8 ms | 38.5 ms | 40.3 ms (1,089 ms for 27) | 0.29 ms (7.9 ms for 27) |
+
+Findings:
+1. The three `candidatesFor` calls are 98% (2,000 rows) and 96% (20,000 rows) of `examineMember`. The rest of the examination (one bundles row, bundle.md and provenance reads, the front-matter parse) is 0.08-0.29 ms a document.
+2. Each call is a full scan: the plan is `SCAN contradiction_candidates` plus `USE TEMP B-TREE FOR ORDER BY` (the four-column `OR` of `#candidatesNaming`'s bundle arm, `contradiction/index.mjs`:1515, has no index to use, and `json_extract` cannot use one). The cost is linear in the table: about 0.64 ms per 1,000 rows per document for the three calls. The state filter runs after the scan (`candidatesFor`:1632), so the three calls scan the same rows three times.
+3. Share of the 60-85 ms a Held row: the three calls reach 60-85 ms a document at about 28,000-40,000 rows (3 x 0.64 ms per 1,000 rows, linear), where the single read this fix proposes would be a third of that. I could not read the smoke copy's row count (no read-only probe of it is open to this session), so I cannot say whether the copy holds that many; the measurement says the reads are the only part of the examination that can reach 60-85 ms, and that they do so only at a table of about that size. With few candidates (a match is rare) a row costs the scan, not the loading of rows; a document that does match loads up to 2,001 candidate rows, which this probe did not time.
+4. The scan is per document, so the Held list of 27 documents costs 27 x 3 scans; the whole list at 20,000 rows is 1.1 s synchronous in the object.
+
+Proposed fix (needs release): one `candidatesFor({on:{bundle}, limit: 50, viewer: PLANE_VIEWER})` per document with no state filter, then the contested states filtered by `candidate.state` in ratification, the same refusals as before (an unread, failed, `undetermined` or `truncated` read counts as contested). That removes two scans of three (a third of today's cost, the reads at 20,000 rows 13 ms a document). It does not remove the scan itself: the remaining 13 ms a document at 20,000 rows is `#candidatesNaming`'s, and an index or a pre-computed list per bundle is `contradiction`'s to give (P9; ratification may not change it). Question for BOB: release the three-to-one fix here, and decide whether `contradiction` gets a job to index the bundle arm (e.g. a `contradiction_candidates` read by `a_bundle_id` and `b_bundle_id` indexes, with the `a_side`/`b_side` inquiry arms stored as columns), which is the only change that takes the cost off the table's size.
+
+Failing-first test planned (after release): count `candidatesFor` calls per examined document (three before, one after) with the test's `contradiction` double, control a standing `explained_not_shown` candidate still `CONTESTED_IN_BATCH`; and a timing test over the real `contradiction` at a seeded table.
