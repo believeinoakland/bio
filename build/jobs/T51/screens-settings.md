@@ -322,3 +322,14 @@ My whole-path test (`bio-plane/test/m/screens-settings/security-seam.test.mjs`, 
 Smallest thing I need: `build/modules.json` `screens-settings.uses` += `"file-safety"`, `"file-scanner"` (both earlier in the order). Nothing else changes. Please write it on `tranche/T51` (or tell me to drop the test's real providers and script them, which R-SEAM forbids).
 
 Best reading, so I carry on: tests are written; everything else in C84 is done (button and sentence by DEC-412's keys, status read from `MIRROR_REFUSED` lines, stale R15 test brought to its key). I go on with C14 meanwhile.
+
+## J25 · QUESTION
+
+QUESTION (J2; does not replace J1) · C14 on my screens: what I measured, and what I need.
+
+(1) Root cause, measured by opening each of my screens in the real shell harness and counting every request (frame included): the frame reads `bootstrap`, `whoami`, `groupidentity`, `groupkeystate`, `queue` for itself, and my screens read the same again because `view` hands them none of it: security `bootstrap` x2 (security.mjs:36), updates `bootstrap` x2 (updates.mjs:24), account `whoami` x2 (account.mjs:26), group `groupidentity` x2 (group.mjs:22), teamai `groupkeystate` x2 (teamai.mjs:18). members shows `memberlist` x2 and places `entitieskind` x2 (paged to the end, so legitimate); I find no repeat of `queue` and no per-project repeat in my module. So the repeats I can remove are the frame's, and only once the shell shares its frame answers with a screen (CAUSE-SHELL-4's "shared frame reads").
+(2) Gap: reads were counted per screen nowhere in my tests. I add one read-set test per screen: each op once, frame reads not repeated.
+(3) Failing-first: written against the shell's sharing API, so it is red by name until CAUSE-SHELL-4 merges.
+(4) P: not runnable from my session. The smoke copy answers a public `bootstrap` (200) but sends no `Server-Timing` yet, and my screens' reads are member-only and I hold no member token.
+
+What I need (smallest): (a) the name of the shell's shared-frame-read accessor (what a screen's `reads(view)` / `render` reads instead of asking again), or send me a CHANGE when CAUSE-SHELL-4 merges; (b) your ruling that C14's P check for my screens is closed by the read-set tests plus the local timing of the screens' reads in the harness, or what member token / probe I may use. Until then I finish everything else and wait for the CHANGE.
