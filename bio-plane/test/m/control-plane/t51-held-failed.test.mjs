@@ -15,11 +15,11 @@ import { fileURLToPath } from "node:url";
 import { Miniflare } from "miniflare";
 import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
-import { MULTIPART_READ_MAX } from "../../../src/reading-pipeline/index.mjs";
 
 const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));
 const ADM = "adm-c5b-0123456789abcdef", PASSWORD = "the founder's long password, C5b", ORIGIN = "https://group.example";
 const MIB = 1024 * 1024;
+const MULTIPART_READ_MAX = 20 * MIB;   /* reading-pipeline R2's size past which the parts are not assembled */
 const WORDS = "The Budget Advisory Committee packet reading";
 
 /* A real PDF with one page of text and, unreferenced after it, a stream of `junk` bytes: the reader finds the text, the size is the packet's. */
