@@ -25,3 +25,7 @@ Size (session_011AxVfrLbuAWxWCRogwpj27): test runs 6, module lines 10
 ## J1 · QUESTION
 
 R42 (and R36/R40's `/remote/version` sentence) say RemoteSession answers GET /remote/version 503 REMOTE_UNAVAILABLE. C92 needs it 200 in R5's shape while not ready: {ok:true, name:'agent-runner', version, capabilities:[]}; every other request stays 503 REMOTE_UNAVAILABLE; agent-worker R110 still answers ASSISTANT_REMOTE_NOT_READY (no passed check at that version). Built that way, bundle rebuilt. Best reading: please amend R42's wording accordingly. No answer needed to proceed.
+
+## J2 · COMPLETE
+
+C92 and C93 met (one cause; K4178 confirms C93 is the same root, not deploy-fleet's bindings). agent-runner R42/R5/R40: RemoteSession answers /remote/version 200 (test seen failing first); dist rebuilt by npm run build (agent-runner/dist/ is regenerated, committed). instance-setup R17/R81/R82: code unchanged, one test added in t46.test.mjs (passed first run: that half was already correct). Suites: agent-runner 76 tests, 0 fail; instance-setup 217 tests, 217 pass. checks: architecture 0, words 0, coverage reds only agent-runner R37/R38/R40 (conditional on R38, pre-existing) and other modules'; format 1 failure in build/rulings.md:4298 (K4301, BOB's file). ownership.mjs here takes one module and has no cause-job form: run per module it flags only the other held module's files and the cause job record. No new words; nothing else found in other modules. Size (session_011AxVfrLbuAWxWCRogwpj27): test runs 6, module lines 10.
