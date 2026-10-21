@@ -21,8 +21,8 @@
   // which the mirror's streaming and a batch's reads stay within.
   "limits": { "cpu_ms": 300000 },
 
-  // R6: the daily mirror run.
-  "triggers": { "crons": ["17 4 * * *"] },
+  // R6: every ten minutes: finishes an open mirror request, resumes a stopped run, otherwise mirrors once a day.
+  "triggers": { "crons": ["*/10 * * * *"] },
 
   // The team's bucket: captures are read (never written, R11); the mirror and reputation lists are written under
   // clamav/ and reputation/. The installer names the team's bucket here.

@@ -1,6 +1,6 @@
 # citation (T51)
 
-**Status** · session_01T23tysCBff1C94XfhB4Qo3 · depth 2 · COMPLETE · handled B9
+**Status** · session_01451wdDHycJMRsEDd4jwBN5 · depth 2 · COMPLETE · handled B11
 
 ## J1 · REPORT
 
@@ -200,3 +200,33 @@ Applied B9 (R20, K4308). `cite` reads each field from the POST body, and from th
 Deferred: none. Other modules: the REPORT J10 is withdrawn for the two tests; the screens still move to a body as C31's other half.
 
 Size (session_01T23tysCBff1C94XfhB4Qo3): test runs 11, module lines 1704
+
+## J13 · QUESTION
+
+QUESTION (no answer needed to proceed; I carry on on this reading). Cause cite-refusal, R21.
+
+1. "Add the new passage to the group" cannot be done before the passage is cited, so that repair is `cite` itself with one more field. My reading: `cite` gains an optional `ground` (the label of a group the question already declares); on a question it is written on each new leg as `ground: <label>` (splice.mjs), so the write's own check judges it (a label not declared is refused by the write as today); on a case it is refused `GROUND_NOT_APPLICABLE` (new C-33 row, awaiting the stamp), as `role` is refused there. DECLARED_OPS' `cite` accepts gains `ground` (R19). The second repair is `inquiryground` with `{target, grounds: []}` (inquiry's own way to remove the grouping; it asks the member for a reason, which the screen collects).
+2. Shape of the answer: a top-level `repairs` beside `findings` on a BASIS_REFUSED from `cite`: `[{key, act, fields, vars}]`, `[]` when none. A repair is offered only when the basis is already grouped (labelled legs) and the refusal carries a C-2.8 finding, read from the document, never from the finding's English.
+3. Words: the design has no rows for the two repair sentences. Stand-in keys, written once with `localize`: citation.index.repair_add_to_group ("Add it to the group {ground}") and citation.index.repair_remove_grouping ("Take the grouping off, so the answer reads as its weakest citation"). The design stream writes the real rows; I change the ids if it names others.
+Proposed requirement lines go in COMPLETE: R21 amended (the `ground` field and the repair shapes), R19 (cite accepts `ground`).
+
+## J14 · COMPLETE
+
+COMPLETE · CITATION #18 · fix round 4 · cause cite-refusal (RC-R9, citation R21).
+
+Cause cite-refusal, the four fields:
+(1) Root cause: the write's BASIS_REFUSED (C-2.8, a basis grouped whole or not at all: a new ungrouped leg beside a grouped one) was relayed unchanged by `cite` (index.mjs, the `promoted` relay), its only text the grammar's English finding; no act could add the new leg to a group, since `cite` took no group. Certain.
+(2) Test gap: the relay test used a scripted refusal (cite-refusals.test.mjs, "answered unchanged"); no test cited onto a really grouped question through the door's ops map. Fixed: cite-repairs.test.mjs builds the grouped question on the real inquiry and presses `cite` through `citationOps` with the body, as the door does.
+(3) Failing-first test (R21, cite-repairs.test.mjs, 5 tests): red on the previous code (`repairs` undefined; BAD_GROUND not a code), now green: citing a second passage while the only citation is grouped answers BASIS_REFUSED with findings and two repairs `{key, act, fields, text}`: `cite` with `{ground: "part 1"}` (done, the new leg lands in the group) and `inquiryground` with `{target, grounds: []}` (done through inquiry's own act, the cite lands). Controls: a refusal with no repair states `repairs: []`; an ungrouped question lands with no `repairs` key; a ground the question does not declare, and a ground on a case, are BAD_GROUND (new C-33.58 row, awaiting the stamp), nothing written. Repairs are read from the document and the write's C-2.8 code, never from the English.
+(4) Platform check: N (pure code).
+
+What changed: `cite` accepts `ground` (written on each new leg, `splice.mjs`); `repairs` on every BASIS_REFUSED cite answer; two helper methods; the row BAD_GROUND; DECLARED_OPS `cite` accepts `ground`. Tests updated for the new shapes: cite-refusals (a BASIS_REFUSED states repairs []), invariants (check rows, `ground` in the ops map call).
+
+Requirement lines proposed for BOB to write (QUESTION J13, no answer needed): R21 amended: "`cite` also accepts an optional `ground`, the label of a group the question declares, written on each new leg; a label not declared, and any on a case, is refused `BAD_GROUND` (C-33.58), writing nothing. A BASIS_REFUSED answer states `repairs`: for a grouped basis refused C-2.8, one `cite` repair `{ground}` per declared group and one `inquiryground` repair `{target, grounds: []}`, each `{key, act, fields, text}`; `[]` otherwise." R19 amended: `cite` accepts `ground`.
+Words (stand-ins, the design writes the rows): citation.index.repair_add_to_group, citation.index.repair_remove_grouping, citation.index.bad_ground, citation.checks.bad_ground. The screen (screens-inquiry, wave 2) draws `repairs` by key, sends the first repair's fields with the original cite, and asks the member's reason for the second.
+Noted for BOB: `screens-inquiry/question.mjs:1138` reads only string repairs inside findings; the new top-level `repairs` objects are for that job. The wizard/affordances op help for `cite` may list `ground`.
+
+Suites: citation 132 pass, 0 fail (was 127); affordances 282/282; screens-inquiry + members 472/472. format 0, architecture citation 0, coverage 21 of 21, words 0, ownership 0 failures. setup-words --check: stale-rows note naming my new key, as expected.
+No open QUESTION requires an answer; none held back.
+
+Size (session_01451wdDHycJMRsEDd4jwBN5): test runs 6, module lines 1760

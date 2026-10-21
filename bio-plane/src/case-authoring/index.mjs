@@ -1659,7 +1659,10 @@ export class CaseAuthoring {
     /* Ready only when nothing refuses AND ratification's list was read: a list not reached is not a list that is empty. */
     /* R83 (fix round 3, C48, C50; K4356): what the record holds prepared and published for the case the call stands at;
        the act's own run is rolled back, so a minted case (which the record does not hold) states neither. */
-    const editions = this.draftEditions({ caseId: answer && answer.ok === true ? (answer.minted ? null : answer.caseId) : stoodAt });
+    /* A draft that asks for a new case (`newCase`) stands at no case until it is prepared, and a second ask of it is refused as
+       a case member already: the document its own preparation made is found by the draft that made it (publication R40). */
+    const editions = this.draftEditions({ caseId: answer && answer.ok === true ? (answer.minted ? null : answer.caseId) : stoodAt,
+                                          draft: str(a.draft) || null });
     return { ok: true, wrote: false, ready: !first && !blockers.length && ratify.reached, first, blockers, steps, editions };
   }
 
