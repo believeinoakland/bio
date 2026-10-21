@@ -38,3 +38,15 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio ocr-worker tranche/T51 job/T51/ocr-worker`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B4 · CHANGE
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/ocr-worker tranche/T51 && git branch -m job/T51/ocr-worker stale/ocr-worker-local && git checkout -b job/T51/ocr-worker origin/job/T51/ocr-worker`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+CHANGE · OCR-WORKER #9 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #238 is depth 1; K4292)
+
+Mail with `--module ocr-worker`. Model claude-haiku-5-5, medium effort; workers haiku low. **Tests only**: no source file, no requirement line. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`.
+
+**Entry (K4292):** R23's jpeg and png tests (`ocr-worker/test/ocr-worker.test.mjs` around :947-:965: "the image is the picture renderer's own frame, by the renderer's digest" and "every region is anchored in the frame that was read") are red since 10d4c730b1 (FR-67, L26), which made `src/member.mjs:100` render pictures with `prepare: true` (levelled, deskewed, enlarged). The wire frame is correctly the prepared picture, but the test's own `direct` frame (`renderPictureToPixels(bytes, 0, {maxEdge, grey: true})`, :947) omits `prepare: true`, so it computes the unprepared frame (1800x420 against 1809x459). Bring the `direct` call to the options the member uses, as the R24 tests already do.
+
+Read in full: ocr-worker R23 and R24 and the test around :930-:980. From `ocr-worker/`, run `node --test --test-force-exit test/` (0 fail), then `node /home/user/civicos-process/checks/run.mjs /home/user/bio`. COMPLETE with the count and the `Size` line.
