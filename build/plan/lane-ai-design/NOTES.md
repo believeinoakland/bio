@@ -344,3 +344,79 @@ Nebius source: model catalog above. Others: Together https://www.together.ai/pri
 - https://tokenfactory.nebius.com/organization/prices (JS page, title only; not worked around).
 - https://api.tokenfactory.nebius.com/v1/models (401 without a key; not attempted further).
 - https://groq.com/pricing (no price content returned); https://fireworks.ai/pricing (prices on docs page instead).
+
+## Q-secrets · How Cloudflare can keep a key so the application does not (read 2026-10-21 by a sonnet/medium worker at Bob's request; Cloudflare and vendor docs; quotes as relayed by the fetch tool)
+
+
+### 1. Cloudflare AI Gateway stored keys (BYOK)
+Source: https://developers.cloudflare.com/ai-gateway/configuration/bring-your-own-keys/ (LU Sep 22, 2026)
+- Storage: "The keys are stored securely with Secrets Store." Dashboard creates the secret automatically. Page does not describe encryption.
+- Injection: "AI Gateway substitutes the stored provider key only when the provider authorization header is absent." If the caller sends the header, the gateway forwards it. So the gateway adds the key on the upstream request; the Worker never needs to hold it. Page does not explicitly say the Worker can never read it back (see Secrets Store, sec 2).
+- Gateway auth: "You still need to pass `cf-aig-authorization`." Placeholder provider-key values cause a provider auth error.
+- Scope: per gateway + provider + alias. API secret name `{gateway_id}_{provider_slug}_{alias}`. Multiple keys per provider allowed; `default` alias used unless `cf-aig-byok-alias` set; Unified Billing endpoints only consult `default`. The `secret_id` "is not used by AI Gateway for runtime lookup."
+- Rotation: edit key in dashboard; "Your applications will immediately start using the new key without any code changes or downtime." Delete: "will immediately stop all requests that depend on it." Dashboard lists keys by provider, last used, status; whether the value is displayed is not stated.
+- Who adds: page says "appropriate permissions to create and deploy secrets on Secrets Store" (roles in sec 2). No roles named on the page.
+- Providers: BYOK page does not list them. Providers page (https://developers.cloudflare.com/ai-gateway/usage/providers/, LU Apr 20, 2026) lists: Workers AI, Amazon Bedrock, Anthropic, Azure OpenAI, Baseten, Cartesia, Cerebras, Cohere, Deepgram, DeepSeek, ElevenLabs, Fal AI, Google AI Studio, Google Vertex AI, Groq, HuggingFace, Ideogram, Mistral AI, OpenAI, OpenRouter, Parallel, Perplexity, Replicate, xAI. Which of these support BYOK specifically: OPEN.
+- Gateway authentication: https://developers.cloudflare.com/ai-gateway/configuration/authentication/ (LU Jun 17, 2026): requests need a valid Cloudflare API token when auth is on; "Requests made through a Worker binding are already authenticated within the account." `cf-aig-authorization` is for provider-native endpoints at gateway.ai.cloudflare.com ("continue to work"); REST API at api.cloudflare.com recommended for new integrations. Tokens are account-scoped: "AI Gateway Read, Run, and Edit can't be limited to one gateway, so a token with Run access can use every gateway in the account, including those with stored BYOK provider keys." (relayed paraphrase)
+- Per-request passthrough (provider key sent by caller): https://developers.cloudflare.com/ai-gateway/usage/chat-completion/ (LU Oct 2, 2026): examples pass `Authorization: Bearer {openai_api_token}` plus `cf-aig-authorization`.
+- Cost: https://developers.cloudflare.com/ai-gateway/reference/pricing/ : "AI Gateway's core features available today are offered for free." Logs: Workers Free 100,000 total; Workers Paid 10,000,000 per gateway; accounts whose first gateway is created on/after Sep 24, 2026 use Workers Logs pricing/retention. Unified Billing 5% fee. BYOK cost: not mentioned (OPEN).
+- Gateway manage page (https://developers.cloudflare.com/ai-gateway/configuration/manage-gateway/, LU Sep 15, 2026): no roles, no audit logs; token permissions "AI Gateway - Read" / "AI Gateway - Edit".
+- Member (non-admin) adding own key: page names no member-level mechanism; creation needs Secrets Store roles (sec 2), i.e. account-level roles. A member without one of those roles cannot, per docs.
+
+### 2. Secrets Store and Workers secrets
+- Workers secrets: https://developers.cloudflare.com/workers/configuration/secrets/ (LU Oct 15, 2026): "Secrets are a type of binding that allow you to attach encrypted text values to your Worker." "To your Worker, there is no difference between an environment variable and a secret." "The difference is secret values are not visible within Wrangler or Cloudflare dashboard after you define them." Accessible via `env`, `cloudflare:workers`, `process.env`. => Worker code reads plaintext: YES. Scope: per Worker.
+- Secrets Store overview: https://developers.cloudflare.com/secrets-store/ (LU Aug 14, 2026): "a secure, centralized location in which account-level secrets are stored and managed"; open beta; "securely encrypted and stored across all Cloudflare data centers"; compatible with Workers and AI Gateway; unavailable in the China Network.
+- Limits: https://developers.cloudflare.com/secrets-store/manage-secrets/ : open beta up to 100 secrets/account, one store/account, 65,536 bytes each. "Once a secret is added to the Secrets Store, it can no longer be decrypted or accessed via API or on the dashboard."
+- Workers binding: https://developers.cloudflare.com/secrets-store/integrations/workers/ (LU Oct 12, 2026): "const APIkey = await env.<BINDING_VARIABLE>.get()" — example puts value into an Authorization header. => Worker code with a Secrets Store binding gets the usable value: YES.
+- Access control: https://developers.cloudflare.com/secrets-store/access-control/ : roles Super Administrator, Secrets Store Admin ("Can create, edit, duplicate, delete, and view secrets metadata"), Secrets Store Deployer (can bind to Workers / associate with AI gateway, cannot create/edit), Secrets Store Reporter (metadata only). Create secrets: Super Admin or Secrets Store Admin. Scopes `workers` and `ai-gateway` (access-control page hyphen; changelog https://developers.cloudflare.com/changelog/post/2025-08-25-secrets-store-ai-gateway/ says `ai_gateway`; spelling OPEN). "A request to bind or associate a secret with a service will be rejected if that service is not in the scope list." Read permission "does not grant access to the value of a secret."
+- Secret usable only by AI Gateway and not by Worker code: Scopes docs imply a secret with only the AI-gateway scope cannot be bound to a Worker (rejected). This is an inference from the scope rule, not an explicit docs statement — OPEN to confirm. (Note: a Worker holding an AI Gateway Run token can still cause the gateway to use the key, without seeing it.)
+- Audit: Secrets Store page and BYOK page do not mention audit logs. Account Audit Logs v2 (https://developers.cloudflare.com/fundamentals/account/account-security/audit-logs/, LU Oct 13, 2026) says "~95% of Cloudflare products" but does not list Secrets Store/AI Gateway/Workers secrets: OPEN. Plan availability: not stated.
+- Secrets Store pricing: not covered on fetched pages (OPEN).
+
+### 3. Other Cloudflare credential-hiding features
+- Dynamic Workers egress control (https://developers.cloudflare.com/dynamic-workers/usage/egress-control/, LU Oct 12, 2026): "A common pattern is attaching credentials to outbound requests so the dynamic Worker never sees the secret." Controlled via `globalOutbound`. Relevant to HTTPS AI calls: the untrusted/sandboxed code does not see the key, but the parent/outbound Worker does hold it. Product availability/plan: OPEN.
+- Service bindings (https://developers.cloudflare.com/workers/runtime-apis/bindings/service-bindings/, LU Oct 13, 2026): "call into another, without going through a publicly-accessible URL." Page says nothing on credentials; the pattern (a separate Worker holds the key) is architectural, not a documented feature.
+- mTLS binding (https://developers.cloudflare.com/workers/runtime-apis/bindings/mtls/, LU Apr 23, 2026): Worker "present[s] a client certificate to a service on your behalf"; whether code can read cert/key not stated. Client-cert auth only; none of the listed AI providers is documented as using it. Not relevant to API-key AI APIs.
+- Hyperdrive: databases only; page does not say whether password is exposed (https://developers.cloudflare.com/hyperdrive/configuration/connect-to-postgres/, LU Oct 15, 2026). Not relevant.
+- Workers VPC (https://developers.cloudflare.com/workers-vpc/, LU Oct 12, 2026): connects Workers to private services via Cloudflare Tunnel + VPC Service bindings. Relevant only to reaching a member-run private proxy (sec 5).
+
+### 4. External secret managers (fetch from a Worker)
+Each: Worker must hold a credential to the manager ("secret zero"). None of the fetched pages documents a proxy mode that makes the AI call for the app.
+- 1Password: SDKs Go/JS/Python, "currently in version 0"; Workers support not mentioned (https://www.1password.dev/sdks/, redirected from developer.1password.com; no date). Service account "token-based authentication... isn't associated with an individual account"; token via OP_SERVICE_ACCOUNT_TOKEN; cannot access Personal/Private/Employee vaults. Connect server: self-hosted, REST API over HTTP, access tokens (https://www.1password.dev/connect/, no date). Worker would need a reachable Connect server; Workers compatibility of JS SDK: OPEN.
+- Bitwarden Secrets Manager: SDK core Rust, wrappers incl. JavaScript, "Authenticate using an access token" (https://bitwarden.com/help/secrets-manager-sdk/, no date, (c) 2026). REST API doc and Workers/WASM suitability: OPEN.
+- HashiCorp Vault: HTTP `GET /:secret-mount-path/data/:path`, token in `X-Vault-Token` header (https://developer.hashicorp.com/vault/api-docs/secret/kv/kv-v2, no date). Vault must be network-reachable; Worker holds a Vault token.
+- Doppler: "bearer token to the HTTP Authorization header"; "All API requests must be made over HTTPS"; service tokens "Provide read or read/write access to secrets within a specific config" (https://docs.doppler.com/reference/api, updated May 29, 2025).
+- Infisical: `GET /api/v4/secrets/{secretName}` with "An access token in Infisical" (https://infisical.com/docs/api-reference/endpoints/secrets/read, no date).
+- AWS Secrets Manager: GetSecretValue returns decrypted `SecretString`; request must be SigV4-signed (`Authorization: AWS4-HMAC-SHA256`); needs `secretsmanager:GetSecretValue` (+ kms:Decrypt if CMK); CloudTrail entry generated, value excluded from logs (https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html). Worker holds AWS access key (or equivalent).
+- Google Secret Manager: `GET https://secretmanager.googleapis.com/v1/{name}:access`, "This call returns the secret data"; OAuth scope cloud-platform (https://docs.cloud.google.com/secret-manager/docs/reference/rest/v1/projects.secrets.versions/access). Worker needs a service-account-derived token.
+- Azure Key Vault: `GET {vaultBaseUrl}/secrets/{name}/{version}?api-version=2025-07-01`, needs secrets/get permission, OAuth2 scope https://vault.azure.net/.default (https://learn.microsoft.com/en-us/rest/api/keyvault/secrets/get-secret/get-secret, ms.date 2024-05-07, updated 2025-10-14). Returns `value` in the response.
+- In all of these, the fetched value lands in Worker memory (Worker code can read it). Proxy/injection modes: none found on pages read; vendors' other products (e.g. Vault agent/proxy features) not checked: OPEN.
+
+### 5. Member-controlled custody
+- Per-request key: AI Gateway docs show provider key sent in `Authorization` per request (sec 1). If a browser sends it to the Worker, the Worker sees it in transit (it must forward it, or the gateway receives it directly if the client calls the gateway). Direct client-to-gateway calls require a Cloudflare API token on the client (token is account-scoped, see sec 1) — OPEN whether this is advisable/possible per docs.
+- Cloudflare Tunnel (https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/, LU Aug 4, 2026): "cloudflared initiates an outbound connection through your firewall from the origin to the Cloudflare global network." A member could run a local proxy holding their key behind a tunnel. Workers VPC (above) is the documented way for a Worker to bind to a tunneled private service. Whether VPC Services can target a tunnel in a different (member's) Cloudflare account: OPEN.
+- OAuth tokens kept client-side: no provider docs fetched in this pass (OPEN; not researched).
+
+### Table
+| Method | Where key lives | Worker code can read plaintext? | Who can add/rotate | Providers | Cost/plan | Notes |
+|---|---|---|---|---|---|---|
+| Workers secret (wrangler secret) | Worker binding, encrypted | YES (documented) | Whoever can deploy/edit the Worker | Any | Not stated | Hidden only from dashboard/Wrangler |
+| Secrets Store + Worker binding | Account Secrets Store | YES (`.get()`) | Super Admin / Secrets Store Admin create; Deployer binds | Any | Beta; 100 secrets; pricing OPEN | Needs `workers` scope |
+| AI Gateway BYOK (Secrets Store, ai-gateway scope) | Secrets Store, per gateway/provider/alias | Not via Gateway; no Worker access documented (scope rule implies not bindable without `workers` scope; OPEN) | Roles with Secrets Store create/deploy perms (account-level) | Listed gateway providers; BYOK subset OPEN | Gateway core free; BYOK cost not stated | Gateway injects key if provider header absent; Run token is account-wide |
+| Per-request key via Gateway | Caller (member/browser/Worker) | YES if sent via Worker | Caller | Gateway providers | as above | Header forwarded as-is |
+| Dynamic Worker outbound injection | Parent/outbound Worker | Parent yes; sandboxed code no | Worker owner | Any HTTPS | OPEN | Hides key from untrusted code only |
+| mTLS / Hyperdrive | Cloudflare account | OPEN / n.a. | Account | Not AI API-key providers | - | Not relevant |
+| External secret manager (1Password, Bitwarden, Vault, Doppler, Infisical, AWS, GCP, Azure) | Manager | YES once fetched | Manager admins | Any | Vendor-specific, not researched | Worker holds a secret-zero credential |
+| Member-run proxy via Tunnel / Workers VPC | Member machine | NO (Worker sends requests, not key) per architecture; OPEN for cross-account | Member | Any | Tunnel/VPC plan OPEN | Needs member machine online |
+
+### What this means (facts)
+- Workers secrets and Secrets Store bindings give Worker code the plaintext.
+- AI Gateway BYOK documents key substitution by the gateway when the provider header is absent; the page does not show Worker access to the value; but any Worker (or token) with gateway Run access can make the gateway use the key.
+- The stored key is created by account roles (Super Admin / Secrets Store Admin), not ordinary members; a member's own key would need an admin to enter it, or the member to hold such a role in the team's account.
+- External managers all return plaintext to the caller and require a credential held by the Worker.
+- Provider terms (e.g. "not in a remote or managed environment") are not assessed here.
+
+### OPEN
+- Which providers support BYOK; Secrets Store pricing after beta; BYOK encryption details; whether ai-gateway-only secrets are unreadable by Workers (explicit statement); scope spelling (`ai-gateway` vs `ai_gateway`); audit-log coverage of Secrets Store/AI Gateway; 1Password JS SDK and Bitwarden SDK in Workers; secret-manager proxy/injection modes; cross-account Workers VPC/Tunnel; provider OAuth client-side token docs; Dynamic Workers plan.
+### BLOCKED
+- None blocked (all fetches returned content; 1Password and Google docs redirected to www.1password.dev and docs.cloud.google.com, followed).
