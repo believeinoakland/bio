@@ -260,23 +260,41 @@ function withoutLog(text) {
   return before ? `${before}\n${after ? `\n${after}` : ""}` : after;
 }
 
-/* R41 (L15, C46): a finding file's words without its front matter (the lines between the opening and closing `---`
-   fences) and without the Session Log. `statement` is the finding's own words: the front matter's `conclusion` (what
-   `op=conclude` wrote there) or `statement` when it holds one as a plain string, first; else the text that follows the
-   front matter. `falsifier` is what would change it, the front matter's, else null. `text` is what follows the front
-   matter. A file with no front matter answers its words unchanged (less any Session Log). */
+/* R41 (C46): the text under one `## <heading>` of a finding's body, to the next `## ` heading or the end, trimmed; null
+   when the heading is absent or its section holds nothing. */
+function sectionOf(text, heading) {
+  const m = new RegExp(`^## ${heading}[ \\t]*\\r?$`, "m").exec(text);
+  if (!m) return null;
+  const rest = text.slice(m.index + m[0].length);
+  const next = rest.search(/\n## /);
+  const got = (next < 0 ? rest : rest.slice(0, next)).trim();
+  return got || null;
+}
+
+/* R41 (L15, C46; fix round 3): a finding file's words without its front matter (the lines between the opening and closing
+   `---` fences), without the Session Log and without the file's headings. `statement` is the finding's own words: the
+   front matter's `conclusion` (what `op=conclude` wrote there) or `statement` when it holds one as a plain string, first;
+   else the text of the body's `## Conclusion` section; else, for words that are not laid out in sections at all (no `## `
+   heading), the words themselves. A file laid out in sections whose Conclusion holds nothing has no statement (null:
+   not concluded yet), never its headings. `falsifier` is what would change it, the front matter's, else the body's
+   `## What Would Falsify This` section, else null. `text` is what follows the front matter. A file with no front matter
+   answers its words unchanged (less any Session Log). `concluded` says whether a statement was found. */
 function findingWords(content) {
   const raw = String(content ?? "");
   let parsed = null;
   try { parsed = parseFrontmatter(raw); } catch { parsed = null; }
+  const laid = (t) => /^## /m.test(t);
   if (!parsed || parsed.data === null || typeof parsed.data !== "object") {
     const text = withoutLog(raw);
-    return { text, statement: text, falsifier: null };
+    const statement = sectionOf(text, "Conclusion") ?? (laid(text) || !text.trim() ? null : text);
+    return { text, statement, falsifier: sectionOf(text, "What Would Falsify This"), concluded: statement !== null };
   }
   const body = withoutLog(String(parsed.body ?? "").replace(/^(?:\r?\n)+/, ""));
   const own = (k) => (typeof parsed.data[k] === "string" && parsed.data[k].trim() ? parsed.data[k].trim() : null);
-  return { text: body, statement: own("conclusion") ?? own("statement") ?? (body.trim() ? body : null),
-           falsifier: own("falsifier") };
+  const statement = own("conclusion") ?? own("statement") ?? sectionOf(body, "Conclusion")
+                    ?? (laid(body) || !body.trim() ? null : body);
+  return { text: body, statement, falsifier: own("falsifier") ?? sectionOf(body, "What Would Falsify This"),
+           concluded: statement !== null };
 }
 
 /* R13: the dry run's own throw, so a rollback is told apart from a failure. */
@@ -359,16 +377,21 @@ export class Review {
     /* D-539: THE ROLE IS THE DRAFT'S OWN AUTHORED FACT, said back whether or not the finding can be read, so an edit
        written from the answer does not lose it. It discloses nothing the target id beside it does not. */
     const role = roles && typeof roles === "object" ? roles[id] ?? null : null;
-    const b = this.#one(`SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b
+    const b = this.#one(`SELECT b.bundle_id, b.title, b.object_type, b.current_state FROM bundles b
                          WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args);
     if (!b) return { target: id, present: false, role,
                      detail: localize("review.index.this_draft_names_a_finding", "this draft names a finding its editor cannot read, or one that does not exist.") };
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
     /* R41 (L15): a reader reads the finding's own words, never the file's front matter. */
     const words = md ? findingWords(md.content) : null;
-    return { target: id, present: true, object_type: b.object_type, state: b.current_state, role,
+    const concluded = !!(words && words.concluded);
+    /* R41 (fix round 3): a finding with no words of its own is told as not concluded yet; the sentence is a stand-in
+       for the design's row (`review.index.not_concluded_yet`). */
+    return { target: id, present: true, title: typeof b.title === "string" && b.title.trim() ? b.title : null,
+             object_type: b.object_type, state: b.current_state, role,
              text: words ? words.text : null, statement: words ? words.statement : null,
-             falsifier: words ? words.falsifier : null };
+             falsifier: words ? words.falsifier : null, concluded,
+             not_concluded: concluded ? null : localize("review.index.not_concluded_yet", "Not concluded yet") };
   }
 
   /** R40 (L14): THE SHORT TITLE a screen draws as a draft's heading, beside the identity sentence it keeps for body text:
