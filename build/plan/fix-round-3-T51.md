@@ -249,3 +249,4 @@ On the live copy: `op=reading&sha256=<the project-less photo's sha>` as the memb
 - acquisition (K4373, J10): `refusal.CAPTURE_NOT_KEPT` (stand-in `acquisition.checks.capture_not_kept`); `checks.test.mjs` R29 R31 red by name until it lands.
 - case-disclosures (K4365): `case-disclosures.index.late_proves`. review (K4367): `review.index.not_concluded_yet`. entities (K4364): `refusal.CONFIRM_NOT_AN_OFFICE`, `refusal.NOT_NAMED_BY_A_MEMBER`.
 - capture (K4377, J11): `refusal.CAPTURE_NOT_HELD` added to capture's `reads`, and a filing-fit sentence (the shared one ends "so it cannot be cited"); `SEEN_IN_NOT_RECORDED` (502, a key or `unkeyed`); `unkeyed` candidates `capture.index.seenin_member_act`, `.seenin_not_held`, `.seenin_not_recorded`, `capture.declared.captureseenin`.
+- cause-shell-3 (K4380): `shell.keyfile.none`, `.unreadable`, `.empty` (no stand-in English: a drawn module may not use `localize`; the key shows until written).
