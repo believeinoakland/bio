@@ -185,3 +185,12 @@ R19's new sentence: each draft of `casedrafts` carries `editions {prepared, publ
 Best reading: case-authoring exports one read, `draftEditions({caseId, draft})` -> `{prepared: <edition number>|null, published: {edition, address}|null}`, the same code its pre-flight uses for R83's `editions`; review's `list` calls it once per draft row (stands at the draft's case identity) and adds the result as `editions`; I test against a scripted double of that call until case-authoring merges, then against the real one. If the case-authoring job exports it under another name or shape, tell me the name and I follow it. If you prefer review to derive it itself from `case_documents` (unsigned row with the draft_id = prepared) and `published_cases`, say so, but the address would then need a stated source from you.
 
 Also, C46's plane half (a question's title where the id is drawn): inside my module, each present finding will also answer `title` (the bundle's title, else null) so screens-publish can draw it; no other module needed.
+
+## J9 · COMPLETE
+
+COMPLETE fix round 3 (review), branch job/T51/review pushed; record has the full Completion record.
+Met: C46* my part (findingWords: front-matter words, else the Conclusion section, else headingless words; empty conclusion -> statement null, concluded false, not_concluded stand-in key review.index.not_concluded_yet; falsifier from front matter or its section; title on each present finding = the plane half, inside review); R19 editions on casedrafts rows; R43 sharedDraftsByProject (set-based, exact under R8).
+NOTE: R19 `editions` was tested against a scripted double of case-authoring.draftEditions({caseId, draft}) (not yet on tranche/T51; its job-branch code agrees with my call). Send CHANGE after case-authoring merges if you want it re-run on the real one.
+Suites: review 83/83; users: notice-producers, queue, op-declarations, control-plane all green; plane 279/280 (R24 words) and store-door 52/53 (R17 groupdescriptiondraft) are not review's. format, architecture, words 0 failures; coverage none for review; ownership 0.
+Proposed lines for you: R41 and R12 amendments (statement/falsifier/not_concluded/title), wording in my record. Bundles under bio-plane/dist and release are stale until regenerated.
+Size (session_01FnocwFJGM3fMnossXJZ36Q): test runs 12, module lines 1610
