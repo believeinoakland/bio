@@ -134,3 +134,34 @@ COMPLETE (re B13, K4248), with one held act (J10 REPORT). Entries applied: B419 
 Tests: module suite 176, 175 pass, 1 fail (R10). Checks: format 0; architecture 0; coverage 59 of 59; words 0 for this module; ownership 7 files, 0 failures; setup-words --check ok; run.mjs names nothing of this module.
 
 Size (session_01S8VGM3tuVs3msj6bpgKFvC): test runs 4, module lines 3024
+
+## J12 · COMPLETE
+
+COMPLETE (re B14, K4259): the three entries applied; one is a removal BOB should confirm (entry 3). Commit d48d377908 on job/T51/screens-investigate. interface-shell's `SCREEN_REGISTRY` (09fbb247eb) against my twelve screens' acts: no difference left (checked over the module's real `SCREENS`).
+
+**Entries applied**
+1. `person` · `linewithdraw` (B423; R50): drawn on each standing kept statement of an organization's office, in the row's act slot with the source's grade and citation kept beside it, labelled `act.linewithdraw.label.person` ("Withdraw this statement, with a reason"). The shell asks the reason (op-grades rung `reasoned`); the act sends `{lineId, reason}` and the lines are read again. A withdrawn line draws none; a person's page draws none. The section's closing note (`keeper.withdraw.a/.b`) stays. The module's R10 ("each screen draws exactly its registry acts") is green for `person`.
+2. `timeline` · `instance`, `progression`: the design draws them as the sections they read (`sec(…, {act: 'instance'})` on "Progressions it follows" and "Its steps", `{act: 'progression'}` on state c's "Steps"), not as buttons. Both are now among the screen's `acts`, and each of those three sections carries its act in `data-act` through a new part `actSec` (interface-shell's `cs.sec` has no `act` option; see the requirement line below). No button is drawn for either.
+3. `explore` · `stepsourcewithdraw`: REMOVED. The design (`mock-screens.js` `SCR.explore` at 09fbb247eb) draws only `stepsource` there; no registry screen lists `stepsourcewithdraw`; the design holds its act row (`mock-acts.js`, weight in `mock-kit.js`, `act.stepsourcewithdraw.does`) but places it on no screen. Per B14 and K3052 the control is gone from the hop line and from the graph's step list; the keys `screen.explore.withdraw` (nothing else read it) and the `withdraw` graph option are gone with it. Consequence to know: a member can no longer take back an attached source from the page (the op is served and unchanged).
+
+**Requirement lines for BOB**
+- screens-investigate R17: drop "and offers `stepsourcewithdraw` (reasoned)" and the withdrawal half of its test ("control: after the withdrawal it is drawn a lead"); R35: drop "and offers `stepsourcewithdraw` (R17)"; R10's list of acts (R50 gains the withdraw line, K4259 entry 1).
+- screens-investigate R33/R49: add that the sections "Progressions it follows", "Its steps" and state c's "Steps" carry `instance` / `progression` as the design draws them; the module lists both in `acts`.
+- interface-shell: `RE_POINTS.explore` (`stepsourcewithdraw`, R55, R73) names an op no screen draws any more: it can go. `cs.sec` could take the design's `{act}` option (the module sets `data-act` on its section itself until it does).
+- HANDOFF to the design (if BOB wants withdrawal back): where on `explore` a member takes back an attached source, and its registry row; until then the page has no way to do it.
+
+**Deferred** none.
+
+**Found in other modules (none in my diff)**
+- setup-words: `node bio-plane/src/setup-words/build.mjs --check` fails on `words-unreviewed.json` ("stale or absent") on the tranche tip as well (checked on origin/tranche/T51 in a clean worktree, with and without my change); presumably stale after the 09fbb247eb re-take.
+- Generated artifact stale: `bio-plane/dist/bio-plane.bundled.mjs` bundles this module's screens; BOB regenerates it at the layer close.
+- `checks/run.mjs` over the whole tree: coverage names 6 modules with ids no test names (agent-harness R17; agent-runner R37, R38, R40; installer-steps R26, R31; journey-check R19; screens-inquiry R110, R119; screens-intake R53); words: testcopy 1 in op-grades `t37.test.mjs`:32. None of it is screens-investigate.
+- `sheet-worker` and `site` have no `node_modules` after the `npm ci` loop (the loop printed nothing for them); not needed by this module's tests.
+
+**Tests and checks**
+- Written first and seen failing, each with its control: `linewithdraw` (organization.test.mjs, R50 B14: two standing lines draw two acts, a withdrawn line none, a person's page none, no reason sends nothing, the lines are read again after the act), `instance`/`progression` (timeline.test.mjs, R33 B14: the three states' sections carry the act, no button, no section for a project that follows nothing), the removal (explore.test.mjs R17, graph.test.mjs R35: no withdrawal control), and common.test.mjs R10 now compares each screen's acts to the registry's with no re-point or unplaced list.
+- node --test bio-plane/test/m/screens-investigate/*.test.mjs: 178 tests, 178 pass, 0 fail (baseline 176, 175 pass: R10 red for `linewithdraw`).
+- node --test bio-plane/test/m/interface-shell/*.test.mjs: 243 pass, 0 fail.
+- format 175 modules, 0 failures; architecture screens-investigate 33 files, 0 failures; coverage 59 of 59 live ids named, 0 failures; words screens-investigate 0 failures (7 unkeyed); ownership tranche/T51 vs job/T51/screens-investigate: 13 files, 0 failures.
+
+Size (session_01SEkZkEvrW6ukwiw4b8mKpD): test runs 9, module lines 3029
