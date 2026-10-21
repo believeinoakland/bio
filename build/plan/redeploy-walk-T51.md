@@ -1,0 +1,77 @@
+# T51: after the fix round's last merge — regenerate, test, redeploy, walk
+
+**Status** · Checklist for the BOB that runs the steps after the fix round's last merge (BOB #238 on). Sources: `build/rulings-active.md` (§2, §4), the manifest's Generated artifacts, `build/handoff.md` "Next" 5, K4162, K4112, K4180, K4186, K4269–K4280. It orders acts; every rule is cited, none restated as an order (§5.8). Nothing here is Bob's to do except what §3 step 3 names. Run long commands as session-tracked background tasks (K4207).
+
+## 0. Before anything
+- [ ] The round's second pass is done (handoff "Next" 5: the reason box K4254, strength family entry, the mark and the asking K4199, words arms K4208, hand-row deletion K4168 after the redeploy, promotion's stamp last K4205). No job runs (mechanics §5.10).
+- [ ] `node_modules` in every directory with a tracked `package-lock.json` (rulings-active §4, K4113): `for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`. A missing one makes failures that are not the code's.
+- [ ] `git pull --ff-only origin tranche/T51`; no other session writes the tree during steps 1 to 3 (never edit `modules.json` or `order.mjs` during a bundle build, K3972).
+
+## 1. Regenerate and verify (manifest, "Generated artifacts"; order K1540)
+From the repository root, in this order:
+1. `node bio-plane/src/member-roster/order-build.mjs` (K3633, K3979), `node bio-plane/src/case-checker/build-program.mjs`, `node court-citations/build.mjs`, `node bio-plane/src/setup-words/build.mjs`, `node bio-plane/src/wizard-scripts/build-data.mjs`, `node site/build.mjs`.
+2. `node bio-plane/scripts/bundles.mjs` (rebuilds every stale bundle: plane, pdf-, ocr-, sheet-worker, agent-runner, agent-worker, file-scanner; the plane bundles `program.mjs`).
+3. Newgroup last: `cd newgroup && node scripts/invite-page.mjs && npm run build`.
+4. Each generator's `--check` prints clean (order-build, court-citations, setup-words, wizard-scripts, site, invite-page); `git status` shows only generated files.
+5. Verify, each printing `0 fail` and no `SKIP` (a SKIP is a missing `node_modules`):
+   - `node --test --test-force-exit bio-plane/test/system/fleetbundles.test.mjs` (153/0 on the rehearsal, K4277)
+   - `node --test --test-force-exit bio-plane/test/system/newgroup-bundle-fresh.test.mjs` (4/0, K4277)
+   Without `--test-force-exit` the passing test hangs on a live esbuild service (K3972).
+6. Plane size: `wc -c bio-plane/dist/bio-plane.bundled.mjs` against 33,554,432 (32 MiB). Rehearsal read 30.18 MiB (K4277). A breach is an architecture question to Bob, never decided here (K2547).
+7. Commit the regenerated files on `tranche/T51` and push (fast-forward; `git -c http.version=HTTP/1.1 push` after an "Internal Server Error", K1977). A bundle changed after this commit means step 1 to 5 run again.
+
+## 2. The whole suite before the redeploy (K2704, K4272)
+- Command: `node .github/scripts/module-tests.mjs` from the root, over `build/modules.json` (K1708, K2704); sweeps the exhaustive and wording/rendering tests once, here, not per job (K4272 (2)). Plus `node checks/run.mjs` from the process checkout (format, architecture, channels, words, coverage) and `node checks/architecture.mjs .` (0, K4267).
+- At most two suites at once on the 4-core container (K4272 (3)); six at once produced load flakes (K4276). To go faster, run only the impact set (`build/plan/impact.mjs <base> <head>`) for the final delta after a full run, never instead of one.
+- Duration: not recorded as one figure. Large suites take 11 to 13 minutes each (K4272); the whole run is therefore hours, as a background task. Not determined here.
+- Read the reds against these accepted by name and nothing else:
+  - plane R24 (four `screen.<id>.purpose` rows: objective, about-knocker, leads, watching) and screens-settings R39 (`screen.bias.adoptfor.label`): T52, `later-ux.md` (K4276, K4278, K4270).
+  - coverage's held ids (K4236): agent-harness R17, agent-runner R37 R38 R40, installer-steps R26 R31, journey-check R19 (assistant, K3717/K3718 (2)).
+  - promotion `row-census` until its stamp (K4205); control-plane #324 until CAUSE-TOTALITY-T51 merges (K4279; it is the round's last known red, so none should remain by this step).
+  - K4274's list (R53/R17/R29, R75 end to end, R2/R41, plane R5, screens-intake R22) is cleared by K4276/K4280; screens-intake and screens-settings R57 are load flakes (K4276): re-run a red alone before naming it.
+  - doc-clean R4 (16 MiB clean) is accepted only if it fails alone (K4149).
+  - journey-check's walk is excluded from the run (K4149) and never `node --test`ed.
+- Any other red: a cause job for its owner (K4271, K4275's route), merge, re-run that suite and its impact set, return to step 1 if a generated input changed.
+
+## 3. Redeploy to biosmoke8 (K4180, K4186; rulings-active §2)
+1. What deploys: the tranche's built artifacts, unsigned, to the test copy only (K4186). Workflow `.github/workflows/deploy-test.yml`, dispatched by hand: inputs `branch` = `tranche/T51`, `copy` = `biosmoke8`, `dry_run`. It builds the branch, runs `deploy-fleet.mjs <member> --instance biosmoke8 --test-instance` for each member in `discoverMembers` order, then `deploy.mjs biosmoke8 <version> dist/bio-plane.bundled.mjs --test-instance` for the plane. It refuses a copy not marked a test instance and any account but `20b533579290b9b93168345edd3b7f72`; secret `CLOUDFLARE_API_TOKEN` is in environment `deploy-test` (K4184), never printed. A container member's image must already be published (`container-images.yml`).
+2. Dispatch a `dry_run: true` first (`mcp__github__actions_run_trigger`), read its logs for every `test deploy:` and `rollback :` line and the permission check (deploy-fleet R26); record the rollback targets (0.86.0's live ids are the ones now serving).
+3. Dispatch the real run. Bob's approval: K4172 covered 0.86.0 only and K4179 held for the session it was given in (K4177); neither covers this one. Auto mode may refuse the dispatch, or a push to `dist/cut-*`, as "Production Deploy" (rulings-active §2; K4180 says a refused dispatch is recorded, never worked around). If refused, state the one refused act in one line and ask Bob's one-line approval in that session; the deploy is not moved to another route, and a deploy act is never done through a second session's approval (K4177). Wrangler reporting any other account: stop and say so.
+4. After it: the plane `https://biosmoke8.believeinoakland.workers.dev/api/?op=bootstrap` answers the new version, claimed true, test_instance true; pdf-, ocr-, sheet-worker `/version`; agent-runner, agent-worker, file-scanner answer 1042 on `workers.dev` (bindings only, K4178): read them through `bootstrap&members=1`. Reach the instance directly, never through the proxy (rulings-active §4, K4212): `curl --noproxy '*'`.
+5. Smoke first (K4112 (2), K4181; `walk-T51-live/SMOKE.md`): administrator and member (`JOURNEY_ADMIN_*`/`JOURNEY_MEMBER_*`, as `journey-check/signin.mjs`) at 1280 and 390: front door, sign-in, Home, Find, Projects, a project, Queue, a document, Your team or Account, Security, sign-out; no console or page error, no failed op. SMOKE.md's last run flagged FAILs that were script artifacts (a bracket suffix on the Security line; checks made before `data-screen` appeared): wait for the frame mark and count `drawn OK` by prefix. A smoke failure is fixed before the walk.
+6. Live re-reads owed (handoff "Next" 5; each a worker, sonnet medium, results saved beside `walk-T51-live/live-reads.md`):
+   - FR-06: `POST /mirror` on file-scanner once; confirm the 27 files scan and Security stops saying "waiting" with no signatures (K4182, K4194). Never borrow another tool's User-Agent (K3658).
+   - FR-43 part 2: `acquiretimings?trace=` through plane R73, a real address capture, stage times while running and after (K4236, K4247).
+   - pdf-pixels' floor: at least 90 percent of the words of each fixture photograph through the live OCR engine (pdf-pixels R44; K4194 L26: the engine is changed only if the floor is still unmet).
+   - L12: `GET /api?op=queue` as administrator: all 20 feeds `answered:true`; the `contradictions` feed failed `refused` at 0.86.0 (live-reads §1); K4233 placed the cause (the founder's bare `admin` viewer, CONTRADICTION #12), the queue's `feeds[]` now names the read and code.
+   - Installer upload peak: the open assumption that a Worker's `fetch` may buffer a FormData body (115 MB against 112) is measured on an install through the installer (K4237; installer R33; P19 (2)).
+   - The owners' batch forms only where `facts.ms` shows them dear (K4233).
+   - L11 `retire` after `select` (live-reads §4, unread), L18 and L20 re-run from the targeted re-walk, not apart.
+
+## 4. The thorough walk (Bob, K4269; structure K4162, K4112, K4111)
+Bob's words, K4269: the release must be walked to confirm it renders properly, that all journeys work, and that finding documents, capturing content, collecting evidence, making connections (money, organizations, ties), reaching conclusions and taking action all work and flow.
+- **Before the walk runs (K4111):** every finding of the last run is traced to a merged fix with a test; the run's whole output is saved to the build state; a walk accepted red by name is not re-run by a job.
+- **Shape (K4162 (3)-(5), K4112):** (1) the smoke, §3.5. (2) One complete pass, never stopping at a defect: every item of the fixed list, 172 use cases (`ux-experience.json` `useCases`) and 11 journeys with 81 steps (`journeyExperience`), at 1280 and 390 px, as administrator and as member. Brief and row format: `walk-T51-live/BRIEF.md` (area files `information`, `act`, `team`; screenshots under `shots/<area>/`). (3) Defects grouped by cause (a diagnosis worker, as `CAUSES-live.md`), each reproduced by a failing test at its module's interface, all fixed in one round (K4271's cause jobs), a provider merged first. (4) One redeploy (§1 to §3 again over the touched modules, impact set plus the sweeps). (5) A targeted re-walk of what the fixes touched, plus the smoke. (6) One final full pass only once that is clean.
+- **Reaching it (rulings-active §4):** directly; Chromium from `/opt/pw-browsers`, `HOME=/opt/walk-home`, `--no-proxy-server`; playwright-core from `bio-plane/src/journey-check/node_modules`; node with the four proxy variables unset. Sign in with the environment's variables; never print a credential. Work in a project named "Walk T51 <area>". BOB debugs the instance itself; Bob is never the tester.
+- **The spine, mapped to the design's journeys** (names from `journeyExperience`; the census per step is `deadends-T51/6-journeys.out.md`, causes `deadends-T51/CAUSES.md`, the live causes `walk-T51-live/CAUSES-live.md`):
+  | stage Bob names | journeys and steps | screens and areas |
+  | --- | --- | --- |
+  | before the flow: setup, sign-in, team | (a) A group sets up and invites members (10); (j) Adding or removing an administrator (2); (d) The daily queue (9) | installer, `/app/setup`, Home, Queue, Settings > Your team, Members, Security |
+  | finding documents | (b) steps from a question; census batch `1-information`; use cases of Find | Find, scope and wider reading, Projects |
+  | capturing content | (f) From a knock to the record (3); (b) capture steps; batch `1-information` | Add (an address, a file or photo, an observation), held captures, Inbox, Document, scanner on Security |
+  | collecting evidence | (b); (k) From suspicion to a closed plan (12) | Document reading, citing, retiring, OCR, transcription checks, Question and strength |
+  | making connections (money, organizations, ties) | (k); batch `2-analysis`; use cases naming the constructs money, ties, people, organizations | People, Standard, Matter, objective, ties, contradiction, `other` (organisation page, K4194 L10) |
+  | reaching conclusions | (b) From a question to a published case (16); (g) A review copy round trip (3) | Finding, Case editor, review copy, ceremony, publish (batch `3-publish-act`) |
+  | taking action | (c) Acting on a finding (13); (h) A records request round trip (3); (i) A source changes after a case is published (3); (k) | Plan, action, due date, reply, records request, escalation, attention (batch `4-track-attention`) |
+  | not walked | (e) Delegating looking to the assistant (7): reported "not walked", the not-ready state asserted, nothing disabled (K3717, journey-check R20, K3718) | |
+- **Findings (K4270, K4269; rulings-active §1):** a misused word or improper rendering is one line in `build/plan/later-ux.md` (screen, what is wrong, where seen), the walk does not stop, unless it stops a member completing an operation (then it is an operation failure). Operation failures, dead ends and a journey that cannot complete are the round's (K3460, K3462). Layout, wording and flow also go to UX-DESIGN as one HANDOFF; a design change enters T51 only for an operation that does not work or a required screen nothing reaches (K4269). A screen a non-technical reader would not understand is MAJOR, each unexplained term quoted (K3462).
+- Job and worker results are read by a haiku worker reporting success or not and why (K4269); a walk's raw output is read by a worker, not BOB (K3676).
+- When the final pass is clean: BOB confirms by signing in as administrator and as member and looking at `/` and each screen (K3052's details) before Bob is told it is ready; then the alpha cut (§5).
+
+## 5. Hard reasons and open items (P19's three reasons, K3915; none is outside T51 until named here)
+1. **Bob's decision pending:** the alpha cut's signature under `release` is Bob's one GitHub click (K4186; K4173 withdrawn, K4172's note). The stewards' contact address, named by Bob before any public release (K2782, K2799).
+2. **A deployment or measurement outside the tranche:** the installer's upload peak and the release signature controls need the cut (K4237; rulings-active §2: `ssh-keygen -Y verify` controls refused by auto mode); the 0.86.0 live reads of §3.6 are inside T51 (nothing waits). `release/T50-unassisted` is pushed after the close (K3718 (4)).
+3. **Something outside the product not yet existing:** civicsmith.org on Bob's domain follows the `workers.dev` check (K3296); the assistant for several AIs, AI choices and API keys (K3717, N1220, K3347, N1105, K3804: Bob brings them when ready); the process repository's `prep/cause-job-K4273` and `prep/words-arms-K4208` reach its `main` by pull request at T51's close (K4275; handoff).
+4. **To T52 by Bob's words (K4269, K4270, K3804):** every entry in `build/plan/later-ux.md`, the ~50 wording-only sweeps, plane R24, screens-settings R39.
+5. **Open for BOB (not Bob's):** wizard-scripts' `wizards` declares `state` though its arm reads it from the query (K4230; handoff "Open for BOB"); registry account labels change to secondary at T51's close (K4251, handoff); `stepsourcewithdraw` HANDOFF to the design (handoff "Next" 4, K4267).
+6. **Close (after the walk):** merge `main` into `tranche/T51`, every module's tests, the checks, the PR to `main` merged with the GitHub merge tool (rulings-active §2; standing direction in CLAUDE.md); never a direct push; archive finished sessions (K4219).
