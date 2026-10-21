@@ -56,3 +56,11 @@ Fix round 3, C13 (P5), my part: the browser render. Requirements met: capture-so
 Merge: `tranche/T51` already merged, no provider named for this cause.
 
 Size (session_016XY41FauSzZ6Ec9JTB5R7K): test runs 8, module lines 2664
+
+## J5 · QUESTION
+
+QUESTION (J-seam, architecture). My two seam tests (C13a: `acquire` with the visitor render of a 33-body page, the store charging 0.27 s a call; C13b: render deferred, render table reset, "Finish it" through `acquire` with `continue`) must run the real merged `acquire`, so they import `bio-plane/src/acquisition/index.mjs` and acquisition's test fixture `bio-plane/test/m/acquisition/fixture.mjs` (its `world`, `run`). Acquisition is later than capture-sources in `build/modules.json` and not in my `uses`, so `checks/architecture.mjs` will name those imports ("not earlier in the order"), as it names `citation/register.test.mjs` on the tranche tip.
+
+My best reading, which I am carrying on with: the seam tests live in `bio-plane/test/m/capture-sources/seam-render.test.mjs` (my tests path) and import acquisition and its fixture; the architecture check names exactly those lines and nothing else of mine, and BOB takes them as the seam owner's named red (K4431: the last-merged job owns the whole-path test). Everything else (the provider fix in `render.mjs` and its interface tests) is clean.
+
+The smallest thing I need from BOB: say yes (named red accepted), or give the rule that makes the edge legal (an exemption for seam tests, or the test moved to a module that can import both). Not blocking: the provider fix and its test go ahead meanwhile.
