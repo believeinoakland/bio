@@ -103,3 +103,34 @@ test("R67 control: a Tier 1 or Tier 2 filing keeps as a file, a brief too", asyn
     assert.equal((await x.op("templatesave", BO, { filing: d.id, name: `briefed at ${tier}`, use: "brief" })).ok, true);
   }
 });
+
+/* C65 (T51 fix round 2): a new template's scope is the project the request names, else the project the action or its
+   filing basis names, as the module's other acts take it. An action resting on no determination has an empty basis
+   project, so only the request or the action can name one. */
+const noDetAction = (x, o = {}) => x.action({ legs: [], ...o });
+const approvedFor = async (x, A) => {
+  const d = await prepare(x, A, "To the {{counterparty_role}}: a letter.");
+  assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
+  const ap = await x.op("filingapprove", BO, { filing: d.id });
+  assert.equal(ap.ok, true, JSON.stringify(ap).slice(0, 300));
+  return d;
+};
+
+test("R32 a template is saved for an action resting on no determination when the request names its project, in that project; with no project named anywhere it is still refused TEMPLATE_SCOPE_REFUSED (control)", async () => {
+  const x = world();
+  const d = await approvedFor(x, noDetAction(x));
+  assert.equal(JSON.parse(x.row(`SELECT basis FROM filing_drafts WHERE filing_id=?`, d.id).basis).project ?? null, null, "the basis names no project");
+  const control = await x.op("templatesave", BO, { filing: d.id, name: "no project named" });
+  assert.equal(control.reason, "TEMPLATE_SCOPE_REFUSED");
+  const saved = await x.op("templatesave", BO, { filing: d.id, name: "project named", project: x.proj });
+  assert.equal(saved.ok, true, JSON.stringify(saved).slice(0, 300));
+  assert.deepEqual(x.f.filingTemplates.templateRead({ template: saved.template, viewer: V("bo") }).template.scope, { project: x.proj });
+});
+
+test("R32 a template is saved for an action resting on no determination that names its own project, in the action's project, the request naming none", async () => {
+  const x = world();
+  const d = await approvedFor(x, noDetAction(x, { project: x.proj }));
+  const saved = await x.op("templatesave", BO, { filing: d.id, name: "the action's project" });
+  assert.equal(saved.ok, true, JSON.stringify(saved).slice(0, 300));
+  assert.deepEqual(x.f.filingTemplates.templateRead({ template: saved.template, viewer: V("bo") }).template.scope, { project: x.proj });
+});
