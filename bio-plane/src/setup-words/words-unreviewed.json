@@ -7204,6 +7204,13 @@
       "line": 1658
     },
     {
+      "id": "basis-versions.declared.narrowcandidates",
+      "en": "read: the machine's proposals for making one leg more specific, keyed by (inquiry, reading, ordinal); labeled machine work and writes nothing",
+      "module": "basis-versions",
+      "file": "bio-plane/src/basis-versions/index.mjs",
+      "line": 1660
+    },
+    {
       "id": "basis-versions.grammar.add_a_basis_version_grounds",
       "en": "add a basis_version_grounds[] row for version '{name}', ground '{g}', with asserted_by and at",
       "module": "basis-version-grammar",
@@ -17330,14 +17337,21 @@
       "en": "content-directed: a member types what a selected portion of a document says, keyed by (document, extent); mints a content row carrying the typing and writes no edge",
       "module": "content",
       "file": "bio-plane/src/content/ops.mjs",
-      "line": 64
+      "line": 71
     },
     {
       "id": "content.declared.transcriptionattest",
       "en": "content-directed: a second member attests another member's typing, keyed by content id, with the attestor's note saying what they compared, now required (content R25, C-52.10; DEC-88: `reasoned`); the typist's own attestation is refused",
       "module": "content",
       "file": "bio-plane/src/content/ops.mjs",
-      "line": 66
+      "line": 73
+    },
+    {
+      "id": "content.declared.transcriptions",
+      "en": "read: the typings a member has made of one document, keyed by document: each portion typed, who typed it, the digest of the text and the attestations of it, bounded and paged, the text itself left to the single typing's read; writes nothing",
+      "module": "content",
+      "file": "bio-plane/src/content/ops.mjs",
+      "line": 75
     },
     {
       "id": "content.extent-core.a_slide_shape_extent_names",
@@ -17708,553 +17722,574 @@
       "en": "a region of page {page}",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 367
+      "line": 370
     },
     {
       "id": "content.index.attestation_raises_ceiling",
       "en": "an attestation raises this row's ceiling only if its extent COVERS this row's extent (textchain's extentCovers) AND it was made against the transcription this row was minted under. A page attestation does not cover a whole-document row, and an attestation over another page does not cover this one",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 792
+      "line": 795
     },
     {
       "id": "content.index.bundleid_is_not_a_document",
       "en": "{bundleId} is not a document, so it has no part to point at. The content axis ranges over documents (DEC-21): an inquiry rests on things, it is not a thing with pages. This is stated rather than met with a document-extent row invented for it (IC-83 AMENDMENT 2)",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 455
+      "line": 458
     },
     {
       "id": "content.index.bytes_b_typed_over_the",
       "en": "{bytes} B typed, over the {TRANSCRIPTION_MAX_BYTES} B one passage is stored to (CAPTURE_TEXT_UNIT_CAP). Refused rather than cut: a typing silently truncated would be text the member did not type, standing in their name",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 926
+      "line": 929
     },
     {
       "id": "content.index.candidate_same_extent_compared",
       "en": "a CANDIDATE: a passage at the same extent of the capture compared, held at another address. It is not established to be the same passage, nor that capture the same work; extent-match is a sufficient signal for a candidate and never evidence of identity",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1171
+      "line": 1214
     },
     {
       "id": "content.index.candidate_same_extent_newer",
       "en": "a CANDIDATE: a passage at the same extent of the newer capture. It is not established to be the same passage; extent-match is a sufficient signal for a candidate and never evidence of identity",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1120
+      "line": 1163
     },
     {
       "id": "content.index.capture_axis_answered_once",
       "en": "the capture axis is answered once, for the DOCUMENT, and never per portion: there is no per-portion capture grade in this record and inventing one would be a third scale (DEC-4). What that one answer states is the weakest link of how the BYTES arrived and what any machine transcription of this document's text is measured at — so a portion of an OCR'd document is bounded exactly as the document is, under earned.capture",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 725
+      "line": 728
     },
     {
       "id": "content.index.capture_metadata_could_not",
       "en": "the capture's metadata could not be read",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1285
+      "line": 1328
     },
     {
       "id": "content.index.capture_not_office_document",
       "en": "the capture is not an office document",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1282
+      "line": 1325
     },
     {
       "id": "content.index.capture_short_is_itemised_as",
       "en": "capture {short} is itemised as a {v1} and not as a PDF, so this record holds no list of images painted on its pages and whether an image is painted at this address is UNDETERMINED and stated, not refused",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 303
+      "line": 306
     },
     {
       "id": "content.index.cited_text_no_longer_held",
       "en": "the text this row was cited under is no longer held beside the new reading, so whether the re-read changed the passage cannot be told",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 848
+      "line": 851
     },
     {
       "id": "content.index.connection_ask_earnedbasis",
       "en": "ask op=earnedbasis with the inquiry whose leg cites this row: a connection is what the record earns between THIS document and THAT question's subject, and it has no value independent of a question",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 786
+      "line": 789
     },
     {
       "id": "content.index.connection_empty_level_question",
       "en": "the question — a connection grade is earned against an inquiry's subject entity, and this read resolves a ROW rather than a LEG",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 785
+      "line": 788
     },
     {
       "id": "content.index.connection_no_captured_resolution",
       "en": "connection — no captured resolution of this document to the subject",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1397
+      "line": 1440
     },
     {
       "id": "content.index.container_extent_format_entry",
       "en": "the record holds this capture's container extent as the format entry itemised it at acquire (CAP-12), so an address outside it is refused by name and one inside it mints",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 312
+      "line": 315
     },
     {
       "id": "content.index.container_image_list_before_wire",
       "en": "the container's image list (this capture was acquired before the wire carried it — FW-19)",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 290
+      "line": 293
     },
     {
       "id": "content.index.container_own_extent_absent",
       "en": "the container's own extent — no sheet list, paragraph count or slide list was persisted for this capture, and, if it is a PDF, no list of the images its pages paint (a PDF acquired before D-420 carries none)",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 295
+      "line": 298
     },
     {
       "id": "content.index.content_requires_id",
       "en": "content requires ?id=<content_id>",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 760
+      "line": 763
     },
     {
       "id": "content.index.crop_taken_from_bytes",
       "en": "the crop was taken from bytes whose sha256 is not the capture this row names, so it is not handed back",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1328
+      "line": 1371
     },
     {
       "id": "content.index.derived_rendition_for_display",
       "en": "a derived rendition for display: the evidence is the capture's bytes plus the extent, and this crop is not itself evidence",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1335
+      "line": 1378
     },
     {
       "id": "content.index.describeextent_is_a_part_no",
       "en": "{describeExtent} is a part no typing can be checked against — a second member's attestation needs a document, a page or a region of a page to scope to, and a transcription nobody could ever attest would stand undetermined for good",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 920
+      "line": 923
     },
     {
       "id": "content.index.document_reread_text_under",
       "en": "the document was re-read and the text under your citation may have changed. Nothing moved: keep the citation as it stands, or adopt the passage under the new reading",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 863
+      "line": 866
     },
     {
       "id": "content.index.document_table_list_before_wire",
       "en": "the document's table list (this capture was acquired before the wire carried it — FW-19)",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 288
+      "line": 291
     },
     {
       "id": "content.index.every_sheet_row_column_extent",
       "en": "every sheet's row and column extent (this capture was acquired before the wire read that figure, or its format fixes no grid — OpenDocument sets no maximum table size, so a .ods workbook states a NULL bound rather than borrowing one — D-359), so an unknown SHEET is bounded and a cell within a known sheet is not",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 292
+      "line": 295
     },
     {
       "id": "content.index.every_slide_shape_count",
       "en": "every slide's shape count (this capture was acquired before the wire read that figure, no slide's part in it could be read, or the deck was over the text size bound and only its length was read — D-359, COFF-13), so a slide past the deck is bounded and a shape within a known slide is not",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 294
+      "line": 297
     },
     {
       "id": "content.index.evidence_store_holds_no",
       "en": "the evidence store holds no object under this row's capture, so no crop was made",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1317
+      "line": 1360
     },
     {
       "id": "content.index.exact_typing_already_recorded",
       "en": ". This exact typing by {who} was already recorded, and is found rather than written again",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 947
+      "line": 950
     },
     {
       "id": "content.index.format_registry_could_not",
       "en": "the format registry could not determine this capture's format at acquire, so whether it is a container is UNDETERMINED",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1384
+      "line": 1427
     },
     {
       "id": "content.index.image_could_not_be_cut",
       "en": "the image this row's extent names could not be cut out of its document; pdf-pixels' own reason is beside this one",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1324
+      "line": 1367
     },
     {
       "id": "content.index.image_member_of_container",
       "en": "this row cites an image that is a member of a container (an embedded part), whose bytes are the image itself rather than a rectangle of a page; there is nothing to cut out of it",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1309
+      "line": 1352
     },
     {
       "id": "content.index.lab_cites_describeextent_of_target",
       "en": "{lab} cites {describeExtent} of '{target}', and this record holds no capture of that document at all{v1}",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 544
+      "line": 547
     },
     {
       "id": "content.index.lab_names_v1_on_target",
       "en": "{lab} names {v1} on '{target}', which is an inquiry rather than a document. An inquiry has no bytes and no pages, so there is no part of it to point at (DEC-21)",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 531
+      "line": 534
     },
     {
       "id": "content.index.label_names_content_id_id",
       "en": "{label} names content_id '{id}…', and this record holds no such part. The id is an address taken over the document, the passage and the transcription chain, so nothing can be found for one nothing minted",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 502
+      "line": 505
     },
     {
       "id": "content.index.label_rests_on_targetid_and",
       "en": "{label} rests on '{targetId}' and names a part of '{bundle_id}' ({ref}): the leg and the part it points at are about two different documents",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 507
+      "line": 510
+    },
+    {
+      "id": "content.index.listing_typings_names_document",
+      "en": "listing a document's typings names the document: pass bundleId=<INFO-…>",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1045
     },
     {
       "id": "content.index.marking_passage_citable",
       "en": "marking a passage citable names the document the passage is in",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 448
+      "line": 451
     },
     {
       "id": "content.index.no_capture_resolves_subject",
       "en": "no capture of this document resolves to this inquiry's subject at A, B or C, so this row earns nothing on the connection axis. The honest leg is testimony (grade D, with an author and a date) or no grade at all. Absence here is a fact about what the recogniser matched, never evidence about what the document says",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1398
+      "line": 1441
     },
     {
       "id": "content.index.no_cited_passage_by_the",
       "en": "no cited passage by the id '{cid}' is readable here.",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1185
+      "line": 1228
     },
     {
       "id": "content.index.no_content_row_addressed",
       "en": "no content row is addressed by this id in this record. A content id is hash(capture, canonical extent, chain) — it is minted when a leg first cites the passage, so an id nothing has cited does not exist yet",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 764
+      "line": 767
     },
     {
       "id": "content.index.no_content_row_addressed_2",
       "en": "no content row is addressed by this id in this record",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1303
+      "line": 1346
     },
     {
       "id": "content.index.no_content_row_by_that",
       "en": "this record holds no content row by that id",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1249
+      "line": 1292
     },
     {
       "id": "content.index.no_document_is_addressed_by",
       "en": "no document is addressed by {bundleId} in this record",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 452
+      "line": 455
     },
     {
       "id": "content.index.no_document_is_addressed_by_2",
       "en": "no document is addressed by {target} in this record",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 895
+      "line": 898
+    },
+    {
+      "id": "content.index.no_document_is_addressed_by_3",
+      "en": "no document is addressed by {target} in this record",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1049
     },
     {
       "id": "content.index.no_evidence_store_set_up",
       "en": "your team's Civicsmith has no evidence store set up, so the capture's bytes cannot be read and no crop was made. That is a fact about how your team's Civicsmith is set up, not about the image",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1313
+      "line": 1356
     },
     {
       "id": "content.index.no_minter_names_who",
       "en": "a content row records WHO marked the passage as citable, and this call carries nobody. The plane stamps that from the credential that asked, so an empty one means the act arrived by a route that does not attribute it — which is refused rather than filled in",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 446
+      "line": 449
     },
     {
       "id": "content.index.no_portion_was_selected",
       "en": "no portion was selected. A transcription is of a PART the member read — a page or a region of one, or the whole document NAMED as such — and a typing with no stated part would be read as covering all of it",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 904
+      "line": 907
     },
     {
       "id": "content.index.no_reading_of_that",
       "en": "this record holds no reading of that capture",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1273
+      "line": 1316
     },
     {
       "id": "content.index.no_transcription_readable_here_is",
       "en": "no transcription readable here is addressed by content_id '{id}…'",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 965
+      "line": 968
     },
     {
       "id": "content.index.nobody_has_read_newer",
       "en": "nobody has read the newer capture yet, so the record holds no text of it at any extent to test against — that is a fact about this record, not about the document",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1057
+      "line": 1100
     },
     {
       "id": "content.index.nothing_in_this_store_has",
       "en": "nothing in this store has been read at that capture hash, so there is no text to attest to. Attesting is about what a document SAYS, and this record does not yet hold what this one says",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 332
+      "line": 335
     },
     {
       "id": "content.index.nothing_in_this_store_has_2",
       "en": "nothing in this store has been read at that capture hash, so there is no text to attest to. Attesting is about what a document SAYS, and this record does not yet hold what this one says",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 337
+      "line": 340
     },
     {
       "id": "content.index.pass_bundleid_info_document",
       "en": "pass bundleId=<INFO-…>: the document whose page you transcribed",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 893
+      "line": 896
     },
     {
       "id": "content.index.pass_contentid_content_id",
       "en": "pass contentId=<the content id op=transcribe returned>",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 966
+      "line": 969
     },
     {
       "id": "content.index.position_within_reading",
       "en": "position within the reading — reading_refs records THAT a reference was read in this document and not WHERE it was read (I2, FW-17)",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1400
+      "line": 1443
     },
     {
       "id": "content.index.reading_carries_container_extent",
       "en": "the capture's reading carries a container extent an office entry itemised, so it is an office container, though no format key was recorded",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1379
+      "line": 1422
     },
     {
       "id": "content.index.reading_holds_no_office",
       "en": "the capture's reading holds no office metadata (its file has no readable core-properties part, or it was read before readings carried it)",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1283
+      "line": 1326
     },
     {
       "id": "content.index.record_does_not_hold_format",
       "en": "this record does not hold this capture's format (it was promoted before the format was projected, and its reading names no container), so whether it is a container is UNDETERMINED",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1385
+      "line": 1428
     },
     {
       "id": "content.index.row_cells_could_not",
       "en": "the row's cells could not be read",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1260
+      "line": 1303
     },
     {
       "id": "content.index.row_cited_under_earlier",
       "en": "the row was cited under an earlier reading of its document, and the cells held now are the newer reading's, which may not be the cells cited",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1251
+      "line": 1294
+    },
+    {
+      "id": "content.index.target_has_no_typings",
+      "en": "{target} is not a document, so nobody has typed any page of it (DEC-21)",
+      "module": "content",
+      "file": "bio-plane/src/content/index.mjs",
+      "line": 1052
     },
     {
       "id": "content.index.target_is_not_a_document",
       "en": "{target} is not a document, so it has no page to transcribe (DEC-21)",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 894
+      "line": 897
     },
     {
       "id": "content.index.the_content_read_is_fixed",
       "en": "the content read is FIXED-KEY: it resolves ONE row by content_id and takes no predicate and no paging (D-222 puts the content-grain query arm in stage C, behind D-225's caps). This call carried {unknown}, which it refuses rather than ignores — a parameter silently dropped is a filter the caller believes was applied",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 759
+      "line": 762
     },
     {
       "id": "content.index.the_row_cites_a_extent",
       "en": "the row cites a {extent_kind} extent, which names no cells of a sheet",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1254
+      "line": 1297
     },
     {
       "id": "content.index.the_typed_text_is_empty",
       "en": "the typed text is empty. Nothing is prefilled: the text is what the member read off {describeExtent}, typed by them",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 923
+      "line": 926
     },
     {
       "id": "content.index.this_attestation_fault_the_note",
       "en": "this attestation {fault}. The note is the attestor's own words on what they compared — the page or passage read, and against what — and it is kept with the attestation, so a later reader can weigh it",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 342
+      "line": 345
     },
     {
       "id": "content.index.this_attestation_of_transcriber_s",
       "en": "this attestation of {transcriber}'s typing {fault}. The note is the attestor's own words on what they compared — the typed text against which page or region — and it is kept with the attestation",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 993
+      "line": 996
     },
     {
       "id": "content.index.this_leg_cites_describeextent_and",
       "en": "this leg cites {describeExtent} and refers only to that portion (Bob, 2026-09-14). Whether any resolution of this document to the subject was established inside it is undetermined and stated, never borrowed from the whole document. The document-grain answer is under earned.connection for {bundle_id}, and it is the DOCUMENT's, not this portion's",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1401
+      "line": 1444
     },
     {
       "id": "content.index.this_re_read_staled_n",
       "en": "this re-read staled {n} rows and {STALE_GRADED_MAX} were graded; the other {ungraded} (the capture's stale rows whose content_id sorts after ungraded_after) were marked stale and not graded, so whether the re-read changed their passages is UNDETERMINED",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 861
+      "line": 864
     },
     {
       "id": "content.index.this_record_holds_no_capture",
       "en": "this record holds no capture of {bundleId}, so there are no bytes for a content row to address. A content id is hash(capture, extent, chain) and there is no capture to hash. Absence here is a fact about what was captured and never evidence about what the document says",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 459
+      "line": 462
     },
     {
       "id": "content.index.this_record_holds_no_capture_2",
       "en": "this record holds no capture of {target}, so there is no copy to have typed from. Absence here is a fact about what was captured, never about what the document says",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 900
+      "line": 903
     },
     {
       "id": "content.index.this_record_holds_no_list",
       "en": "this record holds no list of the images the pages of capture {short} paint — a PDF acquired before D-420 persisted none, and nothing was persisted at all for a capture no format entry itemised — so whether an image is painted at this address is UNDETERMINED and stated, not refused. Re-acquiring the document records the list",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 304
+      "line": 307
     },
     {
       "id": "content.index.this_row_cites_a_extent",
       "en": "this row cites a {extent_kind} extent, and only an image on a PDF page has a crop",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1308
+      "line": 1351
     },
     {
       "id": "content.index.this_row_is_a_members",
       "en": "this row is a member's TYPING (op=transcription reads its text). Only an attestation OF THAT TYPING, by a member other than {transcriber} who typed it, raises its ceiling. Attestations of the capture's machine text are about different text and are not listed",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 791
+      "line": 794
     },
     {
       "id": "content.index.transcriber_nobody",
       "en": "this call carries nobody. The plane stamps the transcriber from the credential that asked, so an empty one means the act arrived by a route that does not attribute it",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 888
+      "line": 891
     },
     {
       "id": "content.index.under_the_capture_the_leg",
       "en": " under the capture the leg names ({capture}…)",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 545
+      "line": 548
     },
     {
       "id": "content.index.v1_is_an_inquiry_rather",
       "en": "{v1} is an inquiry rather than a document. An inquiry has no capture and therefore no part to point at — the content axis ranges over documents (DEC-21), and this is undetermined and stated rather than a document-extent row invented for it",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 569
+      "line": 572
     },
     {
       "id": "content.index.v1_so_it_states_no",
       "en": "{v1}, so it states no office metadata",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1282
+      "line": 1325
     },
     {
       "id": "content.index.version_chains_visible_to",
       "en": "the version chains here are the ones visible to you; a version filed in a project you were not invited to is not in them",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 1191
+      "line": 1234
     },
     {
       "id": "content.index.who_is_a_machine_credential",
       "en": "'{who}' is a machine credential. Typing what a page says is a person's act in their own name; a machine's reading of a page is OCR, a different step kind",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 887
+      "line": 890
     },
     {
       "id": "content.index.who_typed_describeextent_what_a",
       "en": "{who} typed {describeExtent}. What a member types is authored text: its fidelity is UNDETERMINED, stated, until a DIFFERENT member checks it against the page and attests it (op=transcriptionattest). The typist's own attestation is refused{v1}",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 947
+      "line": 950
     },
     {
       "id": "content.index.who_typed_this_transcription_at",
       "en": "{who} typed this transcription ({at}). An attestation is a SECOND member checking it against the page; the typist's own is not evidence and would raise the ceiling on one member's word",
       "module": "content",
       "file": "bio-plane/src/content/index.mjs",
-      "line": 988
+      "line": 991
     },
     {
       "id": "content.notice.chain_unread",
@@ -38449,21 +38484,28 @@
       "en": "exception document, keyed by (progression, entity, stage)",
       "module": "progressions",
       "file": "bio-plane/src/progressions/index.mjs",
-      "line": 1624
+      "line": 1654
     },
     {
       "id": "progressions.declared.progressiondefine",
       "en": "progression definition, keyed by progression key",
       "module": "progressions",
       "file": "bio-plane/src/progressions/index.mjs",
-      "line": 1620
+      "line": 1650
+    },
+    {
+      "id": "progressions.declared.progressions",
+      "en": "the progression definitions, listed",
+      "module": "progressions",
+      "file": "bio-plane/src/progressions/index.mjs",
+      "line": 1658
     },
     {
       "id": "progressions.declared.thread",
       "en": "progression instance write, keyed by (progression, entity)",
       "module": "progressions",
       "file": "bio-plane/src/progressions/index.mjs",
-      "line": 1622
+      "line": 1652
     },
     {
       "id": "progressions.index.a_set_of_at_most",
@@ -38501,11 +38543,18 @@
       "line": 1035
     },
     {
+      "id": "progressions.index.the_progressions_could_not_be",
+      "en": "the progressions could not be read: {String}",
+      "module": "progressions",
+      "file": "bio-plane/src/progressions/index.mjs",
+      "line": 1062
+    },
+    {
       "id": "progressions.index.the_stage_key_stage_is",
       "en": "the '{stage_key}' stage is {required} required and still absent past its '{within_interval}' deadline after '{predecessor_stage}' ({value}, the local day in {zone}) -- an overdue successor (framework 8.2, temporal), carrying the instance's grade",
       "module": "progressions",
       "file": "bio-plane/src/progressions/index.mjs",
-      "line": 1315
+      "line": 1342
     },
     {
       "id": "project-roster.declared.projectowneradd",
@@ -39394,63 +39443,70 @@
       "en": "document-directed: a member states, with their name and the date, the system a document came from, keyed by bundleId; a second declaration is added beside the first and never replaces it, and the document itself does not change",
       "module": "provenance",
       "file": "bio-plane/src/provenance/ops.mjs",
-      "line": 94
+      "line": 96
+    },
+    {
+      "id": "provenance.declared.origins",
+      "en": "document-directed: lists, oldest first, every system members have declared a document came from, with who declared it and when; the latest is the standing one, and nothing is changed",
+      "module": "provenance",
+      "file": "bio-plane/src/provenance/ops.mjs",
+      "line": 99
     },
     {
       "id": "provenance.declared.testify",
       "en": "creation: a member records a firsthand observation, which becomes a NEW authored document; acts on no existing bundle",
       "module": "provenance",
       "file": "bio-plane/src/provenance/ops.mjs",
-      "line": 91
+      "line": 93
     },
     {
       "id": "provenance.index.a_members_firsthand_observation_their",
       "en": "A member's firsthand observation. Their words are `{file}`, below its canonical header, exactly as written; nothing here paraphrases or summarises them.",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1669
+      "line": 1686
     },
     {
       "id": "provenance.index.capture_axis_authored",
       "en": "the capture axis measures the act of reading a document in, and a member's own words were not read in from anywhere, so it earns no letter here",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1746
+      "line": 1763
     },
     {
       "id": "provenance.index.capture_is_not_a_document",
       "en": "capture {capture} is not a document this record's register holds in {bundle}",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1214
+      "line": 1231
     },
     {
       "id": "provenance.index.deciding_who_issued_a_document",
       "en": "deciding who issued a document is a named member's act, and this call carries nobody",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1201
+      "line": 1218
     },
     {
       "id": "provenance.index.name_the_party_that_issued",
       "en": "name the party that issued the document, in at most 500 characters",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1224
+      "line": 1241
     },
     {
       "id": "provenance.index.say_how_you_know_or",
       "en": "say how you know, or what you tried, in at most 2000 characters",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1222
+      "line": 1239
     },
     {
       "id": "provenance.index.who_is_a_machine_credential",
       "en": "'{who}' is a machine credential. Who issued a document is a named member's attributed decision, never a machine's: a machine may propose an issuer and a member decides",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1199
+      "line": 1216
     },
     {
       "id": "public-read.casefile.a_finding_id_a_material",
@@ -48480,7 +48536,7 @@
       "en": "a standard of evidence is a property of a PROJECT, not of a finding or a claim (DEC-72). No bar attaches to this finding, and none ever did on its own behalf: what governed it was whichever project published it, at the moment it published. Ask the project — op=strengthbarof&project=<project id> — or op=strengthbarof&group= for the default a new project starts from.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1538
+      "line": 1540
     },
     {
       "id": "strength.index.an_input",
@@ -48501,84 +48557,84 @@
       "en": "Changes: the project's standard of evidence from {before} to {after}.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1508
+      "line": 1510
     },
     {
       "id": "strength.index.declare_at_least_one_axis",
       "en": "declare at least one axis. Withdrawing a bar entirely is a different act from setting one, and an absent bar is stated as absent rather than written as a blank row.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1412
+      "line": 1414
     },
     {
       "id": "strength.index.declares_no_required_evidentiary_strength",
       "en": "{project} declares no required evidentiary strength, so nothing in this case was measured against one. An absent bar is not a bar of zero, and this case makes no claim to have cleared any standard. A project declares its bar by its own act, written into the project's document as an authored, dated, on-the-record entry.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1379
+      "line": 1381
     },
     {
       "id": "strength.index.give_the_reason_the_project_sets_this_bar",
       "en": "give the reason the project sets this bar, as text in your own words (reason=…). Nothing was changed.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1482
+      "line": 1484
     },
     {
       "id": "strength.index.give_the_reason_the_team_sets_this_bar",
       "en": "give the reason the team sets this bar, as text in your own words (reason=…). Nothing was declared.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1420
+      "line": 1422
     },
     {
       "id": "strength.index.group_carries_no_name",
       "en": "group {n} carries no name; leave the name out altogether to have it filed by its position.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1098
+      "line": 1100
     },
     {
       "id": "strength.index.group_lists_no_reasons",
       "en": "group {n} lists no reasons; every group holds at least one.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1104
+      "line": 1106
     },
     {
       "id": "strength.index.group_names_something_other_than_a_position",
       "en": "group {n} names something other than a reason's position.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1107
+      "line": 1109
     },
     {
       "id": "strength.index.groups_name_is_longer_than_200_characters",
       "en": "group {n}'s name is longer than 200 characters.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1101
+      "line": 1103
     },
     {
       "id": "strength.index.groups_were_proposed_and_a_written_reading_holds",
       "en": "{count} groups were proposed and a written reading holds at most {limit} reasons.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1087
+      "line": 1089
     },
     {
       "id": "strength.index.has_not_said_which_reading_it_stands_on",
       "en": "{project} has not said which reading of {inq} it stands on, and there is no default reading. Name one explicitly to measure it.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 940
+      "line": 942
     },
     {
       "id": "strength.index.is_a_and_a_standard_of_evidence_is_a_property",
       "en": "{id} is a {type}, and a standard of evidence is a property of a PROJECT (DEC-72).",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1449
+      "line": 1451
     },
     {
       "id": "strength.index.is_a_not_an_inquiry_derived_pair",
@@ -48592,140 +48648,140 @@
       "en": "{id} is a {type}, not an inquiry. Only a question has grading facts.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1269
+      "line": 1271
     },
     {
       "id": "strength.index.is_a_not_an_inquiry_only_a_question_rests_on_testimony",
       "en": "{id} is a {type}, not an inquiry. Only a question rests on testimony.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1214
+      "line": 1216
     },
     {
       "id": "strength.index.is_and_this_answer_counts_ask_again",
       "en": "'{name}' is {state} and this answer counts {states}. Ask again naming {state} among the states to see what it would come to — the answer will say on its face that it is a view you constructed and not what this record stands on.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 961
+      "line": 963
     },
     {
       "id": "strength.index.is_not_a_question_so_it_has_no_reasons",
       "en": "{inq} is not a question, so it has no reasons to group.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1046
+      "line": 1048
     },
     {
       "id": "strength.index.is_not_a_question_so_it_holds_no_readings",
       "en": "{inq} is not a question, so it holds no readings of evidence and has no strength to report.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 898
+      "line": 900
     },
     {
       "id": "strength.index.is_not_one_of_the_states_a_reading_can_be_in",
       "en": "'{state}' is not one of the states a reading can be in: {legal}. The set is closed, because a strength that quietly counted readings in states nobody recognises is a number no reader could check.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 916
+      "line": 918
     },
     {
       "id": "strength.index.kinds_of_reading_were_named_and_this_record_has",
       "en": "{count} kinds of reading were named and this record has {limit}. The bound is published here rather than applied silently, so nothing is dropped without the caller being told.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 909
+      "line": 911
     },
     {
       "id": "strength.index.name_either_a_written_reading_or_a_proposed_grouping",
       "en": "name EITHER a written reading (version=<name>) OR a proposed grouping (partition=<JSON>), not both: this answers for one of them, and does not guess which one was meant.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1057
+      "line": 1059
     },
     {
       "id": "strength.index.name_the_reading_to_measure_or_name_the_project",
       "en": "name the reading to measure (version=<name>), or name the project asking (project=<PROJ-…>) so the reading it stands on can be used. There is no default reading here.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 943
+      "line": 945
     },
     {
       "id": "strength.index.names_reason_position_and_has_reasons",
       "en": "'{label}' names reason position {ord}, and {inq} has {count} reason(s).",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1133
+      "line": 1135
     },
     {
       "id": "strength.index.names_reason_position_and_has_reasons_at_positions",
       "en": "'{label}' names reason position {ord}, and {inq} has {count} reason(s) at positions {positions}.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1129
+      "line": 1131
     },
     {
       "id": "strength.index.no_question_by_that_id_is_readable_no_reading",
       "en": "no question by that id is readable here, so there is no reading of it to measure.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 927
+      "line": 929
     },
     {
       "id": "strength.index.no_question_by_that_id_is_readable_no_reasons",
       "en": "no question by that id is readable here, so there are no reasons of it to group.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1050
+      "line": 1052
     },
     {
       "id": "strength.index.no_reading_named_belongs_to",
       "en": "no reading named '{name}' belongs to {inq}.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 951
+      "line": 953
     },
     {
       "id": "strength.index.no_team_default_is_declared",
       "en": "no team default is declared. An absent bar gates nothing and is not a bar of zero.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1554
+      "line": 1556
     },
     {
       "id": "strength.index.no_team_is_named_and_this_store_records_no_producing_team",
       "en": "no team is named and this store records no producing team, so there is no team default to read. An absent bar gates nothing and is not a bar of zero.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1549
+      "line": 1551
     },
     {
       "id": "strength.index.pass_partition_a_non_empty_list_of_groups",
       "en": "pass partition=<JSON>: a non-empty list of groups, each a list of reason positions (e.g. [[0,1],[2]]) or {\"label\":…,\"legs\":[…]} — or version=<name> to read a written reading's groups instead.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1083
+      "line": 1085
     },
     {
       "id": "strength.index.points_at_it_so_the_pointer_has_outlived",
       "en": "{project} points at it, so the pointer has outlived the reading it names.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 953
+      "line": 955
     },
     {
       "id": "strength.index.reason_position_is_in_both_and",
       "en": "reason position {ord} is in both '{first}' and '{second}'.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1139
+      "line": 1141
     },
     {
       "id": "strength.index.reason_positions_are_in_no_group",
       "en": "reason position(s) {positions} are in no group.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1148
+      "line": 1150
     },
     {
       "id": "strength.index.record",
@@ -48739,14 +48795,14 @@
       "en": "required by {project}, the project whose production this case is: {bar}. The bar is the project's own declaration about its own work, stated in advance, and is never set by who a reader is.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1375
+      "line": 1377
     },
     {
       "id": "strength.index.rests_on_more_than_reasons",
       "en": "{inq} rests on more than {limit} reasons.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1120
+      "line": 1122
     },
     {
       "id": "strength.index.strength_requires_id",
@@ -48760,14 +48816,14 @@
       "en": "the default bar is declared for the whole team, so only an active administrator may set it. Nothing was declared.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1394
+      "line": 1396
     },
     {
       "id": "strength.index.the_default_bar_is_the_teams_declaration",
       "en": "the default bar is the TEAM's declaration, keyed by its team; this request names no team and this store records none. Nothing was declared.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1405
+      "line": 1407
     },
     {
       "id": "strength.index.the_derived_pair_is_asked",
@@ -48781,42 +48837,42 @@
       "en": "the pair holds {held} where it must hold exactly {want}. One answer per population, and nothing beside them that reads as a summary of all of them.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1653
+      "line": 1669
     },
     {
       "id": "strength.index.the_projects_document_has_no_front_matter_block",
       "en": "the project's document has no front-matter block to hold its bar. Nothing was changed.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1501
+      "line": 1503
     },
     {
       "id": "strength.index.the_reason_given_is_blank_why_the_project",
       "en": "the reason given is blank; say in your own words why the project sets this bar. Nothing was changed.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1485
+      "line": 1487
     },
     {
       "id": "strength.index.the_reason_given_is_blank_why_the_team",
       "en": "the reason given is blank; say in your own words why the team sets this bar. Nothing was declared.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1423
+      "line": 1425
     },
     {
       "id": "strength.index.the_reason_given_is_characters_project",
       "en": "the reason given is {length} characters, and a reason is at most {max}. Nothing was changed.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1487
+      "line": 1489
     },
     {
       "id": "strength.index.the_reason_given_is_characters_team",
       "en": "the reason given is {length} characters, and a reason is at most {max}. Nothing was declared.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1425
+      "line": 1427
     },
     {
       "id": "strength.index.the_required_evidentiary_strength_project",
@@ -48837,56 +48893,56 @@
       "en": "this answer carries a top-level '{key}', which can only be one figure standing for every axis. Strength is one measurement PER AXIS, each over its own population — {axes} — and there is no value that is all of them.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1640
+      "line": 1656
     },
     {
       "id": "strength.index.this_answer_carries_no_machine_readable_state_set",
       "en": "this answer carries no machine-readable state set beside its sentence, so a consumer would have to parse prose to learn what it counted.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1662
+      "line": 1678
     },
     {
       "id": "strength.index.this_answer_carries_no_pair_at_all",
       "en": "this answer carries no pair at all, so whatever it reports is not the per-axis measurements this record makes.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1646
+      "line": 1662
     },
     {
       "id": "strength.index.this_answer_does_not_state_which_readings",
       "en": "this answer does not state which readings it was computed over. Every answer says so on its face — the record's own as plainly as a view somebody constructed — because absence of the line is exactly what makes the two indistinguishable.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1658
+      "line": 1674
     },
     {
       "id": "strength.index.this_answers_for_one_question_partition",
       "en": "this answers for ONE question: pass id=<INQ-…>. A partition is a grouping of one question's reasons, and there is no default question.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1042
+      "line": 1044
     },
     {
       "id": "strength.index.this_answers_for_one_question_pass_inquiry",
       "en": "this answers for one question: pass inquiry=<record id>.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1208
+      "line": 1210
     },
     {
       "id": "strength.index.this_answers_for_one_question_strength",
       "en": "this answers for ONE question: pass id=<INQ-…>. A strength belongs to a question's reading of its evidence, and there is no default question.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 894
+      "line": 896
     },
     {
       "id": "strength.index.two_groups_are_both_named",
       "en": "two groups are both named '{label}'.",
       "module": "strength",
       "file": "bio-plane/src/strength/index.mjs",
-      "line": 1110
+      "line": 1112
     },
     {
       "id": "strength.method.not_stated",
