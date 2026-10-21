@@ -15,21 +15,17 @@
  * (R87): each act whose own field carries her words names it as its `reasonField` (`explanation` and `why` for clarify, which
  * both travel as `reason`; `question`; `reason` for dismiss, the reason she chose; `conclusion`; `text`), `contradictionoptin`'s
  * words being optional, the shell's own reason box asks (a shell mark, not a declared field). Every sentence is read by key (R44);
- * a design word `words.json` does not hold yet is listed in `GAP_WORDS` and drawn as its key until the design stream writes it.
+ * a design word `words.json` does not hold would be listed in `GAP_WORDS` and drawn as its key until the design stream writes it (none now).
  * Self-contained functions (interface-shell R21 (1)). */
 
 import { COMMON } from "./common.mjs";
 
 const S = "screen.contradiction.";
 
-/** The design's words (mock-screens.js `SCR.contradiction`, DEC-374) that `words.json` holds no row for: the keys the generator's
- *  convention would give them. They are not named in `words` (the page serves the screen's own family by prefix once the row
- *  exists); until then the page draws the key. Reported to BOB (K3366). */
-export const GAP_WORDS = Object.freeze(["first.passage", "second.passage", "they.differ.in", "time.or.occasion", "meaning", "precision",
-  "what.shows.it", "the.first.passage", "the.second.passage", "optional.at.most.200.characters", "optional.at.most.500.characters",
-  "dismiss.it", "anything.to.add", "ask.it.around", "taken.up", "conclude.it", "your.conclusion", "two.rules.conflict", "ask.for",
-  "the.projects", "responses", "respond", "your.response", "share.with.the.other.projects", "my.cover.name", "my.email.address",
-  "your.email.address", "send.my.response", "your.project.can.ask.to.resolve.it", "help.needed", "when.it.cannot.be.concluded"].map((k) => S + k));
+/** The design's words (mock-screens.js `SCR.contradiction`, DEC-374) that `words.json` holds no row for: none now. The 31 the generator's
+ *  convention named were minted by the design stream (DEC-391) under the same keys, so the screen draws their words with no change here and
+ *  the list is empty (R105's test asks that no held key stay listed). */
+export const GAP_WORDS = Object.freeze([]);
 
 /** The keys read from another screen's row (`words.json` holds one row for one English: DEC-179), the rest being this screen's. */
 const BORROWED = Object.freeze(["screen.case-editor.scope.label", "project.start.title", "screen.calculation.question", "screen.security.cando.heading",
@@ -182,7 +178,10 @@ function render(cs, view) {
   /* ---------- (a), (b), (c) and a closed candidate: both passages, side by side ---------- */
   const c = whole, lead = c.weight === "lead", duty = c.weight === "duty";
   const openish = c.state === "open" || c.state === "explained_not_shown";
-  const state = c.state === "taken_up" ? "c" : !openish ? "closed" : lead ? "b" : "a";
+  /* the candidate's `taken_up` (who took it up, when, in what words; contradiction R25) says it was taken up whatever else is read: a
+     contradiction taken up is not offered again, it shows the question it became */
+  const takenUp = c.taken_up && typeof c.taken_up === "object" ? c.taken_up : null;
+  const state = c.state === "taken_up" || (takenUp && openish) ? "c" : !openish ? "closed" : lead ? "b" : "a";
   out.push(cs.title() + `<p class="mk-sub">${W(S + "two.passages.from.your.team.s")} ${W(S + "both.are.shown.as.they.are")}</p>` + sides([S + "first.passage", S + "second.passage"]));
   const fr = P.later(cs, ui, "facts", "contradictionfacts", { candidate });
   const facts = fr.state === "ok" && fr.value && Array.isArray(fr.value.facts) ? fr.value.facts : [];
@@ -240,7 +239,10 @@ function render(cs, view) {
       + fold(S + "when.it.cannot.be.taken.up", [[S + "someone.already.closed.this.and.it", S + "if.it.was.already.taken.up"], [S + "the.question.is.empty.or.the", S + "word.the.question.and.choose.a"]])));
   if (state === "c") {
     const iread = P.later(cs, ui, "inq", "image", { id: c.inquiry });
-    out.push(cs.sec(S + "taken.up", `<p>${c.inquiry ? cs.ref("question", c.inquiry, P.titleOf(iread) || undetermined()) : ""}</p><p>${W(S + "it.stays.open.here.until.the")}</p>`));
+    const qref = c.inquiry ? cs.ref("question", c.inquiry, P.titleOf(iread) || undetermined()) : "";
+    out.push(cs.sec(S + "taken.up", `<p>${qref}</p>`
+      + (takenUp && qref ? `<p data-taken-up="1">${W(S + "member.took.this.up.as.a", { member: P.who(cs, takenUp.member, ""), question: { html: qref }, date: { html: takenUp.at ? cs.date(String(takenUp.at), { year: true }) : "" } })}</p>` : "")
+      + `<p>${W(S + "it.stays.open.here.until.the")}</p>`));
     const vr = P.later(cs, ui, "versions", "basisversions", { id: c.inquiry });
     const accepted = vr.state === "ok" && vr.value && Array.isArray(vr.value.versions) ? vr.value.versions.filter((v) => v && v.state === "accepted" && v.hidden !== true) : [];
     out.push(cs.sec(S + "conclude.it", cs.choice("cd-kind", S + "what.it.turned.out.to.be", K.KINDS, { value: K.KINDS[0][0] })

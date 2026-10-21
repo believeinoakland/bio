@@ -212,8 +212,8 @@ test("R104 the owner's refusals are drawn by the design's words: no reason, a re
 
 /* ------------------------------------------------------------------------------------------------------------------ R10 */
 
-test("R10 question draws exactly its registry acts: each act the registry lists (less those it still owes) is an act of the screen, and the screen has no other; the writing help is drawn only while the assistant is reachable", async () => {
-  const reg = REGISTRY.screens.find((s) => s.id === "question").acts.map((a) => a.op).filter((op) => !op.startsWith("owed:"));
+test("R10 question draws exactly its registry acts: each act the registry lists (the owed ones by their op, R110) is an act of the screen, and the screen has no other; the writing help is drawn only while the assistant is reachable", async () => {
+  const reg = REGISTRY.screens.find((s) => s.id === "question").acts.map((a) => a.op.replace(/^owed:(\w+) DEC-\d+$/, "$1"));
   const screen = SCREENS.find((s) => s.id === "question");
   assert.deepEqual(screen.acts.map((a) => a.op).sort(), [...reg].sort());
   for (const op of ["reopen", "hypothesisrevise", "hypothesiswithdraw", "inquirydivide", "reevaluationrecord", "reevaluations", "writinghelp"])

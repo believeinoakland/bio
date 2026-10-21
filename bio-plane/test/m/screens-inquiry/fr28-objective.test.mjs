@@ -50,6 +50,9 @@ function plane(o = {}) {
     pursuit: (r) => ok({ ok: true, aspiration: r.query.id === ASP_OURS.id ? ASP_OURS : ASP_TEAM, goals: [], dead_ends: r.query.id === ASP_OURS.id ? [{ at: "2026-09-30T09:00:00Z", author: "dev", note: "We asked the Authority for the 2019 vote record." }] : [], taught: null }),
     list: ok({ bundles: [{ bundle_id: GOAL.id, title: "Close the unvoted collections loophole" }] }),
     goal: ok({ ok: true, goal: GOAL }),
+    progressions: ok({ ok: true, count: 2, items: [{ progression_key: "PRG-rent", label: "Lease rent flow", stages: [] }, { progression_key: "PRG-permits", label: "Permit flow", stages: [] }], truncated: false }),
+    entitieskind: (r) => ok({ ok: true, kind: r.query.kind, count: 0, entities: r.query.kind === "institution" ? [{ entity_id: "ENT-city", kind: "institution", label: "Springfield Parks Dept" }, { entity_id: "ENT-auth", kind: "institution", label: "The Transit Authority" }]
+      : r.query.kind === "person" ? [{ entity_id: "ENT-mai", kind: "person", label: "Mai Chen" }] : [], truncated: false, next: null }),
     progression: ok({ ok: true, found: true, progression_key: "PRG-rent", label: "Lease rent flow", stages: [{ stage_key: "invoiced", label: "Invoiced" }, { stage_key: "authorized", label: "Council signed off" }] }),
     entity: ok({ ok: true, found: true, entity: { entity_id: "ENT-city", label: "Springfield Parks Dept", kind: "organization" } }),
     projectparticipants: ok({ ok: true, projectId: P, participants: [{ handle: "dev", state: "joined", owner: 1 }, { handle: "mai", state: "joined", owner: 0 }] }),
@@ -223,21 +226,22 @@ test("R106 aspirations: the team's and the project's are listed with who holds t
 
 test("R106 aspirationdeclare: a project's aspiration sends scope, owner (the project) and statement; the team's sends no owner; a member's names her; an empty statement sends nothing", async () => {
   const p = await open();
-  const press = async (n) => { await p.click(button(p, "aspirationdeclare")); const s = p.root().querySelector(`[data-slot="${button(p, "aspirationdeclare").getAttribute("data-ai")}"]`);
-    if (s && s.querySelector('textarea[id^="cs-reason-"]')) { s.querySelector('textarea[id^="cs-reason-"]').value = "r"; await p.click(s.querySelector('[data-shell="reason-send"]')); } };
+  /* entry 4 (B22): the statement she writes is the act's own reason field, so the shell asks no second one and the request holds no `reason` */
+  const press = async () => { await p.click(button(p, "aspirationdeclare")); };
   await press();
   assert.equal(ops(p, "aspirationdeclare").length, 0, "an empty statement sends nothing");
   fill(p, { "ob-asp-st": "Name a second source for every claim." });
   p.doc.getElementById("ob-asp-scope").value = "project";
   await press();
-  assert.deepEqual(ops(p, "aspirationdeclare")[0].body, { scope: "project", owner: P, statement: "Name a second source for every claim.", reason: "r" });
+  assert.deepEqual(ops(p, "aspirationdeclare")[0].body, { scope: "project", owner: P, statement: "Name a second source for every claim." });
+  assert.equal(p.root().querySelectorAll('textarea[id^="cs-reason-"]').length, 0, "no second reason box is asked");
   p.doc.getElementById("ob-asp-scope").value = "group";
   await press();
-  assert.deepEqual(ops(p, "aspirationdeclare")[1].body, { scope: "group", statement: "Name a second source for every claim.", reason: "r" });
+  assert.deepEqual(ops(p, "aspirationdeclare")[1].body, { scope: "group", statement: "Name a second source for every claim." });
   p.doc.getElementById("ob-asp-scope").value = "member";
   fill(p, { "ob-asp-ent": "ENT-city", "ob-asp-prog": "PRG-rent" });
   await press();
-  assert.deepEqual(ops(p, "aspirationdeclare")[2].body, { scope: "member", owner: "mai", statement: "Name a second source for every claim.", entities: ["ENT-city"], progressions: ["PRG-rent"], reason: "r" });
+  assert.deepEqual(ops(p, "aspirationdeclare")[2].body, { scope: "member", owner: "mai", statement: "Name a second source for every claim.", entities: ["ENT-city"], progressions: ["PRG-rent"] });
 });
 
 test("R106 aspirationdeclare: control: the plane's NOT_AN_ADMIN is drawn by its key", async () => {
@@ -245,9 +249,6 @@ test("R106 aspirationdeclare: control: the plane's NOT_AN_ADMIN is drawn by its 
   fill(p, { "ob-asp-st": "Anything." });
   p.doc.getElementById("ob-asp-scope").value = "group";
   await p.click(button(p, "aspirationdeclare"));
-  const s = p.root().querySelector(`[data-slot="${button(p, "aspirationdeclare").getAttribute("data-ai")}"]`);
-  s.querySelector('textarea[id^="cs-reason-"]').value = "r";
-  await p.click(s.querySelector('[data-shell="reason-send"]'));
   assert.ok(says(p, "refusal.NOT_AN_ADMIN"));
 });
 
@@ -289,10 +290,7 @@ test("R106 goals: the goal is listed with its limit and that this objective serv
   fill(p, { "ob-goal-st": "End unvoted collections.", "ob-goal-bd": "Only council-amendable leases." });
   p.doc.getElementById("ob-goal-asp").value = ASP_TEAM.id;
   await p.click(button(p, "goaldeclare"));
-  const s = p.root().querySelector(`[data-slot="${button(p, "goaldeclare").getAttribute("data-ai")}"]`);
-  s.querySelector('textarea[id^="cs-reason-"]').value = "r";
-  await p.click(s.querySelector('[data-shell="reason-send"]'));
-  assert.deepEqual(ops(p, "goaldeclare")[0].body, { statement: "End unvoted collections.", bounds: "Only council-amendable leases.", aspiration: ASP_TEAM.id, reason: "r" });
+  assert.deepEqual(ops(p, "goaldeclare")[0].body, { statement: "End unvoted collections.", bounds: "Only council-amendable leases.", aspiration: ASP_TEAM.id }, "the statement is the reason it sends; no second box is asked");
   p.doc.getElementById("ob-goal-link").value = GOAL.id;
   await p.click(button(p, "goallink"));
   assert.deepEqual(ops(p, "goallink")[0].body, { goal: GOAL.id, project: P });
@@ -360,8 +358,9 @@ test("R106 the measure: Stop is offered only where a measure is set; a typed min
   assert.deepEqual(ops(p, "objectivecondition")[1].body.condition.filter, { amount: { min: "1000" } });
 });
 
-test("R106 with no flow or party to name (no measure, no proposal) the measure takes them as typed keys; Save sends them", async () => {
-  const p = await open({ objectiveprogress: ok(NOCOND), intentproposals: ok({ ok: true, project: P, proposals: [], count: 0, set_aside: [] }) });
+test("R106 with no flow or party to name (no measure, no proposal, and none held by the group: `progressions` and `entitieskind` answer none) the measure takes them as typed keys; Save sends them", async () => {
+  const p = await open({ objectiveprogress: ok(NOCOND), intentproposals: ok({ ok: true, project: P, proposals: [], count: 0, set_aside: [] }),
+    progressions: ok({ ok: true, count: 0, items: [], truncated: false }), entitieskind: ok({ ok: true, count: 0, entities: [], truncated: false }) });
   assert.equal(p.doc.getElementById("ob-flow").localName, "input");
   fill(p, { "ob-flow": "PRG-rent", "ob-ent": "ENT-city", "ob-share": "50", "ob-why": "Because." });
   await p.click(button(p, "objectivecondition", 0));
@@ -390,4 +389,16 @@ test("R106 a goal closed with its reason is listed with that reason and is offer
   const options = (id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => o.getAttribute("value"));
   assert.deepEqual(options("ob-goal-link"), [GOAL.id]);
   assert.deepEqual(options("ob-goal-cl"), [GOAL.id]);
+});
+
+test("R106 entry 3 (B22): the measure's flow and party pickers offer the flows the group holds (`progressions`) and the parties it holds (`entitieskind`), and a read that fails is drawn failed", async () => {
+  const p = await open({ objectiveprogress: ok(NOCOND) });
+  const flows = p.doc.getElementById("ob-flow").querySelectorAll("option").map((o) => o.getAttribute("value"));
+  assert.ok(flows.includes("PRG-rent") && flows.includes("PRG-permits"), "both flows are offered, not typed");
+  const parties = p.doc.getElementById("ob-ent").querySelectorAll("option").map((o) => o.getAttribute("value"));
+  for (const id of ["ENT-city", "ENT-auth", "ENT-mai"]) assert.ok(parties.includes(id), id);
+  assert.equal(ops(p, "progressions")[0].query.limit, "200");
+  assert.deepEqual(ops(p, "entitieskind").map((r) => r.query.kind).sort(), ["body", "institution", "office", "person"]);
+  const bad = await open({ objectiveprogress: ok(NOCOND), progressions: refusedIn("PROGRESSIONS_UNREADABLE") });
+  assert.ok(main(bad).querySelector('[data-state="failed"]'), "a failed list is drawn failed, never as none");
 });

@@ -34,10 +34,11 @@ const STAGES = (over = {}) => ({ ok: true, project: P, stage: "investigating", c
 const rowOf = (s, stage) => s.querySelector(`[data-stage="${stage}"]`);
 const choose = (p, id, value) => { p.doc.getElementById(id).querySelectorAll("input").find((i) => i.getAttribute("value") === value).checked = true; };
 
-test("R90 R115 the work rows open only what the project holds: no Matter, Action or Calculation link carries the project's id; Action opens dash-action; a held determination and a held calculation open themselves", async () => {
+test("R90 R115 the work rows open only what the project holds, but for Matter (B22 entry 5, K4170, K4259): with no determination Matter opens `/app/matter/<project>`, the project's door to its first; no Action or Calculation link carries the project's id; Action opens dash-action; a held determination and a held calculation open themselves", async () => {
   const p = await open(at, SERVED);
   const s = section(p, "project.work.title");
-  for (const kind of ["matter", "action", "calculation"]) assert.ok(!hrefs(s).some((h) => h.startsWith(`/app/${kind}/`)), `${kind}: no link carries an id the project does not hold`);
+  for (const kind of ["action", "calculation"]) assert.ok(!hrefs(s).some((h) => h.startsWith(`/app/${kind}/`)), `${kind}: no link carries an id the project does not hold`);
+  assert.deepEqual(hrefs(s).filter((h) => h.startsWith("/app/matter/")), ["/app/matter/" + P], "Matter is the project's door to its first determination");
   assert.deepEqual(hrefs(s).filter((h) => h.includes("action")), ["/app/dash-action"], "the Action row opens dash-action");
   assert.ok(says(s.querySelector('a[href="/app/dash-action"]'), "screen.action.name"));
   for (const kind of ["matter", "calculation"]) assert.ok(s.textContent.includes(word("screen." + kind + ".name")), `${kind} is still listed, so the first one can be made`);
@@ -50,7 +51,7 @@ test("R90 R115 the work rows open only what the project holds: no Matter, Action
   assert.equal(h.querySelectorAll('a[href="/app/matter/DET-2026-0001"]').length, 1, "a held determination's row opens it");
   assert.ok(h.querySelector('a[href="/app/matter/DET-2026-0001"]').textContent.includes("The repair log was closed"));
   assert.equal(h.querySelectorAll('a[href="/app/calculation/CALC-2026-0002"]').length, 1, "a held calculation's row opens it");
-  assert.ok(!hrefs(h).some((x) => x === "/app/matter/" + P || x === "/app/calculation/" + P || x === "/app/action/" + P));
+  assert.ok(!hrefs(h).some((x) => x === "/app/matter/" + P || x === "/app/calculation/" + P || x === "/app/action/" + P), "with a determination held, the project's own id is no door");
 });
 
 test("R94 What each stage needs: every unreached stage draws what it needs and why; a reached stage draws neither", async () => {

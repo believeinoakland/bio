@@ -125,6 +125,10 @@ export function plane(o = {}) {
     links: ok({ ok: true, links: [] }),
     connections: ok({ ok: true, connections: [] }),
     reevaluationnotices: ok({ ok: true, notices: [] }),
+    importedcases: ok({ ok: true, imports: [], count: 0 }),
+    origins: ok({ ok: true, bundleId: D, origins: [] }),
+    provenanceroutes: ok({ ok: true, bundleId: D, state: "verified", objectType: "information", route: { applies: true, assessed: false, marked: false, finding: "NEVER_LOOKED" } }),
+    transcriptions: ok({ ok: true, bundle_id: D, transcriptions: [], count: 0, truncated: false, cursor: null }),
     ...(o.plane || {}),
   };
 }

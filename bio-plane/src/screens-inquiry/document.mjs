@@ -316,8 +316,9 @@ function render(cs, view) {
     out.push(textState === "partial" && blind0.length ? cs.sheet(cs.row("", W("screen.document.ocr.says", { pages: pagesText(blind0.map((n) => n + 1)) }), act)) : `<div class="mk-acts">${act}</div>`);
   }
   /* R97 (C22; DEC-375): a page another member typed is confirmed by a second member (`transcriptionattest`); the typist's own page
-     offers her no confirmation, since the plane refuses it (content R25). The typings are the document's `transcriptions`. */
-  if (textState && textState !== "full") {
+     offers her no confirmation, since the plane refuses it (content R25). The typings are the document's `transcriptions` (content R57),
+     read for any document with a digest: a typed page can make the text whole, and it still waits for its confirmation. */
+  if (sha) {
     const ty = later("typed", "transcriptions", { bundleId: id });
     const typed = ty.state === "ok" && ty.value && Array.isArray(ty.value.transcriptions) ? ty.value.transcriptions.filter((t) => t && t.content_id) : [];
     const meIds = [view.me && view.me.member, view.me && view.me.handle].filter(Boolean).map(String);
@@ -776,12 +777,19 @@ function render(cs, view) {
      (R15, R92, R118) and retire folded apart (R113). Watching names its frequency; "Check for a new version now" is drawn only for an address
      that is watched (its `monitoring.enabled`), otherwise the page says it is not and offers "Watch for changes". */
   const watched = !testimony && !!(doc.maps.monitoring && String(doc.maps.monitoring.enabled) === "true");
-  const routeNow = ui.route && typeof ui.route === "object" ? ui.route : null;
+  /* R98 (K4259; provenance-routes R15): the document's standing route is read (`provenanceroutes` with `bundleId`); the answer of the act she
+     pressed, newer than the read, stands over it until the page reads it again */
+  const routeRead = later("route", "provenanceroutes", { bundleId: id });
+  const routeNow = ui.route && typeof ui.route === "object" ? ui.route : routeRead.state === "ok" && routeRead.value && typeof routeRead.value === "object" ? routeRead.value : null;
   const finding = routeNow && routeNow.route && typeof routeNow.route === "object" ? String(routeNow.route.finding || "") : "";
   out.push(cs.sec("screen.document.copyacts.head",
     cs.act("attest", { label: "document.attest.label", data: { sha } }) + `<p class="mk-small">${cs.w("document.attest.when")}</p>` + own("attest")
+    /* the registry's `captureprogressions`: the steps this document is threaded to, asked for again by the member (above, R56, they are
+       drawn from the read the page makes when it opens) */
+    + (sha ? cs.act("captureprogressions", { label: "act.captureprogressions.label.document", data: { sha }, tone: "quiet" }) : "")
     + cs.sheet(cs.row("", `<span class="rec" data-route="${cs.esc(finding || "unchecked")}">${W(finding === "PRESENT" ? "screen.document.route.shown" : finding === "LOOKED_INDETERMINATE" ? "screen.document.route.notshown" : "screen.document.route.standing")}</span>`
       + `<br><span class="mk-sub">${W("screen.document.route.says")}</span>`, cs.act("provenanceroute", { label: "act.provenanceroute.label.document", data: { document: id } })))
+    + (routeRead.state === "failed" && !ui.route ? cs.state(routeRead, () => "") : "")
     + (routeNow && routeNow.appended === false ? `<p class="mk-note" data-route-same="1">${W("screen.document.route.same")}</p>` : "") + own("provenanceroute")
     + (testimony ? "" : (watched ? "" : `<details class="mk-details" data-unwatched="1" open><summary>${W("screen.document.unwatched.head")}</summary><p class="mk-small">${W("screen.document.unwatched")}</p></details>`)
       + cs.choice("document-watch-freq", "screen.capture.address.freq", [{ value: "", text: "" }].concat(["daily", "weekly", "monthly", "hourly", "per_meeting"].map((f) => [f, "screen.capture.address.freq." + f])), { value: "" })
@@ -793,12 +801,15 @@ function render(cs, view) {
   /* R108 (C23; DEC-381): "Where this document came from", after "This copy": the system it came from, declared by a member with her name
      and the date (`declareorigin`, provenance R64). A second declaration is added beside the first and never replaces it: the
      declarations made on this page stay listed in the order they were made. */
-  const origins = Array.isArray(ui.origins) ? ui.origins : [];
+  /* the declarations are read (`origins`, provenance R70: oldest first, each `{seq, system, by, at}`); a read that fails is drawn failed */
+  const og = later("origins", "origins", { bundleId: id });
+  const origins = og.state === "ok" && og.value && Array.isArray(og.value.origins) ? og.value.origins.filter((o) => o && o.system) : [];
   out.push(cs.sec("screen.document.origin.head", cs.field("document-origin-system", "screen.document.origin.field", { rec: true, help: "screen.document.origin.eg" })
     + cs.act("declareorigin", { label: "act.owed_declareorigin.label.document", data: { document: id }, tone: "primary" }) + own("declareorigin")
     + `<p class="mk-note">${W("screen.document.origin.second1")} ${W("screen.document.origin.second2")}</p>`
     + (origins.length ? cs.sheet(origins.map((o) => `<div data-origin="${cs.esc(String(o.seq))}">` + cs.row("", `<span class="rec">${cs.esc(String(o.system))}</span>`, "",
-        [cs.esc(who(o.by)), o.at ? cs.date(String(o.at), { year: true }) : ""].filter(Boolean).join(" \u00b7 ")) + "</div>").join("")) : ""), { help: "screen.document.origin.tip" }));
+        [cs.esc(who(o.by)), o.at ? cs.date(String(o.at), { year: true }) : ""].filter(Boolean).join(" \u00b7 ")) + "</div>").join("")) : "")
+    + (og.state === "failed" ? cs.state(og, () => "") : ""), { help: "screen.document.origin.tip" }));
   return out.join("");
 }
 
@@ -831,6 +842,11 @@ const acts = [
   { op: "themewithdraw", label: "act.themewithdraw.label.document", reasonField: "reason",
     send(view, el) { return { body: { theme: String(el.dataset.theme || ""), target: String(el.dataset.target || view.subject || "") } }; },
     done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { themes: null })); } },
+  /* the registry's `captureprogressions` (progressions R19): the steps of every flow this capture is threaded to, read again at the member's
+     press, and drawn where R56 draws them */
+  { op: "captureprogressions", label: "act.captureprogressions.label.document", rereads: [],
+    send(view, el) { return { query: { sha256: String(el.dataset.sha || "") } }; },
+    done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { progs: null })); } },
   /* R84 (C25): the flow's key, the entity (from `captureprogressions`) and one placement for the step chosen among the flow's own */
   { op: "thread", label: "progression.thread.here",
     send(view, el, cs) {
@@ -1044,11 +1060,8 @@ const acts = [
       if (!system) return { refuse: "screen.document.origin.ref.empty" };
       return { body: { bundleId: String(view.subject || ""), system } };
     },
-    done(view, answer, cs) {
-      const r = answer && answer.result !== undefined ? answer.result : answer;
-      if (!r || !r.system) return;
-      cs.set("origins", (Array.isArray(view.ui.origins) ? view.ui.origins : []).concat([{ system: String(r.system), by: String(r.by || ""), at: String(r.at || ""), seq: Number(r.seq) || (Array.isArray(view.ui.origins) ? view.ui.origins.length : 0) + 1 }]));
-    } },
+    /* the list is read again, so a declaration made here and one made elsewhere are both in it, in the order they were made */
+    done(view, answer, cs) { cs.set("later", Object.assign({}, view.ui.later, { origins: null })); } },
   { op: "pagetranscribe", label: "act.pagetranscribe.label.document",
     send(view, el) {
       const text = view.data.capture && view.data.capture.state === "ok" ? view.data.capture.value["bundle.md"] : "";
@@ -1103,7 +1116,7 @@ const browserActs = [
 const words = Object.freeze([
   "screen.document.name", "screen.document.purpose",
   ...["gradenote", "findin", "cite", "release", "attest", "retire", "monitorset", "monitor", "identityclaim", "transcribe", "pagetranscribe",
-    "adoptversion", "keepversion", "versionnotice", "connectionchoose", "explore"].map((op) => "act." + op + ".label.document"),
+    "adoptversion", "keepversion", "versionnotice", "connectionchoose", "explore", "captureprogressions"].map((op) => "act." + op + ".label.document"),
   "act.pagetranscribe.does", "ai.label.untested", "document.unread.pages",
   /* T50 (R54–R56, R61) */
   "document.held.says", "document.vouched", "document.attest.label", "document.attest.when", "document.retire.fold", "document.retire.when",

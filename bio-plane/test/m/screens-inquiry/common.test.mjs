@@ -36,14 +36,14 @@ const base = (id) => (id === "projectai" ? AI : {});
 const VARIANTS = { refused: refusedIn("SOME_REFUSAL", "The plane refused this read."), silent, pending };
 /* the registry acts this module's requirements do not name (reported to BOB, J3): every other act the registry lists for
    its screens is drawn (N1073: the acts are read from the registry, the owner's declaration, never hand-listed) */
-const NOT_NAMED = { project: ["owed:projectstakeset K3230"], question: ["owed:citeimported DEC-382", "owed:withdrawimported DEC-382"], document: ["captureprogressions"], assistant: ["ask"] };
+const NOT_NAMED = { project: ["owed:projectstakeset K3230"], assistant: ["ask"] };
 /* T50: the registry still owes `projectstakeset` (K3230, "owed:"); R53 draws it, re-pointed by interface-shell. Labels the requirements name by key. */
 const OWED = { project: ["projectstakeset"] };
-const LABEL = { projectstakeset: "stake.project.save", themeplace: { question: "theme.question.place", document: "theme.place" }, themepropose: "theme.propose", thread: "progression.thread.here",
+const LABEL = { citeimported: "act.owed_citeimported.label.question", withdrawimported: "act.owed_withdrawimported.label.question", projectstakeset: "stake.project.save", themeplace: { question: "theme.question.place", document: "theme.place" }, themepropose: "theme.propose", thread: "progression.thread.here",
   hashcopy: "shell.copy", revisioncompare: "screen.document.revisions.compare.act", linkopen: "act.owed_linkopen.label.document",
   declareorigin: "act.owed_declareorigin.label.document", projectclose: "screen.project.closenow.do", rerunread: "act.owed_rerunread.label.project", rerunpair: "act.owed_rerunpair.label.project" };
 const NAMED = Object.fromEntries(REGISTRY.screens.filter((s) => SCREENS.some((x) => x.id === s.id))
-  .map((s) => [s.id, s.acts.map((a) => a.op.replace(/^owed:(hashcopy|linkopen|revisioncompare|declareorigin|projectclose|rerunread|rerunpair) [A-Z]+-?\d+$/, "$1")).filter((op) => !(NOT_NAMED[s.id] || []).includes(op))]));
+  .map((s) => [s.id, s.acts.map((a) => a.op.replace(/^owed:(hashcopy|linkopen|revisioncompare|declareorigin|projectclose|rerunread|rerunpair|citeimported|withdrawimported) [A-Z]+-?\d+$/, "$1")).filter((op) => !(NOT_NAMED[s.id] || []).includes(op))]));
 
 for (const [id, path] of Object.entries(PATHS)) {
   test(`R5 ${id}: each read pending, refused and unanswered is drawn in its own state, beside the rest, with no key drawn bare (interface-shell R5, R10)`, async () => {
