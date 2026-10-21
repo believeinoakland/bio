@@ -2192,7 +2192,7 @@ export const DECLARED_OPS = Object.freeze({
   /* R62 (T51 fix round 3; C64; DEC-401, DEC-402): the administrator's confirm of an office a member named (R64). A member reaches the
      arm and is refused `NOT_AN_ADMIN` by it, as at memberAdd (so `needs` is null, as for the other administrators' acts); `by` and
      `viewer` are the control plane's stamps in the address, not accepts. */
-  officeconfirm: { classes: ["admin","member","probe"], machineClasses: [], mutating: true, stamps: ["viewer","by"], needs: null, weight: "reversible", description: localize("entities.declared.officeconfirm", "registry write, keyed by entity: an administrator confirms an office a member named from a request, clearing its mark"),
+  officeconfirm: { classes: ["admin","member","probe"], machineClasses: [], mutating: true, stamps: ["viewer","by"], needs: null, weight: "reversible", description: localize("entities.declared.officeconfirm", "office-directed: an administrator confirms an office a member named; clears the mark and records who confirmed it and when, and changes no name, alias or note (entities R64)"),
     fields: { accepts: ["entityId"], requires: ["entityId"] } },
   /* R62 (T51; K4243; op-declarations R80, op-grades R49): a read, so its class and mutating are the hand row's. `alias` is what the
      arm reads; a call without it answers `count: 0`, not a refusal, so no field is required. */
