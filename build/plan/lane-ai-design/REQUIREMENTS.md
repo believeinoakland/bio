@@ -191,3 +191,13 @@ Recorded: (1) how teams connect, as recommended: pasted key, provider sign-in an
 **AIR42, project level (confirms and bounds reading (a) of §15):** a check a project owner ticks binds **all work done directly in that project**, whoever does it and on whichever account; it does not reach work in the record or in other areas that are not project-specific, where the team's settings (and a member's own, for checks the team left open) apply. Which acts count as "directly in the project" follows the same project scope the account cascade already uses for a project's account (`ai-accounts` R10, R11); the mapping is BOB's.
 **AIR43 revised (replaces "a default the member can change"):** the origin rule is a seventh check, "not developed by a Chinese organisation", under exactly the privacy checks' rules: required by default; the team's administrators decide whether it stays required, and if it does it is locked for projects and members; if they untick it, a project owner may tick it for work directly in the project, and a member may tick or untick it for their own choices elsewhere; every change recorded. Judged by developer (the "judge by host" variant is not adopted).
 **Confirmed by Bob, 2026-10-21 ("Yes"; reading (b) of §15):** the team's and a project's required checks bind every account used for that work, a member's personal subscription included: the member still chooses to use it (AIR41), but its AI must pass the checks in force where the work is done.
+
+## 17 · Bob on how a key reaches the gateway, 2026-10-21 (his words; BOB to record as K)
+> Okay: C.
+
+Answer to the question after live test L1 (`TESTS.md`): **both ways**: a key is typed into Civicsmith's own connection screen, which passes it straight to Cloudflare AI Gateway's store and keeps nothing (the default), or entered by an administrator in the Cloudflare dashboard, where it never touches Civicsmith. Recorded as AIR45.
+
+| # | Requirement | Checked by |
+|---|---|---|
+| **AIR45** | **Gateway-held keys, entered either way.** A provider API key for a team, project or member account may be held by Cloudflare AI Gateway in the team's own Cloudflare account, one gateway per account holding a key; it reaches the gateway through Civicsmith's connection screen (passed straight to Cloudflare's store, never kept, the default) or through the Cloudflare dashboard (never touching Civicsmith). Every call is checked against the gateway's log: the account's own stored key served it, and Cloudflare's own credits did not; otherwise refused or flagged. | Test: a key entered in the screen is absent from every Civicsmith record and log; a call whose log shows Cloudflare credits instead of the stored key is refused or flagged. |
+
