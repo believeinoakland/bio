@@ -183,7 +183,7 @@ export const PUBLISHED = Object.freeze({
     {
       // R38 (A77): the browser act "Show only findings this strong": the minimum on each axis the reader chose, kept in page memory
       // only (R11): nothing is sent, stored or put in an address; with no minimum chosen the whole case is drawn.
-      op: "pubfloorset", label: "act.owed_pubfloorset.label.published",
+      op: "pubfloorset", label: "act.owed_pubfloorset.label.published", rereads: [],
       send: function (view, el, cs) {
         const grade = function (id) { const v = String(cs.value(id) || "").toUpperCase(); return /^[A-C]$/.test(v) ? v : ""; };
         const floor = { capture: grade("pb-fl-capture"), connection: grade("pb-fl-connection") };
@@ -193,14 +193,14 @@ export const PUBLISHED = Object.freeze({
     },
     {
       // R38 (A77): the browser act "Back to the whole case": the reader's minimum is taken away.
-      op: "pubfloorclear", label: "act.owed_pubfloorclear.label.published",
+      op: "pubfloorclear", label: "act.owed_pubfloorclear.label.published", rereads: [],
       send: function (view, el, cs) { cs.set("floor", null); return null; },
     },
     {
       // R39 (A79): the browser act "Print the case": the page is drawn in its print layout (every finding open with its sources,
       // the signature line at the foot, the filtered view saying so), then printed; `printed` puts the page back. The key's
       // fingerprint is read from the key `publishedcase` states for the signer. Nothing is sent or stored.
-      op: "pubprint", label: "act.owed_pubprint.label.published",
+      op: "pubprint", label: "act.owed_pubprint.label.published", rereads: [],
       send: async function (view, el, cs) {
         const P = view.parts, e = P.answer(view), who = e ? P.signerOf(e) : { fingerprint: "", key: "" };
         view.ui.printFacts = { fingerprint: who.fingerprint || (await P.fingerprintOf(who.key)) };
@@ -211,7 +211,7 @@ export const PUBLISHED = Object.freeze({
     },
     {
       // R6: "Check the signature": the edition's manifest checked against what the group published, without the group.
-      op: "verify", label: "act.verify.label.published",
+      op: "verify", label: "act.verify.label.published", rereads: [],
       // R22: the same act also takes the 64-character fingerprint a reader typed ("Check it"); nothing but that hash is sent.
       send: async function (view, el, cs) {
         view.ui.checking = "";
@@ -274,7 +274,7 @@ export const PUBLISHED = Object.freeze({
     },
     {
       // R57: "Details of this work": the team's current statement of them, read again for any reader (public, no credential).
-      op: "casedetailspublic", label: "act.owed_casedetailspublic.label.published",
+      op: "casedetailspublic", label: "act.owed_casedetailspublic.label.published", rereads: [],
       send: function (view) { return { query: { case: String(view.subject || "").split("/")[0] } }; },
       done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "casedetailspublic", answer)) view.parts.forget(view); return { stay: true }; }, // D29
     },
@@ -282,7 +282,7 @@ export const PUBLISHED = Object.freeze({
       // R6: "Read the case": the edition read again, whole. R19: the same op also opens a piece of evidence's bytes by its
       // hash and downloads the complete edition's file (the case file, by the manifest's hash), both through `publishedbytes`,
       // public, with no credential.
-      op: "publishedcase", label: "act.publishedcase.label.published",
+      op: "publishedcase", label: "act.publishedcase.label.published", rereads: "all",
       send: async function (view, el, cs) {
         const P = view.parts;
         const s = String(view.subject || "").split("/");

@@ -27,7 +27,7 @@ export const IMPORTED = Object.freeze({
       const group = String(c.group && (c.group.name || c.group.slug) || c.group || "");
       const findings = Array.isArray(ed.findings) ? ed.findings : [];
       const resultOf = function (f) { return f.result === "recreated" || f.result === "yes" ? "yes" : f.result === "partial" || f.result === "part" || f.result === "in_part" ? "part" : "no"; };
-      const importer = ed.importer && ed.importer.handle ? ed.importer.handle : ed.imported_by || "";
+      const importer = ed.importer && ed.importer.handle ? ed.importer.handle : ed.imported_by ? cs.memberName(ed.imported_by) : ""; // C94: by handle, never the member id
       // R25: the band says whose case it is and how far it recreated here; the line beneath, who brought it in and when.
       // R20: no count at zero, so an edition with no finding listed draws no band.
       if (findings.length) out.push('<p class="mk-note" data-imported-band>' + cs.w("screen.imported.band", { group: group, edition: String(ed.edition || ""),
@@ -53,7 +53,7 @@ export const IMPORTED = Object.freeze({
         const rows = [gf.name, gf.domain, said(gf.stake), gf.detail].filter(function (x) { return x !== null && x !== undefined && x !== ""; }).map(function (x) {
           return cs.row("", '<span class="rec">' + cs.esc(String(x)) + "</span>"); }).join("")
           + (matter ? cs.row("", cs.w("stake.inmatter") + ': <span class="rec">' + (matter.stake === "undetermined" ? cs.w("stake.unreadable") : cs.esc(said(matter))) + "</span>",
-            matter.set_by || matter.set_at ? '<span class="meta">' + cs.w("stake.set", { who: matter.set_by || "", date: { html: matter.set_at ? cs.date(matter.set_at) : "" } }) + "</span>" : "") : "");
+            matter.set_by || matter.set_at ? '<span class="meta">' + cs.w("stake.set", { who: matter.set_by ? cs.memberName(matter.set_by) : "", date: { html: matter.set_at ? cs.date(matter.set_at) : "" } }) + "</span>" : "") : "");
         stake = '<p class="mk-note" data-group-fields>' + cs.w("case-import.group_fields_label") + "</p>" + (rows ? cs.sheet(rows) : "")
           + (ed.group_fields_note ? P.fold(cs, "caseimport.unreadable.summary", "<p>" + cs.w("caseimport.stake.unreadable") + "</p>") : "");
       }
@@ -124,12 +124,12 @@ export const IMPORTED = Object.freeze({
         return cs.sheet(v.imports.map(function (x) {
           const eds = Array.isArray(x.editions) ? x.editions : [];
           const ed = eds.find(function (e) { return String(e.edition) === String(x.latest_edition); }) || eds[eds.length - 1] || {};
-          const who = ed.importer && ed.importer.handle ? ed.importer.handle : ed.imported_by && ed.imported_by !== "admin" ? ed.imported_by : "–";
+          const who = ed.importer && ed.importer.handle ? ed.importer.handle : ed.imported_by && ed.imported_by !== "admin" ? cs.memberName(ed.imported_by) : "–";
           let says = cs.w("screen.imported.list.row", { group: String(x.group && (x.group.name || x.group.slug) || x.group || ""),
             edition: String(x.latest_edition !== undefined && x.latest_edition !== null ? x.latest_edition : ed.edition || ""), who: who,
             date: { html: ed.imported_at ? cs.date(ed.imported_at) : "" }, recreated: count(ed.recreated), findings: count(ed.findings) });
           if (typeof ed.recreated_in_part === "number" && ed.recreated_in_part > 0) says += " · " + cs.w("screen.imported.list.row.part", { n: String(ed.recreated_in_part) });
-          return cs.row(cs.mark("origin", "elsewhere"), '<a href="/app/imported/' + encodeURIComponent(x.import) + '" data-nav>'
+          return cs.row(cs.mark("origin", "elsewhere"), '<a class="cs-btn" data-tone="quiet" href="/app/imported/' + encodeURIComponent(x.import) + '" data-nav>'
             + cs.esc((x.case && (x.case.title || x.case.id)) || x.case || x.import) + "</a>", '<span class="meta">' + says + "</span>");
         }).join(""));
       }), { help: "screen.imported.list.tip" }));
@@ -157,7 +157,7 @@ export const IMPORTED = Object.freeze({
     },
     {
       // R7: "Import a case": the case file the member chose, its bytes sent as one part.
-      op: "caseimport", label: "act.caseimport.label.imported",
+      op: "caseimport", label: "act.caseimport.label.imported", rereads: [],
       send: async function (view, el, cs) {
         const f = cs.file("im-file");
         if (!f) return { refuse: "screen.imported.file.needed" };
@@ -174,7 +174,7 @@ export const IMPORTED = Object.freeze({
     },
     {
       // R7: "Accept what recreated, with a reason": the findings that recreated, what the member checked, and why.
-      op: "importaccept", label: "act.importaccept.label.imported", reasonField: "reason",
+      op: "importaccept", label: "act.importaccept.label.imported", rereads: ["chosen"], reasonField: "reason",
       send: function (view, el, cs) {
         const c = view.data.chosen && view.data.chosen.state === "ok" ? view.data.chosen.value : null;
         if (!c) return null;
@@ -188,7 +188,7 @@ export const IMPORTED = Object.freeze({
     },
     {
       // R55: "Withdraw this acceptance, with a reason": nothing is sent without one.
-      op: "importacceptwithdraw", label: "act.importacceptwithdraw.label.imported", reasonField: "reason",
+      op: "importacceptwithdraw", label: "act.importacceptwithdraw.label.imported", rereads: ["chosen"], reasonField: "reason",
       refusals: { IMPORT_ACCEPT_NO_REASON: "screen.imported.withdraw.label", IMPORT_NOTHING_ACCEPTED: "screen.imported.withdraw.none.summary" },
       send: function (view, el, cs) {
         const c = view.data.chosen && view.data.chosen.state === "ok" ? view.data.chosen.value : null;
@@ -201,7 +201,7 @@ export const IMPORTED = Object.freeze({
     },
     {
       // R58: "View under another lens": the edition re-weighed under the lens chosen (a read, nothing saved); none is chosen for her.
-      op: "importregrade", label: "act.owed_importregrade.label.imported",
+      op: "importregrade", label: "act.owed_importregrade.label.imported", rereads: [],
       send: function (view, el, cs) {
         const c = view.data.chosen && view.data.chosen.state === "ok" ? view.data.chosen.value : null;
         const lens = (cs.value("im-lens") || [])[0];
@@ -217,7 +217,7 @@ export const IMPORTED = Object.freeze({
     },
     {
       // R58: "Re-run this work in your own project": one of the team's projects declared a rerun of this edition.
-      op: "rerunstart", label: "act.owed_rerunstart.label.imported",
+      op: "rerunstart", label: "act.owed_rerunstart.label.imported", rereads: [],
       refusals: {
         PROJECT_ACT_NOT_THE_OWNER: function (r, cs) { return cs.w("screen.imported.rerun_refused_owner") + " " + cs.w("screen.imported.rerun_refused_owner_next"); },
         RERUN_ALREADY: function (r, cs) { return cs.w("screen.imported.rerun_refused_already") + " " + cs.w("screen.imported.rerun_refused_already_next"); },
@@ -237,7 +237,7 @@ export const IMPORTED = Object.freeze({
     {
       // R59: "Rest one of your team's questions on this": a question of the team rests on a finding the team accepted, at the edition
       // shown; the plane judges whether the finding is accepted (`IMPORTED_NOT_ACCEPTED`), and this page offers it on accepted ones only.
-      op: "citeimported", label: "act.owed_citeimported.label.imported",
+      op: "citeimported", label: "act.owed_citeimported.label.imported", rereads: [],
       refusals: {
         IMPORTED_NOT_ACCEPTED: function (r, cs) { return cs.w("screen.imported.citeimp.ref.notaccepted1") + " " + cs.w("screen.imported.citeimp.ref.notaccepted2"); },
       },
@@ -253,7 +253,7 @@ export const IMPORTED = Object.freeze({
     },
     {
       // R7: "Flag an issue", kept within the group.
-      op: "importflag", label: "act.importflag.label.imported",
+      op: "importflag", label: "act.importflag.label.imported", rereads: ["chosen"],
       send: function (view, el, cs) {
         const c = view.data.chosen && view.data.chosen.state === "ok" ? view.data.chosen.value : null;
         const issue = String(cs.value("im-issue") || "").trim();
@@ -265,7 +265,7 @@ export const IMPORTED = Object.freeze({
     },
     {
       // R7: "Watch the publisher's docket".
-      op: "importwatch", label: "act.importwatch.label.imported",
+      op: "importwatch", label: "act.importwatch.label.imported", rereads: [],
       send: function (view, el, cs) {
         const c = view.data.chosen && view.data.chosen.state === "ok" ? view.data.chosen.value : null;
         const publisher = String(cs.value("im-publisher") || "").trim();

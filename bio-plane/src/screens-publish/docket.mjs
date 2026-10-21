@@ -45,9 +45,11 @@ export const DOCKET = Object.freeze({
           prep = cs.state(pr, function (x) { return x.warning ? '<p class="mk-note">' + cs.esc(x.warning) + "</p>" : ""; })
             + cs.act("docketpost", { data: { entry: String(e.entry), kind: String(e.kind || "") } });
         }
+        // C81: the preparation and "Post it, signed" sit under the entry, the whole width of the row, not squeezed into its end
         return cs.row("", "<b>" + cs.w("screen.docket.kind." + (["edition", "correction", "withdrawal", "court-order", "response", "statement", "reaction", "outcome"].includes(e.kind) ? e.kind : "other")) + "</b> · "
           + '<span class="rec">' + cs.esc(said) + "</span>",
-          '<span class="meta">' + cs.w(posted ? "screen.docket.posted" : "screen.docket.drafted") + (e.filed_at || e.published_at ? " · " + cs.date(e.published_at || e.filed_at) : "") + "</span>", prep);
+          '<span class="meta">' + cs.w(posted ? "screen.docket.posted" : "screen.docket.drafted") + (e.filed_at || e.published_at ? " · " + cs.date(e.published_at || e.filed_at) : "") + "</span>")
+          + (prep ? '<div class="mk-acts" style="display:block;padding:0 0 12px">' + prep + "</div>" : "");
       }).join(""));
     })));
     // R8 (B420 2; DEC-387): the file form drawn whole, in the order `docketfile` asks it: kind, the edition it answers (one per
@@ -103,7 +105,7 @@ export const DOCKET = Object.freeze({
       const listed = due.state === "ok" && due.value && Array.isArray(due.value.items) ? due.value.items : [];
       const lacks = function (e) { return listed.some(function (x) { return x && x.arrived && String(x.arrived.docket_entry) === String(e.entry); }); };
       out.push(P.secTips(cs, "screen.docket.pressure.heading", cs.sheet(marked.map(function (e) {
-        const m = e.pressure, who = m.by && (m.by.handle || m.by.member) ? String(m.by.handle || m.by.member) : "";
+        const m = e.pressure, who = m.by && m.by.handle ? String(m.by.handle) : m.by && m.by.member ? cs.memberName(m.by.member) : ""; // C94: a handle, never the member id
         const kind = ["legal", "retaliation", "discrediting", "other"].includes(m.kind) ? m.kind : "other";
         const said = !who ? "" : kind === "legal" ? cs.w("screen.docket.pressure.mark", { member: who })
           : cs.w("screen.action.pressure." + kind) + " · " + cs.w("screen.action.pressuremark.by", { who: who });
@@ -120,7 +122,7 @@ export const DOCKET = Object.freeze({
     {
       // R52 (C9; DEC-374; `review` R39): "Start the next edition": `casedraft` with the published case's `caseId`, the findings chosen and
       // the scope; the case editor then opens on the new draft. With no finding chosen, or no scope, nothing is sent and it says so.
-      op: "casedraft", label: "act.casedraft.label.docket",
+      op: "casedraft", label: "act.casedraft.label.docket", rereads: [],
       refusals: { REVIEW_NO_SUCH_CASE: "screen.docket.next.refused.nocase" },
       send: function (view, el, cs) {
         const P = view.parts;
@@ -158,7 +160,7 @@ export const DOCKET = Object.freeze({
     },
     {
       // R8: "File a docket entry", with the member's reason for the record or public choice.
-      op: "docketfile", label: "act.docketfile.label.docket", reasonField: "reason",
+      op: "docketfile", label: "act.docketfile.label.docket", rereads: ["docket"], reasonField: "reason",
       send: function (view, el, cs) {
         const caseId = String(view.subject || "").split("/")[1] || "";
         const summary = String(cs.value("dk-summary") || "").trim();
@@ -173,7 +175,7 @@ export const DOCKET = Object.freeze({
     {
       // R8, R16: "Post it, signed": the prepared `docketStatement` (namespace `bio-docket`), prepared again once its hour has
       // passed, signed through the signer kit, and posted with its digest; declined, nothing is sent.
-      op: "docketpost", label: "act.docketpost.label.docket",
+      op: "docketpost", label: "act.docketpost.label.docket", rereads: ["docket"],
       send: async function (view, el, cs) {
         const P = view.parts;
         const caseId = String(view.subject || "").split("/")[1] || "";
