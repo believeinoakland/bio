@@ -134,3 +134,14 @@ Bob: "Anthropic support will be included just like all other providers. It'll be
 |---|---|---|
 | **AIR39** | **Terms and policies carry effective dates, including future ones.** A plan's `binding_terms` (AIR38) records each document's version, effective date and, where known, a future effective date (e.g. Anthropic's Usage Policy takes effect 2026-11-12); the entry is re-confirmed on that date, and the leader is told in advance of a change that touches a restriction. | Schema field and a test that an entry with a pending effective date is flagged before it. |
 | **AIR40** | **Provider-neutral conduct rules for high-risk civic output.** Several providers' policies (Anthropic's high-risk requirements, OpenAI's usage policies, xAI's AUP) require qualified human review and disclosure of AI involvement for legal, public-benefit and adjudication advice, and bar deception about origin and concealed sponsorship. Civicsmith's own rules already require that a member author conclusions and that machine work is labelled; the product states in plain words, once at connection, what each provider's policy asks of the team for these uses (AIR38), and does not itself produce advice for a person's legal matter. | Plan `binding_terms` records the clauses; display requirement for the UX lane. |
+
+## 12 · Bob's answer to AI-DESIGN #2's five questions, 2026-10-21 (his words; provisional like the rest; BOB to record as K)
+> BTW, I agree with all of your recommendations.
+
+Given in the lane session right after the five questions were put to him in plain words. Recorded as his answer to each, as recommended:
+1. The reviewer's reasonableness reading stays outside Gate 1, as a separate labelled characterization note that never changes a verdict (`SUITE-REQUIREMENTS.md` SR3, CH4).
+2. A "civic work not refused" test group (G9) is required for every part that reads records (`SUITE-REQUIREMENTS.md` §4).
+3. A use its owner has switched off refuses as today; it does not move on to the next account in the ordered list (`WAY-THERE.md` §7).
+4. Disclosure is per provider and host: the first time a member's or team's material would go to a recipient not yet disclosed, the notice is shown and the step waits, including after a failover hop; a non-interactive run waits rather than proceeding (`WAY-THERE.md` §7).
+5. AI connection options are grouped provider first, then that provider's plans and types, borrowing the security-tools screen's row, facts, refused and held lists, and test-then-turn-on flow (`UX-REQUIREMENTS.md` §E).
+
