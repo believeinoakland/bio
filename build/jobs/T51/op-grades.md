@@ -275,3 +275,7 @@ Correction to J20 (Size line): module lines are 3627 (wc -l of bio-plane/src/op-
 **A note on the commit.** The commit message does not name the model; the attribution line with the model name is left out (per the session's model-identity rule), and the session link is kept.
 
 Size (session_017LS3B582bpu5TBffTAibNo): test runs 11, module lines 3628
+
+## J23 · REPORT
+
+**REPORT (another module, affordances).** `bio-plane/test/m/affordances/plane.test.mjs` R19 ("together the two drives reach every op RUNGS grades `reasoned`") is green on the tranche tip and red with op-grades' grade for `contradictionflag` (reasoned, contradiction R61, `FLAG_NO_REASON`): its `driven` list names the N345 acts (`contradictiondismiss`, `contradictionclarify`, `contradictiontakeup`, `contradictionresolve`, `resolutiondefect`) and not the flag. Needed from the affordances job: `contradictionflag` on that line, backed at contradiction's interface (R61's refusal, `contradiction.test.mjs`). The same grade turns green affordances' 'R1 R12 R24: N345's ops' test, so the two cannot both be satisfied without it. Also: `op-capabilities` has no row for `contradictionflag` (`needs: contribute`) if its table must name it.
