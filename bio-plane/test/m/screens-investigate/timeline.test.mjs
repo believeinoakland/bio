@@ -67,8 +67,8 @@ test("R3 createevent from a passage; addparticipant; relate \"Link events\" and 
   assert.deepEqual(p.byOp("recorddatedfact")[0].body, { captureSha: SHA, extent: { kind: "document" }, kind: "signed", value: { value: "2024-03", precision: "edtf" }, method: word("screen.timeline.method.member") });
 });
 
-test("R3 each act names its passage (control: none sends nothing)", async () => {
-  const p = await open(at);
+test("R3 each act names its passage (control: with no document held, none sends nothing)", async () => {
+  const p = await open(at, { plane: { heldcaptures: ok({ ok: true, held: [], truncated: false }) } });
   for (const op of ["createevent", "addparticipant", "recorddatedfact"]) {
     await press(p, op, { el: main(p).querySelectorAll(`button[data-act="${op}"]`).at(-1), reason: "x" });
     assert.equal(p.byOp(op).length, 0, op);

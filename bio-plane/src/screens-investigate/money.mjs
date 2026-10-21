@@ -1,6 +1,7 @@
 /* screens-investigate R4: a money trail (Projects › <project> › Money trail; registry screen `money`, its 14 acts; N728;
- * K1457, K1468; DEC-176). The screen's subject is the trail (`money`' `MSR-` set; no op lists a project's trails, so a
- * trail names its project as its `concerns` when it is started here), or a project with no trail yet. Each figure is a
+ * K1457, K1468; DEC-176). The screen's subject is the trail (`money`' `MSR-` set; a trail names its project as its `concerns` when it
+ * is started here, and a project's trails are read by `moneysets`, R28, newest first, C8), or a project: the trails it holds, listed,
+ * and the start of another. Each figure is a
  * row (interface-shell R19): its kind, from, to, when it moved (the event it is tied to, never its accounting period),
  * stage, period, amount, source grade, and whether the trail includes it with its reason. A value the source does not
  * state is drawn undetermined and opens the row's panel at that item with the evidence that would help; a filter keeps
@@ -18,7 +19,9 @@ function reads(view) {
   const id = String(view.subject || "").split("/")[0];
   return /^MSR-/.test(id)
     ? { docs: { op: "heldcaptures", query: { limit: "200", state: "held_and_vouched", fields: "picker" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length }, questions: { op: "list", query: { type: "inquiry", limit: "500" } }, contracts: { op: "peopledirectory", query: { show: "contracts", limit: "200" } }, trail: { op: "moneyset", query: { id }, subject: true, empty: (v) => !v || v.found === false }, vocab: { op: "affordances", query: {} } }
-    : { project: { op: "image", query: { id }, subject: true, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] } };
+    : { project: { op: "image", query: { id }, subject: true, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] },
+      /* C8, R4: the project's trails (money R28), the owner's order (newest first) kept; the last of 500 is the owner's cut */
+      trails: { op: "moneysets", query: { concerns: id, purpose: "trail", limit: "500" }, empty: (v) => !v || !Array.isArray(v.sets) || !v.sets.length } };
 }
 
 /** R8's project step: the trail's project (its `concerns`), its title as read. */
@@ -43,9 +46,13 @@ function render(cs, view) {
   const ui = view.ui;
   const out = [];
   if (!/^MSR-/.test(id)) {
-    /* a project with no trail open here: starting one is all there is to do */
+    /* a project: the trails it holds, each opening its own page (the owner's order, newest first); with none, saying so; starting
+       another is always offered */
     out.push(cs.title(cs.w("screen.money.name")));
-    out.push(cs.state("project", view, () => `<p>${cs.w(S + "notrail")}</p>` + cs.field("money-label", S + "label", { help: S + "label.help" })
+    const tr = view.data && view.data.trails;
+    out.push(cs.state(tr, (v) => cs.sheet((v.sets || []).filter((x) => x && /^MSR-/.test(String(x.set_id)))
+      .map((x) => cs.row("", `<b>${P.refOf(cs, x.set_id, x.label || x.set_id, [], "money")}</b>`, "")).join("")), { empty: S + "notrail" }));
+    out.push(cs.state("project", view, () => cs.field("money-label", S + "label", { help: S + "label.help" })
       + cs.act("createset", { label: "act.createset.label.money", tone: "primary" })));
     return out.join("");
   }
@@ -165,7 +172,7 @@ function render(cs, view) {
     + ch("mf-basis", S + "f.basis", ["undetermined", "budgetary", "cash", "modified_accrual", "accrual"])
     + cs.field("mf-from-date", S + "f.periodfrom", { type: "date" }) + cs.field("mf-to-date", S + "f.periodto", { type: "date" }) + cs.field("mf-fiscal", S + "f.fiscal", {})
     + cs.field("mf-payer", S + "f.payer", {}) + cs.field("mf-payee", S + "f.payee", {})
-    + P.docChoice(cs, view, "mf-doc", { project: set && typeof set.concerns === "string" ? set.concerns : "" })
+    + P.docChoice(cs, view, "mf-doc", { project: set && typeof set.concerns === "string" ? set.concerns : "", passage: false, drive: true }) + P.passagePick(cs, view, "mf-doc", "mf-passage", P.later)
     + contractChoice + cs.field("mf-label", S + "label", {})
     + cs.field("mf-expertise", S + "f.expertise", { help: S + "f.expertise.help" })
     + cs.field("mf-address", S + "f.address", { help: S + "f.address.help" })
@@ -178,7 +185,7 @@ const acts = rereading([
   { op: "recordfact", label: "act.recordfact.label.money",
     send(view, el, cs) {
       const amount = String(cs.value("mf-amount") || "").trim(), as_read = String(cs.value("mf-asread") || "").trim();
-      const src = view.parts.chosen(cs, "mf-doc");
+      const src = view.parts.chosen(cs, "mf-doc", "mf-passage");
       if (el && el.dataset && el.dataset.fact && !amount) { cs.set("readFor", el.dataset.fact); return null; }
       if (!amount || !as_read || !src) return { refuse: "screen.money.f.empty" };
       const phase = String(cs.value("mf-phase") || "adopted"), stage = String(cs.value("mf-stage") || "none");
@@ -278,7 +285,7 @@ const acts = rereading([
   /* "Record when it moved": the movement as an event from the passage that dates it, the figure among what it concerns */
   { op: "createevent", label: "act.createevent.label.money",
     send(view, el, cs) {
-      const at = view.parts.chosen(cs, "mf-doc");
+      const at = view.parts.chosen(cs, "mf-doc", "mf-passage");
       if (!at) return { refuse: "screen.money.f.nopassage" };
       return { body: { kind: "payment", attestations: [at] } };
     },
@@ -313,7 +320,7 @@ const acts = rereading([
       if (!inquiry || !statement) return { refuse: "screen.money.f.nohunch" };
       return { body: { inquiry, kind: "flow", statement, about: [String(el.dataset.fact || "")] } };
     } },
-], ["trail", "project", "contracts", "questions", "vocab"], ["acquire"]);
+], ["trail", "project", "trails", "contracts", "questions", "vocab"], ["acquire"]);
 
 const MONEY_KEYS = [
   "screen.money.graph", "screen.money.graph.holds", "screen.money.notrail", "screen.money.label", "screen.money.label.help",

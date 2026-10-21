@@ -97,8 +97,8 @@ export const PARTS = Object.freeze({
     if (view.ui) view.ui["docshown:" + id] = shown.map((r) => r.capture.sha256);
     if (d && d.state !== "loading" && !rows.length) return `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`;
     const search = rows.length > 1
-      ? cs.field(id + "-q", "shell.search", { value: asked, typing: (cs2, view2, value) => { cs2.set("docq:" + id, String(value || "").trim()); } }) : "";
-    if (d && d.state !== "loading" && !options.length) return search + `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`;
+      ? cs.field(id + "-q", "form.choose.search", { value: asked, typing: (cs2, view2, value) => { cs2.set("docq:" + id, String(value || "").trim()); } }) : "";
+    if (d && d.state !== "loading" && !options.length) return search + `<p class="cs-state" data-state="empty">${cs.w("form.choose.search.none")}</p>`;
     return search + cs.choice(id, o.label || "form.choose.document", options, o.drive ? { acts: {} } : {}) + `<p class="mk-small">${cs.w(o.help || "form.choose.document.help")}</p>`
       + (o.passage === false ? "" : `<p class="mk-small">${cs.w("form.choose.passage")}</p>`);
   },
@@ -108,15 +108,18 @@ export const PARTS = Object.freeze({
     const s = String(cs.value(id) || "").trim().toLowerCase();
     if (!/^[0-9a-f]{64}$/.test(s)) return null;
     let extent = { kind: "document" };
-    const sel = wordsId ? cs.value(wordsId) : null;
+    const sel = wordsId ? cs.value(wordsId + "-" + s.slice(0, 12)) : null;
     if (sel && typeof sel === "object" && Array.isArray(sel.extents) && sel.extents.length) {
       try { const e = JSON.parse(sel.extents[0]); if (e && typeof e === "object" && typeof e.kind === "string") extent = e; } catch { /* the whole document */ }
     }
     return { captureSha: s, extent };
   },
-  /** R34, C59: "Choose the passage on the document": the words of the chosen document (`docChoice` with `drive`, so the choice is kept in
-   *  `view.ui["choice:" + docId]`; the first document until she chooses), from that document's reading (`reading`'s `text_units`, in order,
-   *  at most 500 drawn), for her to select; a unit's extent travels as its JSON. `later` is `PARTS.later`. With no document held, nothing. */
+  /** R34, C59, N3: "Choose the passage on the document": its heading always drawn, then the words of the chosen document (`docChoice` with `drive`,
+   *  so the choice is kept in `view.ui["choice:" + docId]`; the first document until she chooses), from that document's reading (`reading`'s
+   *  `text_units`, in order, at most 500 drawn), for her to select; a unit's extent travels as its JSON, and each document's words are their own
+   *  selection (`wordsId` + the first 12 of its digest, as `chosen` reads it). A document with no reading, or whose reading cannot be read, says
+   *  why the words are not there (`retrieval.notread.not_extracted`, the design's own sentence for a capture nothing has read), never
+   *  "Nothing here" and never "Could not read this". `later` is `PARTS.later`. With no document held, nothing (the document choice says so). */
   passagePick(cs, view, docId, wordsId, later) {
     const d = view.data && view.data.docs;
     const rows = d && d.state === "ok" && d.value && Array.isArray(d.value.held) ? d.value.held : [];
@@ -126,8 +129,12 @@ export const PARTS = Object.freeze({
     const made = view.ui["choice:" + docId];
     const sha = shas.includes(made) ? made : shas[0];
     const rd = later(cs, view, "words:" + sha, "reading", { query: { sha256: sha } });
-    return cs.state(rd, (v) => cs.words(wordsId, { units: (Array.isArray(v && v.text_units) ? v.text_units : []).filter((u) => u && String(u.text || "").trim()).slice(0, 500)
-      .map((u) => ({ extent: JSON.stringify(u.extent && typeof u.extent === "object" ? u.extent : { kind: "document" }), text: String(u.text) })) }));
+    const units = rd.state === "ok" ? (Array.isArray(rd.value && rd.value.text_units) ? rd.value.text_units : []).filter((u) => u && String(u.text || "").trim()).slice(0, 500)
+      .map((u) => ({ extent: JSON.stringify(u.extent && typeof u.extent === "object" ? u.extent : { kind: "document" }), text: String(u.text) })) : [];
+    const body = rd.state === "loading" ? cs.state(rd, () => "")
+      : units.length ? cs.words(wordsId + "-" + sha.slice(0, 12), { units })
+      : `<p class="cs-state" data-state="empty" data-why="noreading">${cs.w("retrieval.notread.not_extracted")}</p>`;
+    return `<p class="mk-small" data-passage="${cs.esc(wordsId)}"><b>${cs.w("form.choose.passage")}</b></p>` + body;
   },
   /** R111, C94: who a stamp names, by handle: a member's id (`member:<id>` or the bare id) through the kit's `memberName`, the founder included and a
    *  member with no handle the kit's word, never the id; a class or machine (`class:legal_lookup`) is no member and keeps its own name. Text. */
