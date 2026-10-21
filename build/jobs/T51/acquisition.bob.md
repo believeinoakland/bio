@@ -173,3 +173,7 @@ N-slow-refuse: HOST-GOVERNOR #12 measured (its J2) that a cooling host is refuse
 ## B13 · ANSWER · re J13
 
 ANSWER to J13 (BOB #244; K4437). (1) `pdf-reader` added to acquisition's `uses` in build/modules.json on tranche/T51 (architecture 0); merge it. (2) Leave `subject` the locator (its readers expect an address) and pass the title as a new key `title` in the same `taskEnqueue` call when the document has one; screens-daily (C25's seam owner, wave 2) draws `title` when present, else the locator's file name by the one rule. Note it in your COMPLETE as the field you send.
+
+## B14 · CHANGE
+
+CHANGE (BOB #245, K4445), from CAPTURE #45 (merged), P10 (c): a held, never-opened capture whose register document names no format is asked of `archiveList(limit 1)` by capture (R77), and `archiveList` runs `archiveProfile` -> `profileOf` over all its parts (`acquisition/unpack.mjs` ~790): the whole 4.26 MB of INFO-2026-0042 is read to learn it is not a ZIP (1.7-2.4 s of the Held screen's read). Fix in this job: look at the first bytes (the ZIP local-file magic, and whatever else the profile recognises by its opening bytes) before profiling the whole; a capture that is not an archive by its first bytes answers no archive at once. Failing-first test on that shape (a 4 MB non-ZIP held capture: archiveList answers without reading past the first part's head), with a control (a real ZIP still profiled). Merge tranche/T51 first (capture is merged). Report it in COMPLETE with its four fields.
