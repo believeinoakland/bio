@@ -1,6 +1,6 @@
 # queue (T51)
 
-**Status** · session_016RSk6PPCHyxn8XjwFBsMoF · depth 2 · COMPLETE · handled B8
+**Status** · session_01FQVnGoBMzsSJMQVV911nYM · depth 2 · COMPLETE · handled B10
 
 ## J1 · QUESTION
 
@@ -150,3 +150,26 @@ QUEUE #30 (session_016RSk6PPCHyxn8XjwFBsMoF), depth 2. B8 (K4238) applied; the r
 Commit `925b86b8a8` on `job/T51/queue` (merge of `tranche/T51` at `7195cf675c` is `289423cbb2`).
 
 Size (session_016RSk6PPCHyxn8XjwFBsMoF): test runs 9, module lines 3386
+
+## J8 · QUESTION
+
+Two queue causes in this START have no requirement line, and each runs against a line in force. I have built nothing for either. Best readings, so you can say "yes" or correct:
+
+**C66, the `limit` cap.** R6 says `limit` is clamped to 1–500 (default 200); `queueFeed` does exactly that, and I cannot make `op=queue&limit=500` answer 400 from this module (tests: `feed.test.mjs` R6 and its `limit: 500` case answer 200; the door only passes `limit` on). The 400 the walk saw is not in queue's code; `interface-shell/browser.mjs:2368` is the caller that asks for 500. The plan says "cap the limit at 200". Best reading: amend R6 to a cap of 200 (a larger ask is clamped to 200, never refused, `limit` in the answer states what applied), and the shell (not mine) asks for at most 200. If you would rather keep 500, say so and I will leave R6 and report the 400 as outside queue. Note `#liveItem` and `exploreapprove`'s feed read use `limit: 500` inside this module and would move to 200 or to a paged read: tell me if a mute of an item past the 200th must still find its title (my reading: page until found).
+
+**C72, "What you answered" for derived items.** R59 says the receipts of acts another module keeps (a vouching, an answer to a request to join, an approved letter) "are not rows here". An expertise confirm is such an act (`member-roster` keeps it; the item leaves the feed because `expertiseAwaitingConfirmation` stops naming it), so the cause as written reverses R59. Best reading, a new line R59a: queue lists a derived to-do as answered when its producer's module can state the receipt. Each producer module that raises a to-do (`queue-producers`' kinds: `endorsement-owed`, `expertise-confirmation-owed`, `project-invitation`, `project-request`, and the rest) publishes `answeredItems({member, viewer, since, limit})` returning `{id, kind, title, by, at}` for the acts it recorded; queue merges them into R59's `resolved` rows (`act: "resolved"`, `by_you` as for tasks), inside the same window and bound, and a producer that does not publish it is listed in the answer's `answered_unread` (never read as "none"). That is a service in `queue-producers` (and `member-roster`/`project-roster` behind it), which I do not hold; I would only consume it. Alternative (smaller, mine alone): queue records its own receipt row whenever `proposedispose`/`taskresolve` run, but an expertise confirm never passes through queue, so this does not meet the cause. The screen's handle-not-internal-id half is C94 (screens-daily, `queue-producers`).
+
+I stop here until you answer: both decide everything I would build. Words: none needed yet.
+
+## J9 · COMPLETE
+
+Fix round 2, wave 1: no change to queue's code or tests, as BOB ruled (B10, K4307).
+
+- **C66** (queue's part): R6 stands as written (clamp 1–500, default 200, never refused); queue's internal limit-500 reads stay. `op=queue&limit=500` answers 200 here (feed.test.mjs R6). The console 400 is not queue's; BOB sent it to the shell job (caller `interface-shell/browser.mjs:2368`).
+- **C72** (queue's part): R59 stands. Receipts of acts another module keeps (an expertise confirm included) are not queue's rows by a requirement in force, so the derived-items half is no defect against queue; BOB places it on the design lane's later list as an observation. The founder-named-by-id half is C94 (shell's memberName, screens-daily).
+
+Deferred: none. Found in other modules: none new.
+
+Tests and checks: `node --test --test-force-exit bio-plane/test/m/queue/`: 206 pass, 0 fail. `checks/run.mjs`: no failure names queue (the 10 coverage failures are other modules' ids: screens-inquiry R123–R125, screens-intake R54, screens-publish R70–R72, and others); words 0 failures; channels 0. `checks/ownership.mjs … queue tranche/T51 job/T51/queue`: 0 failures.
+
+Size (session_01FQVnGoBMzsSJMQVV911nYM): test runs 2, module lines 0
