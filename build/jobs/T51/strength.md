@@ -155,3 +155,29 @@ Checks (from the process repository):
 - `checks/run.mjs /home/user/bio`: strength 0 findings. Reds are other modules': coverage in agent-harness R17, agent-runner R37 R38 R40, installer-steps R26 R31, journey-check R19, screens-inquiry R110 R119, screens-intake R53; words testcopy op-grades t37.test.mjs:32. Channels, architecture, format: 0 failures.
 
 Size (session_01WkkQhSa7yYkmopteVFH7CB): test runs 5, module lines 2971
+
+## J11 · COMPLETE
+
+Applied B12 (CHANGE, K4259) on job/T51/strength, commit d74988a9b4 (tranche/T51 merged first; nothing else pending).
+
+Entries applied:
+- `inquiryStrength` now answers a top-level `ungraded` list and `ungraded_count`, after the viewer's redaction (`src/strength/index.mjs`, `ungradedEverywhere`). Test: `test/m/strength/ungraded.test.mjs` (names R6): a withheld ungraded member is neither listed nor counted for a viewer who may not see it; the machine viewer sees each ungraded target once. Control: a fully graded inquiry answers `ungraded: []` and `ungraded_count: 0`.
+
+My choice, for BOB to record once (lower-level, B12's terms): "ungraded" means a member inert on EVERY axis. The CHANGE said "the distinct targets in the three axes' not_load_bearing"; taken literally, a leg graded on the capture axis would appear as ungraded on the connection and testimony axes, and the control "fully graded -> empty" would fail. So a target is listed only when it is in all three axes' not_load_bearing lists.
+
+Amended R6 line for BOB (requirements file left for BOB to write):
+"R6 … Otherwise R1–R5's answer, with every member the viewer may not see withheld whole … and `ungraded` (T51; K4259): the members inert on every axis, one per target, with `ungraded_count`; a withheld member is neither listed nor counted; `out_of_view: true` stating only that something was withheld (DEC-36)."
+
+Deferred: nothing.
+
+Found outside this module: nothing new. Standing reports unchanged (J1/J4: `bio-plane/src/case-checker/program.mjs` and `bio-plane/dist/bio-plane.bundled.mjs` still need BOB's regeneration).
+
+Checks (process repository; bio at d74988a9b4):
+- `node --test test/m/strength/*.test.mjs` (bio-plane): 173 pass, 0 fail.
+- `checks/format.mjs /home/user/bio`: 175 modules, 0 failures.
+- `checks/architecture.mjs /home/user/bio strength`: 0 failures.
+- `checks/coverage.mjs /home/user/bio strength`: 42 of 42 live ids named by a test.
+- `checks/words.mjs /home/user/bio strength`: 0 failures (no new string; 16 accepted unkeyed lines).
+- `checks/ownership.mjs /home/user/bio strength tranche/T51 job/T51/strength`: 0 failures (3 files, all strength's).
+
+Size (session_01WkkQhSa7yYkmopteVFH7CB): test runs 6, module lines 2987
