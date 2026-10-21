@@ -14,7 +14,7 @@
  * be spent on purpose. The driver's own polling and CDP timeouts still use real timers. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { renderWithBinding, browserBindingRenderer, RENDER_BLOCKED_REASONS } from "../../../src/browserrender.mjs";
+import { renderWithBinding, browserBindingRenderer, RENDER_BLOCKED_REASONS, BODY_CONCURRENCY } from "../../../src/browserrender.mjs";
 import { SUBRESOURCE_CAP, SUBRESOURCE_MAX } from "../../../src/subresources.mjs";
 import { renderBlock } from "../../../src/render.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
@@ -30,7 +30,7 @@ const later = (fakeMs, fn) => setTimeout(fn, Math.max(0, fakeMs / SCALE));
    browser's own behaviour. `stats` counts sessions and closes; `on` lets a test act at
    a named CDP call (to jump a clock). */
 function fakeBinding(pages, mode = {}, on = {}) {
-  const stats = { acquires: 0, upgrades: 0, closeTargets: 0, browserCloses: 0, socketCloses: 0, lateCloses: 0, calls: [], asked: {},
+  const stats = { bodyActive: 0, maxBodyActive: 0, bodyOrder: [], acquires: 0, upgrades: 0, closeTargets: 0, browserCloses: 0, socketCloses: 0, lateCloses: 0, calls: [], asked: {},
                   sent: [], held: {}, resumed: [] };
   const socket = () => {
     const ls = { message: [], close: [] };
@@ -145,7 +145,13 @@ function fakeBinding(pages, mode = {}, on = {}) {
             if (page && page.bodyHang) return;
             const r = page && (page.requests || [])[Number(String(m.params.requestId).slice(1))];
             if (!r || r.evicted || (r.bodyText === undefined && r.bodyB64 === undefined)) return err("No resource with given identifier found");
-            return r.bodyB64 !== undefined ? ok({ body: r.bodyB64, base64Encoded: true }) : ok({ body: r.bodyText, base64Encoded: false });
+            if (r.bodyHang) return;
+            const answer = () => (r.bodyB64 !== undefined ? ok({ body: r.bodyB64, base64Encoded: true }) : ok({ body: r.bodyText, base64Encoded: false }));
+            if (!r.bodyMs) return answer();
+            /* A body that takes `bodyMs` of the test's clock to give; the calls open at once are counted. */
+            stats.maxBodyActive = Math.max(stats.maxBodyActive, ++stats.bodyActive);
+            timers.push(later(r.bodyMs, () => { stats.bodyActive--; answer(); }));
+            return;
           }
           case "Runtime.evaluate": {
             if (page && page.noHtml) return ok({ result: { value: undefined } });
@@ -230,7 +236,7 @@ test("R19: a session is opened over the binding's two calls and the answer is R1
   const a = await render("/same", {}, { binding: b });
   assert.equal(a.ok, true);
   assert.deepEqual(Object.keys(a).sort(), ["dpr", "elapsed_ms", "engine", "engine_version", "html", "locale", "navigated_to", "ok",
-    "requests", "scripts", "status", "timezone", "viewport", "wait"]);
+    "phases_ms", "requests", "scripts", "status", "timezone", "viewport", "wait"]);
   assert.deepEqual([b.stats.acquires, b.stats.upgrades, b.stats.upgradePath], [1, 1, "/v1/devtools/browser/sess-1"]);
   assert.equal(typeof a.elapsed_ms, "number");
   const via = await browserBindingRenderer(fakeBinding(PAGES)).render({ url: `https://${HOST}/same`, wait: { timeout_ms: 1000 } });
@@ -368,14 +374,14 @@ test("R25: each completed load's body is collected or its absence stated, nothin
   const over = await render("/big", {}, { binding: fakeBinding({ "/big": big }) });
   assert.match(over.requests[0].body_unavailable, new RegExp(`over the ${SUBRESOURCE_MAX}-byte ceiling`));
 
-  /* The time bounds: the collection's own 10,000 ms, and the render's reserved bound. */
-  const two = { requests: [0, 1, 2].map((i) => ({ url: `https://${HOST}/t${i}`, type: "XHR", status: 200, end: "finished", bodyText: "z" })) };
-  const now = jumping();
-  const own = await render("/two", {}, { binding: fakeBinding({ "/two": two }, {}, { "Network.getResponseBody": () => now.jump(11000) }), now });
+  /* The time bounds: the collection's own 10,000 ms, and the render's reserved bound. A body still outstanding when
+     the phase ends is stated, with the sentence, and the bodies that finished are kept (R68). */
+  const stuck = { requests: [0, 1, 2].map((i) => ({ url: `https://${HOST}/t${i}`, type: "XHR", status: 200, end: "finished", bodyText: "z", ...(i === 2 ? { bodyHang: true } : {}) })) };
+  const own = await render("/stuck", {}, { binding: fakeBinding({ "/stuck": stuck }) });
+  assert.deepEqual(own.requests.map((r) => r.body_text), ["z", "z", undefined]);
   assert.equal(own.requests.at(-1).body_unavailable, "the 10000 ms body-collection bound was spent");
-  const now2 = jumping();
-  const reserved = await render("/two", { navigation_timeout_ms: 1000, wait: { until: "networkidle", timeout_ms: 1000 } },
-    { binding: fakeBinding({ "/two": two }, {}, { "Network.getResponseBody": () => now2.jump(30000) }), now: now2 });
+  const reserved = await render("/stuck", { navigation_timeout_ms: 1000, wait: { until: "networkidle", timeout_ms: 1000 } }, { binding: fakeBinding({ "/stuck": stuck }) });
+  assert.deepEqual(reserved.requests.map((r) => r.body_text), ["z", "z", undefined]);
   assert.equal(reserved.requests.at(-1).body_unavailable, word("browserrender.text.render_reserved_bound"));
 
   /* Closed on the succeeding path and on the failing ones. */
@@ -523,4 +529,68 @@ test("R64: a refused navigation fails naming the address; a render whose hold ca
   assert.equal(ca.ok, true);
   assert.deepEqual(c.stats.resumed, []);
   assert.ok(!c.stats.sent.includes("https://frames.example.com/f"));
+});
+
+/* R68 (fix round 3, C13, P5): the page of twenty sub-resources that each take a second to give their body. */
+const SLOW = (n, over = {}) => ({ requests: [
+  { url: `https://${HOST}/slow`, type: "Document", status: 200, end: "finished", bodyText: "<html>shell</html>" },
+  ...Array.from({ length: n }, (_, i) => ({ url: `https://${HOST}/s${i}.js`, type: "Script", status: 200, end: "finished", bodyText: `s${i}`, bodyMs: 1000 })),
+], loadAfterMs: 2000, ...over });
+
+test("R68: the bodies of twenty slow sub-resources are collected several at a time and from the start of the load, inside the bound", async () => {
+  const b = fakeBinding({ "/slow": SLOW(20) });
+  const a = await render("/slow", { navigation_timeout_ms: 10000, wait: { until: "networkidle", timeout_ms: 15000 } }, { binding: b });
+  assert.equal(a.ok, true);
+  /* Every body was kept; none is missing, none filled. */
+  assert.equal(a.requests.filter((r) => typeof r.body_text === "string").length, 21);
+  assert.ok(a.requests.every((r) => !("body_unavailable" in r)));
+  /* Several at a time, never past the handful the module names. */
+  assert.ok(b.stats.maxBodyActive >= 2 && b.stats.maxBodyActive <= BODY_CONCURRENCY, String(b.stats.maxBodyActive));
+  /* From the start of the load: the first body was asked for before the document was taken. */
+  assert.ok(b.stats.calls.indexOf("Network.getResponseBody") < b.stats.calls.indexOf("Runtime.evaluate"));
+  /* The body phase took less than the sum of the bodies' times (20 s of the test's clock), the render ends inside
+     navMs + timeoutMs, and the four phases are stated as whole milliseconds. */
+  const p = a.phases_ms;
+  assert.deepEqual(Object.keys(p), ["session", "load", "quiet", "bodies"]);
+  assert.ok(Object.values(p).every((v) => Number.isInteger(v) && v >= 0), JSON.stringify(p));
+  assert.ok(p.bodies < 20000 / 2, JSON.stringify(p));
+  assert.ok(a.elapsed_ms < 25000, String(a.elapsed_ms));
+  assert.ok(p.load >= 2000 - 100, JSON.stringify(p)); /* the load event was fired 2 s after the navigation */
+  assert.ok(p.session + p.load + p.quiet + p.bodies <= a.elapsed_ms + 50, JSON.stringify(p));
+});
+
+test("R68: a body still outstanding at the cap is body_unavailable with its sentence, the bodies that finished are kept, and a phase not reached is null", async () => {
+  /* Three bodies that never come, among ones that do: the phase ends at the bound and says so, once. */
+  const page = SLOW(4);
+  page.requests[2].bodyHang = true; page.requests[3].bodyHang = true;
+  const a = await render("/slow2", { navigation_timeout_ms: 1000, wait: { until: "load", timeout_ms: 3000 } }, { binding: fakeBinding({ "/slow2": page }) });
+  assert.equal(a.ok, true);
+  const by = Object.fromEntries(a.requests.map((r) => [r.url, r]));
+  assert.equal(by[`https://${HOST}/s0.js`].body_text, "s0");
+  for (const u of ["s1", "s2"]) {
+    assert.equal(by[`https://${HOST}/${u}.js`].body_text, undefined);
+    assert.equal(by[`https://${HOST}/${u}.js`].body_unavailable, word("browserrender.text.render_reserved_bound"));
+  }
+  assert.ok(a.elapsed_ms <= 1000 + 3000 + 500, String(a.elapsed_ms));
+  /* A load event that never fired: the load phase ran to the end of the wait, and the quiet wait was not reached. */
+  const none = await render("/noload", { wait: { until: "networkidle", timeout_ms: 1000 } });
+  assert.equal(none.phases_ms.quiet, null);
+  assert.ok(none.phases_ms.load >= 900, JSON.stringify(none.phases_ms));
+});
+
+test("R68 control: a page with no sub-resources states the four phases, a zero body phase, and every other field as before", async () => {
+  const a = await render("/quirks");
+  assert.equal(a.ok, true);
+  assert.deepEqual(Object.keys(a.phases_ms), ["session", "load", "quiet", "bodies"]);
+  assert.equal(a.phases_ms.bodies, 0);
+  assert.ok(Number.isInteger(a.phases_ms.quiet));
+  assert.deepEqual(a.requests, []);
+  assert.equal(a.html, "<html><body><main>Rendered /quirks</main></body></html>");
+  assert.equal(a.wait.fired, "networkidle");
+  assert.ok(a.elapsed_ms < 5000);
+  /* The ceilings are held in the order the loads completed whatever the concurrency. */
+  const many = { requests: Array.from({ length: SUBRESOURCE_CAP + 10 }, (_, i) => ({ url: `https://${HOST}/m${i}`, type: "Image", status: 200, end: "finished", bodyText: "x", bodyMs: i < 50 ? 100 : 0 })) };
+  const cap = await render("/many", {}, { binding: fakeBinding({ "/many": many }) });
+  assert.equal(cap.requests.filter((r) => r.body_text === "x").length, SUBRESOURCE_CAP);
+  assert.equal(cap.requests.filter((r) => typeof r.body_unavailable === "string").length, 10);
 });

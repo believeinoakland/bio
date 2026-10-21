@@ -253,6 +253,7 @@ export const NON_DATA_TYPES = Object.freeze({
  *   viewport       {width, height}, dpr number, locale string, timezone string
  *   wait           {condition, fired}: what was asked, and WHICH condition ended it
  *   elapsed_ms     number: browser time this render spent
+ *   phases_ms      {session, load, quiet, bodies}: whole ms each phase took, `quiet` null when the load event never fired (capture-sources R68)
  *   navigated_to   string: the page address the browser ended on
  *   status         number: the navigation's HTTP status
  *   requests       [{url, type, outcome: completed|failed|blocked, status?, blocked_by?, sha256?,
