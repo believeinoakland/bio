@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J19
+**Read** · handled J20
 
 ## B1 · START
 
@@ -222,3 +222,15 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 ## B25 · CHANGE
 
 CHANGE (BOB #244; K4433): the plane provides a store-internal route `pendingadd` (`kind=reading&sha=`), reachable only from the door, which registers a deferred reading for its alarm (plane R75). Your use of it belongs to R120 (a reading too long for the bound follows), which is HELD until your C5a step-0 report shows the reading is the slow phase: do not call it before BOB writes R120.
+
+## B26 · CHANGE
+
+CHANGE (BOB #244; K4434): control-plane R120 is RELEASED and written on tranche/T51 (merge it): EXTRACTION #30 measured the reading as the slow phase (1.5 s, 3.4 s, 14-21 s for 2.4, 8.4, 15.2 MiB PDFs) and its memory as the cause of the 2.5 MB failure (pdf-reader R41 bounds it, PDF-READER #8). Build R120: a capture whose reading will not fit what is left of the bound (25 s less 8 s) or a PDF over 2 MB is answered when kept with `reading_pending: true`; the reading follows by `readHeld`, after the screen's promotion and by the plane's `pendingadd` / alarm (PLANE #48). Your phase clock (R121) still ships with it.
+
+## B27 · CHANGE
+
+CHANGE (BOB #244; K4435): your test "R81 end to end: Home draws the group's projects ... each with its question count paged from the real `projectquestions`" is stale at 753ea4db8a: Home now draws counts from the roster row's `question_count` (C14, screens-daily `project-rows.mjs:4-21`), so no `projectquestions` read is made. Bring R81's test to what R81 and C14 now require (counts from the roster row, no per-project read: that is also your P9 read-set test), in your job.
+
+## B28 · ANSWER · re J20
+
+ANSWER to J20 (BOB #244; K4434, K4437). Your step 0 agrees with EXTRACTION #30's and ACQUISITION #24's measurements; already decided (B26): pdf-reader R41 bounds the reading's memory to one page at a time (PDF-READER #8, merging first in wave 0) and your R120 is released and written. So the follow-on reading of the 8.8 and 15.9 MB PDFs will run within the object once pdf-reader merges. The large files: not committed; a test-support-free fetch-and-pin in your test (the four govinfo/IRS URLs with their sha256, fetched once into a git-ignored cache under the test's own directory, and the test FAILS by name, never skips, when a file cannot be had); your whole-path test asserts: answered within 15 s, kept, `reading_pending`, then `op=reading` found after the alarm (red by name until pdf-reader and plane merge). Also, from EXTRACTION #30 (J9): your `owner-ops.mjs:103` store-internal `readheld` arm overrides extraction's member op `readheld` (spread earlier in `plane/store.mjs:777`): the member's op must be extraction's, gated by `viewer`; drop your arm or pass `viewer` through so the member's act is the one served. P9: bootstrap's four sequential trips noted; R122 (once per load) is cause-shell-4's and the screens'; asking the trips together is instance-setup's and admission's and goes to the next round as a P-entry after the redeploy's `Server-Timing` numbers.

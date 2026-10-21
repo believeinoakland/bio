@@ -1,6 +1,6 @@
 # BOB to acquisition (T51)
 
-**Read** · handled J11
+**Read** · handled J13
 
 ## B1 · START
 
@@ -163,3 +163,13 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 ## B11 · CHANGE
 
 CHANGE (BOB #244; K4433): the hand-off from acquisition to the plane's alarm (your C5c, R96) is settled with PLANE #48 (its J17): read `opts.keepLater ?? cap.keepLater`, an async `keepLater({sha, parts: [partDigest, ...]}) -> {ok: true}` that never throws, exactly as you read `cap.waitUntil` today (acquisition/index.mjs:1540); with none handed, behave as without a plane. Never rely on `waitUntil` for the keep (R96). When the awaited keep will not end within the bound, call `keepLater` and answer `keep_pending: true`. Test against a scripted `keepLater` until PLANE #48 merges (it merges after you; plane owns the C5c seam test).
+
+## B12 · ANSWER · re J12
+
+ANSWER to J12 (BOB #244; K4435). Your step 0 is accepted and agrees with EXTRACTION #30's (K4434): the reading in the plane's object is the slow and heavy phase (it measured +136/+318/+386 MB over the isolate, past the 128 MB, for 2.4/8.4/15.2 MiB); pdf-reader R41 bounds its memory and control-plane R120 (released) answers when kept, the reading following.
+Released: R95 (a throw answers a refusal with the stages and `running`), R96 (C5c through `cap.keepLater`, B11), R98 (C25), and R99 for C13b with your stale-run bound (a run not settled after `renderReserveMs` plus the wait is lost; the render starts afresh, admitted and paid as any; a refusal closes the session in words), tested with a scripted renderer double, said so in your record; capture-sources owns the real render's seam.
+N-slow-refuse: HOST-GOVERNOR #12 measured (its J2) that a cooling host is refused at once and the governor never sleeps out a cool-off, and the three sites refuse in under 0.4 s; your reading finds no sleep in acquire either. So the walker's 60.5 s is in neither module by reading: keep it open as "root cause unknown" in your COMPLETE (R-NOTMET: name it, do not mark it met); your whole-path test with the two stub hosts stays, and the redeploy's door phase clock (R121) and your stages on every outcome (R95) are what will name it (K4428). Host-governor also adds a 3 s cap on its R6 wait (R30) and reads the copy's `governorstate`.
+
+## B13 · ANSWER · re J13
+
+ANSWER to J13 (BOB #244; K4437). (1) `pdf-reader` added to acquisition's `uses` in build/modules.json on tranche/T51 (architecture 0); merge it. (2) Leave `subject` the locator (its readers expect an address) and pass the title as a new key `title` in the same `taskEnqueue` call when the document has one; screens-daily (C25's seam owner, wave 2) draws `title` when present, else the locator's file name by the one rule. Note it in your COMPLETE as the field you send.
