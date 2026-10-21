@@ -57,8 +57,10 @@ export function homeReadings(cs, view, d) {
   // answer (review R14: a grant is live while unrevoked and unlapsed, its `until` its end).
   if (published) {
     const byCase = {};
+    // C14 (P2.2; project-roster R42): the roster row says whether a draft is shared for review (`shared_drafts.count`), so only the projects
+    // that hold one are asked for their drafts; a row answering `null` (not known, or seen only at existence) is not read one by one.
     (d.projects || []).forEach(function (p) {
-      if (!p || !p.id) return;
+      if (!p || !p.id || !p.shared_drafts || !(Number(p.shared_drafts.count) > 0)) return;
       const dr = later("drafts:" + p.id, "casedrafts", { project: String(p.id) });
       if (dr.state === "failed") { out.investigation.fails.push(dr); return; }
       if (dr.state !== "ok") return;

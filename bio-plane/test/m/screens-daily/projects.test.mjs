@@ -9,9 +9,9 @@ import { open, ok, refused, text, ops, button, press, beside, last, main, settle
 const LIST = ok({ ok: true, count: 2, limit: 200, truncated: false, projects: [
   { id: "PROJ-1", name: "The Coliseum lease", stage: "investigating", owner: { member: "M-1", handle: "dev" },
     members: [{ member: "M-1", handle: "dev" }, { member: "M-2", handle: "rosa" }, { member: "M-3", handle: "teo" }],
-    activity: [3, 5, 4, 6, 8, 7, 9, 11], lastChange: "2026-10-12T15:00:00Z" },
+    activity: [3, 5, 4, 6, 8, 7, 9, 11], lastChange: "2026-10-12T15:00:00Z", question_count: 2 },
   { id: "PROJ-2", name: "Sewer fund transfers", stage: "closed", owner: null, members: [{ member: "M-4", handle: "ana" }],
-    activity: [0, 0, 0, 0, 0, 0, 0, 0], lastChange: null },
+    activity: [0, 0, 0, 0, 0, 0, 0, 0], lastChange: null, question_count: 0 },
 ] });
 const QUESTIONS = (req) => ok({ ok: true, project: req.query.project, items: req.query.project === "PROJ-1" ? [{ inquiry: "INQ-1" }, { inquiry: "INQ-2" }] : [], cursor: null });
 const PLANE = { projectlist: LIST, projectquestions: QUESTIONS };
@@ -32,21 +32,15 @@ test("R10: projects reads projectlist and draws each project as a reference open
   assert.equal(ladders[1].querySelector("[aria-current]").textContent, word("screen.projects.stage.closed"));
 });
 
-test("R10, R25: each project's question count from projectquestions, paged to its end, picking the singular or plural key", async () => {
-  const p = await open("/app/projects", { ...PLANE, projectquestions: (req) => ok({ ok: true, items: [{ inquiry: "Q" }], cursor: req.query.after ? null : "Q" }) });
+test("R10, R25 (fix round 3, C14): each project's question count is its roster row's, picking the singular or plural key; none is read project by project", async () => {
+  const p = await open("/app/projects", PLANE);
   await settle();
-  assert.deepEqual(p.byOp("projectquestions").map((r) => `${r.query.project}:${r.query.after || ""}`).sort(), ["PROJ-1:", "PROJ-1:Q", "PROJ-2:", "PROJ-2:Q"]);
-  assert.ok(text(p, rows(p)[0]).includes(word("screen.projects.questions.many", { n: "2" })));
-  const one = await open("/app/projects", PLANE);
-  await settle();
-  assert.ok(text(one, rows(one)[0]).includes("The Coliseum lease" + word("screen.projects.questions.many", { n: "2" })));
-  assert.doesNotMatch(text(one, rows(one)[1]), /\d+ questions?/, "R21: no count at zero");
-  const single = await open("/app/projects", { ...PLANE, projectquestions: () => ok({ ok: true, items: [{ inquiry: "Q" }], cursor: null }) });
+  assert.equal(p.byOp("projectquestions").length, 0, "no per-project read (project-roster R42)");
+  assert.ok(text(p, rows(p)[0]).includes("The Coliseum lease" + word("screen.projects.questions.many", { n: "2" })));
+  assert.doesNotMatch(text(p, rows(p)[1]), /\d+ questions?/, "R21: no count at zero");
+  const single = await open("/app/projects", { projectlist: ok({ ok: true, projects: [{ id: "PROJ-1", name: "Solo", stage: "forming", question_count: 1 }] }) });
   await settle();
   assert.ok(text(single, rows(single)[0]).includes(word("screen.projects.questions.one")), "one question: the singular key");
-  const failed = await open("/app/projects", { ...PLANE, projectquestions: refused("STORE_DID_NOT_ANSWER", null, 502) });
-  await settle();
-  assert.equal(main(failed).querySelectorAll('.cs-row [data-state="failed"]').length, 2, "a failed count is drawn failed, never as none");
 });
 
 test("R10 (DEC-214 (3); project-roster R28): each row draws its members (cs.initials), its activity over eight weeks (cs.activity) with the word the bars say, and its last change", async () => {

@@ -10,17 +10,18 @@ export function doors() {
   const none = function (key, keep) {
     return function (v) { return !v || !Array.isArray(v[key]) || v[key].filter(keep || function () { return true; }).length === 0; };
   };
-  // The reads: the held captures (the most `heldcaptures` pages in one answer) and the knocks (`inbox`).
+  // The reads: the held captures and the knocks (`inbox`). C14 (P2.3): the held captures are one picker read, one limit of 500, that serves these
+  // doors (every row counts) and the vouch to-dos (`todos.mjs` keeps her own rows), so a screen makes one request for them.
   const reads = function () {
     return {
-      held: { op: "heldcaptures", query: { limit: "200", fields: "picker" }, empty: none("held") },
+      held: { op: "heldcaptures", query: { limit: "500", fields: "picker" }, empty: none("held") },
       inbox: { op: "inbox", query: { limit: "200" }, empty: none("inbox", function (k) { return k && k.status === "new"; }) },
     };
   };
   const draw = function (cs, view, screen) {
     const rows = [];
     const door = function (data, href, label, name, n, icon) {
-      rows.push(cs.row(cs.icon(icon), '<a class="cs-ref" data-nav href="' + href + '"><b>' + cs.w(label) + "</b></a> "
+      rows.push(cs.row(cs.icon(icon), '<a class="cs-btn" data-tone="quiet" data-nav href="' + href + '"><b>' + cs.w(label) + "</b></a> "
         + '<span class="meta"><b>' + cs.esc(String(n)) + "</b>" + (name ? " " + cs.w(name) : "") + "</span>", "", ""));
     };
     const held = view.data.held;

@@ -109,20 +109,15 @@ for (const [where, path] of [["queue", "/app/queue"], ["home", "/app"]]) {
 /* ---------- C14 · R86: the held captures are read as cheaply as the screen's use allows ---------- */
 
 const PICKER = (n) => ok({ ok: true, held: Array.from({ length: n }, (_, i) => ({ bundle_id: "INF-H" + i, title: "Photo " + i, project: null, capture: { sha256: "a".repeat(64) }, standing: "collected" })), state: "held", truncated: false, next: null });
-const FULL = (n) => ok({ ok: true, held: Array.from({ length: n }, (_, i) => ({ bundle_id: "INF-H" + i, title: "Photo " + i, source: { address: "https://example.org/p" + (i % 2), via: "web" }, collected_since: "2026-10-0" + (i + 1) + "T10:00:00Z" })), state: "held", truncated: false, next: null });
 for (const [screen, path] of [["home", "/app"], ["queue", "/app/queue"]]) {
-  test(`R86 (C14, ${screen}): the door's count of held captures is asked as the cheap picker read, once; her own to-dos read only her captures, whole, once; control: the door still counts the rows`, async () => {
+  test(`R86 (C14, ${screen}): the door's count of held captures is the cheap picker read, and (fix round 3, R88) the one read: her to-dos are its rows whose actor is she; control: the door still counts the rows`, async () => {
     const { ADMIN } = await import("../interface-shell/harness.mjs");
-    const plane = { whoami: ok({ ...ADMIN, capabilities: ["contribute"] }), lookedsince: ok({ since: "2026-10-01T00:00:00Z" }), projectlist: ok({ ok: true, projects: [{ id: "PROJ-1", name: "The Coliseum lease", stage: "investigating" }] }), projectquestions: ok({ ok: true, project: "PROJ-1", items: [], cursor: null }),
-      queue: ok({ items: [], item_count: 0 }), inbox: ok({ ok: true, inbox: [] }), heldcaptures: (req) => (req.query.member ? FULL(2) : req.query.fields === "picker" ? PICKER(3) : FULL(3)) };
+    const plane = { whoami: ok({ ...ADMIN, capabilities: ["contribute"] }), lookedsince: ok({ since: "2026-10-01T00:00:00Z" }), projectlist: ok({ ok: true, projects: [{ id: "PROJ-1", name: "The Coliseum lease", stage: "investigating" }] }),
+      queue: ok({ items: [], item_count: 0 }), inbox: ok({ ok: true, inbox: [] }), heldcaptures: PICKER(3) };
     const p = await open(path, plane);
     const reads = p.byOp("heldcaptures");
-    const doorReads = reads.filter((r) => !r.query.member);
-    const mine = reads.filter((r) => r.query.member);
-    assert.equal(doorReads.length, 1, "the door's read is made once");
-    assert.equal(doorReads[0].query.fields, "picker", "and is the cheap picker read");
-    assert.equal(mine.length, 1, "her own captures are read once");
-    assert.ok(!("fields" in mine[0].query), "whole: the to-dos group them by the place each came from, which the picker rows do not carry");
+    assert.equal(reads.length, 1, "the held captures are read once");
+    assert.equal(reads[0].query.fields, "picker", "and the read is the cheap picker read");
     const door = main(p).querySelector('a[href="/app/held"]');
     assert.ok(door, "the door is drawn from the picker rows");
     assert.ok(main(p).querySelectorAll(".cs-row").find((r) => r.querySelector('a[href="/app/held"]')).textContent.includes("3"));

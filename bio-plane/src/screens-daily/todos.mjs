@@ -1,7 +1,8 @@
 /* The to-dos Home and the queue draw as the design draws them (screens-daily R3, R17; B21, DEC-389), a screen part (interface-shell
    R21, K3002) handed to both as `view.parts.todos`: "Vouch for N photos you captured on …" (the registry's `release`), one to-do for
    each place the member's held captures come from, and "Read and approve it" (`filingapprove`) on a letter drafted for the group.
-   `reads(view)` answers the read the vouch to-dos need (her own held captures, by `member`); `vouch(cs, view, screen)` answers
+   Their read is the one `doors.mjs` makes (C14, P2.3): the held captures as picker rows (`fields: "picker"`, one limit of 500), of which these
+   keep the rows whose `actor` is the member, so a screen asks for them once. `vouch(cs, view, screen)` answers
    `{n, rows}`, the to-dos as rows; `loading(view)` is true while that read is being answered, so a screen draws its list and counts
    once, whole (C70); `items(cs, view, screen)` answers them as queue items with no case, and `merge(list, vouch, sort)` places them
    in the list in the sort the member chose; `release(view, el, cs)` and `approve(view, el, cs)` are the two acts' `send`. A read of her
@@ -9,15 +10,17 @@
    Self-contained: it refers only to its parameters. */
 
 export function todos() {
-  const reads = function (view) {
-    const me = view.me && view.me.member ? String(view.me.member) : "";
-    return me ? { mine: { op: "heldcaptures", query: { member: me, limit: "500" }, empty: function (v) { return !v || !Array.isArray(v.held) || v.held.length === 0; } } } : {};
+  // The held captures are the doors' read (`view.data.held`); the rows that are hers are those whose capture's `actor` is her.
+  const heldOf = function (view) {
+    const m = view.data.held;
+    const me = view.me || {};
+    const hers = function (r) { const a = r && r.actor; return !!a && (a === me.member || a === me.handle); };
+    return m && m.state === "ok" && m.value && Array.isArray(m.value.held) ? m.value.held.filter(hers) : [];
   };
 
   // Her captures, grouped by the place each came from (an upload has none: the keys that say no place), in the order read.
   const groupsOf = function (view) {
-    const m = view.data.mine;
-    const rows = m && m.state === "ok" && m.value && Array.isArray(m.value.held) ? m.value.held : [];
+    const rows = heldOf(view);
     const groups = [];
     rows.forEach(function (r) {
       const id = r && (r.bundle_id || r.document);
@@ -33,7 +36,7 @@ export function todos() {
   };
 
   // C70: her captures are being read: a screen that counts them waits for the answer and draws once.
-  const loading = function (view) { const m = view.data.mine; return !!m && m.state === "loading"; };
+  const loading = function (view) { const m = view.data.held; return !!m && m.state === "loading"; };
 
   const rowOf = function (cs, g, i, screen) {
     const f = screen + "-vouch-" + i;
@@ -116,5 +119,5 @@ export function todos() {
     return { body: { filing: String(drafts[drafts.length - 1].filing) } };
   };
 
-  return { reads: reads, vouch: vouch, loading: loading, items: items, merge: merge, release: release, approve: approve };
+  return { vouch: vouch, loading: loading, items: items, merge: merge, release: release, approve: approve };
 }
