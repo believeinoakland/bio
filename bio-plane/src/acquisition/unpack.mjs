@@ -303,6 +303,36 @@ export class Acquisition {
     } catch { return []; }
   }
 
+  /** R41 (T51; C14): `memberOf` for several captures in one read: a map of each capture's digest to the archives it was filed from
+   *  or found in, in `memberOf`'s order; a capture in none has no key. Writes nothing, never throws. */
+  membersOf(captureShas) {
+    const out = new Map();
+    try {
+      const shas = [...new Set((Array.isArray(captureShas) ? captureShas : []).map(shaOf).filter(Boolean))];
+      if (!shas.length) return out;
+      for (const r of this.#rows(`SELECT sha256, archive_sha, idx FROM archive_entries WHERE sha256 IN (SELECT value FROM json_each(?))
+                                   AND idx>=0 AND state IN ('filed','already_held') ORDER BY sha256, archive_sha, idx`, JSON.stringify(shas))) {
+        const list = out.get(r.sha256) || [];
+        list.push({ archiveSha: r.archive_sha, index: r.idx });
+        out.set(r.sha256, list);
+      }
+    } catch { /* none is known: the captures read as in no archive */ }
+    return out;
+  }
+
+  /** R41 (T51; C14): which of these captures this module recorded opening as an archive (it holds the archive's own row), one read.
+   *  A set of digests. Writes nothing, never throws. */
+  openedAmong(captureShas) {
+    const out = new Set();
+    try {
+      const shas = [...new Set((Array.isArray(captureShas) ? captureShas : []).map(shaOf).filter(Boolean))];
+      if (!shas.length) return out;
+      for (const r of this.#rows(`SELECT archive_sha FROM archive_entries WHERE idx=-1 AND archive_sha IN (SELECT value FROM json_each(?))`, JSON.stringify(shas)))
+        out.add(r.archive_sha);
+    } catch { /* none is known */ }
+    return out;
+  }
+
   /** R40: where an archive stands in its unpack tree: its depth (the outermost at 1) and its outermost archive, from its
    *  own row, else from the archive it was cut from (the shallowest one, when several hold it), else the outermost. */
   placeOf(archiveSha) {
@@ -858,6 +888,17 @@ export async function archiveList(instOrStore, { archiveSha = null, viewer = nul
                ...(refused.limit !== undefined ? { limit: refused.limit } : {}) } : null },
     summary, entries: page, limit: lim, truncated, next: truncated ? page[page.length - 1].index : null,
   };
+}
+
+/** R41 (T51; C14): the module-level forms of `membersOf` and `openedAmong`, through the instance a store reaches. Never throw;
+ *  a store with no instance answers nothing known. */
+export function membersOf(store, captureShas) {
+  try { const inst = store instanceof Acquisition ? store : instanceOf(store); return inst ? inst.membersOf(captureShas) : new Map(); }
+  catch { return new Map(); }
+}
+export function openedAmong(store, captureShas) {
+  try { const inst = store instanceof Acquisition ? store : instanceOf(store); return inst ? inst.openedAmong(captureShas) : new Set(); }
+  catch { return new Set(); }
 }
 
 /** R41: the module-level form of `memberOf`, through the instance a store reaches. Never throws. */

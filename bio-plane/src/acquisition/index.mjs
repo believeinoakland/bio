@@ -50,7 +50,7 @@ export { keyedFetch, citationLookup, KEYED_SERVICE_HOSTS, CITATION_LOOKUP_URL, C
 /* R38–R41, R43 (T35-21, N688, K1888): archives opened on capture, the read behind the archive screen, and the group's
    co-archive setting; the instance holding this module's tables is `acquisitionOf`'s. */
 export { ARCHIVE_CHECKS } from "./checks.mjs";
-export { unpack, archiveList, memberOf, acquisitionOf, Acquisition, coArchiveStateOf, ACQUISITION_TABLES, CO_ARCHIVE_SETTING,
+export { unpack, archiveList, memberOf, membersOf, openedAmong, acquisitionOf, Acquisition, coArchiveStateOf, ACQUISITION_TABLES, CO_ARCHIVE_SETTING,
          UNPACK_CALL_ENTRIES, UNPACK_CALL_BYTES, UNPACK_DAILY_BYTES, UNPACK_DAILY_ENTRIES, UNPACK_LIMITS,
          ARCHIVE_CHECK_READS } from "./unpack.mjs";
 
@@ -147,6 +147,29 @@ export async function substanceDigests(profileBytes, stackId, profCtx, sha, mult
       basis: word("acquisition.basis.primary_bytes_read") };
   return { determined: true, rendition: dg.rendition, evidentiary: dg.evidentiary, boundary_missed: !!dg.boundary_missed,
            basis: word("acquisition.basis.normalized_under_certain", { key: stackId.handler.key, version: stackId.handler.version }) };
+}
+
+/** R17 (T51; the walk's C26): the digests of bytes this instance did not store, as `profileOf` would record them for a capture of
+ *  those bytes: the stack identified from the headers, the address and the content type, then `substanceDigests`, the one
+ *  function that decides whether a digest can be trusted to assert sameness. For a reader (`capture` R96's look at a site)
+ *  that compares the substance of what a site serves now with the digests a held copy recorded. Answers
+ *  `{sha256, handler, handler_version, digests}`, `digests` as R17 states them (`determined` only under a certain stack whose
+ *  normalised bytes hash to the capture's identity). The bytes are bounded as R17's are (`PROFILE_TEXT_MAX`, `ODF_DIGEST_MAX`);
+ *  past them the digests are undetermined. Never throws. */
+export async function servedSubstance({ bytes, headers = {}, locator = null, contentType = null, view = undefined } = {}) {
+  const undetermined = (basis, sha = null) => ({ sha256: sha, handler: null, handler_version: null,
+    digests: { determined: false, rendition: null, evidentiary: null, basis } });
+  try {
+    if (!(bytes instanceof Uint8Array)) return undetermined(word("acquisition.basis.document_read_text", { large: "non-textual" }));
+    const sha = await sha256Hex(bytes);
+    const asText = profilesAsText(contentType, bytes.length, false);
+    const profCtx = { headers, locator, content_type: contentType || null,
+                      text: asText ? new TextDecoder("utf-8", { fatal: false }).decode(bytes) : "", ...(view ? { view } : {}) };
+    const stackId = identify(profCtx);
+    const digests = await substanceDigests(asText ? bytes : null, stackId, profCtx, sha, false,
+                                           asText || bytes.length > ODF_DIGEST_MAX ? null : bytes);
+    return { sha256: sha, handler: stackId.handler.key, handler_version: stackId.handler.version, digests };
+  } catch (e) { return undetermined(String(e && e.message || e).slice(0, 120)); }
 }
 
 /** R17: the combined view of the instance's active jurisdiction profiles (record-core's `jurisdiction_profiles`,
