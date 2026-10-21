@@ -1,6 +1,6 @@
 # control-plane (T51)
 
-**Status** · session_018BaB4jyWLrTAiLbGV6EXVS · depth 2 · WAITING ON BOB (J12) · handled B17
+**Status** · session_018BaB4jyWLrTAiLbGV6EXVS · depth 2 · COMPLETE · handled B17
 
 ## J1 · QUESTION
 
