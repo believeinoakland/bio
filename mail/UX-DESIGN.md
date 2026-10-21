@@ -2074,3 +2074,9 @@ DEC-409 (Bob, 2026-10-21, in the design session) @ 4f04d25957: follow the trail 
 
 Folded: DECISIONS.md (DEC-409); BIO_Capability_Ladders_v0_1.md (Status "Amended 2026-10-21 by Bob (DEC-409)"; §2 CONNECTIONS "RULED 2026-10-21"). The drawing follows as DEC-410 (MERGE).
 Owed (its owed: line): BOB: the alpha's plan (with N1259) carries "Follow from here" across the dimension screens and explore's all-connections and most-direct-path reads with the simplified-chain offer, and their tests, with its date effect reported to Bob; the first beta's (with N1258) the combined walks and the assistant's research across dimensions, with step targets and Oakland test matters.
+
+## U445 · MERGE · 2026-10-21 · session_013KihJX63gbyQmh21swQqQs · primary
+DEC-410 (the design, beneath Bob's DEC-409) @ f1bc1e89ea: "Follow from here", one control (follow(kind) in mock-kit.js) on people rows, money figures, timeline events, document, finder results, registers result rows and explore chains, opening the other dimensions scoped to the item in place; on explore: "List every connection" and "Find the most direct path"; the most direct path first, with its plain rule (fewest steps, then the strongest weakest step, then the earlier date; a fact, not a judgment); every connection within the bounds with hub and declared-only steps marked and the cut-short line; "A chain you built" with the shorter-path note, "See the shorter path" / "Keep mine"; combined walks and "Ask the assistant to research this" drawn paused, "Comes in the first beta". 47 keys.
+
+MERGE: design files only @ f1bc1e89ea (with DEC-409 @ 4f04d25957). Checks unchanged: format 64, coverage 3, words 11374; check_walk and check_words_drawn clean.
+Owed: BOB: owed:followfrom, owed:exploreall, owed:explorepath, owed:exploreshorter (DEC-409; names are proposals) with DEC-409's requirements, joined to N1259 for the alpha's part.
