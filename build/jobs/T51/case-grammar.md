@@ -58,3 +58,23 @@ Alternative: key (b) with `localize` (en identical) if you want the checker's re
 ## J3 · COMPLETE
 
 T51-227 done on B3's ruling; details in my record (Completion T51-227, R8). casefile.mjs reasons: 45 localize ids case-grammar.casefile.* (list in the record; the program must carry them; case-grammar reaches it via case-checker -> casefile.mjs). Pinned case-document sentences stay code, REPORT in the record for the unkeyed list. Tests copy no sentence (words: testcopy 0); module 164/164. Needs BOB: modules.json case-grammar uses lacks setup-words (architecture 1 failure); program.mjs, plane bundle and rows.mjs stale.
+
+## J4 · COMPLETE
+
+C47 done (fix round 4, B4): R12's `materials:` row gains `title`.
+
+(1) Root cause: the signed row carried no title, so a reader could only name the entry by `origin`. Fixed at the source: `materials.mjs` adds `MATERIAL_TITLE_FIELD` ("title", exported by index.mjs). `materialsLines` writes `title` flat after `rests_under` (before the obscured fields) when the row is handed a `title`: a sentence, else null (the capture has none, an observation, or any non-string); a row handed no `title` is written byte for byte as before. `materialsOf` reads it back on every row: the sentence, or null when absent (an older case).
+(2) Missed before: no test read a title from a chain. `title.test.mjs` (new, 4 tests, all name R12): round trip beside the obscured fields with quotes/line breaks folded; null for no title, an observation and non-strings, unhanded not written; control, a row without it parses, reads null and nothing else changes (hand-written front matter too, hostile getters never throw); `caseFileManifestCheck` given the rows accepts titled, null and absent. Red first: tests 1-3 failed on the missing field/constant before the change (`actual: undefined`, `actual: []`); test 4 is a control and passed before and after. Green after: 4/4.
+(3) R12 amended as BOB wrote it (K4438): met, with R12's "not yet met" marker still BOB's to lift. Five existing tests of mine (casefile.test, obscured.test) deep-equal a read row; they now state `title: null`. Module: 168/168.
+(4) Merge early: pushed now. case-disclosures and public-read build on this: `materialsOf(fm).materials[i].title`; the writer hands `title` on each row it passes `materialsLines` (case-authoring/case-disclosures: NOT mine).
+
+Found in other modules (their tests deep-equal a read row, which now has `title: null`; case-disclosures' and case-authoring's jobs update them when they carry `title`):
+- case-disclosures: R6/R7 materialsJudged test, and the R7 photo and member-document tests (3 tests).
+- case-authoring: R55 materials test (1).
+Generated, stale by this change (BOB regenerates at L8's close): `bio-plane/src/case-checker/program.mjs` (case-checker R13/R25 fail on it; they failed before for the same cause) and the plane bundle.
+Users run: case-account, case-carriage, case-catalogue, case-import, case-inputs, case-tensions, docket, public-read, publication, ratification, review pass; case-checker as above. `impact.mjs origin/tranche/T51 HEAD`: 60 modules affected (transitively through the plane); direct users all run.
+
+Checks (process repo): format 175/0 failures; architecture 0 failures; coverage case-grammar 33 of 33 ids named, 0 failures (the repo-wide coverage run shows 15 other modules' ids, none mine); ownership 6 files, 0 failures; words: 3 inline findings in op-grades (not mine), none in case-grammar; setup-words --check: stale rows note only.
+No localize key added, so the checker program gains no word.
+
+Size (session_01VBNM18B4vfkzoJAakCSzJF): test runs 22, module lines 2986
