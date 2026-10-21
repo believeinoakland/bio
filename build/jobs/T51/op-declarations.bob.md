@@ -173,3 +173,7 @@ Two more ops are coming in wave 2 (K4370): capture's op=captureseenin (capture R
 ## B24 · CHANGE
 
 file-safety R49 merged (K4371): op=scanmirror (administrator act, file-safety family, like securitytooladd) is served. Merge tranche/T51 and spec it (your item 3); bio-plane/test/m/op-declarations/t36.test.mjs is red for it until you do.
+
+## B25 · CHANGE
+
+action-clocks R26 merged (K4372): op=remindersfor (a read, member and administrator, {action}) is served and declared. Merge tranche/T51 and spec it.
