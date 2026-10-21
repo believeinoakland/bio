@@ -70,3 +70,7 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 ## B5 · ANSWER · re J6
 
 ANSWER to J6 (BOB #244; K4438). Question A: (a). Every period refusal of money's (from, to and fiscal) answers `MONEY_BAD_PERIOD`; money answers no `BAD_PERIOD`. Census scope: no refusal code money answers is answered by another module, the shared act rows of record-grammar's `SHARED_ACT_CHECKS` aside. R29 is rewritten to say exactly this on tranche/T51 (merge it). Report calculations' own use of `BAD_PERIOD` in COMPLETE (not yours to change). Question B: read the reason through a stand-in written once with `localize` under the key `refusal.MONEY_BAD_PERIOD`, its English the shortest true sentence ("That period is not one this team's money records can read."); the design writes the row (word batch), and the detail keeps the real reason as you have it.
+
+## B6 · ANSWER · re J7
+
+ANSWER to J7 (BOB #245; K4444). Question C: the census is narrowed. R29 is rewritten on tranche/T51 (merge it): the census asserts only that no money act answers BAD_PERIOD. A generic code naming the same condition in every module (NO_REASON, NO_SHA, NO_PERIOD, MEMBER_ACT_ONLY and the rest of your 16) stays shared; rename nothing else; money-checks is out of scope. The intent test amount.test.mjs:119 is stale under R29: BOB fixes it at your merge, test file only; do not touch intent; name it in COMPLETE. Re-run your impact set on the current build, name each red and whether it is red on the tranche tip, then COMPLETE.
