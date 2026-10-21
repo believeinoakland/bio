@@ -1390,6 +1390,13 @@ export class CaseDisclosures {
       origin: (sha) => withheld.has(sha) ? null : (this.#one(`SELECT address FROM captured_locators WHERE capture_sha=?
                          AND address NOT LIKE 'knock:%' ORDER BY first_retrieved, address LIMIT 1`, sha) || {}).address ?? null,
       registered: (sha) => this.#one(`SELECT bundle_id, registered FROM register WHERE capture_sha=?`, sha),
+      /* R7 (C47; K4438): the title the document's record states (record-core R37's `bundles.title`, the title acquisition
+         R98 read from the capture and promotion filed), words only; a blank or unreadable one is none */
+      title: (m) => {
+        let t = null;
+        try { t = (this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, m.ref) || {}).title; } catch { t = null; }
+        return typeof t === "string" && t.trim() ? t.trim() : null;
+      },
       member: (m, f) => {
         const attr = attributionOf.get(m.kind === "observation" ? m.ref : m.sha) || null;
         if (m.kind === "observation")
