@@ -300,3 +300,7 @@ Size (session_0173nrFoFHQot9QMnmzzRxdP): test runs 9, module lines 2620
 ## J20 · QUESTION
 
 WORDS (no row exists; stand-ins in use, nothing invented): screen.capture.address.filedhere ({project}: 'Filed here as well; it stays held under {project}'), screen.capture.later.none (no request for later to list), refusal.CAPTURE_NOT_KEPT (drawn meanwhile from the answer's translation), and a next-step sentence for an unread non-picture upload. Add the first two to SCREEN_KEYS.capture when the rows exist.
+
+## J21 · COMPLETE
+
+COMPLETE (B22): C9 R49, C14, C17 R2, C23, C25 R54, C28, C29, C35, C78, C94, FC-23/N4, C81 met; details, proposed R57 and R58, stand-in keys and reports in my record (B22 section). screens-intake 241/241, screens-inquiry 447/447, control-plane 333/340 (7 reds red on the tranche tip too). format, architecture, coverage, words, ownership 0. Size (session_0173nrFoFHQot9QMnmzzRxdP): test runs 9, module lines 2620
