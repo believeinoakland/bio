@@ -219,6 +219,8 @@ export const HELD_FIELDS = Object.freeze(["full", "picker"]);
 /* R77 (DEC-167 (8); K1881, BOB's): the most held files an archive's row carries; the rest are read through
    `acquisition.archiveList`. */
 export const HELD_FILES_IN_ROW = 50;
+/** R77 (fix round 4; P10): the most documents `bundle_ids` names in one read: the ones a screen draws, whose heavy fields it asks for. */
+export const HELD_IDS_MAX = 50;
 /** R96: the most captures at one address `heldAt` counts; `truncated` says when more lie past. */
 export const HELD_AT_VERSIONS_MAX = 200;
 /* R91 (T49; N1080; M-T49-3): the one wait a page of held captures gives its documents' answers, in milliseconds: R78's
@@ -1435,8 +1437,12 @@ export class Capture {
    *
    *  R91 (T49; N1080): the examination of each document the page shows and the archive grouping of each row are asked
    *  together, once each, under one wait of `HELD_PAGE_WAIT_MS`; an answer not given in time reads undetermined
-   *  (`#pageAnswers`). Nothing else in the answer changes. */
-  async heldCaptures({ member = null, project = null, bundle_id: bundleId = null, sort = null, dir = null, limit = null, after = null,
+   *  (`#pageAnswers`). Nothing else in the answer changes.
+   *
+   *  P10 (fix round 4; K4429): a screen reads the page as `picker` rows, and `bundle_ids` (at most `HELD_IDS_MAX`) for the heavy
+   *  fields of the documents it draws; only those rows are answered, the list and its order are the page's, and the
+   *  store's reads overlap the examinations and groupings of the same page. */
+  async heldCaptures({ member = null, project = null, bundle_id: bundleId = null, bundle_ids: bundleIds = null, sort = null, dir = null, limit = null, after = null,
                        viewer = undefined, now = null, state = null, fields = null } = {}) {
     const by = sort == null || sort === "" ? "age" : sort;
     if (!HELD_SORTS.includes(by)) return Capture.#badArgument("heldcaptures", "sort", HELD_SORTS.join(" | "), by);
@@ -1450,6 +1456,9 @@ export class Capture {
     /* R77 (T51; C14): `full` (absent or empty) is R77's rows; `picker` the cheap rows; any other is refused as an unknown `state` is. */
     const shape = fields == null || fields === "" ? "full" : fields;
     if (!HELD_FIELDS.includes(shape)) return Capture.#badArgument("heldcaptures", "fields", HELD_FIELDS.join(" | "), shape);
+    /* R77 (fix round 4; P10): `bundle_ids` names the documents a screen draws; only they are answered, in the page's order. */
+    const picked = Capture.#idsOf(bundleIds);
+    if (picked === null) return Capture.#badArgument("heldcaptures", "bundle_ids", `a list of at most ${HELD_IDS_MAX} document ids`, bundleIds);
     const cap = limitOf(limit);
     const from = after ? keyOf(after, 3) : null;
     if (after && !from) return badCursor();
@@ -1464,11 +1473,12 @@ export class Capture {
       `SELECT * FROM (SELECT bundle_id, title, project, since, standing, src_address, src_via, src_retrieved, ${k0} AS k0, ${k1} AS k1 FROM (
          SELECT b.bundle_id, b.title, b.project, b.current_state AS standing, ${Capture.#SINCE} AS since, ${Capture.#SOURCE("address")} AS src_address,
                 ${Capture.#SOURCE("via")} AS src_via, ${Capture.#SOURCE("first_retrieved")} AS src_retrieved
-           FROM bundles b WHERE ${where.sql})) q
+           FROM bundles b WHERE ${where.sql}${picked.length ? " AND b.bundle_id IN (SELECT value FROM json_each(?))" : ""})) q
         WHERE ${key ? `(k0 > ? OR (k0 = ? AND (k1 ${asc ? ">" : "<"} ? OR (k1 = ? AND bundle_id > ?))))` : "1=1"}
         ORDER BY k0 ASC, k1 ${asc ? "ASC" : "DESC"}, bundle_id ASC LIMIT ?`,
-      ...where.args, ...(key ? [key[0], key[0], key[1], key[1], key[2]] : []), n);
-    /* R77 (DEC-167 (8)): whether a document is a row of this list (the same filters), memoised for the page. */
+      ...where.args, ...(picked.length ? [JSON.stringify(picked)] : []), ...(key ? [key[0], key[0], key[1], key[1], key[2]] : []), n);
+    /* R77 (DEC-167 (8)): whether a document is a row of this list (the same filters; `bundle_ids` selects what is answered, it does
+       not shrink the list, so an archive asked by its id still groups the files beside it), memoised for the page. */
     const isRow = new Map();
     const rowOf = (bundleId) => {
       if (!bundleId) return false;
@@ -1499,7 +1509,10 @@ export class Capture {
     const facts = this.#pageFacts(page.map((r) => r.bundle_id), { aside, vouched, picker: shape === "picker" });
     /* R77 (T51 fix round 2; C10): whether the evidence store holds an object under each row's fingerprint. */
     /* R77 (T51 fix round 3; C14): the picker row answers it from the size the register recorded and asks the store nothing. */
-    const wholes = shape === "picker" ? new Map() : await this.#wholeOf(page.map((r) => facts.first.get(r.bundle_id)?.capture_sha));
+    /* R91 (fix round 4; P10): the store's reads and the page's examinations and groupings are begun together, and the page waits for both. */
+    const [wholes, answers] = shape === "picker" ? [new Map(), null] : await Promise.all([
+      this.#wholeOf(page.map((r) => facts.first.get(r.bundle_id)?.capture_sha)),
+      this.#pageAnswers(page, { viewer, rowOf, vouched, facts })]);
     const wholeOf = shape === "picker"
       ? (id) => Capture.#wholeBySize(facts.first.get(id))
       : (id) => { const s = facts.first.get(id)?.capture_sha; return s ? wholes.get(s) ?? null : null; };
@@ -1517,9 +1530,6 @@ export class Capture {
       return { ok: true, held: rows, state: list, sort: by, dir: way, limit: cap, truncated,
                next: truncated ? cursorOf([String(last.k0), String(last.k1), last.bundle_id]) : null };
     }
-    /* R91: R78's examination and the archive grouping, asked once for each document the page shows, together, under the
-       page's one wait. */
-    const answers = await this.#pageAnswers(page, { viewer, rowOf, vouched, facts });
     /* R77 (T51 fix round 2; C14): the page's captures are graded in one batch (provenance R71), never one read for each. */
     const grades = this.#gradesOf(page.map((r) => facts.first.get(r.bundle_id)?.capture_sha));
     const gradeOf = (sha) => grades.get(sha) ?? null;
@@ -1546,6 +1556,16 @@ export class Capture {
     }
     return { ok: true, held: rows, state: list, sort: by, dir: way, limit: cap, truncated,
              next: truncated ? cursorOf([String(last.k0), String(last.k1), last.bundle_id]) : null };
+  }
+
+  /* R77 (fix round 4; P10): the document ids `bundle_ids` names, as a list of at most `HELD_IDS_MAX` distinct non-blank strings: absent,
+     null, blank or empty names none (`[]`); a comma-separated string (the op's query) is split; anything else is `null`, a refusal. */
+  static #idsOf(x) {
+    if (x == null || x === "") return [];
+    const list = typeof x === "string" ? x.split(",").map((i) => i.trim()).filter(Boolean) : x;
+    if (!Array.isArray(list) || list.some((i) => typeof i !== "string" || !i.trim() || i.length > 300)) return null;
+    const distinct = [...new Set(list)];
+    return distinct.length > HELD_IDS_MAX ? null : distinct;
   }
 
   /* R77 (T51 fix round 3; C14): whether the copy is held whole, from the size the register recorded when the capture was kept
@@ -3134,7 +3154,7 @@ export function captureOps(c, url, body, env, h = {}) {
        instant is this instance's clock. */
     captureseenin: () => c.fileSeenIn({ captureSha: (body && body.captureSha) ?? q("captureSha"), project: (body && body.project) ?? q("project"),
                                         by: q("by"), viewer: q("viewer") ?? "" }),
-    heldcaptures: () => c.heldCaptures({ member: q("member"), project: q("project"), bundle_id: q("bundle_id"), sort: q("sort"), dir: q("dir"), ...page,
+    heldcaptures: () => c.heldCaptures({ member: q("member"), project: q("project"), bundle_id: q("bundle_id"), bundle_ids: q("bundle_ids"), sort: q("sort"), dir: q("dir"), ...page,
                                          state: q("state"), fields: q("fields"), viewer: q("viewer") ?? "" }),
     heldsetaside: () => c.setAside({ ids: body && body.ids, reason: body && body.reason, author: q("by") ?? q("author"),
                                      viewer: q("viewer") ?? "" }),
@@ -3170,7 +3190,7 @@ export const DECLARED_OPS = Object.freeze({
   archivelist: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("capture.declared.archivelist", "read: a held archive's entries, each one's state and, when not filed, its refusal by name; writes nothing"),
     fields: { accepts: ["archive","archiveSha","state","limit","after"], requires: [["archive","archiveSha"]] } },
   heldcaptures: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("capture.declared.heldcaptures", "read: the collected documents not set aside, awaiting a member's decision, as the viewer may see them; writes nothing"),
-    fields: { accepts: ["member","project","bundle_id","sort","dir","limit","after","state","fields"], requires: [] } },
+    fields: { accepts: ["member","project","bundle_id","bundle_ids","sort","dir","limit","after","state","fields"], requires: [] } },
   heldsetaside: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("capture.declared.heldsetaside", "held-directed: a member sets one or more held documents aside with one reason, keyed by their ids, reached from the held list; the set is refused whole or recorded whole, and nothing is deleted"),
     fields: { accepts: ["ids","reason"], requires: ["ids","reason"] } },
   reattest: { classes: ["admin","member","probe"], mutating: true, weight: "attested", description: localize("capture.declared.reattest", "self-attested-capture-directed: asks a timestamp authority, and for a public locator a fresh co-archive, over a capture held without co-attestation, keyed by capture sha; appends a late attestation stating it proves the bytes existed by now, not at capture; reached from a case's pre-flight"),
