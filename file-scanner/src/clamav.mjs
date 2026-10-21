@@ -292,8 +292,10 @@ export async function mirror(deps) {
 export async function signatureState(bucket) {
   const current = bucket ? await readJson(bucket, CURRENT) : null;
   const state = bucket ? await readJson(bucket, STATE) : null;
+  const request = bucket ? await readJson(bucket, REQUEST) : null;
   return { versions: signaturesOf(current), published: current ? current.published : null,
     mirrored_at: current ? current.mirrored_at : null, last_attempt: state ? state.last_attempt : null,
     last_error: state ? state.last_error : null, stage: state && state.stage ? state.stage : null,
-    stage_at: state && state.stage_at ? state.stage_at : null };
+    stage_at: state && state.stage_at ? state.stage_at : null,
+    ...(request && request.requested_at ? { request: request.requested_at } : {}) };
 }

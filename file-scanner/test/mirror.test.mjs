@@ -364,6 +364,7 @@ test('R6 C84 the walker\'s row: an async run the platform cuts after the respons
   assert.deepEqual([during.last_attempt, during.last_error, during.stage, during.stage_at], [iso(NOW), 'RUN_STARTED', 'download', iso(NOW)], 'the cut run left its start and its stage');
   assert.equal(during.versions, null);
   assert.ok(requestOpen(bucket), 'and the request stays open for the cron');
+  assert.equal(during.request, iso(NOW), 'B14: /version states the instant the open request was written');
   // The next tick, ten minutes on, in a new invocation: it finishes the request, fetching the databases whole.
   const remote = freshclamLike(goodFiles());
   const out = await scheduled(at(bucket, NOW + 10 * MIN, { updater: remote }));
@@ -372,6 +373,7 @@ test('R6 C84 the walker\'s row: an async run the platform cuts after the respons
   const done = await sigs(bucket);
   assert.deepEqual([done.versions.daily, done.last_error, done.stage, done.stage_at, done.last_attempt], [27788, null, null, null, iso(NOW + 10 * MIN)]);
   assert.ok(!requestOpen(bucket), 'the finished request is closed');
+  assert.ok(!('request' in done), 'B14: with no open request the key is absent');
 });
 
 test('R6 C84 the door itself leaves the trace: cut the moment the 202 is answered, /version already shows the run started and the request is open', async () => {
