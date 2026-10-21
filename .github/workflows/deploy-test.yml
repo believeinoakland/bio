@@ -6,7 +6,9 @@
 # copy not marked a test instance ([NOT_A_TEST_INSTANCE]) and any other account ([WRONG_ACCOUNT]), and every step
 # logs its `test deploy:` and `rollback :` lines. The steps and their order are bundler's (BUNDLER #24's record).
 # A container member's image must already be published (`container-images.yml`); its marker names the digest.
-# Started by hand (Actions tab, or BOB with the GitHub tools).
+# Started by hand (Actions tab, or BOB with the GitHub tools) once this file is on `main`; until then (GitHub dispatches
+# only workflows on the default branch, and `main` never moves while a tranche runs, P12) by pushing the branch's tip
+# to `deploy-test/<copy>/dry-run` (every step --dry-run) or `deploy-test/<copy>/deploy` (K4290, K4296).
 name: deploy-test
 
 on:
@@ -25,12 +27,14 @@ on:
         required: false
         type: boolean
         default: false
+  push:
+    branches: ["deploy-test/*/dry-run", "deploy-test/*/deploy"]
 
 permissions:
   contents: read
 
 concurrency:
-  group: deploy-test-${{ inputs.copy }}
+  group: deploy-test-${{ inputs.copy || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
@@ -43,12 +47,24 @@ jobs:
       CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CF_ACCT: 20b533579290b9b93168345edd3b7f72
       CLOUDFLARE_ACCOUNT_ID: 20b533579290b9b93168345edd3b7f72
-      CIVICSMITH_TEST_INSTANCE: ${{ inputs.copy }}
-      DRY: ${{ inputs.dry_run && '--dry-run' || '' }}
     steps:
+      - name: what to deploy, and where
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "push" ]; then
+            ref="${{ github.ref_name }}"; copy="${ref#deploy-test/}"; mode="${copy##*/}"; copy="${copy%/*}"
+            [ "$mode" = "dry-run" ] && dry="--dry-run" || dry=""
+            src="${{ github.sha }}"
+          else
+            copy="${{ inputs.copy }}"; dry="${{ inputs.dry_run && '--dry-run' || '' }}"; src="${{ inputs.branch }}"
+          fi
+          case "$copy" in ''|*[!a-z0-9-]*) echo "bad copy name: $copy"; exit 1;; esac
+          echo "COPY=$copy" >> "$GITHUB_ENV"; echo "CIVICSMITH_TEST_INSTANCE=$copy" >> "$GITHUB_ENV"
+          echo "DRY=$dry" >> "$GITHUB_ENV"; echo "SRC=$src" >> "$GITHUB_ENV"
+          echo "test deploy: copy $copy, source $src, ${dry:-real run}"
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ env.SRC }}
       - uses: actions/setup-node@v4
         with:
           node-version: "26.10.0"
@@ -67,7 +83,7 @@ jobs:
           set -euo pipefail
           for member in $(node -e 'import("./bio-plane/scripts/fleet-bundle.mjs").then(async (m) => { const list = await m.discoverMembers(); for (const d of list) console.log(d.name ?? d.member ?? d); })'); do
             echo "::group::$member"
-            node bio-plane/scripts/deploy-fleet.mjs "$member" --instance "${{ inputs.copy }}" --test-instance $DRY
+            node bio-plane/scripts/deploy-fleet.mjs "$member" --instance "$COPY" --test-instance $DRY
             echo "::endgroup::"
           done
       - name: deploy the plane
@@ -75,4 +91,4 @@ jobs:
         run: |
           set -euo pipefail
           version=$(node -p 'require("./package.json").version')
-          node scripts/deploy.mjs "${{ inputs.copy }}" "$version" dist/bio-plane.bundled.mjs --test-instance $DRY
+          node scripts/deploy.mjs "$COPY" "$version" dist/bio-plane.bundled.mjs --test-instance $DRY
