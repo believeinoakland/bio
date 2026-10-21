@@ -156,3 +156,18 @@ test("R41 (3) the founder, who holds no handle, is named by the design's word an
   assert.equal(d.findings[0].attestor.member, word("shell.card.member"));
   assert.ok(!JSON.stringify(d.findings).includes('"olive"'));
 });
+
+test("R41 (3), R38 what each published case froze for a question names its signers by handle too, never by member id", async () => {
+  const ids = { writer: "mem-7731", publisher: "mem-4821", handles: { "mem-7731": "rowan", "mem-4821": "olive" } };
+  const { w } = await evidenceWorld({ ids });
+  const entry = w.read("publishedfrozen", { id: F }).cases[0];
+  assert.equal(entry.signed_by.member, "olive", "the case document's signer");
+  assert.equal(entry.finding_signed_by.member, "olive", "the finding's own signer");
+  assert.deepEqual(entry.delivered_by, { kind: "member", member: "olive" }, "and who delivered the case document");
+  assert.ok(entry.signed_by.key_b64 && entry.finding_signed_by.key_b64, "the keys beside the names are untouched");
+  assert.ok(!JSON.stringify(entry).includes("mem-4821"), "no member id among the names");
+  /* CONTROL: the founder with no handle is named by the design's word, as `publishedCase` names her. */
+  const members = { memberFacts: (id) => (id === "admin" ? { cover: null, handle: null, role: "admin", status: "active" } : null) };
+  const founder = await evidenceWorld({ members, ids: { writer: "admin", publisher: "admin" } });
+  assert.equal(founder.w.read("publishedfrozen", { id: F }).cases[0].signed_by.member, word("member.founder.unnamed"));
+});
