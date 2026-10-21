@@ -5,7 +5,7 @@
 
    `plane` spreads this map into its route map (R5) beside the owners' own, handing it each owner's one instance through
    `of`, a set of getters (`of.aiUse()`, `of.aiRuns()`, `of.caseAccount()`, `of.review()`, `of.legEarning()`,
-   `of.capture()`, `of.steps()`, `of.investigation()`, `of.questionExplorer()`, since T47 `of.actionClocks()` and since T51 `of.filings()` and `of.actionPlans()`), each asked only when its op is served. */
+   `of.capture()`, `of.steps()`, `of.investigation()`, `of.questionExplorer()`, since T47 `of.actionClocks()` and since T51 `of.filings()`, `of.actionPlans()`, `of.extraction()` (R117) and `of.projectRoster()` (R118)), each asked only when its op is served. */
 
 import { localize } from "../setup-words/index.mjs";
 
@@ -95,6 +95,19 @@ export function controlPlaneOwnerOps(of, url, body) {
        caller hands, never a request's field, so one in the address reaches nothing. */
     captureupload: () => of.capture().uploadCapture({ bytes: body, statement: q("statement"), name: q("name"), by: q("by"),
                                                                    ...(q("type") !== null ? { type: q("type") } : {}) }),
+    /* R117 (fix round 3, C5, C17; extraction R80): STORE-INTERNAL, no spec, so no caller reaches it (R2): the door asks extraction to
+       read a home that has no reading once its bytes are held whole. The act is extraction's in-process `readHeld`, answered as
+       it answers (`{ok, read, why?}`); `sha` and `store` are the door's, from the capture's answer and the namespace it landed in.
+       The arm exists once the plane hands the getter `of.extraction` (a door without it routes no `readheld`). */
+    ...(typeof of.extraction === "function" ? {
+      readheld: () => of.extraction().readHeld({ sha: q("sha"), storeName: q("store") || "bio" }) } : {}),
+    /* R118 (fix round 3, C14, P2.2; project-roster R42, review R43): `projectlist` is project-roster's read, handed the reader of
+       the drafts shared for review, review's `sharedDraftsByProject({projectIds, viewer})`, as its `sharedDraftsOf`; project-roster
+       calls it once for the page's projects. It replaces the roster's own arm (the one that reads `env.sharedDraftsOf`, which the
+       door never holds), with the same request fields. Present once the plane hands the getter `of.projectRoster`. */
+    ...(typeof of.projectRoster === "function" ? {
+      projectlist: () => of.projectRoster().projectList({ viewer: q("viewer"), limit: q("limit"), after: q("after"),
+        sharedDraftsOf: (asked) => of.review().sharedDraftsByProject(asked) }) } : {}),
     /* R71 (steps R9): STORE-INTERNAL, no spec, so no caller reaches it (R2): the door ties a member's landed capture to
        the step she named, `recordProduct` asked only for a step she may see; one she may not is answered as steps
        answers an unseen step. */

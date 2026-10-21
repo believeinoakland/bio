@@ -1,27 +1,35 @@
-/* control-plane R75 (T46; N897 (1); DEC-122 (3); N559; `draft-T46-interface.md` §1.2): THE MEMBER INTERFACE'S TWO ROUTES,
+/* control-plane R75 (T46; N897 (1); DEC-122 (3); N559; `draft-T46-interface.md` §1.2): THE MEMBER INTERFACE'S ROUTES,
    beside `/` (R1), answered before `path` and `op` exist, as `/` is.
      - `GET /app` and `GET /app/<path>` (any path below it but the assets) answer `interface-shell`'s page, built at each
        request by `interfacePage` over the screen modules' `SCREENS` (R81: nine, with screens-wizards' guide), `text/html`, `cache-control: no-store`; the
        routing below `/app` is the page's own (interface-shell R9), so every such path answers the same page. The page
-       policy and its nonce are `answer-envelope`'s (its R6), applied to every HTML answer on the way out. A page that
+       policy is `answer-envelope`'s (its R6), applied to every HTML answer on the way out: for this page it names the shell's script by its
+       hash, in place of a nonce (fix round 3, C15). A page that
        cannot be built (a broken screen: `interfacePage` throws, naming it) is never served: the throw reaches the door's
        one catch, `PLANE_INTERNAL_ERROR` (R25).
+     - `GET /app/shell-<version>.js` answers the shell's script (interface-shell's `interfaceScript`) at the address that carries the release
+       version, `text/javascript`, `cache-control: public, max-age=31536000, immutable` (R75, fix round 3); only the plane's own version is
+       served there, any other is 404.
      - `GET /app/assets/<name>` answers `interface-assets`' file of that name (`ASSET_FILES`, its R1; a name may hold `/`,
        `fonts/<f>`) with its content type and its bytes, a face's decoded from base64; `cache-control: no-cache` with an
        `etag` of the plane's version and the name, so the browser keeps the file and reuses it, answered 304, while the
        plane's version is unchanged. Any other name is answered 404 with no body of the record's.
-   Both go through the same namespace and address gates as `/` (`admission` R1, R20), which the door runs before calling
+   All go through the same namespace and address gates as `/` (`admission` R1, R20), which the door runs before calling
    here. No credential is read on either route: the page holds no secret, and every read is an op under the member's
    session. */
+
+import { versionOfScriptPath } from "../interface-shell/index.mjs";
 
 const APP = "/app";
 const ASSETS = "/app/assets/";
 
-/** Which of the two routes a request names: `"page"`, `"asset"`, or null for neither. Only a GET (or HEAD) is either. */
+/** Which of the three routes a request names: `"page"`, `"asset"`, `"script"` (the shell's script at its versioned address,
+ *  R75), or null for none. Only a GET (or HEAD) is any. */
 export function appRouteOf(req, url) {
   if (req.method !== "GET" && req.method !== "HEAD") return null;
   const p = url.pathname;
   if (p.startsWith(ASSETS)) return "asset";
+  if (versionOfScriptPath(p) !== null) return "script";
   if (p === APP || p.startsWith(`${APP}/`)) return "page";
   return null;
 }
@@ -32,6 +40,19 @@ export function appPage(req, { interfacePage, screens, options = {}, status = 20
   const html = interfacePage(screens, options);
   return new Response(req.method === "HEAD" ? null : html,
     { status, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
+}
+
+/* R75 (fix round 3, C15, P2.4; K4353, K4356; interface-shell R1): THE SHELL'S SCRIPT, at the address that carries the release version
+   (`/app/shell-<version>.js`, interface-shell's `scriptPath`): `text/javascript`, kept a year and `immutable`, so a caller that holds
+   a release's script is not sent it again and a new release has a new address. Only the plane's own version is served there: the
+   script of any other version is not this release's, and is answered 404 as an unknown asset is. The page that loads it keeps
+   `no-store` (`appPage`). `source` is interface-shell's `interfaceScript` over the screens the page is built from. */
+export const SCRIPT_CACHE = "public, max-age=31536000, immutable";
+export function appScript(req, url, { source, version }) {
+  const here = version === undefined || version === null || version === "" ? "0" : String(version);
+  if (versionOfScriptPath(url.pathname) !== here) return notFound();
+  return new Response(req.method === "HEAD" ? null : source, { status: 200,
+    headers: { "content-type": "text/javascript; charset=utf-8", "cache-control": SCRIPT_CACHE, "x-content-type-options": "nosniff" } });
 }
 
 /* R104 (T50; N1174, B-14; DEC-299 (11), DEC-301 (3); interface-shell R79): AN ADDRESS OUTSIDE THE TEAM'S PAGES DRAWS A PAGE.
