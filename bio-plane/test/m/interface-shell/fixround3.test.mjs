@@ -1,9 +1,11 @@
 /* interface-shell R112 (fix round 2, wave 3; K4334, C89's shell half): an act may name the answer codes that are its success.
    Such an answer is drawn as done, in the success style, with the code's own row as its sentence, and the act's re-reads run
    as after any success; a code it does not name is a refusal as ever. Every sentence is read through `setup-words` (R70). */
+import "./register.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { boot, ok, refused, silent, ADMIN, fitSend } from "./harness.mjs";
+import { checkScreens } from "../../../src/interface-shell/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 
 const WHO = { ...ADMIN, capabilities: ["contribute", "administer", "create_projects", "publish"] };
@@ -98,4 +100,14 @@ test("R7 (C66) the frame's own queue read asks a limit the queue serves (200), i
   assert.ok(frame.length >= 1, "the frame reads the queue");
   for (const r of frame) assert.equal(r.query.limit, "200");
   assert.ok(p.byOp("queue").some((r) => r.query.limit === "5"), "the screen's own read keeps its limit");
+});
+
+/* R117 (fix round 3; C84, C64): the two acts the registry does not yet list on their screens are named re-points, each until it does */
+test("R117 a security screen naming scanmirror and a places screen naming officeconfirm are served; control: another unlisted op on those screens still throws", () => {
+  const screen = (id, op) => ({ id, render: () => "", acts: [{ op }] });
+  assert.equal(checkScreens([screen("security", "scanmirror")]), true);
+  assert.equal(checkScreens([screen("places", "officeconfirm")]), true);
+  assert.throws(() => checkScreens([screen("security", "officeconfirm")]), /security.*officeconfirm/);
+  assert.throws(() => checkScreens([screen("places", "scanmirror")]), /places.*scanmirror/);
+  assert.throws(() => checkScreens([screen("security", "groupnameset")]), /security.*groupnameset/);
 });
