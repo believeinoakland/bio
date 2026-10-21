@@ -98,3 +98,7 @@ Tests (t51.test.mjs, each naming R2): list for a kind with deadlines, the empty 
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs action-clocks`: 0. `checks/coverage.mjs action-clocks`: 26 of 26 live ids named, 0. `checks/words.mjs action-clocks`: 0 findings. `checks/ownership.mjs action-clocks tranche/T51 job/T51/action-clocks`: 5 files, 0 failures.
 
 Size (session_019moQM11yaAcc7xfvrEDnxX): test runs 5, module lines 2162
+
+## J4 · COMPLETE
+
+C53 met: action-clocks R26. op=remindersfor (read, member and admin) answers remindersFor({action, viewer}) or actions.noSuchAction; declared in DECLARED_OPS as remindersfor (mutating false, weight read, accepts/requires action). Tests (written first, seen failing): t51 R26 through the op with controls (invisible, absent, viewer from stamp only), declared-ops R25 R26, pinned op list updated. Module suite 86/86; format, architecture, coverage (26/26), words, ownership 0 failures. Impact suites: 8 reds (pdf-worker, scheduler, affordances, queue, screens-wizards, control-plane, plane, journey-check) identical on the tranche tip, inherited. op-declarations/op-grades rows for remindersfor are theirs. Details in the record.
