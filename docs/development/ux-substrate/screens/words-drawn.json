@@ -36899,6 +36899,78 @@
    "en": "Ask {owners}.",
    "protected": false,
    "note": "DEC-391: B435 project, end of a refusal that only an owner can act: names the owners to ask. Placeholder {owners}, their names joined with commas."
+  },
+  {
+   "key": "screen.action.minutes.notfound",
+   "en": "These words are not in the document you chose. Copy them exactly as the minutes write them. Nothing was written.",
+   "protected": false,
+   "note": "DEC-393: B437 1: in-place refusal in the minutes fold (screens-action R55): the typed passage is not in the chosen document"
+  },
+  {
+   "key": "screen.action.minutes.needed",
+   "en": "The meeting, its date, the document and the passage are all needed. Nothing was written.",
+   "protected": false,
+   "note": "DEC-393: B437 1: in-place refusal in the minutes fold: one of the four parts is missing"
+  },
+  {
+   "key": "screen.home.todo.vouch.one",
+   "en": "Vouch for the photo you captured on {place}",
+   "protected": false,
+   "note": "DEC-393: B437 2: Home, the one-photo form of screen.home.todo.vouch"
+  },
+  {
+   "key": "queue.letter-approval.summary",
+   "en": "The letter {title} is waiting for your approval",
+   "protected": false,
+   "note": "DEC-393: B437 2: queue kind letter-approval (minted by the design for screens-daily and its producer): a letter awaiting approval"
+  },
+  {
+   "key": "queue.letter-approval.detail",
+   "en": "A member prepared this letter, and it needs approval before it is sent. Read it, then approve it. Your team's Civicsmith sends nothing: once it is approved, you send it and record the sending.",
+   "protected": false,
+   "note": "DEC-393: B437 2: queue kind letter-approval, its detail"
+  },
+  {
+   "key": "screen.home.ailimit.set",
+   "en": "Set the limit",
+   "protected": false,
+   "note": "DEC-393: B437 2: Home, the button of ailimitset as drawn in place"
+  },
+  {
+   "key": "screen.home.ailimit.remove",
+   "en": "Remove",
+   "protected": false,
+   "note": "DEC-393: B437 2: Home, the button of ailimitset that removes the limit, as drawn in place"
+  },
+  {
+   "key": "screen.queue.explore.today",
+   "en": "Explore today",
+   "protected": false,
+   "note": "DEC-393: B437 2: queue, the button of exploreapprove as drawn in place"
+  },
+  {
+   "key": "screen.queue.mute.kind",
+   "en": "Mute this kind",
+   "protected": false,
+   "note": "DEC-393: B437 2: queue, the button of queuemute as drawn in place"
+  },
+  {
+   "key": "screen.queue.check.open",
+   "en": "Open the check",
+   "protected": false,
+   "note": "DEC-393: B437 2: queue, the button on a check-request row, as drawn in place"
+  },
+  {
+   "key": "screen.queue.hint.promote",
+   "en": "Open a question from this",
+   "protected": false,
+   "note": "DEC-393: B437 2: queue, the button of promote on a hint, as drawn in place"
+  },
+  {
+   "key": "screen.queue.vouch.them",
+   "en": "Vouch for them",
+   "protected": false,
+   "note": "DEC-393: B437 2: queue, the button of release on held captures, as drawn in place"
   }
  ],
  "rewrite": {

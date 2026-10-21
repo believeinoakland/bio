@@ -6067,3 +6067,18 @@ decided: 2026-10-21 · the design session (P17)
 the design: one verb per idea: "Defer it" (as `screen.queue.defer`, `state.item.deferred`), "{document} was deferred"; "Withdrew this hunch"; "Dismiss this lead". "Grade" for what the reruns compare and for a source's or observation's standing ("Their grades: {text}", "Our grades: {text}"; "reading" stays one whole account of a question). Plainer labels: "Which passage the question is about", "Which project asks", "The projects that asked", "What in the record shows it", "Who holds it"; "Checked: the department's own site published it"; "the web address". Reeval causes: a cited case's status changed; "Something this question rests on was named wrongly". The contradiction screen's purpose says "in tension", as its name, and names its four ways to settle it. Kept: "About which party"; the writing help's empty-field line (matches `screen.case-editor.help.needed`).
 reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-refs.js`.
 owed: none.
+
+### DEC-393 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B437, K4262: gaps the screen jobs found while drawing)
+for: design
+question: Which rows and drawings close B437's four gaps, and which button words are meant on the queue and Home?
+why it is Bob's: it is not (P17): words and drawing beneath his rulings.
+provisional: as below.
+alternative: the registry's general act names on every button (rejected: a button says what it does in its own place).
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: (1) the minutes fold's two in-place refusals keyed (`screen.action.minutes.notfound`, `.needed`). (2) `screen.home.todo.vouch.one`; a letter awaiting approval is the queue kind `letter-approval` (`queue.letter-approval.summary` with {title}, `.detail`); on the queue and Home the buttons say what they do on their row, the drawn words, while `act.<op>.label.<screen>` stays the act's name in menus and explanations; the drawn words' keys are listed in U428 (six minted: `screen.home.ailimit.set`, `.remove`, `screen.queue.explore.today`, `.mute.kind`, `.check.open`, `.hint.promote`, `.vouch.them`). (3) the docket's "Help me write this" stays: `field()` draws it under the summary whenever the team's assistant is on, as on other screens. (4) the reads lists regenerated from the tranche, so `words-reads.json` holds the updates screen's runtime keys.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (rows noted "DEC-393"), `screens/words-reads.json`.
+owed: none.

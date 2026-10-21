@@ -6856,6 +6856,20 @@ W.append(dict(key='screen.project.stage.reached', en='{stage} · reached', prote
 W.append(dict(key='screen.project.stage.not_reached', en='{stage} · not reached yet', protected=False, note='DEC-391: B435 project, "What each stage needs": label of a stage not yet reached. Placeholder {stage}, the stage name.'))
 W.append(dict(key='screen.project.ask_owners', en='Ask {owners}.', protected=False, note='DEC-391: B435 project, end of a refusal that only an owner can act: names the owners to ask. Placeholder {owners}, their names joined with commas.'))
 
+# DEC-393: B437 (K4262)
+W.append(dict(key='screen.action.minutes.notfound', en='These words are not in the document you chose. Copy them exactly as the minutes write them. Nothing was written.', protected=False, note='DEC-393: B437 1: in-place refusal in the minutes fold (screens-action R55): the typed passage is not in the chosen document'))
+W.append(dict(key='screen.action.minutes.needed', en='The meeting, its date, the document and the passage are all needed. Nothing was written.', protected=False, note='DEC-393: B437 1: in-place refusal in the minutes fold: one of the four parts is missing'))
+W.append(dict(key='screen.home.todo.vouch.one', en='Vouch for the photo you captured on {place}', protected=False, note='DEC-393: B437 2: Home, the one-photo form of screen.home.todo.vouch'))
+W.append(dict(key='queue.letter-approval.summary', en='The letter {title} is waiting for your approval', protected=False, note='DEC-393: B437 2: queue kind letter-approval (minted by the design for screens-daily and its producer): a letter awaiting approval'))
+W.append(dict(key='queue.letter-approval.detail', en="A member prepared this letter, and it needs approval before it is sent. Read it, then approve it. Your team's Civicsmith sends nothing: once it is approved, you send it and record the sending.", protected=False, note='DEC-393: B437 2: queue kind letter-approval, its detail'))
+W.append(dict(key='screen.home.ailimit.set', en='Set the limit', protected=False, note='DEC-393: B437 2: Home, the button of ailimitset as drawn in place'))
+W.append(dict(key='screen.home.ailimit.remove', en='Remove', protected=False, note='DEC-393: B437 2: Home, the button of ailimitset that removes the limit, as drawn in place'))
+W.append(dict(key='screen.queue.explore.today', en='Explore today', protected=False, note='DEC-393: B437 2: queue, the button of exploreapprove as drawn in place'))
+W.append(dict(key='screen.queue.mute.kind', en='Mute this kind', protected=False, note='DEC-393: B437 2: queue, the button of queuemute as drawn in place'))
+W.append(dict(key='screen.queue.check.open', en='Open the check', protected=False, note='DEC-393: B437 2: queue, the button on a check-request row, as drawn in place'))
+W.append(dict(key='screen.queue.hint.promote', en='Open a question from this', protected=False, note='DEC-393: B437 2: queue, the button of promote on a hint, as drawn in place'))
+W.append(dict(key='screen.queue.vouch.them', en='Vouch for them', protected=False, note='DEC-393: B437 2: queue, the button of release on held captures, as drawn in place'))
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
