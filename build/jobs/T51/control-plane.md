@@ -276,3 +276,7 @@ control-plane fix round 2 (C15, C52, C12, contradictionflag): built and pushed (
 **Checks.** control-plane suite 340/340; format 0; architecture 0; coverage 84/84; words 0 for control-plane; ownership: only `build/requirements/control-plane.md` (accepted).
 
 Size (session_018BaB4jyWLrTAiLbGV6EXVS): test runs 9, module lines 3,990
+
+## J13 · COMPLETE
+
+control-plane fix round 2 complete (C15 R116, C52 pinned, C12 R105/R115 kept state, contradictionflag verified). Suite 340/340, architecture/format/words/coverage 0, ownership only the requirements file. Record: Completion (fix round 2). Reds not mine: affordances catalogue (register-owners lacks contradiction), op-grades R42/R46, plane R24.
