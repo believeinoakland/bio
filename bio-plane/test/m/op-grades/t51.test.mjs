@@ -4,6 +4,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, CONSEQUENCE_STATEMENTS, IRREVERSIBLE_WEIGHT, phoneOf } from "../../../src/op-grades/index.mjs";
 import { T51_NON_ACTS } from "../../../src/op-grades/t51.mjs";
+import { MARKS, MARK_SOURCES, MARKS_KIT_COMMIT } from "../../../src/op-grades/marks.mjs";
+import { JUSTIFICATION_REFUSALS } from "../../../src/op-grades/index.mjs";
+import { declaredSentence, registeredOpGrades } from "./declared.mjs";
 
 const READS = ["holdsdue", "templatebyhandle", "rulefields"];
 
@@ -44,4 +47,47 @@ test("R77 R78 R79: each read op-declarations declares for T51 has a NON_ACTS rea
     assert.equal(RUNG_ABSENT[op], undefined, op);
     assert.equal(Object.hasOwn(MACHINE_REFUSALS, op), false, op);
   }
+});
+
+/* ---- fix round 2, K4323 (DEC-394): the design's new acts ------------------------------------------------------------ */
+test("R46: capturerequests and casedrafts, the reads DEC-394's drawings add, have the kit's mark (Reversible, source the kit at the "
+   + "commit the marks name); contradictionflag has none, its owner grades it", () => {
+  assert.equal(MARKS_KIT_COMMIT, "0310c4953d");
+  for (const op of ["capturerequests", "casedrafts"]) {
+    assert.equal(MARKS[op], "Reversible", op);
+    assert.equal(MARK_SOURCES[op], `mock-kit.js WEIGHT at ${MARKS_KIT_COMMIT}`, op);
+  }
+  /* control: the flag is a graded write, so it is in no mark table (R42's control: no op in RUNGS has an entry) */
+  assert.equal(Object.hasOwn(MARKS, "contradictionflag"), false);
+  assert.equal(Object.hasOwn(MARK_SOURCES, "contradictionflag"), false);
+});
+
+test("R42 R46: over the registered tables every rungless act of the registry at the marks' commit has a mark, and "
+   + "contradictionflag has a rung there", async () => {
+  const reg = await registeredOpGrades();
+  assert.equal(reg.RUNGS.contradictionflag, "reasoned");
+  for (const op of ["capturerequests", "casedrafts"]) {
+    assert.equal(Object.hasOwn(reg.RUNGS, op), false, op);
+    assert.ok(Object.hasOwn(MARKS, op), op);
+  }
+  /* control: a read's mark is dropped and the totality names it */
+  const { capturerequests: _m, ...WITHOUT } = MARKS;
+  assert.equal(Object.hasOwn(WITHOUT, "capturerequests"), false);
+});
+
+test("R1 R5 R51: contradictionflag is reasoned (contradiction R61 refuses it without a reason, FLAG_NO_REASON, in the "
+   + "justification family), writes are never a non-act too, its reason is its owner's word, and its owner's row agrees", async () => {
+  assert.equal(RUNGS.contradictionflag, "reasoned");
+  assert.ok(JUSTIFICATION_REFUSALS.includes("FLAG_NO_REASON"));
+  assert.equal(NON_ACTS.contradictionflag, declaredSentence("contradiction", "contradictionflag"));
+  assert.equal(Object.hasOwn(RUNG_ABSENT, "contradictionflag"), false);
+  assert.equal(Object.hasOwn(MACHINE_REFUSALS, "contradictionflag"), false, "contradiction refuses a machine by its own code");
+  assert.equal(phoneOf("contradictionflag"), true);
+  /* the registration of every owner's declared ops meets no DECLARED_OP_DISAGREES for it (R50 (b)) */
+  const reg = await registeredOpGrades();
+  assert.equal(reg.RUNGS.contradictionflag, "reasoned");
+  assert.equal(reg.NON_ACTS.contradictionflag, NON_ACTS.contradictionflag);
+  /* control: a sibling candidate act keeps its grade, and a different op is not backed by the flag's code */
+  assert.equal(RUNGS.contradictiontakeup, "reasoned");
+  assert.equal(JUSTIFICATION_REFUSALS.filter((c) => c === "FLAG_NO_REASON").length, 1);
 });
