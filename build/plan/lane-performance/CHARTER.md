@@ -5,7 +5,7 @@
 ## The job
 Find why Civicsmith is slow for a member, measure it, trace each slowness to its root cause and the module that owns it, and propose the fix that removes the cause (not a patch per screen), with the gain it expects. Bob's long-term goals bind every proposal (K4164): an architecturally clean, non-fragile source tree; a fix lands in the module that owns the cause, and a cause needing edits across layers is fixed by moving ownership, never by spreading the edit.
 
-**The bar** (provisional until Bob rules, K4351): a screen is drawn within 2 s and an act answers within 2 s on the test copy at 1280 px; a web capture within 15 s. Every measure is stated against it.
+**The bar** (Bob, K4354: "A for now, we may want to look at further reductions once the alpha-level workflow is done"): a screen is drawn within 2 s and an act answers within 2 s on the test copy at 1280 px; a web capture within 15 s. Every measure is stated against it.
 
 ## Work, in order
 1. **Baseline**, on the live test copy (https://biosmoke8.believeinoakland.workers.dev; reached as `build/plan/walk-T51-build/BRIEF.md` says, never through the agent proxy; `JOURNEY_ADMIN_*`/`JOURNEY_MEMBER_*` by variable, never printed): for every screen of the registry (`docs/development/ux-substrate/`) and every act a journey presses, at 1280 and 390 px, as administrator and member: time to drawn, number of API requests (and how many are repeats), bytes, the slowest requests, and what the server spends (Cloudflare's own timing headers where present). Write `BASELINE.md`.
