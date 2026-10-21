@@ -5,15 +5,15 @@
 /* R46: the watched addresses (`monitoring`, with the pause as it stands), the sweeps (`sweeps`) and the team's members (who paused,
    who ratified). */
 function watchingReads() {
-  return { list: { op: "monitoring", query: {} }, sweeps: { op: "sweeps", query: {} }, members: { op: "memberlist" },
+  return { list: { op: "monitoring", query: {} }, sweeps: { op: "sweeps", query: {} },
            /* R48 (C56; DEC-382): the named requests, and the projects they and the sweeps are kept in */
            named: { op: "namedrequests", query: {} }, projects: { op: "projectlist" } };
 }
 
 function renderWatching(cs, view) {
   const U = view.ui || {}, D = view.data || {};
-  const roster = D.members && D.members.state === "ok" && D.members.value && Array.isArray(D.members.value.members) ? D.members.value.members : [];
-  const handleOf = (m) => { const x = String(m || "").replace(/^member:/, ""); return (roster.find((r) => r && r.member_id === x) || {}).handle || ""; };
+  /* C94 (interface-shell R111): a member is named by the shell's name for her id (her handle; a fallback word where none is known), never the id */
+  const handleOf = (m) => { const x = String(m || "").replace(/^member:/, ""); return x ? cs.memberName(x) : ""; };
   const named = (t) => `<span class="mk-data">${cs.esc(t)}</span>`;
   const freqs = ["hourly", "daily", "weekly", "monthly", "per_meeting"];
   /* the watching: running, or paused by whom and when; a pause or resume for an administrator (anyone else is refused in words) */
@@ -191,17 +191,17 @@ export const WATCHING_SCREEN = Object.freeze({
   reads: watchingReads,
   render: renderWatching,
   acts: Object.freeze([
-    Object.freeze({ op: "monitoring", label: "act.monitoring.label.watching", send: sendRefresh }),
-    Object.freeze({ op: "monitorpause", label: "act.monitorpause.label.watching", send: sendPause, reasonField: "reason" }),
-    Object.freeze({ op: "monitorslate", label: "act.monitorslate.label.watching", send: sendSlate, done: doneSlate }),
-    Object.freeze({ op: "sweeps", label: "act.sweeps.label.watching", send: sendRefresh }),
-    Object.freeze({ op: "namedrequests", label: "screen.watching.nr.list", send: sendRefresh }),
-    Object.freeze({ op: "namedrequestset", label: "screen.watching.nr.ask", send: sendRequestSet,
+    Object.freeze({ op: "monitoring", rereads: Object.freeze(["list"]), label: "act.monitoring.label.watching", send: sendRefresh }),
+    Object.freeze({ op: "monitorpause", rereads: Object.freeze(["list"]), label: "act.monitorpause.label.watching", send: sendPause, reasonField: "reason" }),
+    Object.freeze({ op: "monitorslate", rereads: Object.freeze([]), label: "act.monitorslate.label.watching", send: sendSlate, done: doneSlate }),
+    Object.freeze({ op: "sweeps", rereads: Object.freeze(["sweeps"]), label: "act.sweeps.label.watching", send: sendRefresh }),
+    Object.freeze({ op: "namedrequests", rereads: Object.freeze(["named"]), label: "screen.watching.nr.list", send: sendRefresh }),
+    Object.freeze({ op: "namedrequestset", rereads: Object.freeze(["named"]), label: "screen.watching.nr.ask", send: sendRequestSet,
                     refusals: Object.freeze({ MACHINE_CANNOT_SET_REQUEST: function (refusal, cs) { return cs.w("screen.watching.nr.ref.machine1") + " " + cs.w("screen.watching.nr.ref.machine2"); } }) }),
-    Object.freeze({ op: "sweepset", label: "screen.watching.sweepdef.head", send: sendSweepSet,
+    Object.freeze({ op: "sweepset", rereads: Object.freeze(["sweeps"]), label: "screen.watching.sweepdef.head", send: sendSweepSet,
                     refusals: Object.freeze({ MACHINE_CANNOT_SET_SWEEP: function (refusal, cs) { return cs.w("screen.watching.sweepdef.ref.machine1") + " " + cs.w("screen.watching.sweepdef.ref.machine2"); } }) }),
-    Object.freeze({ op: "writinghelp", label: "act.writinghelp.label.watching", send: sendHelp, done: doneHelp, reasonField: "told" }),
-    Object.freeze({ op: "sweepratify", label: "screen.watching.sweepdef.ratify", send: sendRatify,
+    Object.freeze({ op: "writinghelp", rereads: Object.freeze([]), label: "act.writinghelp.label.watching", send: sendHelp, done: doneHelp, reasonField: "told" }),
+    Object.freeze({ op: "sweepratify", rereads: Object.freeze(["sweeps"]), label: "screen.watching.sweepdef.ratify", send: sendRatify,
                     refusals: Object.freeze({ SWEEP_RATIFY_NOT_AN_OWNER: function (refusal, cs) { return cs.w("screen.watching.sweepdef.ref.owner1") + (refusal.owners ? " " + cs.w("screen.watching.sweepdef.ref.owner2", { owners: Array.isArray(refusal.owners) ? refusal.owners.join(", ") : String(refusal.owners) }) : ""); },
                                                     MACHINE_CANNOT_SET_SWEEP: function (refusal, cs) { return cs.w("screen.watching.sweepdef.ref.machine1") + " " + cs.w("screen.watching.sweepdef.ref.machine2"); } }) }),
   ]),

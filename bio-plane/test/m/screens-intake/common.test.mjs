@@ -2,7 +2,7 @@
  * served page: `interfacePage(SCREENS)` through interface-shell's harness. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { interfacePage, checkScreens, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, interfaceScript, interfaceScriptHash, checkScreens, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
 import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
@@ -44,7 +44,14 @@ test("R8 R15 SCREENS meets interface-shell R21: eight registry screens, archive 
   assert.deepEqual(SCREENS.map((s) => s.id), ["capture", "held", "archive", "open-file", "inbox", "about-knocker", "leads", "watching"]);
   assert.ok(Object.isFrozen(SCREENS));
   assert.equal(checkScreens(SCREENS), true);
-  assert.match(interfacePage(SCREENS), /<script nonce=/);
+  /* interface-shell R1, R2 (fix round 3): the page loads the shell as one external script named by its hash, with no inline script and no nonce;
+     the screens' functions are in that script */
+  const page = interfacePage(SCREENS, { version: "9" });
+  assert.equal((page.match(/<script\b/g) || []).length, 1, "one script element");
+  assert.match(page, /<script src="\/app\/shell-9\.js" integrity="sha256-[^"]+"><\/script>/);
+  assert.ok(!/<script nonce=/.test(page) && !/nonce/.test(page), "no nonce slot");
+  assert.ok(page.includes(`integrity="${interfaceScriptHash(SCREENS, {})}"`), "named by its hash");
+  assert.ok(interfaceScript(SCREENS).includes("capture"), "the screens are in the external script");
   for (const s of SCREENS) {
     assert.equal(typeof s.reads, "function");
     assert.equal(typeof s.render, "function");
@@ -130,7 +137,7 @@ test("R9 no act or read records which member opened which file: every request is
   /* the shell's own frame reads, `bootstrap` among them (interface-shell R36: public, once, for the test-instance band), read from
      the shell's declaration of them (N1073) */
   const FRAME = new Set(SHELL_OPS);
-  const ours = new Set([...SCREENS.flatMap((s) => s.acts.map((a) => a.op)), ...READS, "allocid", "promote", "select", "image", "heldat"]);
+  const ours = new Set([...SCREENS.flatMap((s) => s.acts.map((a) => a.op)), ...READS, "allocid", "promote", "select", "image", "heldat", "projectquestions", "captureseenin"]);
   const plane = { ...Object.fromEntries(READS.map((op) => [op, ok(VALUES[op])])),
                   openoriginal: { status: 200, bytes: "b", type: "application/pdf" }, openwithwarning: { status: 200, bytes: "b", type: "application/pdf" } };
   const pages = [];
