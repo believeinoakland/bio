@@ -202,3 +202,7 @@ COMPLETE (B9 START, fix round 3, wave 1). Branch job/T51/queue-producers, tranch
 - `checks/run.mjs`: format 1 failure (rulings.md, above); architecture 0; words 0; coverage: queue-producers not among the 16 failures (other modules' ids); ownership 0 failures.
 
 Size (session_01QHswMjuJkugiUqGLjnDCa5): test runs 7, module lines 3633
+
+## J11 · COMPLETE
+
+COMPLETE (B9, C69, R52): one newer-capture item per (holder, target, newer version); 151/151 module tests; details and proposed R52 clause in J10 of the record. Found: door acts take one notice id, so a sibling notice of the same version reappears after adopt/keep (see record).
