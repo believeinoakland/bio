@@ -34,7 +34,7 @@ The harness control table and fences, the plane's checks (report shape, citation
 
 ## 5. Credentials
 **BR13. Three credential means**, each with a resolver: **sealed** (held by Civicsmith, today's mechanism), **reference** (a pointer to a token kept in a password manager, secrets manager or other permitted store, resolved at call time and never stored by Civicsmith; only the reference is stored), **provider-issued** (a documented sign-in/connect flow returning a user-owned token). An entry states which means each plan allows (AIR32).
-**BR14. Runtime constraints.** A plan states where requests may originate (a shared team Worker, a member-controlled runtime, a member's device) and where a token may live; the boundary refuses a call whose deployment cannot meet it (AIR37).
+**BR14. Runtime constraints.** A plan states where requests may originate (a shared team Worker, a member-controlled runtime, a member's device) and where a token may live; the boundary refuses a call whose deployment cannot meet it (AIR37), **except for a member's personal subscription, where the constraint is shown and the member's recorded choice governs; the only rule enforced for it is that it serves only acts that member runs, never a project's or team's account [Bob, 2026-10-21, AIR41]**.
 **BR15.** A resolved secret never appears in logs, records, bundles, health reports or error text; a reference resolving to nothing is the `auth revoked/removed` class (§8).
 **BR16. No hidden precedence.** A call uses exactly the credential its account names; no ambient credential in the environment can override it (today's lesson: a stray API key silently outranking a subscription).
 
