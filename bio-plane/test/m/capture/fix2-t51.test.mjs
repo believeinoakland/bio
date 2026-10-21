@@ -151,7 +151,7 @@ test("R77 R88 (C14): the picker read returns the same rows with fewer fields (th
   assert.deepEqual(pick.held.map((r) => r.bundle_id), full.held.map((r) => r.bundle_id), "the same rows in the same order");
   assert.deepEqual(pick.held.map((r) => [r.title, r.capture ? r.capture.sha256 : null, r.standing]),
                    full.held.map((r) => [r.title, r.capture ? r.capture.sha256 : null, r.standing]));
-  assert.deepEqual(Object.keys(pick.held[0]).sort(), ["actor", "bundle_id", "capture", "collected_since", "project", "source", "standing", "title"], "fewer fields");
+  assert.deepEqual(Object.keys(pick.held[0]).sort(), ["actor", "bundle_id", "capture", "collected_since", "project", "source", "standing", "title", "whole"], "fewer fields");
   assert.deepEqual([w.asked.examined, w.asked.read], [0, 0], "the examination and the questions are not asked");
   assert.ok(k.n <= 6, `${k.n} reads`);
   assert.deepEqual([pick.state, pick.limit, pick.truncated, pick.next], [full.state, full.limit, full.truncated, full.next], "the page is the same");
@@ -318,4 +318,78 @@ test("R77 (K4326): the picker row carries source, collected_since and actor exac
   const m2 = await w.c.heldCaptures({ viewer: "member:m2", now: NOW, limit: 1000, fields: "picker" });
   const m2full = await w.c.heldCaptures({ viewer: "member:m2", now: NOW, limit: 1000 });
   assert.deepEqual(m2.held.map((r) => r.bundle_id), m2full.held.map((r) => r.bundle_id));
+});
+
+/* ---------- fix round 2, B8 (K4328): an interrupted upload answers its document; a held row says whether it is whole ---------- */
+import { provenance as heldProvenance } from "./fixture.mjs";
+
+test("R86 (K4328; C10): bytes a receipt names but the register files under no document (an interrupted upload) answer existed: true with the document as a new upload's, the receipt written as a second sighting, no actor and no within; control: a held home answers existed with no document", async () => {
+  const bytes = te.encode("the clerk's scan, interrupted before it was filed");
+  const d = sha(bytes);
+  const { c, s, rows } = setup();
+  /* the first attempt: its receipt was written, the register names no home */
+  c.provenance = heldProvenance(s, { acquired: [d] });
+  let called = 0;
+  const r = await c.uploadCapture({ bytes, statement: STATEMENT, name: "scan.pdf", by: "m1", at: AT, within: () => { called++; return { ok: true }; } });
+  assert.deepEqual([r.ok, r.existed, r.capture], [true, true, { sha256: d, bytes: bytes.length }]);
+  assert.ok(r.document, "the document is answered");
+  assert.deepEqual([r.document.capture.sha256, r.document.capture.method, r.document.capture.actor, r.document.origin_statement.text, r.document.name_stated.text],
+                   [d, "uploaded", "m1", STATEMENT, "scan.pdf"], "as a new upload's");
+  assert.deepEqual([called, "within" in r], [0, false], "within is not called");
+  assert.equal(rows(`SELECT COUNT(*) n FROM capture_actors`)[0].n, 0, "no actor recorded");
+  assert.equal(rows(`SELECT COUNT(*) n FROM captured_locators WHERE capture_sha = ? AND via = 'upload'`, d)[0].n, 1, "the receipt is written");
+  /* control: the register files the bytes under a home: existed, no document, as before */
+  const h = setup();
+  h.c.provenance = heldProvenance(h.s, { registered: [d] });
+  const again = await h.c.uploadCapture({ bytes, statement: STATEMENT, by: "m1", at: AT });
+  assert.deepEqual([again.ok, again.existed, "document" in again], [true, true, false]);
+  /* control: bytes nowhere held are a new upload */
+  const n = setup();
+  const fresh1 = await n.c.uploadCapture({ bytes, statement: STATEMENT, by: "m1", at: AT });
+  assert.deepEqual([fresh1.existed, !!fresh1.document], [false, true]);
+  /* a receipt that cannot be written is still RECEIPT_NOT_WRITTEN, with no document */
+  const broken = setup();
+  broken.c.provenance = { ...heldProvenance(broken.s, { acquired: [d] }), recordReceipt() { throw new Error("down"); } };
+  const x = await broken.c.uploadCapture({ bytes, statement: STATEMENT, by: "m1", at: AT });
+  assert.deepEqual([x.ok, x.reason, "document" in x], [false, "RECEIPT_NOT_WRITTEN", false]);
+});
+
+/* a world with an evidence store: the first document's copy is held whole, the second's only in parts, the third's not at all */
+function wholeWorld() {
+  const b = bucket();
+  const f = fresh({ evidence: b });
+  const s = f.s;
+  const doc = (i, created) => s.sql.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version)
+                                          VALUES (?, 'information', 'g', ?, 'collected', ?, ?, 'x', 1)`, `INFO-${i}`, `title ${i}`, created, created);
+  const reg = (i, d) => s.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, registered, bytes) VALUES (?, ?, 'x', '2026-01-01T00:00:00.000Z', 10)`, d, `INFO-${i}`);
+  doc(1, "2026-01-01T00:00:00Z"); doc(2, "2026-01-02T00:00:00Z"); doc(3, "2026-01-03T00:00:00Z"); doc(4, "2026-01-04T00:00:00Z");
+  reg(1, H("1")); reg(2, H("2")); reg(3, H("3"));            // INFO-4 has no capture at all
+  b.held.set(`bio/captures/${H("1")}`, new Uint8Array([1]));    // whole
+  b.held.set(`bio/captures/${H("9")}`, new Uint8Array([9]));    // a part of INFO-2, not its own fingerprint
+  return { ...f, b };
+}
+
+test("R77 (K4328; C10): a held row, the picker's and the whole read's, states whole: true when an object is held under its fingerprint, false when none is (a copy held in parts only), null where it cannot be said (no capture, no evidence store, a head that fails); each distinct fingerprint is asked once", async () => {
+  const w = wholeWorld();
+  for (const fields of [undefined, "picker"]) {
+    const r = await w.c.heldCaptures({ viewer: "class:admin", now: NOW, fields });
+    assert.deepEqual(r.held.map((x) => [x.bundle_id, x.whole]), [["INFO-1", true], ["INFO-2", false], ["INFO-3", false], ["INFO-4", null]], String(fields));
+  }
+  const heads = w.b.calls.filter((x) => x[0] === "head").map((x) => x[1]);
+  assert.equal(heads.length, 6, "three fingerprints per read, none twice");
+  assert.deepEqual([...new Set(heads)].sort(), [1, 2, 3].map((i) => `bio/captures/${H(String(i))}`).sort());
+  /* no evidence store: undetermined, never false */
+  const none = fresh();
+  none.s.sql.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version) VALUES ('INFO-1', 'information', 'g', 't', 'collected', '2026-01-01', '2026-01-01', 'x', 1)`);
+  none.s.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, registered) VALUES (?, 'INFO-1', 'x', '2026-01-01T00:00:00.000Z')`, H("1"));
+  assert.equal((await none.c.heldCaptures({ viewer: "class:admin", now: NOW })).held[0].whole, null);
+  /* a head that fails reads null, with the list still answered */
+  const bad = wholeWorld();
+  bad.b.head = async () => { throw new Error("down"); };
+  const br = await bad.c.heldCaptures({ viewer: "class:admin", now: NOW, fields: "picker" });
+  assert.deepEqual(br.held.map((x) => x.whole), [null, null, null, null]);
+  /* control: an empty page asks the store nothing */
+  const calls = w.b.calls.length;
+  assert.deepEqual((await w.c.heldCaptures({ viewer: "junk", now: NOW })).held, []);
+  assert.equal(w.b.calls.length, calls);
 });

@@ -211,8 +211,8 @@ export const HELD_SORTS = Object.freeze(["age", "source", "project"]);
    restores from (R81); T51: `held_and_vouched`, the held ones with the documents a member has vouched for. */
 export const HELD_STATES = Object.freeze(["held", "set_aside", "held_and_vouched"]);
 /* R77 (T51; C14): the rows `heldCaptures` answers: `full` (R77's fields) or `picker`, the cheap read for a screen that lists documents
-   to choose among: the document, its title, its project, its source, when it was collected, its capture's digest and actor and its
-   standing, and nothing that asks the examination, the questions, the archives or a grade. */
+   to choose among: the document, its title, its project, its source, when it was collected, its capture's digest and actor, whether the
+   evidence store holds it whole, and its standing, and nothing that asks the examination, the questions, the archives or a grade. */
 export const HELD_FIELDS = Object.freeze(["full", "picker"]);
 /* R77 (DEC-167 (8); K1881, BOB's): the most held files an archive's row carries; the rest are read through
    `acquisition.archiveList`. */
@@ -630,7 +630,8 @@ export class Capture {
    *  actor (R69); and the answer carries the provenance document (`#uploadedDocument`), graded received, never fetched
    *  (`provenance` R63). Bytes the record already holds (`provenance.registerHolds` answers them registered or acquired)
    *  answer `existed: true` with no document, the receipt written as a second
-   *  sighting, and `within` not called. `within` (N380's seam, `store-door` R7): called inside the upload's own
+   *  sighting, and `within` not called; bytes only a receipt names (the register files them under no document, an interrupted
+   *  upload) answer `existed: true` the same way, with the document as a new upload's (T51 fix round 2). `within` (N380's seam, `store-door` R7): called inside the upload's own
    *  transaction after the receipt and the actor; its `{ok: false}` rolls the upload back and is the answer; a throw or a promise rolls it back as
    *  `UPLOAD_WITHIN_FAILED`. It writes no bundle. */
   async uploadCapture({ bytes, statement, name = null, type = null, by, at = null, within = null } = {}) {
@@ -715,7 +716,8 @@ export class Capture {
     /* The record holds the bytes when its register files them or a receipt names them (provenance R5). Bytes merely in
        the store are not enough: an upload rolled back (by `within`, or a receipt not written) leaves its bytes there,
        content-addressed and named by nothing, and its retry must file them. */
-    const existed = !!(holds && (holds.registered === true || holds.acquired === true));
+    const registered = !!(holds && holds.registered === true);
+    const existed = registered || !!(holds && holds.acquired === true);
     const when = typeof at === "string" && ISO_INSTANT.test(at) ? at : stampSecond();
     const address = `upload:${sha}`;
     const writeReceipt = () => {
@@ -728,7 +730,7 @@ export class Capture {
     const notWritten = { ok: false, reason: "RECEIPT_NOT_WRITTEN", status: 502,
                          detail: localize("capture.index.receipt_not_written", "the acquisition receipt could not be written, so nothing was filed") };
     const receiptOf = (r) => ({ address, via: UPLOAD_VIA, retrieved: when, observation: r.observation ?? null });
-    if (existed) {
+    if (registered) {
       /* a second sighting of bytes the record holds: the receipt only, no document, no actor, `within` not called */
       const r = this.#tx(writeReceipt);
       return r ? { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r) } : notWritten;
@@ -753,6 +755,13 @@ export class Capture {
     if (typeof type === "string" && type !== "") { profile.source_content_type = type; profile.declared_by = "uploader"; }
     else if (ct) profile.source_content_type = null;
     const document = this.#uploadedDocument({ sha, total, parts, by, at: when, statement, name, profile });
+    if (existed) {
+      /* R86 (T51 fix round 2; C10): a receipt names the bytes but the register files them under no document (an upload
+         interrupted before it was filed): the receipt is written as a second sighting and the document is answered as a new
+         upload's, so the screen can file it for the viewer; no actor is recorded and `within` is not called. */
+      const r = this.#tx(writeReceipt);
+      return r ? { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r), document } : notWritten;
+    }
     let done;
     try {
       done = this.#tx(() => {
@@ -1414,6 +1423,9 @@ export class Capture {
     const at = now != null && Number.isFinite(Date.parse(now)) ? Date.parse(now) : Date.now();
     /* R77 (T51; C14): what the page's rows need of the store is read for the whole page at once, never for each row in turn. */
     const facts = this.#pageFacts(page.map((r) => r.bundle_id), { aside, vouched, picker: shape === "picker" });
+    /* R77 (T51 fix round 2; C10): whether the evidence store holds an object under each row's fingerprint. */
+    const wholes = await this.#wholeOf(page.map((r) => facts.first.get(r.bundle_id)?.capture_sha));
+    const wholeOf = (bundleId) => { const s = facts.first.get(bundleId)?.capture_sha; return s ? wholes.get(s) ?? null : null; };
     if (shape === "picker") {
       /* R77 (T51 fix round 2): and the three a screen's to-do reads of a row: `source`, `collected_since` and `actor`, as the full row gives them. */
       const rows = page.map((r) => ({ bundle_id: r.bundle_id, title: r.title ?? null, project: r.project || null,
@@ -1421,6 +1433,7 @@ export class Capture {
                                       collected_since: r.since,
                                       capture: facts.first.has(r.bundle_id) ? { sha256: facts.first.get(r.bundle_id).capture_sha } : null,
                                       actor: this.#captureFacts(facts.first.get(r.bundle_id) ?? null, facts).actor,
+                                      whole: wholeOf(r.bundle_id),
                                       standing: r.standing === VOUCHED_STATE ? VOUCHED_STATE : "collected" }));
       return { ok: true, held: rows, state: list, sort: by, dir: way, limit: cap, truncated,
                next: truncated ? cursorOf([String(last.k0), String(last.k1), last.bundle_id]) : null };
@@ -1446,11 +1459,39 @@ export class Capture {
                   ...(grouped || (r.of_archive ? { archive: { sha256: r.of_archive } } : {})),
                   capture: reg ? { sha256: reg.capture_sha, grade: gradeOf(reg.capture_sha) } : null,
                   ...this.#captureFacts(reg, facts),
+                  whole: wholeOf(r.bundle_id),
                   ...(aside ? { set_aside: facts.setAside.get(r.bundle_id) ?? null } : {}),
                   ...(vouched ? this.#standingOf(r.bundle_id, r.standing, facts.history.get(r.bundle_id) ?? null) : {}) });
     }
     return { ok: true, held: rows, state: list, sort: by, dir: way, limit: cap, truncated,
              next: truncated ? cursorOf([String(last.k0), String(last.k1), last.bundle_id]) : null };
+  }
+
+  /* R77 (T51 fix round 2; C10): for the page's capture digests, a Map from digest to whether the evidence store holds an
+     object under it (`head`): true, or false for a copy held in parts only (past `MULTIPART_KEEP_MAX`, or kept before the
+     whole was), which the screens withhold vouch and OCR from; null where it cannot be said (no evidence store, a head that
+     fails, or the page's wait (`HELD_PAGE_WAIT_MS`) ran out first). Each distinct digest is asked once, `HELD_PAGE_LANES` at a
+     time, and nothing is asked once the wait has run out. Never throws; an empty page asks nothing. */
+  async #wholeOf(shas) {
+    const out = new Map();
+    const distinct = [...new Set(shas.filter((s) => typeof s === "string" && s))];
+    if (!distinct.length) return out;
+    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    for (const s of distinct) out.set(s, null);
+    if (!ev || typeof ev.head !== "function") return out;
+    const wait = Capture.#pageWait(HELD_PAGE_WAIT_MS);
+    try {
+      let next = 0;
+      const lane = async () => {
+        while (next < distinct.length && !wait.over()) {
+          const s = distinct[next++];
+          const got = await wait.within((async () => { try { return !!(await ev.head(s)); } catch { return null; } })());
+          out.set(s, got === TOO_LATE ? null : got);
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(HELD_PAGE_LANES, distinct.length) }, lane));
+    } finally { wait.stop(); }
+    return out;
   }
 
   /* R77 (T51 fix round 2; C14's bound): the grades of a page's captures, a Map from digest to `provenance.captureGrade`'s
