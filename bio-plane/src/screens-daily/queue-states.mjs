@@ -85,9 +85,10 @@ export function queueStates() {
     if (!chosen.length) return Promise.resolve({ refuse: "screen.finder.pickfirst" });
     const shared = {};
     if (op === "taskforward") {
-      const to = String(cs.value("qm-to") || "").trim().replace(/^@/, "");
-      if (!to) return Promise.resolve({ refuse: "screen.queue.fieldfirst" });
-      shared.to = to;
+      // C75: a member chosen from the group's, never oneself.
+      const picked = view.parts.forward().to(cs, view, "qm-to");
+      if (!picked.to) return Promise.resolve(picked);
+      shared.to = picked.to;
     }
     if (op === "queuesnooze") {
       const day = dayOf(cs, "qm-until");
@@ -144,7 +145,9 @@ export function queueStates() {
       const it = items.filter(function (x) { return x && String(x.id) === r.id; })[0] || null;
       const title = it ? wordsOf(it) : cs.esc(r.id);
       if (r.applied) return cs.row(cs.icon("accepted"), "<b>" + cs.w("queue.multi.done") + "</b> · " + title + '<span class="meta">' + cs.w("queue.done", { what: { html: cs.w("act." + o.op + ".label.queue") } }) + "</span>", "", "");
-      const why = r.instead === "filingapprove" ? cs.w("queue.multi.why.letter") : it && it.kind === "check" ? cs.w("queue.multi.why.check") : r.why ? cs.esc(r.why) : "";
+      // C71: every kept row says why: the two reasons the design words, the owner's own `check` or `translation` when it answered one, else
+      // the design's sentence for an item that needs the member to read, check or decide it herself (BOB: a key for "needs your own reason").
+      const why = r.instead === "filingapprove" ? cs.w("queue.multi.why.letter") : it && it.kind === "check" ? cs.w("queue.multi.why.check") : r.why ? cs.esc(r.why) : cs.w("queue.multi.done.help2");
       return cs.row(cs.icon("refused"), "<b>" + cs.w("queue.multi.refused") + "</b> · " + title
         + '<span class="meta">' + why + (it && r.instead ? " " + doorOf(it, r.instead) : "") + "</span>", "", "");
     }).join("");
@@ -153,14 +156,14 @@ export function queueStates() {
       + '<p class="mk-acts">' + link(cs, "/app/queue", "queue.multi.back") + link(cs, "/app/queue/answered", "queue.answered.title") + "</p>";
   };
   // The choosing state's hold strip: the number chosen and the four acts, each with the fields it asks in place.
-  const strip = function (cs, n) {
+  const strip = function (cs, n, forwardTo) {
     const act = function (op, key, extraHtml, data) {
       const b = cs.act(op, { label: key, data: Object.assign({ multi: "1" }, data || {}) });
       return b ? (extraHtml ? '<details class="mk-details"><summary>' + cs.w(key) + "</summary>" + extraHtml + b + "</details>" : b) : "";
     };
     return '<div class="cs-hold mk-hold">' + cs.icon("hold") + '<span><span class="n">' + (n === 1 ? cs.w("queue.multi.chosen.one") : cs.w("queue.multi.chosen", { n: String(n) })) + '</span></span><span class="acts">'
       + act("taskresolve", "queue.multi.done", "")
-      + act("taskforward", "queue.multi.forward", cs.field("qm-to", "screen.queue.forward.to", {}))
+      + act("taskforward", "queue.multi.forward", forwardTo)
       + act("queuesnooze", "queue.multi.snooze", dayField(cs, "qm-until") + '<p class="mk-small muted">' + cs.w("queue.multi.snooze.help") + "</p>")
       + act("proposedispose", "queue.multi.dismiss", "") + "</span></div>";
   };
