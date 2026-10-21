@@ -4,15 +4,19 @@
    `login` by handle, password and device; then the real served `/app` page booted on interface-shell's document stand-in with
    that session, every request it makes answered by the same plane: `home`, `capture` with an upload, `held` and
    `release`, each read back through the real ops. */
+import "./register-declared.mjs";
 import "../../sandbox.mjs";
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { Miniflare } from "miniflare";
-import { boot } from "../interface-shell/harness.mjs";
-import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
-import { OPS } from "../../../src/op-declarations/index.mjs";
+const { boot } = await import("../interface-shell/harness.mjs");
+const { APP_SCREENS, GUIDE } = await import("./app-screens.mjs");
+const { interfaceScript } = await import("../../../src/interface-shell/index.mjs");
+const { ASSET_FILES } = await import("../../../src/interface-assets/index.mjs");
+const { OPS } = await import("../../../src/op-declarations/index.mjs");
 
 const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));
 const ADM = "adm-e2e-0123456789abcdef", PASSWORD = "the founder's long password";
@@ -53,8 +57,8 @@ const SCRIPT = /<script\b[^>]*>/gi;
 
 let session = null;
 
-test("R75 end to end (Miniflare, the real plane): `GET /app` and `/app/<path>` serve the page with the policy and a fresh nonce on every script; `/app/assets/*` serve every file with its type and bytes, 304 on its etag", async () => {
-  const nonces = new Set();
+test("R75 end to end (Miniflare, the real plane; fix round 3, C15): `GET /app` and `/app/<path>` serve the page with a policy that names the shell's script by its hash, in place of a nonce; the script is served at the release's address, `immutable`, and hashes to what the policy and the page's `integrity` name; `/app/assets/*` serve every file with its type and bytes, 304 on its etag", async () => {
+  const hashes = new Set();
   for (const path of ["/app", "/app/home", "/app/held"]) {
     const r = await mf.dispatchFetch(`${ORIGIN}${path}`);
     const html = await r.text();
@@ -62,16 +66,27 @@ test("R75 end to end (Miniflare, the real plane): `GET /app` and `/app/<path>` s
     assert.match(r.headers.get("content-type"), /^text\/html/);
     assert.equal(r.headers.get("cache-control"), "no-store");
     const csp = r.headers.get("content-security-policy") || "";
-    const nonce = (/script-src 'nonce-([A-Za-z0-9+/=]+)'/.exec(csp) || [])[1];
-    assert.ok(nonce, csp);
-    assert.doesNotMatch(csp, /https?:/, "no other origin");
+    const named = (/script-src 'self' 'sha256-([A-Za-z0-9+/]{43}=)'(?:;|$)/.exec(csp) || [])[1];
+    assert.ok(named, csp);
+    assert.doesNotMatch(csp, /nonce|https?:/, "no nonce, no other origin");
     const tags = html.match(SCRIPT) || [];
-    assert.ok(tags.length > 0);
-    for (const t of tags) assert.ok(t.includes(`nonce="${nonce}"`), t);
-    assert.equal(html.includes("__CSP_NONCE__"), false);
-    nonces.add(nonce);
+    assert.equal(tags.length, 1, "one script element, loading the shell's script");
+    assert.ok(tags[0].includes(`integrity="sha256-${named}"`), tags[0]);
+    assert.equal(/\bnonce\b/.test(html) || html.includes("__CSP_NONCE__"), false);
+    const src = (/\ssrc="([^"]+)"/.exec(tags[0]) || [])[1];
+    assert.match(src, /^\/app\/shell-[^/]+\.js$/);
+    for (let load = 1; load <= 2; load++) {
+      const js = await mf.dispatchFetch(`${ORIGIN}${src}`);
+      assert.equal(js.status, 200, `load ${load}`);
+      assert.match(js.headers.get("content-type"), /^text\/javascript/);
+      assert.equal(js.headers.get("cache-control"), "public, max-age=31536000, immutable");
+      const text = await js.text();
+      assert.equal(createHash("sha256").update(text).digest("base64"), named, "the script hashes to the policy's value");
+      assert.equal(text, interfaceScript(APP_SCREENS, { guide: GUIDE }), "the served script is the one the end-to-end suites run over the same screens");
+    }
+    hashes.add(named);
   }
-  assert.equal(nonces.size, 3);
+  assert.equal(hashes.size, 1, "the same script on every path");
   for (const [name, file] of Object.entries(ASSET_FILES)) {
     const r = await mf.dispatchFetch(`${ORIGIN}/app/assets/${name}`);
     assert.equal(r.status, 200, name);
@@ -93,7 +108,7 @@ test("R75, R82, R83 end to end (T47): `GET /` answers the interface's page (the 
   const claimed = await mf.dispatchFetch(`${ORIGIN}/api/?op=claim`, { method: "POST", body: JSON.stringify({ bootstrapToken: ADM, password: PASSWORD }) });
   assert.equal(claimed.status, 200, await claimed.clone().text());
   await claimed.arrayBuffer();
-  const strip = (html) => html.replace(/ nonce="[^"]*"/g, "");
+  const strip = (html) => html;
   const root = await mf.dispatchFetch(`${ORIGIN}/`);
   assert.equal(root.status, 200);
   assert.equal(root.headers.get("cache-control"), "no-store");
@@ -128,7 +143,7 @@ async function quiet(p) {
 /* The real served page, booted with the session, at `path`, every request answered by the plane. */
 async function appAt(path) {
   const html = await (await mf.dispatchFetch(`${ORIGIN}${path}`)).text();
-  const p = await boot({ html, session, path, plane: real });
+  const p = await boot({ screens: APP_SCREENS, guide: GUIDE, html, session, path, plane: real });
   await quiet(p);
   return p;
 }

@@ -33,10 +33,10 @@ import { acquireReadingOp } from "../extraction/ops.mjs";
 /* R75, R81, R82 (T46, T47; N897 (1); K3137): the member interface's page and its assets: interface-shell's page over the
    nine screen modules' screens (R81's order), with screens-wizards' guide in the dock (interface-shell R31), and
    interface-assets' files. */
-import { appRouteOf, appPage, appAsset, logoAsked, addressPageOf } from "./app.mjs";
+import { appRouteOf, appPage, appAsset, appScript, logoAsked, addressPageOf } from "./app.mjs";
 /* R116 (fix round 2; C15): the interface words kept for the release and compressed */
 import { interfaceWordsCache } from "./words-cache.mjs";
-import { interfacePage } from "../interface-shell/index.mjs";
+import { interfacePage, interfaceScript, interfaceScriptHash } from "../interface-shell/index.mjs";
 import { ASSET_FILES } from "../interface-assets/index.mjs";
 import { SCREENS as ENTRY_SCREENS } from "../screens-entry/index.mjs";
 import { SCREENS as SETTINGS_SCREENS } from "../screens-settings/index.mjs";
@@ -173,7 +173,9 @@ const addressGate = (url) => credentialAddressGate(url);
 function testInstanceOf(env) {
   try { return AiRuns.prototype.testInstance.call({ env: env || {} }) === true; } catch { return false; }
 }
-const appOptions = (env) => ({ ...APP_OPTIONS, testInstance: testInstanceOf(env) });
+/* R75 (fix round 3, C15; interface-shell R1): the page names the release's script by `version`, the plane's own (`env.VERSION`) */
+const appOptions = (env) => ({ ...APP_OPTIONS, testInstance: testInstanceOf(env),
+  ...(typeof env?.VERSION === "string" && env.VERSION ? { version: env.VERSION } : {}) });
 
 /* R93 (T48; N1015; K3103; agent-worker R87; plane R55): the requests that reach the plane's ask, run, draft or transcribe
    call: the door mints each one's `trace` and member ref (signin-door R3's form) and hands both to that call in process. */
@@ -663,19 +665,26 @@ export function makeFetch(hooks = {}) {
   /* R50: `seen.session` is set once admission has admitted a member's session, so a refusal answered to it is tallied;
      R51: every HTML answer leaves with the page policy. */
   const planeDoor = async function planeDoor(req, env) {
-    const seen = { session: null, credential: null, cred: null, op: null, trace: null };
+    const seen = { session: null, credential: null, cred: null, op: null, trace: null, scriptHashes: undefined };
     let res;
     try { res = await fetch(req, env, seen); } catch (e) { res = planeInternalError(e, req); }
     res = await withTrace(res, seen.trace);
     await tallySessionRefusal(res, seen.session);
     res = await tallyOnTheWayOut(res, seen, req, env);
-    res = await withPagePolicy(res);
+    /* R75 (fix round 3, C15): a page of the interface leaves with the policy that names its script by hash, in place of a nonce */
+    res = await withPagePolicy(res, { scriptHashes: seen.scriptHashes });
     /* R116: last, so the tallies above read the answer as it was made and a refusal is never kept */
     return seen.op === "interfacewords" ? await interfaceWordsCache(res, req, env) : res;
   };
   planeDoor.limits = PLANE_LIMITS;
   planeDoor.limitsStatement = PLANE_LIMITS_STATEMENT;
   return planeDoor;
+  /* R75: the interface's page, built for this request, and the hash of the script it loads, kept for the page policy on the way out */
+  function page(req, env, seen, status = 200) {
+    const options = appOptions(env);
+    seen.scriptHashes = [interfaceScriptHash(APP_SCREENS, options)];
+    return appPage(req, { interfacePage, screens: APP_SCREENS, options, status });
+  }
   async function fetch(req, env, seen = { session: null }) {
     const url = new URL(req.url);
     /* R59 (admission R20; F1, K2044): the credential this request presents, read once — the `Authorization` header's, else
@@ -720,7 +729,7 @@ export function makeFetch(hooks = {}) {
       if (pageNamespace) return json(pageNamespace.body, pageNamespace.status);
       const pageAddress = addressGate(url);   /* R59: admission R20, before the page is built */
       if (pageAddress) return json(pageAddress.body, pageAddress.status);
-      return appPage(req, { interfacePage, screens: APP_SCREENS, options: appOptions(env) });
+      return page(req, env, seen);
     }
 
     /* R75 (T46): `GET /app`, `/app/<path>` and `/app/assets/<name>`, through the same namespace and address gates as `/`
@@ -734,8 +743,9 @@ export function makeFetch(hooks = {}) {
       /* R84 (T47; DEC-205): the group's logo, read from the namespace addressed (`store=scratch` reads scratch) */
       if (appRoute === "asset" && logoAsked(url))
         return groupLogoAsset(env, url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio", { json, storeSilent, storeRefusal, doAnswer });
-      return appRoute === "page" ? appPage(req, { interfacePage, screens: APP_SCREENS, options: appOptions(env) })
-        : appAsset(req, url, { assets: ASSET_FILES, version: env.VERSION });
+      /* R75 (fix round 3, C15, P2.4): the shell's script, at its versioned address, `immutable` */
+      if (appRoute === "script") return appScript(req, url, { source: interfaceScript(APP_SCREENS, appOptions(env)), version: env.VERSION });
+      return appRoute === "page" ? page(req, env, seen) : appAsset(req, url, { assets: ASSET_FILES, version: env.VERSION });
     }
 
     /* R104 (T50; N1174, B-14; interface-shell R79): an address outside the team's pages that names no op draws the
@@ -748,7 +758,7 @@ export function makeFetch(hooks = {}) {
       if (pageNamespace) return json(pageNamespace.body, pageNamespace.status);
       const pageAddress = addressGate(url);   /* R59: admission R20 */
       if (pageAddress) return json(pageAddress.body, pageAddress.status);
-      return appPage(req, { interfacePage, screens: APP_SCREENS, options: appOptions(env), status: addressPage.status });
+      return page(req, env, seen, addressPage.status);
     }
 
     const path = url.pathname.replace(/^\/api\/?/, "/");
@@ -2321,6 +2331,7 @@ export function makeFetch(hooks = {}) {
       grantMember: aiCred?.grant ? aiCred.principal : undefined, timings })) : undefined;   /* R53 (K1684): an ask's grant's member; R115: `acquire`'s timings */
     if (armed && op === "acquire") {
       const res = await promoteAcquired(armed);
+      await readHeldAfterAcquire(res);
       if (!captureStep && url.searchParams.get("step") === null) return res;
       let body;
       try { body = await res.clone().json(); } catch { return res; }
@@ -2337,20 +2348,50 @@ export function makeFetch(hooks = {}) {
       if (!out.answered) return { early: storeSilent(op, out.correlation) };
       return { body: out.reply.body, status: out.reply.status };
     }
-    /* R100 (R085-4; WALK-085 F1; extraction R1, R20): A NEW UPLOAD IS READ AS AN ACQUIRED DOCUMENT IS. When capture answers
+    /* R117 (fix round 3, C5, C17; K4356, K4358; extraction R80): A HELD CAPTURE GETS ITS READING. `readHeld` is the store-internal
+       route `readheld` (this door's own map, no spec, so no caller reaches it): extraction's act, which reads a home that has no
+       reading once the evidence store holds its bytes whole, and answers `{ok, read, why?}` (`why`: `NO_HOME`, `READING_HELD`,
+       `NO_WHOLE_OBJECT`; never shown to a member, K4365). A refusal or a silence of the route is `null`: it never turns a kept
+       capture into a failed one, and the answer it follows is relayed as it was. */
+    async function readHeld(sha) {
+      if (typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha)) return null;
+      try {
+        const asked = await doAnswer(stub.fetch(new Request(`http://do/readheld?sha=${sha}&store=${encodeURIComponent(storeName)}`)));
+        return asked.answered && asked.result && typeof asked.result === "object" && asked.result.ok === true ? asked.result : null;
+      } catch { return null; }
+    }
+    /* The digest an answer names: its document's capture, else its own `capture` (a registered upload answers no document). */
+    function shaOf(r) { return r?.document?.capture?.sha256 ?? r?.capture?.sha256 ?? null; }
+    /* R100 (R085-4; WALK-085 F1; extraction R1, R20), R117: A NEW UPLOAD IS READ AS AN ACQUIRED DOCUMENT IS. When capture answers
        the upload as new (`ok`, not `existed`, a document), the door hands the document to extraction's reading, exactly
        as `op=acquire` does (`acquireReadingOp`), and the answer's document carries `reading` and `text_units`, so the
        promotion the capture screen sends with it stores the reading. A reading that fails is answered as the failed
-       reading, relayed as acquire relays it; the upload stands, filed already. Bytes already held (`existed`), a refusal
-       and a silence are relayed unread. */
+       reading, relayed as acquire relays it; the upload stands, filed already. A refusal and a silence are relayed unread.
+       Bytes already held (`existed: true`, R117): the digest is asked of `readHeld`, so a record whose home holds no reading gets
+       one; and when the digest has no home yet (`NO_HOME`: an upload whose first answer was never promoted, so its reading was
+       never kept) and the answer carries its document, the door reads the stored bytes as it reads a new upload and answers the
+       reading with the document, so the promotion the screen sends keeps it. A reading held (or no whole object to read) leaves
+       the answer as it was. */
     async function readUploaded(got) {
       if (got.early) return got;
       const r = got.body && typeof got.body.result === "object" && got.body.result ? got.body.result : null;
-      if (!r || r.ok !== true || r.existed === true || !r.document || typeof r.document !== "object") return got;
+      if (!r || r.ok !== true) return got;
+      const hasDocument = !!r.document && typeof r.document === "object";
+      if (r.existed === true) {
+        const held = await readHeld(shaOf(r));
+        if (!held || held.read !== false || held.why !== "NO_HOME" || !hasDocument || r.document.reading) return got;
+      } else if (!hasDocument) return got;
       const read = await acquireReadingOp({ ok: true, document: r.document }, stub, { json, storeSilent, doAnswer, storeName,
         storeRefusal: (out) => storeRefusal(out, { store: storeName, tokenClass: cls }) });
       if (read.response) return { early: read.response };
       return { body: { ...got.body, result: { ...r, document: read.body.document } }, status: got.status };
+    }
+    /* R117: an `acquire` answered `existed: true` (the record already holds the bytes) is asked of `readHeld` as an upload is; the
+       answer is relayed as it was (it carries its own reading already: acquire reads what it files). */
+    async function readHeldAfterAcquire(res) {
+      let b = null;
+      try { b = await res.clone().json(); } catch { return; }
+      if (b && b.ok === true && b.existed === true) await readHeld(shaOf(b));
     }
     /* R71 (N820; steps R9): A MEMBER'S CAPTURE MAY CARRY `step`, the step it is a product of. Once the capture has landed
        (its answer `ok`, naming the capture's digest), the door asks the store's internal route `capturestepproduct` to

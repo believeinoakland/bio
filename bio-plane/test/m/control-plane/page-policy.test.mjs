@@ -14,7 +14,8 @@ const sourcesFor = (p, name) => p[name] ?? p["default-src"];
 /* A source admits only this origin when it is a keyword other than a wildcard, or `data:` (no network); (T47; K3164;
    answer-envelope R6) `blob:` too, in `img-src` alone (a member's own file, previewed before it is sent). */
 const ownOnly = (sources, blob = false) => Array.isArray(sources) && sources.length > 0 && sources.every((s) =>
-  ["'self'", "'none'", "'unsafe-inline'", "data:", ...(blob ? ["blob:"] : [])].includes(s) || /^'nonce-[A-Za-z0-9+/=]+'$/.test(s));
+  ["'self'", "'none'", "'unsafe-inline'", "data:", ...(blob ? ["blob:"] : [])].includes(s) || /^'nonce-[A-Za-z0-9+/=]+'$/.test(s)
+  || /^'sha256-[A-Za-z0-9+/]{43}='$/.test(s));
 function assertOwnOrigin(header, where) {
   assert.equal(typeof header, "string", `${where}: no policy`);
   const p = parse(header);
@@ -26,10 +27,15 @@ function assertOwnOrigin(header, where) {
   /* nothing is sent elsewhere: a form posts only here, and no <base> can redirect relative addresses */
   assert.ok(ownOnly(p["form-action"]), `${where}: form-action`);
   assert.ok(ownOnly(p["base-uri"]), `${where}: base-uri`);
-  /* F17: a script runs only by this response's nonce — no 'unsafe-inline', 'unsafe-eval', 'self' or host in script-src */
+  /* F17: a script runs only by this response's nonce — no 'unsafe-inline', 'unsafe-eval', 'self' or host in script-src — or, for the
+     interface page (fix round 3, C15; answer-envelope R6), only by the hash of its one external script, from this origin, and no nonce */
   const scripts = p["script-src"];
+  if (Array.isArray(scripts) && scripts[0] === "'self'") {
+    assert.ok(scripts.length >= 2 && scripts.slice(1).every((x) => /^'sha256-[A-Za-z0-9+/]{43}='$/.test(x)), `${where}: script-src ${scripts}`);
+    return { hashes: scripts.slice(1) };
+  }
   assert.ok(Array.isArray(scripts) && scripts.length === 1 && /^'nonce-[A-Za-z0-9+/=]{22,}'$/.test(scripts[0]), `${where}: script-src ${scripts}`);
-  return scripts[0].slice(7, -1);
+  return { nonce: scripts[0].slice(7, -1) };
 }
 
 test("R51 (answer-envelope R6): the page at `/` (bio's and scratch's; the interface page since T47, R82) and the page an unknown address draws (`/sign` since T51, R109, R104; 404) are served with a policy that admits no other origin for any script, style, font, image, connection, frame or worker, posts forms only here and fixes the base (negative control: a policy naming another origin is caught by the judge)", async () => {
@@ -64,22 +70,39 @@ test("R51 (answer-envelope R6): an HTML page a module's hook answers through the
     assert.equal(r.headers.get("content-security-policy"), null);
 });
 
-test("R51 (answer-envelope R6; F17, K1881): each HTML route fetched twice carries two different nonces, at least 128 bits each, and every script element of each body carries its own response's nonce (negative control: a body's script without it is seen)", async () => {
+test("R51 (answer-envelope R6; F17, K1881): the interface page at `/` and the page an unknown address draws are served under the hash of their one external script from this origin, with no nonce and no inline script; a page a module's hook answers keeps the nonce rule: two fetches carry two different nonces, at least 128 bits each, and every script element of each body carries its own response's nonce (negative control: a body's script without it is seen)", async () => {
   const { env } = world();
   const SCRIPT = /<script\b[^>]*>/gi;
   for (const [path, params] of [["/sign", {}], ["/", {}], ["/", { store: "scratch" }]]) {
     const seen = [];
     for (let i = 0; i < 2; i++) {
       const r = await call(env, { path, params });
-      const nonce = assertOwnOrigin(r.headers.get("content-security-policy"), path);
-      assert.ok(Buffer.from(nonce, "base64").length >= 16, nonce);
+      const { hashes, nonce } = assertOwnOrigin(r.headers.get("content-security-policy"), path);
+      assert.equal(nonce, undefined, `${path}: no nonce`);
+      assert.equal(hashes.length, 1, `${path}: the script's hash`);
       const tags = r.text.match(SCRIPT) || [];
-      assert.ok(tags.length > 0, `${path}: the page has script elements`);
-      for (const t of tags) assert.ok(t.includes(`nonce="${nonce}"`), `${path}: ${t.slice(0, 80)}`);
-      assert.equal(r.text.includes("__CSP_NONCE__"), false, `${path}: the slot is filled`);
-      seen.push(nonce);
+      assert.equal(tags.length, 1, `${path}: one script element`);
+      assert.match(tags[0], /\ssrc="\/app\/shell-[^"]+\.js"/);
+      assert.ok(tags[0].includes(`integrity="sha256-${hashes[0].slice(8, -1)}"`), `${path}: the element names the hash the policy does`);
+      assert.equal(/\bnonce\b/.test(r.text) || r.text.includes("__CSP_NONCE__"), false, `${path}: no nonce, no slot`);
+      seen.push(hashes[0]);
     }
-    assert.notEqual(seen[0], seen[1], `${path}: a fresh nonce per response`);
+    assert.equal(seen[0], seen[1], `${path}: the same script, the same hash`);
   }
+  /* the nonce rule stands for any other page */
+  const html = '<!doctype html><script>x</script><script nonce="old">y</script>';
+  const hooks = { ...defaultHooks(), async publicOp() { return new Response(html, { status: 200, headers: { "content-type": "text/html; charset=utf-8" } }); } };
+  const seen = [];
+  for (let i = 0; i < 2; i++) {
+    const r = await call(env, { op: "publishedcase", params: { id: "C-1" }, hooks });
+    const { nonce, hashes } = assertOwnOrigin(r.headers.get("content-security-policy"), "hook page");
+    assert.equal(hashes, undefined);
+    assert.ok(Buffer.from(nonce, "base64").length >= 16, nonce);
+    const tags = r.text.match(SCRIPT) || [];
+    assert.equal(tags.length, 2);
+    for (const t of tags) assert.ok(t.includes(`nonce="${nonce}"`), t.slice(0, 80));
+    seen.push(nonce);
+  }
+  assert.notEqual(seen[0], seen[1], "a fresh nonce per response");
   assert.equal("<script>x</script>".match(SCRIPT).every((t) => t.includes('nonce="')), false);
 });
