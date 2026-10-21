@@ -182,3 +182,11 @@ Readers: no reader of the key outside this module in the repository; screens-pub
 ## J9 · COMPLETE
 
 COMPLETE (B11, K4245). R82 is named in the three co-attestation list tests' titles; no test body changed. Module tests 208/208; coverage 54/54; format, architecture, ownership 0 failures for case-authoring. Branch carries tranche/T51 (merged). Record: build/jobs/T51/case-authoring.md, section B11.
+
+## J10 · QUESTION
+
+QUESTION (B12, C3 and C67): two requirement lines are not written; my best reading is below and I carry on with it.
+
+1. C3 needs R82 amended. R82 as written lists the not-co-attested captures but says nothing of a refused publish. Proposed amendment (adds to R82, marked not yet met: T51): "Step three lists them, and its `self_attested` rows, whenever the captures the case rests on are known, whether or not `op=publish` refused: a refusal stays in `first` (and `CO_ATTESTATION_UNACKNOWLEDGED` among them), and the step still carries the list, so the ceremony can offer Retry and the reason box. When the captures cannot be known (a member refused, the roles not given), the step states that and lists none. Test: a pre-flight of a case whose publish is refused CO_ATTESTATION_UNACKNOWLEDGED lists the unacknowledged captures in step three, with `first` the refusal; control: a ready pre-flight lists none that is co-attested, and an unknown roster states it."
+
+2. C67 (my part) needs R16 amended. R16 says every non-severed `cites` edge of the project; the project cites the findings of all its drafts, so an earlier draft's question (not a member of this case) reaches the signed case. My reading, proposed: "an edge whose target is a finding (an inquiry) is carried only when that finding is a member of this case; edges to documents are carried as before." Test: a project citing Q (member) and Q2 (a finding of another draft, not a member): case_citations names Q only; control: with Q2 also a member both are named. If you want documents limited to those the members rest on, say so; that would change R16's existing test.
