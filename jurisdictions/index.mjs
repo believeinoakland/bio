@@ -647,10 +647,11 @@ function validateInto(p, errors) {
     basis(at, t);
   });
   const lawNames = new Set();
+  const lawResponses = [];
   if (own(p, "records_laws")) list("records_laws", p.records_laws).forEach((l, i) => {
     const at = `records_laws[${i}]`;
     if (!entry(at, l)) return;
-    fields(at, l, ["level", "name", "citation", "stages", "requesters", "basis"]);
+    fields(at, l, ["level", "name", "citation", "stages", "requesters", "response", "basis"]);
     if (!LAW_LEVELS.includes(l.level)) err(`${at}.level`, "LEVEL_UNKNOWN", localize("jurisdictions.index.level_is_one_of_law", "level is one of {LAW_LEVELS}", { LAW_LEVELS: String(LAW_LEVELS.join(", ")) }));
     str(`${at}.name`, l.name, "name"); str(`${at}.citation`, l.citation, "citation");
     /* R76 (T45): the stages the law has, in its order, each a product stage name with the law's own term; a stage the
@@ -676,6 +677,11 @@ function validateInto(p, errors) {
         str(`${ra}.text`, r.text, "text"); str(`${ra}.citation`, r.citation, "citation");
         statusBasis(ra, r);
       }
+    }
+    /* R96 (T51): the rule of the deadline that is the law's first-request window; checked once the deadlines are read */
+    if (own(l, "response")) {
+      if (!isStr(l.response)) err(`${at}.response`, "VALUE_INVALID", "response is the rule of a deadline");
+      else lawResponses.push({ at: `${at}.response`, rule: l.response });
     }
     if (isStr(l.name)) lawNames.add(l.name);
     basis(at, l);
@@ -1001,8 +1007,10 @@ function validateInto(p, errors) {
     if (!entry(at, d)) return;
     fields(at, d, ["rule", "applies_to", "units", "amount", "days", "count", "direction", "starts", "starter", "roll", "closures",
       "computation", "extension", "tolling", "observed", "applies_on", "due_at", "owed_by", "consequence", "defends", "citation",
-      "status", "basis"]);
+      "status", "label", "basis"]);
     str(`${at}.rule`, d.rule, "rule");
+    /* R97 (T51): the rule's name in the profile's words */
+    if (own(d, "label")) str(`${at}.label`, d.label, "label");
     if (d.applies_to !== "claim" && !kinds.has(d.applies_to))
       err(`${at}.applies_to`, "DEADLINE_KIND_UNKNOWN", localize("jurisdictions.index.string_is_neither_claim_nor", "'{String}' is neither claim nor a kind of this profile", { String: String(String(d.applies_to)) }));
     const legacy = own(d, "days") && !own(d, "units") && !own(d, "amount");
@@ -1078,6 +1086,11 @@ function validateInto(p, errors) {
     str(`${at}.citation`, d.citation, "citation");
     statusBasis(at, d);
   });
+  /* R96 (T51): a law's `response` is a deadline of this profile that applies to a records request */
+  for (const r of lawResponses) {
+    const hit = Array.isArray(p.deadlines) ? p.deadlines.find((d) => isObj(d) && d.rule === r.rule && d.applies_to === "records_request") : null;
+    if (!hit) err(r.at, "VALUE_INVALID", localize("jurisdictions.index.response_names_no_records_deadline", "response '{rule}' is no rule of a deadline that applies to records_request", { rule: String(r.rule).slice(0, 80) }));
+  }
 
   if (own(p, "legal_organisations")) list("legal_organisations", p.legal_organisations).forEach((o, i) => {
     const at = `legal_organisations[${i}]`;
@@ -1860,9 +1873,9 @@ function merge(profiles) {
      (R76): profiles that disagree have it withheld, so which stages the law has is undetermined. */
   if (has("records_laws")) {
     const v = [];
-    const byName = { stages: new Map(), requesters: new Map() };
+    const byName = { stages: new Map(), requesters: new Map(), response: new Map() };
     for (const p of profiles) for (const l of p.records_laws || []) {
-      const { stages, requesters, ...rest } = l;
+      const { stages, requesters, response, ...rest } = l;
       union(v, [rest], p.id);
       for (const f of Object.keys(byName)) if (own(l, f)) {
         if (!byName[f].has(l.name)) byName[f].set(l.name, []);
@@ -1873,6 +1886,7 @@ function merge(profiles) {
       if (!agree(given)) {
         conflict(`records_laws[${name}].${f}`, given, f === "stages"
           ? localize("jurisdictions.index.the_active_profiles_give_name", "the active profiles give {name} different stages, so which stages it has is undetermined", { name: String(name) })
+          : f === "response" ? localize("jurisdictions.index.the_active_profiles_give_name_different_windows", "the active profiles give {name} different first-request windows, so which one it has is undetermined", { name: String(name) })
           : localize("jurisdictions.index.the_active_profiles_say_differently", "the active profiles say differently who may request under {name}, so it is undetermined", { name: String(name) }));
         continue;
       }
@@ -2182,7 +2196,7 @@ function merge(profiles) {
 
 /* R29, R55: a deadline's fields that hold one value under its rule and what it applies to. */
 const DEADLINE_ONE_VALUE = ["units", "amount", "count", "direction", "starts", "starter", "roll", "closures", "computation",
-  "extension", "tolling", "observed", "applies_on", "due_at", "owed_by", "consequence", "defends", "status"];
+  "extension", "tolling", "observed", "applies_on", "due_at", "owed_by", "consequence", "defends", "status", "label"];
 /** A deadline as R26 reads it: `days: n` with no units is `units: "days", amount: n`. */
 function normalDeadline(d) {
   if (!own(d, "days") || own(d, "units")) return d;
