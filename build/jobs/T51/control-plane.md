@@ -352,3 +352,7 @@ I build nothing until you answer.
 R119 (J18): BOB retired it (K4411): `entitycreate` already admits members and entities marks the office, so the door builds nothing for it. Merged `tranche/T51` (the retired line, `officeconfirm` on the tranche); `t46-app`, `t51-routes` (5 of 5 now), `r117-held`, `r118-shared`, `page-policy` pass (24 of 24). The last full run (356 tests) had two reds, `officeconfirm` (since cleared) and affordances' unaccounted (not mine). I merged before INTERFACE-SHELL #15 and SCREENS-SETTINGS #15 landed, as BOB said "COMPLETE with what you have".
 
 Size (session_01JarNVWj3jh7A31SRkU57RG): test runs 17, module lines 4,103
+
+## J19 · COMPLETE · re B23
+
+Re B23: R119 retired, nothing built; merged tranche; t51-routes 5 of 5, R117/R118/R75 tests pass. Complete with what I have; I merged before INTERFACE-SHELL #15 and SCREENS-SETTINGS #15.
