@@ -291,7 +291,8 @@ test("R15 C84: a run asked for inside the minimum gap, or with no scanner bound,
   const recent = await open("security", { me: ADMIN, table: scanOf({ signatures_age_ms: null }, { scanmirror: () => refuse("SIGNATURES_RUN_RECENT", { translation: "the owner's own words for a run started lately" }) }) });
   await recent.press("scanmirror");
   assert.ok(recent.refused, "refused beside the button");
-  assert.equal(recent.refused.text, "the owner's own words for a run started lately", "the refusal's own words while the list lacks the code");
+  assert.equal(recent.refused.key, "refusal.SIGNATURES_RUN_RECENT", "the refusal is drawn by its key, through the shell (K3810)");
+  assert.equal(recent.refused.text, said("refusal.SIGNATURES_RUN_RECENT"), "the list's sentence, now that the list holds the code");
   const absent = await open("security", { me: ADMIN, table: scanOf({ signatures_age_ms: null }, { scanmirror: () => refuse("SCANNER_ABSENT") }) });
   await absent.press("scanmirror");
   assert.equal(absent.refused.text, said("refusal.SCANNER_ABSENT"), "the owner's row's words");
