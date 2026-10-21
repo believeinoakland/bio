@@ -220,3 +220,30 @@ QUESTION (SCREENS-SETTINGS #13, fix round 2, B26). I carry on with everything; a
 6. **C91** `screen.watching.purpose` and `screen.leads.purpose`: Settings draws each door with its name; no purpose is drawn beneath them.
 
 **Readings I built on (tell me if wrong):** C89: `memberadd` for an administrator beyond the second is sent by the screen itself (the shell would draw its CONSENSUS_REQUIRED answer as a refusal), drawn as done in the success style with who must still endorse, and the roster read again. C90: the removal vote is not drawn while `adminarith.live.possible` is false (the section says why); an unread count hides nothing. C14: grouprules asks `heldcaptures` once on open with `fields: "picker"`.
+
+## J17 · COMPLETE
+
+COMPLETE (SCREENS-SETTINGS #13, fix round 2: B26, with B27 and B28). Tranche merged at `62d4234d23` and DEC-396 read.
+
+**Causes met** (each test written first and seen failing, with its control; tests name the requirement they amend and the C-number):
+- C14 (R70): `grouprules` asks `heldcaptures` once on open, `fields: "picker"`; no act reads it again.
+- C83 (R15, R77): the "files are checked" sentence only with a scanner that answered, holds signatures (`signatures_age_ms`) and has no `no_signatures`; the no-signature state is drawn under file-safety's keys (B27) with its day and the refusal's code, which also says what an administrator can do. Setup's half is screens-entry's.
+- C85 (R66): `export` sends `query: {note}`; the manifest is offered as a file (`shell.save`) from page memory with "{n} records, {n} files" (queue words); the list is read again.
+- C86 (R18): the latest check's verdict also draws its day, HH:MM and the plane's own `detail`.
+- C87 (R14, R46, R61, R65): Add a court, Draft the rule (each box), Propose statements, Save the set (name, subject, statement, reason, citation for a pattern), Start a set from these, Save who your team is: an empty box sends nothing and is named by `screen.security.config.missing {field}`.
+- C88 (R75): a founder's or any member's hosting record is "Recorded by <handle> on <date>"; setup/system words only for no one, bootstrap and machines.
+- C89 (R2): `memberadd` for an administrator beyond the second is sent by the screen, drawn as done (`refusal.CONSENSUS_REQUIRED` with who must still endorse) and the roster read again.
+- C90 (R56): no removal vote where `adminarith.live.possible` is false; an unread count hides nothing.
+- C91 (R17): "For every member" holds Watched addresses and Leads, each only where `cs.can` allows (monitoring; lead); no purpose line (no word).
+- C94 (R15, R27, R40, R48, R55, R56, R57, R61, R65, R75, R46): every id-to-name site uses `cs.memberName` (members, grouprules, places, bias, group, updates, teamai, account, connect, security, panel, draft labels).
+- Also: `keys.mjs` regenerated from the design's reads list (1,955 keys; the contract test had gone red with DEC-393).
+
+**Deferred / not drawn:** the tables count of a copy (no word); the six rows of B28 are drawn nowhere raw. When they exist, a CHANGE: `screen.group.hosting.now.date`, `screen.group.export.count.tables.one/.other`, `screen.group.domain.checked`, `shell.field.needed` (replacing `screen.security.config.missing`), `screen.watching.purpose`, `screen.leads.purpose`.
+
+**Requirement lines for BOB:** R66 ("kept nowhere on the page" is now: offered as a file from page memory; the note goes in the query); R75 (founder is named, not "at setup"); R15/R77 (checked sentence needs signatures); R70 (`fields: "picker"`); R2 (an administrator proposal is done, not a refusal); R56 (no removal act where the plane cannot carry it); R17 (the two doors); C87's named-box refusals under R14, R46, R61, R65; R39/C94 (`memberName` at every site).
+
+**Found in other modules:** (1) interface-shell: an act option to treat named refusal codes as success (with rereads) is missing; `adminendorse` still draws "Your endorsement is recorded" as a red refusal, and my memberadd path sends its own request. (2) screens-intake: Add's doors to Watched addresses and Leads (C91) and Pause the watching for a member (C90). (3) screens-entry: Setup step 7 (C83). (4) capture/op-declarations: `heldcaptures` declares no `fields`, so the guard does not check `state`/`fields`. (5) Red on the untouched tranche, not mine: screens-inquiry `common.test.mjs`:89, `fr28-document.test.mjs`:356, `fr28-project.test.mjs`:199; control-plane `t51-acquire-timings.test.mjs`:94, :123; `plane/r42-entry.mjs`.
+
+**Tests and checks:** module suite 231 tests, 231 pass, 0 fail. Users (impact.mjs): screens-inquiry + journey-check 411 tests, 3 fail (the pre-existing three); control-plane + plane 394 tests, 3 fail (pre-existing). `checks/run.mjs`: format 0; architecture 0; words 0 (testcopy 0); coverage 7 failures, none in screens-settings. `ownership.mjs`: 28 files, 0 failures.
+
+Size (session_01LsvhfCo9erwiifxJZrNarX): test runs 45, module lines 5223
