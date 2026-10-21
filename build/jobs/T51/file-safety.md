@@ -268,8 +268,24 @@ QUESTION (C84, R46/R50 amendments; step 3). I carry on with the best readings be
 
 ## Fix round 4, wave 1 (FILE-SAFETY #15; C84; RC-R7; B11)
 
-Work in progress; the completion section follows when BOB answers J11.
+BOB's answer B12 (K4438): `signatures.stage_at` and `signatures.request` (an instant) are file-scanner R6's; R50's test line corrected (16 minutes allowed, 14 refused as under way); the `mirror.started` note removed; stand-in keys named below for the word batch.
 
-- `index.mjs`: `#runOf` reads the scanner's `RUN_STARTED` (`stage`, `stage_at` else `last_attempt`; alive under 15 minutes); `scanMirror` refuses a live run as `SIGNATURES_RUN_UNDER_WAY` (new row C-140.45, region `is-signature-run-under-way`, stand-in `refusal.SIGNATURES_RUN_UNDER_WAY`), lets a stopped run pass, and the `mirror.started` note is gone; `#startRunWhenNoSignatures` leaves a live run or an open request (`signatures.request`) to the cron; `#noSignatures` words an unfinished run by stage or as stopped (`file-safety.index.signatures_run_*`), never as a refusal. `WORD_KEYS` filters by the row's design source (K4435's red `rows.test.mjs` R24: red first, green after).
-- Tests: `mirror.test.mjs` (four new, each red against the previous source, green now; R49/R50 tests moved to the scanner's own trace via `runTrace` in `fixture.mjs`); `rows.test.mjs` names the new stand-in.
-- Scripted double, said as BOB's START asks: file-scanner's job is not merged at this time (its branch holds only its start commit), so the scanner's trace is `fixture.mjs`' `runTrace`, reading file-scanner R6's stated fields. The interface test against the real handler is written once it merges.
+**Entries applied.** RC-R7: R46 (an unfinished run is worded as one) and R50 (the guard and the six-hour self-start read the scanner's state). Plus K4435's `WORD_KEYS` fix.
+
+**C84.**
+1. Root cause: `scanMirror` (old `index.mjs:1008-1022`) and `#lastAttempt` read this module's own `mirror.started` note, so a run the scanner never wrote still blocked the next press ("checked a few minutes ago"), and `#noSignatures` drew the stale stored refusal. Now `#runOf` reads the scanner's `RUN_STARTED`/`stage`/`stage_at`; the note is gone; an unfinished run is worded by stage, or as stopped.
+2. Why the tests missed it: the double wrote nothing at a run's start, so the note was all a second press could see. Test-gap fix merged: `fixture.mjs` `runTrace` (the scanner's start trace, then cancelled: only `binding.stage`/`end` move it) and four new tests; the R49/R50 tests now run on that trace.
+3. Failing-first test on the walker's row, through the route map (`fileSafetyOps` `scanmirror`, `scanstatus`): "R46, R50 (C84, the walker's row)" in `mirror.test.mjs`. Red against the previous source (all four new tests failed; the walker's row failed at `scanstatus` after the press: the stale `REFUSED` still drawn), green after. Controls in the same file: a run that ended (`REFUSED:main.cvd:403`, `MIRROR_REFUSED:exit 1: … 403`) worded as before, 14 minutes after its end refused as R49 says, 16 allowed; a quiet scanner blocks nothing; a batch leaves a live run and an open request to the cron, starts a stopped one after 6 hours.
+4. Platform check: N for this module (pure plane code). The scanner's own L and P checks (cancel after the response, cron, 200 MB) are file-scanner's. LIVE-CHECK of the smoke copy not run: it needs the redeploy's scanner to show anything new, and the stored 04:17 string is the old one (new data only: the first new run overwrites it). The interface test against the real merged handler is not possible yet: file-scanner's job is not merged (its branch holds its start commit), so the scanner is the scripted double above, reading file-scanner R6's stated fields. The seam test (press to words, real scanner and file-safety) is screens-settings' (S, wave 2).
+
+**K4435's red.** `rows.test.mjs` R24 was red (the stand-in `refusal.SIGNATURES_RUN_RECENT` counted as read); `WORD_KEYS` now filters by the row's design source. Red first, green after; its (1) and (2) as BOB wrote them.
+
+**Stand-in keys for the word batch (design rows owed):** `refusal.SIGNATURES_RUN_UNDER_WAY` (row C-140.45, new; promotion stamps it); `file-safety.index.a_run_is_under_way`, `signatures_run_seed`, `signatures_run_download`, `signatures_run_stage`, `signatures_run_verify`, `signatures_run_under_way`, `signatures_run_stopped`.
+
+**Requirement ids met.** R46, R50 (the amendments), R49 (guard now by the scanner's state); coverage 50 of 50.
+
+**Found in another module.** None.
+
+**Tests and checks.** `node --test --test-force-exit bio-plane/test/m/file-safety/`: 84 tests, 84 pass, 0 fail. Users: notice-producers and scheduler 265 pass; op-declarations and affordances 527 of 528 (R34 `capturecredentiallist`, on the tranche tip, accepted); queue and screens-settings 452 of 453 (R15 C84, the stale test of suite-reds-753ea4db8a, screens-settings'); control-plane 355 of 356 (t47-e2e R81, on the tranche tip, a stale test). Checks: format 0 failures; architecture 0; coverage 0 (50 of 50); words for file-safety 0 (testcopy 0); ownership 0 (6 files); `setup-words/build.mjs --check`: stale-rows note only (the new stand-ins), as expected.
+
+Size (session_01Puie49xQXkuYPiR7ZSPHMk): test runs 12, module lines 2515
