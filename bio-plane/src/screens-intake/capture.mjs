@@ -163,7 +163,11 @@ function renderCapture(cs, view) {
   const plainText = (s) => String(s).replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
   const made = (g) => g && typeof g.bundleId === "string" && g.bundleId
     ? `<p class="mk-small">${cs.ref("document", g.bundleId, g.existed ? plainText(cs.w("screen.capture.address.existed.open")) : g.title || g.bundleId, [])}`
-      + (g.filed && g.filed.id ? ` ${g.filed.question ? cs.w("capture.filed.question", { project: g.filed.title, question: g.filed.question }) : cs.w("capture.filed.project", { project: g.filed.title })}` : "")
+      /* R49 (C9): a document held under another project's home and filed here as well says so (`screen.capture.address.filedhere`, a stand-in
+         key the design has no row for yet, drawn once the table holds it); until then it says where it is filed, as a new capture does */
+      + (g.alsoHere && g.alsoHere.home && cs.w("screen.capture.address.filedhere") !== "screen.capture.address.filedhere"
+          ? ` ${cs.w("screen.capture.address.filedhere", { project: g.alsoHere.home })}`
+          : g.filed && g.filed.id ? ` ${g.filed.question ? cs.w("capture.filed.question", { project: g.filed.title, question: g.filed.question }) : cs.w("capture.filed.project", { project: g.filed.title })}` : "")
       /* R35: "Cite a passage" opens `find-in` over the document by its capture's fingerprint, never its record id */
       + (/^INQ-/.test(at.id) && typeof g.sha === "string" && g.sha ? ` <a class="cs-btn" data-tone="quiet" href="/app/find-in/${encodeURIComponent(g.sha)}/${encodeURIComponent(at.id)}" data-nav data-level="1" data-tip="${cs.w("capture.cite.tip")}">${cs.w("capture.cite")}</a>` : "")
       + "</p>" : "";
@@ -423,8 +427,15 @@ async function doneAcquire(view, answer, cs) {
      shows is linked and no document is written (the question chosen was sent as `for`, so the plane has recorded the capture as made
      for it, acquisition R47); none that shows is promoted for the viewer below, as a new capture is. */
   if (a.existed === true) {
-    const home = await view.parts.homeOf(cs, sha);
-    if (home) { cs.set("captured", { existed: true, title, address, bundleId: home, sha, ...pend }); return; }
+    const copy = await view.parts.copyOf(cs, sha);
+    if (copy) {
+      /* R49 (C9; capture R100, R101): a capture from a project's page whose document is held under another project's home is also filed
+         in this project, as a reference, and the result says so; the document keeps its home and is linked, and shown once */
+      const more = await view.parts.alsoFiled(view, cs, copy, sha);
+      if (more.refused) cs.set("promoteRefused", { tab: "address", html: more.refused });
+      cs.set("captured", { existed: true, title, address, bundleId: copy.document, sha, ...pend, ...(more.alsoHere ? { filed: more.filed, alsoHere: more.alsoHere } : {}) });
+      return;
+    }
   }
   const filed = await view.parts.filedFor(view, cs);
   if (filed === null) { cs.set("promoteRefused", { tab: "address", html: "" }); return; }
@@ -436,10 +447,32 @@ async function doneAcquire(view, answer, cs) {
 /* R49 (C9, C10): the document the viewer may see that holds these bytes, asked of the record by the capture's digest (`heldat`, no
  * `check`: nothing is fetched). "" when the record shows none, the digest is not one, or the read is refused. */
 async function homeOf(cs, sha) {
-  if (typeof sha !== "string" || !sha) return "";
+  const copy = await copyOf(cs, sha);
+  return copy ? copy.document : "";
+}
+
+/* R49 (C9): the copy `heldat` answers for the digest (its `document` and `project`), or null when the record shows none. */
+async function copyOf(cs, sha) {
+  if (typeof sha !== "string" || !sha) return null;
   const held = await cs.call("heldat", { query: { sha256: sha } });
   const h = held && held.result && typeof held.result === "object" ? held.result : held;
-  return h && h.ok !== false && h.held === true && h.copy && typeof h.copy.document === "string" ? h.copy.document : "";
+  return h && h.ok !== false && h.held === true && h.copy && typeof h.copy.document === "string" ? h.copy : null;
+}
+
+/* R49 (C9; capture R100, R101): the subject project (R22) files a found document held under another project: `captureseenin` with the
+ * capture's digest and that project, the member's own act (the plane stamps her). Nothing is sent with no subject project, for a question
+ * that states none or could not be read, or when the document's home is the subject project (it is listed there already). Answers
+ * `{}` (nothing filed), `{filed, alsoHere: {home}}` (`home` the home project's name, "" where it has none or the plane names none) or
+ * `{refused}` (the plane's refusal in words, `refusalHtml`). */
+async function alsoFiled(view, cs, copy, sha) {
+  const filed = await view.parts.filedFor(view, cs);
+  if (!filed || !filed.id || copy.project === filed.id) return {};
+  const asked = await cs.call("captureseenin", { body: { captureSha: sha, project: filed.id } });
+  const a = asked && asked.result && typeof asked.result === "object" ? asked.result : asked;
+  if (!a || a.ok !== true) return { refused: view.parts.refusalHtml(cs, a) || cs.w("shell.unread") };
+  const homeId = typeof a.home === "string" && a.home ? a.home : typeof copy.project === "string" ? copy.project : "";
+  const home = homeId ? await view.parts.projectOf(cs, homeId) : null;
+  return { filed, alsoHere: { home: (home && home.title) || "" } };
 }
 
 /* R49 (C9): a promotion's refusal in words (`refusalHtml`). Bytes that have another home (`CAPTURE_HELD_BY_ANOTHER_BUNDLE`, provenance
@@ -571,8 +604,13 @@ async function doneUpload(view, answer, cs) {
      and none is written. None that shows is promoted for the viewer when the answer carries the document to file; without it nothing
      is written (the plane answers `existed` with no document when it has already registered a home). */
   if (a.existed === true) {
-    const home = await view.parts.homeOf(cs, sha);
-    if (home) { cs.set("uploaded", { name, existed: true, bundleId: home, title: name, sha }); return; }
+    const copy = await view.parts.copyOf(cs, sha);
+    if (copy) {
+      const more = await view.parts.alsoFiled(view, cs, copy, sha);
+      if (more.refused) cs.set("promoteRefused", { tab: "file", html: more.refused });
+      cs.set("uploaded", { name, existed: true, bundleId: copy.document, title: name, sha, ...(more.alsoHere ? { filed: more.filed, alsoHere: more.alsoHere } : {}) });
+      return;
+    }
     if (!doc) { cs.set("uploaded", { name, existed: true, bundleId: null }); return; }
   }
   const filed = await view.parts.filedFor(view, cs);
@@ -676,7 +714,7 @@ export const CAPTURE_SCREEN = Object.freeze({
   id: "capture",
   reads: captureReads,
   render: renderCapture,
-  parts: Object.freeze({ bundleFor, checkOutcome, filedFor, forOf, homeOf, projectOf, promoteDocument, refusalHtml, refusedHtml, titleOf }),
+  parts: Object.freeze({ alsoFiled, bundleFor, checkOutcome, copyOf, filedFor, forOf, homeOf, projectOf, promoteDocument, refusalHtml, refusedHtml, titleOf }),
   acts: Object.freeze([
     Object.freeze({ op: "acquire", label: "act.acquire.label.capture", send: sendAcquire, done: doneAcquire, failed: failedAcquire, rereads: Object.freeze(["open"]),
                     refusals: Object.freeze({ /* control-plane R105, R116 (K4326): a timed-out capture says what was kept: held, undetermined, or (nothing) the base words */
