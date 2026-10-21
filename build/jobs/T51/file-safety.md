@@ -1,6 +1,6 @@
 # file-safety (T51)
 
-**Status** · session_01T8Ec2n7sMP4hLAcphL7HNL · depth 2 · COMPLETE · handled B9
+**Status** · session_013rwPMgEDrWmt84TRnUfgec · depth 2 · COMPLETE · handled B10
 
 ## Completion (T51-183, words)
 
@@ -220,3 +220,39 @@ FR-12 (B8) done; your B9 answer applied (requires providerId, handlingDigest onl
 REPORT for you: `screens-settings`' `security` screen must change to draw it. It reads `scanstatus` for `queued` and `held` only; it must draw `scan.no_signatures` (its entry would be added). The three reds in op-grades (R42, R46) and op-declarations (R73/R21) fail on the tranche without my changes too. `rows.mjs` is stale for the new ids (expected; yours to regenerate).
 
 Merged tranche/T51 (437339a938). Module tests 75/75 (new: signatures 3, declared-ops 8); words, architecture, coverage (45 of 45) and ownership 0 failures for file-safety; format 0.
+
+## Completion (fix round 3, wave 1: C84 your part, C83; session_013rwPMgEDrWmt84TRnUfgec)
+
+**Entries applied.**
+- **C84 (door and self-start), file-safety R49, R50, amending R4, R5.** `scanMirror({viewer, at})` (`op=scanmirror`, administrators) asks `file-scanner` for `POST /mirror?async=1` through the binding and answers `{ok: true, state: "started"}`. It refuses a member or machine (`NOT_AN_ADMIN`), no scanner (`SCANNER_ABSENT`), a scanner that does not answer 202 (`SCANNER_UNREACHABLE`), and an attempt under 15 minutes old with the new row `SIGNATURES_RUN_RECENT` (C-140.44, `attempted_at` says when). An "attempt" is the later of `/version` `signatures.last_attempt` and the run this module last started (kept in `fs_wakes` key `mirror`), because a started run has not yet written its own attempt. `scanBatch` reads `/version` once per batch and, when no set is published and the newest attempt is null or over 6 hours old, starts one run the same way. It never changes the batch's answer, and a state it cannot read or a start the scanner refuses starts nothing. `scanStatus` starts nothing. `scanmirror` is declared in `DECLARED_OPS` (classes admin and member, viewer stamp, no capability, weight substrate).
+- **C83, R46 amended.** `#noSignatures` parses `MIRROR_REFUSED:exit N: …` as well as `REFUSED:<db>:<status>`. A status is named only when the text holds one as an HTTP answer ("error code 403", "status 403", "HTTP 403", "(403)"), never the exit code, a version or a count; an error with none is worded as the service having refused (stand-in key below); an unknown text still answers the generic unfinished-download words.
+
+**Tests (each seen failing first on the code before the change, passing after; controls named in each).** `mirror.test.mjs` (R49: started once with `?async=1`, 14 minutes refused with the scanner not asked, 16 minutes starts, double press, member, machine, unbound, scanner not accepting; R50: one run for no set and no attempt, none an hour later, one at 7 hours, an administrator's run counts, controls: published set, attempt under 6 hours, unbound, state unreadable, `scanStatus` starts nothing), `signatures.test.mjs` (R46 both forms), `declared-ops.test.mjs` (`scanmirror`), `fixture.mjs` (the scripted scanner answers `/mirror`, default 202), `rows.test.mjs` (a row without a word row must be a named stand-in).
+
+**Stand-ins (no word row yet; the design stream writes them).** `refusal.SIGNATURES_RUN_RECENT` (the new row's translation); `file-safety.index.signatures_refused_unnumbered` (the reason line for a refusal with no status); the acts and details `file-safety.index.checking_for_new_signatures`, `file-safety.index.no_scanner_so_no_run_started`, `file-safety.index.a_run_was_started_lately`, `file-safety.index.the_scanner_did_not_start`. `WORD_KEYS` lists only rows that hold a word, so the row joins it when its word lands.
+
+**Provider merged.** file-scanner R6's `mirrorAsync` (`POST /mirror?async=1` → 202 `{ok, started: true}`) was merged to `tranche/T51` while I worked; I merged it into the branch before COMPLETE and the fixture's default answer is exactly its shape. The suite was re-run after the merge (tests 80, pass 80).
+
+**Deferred.** None in this module.
+
+**Found in other modules (REPORT).**
+1. A new op in the route map breaks four tests of other modules that count file-safety's ops (23 expected, 24 now): `op-declarations/t36.test.mjs` (R32, R6: OPS holds a spec for each op), `control-plane/t36-door.test.mjs` (R61, R29), `plane/t36.test.mjs` (two: the door has no store route for `scanmirror`, "Cannot read properties of null (reading 'store')"). `op-declarations` needs `scanmirror` in the file-safety family (`ops`: administrator kind, like `securitytooladd`) and the plane its store route; those tests' count becomes 24.
+2. Generated artifacts made stale by this change: `bio-plane/dist/bio-plane.bundled.mjs`, `release/bio-plane.bundled.mjs`, `agent-worker/dist/agent-worker.bundled.mjs`, `release/agent-worker.bundled.mjs`, `setup-words/rows.mjs`, `words-reads.json` (stand-ins above).
+3. screens-settings (wave 2) draws the button and calls `op=scanmirror` (answers `state: "started"`, or the row `SIGNATURES_RUN_RECENT` with `attempted_at`).
+4. Reds also on the tranche tip, named and not fixed: format (build/rulings.md:4346), coverage of other modules, and in the suites run for impact the same ten failures with and without this change (op-grades R17, screens words R24 and R29).
+
+**Tests and checks run.**
+- `node --test --test-force-exit bio-plane/test/m/file-safety/`: tests 80, pass 80, fail 0.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 12 modules, 171 test files; 4 new failures, all item 1 above; the rest equal the tranche tip's.
+- `checks/run.mjs`: words 0 failures; architecture 0; coverage: file-safety 50 of 50 (the 15 failures are other modules'); format 1 failure, `build/rulings.md`, not mine.
+- `checks/ownership.mjs … file-safety tranche/T51 job/T51/file-safety`: 8 files changed by file-safety; 0 failures.
+
+Size (session_013rwPMgEDrWmt84TRnUfgec): test runs 9, module lines 2474
+
+## J9 · QUESTION
+
+Words needed (K3810; I used stand-ins with plain localize defaults, named in my record): refusal.SIGNATURES_RUN_RECENT (new row C-140.44: a check for signatures was made under 15 minutes ago, no run started; the answer also carries attempted_at), file-safety.index.signatures_refused_unnumbered (the reason line when the scanner states MIRROR_REFUSED with no status number), file-safety.index.checking_for_new_signatures, file-safety.index.no_scanner_so_no_run_started, file-safety.index.a_run_was_started_lately, file-safety.index.the_scanner_did_not_start. Please have the design stream write the first two; the other four are acts and details. Nothing waits on this.
+
+## J10 · COMPLETE
+
+Fix round 3 wave 1, file-safety: C84 my part (R49 scanMirror, op=scanmirror, declared; R50 the scan batch's self-start once in 6 h) and C83 (R46: MIRROR_REFUSED:exit N: … parsed beside REFUSED:<db>:<status>). Merged tranche/T51 incl. file-scanner R6 mirrorAsync. Suite 80/80. Checks: words 0, architecture 0, ownership 0, coverage file-safety 50/50 (format red is rulings.md:4346, on the tip). REPORT: adding the op breaks four other-module tests that count file-safety's ops (23, now 24): op-declarations/t36.test.mjs, control-plane/t36-door.test.mjs, plane/t36.test.mjs (two; the plane has no store route for scanmirror). op-declarations needs scanmirror in the file-safety family (administrator kind like securitytooladd) and the plane its route. Stale generated: both plane and agent-worker bundles, setup-words rows.mjs, words-reads.json. screens-settings (wave 2) draws the button and sends op=scanmirror. Words stand-ins in my QUESTION. Details and Size line in build/jobs/T51/file-safety.md.
