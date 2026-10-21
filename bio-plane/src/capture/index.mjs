@@ -58,7 +58,7 @@ import { governorOf } from "../host-governor/index.mjs";
 /* R86 (T41-8a): `UPLOAD_VIA`, the route an upload's receipt names, provenance's one spelling (its R63). */
 import { provenanceOf, DOORBELL_VIA, UPLOAD_VIA } from "../provenance/index.mjs";
 import { attest, attestationOf } from "../attestation/index.mjs";
-import { viewerPredicate, GATE_MARK, listenerRefusal } from "../membership/index.mjs";
+import { viewerPredicate, GATE_MARK, listenerRefusal, membershipOf } from "../membership/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
 import { CAPTURE_SCHEMA, CAPTURE_DERIVED_SCHEMA, CAPTURE_ADDITIVE_COLUMNS, CAPTURE_RESHAPE,
          CAPTURE_PURGED_TABLES, CAPTURE_EXEMPT_TABLES } from "./schema.mjs";
@@ -418,6 +418,9 @@ export class Capture {
     if (!this.credentials) this.credentials = credentialsOf({ storage: this.#storage }, { record: this.core });
     return this.credentials;
   }
+
+  /* membership's instance for this storage (R101's project fence, its `projectAuthority`), reached when first needed. */
+  #membership() { return membershipOf({ storage: this.#storage }, { record: this.core }); }
 
   /* R90: this module's clock read once, epoch milliseconds; an answer that is not a finite number (a clock at fault)
      reads the platform's. */
@@ -867,6 +870,53 @@ export class Capture {
                                     captureSha, project, memberIdOf(by), at && ISO_INSTANT.test(at) ? at : stampSecond()));
       return { recorded: true };
     } catch { return { recorded: false }; }
+  }
+
+  /** R101 (T51 fix round 3; C9; K4370; amends R100): a member files a held document in a project, `op=captureseenin`, calling
+   *  `recordSeenIn` (R100) for the member. Refused in order, each writing nothing: a `by` that is not a signed-in member's stamp
+   *  (`MEMBER_SESSION_REQUIRED`, 403, as R86's fence); a `captureSha` that is not 64 lowercase hex or a `project` that is blank or
+   *  over `SEEN_IN_PROJECT_MAX` characters (the required-argument refusal naming it); a digest no capture the viewer may see holds
+   *  as a document's capture, which is also the document whose home the member cannot see (`CAPTURE_NOT_HELD`, 404, C-118.11, one
+   *  answer for both, naming no holder); a project the member has not joined (membership's `PROJECT_ACT_NOT_A_PARTICIPANT`,
+   *  C-56.1, through `projectAuthority`, 403, which an unknown project meets as well). Answers `{ok: true, recorded, home}`: `home`
+   *  the project the document is held under (`bundles.project`, as `heldCaptures`' `also_here` names it, null when it has none);
+   *  `recorded` false for a repeat, a reference the first press kept at its first instant and member, and for the document's own
+   *  home, which lists it already. The instant is this instance's clock, never the request's. The `contribute` capability is the
+   *  door's (`op-declarations`), as for every corpus write (membership's `isProjectEditor`). */
+  fileSeenIn({ captureSha, project, by, viewer = undefined } = {}) {
+    if (typeof by !== "string" || !memberIdOf(by).trim() || isMachineIdentity(by))
+      return { ok: false, reason: "MEMBER_SESSION_REQUIRED", status: 403,
+               detail: localize("capture.index.seenin_member_act", "filing a document where it is seen is a signed-in member's act, whose stamp names them; nothing was written") };
+    if (typeof captureSha !== "string" || !HEX64.test(captureSha))
+      return Capture.#missingArgument("captureseenin", "captureSha", "64 lowercase hex characters", captureSha);
+    if (typeof project !== "string" || !project.trim() || [...project].length > SEEN_IN_PROJECT_MAX)
+      return Capture.#missingArgument("captureseenin", "project", `the id of a project, at most ${SEEN_IN_PROJECT_MAX} characters`, project);
+    try {
+      const sight = this.#sightOf(viewer);
+      const home = this.#one(`SELECT b.project AS project FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
+                               WHERE r.capture_sha = ? AND (${sight.sql}) ORDER BY julianday(r.registered), r.registered, r.bundle_id LIMIT 1`,
+                             captureSha, ...sight.args);
+      /* DEC-49 REGION is-capture-held */
+      if (!home) {
+        const row = CAPTURE_CHECKS.CAPTURE_NOT_HELD;
+        return { ok: false, reason: "CAPTURE_NOT_HELD", code: "CAPTURE_NOT_HELD", check: row.check, translation: row.translation, status: 404,
+                 detail: localize("capture.index.seenin_not_held", "the record holds no such document that you may see; nothing was written") };
+      }
+      /* END DEC-49 REGION is-capture-held */
+      const denied = this.#membership().projectAuthority(project, `member:${memberIdOf(by)}`, "joined", "captureseenin");
+      if (denied) return { ...denied, status: 403 };
+      const homeProject = home.project || null;
+      const listed = homeProject === project || !!this.#one(`SELECT 1 AS x FROM seen_in WHERE capture_sha = ? AND project = ?`, captureSha, project);
+      if (listed) return { ok: true, recorded: false, home: homeProject };
+      const done = this.recordSeenIn({ captureSha, project, by, at: stampSecond(this.#instant()) });
+      if (done.recorded !== true)
+        return { ok: false, reason: "SEEN_IN_NOT_RECORDED", status: 502,
+                 detail: localize("capture.index.seenin_not_recorded", "the record could not be written, so nothing was filed") };
+      return { ok: true, recorded: true, home: homeProject };
+    } catch {
+      return { ok: false, reason: "SEEN_IN_NOT_RECORDED", status: 502,
+               detail: localize("capture.index.seenin_not_recorded", "the record could not be written, so nothing was filed") };
+    }
   }
 
   /** R69 (DEC-81 item 3(c)): a capture's actor appends a signed account of when and how they captured it. Refused
@@ -3080,6 +3130,10 @@ export function captureOps(c, url, body, env, h = {}) {
     /* R96 (T51): `check` is the only act that reaches outside, and only from a member session (the stamp `by`). */
     heldat: () => c.heldAt({ address: q("address"), sha256: q("sha256"), check: q("check") === "1" || q("check") === "true",
                               viewer: q("viewer") ?? "", member: q("by") }),
+    /* R101 (fix round 3, C9): a mutating member act; `by` and the viewer are the control plane's stamps, never the body's, and the
+       instant is this instance's clock. */
+    captureseenin: () => c.fileSeenIn({ captureSha: (body && body.captureSha) ?? q("captureSha"), project: (body && body.project) ?? q("project"),
+                                        by: q("by"), viewer: q("viewer") ?? "" }),
     heldcaptures: () => c.heldCaptures({ member: q("member"), project: q("project"), bundle_id: q("bundle_id"), sort: q("sort"), dir: q("dir"), ...page,
                                          state: q("state"), fields: q("fields"), viewer: q("viewer") ?? "" }),
     heldsetaside: () => c.setAside({ ids: body && body.ids, reason: body && body.reason, author: q("by") ?? q("author"),
@@ -3139,6 +3193,12 @@ export const DECLARED_OPS = Object.freeze({
      `matchedSweep` is never read from the body (acquisition R31), so it is not declared. */
   acquire: { classes: ["admin","member","probe","daemon"], mutating: true, weight: "substrate", description: localize("capture.declared.acquire", "substrate: the fetch layer (M2')"),
     fields: { accepts: ["address","at","authority","coArchive","continue","file","for","locator","render","request","subresources","via"], requires: [["locator","continue","address"]] } },
+  /* R101 (T51 fix round 3; C9): a member files a held document in a project; `by` and `viewer` are stamps, so only the two body
+     fields are accepted, and both are required (an absent one is the required-argument refusal naming it). It is a corpus write,
+     so it needs `contribute` (op-declarations R80: a mutating op with no hand row names its capability); the project fence is
+     membership's `projectAuthority`, asked in `fileSeenIn`. */
+  captureseenin: { classes: ["admin","member","probe"], mutating: true, stamps: ["by","viewer"], needs: "contribute", weight: "reversible", description: localize("capture.declared.captureseenin", "held-directed: a member files a held document in a project as a reference, keyed by capture sha and project, so the project lists it beside its own; the document keeps its one home and nothing moves, and the reference is recorded once"),
+    fields: { accepts: ["captureSha","project"], requires: ["captureSha","project"] } },
   /* K4206 (T51 FR-52; R98): `text` is read, and an empty one is C-118.6 by its row's words (R69), so it is accepted and not
      required; a missing captureSha names itself (R98), a missing signature is refused naming the signature. The instant is
      the server's (R98), so `at` is not declared. */
