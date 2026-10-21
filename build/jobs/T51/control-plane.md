@@ -296,3 +296,19 @@ The `env.sharedDraftsOf` that `projectRosterOps(r, url, body, env)` reads (proje
 3. No `existed: true` trigger for "kept whole" (acquisition R96 adds no field); if you want one, tell me the field.
 
 **Other.** None for now; I will REPORT anything further in COMPLETE.
+
+## Completion (fix round 3, B18; CONTROL-PLANE #44)
+
+**Causes met.** C15 (R75): the shell's script is served at `/app/shell-<version>.js`, `text/javascript`, `public, max-age=31536000, immutable`, only for the plane's own version (another is 404); the page policy names its hash (`withPagePolicy(res, {scriptHashes})`), no nonce; the page keeps `no-store`. C5 and C17 (R117): after an `acquire` or `captureupload` answered `existed: true` the door asks `readHeld` (store-internal arm `readheld`); an upload answered `existed: true` with a document and `NO_HOME` is read by the door as R100 reads a new upload; a failed read is answered as R100 answers one; a refusal of `readHeld` changes nothing. C14 (R118): arm `projectlist` hands review's `sharedDraftsByProject` to `projectList` as `sharedDraftsOf`.
+
+**Readings (accepted, B19).** `readHeld` is asked for any `existed: true` answer naming a digest, document or not (a registered second upload answers none). Both new arms exist only when the plane hands the getters `of.extraction` and `of.projectRoster` (PLANE #47, plane R74).
+
+**K4364/K4371/K4380.** `t51-routes.test.mjs` routes `officeconfirm`, `scanmirror`, `moneysets`, `captureseenin`, `remindersfor`; `t36-door` takes file-safety's op count from its map; `t46-app`, `t46-e2e`, `t47-e2e`, `page-policy`, `doors`, `t50-door` are current against the external script (e2e suites run the script over `app-screens.mjs`, registered first). `signerregister` measured on the real plane (Miniflare, 4 runs): whole call 9–23 ms (a `whoami` is 5–10 ms); admission (session, re-ask) 2–7 ms; store dispatch plus arm 2–15 ms, the arm 0–1 ms. Nothing in the door or the arm holds the 37.6 s; it is not spent there, so nothing was cut.
+
+**Red by name, not mine.** (1) Until PLANE #47 merges: the real-plane tests in `r117-held` and `r118-shared` (green with the two getters applied locally, then reverted). (2) `t51-routes`: `officeconfirm` (entities R64) and `captureseenin` (capture R101) have no owner map entry or declaration yet. (3) affordances' "unaccounted" (R2, R41), as at baseline.
+
+**For BOB.** (a) `money` is not in control-plane's `uses`, so `moneysets` is checked for declaration and routing but not against money's map; add `money` as a test-only use if you want that. (b) R118 reads: the arm replaces project-roster's own `projectlist` arm. (c) Checks naming other modules (coverage R101, R64, R114, R115, op-grades words) are not control-plane's.
+
+**Tests and checks.** Control-plane suite 343 tests: 338 pass with the getters applied; after fixes (`t41-door`, `t50-door`) the only reds are those named above. Format 0, architecture 0, coverage 86 of 86, ownership 0, words none in control-plane.
+
+Size (session_01JarNVWj3jh7A31SRkU57RG): test runs 12, module lines 4,076
