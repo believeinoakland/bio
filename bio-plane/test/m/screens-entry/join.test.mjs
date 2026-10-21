@@ -2,7 +2,8 @@
    interface. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, has, lacks, said, all, actOps, links, textOf, squash, JOINED } from "./kit.mjs";
+import { open, has, lacks, said, all, actOps, links, textOf, squash, JOINED, SCREENS } from "./kit.mjs";
+import { checkScreens } from "../../../src/interface-shell/index.mjs";
 
 const INVITE = "inv-sentinel-88aa";
 const LINKID = "jl-sentinel-21bb";
@@ -147,4 +148,22 @@ test("R30 the button that reads the invitation says so again once it has been re
   // pressing it reads the invitation again, with the invitation in the body
   const r = await o.press("invitelook");
   assert.deepEqual(r.sent.map((x) => [x.op, x.body]).slice(0, 1), [["invitelook", { invite: INVITE }]]);
+});
+
+test("R31 join draws the language choice as the design draws it, with its act memberlanguageset; the module names the act", async () => {
+  const o = await open("join", { fragment: { invite: INVITE }, table: plane(), signinAs: JOINED });
+  const marked = all(o.tree, (e) => e.attrs["data-act"] === "memberlanguageset");
+  assert.equal(marked.length, 1, "one mark for the act");
+  assert.notEqual(marked[0].tag, "button", "no button of its own: the member has no session until enroll answers");
+  assert.deepEqual(all(marked[0], (e) => e.tag === "select").map((e) => e.attrs.id), ["jn-lang"], "the mark is on the language field");
+  assert.ok(SCREENS.find((s) => s.id === "join").acts.some((a) => a.op === "memberlanguageset"), "the module names the act");
+  assert.equal(checkScreens(SCREENS), true, "interface-shell's contract holds over the screens");
+  // the language is still sent once, after login, as R7 says
+  const before = o.requests.length;
+  await o.press("enroll", { values: FORM });
+  assert.equal(o.requests.slice(before).filter((r) => r.op === "memberlanguageset").length, 1);
+  // control: no languages offered draws no choice and no mark
+  const none = await open("join", { fragment: { invite: INVITE }, table: plane({ grouplanguages: { ok: true, result: { ok: true, languages: [] } } }) });
+  assert.equal(all(none.tree, (e) => e.attrs["data-act"] === "memberlanguageset").length, 0);
+  assert.equal(all(none.tree, (e) => e.attrs.id === "jn-lang").length, 0);
 });

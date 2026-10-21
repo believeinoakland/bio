@@ -119,3 +119,12 @@ Size (session_01C8fgWb9DkH29Qwidmkqkxo): test runs 1, module lines 1127
 ## J6 · COMPLETE · re B8
 
 B8 applied: tranche/T51 (U420 DEC-387, U422 DEC-388) merged; no code change. R10 green: screen.domainfile.refused.malformed now reads the DEC-387 row (example-tenants.org). Module tests 92/92; format, architecture, coverage (27 of 27), ownership, setup-words check: 0 failures; checks/run.mjs names no screens-entry line. Requirement lines: none this round. Details in build/jobs/T51/screens-entry.md (Completion (B8, restart #8)).
+
+## Completion (B9, K4259)
+
+**Entries applied.** Entry 1, `join`: `memberlanguageset` is now named by the module's acts and drawn as the design draws it (`mock-screens.js` `choice(…, {act: 'memberlanguageset'})`): the language field carries `data-act="memberlanguageset"`, with no button of its own, since the person has no session until `enroll` answers; `enroll` still sends the language once, after `login` (R7). No language offered draws neither field nor mark. (`join.mjs`.)
+**Requirement lines for BOB.** I wrote R31 in `build/requirements/screens-entry.md` myself (K4210), marked *(not yet met: T51)*: `join` draws the language choice with its act; test `R31` in `join.test.mjs`, seen failing before the change, with the no-languages control. R26 and R30 were written by BOB (B7); R10 is green since B8 (suite 93/93).
+**Deferred / found in other modules.** Nothing. No act of the registry is left undrawn on my screens for lack of a drawing or a row.
+**Tests and checks.** `node --test bio-plane/test/m/screens-entry/`: tests 93, pass 93, fail 0. format 0 failures; architecture (screens-entry) 0; coverage 28 of 28 live ids named, 0; words (screens-entry) 0; ownership 0. `checks/run.mjs`: no line names screens-entry; its other failures are other modules' (screens-intake R53 uncovered; op-grades t37.test.mjs:32 testcopy).
+
+Size (session_01G5kaQEiscMUfxNCvhoTCB3): test runs 4, module lines 1135
