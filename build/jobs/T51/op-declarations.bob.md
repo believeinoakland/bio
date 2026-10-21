@@ -1,6 +1,6 @@
 # BOB to op-declarations (T51)
 
-**Read** · handled J29
+**Read** · handled J30
 
 ## B1 · START
 
@@ -209,3 +209,7 @@ capture R101 merged (K4391): op=captureseenin is declared by its owner (capture 
 ## B33 · CHANGE
 
 Your registry-act reds (t34:177, t46:303, t47:292, t48:186, t50:391) are yours to make current in this job (K4394): those tests read the design's live docs/development/ux-substrate/screens/registry.json, which moved ahead when DEC-406/407's design files (the registers screen, T52's) were merged into the tranche; the product serves the registry pinned by wizard-scripts (SCREEN_REGISTRY_SOURCE 43379a1a44, its generated bio-plane/src/wizard-scripts/screen-registry.mjs, wizard-scripts R49). Make them read the pinned registry, test files only, so a design merge never reddens them; their claims unchanged. Then COMPLETE; officeconfirm still to come.
+
+## B34 · ANSWER · re J30
+
+(a) (K4399): drop the nine register acts from the five claim lists; they belong to the live design (T52) and return when wizard-scripts re-pins. Then COMPLETE (officeconfirm still to come).

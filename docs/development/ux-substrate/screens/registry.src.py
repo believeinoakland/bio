@@ -213,6 +213,16 @@ for _s in S:
     for _op, _l in _PROG_ACTS.get(_s['id'], []):
         if _op not in _have: _s['acts'].append(dict(op=_op, label=_l))
 
+# DEC-410: "Follow from here" (DEC-409) on every screen that names a person, organization, payment, donation, event or document;
+# explore's all-connections, most-direct-path and shorter-path acts.
+_FOLLOW_ACTS = [('owed:followfrom DEC-409','Follow this item into another dimension'),('search','Search'),('explore','Explore connections'),('owed:registersearch DEC-406','Search the registers')]
+_EXPLORE_ACTS = [('owed:exploreall DEC-409','List every connection between two ends'),('owed:explorepath DEC-409','Find the most direct path'),('owed:exploreshorter DEC-409','See a shorter path, or keep your own chain')]
+for _s in S:
+    if _s['id'] in ('people','money','timeline','document','finder','registers','explore'):
+        _have = {a['op'] for a in _s['acts']}
+        for _op, _l in _FOLLOW_ACTS + (_EXPLORE_ACTS if _s['id'] == 'explore' else []):
+            if _op not in _have and not (_s['id'] == 'document' and _op == 'search'): _s['acts'].append(dict(op=_op, label=_l))
+
 # DEC-244: the queue holds the to-dos Home shows (vouching for photos, approving a letter).
 for _s in S:
     if _s['id'] == 'queue':

@@ -5,8 +5,6 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { open, ok, refused, text, ops, button, press, beside, last, main, screen, word, hasWord, settle } from "./page.mjs";
 import { SESSION_OPS } from "../../../src/op-declarations/index.mjs";
-import { interfacePage } from "../../../src/interface-shell/index.mjs";
-import { served } from "../interface-shell/harness.mjs";
 import { SCREENS } from "./page.mjs";
 
 const HITS = ok({ total: 3, hits: [
@@ -114,7 +112,8 @@ test("R4: selectionrelease lets the set go; \"Find in these\" opens find-in over
 const LEVELS = ["document", "content", "meaning", "internet"];
 const frontierPlane = (perLevel) => ({ frontier: (req) => ok(perLevel[req.query.level] === undefined ? null : perLevel[req.query.level]) });
 const GOT = { found: true, built: true, never_looked: [], never_looked_count: 0, tally: { LOOKED_FOUND: 4, LOOKED_ABSENT: 1 }, note: "" };
-const HTMLF = () => served(interfacePage(SCREENS).replace('"sessionOps":{"member":[', '"sessionOps":{"member":["frontier",'));
+// `frontier` is in the member's session set the shell's script carries (op-declarations' SESSION_OPS), so the default page serves it.
+const HTMLF = () => undefined;
 const rowsOfLevels = (p) => main(p).querySelectorAll(".cs-row").filter((r) => LEVELS.some((l) => r.querySelector("b") && r.querySelector("b").textContent === word("screen.answers.level." + l)));
 
 test("R4, R67: frontier is read at each of its four levels and draws one row for each, with the places nobody looked at and the look states", async () => {
@@ -144,7 +143,7 @@ test("R4, R67: frontier is read at each of its four levels and draws one row for
   assert.ok(text(fewer).includes(word("screen.finder.nobody.one")), "R25: one place, the singular key");
 });
 
-test("R67, R4 (C22): a place is drawn by its name, no empty list item is drawn, and every look state the plane answers is drawn as a word, never as its code", async () => {
+test("R67, R4 (C22): a place is drawn by its name (else the plain word for a document), no empty list item is drawn, and every look state the plane answers is drawn as a word, never as its code", async () => {
   const html = HTMLF();
   const SHA = "a".repeat(64);
   const per = {
@@ -161,8 +160,9 @@ test("R67, R4 (C22): a place is drawn by its name, no empty list item is drawn, 
   assert.ok(text(p, rowOf("document")).includes("https://oakland.example/budget.pdf"), "control: a place with a name draws it");
   assert.ok(text(p, rowOf("document")).includes(word("screen.finder.nobody", { n: "3" })), "the count is the answer's");
   assert.equal(main(p).querySelectorAll("li").filter((li) => !li.textContent.trim()).length, 0, "no empty list item");
-  assert.equal(rowOf("document").querySelectorAll("li").length, 1, "only the place with a name is an item");
-  assert.equal(rowOf("content").querySelectorAll("ul").length, 0, "a level whose places have no name draws no list at all");
+  // R89 (C22): every place counted is named; one with no words of its own is the plain word for a document, never its digest or id.
+  assert.deepEqual(rowOf("document").querySelectorAll("li").map((li) => li.textContent), ["https://oakland.example/budget.pdf", word("shell.card.document"), word("shell.card.document")], "all three places are items");
+  assert.deepEqual(rowOf("content").querySelectorAll("li").map((li) => li.textContent), [word("shell.card.document"), word("shell.card.document")], "so are the two the passage level counts");
   assert.doesNotMatch(text(p), /[0-9a-f]{64}/, "no digest is drawn");
   const meaning = text(p, rowOf("meaning"));
   for (const code of ["PRESENT", "LOOKED_ABSENT", "LOOKED_INDETERMINATE", "LOOKED_FOUND", "NEVER_LOOKED", "partial"]) assert.ok(!meaning.includes(code), `${code} is drawn as a word`);

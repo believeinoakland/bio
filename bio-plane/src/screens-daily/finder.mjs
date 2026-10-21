@@ -332,14 +332,14 @@ export const finder = Object.freeze({
       send: function (view, el) { return { query: { handle: el.dataset.handle } }; },
       done: function (view, answer, cs) { cs.set("handle", null); cs.set("cite", false); } },
     // "Find in these" opens `find-in` over the held set; it sends nothing itself (find-in's own act asks).
-    { op: "findin", label: "act.findin.label.finder",
+    { op: "findin", label: "act.findin.label.finder", rereads: [],
       send: function (view, el, cs) {
         if (!el.dataset.handle) return { refuse: "screen.finder.holdfirst" };
         cs.go("find-in", el.dataset.handle);
         return null;
       } },
     // R57: "Cite these together" opens the cite state over the held set; the citing itself is the state's own act.
-    { op: "cite", label: "act.cite.label.finder",
+    { op: "cite", label: "act.cite.label.finder", rereads: ["selection"],
       send: function (view, el, cs) {
         if (!el.dataset.handle) return { refuse: "screen.finder.holdfirst" };
         if (el.dataset.cite) return view.parts.finderStates().citeSend(view, el, cs);
