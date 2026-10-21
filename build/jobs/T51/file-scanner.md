@@ -150,3 +150,8 @@ What the module now does (RC-R6): `POST /mirror?async=1` writes `clamav/request.
 **Proposed requirement lines (BOB writes):** R8: `signatures` also carries `stage` (`seed|download|stage|verify` or null) and `stage_at` (ISO or null). R6: the tick's three numbers (a door's run is left 90 s; a run stopped for 15 min is resumed; one run per 23 h), that a request closes at the end of any run, a refusal included (the next try is the next day's), and that two runs are not guarded against overlapping (a button press while a cron run is under way, as before this change): each stages its own directory and the later to finish replaces `current.json`; a guard would be a further line, not built here. Found in other modules: none. Deferred: none. QUESTIONs open: none.
 
 Size (session_01XQgkfkfHVfBWW2EVEhua6x): test runs 9, module lines 5167
+
+## J14 · COMPLETE
+
+COMPLETE for B14 (CHANGE, K4438). `GET /version` `signatures` now also carries `request`: the ISO instant the open `clamav/request.json` was written, the key absent when no request is open. `stage_at` was already served (J13). Merged tranche/T51 first. Change: `signatureState` in `src/clamav.mjs`. Tests: the C84 walker's-row test asserts `during.request` equals the request instant while the cut run's request is open, and that the key is absent once the cron has finished it (assertions added to the existing test after the code, not seen red first). file-scanner: 90 tests, 79 pass, 0 fail, 11 skipped (clamscan/sigtool absent). format, architecture, coverage (34 of 34), ownership: 0 failures. The dist bundle stays stale until BOB regenerates (as J13). QUESTIONs open: none.
+Size (session_01XQgkfkfHVfBWW2EVEhua6x): test runs 10, module lines 5173
