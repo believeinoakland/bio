@@ -154,8 +154,11 @@ test("R116 the ungraded legs are named by their documents' titles, never their i
 
 test("R120 the strength sentences that take {legs} are drawn by key with the titles once: rests on nothing, no leg on any set, no leg on this axis, and listed but not counted", async () => {
   const two = [{ target_id: D }, { target_id: "INFO-2026-0005" }];
+  /* changed in fix round 3 (C38, R2: a removed citation is counted nowhere, so the screen names none among the legs the strength leaves
+     out): the work orders are cited live here, as the answer lists them */
+  const LIVE = { images: { [Q]: { "bundle.md": grouped({}).replace(/(INFO-2026-0005\n    rel: cites\n    status: )severed/, "$1confirmed") } } };
   const sentence = async (conn, key, vars, cap) => {
-    const p = await open(at, { ...A, plane: { inquirystrength: (r) => ok({ ok: true, target: r.query.id, capture: cap || { state: "graded", grade: "B" }, connection: conn }) } });
+    const p = await open(at, { ...LIVE, plane: { inquirystrength: (r) => ok({ ok: true, target: r.query.id, capture: cap || { state: "graded", grade: "B" }, connection: conn }) } });
     const box = main(p).querySelector(".mk-strengthbox");
     assert.ok(says(box, key, vars), key);
     assert.doesNotMatch(main(p).textContent, /INFO-2026-000[45]/, key + ": no id");

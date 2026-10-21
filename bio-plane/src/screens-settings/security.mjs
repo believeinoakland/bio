@@ -49,7 +49,7 @@ export const security = {
       // whose screen it is: the administrators' handles, the founder's as hers or `member.founder.unnamed` (R37: every fill filled)
       out.push(cs.state(data.roster, (v) => {
         const admins = (Array.isArray(v.members) ? v.members : []).filter((m) => m.role === "admin" && m.status === "active")
-          .map((m) => (m.founder === true || m.member_id === "admin" ? m.handle || T("member.founder.unnamed") : m.handle || m.member_id));
+          .map((m) => (m.founder === true || m.member_id === "admin" ? m.handle || T("member.founder.unnamed") : m.handle || cs.memberName(m.member_id)));
         return admins.length ? `<p data-state="admins">${W(S + "admins", { admins: admins.join(", ") })}</p>` : "";
       }));
       return out.join("");
@@ -76,8 +76,10 @@ export const security = {
         h += `<p>${W(S + "summary.signin", { when: D(v.levelAt || (hard[0] && hard[0].start) || v.from) })}</p>`;
         if (hard.length && usual("signin") > 0) h += `<p>${W(S + "summary.detail", { times: Math.max(1, Math.round(sum("signin") / usual("signin"))), from: D(hard[0].start), to: D(last), highfrom: D(v.levelAt || hard[0].start), highto: D(last) })}</p>`;
       }
-      // the files are checked, said once and only while the scanner is built in (R15's rule)
-      if (boot0 && boot0.part_scanner === true) h += `<p data-state="files">${W(S + "files.on")}</p>`;
+      // the files are checked, said once and only while the scanner is built in and holds signatures (R15's rule; C83): a scanner with none,
+      // one that did not answer and one not bound claim nothing; the scanner's own state is told under the queue (R77)
+      const sc0 = data.scan && data.scan.state === "ok" && data.scan.value && data.scan.value.ok !== false ? data.scan.value : null;
+      if (boot0 && boot0.part_scanner === true && sc0 && !sc0.no_signatures && Number.isFinite(sc0.signatures_age_ms)) h += `<p data-state="files">${W(S + "files.on")}</p>`;
       const rows = KINDS.filter((k) => sum(k) > 0 || usual(k) > 0);
       const counts = (Number(t.count || 0) > 0 || Number(t.usual || 0) > 0 ? `<p>${W(S + "total", { count: Number(t.count || 0).toLocaleString("en"), usual: Number(t.usual || 0).toLocaleString("en") })}</p>` : "")
         + (rows.length ? `<table class="mk-table"><thead><tr><th>${W(S + "col.kind")}</th><th>${W(S + "col.count")}</th><th>${W(S + "col.usual")}</th></tr></thead><tbody>${rows.map((k) => `<tr><td>${W(S + "kind." + k)}</td><td>${E(sum(k).toLocaleString("en"))}</td><td>${E(usual(k).toLocaleString("en"))}</td></tr>`).join("")}</tbody></table>` : "");
@@ -103,6 +105,7 @@ export const security = {
           const second = typeof ns.reason_key === "string" ? said1(ns.reason_key, ns.reason_words, status ? { status: status[1] } : {}) : "";
           if (first) h += `<p data-state="nosignatures">${first}</p>`;
           if (second) h += `<p data-state="nosignatures-reason">${second}</p>`;
+          h += `<p data-state="nosignatures-next">${W(S + "nosignatures.next")}</p>`;
         }
       }
       return h;

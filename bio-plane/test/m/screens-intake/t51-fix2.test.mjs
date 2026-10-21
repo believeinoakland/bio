@@ -299,17 +299,21 @@ test("R50 a timed-out capture is drawn by what it kept: held and undetermined by
   }
 });
 
-test("R7 (C28) a discarded knock offers put-back once the design's keys exist, sending status new; a new knock offers discard and no put-back", async () => {
-  const K = { knock_id: "KNOCK-2026-10-03-9c1f0a2b", sha256: "1".repeat(64), bytes: 500, note: "n", received: "2026-10-03T10:00:00Z", status: "discarded", resolve_reason: "dup", pseudonym: null, knocker_digest: null };
+test("R7 (C28) a discarded knock offers put-back, sending status new and saying it was done; a new knock offers discard and no put-back", async () => {
+  const K = { knock_id: "KNOCK-2026-10-03-9c1f0a2b", sha256: "1".repeat(64), bytes: 500, note: "n", received: "2026-10-03T10:00:00Z", status: "discarded", resolve_reason: "dup", pseudonym: null, knocker_digest: null, file_name: "agenda.pdf", media_type: "application/pdf" };
   const at = (k) => open(`/app/inbox/${k.knock_id}`, { plane: { inbox: ok({ inbox: [k] }), inboxget: ok({ ok: true, item: k }), inboxresolve: ok({ ok: true, status: "new" }) } });
   const p = await at(K);
-  const put = main(p).querySelector('button[data-act="inboxresolve"]');
-  if (hasKey("act.inboxresolve.label.inbox.putback")) {
-    await press(p, "inboxresolve", { reason: "Mistake." });
-    assert.equal(p.byOp("inboxresolve")[0].body.status, "new");
-  } else assert.equal(put, null, "no raw key is drawn while the row is missing");
-  const n = await at({ ...K, status: "new" });
+  assert.ok(text(p).includes("agenda.pdf") && text(p).includes("application/pdf"), "the sender's stated name and type (R7, C28)");
+  assert.equal(btn(p, "inboxpull"), null);
+  await press(p, "inboxresolve");
+  assert.equal(p.byOp("inboxresolve").length, 0, "no reason, nothing sent");
+  fill(p, { "cx-back": "Mistake." });
+  await press(p, "inboxresolve");
+  assert.deepEqual(p.byOp("inboxresolve")[0].body, { knockId: K.knock_id, status: "new", reason: "Mistake." });
+  assert.ok(says(p, "screen.inbox.putback.done"));
+  const n = await at({ ...K, status: "new", file_name: null, media_type: null });
   assert.ok(btn(n, "inboxresolve") && btn(n, "inboxpull"), "control: a new knock offers discard");
+  assert.ok(!says(n, "act.inboxresolve.label.inbox.putback"));
 });
 
 test("R4 (capture R77 whole) a held row with no object under its fingerprint is marked refused and is never sent to release; control: whole true is", async () => {

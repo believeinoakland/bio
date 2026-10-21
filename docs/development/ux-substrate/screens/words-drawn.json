@@ -37589,6 +37589,42 @@
    "en": "1 review link is live.",
    "protected": false,
    "note": "DEC-398: B450 (C49): the singular of screen.ceremony.links.live"
+  },
+  {
+   "key": "screen.held.vouch.partsonly",
+   "en": "Only parts of this copy were kept, not the whole of what its source gave, so it cannot be vouched for. Capture it again whole, or set it aside with a reason.",
+   "protected": false,
+   "note": "DEC-399: B451 (capture R77 whole: false): why the vouch is withheld"
+  },
+  {
+   "key": "screen.inbox.knock.name",
+   "en": "File name, as the sender gave it",
+   "protected": false,
+   "note": "DEC-399: B453 (doorbell R27): label beside a knock's sender-stated file name"
+  },
+  {
+   "key": "screen.inbox.knock.type",
+   "en": "Kind of file, as the sender gave it",
+   "protected": false,
+   "note": "DEC-399: B453: label beside a knock's sender-stated media type"
+  },
+  {
+   "key": "screen.contradiction.flagged.by",
+   "en": "{member} said these two contradict, {date}",
+   "protected": false,
+   "note": "DEC-400: B455: who flagged a contradiction by hand, and when"
+  },
+  {
+   "key": "act.heldcaptures.here.project",
+   "en": "List this project's documents",
+   "protected": false,
+   "note": "DEC-400: B455: the project screen's documents act (heldcaptures with the project), as the registry labels it"
+  },
+  {
+   "key": "screen.document.testify.how",
+   "en": "How you know",
+   "protected": false,
+   "note": "DEC-400: B455: the label of the reason field when naming a subject from a passage (DEC-394 3d)"
   }
  ],
  "rewrite": {

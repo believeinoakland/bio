@@ -114,7 +114,7 @@ ${cs.field("mn-about" + id, S + "turn.about", { help: S + "turn.about.help" })}$
         const a = answer && answer.result !== undefined ? answer.result : answer;
         const me = view.me || {};
         const by = a && a.label && a.label.asked_by ? String(a.label.asked_by).replace(/^member:/, "") : me.member;
-        cs.set("draft", { field: (view.ui && view.ui.helping) || "new", text: (a && a.text) || "", askedBy: by === me.member && me.handle ? me.handle : by, untested: !!(a && (a.untested || (a.label && a.label.untested))) });
+        cs.set("draft", { field: (view.ui && view.ui.helping) || "new", text: (a && a.text) || "", askedBy: by === me.member && me.handle ? me.handle : cs.memberName(by), untested: !!(a && (a.untested || (a.label && a.label.untested))) });
       } },
   ],
 };

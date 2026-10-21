@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (18124 design words, 1068 protected; SHA-256
-   3bf4992d9e8fe5d7670f5d761bbec6bdecae69a57d9383f68e1c8f593822c42e) followed by 7136 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (18130 design words, 1068 protected; SHA-256
+   1709a4a9043d932ffec7a0bbaf91351c5aacae744d05915172dffd503b801d1f) followed by 7136 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "3bf4992d9e";
+export const WORDS_COMMIT = "1709a4a904";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -10852,6 +10852,12 @@ export const WORD_ROWS = Object.freeze([
   ["screen.review-copy.links.comments.other","{n} comments","DEC-398: B450 (C49)",null,false,"design"],
   ["screen.case-editor.links.live.one","1 review link is live.","DEC-398: B450 (C49): the singular of screen.case-editor.links.live",null,false,"design"],
   ["screen.ceremony.links.live.one","1 review link is live.","DEC-398: B450 (C49): the singular of screen.ceremony.links.live",null,false,"design"],
+  ["screen.held.vouch.partsonly","Only parts of this copy were kept, not the whole of what its source gave, so it cannot be vouched for. Capture it again whole, or set it aside with a reason.","DEC-399: B451 (capture R77 whole: false): why the vouch is withheld",null,false,"design"],
+  ["screen.inbox.knock.name","File name, as the sender gave it","DEC-399: B453 (doorbell R27): label beside a knock's sender-stated file name",null,false,"design"],
+  ["screen.inbox.knock.type","Kind of file, as the sender gave it","DEC-399: B453: label beside a knock's sender-stated media type",null,false,"design"],
+  ["screen.contradiction.flagged.by","{member} said these two contradict, {date}","DEC-400: B455: who flagged a contradiction by hand, and when",null,false,"design"],
+  ["act.heldcaptures.here.project","List this project's documents","DEC-400: B455: the project screen's documents act (heldcaptures with the project), as the registry labels it","Shows captures waiting for a member to vouch for them before they count.",false,"design"],
+  ["screen.document.testify.how","How you know","DEC-400: B455: the label of the reason field when naming a subject from a passage (DEC-394 3d)",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],

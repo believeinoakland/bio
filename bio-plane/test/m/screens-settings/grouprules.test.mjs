@@ -182,3 +182,51 @@ test("R70 the 'Which document' picker is read with state held_and_vouched: with 
   const only = await open("grouprules", { me: MEMBER, table: grouprulesTable({ heldcaptures: (q) => env({ ok: true, held: q.state === "held_and_vouched" ? [held] : [] }) }) });
   assert.deepEqual(all(all(only.tree, (e) => e.attrs.id === "gr-doc")[0], (e) => e.tag === "option").map((o) => o.attrs.value), [held.capture.sha256]);
 });
+
+/* ---- T51 fix round 2: C14, C87, C94 ---- */
+
+test("R70 C14: the picker is read once when the screen opens, by the cheap picker read (fields picker), and no act reads the whole list again; the picker rows are the cheap ones", async () => {
+  const held = { bundle_id: "INFO-1", title: "Held rules", project: null, capture: { sha256: "1".repeat(64) }, standing: "collected" }, vouched = { bundle_id: "INFO-2", title: "Vouched rules", project: null, capture: { sha256: "2".repeat(64) }, standing: "verified" };
+  // the owner answers by the fields asked (capture R77, R88): the picker rows carry the document, title, project, digest and standing and nothing else
+  const table = grouprulesTable({ heldcaptures: (q) => env({ ok: true, held: q.fields === "picker" ? [held, vouched] : [{ ...held, examination: { slow: true } }], state: q.state }) });
+  const a = await open("grouprules", { me: MEMBER, table });
+  const asked = () => a.p.requests.filter((r) => r.op === "heldcaptures");
+  assert.equal(asked().length, 1, "one read of the held documents for the screen");
+  assert.deepEqual([asked()[0].query.fields, asked()[0].query.state], ["picker", "held_and_vouched"]);
+  assert.deepEqual(all(all(a.tree, (e) => e.attrs.id === "gr-doc")[0], (e) => e.tag === "option").map((o) => [o.attrs.value, textOf(o)]), [["1".repeat(64), "Held rules"], ["2".repeat(64), "Vouched rules"]]);
+  // the acts do not read the list again
+  await a.press("ruledraft", { values: { ...FORM, "gr-doc": "2".repeat(64) }, choose: PICK });
+  await a.press("ruleconfirm", { data: { rule: "GR-0001" }, reason: "I read the source and the rule matches it" });
+  assert.equal(asked().length, 1, "still the one read");
+});
+
+test("R61 C87: Draft the rule with a required box empty sends nothing and names the box; filled, it sends (control)", async () => {
+  const a = await open("grouprules", { me: MEMBER, table: grouprulesTable() });
+  const named = (label) => said("shell.field.needed", { field: label });
+  const sent = (r) => r.sent.filter((x) => x.op === "ruledraft");
+  for (const [box, label] of [["gr-name", "screen.grouprules.name.label"], ["gr-amount", "screen.grouprules.amount.label"], ["gr-cite", "screen.grouprules.cite.label"], ["gr-eff", "screen.grouprules.eff.label"], ["gr-pass", "screen.grouprules.pass.label"], ["gr-why", "screen.grouprules.why.label"]]) {
+    const r = await a.press("ruledraft", { values: { ...FORM, [box]: "  " }, choose: PICK });
+    assert.deepEqual(sent(r), [], box + " empty sends nothing");
+    assert.equal(a.refused && a.refused.text, named(said(label)), box + " is named: " + (a.refused && a.refused.text));
+  }
+  // a legal fact names what it says
+  const f = await a.press("ruledraft", { values: { ...FORM, "gr-kind": "fact", "gr-statement": "" }, choose: { "gr-shown": "pending_measure_or_candidate" } });
+  assert.deepEqual(sent(f), []);
+  assert.equal(a.refused.text, named(said("screen.grouprules.statement.label")));
+  // control: filled sends
+  assert.equal(sent(await a.press("ruledraft", { values: FORM, choose: PICK })).length, 1);
+});
+
+test("R61 C94: a rule's drafter and confirmer are named by memberName: a member with no handle by the fallback word, a member the roster does not hold by it too, the founder by hers or the unnamed word, never an id; a member with a handle by it (control)", async () => {
+  const mk = (n, over) => ({ rule: "GR-01" + n, section: "deadlines", state: "drafted", entry: { rule: "Rule " + n, starts: "hearing", citation: "x", effective_from: "2026-01-01" }, source: { captureSha: "a".repeat(64), extent: "p1" }, reason: "r", applies_to: "request_for_comment", tier: 1, drafter: "ana", drafted_at: "2026-10-09T00:00:00Z", confirmer: null, confirmed_at: null, ...over });
+  const rules = [mk("1", { drafter: "mai-k" }), mk("2", { drafter: "ghost-7" }), mk("3", { drafter: "admin" }), mk("4", { state: "confirmed", drafter: "ana", confirmer: "ghost-7", confirmed_at: "2026-10-10T00:00:00Z" })];
+  const a = await open("grouprules", { me: MEMBER, table: grouprulesTable({ grouprules: env({ ok: true, rules, count: rules.length }) }) });
+  const line = (n) => textOf(item(a, "GR-01" + n));
+  const date = day("2026-10-09T00:00:00Z");
+  assert.ok(line("1").includes(said("screen.grouprules.drafted", { member: said("shell.card.member"), date })), "no handle: the fallback word");
+  assert.ok(line("2").includes(said("screen.grouprules.drafted", { member: said("shell.card.member"), date })), "unknown: the fallback word");
+  assert.ok(line("3").includes(said("screen.grouprules.drafted", { member: said("member.founder.unnamed"), date })), "the founder with no handle: the unnamed word");
+  assert.ok(line("4").includes(said("screen.grouprules.confirmed", { member: said("shell.card.member"), date: day("2026-10-10T00:00:00Z") })));
+  assert.ok(line("4").includes(said("screen.grouprules.drafted", { member: "ana", date })), "control: a member with a handle by it");
+  for (const id of ["mai-k", "ghost-7"]) assert.ok(!a.text.includes(id), id + " is not drawn");
+});

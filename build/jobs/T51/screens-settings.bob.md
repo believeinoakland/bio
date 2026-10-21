@@ -1,6 +1,6 @@
 # BOB to screens-settings (T51)
 
-**Read** · handled J16
+**Read** · handled J18
 
 ## B1 · START
 

@@ -2,7 +2,7 @@
    policy, and work made under an earlier lens, each over a fake plane answering in the owners' shapes (bias R11–R21, R35, R36). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { acts, all, has, lacks, open, said, squash, textOf, SCREENS } from "./kit.mjs";
+import { acts, all, day, has, lacks, open, said, squash, textOf, SCREENS } from "./kit.mjs";
 import { ADMIN, MEMBER, PROJ_BIAS, BIAS_SETS, LENS_TEAM, LENS_PROJECT, POLICY, DEBT_OPEN, DEBT_SETTLED, biasTable, env } from "./fixtures.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
@@ -200,4 +200,52 @@ test("R65 control: a request that carries a field its owner does not declare is 
   await a.press("promote", { data: { from: "write" }, values: { "bi-name": "S", "bi-subject": "ENT-2026-0007", "bi-text": "T", "bi-why": "W", "bi-not": "N" } });
   await a.press("biasadopt", { values: { "bi-adwhy": "Because." } });
   assert.ok(true);
+});
+
+/* ---- T51 fix round 2: C87, C94 ---- */
+
+const WRITE = { "bi-name": "S", "bi-subject": "ENT-2026-0007", "bi-text": "T", "bi-why": "W", "bi-not": "N" };
+
+test("R65 C87: Propose statements from it with the policy empty, and Save the set with a required box empty, send nothing and name the box; filled, they send (control)", async () => {
+  const a = await open("bias", { me: ADMIN, table: biasTable() });
+  const named = (labelKey) => said("shell.field.needed", { field: said(labelKey) });
+  const none = await a.press("biasinhale", { values: { "bi-policy": "  " } });
+  assert.deepEqual(none.sent, []);
+  assert.equal(a.refused.text, named("screen.bias.the_policy_in_its_own"), a.refused && a.refused.text);
+  for (const [box, label] of [["bi-name", "screen.bias.name_of_the_set"], ["bi-subject", "screen.bias.who_or_what_it_is"], ["bi-text", "screen.bias.statement.label"], ["bi-why", "screen.bias.why_you_read_it_this"]]) {
+    const r = await a.press("promote", { data: { from: "write" }, values: { ...WRITE, [box]: "" } });
+    assert.deepEqual(r.sent.filter((x) => x.op === "promote"), [], box);
+    assert.equal(a.refused.text, named(label), box + ": " + (a.refused && a.refused.text));
+  }
+  // a pattern statement must cite
+  const pat = await a.press("promote", { data: { from: "write" }, values: { ...WRITE, "bi-kind": "pattern", "bi-cite": "" } });
+  assert.deepEqual(pat.sent.filter((x) => x.op === "promote"), []);
+  assert.equal(a.refused.text, named("screen.bias.cites.label"));
+  // starting a set from proposals: each proposal's subject and reason are named
+  await a.press("biasinhale", { values: { "bi-policy": "Staff verify every claim against two sources." } });
+  const s1 = await a.press("promote", { data: { from: "inhale" }, values: { "bi-psub0": "", "bi-pwhy0": "Because." } });
+  assert.deepEqual(s1.sent.filter((x) => x.op === "promote"), []);
+  assert.equal(a.refused.text, named("screen.bias.who_or_what_it_is"));
+  const s2 = await a.press("promote", { data: { from: "inhale" }, values: { "bi-psub0": "ENT-2026-0007", "bi-pwhy0": "" } });
+  assert.deepEqual(s2.sent.filter((x) => x.op === "promote"), []);
+  assert.equal(a.refused.text, named("screen.bias.why_you_read_it_this"));
+  // control: filled sends
+  assert.equal((await a.press("biasinhale", { values: { "bi-policy": "Staff verify." } })).sent.filter((x) => x.op === "biasinhale").length, 1);
+  assert.equal((await a.press("promote", { data: { from: "write" }, values: { ...WRITE, "bi-kind": "scrutiny" } })).sent.filter((x) => x.op === "promote").length, 1);
+});
+
+test("R65 C94: who adopted a set and who settled a debt are named by memberName: the handle where it differs from the id, the fallback word where the member has none, never an id", async () => {
+  const roster = [{ member_id: "m-7", handle: "luisa", role: "admin", status: "active", capabilities: [], expertise: [] }, { member_id: "m-9", handle: null, role: "member", status: "invited", capabilities: [], expertise: [] }];
+  const lens = { ...LENS_TEAM, bundles: [{ ...LENS_TEAM.bundles[0], adopted_by: "member:m-7" }] };
+  const a = await open("bias", { me: ADMIN, table: biasTable({ memberlist: env({ members: roster }), biasmanifest: env(lens) }) });
+  assert.ok(a.text.includes(said("screen.bias.by_admin_for_the_team.team", { admin: "luisa", date: day("2026-10-08") })), "the adopter by handle");
+  assert.ok(!a.text.includes("m-7"));
+  const lens2 = { ...LENS_TEAM, bundles: [{ ...LENS_TEAM.bundles[0], adopted_by: "member:m-9" }] };
+  const b = await open("bias", { me: ADMIN, table: biasTable({ memberlist: env({ members: roster }), biasmanifest: env(lens2) }) });
+  assert.ok(b.text.includes(said("screen.bias.by_admin_for_the_team.team", { admin: said("shell.card.member"), date: day("2026-10-08") })), "no handle: the fallback word");
+  assert.ok(!b.text.includes("m-9"));
+  const settled = { ...DEBT_SETTLED, settlements: [{ ...DEBT_SETTLED.settlements[0], actor: "member:m-7" }] };
+  const c = await open("bias", { me: ADMIN, subject: "RUN-2026-0042", table: biasTable({ memberlist: env({ members: roster }), biasdebt: env(settled) }) });
+  assert.ok(c.text.includes(said("screen.bias.earlier.settled", { who: "luisa", date: day("2026-10-10"), reason: settled.settlements[0].reason })));
+  assert.ok(!c.text.includes("m-7"));
 });

@@ -47,7 +47,7 @@ export const updates = {
       const id = String(x || "").replace(/^member:/, "");
       if (id === "" || /^(token|class):/.test(id) || ["daemon", "system", "seed", "bootstrap"].indexOf(id) >= 0) return null;
       if (id === "admin") return me.member === "admin" && me.handle ? me.handle : null;
-      return id;
+      return cs.memberName(id);
     };
     // R68: the three reports of the copy. Each is asked by its own act and drawn from the answer it gave; a part is named as the answer names it
     // (record data), and a number is the answer's own. A sentence the design has no word for is not drawn (the job REPORTs it)

@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 6946,
+  "screen": 6951,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1105,
+  "act": 1106,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -231,7 +231,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 18124,
+  "total": 18130,
   "protected": 1068
  },
  "words": [
@@ -75431,6 +75431,48 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-398: B450 (C49): the singular of screen.ceremony.links.live"
+  },
+  {
+   "key": "screen.held.vouch.partsonly",
+   "en": "Only parts of this copy were kept, not the whole of what its source gave, so it cannot be vouched for. Capture it again whole, or set it aside with a reason.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-399: B451 (capture R77 whole: false): why the vouch is withheld"
+  },
+  {
+   "key": "screen.inbox.knock.name",
+   "en": "File name, as the sender gave it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-399: B453 (doorbell R27): label beside a knock's sender-stated file name"
+  },
+  {
+   "key": "screen.inbox.knock.type",
+   "en": "Kind of file, as the sender gave it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-399: B453: label beside a knock's sender-stated media type"
+  },
+  {
+   "key": "screen.contradiction.flagged.by",
+   "en": "{member} said these two contradict, {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-400: B455: who flagged a contradiction by hand, and when"
+  },
+  {
+   "key": "act.heldcaptures.here.project",
+   "en": "List this project's documents",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-400: B455: the project screen's documents act (heldcaptures with the project), as the registry labels it"
+  },
+  {
+   "key": "screen.document.testify.how",
+   "en": "How you know",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-400: B455: the label of the reason field when naming a subject from a passage (DEC-394 3d)"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

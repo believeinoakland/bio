@@ -83,7 +83,12 @@ export const group = {
       const claim = v.domain_claim || null;
       const latest = claim && claim.latest ? claim.latest : null;
       let h = v.domain && v.domain_verified_at ? `<p data-state="domain">${W(S + "domain.verified", { domain: v.domain, date: D(v.domain_verified_at) })}</p>` : claim ? `<p data-state="domain">${W(S + "domain.unverified", { domain: claim.domain })}</p>` : "";
-      if (latest && latest.verdict && latest.verdict !== "verified") h += `<p>${W(S + "domain.verdict." + (["absent", "mismatched", "undetermined"].indexOf(latest.verdict) >= 0 ? latest.verdict : "undetermined"))}</p>`;
+      // C86: the check's verdict with when it was made and the plane's own words for it (record data; "not found, 404" is its to say)
+      if (latest && latest.verdict && latest.verdict !== "verified") {
+        const at = latest.checked_at ? D(latest.checked_at) : "";
+        const hm = /T(\d{2}:\d{2})/.exec(String(latest.checked_at || ""));
+        h += `<p data-state="domainverdict">${W(S + "domain.verdict." + (["absent", "mismatched", "undetermined"].indexOf(latest.verdict) >= 0 ? latest.verdict : "undetermined"))}${at && hm ? ` ${W(S + "domain.checked", { date: at, time: hm[1] })}` : ""}${typeof latest.detail === "string" && latest.detail ? ` <span class="rec">${E(latest.detail)}</span>` : ""}</p>`;
+      }
       const dm = A("groupdomainset");
       if (dm) h += `${cs.field("gr-domain", S + "domain.field", { value: claim ? claim.domain : v.domain || "", autocomplete: "off" })}${dm}`;
       // R69 (C11; DEC-374): the file the team puts on its website, as `instance-setup` answers it (`domain_claim.well_known`: `{path, body}`, or
@@ -179,9 +184,11 @@ export const group = {
       const hs = A("hostingaccessset");
       // a section that holds nothing is not drawn (R28): the sentence that opens it needs something held, or the form
       if (!cur && !hs) return "";
-      // R75: recorded at setup or by Civicsmith itself has its own words; a member is drawn as before
-      const rec = cur ? originOf(cur.recorded_by) : "";
-      const nowLine = !cur ? "" : rec === "setup" || rec === "system" ? W(S + "hosting.now." + rec, { date: D(cur.at) }) : W(S + "hosting.now", { by: byOf(cur.recorded_by), date: D(cur.at) });
+      // R75, C88: recorded by no one (the bootstrap) or by Civicsmith itself has its own words; a member, the founder among them, who may have
+      // recorded it again long after setup, is named by memberName on the day recorded: the line never claims "when set up" for a date that is not
+      const recBy = cur ? String(cur.recorded_by || "").replace(/^member:/, "") : "";
+      const rec = !cur ? "" : recBy === "" || recBy === "bootstrap" || recBy === "setup" ? "setup" : /^(token|class|daemon|system|seed|session|accelerator|sweep)/.test(recBy) ? "system" : "";
+      const nowLine = !cur ? "" : rec ? W(S + "hosting.now." + rec, { date: D(cur.at) }) : recBy === "admin" ? W(S + "hosting.now.date", { date: D(cur.at) }) : W(S + "hosting.now", { by: cs.memberName(recBy), date: D(cur.at) });
       let h = `<p class="mk-note">${W(S + "hosting.says")}</p>` + (cur ? `<p data-state="hosting">${nowLine} <span class="rec">${E(cur.holders)}</span>${cur.note ? ` · <span class="rec">${E(cur.note)}</span>` : ""}</p>` : "");
       if (hs) h += `${cs.field("gr-holders", S + "hosting.field", { rec: true, max: 500, value: cur ? cur.holders : "", autocomplete: "off" })}${cs.field("gr-hnote", S + "hosting.note", { rec: true, max: 280, value: cur && cur.note ? cur.note : "", autocomplete: "off" })}${hs}`;
       return h;
@@ -210,6 +217,14 @@ export const group = {
       let h = `<p class="mk-note">${W(S + "export.says")}</p>`;
       if (take) h += `${cs.field("gr-exnote", S + "export.note.label", { help: S + "export.note.help", rec: true, autocomplete: "off" })}<p class="mk-small">${W(S + "export.note.cut")}</p>${take}<p class="mk-note">${W(S + "export.undone")} ${W(S + "export.undone.why")}</p>`;
       else h += `<p class="mk-note">${W(S + "export.refused.founder")} ${W(S + "export.refused.next")}</p>`;
+      // C85: the copy just taken, offered as a file and its counts labelled; it lives in the page's memory for the sitting and is drawn nowhere
+      const copy = ui.copy || null;
+      if (copy) {
+        const c = copy.counts || {};
+        const records = Number(c.bundles) === 1 ? T("queue.export-performed.records.one") : T("queue.export-performed.records.other", { n: String(Number(c.bundles) || 0) });
+        const files = Number(c.files) === 1 ? T("queue.export-performed.files.one") : T("queue.export-performed.files.other", { n: String(Number(c.files) || 0) });
+        h += `<div class="mk-msg" data-shown="copy"><p>${W("queue.export-performed.summary", { date: D(copy.at), records, files })} ${Number(c.tables) === 1 ? W(S + "export.count.tables.one") : W(S + "export.count.tables.other", { n: String(Number(c.tables) || 0) })}</p>${cs.save("bio-record-copy-" + String(copy.at).slice(0, 10) + ".json", copy.text, { label: "shell.save" })}</div>`;
+      }
       h += logAct;
       if (list) h += cs.sheet(list.map((r) => cs.row("", `${data1(D(r.at))} · ${data1(r.bundles)} · ${data1(r.files)} · ${data1(r.tables)}`, "", r.note ? `<span class="rec">${E(r.note)}</span>` : "")).join("")) + `<p class="mk-note">${W(S + "export.log.cap")}</p>`;
       section(S + "export.head", h);
@@ -221,7 +236,7 @@ export const group = {
       if (!v.declared_stake || !("stake" in v.declared_stake)) return `<p data-state="stake">${W("stake.unreadable")}</p>`;
       const d = v.declared_stake;
       const ui = view.ui || {};
-      const who = (by) => { const id = String(by || "").replace(/^member:/, ""); return id === "admin" ? (me.member === "admin" && me.handle ? me.handle : T("member.founder.unnamed")) : id; };
+      const who = (by) => cs.memberName(String(by || "").replace(/^member:/, ""));
       const earlier = Array.isArray(v.declared_stake_history) ? Math.max(0, v.declared_stake_history.length - 1) : 0;
       let h = d.stake ? `<p data-state="stake"><span class="rec">${E(d.stake)}</span></p><p class="mk-small">${W("stake.set", { who: who(d.set_by), date: D(d.set_at) })}${earlier ? " · " + W("stake.history", { n: earlier }) : ""}</p>` : `<p data-state="stake">${W("stake.none")}</p>`;
       const save = A("declaredstakeset");
@@ -280,8 +295,15 @@ export const group = {
     // R66: a copy of the record, with the founder's words for the list; the manifest it answers is the copy itself and is kept nowhere on the page,
     // the list is read again to show it
     { op: "export", rereads: [],
-      send(view, el, cs) { const note = String(cs.value("gr-exnote") || "").trim(); return { body: note ? { note } : {} }; },
-      async done(view, answer, cs) { const r = await cs.call("exportlog", {}); const a = r && r.result !== undefined ? r.result : r; if (a && Array.isArray(a.exports)) cs.set("exports", a); },
+      // her words travel as the query's note, where the owner reads it (corpus-export R6; C85)
+      send(view, el, cs) { const note = String(cs.value("gr-exnote") || "").trim(); return { query: note ? { note } : {} }; },
+      // the manifest is the copy: offered as a file in this sitting (page memory only), its counts labelled; the list is read again
+      async done(view, answer, cs) {
+        const copy = answer && typeof answer === "object" && answer.counts && typeof answer.counts === "object" ? { at: String(answer.at || ""), counts: answer.counts, text: JSON.stringify(answer) } : null;
+        const r = await cs.call("exportlog", {}); const a = r && r.result !== undefined ? r.result : r;
+        if (a && Array.isArray(a.exports)) cs.set("exports", a);
+        if (copy) cs.set("copy", copy);
+      },
       refusals: { ROOT_OF_TRUST_REQUIRED: (r, cs) => `${cs.w("screen.group.export.refused.founder")} ${cs.w("screen.group.export.refused.next")}` } },
     // the copies taken so far, newest first (corpus-export R2)
     { op: "exportlog", rereads: [],
@@ -316,7 +338,7 @@ export const group = {
         const me = view.me || {};
         const by = a && a.label && a.label.asked_by ? String(a.label.asked_by).replace(/^member:/, "") : me.member;
         if (a && typeof a.text === "string") cs.fill("gr-stake", a.text);
-        cs.set("draft", { field: "stake", text: (a && a.text) || "", askedBy: by === me.member && me.handle ? me.handle : by, untested: !!(a && (a.untested || (a.label && a.label.untested))) });
+        cs.set("draft", { field: "stake", text: (a && a.text) || "", askedBy: by === me.member && me.handle ? me.handle : cs.memberName(by), untested: !!(a && (a.untested || (a.label && a.label.untested))) });
       } },
     // the bar's reason is the administrator's own words, in its field (interface-shell R11's `reasonField`)
     { op: "strengthbarset", rereads: ["bar"], reasonField: "reason",
