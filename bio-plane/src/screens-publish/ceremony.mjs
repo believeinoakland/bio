@@ -240,7 +240,8 @@ export const CEREMONY = Object.freeze({
           return cs.row("", '<span class="id" data-unconfirmed="' + cs.esc(sha) + '">' + cs.esc(String(sha).slice(0, 12)) + "</span>"
             + (by ? ' <span class="meta" data-capturer="' + cs.esc(sha) + '">' + cs.esc(by) + "</span>" : "")
             + proofLine(x)
-            + (Array.isArray(x.findings) ? x.findings.filter(function (f) { return typeof f === "string" && f; }).map(function (f) {
+            // C40: "has neither" is said only of a document that lacks both proofs (an older entry that states none is read as lacking both)
+            + (Array.isArray(x.findings) && (!Array.isArray(x.missing) || (x.missing.indexOf("timestamp") >= 0 && x.missing.indexOf("co_archive") >= 0)) ? x.findings.filter(function (f) { return typeof f === "string" && f; }).map(function (f) {
               return '<p class="mk-small" data-rests="' + cs.esc(sha) + '">' + cs.w("screen.ceremony.conf.intro2", { finding: nameOf(f) }) + "</p>";
             }).join("") : ""),
             cs.act("reattest", { data: { capture: sha } }));
