@@ -39,3 +39,103 @@ Format: cause | finding id | width | role | what I did | result FIXED / STILL / 
 | C81 | CA18, CA61, E53, E54 | 390 | admin | measured Home/Projects/Project/Question/Document/Case editor/Review copy | STILL | Main area width: Home and Projects 426, Project 408, Question 523, Document 401, Case editor 523, Review copy 401 (screen 390). Buttons cut off at the right edge: "Remove a citation", "Narrow the question" (Question), "Remove a citation" (Case editor), "Check whether its route can be shown" (Document), "Comment" (Review copy); 57 and 16 touch targets under 30 px high on Home and Projects. Queue and ceremony fit | shots/B/m390-admin-question.png |
 | C69 | CA60 | 1280 | admin | Queue as found | STILL | Two identical NOTICED items under "Walk T51 conclusions-action": "A newer version of A web page from www.foia.gov may change a passage ... relies on" with the same sentence and the same two buttons, one after the other (to be repeated after I make my own obligation, below) | shots/B/queue-admin-1280.png |
 | C66 | CA46 | 1280 | admin | Queue page, watched the API log | FIXED | No 400 on `op=queue` (no console/API 400 in the load) | |
+| C24 | E06 | 1280 | admin | rail "Find" and /app/find | FIXED | Both lead to the working Find ("Search everything your team holds ...") | shots/B/find-rail.png |
+| C2 | CA37 | 1280 | outsider | opened the published page of CASE-2026-2057 (edition 1, signed with a key I registered, reauth by password) | FIXED | "FINDING 1: Federal agencies must make records available to any person on request unless an exemption applies, and must say why when they withhold." (no longer the text "## Conclusion"); "What would change it" is not drawn on the public page (MINOR, not a listed finding) | shots/B/published-1280.png |
+| C47 | CA38, CA36 | 1280 | outsider | same page | FIXED (label) / STILL (evidence) | "LEFT OUT OF THIS CASE" now holds the exclusion sentence typed under "What the case says it does not cover" (label and content agree). EVIDENCE lists two entries "Capture B" "Capture B" with no document name or passage: a reader cannot tell what they are | shots/B/published-1280.png |
+| C47 (evidence) | CA36 | 1280 | outsider | same | STILL | see above: evidence entries unnamed | shots/B/published-1280.png |
+| C94 | S-25, E28, E43 (my part) | 1280 | admin | reply on review copy; published page | STILL | Reply shows "admin · October 21, 2026"; published page says "Written by admin and published by admin"; the member's handle is sparky ("Opened by sparky" on the question is right) | shots/B/rc-owner-comments.png |
+| C34 | CA63, E60 | 1280 | admin | "Reopen this finding, with a reason" on a concluded finding of a published case | FIXED | Reason box then POST withdrawconclusion 200; the CONCLUDED block goes and the Conclude form returns; "The published case stays exactly as it was published" is said. (Press answered in the fold only after the reason was typed in the fold's own box: an empty press says "Say why first") | shots/B/reopen.png |
+| C38 | CA14 | 1280 | admin | removed the cutting citation, read strength and partition | FIXED | The removed leg is shown "Removed from the question: <reason>" and is no longer in the "fails if any one of these fails" list or in the strength sentence | shots/B/sever-after.png |
+| C39 | CA27 | 1280 | admin | ceremony after removing the citation | FIXED | The "documents without a second confirmation" block no longer names the removed capture (before the removal it named the cutting leg's capture, 718c...) | |
+| C32 | FC-26, E50 | 1280 | admin | "Check whether its route can be shown" | FIXED | Answers (200): "This address isn't being watched, so there is nothing to check yet. Watch it, and each new version found is kept beside this one." | |
+| C33 | FC-24, E48, E49 | 1280 | admin | "Stop using this copy" on a copy cited by the question, and on a vouched uncited copy | FIXED (cited and vouched) / not exercised (held, unvouched) | Cited: "This copy is cited by <question>. Remove those citations first, then retire it. Nothing was recorded." (names the question; no door to remove). Vouched, uncited: retired ("Retired. Withdrawn from use by a member. Kept for good"). A held copy was not tried (all mine were vouched) | shots/B/retire-0075.png |
+| C35 | FC-27, E52 | 1280 | admin | Add > From an address "For which question"; project "Draw on a question from elsewhere" | STILL | The same two titles ("How many pothole reports ...", "How many days passed between ...") appear twice with no project name beside them | shots/B/cap-gsa2.png |
+| C20-C28 area | E24, E29 | 1280 | admin | pickers (cite, money, person) | STILL (partly) | Document pickers take 6 s or more to fill (person page: empty at 3 s, 72 entries at 6 s; I picked index 0 on the empty list by mistake and the fact went to walk085-sample.txt); the cite and money pickers now list this project first | |
+| C6 | CA53, E33 | 1280 | admin | Matter: record a determination | FIXED | Pickers now: the event (the project's events), the evidence (the project's documents by name, whole document), the published findings (concluded questions of the project, a checkbox once concluded). With no concluded finding it says "Nothing here" and the press says "A determination rests on at least one finding ... Name the findings it rests on". With all chosen the plane refused STANDARD_NOT_BINDING in words ("This standard does not bind this body ... Record it as a benchmark comparison"): a true domain refusal, not a missing picker | shots/B/matter-determined.png |
+| C54 | E56 | 1280 | admin | Timeline: Record an event, leave and return | FIXED | The event is listed under "UNDATED / other" after a reload, and the Matter picker offers it | shots/B/timeline-reload.png |
+| C55 | E34, E35 | 1280 | admin | Timeline forms | STILL (DESIGN) | "Record an event" takes only a document: the event is "other · EVT-2026-ylboaqmffg4zes0p" with no words, date or participants; "Undetermined, because its owner does not settle its validity" remains; a progression is still defined by typing bar-separated lines | shots/B/timeline-event.png |
+| C56 | CA54 | 1280 | admin | Timeline "Record an event" | FIXED (not drawn) | No list of kinds with 'A decision' is drawn now; the event takes kind "other" | |
+| C8 | E36 | 1280 | admin | Money: start a trail, read a figure from my budget note (typed amount, dates) | STILL (half fixed) | Read a figure now answers recordfact then moneysetpropose 200 and the table draws the figure "proposed by the machine; not included" (the figure reaches the trail's record). But after any reload the Money page says "No money trail is open here yet" although four trails exist (MSR-2026-0005 to -0010): the figure and its Include act can never be reached again; "Include with a reason" exists in the row but was not pressable in the headless check | shots/B/money-fact.png |
+| (new) | - | 1280 | admin | Money trail page after reload | NEW MAJOR | "No money trail is open here yet. Start one" after four trails were started in this project; the member cannot get back to a trail, so a second press makes a second trail | shots/B/money-reload2.png |
+| C57 | E37 | 1280 | admin | Money > Committed against paid | FIXED | Press says "Choose the contract." | shots/B/money-cap.png |
+| (C8 aside) | E36 | 1280 | admin | recordfact with fiscal year "FY2025-26" | FIXED (words) | BAD_PERIOD: "A follow names the days it covers: a first day, and a last day not before it, or none." ("follow" is a word a member does not use) | |
+| (new) | - | 1280 | admin | Money / Timeline "Choose the passage on the document" | NEW MINOR | Money page: "Nothing here" under "Choose the passage" for a held text file; Timeline: "Could not read this, because your team's Civicsmith did not answer" for the PDF; the whole document can still be used | shots/B/money-doc.png |
+| C58 | E39 | 1280 | admin | Objective | FIXED | Crumb names the project; "How it is going" says "Not counted yet: no measure of success is set."; the flow is chosen from a list and the fold stays open after choosing it | shots/B/objective-flow.png |
+| C61 | E30, E31 | 1280 | admin | Standard | FIXED | Project Standard lists "Oakland Municipal Code 2.04.100 · Ordinance · Oakland City Council" with a door; the page of one standard shows "Its words as written: ..." and the document name; crumb names the project | shots/B/standard1-1280.png |
+| C62 | E01(crumb), E29, E39, E46 | 1280 | admin | Question, Objective, Standard, Document | FIXED | Crumbs name the project (Start-and-send step 2 reads "Action plan › Start and send" and carries the project: not otherwise checked) | |
+| C43 | E55 | 1280 | admin | project page question card | FIXED | "Unrated / Unrated" chips, no raw id in the sentence, paragraph no longer repeated | |
+| C7 | E25 | 1280 | admin | organisation page (Acme Paving Inc.), "Add a fact from a document" | FIXED | Form draws Name / Address / Contact for an organisation; the press answered recordpersonfact 200 and the fact "Contact · ..." is listed with its document | shots/B/org-fact.png |
+| C59 | E26 | 1280 | admin | person/organisation page | STILL | After choosing a document no "Choose the passage" control is drawn; the fact is now shown with its document name ("from walk085-sample.txt") | shots/B/org-fact.png |
+| C60 | E27 | 1280 | admin | "Connect the documents that name it" | FIXED (words) | Answers "not named in any document yet. Found by their names in the documents your team holds. Not yet matched: ..." (it does not say the memo that names Acme is missed) | |
+| C53 | CA43, E43(reminder), E44 | 1280 | admin | plan: choose an option with a reminder date; action: "Remind me" | STILL (half fixed) | Plan: the option row says "chosen · <reason> · We will remind you on December 14, 2026" (read from the record). The reminder block has no button of its own once an option is chosen (only the Choose press sets it, and it is refused in words "A reminder names a date the option has. Pick one of its dates" if the date select is blank). Action page: POST reminderset 200 and "We will remind you on December 14, 2026" drawn, but gone after a reload (kept in page memory) | shots/B/plan-pick.png |
+| C63 | E42, E46 | 1280 | admin | "Plan what to do" on a question | STILL (MINOR) | Press stays on the question page and adds a line "Its plan: <title>" with a link (no plan page opens); checks "opt-1" not seen; Brown Act line not seen (no records-request option drawn) | shots/B/plan-open.png |
+| C64 | CA51 | 1280 | admin | Request records > office | STILL | Every subject (11) answers "No office is known to hold such records yet. An administrator can add the office under Settings, Places and offices." A member cannot name a federal office; the records request round trip could not be started. "Start another kind of action" works (Request for comment ACTN-2026-0006, due date December 15, 2026 with its basis) | shots/B/req-1.png |
+| C68 | CA47 | - | admin | profile order for a federal office | not exercised | no federal office can be named (C64) | |
+| C65 | CA66 | - | admin | "Keep as a template" | not exercised | needs a sent request; not reached | |
+| C66 | CA49 | 1280 | admin | Record a reply on the action | FIXED | "received · <party>" and "What the reply said: <my words>" are drawn back | shots/B/action-acts.png |
+| C66 | CA68 | 1280 | admin | "Show the routes" with none | STILL (MINOR) | Still draws "Nothing here" with no sentence that none is known for this kind | shots/B/action-acts.png |
+| C66 | CA70 | 390/1280 | member | review copy as a joined member | FIXED | Share boxes are no longer drawn; the member sees readers, comments and a Reply | shots/B/rc-1280.png |
+| C27 | E58 | 1280 | member | captured an address as the member and opened it | FIXED | "Held until you vouch for it" with the vouch box on the member's own copy | |
+| C69 | CA60 | 1280 | admin and member | Queue and Home | STILL for NOTICED; FIXED for the obligation | The deadline obligation of ACTN-2026-0004 now shows once (was four times). Two identical NOTICED items "A newer version of A web page from www.foia.gov may change a passage ... relies on" are still shown one after the other (Queue and member Home); also identical pairs of "Who issued a document ... A web page from www.foia.gov" and "A PDF from www.oaklandca.gov", three "A full export", eight "sparky registered a signing key" (my keys). My plan option and action due dates made no Queue item | shots/B/queue-admin-1280.png |
+| C96 | CA25 | 1280 | member | Home "Join" | not exercised | only one invitation was open; the card shows the project name above "Join" | shots/B/home-member-join.png |
+| C76 | CA31, E28(mark), E09 | 1280 | admin | "Vouch for this copy" | STILL (MINOR) | Button says "Asks for a reason" but the press asks nothing and works with the page's own two boxes | |
+| C51 | CA34 | 1280 | admin | register a signing key with "Keep this key on this device" ticked, three runs | STILL | Registering took 37.6 s each time; each fresh browser registered another key (three for the administrator in my runs); the sign step still draws no control to load a key file | |
+| C50 | CA41 | 1280 | admin | ceremony reopened after publishing edition 1 | STILL | The page lists the same "reasons that stop the signing" and the draft as unpublished; no "Published: edition 1" and no link to the public page | shots/B/cer-after-signing.png |
+| C49 | CA32, CA62, CA61(drafts) | 1280 | admin | editor, review copy, ceremony with two drafts | FIXED | "Which draft" chooser on all three, drafts named by scope and date, "1 review links are live, 1 of them on an earlier draft". After choosing the earlier draft the headings did not change in my check (not confirmed that the earlier draft is shown) | shots/B/editor2-1280.png |
+| C67 | CA30, CA40 | 1280 | admin | ceremony | FIXED (CA30) / not exercised (CA40) | No "minutes ... can't be read" sentence on a case relying on none | |
+| C81 | CA18 | 1280, 390 | admin | case editor "How ready it is" | STILL | Step numbers print over the words ("Draf2t ... Not checked yet3 Externally ..."); at 390 the number 2 sits on "Draft" | shots/B/strip-1280.png |
+| C46/W17 | CA35 | 1280 | admin | Sign dialog "What your key signs, exactly" | STILL (MINOR) | "case CASE-2026-2057bio-ratify-case CASE-2026-2057 1 8937...": label and raw string run together | shots/B/cer-signed.png |
+| C92 | B1, E59 | 1280 | admin | Assistant (not walked) | FIXED (words) | The panel opens; pressing "Ask the assistant to work on this" answers "This could not be read. Try again in a moment." and offers "Other reasons the assistant can't work here" (no longer "a reason this panel has no words for yet"); the test banner says parts of the assistant have not passed tests | shots/B/assistant.png |
+| (E12/W18) | E12 | 1280 | admin | Strength after vouching | STILL (MINOR, wording) | "Not graded yet on Capture: none of the documents this conclusion rests on has a grade that can be counted, so it rests on nothing established here. Not counted yet: PLAW-114publ185.pdf." while the document page reads "Capture B, Vouched for by sparky" | shots/B/q-concluded-1280.png |
+| (E14/E23) | E14, E23 | 1280 | admin | Conclusion words | FIXED | "Set by sparky before the strength was shown" and "Concluded by sparky" (the handle, not the role "founder"); "What would change it" appears once | shots/B/q-concluded-1280.png |
+| C10 | FC-08, FC-29, E19 | 1280 | admin | upload a text file, upload the same bytes again | FIXED (same-project duplicate) | Second press: "Your team's record already held exactly this file. Nothing new was written; your account of it is kept as a second sighting." with "Open it" to the document in my project. A file held only by another project was not tried | shots/B/upload.png |
+| C13/C5/C15/C18/C21/C22/C23/C28/C29/C41/C42/C65/C68/C96 | - | - | - | not walked in my area or not reachable | not exercised | C5/E07 is the other walker's; C41 refusal cannot be provoked now (C1 fixed); C42 needs a newer captured copy with a chain; C65 and C68 need a sent request (C64); C96 had one invitation; the rest are find-capture or setup-team findings | |
+
+## Counts
+
+FIXED: 38 (BLOCKER causes C1, C2, C3, C6, C7: all five of mine fixed; MAJOR 25; MINOR 8)
+STILL: 28 (BLOCKER 0; MAJOR 18; MINOR 10)
+NEW: 5 (MAJOR 1; MINOR 4)
+
+## STILL items, each with its cause
+
+MAJOR
+- C9 (E04, FC-06c): an address already held elsewhere gives "Open it" but nothing is filed under the member's project.
+- C14 (CA2, CA19, CA45, CA56, E24, E29, E36): screens open in 5 to 10 s (Add 7 s, Queue 10 s, document 5 to 6 s, case editor 6 s, ceremony 6 s); acts take 5 to 9 s; pickers fill after 6 s or more.
+- C19 (FC-10, CA4, E20): a web page's reading starts with furniture ("Share", "Facebook", "X", "LinkedIn", "Email"), a Cite button each.
+- C25 (E08, CA3, E18): web pages named "A page from <host>, captured <date>"; a PDF is named by file name in the capture line but "A page from www.govinfo.gov ..." on its own page.
+- C36 (CA8, E13): question legs name the document and paragraph or page, not the cited words.
+- C40 (CA28): after "Ask for the confirmation again" the page still says "no trusted time stamp, no outside copy" and says nothing that one was made.
+- C46 (CA16): case editor draws the finding as markdown headings with an empty Conclusion and a raw question id in "The passages this case cites".
+- C46 (CA21): outside reader sees the same headings and an empty Conclusion (the session log no longer leaks).
+- C47 (CA36): published EVIDENCE lists "Capture B, Capture B" with no document names.
+- C48 (CA33): after a reload the ceremony loses "Edition 1 is prepared" and shows the stopping reasons again.
+- C50 (CA41): reopened ceremony does not say edition 1 is published, no link.
+- C51 (CA34): key registration 37 s, one more key per browser, no control to load a key file.
+- C53 (CA43, E43, E44): no reminder button once an option is chosen; the action page's reminder is gone after a reload.
+- C55 (E34, E35): events have no words, date or participants; progressions typed as bar-separated lines (DESIGN).
+- C59 (E26): no "Choose the passage" control on a person or organisation page.
+- C64 (CA51): no office can be named; the records request cannot be started by a member (DESIGN).
+- C69 (CA60): two identical NOTICED items (and other identical pairs) in Queue and Home.
+- C81 (CA61, E53, E54): at 390 px the main area is 523 px wide on the question and case editor, 426 on Home and Projects, 401 on the document and review copy; "Remove a citation", "Narrow the question", "Check whether its route can be shown", "Comment" are cut off.
+- C8 (E36): the money trail cannot be reached again after a reload (see NEW).
+
+MINOR
+- C16 (FC-11): the document page makes about 35 `projectquestions` reads and 4 `heldcaptures`.
+- C35 (FC-27, E52): same two question titles twice with no project name in "For which question" and "Draw on a question".
+- C63 (E42, E46): "Plan what to do" opens no plan page (a link is added).
+- C76 (CA31, E09): "Vouch for this copy" is marked "Asks for a reason" and asks nothing.
+- C94 (S-25, E28, E43): "admin" instead of "sparky" in the reply and in "Written by admin and published by admin".
+- E12 (W18): strength says "nothing established" for a vouched B document.
+- C95 (E10, E24): cite list still holds every question of the team (this project first, with a search box).
+- CA18 (C81): the strip numbers print over the words.
+- CA68 (C66): "Show the routes" silent when none.
+- CA35 (W17): sign dialog strings run together.
+
+## NEW items
+
+- MAJOR, cause C8 area (money): the money trail page says "No money trail is open here yet" after a reload although trails exist; the member cannot return to a trail or its figures.
+- MINOR, cause C11/capture: the first address capture after a pause answered 502 STORE_DID_NOT_ANSWER twice (govinfo.gov, justice.gov); the retry worked at once. The sentence is honest.
+- MINOR, cause C30/C31 (document): "Cite this" with "Choose a question" left empty sends nothing and says nothing; the question is also not preselected although the note says it is.
+- MINOR, cause C51 (keys): registering a signing key took 37.6 s with no progress shown.
+- MINOR, cause C14 (pickers): "Choose the passage on the document" is empty ("Nothing here") on Money and "Could not read this" on Timeline.
