@@ -179,6 +179,7 @@ Terms. A **capture** is a byte sequence named by its lowercase hex SHA-256 (`cap
 - **R44** C-18.4 (warn): a `crucial` document whose entry carries neither `co_archive` nor `timestamp` is flagged for a member to verify co-attestation before release.
 - **R45** C-18.6 (error): every registered capture's stored bytes (whole, or its parts streamed in order) hash to the recorded `capture.sha256`; bytes that cannot be decoded are refused with the reason.
 - **R46** C-18.9 (error): a document at or past `verified` records a non-empty `provenance_chain` whose every hop names its attestor, and states its authority or, when undetermined, its `authority_basis`; no chain, a non-array chain and an empty chain are three distinct findings.
+- **R71** (T51 fix round 2; K4323, K4326; C14's bound) `captureGrades(captureShas)` answers, for each digest asked and in order, the grade `captureGrade` answers for it, reading the record once for the batch (one more read per level of archive nesting when a file cut out of an archive is asked without its archive); a digest the record does not hold, or a malformed one, answers as `captureGrade` does; a value that is no list answers `[]`; writes nothing.
 
 ### Satisfies
 
@@ -211,4 +212,3 @@ Terms. A **capture** is a byte sequence named by its lowercase hex SHA-256 (`cap
 ## Open for Bob
 
 None (R34's key ruled by Bob, K59).
-
