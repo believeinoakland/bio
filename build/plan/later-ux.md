@@ -51,3 +51,4 @@
 - Inbox · a safe view of a knock's bytes before the pull (DOORBELL #5's record: member read through file-safety's scan; needs a drawing first) · K4332 · 2026-10-21
 - Drafts · adopt DEC-398's `screen.review-copy.links.shared`, `.comments.one/.other`, `links.live.one` in screens-publish (wording, merged module) · K4333 · 2026-10-21
 - Held, Inbox · adopt DEC-399's `screen.held.vouch.partsonly` and `screen.inbox.knock.name`/`.type` in screens-intake (wording; merged module) · K4336 · 2026-10-21
+- Contradiction, Project, Document · adopt DEC-400's `screen.contradiction.flagged.by`, `act.heldcaptures.here.project`, `screen.document.testify.how` in screens-inquiry (wording; merged module) · K4338 · 2026-10-21
