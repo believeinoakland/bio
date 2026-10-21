@@ -73,7 +73,7 @@ test("R84 R81: SETTING_NOT_JSON is this module's row C-102.33, beside the settin
   assert.deepEqual(settings.map((c) => RECORD_CORE_CHECKS[c].check), ["C-102.29", "C-102.30", "C-102.31", "C-102.33", "C-102.32"]);
   assert.ok(settings.every((c) => RECORD_CORE_CHECKS[c].where === row.where));
   const c102 = Object.values(RECORD_CORE_CHECKS).map((r) => r.check).filter((c) => c.startsWith("C-102.")).map((c) => Number(c.slice(6)));
-  assert.equal(Math.max(...c102), 33, "C-102.33 is the last held number");
+  assert.equal(Math.max(...c102), 35, "C-102.35 is the last held number (T51's allocid rows take 34 and 35, R86)");
   const checks = Object.values(RECORD_CORE_CHECKS).map((r) => r.check);
   assert.equal(new Set(checks).size, checks.length, "no number is held twice");
   /* SETTING_INVALID keeps its row and meaning: R26's setting alone, not a build fault */
