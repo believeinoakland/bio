@@ -206,3 +206,17 @@ COMPLETE (re B25, K4259): entry 1 (`updates`, R68, DEC-389) applied. Pushed `cea
 - `npm ci` run in each lock-file directory that lacked `node_modules` (K4113) before the first run; all exited 0.
 
 Size (session_01Si5cxby7xVds46UHqHmk44): test runs 9, module lines 5105
+
+## J16 · QUESTION
+
+QUESTION (SCREENS-SETTINGS #13, fix round 2, B26). I carry on with everything; all ten causes are built and tested, and what follows is only what the design's word list does not hold. I invented no sentence: each place draws the nearest existing word, or draws nothing, until the rows below exist.
+
+**New word rows needed (for UX-DESIGN, one batch):**
+1. **C88** `screen.group.hosting.now.date` "Recorded on {date}:" (the neutral line the cause asks for). Today the hosting line says "recorded when set up" only for a recorder of no one/bootstrap, "by Civicsmith itself" for a machine, and otherwise "Recorded by <handle> on <date>:" with the founder named by `memberName`. So a founder who records it again after setup is no longer told "when set up". R75 said the founder is "at setup"; I read C88 as overriding that (a founder's date can be any day).
+2. **C85** the three counts of a copy of the record. Existing rows give "{n} records" and "{n} files" (`queue.export-performed.records.*`, `.files.*`), drawn with `queue.export-performed.summary` beside "Save as a file". No row says "{n} tables", so the tables figure is not drawn at all on the offered copy (the list of copies keeps its three bare figures, unchanged). Needed: `screen.group.export.count.tables.one` "1 table" and `.other` "{n} tables" (and I would draw all three labelled in the list too).
+3. **C83** what the administrator can do when the scanner holds no signatures (the cause asks for it): `screen.security.nosignatures.next`, e.g. a line telling an administrator to ask whoever looks after the team's Civicsmith to refresh the scanner. The date and the reason are drawn already, from the plane's own keyed words.
+4. **C86** the check's time: `screen.group.domain.checked` "Checked {date} at {time}." Today the day and the HH:MM are drawn as data beside the verdict, with the plane's own `detail` (which says "(HTTP 404)").
+5. **C87** the neutral refusal "Fill in {field} first. Nothing was sent.": I use `screen.security.config.missing` (it fits, `{field}` is the box's own label) for the empty boxes of Add a court, Draft the rule, Propose statements, Save the set and Save who your team is. A neutral key (`shell.field.needed`) would be better placed.
+6. **C91** `screen.watching.purpose` and `screen.leads.purpose`: Settings draws each door with its name; no purpose is drawn beneath them.
+
+**Readings I built on (tell me if wrong):** C89: `memberadd` for an administrator beyond the second is sent by the screen itself (the shell would draw its CONSENSUS_REQUIRED answer as a refusal), drawn as done in the success style with who must still endorse, and the roster read again. C90: the removal vote is not drawn while `adminarith.live.possible` is false (the section says why); an unread count hides nothing. C14: grouprules asks `heldcaptures` once on open with `fields: "picker"`.
