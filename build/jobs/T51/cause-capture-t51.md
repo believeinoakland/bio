@@ -56,3 +56,22 @@ No sentence of mine needs a design row: each is written once with `localize` (ac
 
 - `bio-plane/src/setup-words/rows.mjs` (setup-words): my new `localize` keys are not in it (`node bio-plane/src/setup-words/build.mjs --check` names `acquisition.index.attestation_pending` first); regenerate with `node bio-plane/src/setup-words/build.mjs`.
 - `agent-worker/dist/agent-worker.bundled.mjs`, `.bundle.json` (inputs `acquisition/index.mjs`, `checks.mjs`, `keyed.mjs`, `unpack.mjs`, `capture/checks.mjs`, `ops.mjs`, `words.mjs`) and `bio-plane/dist/bio-plane.bundled.mjs`, `.bundle.json` (the plane's source): `npm run build` in each directory.
+
+### Tests and checks run
+
+- acquisition 185/185; capture (with `cap13-reuse-pages`, `d57selflink`) 220/220; sources 44/44.
+- Direct users (36 modules, two lanes): all pass except two failures that fail identically on `tranche/T51` untouched, not mine: `store-door` R17 (`groupdescriptiondraft` hand row disagrees with the owner's) and `plane` R24 (a screen title/purpose words check).
+- `checks/run.mjs`: architecture, coverage, words 0 failures for acquisition, capture, sources (other modules' coverage gaps and a rulings.md K4301 line fail, not mine). Cause-job `ownership.mjs acquisition,capture,sources origin/tranche/T51 job/T51/cause-capture-t51`: 0 failures (11 files).
+- Not run: the full `impact.mjs` set (1738 files, K4272); BOB runs the whole suite per wave.
+
+Size (session_01GFqkWRF1arvd4PeKMk724o): test runs 40, module lines 8333
+
+## J2 · REPORT
+
+Other modules (for routing):
+- reading-pipeline `bytesOf` (R2): reads a multipart document by assembling its parts and refuses over MULTIPART_READ_MAX (20 MiB); a 21 MB PDF is over it, which is likely the walk's "no reading". It should read `evidence.get(doc.capture.sha256)` first (the whole is now held up to 32 MiB). cause-reading-t51 or a wave-3 follow-up.
+- provenance: `captureGrade` reads once per capture; heldcaptures calls it once per distinct row. A batch `captureGrades(shas)` would finish C14's bound.
+- control-plane: promote the `document` of a render continuation (`acquire {continue}` with `render_pending`); the 504 sentence (wave 2) can now say what was kept.
+- screens-intake: draw `render_pending`, a pending attestation, `capture.file_name`; use `fields:"picker"` for pickers; never offer OCR/vouch for a document with no object under its fingerprint (parts-only past 32 MiB).
+- Generated artifacts stale: setup-words rows.mjs, agent-worker and plane bundles (listed in my record).
+- Two failures on tranche/T51 untouched: store-door R17, plane R24.
