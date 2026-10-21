@@ -81,7 +81,7 @@ function render(cs, view) {
     const tr = e.trail || {};
     const moved = f.phase !== "actual" ? cs.w(S + "didnotmove", { phase: cs.w(S + "phase." + (f.phase || "adopted")) })
       : tr.moved && tr.moved.state === "dated" ? (cs.date((tr.moved.when && (tr.moved.when.value || tr.moved.when.start)) || "") || cs.esc((tr.moved.when && tr.moved.when.value) || ""))
-        + (tr.moved.event ? " " + P.refOf(cs, tr.moved.event, cs.w(S + "event"), [], "event") : "")
+        + (tr.moved.event ? " " + P.refOf(cs, tr.moved.event, cs.w(S + "event"), [cs.date((tr.moved.when && (tr.moved.when.value || tr.moved.when.start)) || "")], "event") : "")
       : gap(e, "moved", (tr.moved && tr.moved.why) || cs.w(S + "moved.why"));
     const per = f.period ? (f.period.fiscal ? cs.esc(f.period.fiscal) : f.period.to
       ? cs.w(S + "period", { from: cs.date(f.period.from || ""), to: cs.date(f.period.to) }) : gap(e, "period", cs.w(S + "period.why"))) : gap(e, "period", cs.w(S + "period.why"));

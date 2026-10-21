@@ -112,7 +112,7 @@ function render(cs, view) {
       + (ourItems.map((x) => `<div class="mk-ev us"><span class="mk-date">${cs.date(x.at) || cs.esc(String(x.at || ""))}</span> <b>${P.refOf(cs, x.ref, x.label || x.ref, [x.kind || ""], /^ACTN-/.test(String(x.ref)) ? "action" : undefined)}</b></div>`).join(""))
       + ourFails.map((s) => cs.mark("gap", "undetermined", { reason: cs.w(S + "lane.failed", { source: s.source || "" }) })).join("") + "</section></div>";
     return lanes
-      + ((world.placed_nowhere || []).length ? cs.sec(S + "undated.head", cs.sheet(world.placed_nowhere.map((x) => cs.row("", P.refOf(cs, x.event_id, x.kind ? cs.w(S + "kind", { kind: x.kind }) : x.event_id, [], "event"), `<span class="mk-small">${cs.w(S + "undated.apart")}</span>${x.grade_why ? ` <span class="mk-small">${P.why(cs, x.grade_why)}</span>` : ""}`)).join(""))) : "")
+      + ((world.placed_nowhere || []).length ? cs.sec(S + "undated.head", cs.sheet(world.placed_nowhere.map((x) => cs.row("", P.refOf(cs, x.event_id, x.kind ? cs.w(S + "kind", { kind: x.kind }) : x.event_id, [x.status || "", cs.w(S + "undated.apart")], "event"), `<span class="mk-small">${cs.w(S + "undated.apart")}</span>${x.grade_why ? ` <span class="mk-small">${P.why(cs, x.grade_why)}</span>` : ""}`)).join(""))) : "")
       ;
   }));
   /* R33 (1): the matters the project follows through a progression, each a reference to its steps (state b) */
