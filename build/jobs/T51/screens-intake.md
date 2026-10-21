@@ -240,3 +240,7 @@ Size (session_016TLvaypBQx6X3AHUVwEdcN): test runs 9, module lines 2233
 ## J16 · COMPLETE
 
 COMPLETE (B17 applied): ACQUIRE_TIMED_OUT drawn by kept (held/undetermined keys fall back to the base words until the rows exist; add them to SCREEN_KEYS.capture then); the merged registry's capturerequests act is drawn. screens-intake 202 of 202; format, architecture, words 0; ownership 0. Size (session_016TLvaypBQx6X3AHUVwEdcN): test runs 5, module lines 2245
+
+## B18 ANSWER applied
+
+Put-back (C28): a discarded knock offers `inboxresolve` to `new` (the shell asks the reason) labelled `act.inboxresolve.label.inbox.putback`, drawn only once that row exists in the word table (until then no raw key is drawn; the test branches on `hasWord` and must be re-read when the row lands, the done sentence's key was not named so none is drawn). Link-enough for C10 and the Held filter accepted. Waiting for CAPTURE #41 and DOORBELL #5 (name, type; `whole: false` withholding of vouch and OCR): a CHANGE then. screens-intake 203 of 203; format, architecture, words 0; ownership 0.
