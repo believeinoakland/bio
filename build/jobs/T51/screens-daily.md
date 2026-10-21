@@ -286,3 +286,11 @@ Merged `tranche/T51` first. Each cause: one test written first and seen failing,
 5. **Not done, by the plan:** the cheap picker read for the vouch rows (C14), the member-name helper (C94): screens-daily-2, wave 2. `projects.mjs`'s Join and the queue item's own Join carry no project name in their accessible name yet (C96's source was `home.mjs`).
 
 Size (session_01Ak8ZoKSctRCDeuHjPSUWJP): test runs 31, module lines 4062
+
+## J14 · COMPLETE
+
+COMPLETE (SCREENS-DAILY #15), re B23 (fix round 2, wave 1). Pushed @ job/T51/screens-daily; the detail, the REPORT items and the check lines are in my record ("Completion (SCREENS-DAILY #15, B23)").
+Causes met, each with a test written first: C4 (R82: adminendorse keeps and shows the invitation once on Home and the queue), C22 (R67: places by name, no empty li, no raw look code), C23 Find's part (count follows the filter, empty filter named, table boxes, full-width words box, help lines with their controls), C35 find-in's part (questions with their project's name), C70 (vouch to-dos counted, grouped, placed by the sort, drawn once with the list), C71 (a reason on every kept row), C73 (the sorted line), C74 (one invitation, Open opens the subject), C75 (member pick list, self refused), C96 (Join names its project).
+NOT done: C79's sentence (no held key, no kit hand-over across navigation; opening the project on success is met): QUESTION-grade decision for you in the record (REPORT 1: options a, b, c; I recommend b with a as interim).
+Suite 242 of 242. Users of what I changed (control-plane totality/declarations/declared-ops/t51-door/t46-app, plane declarations/t51, journey-check pseudo after npm ci): pass. checks/run.mjs: architecture 0, words 0, coverage 0 in screens-daily; the one format failure is build/rulings.md:4298 (K4301), not mine. setup-words --check clean; ownership 0.
+Size (session_01Ak8ZoKSctRCDeuHjPSUWJP): test runs 31, module lines 4062
