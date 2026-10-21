@@ -19,5 +19,5 @@ Background, only where a point needs it: `REQUIREMENTS.md` (Bob's words verbatim
 5. **Decide the technical points the lane left to BOB:** packaging (`BOUNDARY-REQUIREMENTS.md` §10), the order of work (`WAY-THERE.md` §6), the suite's repeat counts, formats and the extended R75 record (`SUITE-REQUIREMENTS.md` §15), the catalogue channel, and the installer asking each team's copy for a Cloudflare credential able to create gateways and store keys (AIR45).
 
 ## Loose ends
-- Bob's Cloudflare account still holds the test gateway `aidesign-test` and the secrets `aidesign-test_openai_default` and `aidesign-control`; harmless (the OpenAI key is revoked); Bob deletes them at his convenience.
+- L1's clean-up is complete (2026-10-21): the lane deleted its test Worker; Bob revoked the OpenAI key and deleted the gateway `aidesign-test` and the secrets `aidesign-test_openai_default` and `aidesign-control`.
 - The session's Cloudflare credential cannot manage AI Gateway or Secrets Store; future live tests in that area need Bob's dashboard steps or a wider credential (Bob's choice).

@@ -171,3 +171,6 @@ Bob revoked the OpenAI test key. Implications, recorded in `AI-PROVIDER-REQUIREM
 
 ## A39 · 2026-10-21 · Bob: key entry both ways (AIR45); documents made current; hand-over prepared
 Bob: "Okay: C." Recorded in `REQUIREMENTS.md` §17 as AIR45: a key reaches the gateway through Civicsmith's own screen (passed straight to Cloudflare's store, never kept; the default) or through the Cloudflare dashboard. For hand-over, `AI-PROVIDER-REQUIREMENTS.md` was rewritten as one clean current statement (the superseded text stays traceable in `REQUIREMENTS.md`); `UX-REQUIREMENTS.md`, `SUITE-REQUIREMENTS.md`, `BOUNDARY-REQUIREMENTS.md` and `WAY-THERE.md` brought in line (privacy and origin as seven team-set checks, not a catalogue bar). `HANDOVER.md` written: reading order and what BOB is to do. **Not yet passed to BOB:** Bob asked to wait while BOB redeploys.
+
+## A40 · 2026-10-21 · L1 clean-up complete
+Bob deleted the test gateway and both test secrets (he had already revoked the OpenAI key); the lane had deleted its test Worker. Recorded in `TESTS.md` and `HANDOVER.md`. The hand-over waits for Bob's word.
