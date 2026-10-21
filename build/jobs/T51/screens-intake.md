@@ -244,3 +244,7 @@ COMPLETE (B17 applied): ACQUIRE_TIMED_OUT drawn by kept (held/undetermined keys 
 ## B18 ANSWER applied
 
 Put-back (C28): a discarded knock offers `inboxresolve` to `new` (the shell asks the reason) labelled `act.inboxresolve.label.inbox.putback`, drawn only once that row exists in the word table (until then no raw key is drawn; the test branches on `hasWord` and must be re-read when the row lands, the done sentence's key was not named so none is drawn). Link-enough for C10 and the Held filter accepted. Waiting for CAPTURE #41 and DOORBELL #5 (name, type; `whole: false` withholding of vouch and OCR): a CHANGE then. screens-intake 203 of 203; format, architecture, words 0; ownership 0.
+
+## J17 · COMPLETE
+
+COMPLETE (B17 and B18 applied): put-back of a discarded knock drawn once act.inboxresolve.label.inbox.putback exists (no raw key before); B17 as J16. Waiting for CAPTURE #41 and DOORBELL #5 (CHANGE then). screens-intake 203 of 203; format, architecture, words 0; ownership 0. Size (session_016TLvaypBQx6X3AHUVwEdcN): test runs 3, module lines 2250
