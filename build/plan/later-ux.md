@@ -47,3 +47,4 @@
 - money (investigate) · a figure a member proposed is labelled "proposed by the machine; not included" (`screen.money.proposed`); a member-proposal row is owed · SCREENS-INVESTIGATE #11 J15 · 2026-10-21
 - Matter pickers and the action kinds · adopt DEC-396's minted `screen.matter.pick.choose`, `.pick.none`, `screen.matter.routes.none` in screens-action (wording; merged modules) · DEC-396, K4325 · 2026-10-21
 - Document page · `heldsetaside` drawn on document as well as Held (SCREENS-INQUIRY J17, C33) · K4328 · 2026-10-21
+- Document pickers · adopt DEC-397's `form.choose.search` and `.none` in screens-investigate (stand-ins `shell.search`, `state.empty` today; wording, merged module) · K4330 · 2026-10-21
