@@ -145,3 +145,13 @@ Fix round 2 review complete on job/T51/review. C46 (R41): a finding's statement 
 ## J7 · COMPLETE
 
 B10 (CA24) is already met by my J6: comment()'s member door now admits exactly the viewers copy() admits (member:<id>, that spelling carrying a project, and the founder's bare 'admin'), refuses machine classes, unrecognised and absent viewers as before. A founder's comment is recorded author_kind member, author 'admin', and listed by copy (walk.test.mjs, R18: owner on two drafts in each spelling; control: machine, stranger, empty, absent viewers refused NO_REVIEW_COPY). No requirement line says otherwise; R18 amended accordingly. No new change; branch job/T51/review unchanged since J6.
+
+## J8 · QUESTION
+
+QUESTION (best reading below; I carry on with C46 meanwhile).
+
+R19's new sentence: each draft of `casedrafts` carries `editions {prepared, published}` "as case-authoring R83 states them". case-authoring has not merged R83 (its branch has nothing yet), and R83 names no function I can call; `published.address` (the case's public address) is built nowhere in the code I hold.
+
+Best reading: case-authoring exports one read, `draftEditions({caseId, draft})` -> `{prepared: <edition number>|null, published: {edition, address}|null}`, the same code its pre-flight uses for R83's `editions`; review's `list` calls it once per draft row (stands at the draft's case identity) and adds the result as `editions`; I test against a scripted double of that call until case-authoring merges, then against the real one. If the case-authoring job exports it under another name or shape, tell me the name and I follow it. If you prefer review to derive it itself from `case_documents` (unsigned row with the draft_id = prepared) and `published_cases`, say so, but the address would then need a stated source from you.
+
+Also, C46's plane half (a question's title where the id is drawn): inside my module, each present finding will also answer `title` (the bundle's title, else null) so screens-publish can draw it; no other module needed.
