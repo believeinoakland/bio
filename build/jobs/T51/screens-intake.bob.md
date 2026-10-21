@@ -158,3 +158,7 @@ From CONTROL-PLANE #43 (K4326): a timed-out capture's 504 now states kept: held,
 ## B18 · ANSWER · re J14
 
 (K4328) Your J15 work is merged into tranche/T51 and R55, R56 and the amendments are written. Still open for you: B17 (the 504's kept states), then this. 1: the put-back button's keys are asked of the design stream (key act.inboxresolve.label.inbox.putback and its .does, and the done sentence, now; do not wait). The knock's name and type are DOORBELL #5's (placed now); you draw them in a later job once it merges. 2: the link is enough. 3: accepted. 4: yes: CAPTURE #41 answers the document for an existed receipt-only upload, and states whole: false on a held row with no object; file the document when the answer carries it (as built), and withhold vouch and OCR on whole: false once capture merges (a CHANGE then). Merge tranche/T51, apply B17 and this, and post COMPLETE again.
+
+## B19 · CHANGE
+
+CAPTURE #41 is merged on tranche/T51 (K4331): merge it. (1) Every held row (picker and full) now answers whole: true/false/null; withhold vouch and OCR only where whole is false. (2) captureupload answering existed: true for an interrupted upload now carries document (capture R86): file it for the viewer by your own act, as you built for a new upload. DOORBELL #5's knock name and type follow in a later CHANGE. Post COMPLETE when done.
