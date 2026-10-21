@@ -201,7 +201,7 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.inbox.resolved", "screen.inbox.same", "screen.inbox.status.discarded",
     "screen.inbox.status.new", "screen.inbox.status.pulled", "screen.inbox.sub", "state.loading",
     "inbox.discard.why", "reference.label", "screen.inbox.alreadyheld", "screen.inbox.alreadyheld.other",
-    "screen.inbox.same.date", "shell.card.document", "screen.document.fingerprint", "act.knocksof.label.inbox", "screen.inbox.knocker.heading", "screen.inbox.knocker.same1", "screen.inbox.knocker.same2",
+    "screen.inbox.same.date", "shell.card.document", "screen.document.fingerprint", "act.inboxresolve.label.inbox.putback", "shell.reason", "screen.inbox.putback.done", "act.knocksof.label.inbox", "screen.inbox.knocker.heading", "screen.inbox.knocker.same1", "screen.inbox.knocker.same2",
     "screen.inbox.knocker.help1", "screen.inbox.knocker.help2", "screen.inbox.source.line", "screen.about-knocker.name", "size.kb", "size.mb", "size.small",
   ]),
 });
