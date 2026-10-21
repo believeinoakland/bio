@@ -210,3 +210,8 @@ COMPLETE (PLANE #45; B16): R68, R71, R5 fixed; R24 is the design's. Details in t
 **For BOB (requirement line)**: R68 now names `record-core` among the assembled owners (T51, B17). The R68 test's assertions wait on OP-GRADES #22.
 
 Size (session_019i2asULg4gBbzGXKQyLGgG): test runs 4, module lines 2
+
+## J14 · QUESTION
+
+R74 (C5, C14) is built in `bio-plane/src/plane/store.mjs` (the two getters `extraction` and `projectRoster`, beside the others in `controlPlaneOwnerOps`). Its two tests (`bio-plane/test/m/plane/fix3-r74.test.mjs`) drive the real door: `readheld` must reach extraction's one instance and `projectlist` must hand review's shared-drafts reader to project-roster. Both arms are CONTROL-PLANE #44's (its branch has neither yet), so the two tests are red on the tranche until control-plane merges. Nothing else in the suite is new-red: R24 (screen word `screen.objective.purpose`) is red as named.
+Options: (a) control-plane merges first and the two tests go green at once (reverses the START's order); (b) plane merges first and the two tests stay red by name until control-plane merges. Recommendation: (a), so no tranche state carries a red I introduced. I will hold the COMPLETE until you choose; the rest of my checks run meanwhile.
