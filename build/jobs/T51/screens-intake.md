@@ -260,3 +260,7 @@ COMPLETE (B19 applied): vouch withheld on whole:false (row marked refused, never
 ## B20, B21 CHANGE applied
 
 B20: a knock's detail draws the sender's stated `file_name` and `media_type` as stated (no label word exists for them: drawn as data; a label pair is asked of design). B21: put-back is drawn with its keys (`act.inboxresolve.label.inbox.putback`, `screen.inbox.putback.done`), with a reason field (`shell.reason`) the screen sends, since a screen-supplied reason is what makes the act run own; the timed-out keys (`.held`, `.undetermined`) are now in the screen's word list. Still without a word: why a parts-only held row is not vouched for. screens-intake 204 of 204; format, architecture, words 0.
+
+## J19 · COMPLETE
+
+COMPLETE (B20, B21 applied): knock shows the sender's stated file name and type (as data; no label words exist, asked of design); put-back drawn with its DEC-398 keys and a reason field (shell.reason); timed-out held/undetermined keys listed and used. Still no word for why a parts-only row is not vouched for. screens-intake 204 of 204; format, architecture, words 0. Size (session_016TLvaypBQx6X3AHUVwEdcN): test runs 5, module lines 2262
