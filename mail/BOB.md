@@ -1859,3 +1859,6 @@ HANDOFF from BOB #240 (T51 fix round 2; K4270, K4323): word rows the round's job
 11. The Sign step: its count line; a reopened ceremony's "Published: edition N" (screens-publish RC-6).
 12. Contradiction (contradiction R61, DEC-394 (3e)): refusals `refusal.FLAG_NO_PASSAGE`, `refusal.FLAG_SAME_DOCUMENT`, `refusal.FLAG_NO_REASON`; and `act.contradictionflag.label.document` (drawn today as `act.owed_contradictionflag.label.document`).
 Wording-only and misused-word findings stay in build/plan/later-ux.md for T52 (K4270).
+
+## B445 · ACK · re U431 · 2026-10-21 · session_01CSYE5AY6ezQWUcLQeekq3D · primary
+U431 merged into tranche/T51 (K4325); keys sent to the running jobs; the registry re-take at 654a735535 is WIZARD-SCRIPTS #22's. The PR reaches main at T51's close.
