@@ -4,7 +4,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";
-import { DECLARED_OPS as DOORBELL_DECLARED } from "../../../src/doorbell/index.mjs";
 import { DECLARED_OPS as MONEY_DECLARED } from "../../../src/money/index.mjs";
 
 const { OPS, SESSION_OPS, NEEDS, OP_STAMPS, OP_ALIASES } = O;
@@ -15,10 +14,8 @@ test("R21, R6 (T51 fix round 3, cause 2; DOORBELL #6): the inbox's list is decla
   assert.ok(Object.hasOwn(OPS, "inboxlist"));
   assert.deepEqual(plain(OPS.inboxlist.classes), MP);
   assert.equal(OPS.inboxlist.mutating, false);
-  /* the census agrees with the owner's declaration */
-  assert.ok(Object.hasOwn(DOORBELL_DECLARED, "inboxlist"));
-  assert.deepEqual([...DOORBELL_DECLARED.inboxlist.classes].sort(), [...OPS.inboxlist.classes].sort());
-  assert.equal(DOORBELL_DECLARED.inboxlist.mutating, OPS.inboxlist.mutating);
+  /* doorbell's own row is not imported here (doorbell is not in this module's `uses`); the owner's row and this one
+     agree or the registration is refused (R81), and doorbell's suite runs the route */
   /* the session sets name the list by its op */
   assert.ok(SESSION_OPS.member.has("inboxlist") && SESSION_OPS.admin.has("inboxlist"));
   assert.ok(!SESSION_OPS.member.has("inbox") && !SESSION_OPS.admin.has("inbox"));
