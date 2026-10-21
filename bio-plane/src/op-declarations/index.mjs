@@ -2673,7 +2673,7 @@ const ACT_HELP_ABSENT = Object.freeze({
       "interfacewords", "interview", "interviewform", "investigationproposals", "keyedservices", "lawaddresses",
       "lawrelations", "line", "linesof", "lookedat", "matterpromiseduties", "matters", "meaningrows",
       "memberlanguage", "memberties", "milestones", "money", "moneyamountchecks", "moneycheckparams",
-      "moneydetectors", "moneyjunction", "moneynoticed", "moneyof", "moneyset", "moneysets", "moneysummable", "narrowcandidates",
+      "moneydetectors", "moneyjunction", "moneynoticed", "moneyof", "moneyset", "moneysummable", "narrowcandidates",
       "notes", "notices", "opencaptures", "originalstate", "overridesof", "partiesof", "patterns",
       "personcredentials", "personinterests", "personstatements", "photomarks", "placewantedstate", "plancomments",
       "planreviewopen", "planreviews", "plantimeline", "powersof", "poweruses", "prepitems", "proceedinglinks",
