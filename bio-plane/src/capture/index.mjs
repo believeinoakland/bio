@@ -890,7 +890,7 @@ export class Capture {
     if (typeof captureSha !== "string" || !HEX64.test(captureSha))
       return Capture.#missingArgument("captureseenin", "captureSha", "64 lowercase hex characters", captureSha);
     if (typeof project !== "string" || !project.trim() || [...project].length > SEEN_IN_PROJECT_MAX)
-      return Capture.#missingArgument("captureseenin", "project", `the id of a project, at most ${SEEN_IN_PROJECT_MAX} characters`, project);
+      return Capture.#missingArgument("captureseenin", "project", `a string of at most ${SEEN_IN_PROJECT_MAX} characters`, project);
     try {
       const sight = this.#sightOf(viewer);
       const home = this.#one(`SELECT b.project AS project FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
