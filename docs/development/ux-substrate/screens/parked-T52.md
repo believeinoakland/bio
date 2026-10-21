@@ -1,0 +1,5 @@
+# Parked for T52 (K4269, K4270)
+
+Design changes that do not meet T51's bar (an operation that does not work, or a required screen that cannot be reached). Each line: what, where, source. Taken up when T52 opens.
+
+- (none yet)
