@@ -2460,7 +2460,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   }
   async function loadFrame() {
     /* R33: the queue count is the shell's own read, not the member's activity */
-    const [g, q, lv] = await Promise.all([call("groupidentity"), call("queue", { query: { limit: 500 }, background: true }), call("infolevel")]);
+    const [g, q, lv] = await Promise.all([call("groupidentity"), call("queue", { query: { limit: 200 }, background: true }), call("infolevel")]);
     if (!ME) return;
     /* R60: the display name only; the slug is never drawn as the group's name */
     if (g.kind === "ok" && g.value) {

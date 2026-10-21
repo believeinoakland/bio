@@ -91,3 +91,11 @@ test("R112 a screen whose act names successCodes that are no list of codes is ne
   for (const bad of ["CONSENSUS_REQUIRED", [1], [""], {}]) assert.throws(() => checkScreens(mk(bad)), /members.*adminendorse.*successCodes/, JSON.stringify(bad));
   assert.equal(checkScreens(mk(["CONSENSUS_REQUIRED"])), true);
 });
+
+test("R7 (C66) the frame's own queue read asks a limit the queue serves (200), in the background; control: a screen's own queue read keeps its limit", async () => {
+  const p = await boot({ screens: [{ id: "home", words: [], reads: () => ({ list: { op: "queue", query: { limit: 5 } } }), acts: [], render: (cs) => cs.state("list", () => "") }], plane: { queue: ok({ items: [] }) } });
+  const frame = p.byOp("queue").filter((r) => r.query.background === "1");
+  assert.ok(frame.length >= 1, "the frame reads the queue");
+  for (const r of frame) assert.equal(r.query.limit, "200");
+  assert.ok(p.byOp("queue").some((r) => r.query.limit === "5"), "the screen's own read keeps its limit");
+});
