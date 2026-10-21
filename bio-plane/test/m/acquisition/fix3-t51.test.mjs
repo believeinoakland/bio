@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { world, run, sha, text, page, HTML } from "./fixture.mjs";
 import { RENDER_DEFAULTS } from "../../../src/render.mjs";
 import { HostGovernor } from "../../../src/host-governor/index.mjs";
+import { ACQUISITION_CHECKS } from "../../../src/acquisition/checks.mjs";
 
 const MIB = 1024 * 1024;
 const BOUND_MS = 25000;
@@ -84,6 +85,22 @@ test("R96 R95 (C5) controls: a single-part capture is kept as before with no `ke
   assert.deepEqual([r2.status, r2.body.reason, r2.body.document, w2.prov.receipts.length], [502, "CAPTURE_NOT_KEPT", undefined, 0]);
   assert.ok(r2.body.detail.length > 20, "in words, not a code alone");
   assert.equal(w2.held(sha(big)), false);
+});
+
+test("R96 R10 (C5, K4370): the CAPTURE_NOT_KEPT refusal carries its catalogue row's code, check and translation; control: an existing refusal's row is unchanged", async () => {
+  const w = world();
+  const put = w.b.put.bind(w.b);
+  const big = varied(9 * MIB, 5);
+  w.b.put = async (k, bytes, opts) => { if (k === wholeKey(w, big)) throw new Error("bucket refused"); return put(k, bytes, opts); };
+  const r = await run(w, { "https://a.example/row": octet(big) }, { locator: "https://a.example/row" });
+  const row = ACQUISITION_CHECKS.CAPTURE_NOT_KEPT;
+  assert.equal(r.status, 502);
+  assert.deepEqual([r.body.reason, r.body.code, r.body.check, r.body.translation], ["CAPTURE_NOT_KEPT", "CAPTURE_NOT_KEPT", row.check, row.translation]);
+  assert.match(row.check, /^C-\d+\.\d+$/);
+  assert.ok(row.translation.length > 20, "the row's translation is a sentence, not a code");
+  /* control: an existing refusal's row is unchanged by the new row */
+  assert.equal(ACQUISITION_CHECKS.CAPTURE_NOT_DRAINING.check, "C-28.13");
+  assert.ok(ACQUISITION_CHECKS.CAPTURE_NOT_DRAINING.translation.length > 20);
 });
 
 /* The past-memory arm (R96; record-core R87, K4363): met against a scripted double of `evidenceStore().putFromParts`, live at
@@ -269,6 +286,10 @@ test("R98 (C25) controls: a plain-text capture and a binary capture answer title
   const pd = (await run(w, { "https://t.example/n.pdf": () => new Response(pdf, { headers: { "content-type": "application/pdf" } }) }, { locator: "https://t.example/n.pdf" })).body;
   assert.equal(pd.document.title, null);
   assert.equal(pd.reading, undefined);
+  /* K4370: a PDF with no Title entry answers null at capture too, the same as one with a Title entry */
+  const bare = new TextEncoder().encode("%PDF-1.4\n1 0 obj << /Author (Clerk) >> endobj\ntrailer << /Info 1 0 R >>\n%%EOF");
+  const pb = (await run(w, { "https://t.example/bare.pdf": () => new Response(bare, { headers: { "content-type": "application/pdf" } }) }, { locator: "https://t.example/bare.pdf" })).body;
+  assert.equal(pb.document.title, null, "a PDF with no Title entry answers null at capture");
   const rw = world({ env: { RENDERER: { fetch: async () => new Response(JSON.stringify({ ...renderAnswer, html: "<!doctype html><html><head><title>As rendered</title></head><body><p>x</p></body></html>" })) } } });
   const rr = await run(rw, { [PAGE]: () => page(HTML("<div id=app></div>")) }, { locator: PAGE, render: true });
   assert.equal(rr.body.document.capture.method, "rendered");

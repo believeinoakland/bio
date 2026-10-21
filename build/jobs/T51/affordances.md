@@ -1,6 +1,6 @@
 # affordances (T51)
 
-**Status** · session_01Wou66QFMgiLpLmx2dvGc3B · depth 2 · COMPLETE · handled B12
+**Status** · session_018BsD9g3GXwi6e8g4cAa1QE · depth 2 · WAITING ON BOB (J17) · handled B13
 
 ## J1 · QUESTION
 
@@ -211,3 +211,48 @@ Tests and checks:
 - `node checks/ownership.mjs /home/user/bio affordances tranche/T51 job/T51/affordances`: 3 files (act-help.mjs, t36.test.mjs, this record), 0 failures.
 
 Size (session_01Wou66QFMgiLpLmx2dvGc3B): test runs 6, module lines 2777
+
+## J17 · BLOCKED
+
+Cause 1 (every op this round adds is accounted for) is not met from this module's paths, and I have not changed code to fake it. I made no edit in this round; the branch carries only the merge of `origin/tranche/T51` (dcba1b0ad7).
+
+**Measured on the tranche tip:** `node --test bio-plane/test/m/affordances/*.test.mjs`: 274 tests, 273 pass, 1 fail: `t33.test.mjs:189` (R12, R24). The 32 plane-runtime reds of J9 are gone on this tip. A direct call of `unaccounted` with the five ops (`moneysets` read, `remindersfor` read, `scanmirror`, `officeconfirm`, `captureseenin` mutating) answers: unpublished `captureseenin, moneysets, officeconfirm, remindersfor, scanmirror`; unranked `captureseenin, officeconfirm, scanmirror`. The test's failing assertion is the first (`moneysets`).
+
+**Why this is not affordances' to publish:**
+- `moneysets` (money R28) and `remindersfor` (action-clocks R26) are reads. A read is accounted for only by a `NON_ACTS` row, which `op-grades` owns (R4, K1974). No row in `op-grades` names either op. The pattern is `op-grades` R48 (`holdsdue` and two others).
+- `scanmirror` (file-safety R49, an administrator act), `officeconfirm` (entities R64) and `captureseenin` (capture R101) are mutating. Each needs a rung or a stated absence in `op-grades` (unranked), and publication: a `NON_ACTS` row, or an `ACTS` / `CAPTURE_ACTS` row here. An act row here needs a requirement line naming its facts and predicate, which BOB writes. Entities R64 and capture R101 are not yet met, so their ops are not on the tranche table.
+- Naming the ops in a list here would be the hand-list K3268 forbids and the copy R4 forbids. I wrote no new test: the only honest one would fail on the owners' rows.
+
+**Requested of BOB (owners, not this job):**
+1. `op-grades`: `NON_ACTS` rows with a "read: …" reason for `moneysets` and `remindersfor`.
+2. `op-grades`: a `NON_ACTS` row (or rung and absence, as BOB rules) for `scanmirror` now. For `officeconfirm` and `captureseenin`, the same when their jobs merge. Whether `captureseenin` is a `CAPTURE_ACTS` row instead is BOB's call, with a requirement line for it.
+3. Once those land on the tranche, `t33.test.mjs:189` should go green with no change here. Send a CHANGE and I will add a control for the five (the existing "one left out is seen" control already holds).
+
+**Entries not applied:** cause 1 (blocked, owners' rows). **Checks:** not re-run; no affordances file changed this round, so format, architecture, coverage, words and ownership stand as at J16.
+
+## J18 · QUESTION
+
+QUESTION (re B14, K4376). Nine ops have no sentence in the word list, so I hold each under its own key with a plain `localize` default (stand-ins, R62): `act.origins.does`, `act.inboxlist.does`, `act.transcriptions.does`, `act.progressions.does`, `act.remindersfor.does`, `act.moneysets.does`, `act.scanmirror.does`, `act.officeconfirm.does`, `act.captureseenin.does`. The defaults are in `bio-plane/src/affordances/act-help.mjs` (`T51_STANDIN_HELP`); the design's rows should replace them. Test t36 names them and asserts `hasWord` is false for each, so the test fails when a row lands and that test is then updated.
+
+One reads-list gap, for the design's decision: `act.contradictionflag.does` is in `words.json` but not in `words-reads.json` for this module. I hold it under the word-list key (`T51_LIST_ONLY_OPS`). If the design means it not to be held, I drop it and its test line.
+
+## J19 · COMPLETE
+
+COMPLETE (re B14, K4376). Commit a3afb574d4 on job/T51/affordances, pushed; merged origin/job/T51/affordances first (no conflicts).
+
+Entries applied: B14's list. All 28 names (the message says 22 + 3; the list has 25 + 3) are held in `ACT_HELP`: 18 under their owed texts (`T51_OWED_OPS`, read from `act.owed_<op>.does`, which the reads list gives), `contradictionflag` (`T51_LIST_ONLY_OPS`, see the QUESTION), and nine stand-ins (`T51_STANDIN_HELP`, `localize` defaults, see the QUESTION). t36 gained one test naming the set and its controls; the existing t36 expectations name the stand-ins and the list-only key. No requirement line changes.
+
+Not met, from B13 (J17, still open): the t33 R12 red for `moneysets`, `remindersfor`, `scanmirror`, `officeconfirm` and `captureseenin` is op-grades' rows (NON_ACTS and RUNGS/RUNG_ABSENT), as J17 said. The stand-ins here do not change that: `unaccounted` reads those rows, not `ACT_HELP`.
+
+Deferred: none in my module. Found in other modules: the op-grades rows of J17 (owner: op-grades, via BOB).
+
+Tests and checks:
+- node --test bio-plane/test/m/affordances/*.test.mjs: 282 tests, 280 pass, 2 fail. The two: t33.test.mjs:189 (R12 R24, J17) and t36's R48 R53 R54 R56 R57 R61 R62 test, fixed by the count (452 = 442 + 10) before the final run; the final run of t36 alone is 14 of 14 green. (The run before the last t36 fix showed 2 fails: the t33 line and that count, so the full suite after the fix is 281 pass, 1 fail: t33.)
+- checks/format.mjs: 175 modules; 0 failures
+- checks/architecture.mjs affordances: 34 product files, 385 relative imports; 0 failures
+- checks/coverage.mjs affordances: 54 of 54 live ids named; 0 failures
+- checks/words.mjs affordances: 6835 literals read, 18163 words; 0 failures (missingkey 0, testcopy 0; the nine stand-ins are `localize` calls, so the words check reads them as dev, 1)
+- checks/ownership.mjs affordances tranche/T51 job/T51/affordances: 0 failures
+- setup-words build --check: expected to report stale rows for the new `localize` ids (the nine `act.<op>.does` stand-ins), as J6/J9 did; I did not regenerate it (a generated artifact, manifest §14).
+
+Size (session_018BsD9g3GXwi6e8g4cAa1QE): test runs 8, module lines 2775

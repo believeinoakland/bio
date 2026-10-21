@@ -32,6 +32,8 @@
  *                  `recordOf(host)`, reached at the read, so a world without it reads the stake undetermined).
  *   roster         `project-roster`, for its `projectStake` (its R32), read at the call, for R36's `matter_stake` (default:
  *                  `projectRosterOf(host)`, so a world without it reads the matter stake undetermined).
+ *   members        `membership`, for its `memberFacts` (`member-roster` R68, the founder's too), read at the call, for R41's
+ *                  handles (default: `membershipOf(host)`; a world without it names every member by the plain word).
  *   storage        the Durable Object's storage (default: the host's).
  *
  * READ CONTRACT it reads in its own SQL, and never writes: `publication` R40's `published_bundles`, `published_cases`,
@@ -41,6 +43,7 @@ import { publicationOf } from "../publication/index.mjs";
 import { recordOf, SETTING_UNREADABLE } from "../record-core/index.mjs";
 import { docketOf } from "../docket/index.mjs";
 import { projectRosterOf } from "../project-roster/index.mjs";
+import { membershipOf } from "../membership/index.mjs";
 import { caseTensionsOf, caseDocumentBlocks, whatChangedOf, lensOf, LENS_HEAD,
          lensClosingSentencesOf, workingOnOf, methodOf, materialsOf, standingOf, gradingFactsOf, passagesOf,
          caseDocumentRequiresMaterials, caseDocumentStatesMemberBlocks } from "../case-grammar/index.mjs";
@@ -230,13 +233,15 @@ export class PublicRead {
   #groupIdentity = null; // R34: {identity}, filled once
   #record; // R34: () => record-core, reached at the read
   #roster; // R36: () => project-roster, reached at the read
+  #members; // R41: () => membership, reached at the read
 
-  constructor({ storage, publication, docket, record = null, roster = null } = {}) {
+  constructor({ storage, publication, docket, record = null, roster = null, members = null } = {}) {
     this.sql = storage.sql;
     this.publication = publication;
     this.docket = docket;
     this.#record = typeof record === "function" ? record : () => record;
     this.#roster = typeof roster === "function" ? roster : () => roster;
+    this.#members = typeof members === "function" ? members : () => members;
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -461,6 +466,57 @@ export class PublicRead {
   /* R21: `publishedCase`'s answer for an absent case. Asked with no route, it resolves nothing, whatever the record
      holds, and so answers its `NOT_PUBLISHED` (C-98.8) from its one governed site. */
   #absentCase() { return this.publishedCase({}); }
+
+  /* R41 (3): how the page names a member. A value that is a member's id (bare, or as `member:<id>`) is her handle, the
+     founder with none held the design's word `member.founder.unnamed` and a member with none `shell.card.member`, as the
+     team's own screens name her (`interface-shell` R111), never her id. A value that is no member's id (an undetermined
+     deliverer, a review grant's id) stays as it is; a roster that cannot be read names her by the plain word, so no id
+     is left on the page. */
+  #handleOf(value, cache) {
+    if (typeof value !== "string" || !value) return value;
+    if (cache.has(value)) return cache.get(value);
+    const id = value.startsWith("member:") ? value.slice("member:".length) : value;
+    let named = value;
+    try {
+      const m = this.#members();
+      if (!m || typeof m.memberFacts !== "function") throw new Error("no roster");
+      const facts = m.memberFacts(id);
+      if (facts) named = typeof facts.handle === "string" && facts.handle ? facts.handle
+        : word(id === "admin" ? "member.founder.unnamed" : "shell.card.member");
+    } catch { named = word("shell.card.member"); }
+    cache.set(value, named);
+    return named;
+  }
+
+  /* R41 (3): a stamp (an object) with the members it names under `keys` named by handle, every other field as it is. */
+  #stampedByHandle(s, keys, cache) {
+    return s && typeof s === "object" && !Array.isArray(s)
+      ? { ...s, ...Object.fromEntries(keys.filter((k) => Object.hasOwn(s, k)).map((k) => [k, this.#handleOf(s[k], cache)])) } : s;
+  }
+
+  /* R41 (3): a completeness block with its writer, publisher and the members who read the statement named by handle. */
+  #completenessByHandle(c, cache) {
+    if (!c || typeof c !== "object" || Array.isArray(c)) return c;
+    return { ...this.#stampedByHandle(c, ["author", "statement_by"], cache),
+      ...(Array.isArray(c.acknowledgements)
+        ? { acknowledgements: c.acknowledgements.map((x) => (x && x.kind === "recipient" ? x : this.#stampedByHandle(x, ["by"], cache))) } : {}) };
+  }
+
+  /* R41 (3): `publishedCase`'s answer with each member it names, by handle: the case's writer and publisher and those who
+     read the statement (`completeness`), each finding's attestor and who delivered it, the case document's signer and
+     its deliverer, and who acknowledged each disclosed contradiction. The signed bytes (`document.text`), the manifest and
+     the blocks read from them are answered as signed. The same people are named as before and no others. */
+  #byHandle(a) {
+    const cache = new Map();
+    const stamp = (s, keys) => this.#stampedByHandle(s, keys, cache);
+    return { ...a,
+      completeness: this.#completenessByHandle(a.completeness, cache),
+      findings: a.findings.map((f) => ({ ...f, attestor: stamp(f.attestor, ["member"]), delivered_by: stamp(f.delivered_by, ["member"]) })),
+      document: a.document && typeof a.document === "object" && !a.document.withheld
+        ? { ...a.document, attestor: stamp(a.document.attestor, ["member"]), delivered_by: stamp(a.document.delivered_by, ["member"]) }
+        : a.document,
+      tensions: Array.isArray(a.tensions) ? a.tensions.map((t) => stamp(t, ["acknowledged_by"])) : a.tensions };
+  }
 
   /* R20 (DEC-116 item 7): the stamp of the docket withdrawal naming one edition of a case, or null when none names it
      (and for anything that is not a case). Read from `docket.withdrawalOf` (its R12), never composed: its `seq`, `date`
@@ -690,7 +746,7 @@ export class PublicRead {
      divergence from DATA-MODEL 2.4.4 — so a public index is not N+1 reads of
      the bytes to learn what each case is called. */
   publishedList() {
-    const index = this.#withheldIndex();
+    const index = this.#withheldIndex(), handles = new Map(); // R41 (3): members named by handle
     return { bundles: this.#rows(
       `SELECT bundle_id, edition, title, bundle_sha, ratified_at, attestor_member, delivered_by, gate_version
        FROM published_bundles ORDER BY bundle_id, edition`)
@@ -712,7 +768,8 @@ export class PublicRead {
       .map((r) => {
         const cms = this.#casesOfSha(r.bundle_id, r.bundle_sha, r.edition);
         const sole = this.publication.soleCase(cms);
-        return withheldRow({ ...r, delivered_by: this.#deliveredBy(r),
+        return withheldRow({ ...r, attestor_member: this.#handleOf(r.attestor_member, handles),
+                 delivered_by: this.#stampedByHandle(this.#deliveredBy(r), ["member"], handles),
                  case_id: sole ? sole.case_id : null, case_edition: sole ? sole.edition : null,
                  cases: cms }, index.bySha.get(r.bundle_sha));
       }),
@@ -736,7 +793,7 @@ export class PublicRead {
       `SELECT bundle_id, edition, title, bundle_sha, ratified_at, attestor_key, attestor_member,
               delivered_by, gate_version, sig_armored, strength, required
        FROM published_bundles WHERE bundle_id=? ORDER BY edition`, bundleId);
-    const index = this.#withheldIndex();
+    const index = this.#withheldIndex(), handles = new Map(); // R41 (3): members named by handle
     /* REC-44: `completeness` is no longer here and that is the correction — it
        is a CASE assertion, so it is fetched from the case each edition belongs
        to rather than repeated on every member finding of it. */
@@ -767,7 +824,8 @@ export class PublicRead {
       /* R28: an edition an order withholds whole states no case content here; a finding whose bytes are withheld
          states no title. */
       const caseWhole = !!(cm && (index.editions.get(`${cm.case_id}\u0000${Number(cm.edition)}`) || {}).whole);
-      return withheldRow({ ...r, delivered_by: this.#deliveredBy(r),
+      return withheldRow({ ...r, attestor_member: this.#handleOf(r.attestor_member, handles),
+               delivered_by: this.#stampedByHandle(this.#deliveredBy(r), ["member"], handles),
                case_id: cid, case_edition: cm ? cm.edition : null, cases: cms,
                bar: c && c.bar ? safeJson(c.bar) : null,
                /* The container's manifest is the CASE edition's, so it is
@@ -780,7 +838,7 @@ export class PublicRead {
                               : {}),
                scope: c && !caseWhole ? (c.scope ?? null) : null,
                bias_acknowledgement: c && !caseWhole ? (c.bias_acknowledgement ?? null) : null,
-               completeness: c && c.completeness && !caseWhole ? JSON.parse(c.completeness) : null,
+               completeness: c && c.completeness && !caseWhole ? this.#completenessByHandle(JSON.parse(c.completeness), handles) : null,
                ...(caseWhole ? { case_withheld: { orders: index.editions.get(`${cm.case_id}\u0000${Number(cm.edition)}`).orders,
                                                   detail: WITHHELD_SENTENCE } } : {}),
                strength: r.strength ? JSON.parse(r.strength) : null,
@@ -812,7 +870,7 @@ export class PublicRead {
       `SELECT m.case_id, m.edition, m.version_sha FROM published_case_members m
          JOIN published_cases c ON c.case_id=m.case_id AND c.edition=m.edition
         WHERE m.bundle_id=? ORDER BY m.case_id, m.edition`, want);
-    const cases = [];
+    const cases = [], handles = new Map();
     for (const pin of pins) {
       const ced = Number(pin.edition);
       const state = this.publication.caseEditionState(pin.case_id, ced);
@@ -845,7 +903,10 @@ export class PublicRead {
       const strength = withheld || !rows.length ? null
         : { capture: rows.find((a) => a.axis === "capture") ?? null, connection: rows.find((a) => a.axis === "connection") ?? null,
             ...(rows.some((a) => a.axis === "testimony") ? { testimony: rows.find((a) => a.axis === "testimony") } : {}) };
-      const signer = (a) => (a && (a.member != null || a.key_b64 != null) ? { member: a.member ?? null, key_b64: a.key_b64 ?? null } : null);
+      /* R41 (3), as `publishedCase` names a member: by her handle, never her id (the page that draws the question names its
+         signers from here). */
+      const signer = (a) => (a && (a.member != null || a.key_b64 != null)
+        ? this.#stampedByHandle({ member: a.member ?? null, key_b64: a.key_b64 ?? null }, ["member"], handles) : null);
       const signedBy = withheld || !state.document ? null : signer(state.document.attestor);
       const findingBy = signer(attestor);
       cases.push({
@@ -855,7 +916,8 @@ export class PublicRead {
         finding, version_sha: version, pinned: version === null ? null : version === finding.bundle_sha,
         strength, strength_from: strength ? from : null,
         ...(!withheld && !rows.length ? { strength_detail: word("public-read.frozen.strength_detail.none") } : {}),
-        signed_by: signedBy, delivered_by: withheld || !state.document ? null : state.document.delivered_by ?? null,
+        signed_by: signedBy,
+        delivered_by: withheld || !state.document ? null : this.#stampedByHandle(state.document.delivered_by ?? null, ["member"], handles),
         finding_signed_by: findingBy,
         ...(!withheld && (!signedBy || !findingBy)
           ? { signer_detail: word("public-read.frozen.signer_detail.unstated") } : {}),
@@ -1165,7 +1227,7 @@ export class PublicRead {
        bytes through its `lastEntryOf` (K1276), null when the case has no public entry. */
     const withdrawn = theCase ? new Map(editions.map((e) => [Number(e.edition), this.#withdrawnStamp(theCase, e.edition)]))
                               : new Map();
-    return { ok: true, caseId: theCase, edition: ed,
+    const answer = { ok: true, caseId: theCase, edition: ed,
              /* R20: the withdrawal stamp at the top of the answer, linked to its entry; null when no withdrawal names
                 this edition. */
              withdrawn: withdrawn.get(Number(ed)) ?? null,
@@ -1301,6 +1363,8 @@ export class PublicRead {
              group_fields: { ...this.groupFields({ project: state.project ?? null }), current: true }, group_fields_detail: GROUP_FIELDS_CURRENT_SENTENCE,
              case_detail: localize("public-read.index.a_published_case_is_a", "a published case is a CONTAINER over one or more FINDINGS (DEC-44). Each finding carries its OWN conclusion, falsifier, basis and its own frozen PAIR of strengths; the case carries the scope that brought them together, the completeness assertion, and the team's acknowledgement of the bias the case was produced under — the last of these is a DISCLOSURE the reader weighs, never a verdict this team's Civicsmith reached (DEC-20, DEC-46). There is deliberately no case-level strength: composing two findings' strengths into one letter is the substitution R2 forbids."),
              graph_detail: localize("public-read.index.each_finding_serves", "each finding's serves[] is what this surface may hand over — every entry names a published edition. names[] is what it may only NAME. unresolved[] is an edge classified servable at publication with no published edition behind it now, stated rather than dropped; it should be empty.") };
+    /* R41 (3): each member the answer names, by handle. */
+    return this.#byHandle(answer);
   }
 
   /** R37 (T50; DEC-310 (6); K3683, K3725): the `publishedcase` op's answer, `publishedCase`'s with `corrections` beside it,
@@ -1899,7 +1963,9 @@ export function publicReadOf(host, deps) {
     const record = d.record || (() => recordOf(host));
     /* R36: project-roster, reached at the read (a throw there reads the matter stake undetermined). */
     const roster = d.roster || (() => projectRosterOf(host));
-    r = new PublicRead({ storage, publication, docket, record, roster });
+    /* R41: membership, reached at the read (a throw there names every member by the plain word). */
+    const members = d.members || (() => membershipOf(host));
+    r = new PublicRead({ storage, publication, docket, record, roster, members });
     instances.set(host, r);
   }
   return r;

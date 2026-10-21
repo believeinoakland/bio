@@ -24,4 +24,6 @@ Run: your suite (`node --test --test-force-exit bio-plane/test/m/control-plane/`
 
 **Added at K4371:** `file-safety` R49 added `op=scanmirror` (its 24th op): your `t36-door.test.mjs` counts 23 and goes red once OP-DECLARATIONS #34 specifies it. Make it read the count from file-safety's own map (K3268), never a hand number; route `captureseenin` (capture R101) and `remindersfor` (action-clocks R26) as their owners' maps serve them, checked like `moneysets`.
 
+**Added at K4380 (CAUSE-SHELL-3 merged):** the interface page now loads the shell as one external versioned script (`/app/shell-<version>.js`, `integrity`, `<meta name="cs-version">`, no inline script, no nonce; interface-shell R1, R2; answer-envelope R6). Your `t46-app`, `t46-e2e`, `t47-e2e` (three) look for `<script nonce=` or inline shell data in the served page: make them current against the external script (`interfaceScript`), test files only, the requirement unchanged.
+
 COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
