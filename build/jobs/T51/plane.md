@@ -237,3 +237,14 @@ Checks
 
 Requirement line for BOB (proposed, R74 already on tranche): none new.
 Size (session_01Ti86WihtuNpDK1TTmcsSAd): test runs 3, module lines 2610
+
+## J16 · QUESTION
+
+QUESTION (PLANE #48; C5c, R75; replaces none): the contract between acquisition's pending keep and the plane's alarm is written in neither module, and acquisition (#3) has not merged. My reading, which I am building now:
+
+- The plane holds the table `keeps_pending` (in the object's storage: `sha` key, `kind` keep|reading, `parts` (the part digests in order), `attempts`, `registered_at`, `last_try`) and registers one scheduler consumer, `pending-work`: due at once for a new entry, `putFromParts(sha, parts)` for a `keep`, then `extraction.readHeld({sha})` (a keep's reading follows; a `reading` entry is only the second); an entry is removed only when its work has ended (`already` counts), a failure leaves it for the next alarm, at most 5 attempts (back-off 15 s, doubling), then it stays named, never retried again.
+- Acquisition cannot import the plane, so it is handed the registration: `acquisitionOf(ctx, {record, provenance, keepLater})` built by the plane before capture's first use (the factory keeps its first instance per storage). `keepLater({sha, parts: [partDigest, ...]}) -> {ok: true}` writes the row and arms the alarm in the same call; it never throws. ACQUISITION #24 reads `deps.keepLater` and, when the awaited keep will not end in the bound, calls it and answers `keep_pending: true`. With none handed, acquisition behaves as it does without a plane.
+- control-plane's deferred reading (R120) reaches the object by a store-internal route `pendingadd` (`kind=reading&sha=`), which only the door can reach; CONTROL-PLANE #45 calls it.
+- The stage record of an acquisition (R73) moves to the object's storage (key `acqstages:<trace>`), bounded as now (64 entries, 60 s), so it survives a restart.
+
+Please confirm or correct three things: (1) `deps.keepLater` is acquisition's to read (does #24's START carry it? its record names only `opts.waitUntil`); (2) the route name `pendingadd` for control-plane; (3) R9 says the plane writes no row: R75 gives it `keeps_pending` and the stage keys, so I read R9 as amended by R75 and declare the table to purge through `record-core`. Until you answer I build the plane's half against a scripted `keepLater` caller, and write the seam test with the real acquisition first, red by name until it merges.
