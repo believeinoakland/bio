@@ -110,7 +110,12 @@ test("R24: every refusal and every R6 reason is named in this module's own table
   for (const r of Object.values(THREAT_REASONS)) assert.doesNotMatch(r.translation, /\d/);
   for (const w of Object.values(PROVIDER_REASON_WORDS)) assert.ok(w.length > 10);
   /* T50 (plan rule 6): the member words are those of their keys, and the keys are the module's `reads` in words-reads.json */
-  for (const [code, x] of rows) assert.equal(x.translation, word(rowKey(code)), code);
+  /* a row whose word the design stream has not written is a named stand-in (fix round 3, C84): its own sentence until the row lands */
+  const STAND_INS = ["SIGNATURES_RUN_RECENT"];
+  for (const [code, x] of rows) {
+    if (hasWord(rowKey(code))) assert.equal(x.translation, word(rowKey(code)), code);
+    else assert.ok(STAND_INS.includes(code), `${code}: no word row and not a named stand-in`);
+  }
   for (const [code, key] of Object.entries(REASON_KEYS)) assert.equal(THREAT_REASONS[code].translation, word(key), code);
   for (const [code, key] of Object.entries(PROVIDER_REASON_KEYS)) assert.equal(PROVIDER_REASON_WORDS[code], word(key), code);
   const reads = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8")).modules["file-safety"].reads;
