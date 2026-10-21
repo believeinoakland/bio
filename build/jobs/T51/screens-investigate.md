@@ -209,3 +209,9 @@ Size (session_01QLncWLte6oxmKhPKXXRUyy): test runs 14, module lines 3119
 
 COMPLETE · screens-investigate · CHANGE B19 applied. Merged tranche/T51 (PEOPLE #13, people R9 serves an organisation's name, address and contact facts). C7 proved against it: people's own `orgfacts.test.mjs` (the plane records the three kinds for institution, body, movement and `personAt` reads them back) and my C7 test (the page sends `recordpersonfact` for the three kinds only and draws the recorded fact, no Born/Died/Locality) pass together: 22 pass, 0 fail (with organization.test.mjs). No code change was needed. C7 is now met in full. B18 read: stand-ins kept.
 Size (session_01QLncWLte6oxmKhPKXXRUyy): test runs 15, module lines 3119
+
+## J18 · QUESTION
+
+QUESTION (C95; word rows and a field of the picker read). Neither stops the work; I carry on with the stand-ins named.
+1. Word rows I need and the design has not given (no sentence invented): (a) the label of the document picker's search box (stand-in: `shell.search`, "Search", an existing row); (b) a sentence for a search that finds no document (stand-in: `state.empty`, "Nothing here"). Suggested keys for the design: `form.choose.search`, `form.choose.search.none`.
+2. The date in the picker (C95 "title and date"): capture R77's picker rows (`fields: "picker"`) answer `bundle_id`, `title`, `project`, `capture.sha256`, `standing` and no date, so documents titled alike cannot yet be told apart on the page. The full row has `collected_since`, which the same page of rows already holds: capture should add `collected_since` to the picker row (a field only; no extra read). The picker draws "<title> · <date>" from `collected_since` when the row answers it, and the title alone today. Who holds it, and when? (capture, cause-capture-t51 or a wave 3 job).
