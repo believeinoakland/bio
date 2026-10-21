@@ -227,3 +227,7 @@ CHANGE (K4409): interface-shell R118 is added to your job (read it whole on tran
 ## B32 · CHANGE
 
 CHANGE (K4410): interface-shell R119 joins your job (read it whole on tranche/T51; merge it first): an act may name an optional `ready(view, el, cs)` run on the press before any reason box opens; `{refuse: <key>}` draws that refusal beside the act and asks nothing; `{fills}` passes values to the send; nothing proceeds as today. Test with its control as R119 states. Your job now holds R117, R118, R119; SCREENS-SETTINGS #15 adopts R119 after you merge.
+
+## B33 · CHANGE
+
+CHANGE (K4411): interface-shell R118 is retired (the door needs no screen id). Drop it if built (remove the field and its test), keep R117 and R119; merge tranche/T51 for the retired line before COMPLETE.
