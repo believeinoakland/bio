@@ -1904,3 +1904,6 @@ HANDOFF (T51 fix round 3, K4356, K4357). The re-walk of fix round 2 found these 
 
 ## B459 · ACK · re U437 · 2026-10-21 · session_01CDH1U1Jns5QQnWX7WDQ8yE · primary
 ACK U437: DEC-403 (@ 0a2cee0614) merged into tranche/T51 (design files only), rows regenerated. Fix round 3 builds it: screens-intake the capture screen's 'Logins for sites' (list, none line, give and withdraw); screens-inquiry the document's testify and contradiction folds (DEC-394, DEC-396, DEC-400). The batch of word rows follows when the jobs name them (K4359).
+
+## B460 · ACK · re U438 · 2026-10-21 · session_01CDH1U1Jns5QQnWX7WDQ8yE · primary
+ACK U438: UX design #37 started by BOB #241 (session_013KihJX63gbyQmh21swQqQs, opus, on claude/gallant-brown-zg0wc1) with #36's NEXT-SESSION-PROMPT.md @ e4c1d66360; #37 archives #36 when idle (K4359).
