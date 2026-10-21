@@ -13,6 +13,7 @@
 4. Deleting the stored key makes the next request fail with an authorisation error, not a fallback.
 5. The request appears in the gateway's log with usage figures; whether it appears in the account's audit log is recorded.
 **Cost.** A few cents of provider usage; AI Gateway's core features are free.
+**Record.** 2026-10-21: **agreed by Bob** ("yes"). Access checked: the Cloudflare credential connected to the lane's session sees only account `20b533579290b9b93168345edd3b7f72` and can deploy Workers, but is refused ("Authentication error") for AI Gateway, Secrets Store and Workers AI. So the gateway and the stored key are created by Bob in the dashboard (which also keeps the key from the lane entirely); the lane deploys and runs the test Worker `aidesign-test-key`. Provider proposed: a Groq free-tier key (no payment, cannot be overspent; synthetic prompts only). Waiting for Bob's dashboard steps.
 
 ## L2 · OpenRouter: does a response say who really served it, and does a pinned request refuse to move?
 **Why.** The requirements pin each OpenRouter request to one vetted host and refuse a response from any other (AIR18, BR12). OpenRouter's documentation does not show a response field naming the serving host, and does not say whether a pinned request fails or falls through when that host is unavailable (A9). Until both are proven, an OpenRouter entry cannot pass the "no hidden onward passing" check.

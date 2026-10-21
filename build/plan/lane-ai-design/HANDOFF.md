@@ -159,3 +159,6 @@ Bob: "Yes" to the team's and a project's required privacy and origin checks bind
 
 ## A35 · 2026-10-21 · First live tests proposed: `TESTS.md`
 Three proposals, none run: **L1** gateway-held key (in Civicsmith's own Cloudflare account; Bob enters a capped provider key himself; proves the Worker cannot read a key AI Gateway holds; cents); **L2** OpenRouter served-host reporting and pinned-request refusal (after OpenRouter support is built; about $5 of credit); **L3** first Gate 1 screening run (after the suite exists; cost estimate first, ceiling set by Bob). Each needs Bob's agreement.
+
+## A36 · 2026-10-21 · Bob agrees test L1; dashboard steps needed
+Bob agreed L1 (gateway-held key). The session's Cloudflare credential is limited to account `20b5…7f72` (as required) and can deploy Workers, but cannot create AI gateways or stored keys, so Bob creates the gateway `aidesign-test` and stores a Groq free-tier key in it himself; the lane then deploys and runs `aidesign-test-key`, and asks Bob to delete the gateway and revoke the key afterwards.
