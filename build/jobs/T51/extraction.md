@@ -113,3 +113,19 @@ Tests and checks:
 - The R78 status marker in `build/requirements/extraction.md` still reads "not yet met"; BOB updates it.
 
 Size (session_011WULPoKT4oA92LsPkDR5nx): test runs 2, module lines 3314 (`wc -l` over `bio-plane/src/extractrun.mjs` and `bio-plane/src/extraction/*.mjs`).
+
+## J6 · COMPLETE
+
+C17 (extraction half) is done. Commit: the one after cf6e6249a9's merge of tranche/T51 on job/T51/extraction.
+
+**Entries applied.** A reading written by a re-read states `words_total` and `words_read` as the first reading does (`textWordsFor` of the re-read's text, reading-pipeline R35). Sites: `pdfStructure` (`op=pdfstructure&ocr=1`), `pageTranscribe` (`op=pagetranscribe`), and the N26/N439 docx/pptx migrations, which recompute them when the old reading held them (they already refreshed text_chars and the like). They are stored with the reading and `op=reading` (`readingFor`) answers them; no other change.
+
+**Requirement line for BOB to fold (extraction R34 and R71):** "A reading a re-read or a transcription writes also states `words_total` and `words_read` as reading-pipeline R35 counts them over the text it wrote, so a document read again says how much of it was read; `op=reading` answers both. Test: a re-read answers equal counts when every page was read; control: a re-read with a region below the OCR floor answers fewer read than total, and a document never re-read answers its first reading's counts."
+
+**Tests** (`bio-plane/test/m/extraction/c17.test.mjs`, four tests, seen failing first: three of four fail without the change, the control passes): re-read, equal counts (R34 R35); re-read with a region below the floor, 9 total / 6 read (R34 R35); control, a never re-read document answers its first reading's counts (R35); a transcription's counts (R71 R35).
+
+**Runs.** extraction suite: 197 tests, 0 fail (one earlier run showed 1 failure that did not repeat in two later runs). Direct users of extraction (content, entities, events, connections, observation-log, standards, progressions, duties, retrieval-browse, retrieval, calculations, leg-earning, inquiry, steps, basis-versions, contradiction, run-productions, intent, investigation, case-carriage, case-disclosures, case-account, case-authoring, following, translations, instance-setup, answer-envelope, control-plane): 0 failures each. Failures that are not mine, each reproduced on tranche/T51 without my change: op-declarations 1 (t50 registryActGaps), store-door 1 (declared-ops, "no hand row disagrees with the owner's row", groupdescriptiondraft). plane 1 (R24, screen words, "your group's Civicsmith"): a words test; I did not run it on the bare tranche.
+Checks: format 0 failures; architecture 0; words 0; ownership 0; coverage 10 failures, none in extraction (agent-harness R17, agent-runner R37 R38 R40, contradiction R61, control-plane R116, installer-steps R26 R31, interface-shell R111, journey-check R19, screens-inquiry R123–R125, screens-intake R54, screens-publish R70–R72).
+Nothing deferred. Nothing found in another module. No generated artifact made stale.
+
+Size (session_01ALmoG5zY9hNNTsdddSrGb9): test runs 14, module lines 3329
