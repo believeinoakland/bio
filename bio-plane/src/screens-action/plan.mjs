@@ -562,6 +562,7 @@ export const plan = Object.freeze({
     {
       // R1: a suggestion or a standing offer becomes an option only by the member's own act.
       op: "optionadopt",
+      rereads: ["plan", "proposals"],
       send: function (view, el) {
         const d = el.dataset;
         return d.proposal ? { body: { proposal: d.proposal } } : { body: { plan: view.subject, offer: { subject: d.subject, kind: d.offer } } };
@@ -570,6 +571,7 @@ export const plan = Object.freeze({
     {
       // R1: "Choose" or "Decline" (the shell asks the reason, required where declining), one option or the picked ones.
       op: "optiondispose",
+      rereads: ["plan"],
       refusals: {
         PLAN_NO_REASON: function (r, cs) { return cs.w("screen.plan.declining.an.option.or.marking.it"); },
         REMINDER_REFUSED: function (r, cs) {
@@ -642,6 +644,7 @@ export const plan = Object.freeze({
     },
     {
       op: "checkpointrecord",
+      rereads: ["plan"],
       send: function (view, el, cs) {
         const d = el.dataset;
         const note = String(cs.value("plan-judgenote-" + d.scenario + "-" + d.phase) || "").trim();
@@ -676,6 +679,7 @@ export const plan = Object.freeze({
     {
       // R1: "Close plan…" with a reason (the shell asks it), and the lessons note when written.
       op: "planclose",
+      rereads: ["plan"],
       send: function (view, el, cs) {
         const note = String(cs.value("plan-close-note") || "").trim();
         return { body: note ? { plan: view.subject, note: note } : { plan: view.subject } };

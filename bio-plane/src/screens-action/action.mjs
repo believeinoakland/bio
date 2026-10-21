@@ -42,6 +42,9 @@ export const action = Object.freeze({
       // R28: a kind the profile defines is worded by its own label; R31 (2): the templates the action's kind holds
       vocab: { op: "affordances", query: {}, empty: function () { return false; } },
       templates: { op: "templatesforaction", query: { action: view.subject }, empty: function () { return false; } },
+      // C53 (action-clocks R26): the reminders the record holds for this action, read on load and again after each reminder set,
+      // never kept in page memory (so a reload draws them)
+      reminders: { op: "remindersfor", query: { action: view.subject }, after: ["reminderset"], empty: function () { return false; } },
     };
   },
 
@@ -185,15 +188,20 @@ export const action = Object.freeze({
       const wait = owed ? '<p class="cs-wait" role="status">' + cs.w("screen.action.waiting", { office: office || cs.w("screen.action.theoffice") }) + "</p>" : "";
       const today = P.today(cs);
       const clock = Array.isArray(a.clock) ? a.clock : [];
-      const clocks = !clock.length ? "" : cs.sec("screen.action.dates", cs.sheet(clock.map(function (c, i) {
+      const rem = view.data.reminders;
+      const remHeld = rem && rem.state === "ok" && rem.value && Array.isArray(rem.value.reminders) ? rem.value.reminders : [];
+      const clocks = !clock.length ? "" : cs.sec("screen.action.dates", (rem && rem.state === "failed" ? cs.state(rem) : "") + cs.sheet(clock.map(function (c, i) {
         const st = ["pending", "met", "overdue", "waived"].includes(c.status) ? c.status : "pending";
         const passed = st === "pending" && c.date && String(c.date) < today;
         const says = passed ? cs.w("screen.action.noreplyby", { date: { html: cs.date(c.date) } }) : cs.w("screen.action.clock." + st);
         const due = c.date ? '<a href="/app/due-date/' + encodeURIComponent(view.subject + "~" + i) + '" data-nav>' + cs.due(String(c.date), st === "met" ? "met" : passed ? "passed" : "") + "</a>" : "";
         const remind = c.date && st === "pending" && cs.can("actioncorrespond")
           ? cs.field("remind-" + i, "screen.action.remindon", { type: "date" }) + cs.act("reminderset", { data: { entry: String(i) } }) : "";
-        // R52: the reminder this page set, beside its entry: its day, by key (the answer never reads "nothing happened")
-        const set = view.ui.reminded && view.ui.reminded[i] ? ' · <span data-reminder="' + i + '">' + cs.w("screen.reminder.on", { date: { html: cs.date(view.ui.reminded[i]) } }) + "</span>" : "";
+        // R52, C53: the reminders the record holds for this entry (`remindersfor`, action-clocks R26), each by its day, by key; one already
+        // answered is not announced
+        const set = remHeld.filter(function (r) { return r && r.entry === i && r.on && r.state !== "answered"; }).map(function (r) {
+          return ' · <span data-reminder="' + i + '">' + cs.w("screen.reminder.on", { date: { html: cs.date(r.on) } }) + "</span>";
+        }).join("");
         return cs.row(due, cs.esc(c.text || c.description || "") + '<span class="meta">' + says + (c.basis ? " · " + cs.esc(c.basis) : "") + set + "</span>", "", remind);
       }).join("")));
       // R37: a sent action with no clock entry has no due date to open: the door to the deadline page is drawn for it, which holds
@@ -371,7 +379,8 @@ export const action = Object.freeze({
       }
 
       // R31 (1): the procedure guide: each route with what to expect and its source, in the profile's order, the group's approved
-      // guides after, each marked with who approved it; legal information, not legal advice.
+      // guides after, each marked with who approved it; legal information, not legal advice. C66: a kind that holds none says so (the
+      // matter's `screen.matter.routes.none` stands in until the design writes this screen's own row).
       const gd = P.later(cs, view, "guides", "procedureguides", { kind: a.kind || "other" }, String(view.ui.guideN || 0));
       const guides = gd.state === "ok" && gd.value && Array.isArray(gd.value.guides) ? gd.value.guides : [];
       const guideRows = guides.map(function (g) {
@@ -386,7 +395,7 @@ export const action = Object.freeze({
       const guideAct = cs.can("actioncorrespond") ? cs.act("procedureguides", {}) : "";
       const guideSec = gd.state === "failed" ? tips("screen.action.guide.heading", cs.state({ state: "failed", refusal: gd.refusal }), "screen.action.guide.tip1", "screen.action.guide.tip2")
         : guideRows || guideAct ? tips("screen.action.guide.heading", '<p class="mk-small">' + cs.w("screen.action.profilefact.from") + " · " + cs.w("screen.action.guide.order") + " · " + cs.w("guide.procedure.legalinfo") + "</p>"
-          + (guideRows ? cs.sheet(guideRows) : gd.state === "ok" ? '<p class="cs-state" data-state="empty">' + cs.w("state.empty") + "</p>" : "") + '<p class="mk-note">' + cs.w("screen.action.guide.sourced") + " " + cs.w("screen.action.guide.team") + " " + (teamGuides ? "" : cs.w("screen.action.guide.teamnone")) + "</p>"
+          + (guideRows ? cs.sheet(guideRows) : gd.state === "ok" ? '<p class="cs-state" data-state="empty">' + cs.w("screen.matter.routes.none") + "</p>" : "") + '<p class="mk-note">' + cs.w("screen.action.guide.sourced") + " " + cs.w("screen.action.guide.team") + " " + (teamGuides ? "" : cs.w("screen.action.guide.teamnone")) + "</p>"
           + (guideAct ? '<div class="mk-acts">' + guideAct + "</div>" : ""), "screen.action.guide.tip1", "screen.action.guide.tip2") : "";
 
       // R16: the law it goes under: the laws a member stated (each by level and citation, with the window the group's places
@@ -506,6 +515,7 @@ export const action = Object.freeze({
     {
       // R5: a received reply marked as pressure directed at the group, once.
       op: "actionpressure",
+      rereads: ["action", "pressure"],
       send: function (view, el, cs) {
         const ord = el.dataset.ord;
         const note = String(cs.value("pressure-note-" + ord) || "").trim();
@@ -516,6 +526,7 @@ export const action = Object.freeze({
     {
       // R5: "Move the action", with the member's reason (asked by the shell, sent in the query actions reads).
       op: "actionmove",
+      rereads: ["action"],
       send: function (view, el, cs) {
         const to = cs.value("move-to");
         if (!to) return null;
@@ -530,17 +541,10 @@ export const action = Object.freeze({
       send: function (view, el, cs) {
         const on = String(cs.value("remind-" + el.dataset.entry) || "").trim();
         if (!/^\d{4}-\d{2}-\d{2}$/.test(on)) return { refuse: "screen.action.remindon.needed" };
-        view.ui.remindSent = { entry: Number(el.dataset.entry), on: on };
         return { body: { target: view.subject, entry: Number(el.dataset.entry), on: on } };
       },
+      // C53: the entry shows the reminder as the record holds it: the `reminders` read names this act in its `after`
       rereads: [],
-      // R52: the day the member set, kept beside its entry (this page's memory, never the record's)
-      done: function (view, answer, cs) {
-        const r = view.ui.remindSent || {};
-        const set = Object.assign({}, view.ui.reminded || {});
-        if (r.on) set[r.entry] = r.on;
-        cs.set("reminded", set);
-      },
     },
     {
       // R16: "Change the law…": the law chosen among those the group's places name replaces the action's list (the act logs
