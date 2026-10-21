@@ -14,6 +14,30 @@ export const PUBLISHED_PARTS = Object.freeze({
     return view.data.edition && view.data.edition.state === "ok" ? view.data.edition.value : null;
   },
 
+  /* R6, R37 (fix round 2, C2): the words of a claim or a falsifier, never a heading: the first of the candidates that holds words
+     once a leading markdown heading line is taken off (a section kept with its heading, "## Conclusion", is no words); "" when none
+     does. */
+  wordsOf: function () {
+    for (let i = 0; i < arguments.length; i++) {
+      const v = arguments[i];
+      const w = typeof v === "string" ? v.replace(/^\s*#{1,6}[^\n]*(\n|$)/, "").trim() : "";
+      if (w) return w;
+    }
+    return "";
+  },
+  /* the words of a finding's claim and of its falsifier: the signed document's own (`case_words`), the finding's published bytes' next
+     (`body.conclusion`, `body.falsifies`), the authored words last */
+  claimOf: function (view, f) {
+    const body = f && f.body && typeof f.body === "object" ? f.body : {}, au = body.authored && typeof body.authored === "object" ? body.authored : {};
+    const cw = f && f.case_words && typeof f.case_words === "object" ? f.case_words : {};
+    return view.parts.wordsOf(cw.claim, body.conclusion, au.conclusion);
+  },
+  falsifierOf: function (view, f) {
+    const body = f && f.body && typeof f.body === "object" ? f.body : {}, au = body.authored && typeof body.authored === "object" ? body.authored : {};
+    const cw = f && f.case_words && typeof f.case_words === "object" ? f.case_words : {};
+    return view.parts.wordsOf(cw.falsifier, body.falsifies, au.falsifier);
+  },
+
   /* A finding's grade on `axis` as a letter (A to D), or "" when its frozen pair does not state one. */
   gradeOf: function (f, axis) {
     const st = f && Array.isArray(f.strength) ? f.strength : [];
@@ -70,7 +94,7 @@ export const PUBLISHED_PARTS = Object.freeze({
     const line = (stand.role === "load_bearing" ? cs.w("case-grammar.load_bearing") + " · " : "") + P.gradeMark(cs, "capture", P.gradeOf(f, "capture")) + " "
       + P.gradeMark(cs, "connection", P.gradeOf(f, "connection"))
       + (meets ? " " + cs.w(meets === "yes" ? "screen.published.meets" : "screen.published.below", { capture: String(bar.capture || "–"), connection: String(bar.connection || "–") }) : "");
-    return '<article class="mk-finding" data-finding="' + cs.esc(id) + '">' + head + '<p class="rec mk-fbody">' + cs.esc(body.conclusion || body.question || f.title || "")
+    return '<article class="mk-finding" data-finding="' + cs.esc(id) + '">' + head + '<p class="rec mk-fbody">' + cs.esc(P.claimOf(view, f) || body.question || f.title || "")
       + "</p><p>" + line + "</p>" + (o && o.open ? P.sources(cs, view, f) : "") + "</article>";
   },
 

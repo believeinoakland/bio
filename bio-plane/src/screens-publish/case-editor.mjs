@@ -70,7 +70,7 @@ export const CASE_EDITOR = Object.freeze({
     // R31: a project's first case (state b): the concluded questions to take in, each ticked, then the scope.
     const scope = function (authored) {
       return cs.field("ce-scope", "screen.case-editor.scope.label", { area: true, rec: true, value: authored.scope || "", help: "screen.case-editor.scope.help" })
-        + cs.field("ce-statement", "screen.case-editor.statement.label", { area: true, rec: true, value: authored.statement || "" })
+        + cs.field("ce-statement", "review.statement.title", { area: true, rec: true, value: authored.statement || "" })
         + '<div class="mk-acts">' + cs.act("writinghelp", { data: { field: "scope" } }) + cs.act("casedraft", { tone: "primary" }) + "</div>"
         + P.said(view, "help-scope") + P.said(view, "casedraft");
     };
@@ -291,7 +291,8 @@ export const CASE_EDITOR = Object.freeze({
           + P.said(view, "casedetailsset");
       })));
     }
-    if (doc) out.push(cs.state(doc, function () { return ""; }));
+    // a case edition never authored answers NO_CASE_DOCUMENT (publication R1): that is a draft not yet prepared, not a read that failed
+    if (doc && !(doc.state === "failed" && doc.refusal && doc.refusal.code === "NO_CASE_DOCUMENT")) out.push(cs.state(doc, function () { return ""; }));
     return out.join("");
   },
 

@@ -141,12 +141,6 @@ export const PARTS = Object.freeze({
     return String(html).replace(/<[^>]*>/g, "").replace(/&(amp|lt|gt|quot|#39);/g, function (m, e) { return { amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e]; });
   },
 
-  /* R30 (DEC-276): an act's explanation in its place: the button's explanation carries `now`'s word where the kit drew
-     `was`'s (the kit names no way for a screen to choose an act's explanation); unchanged when `was` is not in it. */
-  explained: function (cs, html, was, now) {
-    return String(html).split(cs.esc(cs.w(was))).join(cs.esc(cs.w(now)));
-  },
-
   /* R27, R41 (`review` R35): the team's time zone as the member door's copy answer carries it: its own top-level `zone`, else
      the first roster row's; "" when none is held, never UTC in its place. */
   copyZone: function (copy) {
@@ -312,6 +306,22 @@ export const PARTS = Object.freeze({
       list.push({ kind: "evidence", id: id, sha: sha, text: "bio-ratify " + id + " " + sha + "\n", namespace: "bio-ratify" });
     });
     return list;
+  },
+
+  /* C47 (fix round 2; public-read R39): how many documents the edition's document cites that are not published with the case: a
+     citation that is no finding of the edition and whose version is no full SHA-256 (what a sitting signs as evidence is published),
+     each counted once. */
+  notPublished: function (doc, prepared) {
+    const pinned = {}, seen = {};
+    (prepared && Array.isArray(prepared.findings) ? prepared.findings : []).forEach(function (f) { if (f && f.target) pinned[f.target] = true; });
+    let n = 0;
+    (doc && Array.isArray(doc.citations) ? doc.citations : []).forEach(function (c) {
+      const id = c && (c.target || c.bundle_id), sha = c && (c.version || c.bundle_sha);
+      if (!id || pinned[id] || seen[id]) return;
+      seen[id] = true;
+      if (typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha)) n++;
+    });
+    return n;
   },
 
   /* The UTF-8 bytes of a statement the member's key signs (interface-shell R41's `{label, bytes, namespace}`). */
