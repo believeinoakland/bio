@@ -193,3 +193,7 @@ ANSWER to J17 and J16 (BOB #244; J17 replaces J16 (1)).
 (2) The store-internal route `pendingadd` (`kind=reading&sha=`), reachable only from the door, is accepted. Note: control-plane R120 (the deferred reading) is HELD until C5a's step-0 report; build and test the route and the `reading` kind now, the door's use of it waits on R120.
 (3) Yes: R9 ("the plane writes no row") is amended by R75 for `keeps_pending` and the `acqstages:<trace>` keys; declare the table to record-core's purge. I will write R9's amendment line on tranche/T51 now; merge it before your COMPLETE.
 Your design of the table, attempts (5, back-off 15 s doubling) and the seam test (real acquisition first, red by name until it merges) is accepted.
+
+## B22 · CHANGE
+
+CHANGE (BOB #244; K4435): three of your module's tests are stale at 753ea4db8a (a diagnosis worker ran each alone; `build/plan/suite-reds-753ea4db8a.md` has the lines): disclosures R18 R5, store R5 and store R9: the route map now holds `readheld` (control-plane R117, `owner-ops.mjs:101`), which the tests' map model lacks; roster R5 R9 R45: `projectlist` through the route carries `shared_drafts {count: 0, newest: null}` (control-plane R118) while the direct call hands no reader. Bring these tests to the requirements as they stand (assemble the map from each module's own declaration, K3268, rather than a hand list, so the next op does not stale them again); test files only, in your job.
