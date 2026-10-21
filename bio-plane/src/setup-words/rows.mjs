@@ -1,12 +1,12 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
-   list, docs/development/ux-substrate/screens/words.json (17997 design words, 1061 protected; SHA-256
-   e76b85546e41d8a2db0b4c5863ab14361a3efa684fd795bc79ca5fb188c9db2c) followed by 7104 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   list, docs/development/ux-substrate/screens/words.json (18009 design words, 1061 protected; SHA-256
+   a8d603eaaa531ed5ee3612cc2a35f77ff1972ad9c91270ef5f730d3d8801d193) followed by 7104 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
    and each row are frozen (R3). Written by `node bio-plane/src/setup-words/build.mjs` from the repository root
    (`--check` finds it stale); bio-plane/test/m/setup-words/ checks it. */
-export const WORDS_COMMIT = "e76b85546e";
+export const WORDS_COMMIT = "a8d603eaaa";
 export const WORD_ROWS = Object.freeze([
   ["weight.reversible.name","Reversible",null,"Reversible: you can undo this.",true,"design"],
   ["weight.reasoned.name","Asks for a reason",null,"Asks for a reason: you are asked why, and your reason becomes part of the record.",true,"design"],
@@ -10737,6 +10737,18 @@ export const WORD_ROWS = Object.freeze([
   ["screen.project.stage.reached","{stage} · reached","DEC-391: B435 project, \"What each stage needs\": label of a stage the project has reached. Placeholder {stage}, the stage name.",null,false,"design"],
   ["screen.project.stage.not_reached","{stage} · not reached yet","DEC-391: B435 project, \"What each stage needs\": label of a stage not yet reached. Placeholder {stage}, the stage name.",null,false,"design"],
   ["screen.project.ask_owners","Ask {owners}.","DEC-391: B435 project, end of a refusal that only an owner can act: names the owners to ask. Placeholder {owners}, their names joined with commas.",null,false,"design"],
+  ["screen.action.minutes.notfound","These words are not in the document you chose. Copy them exactly as the minutes write them. Nothing was written.","DEC-393: B437 1: in-place refusal in the minutes fold (screens-action R55): the typed passage is not in the chosen document",null,false,"design"],
+  ["screen.action.minutes.needed","The meeting, its date, the document and the passage are all needed. Nothing was written.","DEC-393: B437 1: in-place refusal in the minutes fold: one of the four parts is missing",null,false,"design"],
+  ["screen.home.todo.vouch.one","Vouch for the photo you captured on {place}","DEC-393: B437 2: Home, the one-photo form of screen.home.todo.vouch",null,false,"design"],
+  ["queue.letter-approval.summary","The letter {title} is waiting for your approval","DEC-393: B437 2: queue kind letter-approval (minted by the design for screens-daily and its producer): a letter awaiting approval",null,false,"design"],
+  ["queue.letter-approval.detail","A member prepared this letter, and it needs approval before it is sent. Read it, then approve it. Your team's Civicsmith sends nothing: once it is approved, you send it and record the sending.","DEC-393: B437 2: queue kind letter-approval, its detail",null,false,"design"],
+  ["screen.home.ailimit.set","Set the limit","DEC-393: B437 2: Home, the button of ailimitset as drawn in place",null,false,"design"],
+  ["screen.home.ailimit.remove","Remove","DEC-393: B437 2: Home, the button of ailimitset that removes the limit, as drawn in place",null,false,"design"],
+  ["screen.queue.explore.today","Explore today","DEC-393: B437 2: queue, the button of exploreapprove as drawn in place",null,false,"design"],
+  ["screen.queue.mute.kind","Mute this kind","DEC-393: B437 2: queue, the button of queuemute as drawn in place",null,false,"design"],
+  ["screen.queue.check.open","Open the check","DEC-393: B437 2: queue, the button on a check-request row, as drawn in place",null,false,"design"],
+  ["screen.queue.hint.promote","Open a question from this","DEC-393: B437 2: queue, the button of promote on a hint, as drawn in place",null,false,"design"],
+  ["screen.queue.vouch.them","Vouch for them","DEC-393: B437 2: queue, the button of release on held captures, as drawn in place",null,false,"design"],
   ["refusal.GROUP_SLUG_MALFORMED","A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_ALREADY_RECORDED","Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.","setup, refusal by its code",null,false,"design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN","Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.","setup, refusal by its code",null,false,"design"],
