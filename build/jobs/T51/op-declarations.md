@@ -237,3 +237,30 @@ COMPLETE (OP-DECLARATIONS #32, session_01GykvWFgopputGrmd98pLi2, depth 2; B18 an
 **Tests and checks** (from `bio-plane`): `node --test test/m/op-declarations/*.test.mjs`: tests 246, pass 246, fail 0 (before: 244 tests, 5 failing). Process repo: `format.mjs`: 175 modules, 0 failures; `architecture.mjs op-declarations`: 0 failures; `coverage.mjs op-declarations`: 82 of 82 live ids named; `words.mjs op-declarations`: 0 failures; `ownership.mjs ... tranche/T51 job/T51/op-declarations`: 9 files changed, 0 failures; `run.mjs` format and architecture 0 failures, no finding in my module; `setup-words/build.mjs --check`: "words-unreviewed.json is stale or absent" (expected; no refusal naming my module). My layer's tests (manifest) are not named beyond the module's suite.
 
 Size (session_01GykvWFgopputGrmd98pLi2): test runs 9, module lines 3464
+
+## J19 · COMPLETE
+
+COMPLETE for B20 (K4262), with B21 read (route taken; job started at depth 2 under session session_01Uihot6oAdmTPVZ9YVwa3Rs).
+
+**Entries applied.** B20: `strengthbarset` leaves the unexplained ground in `ACT_HELP_ABSENT`; `strengthbar` takes it (the design gives it no text and no screen sends it). Header comment of the table records it (K4262, B20).
+
+**Test changed.** `t34.test.mjs` R21 test (K4254) asserted `strengthbarset` sits under `unexplained`; that is superseded by B20. It now asserts `strengthbarset` is explained by `ACT_HELP` (through `help.mjs`) and under no ground, and `strengthbar` is explained by none and under `unexplained`. This is the test that went red after the entry, and it is the same check, not a weakened one.
+
+**Reds before the fix (seen):** R34 member partition; R34 `T51_DESIGN_OPS` check; R47/R34 N862; R75. **After:** 246 of 246 pass.
+
+**Requirement lines.** None changed. R21 (line 99) and R34 do not name the ground of `strengthbarset`, so no BOB line is needed.
+
+**Deferred.** None.
+
+**Other modules (P9), found by the checks, not in this job's files:**
+- coverage: agent-harness R17; agent-runner R37, R38, R40; installer-steps R26, R31; journey-check R19; screens-inquiry R110, R119; screens-intake R53 are named by no test.
+- words: op-grades `bio-plane/test/m/op-grades/t37.test.mjs:32` (testcopy, translation-directed).
+
+**Checks run.**
+- `node checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; channels 0; words 1 failure (op-grades, not this module); coverage 6 failures (other modules, listed above). Op-declarations files: 0 findings.
+- `node checks/ownership.mjs /home/user/bio op-declarations tranche/T51 job/T51/op-declarations`: 3 files changed by op-declarations, 0 failures.
+- Suite: `node --test "test/m/op-declarations/**/*.test.mjs"` in `bio-plane`: 246 pass, 0 fail.
+
+**Git.** The B21 route kept the stale commit on `stale/op-declarations-local`. Pushed as `12dabe5943` on `job/T51/op-declarations`.
+
+**Size (session_01Uihot6oAdmTPVZ9YVwa3Rs): test runs 4, module lines 3466.**
