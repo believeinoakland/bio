@@ -1,6 +1,6 @@
 # BOB to file-safety (T51)
 
-**Read** · handled J10
+**Read** · handled J12
 
 ## B1 · START
 
@@ -145,3 +145,7 @@ Run: your suite (`node --test --test-force-exit bio-plane/test/m/<module>/`), th
 COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BOB's release), (2) test-gap fix merged, (3) the failing-first test for the walker's row, red then green with the evidence, (4) the platform check L/P/F/N and its numbers; then requirement ids met, suite counts, each QUESTION with BOB's answer (none open), and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: held modules' own code).
 
 **Added by BOB (K4435): the suite's red `rows.test.mjs` R24 (diagnosis `build/plan/suite-reds-753ea4db8a.md`).** `index.mjs:53` filters `WORD_KEYS` by `hasWord`, which is true for a stand-in since the regeneration of K4422 (the table now holds the code's own default, source "code"), so the stand-in `refusal.SIGNATURES_RUN_RECENT` is counted as read while the design's `words-reads.json` lacks it. Fix: `WORD_KEYS` filters by the row's source (a design row), not `hasWord`, so no stand-in repeats this; the test red first. (1) certain, above; (2) missed because the test ran before the regeneration and no one re-ran it after; (3) `rows.test.mjs` R24 red, then green with the stand-in excluded; (4) N.
+
+## B12 · ANSWER · re J11
+
+ANSWER to J11 (BOB #244; K4438). (1) Your names are adopted: file-scanner R6 now states `signatures.stage_at` (the instant of the latest stage write) and `signatures.request` (the instant the open request was written, absent when none); FILE-SCANNER #11 is told by CHANGE. (2) Your reading is right: R50's test line is corrected on tranche/T51 (16 minutes allowed, 14 refused as under way; the guard reads `stage_at`, else `last_attempt`). (3) Accepted: remove the `mirror.started` note; the request file absorbs a double press. (4) Accepted; name the stand-in keys in COMPLETE for the word batch.

@@ -375,8 +375,27 @@ export class Review {
     } catch { return null; }
   }
 
-  /* R12: one id as the given reader may see it: present with its type, state, role and text, or absent with its role. */
-  #finding(raw, roles, gate) {
+  /* R41 (C46, fix round 4): THE CONCLUSION THE PROJECT RECORDED for a question, in its own words. A project that concludes a
+     question adopts a reading's claim and keeps it as its own conclusion record (basis-versions R22), and writes nothing
+     into the question's bytes (`inquiry_moved: false`), so the file holds no `conclusion` for a reader to find. It is asked
+     of ratification's `caseConclusionFor` (its R1), the one answer the publish gate and the case document use: the claim
+     adopted and the falsifier, only while the project's latest act on the question is a conclusion (a withdrawn one, another
+     project's and a conclusion written in the question's own bytes are not this project's: those answer the file's words).
+     Null when there is none; never throws. */
+  #recorded(id, state, project, viewer) {
+    if (!project) return null;
+    let c = null;
+    try { c = this.ratification.caseConclusionFor(project, id, viewer, state); } catch { return null; }
+    if (!c || c.state !== "concluded" || c.relationship !== "project") return null;
+    const words = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
+    const claim = c.claim && c.claim.state === "adopted" ? words(c.claim.text) : null;
+    return claim ? { statement: claim, falsifier: words(c.falsifier) } : null;
+  }
+
+  /* R12: one id as the given reader may see it: present with its type, state, role and text, or absent with its role.
+     `by` is the project the draft belongs to and the viewer its findings are read as (the draft's last editor), so a
+     question that project concluded answers that conclusion's words (R41). */
+  #finding(raw, roles, gate, by = null) {
     const id = String(raw ?? "").trim();
     /* D-539: THE ROLE IS THE DRAFT'S OWN AUTHORED FACT, said back whether or not the finding can be read, so an edit
        written from the answer does not lose it. It discloses nothing the target id beside it does not. */
@@ -387,7 +406,11 @@ export class Review {
                      detail: localize("review.index.this_draft_names_a_finding", "this draft names a finding its editor cannot read, or one that does not exist.") };
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
     /* R41 (L15): a reader reads the finding's own words, never the file's front matter. */
-    const words = md ? findingWords(md.content) : null;
+    let words = md ? findingWords(md.content) : null;
+    /* R41 (fix round 4, C46): the project's own conclusion record comes first, as the case document records it. */
+    const rec = b.object_type === "inquiry" && by ? this.#recorded(id, b.current_state, by.project, by.viewer) : null;
+    if (rec) words = { text: words ? words.text : null, statement: rec.statement,
+                       falsifier: rec.falsifier ?? (words ? words.falsifier : null), concluded: true };
     const concluded = !!(words && words.concluded);
     /* R41 (fix round 3): a finding with no words of its own is told as not concluded yet; the sentence is a stand-in
        for the design's row (`review.index.not_concluded_yet`). */
@@ -766,7 +789,7 @@ export class Review {
     /* R12: THE FINDINGS ARE READ AS THE DRAFT'S EDITOR SEES THEM, for both doors: the grant is the editor's act, so a
        recipient is shown exactly what the editor put in front of them and never a document the editor could not see. */
     const gate = viewerPredicate(`member:${d.updated_by}`);
-    const findings = targets.map((raw) => this.#finding(raw, params.roles, gate));
+    const findings = targets.map((raw) => this.#finding(raw, params.roles, gate, { project: d.project_id, viewer: `member:${d.updated_by}` }));
     const gates = this.#gates(d);
     const cap = listCap(limit);
     const commentRows = this.#rows(`SELECT c.comment_id, c.author_kind, c.author, c.grant_id, c.text, c.at,
@@ -1036,7 +1059,7 @@ export class Review {
       const c = this.ratification.caseConclusionFor(pid, inq, viewer, b.current_state);
       if (!c || c.state !== "concluded" || c.relationship !== "project") continue;
       found.push({ inquiry: inq, title: b.title ?? null, concluded_at: c.at ?? null, concluded_by: c.by ?? null,
-                   findings: [this.#finding(inq, null, gate)] });
+                   findings: [this.#finding(inq, null, gate, { project: pid, viewer })] });
     }
     /* by instant, never by string; an unparseable stamp is not ranked and goes last, keeping its order */
     found.sort((x, y) => {

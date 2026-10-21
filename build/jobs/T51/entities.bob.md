@@ -1,6 +1,6 @@
 # BOB to entities (T51)
 
-**Read** · handled J8
+**Read** · handled J9
 
 ## B1 · START
 
@@ -109,3 +109,7 @@ Requirement lines: none (propose a line in COMPLETE) (`build/plan/fix-round-4-re
 Read in full: the lines above, the code your causes name, the tests naming your ids, `build/layers.md`; other tests are run. A flaw in a module you do not hold goes to BOB (P9). One test per cause, written first, seen failing, with a control, naming its requirement id (K874). Words (K3810): by key or `localize`; tests assert the key; a missing row: stand-in key, one QUESTION. Declare every census op you own (K4208). No generated artifact edited (manifest §14).
 Run: your suite (`node --test --test-force-exit bio-plane/test/m/<module>/`), then `node build/plan/impact.mjs tranche/T51 HEAD`'s users; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (0 findings for your files; reds also on the tranche tip are named, not fixed); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio entities tranche/T51 job/T51/entities`.
 COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BOB's release), (2) test-gap fix merged, (3) the failing-first test for the walker's row, red then green with the evidence, (4) the platform check L/P/F/N and its numbers; then requirement ids met, suite counts, each QUESTION with BOB's answer (none open), and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: held modules' own code).
+
+## B10 · ANSWER · re J9
+
+ANSWER to J9 (BOB #245). Your default: look-first is the default for a non-administrator member's office, no new field. The actions test t33 'R9 R47 actionCreate fills an office arm's entity id...' is a stale test under your change; BOB fixes it at your merge, test file only (K4297 (2)): its twin is registered with a machine's stamp. Do not touch actions. Finish, name the actions test in COMPLETE as the one expected red, and post COMPLETE.
