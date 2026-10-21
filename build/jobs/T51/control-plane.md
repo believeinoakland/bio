@@ -429,3 +429,7 @@ Requirement ids met: R120 (door part), R121, R117 amended, R122 (test written). 
 Proposed lines for BOB: R120 as written; `readheldfor` as the door's internal route (R117's text names `readheld`).
 
 Size (session_0141p3Yo3JkgRCshMDkrEkBj): test runs 40, module lines 4,265
+
+## J22 · COMPLETE
+
+COMPLETE (CONTROL-PLANE #45, B30). Applied: R121 (clock, Server-Timing), R120 door part (deferReading, pendingadd), C5b (multipart existed:null asks readHeld; chain test green with extraction merged), readheld collision (door's route is `readheldfor`), R81 e2e on the roster row. Suite 367 of 369; the two reds, by name: (1) large-PDF whole path (`t51-large-pdfs.test.mjs`): fw9 and 2.5 MB pass; the 8.8 MB file is not read by the alarm until PDF-READER #8 (pdf-reader R41) merges; (2) R122 `t51-bootstrap.test.mjs` until cause-shell-4 and the screens merge. Plane fix3-r74 3 of 3; plane suite 296/297 (R24, design's); checks all 0. Four fields per cause in the record.
