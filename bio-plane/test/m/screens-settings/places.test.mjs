@@ -2,7 +2,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { acts, all, day, has, lacks, open, said, textOf } from "./kit.mjs";
-import { ADMIN, MEMBER, COURTS, env, placesTable } from "./fixtures.mjs";
+import { hasWord } from "../../../src/setup-words/index.mjs";
+import { ADMIN, MEMBER, COURTS, env, refuse, placesTable } from "./fixtures.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
 // the next page is read on the page's clock (cs.later): the harness's fake clock is moved on
@@ -187,4 +188,57 @@ test("R46 C94: a court a member added names that member by memberName: the handl
   assert.ok(items[0].includes(said("screen.places.court.added", { name: "luisa", date: day("2026-10-09T00:00:00Z") })), items[0]);
   assert.ok(items[1].includes(said("screen.places.court.added", { name: said("shell.card.member"), date: day("2026-10-09T00:00:00Z") })), items[1]);
   assert.ok(!a.text.includes("m-7") && !a.text.includes("m-9"));
+});
+
+/* ---- T51 fix round 3: C64 (entities R63, R64; DEC-401, DEC-402) ---- */
+
+const NAMED = { entity_id: "ENT-0201", kind: "office", label: "Records Office of the Agency", note: "n", declared_by: "member:lu", at: "2026-10-12T00:00:00Z", named_by_member: true, contact: { kind: "portal", value: "https://records.agency.example/portal" }, law: "FOIA, 5 U.S.C. 552" };
+const OWN = { entity_id: "ENT-0202", kind: "office", label: "Office of the City Clerk", note: "n", declared_by: "rosa", at: "2026-10-01T00:00:00Z", named_by_member: false, contact: null, law: null };
+const officeLine = (o, id) => all(all(o.tree, (e) => e.attrs["data-list"] === "offices")[0], (e) => e.tag === "li").find((e) => e.attrs["data-office"] === id);
+const withOffices = (list, over = {}) => placesTable({ entitieskind: (q) => q.kind === "body" ? env({ ok: true, kind: "body", entities: [], count: 0, limit: 500, truncated: false, next: null }) : env({ ok: true, kind: "office", entities: list(), count: list().length, limit: 500, truncated: false, next: null }), ...over });
+
+test("R19 C64: an office a member named is listed with the mark and the administrator's confirm, with the contact and law it states; an office not named by a member draws no mark, no confirm and no line it does not state (control)", async () => {
+  const a = await open("places", { me: ADMIN, table: withOffices(() => [NAMED, OWN]) });
+  const named = officeLine(a, "ENT-0201"), own = officeLine(a, "ENT-0202");
+  assert.ok(named && own);
+  assert.ok(textOf(named).includes(said("screen.request.nameoffice.mark")), "the mark");
+  assert.equal(acts(named).filter((b) => b.attrs["data-act"] === "officeconfirm").length, 1, "the confirm");
+  assert.ok(textOf(named).includes(said("screen.request.nameoffice.where") + ": " + NAMED.contact.value) && textOf(named).includes(said("screen.request.nameoffice.law") + ": " + NAMED.law), "where requests go and the law they go under");
+  assert.ok(!textOf(named).includes(said("screen.places.offices.bygroup")), "the mark says who named it; the origin line is not said twice");
+  assert.ok(!textOf(own).includes(said("screen.request.nameoffice.mark")) && acts(own).length === 0, "control: no mark, no confirm");
+  assert.ok(!textOf(own).includes(said("screen.request.nameoffice.where")) && !textOf(own).includes(said("screen.request.nameoffice.law")), "control: nothing it does not state");
+  assert.ok(textOf(own).includes(said("screen.places.offices.bygroup")), "control: marked by its origin as before");
+  // a member who does not administer is shown the mark and is offered no confirm
+  const m = await open("places", { me: MEMBER, table: withOffices(() => [NAMED, OWN]) });
+  assert.ok(textOf(officeLine(m, "ENT-0201")).includes(said("screen.request.nameoffice.mark")));
+  assert.deepEqual(ops(m), []);
+});
+
+test("R19 C64: the administrator's confirm sends officeconfirm with the office's entityId and reads the offices again, and the mark is gone; a repeat answers already and reads the same", async () => {
+  let confirmed = false;
+  const table = withOffices(() => [{ ...NAMED, named_by_member: !confirmed }, OWN], { officeconfirm: (q, b) => { const already = confirmed; confirmed = true; return env({ ok: true, entity_id: b.entityId, named_by_member: false, confirmed_by: "rosa", at: "2026-10-21T00:00:00Z", ...(already ? { already: true } : {}) }); } });
+  const a = await open("places", { me: ADMIN, table });
+  const before = a.p.requests.filter((r) => r.op === "entitieskind" && r.query.kind === "office").length;
+  const r = await a.press("officeconfirm", { data: { office: "ENT-0201" } });
+  assert.deepEqual(r.sent.filter((x) => x.op === "officeconfirm").map((x) => x.body), [{ entityId: "ENT-0201" }], "entityId, camel case, and nothing else");
+  assert.ok(a.p.requests.filter((x) => x.op === "entitieskind" && x.query.kind === "office").length > before, "the offices are read again");
+  assert.ok(!textOf(officeLine(a, "ENT-0201")).includes(said("screen.request.nameoffice.mark")), "the mark is gone");
+  assert.equal(acts(officeLine(a, "ENT-0201")).length, 0, "and no confirm");
+  assert.equal(a.refused, null, "done, nothing refused");
+  // a repeat (a second administrator pressed it on a page opened earlier) answers already: drawn as done, not refused
+  const b = await open("places", { me: ADMIN, table: withOffices(() => [NAMED], { officeconfirm: (q, body) => env({ ok: true, entity_id: body.entityId, named_by_member: false, confirmed_by: "lu", at: "2026-10-21T00:00:00Z", already: true }) }) });
+  await b.press("officeconfirm", { data: { office: "ENT-0201" } });
+  assert.equal(b.refused, null, "already is as done as the first");
+});
+
+test("R19 C64: each refusal of the confirm is drawn beside it by its own words (refusal.<code>, else the owner's translation until the design writes it)", async () => {
+  const drawn = async (code) => {
+    const a = await open("places", { me: ADMIN, table: withOffices(() => [NAMED], { officeconfirm: () => refuse(code, { translation: "owner words for " + code }) }) });
+    await a.press("officeconfirm", { data: { office: "ENT-0201" } });
+    assert.ok(a.refused, code + " is drawn beside the act");
+    assert.equal(a.refused.text, hasWord("refusal." + code) ? said("refusal." + code) : "owner words for " + code, code);
+    assert.ok(officeLine(a, "ENT-0201") && textOf(officeLine(a, "ENT-0201")).includes(said("screen.request.nameoffice.mark")), code + ": the mark stays");
+  };
+  for (const code of ["NO_ENTITY", "NO_SUCH_ENTITY", "NOT_AN_ADMIN"]) await drawn(code);
+  for (const code of ["CONFIRM_NOT_AN_OFFICE", "NOT_NAMED_BY_A_MEMBER"]) await drawn(code);
 });

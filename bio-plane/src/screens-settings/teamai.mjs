@@ -104,7 +104,7 @@ export const teamai = {
       if (on) {
         const USES = ["ask", "draft", "run", "standing", "enquire", "read", "transcribe", "account", "explore"];
         const chosen = v.on && Array.isArray(v.uses) && v.uses.length < USES.length ? v.uses : null;
-        h += `<div><p>${W("act.aikeepaway.does")}</p><fieldset><legend>${W(M + "keepaway.which")}</legend><input type="radio" id="mk-all" name="mk-scope"${chosen ? "" : " checked"}><label for="mk-all">${W(M + "keepaway.all")}</label><input type="radio" id="mk-some" name="mk-scope"${chosen ? " checked" : ""}><label for="mk-some">${W(M + "keepaway.some")}</label></fieldset><fieldset><legend>${W(M + "keepaway.uses")}</legend>${USES.map((u) => `<input type="checkbox" id="mk-use-${u}"${chosen && chosen.indexOf(u) >= 0 ? " checked" : ""}><label for="mk-use-${u}">${W("ai.use." + u + ".name")}</label>`).join("")}</fieldset>${cs.field("mk-why", M + "keepaway.reason", { area: true, rec: true, max: 2000, value: v.on ? v.reason || "" : "" })}${on}${v.on ? cs.act("aikeepaway", { label: M + "keepaway.turnoff", data: { on: "off" } }) : ""}</div>`;
+        h += `<div><p>${W("act.aikeepaway.does")}</p><fieldset><legend>${W(M + "keepaway.which")}</legend><label for="mk-all"><input type="radio" id="mk-all" name="mk-scope"${chosen ? "" : " checked"}>${W(M + "keepaway.all")}</label><label for="mk-some"><input type="radio" id="mk-some" name="mk-scope"${chosen ? " checked" : ""}>${W(M + "keepaway.some")}</label></fieldset><fieldset><legend>${W(M + "keepaway.uses")}</legend>${USES.map((u) => `<label for="mk-use-${u}"><input type="checkbox" id="mk-use-${u}"${chosen && chosen.indexOf(u) >= 0 ? " checked" : ""}>${W("ai.use." + u + ".name")}</label>`).join("")}</fieldset>${cs.field("mk-why", M + "keepaway.reason", { area: true, rec: true, max: 2000, value: v.on ? v.reason || "" : "" })}${on}${v.on ? cs.act("aikeepaway", { label: M + "keepaway.turnoff", data: { on: "off" } }) : ""}</div>`;
       }
       return h;
     }), false);
@@ -129,6 +129,7 @@ export const teamai = {
   acts: [
     // the key in the request's body only, never drawn again; then switched on, as setup-page R18 does
     { op: "groupkeyset", rereads: ["groupkey", "uses", "history"],
+      ready(view, el, cs) { if (!String(cs.value("mk-key" + ((view.ui && view.ui.keyGen) || 0)) || "").trim()) return { refuse: "screen.members.key.nokey" }; },
       send(view, el, cs) { const key = String(cs.value("mk-key" + ((view.ui && view.ui.keyGen) || 0)) || "").trim(); return key ? { body: { key } } : { refuse: "screen.members.key.nokey" }; },
       // the field drawn anew, empty (the shell keeps a field's value by its id, R10); the shell does not await `done`:
       // the switch is sent, then the screen opened again, which reads everything anew

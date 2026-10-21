@@ -63,7 +63,7 @@ export function aiPanel(cs, view, o) {
     if (set) {
       const scopes = ["overall", ...USES.filter((k) => k !== "suggestions"), ...(o.explore ? ["explore"] : []), ...(o.perMember ? ["per_member"] : [])];
       h += `<div>${cs.choice(p + "-scope", S + "form.scope", scopes.map((s) => [s, scopeKey(s)]))}${cs.field(p + "-amount", S + "form.amount")}${cs.choice(p + "-unit", S + "form.unit", ["usd", "tokens", "calls"].filter((u) => !o.units || o.units.indexOf(u) >= 0).map((u) => [u, S + "unit." + u]))}${cs.choice(p + "-period", S + "form.period", ["day", "month"].map((x) => [x, S + "period." + x]))}
-<fieldset><legend>${W(S + "form.inclusive")}</legend><input type="radio" id="${p}-within" name="${p}-inclusive" checked><label for="${p}-within">${W(S + "within")}</label><input type="radio" id="${p}-ontop" name="${p}-inclusive"><label for="${p}-ontop">${W(S + "ontop")}</label></fieldset>${set}</div><p class="mk-note">${W(S + "limits.told")}</p>`;
+<fieldset><legend>${W(S + "form.inclusive")}</legend><label for="${p}-within"><input type="radio" id="${p}-within" name="${p}-inclusive" checked>${W(S + "within")}</label><label for="${p}-ontop"><input type="radio" id="${p}-ontop" name="${p}-inclusive">${W(S + "ontop")}</label></fieldset>${set}</div><p class="mk-note">${W(S + "limits.told")}</p>`;
     }
     return h;
   }));

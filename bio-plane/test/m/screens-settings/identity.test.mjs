@@ -80,3 +80,35 @@ test("R14 C87: Save who your team is with nothing ticked or written sends nothin
   assert.deepEqual((await a.press("groupdescriptionset", { values: { "gi-k-issue": true } })).sent[0].body.kinds, ["issue"]);
   assert.equal((await a.press("groupdescriptionset", { values: { "gi-k-issue": false, "gi-purpose": "Accountability." } })).sent[0].body.purpose, "Accountability.");
 });
+
+/* ---- T51 fix round 3: C87 (c) (R14): an empty box is refused before the reason is asked ---- */
+
+test("R14 C87 (c): Save who your team is with an empty box names the box and asks for no reason first; with the box filled the reason is asked (control)", async () => {
+  const a = await open("group-identity", { me: ADMIN, table: identityTable({ groupdescription: env({ description: null, history: [] }) }) });
+  // the reason is left unanswered: if the shell asked it first, the refusal would never be drawn
+  const r = await a.press("groupdescriptionset", { reason: null, values: { "gi-k-issue": false, "gi-k-community": false, "gi-k-other": false, "gi-other": "", "gi-focus": "  ", "gi-purpose": "" } });
+  assert.deepEqual(r.sent, [], "nothing is sent");
+  assert.equal(r.asked, false, "no reason box is drawn for an empty box");
+  assert.equal(a.refused.text, said("shell.field.needed", { field: said("screen.group-identity.focus.field") }), a.refused && a.refused.text);
+  // control: a box filled, the act is asked as the shell asks it of an administrator's act, and sends once the reason is given
+  const filled = await a.press("groupdescriptionset", { values: { "gi-focus": "Repair." } });
+  assert.equal(filled.sent.filter((x) => x.op === "groupdescriptionset").length, 1);
+});
+
+test("R14 C87 (c) (interface-shell R119): the other reasoned acts with a required box refuse an empty one before any reason is asked, and send nothing", async () => {
+  const F = await import("./fixtures.mjs");
+  const cases = [
+    ["members", F.membersTable(), "memberadd", {}],
+    ["members", F.membersTable(), "websitekeycreate", { "mw-cap": "" }],
+    ["group", F.groupTable(), "groupnameset", { "gr-name": " " }],
+    ["group", F.groupTable(), "hostingaccessset", { "gr-holders": "" }],
+    ["teamai", F.teamaiTable(), "groupkeyset", {}],
+  ];
+  for (const [screen, table, op, values] of cases) {
+    const o = await open(screen, { me: ADMIN, table });
+    const r = await o.press(op, { reason: null, values });
+    assert.equal(r.asked, false, `${op}: no reason box`);
+    assert.deepEqual(r.sent, [], `${op}: nothing sent`);
+    assert.ok(o.refused, `${op}: refused beside the act`);
+  }
+});

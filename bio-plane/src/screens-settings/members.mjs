@@ -78,7 +78,7 @@ export const members = {
       let h = `<p>${W(S + "count", { members: active.length, administrators: active.filter((m) => m.role === "admin").length })}</p>`;
       if (admin && rec && rec.met === false) {
         const lead = rec.administrators === 1 ? W(S + "recovery.one") : W(S + "recovery.many", { administrators: rec.administrators });
-        h += `<div class="mk-msg" data-note="recovery"><p>${lead}${lead ? " " : ""}${W(rec.codes_held ? S + "recovery.codes" : S + "recovery.nocodes", { remaining: rec.remaining })}</p><p>${rec.administrators < 2 ? `<a href="#members-invite">${W(S + "recovery.add")}</a> ` : ""}${rec.codes_held ? "" : `<a href="/app/recovery" data-nav>${W(S + "recovery.issue")}</a>`}</p></div>`;
+        h += `<div class="mk-msg" data-note="recovery"><p>${lead}${lead ? " " : ""}${W(rec.codes_held ? S + "recovery.codes" : S + "recovery.nocodes", { remaining: rec.remaining })}</p><div class="mk-links">${rec.administrators < 2 ? `<a class="cs-ref" href="#members-invite">${W(S + "recovery.add")}</a>` : ""}${rec.codes_held ? "" : `<a class="cs-ref" href="/app/recovery" data-nav>${W(S + "recovery.issue")}</a>`}</div></div>`;
       }
       const isFounder = (m) => m.founder === true || m.member_id === "admin";
       const expOf = (m) => {
@@ -116,7 +116,7 @@ export const members = {
           const p = [];
           if (m.role !== "admin" && m.status === "active") {
             const c = cs.act("membercaps", { data: { member: id } });
-            if (c) p.push(`<fieldset><legend>${W(S + "caps.legend", { handle: label })}</legend>${vocabulary.map((v) => `<input type="checkbox" id="mc-${E(id)}-${v}"${(m.capabilities || []).indexOf(v) >= 0 ? " checked" : ""}><label for="mc-${E(id)}-${v}">${E(capName(v))}</label>`).join("")}</fieldset>${c}`);
+            if (c) p.push(`<fieldset><legend>${W(S + "caps.legend", { handle: label })}</legend>${vocabulary.map((v) => `<label for="mc-${E(id)}-${v}"><input type="checkbox" id="mc-${E(id)}-${v}"${(m.capabilities || []).indexOf(v) >= 0 ? " checked" : ""}>${E(capName(v))}</label>`).join("")}</fieldset>${c}`);
           }
           if (m.status === "revoked" || (m.status === "active" && m.role !== "admin")) {
             const next = m.status === "active" ? "revoked" : "active";
@@ -154,7 +154,7 @@ export const members = {
     }, { empty: S + "empty" }));
 
     // more for administrators (R23): the group's other settings
-    if (admin) out.push(cs.sec(S + "more.heading", `<ul class="mk-list" data-list="more">${["group", "places", "recovery"].map((id) => `<li><a class="cs-ref" href="/app/${id}" data-nav>${W("screen." + id + ".name")}</a></li>`).join("")}</ul>`));
+    if (admin) out.push(cs.sec(S + "more.heading", `<div class="mk-links" data-list="more">${["group", "places", "recovery"].map((id) => `<a class="cs-ref" href="/app/${id}" data-nav>${W("screen." + id + ".name")}</a>`).join("")}</div>`));
 
     // inviting (R2): the short id, the cover and the capabilities ticked; the invitation shown once. The capabilities are the kit's checks, which
     // redraw at once and send nothing (interface-shell R90): ticking "look after the team's Civicsmith" draws what it hands over and the
@@ -283,6 +283,8 @@ export const members = {
     // with who must still endorse it; that answer is this act's success, drawn by the shell as done with the members' handles
     { op: "memberadd", rereads: ["roster", "recovery"], successCodes: ["CONSENSUS_REQUIRED"],
       refusals: { CONSENSUS_REQUIRED: function (refusal, cs) { return cs.w("refusal.CONSENSUS_REQUIRED", { awaiting: (Array.isArray(refusal.awaiting) ? refusal.awaiting : []).map(function (x) { return cs.memberName(String(x)); }).join(", ") }); } },
+      // R119: an invitation with no short id or no cover is refused before any reason is asked
+      ready(view, el, cs) { if (!String(cs.value("mi-id") || "").trim() || !String(cs.value("mi-cover") || "").trim()) return { refuse: "screen.members.invite.incomplete" }; },
       send(view, el, cs) {
         const vocabulary = view.me && Array.isArray(view.me.vocabulary) && view.me.vocabulary.length ? view.me.vocabulary : ["contribute", "publish", "create_projects"];
         const memberId = String(cs.value("mi-id") || "").trim(), cover = String(cs.value("mi-cover") || "").trim();
@@ -341,6 +343,11 @@ export const members = {
       send(view, el) { return { body: { keyB64: el.dataset.key, status: el.dataset.status === "active" ? "active" : "revoked" } }; } },
     // the public line the member gave, split: its base64 field and any words after it (R55); a line not of that shape sends nothing
     { op: "signeradd", rereads: ["signers"],
+      ready(view, el, cs) {
+        const parts = String(cs.value("ms-line") || "").trim().split(/\s+/);
+        if (!String(cs.value("ms-who") || "").trim()) return { refuse: "refusal.NO_SUCH_MEMBER" };
+        if (parts.length < 2 || !/^[a-z][a-z0-9@.-]*$/.test(parts[0]) || !/^AAAA[A-Za-z0-9+/=]+$/.test(parts[1])) return { refuse: "refusal.BAD_KEY" };
+      },
       send(view, el, cs) {
         const memberId = String(cs.value("ms-who") || "").trim();
         const parts = String(cs.value("ms-line") || "").trim().split(/\s+/);
@@ -354,6 +361,7 @@ export const members = {
     { op: "invitewithdraw", rereads: ["roster"],
       send(view, el) { return { body: { memberId: el.dataset.member } }; } },
     { op: "websitekeycreate", rereads: [],
+      ready(view, el, cs) { const dailyCap = Number(cs.value("mw-cap")); if (!(Number.isInteger(dailyCap) && dailyCap >= 1)) return { refuse: "screen.members.website.nocap" }; },
       send(view, el, cs) {
         const dailyCap = Number(cs.value("mw-cap"));
         if (!(Number.isInteger(dailyCap) && dailyCap >= 1)) return { refuse: "screen.members.website.nocap" };
@@ -362,6 +370,7 @@ export const members = {
       },
       done(view, answer, cs) { const a = answer && answer.result !== undefined ? answer.result : answer; if (a && a.key) cs.set("websiteKey", a.key); } },
     { op: "joinlinkenable", rereads: [],
+      ready(view, el, cs) { const dailyCap = Number(cs.value("mw-cap")); if (!(Number.isInteger(dailyCap) && dailyCap >= 1)) return { refuse: "screen.members.website.nocap" }; },
       send(view, el, cs) {
         const dailyCap = Number(cs.value("mw-cap"));
         if (!(Number.isInteger(dailyCap) && dailyCap >= 1)) return { refuse: "screen.members.website.nocap" };

@@ -50,11 +50,11 @@ export const identity = {
       // a field holding the assistant's draft says so beside its label, and as untested where its answer says so (R11)
       const draftOf = (field) => (dr && dr[field] ? { draft: S + "draft.label", draftFills: { handle: dr[field].askedBy } } : {});
       const untested = (field) => (dr && dr[field] && dr[field].untested ? ` <span class="mk-tag">${W("ai.label.untested")}</span>` : "");
-      let h = `<fieldset><legend>${W(S + "kinds.field")}</legend>${KINDS.map((k) => `<input type="checkbox" id="gi-k-${k}"${(d.kinds || []).indexOf(k) >= 0 ? " checked" : ""}><label for="gi-k-${k}">${W(S + "kind." + k)}</label>`).join("")}</fieldset>
+      let h = `<fieldset><legend>${W(S + "kinds.field")}</legend>${KINDS.map((k) => `<label for="gi-k-${k}"><input type="checkbox" id="gi-k-${k}"${(d.kinds || []).indexOf(k) >= 0 ? " checked" : ""}>${W(S + "kind." + k)}</label>`).join("")}</fieldset>
 ${cs.field("gi-other", S + "other.field", { rec: true, max: 120, value: d.otherKind || "", autocomplete: "off" })}
 ${cs.field("gi-focus", S + "focus.field", { area: true, rec: true, max: 1000, value: d.focus || "", ...draftOf("focus") })}${untested("focus")}
 ${cs.field("gi-purpose", S + "purpose.field", { area: true, rec: true, max: 4000, value: d.purpose || "", ...draftOf("purpose") })}${untested("purpose")}
-<fieldset><legend>${W(S + "visibility.field")}</legend>${["members", "public"].map((x) => `<input type="radio" id="gi-v-${x}" name="gi-v"${(d.visibility === "public" ? "public" : "members") === x ? " checked" : ""}><label for="gi-v-${x}">${W(S + "visibility.choice." + x)}</label>`).join("")}</fieldset>${set}`;
+<fieldset><legend>${W(S + "visibility.field")}</legend>${["members", "public"].map((x) => `<label for="gi-v-${x}"><input type="radio" id="gi-v-${x}" name="gi-v"${(d.visibility === "public" ? "public" : "members") === x ? " checked" : ""}>${W(S + "visibility.choice." + x)}</label>`).join("")}</fieldset>${set}`;
       // the assistant's draft, only while it is reachable, from the administrator's own answers
       const ask = view.reachable ? cs.act("groupdescriptiondraft") : "";
       if (ask) h += `<div data-form="draft"><p>${W(S + "ask.intro")}</p>${["what", "who", "why"].map((q) => cs.field("gi-q-" + q, S + "ask.q." + q, { area: true, rec: true, max: 1000 })).join("")}${ask}</div>`;
@@ -66,6 +66,11 @@ ${cs.field("gi-purpose", S + "purpose.field", { area: true, rec: true, max: 4000
   acts: [
     // the whole record each time (membership R109 appends a record): kinds, the other kind, focus, purpose, visibility
     { op: "groupdescriptionset", rereads: ["description"],
+      // R119 (C87 (c)): with no kind ticked and nothing written, the first box to fill is named before any reason is asked
+      ready(view, el, cs) {
+        const kinds = ["professional", "issue", "community", "catch-all", "other"].filter((k) => cs.value("gi-k-" + k) === true);
+        if (!kinds.length && !String(cs.value("gi-other") || "").trim() && !String(cs.value("gi-focus") || "").trim() && !String(cs.value("gi-purpose") || "").trim()) return { refuse: "shell.field.needed", fills: { field: String(cs.w("screen.group-identity.focus.field")).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: '"', "#39": "'" }[e])) } };
+      },
       send(view, el, cs) {
         const kinds = ["professional", "issue", "community", "catch-all", "other"].filter((k) => cs.value("gi-k-" + k) === true);
         const body = { kinds, visibility: cs.value("gi-v-public") === true ? "public" : "members" };

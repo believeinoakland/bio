@@ -10,7 +10,9 @@
    T51 FR-25 (R66, R69, R75; C30, C11, T-18; DEC-374, DEC-376, DEC-384): a copy of the team's record, taken by the founder (`export`), and
    the list of copies every administrator reads (`exportlog`); the file the team puts on its website, drawn as `instance-setup` answers it
    (`domain_claim.well_known`, the page building none); and a hosting account recorded at setup or by Civicsmith itself said so, not "by
-   set at setup". */
+   set at setup".
+   T51 fix round 3 (C85; R66): each count of a copy, in the list and in the sentence for the copy just taken, is drawn with its label, the tables
+   after a comma. */
 
 export const group = {
   id: "group",
@@ -122,7 +124,7 @@ export const group = {
         const COMMON = ["en", "es", "zh", "yue", "vi", "tl", "ko", "ja", "fr", "ar", "ru", "pt", "hi", "so", "am", "ti", "fa", "uk", "hy", "km", "th", "ht", "de", "it", "pl", "sw", "mn", "lo"];
         const offered = [...L, ...COMMON.filter((t) => L.indexOf(t) < 0)];
         view.ui.offered = offered;
-        h += `<fieldset><legend>${W(S + "languages.field")}</legend><p class="mk-small">${W(S + "languages.help")}</p>${offered.map((t) => `<input type="checkbox" id="gr-lang-${E(t)}"${L.indexOf(t) >= 0 ? " checked" : ""}><label for="gr-lang-${E(t)}">${E(nameOf(t))}</label>`).join("")}</fieldset>${ls}`;
+        h += `<fieldset><legend>${W(S + "languages.field")}</legend><p class="mk-small">${W(S + "languages.help")}</p>${offered.map((t) => `<label for="gr-lang-${E(t)}"><input type="checkbox" id="gr-lang-${E(t)}"${L.indexOf(t) >= 0 ? " checked" : ""}>${E(nameOf(t))}</label>`).join("")}</fieldset>${ls}`;
       }
       return h;
     }));
@@ -173,7 +175,7 @@ export const group = {
       const c = v.choice === "tell" || v.choice === "dont" ? v.choice : null;
       let h = `<p class="mk-note">${W(S + "court.says")}</p><p data-state="court">${W(c === "tell" ? S + "court.tell" : S + "court.dont")}</p>`;
       const ct = A("courtnoticeset");
-      if (ct) h += `<fieldset><legend>${W(S + "court.field")}</legend>${["tell", "dont"].map((x) => `<input type="radio" id="gr-court-${x}" name="gr-court"${(c || "dont") === x ? " checked" : ""}><label for="gr-court-${x}">${W(S + "court.choice." + x)}</label>`).join("")}</fieldset>${ct}`;
+      if (ct) h += `<fieldset><legend>${W(S + "court.field")}</legend>${["tell", "dont"].map((x) => `<label for="gr-court-${x}"><input type="radio" id="gr-court-${x}" name="gr-court"${(c || "dont") === x ? " checked" : ""}>${W(S + "court.choice." + x)}</label>`).join("")}</fieldset>${ct}`;
       return h;
     }));
 
@@ -212,21 +214,23 @@ export const group = {
       const take = cs.act("export", { tone: "primary" });
       const ex = ui.exports || null;
       const list = ex ? (Array.isArray(ex.exports) ? ex.exports : []) : null;
-      const data1 = (x) => `<span class="mk-data">${E(String(x))}</span>`;
+      const data1 = (x) => `<span class="mk-data">${E(String(x))}</span>`, data2 = (x) => `<span class="mk-data">${x}</span>`;
       const logAct = cs.act("exportlog", { label: S + "export.log.act" });
       let h = `<p class="mk-note">${W(S + "export.says")}</p>`;
       if (take) h += `${cs.field("gr-exnote", S + "export.note.label", { help: S + "export.note.help", rec: true, autocomplete: "off" })}<p class="mk-small">${W(S + "export.note.cut")}</p>${take}<p class="mk-note">${W(S + "export.undone")} ${W(S + "export.undone.why")}</p>`;
       else h += `<p class="mk-note">${W(S + "export.refused.founder")} ${W(S + "export.refused.next")}</p>`;
       // C85: the copy just taken, offered as a file and its counts labelled; it lives in the page's memory for the sitting and is drawn nowhere
+      // each count is drawn with its own label, one or many (C85), a zero as any other; the tables follow the sentence after a comma
+      const count = (n, one, other) => (Number(n) === 1 ? W(one) : W(other, { n: String(Number(n) || 0) }));
       const copy = ui.copy || null;
       if (copy) {
         const c = copy.counts || {};
-        const records = Number(c.bundles) === 1 ? T("queue.export-performed.records.one") : T("queue.export-performed.records.other", { n: String(Number(c.bundles) || 0) });
-        const files = Number(c.files) === 1 ? T("queue.export-performed.files.one") : T("queue.export-performed.files.other", { n: String(Number(c.files) || 0) });
-        h += `<div class="mk-msg" data-shown="copy"><p>${W("queue.export-performed.summary", { date: D(copy.at), records, files })} ${Number(c.tables) === 1 ? W(S + "export.count.tables.one") : W(S + "export.count.tables.other", { n: String(Number(c.tables) || 0) })}</p>${cs.save("bio-record-copy-" + String(copy.at).slice(0, 10) + ".json", copy.text, { label: "shell.save" })}</div>`;
+        const records = T(Number(c.bundles) === 1 ? "queue.export-performed.records.one" : "queue.export-performed.records.other", { n: String(Number(c.bundles) || 0) });
+        const files = T(Number(c.files) === 1 ? "queue.export-performed.files.one" : "queue.export-performed.files.other", { n: String(Number(c.files) || 0) });
+        h += `<div class="mk-msg" data-shown="copy"><p>${W("queue.export-performed.summary", { date: D(copy.at), records, files })}, ${count(c.tables, S + "export.count.tables.one", S + "export.count.tables.other")}</p>${cs.save("bio-record-copy-" + String(copy.at).slice(0, 10) + ".json", copy.text, { label: "shell.save" })}</div>`;
       }
       h += logAct;
-      if (list) h += cs.sheet(list.map((r) => cs.row("", `${data1(D(r.at))} · ${data1(r.bundles)} · ${data1(r.files)} · ${data1(r.tables)}`, "", r.note ? `<span class="rec">${E(r.note)}</span>` : "")).join("")) + `<p class="mk-note">${W(S + "export.log.cap")}</p>`;
+      if (list) h += cs.sheet(list.map((r) => cs.row("", `${data1(D(r.at))} · ${data2(count(r.bundles, "queue.export-performed.records.one", "queue.export-performed.records.other"))} · ${data2(count(r.files, "queue.export-performed.files.one", "queue.export-performed.files.other"))} · ${data2(count(r.tables, S + "export.count.tables.one", S + "export.count.tables.other"))}`, "", r.note ? `<span class="rec">${E(r.note)}</span>` : "")).join("")) + `<p class="mk-note">${W(S + "export.log.cap")}</p>`;
       section(S + "export.head", h);
     }
 
@@ -253,6 +257,7 @@ export const group = {
   acts: [
     // R52: the name saved is acknowledged, or that it was already the name, so nothing changed
     { op: "groupnameset", rereads: ["identity"],
+      ready(view, el, cs) { if (!String(cs.value("gr-name") || "").trim()) return { refuse: "screen.group.name.empty" }; },
       send(view, el, cs) {
         const name = String(cs.value("gr-name") || "").trim();
         if (!name) return { refuse: "screen.group.name.empty" };
@@ -290,6 +295,7 @@ export const group = {
         return { raw: f, rawType: f.type };
       } },
     { op: "groupdomainset", rereads: ["identity"],
+      ready(view, el, cs) { if (!String(cs.value("gr-domain") || "").trim()) return { refuse: "screen.group.domain.empty" }; },
       send(view, el, cs) { const domain = String(cs.value("gr-domain") || "").trim(); return domain ? { body: { domain } } : { refuse: "screen.group.domain.empty" }; },
       refusals: { GROUP_DOMAIN_MALFORMED: "screen.domainfile.refused.malformed", NOT_AN_ADMIN: "screen.domainfile.refused.notadmin" } },
     // R66: a copy of the record, with the founder's words for the list; the manifest it answers is the copy itself and is kept nowhere on the page,
@@ -317,6 +323,7 @@ export const group = {
     { op: "courtnoticeset", rereads: ["court"],
       send(view, el, cs) { return { body: { choice: cs.value("gr-court-tell") === true ? "tell" : "dont" } }; } },
     { op: "hostingaccessset", rereads: ["hosting"],
+      ready(view, el, cs) { if (!String(cs.value("gr-holders") || "").trim()) return { refuse: "screen.group.hosting.empty" }; },
       send(view, el, cs) {
         const holders = String(cs.value("gr-holders") || "").trim(), note = String(cs.value("gr-hnote") || "").trim();
         return holders ? { body: note ? { holders, note } : { holders } } : { refuse: "screen.group.hosting.empty" };

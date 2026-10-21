@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { acts, all, ancestor, day, has, lacks, open, panelOf, said, textOf, SCREENS } from "./kit.mjs";
-import { ADMIN, MEMBER, env, securityTable, CATALOGUE_ENTRY, OWN_ENTRY } from "./fixtures.mjs";
+import { ADMIN, MEMBER, env, refuse, securityTable, CATALOGUE_ENTRY, OWN_ENTRY } from "./fixtures.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
 
@@ -224,7 +224,7 @@ test("R15, R77 C83: files are said to be checked only while signatures are held;
   assert.equal(all(none.tree, (e) => e.attrs["data-state"] === "files").length, 0, "no checked sentence");
   assert.equal(textOf(all(none.tree, (e) => e.attrs["data-state"] === "nosignatures")[0]), said("file-safety.index.no_signatures_since", { date: day("2026-10-15T03:00:00Z") }), "since when");
   assert.equal(textOf(all(none.tree, (e) => e.attrs["data-state"] === "nosignatures-reason")[0]), said("file-safety.index.signatures_refused", { status: "403" }), "why, in words");
-  assert.equal(textOf(all(none.tree, (e) => e.attrs["data-state"] === "nosignatures-next")[0]), said("screen.security.nosignatures.next"), "what an administrator can do");
+  assert.equal(all(none.tree, (e) => e.attrs["data-state"] === "nosignatures-next").length, 0, "what an administrator can do is in the reason's own sentence, said once (C83, round 3)");
   // a scanner that did not answer, or none bound, claims nothing either
   for (const sc of [{ scanner: { bound: true, version: null, unreachable: true }, signatures_age_ms: null }, { scanner: { bound: false, version: null }, signatures_age_ms: null }]) {
     const o = await open("security", { me: ADMIN, table: scan(sc) });
@@ -237,4 +237,67 @@ test("R15, R77 C83: files are said to be checked only while signatures are held;
   const held = await open("security", { me: ADMIN, table: scan({ signatures_age_ms: 3600000 }) });
   has(held, "screen.security.files.on");
   assert.equal(all(held.tree, (e) => /^nosignatures/.test(e.attrs["data-state"] || "")).length, 0);
+});
+
+/* ---- T51 fix round 3: C83 (R15, R77), C84 (R15) ---- */
+
+const scanOf = (extra, over = {}) => securityTable({ scanstatus: env({ ok: true, scanner: { bound: true, version: "1" }, renderer: { bound: true, version: "1" }, queued: 48, overdue: 0, held: 0, tools: [], ...extra }), ...over });
+const stateLines = (o, re) => all(o.tree, (e) => re.test(e.attrs["data-state"] || ""));
+
+test("R15, R77 C83: the administrator's step is said once in each state of a scanner with no signatures; where no reason line is drawn it is drawn on its own; the other states draw none (control)", async () => {
+  const reasons = [
+    { since: "2026-10-15T03:00:00Z", reason: "REFUSED:main.cvd:403", key: "file-safety.index.no_signatures_since", words: "w1", reason_key: "file-safety.index.signatures_refused", reason_words: "r1" },
+    { since: null, reason: "SIGNATURES_ABSENT", key: "file-safety.index.no_signatures", words: "w2", reason_key: "file-safety.index.signatures_not_fetched", reason_words: "r2" },
+    { since: "2026-10-15T03:00:00Z", reason: "FAILED", key: "file-safety.index.no_signatures_since", words: "w3", reason_key: "file-safety.index.signatures_failed", reason_words: "r3" },
+    // a refusal with no status number, worded by the answer's own words (the plane's table, not the list)
+    { since: "2026-10-15T03:00:00Z", reason: "MIRROR_REFUSED:exit 1: refused", key: "file-safety.index.no_signatures_since", words: "w4", reason_key: "file-safety.index.no_such_reason_row", reason_words: "The plane's own words for it." },
+  ];
+  for (const ns of reasons) {
+    const o = await open("security", { me: ADMIN, table: scanOf({ signatures_age_ms: null, no_signatures: ns }) });
+    assert.equal(stateLines(o, /^nosignatures-reason$/).length, 1, "the reason line holds the step");
+    assert.equal(stateLines(o, /^nosignatures-next$/).length, 0, "no second line says it again");
+  }
+  // control: an answer with no reason line draws the step on its own, once
+  const bare = await open("security", { me: ADMIN, table: scanOf({ signatures_age_ms: null, no_signatures: { since: "2026-10-15T03:00:00Z", reason: "FAILED", key: "file-safety.index.no_signatures_since", words: "w5" } }) });
+  assert.equal(stateLines(bare, /^nosignatures-reason$/).length, 0);
+  assert.equal(textOf(stateLines(bare, /^nosignatures-next$/)[0]), said("screen.security.nosignatures.next"));
+  assert.equal(stateLines(bare, /^nosignatures-next$/).length, 1);
+  // control: signatures held, an unreachable scanner and none bound say none of it
+  for (const extra of [{ signatures_age_ms: 3600000 }, { scanner: { bound: true, version: null, unreachable: true }, signatures_age_ms: null }, { scanner: { bound: false, version: null }, signatures_age_ms: null }]) {
+    const o = await open("security", { me: ADMIN, table: scanOf(extra) });
+    assert.equal(stateLines(o, /^nosignatures/).length, 0);
+  }
+});
+
+test("R15 C84: Security draws a button that checks for new signatures now, sends scanmirror once, draws that the run goes on, and reads the scanner's state again", async () => {
+  const a = await open("security", { me: ADMIN, table: scanOf({ signatures_age_ms: null, no_signatures: { since: null, reason: "SIGNATURES_ABSENT", key: "file-safety.index.no_signatures", words: "w", reason_key: "file-safety.index.signatures_not_fetched", reason_words: "r" } }, { scanmirror: () => env({ ok: true, state: "started" }) }) });
+  assert.equal(acts(a.tree).filter((b) => b.attrs["data-act"] === "scanmirror").length, 1, "the button is drawn");
+  assert.equal(stateLines(a, /^mirror$/).length, 0, "nothing answered yet");
+  const reads = () => a.p.requests.filter((r) => r.op === "scanstatus").length;
+  const before = reads();
+  const r = await a.press("scanmirror");
+  assert.deepEqual(r.sent.filter((x) => x.op === "scanmirror").map((x) => x.body), [{}], "asked once, with no field");
+  assert.equal(stateLines(a, /^mirror$/).length, 1, "what it answered is drawn");
+  has(a, "shell.working");
+  assert.ok(reads() > before, "the scanner's state is read again");
+  // pressing again clears the earlier answer until the next one comes
+  const again = await open("security", { me: ADMIN, table: scanOf({ signatures_age_ms: null }, { scanmirror: () => refuse("SIGNATURES_RUN_RECENT", { translation: "A check was made a few minutes ago." }) }) });
+  const q = await again.press("scanmirror");
+  assert.equal(q.sent.filter((x) => x.op === "scanmirror").length, 1);
+  assert.equal(stateLines(again, /^mirror$/).length, 0, "a refused run is not drawn as started");
+});
+
+test("R15 C84: a run asked for inside the minimum gap, or with no scanner bound, is refused beside the button in file-safety's own words; no button where no scanner is built in, and none to a member who does not administer (control)", async () => {
+  const recent = await open("security", { me: ADMIN, table: scanOf({ signatures_age_ms: null }, { scanmirror: () => refuse("SIGNATURES_RUN_RECENT", { translation: "the owner's own words for a run started lately" }) }) });
+  await recent.press("scanmirror");
+  assert.ok(recent.refused, "refused beside the button");
+  assert.equal(recent.refused.text, "the owner's own words for a run started lately", "the refusal's own words while the list lacks the code");
+  const absent = await open("security", { me: ADMIN, table: scanOf({ signatures_age_ms: null }, { scanmirror: () => refuse("SCANNER_ABSENT") }) });
+  await absent.press("scanmirror");
+  assert.equal(absent.refused.text, said("refusal.SCANNER_ABSENT"), "the owner's row's words");
+  // control: no scanner built in: no button; a member: no button
+  const none = await open("security", { me: ADMIN, table: securityTable({ bootstrap: { ok: true, part_signin: true, part_scanner: false, part_safe_view: false } }) });
+  assert.ok(!ops(none).includes("scanmirror"));
+  const m = await open("security", { me: MEMBER, table: securityTable() });
+  assert.deepEqual(ops(m), []);
 });

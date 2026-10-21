@@ -12,7 +12,7 @@ const links = (o) => all(o.tree, (e) => e.tag === "a" && e.attrs["data-screen"])
 
 test("R17 settings: \"Yours\" then, to a session that administers, \"The group's\", each a reference to its screen; a member is drawn only their own", async () => {
   const a = await open("settings", { me: ADMIN, table: {} });
-  assert.deepEqual(links(a), ["account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members", "teamai", "places", "security", "updates", "translations", "wizards", "bias", "watching", "leads"]);
+  assert.deepEqual(links(a), ["account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members", "teamai", "places", "security", "updates", "translations", "wizards", "bias", "grouprules", "watching", "leads"]);
   for (const id of links(a)) {
     const l = all(a.tree, (e) => e.tag === "a" && e.attrs["data-screen"] === id)[0];
     assert.equal(l.attrs.href, "/app/" + id);
@@ -23,7 +23,7 @@ test("R17 settings: \"Yours\" then, to a session that administers, \"The group's
   assert.ok(t.indexOf(said("screen.settings.groups")) < t.indexOf(said("screen.settings.everyone")), "then the section for every member");
   // control: a member who does not administer is drawn no group section
   const m = await open("settings", { me: MEMBER, table: {} });
-  assert.deepEqual(links(m), ["account", "connect", "ties", "notes", "recovery", "bias", "watching", "leads"]);
+  assert.deepEqual(links(m), ["account", "connect", "ties", "notes", "recovery", "bias", "grouprules", "watching", "leads"]);
   lacks(m, "screen.settings.groups"); has(m, "screen.settings.everyone");
   assert.ok(!a.html.includes('href="/"'), "no link opens the setup page");
 });
@@ -114,4 +114,20 @@ test("R17 C91: the doors to the watched addresses and the leads are drawn from S
   // control: a reader holds no capability to write a lead: watching, which anyone reads, is drawn, the leads not
   const r = await open("settings", { me: READER, table: {} });
   assert.deepEqual(links(r).filter((id) => id === "watching" || id === "leads"), ["watching"]);
+});
+
+/* ---- T51 fix round 3: C87 (d) (R17) ---- */
+
+test("R17 C87 (d): Settings holds a door to the team's own rules, under 'For every member', to an administrator and to a member; every screen the list names is named once (control)", async () => {
+  for (const me of [ADMIN, MEMBER]) {
+    const o = await open("settings", { me, table: {} });
+    const door = all(o.tree, (e) => e.tag === "a" && e.attrs["data-screen"] === "grouprules");
+    assert.equal(door.length, 1, "one door");
+    assert.deepEqual([door[0].attrs.href, textOf(door[0])], ["/app/grouprules", said("screen.grouprules.name")]);
+    assert.ok(o.text.indexOf(said("screen.settings.everyone")) < o.text.indexOf(said("screen.grouprules.name")), "under For every member");
+    has(o, "screen.grouprules.purpose");
+    // a screen already linked from the list gets no second door
+    const ids = links(o);
+    assert.equal(new Set(ids).size, ids.length, "no screen is linked twice");
+  }
 });
