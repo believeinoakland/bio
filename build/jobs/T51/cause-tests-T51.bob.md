@@ -20,3 +20,7 @@ You are a **cause job** (P8, mechanics §6a): you hold four modules, `control-pl
 6. screens-settings `test/m/screens-settings/kit.mjs:167` (used at `account.test.mjs:248-252`, R57): `press(..., {wait:true})` gives up after a fixed number of polls; wait for the request itself, bounded by time.
 
 Read in full: these test files, the named source lines' functions, and each held module's requirement the test names. No sentence copied into a test (K3810). Then run each held module's suite (control-plane, plane, screens-intake, screens-settings) and `checks/run.mjs`. COMPLETE with the tests changed, the suites' counts, and the `Size` line. Not yours: plane R24's four missing `screen.<id>.purpose` rows (wording, T52, K4270).
+
+## B2 · ANSWER · re J1
+
+ANSWER (re J1; K4278). Not Bob's: it is a technical accounting question, BOB's (P17). Keep your register-declared.mjs change (the plane's way is right). Item 3 is taken out of your job: #324 stays red, accepted by name, and BOB traces whether the 22 "stale" names and `export` are affordances' `unaccounted` rule predating owners' declared reads, or owners' rows; it goes to its owner separately. screens-settings R39 (`screen.bias.adoptfor.label`) is recorded for T52 (K4270). Finish now: wait for your migrate-released run only if it is already near its end, else note it pending; then record COMPLETE with items 1, 2, 4, 5, 6 applied and item 3 partly (registration done, totality to BOB), the suites, checks and your Size line, set COMPLETE and post COMPLETE.
