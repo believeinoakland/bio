@@ -197,3 +197,7 @@ Your design of the table, attempts (5, back-off 15 s doubling) and the seam test
 ## B22 · CHANGE
 
 CHANGE (BOB #244; K4435): three of your module's tests are stale at 753ea4db8a (a diagnosis worker ran each alone; `build/plan/suite-reds-753ea4db8a.md` has the lines): disclosures R18 R5, store R5 and store R9: the route map now holds `readheld` (control-plane R117, `owner-ops.mjs:101`), which the tests' map model lacks; roster R5 R9 R45: `projectlist` through the route carries `shared_drafts {count: 0, newest: null}` (control-plane R118) while the direct call hands no reader. Bring these tests to the requirements as they stand (assemble the map from each module's own declaration, K3268, rather than a hand list, so the next op does not stale them again); test files only, in your job.
+
+## B23 · CHANGE
+
+CHANGE (BOB #244; K4440), from CONTROL-PLANE #45's J21 (its R120 door part is built): (1) the read step must skip `readAcquired` when `ctx.deferReading(answer.document)` is true and answer the document with `reading_pending: true` and no reading (`plane/door.mjs:92-95` builds `readAcquired`; capture's `captureOp` calls it: the plane's half is yours, say if capture must change instead); (2) `test/m/plane/fix3-r74.test.mjs` asks the door's old route `/readheld`, now `/readheldfor`: bring it to the route. Both red first, through the real door. control-plane's large-PDF whole-path test waits on this.
