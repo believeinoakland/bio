@@ -336,3 +336,13 @@ Size (session_01JarNVWj3jh7A31SRkU57RG): test runs 15, module lines 4,103
 ## J17 · COMPLETE · re B21
 
 Re B21: merged; t51-routes reads money's map for moneysets; architecture 0. Only red of mine: officeconfirm (entities R64 unmerged).
+
+## J18 · QUESTION
+
+control-plane R119 (B22): I cannot build it as written, because its premise does not hold on the tranche. Measured through the door (merged tranche, harness): a member's `entitycreate` is admitted and reaches entities with no `screen`, with `screen: request` and with `screen: places` alike. `OPS.entitycreate.classes` is `["admin","member","probe"]` (op-declarations index.mjs:1146; entities' own declaration says the same), so no door gate stands in her way today, and entities itself marks any non-administrator's office `named_by_member` without asking the screen (entities index.mjs:604: "Which screen may send the act is the door's"). So the control ("without it, or from `places`, refused") cannot be met by any change in the door while the row admits members. Also no op in the tables has classes that exclude `member` yet pass a member session's gate (`SESSION_OPS.member`), so "an op whose classes admit only an administrator" names nothing a member could reach.
+
+Options, my recommendation first:
+1. (Recommended) op-declarations/entities narrow `entitycreate`'s classes to `["admin","probe"]` with a note (a member's act is the screen-gated exception, op-grades R52). I then build the door half: a member's session refused `CLASS_FORBIDDEN` for an op is re-admitted when `memberMayDo(op, screen)` is true for the `screen` the request names (read from the address, else the JSON body), by re-running admission with `member` added to that one request's classes, nothing else changed; any other op, screen or caller is refused as before. Tested through the door with `entitycreate`: `screen: request` reaches entities, no `screen` and `screen: places` refused.
+2. Drop R119 and leave entitycreate open to members: the door does nothing, and the mark `named_by_member` is all there is.
+3. Make entities refuse a non-administrator's office unless the door stamps `screen`: the door then stamps the screen it was sent, from the same `memberMayDo`. (More of entities' work.)
+I build nothing until you answer.
