@@ -66,7 +66,8 @@ function renderHeld(cs, view) {
   const projectOf = (r) => {
     const p = r.project ? projectRows.find((x) => x && x.id === r.project) : null;
     if (!p || !p.name) return r.project ? "" : cs.w("screen.held.noproject");
-    return cs.w("screen.held.project", { project: filtered ? p.name : { html: `<a href="/app/held/${encodeURIComponent(r.project)}" data-nav>${cs.esc(p.name)}</a>` } });
+    /* C81: the link is a flex item of its own box, so the shell's phone rule gives it a 44 px target (an inline link has no height of its own) */
+    return cs.w("screen.held.project", { project: filtered ? p.name : { html: `<span style="display:inline-flex;align-items:center;max-width:100%"><a class="cs-ref" href="/app/held/${encodeURIComponent(r.project)}" data-nav>${cs.esc(p.name)}</a></span>` } });
   };
   const source = (r) => {
     const s = r.source;
@@ -99,7 +100,8 @@ function renderHeld(cs, view) {
     return `<span class="meta" data-also-here="1">${home && cs.w("screen.capture.address.filedhere") !== "screen.capture.address.filedhere" ? cs.w("screen.capture.address.filedhere", { project: home }) : ""}</span>`;
   };
   const thumb = (r) => r.capture && typeof r.capture.sha256 === "string" && r.capture.sha256
-    ? `<span class="mk-thumb">${cs.ref("capture", r.capture.sha256, cs.w("screen.held.thumb").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"), [r.title || ""])}</span>` : "";
+    /* C23, C81: "Open the file" keeps its words on one line and is a 44 px target at every width (the box is as wide as its words need) */
+    ? `<span class="mk-thumb" style="display:flex;align-items:center;justify-content:center;width:auto;min-width:64px;height:auto;min-height:48px;padding:0 8px;box-sizing:border-box">${cs.ref("capture", r.capture.sha256, cs.w("screen.held.thumb").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"), [r.title || ""])}</span>` : "";
   const list = cs.state(view.data.held, (v) => cs.rows({
     id: "held",
     cols: ["screen.held.col"],
@@ -146,7 +148,7 @@ function renderHeld(cs, view) {
   const A = view.data.aside, W = Array.isArray(U.waiting) && U.waiting.length;
   const aside = W || (A && (A.state === "failed" || (A.state === "ok" && Array.isArray(A.value.held) && A.value.held.length))) ? asideSec : "";
   return `<div class="mk-h">${cs.title()}<p class="mk-sub">${cs.w("screen.held.sub")}</p></div>`
-    + (filtered ? `<p class="mk-small"><a href="/app/held" data-nav>${cs.w("screen.held.name")}</a></p>` : "")
+    + (filtered ? `<p class="mk-small"><span style="display:inline-flex;align-items:center;max-width:100%"><a class="cs-ref" href="/app/held" data-nav>${cs.w("screen.held.name")}</a></span></p>` : "")
     + `<div class="mk-acts">${cs.act("heldcaptures")}</div>`
     + list
     + (U.released ? said("screen.held.released", { count: U.released }) : "")

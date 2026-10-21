@@ -59,7 +59,7 @@ function renderInbox(cs, view) {
   /* R10: each knock named is a reference of the kind `knock`, its card what was handed in and when (interface-shell R27) */
   const card = (k) => [size(k.bytes), k.received ? cs.date(k.received) : "", k.note || ""];
   const list = cs.state(D.list, (v) => `<div class="cs-sheet" role="list">${v.inbox.map((k) => `<div class="cs-row" role="listitem"${k.knock_id === id ? ' aria-current="true"' : ""}>`
-      + `<span>${cs.ref("knock", k.knock_id, plain(handed(k)), card(k))}${facts(k)}</span></div>`).join("")}</div>`,
+      + `<span><span style="display:inline-flex;align-items:center;max-width:100%">${cs.ref("knock", k.knock_id, plain(handed(k)), card(k))}</span>${facts(k)}</span></div>`).join("")}</div>`,
     { empty: "screen.inbox.empty" });
   const one = !id ? "" : cs.state(D.knock, (v) => {
     const k = v.item || {};
@@ -93,7 +93,7 @@ function renderInbox(cs, view) {
     const alike = L.knocker && L.knocker.pseudonym === k.pseudonym && Array.isArray(L.knocker.knocks) ? L.knocker.knocks.filter((x) => x && x.knock_id !== k.knock_id) : null;
     const knocker = !k.pseudonym || (!same(k) && !(alike && alike.length)) ? ""
       : cs.sec("screen.inbox.knocker.heading", (alike && alike.length
-          ? cs.sheet(alike.map((x) => `<div class="cs-row" role="listitem"><span>${cs.ref("knock", x.knock_id, plain(handed(x)), card(x))}${statedLine(x)}</span></div>`).join(""))
+          ? cs.sheet(alike.map((x) => `<div class="cs-row" role="listitem"><span><span style="display:inline-flex;align-items:center;max-width:100%">${cs.ref("knock", x.knock_id, plain(handed(x)), card(x))}</span>${statedLine(x)}</span></div>`).join(""))
             + `<p class="mk-small muted">${cs.w("screen.inbox.knocker.same1")} ${cs.w("screen.inbox.knocker.same2")}</p>` : "")
           + `<div class="mk-acts">${cs.act("knocksof", { data: { pseudonym: k.pseudonym } })}</div>`,
         { help: ["screen.inbox.knocker.help1", "screen.inbox.knocker.help2"] });
