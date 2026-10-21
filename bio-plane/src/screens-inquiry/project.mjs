@@ -113,6 +113,9 @@ function render(cs, view) {
     ? d.directory.value.projects.find((p) => p && p.id === id) : null;
   /* R39: the title read from the record (or the directory's, or the refusal's name), never its id */
   const title = (doc && doc.title) || (listed && (listed.name || listed.title)) || (seen && seen.name) || "";
+  /* C81 (R5): the phone's grid (`:root:root .cs-row`) puts the second and later children in the second column and assumes a first element, so a
+     row with nothing to lead it is given an empty one, never "" (which leaves no first element and squeezes its text beside its acts) */
+  const lead = "<span aria-hidden=\"true\"></span>";
   const out = [];
   out.push(cs.title(title || T("state.undetermined", { reason: "" }), { thing: "project" }));
 
@@ -321,7 +324,7 @@ function render(cs, view) {
         };
         return `<span class="cs-strength">${ax("capture")}${ax("connection")}</span>`;
       });
-      return cs.row("", cs.ref("question", q, t, [t]), grades);
+      return cs.row(lead, cs.ref("question", q, t, [t]), grades);
     }).join("")) + (pending ? cs.state({ state: "loading" }, () => "") : "") + (failed ? cs.state(failed, () => "") : ""));
     out.push(cs.sec("screen.project.questions.head", qInner
       + cs.field("project-question", "screen.project.question.label", { area: true, rec: true, help: "screen.project.question.help" })
@@ -335,9 +338,25 @@ function render(cs, view) {
   if (drawAct) {
     const drawn = new Set(items.map((x) => String(x.inquiry)));
     const drawInner = cs.state("others", view, (v) => {
-      const opts = (Array.isArray(v.bundles) ? v.bundles : []).filter((q) => q && q.bundle_id && !drawn.has(q.bundle_id) && q.title)
-        .map((q) => ({ value: String(q.bundle_id), text: String(q.title) }));
-      if (!opts.length) return "";
+      /* C35 (R16, R1): one option per question (a row the list repeats is one), each named with the project that draws on it, as the cite
+         picker names them (`screen.document.cite.option`): the projects she may see are `projectlist`'s (project-roster R26) and each one's
+         questions `projectquestions`' (basis-versions R50), read only for a project that holds some and only once there is a question to
+         choose; a question no project of hers draws on is named by its title alone. `list` rows carry no project. */
+      const seen = new Set();
+      const rows = (Array.isArray(v.bundles) ? v.bundles : []).filter((q) => q && q.bundle_id && !drawn.has(q.bundle_id) && q.title)
+        .filter((q) => (seen.has(String(q.bundle_id)) ? false : (seen.add(String(q.bundle_id)), true)));
+      if (!rows.length) return "";
+      const projectOf = new Map();
+      const pl = later("projects", "projectlist", { limit: "200" });
+      for (const pr of pl.state === "ok" && pl.value && Array.isArray(pl.value.projects) ? pl.value.projects : []) {
+        if (!pr || !pr.id || String(pr.id) === id || !pr.name || pr.question_count === 0) continue;
+        const pq = later("projectq:" + pr.id, "projectquestions", { project: String(pr.id), limit: "100" });
+        for (const x of pq.state === "ok" && pq.value && Array.isArray(pq.value.items) ? pq.value.items : [])
+          if (x && x.inquiry && !projectOf.has(String(x.inquiry))) projectOf.set(String(x.inquiry), String(pr.name));
+      }
+      const opts = rows.map((q) => (projectOf.has(String(q.bundle_id))
+        ? { value: String(q.bundle_id), key: "screen.document.cite.option", fills: { question: String(q.title), project: projectOf.get(String(q.bundle_id)) } }
+        : { value: String(q.bundle_id), text: String(q.title) }));
       return cs.choice("project-draw-question", "screen.project.draw.choose", opts, { value: opts[0].value })
         + cs.field("project-draw-note", "screen.project.draw.note", { rec: true, help: "screen.project.draw.help" }) + drawAct
         + (ui.drawSaid ? `<p class="mk-note" role="status" data-said="drawquestion">${W(ui.drawSaid)}</p>` : "");
@@ -386,7 +405,7 @@ function render(cs, view) {
   }
   for (const cid of ours) { work.push(["published", cid, kindName("published")]); work.push(["docket", cid, kindName("docket")]); }
   const workRows = work.map(([kind, sid, label]) =>
-    cs.row("", (() => {
+    cs.row(lead, (() => {
       if (sid === "@dash-action") return `<a class="cs-btn" data-tone="quiet" href="/app/dash-action" data-nav data-work="dash-action">${cs.esc(label)}</a>`;
       const h = String(cs.ref(kind, sid, label, [T("shell.card." + kind)]));
       return /^<a /.test(h) ? h : `<span class="rec">${cs.esc(label)}</span>`;
@@ -521,7 +540,7 @@ function render(cs, view) {
           ? cs.act("projectownerremove", { label: "project.owners.agree.remove", fills: { who: name }, data: { handle: String(x.handle), mode: "open" } }) : "") : cs.act("projectowneradd", { label: "act.projectowneradd.label.project", data: { handle: String(x.handle) } }))
           + cs.field("project-remove-why-" + x.handle, "shell.reason", { help: "shell.reason.help" })
           + cs.act("projectremove", { label: "act.projectremove.label.project", data: { handle: String(x.handle) } }) : "";
-      return cs.row("", `<span class="rec">${cs.esc(name)}</span> · ${role}` + (x.state === "invited" ? " · " + W("screen.project.members.invited", { handle: "" }) : ""), acts, date);
+      return cs.row(lead, `<span class="rec">${cs.esc(name)}</span> · ${role}` + (x.state === "invited" ? " · " + W("screen.project.members.invited", { handle: "" }) : ""), acts ? `<div class="mk-acts">${acts}</div>` : "", date);
     }).join("");
     const waiting = pend.map((c) => {
       const fills = { who: whoIs(c.target), by: whoIs(c.proposed_by), date: { html: c.proposed_at ? cs.date(String(c.proposed_at), { year: true }) : "" },
@@ -579,7 +598,7 @@ function render(cs, view) {
            proposed; an owner who has not voted, that the change waits for her */
         const meta = voted && h === standing && change && change.proposed_at ? W("screen.project.by.standing.down.17.october", { date: dateOf(change.proposed_at) })
           : !voted && !silent ? W("screen.project.the.change.waits.for.ana", { member: name }) : "";
-        return `<div data-vote-for="${cs.esc(h)}" data-voted="${voted ? "yes" : "no"}">${cs.row(voted ? "✓" : silent ? "" : cs.icon("clock"), text,
+        return `<div data-vote-for="${cs.esc(h)}" data-voted="${voted ? "yes" : "no"}">${cs.row(voted ? "<span>✓</span>" : silent ? lead : cs.icon("clock"), text,
           h === me && offered ? castAct : "", meta)}</div>`;
       }).join("");
       /* "This takes n of m owners' votes", at two owners with the departing owner's own among them; none for a sole owner */
@@ -695,9 +714,9 @@ function render(cs, view) {
       const missed = Array.isArray(last.missed_monthlies) && last.missed_monthlies.length > 0;
       const rows = cs.row(cs.icon("clock"), `<span class="rec" data-notice="wording">${cs.esc(rev.wording || "")}</span>`, "",
           `${published ? W("state.item.published.name") + " " + cs.date(String(published), { year: true }) : ""}${rev.since ? " · " + W("screen.project.notice.working.on.it.since.3", { date: dateOf(rev.since) }) : ""}${rev.collaborate === true ? " · " + W("network-notices.others_working_welcome") : ""} · ${W(STATUS.open)}`)
-        + (lv ? cs.row("", `${levelKey ? `<b data-notice="level">${W(levelKey)}</b> · ` : ""}${W("screen.project.notice.as.the.teams.civicsmith.worked", { date: dateOf(lv.as_of) })}`, "",
+        + (lv ? cs.row(lead, `${levelKey ? `<b data-notice="level">${W(levelKey)}</b> · ` : ""}${W("screen.project.notice.as.the.teams.civicsmith.worked", { date: dateOf(lv.as_of) })}`, "",
             `${last.next_monthly ? W("screen.project.notice.the.next.monthly.check.is", { date: dateOf(last.next_monthly) }) : ""}${last.lapse_date ? " " + W("screen.project.notice.a.notice.that.stays.dormant") : ""}`) : "")
-        + (cases > 0 ? cs.row("", `<b>${W(cases === 1 ? "screen.project.notice.1.case.published.from.this" : "screen.project.notice.cases.published.from.this", { n: String(cases) })}</b>`, "") : "");
+        + (cases > 0 ? cs.row(lead, `<b>${W(cases === 1 ? "screen.project.notice.1.case.published.from.this" : "screen.project.notice.cases.published.from.this", { n: String(cases) })}</b>`, "") : "");
       /* a monthly check missed: the last level attested, with its date (a level the list does not hold names none) */
       const missedLine = missed && lv && levelKey && lv.as_of ? `<p class="mk-small" data-notice="missed">${W("screen.project.notice.missed", { level: T(levelKey), date: dateOf(lv.as_of) })}</p>` : "";
       parts.push(cs.sec(tell, `<p><b>${W("screen.project.notice.thenotice")}</b></p><div data-notice="published" data-status="open"${missed ? " data-missed=\"1\"" : ""}>${cs.sheet(rows)}</div>${missedLine}`
@@ -714,7 +733,7 @@ function render(cs, view) {
       /* the entry: a new notice is offered only where network-notices R1 allows (a closed project refuses it, in words) */
       const stopped = last && last.status !== "open";
       parts.push(cs.sec(tell, `<p>${W("screen.project.notice.an.owner.can.publish.a")}</p><p>${W("screen.project.notice.it.is.public.and.it")}</p>`
-        + (stopped ? `<div data-notice="last" data-status="${cs.esc(String(last.status || ""))}">${cs.sheet(cs.row("", `<span class="rec" data-notice="wording">${cs.esc(rev.wording || "")}</span>`, "",
+        + (stopped ? `<div data-notice="last" data-status="${cs.esc(String(last.status || ""))}">${cs.sheet(cs.row(lead, `<span class="rec" data-notice="wording">${cs.esc(rev.wording || "")}</span>`, "",
             [revs.length && revs[revs.length - 1].published_at ? cs.date(String(revs[revs.length - 1].published_at), { year: true }) : "",
               STATUS[String(last.status)] ? W(STATUS[String(last.status)]) : "",
               last.status === "lapsed" && last.lapse_date ? W("screen.project.notice.lapsed.on", { date: dateOf(last.lapse_date) }) : ""].filter(Boolean).join(" · ")))}</div>` : "")
@@ -736,7 +755,7 @@ function render(cs, view) {
 /** R1's, R10's, R11's, R16's and R27–R30's acts. `promote` writes its question itself (an id from `allocid`, then the
  *  package, then the draw), so its `send` sends nothing through the shell and draws its own outcome. */
 const acts = [
-  { op: "promote", label: "act.promote.label.project",
+  { op: "promote", label: "act.promote.label.project", rereads: ["questions", "others"],
     send(view, el, cs) {
       const project = String(view.subject || "");
       const question = String(cs.value("project-question") || "").trim();
@@ -819,7 +838,7 @@ const acts = [
       }
       return out.length ? out.join(" ") : cs.w("refusal.BASIS_REFUSED");
     } } },
-  { op: "findin", label: "act.findin.label.project",
+  { op: "findin", label: "act.findin.label.project", rereads: [],
     send(view, el, cs) { cs.go("find-in", String(view.subject || "")); return null; } },
   { op: "projectbarset", label: "act.projectbarset.label.project", rereads: ["bar"],
     send(view, el, cs) {
@@ -907,16 +926,16 @@ const acts = [
     refusals: { CONSENSUS_REQUIRED: (r, cs) => cs.w("project.owners.pending", { who: String((r && r.handle) || ""), by: "", date: "",
       agreed: ((r && r.have) || []).join(", "), awaiting: ((r && r.awaiting) || []).join(", ") }) } },
   /* R29: remove a member, her reason asked and shown, not refused when empty (membership R36) */
-  { op: "projectremove", label: "act.projectremove.label.project", rereads: ["participants"],
+  { op: "projectremove", label: "act.projectremove.label.project", rereads: ["participants", "votes"],
     send(view, el, cs) {
       const handle = String(el.dataset.handle || "");
       const comment = String(cs.value("project-remove-why-" + handle) || "").trim();
       return { query: { projectId: String(view.subject || ""), handle, ...(comment ? { comment } : {}) } };
     } },
-  { op: "projectleave", label: "act.projectleave.label.project", rereads: ["participants"],
+  { op: "projectleave", label: "act.projectleave.label.project", rereads: "all",
     send(view) { return { query: { projectId: String(view.subject || "") } }; } },
   /* R29: start a project from this one, with its title and who can find it (hidden preselected); the new one opened */
-  { op: "projectfork", label: "act.projectfork.label.project",
+  { op: "projectfork", label: "act.projectfork.label.project", rereads: [],
     send(view, el, cs) {
       const title = String(cs.value("project-fork-title") || "").trim();
       if (!title) return { refuse: "project.start.title.help" };
@@ -939,7 +958,7 @@ const acts = [
   { op: "projectrequestwithdraw", label: "act.projectrequestwithdraw.label.project", rereads: ["directory"],
     send(view) { return { query: { projectId: String(view.subject || "") } }; } },
   /* R30: an administrator becomes its owner, naming herself, with her reason (in the query) */
-  { op: "projectownerrescue", label: "act.projectownerrescue.label.project", reasonField: "reason",
+  { op: "projectownerrescue", label: "act.projectownerrescue.label.project", reasonField: "reason", rereads: "all",
     send(view, el, cs) {
       const reason = String(cs.value("project-rescue-why") || "").trim();
       return { query: { projectId: String(view.subject || ""), handle: String((view.me && view.me.handle) || ""), reason }, raw: "" };
@@ -1103,7 +1122,7 @@ const words = Object.freeze([
   "shell.card.request", "shell.card.matter", "shell.card.action", "shell.card.case-editor", "shell.card.review-copy", "shell.card.ceremony",
   "shell.card.published", "shell.card.docket", "screen.money.name", "screen.proceeding.name", "screen.request.name", "screen.matter.name",
   "screen.action.name", "screen.plan.name", "screen.case-editor.name", "screen.review-copy.name", "screen.ceremony.name",
-  "screen.published.name", "screen.docket.name", "project.settings.fold", "project.bar.both", "project.bar.source_only",
+  "screen.published.name", "screen.docket.name", "project.settings.fold", "screen.document.cite.option", "project.bar.both", "project.bar.source_only",
   "project.bar.connection_only", "project.bar.none", "term.bar.project.means", "term.bar.team.means", "act.promote.here.project",
   "stake.project.title", "stake.project.group", "stake.project.label", "stake.project.help", "stake.project.save", "stake.set",
   "stake.history", "stake.none", "stake.unreadable", "stake.unreadable.summary", "projects.request.asked",
