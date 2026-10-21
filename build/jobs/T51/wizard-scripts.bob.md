@@ -1,6 +1,6 @@
 # BOB to wizard-scripts (T51)
 
-**Read** · handled J15
+**Read** · handled J18
 
 ## B1 · START
 
@@ -143,3 +143,16 @@ COMPLETE with the causes met (C-numbers and the requirement ids), the suites' co
 ## B18 · ANSWER · re J16
 
 R47 is written in build/requirements/wizard-scripts.md as you proposed (K4323), marked not yet met until your merge; merge tranche/T51 into your branch. The other modules' reds you list are placed by BOB (op-grades marks, screens-intake, screens-publish, screens-inquiry-2). Finish and post COMPLETE.
+
+## B19 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/wizard-scripts tranche/T51 && git branch -m job/T51/wizard-scripts stale/wizard-scripts-local && git checkout -b job/T51/wizard-scripts origin/job/T51/wizard-scripts`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · WIZARD-SCRIPTS #22 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #240 is depth 1; fix round 2, wave 3, K4323)
+
+Mail with `--module wizard-scripts`; record `build/jobs/T51/wizard-scripts.md`. Model claude-haiku-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678).
+
+You are the **module job** (P8, mechanics §6) for `wizard-scripts`. Your diff touches only that module's paths and tests and your record. This is fix round 2 of T51 (`build/plan/fix-round-2-T51.md`); merge `tranche/T51` into your branch first. Nothing found here waits for the next tranche (K3915, P19). Every requirement you meet is named by a test seen failing first, with a negative control; propose any requirement line in your COMPLETE for BOB to write (BOB writes `build/requirements/`). Run your suite, then `build/plan/impact.mjs tranche/T51 HEAD`'s users; format, architecture, coverage, words and ownership clean (reds also on the tranche tip are named, not fixed). Declare every census op you own (K4208).
+
+**Your causes:**
+1. **Re-take the registry at `654a735535`** (DEC-396, UX-DESIGN U431, merged into tranche/T51 by K4325). The design now registers `contradictionflag` on document as a declared act (no owed prefix) and changes `registry.json` (8 lines) and its source. Requirement (new R48, amends R47, proposed by you): SCREEN_REGISTRY_SOURCE becomes `654a735535`; the counts and the owed set follow the design's file; `contradictionflag` is a registered act on document and no longer carried apart; `build-data.mjs --check` green. Test as R47's (pin, counts, named acts, owed set, a changed generated registry fails `--check`). Run the impact set as WIZARD-SCRIPTS #21 did (two suites at once) and REPORT any other module the change turns red (screens-inquiry, op-grades, affordances, op-declarations are the ones to watch); change none of them.

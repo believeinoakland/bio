@@ -45,3 +45,4 @@
 - queue · "What you answered" lists only queue's own receipts (R59): an expertise confirm or other derived to-do answered elsewhere is not shown back · S-34, C72 (K4307) · 2026-10-21
 - queue, every list · a member with no handle is named by her id (queue-producers R46's fallback); a word such as "A member" would serve · QUEUE-PRODUCERS #21 J8 · 2026-10-21
 - money (investigate) · a figure a member proposed is labelled "proposed by the machine; not included" (`screen.money.proposed`); a member-proposal row is owed · SCREENS-INVESTIGATE #11 J15 · 2026-10-21
+- Matter pickers and the action kinds · adopt DEC-396's minted `screen.matter.pick.choose`, `.pick.none`, `screen.matter.routes.none` in screens-action (wording; merged modules) · DEC-396, K4325 · 2026-10-21

@@ -2416,9 +2416,13 @@
      ]
     },
     {
-     "op": "owed:contradictionflag DEC-394",
+     "op": "contradictionflag",
      "label": "Say these two contradict",
-     "status": "owed"
+     "status": "declared",
+     "onTranche": "origin/tranche/T51",
+     "modules": [
+      "contradiction"
+     ]
     },
     {
      "op": "themeplace",

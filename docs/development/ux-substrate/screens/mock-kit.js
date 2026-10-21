@@ -10,7 +10,7 @@ const WSHOW = { Reasoned: 'Asks for a reason', Terminal: 'Ends something', Signe
 const pips = w => `<span class="cs-pips">${[1,2,3,4,5].map(i => `<i${i <= w ? ' class="on"' : ''}></i>`).join('')}</span>`;
 /* weights follow DEC-87 and DEC-88; an act whose weight is not yet set is treated as reasoned */
 const WEIGHT = {
-  owed_contradictionflag:2, owed_citeimported:1, owed_withdrawimported:2, owed_namedrequestset:1, owed_sweepset:1, owed_sweepratify:1,
+  contradictionflag:2, owed_citeimported:1, owed_withdrawimported:2, owed_namedrequestset:1, owed_sweepset:1, owed_sweepratify:1,
   owed_casedetailsset:1, owed_casedetails:1, owed_casedetailspublic:1, templatesave:1, reattest:1, captureaccount:2,
   owed_importregrade:1, owed_rerunstart:1, owed_rerunpair:1, owed_rerunread:1,
   templatesave:1, reattest:1, captureaccount:2,
