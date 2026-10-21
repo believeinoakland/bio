@@ -330,3 +330,26 @@ I did not choose: each is a visible policy change, and I will not hide 22 gaps b
 Also still open: `capturecredentiallist` is in the member set with no spec under registration (a defect of its own, not in my list of grounds). Pending CHANGEs: officeconfirm (entities) and captureseenin (capture R101) when you tell me they merge.
 
 Current state on job/T51/op-declarations: no uncommitted changes; tranche merged at 83c57d7; checks format, architecture, words clean; coverage: 6502 of 6514 ids named (the 8 failing modules are other modules). Waiting on BOB.
+
+## J24 · COMPLETE
+
+COMPLETE for the causes open now (fix round 3, op-declarations). Branch job/T51/op-declarations at 856fc95a97, tranche/T51 merged at 83c57d7.
+
+Met:
+- Cause 1, `moneysets` (MONEY #6; R17, R19, R20): money's family read; spec, NEEDS null, both session sets; test fix3.test.mjs names R17, R19, R20 (negative control: moneyrecord needs contribute); t49's NEEDS counts moved by one.
+- Cause 3, the owners' declarations (K4208, K4371, K4372): `scanmirror` (file-safety R49) and `remindersfor` (action-clocks R26) are specced by their owners' rows (R80). No family entry for either (B27). t36 and t45 read the registered owners (R80, K3268): t36's file-safety expectation includes scanmirror (both sets, no family, admin and member); t45 needs nothing more.
+Not made:
+- Cause 2, the inbox rename: dropped as B26 answered (keep the `inbox` hand row and its session-set names; R21 unchanged).
+
+Reports and deferred (not changed here):
+- The 22 member ops with no affordances text and no ACT_HELP_ABSENT ground (t36:306, R34 partition under registration): affordances' gap, going to AFFORDANCES #41 (B27); not grounded here. This is the one red in the suite: t36.test.mjs:306.
+- `capturecredentiallist` is in the member set with no spec under registration; its owner is capture-sources (ops.mjs). REPORT to BOB: the spec belongs to capture-sources.
+- affordances' t33 R12 R24 (moneysets unpublished): reported in J20; BOB sent it to an AFFORDANCES job.
+
+Waiting: `officeconfirm` (entities) and `captureseenin` (capture R101, B23) — specced when their owners merge into tranche/T51 and BOB says so.
+
+Tests and checks at 856fc95a97:
+- node --test bio-plane/test/m/op-declarations/: 247 tests, 246 pass, 1 fail (t36:306, affordances' gap above).
+- checks/run.mjs: format 0, architecture 0, words 0 (handlist 0), coverage for this module 82 of 82 ids; ownership: 4 files between tranche/T51 and HEAD, 0 failures.
+
+Size (session_01G3X5QPGSsvGq7xCMfaNpTz): test runs 22, module lines 3466
