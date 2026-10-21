@@ -38,6 +38,8 @@ export const request = Object.freeze({
       // R39: `addresseesuggest` resolves an entity or an action's records, never a project: the member says which name the records
       // concern first, from the names the record follows, and the offices are asked after she picks (the act below)
       r.names = { op: "peopledirectory", query: { show: "everything", limit: "200" }, empty: function () { return false; } };
+      // C64 (DEC-402): the laws an office a member names can go under are the profile's records laws
+      r.profiles = { op: "profiles", empty: function () { return false; } };
     }
     return r;
   },
@@ -58,6 +60,19 @@ export const request = Object.freeze({
       const rows = r && r.state === "ok" && r.value && Array.isArray(r.value.rows) ? r.value.rows : [];
       return rows.filter(function (x) { return x && typeof x.entity === "string" && typeof x.name === "string" && x.name; })
         .map(function (x) { return { value: x.entity, text: x.name }; });
+    },
+    // C64: "Name the office yourself": the records laws the active profiles name (`jurisdictions` R7), each as an option
+    recordsLaws: function (profiles) {
+      const v = profiles && profiles.view ? profiles.view : {};
+      return (Array.isArray(v.records_laws) ? v.records_laws : []).filter(function (l) { return l && typeof l.citation === "string" && l.citation; });
+    },
+    // C64: where requests go, as `entities` R63 holds it: `{kind: address|email|portal, value}`, by its form; none when left empty
+    contactOf: function (where) {
+      const v = String(where || "").trim();
+      if (!v) return null;
+      if (/^(https?:\/\/|www\.)\S+$/i.test(v)) return { kind: "portal", value: v };
+      if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) return { kind: "email", value: v };
+      return { kind: "address", value: v };
     },
     // R4: the laws the profile names for a records request, each with its window (`profiles`' `view.deadlines`).
     laws: function (profiles) {
@@ -93,8 +108,22 @@ export const request = Object.freeze({
         const keeper = pointer ? '<p class="mk-note">' + cs.w("screen.request.nooffice.pointer.a") + " " + cs.w("screen.request.nooffice.pointer.b") + "</p>"
           + '<div class="mk-links" data-list="person"><a class="cs-ref" href="/app/person/' + encodeURIComponent(pointer) + '" data-nav data-screen="person">'
           + cs.w("screen.person.name") + '</a><span class="mk-small" data-purpose="person">' + cs.w("screen.person.purpose") + "</span></div>" : "";
+        // C64 (DEC-402): the member may name the office herself: the agency and office, where requests go and the law it goes under
+        const pr = view.data.profiles;
+        const laws = P.recordsLaws(pr && pr.state === "ok" ? pr.value : null);
+        const fold = '<details class="mk-details"><summary>' + cs.w("screen.request.nameoffice.head") + "</summary>"
+          + '<p class="mk-note">' + cs.w("screen.request.nameoffice.note") + "</p>"
+          + cs.field("req-noff-name", "screen.request.nameoffice.name", { help: "screen.request.nameoffice.name.help" })
+          + cs.field("req-noff-where", "screen.request.nameoffice.where", { help: "screen.request.nameoffice.where.help" })
+          // the note `entities` R1 requires, in her own words: the drawing holds no field for it, so the kit's reason field stands in (REPORTed)
+          + cs.field("req-noff-note", "shell.reason", { area: true, rec: true, help: "shell.reason.help" })
+          + (laws.length ? cs.choice("req-noff-law", "screen.request.nameoffice.law", laws.map(function (l, i) {
+            return { value: String(i), text: [l.name, l.citation].filter(Boolean).join(" · ") };
+          })) + '<p class="mk-note">' + cs.w("screen.request.nameoffice.law.help") + "</p>" : "")
+          + '<div class="mk-acts">' + cs.act("entitycreate", { label: "act.entitycreate.label.request" }) + "</div>"
+          + '<p class="mk-note">' + cs.w("screen.request.nameoffice.use.help") + "</p></details>";
         return '<p class="mk-note" role="status">' + cs.w("screen.request.nooffice") + "</p>"
-          + '<p class="mk-note">' + cs.w("screen.request.nooffice.admin") + "</p>" + keeper + places;
+          + '<p class="mk-note">' + cs.w("screen.request.nooffice.admin") + "</p>" + fold + keeper + places;
       };
       // a request opened with no subject at all, or a record that follows no name, cannot ask: it says no office is known
       if (offices !== null && !offices.length && !asked) return head + noOffice("");
@@ -103,13 +132,16 @@ export const request = Object.freeze({
       const subjectPick = cs.choice("req-subject", "screen.request.subject.label", [{ value: "", text: "" }].concat(names), { value: String(view.ui.subject || "") })
         + '<p class="mk-note">' + cs.w("screen.request.subject.help") + "</p>"
         + '<div class="mk-acts">' + cs.act("addresseesuggest", {}) + "</div>";
-      const askStep = cs.sec("screen.request.step.office", subjectPick);
+      // C64: an office she named herself is the one chosen: no name to ask about, and it is drawn marked until an administrator confirms it
+      const named = view.ui.named === true && offices !== null && offices.length > 0;
+      const askStep = named ? "" : cs.sec("screen.request.step.office", subjectPick);
       if (offices === null) return head + askStep;
       if (!offices.length) return head + askStep + noOffice(String(view.ui.subject || ""));
       const pick = cs.choice("req-office", "screen.request.office", offices.map(function (o, i) {
         const a = o.addressee || {};
         return { value: String(i), text: [a.role, a.body].filter(Boolean).join(", ") };
-      }), { value: String(view.ui.office || 0) }) + '<p class="mk-note">' + cs.w("screen.request.office.help") + "</p>";
+      }), { value: String(view.ui.office || 0) }) + '<p class="mk-note">' + cs.w("screen.request.office.help") + "</p>"
+        + (named ? '<p class="mk-small" data-named="1">' + cs.w("screen.request.nameoffice.mark") + "</p>" : "");
       // "Start the request" is drawn once an office is chosen
       const what = view.ui.chosen === true ? cs.sec("screen.request.step.what", cs.field("req-what", "screen.request.what", { help: "screen.request.what.help" })
         + '<div class="mk-acts">' + cs.act("actioncreate", { tone: "primary" }) + "</div>") : "";
@@ -159,6 +191,37 @@ export const request = Object.freeze({
         cs.set("offices", offices);
         cs.set("office", 0);
         cs.set("chosen", offices.length > 0);
+      },
+    },
+    {
+      // C64 (DEC-402; `entities` R63): "Use this office": the office she names herself, saved for the team marked as named by a member and chosen for
+      // this request; her words on why it belongs are the act's reason (`note`). An agency and office is one line: before its first comma is the
+      // body, after it the role, as the addressee R9 states an office.
+      op: "entitycreate",
+      reasonField: "note",
+      send: function (view, el, cs) {
+        const label = String(cs.value("req-noff-name") || "").trim();
+        if (!label) return { refuse: "findin.fieldneeded", fills: { field: { html: cs.w("screen.request.nameoffice.name") } } };
+        const body = { kind: "office", label: label, note: String(cs.value("req-noff-note") || "").trim() };
+        const contact = view.parts.contactOf(cs.value("req-noff-where"));
+        if (contact) body.contact = contact;
+        const pr = view.data.profiles;
+        const laws = view.parts.recordsLaws(pr && pr.state === "ok" ? pr.value : null);
+        const law = laws[Number(cs.value("req-noff-law"))];
+        if (law) body.law = law.citation;
+        return { body: body };
+      },
+      rereads: [],
+      done: function (view, answer, cs) {
+        const r = answer && answer.result !== undefined ? answer.result : answer;
+        if (!r || typeof r.entity_id !== "string" || typeof r.label !== "string") return;
+        const cut = r.label.indexOf(",");
+        const body = cut > 0 ? r.label.slice(0, cut).trim() : r.label;
+        const role = cut > 0 && r.label.slice(cut + 1).trim() ? r.label.slice(cut + 1).trim() : r.label;
+        cs.set("offices", [{ addressee: { state: "named", kind: "office", role: role, body: body, entity_id: r.entity_id } }]);
+        cs.set("office", 0);
+        cs.set("chosen", true);
+        cs.set("named", true);
       },
     },
     {

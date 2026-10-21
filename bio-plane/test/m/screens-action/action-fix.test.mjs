@@ -86,7 +86,10 @@ test("R38: a reply needs its day and a received one its account; a refusal is dr
 });
 
 test("R52 (L21): after `reminderset` the entry shows the day the member set, by key; control: a refused day shows its refusal and no reminder", async () => {
-  const p = await open(ROUTES.action, { ...DATA_PLANE, reminderset: ok({ ok: true }) });
+  // C53: the reminder is the record's (`remindersfor`, action-clocks R26): the plane keeps what `reminderset` was sent and answers it back
+  const held = [];
+  const p = await open(ROUTES.action, { ...DATA_PLANE, reminderset: (req) => { held.push({ entry: req.body.entry, on: req.body.on, set_by: "mai", set_at: "2026-10-09T10:00:00Z", answered_at: null, state: "waiting" }); return ok({ ok: true }); },
+    remindersfor: () => ok({ ok: true, action: ACTION_ID, reminders: held }) });
   await press(p, "reminderset", { nth: 1, values: { "remind-1": "2099-10-20" } });
   assert.deepEqual(last(p, "reminderset").body, { target: ACTION_ID, entry: 1, on: "2099-10-20" });
   const mark = main(p).querySelector('[data-reminder="1"]');
