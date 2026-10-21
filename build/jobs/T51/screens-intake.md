@@ -296,3 +296,7 @@ Merged `tranche/T51` first. Every cause below has a test seen failing first with
 **Suites (B22):** screens-intake 241 of 241 (was 204); screens-inquiry 447 of 447; control-plane 333 of 340, the seven reds (`t46-e2e` R75, `t46-app` R81, `t47-e2e` R81 x3, `t36-door` R61/R29, `totality` R2/R41) are red on `origin/tranche/T51` too, run there, not mine. Checks: format 0, architecture 0, coverage 55 of 55, words 0, ownership 0 (the whole-product run's reds are other modules'). I own no census op to declare.
 
 Size (session_0173nrFoFHQot9QMnmzzRxdP): test runs 9, module lines 2620
+
+## J20 · QUESTION
+
+WORDS (no row exists; stand-ins in use, nothing invented): screen.capture.address.filedhere ({project}: 'Filed here as well; it stays held under {project}'), screen.capture.later.none (no request for later to list), refusal.CAPTURE_NOT_KEPT (drawn meanwhile from the answer's translation), and a next-step sentence for an unread non-picture upload. Add the first two to SCREEN_KEYS.capture when the rows exist.
