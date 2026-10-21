@@ -1,6 +1,6 @@
 # host-governor (T51)
 
-**Status** · session_01E5aZgMS5PZNR6n1pGjwdGB · depth 2 · WORKING · handled B3
+**Status** · session_01E5aZgMS5PZNR6n1pGjwdGB · depth 2 · WAITING ON BOB (J3) · handled B3
 
 ## Completion (fix round 3, wave 1)
 
