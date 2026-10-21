@@ -256,3 +256,20 @@ Tests and checks:
 - setup-words build --check: expected to report stale rows for the new `localize` ids (the nine `act.<op>.does` stand-ins), as J6/J9 did; I did not regenerate it (a generated artifact, manifest §14).
 
 Size (session_018BsD9g3GXwi6e8g4cAa1QE): test runs 8, module lines 2775
+
+## J20 · QUESTION
+
+QUESTION (re B16 cause 2, K4437; no change made to modules.json).
+
+Cause 2 asked for affordances' own test to read every owner's declared member op (from the owners' declarations, K3268) and to fail by name for any with no entry. I built it and it was seen red (naming capturecredentiallist and readheld, before the fix), then `checks/architecture.mjs` refused it: the test imported test-support's `declaredOpsOf` and `op-declarations`, and affordances does not declare test-support in `uses`, and op-declarations is not earlier in the order. I removed the file (commit after d2678dd585). Reading every owner's rows without importing a later module is not possible from this module as `uses` stands.
+
+My reading: the only module that holds both the member set and the explanations is op-declarations, which is later in the order. Its own R34 test (`bio-plane/test/m/op-declarations/t36.test.mjs`) already fails by name for any member op with neither a text nor a ground, and it found these two.
+
+Options, my recommendation first:
+1. Recommended: accept op-declarations' R34 as the net. Rule for the plan: a round that adds a member op runs op-declarations' t36 in the owner's own round, and the explanation job takes its name from that failure. No change to modules or order.
+2. Add test-support to affordances' test `uses` in build/modules.json. This still does not give the member set (op-declarations is later), so it does not close the gap alone.
+3. Move op-declarations before affordances in the order. Largest change; it changes layer boundaries, so it is yours.
+
+Which do you choose? I will write cause 2 to your answer and COMPLETE after it.
+
+Cause 1 is met and committed (d2678dd585): capturecredentiallist is held under act.owed_capturecredentiallist.does (the reads list gives it); readheld is a stand-in, key act.readheld.does (text in act-help.mjs), for your word batch.
