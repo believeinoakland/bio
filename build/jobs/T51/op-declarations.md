@@ -290,3 +290,23 @@ Options:
 (b) Rename to `inboxlist` and add `inbox → inboxlist` as an alias. That needs R21 amended to say the plane's route aliases may name a route rather than a registry act, a requirement change for BOB to write, and the words red in doorbell's test to be resolved there.
 
 Please answer (a) or (b). I will not change cause 2 until then.
+
+## J22 · QUESTION
+
+Re B24 (scanmirror) and B25 (remindersfor): I merged tranche/T51 and did NOT spec them, because the owners' own declarations conflict with a family spec, and I need your call. Nothing is committed for them.
+
+What I found:
+- file-safety declares `scanmirror` (DECLARED_OPS) as classes admin and member, mutating, stamps viewer. A family entry (`scanmirror: "admin"`, as `securitytooladd` has) fails R81: "file-safety's row differs from the hand row on stamps". Its declared row also reads admin and member, though your entry says an administrator's act.
+- action-clocks declares `remindersfor` as classes admin and member, a read, with no probe. A family read gives admin, member and probe, so R81 fails on classes.
+- Both ops are served by their owners, so the owners' declarations are the spec (R80). Only the hand-listed tests (t36:136, which expects 23 file-safety ops, and t45:221) need them, and they are red on tranche/T51 too.
+- Under a full registration (the plane's start-up), 22 member ops have no affordances text and no ACT_HELP_ABSENT ground (R34), among them scanmirror and remindersfor. Grounding them here would hide a gap in affordances' explanations, so I did not do it. The list: expertisewithdraw declareorigin origins capturecredentialsupply capturecredentialwithdraw inboxlist scanmirror transcriptions progressions citeimported withdrawimported contradictionflag projectclose importregrade rerunstart rerunpair rerunread casedetailsset casedetails remindersfor namedrequestset namedrequests sweepset sweepratify taskdecide. Also `capturecredentiallist` is in the member set with no spec, which looks like a defect of its own.
+
+Options for scanmirror (file-safety):
+(a) Keep the owner's declaration as it is, and have the tests register owners (`register-owners.mjs`) so the spec comes from file-safety. Recommended. Cost: the registered partition (R34) then shows the 22 gaps above.
+(b) Amend file-safety's declaration to admin only, then add the family entry. This is a file-safety change, so it goes to file-safety's owner.
+
+Options for remindersfor (action-clocks):
+(a) The same as (a) above (register owners). Recommended.
+(b) Amend action-clocks' declaration to admin, member and probe, then add the family read.
+
+Please pick (a) or (b) for each. I will not change either until then. `inboxlist` (cause 2) is still waiting on your answer to my first QUESTION.
