@@ -11,7 +11,7 @@ import { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS,
          LARGER_SCREEN_ACTS, OP_ALIASES, phoneOf, MARKS, MARK_SOURCES } from "../../../src/op-grades/index.mjs";
 import * as T48 from "../../../src/op-grades/t48.mjs";
 import { MARKS_KIT_COMMIT } from "../../../src/op-grades/marks.mjs";
-import { reqText, ticked, readRows, asksNotTheAccount, declaredSentence, doesSentence } from "./declared.mjs";
+import { reqText, ticked, readRows, asksNotTheAccount, declaredSentence, doesSentence, registeredOpGrades } from "./declared.mjs";
 
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 const isRead = (op) => typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ")
@@ -228,17 +228,22 @@ const KIT_WEIGHT = Object.fromEntries([...KIT.match(/const WEIGHT = \{([\s\S]*?)
 const WNAME = ["", "Reversible", "Reasoned", "Terminal", "Signed", "Irreversible"];
 const nameOf = (a) => (a.startsWith("owed:") ? a.slice(5).split(" ")[0] : a);
 const REGISTRY_OPS = [...new Set(REGISTRY.screens.flatMap((s) => s.acts.map((a) => nameOf(a.op))))].sort();
-const rungless = (op) => !Object.hasOwn(RUNGS, op)
-  && !(Object.hasOwn(RUNG_ABSENT, op) && RUNG_ABSENT[op].ground === "undetermined");
+/* an act is rungless when no table grades it: the registered tables (R49), so an op its owner grades is not rungless (B27) */
+const rungless = (m, op) => !Object.hasOwn(m.RUNGS, op)
+  && !(Object.hasOwn(m.RUNG_ABSENT, op) && m.RUNG_ABSENT[op].ground === "undetermined");
 
 test("R42: MARKS is frozen and total over the registry's rungless acts — a read, an op stated absent under a ground other "
    + "than `undetermined`, or an op no table grades — and holds no other op; each value is a kit weight name; each entry "
-   + "names its source", () => {
+   + "names its source", async () => {
   assert.ok(Object.isFrozen(MARKS) && Object.isFrozen(MARK_SOURCES));
-  const want = REGISTRY_OPS.filter(rungless);
-  assert.deepEqual(Object.keys(MARKS).sort(), want);
+  const reg = await registeredOpGrades();
+  const want = REGISTRY_OPS.filter((op) => rungless(reg, op));
+  /* an owner's grade for an op a mark held before (its unread mark, B11) is the one exception: the mark is the owner's to drop */
+  const graded = Object.keys(MARKS).filter((op) => !want.includes(op));
+  for (const op of graded) assert.ok(Object.hasOwn(reg.RUNGS, op) || Object.hasOwn(reg.RUNG_ABSENT, op), op);
+  assert.deepEqual(Object.keys(MARKS).filter((op) => !graded.includes(op)).sort(), want);
+  assert.deepEqual(Object.keys(MARK_SOURCES).sort(), Object.keys(MARKS).sort());
   assert.ok(want.length > 80, "the registry lists many rungless acts");
-  assert.deepEqual(Object.keys(MARK_SOURCES).sort(), want);
   for (const op of want) {
     assert.ok(WNAME.slice(1).includes(MARKS[op]), `${op}: ${MARKS[op]}`);
     assert.equal(typeof MARK_SOURCES[op], "string", op);
@@ -248,15 +253,16 @@ test("R42: MARKS is frozen and total over the registry's rungless acts — a rea
   const { login, ...withoutLogin } = MARKS;
   assert.equal(login, "Reversible");
   assert.notDeepEqual(Object.keys(withoutLogin).sort(), want);
-  assert.notDeepEqual(Object.keys({ ...MARKS, publish: "Terminal" }).sort(), want);
+  assert.notDeepEqual(Object.keys({ ...MARKS, publish: "Terminal" }).sort(), Object.keys(MARKS).sort());
 });
 
 test("R42: every value is the design kit's WEIGHT for the op (the kit's `owed_` key for an owed act), an op the kit does not "
    + "name Reasoned, the kit's default; the kit and the registry are read at the commit the marks name", () => {
   assert.equal(MARKS_KIT_COMMIT, "aa8bdcd0b4");
   for (const op of Object.keys(MARKS)) {
-    /* notewrite is the one entry a ruling, not the kit, sets (R46, DEC-300 (5)); t50.test.mjs names it */
-    if (op === "notewrite") continue;
+    /* notewrite is the one entry a ruling, not the kit, sets (R46, DEC-300 (5)); t50.test.mjs names it. versionnotice is a
+       read, marked by its ruling (K4259, B30); t50.test.mjs names it. */
+    if (op === "notewrite" || op === "versionnotice") continue;
     const w = KIT_WEIGHT[op] ?? KIT_WEIGHT[`owed_${op}`];
     assert.equal(MARKS[op], WNAME[w ?? 2], op);
     assert.match(MARK_SOURCES[op], w ? /^mock-kit\.js WEIGHT at aa8bdcd0b4$/ : /^kit default at aa8bdcd0b4/, op);
@@ -274,7 +280,7 @@ test("R42: every value is the design kit's WEIGHT for the op (the kit's `owed_` 
   assert.equal(MARKS.queuemute, "Reversible");
   assert.equal(MARKS.claim, "Signed");
   /* an op the kit does not name is Reasoned (control) */
-  const unnamed = Object.keys(MARKS).filter((op) => op !== "notewrite" && KIT_WEIGHT[op] === undefined
+  const unnamed = Object.keys(MARKS).filter((op) => op !== "notewrite" && op !== "versionnotice" && KIT_WEIGHT[op] === undefined
     && KIT_WEIGHT[`owed_${op}`] === undefined);
   assert.ok(unnamed.length > 0);
   for (const op of unnamed) assert.equal(MARKS[op], "Reasoned", op);

@@ -29,8 +29,8 @@ const R27_REASONS = {
   translationadopt: declaredSentence("translations", "translationadopt"),
   translationconfirm: declaredSentence("translations", "translationconfirm"),
   translationrevert: declaredSentence("translations", "translationrevert"),
-  translationmark: "translation-directed: keyed by a language and an interface word; the group's own wording of Civicsmith's "
-    + "words, shown to members reading that language; moves no bundle",
+  /* a hand sentence of this module with no owner's declaration (B28): its own table's text, not a copy of it */
+  translationmark: T37_NON_ACTS.translationmark,
 };
 
 test("R27 (T38: R28; T48: R39): T37's ops — translationmark `undetermined`, translationdraft and setpassword `caller-owned`, "
@@ -47,6 +47,7 @@ test("R27 (T38: R28; T48: R39): T37's ops — translationmark `undetermined`, tr
   for (const [op, e] of Object.entries(T37_RUNG_ABSENT)) assert.ok(typeof e.is === "string" && e.is.length > 40, op);
   assert.deepEqual(Object.keys(R27_REASONS).sort(), Object.keys(R27_WRITES).sort());
   for (const [op, why] of Object.entries(R27_REASONS)) assert.equal(NON_ACTS[op], why, op);
+  assert.match(NON_ACTS.translationmark, /^translation-directed: /);
   for (const op of R27_READS) { assert.ok(isRead(op), op); assert.equal(gradeOf(op), null, op); }
   /* none is a capture act (`capture-directed:` would enrol it in affordances' CAPTURE_ACTS) */
   for (const op of [...Object.keys(R27_WRITES), ...R27_READS]) assert.ok(!NON_ACTS[op].startsWith("capture-directed:"), op);

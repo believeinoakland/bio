@@ -1,6 +1,6 @@
 # op-grades (T51)
 
-**Status** · session_01J5x9uuvhngES6Vq6VYWnWb · depth 2 · COMPLETE · handled B26
+**Status** · session_017LS3B582bpu5TBffTAibNo · depth 2 · COMPLETE · handled B26
 
 ## J1 · QUESTION
 
@@ -242,3 +242,36 @@ Size (session_01J5x9uuvhngES6Vq6VYWnWb): test runs 14, module lines 3640
 ## J21 · REPORT
 
 Correction to J20 (Size line): module lines are 3627 (wc -l of bio-plane/src/op-grades/*.mjs), not 3640.
+
+## J22 · COMPLETE
+
+**COMPLETE (B27–B31; B28 1 and 2, B29, B30).** Pushed `733ebb1510` on `job/T51/op-grades`, with `tranche/T51` merged first (B29). Before that, the job branch was aligned with origin by BOB's route (B31); the stale local start line is kept on `stale/op-grades-local`.
+
+**Entries applied.**
+1. **B28 (2), groupdescriptiondraft.** Its NON_ACTS row reads `word("store-door.declared.groupdescriptiondraft")` (DEC-390), no held sentence. Registration does not refuse it.
+2. **B27 (2), R42 and R46.** Both are evaluated over the registered tables: a fresh instance with every owner's `DECLARED_OPS` registered (`registeredOpGrades`, in `test/m/op-grades/declared.mjs`). `strengthbarset` (reasoned, from strength) is graded and needs no mark. R42's first test reads MARKS minus the owner-graded ops; the owner-graded entries stay as unread marks (J11 finding a). R46's first test uses the registered rungless set.
+3. **B27 (1), R17.** The count is no longer written: the test reads op-declarations' `OP_ALIASES` by path (`declaredAliases`) and compares the key sets. It is 26 on both sides.
+4. **B30, versionnotice.** `marks.mjs` marks it `["versionnotice", "Reversible", "read"]`; the new source `read` is K4259's ruling (`localize` id `op-grades.marks.k4259_read_mark`). R42's kit test and R46's kit test name it as the exception, as they name `notewrite`.
+5. **B28 (1), t37.** `translationmark`'s expected reason reads `T37_NON_ACTS.translationmark` (the module's own table), not a copy of the sentence. A prefix check remains.
+
+**Changes to a control, for BOB.** The K4206 control (R46: the table without `expertisewithdraw` leaves it unmarked) no longer holds: members declares `expertisewithdraw` once registered, so it is graded and not rungless. The control now names `login` (rungless after registration, marked Reversible): the table without `login` leaves exactly that act unmarked.
+
+**Requirement lines for BOB.**
+- R17 names "27 aliases"; the count is 26 (op-declarations R21). The amendment is yours.
+- R42 and R46 take the rungless set over the registered tables (B27 2); R46 names the exception `versionnotice` (K4259) beside `notewrite`; MARKS_KIT_COMMIT is unchanged.
+
+**An open question (B27 vs P4).** B27 says read op-declarations' alias table. The owners test header says this module imports nothing (P4), and the architecture check rejects an import of op-declarations (it is later in the order). I read it by path in the shared helper, the same way `collectDeclaredOps` reads other modules' `DECLARED_OPS`, and the architecture check passes. If you want that read stopped, the count goes back to the requirement text (26).
+
+**Deferred.** Nothing in op-grades. The other `rows.mjs` finding is BOB's: the setup-words check reports `rows.mjs` stale for `op-grades.marks.k4259_read_mark` (expected; BOB regenerates at the layer close).
+
+**Found in other modules (not changed).** None new. Plane (`node --test bio-plane/test/m/plane/*.test.mjs`): 280 tests, 278 pass, 2 fail: R24 (screen.contradiction.purpose words) and R5 (provenance-routes arms in the route map). Neither is in op-grades. The plane's start is no longer refused (DECLARED_OP_DISAGREES gone).
+
+**Tests and checks** (from civicos-process, product `/home/user/bio`):
+- `node --test test/m/op-grades/*.test.mjs`: 141 tests, 141 pass, 0 fail.
+- `checks/format.mjs`: 175 modules, 0 failures. `checks/architecture.mjs … op-grades`: 0 failures. `checks/coverage.mjs … op-grades`: 51 of 51 named, 0 failures. `checks/words.mjs … op-grades`: 0 failures (inline 0, testcopy 0, missingkey 0, handlist 0). `checks/ownership.mjs … op-grades tranche/T51 job/T51/op-grades`: 1 file changed by op-grades, 0 failures.
+- `checks/run.mjs /home/user/bio` (product-wide): words and coverage show findings only in other modules (coverage: 5, not op-grades) and this one `testcopy` fixed by item 5.
+- `setup-words/build.mjs --check`: `rows.mjs` stale for the one new localize id (expected, BOB).
+
+**A note on the commit.** The commit message does not name the model; the attribution line with the model name is left out (per the session's model-identity rule), and the session link is kept.
+
+Size (session_017LS3B582bpu5TBffTAibNo): test runs 11, module lines 3628
