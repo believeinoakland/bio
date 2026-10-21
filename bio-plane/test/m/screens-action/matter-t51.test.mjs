@@ -13,6 +13,12 @@ const NONE = { ...DATA_PLANE, determinations: ok({ ok: true, items: [], cursor: 
 const STANDARDS = ok({ ok: true, items: [{ id: "STD-1", cite: "Lease §7.2" }, { id: "STD-9", cite: "Lease §9.1" }], truncated: false });
 const PUBLISHED = { publishedlist: ok({ bundles: [], cases: [{ case_id: "CASE-1", edition: 1 }, { case_id: "CASE-1", edition: 2 }] }),
   publishedcase: ok({ ok: true, findings: [{ bundle_id: "FND-1", title: "Rents rose without a vote" }, { bundle_id: "FND-2", title: "The shortfall was not reported" }] }) };
+/* C6: what the pickers read: the project's document naming an event, the events the timeline answers over it, the project's documents, its concluded questions */
+const PROJECT_DOC = ok({ "bundle.md": `---\nid: ${PROJECT}\ntitle: Pothole repairs\nreferences:\n  - target: EVT-1\n    rel: cites\n  - target: ENT-9\n    rel: cites\n  - target: EVT-7\n    rel: cites\n    status: severed\n---\nbody\n` });
+const EVENTS = ok({ ok: true, world: { items: [{ event_id: "EVT-1", kind: "vote", when: { value: "2024-03-01", precision: "day" } }], placed_nowhere: [{ event_id: "EVT-2", kind: "meeting", when: null }] } });
+const DOCS = ok({ ok: true, held: [{ bundle_id: "INFO-1", title: "Council minutes", capture: { sha256: "a".repeat(64) } }, { bundle_id: "INFO-2", title: "The lease", capture: { sha256: "b".repeat(64) } }], truncated: false });
+const CONCLUDED = ok({ ok: true, project: PROJECT, items: [{ inquiry: "INQ-1", title: "Did the adjustments cause the higher rent?", stance: "concluded" }, { inquiry: "INQ-2", title: "Who signed the memo?", stance: "none" }], cursor: null });
+const CHOICES = { image: PROJECT_DOC, timeline: EVENTS, heldcaptures: DOCS, projectquestions: CONCLUDED };
 const QUESTIONS = ok({ ok: true, project: PROJECT, items: [{ inquiry: "INQ-1", title: "Did the adjustments cause the higher rent?" }], cursor: null });
 /** What the act sent less the reason the shell asks of a reasoned act (it is no field of the screen). */
 const sent = (p, op) => { const { reason, ...rest } = last(p, op).body; return rest; };
@@ -53,28 +59,60 @@ test("R45 (b): a matter with no determination yet draws each act that needs one 
 });
 
 test("R45 (c): recording a determination sends exactly what `determine` declares: the act, the findings it rests on, the rule, what it requires and what was done, the outcome, the question when unclear, the cause", async () => {
-  const p = await open(`/app/matter/${PROJECT}`, { ...NONE, standards: STANDARDS, ...PUBLISHED, determine: ok({ ok: true, id: DET }) });
+  const p = await open(`/app/matter/${PROJECT}`, { ...NONE, standards: STANDARDS, ...PUBLISHED, ...CHOICES, determine: ok({ ok: true, id: DET }),
+    contentmint: ok({ ok: true, content_id: "CON-1", minted: true }) });
   assert.ok(!main(p).querySelector("#mt-d-why"), "a first determination replaces nothing");
-  // the rules come from `standards`, the findings from the published cases' own findings
+  // the rules come from `standards`, the findings from the project's concluded questions and the published cases' own findings
   assert.equal(p.byOp("standards").length, 1);
   assert.deepEqual(p.byOp("publishedcase").map((r) => r.query.edition), ["2"], "each case's latest edition, once");
   assert.ok(main(p).querySelector("#mt-d-std option[value='STD-9']"));
   assert.ok(text(p).includes("Rents rose without a vote"));
-  await press(p, "determine", { reason: "recorded", values: { "mt-d-event": "EVT-1", "mt-d-role": "City Administrator", "mt-d-body": "City of Oakland", "mt-d-evidence": "CAP-1, CAP-2",
+  await press(p, "determine", { reason: "recorded", values: { "mt-d-event": "EVT-1", "mt-d-role": "City Administrator", "mt-d-body": "City of Oakland", "mt-d-evidence-0": true,
     "mt-d-findings-0": true, "mt-d-std": "STD-1", "mt-d-req": "a council vote", "mt-d-did": "no vote was held", "mt-d-rd": "diverges", "mt-d-out-2": true, "mt-d-q": "Was there a vote?", "mt-d-cause": "a rushed signing" } });
   const b = last(p, "determine").body;
-  assert.deepEqual(b.act, { event: "EVT-1", actor: { role: "City Administrator", body: "City of Oakland" }, evidence: ["CAP-1", "CAP-2"] });
-  assert.deepEqual(b.findings, [{ finding: "FND-1" }]);
+  assert.deepEqual(b.act, { event: "EVT-1", actor: { role: "City Administrator", body: "City of Oakland" }, evidence: ["CON-1"] });
+  assert.deepEqual(b.findings, [{ finding: "INQ-1" }]);
   assert.deepEqual(b.standards, [{ standard: "STD-1", outcome: "unclear" }]);
   assert.deepEqual(b.rows, [{ standard: "STD-1", requires: "a council vote", did: "no vote was held", reading: "diverges" }]);
   assert.deepEqual(b.questions, [{ question: "Was there a vote?" }]);
-  assert.deepEqual(b.cause, { statement: "a rushed signing", evidence: ["CAP-1", "CAP-2"] });
+  assert.deepEqual(b.cause, { statement: "a rushed signing", evidence: ["CON-1"] });
   assert.equal(b.project, PROJECT);
   assert.ok(!("supersedes" in b), "control: nothing superseded");
 });
 
+test("R45 (C6): the event, the passage and the finding are chosen among what the project holds, and a determination missing one is refused in the words that name it", async () => {
+  const plane = { ...NONE, standards: STANDARDS, ...CHOICES, determine: ok({ ok: true, id: DET }), contentmint: ok({ ok: true, content_id: "CON-1", minted: true }) };
+  const p = await open(`/app/matter/${PROJECT}`, plane);
+  // the event: the events the project's document follows, severed references and entities left to the timeline's own set
+  assert.equal(p.byOp("timeline")[0].query.set, "EVT-1,ENT-9");
+  assert.deepEqual(p.doc.getElementById("mt-d-event").querySelectorAll("option").map((o) => o.getAttribute("value")), ["", "EVT-1", "EVT-2"]);
+  // the passage: the project's documents, each by its title; the findings: its concluded questions only
+  assert.equal(p.byOp("heldcaptures")[0].query.project, PROJECT);
+  assert.ok(text(p).includes("Council minutes") && text(p).includes("The lease"));
+  assert.ok(text(p).includes("Did the adjustments cause the higher rent?") && !text(p).includes("Who signed the memo?"));
+  assert.ok(!main(p).querySelector("textarea#mt-d-evidence") && !main(p).querySelector("input#mt-d-findings") && !main(p).querySelector("input#mt-d-event"), "no box asks for an id");
+  const all = { "mt-d-role": "City Administrator", "mt-d-body": "City", "mt-d-std": "STD-1", "mt-d-req": "x", "mt-d-did": "y", "mt-d-out-0": true };
+  const refusedWith = async (values, key) => {
+    const q = await open(`/app/matter/${PROJECT}`, plane);
+    const b = await press(q, "determine", { reason: "r", values: { ...all, ...values } });
+    assert.ok(text(q, q.root().querySelector(`[data-slot="${b.getAttribute("data-ai")}"]`)).includes(W(key)), key);
+    assert.equal(q.byOp("determine").length, 0, "nothing was sent");
+    assert.equal(q.byOp("contentmint").length, 0, "nothing was marked citable");
+  };
+  await refusedWith({ "mt-d-evidence-0": true, "mt-d-findings-0": true }, "refusal.NO_SUCH_EVENT");
+  await refusedWith({ "mt-d-event": "EVT-1", "mt-d-findings-0": true }, "refusal.ACT_INCOMPLETE");
+  await refusedWith({ "mt-d-event": "EVT-1", "mt-d-evidence-0": true }, "refusal.NO_FINDINGS");
+  // control: all three chosen sends, with the content id the plane minted for the chosen document
+  await press(p, "determine", { reason: "r", values: { ...all, "mt-d-event": "EVT-2", "mt-d-evidence-1": true, "mt-d-findings-0": true } });
+  assert.deepEqual(p.byOp("contentmint").map((r) => r.body), [{ bundleId: "INFO-2", extent: { kind: "document" } }]);
+  const b = last(p, "determine").body;
+  assert.equal(b.act.event, "EVT-2");
+  assert.deepEqual(b.act.evidence, ["CON-1"]);
+  assert.deepEqual(b.findings, [{ finding: "INQ-1" }]);
+});
+
 test("R45 (d): revising a determination names the one it replaces, opens with its values, and says why in the reason; the earlier is not edited", async () => {
-  const p = await open(AT, { ...DATA_PLANE, standards: STANDARDS, ...PUBLISHED, determine: ok({ ok: true, id: "CONF-2026-9999999999999999-determination" }) });
+  const p = await open(AT, { ...DATA_PLANE, standards: STANDARDS, ...PUBLISHED, ...CHOICES, determine: ok({ ok: true, id: "CONF-2026-9999999999999999-determination" }) });
   assert.ok(!ops(p).includes("determine"), "the form is opened by the member's choice");
   await choose(p, "mt-mode", "determine");
   assert.ok(text(p).includes(W("screen.matter.the_earlier_determination_stays_readable_with_a")));
@@ -88,23 +126,28 @@ test("R45 (d): revising a determination names the one it replaces, opens with it
   assert.equal(b.reason, "the first rule did not bind the office");
   assert.deepEqual(b.standards, [{ standard: "STD-1", outcome: "compliant" }]);
   assert.equal(b.act.event, "The 2024 rent adjustment");
+  assert.deepEqual(b.act.evidence, ["CON-1"], "the passages it rested on are kept when none is chosen anew");
+  assert.deepEqual(b.findings, [{ finding: "INQ-1" }], "the findings it rested on are opened chosen");
   // control: a first determination is plain
   const q = await open(`/app/matter/${PROJECT}`, { ...NONE, determine: ok({ ok: true, id: DET }) });
   assert.ok(button(q, "determine").textContent.includes(W("screen.matter.record.this")), "a first determination reads `screen.matter.record.this`, a revision `screen.matter.record_the_revised_determination`");
 });
 
 test("R45: the determination's refusals are drawn by their words (refusal.<CODE>); control: a recorded one draws none", async () => {
-  for (const code of ["NO_FINDINGS"]) {
-    const p = await open(AT, { ...DATA_PLANE, determine: refused(code, "the owner's own sentence") });
+  // everything chosen, so the owner's own refusal is what the member reads
+  const chosen = { "mt-d-event": "EVT-1", "mt-d-evidence-0": true, "mt-d-findings-0": true };
+  const plane = { ...DATA_PLANE, ...CHOICES, contentmint: ok({ ok: true, content_id: "CON-1" }) };
+  for (const code of ["NO_FINDINGS", "FINDING_NOT_PUBLISHED"]) {
+    const p = await open(AT, { ...plane, determine: refused(code, "the owner's own sentence") });
     await choose(p, "mt-mode", "determine");
-    const b = await press(p, "determine", { reason: "x" });
+    const b = await press(p, "determine", { reason: "x", values: chosen });
     const beside = text(p, p.root().querySelector(`[data-slot="${b.getAttribute("data-ai")}"]`));
     assert.ok(beside.includes(W(`refusal.${code}`)), code);
     assert.ok(!beside.includes("the owner's own sentence"), code);
   }
-  const p = await open(AT, { ...DATA_PLANE, determine: ok({ ok: true, id: DET }) });
+  const p = await open(AT, { ...plane, determine: ok({ ok: true, id: DET }) });
   await choose(p, "mt-mode", "determine");
-  const b = await press(p, "determine", { reason: "x" });
+  const b = await press(p, "determine", { reason: "x", values: chosen });
   assert.ok(!text(p, p.root().querySelector(`[data-slot="${b.getAttribute("data-ai")}"]`)).includes(W("refusal.NO_FINDINGS")));
 });
 
