@@ -1,6 +1,6 @@
 # case-disclosures (T51)
 
-**Status** · session_01QauuYoWqCoXNu8JWm2WmuR · depth 2 · WORKING · handled B2
+**Status** · session_01QauuYoWqCoXNu8JWm2WmuR · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
