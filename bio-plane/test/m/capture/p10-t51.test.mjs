@@ -51,7 +51,7 @@ const keyOf = (d) => `bio/captures/${d}`;
 /* the call as the door runs it */
 const door = (w, query) => captureOps(w.c, new URL(`http://x/?op=heldcaptures&viewer=${ADMIN}&${query}`), {}, w.c.env).heldcaptures();
 
-test("R77 R91 (P10): a screen of 27 documents reads the page as picker rows, which ask the evidence store and the examination nothing, and the heavy fields of the 10 on screen, asking each of those once; the whole read asks all 27 (control)", async () => {
+test("R77 R91 R102 (P10): a screen of 27 documents reads the page as picker rows, which ask the evidence store and the examination nothing, and the heavy fields of the 10 on screen, asking each of those once; the whole read asks all 27 (control)", async () => {
   const w = world({ latency: 40, exam: 15 });
   const all = fill(w);
   const began = performance.now();
@@ -79,7 +79,7 @@ test("R77 R91 (P10): a screen of 27 documents reads the page as picker rows, whi
   assert.deepEqual(all.slice().sort(), ids(whole).slice().sort());
 });
 
-test("R77 (P10): `bundle_ids` selects which rows are answered, not which documents are in the list: a row is the page's row for a viewer who may see it, one the list does not hold is no row, and the order, `limit`, `truncated` and `next` are the page's", async () => {
+test("R77 R102 (P10): `bundle_ids` selects which rows are answered, not which documents are in the list: a row is the page's row for a viewer who may see it, one the list does not hold is no row, and the order, `limit`, `truncated` and `next` are the page's", async () => {
   const w = world();
   const all = fill(w, 12);
   held(w, 90, { state: "verified" });
@@ -102,7 +102,7 @@ test("R77 (P10): `bundle_ids` selects which rows are answered, not which documen
   assert.deepEqual(ids(await w.c.heldCaptures({ viewer: ADMIN, bundle_id: a, bundle_ids: [b] })), []);
 });
 
-test("R77 (P10): an archive's row asked by `bundle_ids` still groups its files beside it; a file asked alone, whose archive is a row of the list, is no row of its own", async () => {
+test("R77 R102 (P10): an archive's row asked by `bundle_ids` still groups its files beside it; a file asked alone, whose archive is a row of the list, is no row of its own", async () => {
   const w = world();
   fill(w, 2);
   const z = makeZip([{ name: "a.txt", data: "ay" }, { name: "b.txt", data: "bee" }]);
@@ -126,7 +126,7 @@ test("R77 (P10): an archive's row asked by `bundle_ids` still groups its files b
   assert.deepEqual(ids(await w.c.heldCaptures({ viewer: ADMIN, bundle_ids: [files[0]] })), [], "beside its archive, a file is not a row of its own");
 });
 
-test("R77 (P10): a `bundle_ids` that is not a list of document ids, or names more than HELD_IDS_MAX, is the required-argument refusal naming it, nothing read", async () => {
+test("R77 R102 (P10): a `bundle_ids` that is not a list of document ids, or names more than HELD_IDS_MAX, is the required-argument refusal naming it, nothing read", async () => {
   const w = world();
   fill(w, 3);
   for (const bad of [{ a: 1 }, 7, [1, 2], ["", "x"], [{}], Array.from({ length: HELD_IDS_MAX + 1 }, (_, i) => `INFO-${i}`)]) {
@@ -140,7 +140,7 @@ test("R77 (P10): a `bundle_ids` that is not a list of document ids, or names mor
   assert.equal(exactly.ok, true, "control: HELD_IDS_MAX ids are accepted");
 });
 
-test("R77 R91 (P10): the page's reads of the evidence store and its archive groupings overlap: the first grouping is asked before any of the store's heads for the page has answered, not after they all end", async () => {
+test("R77 R91 R102 (P10): the page's reads of the evidence store and its archive groupings overlap: the first grouping is asked before any of the store's heads for the page has answered, not after they all end", async () => {
   const w = world({ latency: 30 });
   fill(w, 6);
   let headsDone = 0, doneAtFirstProbe = null;
