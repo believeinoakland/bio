@@ -111,3 +111,16 @@ test("R83 (K4363): draftEditions({caseId, draft}) is the one read the pre-flight
                    { prepared: null, published: { edition: 1, address: `/app/published/${done.caseId}/1` } });
   assert.deepEqual(w.ca.draftEditions({ caseId: "CASE-2026-0000" }), NONE, "a case the record does not hold");
 });
+
+test("R83 (C48 / N6): a draft that asks for a new case, once prepared, states prepared 1 on every later call (found by the draft that made the document), and a second newCase draft never prepared states neither (control)", () => {
+  const { w, P } = setup();
+  const params = { ...AUTHORED, targets: [Q], roles: { [Q]: "load_bearing" }, newCase: true };
+  w.draft("DRAFT-N", P, params);
+  w.draft("DRAFT-M", P, params);
+  const ask = (draft) => ({ draft, project: P, viewer: V("alice"), author: "alice", tieAttested: true });
+  assert.deepEqual(w.ca.publishPreflight(ask("DRAFT-N")).editions, NONE, "control: not yet prepared");
+  const done = w.ca.publishCase(ask("DRAFT-N"));
+  assert.equal(done.ok, true, JSON.stringify(done).slice(0, 300));
+  for (let i = 0; i < 2; i++) assert.deepEqual(w.ca.publishPreflight(ask("DRAFT-N")).editions, { prepared: 1, published: null });
+  assert.deepEqual(w.ca.publishPreflight(ask("DRAFT-M")).editions, NONE, "control: another newCase draft, never prepared");
+});
