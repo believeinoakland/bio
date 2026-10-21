@@ -1,40 +1,35 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #242 (`session_018XS8GJKJ9CrADVMCkN7XLe`, depth 1, parent ROOT #8 `session_01R3hvN64bYHG3vPQmYmaeLR`, secondary account), 2026-10-21 ~16:25 UTC, at 63 % of its window. **T51 is OPEN** on `tranche/T51`, in **fix round 3, wave 2**. Read `build/rulings-active.md` whole (§1 "How debugging runs" K4297, "Speed" K4354; §4's new job-branch line, K4385), then **K4367 to the last line** of `build/rulings.md` whole, then `build/plan/fix-round-3-T51.md` whole (in force; additions at K4367 to K4399, its §11 the round's word batch).
+**Status** · Replaced whole at each handoff. Written by BOB #243 (`session_01LRzJXaPyXDy55wfL6JRmC8`, depth 1, parent ROOT #8 `session_01R3hvN64bYHG3vPQmYmaeLR`, secondary account), 2026-10-21 ~19:20 UTC, at 43 % of its window. **T51 is OPEN** on `tranche/T51`; **every job of fix round 3 is merged** (K4418); the round's after-steps (plan §9) remain. Read `build/rulings-active.md` whole, then **K4401 to the last line** of `build/rulings.md` whole, then `build/plan/fix-round-3-T51.md` §9 to §11 whole.
 
 ## What happened this session
 
-- Took over (K4367). Wave 1 merged whole: 20 jobs plus RECORD-CORE, and the providers added for wave 2 (CAPTURE #44 `captureseenin`, ACTION-CLOCKS #17 `remindersfor`, ACQUISITION #23, AFFORDANCES #41, PLANE #47, all merged; K4367 to K4397). Wave-2 STARTs checked against merged code and amended (K4370).
-- **Why BOBs force-pushed, and the fix** (Bob asked, K4385): job branches were moved by hand-written git; now only `node /home/user/cp-jb/tools/mail.mjs jobbranch --product . --tranche T51 --module <m>` (civicos-process branch `prep/jobbranch-K4385`; check it out into a worktree if `/home/user/cp-jb` is gone). It never forces. rulings-active §4 says so.
-- Design stream: DEC-405 (N1258), DEC-406/407 public registers (N1259), DEC-408 (notes, never published), DEC-409/410 follow the trail (N1260): all merged into the tranche (design files only), placed in `next.md` for T52 (K4269), ACKed through U445.
-- T52 drafts: `build/plan/draft-T52-DEC406.md`, `measures-T52-DEC406.md`, `draft-T52-DEC409.md`; **nine decisions put to Bob** on the page https://claude.ai/artifact/MAAk8ZpjRve5y7fkutHnjG (K4392, K4396).
+- Merged: interface-shell (R116; then #15: R117 re-points, R119 the `ready` hook), screens-inquiry, retrieval (R93), screens-intake, entities, op-declarations, jurisdictions (R95, FOIA re-read live), screens-action, control-plane, screens-settings. R118/R119-of-control-plane retired (K4411: no screen gate; `entitycreate` already admits members).
+- Stale tests fixed by BOB, test files only (K4414, K4415, K4417): six tests now read the pinned registry fixture; fr4-project's later-module import replaced; testcopy cleared; coverage ids named. `uses` edges: screens-settings and screens-inquiry gain `interface-assets` (K4413, K4414): member-roster's `order.mjs` is stale until regenerated.
+- **Bob's nine T52 decisions answered (K4403)**, recorded in his words; folded into N1259/N1260 and rulings-active; T52's plan written and reviewed (`build/plan/draft-T52-plan.md`, K4405: 42 jobs, ~6-7 working days); DEC-411 (U446 @ 0012a09939) redraws registers and explore for K4403, merged into the tranche (design files only) and named by the plan (K4406).
+- Channel: UX-DESIGN read through U446; BOB posted B468 NOTICE (K4403), B469 HANDOFF (answered by U446), B470 ACK, **B471 HANDOFF: the round's word batch (plan §11)**, not yet answered.
+- Suite at e4a2ae2573 classified (K4414): all reds are accepted by name, stale until regeneration (setup-words rows, the bundles, ocr-worker, agent-worker), or since fixed; doc-clean R4 flakes only under load.
 
-## Running jobs (addresses in `current.md`'s Jobs line)
+## Running
 
-- **ENTITIES #18** (wave 1, last): told B8 to declare `officeconfirm`'s description word for word as op-grades publishes it. When it merges: CHANGE to OP-DECLARATIONS #34 (spec it, then merge it), start SCREENS-SETTINGS #15 and SCREENS-ACTION #12 (STARTs ready; settings also waits on INTERFACE-SHELL #14).
-- **OP-DECLARATIONS #34**: answered J30 (a); held until officeconfirm merges, then COMPLETE and merge.
-- **CONTROL-PLANE #44**: told plane R74 merged (B20) and `money` added to its uses (B21); merge last in wave 2.
-- **SCREENS-INQUIRY #19**, **SCREENS-INTAKE #14**: running.
-- **INTERFACE-SHELL #14** (interface-shell R116 `cs.signer.sign(statements, {keyFile})`): merges before SCREENS-SETTINGS.
-- Merged and archived this session: see K4367 to K4399. The module suite started at fead60ac8e (background task in BOB #242's container; its result lost with this session; re-run once per wave on the merged tranche).
+Nothing. No job session is open. Lanes: PERFORMANCE past P6, AI-DESIGN past A5, JOURNEYS past W4, INVESTIGATION-DESIGN past H43 (nothing new this session).
 
 ## Do next, in order
 
-1. **Take over** (§5.1). Archive BOB #242 once idle (row `BOB-final`, T51). Delete its routines: backstop (send_later, ~16:20Z, may have fired) and WATCH #242 `trig_013j7hLnCdLKMw7nM5gzpcks`; arm your own. Channel: UX-DESIGN #37, read through U445, nothing owed. Lanes: PERFORMANCE past P6, AI-DESIGN past A5, JOURNEYS past W4, INVESTIGATION-DESIGN past H43.
-2. **Bob's nine T52 decisions:** ask him in one line to answer in your session (he may have answered in BOB #242's: read its last events with `list_events` before asking). Record each in his words; then write T52's plan from the two drafts (read both whole) with his answers.
-3. **Finish wave 2** as above; merge each at once (providers first: interface-shell, then settings, intake, inquiry, action, control-plane last).
-4. **After the round** (plan §9): send the word batch (plan §11) to UX-DESIGN in one HANDOFF; regenerate in the manifest's order (member-roster `order.mjs` changed: `uses` edges added, K4399); checks; the scanner image republished (`container-images.yml`); redeploy biosmoke8 by push to `deploy-test/biosmoke8/{dry-run,deploy}`; targeted re-walk; the performance lane's re-measure (K4354); the final pass; then T51's close (§5.7): design MERGE first, `main` merged in, every module's tests, the close PR; the process repository's PR (M-T51-6) carrying `prep/cause-job-K4273`, `prep/words-arms-K4208`, `prep/stale-test-K4349`, `prep/jobbranch-K4385`.
+1. **Take over** (§5.1). Archive BOB #243 once idle (row `BOB-final`, T51). Delete its routines: backstop (send_later `trig_01AN6fRjb9VZ9g16bJUJ4T7a`'s successor, ~19:35Z) and WATCH #243 `trig_012Qt3HagLmnxpEDoEnbZMam`; arm your own. Install `node_modules` (K4113). The mail tool's jobbranch command is on civicos-process `prep/jobbranch-K4385` (worktree `/home/user/cp-jb`; recreate if gone).
+2. **Plan §9, in order:** regenerate in the manifest's order (member-roster `order.mjs` first: `uses` changed; setup-words `rows.mjs`; `program.mjs`; `court-data.mjs`; wizard-scripts' data; `node bio-plane/scripts/bundles.mjs`; newgroup), verify (`fleetbundles`, `newgroup-bundle-fresh`, `--test-force-exit`), checks (words must read zero after regeneration; op-grades' three `plain` findings were waiting on it, K4384); the scanner image republished (`container-images.yml`, its digest and `source_sha256` into the marker and `wrangler.jsonc`; check §16); redeploy biosmoke8 by push to `deploy-test/biosmoke8/{dry-run,deploy}` (K4296; each deploy act needs Bob's one-line approval in the refused session, rulings-active §2); targeted re-walk (plan §9 (5), with fixtures); the performance lane's re-measure (K4354); one final pass; then T51's close (§5.7): design MERGE first (UX-DESIGN's PR, including DEC-411), `main` merged in, every module's tests, the close PR; the process repository's PR (M-T51-6) carrying `prep/cause-job-K4273`, `prep/words-arms-K4208`, `prep/stale-test-K4349`, `prep/jobbranch-K4385`.
+3. **T52** opens the moment T51 closes, from `draft-T52-plan.md` (moved into `next.md`/`current.md`), L11-D on DEC-411 @ 0012a09939.
 
 ## Accepted reds, by name, until the act named
 
-Plane R24 and screens-settings R39 (T52); journey-check R17 and its walk-dependent local-arm tests; store-door R17; promotion `row-census`; coverage's held ids (K4236); case-checker R13, R25 until the round's regeneration (K4355); the words check's op-grades `plain`/`inline` findings until regeneration (K4384); control-plane's nonce/page tests and `plane/fix3-r74` until CONTROL-PLANE #44 merges (K4360, K4393); `affordances/t33:189` and op-declarations' spec reds until OP-DECLARATIONS #34 merges (K4369, K4379); acquisition `checks.test.mjs` R29 R31 until the design's `refusal.CAPTURE_NOT_KEPT` row lands (K4373); op-declarations `t36:306` (`capturecredentiallist` has no help text; its affordances row goes in the completion round, K4381).
+Plane R24 and screens-settings R39 (T52); journey-check R17 and its walk-dependent local-arm tests; store-door R17; promotion `row-census`; coverage's six held remote-route ids (agent-harness R17, agent-runner R37 R38, installer-steps R26 R31, journey-check R19; K4417); case-checker R13, R25 and setup-words, bundler `fleetbundles`, ocr-worker R19, agent-worker R45 until the round's regeneration (K4355, K4414); words' op-grades `plain` findings until regeneration (K4384); acquisition `checks.test.mjs` R29 R31 until the design's `refusal.CAPTURE_NOT_KEPT` row lands (K4373); op-declarations `t36:306` (`capturecredentiallist`, completion round, K4381).
 
 ## Acts on main or sessions (reviewed acts, §5.8)
 
 - `main` moves only by T51's close PR (§5.7 (3)), the design stream's MERGE first (§5.7 (1), K1177); no refusal of either recorded. The process repository's `main` by PR at the close (K4275: its direct push was refused).
 - Job branches: only by `mail jobbranch` (K4385); a force-push is never written (refused at K3977, K4384).
-- Deploys to biosmoke8: by push to `deploy-test/biosmoke8/{dry-run,deploy}` (K4296); none yet this session.
+- Deploys to biosmoke8: by push to `deploy-test/biosmoke8/{dry-run,deploy}` (K4296), each approved by Bob in the refused session (K1715 line); none yet this round.
 
 ## Open with Bob
 
-The nine T52 decisions (registers and following the trail) on https://claude.ai/artifact/MAAk8ZpjRve5y7fkutHnjG; "All as recommended" or exceptions.
+Nothing.
