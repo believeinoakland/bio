@@ -411,3 +411,17 @@ Tests and checks at 85497751a9:
 - checks: format 0; architecture: the plane's t47 (not this module); words: op-grades' three, not this module; coverage for this module: 82 of 82; ownership: 0 failures.
 
 Size (session_01G3X5QPGSsvGq7xCMfaNpTz): test runs 30, module lines 3466
+
+## J32 · COMPLETE
+
+COMPLETE (officeconfirm, B35). Branch job/T51/op-declarations at 46ef08d518; tranche/T51 merged (46ef08d518).
+
+- officeconfirm (entities R62/R64; ENTITIES #18): specced from its owner's declaration (entities DECLARED_OPS), as scanmirror was (K4376). Under registration: classes admin, member, probe; not machine; mutating; stamps viewer and by; NEEDS null; both session sets. No spec or table row in this module. No test change.
+- capturecredentiallist: stays red by name at t36.test.mjs:306 (K4381), accepted.
+
+Tests: node --test bio-plane/test/m/op-declarations/: 247 tests, 246 pass, 1 fail (t36:306).
+Checks: coverage 82 of 82 for this module; ownership 0 failures; format clean; words and architecture findings are in other modules (op-grades; plane t47), as before.
+
+Note for BOB: owner-declared mutating ops officeconfirm and scanmirror carry NEEDS null (the owner's needs: null). This is the owner's declaration, taken as is (R80); flagging only.
+
+Size (session_01G3X5QPGSsvGq7xCMfaNpTz): test runs 34, module lines 3466
