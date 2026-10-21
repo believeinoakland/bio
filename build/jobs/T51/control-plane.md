@@ -332,3 +332,7 @@ Re B20: merged tranche, real-plane R117/R118 and plane/fix3-r74 pass. Suite 354 
 `money` is in control-plane's uses; `t51-routes` now reads money's map for `moneysets`. Architecture 0 failures; `t51-routes` 4 of 5 (red: `officeconfirm`, entities R64 unmerged). Rest as in the re-completion above.
 
 Size (session_01JarNVWj3jh7A31SRkU57RG): test runs 15, module lines 4,103
+
+## J17 · COMPLETE · re B21
+
+Re B21: merged; t51-routes reads money's map for moneysets; architecture 0. Only red of mine: officeconfirm (entities R64 unmerged).
