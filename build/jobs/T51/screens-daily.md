@@ -10,6 +10,8 @@
    - `filingapprove`: an item whose option is `filingapprove` (a letter drafted for the group) draws the act (`act.filingapprove.label.home|queue`, terminal, so the shell confirms). Pressing it reads `filingsfor {action}` (the item's subject) and sends `filingapprove {filing}` for the newest draft not yet sent and not approved; with none it sends nothing and opens the action.
    - Tests: `todos.test.mjs` (written first and seen failing; 15 tests, each on Home and on the queue, controls included) and `contract.test.mjs` R1–R13 (the registry's acts, exactly).
 
+- (B22, R74) A contradiction item seen in part opens `/app/contradiction/<candidate>/<project>`: the project from `parties[0].project` (a notice) or `between_projects[0].project` (a candidate), the slash unescaped (`item-words.mjs`, `targetOf` and `open`); with no project it opens by the candidate alone as before. Test: `queue.test.mjs` R74 (seen failing first), control included. **R74 amended line for BOB:** a contradiction item opens `<candidate>/<project>` when its subject names a side's project (`parties[0]` or `between_projects[0]`), else the candidate alone.
+
 **Deferred:** none.
 
 **Requirement lines for BOB:** R3 add: `release` and `filingapprove` are registered acts of Home and the queue. R17 add: "Vouch for N photos you captured on {place}" (`screen.home.todo.vouch`, `.vouch.noplace`, `.vouch.noplace.one`) is a to-do of the member's own for each place her held captures (`heldcaptures {member}`) come from, with her two statements and `release` (`select` then `release`, R79 of screens-inquiry's dashboard the same); on the queue it is drawn above the list and counts as something waiting (R41). R3 add: a letter's item draws `filingapprove` ("Read and approve it"): `filingsfor {action}`, then `filingapprove {filing}`. Private Uses: `heldcaptures`, `select`, `release`, `filingsfor`, `filingapprove` through the plane; the registry's reading of "ELSEWHERE" in this module's contract test is retired.
@@ -21,7 +23,7 @@
 4. `checks/run.mjs` over all modules: coverage 6 failures in other modules (agent-harness, agent-runner, installer-steps, journey-check, screens-inquiry, screens-intake), words 1 (op-grades `t37.test.mjs`:32); none names screens-daily.
 
 **Tests and checks run (process repo at its head):**
-- `node --test bio-plane/test/m/screens-daily/`: 222 tests, 222 pass.
+- `node --test bio-plane/test/m/screens-daily/`: 223 tests, 223 pass (after B22).
 - `node checks/format.mjs /home/user/bio`: 0 failures. `architecture.mjs … screens-daily`: 0 failures. `coverage.mjs … screens-daily`: 79 of 79 live ids named by a test, 0 failures. `words.mjs … screens-daily`: 0 failures. `ownership.mjs … screens-daily tranche/T51 job/T51/screens-daily`: 8 files changed, 0 failures. `checks/run.mjs`: format 0, architecture 0, coverage and words as REPORT 4.
 
 Size (session_01529AmD3t2nQgB7HFWQs2QU): test runs 9, module lines 3897
