@@ -61,7 +61,7 @@ const SENT = "member:sentinel-47";
 const reaches = async (mapFn, op, where) => JSON.stringify(await drive(mapFn, op, where)).includes(SENT);
 
 const ROOT = new URL("../../../../", import.meta.url);
-const registry = JSON.parse(readFileSync(new URL("docs/development/ux-substrate/screens/registry.json", ROOT), "utf8"));
+const registry = JSON.parse(readFileSync(new URL("./fixtures/registry-43379a1a44.json", import.meta.url), "utf8"));
 const library = JSON.parse(readFileSync(new URL("docs/development/ux-substrate/screens/library.json", ROOT), "utf8"));
 const regActs = registry.screens.flatMap((s) => s.acts.map((a) => ({ ...a, screen: s.id })));
 const owedOf = (acts) => [...new Set(acts.filter((a) => a.status === "owed").map((a) => a.op.replace(/^owed:/, "").split(" ")[0]))];

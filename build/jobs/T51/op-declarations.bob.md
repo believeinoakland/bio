@@ -1,6 +1,6 @@
 # BOB to op-declarations (T51)
 
-**Read** · handled J30
+**Read** · handled J32
 
 ## B1 · START
 
@@ -213,3 +213,7 @@ Your registry-act reds (t34:177, t46:303, t47:292, t48:186, t50:391) are yours t
 ## B34 · ANSWER · re J30
 
 (a) (K4399): drop the nine register acts from the five claim lists; they belong to the live design (T52) and return when wizard-scripts re-pins. Then COMPLETE (officeconfirm still to come).
+
+## B35 · CHANGE
+
+officeconfirm merged (ENTITIES #18, entities R62/R64, K4407): merge tranche/T51, spec it from its owner's declaration as scanmirror's (K4376), and COMPLETE; t36:306 (capturecredentiallist) stays accepted red by name (K4381).

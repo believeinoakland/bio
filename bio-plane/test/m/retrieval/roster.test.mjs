@@ -9,7 +9,7 @@ import { retrievalOf, retrievalRoutes, RETRIEVAL_COUNT_KEYS } from "../../../src
 import { routeFinding } from "../../../src/provenance-routes/index.mjs";
 import { hiddenBundles, viewerPredicate } from "../../../src/membership/index.mjs";
 
-const ROW_KEYS = ["bundle_id", "bundle_sha", "current_state", "last_updated", "object_type", "route", "title"];
+const ROW_KEYS = ["bundle_id", "bundle_sha", "current_state", "last_updated", "object_type", "project", "route", "title"];
 const INDEX_KEYS = ["current_state", "id", "last_updated", "object_type", "sha256", "title"];
 const VIEWERS = [MACHINE, "admin", V("ann"), V("vera"), "member:nobody", "garbage", "", null, undefined];
 
@@ -55,10 +55,35 @@ test("R63: listBundles answers exactly the bundles membership's viewerPredicate 
   assert.deepEqual(r.listBundles(), []);
   /* Each row's columns are the bundle's own. */
   for (const b of r.listBundles({ viewer: MACHINE })) {
-    const own = w.row(`SELECT bundle_id, object_type, current_state, title, last_updated, bundle_sha FROM bundles WHERE bundle_id=?`, b.bundle_id);
+    const own = w.row(`SELECT bundle_id, object_type, current_state, title, last_updated, bundle_sha,
+                              COALESCE(project, '') AS project FROM bundles WHERE bundle_id=?`, b.bundle_id);
     const { route, ...rest } = b;
     assert.deepEqual(rest, own);
   }
+});
+
+test("R93: each row listBundles answers carries the bundle's project, the empty text for a project-less bundle, in the same statement; no row gains a project its viewer could not already see, and no other field changes", () => {
+  const { w, r, proj } = roster();
+  w.doc("INFO-2026-0004-p", { project: proj });
+  const stored = (id) => w.row(`SELECT project FROM bundles WHERE bundle_id=?`, id).project;
+  assert.equal(stored("INFO-2026-0004-p"), proj, "the fixture files the question in the project");
+  assert.equal(stored("INFO-2026-0001-a") ?? null, null, "a project-less bundle stores no project");
+  /* Each visible row carries what its bundle stores, and the empty text where nothing is stored. */
+  for (const viewer of VIEWERS) {
+    const rows = r.listBundles({ viewer });
+    assert.deepEqual(rows.map((b) => b.bundle_id), passes(w, viewer), String(viewer));
+    for (const b of rows) assert.equal(b.project, stored(b.bundle_id) ?? "", `${viewer} ${b.bundle_id}`);
+  }
+  const ann = Object.fromEntries(r.listBundles({ viewer: V("ann") }).map((b) => [b.bundle_id, b.project]));
+  assert.equal(ann["INFO-2026-0004-p"], proj, "a member who may see the project sees its question's project");
+  assert.equal(ann["INFO-2026-0001-a"], "", "the empty text for a project-less bundle");
+  /* The paged arm carries the same field. */
+  const paged = r.listBundles({ viewer: V("ann"), limit: 100 }).bundles;
+  assert.deepEqual(paged.map((b) => b.project), r.listBundles({ viewer: V("ann") }).map((b) => b.project));
+  /* Control: a viewer who may not see the project is not answered its question, nor the project's name on any row. */
+  const vera = r.listBundles({ viewer: V("vera") });
+  assert.ok(!vera.some((b) => b.bundle_id === "INFO-2026-0004-p"), "the question is hidden from vera");
+  assert.ok(!vera.some((b) => b.project === proj), "no row names the hidden project to a viewer who cannot see it");
 });
 
 test("R63: route is provenance-routes' routeFinding(object_type, mark) over the bundle's standing route mark (its highest seq, provenance-routes R8), null mark when none; the mark's own columns are never on the row", () => {

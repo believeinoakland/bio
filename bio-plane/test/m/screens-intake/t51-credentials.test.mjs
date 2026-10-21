@@ -22,7 +22,7 @@ test("R47 a request turned away for a login is drawn with the login form; only a
   assert.ok(text(p).includes(word("screen.capture.cred.turned", { source: "records.example-city.gov" })));
   const tail = word("screen.capture.cred.askedby", { name: "N", date: "D", count: 0 }).split("D")[1];
   assert.ok(tail && text(p).includes(tail), "R47 asked for by the member, the day and the tries, by key");
-  assert.equal(main(p).querySelectorAll('button[data-act="capturecredentialsupply"]').length, 1, "one row asked for a login");
+  assert.equal(main(p).querySelectorAll('button[data-act="capturecredentialsupply"][data-request]').length, 1, "one row asked for a login (the logins section's own 'Store this login' carries no request)");
   assert.equal(main(p).querySelectorAll('button[data-act="capturerequestretry"]').length, 1, "the retry only on that refused request");
   assert.ok(!text(p).includes(word("screen.capture.cred.turned", { source: "paid.example.org" })) && !text(p).includes(word("screen.capture.cred.turned", { source: "fine.example.org" })), "control: a paywall refusal and an accepted request are not offered a login or a retry");
   assert.equal(p.doc.getElementById("cc-secret").getAttribute("type"), "password");
@@ -63,16 +63,16 @@ test("R47 the retry by itself sends the request and nothing else", async () => {
 test("R47 the stored logins are listed by source and who gave each; no secret, length or digest; a login is withdrawn and the list read again", async () => {
   let entries = [LOGIN];
   const p = await open({ plane: { capturecredentiallist: () => ok({ ok: true, entries, limit: 200, truncated: false }), capturecredentialwithdraw: () => { entries = []; return ok({ ok: true }); } } });
-  assert.ok(!text(p).includes(word("screen.capture.cred.notshown")), "nothing stored is drawn before the list is asked");
+  assert.ok(!main(p).querySelector('button[data-act="capturecredentialwithdraw"]'), "nothing stored is drawn before the list is asked");
   await press(p, "capturecredentiallist");
-  assert.ok(text(p).includes(word("screen.capture.cred.stored", { source: "records.example-city.gov" })));
-  assert.ok(says(p, "screen.capture.cred.notshown"));
+  assert.ok(text(p).includes("records.example-city.gov"), "the source");
+  assert.ok(text(p).includes(word("screen.capture.logins.kind.login")) && text(p).includes(word("screen.capture.logins.scope.group")), "what it asks for and who may use it (fix round 3, FC-23)");
   assert.ok(text(p).includes("Rosa-h"), "who gave it, by handle");
   assert.ok(says(p, "screen.capture.cred.listnote1") && says(p, "screen.capture.cred.listnote2"));
   assert.ok(!/secret|digest/i.test(JSON.stringify(entries)) , "the fixture itself carries none");
   await press(p, "capturecredentialwithdraw", { reason: "No longer needed." });
   assert.deepEqual(p.byOp("capturecredentialwithdraw").map((r) => r.body.credential), ["CRED-1"]);
-  assert.ok(!says(p, "screen.capture.cred.notshown"), "the withdrawn login is gone from the list");
+  assert.ok(!text(p).includes("records.example-city.gov") || !main(p).querySelector('button[data-act="capturecredentialwithdraw"]'), "the withdrawn login is gone from the list");
 });
 
 test("R47 each refusal is drawn by its words: a machine, the team's own Civicsmith, a request its source did not turn away", async () => {

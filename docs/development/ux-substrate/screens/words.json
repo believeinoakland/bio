@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7101,
+  "screen": 7132,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1155,
+  "act": 1165,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -231,8 +231,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 18329,
-  "protected": 1103
+  "total": 18370,
+  "protected": 1108
  },
  "words": [
   {
@@ -75714,7 +75714,7 @@
   },
   {
    "key": "screen.registers.intro",
-   "en": "Registers that public offices keep, which your team brings in whole, searches, cites and watches. None of it needs the assistant.",
+   "en": "Registers that public offices keep, which your team brings in whole or in part, reads ahead, searches, cites and watches. None of it needs the assistant.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-407: subtitle"
@@ -75846,34 +75846,6 @@
    "note": "DEC-407: option"
   },
   {
-   "key": "screen.registers.import.which.officers",
-   "en": "Company officers",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-407: option"
-  },
-  {
-   "key": "screen.registers.import.which.other",
-   "en": "Another register: give its address below",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-407: option"
-  },
-  {
-   "key": "screen.registers.import.address",
-   "en": "The register's address, if it is not in the list",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-407: field"
-  },
-  {
-   "key": "screen.registers.import.address.help",
-   "en": "Where the register is published. Leave it empty to bring in the one chosen above.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-407: help"
-  },
-  {
    "key": "screen.registers.import.go",
    "en": "Bring in this register",
    "protected": false,
@@ -75959,7 +75931,7 @@
   },
   {
    "key": "screen.registers.search.cite.note",
-   "en": "A cited row carries its register, its source and the date it was brought in.",
+   "en": "A cited row travels as a labeled extract of the file it came from.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-407: note"
@@ -75970,13 +75942,6 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-407: section"
-  },
-  {
-   "key": "screen.registers.watch.row",
-   "en": "{register} · watched since {date} · last changed {date}",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-407: a watch line under its number"
   },
   {
    "key": "screen.registers.watch.row.quiet",
@@ -76036,7 +76001,7 @@
   },
   {
    "key": "screen.registers.watch.told",
-   "en": "You are told once in your queue when it changes.",
+   "en": "Each change to a watch is one item in your queue, with how many changes there have been since you last looked.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-407: note"
@@ -76399,13 +76364,6 @@
    "note": "DEC-410: a hop through a place linked to too many things to walk"
   },
   {
-   "key": "screen.explore.all.cut",
-   "en": "Not every connection was searched: the search stopped at {depth} steps and at {visited} places visited, so there may be others.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-410: when the search was cut short at its bounds; never implies completeness"
-  },
-  {
    "key": "screen.explore.all.tip.what",
    "en": "Every chain the search found between the two ends, not only the first.",
    "protected": false,
@@ -76448,22 +76406,8 @@
    "note": "DEC-410: under a chain a member built"
   },
   {
-   "key": "screen.explore.shorter.note",
-   "en": "A shorter cited path joins the same two ends.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-410: beside a member's chain"
-  },
-  {
-   "key": "screen.explore.shorter.count",
-   "en": "It has {short} steps, against your {mine}.",
-   "protected": false,
-   "source": "DEC-259",
-   "note": "DEC-410: beside a member's chain"
-  },
-  {
    "key": "screen.explore.shorter.see",
-   "en": "See the shorter path",
+   "en": "See the shorter paths",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-410: button (owed:exploreshorter)"
@@ -76477,7 +76421,7 @@
   },
   {
    "key": "screen.explore.shorter.tip.what",
-   "en": "Where you built a chain step by step, a shorter cited path between its two ends is shown beside it.",
+   "en": "Where you built a chain step by step, paths with fewer steps between its two ends are shown beside it: evidenced paths first, then leads.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-410: the section's explanation"
@@ -76509,6 +76453,279 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-410: the paused parts"
+  },
+  {
+   "key": "screen.registers.held.filter",
+   "en": "Kept with it, and what watching looks for: {filter}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: a held register line: the filter it was brought in with"
+  },
+  {
+   "key": "screen.registers.held.row.preread",
+   "en": "From {source} · read ahead for the team {date} · {rows} rows · no project has asked yet",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: a register line for a team pre-read"
+  },
+  {
+   "key": "screen.registers.held.whole",
+   "en": "Read in whole: watching looks for any change",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: a held register line: no filter"
+  },
+  {
+   "key": "screen.registers.known.head",
+   "en": "Registers we know",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: section"
+  },
+  {
+   "key": "screen.registers.known.about",
+   "en": "Each is listed with where it comes from and how big it is.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: note"
+  },
+  {
+   "key": "screen.registers.known.row",
+   "en": "From {source} · {url} · {bytes} bytes · {rows} rows",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: a known register line under its name"
+  },
+  {
+   "key": "screen.registers.known.officers.tag",
+   "en": "Not in the alpha",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: tag on company officers"
+  },
+  {
+   "key": "screen.registers.known.officers.note",
+   "en": "Bringing in company officers in bulk comes in the beta.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: line under company officers; no import control"
+  },
+  {
+   "key": "screen.registers.known.door.head",
+   "en": "A register we know that is not listed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: fold"
+  },
+  {
+   "key": "screen.registers.known.door.note",
+   "en": "Give its name, its address and who publishes it. It is proposed for the list, and nothing is brought in.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: note"
+  },
+  {
+   "key": "screen.registers.known.door.name",
+   "en": "Name of the register",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: field"
+  },
+  {
+   "key": "screen.registers.known.door.url",
+   "en": "Its address (URL)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: field"
+  },
+  {
+   "key": "screen.registers.known.door.source",
+   "en": "Who publishes it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: field"
+  },
+  {
+   "key": "screen.registers.known.door.go",
+   "en": "Propose this register",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: button (registerpropose)"
+  },
+  {
+   "key": "screen.registers.import.mech",
+   "en": "Importing runs by fixed steps and never uses the assistant.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: note"
+  },
+  {
+   "key": "screen.registers.import.part.head",
+   "en": "Whole or in part",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: heading over the filter"
+  },
+  {
+   "key": "screen.registers.import.part.empty",
+   "en": "Leave every box empty to bring in the whole register.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: note"
+  },
+  {
+   "key": "screen.registers.import.part.prefill",
+   "en": "Filled in from the project {name}; change it as you like.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: note when a project is open"
+  },
+  {
+   "key": "screen.registers.import.part.names",
+   "en": "Names or organizations",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: field (registerfilter)"
+  },
+  {
+   "key": "screen.registers.import.part.ids",
+   "en": "Filer numbers",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: field (registerfilter)"
+  },
+  {
+   "key": "screen.registers.import.delta.go",
+   "en": "Work out what it would add",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: button (registerdelta)"
+  },
+  {
+   "key": "screen.registers.import.delta.row",
+   "en": "Compared with what your record holds: {rows} new rows, {bytes} bytes, about {time} to read in.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: the delta before importing"
+  },
+  {
+   "key": "screen.registers.import.kept",
+   "en": "The filter is kept with the import and shown as what watching looks for.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: note"
+  },
+  {
+   "key": "screen.registers.import.dropped",
+   "en": "Phone and address columns are left out as it arrives.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: note (DEC-408)"
+  },
+  {
+   "key": "screen.registers.import.preread",
+   "en": "Read it ahead, for the team",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: button (registerpreread)"
+  },
+  {
+   "key": "screen.registers.import.preread.note",
+   "en": "Reading it ahead keeps the register, whole or in the part you chose, as a resource for the team before any project asks.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: note"
+  },
+  {
+   "key": "screen.registers.search.cite.extract",
+   "en": "Cited as an extract of {file}, fingerprint {fingerprint}, {date}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: what a cited row shows"
+  },
+  {
+   "key": "screen.registers.search.fec.notice",
+   "en": "Under 11 CFR 104.15, the names and addresses of contributors may not be sold or used to ask for contributions or for commercial purposes.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: notice on FEC rows"
+  },
+  {
+   "key": "screen.registers.search.fec.noexport",
+   "en": "Rows from this register cannot be exported as a donor list.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: notice on FEC rows"
+  },
+  {
+   "key": "screen.registers.watch.auto",
+   "en": "A watch starts by itself only for what a project has said it is interested in, and it is shown with that project and its interest.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: note"
+  },
+  {
+   "key": "screen.registers.watch.row.project",
+   "en": "{register} · watched for the project {project}, which has an interest in {interest}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: a watch line started for a project"
+  },
+  {
+   "key": "screen.registers.watch.changes",
+   "en": "{count} changes since you last looked",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: count on a watch"
+  },
+  {
+   "key": "screen.explore.all.cut",
+   "en": "The explorer stopped after 2 seconds and shows what it found. More may exist.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: when the search was stopped at 2 seconds; never implies completeness"
+  },
+  {
+   "key": "screen.explore.all.continue",
+   "en": "Keep looking",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: button (owed:explorecontinue)"
+  },
+  {
+   "key": "screen.explore.shorter.note",
+   "en": "Paths with fewer steps join the same two ends.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: beside a member's chain; never says the chain is wrong"
+  },
+  {
+   "key": "screen.explore.shorter.best",
+   "en": "The best has {short} steps, against your {mine}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: beside a member's chain"
+  },
+  {
+   "key": "screen.explore.shorter.evidenced",
+   "en": "Evidenced paths",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: sub-heading, first"
+  },
+  {
+   "key": "screen.explore.shorter.leads",
+   "en": "Leads",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: sub-heading, after the evidenced paths"
+  },
+  {
+   "key": "screen.explore.shorter.lead",
+   "en": "a lead, not evidence",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-411: label on each lead"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
@@ -118108,6 +118325,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_explorecontinue.label.explore",
+   "en": "Keep looking",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.owed_followfrom.label.explore",
    "en": "Follow this item into another dimension",
    "protected": true,
@@ -119166,6 +119389,30 @@
   {
    "key": "act.owed_registerwatchpropose.label.registers",
    "en": "Propose watches",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registerfilter.label.registers",
+   "en": "Choose which rows of a register to bring in",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registerdelta.label.registers",
+   "en": "See what an import would add",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registerpreread.label.registers",
+   "en": "Read a register ahead, for the team",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_registerpropose.label.registers",
+   "en": "Propose a register that is not listed",
    "protected": true,
    "source": "registry.json"
   },
@@ -120229,7 +120476,7 @@
   },
   {
    "key": "act.owed_exploreshorter.does",
-   "en": "Puts a shorter cited chain between the same two ends beside the one you built, so you can see it or keep your own. Your chain is never changed.",
+   "en": "Puts paths with fewer steps between the same two ends beside the one you built, evidenced paths first and then leads, so you can see them or keep your own. Your chain is never changed.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -120260,6 +120507,36 @@
   {
    "key": "act.owed_registerwatch.does",
    "en": "Watches one named filer, license or docket by its number, and tells your team once in the queue when it changes. It never watches a person.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_registerfilter.does",
+   "en": "Chooses which rows of a register to bring in, by names, organizations, amounts, dates or filer numbers. It starts from what the project you are in is interested in, and you can change it. Leave it empty to bring in the whole register.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_registerdelta.does",
+   "en": "Shows what bringing in would add to your record before anything is brought in: the new rows, the bytes, and about how long it takes. It changes nothing.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_registerpreread.does",
+   "en": "Reads a register ahead for the team, whole or in the part you chose, as a resource before any project asks. It runs by fixed steps and never uses the assistant.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_registerpropose.does",
+   "en": "Proposes a register we know that is not in the list, by its name, its address and who publishes it. Nothing is brought in.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_explorecontinue.does",
+   "en": "Keeps looking for connections after the explorer stopped at 2 seconds, and adds what it finds to what is shown. It never says the list is complete.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

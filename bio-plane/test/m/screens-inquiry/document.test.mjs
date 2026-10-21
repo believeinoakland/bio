@@ -35,7 +35,7 @@ test("R3 reads: the capture and what cites it at once; its reading, grade note, 
   assert.equal(p.byOp("backlinks")[0].query.target, D);
   assert.equal(p.byOp("reading")[0].query.sha256, SHA);
   assert.equal(p.byOp("gradenote")[0].query.capture, SHA);
-  assert.equal(p.byOp("heldcaptures")[0].query.project, P);
+  assert.equal(p.byOp("heldcaptures")[0].query.bundle_id, D);
   assert.deepEqual([p.byOp("versionchain")[0].query.address, p.byOp("versionchain")[0].query.at], ["https://example.org/ai-4-12.pdf", SHA]);
   assert.equal(p.byOp("links")[0].query.capture, SHA);
   assert.equal(p.byOp("connections")[0].query.sha256, SHA);

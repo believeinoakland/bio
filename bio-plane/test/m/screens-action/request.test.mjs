@@ -48,7 +48,7 @@ test("R20, R39: with no office known the request says so and points an administr
   const places = main(admin).querySelector('a[href="/app/places"]');
   assert.ok(places && places.textContent.includes(W("screen.places.name")), "the reference to where an office is added");
   said(admin, "screen.places.purpose");
-  assert.deepEqual(ops(admin), ["addresseesuggest"], "the name can be changed and asked again; no start and no later step");
+  assert.deepEqual(ops(admin), ["addresseesuggest", "entitycreate"], "the name can be changed and asked again, or the office named (C64); no start and no later step");
   for (const id of ["req-office", "req-what"]) assert.equal(admin.doc.getElementById(id), null, id);
   assert.equal(admin.byOp("actioncreate").length + admin.byOp("filingprepare").length, 0);
   // a session for which the shell draws no Places screen is shown the sentences and no reference
@@ -68,12 +68,12 @@ test("R20, R39: with no office known the request says so and points an administr
   assert.equal(bare.byOp("addresseesuggest").length, 0, "no call without a subject");
   said(bare, "screen.request.nooffice");
   assert.ok(main(bare).querySelector('a[href="/app/places"]'));
-  assert.deepEqual(ops(bare), []);
+  assert.deepEqual(ops(bare), ["entitycreate"], "no ask and no later step; the office may be named (C64)");
   assert.ok(!main(bare).querySelector('[data-state="failed"]'));
   // a project whose record follows no name has none to ask about: it says no office is known and draws no act
   const nameless = await open(NEW, { ...DATA_PLANE, peopledirectory: ok({ rows: [], truncated: false }), whoami: ok(ADMIN) });
   said(nameless, "screen.request.nooffice");
-  assert.deepEqual(ops(nameless), []);
+  assert.deepEqual(ops(nameless), ["entitycreate"], "no ask and no later step; the office may be named (C64)");
   // control: a read that failed is not "no office known"
   const failed = await open(NEW, { ...DATA_PLANE, peopledirectory: refused("STORE_DID_NOT_ANSWER", null, 502) });
   assert.ok(main(failed).querySelector('[data-state="failed"]'));

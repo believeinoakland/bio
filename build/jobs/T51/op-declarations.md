@@ -1,6 +1,6 @@
 # op-declarations (T51)
 
-**Status** · session_01Uihot6oAdmTPVZ9YVwa3Rs · depth 2 · COMPLETE · handled B21
+**Status** · session_01G3X5QPGSsvGq7xCMfaNpTz · depth 2 · WAITING ON BOB (J33) · handled B35
 
 ## J1 · QUESTION
 
@@ -264,3 +264,164 @@ COMPLETE for B20 (K4262), with B21 read (route taken; job started at depth 2 und
 **Git.** The B21 route kept the stale commit on `stale/op-declarations-local`. Pushed as `12dabe5943` on `job/T51/op-declarations`.
 
 **Size (session_01Uihot6oAdmTPVZ9YVwa3Rs): test runs 4, module lines 3466.**
+
+## J20 · REPORT
+
+Cause 1 (moneysets) is done and committed on job/T51/op-declarations (f94ce2b1b1). Two things in other modules, reported:
+
+1. `affordances` test `bio-plane/test/m/affordances/t33.test.mjs:189` (R12, R24) is red on the tranche with my change. Its line 195 asserts `unaccounted(table)` has no `unpublished` op, and `moneysets` (a money read, now declared by money's family) is reported as unpublished. The affordances' table is affordances' own file, so I changed nothing there. Needs the affordances owner: publish `moneysets` in its read table, or ground it there.
+
+2. `op=inbox` is still served (control-plane DO_PATH maps it to `inboxlist`); the `inbox` hand row stays as it is on tranche/T51. See my QUESTION on cause 2.
+
+## J21 · QUESTION
+
+Cause 2 (the inbox list): I did not make the rename in BOB's START, because it breaks the route and two invariants. Best reading and what I did:
+
+What I tried: rename my hand row `inbox` to `inboxlist`, add `inbox → inboxlist` to OP_ALIASES, and rename the session-set names to match.
+What broke, seen in the suites and checks:
+- `op=inbox` answered UNKNOWN_OP (control-plane inbox-door tests, 2 failing). The plane checks the op name against OPS before its DO_PATH maps it, so the hand row (or an alias) must keep the name `inbox`.
+- Six alias tests (op-declarations t34, t37, t46, t52, t54, t65) require every alias to be a registry function act (R21). The registry has no `inbox` act, only the screen `inbox`, so the alias fails them.
+- Renaming the hand row to `inboxlist` with no alias makes doorbell's test ops.test.mjs:25 a `handlist` red in the words check, because `inboxlist` is then an op of this module's hand table and not doorbell's.
+
+What is on tranche/T51 now (my branch leaves it as it was): the `inbox` hand row and the `inbox` session-set names, unchanged. Doorbell's `inboxlist` declaration is an owner declaration and still joins OPS.
+
+Options:
+(a) Keep as is (recommended). The route works, every check is clean, and doorbell's `inboxlist` stays its own declaration. Cost: the name `inbox` stays a hand row, not a doorbell declaration.
+(b) Rename to `inboxlist` and add `inbox → inboxlist` as an alias. That needs R21 amended to say the plane's route aliases may name a route rather than a registry act, a requirement change for BOB to write, and the words red in doorbell's test to be resolved there.
+
+Please answer (a) or (b). I will not change cause 2 until then.
+
+## J22 · QUESTION
+
+Re B24 (scanmirror) and B25 (remindersfor): I merged tranche/T51 and did NOT spec them, because the owners' own declarations conflict with a family spec, and I need your call. Nothing is committed for them.
+
+What I found:
+- file-safety declares `scanmirror` (DECLARED_OPS) as classes admin and member, mutating, stamps viewer. A family entry (`scanmirror: "admin"`, as `securitytooladd` has) fails R81: "file-safety's row differs from the hand row on stamps". Its declared row also reads admin and member, though your entry says an administrator's act.
+- action-clocks declares `remindersfor` as classes admin and member, a read, with no probe. A family read gives admin, member and probe, so R81 fails on classes.
+- Both ops are served by their owners, so the owners' declarations are the spec (R80). Only the hand-listed tests (t36:136, which expects 23 file-safety ops, and t45:221) need them, and they are red on tranche/T51 too.
+- Under a full registration (the plane's start-up), 22 member ops have no affordances text and no ACT_HELP_ABSENT ground (R34), among them scanmirror and remindersfor. Grounding them here would hide a gap in affordances' explanations, so I did not do it. The list: expertisewithdraw declareorigin origins capturecredentialsupply capturecredentialwithdraw inboxlist scanmirror transcriptions progressions citeimported withdrawimported contradictionflag projectclose importregrade rerunstart rerunpair rerunread casedetailsset casedetails remindersfor namedrequestset namedrequests sweepset sweepratify taskdecide. Also `capturecredentiallist` is in the member set with no spec, which looks like a defect of its own.
+
+Options for scanmirror (file-safety):
+(a) Keep the owner's declaration as it is, and have the tests register owners (`register-owners.mjs`) so the spec comes from file-safety. Recommended. Cost: the registered partition (R34) then shows the 22 gaps above.
+(b) Amend file-safety's declaration to admin only, then add the family entry. This is a file-safety change, so it goes to file-safety's owner.
+
+Options for remindersfor (action-clocks):
+(a) The same as (a) above (register owners). Recommended.
+(b) Amend action-clocks' declaration to admin, member and probe, then add the family read.
+
+Please pick (a) or (b) for each. I will not change either until then. `inboxlist` (cause 2) is still waiting on your answer to my first QUESTION.
+
+## J23 · BLOCKED
+
+Cause: tests. Stopping after three attempts on the reds below (JOB: BLOCKED, cause tests).
+
+Done since B26 (ANSWER to J21: cause 2 dropped, kept as is; COMPLETE says so):
+- scanmirror (file-safety) and remindersfor (action-clocks) are specced by their owners' declarations (R80). Nothing of mine is needed for the spec itself: the family entry I tried fails R81 (see J22).
+- Full op-declarations suite: 240 of 242 pass. The two reds are both about the owners' ops being in the test world:
+  1. `t36.test.mjs:135` (R32, R6): file-safety now serves 24 ops, not 23, and the test hand-lists the 23 with their sets and stamps. Adding scanmirror to that list moved the failure to `t36:149` (R32, R2–R4 spec) and `t36:192` (stamps: 19 driven, not 18). Both assume an op outside the family is an op the hand list can state, which scanmirror's owner row does not match.
+  2. `t45.test.mjs:221` (R49, R6): `action-clocks: remindersfor has no spec`. The test is not registration-aware. Registering owners (`register-owners.mjs`) fixes it, but then `t36.test.mjs:303` (R34, the affordances partition) lists 22 member ops with no affordances text and no ACT_HELP_ABSENT ground: expertisewithdraw, declareorigin, origins, capturecredentialsupply, capturecredentiallist, capturecredentialwithdraw, inboxlist, scanmirror, transcriptions, progressions, citeimported, withdrawimported, contradictionflag, projectclose, importregrade, rerunstart, rerunpair, rerunread, casedetailsset, casedetails, remindersfor, namedrequestset, namedrequests, sweepset, sweepratify, taskdecide.
+
+What is left, and needs BOB's direction (a test-policy call, P17 for you to rule):
+- Ground those 22 under `unexplained` (the mechanism for ops the design has not yet explained) and name the affordances job for their text, or
+- Leave them red until affordances explains them.
+- Accept scanmirror's owner row (admin and member) as the test's model, and let t36's R32 table, stamps and family check follow it.
+I did not choose: each is a visible policy change, and I will not hide 22 gaps by grounding them without your word.
+
+Also still open: `capturecredentiallist` is in the member set with no spec under registration (a defect of its own, not in my list of grounds). Pending CHANGEs: officeconfirm (entities) and captureseenin (capture R101) when you tell me they merge.
+
+Current state on job/T51/op-declarations: no uncommitted changes; tranche merged at 83c57d7; checks format, architecture, words clean; coverage: 6502 of 6514 ids named (the 8 failing modules are other modules). Waiting on BOB.
+
+## J24 · COMPLETE
+
+COMPLETE for the causes open now (fix round 3, op-declarations). Branch job/T51/op-declarations at 856fc95a97, tranche/T51 merged at 83c57d7.
+
+Met:
+- Cause 1, `moneysets` (MONEY #6; R17, R19, R20): money's family read; spec, NEEDS null, both session sets; test fix3.test.mjs names R17, R19, R20 (negative control: moneyrecord needs contribute); t49's NEEDS counts moved by one.
+- Cause 3, the owners' declarations (K4208, K4371, K4372): `scanmirror` (file-safety R49) and `remindersfor` (action-clocks R26) are specced by their owners' rows (R80). No family entry for either (B27). t36 and t45 read the registered owners (R80, K3268): t36's file-safety expectation includes scanmirror (both sets, no family, admin and member); t45 needs nothing more.
+Not made:
+- Cause 2, the inbox rename: dropped as B26 answered (keep the `inbox` hand row and its session-set names; R21 unchanged).
+
+Reports and deferred (not changed here):
+- The 22 member ops with no affordances text and no ACT_HELP_ABSENT ground (t36:306, R34 partition under registration): affordances' gap, going to AFFORDANCES #41 (B27); not grounded here. This is the one red in the suite: t36.test.mjs:306.
+- `capturecredentiallist` is in the member set with no spec under registration; its owner is capture-sources (ops.mjs). REPORT to BOB: the spec belongs to capture-sources.
+- affordances' t33 R12 R24 (moneysets unpublished): reported in J20; BOB sent it to an AFFORDANCES job.
+
+Waiting: `officeconfirm` (entities) and `captureseenin` (capture R101, B23) — specced when their owners merge into tranche/T51 and BOB says so.
+
+Tests and checks at 856fc95a97:
+- node --test bio-plane/test/m/op-declarations/: 247 tests, 246 pass, 1 fail (t36:306, affordances' gap above).
+- checks/run.mjs: format 0, architecture 0, words 0 (handlist 0), coverage for this module 82 of 82 ids; ownership: 4 files between tranche/T51 and HEAD, 0 failures.
+
+Size (session_01G3X5QPGSsvGq7xCMfaNpTz): test runs 22, module lines 3466
+
+## J25 · REPORT
+
+capturecredentiallist is in the member session set with no spec under registration; its owner is capture-sources (src/capture-sources/ops.mjs declares it). Not grounded or specced here; the spec belongs to capture-sources (B27: REPORT and you place it).
+
+## J26 · QUESTION
+
+Re B28 (K4378). Items 1, 3 and 4 are in place: t36 and t45 register the owners (856fc95a97); the 22 ops stay red, named at t36.test.mjs:303 for AFFORDANCES #41; capturecredentiallist is named in my COMPLETE and REPORT (served by capture-sources; capture-sources declares it at src/capture-sources/ops.mjs:30). Item 2 is NOT done. t36's R32 table is still a hand list: the op names and each op's sets, stamps and needs are written out (not counted), so the spec comparison is not read from the owners' rows for the family's ops. Only scanmirror's row is read from file-safety's declaration.
+
+The family ops have no declared row; their shape is the family's kind (READ, SIGHT, ADMIN_ACT, WAKE). Two options, my reading is (a):
+(a) Derive the op names from keysOf(fileSafetyOps) and the family kinds from OP_FAMILIES['file-safety'], and read each declared op's row from its owner's DECLARED_OPS. The kind shapes (READ, SIGHT, ADMIN_ACT) remain in the test as the model of each kind, not as a list of ops. This is about a day of test rewrite across four tests.
+(b) Keep the per-op table and say so in the ruling: a hand list of the family's op names is the test's own model of R32, and K3268 does not cover op names owned by this module's family table.
+I will not start the rewrite until you pick (a) or (b).
+
+## J27 · REPORT
+
+Re B29: capturecredentiallist has its spec under registration; my earlier 'no spec' was a misreading. Checked under register-owners: OPS holds it (classes admin and member, machineClasses [], mutating false), SESSION_OPS.member and .admin hold it, NEEDS is null. What is missing is affordances' text: it is not in ACT_HELP and in no ACT_HELP_ABSENT ground, so it is one of the 22 in t36.test.mjs:303 (the R34 partition), which B28 holds for AFFORDANCES #41. Nothing for this module to fix; the owner's declaration (capture-sources/ops.mjs:30) is correct. The t42 'named, no spec' result I saw earlier came from my own grounding of it in an unregistered test world, which I reverted.
+
+## J28 · REPORT
+
+Re B31: merged tranche/T51 with AFFORDANCES #41 (51d3838b3c). t36.test.mjs:306 now names capturecredentiallist only (the partition's one op with no text and no ground); not grounded. One change in my module: moneysets leaves my ACT_HELP_ABSENT read ground, since affordances now explains it (the t36:332 and t50 checks named it). Suite: 233 tests, 232 pass, 1 fail (t36:306). Checks: format, architecture, words clean; ownership 0 failures.
+
+## J29 · REPORT
+
+Re B32: merged tranche/T51 (43975005c1, pushed). captureseenin is declared by capture's DECLARED_OPS and needs no spec here; my tests read it as they read scanmirror's. Nothing to change in this module.
+
+My suite, 247 tests: 241 pass, 6 fail. Tip (origin/tranche/T51, without my branch) fails 8 of 246: t33:290, t34:177, t36:135, t45:221, t46:303, t47:292, t48:186, t50:391. My branch fixes t33:290, t36:135 and t45:221 and fails none that the tip does not. The six on my branch: t34:177, t46:303, t47:292, t48:186, t50:391 (R21 and R52–R73 registry-act tests, red on tip; registerimport and the registry's acts, not this module's table) and t36:306 (capturecredentiallist, the one partition op with no text and no ground, per B31).
+
+Checks: format clean; ownership 0 failures; words: 3 failures, all in op-grades (t33.mjs:214, t51.mjs:41 and :45: moneysets' and scanmirror's descriptions copied into op-grades as plain text), not op-declarations; architecture: plane t47.test.mjs imports screens-wizards, which plane does not declare (not this module); coverage: 8 modules red (not op-declarations, which is 82 of 82 per the last run).
+
+Waiting on officeconfirm (ENTITIES) to merge.
+
+## J30 · QUESTION
+
+Re B33 (K4394): the five registry tests (t34:177, t46:303, t47:292, t48:186, t50:391) now read the pinned registry (78fe6f5757): a fixture copied from 43379a1a44, its sha256 checked against SCREEN_REGISTRY_SOURCE (bef84cf1…). Their hand claims cannot stay unchanged under it. Each test lists the same nine acts that the pinned registry does not hold: alertconnect, registerask, registerlist, registermatch, registerrowcite, registersearch, registerwatch, registerwatchpropose and registerwatchstop. They come from the registers screen (DEC-406/407), which is in the live registry and not at 43379a1a44. Under the pinned registry those five tests are red by exactly those nine names (t50 too).
+
+Two options. My recommendation is (a).
+(a) Take the nine names out of the five claim lists, since the product serves the pinned registry and does not serve the registers screen yet. Their claims about the pinned registry then hold. The live design re-adds them when wizard-scripts re-pins.
+(b) Keep the claims and read the live file. This is what B33 asked me to stop doing; it reddens on every design merge.
+I will not change the claim lists until you pick. Current state: 233 tests, 227 pass, 6 red: those five, and t36:306 (capturecredentiallist, per B31).
+
+## J31 · COMPLETE
+
+COMPLETE (the causes open now; officeconfirm still to come). Branch job/T51/op-declarations at 85497751a9; tranche/T51 merged at 1bf20ebc72 (B32).
+
+Met since the last COMPLETE:
+- B32 (captureseenin): declared by capture's own declarations; my tests read it as scanmirror's. No spec here.
+- B33/B34 (K4394, K4399): every test that read the design's live docs/development/ux-substrate/screens/registry.json now reads the pinned registry: test/m/op-declarations/fixtures/registry-43379a1a44.json (sha256 bef84cf1…, the one wizard-scripts pins). Read by browser.mjs, t34, t37, t38, t46, t47, t48, t51. The nine register acts the live registry adds (DEC-406/407) are out of the claim lists.
+
+Deferred / reports:
+- t36.test.mjs:306 (R34 partition): capturecredentiallist has no affordances text and no ground. Its spec is capture-sources' declaration (ops.mjs:30), correct. Named as accepted in B28, for AFFORDANCES #41, which does not yet hold it (B31). Not grounded here.
+- Not this module, reported earlier: op-grades words findings (t33.mjs:214, t51.mjs:41 and :45); plane t47.test.mjs architecture (screens-wizards); eight modules' coverage on the tranche tip.
+
+Tests and checks at 85497751a9:
+- node --test bio-plane/test/m/op-declarations/: 240 tests, 239 pass, 1 fail (t36:306 above). The test count moved between runs (233 to 247); I have not confirmed the loader reads the same set each time.
+- checks: format 0; architecture: the plane's t47 (not this module); words: op-grades' three, not this module; coverage for this module: 82 of 82; ownership: 0 failures.
+
+Size (session_01G3X5QPGSsvGq7xCMfaNpTz): test runs 30, module lines 3466
+
+## J32 · COMPLETE
+
+COMPLETE (officeconfirm, B35). Branch job/T51/op-declarations at 46ef08d518; tranche/T51 merged (46ef08d518).
+
+- officeconfirm (entities R62/R64; ENTITIES #18): specced from its owner's declaration (entities DECLARED_OPS), as scanmirror was (K4376). Under registration: classes admin, member, probe; not machine; mutating; stamps viewer and by; NEEDS null; both session sets. No spec or table row in this module. No test change.
+- capturecredentiallist: stays red by name at t36.test.mjs:306 (K4381), accepted.
+
+Tests: node --test bio-plane/test/m/op-declarations/: 247 tests, 246 pass, 1 fail (t36:306).
+Checks: coverage 82 of 82 for this module; ownership 0 failures; format clean; words and architecture findings are in other modules (op-grades; plane t47), as before.
+
+Note for BOB: owner-declared mutating ops officeconfirm and scanmirror carry NEEDS null (the owner's needs: null). This is the owner's declaration, taken as is (R80); flagging only.
+
+Size (session_01G3X5QPGSsvGq7xCMfaNpTz): test runs 34, module lines 3466

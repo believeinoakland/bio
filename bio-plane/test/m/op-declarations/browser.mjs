@@ -26,7 +26,7 @@ export const browserActs = (registry) => {
    registry's own owed rows (K3268: no hand list): every owed act that is no op, no browser act (R76) and no installer
    route; an act leaves the list when it becomes an op. */
 const INSTALLER = ["installalongside", "installremove", "installremoveconfirm", "installupdate"];
-const registryRows = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/registry.json", import.meta.url), "utf8"));
+const registryRows = JSON.parse(readFileSync(new URL("./fixtures/registry-43379a1a44.json", import.meta.url), "utf8"));
 const OWED_ALL = [...new Set(registryRows.screens.flatMap((s) => s.acts).filter((a) => a.status === "owed")
   .map((a) => a.op.replace(/^owed:/, "").split(" ")[0]))];
 const DECLARED_BY_OWNERS = new Set(Object.values(REGISTERED).flatMap((rows) => Object.keys(rows)));

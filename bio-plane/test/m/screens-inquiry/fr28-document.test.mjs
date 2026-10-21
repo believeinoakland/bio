@@ -188,7 +188,7 @@ const HELD_ROW = { bundle_id: D, title: "Pothole repair policy", project: P, col
   captured_for: { questions: [{ question: Q, title: "Seven days?", asker: "mai" }], withheld: null } };
 test("R111 a held capture, read as the plane answers it ({held: rows}), draws the two release fields and the act, and its question is preselected", async () => {
   const p = await openWith(at, { plane: { heldcaptures: (r) => ok({ ok: true, held: [HELD_ROW], state: "held", limit: Number(r.query.limit), truncated: false, next: null }) } });
-  assert.ok(p.byOp("heldcaptures").some((r) => r.query.member === "mai"), "her own held captures are read");
+  assert.ok(p.byOp("heldcaptures").some((r) => r.query.bundle_id === D), "this copy's held row is read");
   const box = main(p).querySelector("[data-held]");
   assert.ok(box && says(box, "document.held.says"));
   assert.ok(p.doc.getElementById("document-release-ack") && p.doc.getElementById("document-release-mitigation"), "the two fields");
@@ -309,7 +309,10 @@ test("R118 Cite in which question lists each question with its project by the ke
   assert.equal(text(o[0]), word("screen.document.cite.choose"), "never starts blank");
   assert.equal(o[0].getAttribute("value"), "");
   assert.equal(text(o[1]), word("screen.document.cite.option", { question: "Is the city repairing reported potholes within seven days?", project: "Pothole repairs" }));
-  assert.equal(text(o[3]), word("screen.document.cite.option", { question: "Did the lease go to a vote?", project: "The Coliseum lease" }), "a question of another project names that project");
+  /* fix round 3 (C16): a project's questions are not read one project at a time, so a question of another project, whose title no other
+     question shares, is named by its title alone (the list row states no project); fr4-document names the project where titles collide */
+  assert.equal(text(o[3]), "Did the lease go to a vote?", "a question of another project whose project is not known is its title alone");
+  assert.deepEqual(p.byOp("projectquestions").map((r) => r.query.project), [P], "only this project's questions are read");
   assert.deepEqual(o.slice(1).map((x) => x.getAttribute("value")), [Q, Q2, Q3], "this project's questions first");
 });
 

@@ -352,14 +352,13 @@ test("R41 state g: concluded over a project is drawn from the read that names th
   assert.equal(w.root().querySelector("#state-g"), null);
 });
 
-test("R36 after planopen, the question links its plan by name; control: no plan, no link", async () => {
+test("R36 C63 after planopen, the question opens its plan page (fix round 3; it no longer stays to link it); control: a refused press opens none", async () => {
   const p = await open(at, { ...A, plane: { planopen: ok({ ok: true, id: "PLAN-2026-0003", title: "Ask the committee" }) } });
   assert.equal(main(p).querySelector("[data-plan]"), null);
   fill(p, { "question-plan": "Ask the committee" });
   await press(p, "planopen");
   assert.deepEqual(p.byOp("planopen")[0].body, { project: P, title: "Ask the committee", subjects: [{ kind: "inquiry", inquiry: Q }] });
-  const link = main(p).querySelector('[data-plan="PLAN-2026-0003"]');
-  assert.ok(link.textContent.includes("Ask the committee") && link.textContent.includes(lead("question.plan.link")));
+  assert.equal(p.location.pathname, "/app/plan/PLAN-2026-0003", "the plan page is opened with the plan as subject");
 });
 
 test("R31 Read in my language sends the question as subject, the answer drawn in place and labeled, the original back by one press", async () => {

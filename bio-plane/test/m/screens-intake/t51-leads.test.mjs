@@ -6,7 +6,7 @@ import { open as openPage, text, main, btn, fill, press, ok, refused, word, says
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 
 const PROJECTS = ok({ projects: [{ id: "PROJ-1", name: "The Coliseum lease" }, { id: "PROJ-2", name: "Pothole repairs" }] });
-const MEMBERS = ok({ members: [{ member_id: "mai", handle: "Mai-h" }] });
+const MEMBERS = ok({ members: [{ member_id: "rosa", handle: "Rosa-h" }] });
 const WORDS = "The city inspected the Coliseum garage in 2019.";
 const LEAD = (more = {}) => ({ ok: true, lead_id: "LEAD-2026-1008-aaaaaaaaaaaa", author: "member:mai", words: WORDS, locator: null, at: "2026-10-08T10:00:00Z", evidence: false, shared_to: [], looks: [], state: "NEVER_LOOKED", ...more });
 /* `leadlist` (observation-log R20) answers the leads the viewer may read: the plane's record, kept here by `held`; a written lead enters it
@@ -49,13 +49,13 @@ test("R44 an empty lead is refused in the owner's words and nothing is listed; n
 });
 
 test("R44 reading it back: Open it draws the lead, its looks by who looked and what they found, and where it was shared", async () => {
-  const p = await written({ looks: [{ seq: 1, at: "2026-10-09T10:00:00Z", looked_by: "member:mai", state: "LOOKED_INDETERMINATE", detail: "Searched the portal; nothing under that name.", result_kind: null, result_ref: null }],
+  const p = await written({ looks: [{ seq: 1, at: "2026-10-09T10:00:00Z", looked_by: "member:rosa", state: "LOOKED_INDETERMINATE", detail: "Searched the portal; nothing under that name.", result_kind: null, result_ref: null }],
     shared_to: [{ project: "PROJ-1", shared_by: "member:mai", at: "2026-10-09T11:00:00Z", reason: "The project needs this report." }], state: "LOOKED_INDETERMINATE" });
   await press(p, "leadread");
   assert.deepEqual(p.byOp("leadread").map((r) => r.query.id), [LEAD().lead_id]);
   assert.ok(says(p, "screen.leads.one.head"));
   const t = text(p);
-  assert.ok(t.includes("Mai-h") && t.includes("Searched the portal; nothing under that name."));
+  assert.ok(t.includes("Rosa-h") && t.includes("Searched the portal; nothing under that name."));
   assert.ok(t.includes("The Coliseum lease") && t.includes("The project needs this report."));
   assert.ok(says(p, "screen.leads.state.unclear"));
 });

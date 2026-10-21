@@ -40,7 +40,7 @@ test("R105 a candidate a member flagged draws her reason in her words, her name 
   const why = main(p).querySelector("[data-flagged-by]");
   assert.ok(why, "the flag is drawn");
   assert.ok(why.textContent.includes("The notice and the amendment give two different dates."), "her reason, in her words");
-  assert.ok(why.textContent.includes("rosa") && why.textContent.includes(day("2026-10-11")), "who, and when");
+  assert.ok(why.textContent.includes(word("screen.contradiction.flagged.by", { member: "rosa", date: day("2026-10-11") })), "who and when, by the key (R127, U437)");
   assert.doesNotMatch(why.textContent, /\bu-7\b/, "never her id");
   assert.equal(main(p).querySelector(".cs-machinework"), null, "no machine mark");
   assert.equal(main(p).querySelector('[data-origin="machine"]'), null);

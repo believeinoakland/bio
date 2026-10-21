@@ -1321,8 +1321,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         + '<button type="button" class="cs-btn" data-tone="quiet" data-shell="dialog-no">' + w("shell.cancel") + "</button></span></div></div>";
     }
     if (DIALOG && DIALOG.kind === "sign") {
-      const load = DIALOG.needKey ? '<fieldset class="cs-field"><legend>' + w("shell.signer.load") + '</legend><span class="cs-field"><label for="cs-key-file">' + w("shell.signer.loadfile")
-        + '</label><textarea id="cs-key-file" class="cs-input" spellcheck="false" autocomplete="off"></textarea></span><span class="cs-field"><label for="cs-key-filepass">' + w("shell.signer.loadpass")
+      const fileBox = DIALOG.fileGiven ? "" : '<span class="cs-field"><label for="cs-key-file">' + w("shell.signer.loadfile")
+        + '</label><textarea id="cs-key-file" class="cs-input" spellcheck="false" autocomplete="off"></textarea></span>';
+      const load = DIALOG.needKey ? '<fieldset class="cs-field"><legend>' + w("shell.signer.load") + '</legend>' + fileBox + '<span class="cs-field"><label for="cs-key-filepass">' + w("shell.signer.loadpass")
         + '</label><input id="cs-key-filepass" class="cs-input" type="password" autocomplete="off"></span></fieldset>' : "";
       return '<div class="mk-scrim"><div class="cs-dialog" role="dialog" aria-modal="true" aria-labelledby="cs-sign-t" data-overlay="sign"><h2 id="cs-sign-t">' + w("shell.signer.exactly") + "</h2><ol>"
         + DIALOG.list.map((s) => "<li><b>" + soft(s.label) + "</b><code>" + soft(s.line) + "</code></li>").join("") + "</ol>" + load + "<p>" + w("signing.ceremony.device") + "</p>"
@@ -1884,19 +1885,23 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     async forget() { SITTING = null; await idb("readwrite", (st) => st.delete("own")); return true; },
     /* R41, R47: "What your key signs, exactly", one confirmation for the whole list; one SSHSIG per statement in list
        order, or `{ok: false, declined: true}` signing nothing. With no key held, the dialog offers "Use a key file you
-       already have", loaded for this sitting only. */
-    async sign(statements) {
+       already have", loaded for this sitting only. R116: `{keyFile}`, the text `cs.keyFile` answered (or its answer), is
+       that key file handed over by the screen: with no key held the dialog then asks only its passphrase; with a key held
+       it is not used. */
+    async sign(statements, o = {}) {
       const list = (Array.isArray(statements) ? statements : []).map((s) => ({ label: String((s && s.label) || ""), bytes: bytesOf(s && s.bytes), namespace: String((s && s.namespace) || "") }));
       if (!list.length || list.some((s) => !s.namespace)) return { ok: false, declined: true };
       let key = await heldKey();
+      const given = o && o.keyFile && typeof o.keyFile === "object" ? o.keyFile.text : o && o.keyFile;
+      const keyFile = typeof given === "string" && given.trim() ? given : "";
       const shown = list.map((s) => ({ label: s.label, line: new TextDecoder().decode(s.bytes) }));
       let refusal = "";
       for (;;) {
-        const yes = await new Promise((resolve) => { DIALOG = { kind: "sign", resolve, list: shown, needKey: !key }; OVERLAY_REFUSAL = refusal; draw(); });
+        const yes = await new Promise((resolve) => { DIALOG = { kind: "sign", resolve, list: shown, needKey: !key, fileGiven: !!keyFile }; OVERLAY_REFUSAL = refusal; draw(); });
         if (!yes) return { ok: false, declined: true };
         if (!key) {
           try {
-            const seed = await unwrapKey(yes.file, yes.pass);
+            const seed = await unwrapKey(keyFile || yes.file, yes.pass);
             key = await seedKeys(seed);
             seed.fill(0);
             SITTING = key;
@@ -1924,7 +1929,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       return d.resolve(pass);
     }
     if (d.needKey) {
-      const file = valueOf("cs-key-file"), pass = valueOf("cs-key-filepass");
+      const file = d.fileGiven ? "given" : valueOf("cs-key-file"), pass = valueOf("cs-key-filepass");
       clear("cs-key-file", "cs-key-filepass");
       if (!file.trim()) { OVERLAY_REFUSAL = refusalHtml(w("shell.signer.nokey")); return draw(); }
       DIALOG = null; OVERLAY_REFUSAL = ""; draw();

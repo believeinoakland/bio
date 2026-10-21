@@ -6,8 +6,13 @@ export const WORDS = Object.freeze([
   "screen.request.nooffice.pointer.a", "screen.request.nooffice.pointer.b",
   // R39 (DEC-387 B424): which name the records concern
   "screen.request.subject.label", "screen.request.subject.help",
+  // C64 (DEC-402): "Name the office yourself", the design's own rows
+  "screen.request.nameoffice.head", "screen.request.nameoffice.note", "screen.request.nameoffice.name", "screen.request.nameoffice.name.help",
+  "screen.request.nameoffice.where", "screen.request.nameoffice.where.help", "screen.request.nameoffice.law", "screen.request.nameoffice.law.help",
+  "screen.request.nameoffice.use.help", "screen.request.nameoffice.mark",
 ]);
 export const EXTRA = Object.freeze({
   // R39: which name the records concern, asked before the offices (`screen.request.subject.*`, DEC-387); R46: the organization's page
-  request: ["screen.person.name", "screen.person.purpose"],
+  // C64: the act's label; a name left empty is asked for by `findin.fieldneeded`; her reason (`entities` R1's note) is the kit's reason field
+  request: ["screen.person.name", "screen.person.purpose", "act.entitycreate.label.request", "findin.fieldneeded", "shell.reason", "shell.reason.help"],
 });
