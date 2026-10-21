@@ -279,3 +279,30 @@ Size (session_017LS3B582bpu5TBffTAibNo): test runs 11, module lines 3628
 ## J23 · REPORT
 
 **REPORT (another module, affordances).** `bio-plane/test/m/affordances/plane.test.mjs` R19 ("together the two drives reach every op RUNGS grades `reasoned`") is green on the tranche tip and red with op-grades' grade for `contradictionflag` (reasoned, contradiction R61, `FLAG_NO_REASON`): its `driven` list names the N345 acts (`contradictiondismiss`, `contradictionclarify`, `contradictiontakeup`, `contradictionresolve`, `resolutiondefect`) and not the flag. Needed from the affordances job: `contradictionflag` on that line, backed at contradiction's interface (R61's refusal, `contradiction.test.mjs`). The same grade turns green affordances' 'R1 R12 R24: N345's ops' test, so the two cannot both be satisfied without it. Also: `op-capabilities` has no row for `contradictionflag` (`needs: contribute`) if its table must name it.
+
+## J24 · COMPLETE
+
+**COMPLETE (B32 START, cause 1: marks for DEC-394's acts and the new flag; B27–B31 were applied by #22, J22).** Pushed on `job/T51/op-grades`, with `tranche/T51` merged first.
+
+**Entries applied.**
+1. **`capturerequests` and `casedrafts`** (R42, R46). Both are reads (op-declarations `mutating: false`); the kit weighs each 1 (Reversible); each has a `MARKS` entry, `Reversible`, source the kit. `MARKS_KIT_COMMIT` is `0310c4953d` (the design as the tranche holds it after DEC-394's B441 drawings: the registry lists these two rungless acts more than at `aa8bdcd0b4`; no earlier entry changed weight, none is dropped).
+2. **`contradictionflag`** (contradiction R61; owner row `weight: "reasoned"`, `mutating: true`). Graded `reasoned` in `RUNGS` (refused `FLAG_NO_REASON`, C-93.42, which joins `JUSTIFICATION_REFUSALS`), with a `NON_ACTS` reason that is the owner's declared word (`localize("contradiction.declared.contradictionflag", …)`: that id is contradiction's own and the design's `words.json` does not key it, so `word()` would be refused by the words check; `localize` answers the list's row whatever English is given). The registration of every owner's `DECLARED_OPS` meets no `DECLARED_OP_DISAGREES` for it. It is a graded write, so it has no mark (R42's control). Not in `MACHINE_REFUSALS` (contradiction refuses a machine by its own code); by R18 `phone: true`.
+3. Tests: `t51.test.mjs` (three new tests, seen failing first against the old source): the two marks and their source; the registered tables leave only those two unmarked and the flag has a rung; the flag's grade, backing code, reason and owner agreement, with controls. `pins.test.mjs` names the flag in its closed `reasoned` partition; `t48.test.mjs` and `t50.test.mjs` read the new commit.
+
+**Reds on the tranche tip, not fixed here.** Fifteen failures in other modules' tests are identical with and without this change (run against `origin/tranche/T51`'s op-grades): `plane/release.test.mjs` R24 (screen purpose words), `plane/r42-entry.mjs`, `store-door/declared-ops.test.mjs` R17 (`groupdescriptiondraft`: a hand row disagrees with the owner's row), `screens-inquiry` `common` / `fr28-document` / `fr28-project`, `screens-publish/common`, `screens-settings/contract`, `journey-check/pseudo` (R29 ×6).
+
+**Found in another module (REPORT also posted):** `bio-plane/test/m/affordances/plane.test.mjs` R19 "together the two drives reach every op RUNGS grades `reasoned`" is green on the tip and red with this change: `contradictionflag` is now `reasoned` and its `driven` list does not name it. Its backing is contradiction's own R61 test (`FLAG_NO_REASON` is refused), as `contradictiondismiss`'s is; `affordances` adds `contradictionflag` to the N345 line of that list. The affordances 'R1 R12 R24: N345's ops' test, which was red for the flag's missing rung, is green with the change. `op-capabilities` (later in the order) holds `casedrafts: null` and has no row for `contradictionflag`: if the capability table must name the flag (`needs: contribute`), that row is its owner's.
+
+**Requirement lines for BOB.**
+- R2/R1 (rung list): `contradictionflag` is `reasoned` (contradiction R61, `FLAG_NO_REASON`), beside N345's `contradictiondismiss`, `contradictionclarify`, `contradictiontakeup`; `FLAG_NO_REASON` joins the justification family (R1, affordances R19).
+- R46: `MARKS_KIT_COMMIT` is `0310c4953d`; its rungless registered acts include `capturerequests` and `casedrafts` (kit 1, Reversible); `contradictionflag` has none (graded).
+- R51: a declared op's reason whose id the design's list does not key is read through `localize` on the owner's id (here `contradiction.declared.contradictionflag`); the design may key it, after which `word()` replaces it.
+
+**Impact.** `build/plan/impact.mjs origin/tranche/T51 HEAD`: 21 modules, 427 test files outside op-grades run (two at a time, `--test-force-exit`): the only failures are the fifteen above (identical on the tip) and the affordances R19 one.
+
+**Tests and checks** (from civicos-process, product `/home/user/bio`):
+- `node --test test/m/op-grades/`: 145 tests, 145 pass, 0 fail. Plane (`test/m/plane/`): 280 tests, 279 pass, 1 fail (R24 above, on the tip). Control-plane: 324 of 324 pass.
+- `checks/format.mjs`: 175 modules, 0 failures. `checks/architecture.mjs … op-grades`: 0 failures. `checks/coverage.mjs … op-grades`: 51 of 51 named, 0 failures. `checks/words.mjs … op-grades`: 0 failures. `checks/ownership.mjs … op-grades origin/tranche/T51`: 7 files changed by op-grades, 0 failures.
+- `setup-words/build.mjs --check`: rows match.
+
+Size (session_01MfAJMdL1CxJq36VfSFDQdb): test runs 9, module lines 3646
