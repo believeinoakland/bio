@@ -1400,7 +1400,7 @@ async function acquireRun(cap, body0, opts, t) {
      about it. The subject is the DOCUMENT for a Drive export, else the locator. */
   if (renderedAuth ? renderedAuth.authority_state === "undetermined" : !authorityAsserted) {
     try { await cap.taskEnqueue({ kind: "authority-undetermined", captureSha: sha,
-                                  subject: driveCapture ? documentAddress : locator, locator, at: retrieved }); }
+                                  subject: driveCapture ? documentAddress : locator, locator, ...(title ? { title } : {}), at: retrieved }); }
     catch { /* an unqueued task is not a failed capture; C-18.9 still refuses it at or past verified */ }
   }
 

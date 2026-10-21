@@ -435,3 +435,14 @@ test("R99 R12 R5 (C13b): the object restarted (the render table is gone): finish
   assert.equal(bad.body.continued, undefined);
   assert.equal(w2.store.state.sessions.has(sid2), false, "the session is closed");
 });
+
+test("R98 R15 (C25): an undetermined capture's queue event keeps `subject` the locator and carries the document's `title` when it has one; control: none when it has none", async () => {
+  const w = world();
+  await run(w, { "https://a.example/t": () => page("<title>Notice 2026-118</title>") }, { locator: "https://a.example/t" });
+  const ev = w.store.state.events.find((e) => e.kind === "authority-undetermined");
+  assert.equal(ev.subject, "https://a.example/t");
+  assert.equal(ev.title, "Notice 2026-118");
+  const n = world();
+  await run(n, { "https://a.example/n": () => text("plain") }, { locator: "https://a.example/n" });
+  assert.equal("title" in n.store.state.events.find((e) => e.kind === "authority-undetermined"), false);
+});
