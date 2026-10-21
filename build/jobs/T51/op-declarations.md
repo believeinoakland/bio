@@ -393,3 +393,21 @@ Two options. My recommendation is (a).
 (a) Take the nine names out of the five claim lists, since the product serves the pinned registry and does not serve the registers screen yet. Their claims about the pinned registry then hold. The live design re-adds them when wizard-scripts re-pins.
 (b) Keep the claims and read the live file. This is what B33 asked me to stop doing; it reddens on every design merge.
 I will not change the claim lists until you pick. Current state: 233 tests, 227 pass, 6 red: those five, and t36:306 (capturecredentiallist, per B31).
+
+## J31 · COMPLETE
+
+COMPLETE (the causes open now; officeconfirm still to come). Branch job/T51/op-declarations at 85497751a9; tranche/T51 merged at 1bf20ebc72 (B32).
+
+Met since the last COMPLETE:
+- B32 (captureseenin): declared by capture's own declarations; my tests read it as scanmirror's. No spec here.
+- B33/B34 (K4394, K4399): every test that read the design's live docs/development/ux-substrate/screens/registry.json now reads the pinned registry: test/m/op-declarations/fixtures/registry-43379a1a44.json (sha256 bef84cf1…, the one wizard-scripts pins). Read by browser.mjs, t34, t37, t38, t46, t47, t48, t51. The nine register acts the live registry adds (DEC-406/407) are out of the claim lists.
+
+Deferred / reports:
+- t36.test.mjs:306 (R34 partition): capturecredentiallist has no affordances text and no ground. Its spec is capture-sources' declaration (ops.mjs:30), correct. Named as accepted in B28, for AFFORDANCES #41, which does not yet hold it (B31). Not grounded here.
+- Not this module, reported earlier: op-grades words findings (t33.mjs:214, t51.mjs:41 and :45); plane t47.test.mjs architecture (screens-wizards); eight modules' coverage on the tranche tip.
+
+Tests and checks at 85497751a9:
+- node --test bio-plane/test/m/op-declarations/: 240 tests, 239 pass, 1 fail (t36:306 above). The test count moved between runs (233 to 247); I have not confirmed the loader reads the same set each time.
+- checks: format 0; architecture: the plane's t47 (not this module); words: op-grades' three, not this module; coverage for this module: 82 of 82; ownership: 0 failures.
+
+Size (session_01G3X5QPGSsvGq7xCMfaNpTz): test runs 30, module lines 3466
