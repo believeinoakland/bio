@@ -22,7 +22,7 @@ const make = (w, by, label, extra = {}, kind = "office") => op(w, "entitycreate"
 const rows = (w) => w.rows(`SELECT entity_id FROM entities ORDER BY 1`).length;
 const aliasRows = (w) => w.rows(`SELECT entity_id, alias FROM entity_aliases ORDER BY 1, 2`);
 
-test("R65 naming the same office again answers the first entry, existed: true, and writes nothing (a different casing or spacing is the same name)", () => {
+test("R65 naming the same office again answers the first entry, existed: true, and writes nothing (a different casing or spacing is the same name), whichever member names it", () => {
   const w = team();
   const first = make(w, "bea", "Office of the City Clerk");
   assert.equal(first.ok, true, JSON.stringify(first));
@@ -37,7 +37,12 @@ test("R65 naming the same office again answers the first entry, existed: true, a
     assert.equal(again.label, "Office of the City Clerk");
   }
   assert.deepEqual([rows(w), aliasRows(w)], before, "no entity and no alias written");
-  assert.equal(op(w, "entity", { query: { id: first.entity_id, viewer: "member:ann" } }).entity.named_by_member, true, "her mark is untouched by an administrator's repeat");
+  assert.equal(op(w, "entity", { query: { id: first.entity_id, viewer: "member:ann" } }).entity.named_by_member, true, "the mark is untouched by a repeat");
+  /* control: an administrator (or a machine) registers what she means to, as before: two offices of one name are hers to make
+     (a Town Clerk of each of two towns), and a member naming it then finds the first */
+  const twin = make(w, "ada", "Office of the City Clerk");
+  assert.equal(twin.ok && twin.existed === undefined && twin.entity_id !== first.entity_id, true, JSON.stringify(twin));
+  assert.equal(make(w, "bea", "Office of the City Clerk").entity_id, first.entity_id);
 });
 
 test("R65 a name an office holds as a standing alias finds that office; a withdrawn alias does not", () => {

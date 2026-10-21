@@ -602,9 +602,10 @@ export class Entities {
     const by = declaredBy == null ? null : String(declaredBy);
     /* R63: an office a member who is not an administrator registers is marked until an administrator confirms it; one an
        administrator or a machine registers is not. Which screen may send the act is the door's (`op-grades`), not asked here. */
-    /* R65: an office named again is the held one (`existed: true`), found by its folded name among the live aliases of an office
+    const marked = k === "office" ? (by !== null && !isMachine(by) && !this.#administers(by) ? 1 : 0) : null;
+    /* R65: an office a member names again is the held one (`existed: true`), found by its folded name among the live aliases of an office
        that does not state another law; nothing is written, so her repeat neither makes another entry nor clears a mark. */
-    if (k === "office") {
+    if (marked === 1) {
       const held = this.#rows(`SELECT DISTINCT e.entity_id, e.label, e.law FROM entities e JOIN entity_aliases a ON a.entity_id=e.entity_id
                                    WHERE e.kind='office' AND a.alias_norm=? AND a.withdrawn_at IS NULL ORDER BY e.entity_id`, normAlias(name))
         .filter((r) => !lawKey || !r.law || r.law === lawKey);
@@ -615,7 +616,6 @@ export class Entities {
                  sector: this.#one(`SELECT sector FROM entities WHERE entity_id=?`, hit.entity_id).sector };
       }
     }
-    const marked = k === "office" ? (by !== null && !isMachine(by) && !this.#administers(by) ? 1 : 0) : null;
     return this.#record.transact(() => {
       const { id } = this.#record.allocId("ENT", at.slice(0, 4));
       this.#sql.exec(`INSERT INTO entities (entity_id,kind,label,note,declared_by,at,sector,forum_kind,named_by_member,contact_kind,contact_value,law) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
