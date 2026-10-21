@@ -62,11 +62,14 @@ export function bucket() {
 /* host-governor's R1–R14 as the store reaches them, each call recorded; `refuse` names hosts to refuse and `held`
    hosts cooling off. */
 export function governor({ refuse = [], held = [] } = {}) {
-  const calls = [];
+  const calls = [], granted = {};
   return {
-    calls, configured: [],
-    governorAdmit({ host }) { calls.push(["admit", host]); return refuse.includes(host)
-      ? { admitted: false, reason: "cooling_off", retry_in_ms: 5000 } : { admitted: true, wait_ms: 0, appetite_per_min: 12 }; },
+    calls, granted, configured: [],
+    /* R29: a `peek` answers as the admission would and writes nothing; any other admission that is granted books one grant */
+    governorAdmit({ host, peek = false }) { calls.push([peek === true ? "peek" : "admit", host]);
+      if (refuse.includes(host)) return { admitted: false, reason: "cooling_off", retry_in_ms: 5000 };
+      if (peek !== true) granted[host] = (granted[host] || 0) + 1;
+      return { admitted: true, wait_ms: 0, appetite_per_min: 12 }; },
     governorReport(r) { calls.push(["report", r.host, r.status, r.retry_after_ms]); return { recorded: true }; },
     governorConfig(c) { this.configured.push(c); return { configured: true, ...c }; },
     isHeld(host) { calls.push(["isHeld", host]); return held.includes(host); },
@@ -281,11 +284,25 @@ export function network(routes) {
   return { seen, attest, restore() { globalThis.fetch = orig; } };
 }
 
-/* One acquisition over a scripted network; a member session unless `o` says otherwise. */
+/* One acquisition over a scripted network; a member session unless `o` says otherwise. R20 (fix round 3, C12): the answer does
+   not wait for co-attestation, which goes on after it, so the scripted network stays up until the attempt a pending answer names
+   has been recorded against the capture (capture R68), unless `o.settle` is false: then the answer carries `settled()`, which a
+   test that times the answer awaits when it is done. The other keys of `o` are `acquire`'s. */
 export async function run(w, routes, body, o = {}) {
+  const { settle = true, ...opts } = o;
   const net = network(routes);
-  try { const r = await acquire(w.store, body, { cls: "member", member: true, sessMember: "m1", storeName: "bio", ...o }); return { ...r, net }; }
-  finally { net.restore(); }
+  const had = w.store.state.late.length;
+  try {
+    const r = await acquire(w.store, body, { cls: "member", member: true, sessMember: "m1", storeName: "bio", ...opts });
+    const pending = !!(r.body && r.body.document && Array.isArray(r.body.document.attestation_attempts)
+      && r.body.document.attestation_attempts.some((a) => a && a.pending === true));
+    const settled = async () => {
+      for (let i = 0; pending && i < 3000 && w.store.state.late.length === had; i++) await new Promise((x) => setTimeout(x, 10));
+      net.restore();
+    };
+    if (settle) { await settled(); return { ...r, net }; }
+    return { ...r, net, settled };
+  } catch (e) { net.restore(); throw e; }
 }
 export async function lookup(w, routes, args) {
   const net = network(routes);
