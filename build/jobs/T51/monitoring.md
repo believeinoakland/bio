@@ -59,3 +59,22 @@ COMPLETE for T51 monitoring FR-36 (session session_019To67KKnDNVeKq651n8y2v), co
 - `bio-plane/src/setup-words/build.mjs --check`: stale-rows note only (first stale word `ai-accounts.declared.accountusesset`, another module's); the new ids (`monitoring.declared.*`, `monitoring.checks.only_a_member_plants`, `monitoring.checks.this_request_was_not`, `monitoring.named_requests.*`) are not in `rows.mjs` yet, regenerated at the layer close.
 
 **Size (session_019To67KKnDNVeKq651n8y2v):** test runs 5, module lines 3078 (non-blank, non-comment lines in `src/monitoring/*.mjs`; 4114 lines in all, over the P6 mark of about 4,000 as the requirements file foresaw: `index.mjs` grew by 59 lines to 3429, `named-requests.mjs` is new at 251 lines (208 non-comment), `checks.mjs` grew by 18 to 265).
+
+## J3 · QUESTION
+
+QUESTION on C26 (my part): no requirement line is written for it, and the one that governs says the opposite.
+
+What I found (read whole: monitoring R1–R10, R74, R38; code `index.mjs` tick comparison ~l.940–1010; capture R96 and `capture/index.mjs` heldAt):
+- The tick's comparison (monitoring R5, `index.mjs` ~l.969–1010) already prefers the determined evidentiary digest. It falls to the raw SHA-256 whenever the baseline recorded none, or the handler/member differ, or the fresh bytes are undetermined, and says so in `compared: "raw"` + `compared_basis`. R5 *requires* that fallback ("else the raw SHA-256").
+- The walk's "changed" for a static page is NOT produced by the tick: it is `heldAt` (capture R96, `capture/index.mjs` ~l.1130–1160), which compares the served bytes' raw SHA-256 with `copy.sha256` (no determined digest anywhere in that path), and `screens-intake/capture.mjs:366-376` which maps its `changed.state`. Both are capture's / screens-intake's, not monitoring's. I cannot find a plane line in monitoring that says "changed" for an unchanged static page except R5's raw fallback (an ASP.NET-style page with no determined baseline digest reads `modified` on every fetch, which is the same symptom).
+
+Best reading of "monitoring's part" (what I will build unless you say otherwise):
+1. The tick's status is judged only on the determined digest. When the baseline recorded no determined evidentiary digest (or it cannot be compared with the fetched side: different handler/version, different member, fresh side undetermined), the tick answers `compared: null`, `status: null`, `compared_basis` saying why (existing keys), the look is `LOOKED_INDETERMINATE`, nothing is captured (R9 does not fire), and no `modified`/`unchanged` is written. Raw bytes are compared only where the baseline is a shell/rendered frame (R5's `shell` arm is untouched) and the raw "same bytes" equality is no longer evidence of `unchanged` or of `modified`.
+2. That amends R5, R9 (a `modified` capture), R11 (a look's outcome) and R38. I cannot edit the requirements file. If you agree, please write the amended R5 line (marked not yet met) and CHANGE me; I then test it: baseline with no determined digest → cannot-tell; same page re-fetched with unchanged substance → unchanged; control: changed substance → changed.
+
+Questions:
+(a) Is reading 1 right, i.e. does "cannot tell" for the tick mean `status: null` + an indeterminate look, replacing the raw fallback entirely (and so one more thing for `following`, `scheduler` and the screens that read `compared: "raw"` to meet)?
+(b) The determined digest is recorded on the baseline by acquisition/capture's side (not mine). Is that half in the cause-capture job (its C26*), and does `heldAt` get the same rule there? I am not touching either.
+(c) If instead you mean heldAt only, then monitoring has nothing to change for C26: say so and I will COMPLETE with that stated.
+
+I carry on with nothing else (this is my only cause).
