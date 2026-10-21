@@ -239,3 +239,13 @@ Size (session_01Czk6fsMgDJE7nbPVmgPw5X): test runs 9, module lines 2921
 ## J13 · QUESTION · re B15
 
 QUESTION (B15): no builder of a published case's public address exists in public-read (it has only docketAddress, op=docketpublic&case=); the address is composed inline by the screens (screens-publish ceremony.mjs:120, published-parts.mjs:9: /app/published/<case> and /app/published/<encodeURIComponent(case/edition)>). I will not compose a second way in earnest, but need one value: best reading, address = /app/published/<case>/<edition> (the form R83 already ships, equal to what the screens link for an edition). Carrying on with it in draftEditions({caseId, draft}). If public-read should own a builder (public-read is not mine), tell me its export name and I will import it.
+
+## J14 · COMPLETE · re B15
+
+COMPLETE (B15, K4363). `draftEditions({caseId, draft})` is a public method of the case-authoring instance (`caseAuthoringOf(host).draftEditions`), answering `{prepared, published: {edition, address}|null}`; the pre-flight's `editions` is now that one read (no second path). `caseId` is the case the draft's identity names; with none, `draft` (an id, or a row with `case_id`) resolves to the case its own preparation produced (`case_documents.draft_id`); neither held states `{prepared: null, published: null}`. It reads only and never throws. REVIEW #21 calls it per draft row.
+
+Address: no builder exists in public-read (only `docketAddress`); see my QUESTION J13. Until BOB names one, address = `/app/published/<case>/<edition>`, the form the screens link. If a builder is named, the change is one import in this method.
+
+Tests: `editions.test.mjs` +1 (R83/K4363: by case, by draft id, by row, never prepared, published, equals the pre-flight's answer, unknown case). case-authoring 221/221; review 76/76; architecture and words 0 failures; ownership 0 failures; format's one failure is `build/rulings.md` (not mine). Merged `origin/tranche/T51` first.
+
+Size (session_01Czk6fsMgDJE7nbPVmgPw5X): test runs 12, module lines 2938
