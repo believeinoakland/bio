@@ -274,7 +274,8 @@ test("R1: a refusal from the write (inquiry R11: BASIS_REFUSED, SELF_BASIS, BASI
     refusal = { ok: false, reason, code: reason, ...extra, detail: `refused: ${reason}` };
     const before = w.md(q);
     const r = w.cit.cite({ project: q, handle: h, ...ANN, role: "supports" });
-    assert.deepEqual(r, { ...refusal, project: q, handle: h, drift: r.drift }, reason);
+    /* R21: a BASIS_REFUSED also states its repairs, none here (the basis is not grouped) */
+    assert.deepEqual(r, { ...refusal, project: q, handle: h, drift: r.drift, ...(reason === "BASIS_REFUSED" ? { repairs: [] } : {}) }, reason);
     assert.equal(r.drift.kind, "enumerated");
     assert.equal(w.md(q), before, `${reason}: nothing written`);
   }

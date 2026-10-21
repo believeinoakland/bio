@@ -1,6 +1,6 @@
 # filing-templates (T51)
 
-**Status** · session_01PbeBP85c4YmXfKoksHMFk4 · depth 2 · COMPLETE · handled B2
+**Status** · session_01KaymbcDym8ajLSiHBqjDGC · depth 2 · COMPLETE · handled B4
 
 ## J1 · QUESTION
 
@@ -44,3 +44,34 @@ B2 applied at `8cb92802bf` (merged `tranche/T51`): C-125.34 TEMPLATE_COURT_PETIT
 Tests and checks: filing-templates tests 84, pass 84, fail 0; words 0 failures; format 0; architecture 0 (18 files, 65 imports); coverage 35 of 35; ownership 0 failures. Everything else in J2 unchanged.
 
 Size (session_01PbeBP85c4YmXfKoksHMFk4): test runs 10, module lines 1939
+
+## J4 · QUESTION
+
+STEP 0 REPORT, C64-template (template lookup for 5 U.S.C. section 552). Root cause found; it is not in filing-templates' code. I need your release, and one choice, before I write anything.
+
+What I read: send-steps.mjs:275-290; filings/index.mjs filingPrepare (739-800) and its template lookup; filing-templates R15, R26, R34, R35; the profile `jurisdictions/profiles/oakland-alameda.mjs` (the one real profile).
+
+1. The empty draft. filingPrepare finds a template for a request only by `action_kinds[records_request].template` in the active profile (a `file` template with an id) or by one the member names. The real profile's `records_request` row (oakland-alameda.mjs:519) carries NO template: the file header says "No template: none is approved (K921 Q1, R45)". So the lookup answers TEMPLATE_NOT_NAMED with an empty list, for the California law as much as the federal one: the federal Freedom of Information Act is only a `records_laws` row (line 426), not a profile with its own kinds or templates. The screen then draws the box empty, under the help line "Drafted from your team's template for this law ...", which is always shown. Round 3 passed because its fixture used the test profile, which does hold a records-request template.
+2. filing-templates behaves as its requirements say (R15/R26/R35: a profile template is offered only with a named writer, public sources, a professional no_concerns review and a second approver; your reviews of the template texts are the hard reason in the plan, row "N858's template and procedure-guide texts"). I find no defect in this module for the empty draft.
+3. The refusal "You filled in a blank the text does not have" is the other half, certain, in screens-action (send-steps.mjs:275-290 sends period, form and cost limit always) with filings (FILL_UNKNOWN_BLANK). Neither is this module's.
+
+Options:
+A (recommended). No template is written. I change nothing in filing-templates for the empty draft. The cure is in screens-action (the seam owner): when no template is offered, say so in words (not "Drafted from your team's template"), let a typed plain request prepare, and send period, form and cost limit only where the text names those blanks. Then the walker's (A)(ii) holds with no template at all. In my module I would add the failing-first test at my interface on the real profile's shape: a kind with no profile template answers no text (a stated absence, never an empty offer) and `unofferedFor` / `templateByHandle` answer `NO_SUCH_TEMPLATE` for it, so screens-action has a real fixture of that case. No requirement changes.
+B. A federal (and California) records-request template text. That needs a named writer, sources and a professional review, then your approval as R15's reviewer. I cannot supply those; the plan holds this as yours.
+C. Both: A now, B whenever you have the texts.
+
+Please release the fix step with A (or tell me otherwise). I will wait.
+
+## J5 · COMPLETE
+
+COMPLETE, fix round 4, cause C64-template (filing-templates #15), pushed at `7cda1edbf0` on `job/T51/filing-templates`; `tranche/T51` merged in before COMPLETE. No PR.
+
+C64-template, the four fields:
+(1) Root cause (step 0 reported in J4, released by BOB's B4 = option A, K4438): the real profile's `records_request` row (oakland-alameda.mjs:519) carries no template (K921 Q1, R45); `filings.filingPrepare` (index.mjs:739-800) finds a template only through `action_kinds[kind].template` or a named one, so it answers `TEMPLATE_NOT_NAMED` with an empty list and the screen draws an empty box under an always-shown help line. California as much as federal. No template text is written (Bob's review, K921). The refusal "blank the text does not have" is screens-action's and filings' (send-steps.mjs:275-290, FILL_UNKNOWN_BLANK), the cure is in screens-action's START.
+(2) Test-gap fix: round 3 used the test profile, which holds a template; no test had a kind with none. New `bio-plane/test/m/filing-templates/c64-template.test.mjs` uses `test-harbour` (the test profile with its templates removed, records_request Tier 1: the real profile's shape), so screens-action has a real fixture.
+(3) The test (R34 R35 R14 R26): `templateByHandle` and `offeredVersion` of `@records-request` answer `NO_SUCH_TEMPLATE` (`template: null`, no text); `templatesFor({kind, use: file})` answers `{ok: true, templates: []}`; `unofferedFor` answers `[]`; nothing written; control: the test profile's template is offered with a default approved version. Red/green: the module already behaved as the requirements say, so the test passes on the unchanged code (no defect here; BOB's A needed none). To show it can fail I mutated `templateByHandle` to answer an empty text for an unresolved handle: 0 pass, 1 fail; restored; 1 pass.
+(4) Platform check: N (pure code).
+
+Requirement ids met: R14, R15, R26, R34, R35 unchanged and still met; no requirement line to propose. Nothing deferred, no open QUESTION (J4 answered by B4); no finding in another module beyond the cure already placed in screens-action.
+Tests and checks: `node --test --test-force-exit bio-plane/test/m/filing-templates/`: tests 86, pass 86, fail 0. Users: the module's services are unchanged (test-only diff), so no user suite was needed. `checks/format.mjs bio`: 0 failures. `architecture.mjs bio filing-templates`: 18 files, 65 imports, 0 failures. `coverage.mjs bio filing-templates`: 35 of 35 live ids named, 0 failures. `ownership.mjs bio filing-templates tranche/T51 job/T51/filing-templates`: 2 files changed, 0 failures. `checks/run.mjs` whole tree: no line names filing-templates; its failures are other modules' (coverage 15, words 3).
+Size (session_01KaymbcDym8ajLSiHBqjDGC): test runs 9, module lines 1939
