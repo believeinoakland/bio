@@ -9,6 +9,7 @@
 import { registerDeclaredOps as registerOpDeclarations } from "../op-declarations/index.mjs";
 import { registerDeclaredOps as registerOpGrades } from "../op-grades/index.mjs";
 import { DECLARED_OPS as plane } from "./declared.mjs";
+import { DECLARED_OPS as recordCore } from "../record-core/index.mjs";
 import { DECLARED_OPS as membership } from "../membership/index.mjs";
 import { DECLARED_OPS as aiAccounts } from "../ai-accounts/index.mjs";
 import { DECLARED_OPS as promotion } from "../promotion/index.mjs";
@@ -82,13 +83,17 @@ import { DECLARED_OPS as review } from "../review/index.mjs";
 import { DECLARED_OPS as filings } from "../filings/index.mjs";
 import { DECLARED_OPS as monitoring } from "../monitoring/index.mjs";
 import { DECLARED_OPS as linkSweep } from "../link-sweep/index.mjs";
+import { DECLARED_OPS as wizardScripts } from "../wizard-scripts/index.mjs";
 import { DECLARED_OPS as tasks } from "../tasks/index.mjs";
+import { DECLARED_OPS as queue } from "../queue/index.mjs";
 import { DECLARED_OPS as instanceSetup } from "../setup.mjs";
 import { DECLARED_OPS as storeDoor } from "../store-door/dispatch.mjs";
+import { DECLARED_OPS as controlPlane } from "../control-plane/owner-ops.mjs";
 
 /* module id → that module's `DECLARED_OPS`, in `build/modules.json`'s order */
 export const OWNERS = Object.freeze({
   "member-roster": memberRoster,
+  "record-core": recordCore,
   membership: membership,
   "project-roster": projectRoster,
   "ai-accounts": aiAccounts,
@@ -160,10 +165,13 @@ export const OWNERS = Object.freeze({
   monitoring: monitoring,
   following: following,
   "link-sweep": linkSweep,
+  "wizard-scripts": wizardScripts,
   tasks: tasks,
+  queue: queue,
   translations: translations,
   "instance-setup": instanceSetup,
   "store-door": storeDoor,
+  "control-plane": controlPlane,
   plane,
 });
 

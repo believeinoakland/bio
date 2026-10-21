@@ -156,11 +156,10 @@ const walkWith = (declared, sourced) => {
   return w;
 };
 
-test("R17 Attach a source to a declared step sends stepsource with the hop's relation, the chosen passage and the member's words; the walk is read again and the hop is drawn evidenced; control: the withdrawal draws it a lead again", async () => {
+test("R17 Attach a source to a declared step sends stepsource with the hop's relation, the chosen passage and the member's words; the walk is read again and the hop is drawn evidenced; B14: the design draws no withdrawal of the attached source on explore, so none is drawn", async () => {
   let attached = false;
   const p = await walked({ plane: { explore: () => ok(walkWith(true, attached)),
-    stepsource: () => { attached = true; return ok({ ok: true, id: "STEPSOURCE-1", wrote: true }); },
-    stepsourcewithdraw: () => { attached = false; return ok({ ok: true, id: "STEPSOURCE-1" }); } } });
+    stepsource: () => { attached = true; return ok({ ok: true, id: "STEPSOURCE-1", wrote: true }); } } });
   const lead = () => main(p).querySelectorAll("div.mk-msg[data-chain]")[1];
   drew(lead(), "screen.explore.lead");
   assert.equal(button(p, "connectionassert"), null, "connectionassert is not drawn for this act");
@@ -172,9 +171,8 @@ test("R17 Attach a source to a declared step sends stepsource with the hop's rel
   notDrew(done, "screen.explore.declared");
   assert.equal(done.querySelector(".cs-grade").textContent, "ConnectionB", "at the capture's grade");
   drew(done.querySelector("[data-attached]"), "screen.explore.attached", { by: "mai", date: dayOf("2026-10-12") });
-  await press(p, "stepsourcewithdraw", { within: done, reason: "wrong page" });
-  assert.deepEqual(p.byOp("stepsourcewithdraw")[0].body, { id: "STEPSOURCE-1", reason: "wrong page" });
-  drew(lead(), "screen.explore.lead", undefined, "after the withdrawal it is drawn a lead");
+  assert.ok(button(p, "stepsourcewithdraw") === null, "B14: stepsourcewithdraw is not the registry's act on explore and the design draws no control for it (K3052)");
+  assert.equal(main(p).textContent.includes(word("screen.explore.withdraw")), false);
 });
 
 test("R17 an attachment without its passage or without the member's words sends nothing (control); a refusal is drawn by its words", async () => {

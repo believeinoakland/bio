@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J11
+**Read** · handled J13
 
 ## B1 · START
 
@@ -114,3 +114,15 @@ capture R99 (merged): `captureOp`'s `acquire` arm reads `h.trace` and sends it t
 CHANGE (K4254): PLANE, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip. The plane starts again (every owner's declaration registers; 276 of 280).
 Entries, the four reds: (1) R24: `screen.contradiction.purpose` is not held by the words list: read whether the screen or the plane's list is wrong, and fix your side or report the design's. (2) R5: link-sweep's `sweeps` in the route map (it is a read since K4250: route it as the other reads). (3) R68: a module exporting `DECLARED_OPS` is missing from `plane/declarations.mjs`' assembly: add it (the test names it). (4) R71: a declared op with no route, Worker arm or plane door: route it, or report its owner if the op is not served. Then run `node --test bio-plane/test/m/plane/` whole and control-plane's e2e tests (t46-e2e, t47-e2e); report any red with its cause. Requirement lines for BOB in your COMPLETE.
 Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model sonnet, medium effort; workers haiku low for mechanical edits.
+
+## B17 · CHANGE
+
+CHANGE (K4262): PLANE, depth 2 (BOB #236 is depth 1). Your branch is at the tranche's tip. Model: claude-haiku-5-5, medium effort.
+Why: RECORD-CORE #25 (merged, K4262) now exports `DECLARED_OPS` (`allocid`, record-core R85); your R68 assembly (`plane/declarations.mjs`) must hand it to both registrations, and your R68 test names a module that declares and is not assembled.
+Entry: add record-core to `plane/declarations.mjs`' assembly (its static import, as the others); R68's test green for it. Note: until OP-GRADES #22 merges, the plane's start is refused `DECLARED_OP_DISAGREES: groupdescriptiondraft description` (accepted red by name, K4258): judge your change by the R68 assembly test and, if the start still refuses only that, say so in your COMPLETE. R68 line for BOB.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio plane tranche/T51 job/T51/plane`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).

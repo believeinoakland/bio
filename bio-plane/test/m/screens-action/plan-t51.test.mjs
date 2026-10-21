@@ -160,7 +160,7 @@ test("R44 (b): each refusal of a scenario is drawn by its two sentences, beside 
 const DATED = { ...PLAN, options: [
   { id: "opt-1", summary: "Public comment", category: "legal", subjects: [`outcome:${DET}#STD-1`], dates: [{ date: "2026-11-30", basis: "law" }], disposition: "open", dispositions: [], action: null },
   { id: "opt-2", summary: "Story with a reporter", category: "awareness", subjects: [`outcome:${DET}#STD-1`], dates: [], disposition: "blocked", dispositions: [{ disposition: "blocked", reason: "no signatures" }], action: null }] };
-const labelOf = { done: "screen.plan.disposition.done", blocked: "screen.plan.disposition.blocked", open: "screen.plan.return.them.to.undecided", chosen: "screen.plan.choose", declined: "screen.plan.decline" };
+const labelOf = { done: "screen.plan.dispose.done", blocked: "screen.plan.dispose.blocked", open: "screen.plan.dispose.open", chosen: "screen.plan.choose", declined: "screen.plan.decline" };
 const markBtn = (p, option, disposition) => main(p).querySelectorAll('button[data-act="optiondispose"]').find((b) => b.dataset.option === option && b.dataset.disposition === disposition);
 
 test("R44 (c): an option can be marked done or blocked, or returned to undecided, each sending its reason; never the mark it already has", async () => {
@@ -318,4 +318,52 @@ test("R44 (registry): the assistant's help with words is drawn on the option's l
   const closed = await open(ROUTES.plan, { ...DATA_PLANE, ...REACH, plan: ok({ ...PLAN, state: "closed", closed: { reason: "done", by: "member:dev", at: "x" } }) });
   assert.ok(!ops(closed).includes("writinghelp"));
   assert.ok(button(on, "optionadd") && hasWord("act.writinghelp.label.plan"));
+});
+
+/* ---------- R44 (DEC-387, B424): the forms' own rows ---------- */
+
+const texts = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => o.textContent.trim());
+
+test("R44 (DEC-387): 'Add an option' reads the design's rows: the kinds, who it is directed to, the role and the date, the tier, seeking enforcement and its 'None'; control: the case list is not the table's", async () => {
+  const p = await open(ROUTES.plan, { ...DATA_PLANE, optionadd: ok({}) });
+  assert.deepEqual(texts(p, "plan-opt-category"), ["mitigation", "legal", "awareness", "journalistic", "grassroots", "other"].map((c) => W("screen.plan.option.kind." + c)));
+  assert.equal(texts(p, "plan-opt-adk")[2], W("screen.plan.option.directed.press"), "the press");
+  assert.deepEqual(texts(p, "plan-opt-tier"), [W("screen.plan.option.tier.none"), W("screen.plan.option.tier.1"), W("screen.plan.option.tier.2"), W("screen.plan.option.tier.3")]);
+  assert.equal(texts(p, "plan-opt-enforces")[0], W("screen.plan.option.enforce.none"));
+  for (const id of ["plan-opt-arole", "plan-opt-date-0", "plan-opt-lobbying-0"]) assert.ok(p.doc.getElementById(id), id);
+  const labelOf = (id) => p.doc.getElementById(id).parentNode.querySelector("label, legend");
+  assert.equal(p.doc.getElementById("plan-opt-arole").parentNode.querySelector("label").textContent.trim(), W("screen.plan.option.role"));
+  assert.equal(p.doc.getElementById("plan-opt-date-0").parentNode.querySelector("label").textContent.trim(), W("screen.plan.option.date"));
+  assert.ok(labelOf("plan-opt-tier"));
+  said(p, "screen.plan.option.enforce");
+  said(p, "screen.plan.add.another.date");
+  said(p, "screen.plan.add.another.phase");
+});
+
+test("R44 (DEC-387): deciding the options reads the design's rows: marking done and blocked and returning to undecided on a row; 'Choose them', 'Decline them' and 'Mark them blocked' on the picked ones; the reminder's 'Which date'", async () => {
+  const p = await open(ROUTES.plan, { ...withPlan(DATED), optiondispose: ok({}) });
+  const row = (d) => markBtn(p, "opt-1", d);
+  assert.ok(row("done").textContent.includes(W("screen.plan.dispose.done")) && row("blocked").textContent.includes(W("screen.plan.dispose.blocked")));
+  assert.ok(markBtn(p, "opt-2", "open").textContent.includes(W("screen.plan.dispose.open")));
+  await p.click(p.doc.getElementById("pick-options-opt-1"));
+  await p.click(p.doc.getElementById("pick-options-opt-2"));
+  const hold = main(p).querySelector(".cs-hold").querySelectorAll('button[data-act="optiondispose"]');
+  const by = (d) => hold.find((b) => b.dataset.disposition === d).textContent;
+  assert.ok(by("chosen").includes(W("screen.plan.dispose.them.choose")) && by("declined").includes(W("screen.plan.dispose.them.decline")) && by("blocked").includes(W("screen.plan.dispose.them.blocked")));
+  assert.ok(by("done").includes(W("screen.plan.dispose.done")) && by("open").includes(W("screen.plan.dispose.open")));
+  assert.equal(p.doc.getElementById("plan-rem-date").parentNode.querySelector("label").textContent.trim(), W("screen.plan.dispose.date"));
+});
+
+test("R44 (DEC-387): a scenario's phase reads the design's rows: 'A phase', its options, when it starts, which phase and 'No phase' for where each judgement goes", async () => {
+  const p = await open(ROUTES.plan, withPlan({ options: DATED.options.map((o, i) => ({ ...o, disposition: "chosen" })) }));
+  said(p, "screen.plan.phase.head");
+  const labelOf = (id) => p.doc.getElementById(id).parentNode.querySelector("label, legend").textContent.trim();
+  assert.equal(labelOf("plan-scen-start"), W("screen.plan.phase.when"));
+  assert.equal(labelOf("plan-scen-after"), W("screen.plan.phase.which"));
+  assert.ok(texts(p, "plan-scen-start").includes(W("screen.plan.phase.when.after")), "'After another phase'");
+  assert.ok(text(p).includes(W("screen.plan.phase.options")), "its options");
+  assert.equal(texts(p, "plan-scen-met")[0], W("screen.plan.phase.none"));
+  assert.equal(texts(p, "plan-scen-not")[0], W("screen.plan.phase.none"));
+  said(p, "screen.plan.each.phase.starts.after.something.else");
+  said(p, "screen.plan.no.phase.can.start.after.itself");
 });

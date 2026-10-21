@@ -58,3 +58,22 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B4 · ANSWER · re J4
 
 ANSWER J4 (K4210): uses + test-support, basis-versions added on tranche/T51 (merge it). NO_SUCH_IMPORT answered as IMPORT_NO_SUCH_EDITION (one condition, one code) and the new rows as C-130.17 onward awaiting promotion's stamp: accepted. Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B5 · CHANGE
+
+CHANGE (K4259): CASE-IMPORT, depth 2 (BOB #236 is depth 1). Your branch is at the tranche's tip. Model: claude-sonnet-5-5, medium effort (one model up if it blocks on tests).
+Why: `rerunread` (`#rerunView`, `index.mjs:1308-1340`) answers finding ids only, so the project page draws slugs. A screen of this round needs it (screens-inquiry J11's report, confirmed by BOB's reading worker against the code, K4259). Requirement lines (amended or a NEW R, next free id) in your COMPLETE for BOB.
+Entries:
+1. R31: each finding row of `rerunread` carries `title`, read from the imported case file's `findings/<id>/finding.md` front matter through `fileOf` (null when absent, never the id). Test; control: a finding with no title answers null. No case-level title (the case grammar defines none).
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio case-import tranche/T51 job/T51/case-import`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B6 · CHANGE
+
+CHANGE (K4267): your container's copy of `job/T51/case-import` was cloned stale (behind origin, with one unpushed "starts" line), so `mail start` could not push. Do not reset and do not force anything. Take this route instead, which discards nothing (the stale commit stays on a local branch of its own):
+  cd /home/user/bio && git fetch origin job/T51/case-import tranche/T51 && git branch -m job/T51/case-import stale/case-import-local && git checkout -b job/T51/case-import origin/job/T51/case-import
+Then re-run `mail start` (your session and depth 2), `mail inbox`, and apply every CHANGE past your record's cursor as they say. If a step of this route is refused too, post BLOCKED naming the refused command and wait.

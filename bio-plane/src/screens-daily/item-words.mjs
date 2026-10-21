@@ -39,12 +39,17 @@ export function itemWords() {
     const s = it && it.subject || {};
     const byKind = it && KIND_OPENS[String(it.kind)];
     const screen = byKind || screenOf(s);
-    const id = byKind === "contradiction" ? (s.candidate !== undefined && s.candidate !== null ? s.candidate : s.id) : s.id;
+    let id = screen === "contradiction" ? (s.candidate !== undefined && s.candidate !== null ? s.candidate : s.id) : s.id;
+    // R74: a conflict seen in part opens at `<candidate>/<project>`, the project of the party (a notice) or of the first side (a candidate).
+    if (screen === "contradiction" && id !== undefined && id !== null && id !== "") {
+      const side = (Array.isArray(s.parties) && s.parties[0]) || (Array.isArray(s.between_projects) && s.between_projects[0]) || null;
+      if (side && typeof side.project === "string" && side.project) id = String(id) + "/" + side.project;
+    }
     return screen && id !== undefined && id !== null && id !== "" ? { screen: screen, id: String(id) } : null;
   };
   const open = function (it) {
     const t = targetOf(it);
-    return t ? "/app/" + t.screen + "/" + encodeURIComponent(t.id) : "";
+    return t ? "/app/" + t.screen + "/" + (t.screen === "contradiction" ? t.id.split("/").map(encodeURIComponent).join("/") : encodeURIComponent(t.id)) : "";
   };
   // A subject's title: the item's own, as the producers carry it (queue-producers R40) or beside its subject.
   const titleOf = function (it) {

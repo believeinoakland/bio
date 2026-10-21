@@ -14,7 +14,7 @@ const OFFICES = { ok: true, subject: SUBJECT, offices: [{ addressee: { state: "n
 test("R39: a request opened for a project sends no `addresseesuggest` with the project's id, asks which name it concerns first, and after the pick sends that id; the offices are then drawn", async () => {
   const p = await open(NEW, { ...DATA_PLANE, peopledirectory: ok(NAMES), addresseesuggest: ok(OFFICES) });
   assert.equal(p.byOp("addresseesuggest").length, 0, "nothing is asked with the project's id on load");
-  assert.ok(text(p).includes(W("screen.person.keeper.subject.label")), "which name it concerns is asked first");
+  assert.ok(text(p).includes(W("screen.request.subject.label")) && text(p).includes(W("screen.request.subject.help")), "which name it concerns is asked first");
   assert.deepEqual(ops(p), ["addresseesuggest"], "only the ask is drawn before a name is picked");
   assert.equal(p.doc.getElementById("req-office"), null, "no office before the ask is answered");
   // control: pressing with no name picked sends nothing
@@ -49,7 +49,7 @@ test("R46: a records request that knows no office points to the organization's p
 
 test("R39, R46 (R19): each key the new lines name is a word of setup-words, on the screen that draws it", () => {
   const words = new Set(SCREENS.find((s) => s.id === "request").words);
-  for (const k of ["screen.person.keeper.subject.label", "screen.person.keeper.subject.help.a", "screen.person.keeper.subject.help.b", "screen.request.nooffice.pointer.a",
+  for (const k of ["screen.request.subject.label", "screen.request.subject.help", "screen.request.nooffice.pointer.a",
     "screen.request.nooffice.pointer.b", "screen.person.name", "screen.person.purpose"]) {
     assert.ok(hasWord(k), `${k} is a word`);
     assert.ok(words.has(k), `request reads ${k}`);

@@ -1,6 +1,6 @@
 # plane (T51)
 
-**Status** · session_01HpHBfhUsJDqQs6EQDqvKuj · depth 2 · COMPLETE · handled B15
+**Status** · session_019i2asULg4gBbzGXKQyLGgG · depth 2 · COMPLETE · handled B17
 
 ## Record (PLANE #41, T51-125)
 
@@ -177,3 +177,36 @@ Accepted reds (B12), 11 of 283 with the nine disagreeing owner rows skipped loca
 ## J11 · COMPLETE
 
 COMPLETE (PLANE #44; B15): pushed. `gatedOp` hands `trace` to captureOp; the object reads capture's header `x-civicsmith-trace` (Store.fetch sets the in-process `trace` for a POST acquire and strips a caller's own, because store-door's HANDED list does not carry it: you may prefer store-door to hand it on); `acquiretimings` answers {ok, stageTimes}. R73's test runs the whole hop (door -> header -> object's timings under the trace -> read, while running and after). Checks: format, architecture, coverage 0 failures. Suite (seven owner rows still disagreeing skipped locally): 272 of 283, the accepted eleven. R73's requirement text is yours to write.
+
+## Record: CHANGE B16 (K4254) · PLANE #45
+- (3) R68: `declarations.mjs` imports and lists `wizard-scripts`, `queue` and `control-plane` (`owner-ops.mjs`), in `modules.json` order. `declarations.test.mjs` R68 passes.
+- (4) R71: the test now counts as reachable an op the control-plane door's own map serves (`OWNERS["control-plane"]`: `subscriptionsignin`) and a public read a module registered at start (`publicReadOf(ctx).publicReads()`: `casedetailspublic`; t51 R17 asks it). The two had a route, the door's own, which the test did not know. R71 passes.
+- (2) R5: `sweep.test.mjs` expects link-sweep's map to hold `sweeps`, `sweepset`, `sweepratify` and finds monitoring's last op from `monitoringOps` (monitoring has more ops after `addressfrequencyset`). The route map already spread the whole map. Passes.
+- (1) R24, not plane's: `screen.contradiction.purpose` is absent from `docs/development/ux-substrate/screens/words.json`. The registry (wizard-scripts, generated from the design) holds the screen's purpose; the design's `build_words.mjs` writes `screen.<id>.purpose` from `SCREEN_HELP` in `mock-refs.js`, which has no `contradiction` entry. The design's to add. The test stays unchanged and red until then.
+- Suite: `node --test bio-plane/test/m/plane/`: 280 tests, 279 pass, 1 fail (R24 above). t46-e2e and t47-e2e: 7 of 7 pass. The plane boots on the tranche tip.
+- Checks: format 0 failures; architecture 0; coverage 73 of 73; ownership 0.
+- For BOB (requirement lines): R68 names `wizard-scripts`, `queue` and `control-plane` among the owners assembled. R71: an op reached through the control-plane door's own map or registered as a public read counts as reachable. R73's text is still yours to write (earlier entry).
+- Size (session_01CLRkcMHppRTA6yFfn5t1Zg): test runs 8, module lines 8 new (declarations 6; tests 4 changed lines)
+
+## J12 · COMPLETE
+
+COMPLETE (PLANE #45; B16): R68, R71, R5 fixed; R24 is the design's. Details in the record. (3) R68: declarations.mjs assembles wizard-scripts, queue, control-plane. (4) R71: test counts the control-plane door's own ops (subscriptionsignin) and registered public reads (casedetailspublic) as reachable; both were routed. (2) R5: test expects sweeps, sweepset, sweepratify. (1) R24: screen.contradiction.purpose is missing in the design's words.json (SCREEN_HELP in mock-refs.js has no contradiction entry); the design's to add; test unchanged, red. Suite 279 of 280 (only R24); t46-e2e, t47-e2e 7 of 7. Checks: format, architecture, coverage 73/73, ownership 0 failures. Requirement lines: R68 lists wizard-scripts, queue, control-plane among assembled owners; R71 counts door-own ops and public reads as reachable. R73 text still yours.
+
+## J13 · COMPLETE · re B17
+
+## Record: CHANGE B17 (K4262) · PLANE #46
+
+- (B17) `record-core` is added to `plane/declarations.mjs`: a static import of `DECLARED_OPS` beside the others, and an `OWNERS` entry in `build/modules.json` order (after `member-roster`). Two lines of module code (`c23360679f`).
+- The `allocid` row (record-core R85) is accepted by both hand registrations (`op-declarations`, `op-grades`), checked alone in a process of its own.
+- R68 test (`declarations.test.mjs`): the plane's start is refused at import by `DECLARED_OP_DISAGREES: groupdescriptiondraft description` (op-grades), the accepted red by name (K4258, until OP-GRADES #22 merges). That refusal names no other op, so the test cannot reach its assertions yet. The whole plane suite is held by the same refusal until OP-GRADES #22 merges; then re-run `node --test bio-plane/test/m/plane/`.
+- Checks (`checks/run.mjs /home/user/bio`): format 0 failures; architecture 0 failures; ownership 0 failures (1 file, `bio-plane/src/plane/declarations.mjs`). Coverage and words show failures in other modules only (below).
+- Deferred: none.
+- Node modules installed where missing (K4113): `agent-runner`, `bio-plane/src/journey-check`, `file-scanner`, `sheet-worker`, `site`.
+
+**Found in other modules (for BOB)**
+- Coverage: live ids named by no test: `agent-harness` R17; `agent-runner` R37, R38, R40; `installer-steps` R26, R31; `journey-check` R19; `screens-inquiry` R110, R119; `screens-intake` R53.
+- Words: `testcopy` at `bio-plane/test/m/op-grades/t37.test.mjs:32` (`translation-directed`, op-grades).
+
+**For BOB (requirement line)**: R68 now names `record-core` among the assembled owners (T51, B17). The R68 test's assertions wait on OP-GRADES #22.
+
+Size (session_019i2asULg4gBbzGXKQyLGgG): test runs 4, module lines 2

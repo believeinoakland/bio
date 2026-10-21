@@ -12,7 +12,7 @@ const sameCode = (x, y) => x && y && x.ok === y.ok && (x.code ?? x.reason) === (
 const M1 = "member:m1";
 /* a seeded world with one candidate (and, for a resolution, the question taken up from it); their ids stand for the sample ones */
 const seedEnv = (key, label, takeUp = false) => async () => {
-  const w = seeded();
+  const w = seeded({ strictConclude: takeUp });
   w.id = cand(w, key, label);
   if (takeUp) w.inq = w.c.takeUp({ candidate: w.id, question: "Q?", frame: "a", viewer: M1, author: M1 }).inquiry;
   return w;
@@ -70,7 +70,7 @@ const mk = (op, stamps = {}, setup = null, invoke = null, adapt = null) => async
 
 test("R60 contradiction declares contradictionresolve: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
   await declaredOpHolds({ op: "contradictionresolve", declaration: DECLARED_OPS["contradictionresolve"], call: mk("contradictionresolve", {"viewer":"member:m1","author":"member:m1"}, async () => (seedEnv("K2", "record", true)()), null, (fields, env) => (real(fields, env))),
-    refusedNaming: named({"inquiry":["NOT_A_CONTRADICTION_INQUIRY"],"resolution":[{"code":"BASIS_REFUSED","whyHas":"`resolution`"}],"conclusion":[{"code":"BASIS_REFUSED","whyHas":"non-empty conclusion"}]}, true), values: {"resolution":{"kind":"dissolved","coordinates":["scope"],"qualifiers":{"a":"base","b":"total"}},"conclusion":"two fees"}, same: sameCode });
+    refusedNaming: named({"inquiry":["NOT_A_CONTRADICTION_INQUIRY"],"resolution":[{"code":"BASIS_REFUSED","whyHas":"`resolution`"}],"conclusion":["BAD_READING"]}, true), values: {"resolution":{"kind":"dissolved","coordinates":["scope"],"qualifiers":{"a":"base","b":"total"}},"conclusion":"two fees, two bases"}, same: sameCode });
 });
 
 test("R60 contradiction declares contradictiondismiss: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {

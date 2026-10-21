@@ -161,7 +161,7 @@ test("the N345 routes: each op reads its own fields from the body or query and t
   assert.equal(cl.ok, true);
   const up = ops({ viewer: M1, author: M1 }, { candidate: duty, question: "Q?", frame: "a" }).contradictiontakeup();
   assert.equal(up.ok, true, JSON.stringify(up).slice(0, 300));
-  const res = ops({ viewer: M1, author: M1 }, { inquiry: up.inquiry, resolution: { kind: "irreconcilable" }, conclusion: "both" }).contradictionresolve();
+  const res = ops({ viewer: M1, author: M1 }, { inquiry: up.inquiry, resolution: { kind: "irreconcilable" }, conclusion: "both conclusions stand" }).contradictionresolve();
   assert.equal(res.ok, true, JSON.stringify(res).slice(0, 300));
   const lead = cand(w, "K4", "world");
   assert.equal(ops({ viewer: M1, author: M1 }, { candidate: lead, reason: "not_same_matter" }).contradictiondismiss().ok, true);

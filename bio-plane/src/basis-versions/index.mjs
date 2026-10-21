@@ -1657,6 +1657,8 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["target","version","reason","project","hidden","preview","affirmed"], requires: ["target","version"] } },
   narrow: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("basis-versions.declared.narrow", "leg-directed: makes ONE leg of ONE reading point at less of its document, keyed by (inquiry, reading, ordinal); writes a new reading and moves nothing existing"),
     fields: { accepts: ["target","version","ord","name","description","extent"], requires: ["target","version","ord","name","description","extent"] } },
+  narrowcandidates: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("basis-versions.declared.narrowcandidates", "read: the machine's proposals for making one leg more specific, keyed by (inquiry, reading, ordinal); labeled machine work and writes nothing"),
+    fields: { accepts: ["target","version","ord"], requires: ["target","version","ord"] } },
   conclude: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: "act.conclude.does",
     fields: { accepts: ["target","conclusion","falsifier","no_falsifier","project","commentary","version","reading","preview","affirmed","bias_applied"], requires: ["target",["falsifier","no_falsifier"],["conclusion","project","reading"]] } },
   withdrawconclusion: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: "act.withdrawconclusion.does",

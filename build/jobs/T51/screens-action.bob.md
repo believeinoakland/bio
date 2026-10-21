@@ -1,6 +1,6 @@
 # BOB to screens-action (T51)
 
-**Read** · handled J9
+**Read** · handled J12
 
 ## B1 · START
 
@@ -136,3 +136,16 @@ CHANGE (K4249), with B15: (a) releasing a contradicted sentence is not a `releas
 ## B17 · CHANGE
 
 CHANGE (K4253), with B15 and B16: the design folded B16's answers (U424, DEC-389, merged into the tranche at 742a6c8d1c; rows regenerated): "Release this sentence" and its reason field carry `filingapprove` with `release: [{ord, reason}]` (`release` is off start-send's acts; `act.release.label.start-send` stays a drawn row); `screen.action.reply.stage.none` / `.outcome.none` mean the field is omitted; a sent entry's stages have keys `screen.action.sent.stage.{request, fee_waiver_request, appeal, court_filing}`. Merge `tranche/T51` before you draw them.
+
+## B18 · CHANGE
+
+CHANGE (K4259): SCREENS-ACTION, depth 2 (BOB #236 is depth 1). Your branch is at the tranche's tip. Model: claude-sonnet-5-5, medium effort (one model up if it blocks on tests).
+Why: your J10 deferred the minutes fold for want of a requirement; R55 now binds it (K4258).
+Entries:
+1. R55 (new, K4258; `actions` R108; DEC-340): the minutes fold on a reply to a public comment (`screen.action.minutes.*`), your J10 deferral 4. The registry re-take found no difference on your screens (`start-send` lost `release`; your contract test's carve-out is inert: remove it).
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio screens-action tranche/T51 job/T51/screens-action`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).

@@ -1,6 +1,6 @@
 # BOB to screens-settings (T51)
 
-**Read** · handled J14
+**Read** · handled J15
 
 ## B1 · START
 
@@ -181,3 +181,16 @@ CHANGE (K4248) for the running job. The design answered every open HANDOFF (UX-D
 ## B24 · CHANGE
 
 CHANGE (K4249), with B23: `runtime`'s units are exactly two codes, `ms` and `bytes` (instance-setup R34; a metric ending `_bytes` is bytes, else ms); the subrequests ceiling carries no unit. The design is told; until it gives each a word, draw the code beside the number.
+
+## B25 · CHANGE
+
+CHANGE (K4259): SCREENS-SETTINGS, depth 2 (BOB #236 is depth 1). Your branch is at the tranche's tip. Model: claude-haiku-5-5, medium effort (one model up if it blocks on tests).
+Why: the screen registry is re-taken at the design commit `09fbb247eb` (DEC-389; wizard-scripts R41, merged, K4259). WIZARD-SCRIPTS #20 compared every screen's registered acts with what its module draws; your screens differ as below. Draw each act as the design draws it (the drawing under `docs/development/ux-substrate/`, its rows in `words.json`), through interface-shell's kit, so interface-shell's `checkScreens` over your screens names no difference. An act whose drawing or rows are missing: draw nothing for it and name it in your COMPLETE (BOB HANDOFFs it to the design). Requirement lines for BOB in your COMPLETE.
+Entries:
+1. `updates` (R68, DEC-389): the runtime figures are said with their units by key, `screen.updates.health.runtime.unit.ms` and `.unit.bytes` (instance-setup R34 answers `ms` and `bytes`), never a bare number or the raw unit token.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio screens-settings tranche/T51 job/T51/screens-settings`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).

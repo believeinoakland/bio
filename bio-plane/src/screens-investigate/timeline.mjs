@@ -119,10 +119,10 @@ function render(cs, view) {
   if (set.length) {
     const inst = P.later(cs, view, "instances", "instances", { query: { set: set.join(",") } });
     const known = view.parts.options(view, "people", (v) => v.rows, (r) => ({ value: r.entity, text: r.name || "" }));
-    if (inst.state !== "ok" || ((inst.value && inst.value.items) || []).length) out.push(cs.sec("progression.follows", cs.state(inst, (v) => cs.sheet(((v && v.items) || []).map((m) => cs.row("",
+    if (inst.state !== "ok" || ((inst.value && inst.value.items) || []).length) out.push(P.actSec(cs.sec("progression.follows", cs.state(inst, (v) => cs.sheet(((v && v.items) || []).map((m) => cs.row("",
       `<b>${P.refOf(cs, [id, "matter", m.progression_key, m.entity_id].join("/"), (known.find((o) => o.value === m.entity_id) || {}).text || P.plain(cs, "connection.node.unnamed"), [m.label || ""], "timeline")}</b>`
       + `<br><span class="mk-small">${cs.w("progression.followed", { progression: cs.esc(m.label || ""), n: String(m.definition_version) })} · ${cs.w("progression.threadedto")}: ${String(m.placed_count)} / ${String(m.stage_count)}`
-      + (m.finding_count ? ` · ${cs.w("progression.findings")}: ${String(m.finding_count)}` : "") + "</span>")).join(""))), { help: S + "tip.progressions" }));
+      + (m.finding_count ? ` · ${cs.w("progression.findings")}: ${String(m.finding_count)}` : "") + "</span>")).join(""))), { help: S + "tip.progressions" }), "instance"));
   }
   /* R33 (5): "Dated in the documents": a third list apart from the two lanes; it creates no event and is never merged into a lane */
   const datedAll = tl && tl.state === "ok" && tl.value.dated && Array.isArray(tl.value.dated.items) ? tl.value.dated.items : [];
@@ -250,6 +250,9 @@ const acts = [
     done(view, answer, cs) { const r = answer && answer.result !== undefined ? answer.result : answer; view.ui.later = {}; if (r && r.progression_key && !/\/progression\//.test(String(view.subject || ""))) cs.go("timeline", String(view.subject || "").split("/")[0] + "/progression/" + r.progression_key); } },
   { op: "findin", label: "act.findin.label.timeline",
     send(view, el, cs) { cs.go("find-in", String(view.subject || "")); return null; } },
+  /* B14: the registry's reads of states b and c, drawn as the sections that show them (`data-act`), never as buttons */
+  { op: "instance", label: "act.instance.label.timeline", send() { return null; } },
+  { op: "progression", label: "act.progression.label.timeline", send() { return null; } },
 ];
 
 const TIMELINE_KEYS = [

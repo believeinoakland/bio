@@ -85,8 +85,12 @@ export const updates = {
       const rv = ui.runtime || null;
       if (rv) {
         const metrics = rv.measured && Array.isArray(rv.measured.metrics) ? rv.measured.metrics : [];
-        // a measurement in the unit it was recorded in (`ms` or `bytes`, drawn as the code until the design words them); the subrequests ceiling is a count, with no unit
-        const rows = metrics.map((m) => cs.row(icon("status"), data1(m.metric), "", `${W(H + "runtime.heaviest", { peak: num(m.peak), unit: String(m.unit || "") })} · ${W(H + "runtime.average", { mean: num(m.mean), unit: String(m.unit || "") })} · ${W(H + "runtime.samples", { samples: num(m.samples) })}`));
+        // a measurement is said in the unit it was recorded in, by its key (DEC-389: `ms`, `bytes`); a unit with no key draws the metric's name and its count of samples only, never a figure with a bare number or the raw token. The subrequests ceiling is a count, with no unit
+        // the units the runtime answers (instance-setup R34), each said by its key `screen.updates.health.runtime.unit.<code>` (DEC-389)
+        const UNIT_KEYS = ["ms", "bytes"];
+        const rows = metrics.map((m) => (UNIT_KEYS.includes(m.unit)
+          ? cs.row(icon("status"), data1(m.metric), "", `${W(H + "runtime.heaviest", { peak: num(m.peak), unit: T(H + "runtime.unit." + m.unit) })} · ${W(H + "runtime.average", { mean: num(m.mean), unit: T(H + "runtime.unit." + m.unit) })} · ${W(H + "runtime.samples", { samples: num(m.samples) })}`)
+          : cs.row(icon("status"), data1(m.metric), "", W(H + "runtime.samples", { samples: num(m.samples) }))));
         const ceiling = rv.subrequests && Number.isFinite(rv.subrequests.observed) ? String(rv.subrequests.observed) : "";
         hb += cs.sheet(rows.join("") + (ceiling ? cs.row(icon("status"), W(H + "runtime.limits", { ceiling })) : "") + cs.row(icon("status"), W(H + "runtime.cpu"))) + `<p class="mk-note">${W(H + "runtime.note")}</p>`;
       }
