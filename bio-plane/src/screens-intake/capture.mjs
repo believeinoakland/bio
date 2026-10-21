@@ -156,6 +156,9 @@ function renderCapture(cs, view) {
   const at = view.parts.forOf(view), tab = at.tab;
   const U = view.ui || {};
   const said = (k, f) => `<p class="mk-note" role="status">${cs.w(k, f)}</p>`;
+  /* C29: a name placed before a sentence's own full stop loses its one (a title or file name that ends in a full stop would double it);
+     an ellipsis, or a name that ends in several, is left whole */
+  const bare = (t) => String(t == null ? "" : t).replace(/(?<![.\u2026])\.$/, "");
   const tabs = [["address", "screen.capture.tab.address"], ["file", "screen.capture.tab.file"], ["saw", "screen.capture.tab.saw"]]
     .map(([k, w]) => `<span role="tab"${k === tab ? ' aria-selected="true"' : ""}><a href="/app/capture/${k}${at.id ? "/" + encodeURIComponent(at.id) : ""}" data-nav${k === tab ? ' aria-current="page"' : ""}>${cs.w(w)}</a></span>`).join("");
   /* R24: the capture's result links the document it made; R22: "Cite a passage" opens `find-in` over it, with the question
@@ -263,7 +266,7 @@ function renderCapture(cs, view) {
     const result = (got ? (got.archive
         ? said("screen.capture.address.archive", { filed: got.filed })
           + (got.notPromoted ? said("screen.capture.address.notpromoted", { count: got.notPromoted }) : "")
-        : said(got.existed ? "screen.capture.address.existed" : "screen.capture.address.done", { title: got.title }) + made(got)
+        : said(got.existed ? "screen.capture.address.existed" : "screen.capture.address.done", { title: bare(got.title) }) + made(got)
           /* a render still being made and an attestation not yet answered, in the plane's own notes; the capture is kept */
           + [got.renderNote, got.attestNote].filter(Boolean).map((n) => `<p class="mk-small muted" role="status">${cs.esc(n)}</p>`).join("")) : "")
       + refusedPromotion("address");
@@ -336,7 +339,7 @@ function renderCapture(cs, view) {
       + cs.field("ci-where", "screen.capture.file.where", { help: "screen.capture.file.wherehelp", value: U.where || "" })
       + cs.field("ci-what", "screen.capture.file.what", { area: true, rec: true, value: U.what || "" })
       + `<div class="mk-acts">${cs.act("captureupload", { tone: "primary", label: "act.captureupload.label.capture" })}</div>`
-      + (U.uploaded ? said(U.uploaded.existed ? "screen.capture.file.existed" : "screen.capture.file.done", { name: U.uploaded.name }) + made(U.uploaded) + readLine(U.uploaded) : "")
+      + (U.uploaded ? said(U.uploaded.existed ? "screen.capture.file.existed" : "screen.capture.file.done", { name: bare(U.uploaded.name) }) + made(U.uploaded) + readLine(U.uploaded) : "")
       + refusedPromotion("file")
       + `<p class="mk-note">${cs.w("screen.capture.file.note")}</p>`;
   } else {
@@ -353,7 +356,7 @@ function renderCapture(cs, view) {
       + cs.field("ci-when", "screen.capture.saw.when", { help: "screen.capture.saw.whenhelp", value: U.when || "" })
       + `<p class="mk-small muted">${cs.w("photo.reminder")}</p>`
       + `<div class="mk-acts">${cs.act("testify", { tone: "primary" })}</div>`
-      + (U.testified ? said("screen.capture.saw.done", { id: { html: U.testified.id ? cs.ref("document", U.testified.id, U.testified.text || plainText(cs.w("shell.card.document")).replace(/<[^>]*>/g, ""), []) : cs.esc(U.testified.text || "") } }) : "")
+      + (U.testified ? said("screen.capture.saw.done", { id: { html: U.testified.id ? cs.ref("document", U.testified.id, bare(U.testified.text) || plainText(cs.w("shell.card.document")).replace(/<[^>]*>/g, ""), []) : cs.esc(bare(U.testified.text)) } }) : "")
       + `<p class="mk-note">${cs.w("screen.capture.saw.after")}</p>`;
   }
   return `<div class="mk-h">${cs.title()}<p class="mk-sub">${cs.w("screen.capture.sub")}</p></div>`

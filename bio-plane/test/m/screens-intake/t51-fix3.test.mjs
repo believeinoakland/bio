@@ -207,3 +207,66 @@ test("R4 (C23) Held filtered by a project reads that project's captures and mark
   assert.ok(all.byOp("heldcaptures").every((r) => r.query.project === undefined));
   assert.ok(text(all).includes("Other minutes") && main(all).querySelectorAll("[data-also-here]").length === 0, "all listed, none marked");
 });
+
+/* ---------- C29: no result line holds two full stops where one sentence ends ---------- */
+
+const statusLines = (p) => Array.from(main(p).querySelectorAll('[role="status"]')).map((e) => e.textContent.trim()).filter(Boolean);
+const TESTIFIED = { ok: true, bundle_id: "INFO-2026-0009-observation", bundle_sha: "f".repeat(64), capture_sha: "e".repeat(64) };
+const DOUBLED = /(?<!\.)\.\.(?!\.)/;
+async function testified(words) {
+  const saw = await open("/app/capture/saw", { plane: { testify: ok(TESTIFIED) } });
+  fill(saw, { "ci-words": words, "ci-where": "6012 Seminary Ave", "ci-when": "2026-10-04T09:10:00Z" });
+  await press(saw, "testify");
+  return saw;
+}
+
+test("C29 (R3) the testimony's result line does not double the full stop when the member's words end in one", async () => {
+  const saw = await testified("The pothole is still open.");
+  assert.ok(statusLines(saw).length >= 1);
+  assert.ok(statusLines(saw).every((l) => !DOUBLED.test(l)), JSON.stringify(statusLines(saw)));
+  assert.ok(statusLines(saw).some((l) => l.includes("The pothole is still open")), "the words are still the link's name");
+});
+
+test("C29 control: a name that ends in an ellipsis is unchanged", async () => {
+  const dots = await testified("Wait for it...");
+  assert.ok(statusLines(dots).some((l) => l.includes("Wait for it...")), "the typed ellipsis is kept whole");
+  const cut = await testified("x".repeat(100));
+  assert.ok(statusLines(cut).some((l) => l.includes("x\u2026")), "words cut for the name keep their ellipsis");
+  const plain = await testified("The pothole is still open");
+  assert.ok(statusLines(plain).some((l) => l.includes("The pothole is still open")), "words with no full stop are unchanged");
+});
+
+test("C29 (R50, R2) the capture and upload result lines do not double a full stop either", async () => {
+  const page = await captureOf({ document: { ...DOC, title: "Minutes of the board." } });
+  assert.ok(statusLines(page).every((l) => !DOUBLED.test(l)), JSON.stringify(statusLines(page)));
+  const up = await upload("/app/capture/file", new File(["x"], "notes.", { type: "text/plain" }), { document: UDOC });
+  assert.ok(statusLines(up).every((l) => !DOUBLED.test(l)), JSON.stringify(statusLines(up)));
+});
+
+/* ---------- C28: R7 (the Inbox shows the name and type the sender stated) ---------- */
+
+const KA = { knock_id: "KNOCK-2026-10-03-9c1f0a2b", sha256: "1".repeat(64), bytes: 3 * 1048576, note: "Sheets.", received: "2026-10-03T10:00:00Z", status: "new", pseudonym: "P-1", knocker_digest: "dd", file_name: "agenda-oct.pdf", media_type: "application/pdf" };
+const KB = { knock_id: "KNOCK-2026-09-12-11aa22bb", sha256: "2".repeat(64), bytes: 500, note: null, received: "2026-09-12T10:00:00Z", status: "new", pseudonym: "P-1", knocker_digest: "dd", file_name: null, media_type: null };
+const KC = { knock_id: "KNOCK-2026-09-13-55ee66ff", sha256: "3".repeat(64), bytes: 700, note: null, received: "2026-09-13T10:00:00Z", status: "new", pseudonym: "P-1", knocker_digest: "dd", file_name: "photo.jpg", media_type: "image/jpeg" };
+const rowOf = (p, k) => Array.from(main(p).querySelectorAll('[role="listitem"]')).find((r) => r.querySelector(`a[href*="${k.knock_id}"]`));
+
+test("R7 (C28) an Inbox row draws the file name and type the sender stated; a knock with neither draws neither, with no empty label", async () => {
+  const p = await open("/app/inbox", { plane: { inbox: ok({ inbox: [KA, KB, KC] }) } });
+  assert.ok(rowOf(p, KA).textContent.includes("agenda-oct.pdf") && rowOf(p, KA).textContent.includes("application/pdf"));
+  assert.ok(rowOf(p, KC).textContent.includes("photo.jpg") && rowOf(p, KC).textContent.includes("image/jpeg"));
+  const bare = rowOf(p, KB);
+  assert.ok(bare, "the knock is listed");
+  assert.equal(bare.querySelectorAll(".mk-data").length, 0, "no name, no type: nothing drawn for them");
+  assert.ok(!/null|undefined/.test(bare.textContent) && !/ · \s*$/.test(bare.textContent.trim()), "and no empty label");
+});
+
+test("R7 (C28) the knocker's other material (`knocksof`) draws each knock's stated name and type too", async () => {
+  const p = await open(`/app/inbox/${KA.knock_id}`, { plane: { inbox: ok({ inbox: [KA, KB, KC] }), inboxget: ok({ ok: true, item: KA }), sourceof: ok({ ok: true, sourceId: null }),
+    knocksof: ok({ ok: true, pseudonym: "P-1", knocks: [KA, KB, KC], count: 3, truncated: false }) } });
+  await press(p, "knocksof");
+  const sec = main(p).querySelectorAll("section.cs-section").find((s) => s.querySelector(`a[href*="${KC.knock_id}"]`));
+  assert.ok(sec, "the section of other material");
+  assert.ok(sec.textContent.includes("photo.jpg") && sec.textContent.includes("image/jpeg"));
+  const none = Array.from(sec.querySelectorAll('[role="listitem"]')).find((r) => r.querySelector(`a[href*="${KB.knock_id}"]`));
+  assert.equal(none.querySelectorAll(".mk-data").length, 0, "a knock with neither draws neither");
+});
