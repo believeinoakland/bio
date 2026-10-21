@@ -346,3 +346,9 @@ Options, my recommendation first:
 2. Drop R119 and leave entitycreate open to members: the door does nothing, and the mark `named_by_member` is all there is.
 3. Make entities refuse a non-administrator's office unless the door stamps `screen`: the door then stamps the screen it was sent, from the same `memberMayDo`. (More of entities' work.)
 I build nothing until you answer.
+
+## Re-completion (B22, B23)
+
+R119 (J18): BOB retired it (K4411): `entitycreate` already admits members and entities marks the office, so the door builds nothing for it. Merged `tranche/T51` (the retired line, `officeconfirm` on the tranche); `t46-app`, `t51-routes` (5 of 5 now), `r117-held`, `r118-shared`, `page-policy` pass (24 of 24). The last full run (356 tests) had two reds, `officeconfirm` (since cleared) and affordances' unaccounted (not mine). I merged before INTERFACE-SHELL #15 and SCREENS-SETTINGS #15 landed, as BOB said "COMPLETE with what you have".
+
+Size (session_01JarNVWj3jh7A31SRkU57RG): test runs 17, module lines 4,103
