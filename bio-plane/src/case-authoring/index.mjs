@@ -1732,7 +1732,11 @@ export class CaseAuthoring {
       if (!rows.has(c.capture)) {
         const actors = this.capture.captureAccountsOf(c.capture).actors || [];
         const first = actors.find((x) => typeof x.actor === "string" && /^member:./.test(x.actor) && !isMachineIdentity(x.actor));
-        rows.set(c.capture, { capture: c.capture, by: first ? first.actor.replace(/^member:/, "") : null, findings: [] });
+        /* C40 (K4365): the facts the capture row already carries, so the screen can say which proof exists late and which is
+           missing (case-disclosures R2). */
+        rows.set(c.capture, { capture: c.capture, by: first ? first.actor.replace(/^member:/, "") : null, findings: [],
+                              timestamp_at: c.timestamp_at ?? null, co_archive: c.co_archive ?? null, missing: c.missing ?? [],
+                              late: !!c.late, timestamp_late: !!c.timestamp_late, late_words: c.late_words ?? null });
       }
       const row = rows.get(c.capture);
       if (!row.findings.includes(c.member)) row.findings.push(c.member);
