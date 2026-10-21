@@ -250,7 +250,7 @@ const OP_FAMILIES = Object.freeze({
     moneyrecord: "open", moneywithdraw: "open", moneysetcreate: "open", moneysetinclude: "member",
     moneysetexclude: "member", moneysetpropose: "proposal", moneyfundtype: "open",
     money: "read", moneyof: "read", moneysummable: "read", moneyreconcile: "read", moneyset: "read",
-    committedagainstpaid: "read", authoritychain: "read" } }),
+    committedagainstpaid: "read", authoritychain: "read", moneysets: "read" } }),
   /* money-checks R11 (K1566): parameters and detectors a member's (MEMBER_ACT_ONLY, R3–R5), the display gate an
      administrator's (R8); the run itself is the scheduler's (R6), declared apart below. */
   "money-checks": family({ owner: "money-checks", cite: "money-checks R11", actor: BODY("by"), ops: {
