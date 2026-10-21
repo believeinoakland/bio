@@ -85,6 +85,11 @@ test("R45 (C6): the event, the passage and the finding are chosen among what the
   const p = await open(`/app/matter/${PROJECT}`, plane);
   // the event: the events the project's document follows, severed references and entities left to the timeline's own set
   assert.equal(p.byOp("timeline")[0].query.set, "EVT-1,ENT-9");
+  assert.equal(p.byOp("timeline")[0].query.captures, `${"a".repeat(64)},${"b".repeat(64)}`, "and the project's captures");
+  // with no reference in the project's document the captures alone are asked
+  const bare = await open(`/app/matter/${PROJECT}`, { ...plane, image: ok({ "bundle.md": "---\nid: x\n---\n" }) });
+  assert.equal(bare.byOp("timeline")[0].query.set, undefined);
+  assert.ok(bare.byOp("timeline")[0].query.captures);
   assert.deepEqual(p.doc.getElementById("mt-d-event").querySelectorAll("option").map((o) => o.getAttribute("value")), ["", "EVT-1", "EVT-2"]);
   // the passage: the project's documents, each by its title; the findings: its concluded questions only
   assert.equal(p.byOp("heldcaptures")[0].query.project, PROJECT);
