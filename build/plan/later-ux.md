@@ -13,3 +13,4 @@
 - question · the cite-imported finding choice and its section heading share one label (`act.owed_citeimported.label.question`) · screens-inquiry J13 · 2026-10-21
 - contradiction · `GAP_WORDS` emptied; its keys could be re-pointed to DEC-391's names · screens-inquiry J13 · 2026-10-21
 - objective · `PENDING_WORDS` all held, the list can go; aspirations' parties and flows are still typed lists, pickers could serve them · screens-inquiry J13 · 2026-10-21
+- bias (settings) · `screen.bias.adoptfor.label` read by `bias.mjs:141` has no row (screens-settings R39 red, accepted by name until T52) · CAUSE-TESTS-T51 J1 · 2026-10-21
