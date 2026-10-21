@@ -1552,6 +1552,33 @@ var fleet_member_default = {
   note: "The fleet-member marker of a container member (R7, R14). `entry` is the image's Node entry; `bundle` is the Worker hosting its class (`src/worker.mjs`, R12), built by `npm run build` and guarded as every member's bundle is. `class_name`, `max_instances` and `bind` (the binding through which its caller reaches it) are copied by bundler into the release's `container.json` part (bundler R25). `image.digest` is written by the release when it publishes the image (T33-D1), with the same digest in `wrangler.jsonc`'s `containers[0].image`; an install names the image only as `repository@digest` (src/manifest.mjs imageReference, R7). `egress` is the container's allow-list, applied by the Worker's class when it starts the container (R10, R13). `egress` names the model API and the host Claude Code's own sign-in reaches from the container to mint its token (platform.claude.com, K2211). `terms` records AT-14's condition for whoever deploys this member, as `build/terms/anthropic.md` AT-14 quotes it (read 2026-10-06); Bob settled U-2 and U-7 (K3061); `who_agrees` stays null until the release names who agrees."
 };
 
+// package.json
+var package_default = {
+  name: "agent-runner",
+  private: true,
+  type: "module",
+  version: "0.86.0",
+  description: "The container in which a member's own Claude account runs one model conversation, with only relayed tools.",
+  main: "src/entry.mjs",
+  engines: {
+    node: ">=22"
+  },
+  scripts: {
+    start: "node src/entry.mjs",
+    build: "node scripts/build.mjs",
+    test: "node --test test/"
+  },
+  dependencies: {
+    "@anthropic-ai/claude-agent-sdk": "0.3.289",
+    "@anthropic-ai/sdk": "0.131.0",
+    "@modelcontextprotocol/sdk": "1.32.1",
+    zod: "4.6.5"
+  },
+  devDependencies: {
+    "@cloudflare/containers": "0.3.7"
+  }
+};
+
 // src/waits.mjs
 var CODE_WAIT_MS = 10 * 6e4;
 var OUTCOME_WAIT_MS = 6e4;
@@ -1779,8 +1806,11 @@ var AgentRunner = class extends Container {
   }
 };
 var RemoteSession = class extends DurableObject2 {
-  async fetch() {
-    return new Response(UNAVAILABLE, { status: 503, headers: { "content-type": "application/json" } });
+  async fetch(request) {
+    const json = { "content-type": "application/json" };
+    if (request.method === "GET" && new URL(request.url).pathname === "/remote/version")
+      return new Response(JSON.stringify({ ok: true, name: fleet_member_default.name, version: package_default.version, capabilities: [] }), { status: 200, headers: json });
+    return new Response(UNAVAILABLE, { status: 503, headers: json });
   }
 };
 var worker_default = {

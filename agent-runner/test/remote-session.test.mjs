@@ -35,14 +35,26 @@ test('R42 the Worker exports RemoteSession beside AgentRunner and the default ha
   } finally { restore(); }
 });
 
-test('R42 GET /remote/version answers unavailable: 503 REMOTE_UNAVAILABLE, JSON', async () => {
+test('R42 C92 GET /remote/version answers 200 in R5\'s shape while not ready, so the part reads present, not absent', async () => {
   const h = await recorded();
   try {
     const res = await h.session.fetch(new Request('https://remote-session/remote/version'));
-    assert.equal(res.status, 503);
+    assert.equal(res.status, 200);
     assert.match(res.headers.get('content-type'), /^application\/json\b/);
-    assert.deepEqual(await res.json(), BODY);
+    const body = await res.json();
+    const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+    assert.deepEqual(body, { ok: true, name: 'agent-runner', version: pkg.version, capabilities: [] });
+    assert.deepEqual(h.calls, [], 'no storage call');
   } finally { h.stop(); }
+});
+
+test('R42 C92 control: a missing runner (no REMOTE class) has no version to answer; only the stub answers it', async () => {
+  const restore = installRuntime();
+  try {
+    const mod = await loadWorker();
+    const absent = await mod.default.fetch(new Request('https://agent-runner/remote/version'), {}, {});
+    assert.equal(absent.status, 404, 'the default export is not the runner: it answers UNKNOWN');
+  } finally { restore(); }
 });
 
 test('R42 every other method and path, and the WebSocket upgrade, is refused 503 REMOTE_UNAVAILABLE with no body read and no storage or container call', async () => {
@@ -50,7 +62,7 @@ test('R42 every other method and path, and the WebSocket upgrade, is refused 503
   try {
     for (const path of PATHS) {
       for (const method of METHODS) {
-        if (method === 'GET' && path === '/remote/version') continue;
+        if (method === 'GET' && path === '/remote/version') continue; // R42 C92: answered 200 above
         const body = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method) ? JSON.stringify({ member: 'm-1', code: SENT, secret: SENT }) : undefined;
         const req = new Request(`https://remote-session${path}?k=${SENT}`, { method, body, headers: { authorization: `Bearer ${SENT}` } });
         const res = await h.session.fetch(req);
