@@ -1,6 +1,6 @@
 # case-authoring (T51)
 
-**Status** · session_01SzRDd1oqEEzNixuCz5nhog · depth 2 · COMPLETE · handled B11
+**Status** · session_014WjdhuWBuYxto9rwEbpv6a · depth 2 · COMPLETE · handled B13
 
 ## Completion record (T51, B1 START)
 
@@ -182,3 +182,34 @@ Readers: no reader of the key outside this module in the repository; screens-pub
 ## J9 · COMPLETE
 
 COMPLETE (B11, K4245). R82 is named in the three co-attestation list tests' titles; no test body changed. Module tests 208/208; coverage 54/54; format, architecture, ownership 0 failures for case-authoring. Branch carries tranche/T51 (merged). Record: build/jobs/T51/case-authoring.md, section B11.
+
+## J10 · QUESTION
+
+QUESTION (B12, C3 and C67): two requirement lines are not written; my best reading is below and I carry on with it.
+
+1. C3 needs R82 amended. R82 as written lists the not-co-attested captures but says nothing of a refused publish. Proposed amendment (adds to R82, marked not yet met: T51): "Step three lists them, and its `self_attested` rows, whenever the captures the case rests on are known, whether or not `op=publish` refused: a refusal stays in `first` (and `CO_ATTESTATION_UNACKNOWLEDGED` among them), and the step still carries the list, so the ceremony can offer Retry and the reason box. When the captures cannot be known (a member refused, the roles not given), the step states that and lists none. Test: a pre-flight of a case whose publish is refused CO_ATTESTATION_UNACKNOWLEDGED lists the unacknowledged captures in step three, with `first` the refusal; control: a ready pre-flight lists none that is co-attested, and an unknown roster states it."
+
+2. C67 (my part) needs R16 amended. R16 says every non-severed `cites` edge of the project; the project cites the findings of all its drafts, so an earlier draft's question (not a member of this case) reaches the signed case. My reading, proposed: "an edge whose target is a finding (an inquiry) is carried only when that finding is a member of this case; edges to documents are carried as before." Test: a project citing Q (member) and Q2 (a finding of another draft, not a member): case_citations names Q only; control: with Q2 also a member both are named. If you want documents limited to those the members rest on, say so; that would change R16's existing test.
+
+## Completion record for B12 (START, fix round 2, wave 1: C3, C67), B13 (ANSWER)
+
+**Causes met.**
+- **C3 (R82 as amended, K4307).** `publishPreflight` now keeps the capture rows its independent reads already have (`D.disclosureBlocks` over `resting`, `facts` and the self-attested judgment, inside the rolled-back run) and step three carries `self_attested` and `not_co_attested` from them whenever the roster and roles are judged, whether or not `op=publish` refused (`capturesListed`, `#preflightSteps`). A refusal stays in `first`; a roster that cannot be judged (a member refused, no roles) states `not reached` and lists nothing, never `[]`. When `op=publish` reaches its rows, the lists are built from them as before, so the ready pre-flight's answer is byte-identical to the one before.
+- **C67 (my part; R16 as amended, K4307).** `#caseCitations(project, members)` carries an edge to a finding only when that finding is a member of the case; edges to documents are carried as before. An earlier draft's question no longer reaches the signed bytes.
+
+**Tests (written first, seen failing: three R82 and two R16 reds, then green).** `bio-plane/test/m/case-authoring/fixround2.test.mjs`: R82 x4 (the refused pre-flight lists the unacknowledged capture with `first` the refusal, a co-attested capture not listed; control: the list equals the ready pre-flight's and its `self_attested` row; another refusal first still lists, an unknown roster states it and lists none; writes nothing), R16 x2 (a project citing Q, Q2, Q3 and two documents: a case over Q3 cites Q3 and the documents only, neither earlier finding in the signed bytes; control: a member is cited, two members both).
+
+**Deferred.** None. The screen's half of C67 ("minutes … can't be read" with no minutes relied on) and the ceremony drawing Retry from `not_co_attested` are `screens-publish`'s (wave 2); no change to the answer's shape is needed for it.
+
+**Found in other modules (not mine, not changed).** `plane` `release.test.mjs` R24 (the surface-title words test) is red on `tranche/T51` itself (checked on a clean worktree of it: 5 of 6 pass). `checks/format.mjs` fails on `build/rulings.md:4298` (K4301 has no standing-list decision, §16). `checks/run.mjs` coverage fails for 10 modules, none case-authoring.
+
+**Tests and checks.**
+- `node --test --test-force-exit bio-plane/test/m/case-authoring/`: 214 of 214 pass.
+- Users: `review` 73/73, `case-check` 34/34, `screens-publish` 179 pass, 0 fail (181 tests, 2 not run as pass), `plane` 279 of 280 (the one red above, pre-existing).
+- `checks/architecture.mjs case-authoring`: 0 failures. `checks/coverage.mjs case-authoring`: 54 of 54 live ids named, 0 failures. `checks/words.mjs` (inside `run.mjs`): 0 failures. `checks/ownership.mjs case-authoring tranche/T51 job/T51/case-authoring`: 0 failures (3 files). `checks/format.mjs`: 1 failure, `build/rulings.md`, not this job's.
+
+**Size (session_014WjdhuWBuYxto9rwEbpv6a): test runs 9, module lines 2889** (`bio-plane/src/case-authoring/*.mjs`, all lines).
+
+## J11 · COMPLETE
+
+COMPLETE (B12, B13; fix round 2, wave 1). C3 (R82 as amended): the pre-flight's step three lists `not_co_attested` and `self_attested` whenever the roster and roles are judged, whether or not `op=publish` refused; the refusal stays in `first`; an unjudgeable roster states it and lists none. C67 (my part, R16 as amended): a case carries an edge to a finding only when it is a member; documents as before. Tests written first and seen red: fixround2.test.mjs (R82 x4, R16 x2). case-authoring 214/214; users review 73/73, case-check 34/34, screens-publish 179 pass 0 fail, plane 279/280 (R24 words test in release.test.mjs is red on tranche/T51 itself). architecture, coverage 54/54, words and ownership: 0 failures; format fails only on build/rulings.md:4298 (K4301, not mine). Nothing deferred. For screens-publish (wave 2): the ceremony can draw Retry and the reason box from step three's `not_co_attested` with no change of shape; its C67 half (no minutes line when none relied on) is theirs. Record: build/jobs/T51/case-authoring.md, pushed. Size (session_014WjdhuWBuYxto9rwEbpv6a): test runs 9, module lines 2889.

@@ -307,16 +307,19 @@ export class ConcludeFamily {
     const name = `reading-${n}`;
     /* the grounds as the document holds them, the ones a live leg uses; none held, one part with the explicit no-claim
        value, as a machine's one-part version carries (DEC-65) */
-    const labelled = live.some((l) => typeof l.ground === "string" && l.ground.trim() !== "");
-    const used = new Set(live.map((l) => String(l.ground ?? "").trim()).filter(Boolean));
+    /* R3 (C1): a leg that cuts against is no part of the partition (`inquiry-grammar` R68), so the parts are those of the
+       legs that support, and a cutting leg is copied as the document holds it and placed in none */
+    const supporting = live.filter((l) => l.role !== "cuts_against");
+    const labelled = supporting.some((l) => typeof l.ground === "string" && l.ground.trim() !== "");
+    const used = new Set(supporting.map((l) => String(l.ground ?? "").trim()).filter(Boolean));
     const when = this.k.bv.now();
     const grounds = labelled
       ? (Array.isArray(fm.grounds) ? fm.grounds : []).filter((g) => g && typeof g === "object" && used.has(String(g.ground ?? "").trim()))
           .map((g) => ({ ground: g.ground, asserted_by: g.asserted_by, at: g.at, statement: g.statement }))
-      : [{ ground: "g1", asserted_by: SUFFICIENCY_UNCLAIMED, at: when }];
+      : supporting.length ? [{ ground: "g1", asserted_by: SUFFICIENCY_UNCLAIMED, at: when }] : [];
     const legs = live.map((l) => {
       const o = {};
-      for (const k of LEG_COPY_KEYS) o[k] = k === "ground" && !labelled ? "g1" : l[k];
+      for (const k of LEG_COPY_KEYS) o[k] = k === "ground" && !labelled && l.role !== "cuts_against" ? "g1" : l[k];
       return o;
     });
     const parts = [...new Set(legs.map((l) => String(l.ground ?? "").trim()).filter(Boolean))];

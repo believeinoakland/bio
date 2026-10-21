@@ -119,6 +119,17 @@ export function standingsOf(fm) {
   }
   return out;
 }
+/* R39 (C2): the words the signed case document states for each member's finding, `case_conclusions:` by target: its
+   `claim` and its `falsifier`, a string with letters in it or null. Null for a document stating no member blocks. */
+export function caseWordsOf(fm) {
+  if (!fm || !caseDocumentStatesMemberBlocks(fm)) return null;
+  const words = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
+  const out = new Map();
+  for (const r of Array.isArray(fm.case_conclusions) ? fm.case_conclusions : [])
+    if (r && typeof r === "object" && typeof r.target === "string")
+      out.set(r.target, { claim: words(r.claim), falsifier: words(r.falsifier) });
+  return out;
+}
 /* R23: a text held by `publication`'s `publishedMaterialText` (its R57), whichever shape it answers in. */
 const heldText = (v) => (typeof v === "string" ? v : v && typeof v.text === "string" ? v.text : null);
 const HEX64 = /^[0-9a-f]{64}$/;
@@ -1142,6 +1153,10 @@ export class PublicRead {
        none). It composes no case-level strength (R11): one line per member, never one for the case. */
     const standings = signed ? standingsOf(signed.fm) : null;
     for (const f of findings) f.standing = standings ? (standings.get(f.bundle_id) ?? null) : null;
+    /* R39 (C2): the claim and falsifier the signed document states for each member, for the Worker's `body.conclusion` and
+       `body.falsifies` to carry before the finding's own bytes' words; null where the document states none. */
+    const stated = signed ? caseWordsOf(signed.fm) : null;
+    for (const f of findings) f.case_words = stated ? (stated.get(f.bundle_id) ?? null) : null;
     /* R3 (DEC-112): a `/6` document's `method` and `materials` blocks, as signed, each copy's row with its `label_key`
        (T41; DEC-185 (1)); null for any other document. */
     const six = !!(signed && caseDocumentRequiresMaterials(signed.fm));

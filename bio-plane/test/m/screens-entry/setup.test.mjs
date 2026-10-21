@@ -684,3 +684,63 @@ test("R30 where setup shows who recorded hosting access, the setup and the syste
   has(member, "screen.setup.hosting.now", { holders });
   lacks(member, "screen.group.hosting.now.setup", { date: { html: date(at) } }); lacks(member, "screen.group.hosting.now.system", { date: { html: date(at) } });
 });
+
+// ---- R33: step 7 draws the scanner's true state (C83) ----
+// `scanstatus` as file-safety R46 answers a scanner that holds no signatures; the words are the answer's keys, read as it carries them.
+const NOSIG = (over = {}) => ({
+  since: "2026-10-15T03:00:00Z", reason: "REFUSED:main.cvd:403",
+  key: "file-safety.index.no_signatures_since", words: "own words: since",
+  reason_key: "file-safety.index.signatures_refused", reason_words: "own words: refused", ...over,
+});
+const SCAN = (over = {}) => ({ scanstatus: { ok: true, result: { ok: true, scanner: { bound: true, version: "1.0" }, queued: 48, held: 0, ...over } } });
+const NOSIG_WORDS = ["file-safety.index.no_signatures_since", "file-safety.index.no_signatures", "file-safety.index.signatures_refused", "file-safety.index.signatures_failed", "file-safety.index.signatures_not_fetched"];
+const securityText = (o) => squash(textOf(partOf(o, "security")));
+
+test("R33 a scanner holding no signatures draws since when and why, from the answer, and not the checked sentence; control: signatures held draw the checked sentence and none of those words", async () => {
+  const o = await claimed(SCAN({ no_signatures: NOSIG() }));
+  assert.ok(o.requests.some((r) => r.op === "scanstatus" && r.header), "the administrator's own read, under her session");
+  const text = securityText(o);
+  assert.ok(text.includes(said("file-safety.index.no_signatures_since", { date: date("2026-10-15") })), "since when");
+  assert.ok(text.includes(said("file-safety.index.signatures_refused", { status: "403" })), "why, in words");
+  assert.ok(!text.includes(said("screen.setup.security.scanner")), "not 'checked'");
+  assert.ok(!o.drawn().includes("REFUSED:main.cvd"), "never the scanner's own code");
+  // the date and the reason follow the answer
+  const other = await claimed(SCAN({ no_signatures: NOSIG({ since: "2026-09-02T00:00:00Z", reason: "ENOTFOUND", key: "file-safety.index.no_signatures_since", reason_key: "file-safety.index.signatures_failed" }) }));
+  const t2 = securityText(other);
+  assert.ok(t2.includes(said("file-safety.index.no_signatures_since", { date: date("2026-09-02") })));
+  assert.ok(t2.includes(said("file-safety.index.signatures_failed")));
+  assert.ok(!t2.includes(said("file-safety.index.signatures_refused", { status: "403" })));
+  // no date known, no download yet: the answer's other keys
+  const none = await claimed(SCAN({ no_signatures: NOSIG({ since: null, reason: "SIGNATURES_ABSENT", key: "file-safety.index.no_signatures", reason_key: "file-safety.index.signatures_not_fetched" }) }));
+  const t3 = securityText(none);
+  assert.ok(t3.includes(said("file-safety.index.no_signatures")) && t3.includes(said("file-safety.index.signatures_not_fetched")));
+  assert.ok(!t3.includes(said("screen.setup.security.scanner")));
+  // a key the list lacks is drawn as the answer's own words, never as the key
+  const own = await claimed(SCAN({ no_signatures: NOSIG({ key: "file-safety.index.nonesuch", reason_key: "file-safety.index.nonesuch2" }) }));
+  const t4 = securityText(own);
+  assert.ok(t4.includes("own words: since") && t4.includes("own words: refused") && !t4.includes("nonesuch"));
+  // control: signatures held (the answer carries no `no_signatures`)
+  const held = await claimed(SCAN());
+  const th = securityText(held);
+  assert.ok(th.includes(said("screen.setup.security.scanner")), "checked");
+  for (const k of NOSIG_WORDS) assert.ok(!held.drawn().includes(said(k, { date: "", status: "" }).slice(0, 20)), k);
+  assert.ok(!/no signatures/i.test(th));
+});
+
+test("R33 control: no scanner part draws neither the checked sentence nor a no-signature state; a read that does not answer, or a scanner that cannot be reached, draws no 'checked'", async () => {
+  const off = { bootstrap: { ok: true, result: { ok: true, claimed: false, bootstrapConfigured: true, part_scanner: false } } };
+  for (const over of [off, { ...off, ...SCAN({ no_signatures: NOSIG() }) }]) {
+    const o = await claimed(over);
+    const text = securityText(o);
+    assert.ok(!text.includes(said("screen.setup.security.scanner")));
+    assert.ok(!text.includes(said("file-safety.index.no_signatures_since", { date: date("2026-10-15") })));
+  }
+  for (const fail of [{ ok: false, code: "NOT_AN_ADMIN" }, "none"]) {
+    const o = await claimed({ scanstatus: fail });
+    const text = securityText(o);
+    assert.ok(!text.includes(said("screen.setup.security.scanner")), JSON.stringify(fail));
+    assert.deepEqual(PARTS.map((k) => stateOf(o, k)).slice(1, 2), ["optional"], "the rest of the page is as before");
+  }
+  const lost = await claimed(SCAN({ scanner: { bound: true, version: null, unreachable: true } }));
+  assert.ok(!securityText(lost).includes(said("screen.setup.security.scanner")), "unreachable");
+});

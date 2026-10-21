@@ -78,6 +78,9 @@ export const READS = Object.freeze({
     "setup.skip", "setup.skip_does", "setup.admin.invite", "setup.admin.invite_does",
     /* R26: the website file; R30: who recorded the hosting account, when it was the setup or the system */
     ...DOMAINFILE, "shell.copy", "screen.group.hosting.now.setup", "screen.group.hosting.now.system",
+    /* R33: the scanner holding no signatures, in the words file-safety's `scanstatus` carries by key (its R46) */
+    "file-safety.index.no_signatures", "file-safety.index.no_signatures_since", "file-safety.index.signatures_refused",
+    "file-safety.index.signatures_failed", "file-safety.index.signatures_not_fetched",
     ...labels("setup", ["recoverycodesissue", "groupnameset", "groupdomainset", "profilesset", "placewanted", "officesseed", "entitycreate",
       "aikeepaway", "groupkeyset", "ailimitset", "courtnoticeset", "hostingaccessset"]),
     ...["claim", "groupkeyswitch", "memberadd", "securitytooladd"].map((op) => `act.${op}.does`)]),

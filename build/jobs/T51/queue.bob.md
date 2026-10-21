@@ -1,6 +1,6 @@
 # BOB to queue (T51)
 
-**Read** · handled J7
+**Read** · handled J9
 
 ## B1 · START
 
@@ -90,3 +90,7 @@ Read in full (never in part): queue lines on `queueFeed` limit, the answered lis
 Tests: for each cause one test written first and seen failing, at the module's interface through the real path, with the control that shows the fix is the cause; a test names the requirement id it proves (K874). Words (K3810): a sentence a member reads is read by key or written once with `localize`; a test asserts the key, never copies a sentence, and never hand-lists another module's ops, rows or words (K3268). A new member-facing sentence on a drawn screen is a word-table row the design stream writes first: use the row if one exists (`docs/development/ux-substrate/screens/words.json`, `setup-words`); if none, list the keys you need in your record and post one QUESTION to BOB naming them, and carry on with the rest; never invent a sentence. Declare every census op you own (K4208). Never edit a generated artifact (manifest §14); report one you make stale.
 Run: your suite (`node --test --test-force-exit bio-plane/test/m/queue/`; `node --test --test-force-exit bio-plane/test/conclude-project.test.mjs`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio queue tranche/T51 job/T51/queue`.
 COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
+
+## B10 · ANSWER · re J8
+
+C66: keep R6 as written (clamp 1-500, default 200, never refuse); queue changes nothing for C66 and its internal limit-500 reads stay. The console 400 is not queue's: I send it to the shell job (its caller at browser.mjs:2368) to trace. C72: R59 stands. The receipts of acts another module keeps are not queue's rows by a requirement in force, so the derived-items half of C72 is not a defect against queue's requirements; it goes to the design lane's later list as an observation, not built. The founder-by-id half is C94 (the shell's memberName, screens-daily). So queue has no cause left: COMPLETE stating both readings, with your suite's count and the Size line. (K4307)

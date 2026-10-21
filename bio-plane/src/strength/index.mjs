@@ -394,9 +394,32 @@ export class Strength {
     return new Map(Object.entries((reg && reg.earned && reg.earned.capture) || {}));
   }
 
+  /* R43: an inquiry's LIVE legs. The projected basis keeps a leg whose citation the question has withdrawn (its
+     reference entry marked `severed`; the projection drops the status), so the legs are read against the question's own
+     bundle.md, as `connections.edgeSevered` reads it: the first reference entry naming the target. Evidence narrows
+     only: an unreadable document, or no entry for the target, is live. A bounded read that was cut short and lost a leg
+     to this is read again whole, so the bound counts live legs. */
   #legsOf(id, opts = undefined) {
     const b = this.inquiry.basisFor(id, opts);
-    return (b && Array.isArray(b.legs)) ? b.legs : [];
+    const legs = (b && Array.isArray(b.legs)) ? b.legs : [];
+    const live = this.#liveLegs(id, legs);
+    if (live.length === legs.length || !b.truncated) return live;
+    const whole = this.inquiry.basisFor(id);
+    return this.#liveLegs(id, (whole && Array.isArray(whole.legs)) ? whole.legs : []);
+  }
+
+  #liveLegs(id, legs) {
+    if (!legs.length || !id || typeof this.record?.readFile !== "function") return legs;
+    const md = this.record.readFile(id, "bundle.md");
+    const refs = md && typeof md.text === "string" ? parseFrontmatter(md.text).data?.references : null;
+    if (!Array.isArray(refs)) return legs;
+    const seen = new Set(), severed = new Set();
+    for (const x of refs) {
+      if (!x || typeof x !== "object" || seen.has(x.target)) continue;
+      seen.add(x.target);
+      if (x.status === "severed") severed.add(x.target);
+    }
+    return severed.size ? legs.filter((l) => !severed.has(l.target_id)) : legs;
   }
 
   /* A leg's kind as the walk reads it (R2, R33, R36–R38): another group's finding by its reference, an occurrence by
