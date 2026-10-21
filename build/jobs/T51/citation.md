@@ -178,3 +178,16 @@ REPORT. My change (cite reads its fields from the POST body, `citationOps(c, url
 - `bio-plane/test/members.test.mjs` (membership): line 266 sends `POST op=cite&project=…&handle=…` with body `{}`; the fields must move into the body.
 Callers in source that send `cite` fields in the address (found by grep, to move to a body): `screens-inquiry/document.mjs:917` and `question.mjs` (wave 2 screens-inquiry, C31's other half), `screens-daily/finder.mjs` (`cs.act("cite", { data: { handle } })`, lines 256, 296 in finder-states.mjs, 334-341) and `screens-daily/find-in.mjs:59, 329`. Also the wizard-scripts library's `cite` steps and `journey-check/investigation.mjs:195-199` if they send the fields as a query. Suites that pass unchanged: control-plane envelope (16) and stamps (6), interface-shell frame (21) and t51 (29).
 Merge order matters: citation lands before affordances, membership and the screens, so their jobs must send the body when they merge.
+
+## J11 · COMPLETE
+
+CITATION #17 · fix round 2 · C31 met (citation's part).
+
+- `citationOps(c, url, body)`: `cite` reads `project`, `handle`, `found` (object or one JSON string), `question`, `note`, `role` and the part (`extent_*`, `content_id`) from the POST body only; the stamps (`viewer`, `owner`, `author`, `identity`) stay in the address. A GET reaches the door with a null body, so no field reaches the act and it refuses `CITE_ONE_SOURCE` writing nothing, even with every field in the address. Weight is read from nowhere (R7). DECLARED_OPS unchanged (the same fields are accepted).
+- Test: `cite-post.test.mjs` (R1, R19, R7), written first, seen failing 5 of 5 on tranche/T51's code, now passing. Control: the same fields as a body cite; a GET with all fields writes nothing and the document is byte-identical. `invariants.test.mjs` and `declared-ops.test.mjs` send `cite`'s fields as a body.
+- Suites: `node --test --test-force-exit bio-plane/test/m/citation/`: 127 pass, 0 fail. Format failure 1 is `build/rulings.md:4298` (K4301, BOB's file). architecture 0, coverage citation 19 of 19, words 0, ownership 0 failures.
+- Reported to BOB: the QUESTION (requirement line and a dedicated refusal row) and the REPORT (other modules' tests and callers to move to a body).
+- Not done by me: the passage's "already cited" mark is screens' half (wave 2).
+Deferred: none.
+
+Size (session_01T23tysCBff1C94XfhB4Qo3): test runs 9, module lines 1698
