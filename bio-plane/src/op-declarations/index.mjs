@@ -250,7 +250,7 @@ const OP_FAMILIES = Object.freeze({
     moneyrecord: "open", moneywithdraw: "open", moneysetcreate: "open", moneysetinclude: "member",
     moneysetexclude: "member", moneysetpropose: "proposal", moneyfundtype: "open",
     money: "read", moneyof: "read", moneysummable: "read", moneyreconcile: "read", moneyset: "read",
-    committedagainstpaid: "read", authoritychain: "read" } }),
+    committedagainstpaid: "read", authoritychain: "read", moneysets: "read" } }),
   /* money-checks R11 (K1566): parameters and detectors a member's (MEMBER_ACT_ONLY, R3–R5), the display gate an
      administrator's (R8); the run itself is the scheduler's (R6), declared apart below. */
   "money-checks": family({ owner: "money-checks", cite: "money-checks R11", actor: BODY("by"), ops: {
@@ -1032,7 +1032,9 @@ const OPS_HAND = aliasRows({
   /* T47 (R63; K3144): the published cases' list is public, as the door serves it (screens-entry reads it with no
      session); it answers only what is already published, so nothing is stamped and no session set holds it. */
   publishedlist:{ classes: null,                                   mutating: false },
-  inbox:        { classes: ["admin", "member", "probe"],           mutating: false },
+  /* T51 fix round 3 (DOORBELL #6; K4369): doorbell declares the inbox's list as `inboxlist`, the name it routes by (the
+     plane's DO_PATH sends `op=inbox` there); this row agrees with its row (R81). */
+  inboxlist:    { classes: ["admin", "member", "probe"],           mutating: false },
   inboxget:     { classes: ["admin", "member", "probe"],           mutating: false },
   inboxresolve: { classes: ["admin", "member", "probe"],           mutating: true  },
   /* N364 (capture R65, R67, R72; R36): the pull, and the two knock reads, are a signed-in member's (R32's fence):
@@ -2312,7 +2314,7 @@ const SESSION_OPS = Object.freeze({
                       proposer is stamped from the credential that asked, and the session route is the one
                       that produces a member's own name for a member's proposal. */
                    "actionlawspropose",
-                   "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
+                   "inboxlist", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
                    /* T46 (R3, R34; K3011): REC-93's frontier read, in BOTH sets as `search` and `findin` are, so the
                       shell draws Find's "See where nobody looked" from a session; a read, so no NEEDS row, the viewer
                       stamp the door's. */
@@ -2424,7 +2426,7 @@ const SESSION_OPS = Object.freeze({
                       proposer is stamped from the credential that asked, and the session route is the one
                       that produces a member's own name for a member's proposal. */
                    "actionlawspropose",
-                   "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
+                   "inboxlist", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    "frontier",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -2668,12 +2670,12 @@ const ACT_HELP_ABSENT = Object.freeze({
       "event", "eventforact", "eventsfor", "exceptions", "exploretimeline", "extractproposals", "factsdue",
       "factstatus", "finddoors", "findingkind", "follows", "forcesof", "governorstate", "groupkeynotice",
       "groupkeystate", "grouprules", "grouptestresults", "guide", "guidefor", "guideproposals", "guides", "heldat",
-      "holderat", "holdsdue", "hypotheses", "identity", "importedcase", "importedcases", "inbox", "inboxget",
+      "holderat", "holdsdue", "hypotheses", "identity", "importedcase", "importedcases", "inboxget", "inboxlist",
       "infolevel", "inforceat", "inforcethroughof", "inquirypartition", "instances", "interestchecks",
       "interfacewords", "interview", "interviewform", "investigationproposals", "keyedservices", "lawaddresses",
       "lawrelations", "line", "linesof", "lookedat", "matterpromiseduties", "matters", "meaningrows",
       "memberlanguage", "memberties", "milestones", "money", "moneyamountchecks", "moneycheckparams",
-      "moneydetectors", "moneyjunction", "moneynoticed", "moneyof", "moneyset", "moneysummable", "narrowcandidates",
+      "moneydetectors", "moneyjunction", "moneynoticed", "moneyof", "moneyset", "moneysets", "moneysummable", "narrowcandidates",
       "notes", "notices", "opencaptures", "originalstate", "overridesof", "partiesof", "patterns",
       "personcredentials", "personinterests", "personstatements", "photomarks", "placewantedstate", "plancomments",
       "planreviewopen", "planreviews", "plantimeline", "powersof", "poweruses", "prepitems", "proceedinglinks",
