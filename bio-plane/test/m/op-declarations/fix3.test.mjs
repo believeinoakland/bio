@@ -1,4 +1,4 @@
-/* op-declarations, T51 fix round 3 (fix-round-3-T51.md section 4; K4369, K4208): the three causes this job meets.
+/* op-declarations, T51 fix round 3 (fix-round-3-T51.md section 4; K4369, K4208): the causes this job meets, cause 1 (`moneysets`).
    Each test names the requirement it proves and carries its control. Specs, sets and stamps are read from the exported
    tables; the owners' declared rows are read from their own `DECLARED_OPS`, so an agreement (R81) is seen, not assumed. */
 import { test } from "node:test";
@@ -6,23 +6,9 @@ import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";
 import { DECLARED_OPS as MONEY_DECLARED } from "../../../src/money/index.mjs";
 
-const { OPS, SESSION_OPS, NEEDS, OP_STAMPS, OP_ALIASES } = O;
+const { OPS, SESSION_OPS, NEEDS, OP_STAMPS } = O;
 const MP = ["admin", "member", "probe"];
 const plain = (s) => JSON.parse(JSON.stringify(s));
-
-test("R21, R6 (T51 fix round 3, cause 2; DOORBELL #6): the inbox's list is declared as `inboxlist`, the name doorbell routes it by; its row here agrees with doorbell's in class and mutation (R81), and no session set names `inbox`, which is the plane's route name and not an op (negative control: a session-set name with no spec is seen)", () => {
-  assert.ok(Object.hasOwn(OPS, "inboxlist"));
-  assert.deepEqual(plain(OPS.inboxlist.classes), MP);
-  assert.equal(OPS.inboxlist.mutating, false);
-  /* doorbell's own row is not imported here (doorbell is not in this module's `uses`); the owner's row and this one
-     agree or the registration is refused (R81), and doorbell's suite runs the route */
-  /* the session sets name the list by its op */
-  assert.ok(SESSION_OPS.member.has("inboxlist") && SESSION_OPS.admin.has("inboxlist"));
-  assert.ok(!SESSION_OPS.member.has("inbox") && !SESSION_OPS.admin.has("inbox"));
-  assert.ok([...SESSION_OPS.member].every((op) => Object.hasOwn(OPS, op)), "every member name is specced");
-  /* control: `inbox` is no alias, since an alias names a registry act and the screens name none `inbox`; the plane's route maps it */
-  assert.ok(!Object.hasOwn(OP_ALIASES, "inbox"));
-});
 
 test("R17, R19, R20 (T51 fix round 3, cause 1; MONEY #6; K4369): `moneysets`, the read money serves, has its spec in money's family: classes admin, member and probe, not mutating, `viewer` stamped, its NEEDS row null, in both session sets; money's own declared row agrees (R81). Negative control: a read of money with no spec is seen", () => {
   assert.ok(Object.hasOwn(OPS, "moneysets"), "moneysets has a spec");

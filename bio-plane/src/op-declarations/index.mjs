@@ -1032,9 +1032,7 @@ const OPS_HAND = aliasRows({
   /* T47 (R63; K3144): the published cases' list is public, as the door serves it (screens-entry reads it with no
      session); it answers only what is already published, so nothing is stamped and no session set holds it. */
   publishedlist:{ classes: null,                                   mutating: false },
-  /* T51 fix round 3 (DOORBELL #6; K4369): doorbell declares the inbox's list as `inboxlist`, the name it routes by (the
-     plane's DO_PATH sends `op=inbox` there); this row agrees with its row (R81). */
-  inboxlist:    { classes: ["admin", "member", "probe"],           mutating: false },
+  inbox:        { classes: ["admin", "member", "probe"],           mutating: false },
   inboxget:     { classes: ["admin", "member", "probe"],           mutating: false },
   inboxresolve: { classes: ["admin", "member", "probe"],           mutating: true  },
   /* N364 (capture R65, R67, R72; R36): the pull, and the two knock reads, are a signed-in member's (R32's fence):
@@ -2314,7 +2312,7 @@ const SESSION_OPS = Object.freeze({
                       proposer is stamped from the credential that asked, and the session route is the one
                       that produces a member's own name for a member's proposal. */
                    "actionlawspropose",
-                   "inboxlist", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
+                   "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease", "governorstate",
                    /* T46 (R3, R34; K3011): REC-93's frontier read, in BOTH sets as `search` and `findin` are, so the
                       shell draws Find's "See where nobody looked" from a session; a read, so no NEEDS row, the viewer
                       stamp the door's. */
@@ -2426,7 +2424,7 @@ const SESSION_OPS = Object.freeze({
                       proposer is stamped from the credential that asked, and the session route is the one
                       that produces a member's own name for a member's proposal. */
                    "actionlawspropose",
-                   "inboxlist", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
+                   "inbox", "inboxget", "inboxresolve", "audit", "select", "selectionrelease",
                    "frontier",
                    ...RETRIEVAL_READS, ...READING_READS, ...REGISTRY_ACTIONS, ...RECOGNISER_ACTIONS,
                    ...PROGRESSION_ACTIONS, ...EDGE_ACTIONS, ...STATE_ACTIONS, ...ACTION_ACTIONS,
@@ -2670,7 +2668,7 @@ const ACT_HELP_ABSENT = Object.freeze({
       "event", "eventforact", "eventsfor", "exceptions", "exploretimeline", "extractproposals", "factsdue",
       "factstatus", "finddoors", "findingkind", "follows", "forcesof", "governorstate", "groupkeynotice",
       "groupkeystate", "grouprules", "grouptestresults", "guide", "guidefor", "guideproposals", "guides", "heldat",
-      "holderat", "holdsdue", "hypotheses", "identity", "importedcase", "importedcases", "inboxget", "inboxlist",
+      "holderat", "holdsdue", "hypotheses", "identity", "importedcase", "importedcases", "inbox", "inboxget",
       "infolevel", "inforceat", "inforcethroughof", "inquirypartition", "instances", "interestchecks",
       "interfacewords", "interview", "interviewform", "investigationproposals", "keyedservices", "lawaddresses",
       "lawrelations", "line", "linesof", "lookedat", "matterpromiseduties", "matters", "meaningrows",
