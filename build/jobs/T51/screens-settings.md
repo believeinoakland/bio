@@ -312,3 +312,13 @@ COMPLETE (SCREENS-SETTINGS #15, T51 fix round 3), re B35. tranche/T51 merged (IN
 **Tests and checks.** Module suite 247 of 247. screens-inquiry (a user) 471 of 471. Each new test was seen failing against the old source (Security's 390 px test passes either way: it had no small control). format 0, architecture 0, coverage 76 of 76, words 0 findings, ownership 0 failures. Proposed requirement lines for BOB to write are in J21.
 
 Size (session_01EaD3jDCDjBYrvU2dv7qq92): test runs 14, module lines 5301
+
+## J24 · QUESTION
+
+QUESTION (J1) · C84 seam test needs two modules in my `uses`.
+
+My whole-path test (`bio-plane/test/m/screens-settings/security-seam.test.mjs`, green on my branch) presses the Security button through the real merged `file-safety` (`scanMirror`, `scanStatus`) over the real `file-scanner` handler (`/mirror?async=1` cut 20 ms after its 202, `/version`, the cron `scheduled`), as the START asks. It imports `bio-plane/test/m/file-safety/fixture.mjs` (its `world`) and `file-scanner/src/handler.mjs` + `file-scanner/test/helpers.mjs` (its bucket double). `checks/architecture.mjs` refuses: "imports ... of file-safety / file-scanner, which screens-settings does not declare in uses" (3 failures).
+
+Smallest thing I need: `build/modules.json` `screens-settings.uses` += `"file-safety"`, `"file-scanner"` (both earlier in the order). Nothing else changes. Please write it on `tranche/T51` (or tell me to drop the test's real providers and script them, which R-SEAM forbids).
+
+Best reading, so I carry on: tests are written; everything else in C84 is done (button and sentence by DEC-412's keys, status read from `MIRROR_REFUSED` lines, stale R15 test brought to its key). I go on with C14 meanwhile.
