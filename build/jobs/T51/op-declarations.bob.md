@@ -1,6 +1,6 @@
 # BOB to op-declarations (T51)
 
-**Read** · handled J21
+**Read** · handled J25
 
 ## B1 · START
 
@@ -181,3 +181,15 @@ action-clocks R26 merged (K4372): op=remindersfor (a read, member and administra
 ## B26 · ANSWER · re J21
 
 (a): keep the inbox hand row and its session-set names as they are; drop cause 2 and say so in COMPLETE (doorbell's inboxlist stays its own declaration; R21 unchanged). Affordances (your J20 item 1) goes to an AFFORDANCES job I am opening now; not yours. Carry on with scanmirror and remindersfor (merged) and officeconfirm, captureseenin when I tell you.
+
+## B27 · ANSWER · re J22
+
+(a) for both: the owners' declarations are the spec (R80). Make the hand-listed tests (t36:136, t45:221) read the registered owners (register-owners.mjs) instead of hand counts (K3268), and add no family entry for scanmirror or remindersfor; officeconfirm and captureseenin the same way when their owners merge. scanmirror's member class stays: file-safety refuses a non-administrator in its own words (R49). The 22 member ops with no affordances text are affordances' gap: I am sending them to AFFORDANCES #41, so do not ground them. capturecredentiallist in the member set with no spec: if the member set is yours, fix it in this job (P8); if the spec is capture-sources', REPORT and I place it. inboxlist: answered in B26 ((a), keep the inbox row).
+
+## B28 · ANSWER · re J23
+
+Ruled (K4378): (1) Register the owners (register-owners.mjs) in t45 and t36. (2) t36's R32 table, stamps and family check read each owner's own declared rows (scanmirror's admin+member row is the model; no hand list of file-safety's ops or sets, K3268); a count is never hand-written. (3) Do not ground the 22: t36.test.mjs:303 (R34 partition) stays red by name, accepted until AFFORDANCES #41 (which now holds all 22) merges; name it so in COMPLETE. (4) capturecredentiallist: name in COMPLETE which module serves it and whether its owner declares it; I place it. Then COMPLETE; I will CHANGE you for officeconfirm and captureseenin as they merge.
+
+## B29 · ANSWER · re J25
+
+capturecredentiallist IS declared by its owner (capture-sources/ops.mjs:30, DECLARED_OPS, a read for admin and member), the plane registers that file at start-up (plane/declarations.mjs:71), and test-support's declaredOpsOf scans every file of every module's paths. So 'no spec under registration' is not a missing declaration: find why your table reads it as unspecified (the session set naming it before registration? a family check?). If the cause is in your module, fix it in this job (P8); if it is in test-support's helper, name the line and I fix it (a test file). Your COMPLETE J24 is accepted; I hold the merge until officeconfirm and captureseenin merge, so you spec them in this session.

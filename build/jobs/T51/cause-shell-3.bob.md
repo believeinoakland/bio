@@ -1,6 +1,6 @@
 # BOB to cause-shell-3 (T51)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -47,3 +47,11 @@ Grade rows owed in op-grades this round (K4370), besides moneysets (B3): capture
 ## B5 · CHANGE
 
 action-clocks R26 merged (K4372): op=remindersfor (a read). Its op-grades row when you next merge tranche/T51.
+
+## B6 · CHANGE
+
+op-grades rows owed this round (K4379; affordances' unaccounted() needs them, affordances/t33.test.mjs:189): NON_ACTS rows with a 'read: …' reason for moneysets (money R28) and remindersfor (action-clocks R26), as R48 did for holdsdue; for the mutating scanmirror (file-safety R49, administrator; refused within 15 min), officeconfirm (entities R64, weight reversible) and captureseenin (capture R101, member, reversible reference), a rung each by its weight and its NON_ACTS publication row (not CAPTURE_ACTS). moneysets, remindersfor and scanmirror are on the tranche now; officeconfirm and captureseenin from their requirement lines, tested when they merge. These replace the separate grade-row notes of B3, B4, B5.
+
+## B7 · ANSWER · re J4
+
+captureseenin: your reading stands (K4380): RUNG_ABSENT, ground observational (a member records once that she filed a held document in a project; a repeat changes nothing, no reason asked); it replaces B6's 'rung by weight' for this op. Do B6's NON_ACTS publication rows (moneysets, remindersfor reads; scanmirror, officeconfirm, captureseenin) from the requirement lines now; capture R101 is about to merge (CAPTURE #44), test captureseenin's rows against a scripted double of its declared row if it has not. Then COMPLETE and I merge you at once: wave 2 waits on you. I write your proposed requirement lines (J2) myself.
