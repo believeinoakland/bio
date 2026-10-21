@@ -54,6 +54,9 @@ const verdict = (capture_sha, tool, engine, fields) => ({ capture_sha, tool, eng
                             for a tool with no local list
      test[id]             → {passed, detail}
      mirror(params)       → /mirror's answer (default: 202 {ok, started}, file-scanner R6 `?async=1`)
+     runTrace: true       → /mirror?async=1 leaves the trace file-scanner R6 (fix round 4, C84) states, as the real handler does:
+                            `last_attempt` now, `last_error` RUN_STARTED, `stage` seed, `stage_at` now, at the start; the invocation is then
+                            cancelled (nothing follows) until a test calls `binding.stage(name)` or `binding.end(error)`
      signatures           → the signature state /version answers (default: a set published an hour ago); `null` versions and
                             `published` is a scanner that has mirrored none
      render(sha, route)   → bytes | {code, detail}
@@ -65,6 +68,9 @@ export function scanner(script = {}, { now = () => T0 } = {}) {
   const derived = new Set();   /* the copies made, which R2 holds in the derived area only */
   const binding = {
     calls,
+    /* the run reaches a later stage, or ends (`error` its `last_error`, null on success): file-scanner's own writes, scripted */
+    stage(name) { Object.assign(s.signatures, { stage: name, stage_at: new Date(now()).toISOString() }); },
+    end(error = null) { delete s.signatures.stage; delete s.signatures.stage_at; Object.assign(s.signatures, { last_error: error }); },
     async fetch(req) {
       const u = new URL(req.url);
       const body = req.method === "POST" ? await req.json() : null;
@@ -74,7 +80,10 @@ export function scanner(script = {}, { now = () => T0 } = {}) {
         signatures: s.signatures ?? { versions: { main: 62 }, published: new Date(at - 3_600_000).toISOString(), mirrored_at: null, last_attempt: null, last_error: null },
         providers: {}, reputation_lists: s.lists ?? [], renderer_version: "libreoffice 7; poppler 24", bounds: {} });
       /* file-scanner R6 (fix round 3, C84): `POST /mirror?async=1` starts a run and answers 202 at once; `mirror(search)` scripts another answer */
-      if (u.pathname === "/mirror") return s.mirror ? s.mirror(u.searchParams) : reply({ ok: true, started: true }, 202);
+      if (u.pathname === "/mirror") {
+        if (s.runTrace && !s.mirror && s.signatures) Object.assign(s.signatures, { last_attempt: new Date(at).toISOString(), last_error: "RUN_STARTED", stage: "seed", stage_at: new Date(at).toISOString() });
+        return s.mirror ? s.mirror(u.searchParams) : reply({ ok: true, started: true }, 202);
+      }
       if (u.pathname === "/scan") {
         const out = [];
         for (const t of body.targets) {

@@ -143,6 +143,7 @@ export function spliceBasis(text, legs) {
     ...(l.grade_axis ? [`    grade_axis: ${l.grade_axis}`] : []),
     ...(l.grade_source ? [`    grade_source: ${l.grade_source}`] : []),
     ...(l.note ? [`    note: "${l.note}"`] : []),
+    ...(typeof l.ground === "string" && l.ground ? [`    ground: ${l.ground}`] : []),
     ...legExtentLines(l),
   ].join("\n"));
 
