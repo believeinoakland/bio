@@ -1,6 +1,6 @@
 FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/screens-settings tranche/T51 && git branch -m job/T51/screens-settings stale/screens-settings-local && git checkout -b job/T51/screens-settings origin/job/T51/screens-settings`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
 
-START · SCREENS-SETTINGS #15 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #242 is depth 1; fix round 3, wave 2, K4356)
+START · SCREENS-SETTINGS #15 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #243 is depth 1; fix round 3, wave 2, K4356)
 
 **Amended at K4370** from the review of wave 1's merged code: items marked (K4370).
 
@@ -33,3 +33,5 @@ Run: your suite (`node --test --test-force-exit bio-plane/test/m/screens-setting
 **Added at K4398:** the Account key section hands a key file to the signer by `cs.signer.sign(statements, {keyFile})` (interface-shell R116, INTERFACE-SHELL #14, merged before you), never by filling the kit's dialog box by its id.
 
 COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
+
+**Added at K4407:** ENTITIES #18 and INTERFACE-SHELL #14 are merged: `officeconfirm` (entities R64) is on the tranche; Account's key section uses `cs.signer.sign(list, {keyFile: (await cs.keyFile(id)).text})` (interface-shell R116).
