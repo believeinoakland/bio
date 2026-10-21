@@ -153,3 +153,23 @@ Tests and checks:
 - Environment: `file-scanner`, `bio-plane/src/journey-check`, `sheet-worker`, `agent-runner`, `site` have a lockfile and no `node_modules` here (K4113); none is an input to extraction's or control-plane's suite, so I did not install them.
 
 Size (session_01RNKFMerseiVz1hP5LfR1JD): test runs 6, module lines 3354
+
+## J8 · QUESTION
+
+STEP-0 REPORT for C5a/P8 (extraction's part: the reading of the 2.5 / 8.8 / 15.9 MB PDFs). No fix code written; I ask you to release or redirect the fix.
+
+Measured on the real govinfo files (BUDGET-2025-BUD 2.39 MiB/188 pages, BUDGET-2025-PER 8.39 MiB/295 pages, BUDGET-2024-APP 15.19 MiB/1354 pages), the reading being tier 1 (`pdf` format entry = `extractPdfStructure`, pure JS, in the plane's object; the PDF_WORKER member is not used for these in the walker's copy: "no pdf-worker member is set up" / tier 1 only).
+
+L (workerd 2026-07-22 under miniflare, the module bundled as a Worker, idle workerd RSS 85 MB; local workerd does not enforce the 128 MB, so the peak is compared to it):
+- 2.39 MiB: 1.57 s in the isolate, workerd RSS peak 221 MB (+136 over idle)
+- 8.39 MiB: 2.32 s, peak 403 MB (+318)
+- 15.19 MiB: 14.40 s, peak 471 MB (+386)
+Node, whole `Extraction.read` (reading + text units, the fixture's baseline heap included): 1.5 s / 3.4 s / 20.7 s wall (CPU-bound, cpu = wall); heap + array buffers peak 176 / 329 / 508 MB; RSS peak 328 / 523 / 967 MB. Pages read 188 / 295 / 1354; units 17 / 65 / 58.
+
+Reading it: (1) the reading IS the slow and heavy phase: CPU time 1.5 s, 3.4 s, 14-21 s, so at 15.9 MB it alone is over half the door's 25 s, and the 8.8 MB capture fails at 25-36 s only if acquire (fetch + parts + keep) takes the rest; (2) the cause of the 502 `STORE_DID_NOT_ANSWER` at 2.5 MB (3 of 3) is memory, not time: the reading needs about +136 MB over the idle isolate, past the object's 128 MB, so the object is reset mid-read, which also loses the in-memory stage holder (`timings: {}`) and silences the same object's other calls: hypothesis H, now measured for the memory half; (3) because the memory is what fails, RC-R1's deferral (reading after the answer, by `readHeld` and the plane's alarm) does NOT by itself fix it: the alarm runs the same read in the same object and meets the same 128 MB. Every PDF over about 2 MB would still reset the object, only later.
+
+What would work (the module and what it needs; I write none of it before your release):
+ (a) pdf-reader (`extractPdfStructure`) bounded in memory: it brute-force scans every object and every ObjStm and keeps all page content streams decoded; a page-by-page reader that drops each page's decoded stream after reading it would hold the peak near one page's worth. That is `pdf-reader`'s module (wave 0 #1, merged before me), not mine.
+ (b) the read of a PDF over a size bound (say 2 MB, RC-R1's own figure) goes to the PDF_WORKER fleet member (tier 2, its own isolate and limits) and the object only stores its answer; `reading-pipeline.read` is `reading-pipeline`'s (cause-reading-3 in wave 1), the object's alarm is `plane`'s.
+ (c) extraction, mine: `readHeld` and `readheld` already read what the pipeline reads; once (a) or (b) lands there is nothing further to change in extraction for C5a. Until then `readHeld` of a 21 MB PDF (C5b) meets the same wall: its reading by tier 1 would need about +400 MB.
+Please decide: which of (a) or (b), and which job; or hold C5a's fix for the redeploy's phase clock (K4428). My C5b/N5 work (below) is independent of this and proceeds.
