@@ -147,3 +147,7 @@ E2 reader half done. Root cause confirmed: linesOf/readRows/readBoxes held every
 - `node checks/ownership.mjs /home/user/bio roster-reader origin/tranche/T51 job/T51/roster-reader`: `9 files changed by roster-reader between origin/tranche/T51 and job/T51/roster-reader; 0 failures`.
 
 Size (session_01E1WAAUCdCBnpW5KTCteeWs): test runs 9, module lines 1122
+
+## J6 · COMPLETE
+
+G37 (roster-reader's part) done. staff_roster and org_chart detect now walk the text without per-line copies or regex allocations (lines.mjs: in-place word counts, exec not matchAll, no regex pass for a line with no contact point, one withoutContacts a line, a cached phraseWord, hasNameSpan). Cost bound 32 B allocated per byte of text, counted in 2 MB collections in a child (before ~150 B/byte, after ~21): 1 MiB 77/61 -> 11/10 collections, 24 MiB 1835/1452 -> 250/236, 5.7 s/4.1 s -> 1.2-2.3 s. Failing-first red on the old code (158 and 153 B/byte), green on the new, five of five. Verdicts pinned from the old code on 29 fixtures, the real budget pages, a 1 MiB budget text and a roster and a chart behind 30/400/6000 preface lines: all 38 equal. Module 27/27, docprofile 45/45, plane impact files 331/332 (release R24, red on the base). run.mjs, ownership: 0 failures. Proposed R1/R3 lines and the Size line are in build/jobs/T51/roster-reader.md. Merge me before READING-PIPELINE #24.
