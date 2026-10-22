@@ -307,3 +307,7 @@ COMPLETE G26 (READING-PIPELINE #23): a PDF in pieces mode is read by page ranges
 **Waiting on:** ROSTER-READER #5's merge (B5 START in progress); then the three probes re-run alone, numbers here.
 
 Suites so far: reading-pipeline + `extraction/read.test.mjs` 221 tests, 220 pass; the 1 is `pdf-pieces.test.mjs` failing in the parallel run (its 1.5-parse ratio under load, as #23 noted) and green alone (3 runs). extraction 287/287; events, observation-log, content, retrieval-browse 374/374. Checks: format, architecture 0; coverage 41 of 41 (this module), 6668 of 6668 (run.mjs); words 18421 → 18421; ownership 0 failures (3 files).
+
+## J14 · REPORT
+
+REPORT G37 (READING-PIPELINE #24): the once-per-read change is built and tested (classify-once.test.mjs: CSV red 4 calls vs 2, green); PDF_RANGE_PAGES set to 100 by measurement (g26 tick 1 12.4 s -> 5.7 s; pdf-pieces 1.40 parses). Not yet complete: the 24 MiB text (tick 1 12.2 s) and the 1 MB CSV (dies at 127) still wait on roster-reader's recogniser cost (profile: 6.5 s of 12.2 s in roster-reader lines.mjs/staff-roster/org-chart; this module's share ~1 s). I will re-run the three probes alone when you send CHANGE after ROSTER-READER #5 merges. Details in my record, section 'G37 work in progress'.
