@@ -35,7 +35,9 @@ for (const [where, path] of screens) {
     assert.equal(p.byOp("heldcaptures").length, 1, "the held captures are read once, as the doors read them; her own are the rows whose actor is she (C14, P2.3)");
     const t = text(p);
     assert.ok(t.includes(word("screen.home.todo.vouch", { count: "2", place: "https://city.example/gate" })), "two photos at one place");
-    assert.ok(t.includes(word("screen.dash-project.next.vouch.one", { place: "https://city.example/lot" })), "one photo at another place");
+    assert.ok(t.includes("Photo INF-H3") && !t.includes(word("screen.dash-project.next.vouch.one", { place: "https://city.example/lot" })), "C25: one capture at another place is the document, named by its title");
+    const titleless = await open(path, planeOf({ heldcaptures: HELD({ ...ROW("INF-H3", "https://city.example/lot"), title: null }) }), SCR);
+    assert.ok(text(titleless).includes(word("screen.dash-project.next.vouch.one", { place: "https://city.example/lot" })), "control: one with no title keeps the sentence about its place");
     assert.deepEqual(ops(p).filter((o) => o === "release"), ["release", "release"], "each to-do carries the act");
     assert.ok(button(p, "release").textContent.includes(word(`act.release.label.${where}`)));
   });
@@ -44,7 +46,9 @@ for (const [where, path] of screens) {
     const p = await open(path, planeOf({ heldcaptures: HELD(ROW("INF-H1", null), ROW("INF-H2", null), ROW("INF-H3", "https://city.example/lot")) }), SCR);
     assert.ok(text(p).includes(word("screen.home.todo.vouch.noplace", { count: "2" })));
     const q = await open(path, planeOf({ heldcaptures: HELD(ROW("INF-H1", null)) }), SCR);
-    assert.ok(text(q).includes(word("screen.home.todo.vouch.noplace.one")));
+    assert.ok(text(q).includes("Photo INF-H1") && !text(q).includes(word("screen.home.todo.vouch.noplace.one")), "C25: one capture is the document, named by its title");
+    const bare = await open(path, planeOf({ heldcaptures: HELD({ ...ROW("INF-H1", null), title: null }) }), SCR);
+    assert.ok(text(bare).includes(word("screen.home.todo.vouch.noplace.one")), "control: with no title, one photo reads in the singular");
   });
 
   test(`R17 (${where}): vouching asks her two statements; with one missing nothing is sent; with both it selects the group's captures, then releases them over the handle`, async () => {
@@ -99,7 +103,7 @@ for (const [where, path] of screens) {
 
 test("R17 (queue): with nothing else waiting, the photos she has not vouched for are waiting on her: the to-do is drawn and the queue is not told 'Nothing is waiting on you'; control: with no photo it is", async () => {
   const p = await open("/app/queue", planeOf({ heldcaptures: HELD(ROW("INF-H1", "https://city.example/gate")) }), SCR);
-  assert.ok(text(p).includes(word("screen.dash-project.next.vouch.one", { place: "https://city.example/gate" })));
+  assert.ok(text(p).includes("Photo INF-H1"));
   assert.ok(!text(p).includes(word("screen.queue.empty")));
   const none = await open("/app/queue", planeOf({ heldcaptures: HELD() }), SCR);
   assert.ok(text(none).includes(word("screen.queue.empty")));
@@ -142,12 +146,12 @@ for (const [where, path] of screens) {
     const gate = new Promise((r) => { open1 = r; });
     const p = await open(path, planeOf({ queue: ok({ items: TASKS, item_count: 2 }), heldcaptures: async () => { await gate; return HELD(HELDAT("INF-H1", "https://city.example/gate", "2026-10-02T10:00:00Z")); } }), SCR);
     assert.ok(!text(p).includes("Check the memo"), "not drawn before her captures are read");
-    assert.ok(!text(p).includes(word("screen.dash-project.next.vouch.one", { place: "https://city.example/gate" })));
+    assert.ok(!text(p).includes("Photo INF-H1"));
     assert.ok(main(p).querySelector('[data-state="loading"]'), "it says it is loading");
     if (where === "home") assert.ok(!text(p).includes(word("screen.home.strip.you")), "no strip reading before the count is whole");
     open1();
     await settle();
-    assert.ok(text(p).includes("Check the memo") && text(p).includes(word("screen.dash-project.next.vouch.one", { place: "https://city.example/gate" })), "both at once");
+    assert.ok(text(p).includes("Check the memo") && text(p).includes("Photo INF-H1"), "both at once");
     assert.equal(main(p).querySelectorAll('button[data-act="release"]').length, 1);
     if (where === "home") assert.ok(text(p).includes(word("screen.home.strip.you")));
   });

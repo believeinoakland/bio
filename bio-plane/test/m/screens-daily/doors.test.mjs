@@ -44,17 +44,19 @@ for (const [screen, path, base] of [["home", "/app", HOMEISH], ["queue", "/app/q
   });
 }
 
-test("R65: Home says how many wait for a member to look, held captures and Inbox items both shown, a zero as 0; the queue draws no such line", async () => {
+test("R65: Home says how many wait for a member to look, held captures and Inbox items both shown, a zero as 0; the queue draws it too (R95: it tells the doors' numbers apart from its own items)", async () => {
   const some = await open("/app", { ...HOMEISH, heldcaptures: HELD(3), inbox: KNOCKS("new", "pulled", "new") });
   const line = word("screen.home.waiting.counts", { held: "3", inbox: "2" });
   assert.ok(main(some).textContent.includes(line), "both counts, in the design's sentence");
   const zero = await open("/app", { ...HOMEISH, heldcaptures: HELD(0), inbox: KNOCKS("new") });
   assert.ok(main(zero).textContent.includes(word("screen.home.waiting.counts", { held: "0", inbox: "1" })), "a zero is shown as 0, never left out or worded as a plural");
-  // controls: nothing waiting draws no line (R17: no reading at zero); a failed read says nothing of its count; the queue draws none
+  // controls: nothing waiting draws no line (R17: no reading at zero); a failed read says nothing of its count
   const nothing = await open("/app", { ...HOMEISH, heldcaptures: HELD(0), inbox: KNOCKS("pulled") });
   assert.ok(!main(nothing).textContent.includes(word("screen.home.waiting.counts", { held: "0", inbox: "0" })));
   const failed = await open("/app", { ...HOMEISH, heldcaptures: HELD(2), inbox: refused("NOT_YET", "No.", 500) });
   assert.ok(!main(failed).textContent.includes(word("screen.home.waiting.counts", { held: "2", inbox: "0" })));
   const queue = await open("/app/queue", { ...HOMEISH, heldcaptures: HELD(3), inbox: KNOCKS("new", "new") });
-  assert.ok(!main(queue).textContent.includes(word("screen.home.waiting.counts", { held: "3", inbox: "2" })));
+  assert.ok(main(queue).textContent.includes(word("screen.home.waiting.counts", { held: "3", inbox: "2" })), "R95: the queue says what the doors' numbers count");
+  const quiet = await open("/app/queue", { ...HOMEISH, heldcaptures: HELD(0), inbox: KNOCKS("pulled") });
+  assert.ok(!main(quiet).textContent.includes(word("screen.home.waiting.counts", { held: "0", inbox: "0" })), "control: nothing waiting, no line");
 });

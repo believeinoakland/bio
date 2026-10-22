@@ -216,12 +216,18 @@ export function finderStates() {
     let everywhere = true;
     let answered = 0;
     const ui = view.ui || {};
-    const textOf = function (html) { return String(html).replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&"); };
-    // A place's own words: not a digest, and not the id of the document it lies in.
+    // A place's own words: not a digest, and not the id of the document it lies in. A reference (the meaning level's `kind:key`, the
+    // identifier its source gave: `legislation:26-0788`) is named kind then key, never with the colon; an entity by what it is.
+    const referenceOf = function (x) {
+      const m = x && typeof x === "object" && x.subject_kind === "reference" && typeof x.subject === "string" ? /^([A-Za-z][\w-]*):(\S.*)$/.exec(x.subject.trim()) : null;
+      return m ? m[1] + " " + m[2] : "";
+    };
     const ownName = function (x) {
+      const ref = referenceOf(x);
+      if (ref) return ref;
       const named = x && typeof x === "object" ? (x.title || x.name || x.label || x.referent || x.detail || x.subject || "") : String(x);
       const label = String(named).trim();
-      return label && !/^[0-9a-f]{12,}$/i.test(label) && label !== String(x && x.bundle_id || "") ? label : "";
+      return label && !/^[0-9a-f]{12,}$/i.test(label) && label !== String(x && x.bundle_id || "") && !(x && x.subject_kind === "entity" && label === String(x.subject)) ? label : "";
     };
     // The places that name nothing themselves but lie in a document: their documents' titles, asked for once for all the levels
     // (`search` over `id:` terms), kept in the page's memory under the ids asked, drawn on arrival.
@@ -266,7 +272,12 @@ export function finderStates() {
         const items = (Array.isArray(v.never_looked) ? v.never_looked : []).map(function (x) {
           const label = ownName(x);
           const id = x && typeof x === "object" && x.bundle_id ? String(x.bundle_id) : "";
-          return "<li>" + cs.esc(label || (id && titleOf(id)) || textOf(cs.w("shell.card.document"))) + "</li>";
+          if (label || (id && titleOf(id))) return "<li>" + cs.esc(label || titleOf(id)) + "</li>";
+          // A place that is an entity is named for what it is; a document with no title is named by the day it came in, the one thing
+          // that tells it from the next (`registered` at the content level, `entered` at the meaning level), else by the plain word.
+          if (x && typeof x === "object" && x.subject_kind === "entity") return "<li>" + cs.w("shell.card.person") + "</li>";
+          const day = x && typeof x === "object" ? String(x.registered || x.entered || "") : "";
+          return "<li>" + (day && /^\d{4}-\d{2}-\d{2}/.test(day) ? cs.w("queue.source.untitled", { date: { html: cs.date(day) } }) : cs.w("shell.card.document")) + "</li>";
         }).join("");
         return cs.row(cs.icon("nobody"), name + '<span class="meta">' + cs.mark("gap", "nobody") + " " + (n === 1 ? cs.w("screen.finder.nobody.one") : cs.w("screen.finder.nobody", { n: String(n) })) + "</span>"
           + (items ? '<ul class="mk-list">' + items + "</ul>" : ""), "", "");

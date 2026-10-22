@@ -1,6 +1,6 @@
 /* The to-dos Home and the queue draw as the design draws them (screens-daily R3, R17; B21, DEC-389), a screen part (interface-shell
    R21, K3002) handed to both as `view.parts.todos`: "Vouch for N photos you captured on …" (the registry's `release`), one to-do for
-   each place the member's held captures come from, and "Read and approve it" (`filingapprove`) on a letter drafted for the group.
+   each place the member's held captures come from (a place with one capture is that document, named by its title, C25), and "Read and approve it" (`filingapprove`) on a letter drafted for the group.
    Their read is the one `doors.mjs` makes (C14, P2.3): the held captures as picker rows (`fields: "picker"`, one limit of 500), of which these
    keep the rows whose `actor` is the member, so a screen asks for them once. `vouch(cs, view, screen)` answers
    `{n, rows}`, the to-dos as rows; `loading(view)` is true while that read is being answered, so a screen draws its list and counts
@@ -27,8 +27,9 @@ export function todos() {
       const s = r && r.source;
       const at = s && typeof s.address === "string" && s.address && s.via !== "upload" && !/^upload:/.test(s.address) ? s.address : "";
       if (!id) return;
-      const g = groups.filter(function (x) { return x.place === at; })[0] || (groups.push({ place: at, ids: [], since: "" }), groups[groups.length - 1]);
+      const g = groups.filter(function (x) { return x.place === at; })[0] || (groups.push({ place: at, ids: [], titles: [], since: "" }), groups[groups.length - 1]);
       g.ids.push(String(id));
+      g.titles.push(typeof r.title === "string" && r.title.trim() ? r.title.trim() : "");
       // The to-do arose when its first capture began to wait.
       if (typeof r.collected_since === "string" && r.collected_since && (!g.since || r.collected_since < g.since)) g.since = r.collected_since;
     });
@@ -43,7 +44,10 @@ export function todos() {
     const button = cs.act("release", { label: "act.release.label." + screen, data: { ids: g.ids.join(","), f: f }, tone: "primary" });
     if (!button) return "";
     // The design's sentence has no form for one photo at a place on Home (REPORT): the dashboard's own sentence for it is used.
-    const text = g.place
+    // C25: one capture is the document, named as every other list names it (the record's title, a reference to it), not the address it came
+    // from; several at a place, or one with no title, keep the sentences about the place.
+    const text = g.ids.length === 1 && g.titles[0] ? cs.ref("document", g.ids[0], g.titles[0], [])
+      : g.place
       ? (g.ids.length === 1 ? cs.w("screen.dash-project.next.vouch.one", { place: g.place })
         : cs.w("screen.home.todo.vouch", { count: String(g.ids.length), place: g.place }))
       : g.ids.length === 1 ? cs.w("screen.home.todo.vouch.noplace.one") : cs.w("screen.home.todo.vouch.noplace", { count: String(g.ids.length) });
