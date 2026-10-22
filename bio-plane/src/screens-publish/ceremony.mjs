@@ -345,15 +345,21 @@ export const CEREMONY = Object.freeze({
     const phone = /data-phone-act/.test(cs.act("caseratify"));
     if ((prepared || phone) && !published && !waiting && !(ui.signed && ui.signed.at)) {
       const doc = prepared && !phone ? P.later(cs, view, "document", "casedocument", { query: { case: prepared.caseId, edition: String(prepared.edition) } }) : null;
-      const zone = signStep && signStep.publish_at && (signStep.publish_at.zone || signStep.publish_at.time_zone) || "";
+      const pa = signStep && signStep.publish_at || {};
+      const zone = pa.zone || pa.time_zone || "";
+      // G11 (fix round 6): a publishing time is offered only where the op offers it (`publish_at.offered`, with the zone it is counted in);
+      // a team with no zone is told why by the held refusal, and only "Sign and publish now" is drawn
+      const timed = pre.state === "ok" && pa.offered !== false && !!zone;
+      const untimed = pre.state === "ok" && !timed;
       // R70: preparing publishes nothing; the Sign step is the one that says publishing makes the edition permanent
       let sign = '<p class="mk-sub">' + cs.w("screen.ceremony.permanent") + "</p>"
         + '<p class="mk-explain">' + cs.w("signing.ceremony.who", { signer: (view.me && view.me.handle) || "", project: projectTitle, group: groupName }) + "</p>";
       if (phone) sign += '<p role="status" data-phone>' + cs.w("signing.ceremony.phone", { project: projectTitle }) + "</p>";
       else {
-        sign += '<fieldset class="cs-field"><legend>' + cs.w("screen.ceremony.when") + "</legend>"
+        sign += (timed ? '<fieldset class="cs-field"><legend>' + cs.w("screen.ceremony.when") + "</legend>"
           + '<p class="help">' + cs.w("screen.ceremony.when.help", { zone: zone }) + "</p>"
           + cs.field("ce-date", "screen.ceremony.when.date", { type: "date" }) + cs.field("ce-time", "screen.ceremony.when.time", { type: "time" }) + "</fieldset>"
+          : untimed ? '<p class="mk-note" role="status" data-publish-at-none>' + cs.w("refusal.PUBLISH_AT_NO_ZONE") + "</p>" : "")
           + cs.state(doc, function (d) {
             const list = P.sitting(d, prepared) || [];
             // E4 (fix round 5, C48): said before the press as well: the page could not read what the edition pins
@@ -375,8 +381,8 @@ export const CEREMONY = Object.freeze({
           + (ui.keyHeld === false ? cs.field("ce-keyfile", "shell.signer.loadfile", { type: "file", help: "shell.signer.load",
             typing: function (cs2) { cs2.keyFile("ce-keyfile").then(function (k) { cs2.set("keyFileChosen", !!k.ok); }); } }) : "")
           // R12 (K3147, K3150): one button that follows the choice of when (interface-shell R49's `cs.choice` with `acts`).
-          + '<div class="mk-acts">' + cs.choice("ce-when", "screen.ceremony.when", [["now", "screen.ceremony.when.now"], ["at", "screen.ceremony.when.at"]],
-            { acts: { now: "caseratify", at: "publishat" }, act: { tone: "primary", icon: "signed" } }) + "</div>"
+          + '<div class="mk-acts">' + (timed ? cs.choice("ce-when", "screen.ceremony.when", [["now", "screen.ceremony.when.now"], ["at", "screen.ceremony.when.at"]],
+            { acts: { now: "caseratify", at: "publishat" }, act: { tone: "primary", icon: "signed" } }) : cs.act("caseratify", { tone: "primary", icon: "signed" })) + "</div>"
           + '<p class="muted">' + cs.w("screen.ceremony.device.next") + "</p>";
       }
       // R45 (C4): the making of a signing key is offered as soon as the step is drawn when this browser holds none

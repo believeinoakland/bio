@@ -146,3 +146,28 @@ test("R13 R71 the Sign step's count line with no evidence is screen.ceremony.sig
 });
 
 const norm = (el) => String(el.textContent).replace(/\s+/g, " ").trim();
+
+/* ---------- G12c (fix round 6): the other drafts' copies are read in one `reviewcopy`, not one each ---------- */
+const MORE = ["RVD-2026-0002", "RVD-2026-0003", "RVD-2026-0004"].map((id, i) => ({ draft_id: id, case: null, created_by: "dev", updated_by: "dev", created_at: `2026-10-1${3 + i}T10:00:00Z` }));
+/* the batch as `review` is to answer it: `drafts` the ids comma-joined, `{ok, kind: "review-copies", drafts: {<id>: the single answer}}` */
+const batched = (single, dead = []) => (req) => {
+  if (!req.query.drafts) return single(req);
+  return ok({ ok: true, kind: "review-copies", drafts: Object.fromEntries(req.query.drafts.split(",").filter((id) => !dead.includes(id)).map((id) => [id, single({ query: { draft: id } }).json.result])) });
+};
+for (const [screen, path] of [["case-editor", ED], ["review-copy", RC], ["ceremony", CER]]) {
+  test(`R73 C49 G12c ${screen}: a project of five drafts reads the four other drafts' copies in one reviewcopy, each draft named by its own scope; a draft the batch lacks is drawn unread (control)`, async () => {
+    const plane = (dead) => ({ casedrafts: ok(DRAFTS(MORE)), reviewcopy: batched(copies({ "RVD-2026-0002": { authored: { scope: "Second scope" } }, "RVD-2026-0003": { authored: { scope: "Third scope" } } }), dead) });
+    const p = await open(path, { plane: plane([]) });
+    const reads = p.byOp("reviewcopy");
+    assert.equal(reads.length, 2, "the newest draft, which the screen shows, and one batch for the rest (five reads before)");
+    const batch = reads.filter((r) => r.query.drafts);
+    assert.equal(batch.length, 1);
+    assert.deepEqual(batch[0].query.drafts.split(",").sort(), [OLD, DR, "RVD-2026-0002", "RVD-2026-0003"].sort(), "every other draft, none twice, not the one shown");
+    assert.equal(batch[0].query.draft, undefined, "a batch names its drafts alone");
+    const labels = options(p, `drafts-${screen}`).map((o) => o.text);
+    assert.ok(labels.some((t) => t.includes("Second scope")) && labels.some((t) => t.includes("Third scope")) && labels.some((t) => t.includes(SCOPE_OLD)), "each named by the scope of its own copy");
+    const q = await open(path, { plane: plane(["RVD-2026-0003"]) });
+    assert.equal(q.byOp("reviewcopy").length, 2);
+    assert.ok(!text(q).includes("Third scope"), "a draft the batch does not answer is never given another draft's scope");
+  });
+}
