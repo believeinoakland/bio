@@ -1,47 +1,45 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #251 (`session_019LaUeegXQPMSR3oCkpNPgw`, depth 1, parent ROOT #8 `session_01R3hvN64bYHG3vPQmYmaeLR`, secondary account), 2026-10-22 ~14:10 UTC, at about 43 % of its window, at a clean point (every entry answered, every merge committed). **T51 is OPEN** on `tranche/T51`; fix round 5 is merged and was deployed (K4556); its re-walk is scored (K4560, K4563); E9's three jobs and SCHEDULER #39 run. Read `build/rulings-active.md` whole, then **K4543 to the last line** of `build/rulings.md` whole, then `build/plan/walk-T51-rewalk5/A.md` and `B.md`, `build/plan/diagnosis-F5-ledger-live.md`, `build/plan/k4426-check-T51-F5.md`, `build/plan/census-join-K4557.md`, whole.
+**Status** · Replaced whole at each handoff. Written by BOB #252 (`session_01T8rYkDXW3CsEsgBMqu8Zce`, depth 1, parent ROOT #8 `session_01R3hvN64bYHG3vPQmYmaeLR`, secondary account), 2026-10-22 ~15:30 UTC, at about 37 % of its window, at a clean point (every job entry answered, every merge committed, fix round 6's 20 jobs started). **T51 is OPEN** on `tranche/T51`; fix round 6 runs. Read `build/rulings-active.md` whole, then **K4567 to the last line** of `build/rulings.md` whole, then `build/plan/fix-round-6-T51.md` and `build/plan/audit-silent-partial-reads-K4571.md`, whole.
 
 ## Bob's direction today (in force)
 
 - Alpha release deployed as efficiently as possible (K4459, K4460). Weekly meter 53 % (K4516).
-- K4557 (E9): an invited, not joined member is told at the start of a weighty act to accept the invitation; gathering stays open. K4562: captures within 15 s up to ~8 MB; a larger file "being fetched" at once, fetched in the background, the member told what, why, and when it completes.
-- Bob asked (2026-10-22) that a stalled scheduler be avoided and found as fast as reasonably possible: BOB's safeguards are K4563.
+- K4565/K4566: the scheduler heals itself unseen; the Worker's cron is a watchdog, efficient and bulletproof.
+- **K4571: never a silent partial read** ("silent scanning is death!"): a large text is read whole in the background; every other silent partial read the audit finds is fixed in this round; a bound that must stay is stated to the member.
 
-## What happened this session (K4543-K4563)
+## What happened this session (K4567-K4575)
 
-- Round 5 merged: pdf-reader (K4542 by #250), reading-pipeline, extraction, control-plane, roster-reader (a new cause: detectors held every line, K4548, K4551), plane (ledger, B38 alarm wake, the `l77-size` gate, K4553); a press seam test by BOB's worker (K4555); artifacts regenerated (K4554; plane bundle 32,388,221 B, 1.17 MB under 32 MiB); deployed 5ff8b5e01b (K4556).
-- Re-walk 5: E4, E5, E11, E14, C47, C59 and most speed counts FIXED; **every BLOCKER is one cause: the object's alarm has not run since 06:03Z** (Cloudflare analytics: 8 `exceededResources` kills, then none), because `scheduler` `#reconcile` only pulls an alarm earlier and never replaces a spent one (K4561).
+- Merged: filings, docket, screens-action (E9 closed offline, K4567-K4569), scheduler (spent alarm, heal, heartbeat, health, watch; R28, R29; K4574).
+- Four diagnoses (`build/plan/diagnosis-R6-watchdog.md`, `-capture.md`, `-screens.md`, `-speed.md`); the watchdog placed (K4570); fix round 6 planned whole and started (K4573): 20 jobs, sonnet; the audit reported 14 SILENT rows (K4575).
+- DEC-415 (U450) placed as N1265 for T52 (K4572). Channel: B479 (K4571 NOTICE), B480 (ACK U450), B481 (HANDOFF: round 6's words). UX-DESIGN through U450, nothing unread.
 
-## Running jobs (mail check; doorbell routine into each, K3686)
+## Running jobs (all started 15:13-15:14Z; START bodies `build/plan/starts-T51-F6/`; confirm each start with `mail check`, §5.3 (5))
 
-| job | session | state | waits on |
-|---|---|---|---|
-| SCHEDULER #39 | `session_01WuSBArtKWiDTrSYjdTtS8z` | starting | its entry (START B2: spent alarm re-armed) and CHANGE B3 (K4563: request re-arm, heartbeat `health()`, tests); the plane's `plane.test.mjs` test that encodes "only pulled earlier" is BOB's to fix (test only) |
-| FILINGS #27 | `session_01R4VFKTh7hnaT7V78r8QJnL` | RUNNING its users' suites | K4558 merge 1 |
-| DOCKET #11 | `session_01SMUewbpPXf2emYuG2aQvxY` | WORKING | K4558 merge 2 |
-| SCREENS-ACTION #14 | `session_012SukeKJ6jZZFc6BPcuWckQ` | COMPLETE (J23 read) | **merge after filings** (its seam test's one named red clears then); R3, R4, R5, R30, R43, R48 lines in its J23 |
+bundler #26, acquisition #28, capture #48, reading-pipeline #22, extraction #34, strength #21, case-carriage #14, case-authoring #38, review #24, notice-producers #15, store-door #16, interface-shell #17, screens-intake #18 (+ CHANGE B30: three suite reds to run alone), screens-daily #19, screens-inquiry #21, screens-publish #18, control-plane #48, plane #51 (+ CHANGE B41: scheduler merged), installer-steps #6, journey-check #12. Session ids in the plan's Jobs line. Merge order: plan section 3.
 
 ## Do next, in order
 
-1. **Take over** (§5.1): archive BOB #251 once idle (row `BOB-final`, T51); delete its backstop (the newest "BOB #251 backstop") and WATCH #251 `trig_0199Gq69TZESPKkh75MjAXdf`; arm yours; `node_modules` (K4113); `/home/user/cp-close` at civicos-process `prep/T51-close-v2` (`git worktree add`, detached is fine; its `tools/mail.mjs` has `jobbranch`). The whole suite's second half (`HALF=1`) was running in BOB #251's container and is lost: re-run it (the first half: only file-safety R24 and plane R24, accepted).
-2. **Merge** filings, docket, then screens-action (K4558), then scheduler (writing R-lines from each COMPLETE).
-3. **Plan fix round 6** whole (K4297 (3)) from re-walk 5's STILL and NEW rows, `later-ux.md` for MINORs: the alarm (scheduler, K4561/K4563), the plane's half of K4563 (the Worker's scheduled trigger that checks and re-arms; `owedwork` states last run, next alarm, oldest overdue row), K4562's large-capture background fetch (acquisition, control-plane, screens-intake; the "being fetched" line and a completion notice; words by HANDOFF to UX-DESIGN), B's NEW BLOCKER `DOCUMENT_COPY_PENDING` and the raw "{document}" (whether only the dead alarm, or also a screen defect), A's NEW MAJORs (15.3 MB 504 at 25.4 s; visitor capture 502 at 12.7 s; the 12 MB text read inline but `op=reading` found:false; old 0125/0127 not repaired; 0115 statement without size), speed (Project 5.6-17 s, Held with a project filter 300-400 ms a row, `in-heldcaptures` 3.4-4.6 s). Then regenerate, checks, the whole suite, K4426's check, **one redeploy**, re-walk, final pass.
-4. **T51's close** (§5.7): U448 then U449 merged into `main` first, `main` merged in, every module's tests, the close PR; the process PR from `prep/T51-close-v2`. Close audit as K4540's handoff named (journey-check's older `not yet met: T51` marks, case-disclosures R33, corpus-export R11, R12).
+1. **Take over** (§5.1): archive BOB #252 once idle (row `BOB-final`, T51); delete its backstop (newest "BOB #252 backstop") and WATCH #252 `trig_01D44rwKwFxD7Ugs2z3YeabF`; arm yours; `node_modules` (K4113); `/home/user/cp-close` at civicos-process `prep/T51-close-v2` (`git worktree add --detach`; its `tools/mail.mjs` has `jobbranch`). Note: a `node --test` whose file argument comes out empty runs every test in the repository, agent-worker's mutating negative controls included (BOB #252's own slip, stopped and restored from HEAD at 15:30): check the path before running; restore from HEAD after any such run (K1994); never commit those edits.
+2. **Place the audit's 14 SILENT rows** (K4575) as causes G14 onward in `fix-round-6-T51.md` with the four fields: by CHANGE to a running job that owns the module (extraction, reading-pipeline, screens-inquiry, capture, acquisition, control-plane are running), else STARTs for a second wave (search/find-in/finder screens, legistar, promotion, corpus-export, doctypes, calculations), at most 20 at once. The shared fix (the reading states its completeness; Document, Capture, Search and "looked" screens draw it) serves S1, S2, S4, S6. Words to UX-DESIGN as a HANDOFF.
+3. **Watch and merge** in plan section 3's order, R-lines from each COMPLETE; heavy tests alone five runs (plan §7 (1)).
+4. Then regenerate (manifest order), the whole suite (reds known: setup-words R10/R16/R17 and `fleetbundles` stale artifacts; test-support R2 environmental in a /tmp worktree; reading-pipeline BUDGET-2024-APP memory test timed out under load (re-run alone; a run alone was cut by the handoff); screens-investigate `fix4-seam` C8 load-dependent (K4550); promotion row-census, file-safety R24, plane R24 accepted), K4426's check per cause, **one redeploy**, targeted re-walk (plan §7 (3)), final pass.
+5. After the re-walk's measurements: bring Bob the two speed questions with options (a combined read; where the objects live), plan §2 G12 end. Not before.
+6. **T51's close** (§5.7): U448, U449, U450 (and DEC-416 when posted) merged into `main` first, `main` merged in, every module's tests, the close PR; the process PR from `prep/T51-close-v2`. Close audit as K4540's handoff named.
 
 ## Accepted reds, by name, until the act named
 
-Promotion `row-census`; file-safety R24 and plane R24 `release.test.mjs` (stale design rows: U448's merge at the close); journey-check R17 (T52); screens-action `join-seam-t51` "the real filings refuses..." until filings merges.
+Promotion `row-census`; file-safety R24 and plane R24 `release.test.mjs` (stale design rows: U448's merge at the close); journey-check R17 (T52).
 
 ## Acts on main or sessions (reviewed acts, §5.8)
 
-- `main` moves only by T51's close PR (§5.7 (3)), the design MERGEs U448 and U449 first (§5.7 (1), K1177); no refusal recorded. The process repository's `main` by PR at the close (K4275).
+- `main` moves only by T51's close PR (§5.7 (3)), the design MERGEs first (§5.7 (1), K1177); no refusal recorded. The process repository's `main` by PR at the close (K4275).
 - Job branches only by `mail jobbranch` (K4385); never a force-push (K3977, K4384).
 - Deploys to biosmoke8 by push to `deploy-test/biosmoke8/{dry-run,deploy}` (K4296; not refused at K4423, K4520, K4556); none until round 6's K4426 points are checked.
 - Sessions: archive each job at its merge; lanes' sessions are not BOB's to archive.
 
 ## Open with Bob
 
-- None. Answered after the handoff: no stall notice to people; the scheduler must heal itself with no human aware or acting (K4565). Plan round 6's safeguards (K4563) on that basis: self-healing and the process's own detection only. The Worker's scheduled trigger is a watchdog timer, efficient and mission-critical bulletproof (Bob, K4566): its five binding details are in K4566.
+- None.
 
-Lanes: AI-DESIGN A40, JOURNEYS W4, INVESTIGATION-DESIGN H43, PERFORMANCE P14 unchanged. Channel: BOB posted B476 (K4557 NOTICE), B477 (HANDOFF, the join door in place and two rows), B478 (K4562 NOTICE); UX-DESIGN through U449, nothing unread.
+Lanes: AI-DESIGN A40, JOURNEYS W4, INVESTIGATION-DESIGN H43, PERFORMANCE P14 unchanged.
