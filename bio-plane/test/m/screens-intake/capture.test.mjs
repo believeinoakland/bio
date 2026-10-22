@@ -615,7 +615,7 @@ test("R29 opened from a question, the address tab draws \"For which question\" p
   assert.equal(p.byOp("search")[0].query.q, "type:inquiry");
   fill(p, { "ci-address": ADDRESS });
   await press(p, "acquire");
-  assert.deepEqual(p.byOp("acquire").map((r) => r.body), [{ locator: ADDRESS, for: Q }], "the preset question rides as for");
+  assert.deepEqual(p.byOp("acquire").map((r) => r.body), [{ locator: ADDRESS, for: Q, project: "PROJ-2026-0007" }], "the preset question rides as for");
   assert.equal(p.byOp("capturerequest").length, 0, "R29: no capturerequest is made for it");
   /* changeable: another question is the one sent */
   const q = await open(`/app/capture/address/${Q}`, { plane: { ...FOR_QUESTION(), search: QS, opencaptures: OPEN0 } });
@@ -643,7 +643,7 @@ test("R29 controls: the file tab draws no such choice and sends no for; with no 
     assert.equal(p.byOp("search").length, 0, path);
     fill(p, { "ci-address": ADDRESS });
     await press(p, "acquire");
-    assert.deepEqual(p.byOp("acquire").map((r) => r.body), [{ locator: ADDRESS }], `${path}: for absent`);
+    assert.deepEqual(p.byOp("acquire").map((r) => r.body), [path.endsWith(PROJ) ? { locator: ADDRESS, project: PROJ } : { locator: ADDRESS }], `${path}: for absent (a project subject rides as project, G2)`);
   }
 });
 
