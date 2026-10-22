@@ -2344,6 +2344,9 @@ export function extractionOps(x, url, body, env) {
 export const DECLARED_OPS = Object.freeze({
   pagetranscribe: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("extraction.declared.pagetranscribe", "reading-directed: keyed by a capture; at a member's act, the AI reads the pages Civicsmith could not, on the account that pays and within its limits; the text is labeled the AI's reading and undetermined; moves no bundle"),
     fields: { accepts: ["sha256","project"], requires: ["sha256"] } },
+  /* R76 amended (fix round 6, G13; K4577; K4208): `reading` takes `after`, a unit's `seq`, to page a capture's units. */
+  reading: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("extraction.declared.reading", "read: keyed by a capture's digest; its reading, how far a text read in pieces has been read, and its text units a page at a time; writes nothing"),
+    fields: { accepts: ["sha256","after"], requires: ["sha256"] } },
   readheld: { classes: ["admin","member"], machineClasses: [], mutating: true, needs: null, weight: "undetermined", description: localize("extraction.declared.readheld", "reading-directed: keyed by a capture's digest; at a member's act, Civicsmith reads a document its record holds whole and holds no reading of, or holds a reading of that found nothing for want of the whole; the reading is machine-made and undetermined, the earlier one kept in the history; moves no bundle"),
     fields: { accepts: ["sha","defer"], requires: ["sha"] } },
   pdfstructure: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.pdfstructure.label.document",

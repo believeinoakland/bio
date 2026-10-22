@@ -466,3 +466,23 @@ test("R76 (control): a capture of at most 4,096 units is one page with `next` nu
   assert.equal("text_units" in hidden, false);
   assert.equal("next" in hidden, false);
 });
+
+/* ---- R90 (R-OLD): a store whose index state was made before pieces gains the columns and states nothing it did not know ---- */
+
+test("R90 (R-OLD): a store made before the piece state gains its columns at the next boot, keeps every row, and its readings state no progress", async () => {
+  const { w, d } = await pieces({ pieceUnits: [3] });
+  await w.x.readHeld({ sha: d, kind: "reading" });
+  const keep = w.one(`SELECT state, offered, written FROM capture_text_state WHERE capture_sha=?`, d);
+  /* the table as an earlier release made it: no more, cursor, read_through, total, words_read */
+  w.s.db.exec(`CREATE TABLE old_state AS SELECT capture_sha, bundle_id, state, offered, written, over_bound, unaddressable, truncated, skipped_named, chain_kind, at FROM capture_text_state`);
+  w.s.db.exec(`DROP TABLE capture_text_state`);
+  w.s.db.exec(`ALTER TABLE old_state RENAME TO capture_text_state`);
+  assert.equal(w.rows(`PRAGMA table_info(capture_text_state)`).some((c) => c.name === "more"), false);
+  w.x.migrate();
+  const cols = w.rows(`PRAGMA table_info(capture_text_state)`).map((c) => c.name);
+  for (const c of ["more", "cursor", "read_through", "total", "words_read"]) assert.ok(cols.includes(c), c);
+  assert.deepEqual({ ...w.one(`SELECT state, offered, written FROM capture_text_state WHERE capture_sha=?`, d) }, { ...keep });
+  const got = w.x.readingFor(d, "class:admin");
+  assert.equal("more" in got, false, "an old state says nothing of pieces");
+  assert.equal(w.x.unitsOf(d).state, keep.state);
+});
