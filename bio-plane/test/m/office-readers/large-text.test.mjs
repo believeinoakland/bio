@@ -9,7 +9,7 @@ import { docxEntry } from "../../../src/docx.mjs";
 import { pptxEntry } from "../../../src/pptx.mjs";
 import { csvEntry, MEASURED_CSV_TEXT_BOUND_BYTES } from "../../../src/csv.mjs";
 import { MEASURED_OOXML_TEXT_BOUND_BYTES, STREAMED_TEXT_BOUND_BYTES } from "../../../src/ooxml.mjs";
-import { xlsx } from "./fixtures.mjs";
+import { xlsx, docx, wdoc } from "./fixtures.mjs";
 import { bigXlsx, bigDocx, bigPptx, bigCsv, structuredXlsx, corruptBigXlsx, oneRowXlsx, angleDocx, hiddenPptx,
   oneBigSlidePptx, csvField, randomText, prng, MIB } from "./large.mjs";
 import { csvEntry as csv, walkRecords, createRecordWalk } from "../../../src/csv.mjs";
@@ -174,9 +174,9 @@ test("R35 xlsx: a sheet that is one row of 21 MiB has no place to end a piece, a
   const t = await xlsxEntry.text(f.bytes);
   assert.equal(t.ok, true);
   assert.equal(t.sheets[0].text, "");
-  assert.deepEqual(t.undetermined, [{ sheet: 0, cell: null, reason: "piece_unbounded", size: f.declared, final: true }]);
+  assert.deepEqual(t.undetermined, [{ sheet: 0, cell: null, reason: "over_size_bound", detail: "piece_unbounded", size: f.declared, final: true }]);
   const st = await xlsxEntry.structure(f.bytes);
-  assert.ok(st.evidentiary.undetermined.some((u) => u.why === "piece_unbounded" && u.size === f.declared && u.final === true));
+  assert.ok(st.evidentiary.undetermined.some((u) => u.why === "over_size_bound" && u.detail === "piece_unbounded" && u.size === f.declared && u.final === true));
 });
 
 test("R35 xlsx: over the streamed ceiling the text is refused with the marker, the size and final", async () => {
@@ -198,6 +198,19 @@ test("R35 docx: a piece cut at a > inside an attribute value or in text reads as
   const comment = st.evidentiary.items.find((i) => i.kind === "comment");
   assert.equal(comment.text, "check this");
   assert.deepEqual(comment.source, { kind: "doc-para", ref: "¶1", para: 0, run: 1 });
+});
+
+test("R35 docx: a body that is one run of 21 MiB of text has no place to end a piece, and is stated with its size, final", async () => {
+  const body = `<w:p><w:r><w:t>${"x".repeat(21 * MIB)}</w:t></w:r></w:p>`;
+  const bytes = docx({ document: wdoc(body) });
+  const declared = enc(wdoc(body)).length;
+  const t = await docxEntry.text(bytes);
+  assert.equal(t.ok, true);
+  assert.equal(t.document, null);
+  assert.deepEqual(t.undetermined, [{ reason: "main_part_unreadable", part: "word/document.xml", why: "over_size_bound", detail: "piece_unbounded", size: declared, final: true }]);
+  const st = await docxEntry.structure(bytes);
+  assert.equal(st.paragraphs, null);
+  assert.deepEqual(st.evidentiary.undetermined, [{ part: "word/document.xml", why: "over_size_bound", detail: "piece_unbounded", size: declared, final: true }]);
 });
 
 test("R35 pptx: a hidden slide and speaker notes survive a deck read one part at a time", async () => {

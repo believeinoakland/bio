@@ -85,7 +85,7 @@ import {
   hasZipMagic, readContainer, readPart, discriminate,
   CONTENT_TYPES_PART, relsPartFor, normalizePartName, walkRels,
   declaredTextBytes, CORE_PROPERTIES_PART, readCoreProperties,
-  withContainerImages, textPlan, readPartPieces, cutBefore,
+  withContainerImages, textPlan, readPartPieces, pieceWhy, cutBefore,
 } from "./ooxml.mjs";
 import { linkWrapper } from "./subresources.mjs";
 import { withMetadata, activeContent, withActive, detectByContentType } from "./docx.mjs";
@@ -550,7 +550,7 @@ async function xlsxParts(bytes) {
           for (const si of elements(piece, "si")) strings.push(textRuns(si.inner));
         });
         if (ss.ok) sharedStrings = strings;
-        else undetermined.push({ part: SHARED_STRINGS_PART, why: ss.why, ...(ss.final ? { size: ss.size, final: true } : {}) });
+        else undetermined.push({ part: SHARED_STRINGS_PART, ...pieceWhy(ss) });
       }
     }
     for (const sheet of sheets) {
@@ -686,7 +686,7 @@ async function walkSheetPart(parts, sheet, onRow) {
   const w = sheetWalker(onRow);
   if (sheet.xml != null) { w.feed(sheet.xml); return w.done(); }
   const read = await readPartPieces(parts.bytes, parts.container, sheet.part, SHEET_CUT, (piece) => w.feed(piece));
-  return read.ok ? w.done() : { failed: read.why, read };
+  return read.ok ? w.done() : { failed: pieceWhy(read) };
 }
 
 /** One cell's DISPLAYED value (the cached claim the published sheet shows).
@@ -786,9 +786,8 @@ async function xlsxStructure(parts) {
         }
       });
       if (walked.failed) {
-        failedWhy = walked.failed;
-        evUndetermined.push({ part: sheet.part, why: walked.failed,
-          ...(walked.read?.final ? { size: walked.read.size, final: true } : {}) });
+        failedWhy = walked.failed.why;
+        evUndetermined.push({ part: sheet.part, ...walked.failed });
         walked = null;
       }
     }
@@ -1056,7 +1055,8 @@ async function xlsxText(parts) {
       if (vals.length) lines.push(vals.join("\t"));
     });
     if (walked.failed) {
-      unreadable(sheet, walked.failed, walked.read?.final ? { size: walked.read.size, final: true } : {});
+      const { why, ...rest } = walked.failed;
+      unreadable(sheet, why, rest);
       continue;
     }
     cellCount += sheetCells;

@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { deflateRawSync } from "node:zlib";
 import {
-  textPlan, readPartPieces, readPart, readContainer, cutAfterTag, cutBefore, sizeGuard,
+  textPlan, readPartPieces, pieceWhy, readPart, readContainer, cutAfterTag, cutBefore, sizeGuard,
   MEASURED_OOXML_TEXT_BOUND_BYTES, STREAMED_TEXT_BOUND_BYTES, MEMBER_MAX, ARCHIVE_TOTAL_MAX,
 } from "../../../src/ooxml.mjs";
 import { buildZip } from "./zip.mjs";
@@ -149,4 +149,11 @@ test("R35 readPartPieces: bytes the caller passes as an ArrayBuffer or a view re
   assert.equal(viaBuffer.join(""), text);
   const raw = deflateRawSync(Buffer.from(text));
   assert.ok(raw.length > 0);
+});
+
+test("R35 pieceWhy: a member with no place to end a piece is over_size_bound with its size and final; any other refusal as it is", () => {
+  assert.deepEqual(pieceWhy({ ok: false, why: "piece_unbounded", name: "p.xml", size: 99, final: true }),
+    { why: "over_size_bound", detail: "piece_unbounded", size: 99, final: true });
+  assert.deepEqual(pieceWhy({ ok: false, why: "crc_mismatch", name: "p.xml" }), { why: "crc_mismatch" });
+  assert.deepEqual(pieceWhy(undefined), { why: undefined });
 });

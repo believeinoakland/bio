@@ -240,6 +240,16 @@ export function cutBefore(re) {
   };
 }
 
+/** A refusal of `readPartPieces` as the readers state it. A member with no place
+ *  to end a piece (`piece_unbounded`) is stated in the words every reader has
+ *  always used for a text it did not read for its size, `over_size_bound`, with
+ *  that size, `final: true` and the mechanism in `detail`; any other refusal is
+ *  stated as it is. */
+export function pieceWhy(read) {
+  if (read?.why !== "piece_unbounded") return { why: read?.why };
+  return { why: "over_size_bound", detail: "piece_unbounded", size: read.size, final: true };
+}
+
 /* ------------------------------------------------------------------ *
  * The archive limits (N688; K1844, K1852 (2), K1881, K1903), by name
  * ------------------------------------------------------------------ *

@@ -75,9 +75,9 @@ const T47_FUNCTIONS = {
   readContainer: 1, readCoreProperties: 2, readPart: 3, readVbaProject: 3, relsPartFor: 0, sizeGuard: 1, streamMember: 2,
   walkRels: 2, withContainerImages: 3,
 };
-/* What T51 (F7, R35) added, each by its name: the piece reader, its plan and its two cuts, and the ceiling of a read
+/* What T51 (F7, R35) added, each by its name: the piece reader, its plan, its two cuts and the words for its refusal, and the ceiling of a read
  * in pieces. R34 pins every name T47 held, and these. */
-const T51_FUNCTIONS = { cutAfterTag: 1, cutBefore: 1, readPartPieces: 5, textPlan: 1 };
+const T51_FUNCTIONS = { cutAfterTag: 1, cutBefore: 1, pieceWhy: 1, readPartPieces: 5, textPlan: 1 };
 const T51_CONSTANTS = { STREAMED_TEXT_BOUND_BYTES: 33554432 };
 const T47_CONSTANTS = {
   ARCHIVE_DEPTH_MAX: 3, ARCHIVE_ENTRIES_MAX: 10000, ARCHIVE_RATIO_MAX: 1100, ARCHIVE_TOTAL_MAX: 268435456,

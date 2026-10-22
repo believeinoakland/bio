@@ -96,7 +96,7 @@
 import { linkWrapper } from "./subresources.mjs";
 import {
   hasZipMagic, readContainer, readPart, normalizePartName,
-  discriminate, walkRels, relsPartFor, textPlan, readPartPieces, cutAfterTag,
+  discriminate, walkRels, relsPartFor, textPlan, readPartPieces, pieceWhy, cutAfterTag,
   CORE_PROPERTIES_PART, readCoreProperties, withContainerImages,
   readVbaProject, MEASURED_OOXML_TEXT_BOUND_BYTES,
 } from "./ooxml.mjs";
@@ -888,8 +888,7 @@ async function docxStructure(parts) {
   const evUndetermined = [...parts.undetermined];
   if (parts.guard) evUndetermined.push({ part: parts.mainPart, why: "over_size_bound", guard: parts.guard });
   if (pieceFailure) {
-    evUndetermined.push({ part: parts.mainPart, why: pieceFailure.why,
-      ...(pieceFailure.final ? { size: pieceFailure.size, final: true } : {}) });
+    evUndetermined.push({ part: parts.mainPart, ...pieceWhy(pieceFailure) });
   }
   if (parts.commentsXml != null) {
     const parsed = parseComments(parts.commentsXml);
@@ -998,8 +997,8 @@ async function docxText(parts) {
       const stated = parts.undetermined.find((u) => u.part === parts.mainPart);
       return {
         ok: true, container: "docx", document: null, paragraphs: [], tables: null,
-        undetermined: [{ reason: "main_part_unreadable", part: parts.mainPart, why: read ? read.why : (stated?.why ?? "unreadable"),
-          ...(read?.final ? { size: read.size, final: true } : {}) }],
+        undetermined: [{ reason: "main_part_unreadable", part: parts.mainPart,
+          ...(read ? pieceWhy(read) : { why: stated?.why ?? "unreadable" }) }],
         counts: { chars: 0, undetermined: 1 },
       };
     }
