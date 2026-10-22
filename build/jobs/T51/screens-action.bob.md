@@ -283,3 +283,7 @@ ANSWER (K4468). Confirmed and placed: instance-setup R12 now requires profiles()
 ## B24 · ANSWER · re J20
 
 ANSWER (K4470). (1) build/modules.json screens-action.uses now adds action-clocks (tranche @ 262f9ae408; merge it): make the due date by the member's own proposal and adopt in the seam test. (2) Keep the groupidentity read on request and start-send, named in the test as the one known repeat; no kit accessor this round.
+
+## B25 · CHANGE
+
+CHANGE (K4472): CAUSE-SHELL-4 #1 is merged (tranche/T51 @ 5539bd4c3d). Merge the tranche before your next run. What it changes for you: RE_POINTS.document admits readheld (R117); a screen's {op:'bootstrap'} read is answered from the page's one answer (assert one); the frame's queue read is count:true, and the harness's FRAME.queue answers count and list (queueOf(items) for a suite that scripted the frame's number); the kit's w inserts a word it returned as a fill as it is (C59). Nothing else changes.
