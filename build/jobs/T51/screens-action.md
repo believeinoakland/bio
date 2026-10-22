@@ -190,3 +190,19 @@ Proposed fix (no registry change, my module only): on `action`, when the action'
 2. `screen.action.reply.medium.portal.office` ("The office's portal"): the medium option for a non-city office; `screen.action.reply.medium.portal` ("The city's portal") stays for a city office.
 3. For a non-city office (the chosen law's level is federal, state or county) I draw none of the city-worded sentences (`screen.request.howsend.3` "the city can't send you updates", `screen.help-records.portal.2` "the city's contact"); they stay for a city office. A neutral row for each is a T52 wording ask, not drawn now.
 4. Gap, no key needed: on `request`, a period, form or cost the member fills whose blank her text does not name is not sent (K4438 (a)); the boxes stay drawn. Say if you want a note beside them.
+
+## J18 · QUESTION
+
+QUESTION (SCREENS-ACTION #13, fix round 4; replies to B22; the smallest thing I need, asked now per R-NOTMET). A seam finding that decides whether C64-law works on the live site.
+
+**The `profiles` op the screens read does not carry the facts BOB's K4438 (b) tells me to list.** `instance-setup`'s `profiles()` (bio-plane/src/setup.mjs:1504) answers `view: profileView(combined)`, and `profileView` (setup.mjs:2905-2916) copies only `deadlines`, `legal_organisations` and `venues` from `jurisdictions.combine`'s view (R12's "three facts for agent-worker R51"). It drops `records_laws` (jurisdictions R7, R95, R96: each law's `level`, `name`, `citation`, `response`), `records_help` (R93) and `name`. `jurisdictions.combine` does give them (index.mjs:1895 `view.records_laws`). So on the live copy, with the real plane:
+- the law picker on `request` (K4438 (b): list `records_laws`), the same list on `action` ("Change the law"), and the law choice in "Name the office yourself" (round 3) would all be EMPTY, because `view.records_laws` is absent: my fix is right at the interface and nothing reaches it;
+- the help's `records_help` block (R22) has never reached `help-records` either (`view.records_help` absent: the page draws `screen.help-records.notheld` for every place), and `view.name` is absent.
+My fixtures hold `records_laws` in `view` (as jurisdictions R7 and the screens' round-3 tests assume), so none of my earlier tests could have seen this (class a).
+
+What I need, in order:
+1. An instance-setup job (or a CHANGE to a job BOB already holds for it) to amend R12: `profiles().view` also carries, as `combine` gives them and absent when no active profile states them, `records_laws` (each entry whole: `level`, `name`, `citation`, `response`, `stages`, `requesters`), `records_help` and `name`. Test at its interface on the first profile: `view.records_laws` holds the three laws and the federal one names `foia_response`. Until it merges, a request's law picker is empty live.
+2. `instance-setup` added to screens-action's `uses` (it is earlier in the order: 150 against my 167), so my seam test boots the real `profiles()` over the first profile, as the walker's plane does; without it the test would build the `view` itself and hide this very gap.
+My seam tests are written first and stay red by name on this (the picker, the help for the federal law and the fold's law choice) until item 1 merges; everything else of the round is built and tested at the screens' interface now.
+
+**Also, to close J17's part 3:** I needed neither stand-in key. The no-template help is the existing `screen.start-send.text.help` ("from your team's template for this kind where it has one, else your own words"), and a federal request's reply medium `portal` is drawn by the vocabulary's own token as record data (as stage and outcome tokens are), so the city-worded rows are simply not drawn for a request under the federal law. No new key.
