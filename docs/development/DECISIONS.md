@@ -6368,3 +6368,108 @@ decided: 2026-10-21 · the design session (P17)
 the design: (1) 55 rows (block "DEC-412" in `screens/words-drawn.src.py`): file-safety's signature-check refusal and details; `refusal.CAPTURE_NOT_KEPT`; `case-disclosures.index.late_proves`; `review.index.not_concluded_yet`; entities' office-confirm refusals, details and declared description; `refusal.SEEN_IN_NOT_RECORDED`; `shell.keyfile.none|unreadable|empty`; seven `act.*.does` rows (origins, inboxlist, transcriptions, progressions, remindersfor, moneysets, captureseenin), with `act.scanmirror.does` and `act.officeconfirm.does` from the act help; the ceremony's proof rows and "registering" line; Home's and Projects' unknown question count; `screen.capture.address.filedhere`, `screen.capture.later.none`, and `screen.document.text.unread.next` (new key, the next step for an unread non-picture upload); settings' scanmirror and officeconfirm labels and results, and the signing box's proof label; `screen.action.routes.none`. Reworded: `screen.document.ocr.refused.unread` (the cause is an unread copy), `refusal.CAPTURE_NOT_HELD` (fits citing and filing). (2) The registry lists `scanmirror` on `security` and `officeconfirm` on `places`, each drawn with its button and result line. (3) On `request`, "Name the office yourself" has two fields, "The agency" and "The office within it", and its note "Why you are naming this office" with its own help (not shell.reason). (4) Links inside running text are exempt from the 44 px target (WCAG 2.5.8's inline exception: a 44 px box would overlap the lines around it) and get about 24 px by padding; stand-alone links and buttons keep 44 px (`visual-language/components.css`, rebuilt `civicsmith.css`). (5) B472's three op-grades strings and capture's seen-in details added to the `unkeyed` lists (`screens/words-reads-handoffs.json`).
 reasoning recorded in: this entry; the files named.
 owed: BOB: regenerate `words-reads.json` against the tranche (the handoffs file's additions take effect then); `refusal.CAPTURE_NOT_HELD` and `act.contradictionflag.does` into capture's and affordances' reads, `screen.capture.address.filedhere` and `screen.capture.later.none` into SCREEN_KEYS.capture, the other new keys into their modules' reads, t36 updated; screens-intake keys `screen.document.text.unread.next`; the request's two fields and note keys and `screen.action.routes.none` read in the code; the shell's inline-link rule (`interface-shell/index.mjs`:353's `.cs-main a.cs-ref{min-height:44px}`) carries the exemption. `SIGNATURES_RUN_UNDER_WAY` and `a_run_is_under_way` were not asked: send them if they need rows.
+
+### DEC-413 · answered
+raised: 2026-10-22 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (BOB's B473, K4458: regenerate words-reads.json against origin/tranche/T51)
+for: design
+question: The reads lists regenerated against T51 after fix round 3, and the inline strings that regeneration leaves untriaged.
+why it is Bob's: it is not (P17): the design's word machinery.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-22 · the design session (P17)
+the design: `screens/words-reads.json` regenerated from origin/tranche/T51's bio-plane/src (163 modules, 18,887 keys read, 5,868 inline strings unkeyed), with DEC-412's handoff additions (op-grades' moneysets and scanmirror strings). Nine strings it left untriaged are triaged: control-plane's six owner-op descriptions and the plane's `ask` description as builders' grading text (`dev("grade")`; their member sentences are act.<op>.does rows), screens-settings' bias file label "## What This Does Not Enforce" as file grammar; and affordances' last stand-in gets its row, `act.readheld.does`, word for word its default (extraction R80). The words check on T51 with these files: 0 failures (from 3).
+reasoning recorded in: this entry; `screens/words-reads.src.mjs` (block "DEC-413"), `screens/words-drawn.src.py`.
+owed: none.
+
+### DEC-414 · answered
+raised: 2026-10-22 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (BOB's B474: T51 fix round 4's design asks)
+for: design
+question: (1) 44 px targets at 390 px for small controls and inline links; (2) "Give a login"'s submit label, and the agency and office as one field or two; (3) one number or two for the queue's vouch band; (4) five owed rows.
+why it is Bob's: it is not (P17): drawing and words beneath his rulings.
+provisional: as below.
+alternative: (3) the bell and sidebar counting the band's captures too.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-22 · the design session (P17)
+the design: (1) Every control at 390 px keeps a 44 px target (the design's phone rule stands; the controls under 30 px on Home, Queue, Find and Projects are a defect of the shell's stylesheet, not a new rule); a link inside running text is exempt, with about 24 px by padding (DEC-412 (4), `visual-language/components.css`). (2) The submit is "Store this login" (`screen.capture.logins.store`, DEC-403); the agency and the office are two fields, "The agency" and "The office within it" (DEC-412 (3)). (3) Two numbers, each saying what it counts: the bell and the sidebar count queue items only; the vouch band draws its own number apart, "Captures waiting for a vouch: {n}. They are not counted in your queue." (`screen.queue.vouchband.apart`), matching K4429 (the band's rows are not queue items). (4) Rows: `act.readheld.label.document` "Read it now"; `screen.document.readnow.refused.NO_HOME`, `.NO_WHOLE_OBJECT`; `screen.document.cite.repair.says`; `screen.capture.reading.pending`.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-414").
+owed: BOB: the shell's 44 px rule reaching the small controls (T52 under K4269); the six keys read in their modules.
+
+### DEC-415 · answered
+raised: 2026-10-22 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (Bob: "Is there a means by which we can simplify the Cloudflare signup and configuration process and confirm that the configuration is correct before trying to deploy CS for one of these outside teams?")
+for: Bob
+question: How does a non-technical founder get a Cloudflare account ready, and how is it confirmed before installing?
+why it is Bob's: a requirement on the installer and its experience (P17; K3447, K3456).
+provisional: the installer's first page lists what is needed; Cloudflare's permission page; the preflight (installer R70) checks plan, containers, limits and the name only once the install has started, and a missing card shows only when a bucket fails; each stop says what to fix; nothing guides signup.
+alternative: B, the guide only; C, A plus Cloudflare's partner programs (Civicsmith opening accounts for teams), against the sovereign model.
+recommendation: A, a "Get ready" guide and a "Check my account" button.
+reversal cost: low.
+response: "A, but the 'Check my account' button is a gate that must be passed in order for the install to proceed. This allows the installer to help the team prepare for the install rather than hav[e] it fail midway through."
+decided: 2026-10-22 · Bob
+the design: as folded in `BIO_Distribution_v0_1.md` §5, "RULED 2026-10-22": "Get ready" (five plain steps, each opening the exact Cloudflare page; links checked on a schedule); "Check my account" after Cloudflare's permission page (every preflight check at once, plus the payment method by a throwaway probe; nothing kept; a checklist with each line's fix and link; re-runnable); the gate: "Install now" only when every line is ready; the install's own stops stay as a second line. Before any outside team installs.
+reasoning recorded in: this entry; `docs/architecture/BIO_Distribution_v0_1.md` §5.
+owed: BOB: requirements (installer: a check-only run of R70's checks plus a payment-method probe, creating nothing that stays, answering a per-check list; the install refused unless that list is all ready within the session; the guide's link check), placed before the first outside install, with its date effect reported to Bob; Bob: registering the sixth OAuth scope (account-logs.read, K3815) on the OAuth client, if the check is to cover request logging. Design: `install` drawn with "Get ready", "Check my account" and the gate (the next DEC).
+
+### DEC-416 · answered
+raised: 2026-10-22 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (Bob's DEC-415)
+for: design
+question: How are "Get ready", "Check my account" and the gate drawn on the installer?
+why it is Bob's: it is not (P17): drawing beneath his ruling.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-22 · the design session (P17)
+the design: `install` gains state `ready` ("Get ready", from "Get your Cloudflare account ready first" on start and on the needs list): five numbered steps, each a sentence, what the founder will see, and a button opening Cloudflare's own page in a new tab (an account in the team's name with a shared email; verify the email; a payment card; Workers Paid; containers on), then "When these are done, check your account" to Cloudflare's permission page; states `check` and `checkok` after it: "Check my account", "Checking creates nothing that stays in your account.", one line per check (Workers Paid, containers, room under the limits, the short name free, a payment card), each "Ready" or "Not ready yet" with its fix and a button to the page that fixes it, "Check again"; "Install now" (bootstrap) disabled with "Install now opens when every line is ready." until all are ready; `refused` adds "This is rare: the check before installing should have caught it." Journey 1 walks start, ready, cloudflare, check, checkok, progress, done. Act `owed:installcheck DEC-415`; 52 keys (`screen.install.getready.*`, `screen.install.check.*`, `screen.install.refused.rare`).
+reasoning recorded in: this entry; `screens/mock-screens.js`, `screens/mock-journeys.js`, `screens/mock-acts.js`, `screens/mock-kit.js`, `screens/registry.src.py`, `screens/words-drawn.src.py` (rows noted "DEC-416").
+owed: BOB: installcheck (DEC-415's requirements).
+
+### DEC-417 · answered
+raised: 2026-10-22 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (BOB's B477, K4557, K4559; B476 noted)
+for: design
+question: Where does an invited, not yet joined member find the join door on an action, and the rows owed from T51's round (later-ux.md).
+why it is Bob's: it is not (P17): drawing and words beneath his K4557.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-22 · the design session (P17)
+the design: `action`, `request` and `start-send` list `projectjoin` ("Join") and draw, near the top, a fold "If you were invited and have not joined yet" (`screen.projectact.invited.head`) holding the refusal in the invitation's words, `refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited`: "You have been invited to this project but have not joined it yet, so you can't do this here. Looking, capturing and citing stay open to you. Join the project to go on. Nothing was changed.", and Join beside it. Rows: `document.readnow.pending` "Being read now. Its words can be found and cited once the reading is done, and this page shows them then."; `plane.pending.interrupted` "The reading stopped three times before it finished, so your team's Civicsmith has stopped trying. Ask for a fresh reading, or capture the document again."
+reasoning recorded in: this entry; `screens/registry.src.py`, `screens/mock-screens.js`, `screens/words-drawn.src.py` (block "DEC-417").
+owed: BOB: the invited refusal read where the member is invited (the held sentence stays for a member not invited), Join drawn beside it, the two rows read (T52 under K4269).
+
+### DEC-418 · answered
+raised: 2026-10-22 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (BOB's B481: fix round 6's words, beneath Bob's K4562 and K4571; B479, B480 read)
+for: design
+question: The sentences for large web captures fetched in the background, large texts read in the background, a document's stated reading bound, and four refusals.
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-22 · the design session (P17)
+the design: 15 rows (block "DEC-418" in `screens/words-drawn.src.py`): `screen.capture.fetch.pending` ("This file is about {size}. Your team's Civicsmith is fetching it now and will file it under {project}."), `.fetch.why` (over about 8 MB a file is fetched in the background; the member may leave and is told on arrival), `.fetch.done`; `notice.fetch.done` and its door `notice.fetch.done.door` "Open the document"; `screen.document.reading.progress` ("Being read: {read} of {total} so far"), `.reading.partial` ("Until the whole file is read, searching and citing cover only what has been read so far."), `.reading.done` ("Read in full. Every line of this file can now be searched and cited."), `.reading.stated` (a bound stated with its size: kept whole, openable, its words not searchable or citable), `.reading.repairable` and its door "Read it"; `refusal.DOCUMENT_COPY_PENDING`, `refusal.DOCUMENT_NOT_CLEANABLE`, `refusal.PHOTO_UNCHECKED`, `refusal.PHOTO_NOT_COVERABLE`, each ending with what was not changed. Minted: notice.fetch.done.door, screen.document.reading.progress, .partial, .done, .repairable.door.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-418").
+owed: BOB: the keys read in their modules with the placeholder names used here ({size}, {project}, {document}, {read}, {total}; the refusals' {document}, {photo}), or name any that differ; "about 8 MB" is written in, so a changed LARGE_FETCH_BYTES needs the row changed (or a {limit} fill asked).
+
+### DEC-419 · answered
+raised: 2026-10-22 · the UX design session with Bob, on his secondary account with BOB (session_01DvXHQqV1arHFoxUeFp1nmG) (BOB's B485: the rows for fix round 6's G14 to G24, beneath Bob's K4571 (never a silent partial read; a bound that must stay is said to the member), K4575, K4578)
+for: design
+question: The sentences that say when a reading, a search, a find-in, a list, a capture's supporting files, a followed meeting body, an export or a pattern covered only part of what there is.
+why it is Bob's: it is not (P17): words beneath his ruling K4571.
+provisional: as below.
+alternative: one sentence per screen for each cut list; not taken: one shared "Showing {shown} of {total}." with "Show more" or a narrowing hint reads the same everywhere, so no two explanations compete.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-22 · the design session (P17)
+the design: 25 rows (block "DEC-419" in `screens/words-drawn.src.py`). (1) Reading: `screen.document.reading.inpart` ("Read in part. Not yet searchable or citable: {where}."), `.inpart.going`, `.notext` (pages with no readable words), `.toolarge` ("This file is {size}, more than the {limit} your team's Civicsmith can read whole. …"; DEC-418's `.stated` serves when no limit is answered). (2) Search: `screen.finder.showmore` "Show more results"; `screen.finder.unread` (and `.one`): "{n} documents in what you searched are not read yet or can be searched only in part, so they may hold more than is found here."; `screen.finder.partial` drawn instead of "looked everywhere" when a look was partial. (3) Find in: `screen.findin.searched` "Searched {read} of {total} documents.", `.continue` "Keep searching", `.more`, `.cells.more`, `.cells.showall`. (4)(6) Every cut list (the Document's links, names, connections, themes; pickers, the inbox, the question choosers): `screen.list.showing` "Showing {shown} of {total}.", `.showing.unknown`, `screen.list.showmore` "Show more", `screen.list.narrow` "Type part of a name to narrow the list." (5) `screen.capture.supporting.kept` "{kept} of {total} supporting files kept. …" with reasons `.cap`, `.toolarge`, `.unavailable`. Wave 2: `screen.follow.meetings.read`/`.done`, `screen.export.cut`, `screen.pattern.sample`.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-419").
+owed: BOB: the keys read in their modules with these placeholders ({where}, {pages}, {size}, {limit}, {n}, {read}, {total}, {shown}, {kept}, {cap}, {body}, {source}), or a QUESTION naming any fill that differs (B485).
