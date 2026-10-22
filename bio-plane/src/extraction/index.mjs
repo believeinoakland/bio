@@ -81,6 +81,9 @@ const ADDITIVE_COLUMNS = [
   ["readings", "justification", "TEXT"],
   /* R82 (F12): the candidates a migration could not read yet, and the once-only scan again for a migration that finished before. */
   ["reading_migrations", "retry", "TEXT"], ["reading_migrations", "rescan", "INTEGER"],
+  /* R90 (fix round 6, G13): a text read in pieces states how far it has been read; a store that holds none of it states none. */
+  ["capture_text_state", "more", "INTEGER NOT NULL DEFAULT 0"], ["capture_text_state", "cursor", "TEXT"],
+  ["capture_text_state", "read_through", "INTEGER"], ["capture_text_state", "total", "INTEGER"],
 ];
 
 /* ---- REC-36 / REC-40: the name terms (R19, R37), and the term fold (R59, N108): `reading_ref_terms.term` is exactly
@@ -381,6 +384,10 @@ const notReadAsText = (r) => !!r && r.found === false && r.failure === "final" &
   && [localize("reading-pipeline.index.multipart", "multipart"),
       localize("reading-pipeline.index.non_textual_large", "non-textual or too large")]
        .some((why) => r.basis === localize("reading-pipeline.index.document_not_read_text", "the document was not read as text ({why}), so no reading was attempted", { why }));
+/* (fix round 6, G13; R90) what reading-pipeline's read of a piece of a text says of how far it has read: `more` while pieces follow, the
+   `cursor` for the next, `read_through` and `total` of the text; null for a read that is not in pieces (every other read). */
+const pieceOf = (out) => (out && (out.more === true || out.more === false) && (out.total != null || out.cursor != null)
+  ? { more: out.more, cursor: out.cursor ?? null, read_through: out.read_through ?? null, total: out.total ?? null } : null);
 /* R82 (F9): the author the ledger's own continuation of a re-read is stamped with. */
 const PLANE_AUTHOR = "plane:pending-work";
 
@@ -604,12 +611,13 @@ export class Extraction {
 
   /** R1, R18: reads a stored capture (`reading-pipeline.read`, its R24) with this object's evidence store, bindings and the
    *  instance's jurisdiction view (R18), and records the digest of the reading it composed (R21). */
-  async read(document, { storeName = "bio", env = null, budget = undefined } = {}) {
+  async read(document, { storeName = "bio", env = null, budget = undefined, cursor = undefined } = {}) {
     const e = env || this.env || {};
     const out = await readDocument(document, {
       evidence: this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null,
       env: e, storeName, view: this.view(), planeVersion: e.VERSION || null,
-      liveCalibration: (q) => this.#liveCalibration(q), ...(budget === undefined ? {} : { unitsBudget: budget }) });
+      liveCalibration: (q) => this.#liveCalibration(q), ...(budget === undefined ? {} : { unitsBudget: budget }),
+      ...(cursor === undefined ? {} : { cursor, unitsMax: CAPTURE_TEXT_CAPTURE_UNIT_BOUND }) });
     this.recordComposed(out.reading, document && document.capture && document.capture.sha256);
     return out;
   }
@@ -699,6 +707,11 @@ export class Extraction {
       ? document.profile.format.format : null;
     const repair = ev && !ocr && (held ? notReadAsText(heldReading) : !fmt0 || fmt0 === "undetermined")
       ? await this.#nowDetected(document, digest, ev) : null;
+    /* (fix round 6, G13; R90) a held reading of a text read in pieces that has more to read is not held: the next piece is read. */
+    if (held && !ocr && stored && this.#moreOf(digest)) {
+      if (defer === true) return left("READING_PENDING");
+      return this.#continueText({ digest, document, bundleId: home.bundleId, storeName, env: env || this.env || {}, left });
+    }
     /* (fix round 6, G8; R89) a "not read as text" reading whose held bytes detect nothing is tried: it stops stating itself repairable. */
     if (held && !ocr && ev && !repair && notReadAsText(heldReading)) this.#markRepairTried(home.bundleId, digest, "undetected");
     if (held && !ocr && !(repair && notReadAsText(heldReading)) && !this.#wantedTheWhole(heldReading, document) && !failedTransiently(heldReading))
@@ -733,12 +746,46 @@ export class Extraction {
         textUnits: Array.isArray(out.text_units) ? out.text_units : null,
         textUnitsOverBound: out.text_units_over_bound, textUnitsSkipped: out.text_units_skipped,
         profileFormat: prof && prof.format && typeof prof.format.format === "string" ? prof.format.format : null,
-        composed: true });
+        composed: true, more: pieceOf(out) });
     });
     if (!wrote) return left("READING_HELD");
     await wrote.afterRead;
     const owed = failedTransiently(out.reading) || (out.reading.tier3_candidate === true && !!e.OCR_WORKER);
+    /* (fix round 6, G13; R90) the first piece of a text that has more: the ledger goes on at once (plane R77: `more`) */
+    if (out.more === true) return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true, more: true,
+                                    detail: { read_through: out.read_through ?? null, total: out.total ?? null } };
     return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true, ...(owed ? { owed: true } : {}) };
+  }
+
+  /** (fix round 6, G13; R90) Whether the capture's text is read in pieces and has more to read: its index state says so. */
+  #moreOf(digest) {
+    const st = this.#one(`SELECT 1 AS x FROM capture_text_state WHERE capture_sha=? AND more=1`, digest);
+    return !!st;
+  }
+
+  /** (fix round 6, G13; R90; Bob, K4571: a large text is read whole, in the background, never silently partial) The next piece
+   *  of a text read in pieces: reading-pipeline reads from the cursor the index state holds, the piece's units are added to the
+   *  capture's (the bound of R22 applying to the piece), and the state moves to the cursor the piece answers. Answers
+   *  `{ok: true, read: true, more: true, detail}` while more follows, which the ledger continues at once, one piece a tick;
+   *  `{ok: true, read: true}` for the last; `{final: true, why}` when the reader refuses the cursor (the bytes it was made
+   *  from are no longer the ones held), which states it and ends the entry. Nothing else about the capture's reading changes. */
+  async #continueText({ digest, document, bundleId, storeName, env, left }) {
+    const st = this.#one(`SELECT cursor, read_through, total FROM capture_text_state WHERE capture_sha=? AND more=1`, digest);
+    if (!st) return left("READING_HELD");
+    const out = await this.read(document, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, cursor: st.cursor });
+    if (out.cursor_refused) return { ok: true, read: false, final: true, why: String(out.cursor_refused).slice(0, 160) };
+    if (!out.reading || out.reading.found === false) return left(failedTransiently(out.reading) ? "READING_RETRY" : "READ_FAILED");
+    const units = Array.isArray(out.text_units) ? out.text_units : [];
+    const wrote = this.core.transact(() => {
+      const now = this.#one(`SELECT cursor FROM capture_text_state WHERE capture_sha=? AND more=1`, digest);
+      if (!now || now.cursor !== st.cursor) return null;
+      return this.indexUnits(bundleId, digest, units, out.reading.text_source ?? null,
+        { wireOverBound: out.text_units_over_bound, wireSkipped: out.text_units_skipped, append: true, more: pieceOf(out) });
+    });
+    if (!wrote) return left("READING_HELD");
+    if (out.more === true) return { ok: true, read: true, bundle_id: bundleId, found: true, more: true,
+                                    detail: { read_through: out.read_through ?? null, total: out.total ?? null } };
+    return { ok: true, read: true, bundle_id: bundleId, found: true };
   }
 
   /** R82 (F9): one pass of the OCR member over the pages a stored scan's reading still leaves unread (R35's seeding is the
@@ -888,7 +935,7 @@ export class Extraction {
    *  the text index (R22); then the listeners (R24). R21: a reading this instance did not compose is recorded as
    *  the caller's assertion, with the caller's standing and justification. */
   writeReading({ bundleId, captureSha, reading, textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null,
-                 profileFormat = null, author = null, justification = null, composed = null } = {}) {
+                 profileFormat = null, author = null, justification = null, composed = null, more = null } = {}) {
     const sha = captureSha;
     return this.core.transact(() => {
       const before = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, sha);
@@ -950,7 +997,7 @@ export class Extraction {
       this.#sql.exec(`DELETE FROM reading_text_source WHERE capture_sha=?`, sha);
       this.#writeTextSource(bundleId, sha, reading.text_source);
       const indexed = this.indexUnits(bundleId, sha, textUnits, reading.text_source,
-        { wireOverBound: textUnitsOverBound, wireSkipped: textUnitsSkipped });
+        { wireOverBound: textUnitsOverBound, wireSkipped: textUnitsSkipped, more });
       const chainAfter = Array.isArray(reading.text_source) ? reading.text_source : null;
       const listeners = {};
       for (const l of this.#listeners)
@@ -1065,9 +1112,14 @@ export class Extraction {
    *  grain, `undetermined` when neither can be said. D-724: every unit skipped is named, as runs, the wire's runs
    *  read beside this loop's. The answer gives `offered`, `written`, `truncated`, `over_bound` (with the wire's own
    *  count), `unaddressable`, the chain kind, and `skipped`. */
-  indexUnits(bundleId, captureSha, units, chain, { wireOverBound = 0, wireSkipped = null } = {}) {
-    this.#sql.exec(`DELETE FROM capture_text WHERE capture_sha=?`, captureSha);
-    this.#sql.exec(`DELETE FROM capture_text_skipped WHERE capture_sha=?`, captureSha);
+  indexUnits(bundleId, captureSha, units, chain, { wireOverBound = 0, wireSkipped = null, more = null, append = false } = {}) {
+    /* (fix round 6, G13; R90) `append`: the next piece of a text read in pieces. The capture's earlier units, named gaps and
+       counts stay and this piece's are added to them, the bound (R22) applying to each piece in turn, never to the capture. */
+    const before = append ? this.#one(`SELECT * FROM capture_text_state WHERE capture_sha=?`, captureSha) : null;
+    if (!append) {
+      this.#sql.exec(`DELETE FROM capture_text WHERE capture_sha=?`, captureSha);
+      this.#sql.exec(`DELETE FROM capture_text_skipped WHERE capture_sha=?`, captureSha);
+    }
     const list = Array.isArray(units) ? units : [];
     const ordered = list
       .filter((u) => u && typeof u === "object" && typeof u.text === "string" && glyphCount(u.text) > 0)
@@ -1094,7 +1146,9 @@ export class Extraction {
       const kind = u.extent && typeof u.extent === "object" && typeof u.extent.kind === "string" ? u.extent.kind : null;
       if (!kind) { unaddressable++; unaddressed.push({ seq: u.seq, why: say("extraction.why.unit_names_extent") }); continue; }
       const extent = canonicalExtent(u.extent);
-      if (seen.has(extent)) { unaddressable++; unaddressed.push({ seq: u.seq, extent: u.extent, why: say("extraction.why.earlier_unit_holds") }); continue; }
+      if (seen.has(extent) || (append && this.#one(`SELECT 1 AS x FROM capture_text WHERE capture_sha=? AND extent_kind=? AND extent=?`, captureSha, kind, extent))) {
+        unaddressable++; unaddressed.push({ seq: u.seq, extent: u.extent, why: say("extraction.why.earlier_unit_holds") }); continue;
+      }
       seen.add(extent);
       const full = u.text;
       const capped = full.length > CAPTURE_TEXT_UNIT_CAP ? full.slice(0, CAPTURE_TEXT_UNIT_CAP) : full;
@@ -1136,13 +1190,22 @@ export class Extraction {
     const offered = ordered.length + wire;
     const over = overBound + wire;
     const chainKind = kinds.size === 1 ? [...kinds][0] : kinds.size ? "mixed" : (docKind || "undetermined");
-    const state = !offered ? "none" : (over || unaddressable) ? "partial" : "whole";
+    /* the state is the capture's, so a piece adds to what the earlier pieces counted; "whole" only when nothing is left over, skipped or
+       unaddressable and nothing more follows (R36), so a capture read through its first piece alone is never stated whole */
+    const sum = (k, now) => (before ? Number(before[k] || 0) : 0) + now;
+    const [offeredAll, writtenAll, overAll, unaddrAll, truncAll, skippedAll] = [sum("offered", offered), sum("written", written),
+      sum("over_bound", over), sum("unaddressable", unaddressable), sum("truncated", truncatedUnits), sum("skipped_named", skippedNamed)];
+    const followed = !!(more && typeof more === "object" && more.more !== false && more.cursor != null);
+    const state = !offeredAll ? "none" : (overAll || unaddrAll || followed) ? "partial" : "whole";
+    const prog = more && typeof more === "object" ? more : null;
+    const keptChain = before && before.chain_kind && before.chain_kind !== chainKind ? "mixed" : chainKind;
     this.#sql.exec(
       `INSERT OR REPLACE INTO capture_text_state (capture_sha,bundle_id,state,offered,written,over_bound,unaddressable,
-                                                  truncated,skipped_named,chain_kind,at)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-      captureSha, bundleId, state, offered, written, over, unaddressable, truncatedUnits, skippedNamed, chainKind,
-      stampInstant("second"));
+                                                  truncated,skipped_named,chain_kind,at,more,cursor,read_through,total)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+      captureSha, bundleId, state, offeredAll, writtenAll, overAll, unaddrAll, truncAll, skippedAll, keptChain,
+      stampInstant("second"), followed ? 1 : 0, followed ? String(prog.cursor) : null,
+      prog && Number.isFinite(prog.read_through) ? prog.read_through : null, prog && Number.isFinite(prog.total) ? prog.total : null);
     return { offered, written, bytes, truncated: truncatedUnits, over_bound: over, wire_over_bound: wire,
              unaddressable, unaddressed, chain_kind: chainKind, skipped, skipped_named: skippedNamed, state };
   }
@@ -1202,6 +1265,10 @@ export class Extraction {
     /* R78 (T51; K4127; amends R77): `format` is the reading's own capture format, a format-registry id, absent when the
        reading holds none, and withheld with the bundle as `bytes` is. */
     const format = withheld || row.capture_format == null || row.capture_format === "" ? undefined : row.capture_format;
+    /* R90 (fix round 6, G13): a text read in pieces states how far it has been read, and is never stated complete while more follows. */
+    const piece = this.#one(`SELECT more, read_through, total FROM capture_text_state WHERE capture_sha=?`, row.capture_sha);
+    const progress = piece && (piece.more || piece.total != null)
+      ? { more: !!piece.more, read_through: piece.read_through ?? null, total: piece.total ?? null } : null;
     return { ok: true, found: true, capture_sha: row.capture_sha,
              bundle_id: this.#redactor(viewer)(row.bundle_id),
              content_type: row.content_type, reader_version: row.reader_version,
@@ -1226,7 +1293,8 @@ export class Extraction {
              ...(notReadAsText(reading) && !this.#repairTried(row.capture_sha) ? { repairable: true } : {}),
              ...(text_units ? { text_units } : {}),
              ...(bytes === undefined ? {} : { bytes }),
-             ...(format === undefined ? {} : { format }) };
+             ...(format === undefined ? {} : { format }),
+             ...(progress && !withheld ? progress : {}) };
   }
 
   /** R27 (T43; N862; DEC-190 (1), (2)): the pages a reading with pages could not make out, ascending: those holding no

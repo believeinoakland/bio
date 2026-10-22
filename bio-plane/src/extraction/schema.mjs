@@ -382,7 +382,13 @@ CREATE TABLE IF NOT EXISTS capture_text_state (
   truncated      INTEGER NOT NULL,
   skipped_named  INTEGER NOT NULL,
   chain_kind     TEXT,
-  at             TEXT    NOT NULL
+  at             TEXT    NOT NULL,
+  -- R90 (fix round 6, G13): a text read in pieces. more is 1 while pieces follow, cursor is reading-pipeline's for the next,
+  -- read_through and total say how far the text has been read (units are bytes of text). All null/0 for a read not in pieces.
+  more           INTEGER NOT NULL DEFAULT 0,
+  cursor         TEXT,
+  read_through   INTEGER,
+  total          INTEGER
 );
 CREATE INDEX IF NOT EXISTS capture_text_state_bundle ON capture_text_state(bundle_id);
 

@@ -215,3 +215,123 @@ test("R89 R49: the tried marks are purged with their bundle", async () => {
   assert.equal(owned("reading_repairs"), true);
   assert.equal(w.one(`SELECT bundle_id FROM reading_repairs WHERE capture_sha=?`, d).bundle_id, "INFO-1", "keyed to its bundle");
 });
+
+/* ---- R90 (G13): a large text is read whole, in pieces, by the ledger ---- */
+
+/* A held text capture of `n` lines read by a scripted provider that answers reading-pipeline's pieces: `lines` per piece, each unit one
+   block of `perUnit` bytes at a `doc-para` extent numbered from the whole text (global `seq`, as the provider states it). The provider is
+   scripted here, so this checks extraction's half alone; the whole path with the real reader is `round6-plane.test.mjs`. */
+async function pieces({ pieceUnits = [3, 3, 3], perUnit = 40, order = null } = {}) {
+  const rows = new Map(), evidence = bucket();
+  const w = fresh({ evidence, provenance: register(rows) });
+  bundle(w.s, "INFO-1");
+  const bytes = new TextEncoder().encode("a long plain text held whole " + Math.random());
+  const d = sha(bytes);
+  rows.set(d, row("INFO-1", bytes.length));
+  await evidence.put(`bio/captures/${d}`, bytes);
+  const document = doc({ digest: d, bytes: bytes.length, ct: "text/plain", format: "text" });
+  w.core.readFile = (b, p) => (b === "INFO-1" && p === "data/provenance.json" ? { text: JSON.stringify({ documents: [document] }) } : null);
+  const total = pieceUnits.reduce((a, b) => a + b, 0) * perUnit, asked = [];
+  const starts = pieceUnits.map((_, i) => pieceUnits.slice(0, i).reduce((a, b) => a + b, 0));
+  w.x.read = async (docm, opts) => {
+    const i = opts.cursor === undefined ? 0 : Number(String(opts.cursor).slice(1));
+    asked.push({ cursor: opts.cursor, budget: opts.budget });
+    if (order) await order(i, w);
+    const units = Array.from({ length: pieceUnits[i] }, (_, k) => ({ extent: { kind: "doc-para", para: starts[i] + k }, seq: starts[i] + k,
+      text: `unit ${starts[i] + k} ${"x".repeat(perUnit - 10)}${i === pieceUnits.length - 1 && k === pieceUnits[i] - 1 ? " ENDMARKER" : ""}` }));
+    const more = i < pieceUnits.length - 1;
+    return { reading: { found: true, entities: [], text_source: null, basis: "read" }, text_units: units, text_units_over_bound: 0,
+             more, cursor: more ? `c${i + 1}` : null, read_through: (starts[i] + pieceUnits[i]) * perUnit, total };
+  };
+  return { w, d, asked, total };
+}
+
+test("R90 (G13): a text read in pieces is read to its end by the ledger's ticks: each tick reads the next piece and answers `more` until the last; ENDMARKER is then in the text units and the state is whole; midway the index holds only what was read and the reading says it has more", async () => {
+  const { w, d, asked, total } = await pieces({ pieceUnits: [3, 3, 3] });
+  const first = await w.x.readHeld({ sha: d, kind: "reading" });
+  assert.deepEqual([first.ok, first.read, first.more, first.detail], [true, true, true, { read_through: 120, total }], JSON.stringify(first));
+  let got = w.x.readingFor(d, "class:admin");
+  assert.deepEqual([got.more, got.read_through, got.total], [true, 120, total], "R-STOP: the reading says it has more");
+  assert.equal(w.x.unitsOf(d).state, "partial", "never stated whole while more follows");
+  assert.equal(w.rows(`SELECT rowid FROM capture_text_fts WHERE capture_text_fts MATCH 'ENDMARKER'`).length, 0, "midway a search finds only what is read");
+  assert.equal(w.rows(`SELECT rowid FROM capture_text_fts WHERE capture_text_fts MATCH 'unit'`).length, 3);
+  const second = await w.x.readHeld({ sha: d, kind: "reading" });
+  assert.deepEqual([second.read, second.more], [true, true]);
+  assert.equal(w.rows(`SELECT rowid FROM capture_text_fts WHERE capture_text_fts MATCH 'unit'`).length, 6);
+  const last = await w.x.readHeld({ sha: d, kind: "reading" });
+  assert.deepEqual([last.ok, last.read, last.more], [true, true, undefined], "the last piece ends the entry");
+  assert.deepEqual(asked.map((a) => a.cursor), [undefined, "c1", "c2"], "each piece from the cursor the last one answered");
+  assert.ok(asked.every((a) => a.budget === 2 * 1024 * 1024));
+  got = w.x.readingFor(d, "class:admin");
+  assert.deepEqual([got.more, got.read_through, got.total], [false, total, total]);
+  assert.match(got.text_units.map((u) => u.text).join(" "), /ENDMARKER/, "R-STOP: the last line is in the text units");
+  assert.deepEqual(got.text_units.map((u) => u.extent.para), [0, 1, 2, 3, 4, 5, 6, 7, 8], "in reading order, each once");
+  assert.equal(w.rows(`SELECT rowid FROM capture_text_fts WHERE capture_text_fts MATCH 'ENDMARKER'`).length, 1);
+  const st = w.x.unitsOf(d);
+  assert.deepEqual([st.state, st.counts.offered, st.counts.written, st.counts.over_bound], ["whole", 9, 9, 0]);
+  const again = await w.x.readHeld({ sha: d, kind: "reading" });
+  assert.deepEqual([again.read, again.why], [false, "READING_HELD"], "a finished text is held as any reading is");
+  assert.equal(count(w, "reading_history", d), 1, "the pieces change no reading: one is kept");
+});
+
+test("R90 R22 (G13): the index's bound is each piece's, not the capture's: a text of 9,000 units and 5 MB is stored whole in three pieces, none over bound", async () => {
+  const { w, d } = await pieces({ pieceUnits: [3000, 3000, 3000], perUnit: 600 });
+  for (let i = 0; i < 3; i++) await w.x.readHeld({ sha: d, kind: "reading" });
+  const st = w.x.unitsOf(d);
+  assert.deepEqual([st.state, st.counts.written, st.counts.over_bound, st.counts.offered], ["whole", 9000, 0, 9000]);
+  const bytes = w.one(`SELECT sum(length(CAST(text AS BLOB))) n FROM capture_text WHERE capture_sha=?`, d).n;
+  assert.ok(bytes > 4 * 1024 * 1024 && bytes < 6 * 1024 * 1024, `${bytes} bytes stored, past the 2 MiB of any one piece`);
+  assert.equal(w.rows(`SELECT count(*) c FROM capture_text WHERE capture_sha=?`, d)[0].c, 9000);
+});
+
+test("R90 (G13): a piece that is over its own bound is counted and named, never lost unseen; the reading is then not whole", async () => {
+  const { w, d } = await pieces({ pieceUnits: [4100, 5], perUnit: 20 });
+  for (let i = 0; i < 2; i++) await w.x.readHeld({ sha: d, kind: "reading" });
+  const st = w.x.unitsOf(d);
+  assert.equal(st.state, "partial");
+  assert.equal(st.counts.over_bound, 4);
+  assert.deepEqual(st.skipped.map((k) => [k.units, k.side]), [[4, "store"]]);
+});
+
+test("R90 (control): a read that is not in pieces is stated as it was: no `more` key, complete at once; and `defer=1` leaves the next piece to the ledger, reading nothing", async () => {
+  const w0 = await pieces({ pieceUnits: [3] });
+  const was = w0.w.x.read;
+  w0.w.x.read = async (...a) => { const { more, cursor, read_through, total, ...rest } = await was(...a); return rest; };
+  const r = await w0.w.x.readHeld({ sha: w0.d, kind: "reading" });
+  assert.deepEqual([r.read, r.more], [true, undefined]);
+  const got = w0.w.x.readingFor(w0.d, "class:admin");
+  assert.equal("more" in got, false, "absent, not false: a read not in pieces states no progress");
+  assert.equal(w0.w.x.unitsOf(w0.d).state, "whole");
+  const w1 = await pieces({ pieceUnits: [2, 2] });
+  await w1.w.x.readHeld({ sha: w1.d, kind: "reading" });
+  const pending = await w1.w.x.readHeld({ sha: w1.d, kind: "reading", defer: true });
+  assert.deepEqual([pending.read, pending.why], [false, "READING_PENDING"]);
+  assert.equal(w1.asked.length, 1, "nothing was read");
+});
+
+test("R90 (control): a cursor the reader refuses is stated and ends the entry, the units already read stay; a piece that lands after the state moved is not added", async () => {
+  const bad = await pieces({ pieceUnits: [2, 2] });
+  await bad.w.x.readHeld({ sha: bad.d, kind: "reading" });
+  const was = bad.w.x.read;
+  bad.w.x.read = async (docm, opts) => (opts.cursor === undefined ? was(docm, opts) : { reading: { found: false }, cursor_refused: "the held bytes are not the ones this cursor was made from" });
+  const r = await bad.w.x.readHeld({ sha: bad.d, kind: "reading" });
+  assert.deepEqual([r.ok, r.read, r.final], [true, false, true]);
+  assert.match(r.why, /not the ones this cursor was made from/);
+  assert.equal(bad.w.x.unitsOf(bad.d).units.length, 2, "what was read stays");
+  /* the state moves while a piece is being read: the stale piece is dropped */
+  const race = await pieces({ pieceUnits: [2, 2, 2], order: (i, w) => { if (i === 1) w.s.sql.exec(`UPDATE capture_text_state SET cursor='c9'`); } });
+  await race.w.x.readHeld({ sha: race.d, kind: "reading" });
+  const lost = await race.w.x.readHeld({ sha: race.d, kind: "reading" });
+  assert.deepEqual([lost.read, lost.why], [false, "READING_HELD"]);
+  assert.equal(race.w.x.unitsOf(race.d).units.length, 2);
+});
+
+test("R90 (control): a reading of a viewer's hidden bundle states no progress", async () => {
+  const { w, d } = await pieces({ pieceUnits: [2, 2] });
+  await w.x.readHeld({ sha: d, kind: "reading" });
+  w.s.sql.exec(`UPDATE bundles SET project='PROJ-9' WHERE bundle_id='INFO-1'`);
+  const got = w.x.readingFor(d, "member:outsider");
+  assert.equal(got.bundle_id, null);
+  assert.equal("more" in got, false);
+  assert.equal("text_units" in got, false);
+});
