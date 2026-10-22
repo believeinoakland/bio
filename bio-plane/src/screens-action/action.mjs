@@ -7,7 +7,7 @@
    where a reply's date has passed with none recorded, behind a fold on any other. The subject is the action's id. It holds
    no member-facing English (R19). Every function here is self-contained (interface-shell R21 (1)). */
 import { OPS } from "../op-declarations/index.mjs";
-import { draftsOf, stepOf, readOnly, kindWord, later, WRITE_HELP } from "./send-steps.mjs";
+import { draftsOf, stepOf, readOnly, kindWord, later, officeLine, chosenLawOf, WRITE_HELP } from "./send-steps.mjs";
 
 // R23: `actioninquiry` is an owed act (`interface-shell` R73): it is registered once `op-declarations` declares it, and the
 // shell draws it as it draws every act (R12).
@@ -49,17 +49,38 @@ export const action = Object.freeze({
   },
 
   parts: {
-    draftsOf: draftsOf, stepOf: stepOf, readOnly: readOnly, kindWord: kindWord,
+    draftsOf: draftsOf, stepOf: stepOf, readOnly: readOnly, kindWord: kindWord, officeLine: officeLine, chosenLawOf: chosenLawOf,
     later: later,
-    // R16: the laws the profile names for this kind of action (each citation once), with the window the profile gives.
+    // R16: the laws the profile names for this kind of action (each citation once), with the window the profile gives. C64-law: for a
+    // records request they are the profile's records laws, each with the window its own `response` names (`jurisdictions` R96), never
+    // the deadlines (a deadline is a rule, an appeal's window is not a law a request goes under).
     lawsOf: function (profiles, kind) {
       const v = profiles && profiles.view ? profiles.view : {};
+      if ((kind === "records_request" || kind === "cpra_request") && Array.isArray(v.records_laws) && v.records_laws.length) {
+        const ds = Array.isArray(v.deadlines) ? v.deadlines : [];
+        return v.records_laws.filter(function (l) { return l && typeof l.citation === "string" && l.citation; }).map(function (l) {
+          const d = typeof l.response === "string" ? ds.find(function (x) { return x && x.rule === l.response && x.applies_to === "records_request"; }) : null;
+          return { citation: l.citation, level: typeof l.level === "string" ? l.level : "", name: typeof l.name === "string" ? l.name : "",
+            amount: d && d.amount ? d.amount : 0, count: d && d.count ? d.count : "" };
+        });
+      }
       const seen = new Set();
       return (Array.isArray(v.deadlines) ? v.deadlines : []).filter(function (d) {
         if (!d || !d.citation || d.applies_to !== kind || seen.has(d.citation)) return false;
         seen.add(d.citation);
         return true;
       });
+    },
+    // C64-law (`jurisdictions` R97): a clock entry whose text is one of the profile's rules is worded by that rule's own label ("answer to a
+    // first request"), never by the rule's code; a rule with no label is worded by the entry's own description; an entry that is not one of
+    // the rules' (a member's own) is drawn as written.
+    clockWords: function (cs, c, deadlines) {
+      const text = typeof c.text === "string" ? c.text.trim() : "";
+      const desc = typeof c.description === "string" ? c.description.trim() : "";
+      const d = text ? deadlines.find(function (x) { return x && x.rule === text; }) : null;
+      if (d && typeof d.label === "string" && d.label.trim()) return cs.esc(d.label.trim());
+      if (d || /^[a-z][a-z0-9]*(_[a-z0-9]+)+$/.test(text)) return cs.esc(desc);
+      return cs.esc(text || desc);
     },
     // C94 (R56): a member is named by her handle, never by her id; an agent (`agent:…`) is not a member and is named as the plane names it
     who: function (cs, by) { const id = String(by || "").replace(/^member:/, ""); return id && !/^agent:/.test(id) ? cs.memberName(id) : id; },
@@ -156,7 +177,7 @@ export const action = Object.freeze({
         + cs.w("screen." + screen + ".name") + '</a><span class="mk-small" data-purpose="' + screen + '">' + cs.w("screen." + screen + ".purpose") + "</span></div>";
     };
     return cs.state("action", function (a) {
-      const office = a.addressee ? [a.addressee.role, a.addressee.body].filter(Boolean).join(", ") : "";
+      const office = a.addressee ? P.officeLine(a.addressee) : "";
       const holder = a.addressee && a.addressee.holder_on_date && a.addressee.holder_on_date.holder ? a.addressee.holder_on_date.holder : "";
       const corr = Array.isArray(a.correspondence) ? a.correspondence : [];
       const sent = corr.filter(function (c) { return c.direction === "sent"; });
@@ -184,10 +205,15 @@ export const action = Object.freeze({
       // prepared; a sent one does not
       const unsent = !sent.length && step !== "sent";
       const toSend = unsent ? door("start-send", view.subject) : "";
+      // R43, R48 (C65): once the filing's sending is recorded the way to keep it as the team's template is reachable from the action: the
+      // control is on `start-send`'s step for a sent filing (the registry lists `templatesave` on that screen alone), which this opens
+      const keepDoor = step === "sent" && cs.can("templatesave") ? '<p class="mk-note">' + aLink("start-send", view.subject, "screen.start-send.template.heading") + "</p>" : "";
       const owed = a.reply_owed && a.reply_owed.owed;
       const wait = owed ? '<p class="cs-wait" role="status">' + cs.w("screen.action.waiting", { office: office || cs.w("screen.action.theoffice") }) + "</p>" : "";
       const today = P.today(cs);
       const clock = Array.isArray(a.clock) ? a.clock : [];
+      const pfv = view.data.profiles && view.data.profiles.state === "ok" && view.data.profiles.value && view.data.profiles.value.view ? view.data.profiles.value.view : {};
+      const deadlines = Array.isArray(pfv.deadlines) ? pfv.deadlines : [];
       const rem = view.data.reminders;
       const remHeld = rem && rem.state === "ok" && rem.value && Array.isArray(rem.value.reminders) ? rem.value.reminders : [];
       const clocks = !clock.length ? "" : cs.sec("screen.action.dates", (rem && rem.state === "failed" ? cs.state(rem) : "") + cs.sheet(clock.map(function (c, i) {
@@ -202,7 +228,7 @@ export const action = Object.freeze({
         const set = remHeld.filter(function (r) { return r && r.entry === i && r.on && r.state !== "answered"; }).map(function (r) {
           return ' · <span data-reminder="' + i + '">' + cs.w("screen.reminder.on", { date: { html: cs.date(r.on) } }) + "</span>";
         }).join("");
-        return cs.row(due, cs.esc(c.text || c.description || "") + '<span class="meta">' + says + (c.basis ? " · " + cs.esc(c.basis) : "") + set + "</span>", "", remind);
+        return cs.row(due, P.clockWords(cs, c, deadlines) + '<span class="meta">' + says + (c.basis ? " · " + cs.esc(c.basis) : "") + set + "</span>", "", remind);
       }).join("")));
       // R37: a sent action with no clock entry has no due date to open: the door to the deadline page is drawn for it, which holds
       // the proposal and "Confirm this due date"
@@ -260,7 +286,9 @@ export const action = Object.freeze({
       const revisesOpts = [{ value: "", text: "" }].concat(earlier.filter(function (x) { return x.c.direction !== "sent" && x.c.quote_amount !== undefined && x.c.quote_amount !== null && x.c.quote_amount !== ""; }).map(function (x) {
         return { value: String(x.ord), text: String(x.c.quote_amount) + (x.c.quote_currency ? " " + String(x.c.quote_currency) : "") };
       }));
-      const mediumOpts = [{ value: "", text: "" }].concat(P.mediums().map(function (t) { return { value: t, key: "screen.action.reply.medium." + t }; }));
+      // C64-law: "The city's portal" is not said of a reply to a request under the federal law; the vocabulary's own token stands in for it
+      const fedLaw = (P.chosenLawOf(a, view.data.profiles && view.data.profiles.state === "ok" ? view.data.profiles.value : null) || {}).level === "federal";
+      const mediumOpts = [{ value: "", text: "" }].concat(P.mediums().map(function (t) { return t === "portal" && fedLaw ? { value: t, text: t } : { value: t, key: "screen.action.reply.medium." + t }; }));
       const fold = function (summaryKey, inner) { return '<details class="mk-details"><summary>' + cs.w(summaryKey) + "</summary>" + inner + "</details>"; };
       const noteOf = function (key) { return '<p class="mk-small">' + cs.w(key) + "</p>"; };
       // the kit's choice draws no help of its own: a choice's help sentences follow it as notes
@@ -428,7 +456,7 @@ export const action = Object.freeze({
       // R54: "Change the law…" and "Propose another law…" share one list of laws, drawn once with both acts under it; with no laws
       // offered neither act is drawn (E3, DEC-384)
       const lawChoose = offered.length
-        ? cs.choice("law-pick", "law.pick", optionsOf(offered)) + levels("law-level")
+        ? cs.choice("law-pick", "law.pick", optionsOf(offered)) + (offered.some(function (d) { return !d.level; }) ? levels("law-level") : "")
           + '<div class="mk-acts">' + cs.act("actionlaws", { label: "law.change" }) + cs.act("actionlawspropose", { label: "law.propose" }) + "</div>" : "";
       const lawSec = cs.sec("law.title", lawsStated + lawProposed + lawChoose, { help: "law.help" });
 
@@ -461,7 +489,7 @@ export const action = Object.freeze({
         + cs.act("actionscope", { data: { to: a.confidential ? "false" : "true" } });
       const manage = cs.sec("screen.action.manage", '<div class="mk-acts">' + move + "</div>" + scope);
       // R40: the counsel packet's screen is opened from the action
-      return head + pickup + toSend + wait + dueDoor + question + clocks + replies + pressureSec + lawSec + guideSec + templatesSec + riskSec + door("counsel", view.subject) + manage;
+      return head + pickup + toSend + wait + dueDoor + question + clocks + replies + pressureSec + lawSec + guideSec + templatesSec + keepDoor + riskSec + door("counsel", view.subject) + manage;
     });
   },
 
@@ -557,7 +585,7 @@ export const action = Object.freeze({
         const c = offered.find(function (d) { return d.citation === cs.value("law-pick"); });
         if (!c) return null;
         const held = a.governing_laws && Array.isArray(a.governing_laws.laws) ? a.governing_laws.laws.find(function (l) { return l.citation === c.citation; }) : null;
-        return { body: { target: view.subject, laws: [{ level: held ? held.level : cs.value("law-level") || "state", citation: c.citation }] } };
+        return { body: { target: view.subject, laws: [{ level: held ? held.level : c.level || cs.value("law-level") || "state", citation: c.citation }] } };
       },
       rereads: ["action"],
     },
@@ -570,7 +598,7 @@ export const action = Object.freeze({
         const offered = view.parts.lawsOf(pf && pf.state === "ok" ? pf.value : null, a.kind);
         const c = offered.find(function (d) { return d.citation === cs.value("law-pick"); });
         if (!c) return null;
-        return { body: { target: view.subject, laws: [{ level: cs.value("law-level") || "state", citation: c.citation }] } };
+        return { body: { target: view.subject, laws: [{ level: c.level || cs.value("law-level") || "state", citation: c.citation }] } };
       },
       rereads: ["action"],
     },

@@ -62,3 +62,6 @@
 - acquisition · `CAPTURE_NOT_KEPT` still reads its stand-in sentence, not DEC-412's `refusal.CAPTURE_NOT_KEPT` row (`checks.mjs:362`); N1261 · K4459 · 2026-10-21
 - file-safety · `SIGNATURES_RUN_RECENT` still reads its stand-in sentence, not DEC-412's row (`checks.mjs:96`); N1261 · K4459 · 2026-10-21
 - Find, frontier · a reference named by its kind token and key ("legislation 26-0788"), an entity by "person": rows wanted (`screen.finder.nobody.reference`, a name for an entity place) · SCREENS-DAILY J19 (C22) · 2026-10-22
+- Document · rows owed by screens-inquiry (stood in by the nearest held row): `act.readheld.label.document` "Read it now", `screen.document.readnow.refused.NO_HOME`, `.NO_WHOLE_OBJECT`, `screen.document.cite.repair.says`, `screen.document.a34.para_same` / `.para_differs` (paragraph legs not drawn until they exist) · SCREENS-INQUIRY J22 · 2026-10-22
+- Document · "Read it now" asks the member a reason first (op-grades marks `readheld` Reasoned; extraction does not accept `reason`): whether a reason is wanted · SCREENS-INQUIRY J22 (a) · 2026-10-22
+- Security · `act.scanmirror.does` says "the group's file scanner" · JOURNEY-CHECK J8 · 2026-10-22

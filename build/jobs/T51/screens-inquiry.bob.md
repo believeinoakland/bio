@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J21
+**Read** · handled J22
 
 ## B1 · START
 
@@ -405,3 +405,7 @@ ANSWER (K4467). (1) RE_POINTS.document += readheld is forwarded to CAUSE-SHELL-4
 ## B33 · CHANGE
 
 CHANGE (K4472): CAUSE-SHELL-4 #1 is merged (tranche/T51 @ 5539bd4c3d). Merge the tranche before your next run. What it changes for you: RE_POINTS.document admits readheld (R117); a screen's {op:'bootstrap'} read is answered from the page's one answer (assert one); the frame's queue read is count:true, and the harness's FRAME.queue answers count and list (queueOf(items) for a suite that scripted the frame's number); the kit's w inserts a word it returned as a fill as it is (C59). Nothing else changes.
+
+## B34 · ANSWER · re J22
+
+ANSWER (K4473). You are right: K4467 (3)'s localize was wrong for a drawn-screen module. Your stand-ins by the nearest held row stand; the rows owed (1-4) and the reason asked before 'Read it now' are in later-ux for T52. (5) as you do. (b), (c), (d) noted; nothing more for you.

@@ -161,25 +161,25 @@ test("R16: 'Change the law…' sends actionlaws with the law chosen from those t
   // R54: one list offers the laws of this action's kind the places name, for both acts
   assert.deepEqual(p.doc.getElementById("law-pick").querySelectorAll("option").map((o) => o.value), ["Gov. Code § 7922.535(b)", "Mun. Code § 2.20.230"]);
   assert.equal(p.doc.getElementById("lawp-pick"), null, "no second list");
-  await press(p, "actionlaws", { values: { "law-pick": "Mun. Code § 2.20.230", "law-level": "city" } });
+  await press(p, "actionlaws", { values: { "law-pick": "Mun. Code § 2.20.230" } });
   assert.deepEqual(last(p, "actionlaws").body, { target: ACTION_ID, laws: [{ level: "city", citation: "Mun. Code § 2.20.230" }] });
-  await press(p, "actionlawspropose", { values: { "law-pick": "Mun. Code § 2.20.230", "law-level": "city" } });
+  await press(p, "actionlawspropose", { values: { "law-pick": "Mun. Code § 2.20.230" } });
   assert.deepEqual(last(p, "actionlawspropose").body, { target: ACTION_ID, laws: [{ level: "city", citation: "Mun. Code § 2.20.230" }] });
   assert.equal(p.byOp("actionlaws").length, 1, "proposing sent no actionlaws");
   // a law already chosen keeps its level when it is chosen again
-  await press(p, "actionlaws", { values: { "law-pick": "Gov. Code § 7922.535(b)", "law-level": "federal" } });
+  await press(p, "actionlaws", { values: { "law-pick": "Gov. Code § 7922.535(b)" } });
   assert.deepEqual(last(p, "actionlaws").body.laws, [{ level: "state", citation: "Gov. Code § 7922.535(b)" }]);
 });
 
 test("R16: refusals are drawn by their words, beside the act", async () => {
   assert.ok(hasWord("refusal.BAD_CITATION"));
   const p = await open(ROUTES.action, { ...DATA_PLANE, actionlaws: refusedIn("BAD_CITATION", "the owner's own sentence") });
-  const b = await press(p, "actionlaws", { values: { "law-pick": "Mun. Code § 2.20.230", "law-level": "city" } });
+  const b = await press(p, "actionlaws", { values: { "law-pick": "Mun. Code § 2.20.230" } });
   assert.ok(beside(p, b).includes(W("refusal.BAD_CITATION")), "by its word");
   assert.ok(!beside(p, b).includes("the owner's own sentence"));
   // a code the design holds no word for is drawn by the owner's own sentence
   const q = await open(ROUTES.action, { ...DATA_PLANE, actionlaws: refusedIn("CODE_NO_ONE_HAS_A_WORD_FOR", "That law cannot be kept.") });
-  assert.ok(beside(q, await press(q, "actionlaws", { values: { "law-pick": "Mun. Code § 2.20.230", "law-level": "city" } })).includes("That law cannot be kept."));
+  assert.ok(beside(q, await press(q, "actionlaws", { values: { "law-pick": "Mun. Code § 2.20.230" } })).includes("That law cannot be kept."));
 });
 
 /* ---------- R17 (T49; N1093; DEC-239 (2); actions R23–R25; action-records R2): its risk ---------- */
