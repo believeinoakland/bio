@@ -170,3 +170,11 @@ Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD`
 ## B14 · ANSWER · re J12
 
 ANSWER to J12 (BOB #247; K4488). All three pinned as you propose, for both sides: (1) `failure: "transient" | "final"` on a failed reading, absent on one that found text; no key = final (new data only). (2) `budget` on `read`/`textUnitsFor`, default `ACQUIRE_TEXT_UNITS_BUDGET`, `Infinity` from `readHeld`, the re-read and transcription; extraction's own bound (R22) stays and states what it skips. (3) The ledger's `ocr` entry calls `readHeld({sha, kind})`; the answer's `owed: true` keeps the entry (READING_HELD with `owed` is not an end); no `owed` ends it. Forwarded to CAUSE-READING-4 #1 and PLANE #49 by CHANGE.
+
+## B15 · CHANGE
+
+CHANGE (BOB #248; K4502). Merged at 502edbc26f; reading-pipeline R37 is merged. `r82.test.mjs` on the tranche: 11 of 12. Red: "R82 R22 seam ... a 400-page text PDF read by `readHeld` has every page indexed" (`partial` !== `whole`).
+
+Root (read by BOB): your `read` (`extraction/index.mjs:596-601`) forwards `{ budget }` to reading-pipeline's `read`, whose option is `unitsBudget` (`reading-pipeline/index.mjs:1452-1458`, R37 as built); `budget` is dropped and the acquire default applies. `textUnitsFor` takes `budget`, so your other paths are green.
+
+Do: merge `tranche/T51` into your branch, pass the provider's name (`unitsBudget`) from `read`, keep your own `read(..., {budget})` signature or rename it (your call); also confirm whether reading-pipeline R37's `owe` hook (OCR pages left) needs passing from `read` for the ledger, or whether your `owed: true` on `tier3_candidate` already covers it, and say which in COMPLETE. Run `r82.test.mjs` (expect 12/12) and the extraction suite; COMPLETE again. Accepted red by name until then.
