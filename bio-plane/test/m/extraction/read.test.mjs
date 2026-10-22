@@ -50,7 +50,8 @@ test("R1: op=acquire's wire answer still carries the reading and its text units 
   assert.equal(out.body.document.text_units_over_bound, 2);
   assert.deepEqual(out.body.document.text_units_skipped, [{ units: 2 }]);
   const silent = await acquireReadingOp(answer, { fetch: async () => new Response("{}") }, { storeSilent: () => "silent", storeName: "bio" });
-  assert.equal(silent.response, "silent");
+  assert.equal(silent.response, undefined, "R87: a silence after a kept acquire is no failed act");
+  assert.equal(silent.body.reading_pending, true);
 });
 
 test("R1 R22 R36 (reading-pipeline R15): a csv capture read from the evidence store, then written, holds its sheet as one sheet-range unit at the used range its reader names, and the index reads whole", async () => {

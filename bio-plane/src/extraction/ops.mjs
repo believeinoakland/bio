@@ -25,8 +25,13 @@ async function readAnswer(res) {
     && CORRELATION.test(out.correlation) ? out.correlation : undefined;
   return correlation ? { answered: false, result: undefined, correlation } : { answered: false, result: undefined };
 }
-async function ask(store, path, init, doAnswer) {
-  const res = (async () => store.fetch(path, init))();
+async function ask(store, path, init, doAnswer, probe = null) {
+  /* `probe`, when handed, learns what the call itself did (its status, or the error it threw), which the reader of the
+     envelope below does not keep: `readAnswer` and the plane's `doAnswer` both reduce a failed call to no answer. */
+  const res = (async () => {
+    try { const r = await store.fetch(path, init); if (probe) probe.status = typeof r.status === "number" ? r.status : null; return r; }
+    catch (e) { if (probe) probe.error = e; throw e; }
+  })();
   return typeof doAnswer === "function" ? doAnswer(res) : readAnswer(res);
 }
 
@@ -104,19 +109,38 @@ export async function extractionOp(op, url, env, getStore, stamps) {
 
 /** R1 (K72 (8)): the acquire op's reading. `answer` is capture's acquire answer; the Durable Object reads the
  *  document it filed (`read`) and the answer carries the reading and its text units on the document, as it always
- *  did. Answers `{response}` (the store's refusal relayed, or a silence, R64) or `{body}`. `json` defaults to the
- *  plane's JSON answer for a caller that hands none (as legacy-index did, before it retired; the plane's door hands
- *  its own). */
+ *  did. Answers `{response}` (the store's own refusal relayed, R64) or `{body}`. `json` defaults to the plane's JSON
+ *  answer for a caller that hands none (as legacy-index did, before it retired; the plane's door hands its own).
+ *  (R87; fix round 6, G4; K4428) The capture is already kept when this runs, so a call that comes back as no answer (the
+ *  stub threw, or the reply was no envelope) never turns the act into a failed one: the body is the acquire answer with
+ *  `reading_pending: true`, which the door reads off the answer to owe the reading to the ledger, and `diag`, `{name,
+ *  message, status, correlation?}` of the failed call (not drawn; read by walks), also written once with `console.error`,
+ *  so the deploy names the cause. */
 export async function acquireReadingOp(answer, store, { json = jsonAnswer, storeSilent, storeRefusal, doAnswer, storeName }) {
+  const probe = {};
   const r = await ask(store, `http://x/extractread?store=${encodeURIComponent(storeName || "bio")}`, {
     method: "POST", headers: { "content-type": "application/json" },
-    body: JSON.stringify({ document: answer.document }) }, doAnswer);
-  const relayed = unanswered(r, "acquire", { json, storeSilent, storeRefusal });
-  if (relayed) return { response: relayed };
+    body: JSON.stringify({ document: answer.document }) }, doAnswer, probe);
+  if (r && r.refused && r.reply) return { response: unanswered(r, "acquire", { json, storeSilent, storeRefusal }) };
+  if (!r || !r.answered || !r.result) return { body: { ...answer, reading_pending: true, diag: deferralDiag(answer, probe, r) } };
   const out = r.result;
   const body = withReading(answer, { reading: out.reading, textUnits: out.text_units || null,
                                      textUnitsOverBound: out.text_units_over_bound || 0 });
   /* D-724 (reading-pipeline R15): the units left out, named, beside the count. */
   if (out.text_units_skipped) body.document.text_units_skipped = out.text_units_skipped;
   return { body };
+}
+
+/* R87: what the deploy needs to name a failed read's cause: the error's name and message, the reply's status, the store's
+   own correlation id when it gave one. One log line; nothing of the store's envelope (its `error` is a stack, R30). */
+function deferralDiag(answer, probe, r) {
+  const e = probe.error;
+  const diag = { name: e && typeof e.name === "string" ? e.name : (e ? "Error" : "NoAnswer"),
+                 message: String(e && e.message ? e.message : e ? e : "the store's reply was no answer").slice(0, 300),
+                 status: Number.isInteger(probe.status) ? probe.status : null,
+                 ...(r && r.correlation ? { correlation: r.correlation } : {}) };
+  const sha = answer && answer.document && answer.document.capture ? answer.document.capture.sha256 : null;
+  try { console.error(JSON.stringify({ event: "extraction.acquire_read_unanswered", sha: typeof sha === "string" ? sha : null, ...diag })); }
+  catch { /* the log is where it can be written; the capture stands */ }
+  return diag;
 }

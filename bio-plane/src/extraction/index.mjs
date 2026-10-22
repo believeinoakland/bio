@@ -58,7 +58,7 @@ export const OCCURRENCES_PER_REF = 256;
    `capture_text`, kept by triggers) and `composed_readings` (no bundle) whole-store only. `capture_text` is
    declared before its index so the triggers keep the index true on the per-bundle arm. */
 export const EXTRACTION_TABLES = Object.freeze(["readings", "reading_refs", "reading_ref_terms", "reading_text_source",
-  "reading_history", "capture_text", "capture_text_skipped", "capture_text_state"]);
+  "reading_history", "capture_text", "capture_text_skipped", "capture_text_state", "reading_repairs"]);
 export const EXTRACTION_WHOLE_ONLY = Object.freeze(["capture_text_fts", "composed_readings"]);
 /* R66, R68 (T38; N786): exempt from both purges. A migration's row holds its cutoff; cleared by a whole-store purge, it
    would be taken again at the next start over the readings written since the purge (the history's rowids restart),
@@ -332,6 +332,10 @@ export function n439MigratedReading(reading, map, text, { at = null } = {}) {
   return next;
 }
 
+/* R89 (fix round 6, G8): the repair of old "not read as text" readings, its row in `reading_migrations` and one call's batch. */
+export const REPAIR_MIGRATION = "r89-repair-not-read";
+export const REPAIR_BATCH = 200;
+
 /* R66, R68: the two migrations, run by one machine (`#migrate`): the format they read, how a reading is marked, the
    renumbering map over the entry's parts, whether it moves anything, whether the stored reading states the old walk's
    counts, and the pure migration. */
@@ -408,6 +412,7 @@ export function extractionOf(ctx, opts = {}) {
 export class Extraction {
   #sql; #storage; #listeners = []; #indexListeners = []; #declared = false; #stepped = false; #calListening = false;
   #testified = false; #counted = false; #host = null; #provenance = null; #migrationRun = null; #readHooks = null; #transcriber = null;
+  #owe = null; #repairRun = null;
 
   constructor(storage, { record, membership = null, calibration = null, promotion = null, provenance = null, host = null,
                          env = {}, readHooks = null } = {}) {
@@ -676,7 +681,14 @@ export class Extraction {
     const left = (why, more = {}) => ({ ok: true, read: false, why, ...more });
     if (!home || typeof home.bundleId !== "string" || !home.bundleId) return left("NO_HOME");
     if (viewer !== undefined && !this.#sees(home.bundleId, viewer)) return left("NO_HOME");
-    const document = this.#storedDocument(home.bundleId, digest) || { capture: { sha256: digest } };
+    const stored = this.#storedDocument(home.bundleId, digest);
+    /* (fix round 6, G6; R88) a digest that is a PART of a document the home holds is no document: it resolves to the whole it is
+       a part of and is read as that, so a bare part is never read alone as if it were a document, and nothing is written under it. */
+    if (!stored) {
+      const whole = this.#wholeOfPart(home.bundleId, digest);
+      if (whole) return this.readHeld({ sha: whole, storeName, env, viewer, kind, defer });
+    }
+    const document = stored || { capture: { sha256: digest } };
     const held = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
     const heldReading = held ? safeJson(held.reading) : null;
     const ocr = kind === "ocr";
@@ -687,8 +699,13 @@ export class Extraction {
       ? document.profile.format.format : null;
     const repair = ev && !ocr && (held ? notReadAsText(heldReading) : !fmt0 || fmt0 === "undetermined")
       ? await this.#nowDetected(document, digest, ev) : null;
+    /* (fix round 6, G8; R89) a "not read as text" reading whose held bytes detect nothing is tried: it stops stating itself repairable. */
+    if (held && !ocr && ev && !repair && notReadAsText(heldReading)) this.#markRepairTried(home.bundleId, digest, "undetected");
     if (held && !ocr && !(repair && notReadAsText(heldReading)) && !this.#wantedTheWhole(heldReading, document) && !failedTransiently(heldReading))
       return left("READING_HELD");
+    /* (fix round 6, G6; R88) a digest that no stored document names (a bare stub) is read as no document: it has no parts, size or
+       capture instant to read it by, and the reading it would write is stored against a digest that is no document. */
+    if (!stored && !ocr) return left("NO_DOCUMENT");
     /* (fix round 5, E3) a capture over the reading ceiling is stated from its size alone (reading-pipeline R37), so no
        whole is needed to write the statement; one at or under it still needs its whole. */
     const size = this.#sizeOf(document);
@@ -706,7 +723,7 @@ export class Extraction {
     /* (fix round 5, E2) the text units built are those the index keeps: the budget is the index's bound, never `Infinity`. */
     const reader = repair ? { ...document, profile: { ...(document.profile || {}), format: repair } } : document;
     const out = await this.read(reader, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND });
-    if (repair && held && notReadAsText(out.reading)) return left("READING_HELD");
+    if (repair && held && notReadAsText(out.reading)) { this.#markRepairTried(home.bundleId, digest, "still"); return left("READING_HELD"); }
     const prof = reader.profile && typeof reader.profile === "object" ? reader.profile : null;
     const wrote = this.core.transact(() => {
       const now = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
@@ -771,6 +788,21 @@ export class Extraction {
     if (!declared.startsWith("text/") || head.includes(0)) return null;
     try { new TextDecoder("utf-8", { fatal: true }).decode(head, { stream: true }); } catch { return null; }
     return document.profile.format ?? { format: "undetermined", confidence: "none", signals: [] };
+  }
+
+  /** (fix round 6, G6; R88) The whole document a part digest belongs to, in the bundle `bundleId`: the digest of the document in
+   *  the bundle's own provenance document whose `parts` name `part`; null when no document there does (a document's own digest,
+   *  or a digest the bundle does not hold as a part). */
+  #wholeOfPart(bundleId, part) {
+    let docText = null;
+    try {
+      const f = this.core && typeof this.core.readFile === "function" ? this.core.readFile(bundleId, "data/provenance.json") : null;
+      docText = f && typeof f === "object" ? (f.text ?? f.content ?? null) : (typeof f === "string" ? f : null);
+    } catch { docText = null; }
+    const docs = (safeJson(docText) || {}).documents;
+    const hit = Array.isArray(docs) ? docs.find((d) => d && d.capture && typeof d.capture.sha256 === "string" && d.capture.sha256 !== part
+      && Array.isArray(d.parts) && d.parts.some((p) => p && p.sha256 === part)) : null;
+    return hit ? hit.capture.sha256 : null;
   }
 
   /** R81: the home of a capture held in parts, or null. The bundle whose `data/provenance.json` states `capture.sha256` =
@@ -1143,6 +1175,15 @@ export class Extraction {
       `SELECT capture_sha, bundle_id, content_type, reader_version, found, entity_count, reading, at,
               origin, asserted_by, asserted_standing, justification, capture_format
          FROM readings WHERE capture_sha=?`, captureSha);
+    /* (fix round 6, G6; R88) a part's digest is no capture of its own: a reading asked for by the digest of a part of a held document
+       is the whole's reading, answered as the whole's (a failed reading stored against the part by the read before this fix is
+       not it). Only a digest with no reading, or a failed one, is looked up, so a read of a reading with text costs nothing more. */
+    if (!row || !row.found) {
+      const home = this.#provenance && typeof this.#provenance.homeOf === "function" ? this.#provenance.homeOf(captureSha) : null;
+      const whole = home && typeof home.bundleId === "string" && !this.#storedDocument(home.bundleId, captureSha)
+        ? this.#wholeOfPart(home.bundleId, captureSha) : null;
+      if (whole) return this.readingFor(whole, viewer);
+    }
     if (!row) return { ok: true, found: false, capture_sha: captureSha, reading: null };
     const reading = safeJson(row.reading);
     const ts = this.#one(
@@ -1180,6 +1221,9 @@ export class Extraction {
                    why: localize("extraction.index.no_text_provenance_recorded", "this reading carries no text provenance, which is not the same as its text not having been transcribed -- nobody recorded how it was produced") },
              reading_history: this.#readingHistoryOf(row.capture_sha),
              ...this.#unreadOf(row.capture_sha, reading, viewer, row.bundle_id, row.capture_format),
+             /* R89 (fix round 6, G8): a reading that says the document was not read as text, and that no read has found nothing to
+                repair it by under this release, states it may be repaired (the member's press, "Read it", is offered for it). */
+             ...(notReadAsText(reading) && !this.#repairTried(row.capture_sha) ? { repairable: true } : {}),
              ...(text_units ? { text_units } : {}),
              ...(bytes === undefined ? {} : { bytes }),
              ...(format === undefined ? {} : { format }) };
@@ -1425,6 +1469,7 @@ export class Extraction {
     this.#migrationRun = (async () => {
       await drain(() => this.migrateDocxReadings()).catch(() => null);
       await drain(() => this.migratePptxReadings()).catch(() => null);
+      await drain(() => this.migrateRepairs()).catch(() => null);
     })().catch(() => null);
     host.waitUntil(this.#migrationRun);
     return this.#migrationRun;
@@ -1491,6 +1536,64 @@ export class Extraction {
     this.#sql.exec(`UPDATE reading_migrations SET retry=? WHERE migration=?`, waiting.size ? JSON.stringify([...waiting].sort()) : null, m.name);
     out.done = finished && !waiting.size;
     return out;
+  }
+
+  /** R89 (fix round 6, G8; plane R77): the composition hands in the owed-work ledger's registration, once, as it hands capture its
+   *  `owedLater` (this module is below the plane and cannot reach it): an async `owe({kind, sha}) -> {ok: true}` that never throws.
+   *  Every later repair is owed through it; on an object it also starts the repair that waits for it. */
+  registerOwe(fn) {
+    if (typeof fn !== "function") return { ok: false, reason: "LISTENER_MALFORMED" };
+    if (this.#owe) return { ok: false, reason: "LISTENER_DECLARED" };
+    this.#owe = fn;
+    const host = this.#host;
+    if (host && typeof host.waitUntil === "function" && !this.#repairRun) {
+      this.#repairRun = (async () => {
+        for (let n = 0; n < 10_000; n++) { const r = await this.migrateRepairs(); if (!r || r.done || !r.examined) break; }
+      })().catch(() => null);
+      host.waitUntil(this.#repairRun);
+    }
+    return { ok: true };
+  }
+
+  /** R89 (fix round 6, G8; R-OLD, a repair): once per store, each held `final` reading that says the document was not read as text
+   *  (R85) and has not been tried under this release is owed to the ledger as a `reading` entry (cheap: the ledger runs one heavy
+   *  entry a tick), so an old record is repaired with no press. In digest order from a cursor, so a restart resumes; with no
+   *  registration handed in (R89's `registerOwe`) it owes nothing and stays undone, and answers that it examined nothing. */
+  async migrateRepairs({ limit = REPAIR_BATCH } = {}) {
+    const st = this.#migrationState(REPAIR_MIGRATION);
+    const out = { ok: true, migration: REPAIR_MIGRATION, done: !!st.done, examined: 0, owed: [] };
+    if (st.done || !this.#owe) return out;
+    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || REPAIR_BATCH), 5000));
+    const page = this.#rows(`SELECT capture_sha, bundle_id, reading FROM readings WHERE found=0 AND capture_sha > ? ORDER BY capture_sha LIMIT ?`,
+                            st.after || "", cap + 1);
+    for (const r of page.slice(0, cap)) {
+      let owed = 0;
+      if (notReadAsText(safeJson(r.reading)) && !this.#repairTried(r.capture_sha)) {
+        let a = null;
+        try { a = await this.#owe({ kind: "reading", sha: r.capture_sha }); } catch { a = null; }
+        if (!a || a.ok !== true) return out;
+        out.owed.push(r.capture_sha);
+        owed = 1;
+      }
+      this.#sql.exec(`UPDATE reading_migrations SET after=?, examined=examined+1, migrated=migrated+?, at=? WHERE migration=?`,
+                     r.capture_sha, owed, stampInstant("second"), REPAIR_MIGRATION);
+      out.examined++;
+    }
+    if (page.length <= cap) {
+      this.#sql.exec(`UPDATE reading_migrations SET done=1, at=? WHERE migration=?`, stampInstant("second"), REPAIR_MIGRATION);
+      out.done = true;
+    }
+    return out;
+  }
+
+  /* R89: whether a read has looked at this capture's held bytes under this release and found nothing to read them by. */
+  #repairTried(sha) {
+    const r = this.#one(`SELECT version FROM reading_repairs WHERE capture_sha=?`, sha);
+    return !!r && r.version === String(this.env.VERSION ?? "");
+  }
+  #markRepairTried(bundleId, sha, outcome) {
+    this.#sql.exec(`INSERT OR REPLACE INTO reading_repairs (capture_sha, bundle_id, version, outcome, at) VALUES (?,?,?,?,?)`,
+                   sha, bundleId, String(this.env.VERSION ?? ""), outcome, stampInstant("second"));
   }
 
   /* One candidate: "unmoved", a reason it was left as it is, or `{migrated, moved}`. */
