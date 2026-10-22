@@ -24,7 +24,7 @@
    anything else (tried again). */
 import { recordOf } from "../record-core/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
-import { acquisitionOf } from "../acquisition/index.mjs";
+import { acquisitionOf, owedRun } from "../acquisition/index.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { schedulerOf } from "../scheduler/index.mjs";
 
@@ -85,10 +85,21 @@ export function pendingOf(ctx, deps = {}) {
   /* what an owner answered, read: the entry's outcome */
   const settle = (row, at, r) => {
     if (r && (r.final === true || r.failure === "final")) return stop(row, at, String(r.why || r.reason || r.code || "FINAL").slice(0, 160));
-    if (r && r.ok === true && (r.more === true || r.owed === true)) {
+    if (r && r.ok === true && r.more === true) {
       sql.exec(`UPDATE keeps_pending SET detail=?, attempts=0, due_at=?, last_try=?, last_why=NULL WHERE sha=? AND kind=?`,
                JSON.stringify(r.detail && typeof r.detail === "object" ? r.detail : json(row.detail, {})), at, at, row.sha, row.kind);
       return "retried";
+    }
+    if (r && r.ok === true && r.owed === true) {
+      /* work remains for the digest (extraction R82). An `ocr` pass that read pages goes on at once; a pass that read none (the member
+         down) and a reading whose own failure was transient wait their back-off. A reading that left pages of a scan unread owes an `ocr`
+         entry besides, and keeps its own until the next call finds the reading held. */
+      if (row.kind === "ocr" && r.read === true) {
+        sql.exec(`UPDATE keeps_pending SET attempts=0, due_at=?, last_try=?, last_why=NULL WHERE sha=? AND kind=?`, at, at, row.sha, row.kind);
+        return "retried";
+      }
+      if (row.kind !== "ocr" && r.read === true) put(row.sha, "ocr", [], {});
+      return attempt(row, at, String(r.why || "OWED"));
     }
     if (r && r.ok === true && (r.read === true || r.done === true || r.why === "READING_HELD")) return end(row);
     return attempt(row, at, String(r && (r.why || r.code || r.reason) || "NOT_DONE"));
@@ -114,11 +125,11 @@ export function pendingOf(ctx, deps = {}) {
     },
     subresources: async (row, at) => {
       const acq = acquisitionOf(ctx);
-      if (!acq || typeof acq.owedRun !== "function") return attempt(row, at, "NO_OWNER");
+      const run = acq && typeof acq.owedRun === "function" ? acq.owedRun.bind(acq) : owedRun;   /* acquisition's export; an instance's own is a test's */
       /* a rendered document is promoted beside its shell by the door's own function (control-plane, B29); without it a pending render stays the member's "Finish it" */
       /* a rendered document is promoted beside its shell by the door's own function (control-plane, B29), handed in by the composition; without it a pending render stays the member's "Finish it" */
       const deliver = typeof deps.deliver === "function" ? (a) => deps.deliver({ ctx, env, storeName: store(), ...a }) : undefined;
-      const r = await call(() => acq.owedRun(captureOf(ctx), { kind: "subresources", session: row.sha }, { storeName: store(), env, ...(deliver ? { deliver } : {}) }));
+      const r = await call(() => run(captureOf(ctx), { kind: "subresources", session: row.sha }, { storeName: store(), env, ...(deliver ? { deliver } : {}) }));
       if (r && r.final === true && r.reason) return stop(row, at, String(r.reason).slice(0, 160));
       if (r && r.ok === true && r.done === true) return end(row);
       return attempt(row, at, String(r && (r.reason || r.code || r.why) || (r && r.outstanding ? "OUTSTANDING" : "NOT_DONE")));

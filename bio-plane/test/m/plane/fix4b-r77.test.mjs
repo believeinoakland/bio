@@ -130,11 +130,14 @@ test("R77 (F9, F5, F11): an `ocr` entry is continued by `readHeld({sha, kind: \"
   assert.deepEqual(x.state.asked.map((a) => a.kind), ["ocr", "ocr", "ocr"], "continued while pages were owed (READING_HELD with owed is no end)");
   assert.deepEqual(rows(x), [], "no owed, so it ended");
   const u = sha("an archive stopped by its budget"), session = "session-" + "x".repeat(20);
-  assert.equal((await captureOf(x.ctx).owedLater({ kind: "subresources", sha: sha("page"), session })).ok, true);
   assert.equal((await captureOf(x.ctx).owedLater({ kind: "unpack", sha: u })).ok, true);
   assert.equal((await captureOf(x.ctx).owedLater({ kind: "subresources", sha: sha("page") })).ok, false, "a subresources entry needs its session");
   await x.s.onAlarm(now += 1000);
-  assert.deepEqual(rows(x).map((r) => [r.kind, r.sha === session ? "session" : "sha", r.last_why]), [["subresources", "session", "NO_OWNER"], ["unpack", "sha", "NOT_CONFIGURED"]], "with no owner they stay, named");
+  assert.deepEqual(rows(x).map((r) => [r.kind, r.last_why]), [["unpack", "NOT_CONFIGURED"]], "an unpack with no daemon door stays, named");
+  assert.equal((await captureOf(x.ctx).owedLater({ kind: "subresources", sha: sha("page"), session })).ok, true);
+  await x.s.onAlarm(now += 1000);
+  assert.deepEqual(rows(x).map((r) => r.kind), ["unpack"], "acquisition's real owedRun ends the entry of a session that is gone (nothing left to do)");
+  await captureOf(x.ctx).owedLater({ kind: "subresources", sha: sha("page"), session });
   const ran = []; let outstanding = 30;
   acquisitionOf(x.ctx).owedRun = async (cap, e, o) => { ran.push([cap === captureOf(x.ctx), e]); return outstanding ? { ok: true, done: false, outstanding } : { ok: true, done: true }; };
   const answers = [{ ok: true, result: { ok: true, complete: false, waiting_on: { code: "UNPACK_DAILY_BYTES" } } }];
@@ -142,7 +145,7 @@ test("R77 (F9, F5, F11): an `ocr` entry is continued by `readHeld({sha, kind: \"
   x.env.DAEMON_TOKEN = "t";
   await x.s.onAlarm(now += PENDING_RETRY_MAX_MS);
   assert.deepEqual(ran.map((r) => [r[0], r[1]]), [[true, { kind: "subresources", session }]]);
-  assert.deepEqual(rows(x).map((r) => [r.kind, r.last_why, r.final_why]), [["subresources", "OUTSTANDING", null], ["unpack", "UNPACK_DAILY_BYTES", null]], "outstanding files and a daily budget stay owed");
+  assert.deepEqual(rows(x).map((r) => [r.kind, r.last_why, r.final_why]).sort(), [["subresources", "OUTSTANDING", null], ["unpack", "UNPACK_DAILY_BYTES", null]], "outstanding files and a daily budget stay owed");
   outstanding = 0; answers[0] = { ok: true, result: { ok: true, complete: false, waiting_on: { code: "ARCHIVE_TREE_ENTRIES_MAX" } } };
   await x.s.onAlarm(now += PENDING_RETRY_MAX_MS);
   assert.deepEqual(rows(x).map((r) => [r.kind, r.final_why]), [["unpack", "ARCHIVE_TREE_ENTRIES_MAX"]], "done ends the one; a tree limit ends the other, stated");
