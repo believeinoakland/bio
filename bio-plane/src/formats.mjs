@@ -52,7 +52,7 @@
  *     WRITES nothing (the fleet rule, one layer down).
  */
 
-import { extractPdfStructure } from "./pdfstructure.mjs";
+import { extractPdfStructure, extractPdfRange } from "./pdfstructure.mjs";
 import { docxEntry } from "./docx.mjs";
 import { xlsxEntry } from "./formats-xlsx.mjs";
 import { pptxEntry } from "./pptx.mjs";
@@ -199,6 +199,8 @@ registerFormat({
      the same function op=pdfstructure always called, now reached through the
      registry instead of a direct import in index.mjs. */
   structure: (bytes) => extractPdfStructure(bytes),
+  /* R43: the pages [from, from + count) only, for a document too large to read whole (fix round 6, G26). */
+  structureRange: (bytes, range) => extractPdfRange(bytes, range),
   /* Tier 1 text rides structure()'s own I2 output object (`text` on the same
      object — pdfstructure.mjs's do-not-fork rule), so a second entry point
      would be a fork of exactly the kind that rule exists to prevent. */
