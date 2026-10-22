@@ -141,3 +141,40 @@ test("R96 G13 (the real plane) a 12 MB text filed by the screen's own promotion 
   const state = main(p).querySelector("[data-text-state]").getAttribute("data-text-state");
   assert.equal(state, "reading", "a large text is being read, never drawn as complete while more of it waits");
 });
+
+test("R3 R96 G38 (the real plane) a 10,000-line text the member filed, cited on its last line from a question she opened: the document page draws the cited words though the plane's pages are bounded, reading each page once", async () => {
+  const auth = await founder();
+  const cs = screenCall(auth);
+  const project = await makeProject(cs, "Long reading seam");
+  const lines = []; for (let i = 0; i < 9999; i++) lines.push("PAGETXT line " + i + " appeal" + (i % 997));
+  lines.push("CITEDLAST the words the question rests on");
+  const up = await upload(auth, Buffer.from(lines.join("\n")), "long.txt", "text/plain");
+  const filed = await CAPTURE_SCREEN.parts.promoteDocument(cs, { doc: up.document, title: "long.txt", locator: up.document.locator, project });
+  assert.equal(filed.refused, undefined, JSON.stringify(filed).slice(0, 300));
+  const sha = up.capture.sha256;
+  const page = async (after) => (await (await door(`/api/?op=reading&sha256=${sha}${after === undefined ? "" : "&after=" + after}`, { headers: auth })).json()).result;
+  /* the text is read in pieces by the plane's ledger (G13): wait until it says it is whole */
+  let first = await page();
+  for (const end = Date.now() + 90000; first.more === true && Date.now() < end;) { await new Promise((r) => setTimeout(r, 500)); first = await page(); }
+  assert.notEqual(first.more, true, "the plane says the reading is whole");
+  assert.ok(first.found === true && first.next !== undefined && first.next !== null, "the plane pages this reading: " + JSON.stringify({ n: (first.text_units || []).length, next: first.next, more: first.more }));
+  let last = first, hops = 0;
+  while (last.next !== undefined && last.next !== null && last.next !== "") { last = await page(last.next); hops++; }
+  const tail = last.text_units[last.text_units.length - 1];
+  assert.ok(String(tail.text).includes("CITEDLAST"), "the last page ends on the last line");
+  assert.ok(hops >= 2, "more than two pages: " + hops);
+  /* the question is opened by the member's own press, and rests on the last line (the extent the plane states for it) */
+  const home = await boot({ screens: SCREENS, plane: forwarded(auth), path: "/app/project/" + project });
+  await until(home, () => !!home.doc.getElementById("project-question"));
+  fill(home, { "project-question": "Does the long text hold the words?" });
+  await press(home, "promote", { reason: "a question the seam asks" });
+  await until(home, () => /^\/app\/question\//.test(home.location.pathname));
+  const question = decodeURIComponent(home.location.pathname.split("/")[3]);
+  const cited = await cs.call("cite", { body: { project: question, role: "supports", found: { capture_sha: sha, extent: tail.extent, kind: "passage" } } });
+  assert.ok(cited.ok !== false && !(cited.result && cited.result.ok === false), "the cite: " + JSON.stringify(cited).slice(0, 300));
+  const p = await boot({ screens: SCREENS, plane: forwarded(auth), path: "/app/document/" + filed.bundleId });
+  await until(p, () => !!main(p).querySelector("[data-leg-words]"), 60000);
+  assert.ok(String(main(p).querySelector("[data-leg-words]").textContent).includes("CITEDLAST"), "the words of the last line are drawn as cited");
+  const asked = p.byOp("reading").filter((r) => r.query.sha256 === sha).map((r) => r.query.after);
+  assert.equal(asked.length, hops + 1, "each page was read once: " + JSON.stringify(asked));
+});
