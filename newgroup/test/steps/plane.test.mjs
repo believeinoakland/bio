@@ -420,6 +420,7 @@ const MB29 = (() => {
   const b = new Uint8Array(29 * 2 ** 20);
   for (let i = 0; i < b.length; i++) b[i] = (i * 2654435761 >>> 24) & 255;
   b.set(Array.from({ length: 32 }, (_, i) => 0x80 + i), 1000);
+  b.set(ascii(' "bio-plane-crons/1 */5 * * * *" '), b.length - 100);   /* R39: the plane states its schedule; its upload sets it */
   return b;
 })();
 /* A response that cannot be read whole: any call that holds the body as one buffer, string or blob is counted and refused. */
@@ -473,7 +474,7 @@ test("R38: the multipart part is found whatever the chunking, across preambles, 
 });
 
 test("R38: the upload carries the release's Blob as it is, never turned into a string or a buffer, whose bytes reach the account once", async () => {
-  const calls = sequence([cfok({})]);
+  const calls = sequence([cfok({}), cfok({})]);
   const seen = [];
   const blob = new Blob([MB29]);
   for (const m of ["text", "arrayBuffer", "bytes"]) blob[m] = async () => { seen.push(m); throw new Error("held whole by " + m); };
@@ -483,7 +484,7 @@ test("R38: the upload carries the release's Blob as it is, never turned into a s
   assert.deepEqual(seen, [], "no whole-body copy was asked of the release's Blob");
   assert.equal(part.size, MB29.length, "the part is the module's bytes, once");
   seen.length = 0;
-  sequence([cfok({})]);
+  sequence([cfok({}), cfok({})]);
   await uploadUpdate(session(), "A1", "grp", true, rel, { secrets: SECRETS, names: NAMES });
   assert.deepEqual(seen, [], "the update's upload likewise");
 });
