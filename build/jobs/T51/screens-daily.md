@@ -1,6 +1,6 @@
 # screens-daily (T51)
 
-**Status** · session_017vgaPSzbnT5yf4ULaFwgm1 · depth 2 · WORKING · handled B30
+**Status** · session_017vgaPSzbnT5yf4ULaFwgm1 · depth 2 · WAITING ON BOB (J21) · handled B30
 
 ## Completion (SCREENS-DAILY #18, B27: fix round 4, wave 2)
 
