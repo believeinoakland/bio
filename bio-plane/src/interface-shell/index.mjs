@@ -153,6 +153,8 @@ export const RE_POINTS = Object.freeze({
   /* R117 (fix round 3; C84, C64): each until the registry lists the op on that screen */
   security: Object.freeze(["scanmirror"]),
   places: Object.freeze(["officeconfirm"]),
+  /* B3 (K4467; screens-inquiry J21, N5): the read of a record stored unread, until the registry lists `readheld` on `document` */
+  document: Object.freeze(["readheld"]),
 });
 export const LOCKED_OPS = Object.freeze(["unlock"]);
 export const ANY_SCREEN_OPS = Object.freeze(["infolevelset"]);
