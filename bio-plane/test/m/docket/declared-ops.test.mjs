@@ -46,3 +46,21 @@ test("R31 docket declares docketpost: its requires alone raise no refusal naming
   await declaredOpHolds({ op: "docketpost", declaration: DECLARED_OPS["docketpost"], call: mk("docketpost", {"by":"member:alice","viewer":"member:alice"}, async () => (mkWorld(true)), null, (fields, env) => (withPrepared(fields, env))),
     refusedNaming: named({"digest":["DOCKET_STALE"],"signature":["DOCKET_SIGNATURE_REFUSED"],"acknowledged":["DOCKET_WARNING_NOT_ACKNOWLEDGED"]}, true), values: {"acknowledged":true}, same: sameCode });
 });
+
+/* K4557, K4208: the census ops this module owns that were not yet declared: the mark (a joined member's act) and the preparing of a
+   public entry. The mark's world holds a record entry bob filed; the preparing's holds a second edition, so the `edition` kind
+   (no reason, summary or candidate of its own) is the call that is accepted on its requires alone. */
+test("R31 docket declares docketpressure: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  const setup = async () => { const w = mkWorld(); w.entryId = file(w).entry; return w; };
+  await declaredOpHolds({ op: "docketpressure", declaration: DECLARED_OPS["docketpressure"],
+    call: mk("docketpressure", { author: "member:bob", viewer: "member:bob" }, setup, null, (fields, env) => ({ ...fields, ...("entry" in fields ? { entry: env.entryId } : {}) })),
+    refusedNaming: named({ entry: ["NO_SUCH_DOCKET_ENTRY"], pressure: ["DOCKET_PRESSURE_REFUSED"] }, true), values: { pressure: { kind: "legal" } }, same: sameCode });
+});
+
+test("R31 docket declares docketprepare: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  const setup = async () => { const w = mkWorld(); w.publish(w.P, CASE, 2, [{ id: w.F1, role: "load_bearing" }]); return w; };
+  await declaredOpHolds({ op: "docketprepare", declaration: DECLARED_OPS["docketprepare"],
+    call: mk("docketprepare", { by: "member:alice", viewer: "member:alice" }, setup),
+    refusedNaming: named({ case: ["NO_SUCH_CASE"], kind: ["DOCKET_KIND_UNKNOWN"], shelf: ["DOCKET_WRONG_SHELF"], edition: ["DOCKET_NO_EDITION"], entry: ["NO_SUCH_DOCKET_ENTRY"] }, true),
+    values: { case: CASE, kind: "edition", shelf: "listed", edition: 2 }, same: sameCode });
+});
