@@ -5,6 +5,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok } from "../interface-shell/harness.mjs";
 import { open, main, says, word, P, Q, Q2, D, SHA, DOCUMENT_MD, inquiryMd } from "./fixtures.mjs";
+import { STAND_INS } from "../../../src/screens-inquiry/document.mjs";
+const standIn = (key) => STAND_INS.find((x) => x[0] === key)[1];
 
 process.env.TZ = "UTC";
 const at = "/app/document/" + D;
@@ -75,6 +77,8 @@ test("R129 R3 a cite refused because the only citation is grouped draws the two 
   assert.ok(text(acts[0]).includes(word("citation.index.repair_add_to_group", { ground: "G1" })), "the first: add it to the group, naming the group");
   assert.ok(text(acts[1]).includes(word("citation.index.repair_remove_grouping")), "the second: take the grouping off");
   assert.ok(main(p).querySelector('[data-cite="repair"] textarea, [data-cite="repair"] input') !== null, "and the second asks her reason");
+  assert.ok(text(main(p)).includes(standIn("screen.document.cite.repair.says")), "a sentence in the member's words says what is wrong and offers the two");
+  assert.ok(!text(main(p)).includes(JARGON) && !text(main(p)).includes(CHECK), "and the finding's own English, with its check number, is not what she is left with");
   const none = await open(at, { plane: { cite: () => refusedCite({ repairs: [] }) } });
   const el = none.doc.getElementById("document-cite-question");
   el.value = Q; none.fire(el, "change"); await none.settle();
@@ -118,4 +122,47 @@ test("R129 R3 taking the grouping off asks her reason first and sends nothing wi
   assert.ok(!("ground" in cites[1].body), "as she first asked it");
   assert.equal(repairButtons(p).length, 0);
   assert.ok(main(p).querySelector("[data-cite-done=cited]"));
+});
+
+/* ---- R129 / N5: an unread copy can be read ---- */
+import { RE_POINTS } from "../../../src/interface-shell/index.mjs";
+import { press, actsIn, READING } from "./fixtures.mjs";
+
+test("R129 N5 interface-shell lists readheld among the acts of document (its RE_POINTS, until the registry does): CAUSE-SHELL-4's line, red by name until it merges", () => {
+  assert.ok(Array.isArray(RE_POINTS.document) && RE_POINTS.document.includes("readheld"), "interface-shell's RE_POINTS names readheld for document");
+});
+
+const UNREAD = ok({ ok: true, found: false, capture_sha: SHA, reading: null });
+test("R129 N5 a copy stored with no reading says so and offers Read it now; pressing it sends readheld with the digest, and the page then draws the reading; control: a copy with a reading offers none", async () => {
+  const state = { read: false };
+  const pl = { reading: () => (state.read ? ok(READING({ words_read: 22, words_total: 22, unread_pages: [] })) : UNREAD),
+    readheld: () => { state.read = true; return ok({ ok: true, read: true, bundle_id: D, found: true }); } };
+  const p = await open(at, { plane: pl });
+  assert.ok(actsIn(main(p)).includes("readheld"), "Read it now is offered");
+  assert.ok(text(main(p)).includes(standIn("screen.document.readnow.says")), "with the sentence that says why");
+  assert.ok(text(main(p).querySelector('button[data-act="readheld"]')).includes(standIn("act.readheld.label.document")), "and its label is a plain sentence, not a key");
+  await press(p, "readheld", { reason: "the photo was filed before it could be read" });
+  const sent = p.byOp("readheld");
+  assert.equal(sent.length, 1);
+  assert.equal((sent[0].body || {}).sha, SHA, "the digest, in the body");
+  assert.ok(says(main(p), "screen.document.text.read", { read: "22", total: "22" }), "the reading is drawn: Read 22 of 22 words");
+  assert.ok(!actsIn(main(p)).includes("readheld") && !says(main(p), "screen.document.text.unread"), "and the offer goes");
+  /* control: a copy with a reading held offers none, and sends nothing on load */
+  const held = await open(at, { plane: { reading: ok(READING({ words_read: 80, words_total: 100, unread_pages: [] })) } });
+  assert.ok(!actsIn(main(held)).includes("readheld"), "control: a copy with a reading offers no such act");
+  assert.equal(held.byOp("readheld").length, 0);
+});
+
+test("R129 N5 a refusal to read says why in words: the original not held whole, or no record to read it into; control: a copy read by someone else meanwhile (READING_HELD) is read again and draws its reading", async () => {
+  for (const why of ["NO_WHOLE_OBJECT", "NO_HOME"]) {
+    const p = await open(at, { plane: { reading: UNREAD, readheld: ok({ ok: true, read: false, why }) } });
+    await press(p, "readheld", { reason: "read it" });
+    assert.ok(text(main(p).querySelector('[data-outcome="readheld"]')).includes(standIn("screen.document.readnow.refused." + why)), why + " is said");
+    assert.ok(actsIn(main(p)).includes("readheld"), "and the act stays, for when it can be done");
+  }
+  const state = { read: false };
+  const p = await open(at, { plane: { reading: () => (state.read ? ok(READING({ words_read: 5, words_total: 5, unread_pages: [] })) : UNREAD), readheld: () => { state.read = true; return ok({ ok: true, read: false, why: "READING_HELD" }); } } });
+  await press(p, "readheld", { reason: "read it" });
+  assert.ok(says(main(p), "screen.document.text.read", { read: "5", total: "5" }), "control: READING_HELD reads the copy again and draws what is there");
+  assert.equal(main(p).querySelector('[data-outcome="readheld"]'), null, "and says nothing against it");
 });

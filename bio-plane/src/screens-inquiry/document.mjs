@@ -43,6 +43,21 @@
  * R117 (C41) a refused version names its unplaced legs by their documents' titles. */
 
 import { checkOutcome } from "../screens-intake/index.mjs";
+import { localize } from "../setup-words/index.mjs";
+import { RE_POINTS } from "../interface-shell/index.mjs";
+
+/** The sentences this screen draws that the design has no row for yet (K4269; BOB's B32: a plain stand-in, never a raw key; the design reviews the rows in T52):
+ *  each is `[key, English]`, the English from `localize`, which gives the table's own sentence as soon as a row exists. They travel with the screen's words
+ *  and are dropped from this list when the design's row lands. */
+export const STAND_INS = Object.freeze([
+  ["act.readheld.label.document", localize("act.readheld.label.document", "Read it now")],
+  ["screen.document.readnow.says", localize("screen.document.readnow.says", "This copy has not been read yet. Reading it now makes its first reading; the original stays as it was captured.")],
+  ["screen.document.readnow.refused.NO_WHOLE_OBJECT", localize("screen.document.readnow.refused.NO_WHOLE_OBJECT", "The original of this copy is not held whole, so it cannot be read.")],
+  ["screen.document.readnow.refused.NO_HOME", localize("screen.document.readnow.refused.NO_HOME", "Civicsmith holds no record of this copy to read it into.")],
+  ["screen.document.cite.repair.says", localize("screen.document.cite.repair.says", "This question's citations are grouped, and the passage you are citing is in no group yet. Choose one of these, and it is cited.")],
+  ["screen.document.a34.para_same", localize("screen.document.a34.para_same", "paragraph {n} reads the same in both", { n: "{n}" })],
+  ["screen.document.a34.para_differs", localize("screen.document.a34.para_differs", "paragraph {n} reads differently", { n: "{n}" })],
+]);
 
 /** R3: the reads that need only the document's id; the rest follow from its front matter. */
 function reads(view) {
@@ -372,7 +387,7 @@ function render(cs, view) {
       const held = ui.citeRepair && typeof ui.citeRepair === "object" && Array.isArray(ui.citeRepair.repairs) ? ui.citeRepair : null;
       if (!held || !held.repairs.length) return "";
       const asks = held.repairs.some((x) => x.act === "inquiryground");
-      const says = cs.w("screen.document.cite.repair.says") !== "screen.document.cite.repair.says" ? `<p class="mk-small">${cs.w("screen.document.cite.repair.says")}</p>` : "";
+      const says = `<p class="mk-small">${cs.w("screen.document.cite.repair.says")}</p>`;
       return `<div class="mk-note" data-cite="repair" role="alert">${says}`
         + (asks ? cs.field("document-cite-repair-reason", "shell.reason", { area: true, rec: true, help: "shell.reason.help" }) : "")
         + held.repairs.map((x, i) => `<p class="mk-small">${cs.act("cite", { label: x.key, fills: x.fields && typeof x.fields === "object" ? Object.fromEntries(Object.entries(x.fields).filter(([, v]) => typeof v === "string")) : {}, data: { repair: String(i) } })}</p>`).join("")
@@ -458,6 +473,11 @@ function render(cs, view) {
   })();
   /* R96 (C17): an act that reads the copy again is drawn only for a copy a reading is held for (`rv0`): one with none says it is unread, in the
      facts above, and draws no act that re-reads it */
+  /* R129 (N5): a copy stored with no reading says so and offers to read it now (`readheld`); the sentence and the act are drawn together or not at all */
+  if (textState === "unread" && sha) {
+    const readNow = cs.act("readheld", { label: "act.readheld.label.document", data: { sha } });
+    if (readNow) out.push(`<div class="mk-acts" data-readnow="1"><p class="mk-small">${W("screen.document.readnow.says")}</p>${readNow}${own("readheld")}</div>`);
+  }
   if (rv0 && textState && textState !== "full" && textState !== "unread" && sha && !incomplete) {
     if (isPicture) {
       if (view.reachable && !drewTranscribe) out.push(`<div class="mk-acts">${cs.act("pagetranscribe", { label: "act.pagetranscribe.label.document", data: { sha } })}</div>`);
@@ -601,8 +621,8 @@ function render(cs, view) {
           if (it.date) lines.push(`<span data-leg="newer">${W("screen.document.a34.a_newer_copy_exists_captured_2_october", { date: { html: dayOf(it.date) } })}</span>`);
           if (it.affects === "unaffected" && places.length) lines.push(`<span data-leg="same">${W("screen.document.a34.page_same", { page: pagesText(places) })}</span>`);
           else if (it.affects === "affected" && places.length) lines.push(`<span data-leg="differs">${W("screen.document.a34.page_differs", { page: pagesText(places) })}</span>`);
-          else if (it.affects === "unaffected" && paras.length && cs.w("screen.document.a34.para_same") !== "screen.document.a34.para_same") lines.push(`<span data-leg="same">${W("screen.document.a34.para_same", { n: paras.join(", ") })}</span>`);
-          else if (it.affects === "affected" && paras.length && cs.w("screen.document.a34.para_differs") !== "screen.document.a34.para_differs") lines.push(`<span data-leg="differs">${W("screen.document.a34.para_differs", { n: paras.join(", ") })}</span>`);
+          else if (it.affects === "unaffected" && paras.length) lines.push(`<span data-leg="same">${W("screen.document.a34.para_same", { n: paras.join(", ") })}</span>`);
+          else if (it.affects === "affected" && paras.length) lines.push(`<span data-leg="differs">${W("screen.document.a34.para_differs", { n: paras.join(", ") })}</span>`);
           else if (it.affects === "undetermined") lines.push(`<span data-leg="undetermined">${cs.mark("gap", "undetermined")}</span>`);
         }
         if (lines.length) meta.push(unseen(lines.join(" · ")));
@@ -1093,7 +1113,7 @@ async function legTitlesFailed(view, answer, cs) {
 function citeRefusal(refusal, cs) {
   const r = refusal && typeof refusal === "object" ? refusal : {};
   const has = Array.isArray(r.repairs) && r.repairs.some((x) => x && typeof x === "object" && typeof x.key === "string");
-  if (has && cs.w("screen.document.cite.repair.says") !== "screen.document.cite.repair.says") return cs.w("screen.document.cite.repair.says");
+  if (has) return cs.w("screen.document.cite.repair.says");
   const f = (Array.isArray(r.findings) ? r.findings : []).find((x) => x && typeof x === "object" && (x.code || x.translation || x.detail));
   if (f) {
     const key = f.code ? "refusal." + f.code : "";
@@ -1111,6 +1131,24 @@ async function citeFailed(view, answer, cs) {
   const repairs = f && Array.isArray(f.repairs) ? f.repairs.filter((x) => x && typeof x === "object" && typeof x.key === "string" && typeof x.act === "string") : [];
   cs.set("citeRepair", repairs.length ? { repairs, req: view.ui.citeReq || null } : null);
 }
+
+/** R129 (N5; extraction R80 as amended): "Read it now" on a copy stored with no reading (a photo whose promotion was cut short, a record stored unread
+ *  before readers were made): `op=readheld` reads the held bytes and keeps the first reading, and the page reads the copy again. It is held apart from `acts`
+ *  as `browserActs` is: interface-shell's `checkScreens` admits an act on a screen only when the registry lists it or `RE_POINTS` names it, and until
+ *  interface-shell names `readheld` for `document` the screen draws neither the sentence nor the act (and no raw key). Self-contained. */
+const readheldActs = Object.freeze(Array.isArray(RE_POINTS.document) && RE_POINTS.document.includes("readheld") ? [
+  { op: "readheld", label: "act.readheld.label.document", rereads: [],
+    send(view, el) { return { body: { sha: String(el.dataset.sha || "") } }; },
+    /* the answer is `{ok, read, why}` (extraction R80): a reading made is read again below; `NO_WHOLE_OBJECT` and `NO_HOME` are said; `READING_HELD`
+       means a reading is there now and is read again */
+    done(view, answer, cs) {
+      const r = answer && answer.result !== undefined ? answer.result : answer;
+      const why = r && r.read === false ? String(r.why || "") : "";
+      const key = why === "NO_WHOLE_OBJECT" || why === "NO_HOME" ? "screen.document.readnow.refused." + why : "";
+      cs.set("outcome", Object.assign({}, view.ui.outcome, { readheld: key ? { ok: false, html: cs.w(key) } : null }));
+      cs.set("later", Object.assign({}, view.ui.later, { reading: null }));
+    } },
+] : []);
 
 /** R3's, R15's, R32's, R56's and R61's acts. */
 const acts = [
@@ -1596,6 +1634,6 @@ const words = Object.freeze([
 export function documentScreen(parts) {
   /* R93: the one drawing of what a check found is `screens-intake`'s (its R42), imported and carried as this screen's part; R117: a refusal's
      first finding is drawn by `findingsRefusal` */
-  return Object.freeze({ id: "document", reads, place, render, acts: [...acts, ...browserActs],
-    words: Object.freeze([...words, ...parts.kinds.map((k) => "document.kind." + k)]), parts: Object.freeze({ ...parts, checkOutcome, findingsRefusal }) });
+  return Object.freeze({ id: "document", reads, place, render, acts: [...acts, ...browserActs, ...readheldActs],
+    words: Object.freeze([...words, ...parts.kinds.map((k) => "document.kind." + k), ...STAND_INS]), parts: Object.freeze({ ...parts, checkOutcome, findingsRefusal }) });
 }
