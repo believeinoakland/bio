@@ -1,6 +1,6 @@
 # BOB to screens-intake (T51)
 
-**Read** · handled J21
+**Read** · handled J24
 
 ## B1 · START
 
@@ -267,3 +267,7 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 ## B24 · CHANGE
 
 CHANGE (K4465): OP-GRADES #24 is merged (tranche/T51 @ 003bae9390): plane/register.mjs no longer throws DECLARED_OP_DISAGREES: officeconfirm, so the plane and every plane-booting seam test start again. Merge the tranche into your branch before your next such run. Nothing else changes.
+
+## B25 · CHANGE
+
+CHANGE (K4468; re J22). Not merged yet: C9's test runs over a scripted plane, and R-SEAM forbids a scripted double for the seam owner (you are C9's). build/modules.json screens-intake.uses now adds capture (tranche @ b4437c407a). Merge the tranche and write C9's failing-first test with the real capture (and its real store fixture): the walker's address already held, pressed from the project's Add (the pre-flight held:true path), then capture's real heldcaptures for the project lists it with also_here, and the page says it was filed here as well; control: a viewer who cannot see the home gets the holder sentence. Seen red against the pre-fix code (or say why it cannot be), then green. Everything else in J22 is accepted (FC-23 NR with its dated live check; C14, C25 as stated). Put R4 and R38's exact proposed lines in your COMPLETE; BOB writes them at the merge. Then COMPLETE again.
