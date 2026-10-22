@@ -345,3 +345,16 @@ Size (session_01HEJ44SYdkiESYxbUXjmywT): test runs 7, module lines 3698
 ## J24 · COMPLETE
 
 COMPLETE (B25 applied). Answers B25's finding: a `continue` naming a session that is gone, with no address of its own, now answers 404 NO_SUCH_SESSION (index.mjs, before the locator check in acquireRun), no longer BAD_LOCATOR; with an address of its own it is captured as an ordinary capture, as R12 says. Test in fix5-render-owed.test.mjs (red before: BAD_LOCATOR 400). Amend proposed R104's neighbour R12 with that sentence. acquisition 228/228; checks 0 failures; ownership 0 failures. J23 otherwise stands. Size (session_01HEJ44SYdkiESYxbUXjmywT): test runs 8, module lines 3705
+
+## J25 · QUESTION
+
+QUESTION (fix round 6, G2/G3/G12a; no work is stopped by it, I build on these readings):
+
+1. **G2, who records `fetch_done`?** The plan gives capture "a `fetch_done` record (session, document, opener, project, at)" and notice-producers reads it, but names no trigger. My reading: `owedFetch(cap, entry, opts)` (mine) hands the finished document to `opts.deliver({answer, session})` (control-plane promotes), and when that answers `{ok:true}` it calls `cap.recordFetchDone({session, sha256, opened_by, project, at})` on the store handed in, if the store offers one (feature-detected, a missing or failing call never fails the delivery), then drops the session. Capture implements `recordFetchDone`. If you want another shape, send the name and fields.
+
+2. **G2, three things in other modules that follow from how the hand-off is parked** (plane/capture/producers; for BOB to place):
+   - The parked session is a `capture_sessions` row; its `primary_sha` column is NOT NULL and there is no primary yet, so the row carries 64 zeros as a sentinel, `state = {queue:[{fetch:true}], opened_by, project, fetch_pending:{since, declared_bytes, why}, body:{...carried keys}}`. machinery-producers' `partial-capture-outstanding` condition (`#conditionsPartialCapture`) reads every live session and would draw this one as "primary captured, subrequest ceiling reached": it must skip a session whose state has `fetch_pending` (not mine).
+   - The ledger row is `owe({kind:"fetch", session})`, keyed by the session like `subresources`; plane's `owe` today answers PENDING_MALFORMED for the kind, and I treat a refused owe as "cannot park": the capture then runs inline as today. So nothing changes until plane merges.
+   - `openCaptures` (mine, R46) lists the parked fetch with `outstanding: 1` and a new key `fetch_pending: {since, declared_bytes, why}` (plus `failed: <reason>` once the owed fetch ended with a stated refusal, the session then kept, never silently dropped); capture's `opencaptures` passes it through, screens-intake draws "being fetched" from the key and no "Finish it" (a `continue` on it answers the fetch_pending state, touches nothing). `why` is a machine code (`LARGE_DECLARED`, `LARGE_BODY`, `SLOW_BODY`), no sentence: the screen words it.
+
+3. **G12a:** "not an archive" is remembered in the module's instance memory (per storage, bounded), not in a table: `archiveList` is a read and R41 says it writes nothing, and the tests count rows. The cost: a restarted object pays the first ask again. Persisting would need a write on a read path (or a new table); say so if you want it persisted.
