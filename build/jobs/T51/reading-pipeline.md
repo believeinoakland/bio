@@ -339,3 +339,7 @@ Also seen: `words_read` 162,906 exceeds `words_total` 162,878 on that CSV (words
 - Nothing else changes: no new sentence (words 18421), no census op owned (K4208), no stored data touched (R-OLD: new reads only).
 
 Size (session_01EihK7Mkuc9VE8VdK74jysx): test runs 22, module lines 2221
+
+## J15 · COMPLETE
+
+COMPLETE G37 (READING-PIPELINE #24) except G15's memory. A read classifies once (classify-once.test.mjs: CSV red 4 calls vs 2, green); PDF_RANGE_PAGES stays 200 (measured: 100 flakes the 1.5-parse bar, 150 thin, 200 gives tick 1 8.2 s and 1.40-1.42). Probes alone after ROSTER-READER merge: g13 24 MiB tick 1 14.0 s -> 7.2 s (62 ticks, ENDMARKER found); g26 tick 1 12.4 s -> 8.2 s, op=reading answers; g15 127 STILL DIES (survives 133): needs ~6 MB; not this module's: the csv entry's text() retains +18.3 MB for a 1 MB file (72,392 cell objects), and extraction serialises the whole reading (cells included) four times (extraction/index.mjs:658, :999, :1064 JSON.parse(JSON.stringify(reading)), :1086), an 11.3 MB string live at the cap. I ask: extraction to drop the deep copy at :1064 (and the repeated stringify), else the csv entry's cell shape. Also seen: words_read 162906 > words_total 162878 on that CSV. Proposed R42 and R40 lines, suites (220/220, extraction 292/292), checks (0 failures, words 18421) and Size line are in my record, section 'G37 · COMPLETE'.
