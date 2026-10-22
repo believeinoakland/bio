@@ -273,3 +273,19 @@ Options, my recommendation first:
 Which do you choose? I will write cause 2 to your answer and COMPLETE after it.
 
 Cause 1 is met and committed (d2678dd585): capturecredentiallist is held under act.owed_capturecredentiallist.does (the reads list gives it); readheld is a stand-in, key act.readheld.does (text in act-help.mjs), for your word batch.
+
+## J21 · COMPLETE
+
+COMPLETE (re B16 and B18, K4437, K4464; fix round 4). Merged tranche/T51 at 003bae9390 (op-grades). Pushed.
+
+Cause 1 (met): `capturecredentiallist` is held under its owed act, `act.owed_capturecredentiallist.does` (the reads list gives it; T51_OWED_OPS). `readheld` is a stand-in with key `act.readheld.does` (T51_STANDIN_HELP), for BOB's word batch. Red-then-green: before the change, op-declarations' R34 named both ops as neither explained nor grounded; after, its t36 passes 14 of 14.
+
+Cause 2 (per B18, option 1): no own test. Affordances' test could not read the owners' declared member set: test-support and op-declarations are not in affordances' uses, and op-declarations is later in the order (architecture check refused the test; I removed it in commit 2be49424c2). op-declarations' R34 test is the net that names any member op with no text and no ground. No change to modules.json or the order.
+
+B17 (met): origins, inboxlist, transcriptions, progressions, remindersfor, moneysets, captureseenin, scanmirror, officeconfirm read their act.<op>.does rows (DEC-412), held as list-only ops with contradictionflag. The design's words-reads.json does not yet give affordances these keys; the reads list needs regenerating.
+
+Checks: format 0 failures; architecture (affordances) 0; words (affordances) 0; coverage 54 of 54; ownership 2 files, 0 failures. Suites: affordances 268 pass, 0 fail; op-declarations t36 14 pass, 0 fail.
+
+Reported to BOB: nothing further in other modules beyond the words-reads gap above. Earlier reds (op-grades words, coverage in other modules, case-authoring reload architecture) are not in this module.
+
+Size (session_01Di1UCztSNBX62o6BkJqmb3): test runs 9, module lines 2806
