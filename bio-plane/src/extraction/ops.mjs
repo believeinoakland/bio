@@ -136,7 +136,7 @@ export async function acquireReadingOp(answer, store, { json = jsonAnswer, store
 function deferralDiag(answer, probe, r) {
   const e = probe.error;
   const diag = { name: e && typeof e.name === "string" ? e.name : (e ? "Error" : "NoAnswer"),
-                 message: String(e && e.message ? e.message : e ? e : "the store's reply was no answer").slice(0, 300),
+                 message: String(e && e.message ? e.message : e ? e : "STORE_REPLY_NOT_AN_ANSWER").slice(0, 300),
                  status: Number.isInteger(probe.status) ? probe.status : null,
                  ...(r && r.correlation ? { correlation: r.correlation } : {}) };
   const sha = answer && answer.document && answer.document.capture ? answer.document.capture.sha256 : null;
