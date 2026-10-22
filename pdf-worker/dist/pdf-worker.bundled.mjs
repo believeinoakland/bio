@@ -42904,7 +42904,7 @@ var SURFACE = {
   structure: { method: "POST", mutating: false },
   version: { method: "GET", mutating: false }
 };
-var DEFAULT_MAX_PDF_BYTES = 16 * 1024 * 1024;
+var DEFAULT_MAX_PDF_BYTES = 64 * 1024 * 1024;
 var NAMESPACES = Object.freeze(["bio", "scratch"]);
 var json = (obj, status = 200) => new Response(JSON.stringify(obj), {
   status,
