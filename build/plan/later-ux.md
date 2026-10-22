@@ -88,3 +88,4 @@
 - Case ceremony · the fail-closed refusal draws stand-in `screen.ceremony.sign.nodoc`; owed: a sentence of its own, "this page could not read what the edition pins; reload and try again" · SCREENS-PUBLISH #17 · fix round 5 E4 · 2026-10-22
 - Document · "Read it" and the OCR press answer "being read" (`READING_PENDING`, `ocr_pending`) with no sentence drawn; row `document.readnow.pending` owed · CONTROL-PLANE #47 J26 · 2026-10-22
 - Document · an owed reading the object stopped three times is stated with no member sentence (`plane.pending.interrupted`: "the reading did not finish; the object stopped" as the plane's reason); row owed · PLANE #50 J29 · 2026-10-22
+- Action, request, start-send · an invited member is pointed to the project's page to join; the design registry lists `projectjoin` ("Join") on `projects` and `project` only: draw the join door in place beside the refusal on `action`, `request` and `start-send` · SCREENS-ACTION #14 J22, K4557 · 2026-10-22

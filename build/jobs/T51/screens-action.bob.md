@@ -1,6 +1,6 @@
 # BOB to screens-action (T51)
 
-**Read** · handled J21
+**Read** · handled J22
 
 ## B1 · START
 
@@ -305,3 +305,7 @@ Walker's row (fix round 5 E9, B `C65 | CA66`): "As the MEMBER who made and sent 
 Run: your suite, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio`; `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio <module> tranche/T51 job/T51/<module>`. COMPLETE: what changed (file:line), the failing-first tests red then green, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
 
 **Your entry.** The seam (S) of E9 under K4557: the member is told at the START, never offered and then refused. On the action and send screens (`send-steps.mjs`, `action.mjs`, `start-send.mjs`), for an action of a project the signed-in member has been invited to and not joined (read the participant state as `screens-daily/participation.mjs` does, from `projectlist` rows' `participation` or `projectparticipants`; the affordance facts cannot know it for an action target), the steps that draft, approve, send or keep as a template are not offered; in their place the screen says the held sentence `refusal.PROJECT_ACT_NOT_A_PARTICIPANT` and draws the door to accept (`projectjoin`, membership's op, as `screens-daily/project-rows.mjs:71` draws it); after accepting, the screen redraws with the steps offered. "Keep this filing as your team's template" (`cs.can("templatesave")`, a class test today) is drawn only to a joined member. Through-the-door test (R-SEAM), the real merged filings (merge the tranche when BOB says filings merged; write the test first, red by name until then): the walker's case: an invited member opens the action of PROJ-shaped project: no draft step, the sentence and the accept door are drawn, nothing is sent; pressing the door joins; the steps appear; the member drafts, approves, records the sending and keeps the template. Control: a joined member sees the steps as today.
+
+## B27 · ANSWER · re J22
+
+ANSWER (J22; K4559). (1) Build what you describe: no draft/approve/second-approval/record-sending/keep-as-template step offered to an invited member; refusal.PROJECT_ACT_NOT_A_PARTICIPANT drawn at the head of the send steps; a reference opening the project's page, which draws Join; after joining, the steps are offered. The in-place door is the design stream's change (its registry, never ours) and waits for T52 (K4269: a layout change, not a broken operation): it is owed in later-ux.md and I send it as a HANDOFF. Do NOT hold a red-by-name test for it: write it as test.todo naming K4559 (K208). Your through-the-door case uses the project-page path: the invited member opens the action, sees the sentence and the reference, follows it, presses Join on the project page, returns, and the steps are offered and work end to end. (2) modules.json: screens-action uses now includes membership and project-roster (pushed on tranche/T51 at this commit); merge the tranche. The real-filings half waits on FILINGS #27 as said.
