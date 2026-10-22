@@ -4,7 +4,7 @@
    the member's act (a press), never by calling an act's done function; every sentence is read by its key (R19). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, ops, press, last, ok, W, D, DATA_PLANE, ROUTES, PLAN, PLAN_ID, DET, PROJECT, PROFILES, PROFILES_WITH_HELP, RECORDS_HELP, ACTION, ACTION_ID, FILING, FILINGS, draft, TEMPLATES, button } from "./page.mjs";
+import { open, main, text, ops, press, last, ok, W, D, DATA_PLANE, ROUTES, PLAN, PLAN_ID, DET, PROJECT, PROFILES, PROFILES_WITH_HELP, RECORDS_HELP, ACTION, ACTION_ID, FILING, FILINGS, draft, TEMPLATES, button, READER } from "./page.mjs";
 
 const withPlan = (o) => ({ ...DATA_PLANE, plan: ok({ ...PLAN, ...o }) });
 const markBtn = (p, option, disposition) => main(p).querySelectorAll('button[data-act="optiondispose"]').find((b) => b.dataset.option === option && b.dataset.disposition === disposition);
@@ -284,4 +284,13 @@ test("R43, R48 (C65): a request prepared, approved, sent and answered offers the
   // control: an action sent with no filing (a direct sending) has nothing to keep
   const direct = await open(`/app/action/${ACTION_ID}`, filingPlane());
   assert.equal(main(direct).querySelector(`a[href="/app/start-send/${ACTION_ID}"]`), null);
+});
+
+test("R27, R43, R48 (C65): a member who may read and not act is shown no way to keep the filing as a template (the control is an act); control: a member who may act is", async () => {
+  const sent = filingPlane();
+  const plane = { ...sent, filingsfor: () => ok(FILINGS([draft({ approval: { approved_by: "member:mai", at: "x", sha: "s" }, sending: { ord: 1, sent_on: "2026-10-20", reference: "26-0001" } })])) };
+  const reader = await open(`/app/action/${ACTION_ID}`, { ...plane, whoami: ok(READER) });
+  assert.equal(main(reader).querySelector(`a[href="/app/start-send/${ACTION_ID}"]`), null);
+  const member = await open(`/app/action/${ACTION_ID}`, plane);
+  assert.ok(main(member).querySelector(`a[href="/app/start-send/${ACTION_ID}"]`));
 });

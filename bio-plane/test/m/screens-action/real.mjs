@@ -10,6 +10,7 @@ import { actionsOps } from "../../../src/actions/index.mjs";
 import { entitiesOps } from "../../../src/entities/index.mjs";
 import { get as profileOf, combine } from "../../../../jurisdictions/index.mjs";
 import { OP_ALIASES } from "../../../src/op-declarations/index.mjs";
+import { boot as bootSetup } from "../instance-setup/fixture.mjs";
 import { open, ok, DATA_PLANE } from "./page.mjs";
 
 /** The real world with the first real profile active (`profile` an id `jurisdictions` holds), the member `olive` the project's owner. */
@@ -47,9 +48,17 @@ export function realPlane(x, member = V("olive"), base = DATA_PLANE) {
 
 export { open, world, V };
 
+/** The REAL `profiles()` of `instance-setup`, booted as the plane boots it with the first profile chosen: the answer the screens read. */
+export async function realProfiles(id = "oakland-alameda") {
+  const s = await bootSetup();
+  const set = s.m.profilesSet({ profiles: [id], by: "admin" });
+  if (!set || set.ok === false) throw new Error(`profiles not set: ${JSON.stringify(set).slice(0, 200)}`);
+  return () => ok(s.m.profiles());
+}
+
 /** The `profiles` answer for the active profile `id`, from `jurisdictions.combine` whole: what `instance-setup`'s `profiles()` must carry in
- *  `view` for the screens (`records_laws`, `records_help`, `name`, beside `deadlines`). The real `profiles()` is run, and found to omit
- *  them, by the red test in `seam-t51.test.mjs`; this stands in only for the parts of the path that follow it. */
+ *  `view` for the screens (`records_laws`, `records_help`, `name`, beside `deadlines`; INSTANCE-SETUP #27, instance-setup R12). It stands in
+ *  for `realProfiles` only to prove the rest of the path while that provider has not merged; `seam-t51.test.mjs` runs both. */
 export function profilesOf(id = "oakland-alameda") {
   const p = profileOf(id), c = combine([id]);
   return ok({ ok: true, profiles: [{ id, name: p.name, covers: p.covers }], conflicts: [], choices: [], stage_findings: [], view: { ...(c.view || {}), name: p.name } });

@@ -4,16 +4,18 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { main, text, ops, press, last, ok, W, D, button } from "./page.mjs";
-import { realWorld, realPlane, profilesOf, open, V } from "./real.mjs";
+import { realWorld, realPlane, realProfiles, profilesOf, open, V } from "./real.mjs";
 
 const OGIS = "Office of Government Information Services";
 const FED = "5 U.S.C. § 552";
 const said = (p, key, vars) => assert.ok(text(p).includes(W(key, vars)), key);
 
 const lawsPick = (q) => q.doc.getElementById("req-law").querySelectorAll("option").map((o) => o.textContent.trim());
-test("R20, R4, R9, R3, R8, R43, R48 (C64, C65): a member names the federal office, starts the request, chooses the Freedom of Information Act, prepares a plain request, records the sending and keeps the filing as a template, over the real providers", async () => {
+/* The walker's path, by the member's own presses. `profiles` is the op that answers the place's facts: the real `instance-setup` or, while
+   its `profiles()` omits the laws (instance-setup R12, INSTANCE-SETUP #27), `jurisdictions.combine`'s view in its place. */
+async function walk(profiles) {
   const x = realWorld();
-  const plane = realPlane(x, V("olive"), { peopledirectory: ok({ rows: [], truncated: false }), profiles: profilesOf("oakland-alameda"),
+  const plane = realPlane(x, V("olive"), { peopledirectory: ok({ rows: [], truncated: false }), profiles,
     list: ok({ bundles: [{ bundle_id: x.proj, object_type: "project", title: "Parks" }], limit: 500, cursor: null, total: 1 }) });
   const p = await open(`/app/request/${x.proj}`, plane);
   said(p, "screen.request.nooffice");
@@ -66,4 +68,16 @@ test("R20, R4, R9, R3, R8, R43, R48 (C64, C65): a member names the federal offic
   assert.deepEqual({ ...saved, reason: undefined }, { filing: saved.filing, name: "A federal records request", use: "file", project: x.proj, reason: undefined });
   const kept = x.rows("SELECT kind, use, name, project FROM tpl_templates");
   assert.deepEqual(kept, [{ kind: "records_request", use: "file", name: "A federal records request", project: x.proj }], "the real filings keeps the template");
+}
+
+test("R20, R4, R9, R3, R8, R43, R48 (C64, C65): the walker's federal request, from naming the office to keeping the filing as a template, over the real providers (the profile's facts from jurisdictions.combine)", async () => {
+  await walk(profilesOf("oakland-alameda"));
+});
+
+test("R20, R4, R9 (C64; instance-setup R12, INSTANCE-SETUP #27): the same request with the REAL instance-setup profiles(): its view carries the records laws the screens list (red by name until instance-setup carries them)", async () => {
+  const profiles = await realProfiles("oakland-alameda");
+  const view = profiles().json.result.view;
+  assert.ok(Array.isArray(view.records_laws) && view.records_laws.some((l) => l.citation === FED && l.response === "foia_response"), "profiles().view.records_laws holds the federal law with its window");
+  assert.ok(view.records_help === undefined || typeof view.records_help === "object");
+  await walk(profiles);
 });
