@@ -288,3 +288,22 @@ Size (session_01EELF7tdeuCRAdwEDTmo1ya): test runs 24, module lines 2290
 ## J13 · COMPLETE
 
 COMPLETE G26 (READING-PIPELINE #23): a PDF in pieces mode is read by page ranges (pdf-reader extractPdfRange, 200 pages a piece, cursor = page). Seam test green on the real 15.2 MiB volume at 112 MB (7 pieces, slowest 3.3 s, 1.4 parses; workerd probe: 35 MB old space beside the bytes, 77 with a 60 MB ballast). Checks 0 failures, words 18421 unchanged, extraction 287/287. Details, notes (first piece digests its range only; run pdf-pieces.test.mjs alone) and proposed R40/R14/R35 lines in my record, section 'G26 · COMPLETE'.
+
+## G37 work in progress (READING-PIPELINE #24, session_01EihK7Mkuc9VE8VdK74jysx; B16 START)
+
+**Root cause (1).** A read of a CSV (or any `profiled_from_text` capture with a format entry) classified the whole intake decode at `index.mjs:1916-1918` (`identify` + `doctypeFor`, every registered `detect` over the text) and then `docprofile.readText` classified the entry's text again (`index.mjs:2125` → `readtext.mjs:273-274`): twice over the whole text, the recognisers allocating in proportion to it (roster-reader's cost, its job). The 1918 classification served only the failure branches and the text-read-as-text reading. A PDF's 1918 classification ran over an empty text; its one real classification is `readText`'s.
+
+**What changed (`bio-plane/src/reading-pipeline/index.mjs`).** `classify()` (`:1922`), memoised, asks `identify`/`doctypeFor` over the same context only where a reading is made from it: the text read as text (`:1939`), the `!bytes` failure, and the failed readings (`:2151`, `:2179`, `:2184`; `readingFromWire` is handed the type only when the wire is undetermined). A read through an entry now classifies once, in `readText`; the verdicts are the same calls on the same context, asked later. `PDF_RANGE_PAGES` 200 → 100 (`:1216`), measured below.
+
+**(2) Why the tests missed it.** No test counted classifications; no read ran at the plane's cap. Gap fixed: `classify-once.test.mjs` counts the calls a registered type's `detect` receives over non-empty text at `read`'s interface.
+
+**(3) Failing-first.** `classify-once.test.mjs` (5 tests): the CSV test RED before the change ("one classification is 2 detect calls over text, a CSV read made 4"), GREEN after; text and PDF reads classify once (green throughout, the control that a count equals one classification); two controls: a failed reading still takes its content type from the intake's text (`probe-marked`), a text capture's reading is as it was.
+
+**Measured at the plane's shape (E3 harness, each run alone, roster-reader NOT yet merged, so the recognisers' own cost stands):**
+- `g26.probe.mjs` (BUDGET-2024-APP, cap 112): tick 1 was 12.4 s; 200 pages a piece 8.8 s (ticks 4.4-4.8 s, 7 ticks, 35.0 s); **100 pages a piece 5.7 s (ticks ~2.1 s, 14 ticks, 32.6 s)**, so 100. `pdf-pieces.test.mjs` alone at 100: 14 pieces, slowest 1.73 s, 19.1 s against one parse 13.7 s (1.40; two runs 1.40, 1.41), peak 101.6-106.7 MB. Peak heap + buffers in the plane 126-130 MB at either size (the plane's idle and the bytes; not the range's). Its `op=reading` still kills the child: G38 (extraction's), not this cause.
+- `g13.probe.mjs 25165824:104` (24 MiB text): tick 1 14.0 s → 12.2-12.3 s. CPU profile of tick 1: `classify` 8.3 s of 12.2 s, of it roster-reader (`lines.mjs` `tidy`/`words`/`isUnitLine`/`eachLine`, `staff-roster.mjs:123-128`, `org-chart.mjs:50-56`) 6.5 s; this module's own share (`totalsOfText`, `glyphCount`) about 1 s. So the rest of the bar waits on ROSTER-READER #5.
+- `g15.probe.mjs 127` (1 MB CSV): still dies at the cap (the one classification still allocates 129 MB: roster-reader's).
+
+**Waiting on:** ROSTER-READER #5's merge (B5 START in progress); then the three probes re-run alone, numbers here.
+
+Suites so far: reading-pipeline + `extraction/read.test.mjs` 221 tests, 220 pass; the 1 is `pdf-pieces.test.mjs` failing in the parallel run (its 1.5-parse ratio under load, as #23 noted) and green alone (3 runs). extraction 287/287; events, observation-log, content, retrieval-browse 374/374. Checks: format, architecture 0; coverage 41 of 41 (this module), 6668 of 6668 (run.mjs); words 18421 → 18421; ownership 0 failures (3 files).
