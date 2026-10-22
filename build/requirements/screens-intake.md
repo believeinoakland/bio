@@ -138,6 +138,7 @@ Bringing material in and deciding what enters the record: capturing from an addr
 - **R9** No act or read of these screens records, in the browser or in a request beyond the op's own, which member opened which file (K1888).
 - **R55** (T51 fix round 2; DEC-394 3c; `capture-requests` R23; amends R47; K4328) `capture`'s address tab lists the member's own capture requests (`capturerequests`, the one read that also serves R47) under `screen.capture.later.head` with `.about`, each with its address, the day asked and its state: `requested` or `draining` as `screen.capture.later.waiting`, `captured` as `.captured`, `refused` as `.turned`; a request another member asked, an `expired` one and an empty list are not drawn.
 - **R56** (T51 fix round 2; C91; amends R44, R46; K4328) `capture` draws a door to `watching` and to `leads` (`screen.watching.name`, `screen.leads.name`) for a viewer who may act on the record; none otherwise.
+- **R57** *(not yet met: T51)* (fix round 4b, F1; K4487) **The member is told a reading is on its way.** A capture or upload answered `reading_pending` says the reading follows (the nearest held row as stand-in, K4269; its row to `later-ux.md`). Test: the press with a pending answer draws it.
 **Proposed requirement lines (BOB writes them):**
 
 ### Satisfies
