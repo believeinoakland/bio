@@ -596,3 +596,7 @@ B44: all three done in J28 (visitor-copy test, r117-held root cause = wall-clock
 ## B45
 
 Merged `tranche/T51` (capture). Capture's `recordFetchDone` takes `document` as a string (the real call refused my object as `recorded: false`, which the spy test could not see): the delivery now passes the document's bundle id. The real-capture test (`r124-owed-render.test.mjs`, last test) finds one `fetch_done` row `{session, document: bundleId, opener, project}` for a fetch and none for a render; red before the fix, green now (9 of 9 in the file). The G2 seam still waits on the plane's `fetch` kind.
+
+## J30 · REPORT
+
+B45 done: merged capture; recordFetchDone takes document as a string, so the delivery now passes the bundle id (my first shape, an object, was refused by the real call and my spy test could not see it). Real-capture test finds one fetch_done row per fetch, none per render; r124 9/9. G2 seam waits on the plane fetch kind.
