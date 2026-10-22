@@ -980,8 +980,8 @@ export class Review {
     try {
       const got = this.caseAuthoring.draftEditions({ caseId: ident.caseId, draft });
       return { prepared: got && got.prepared != null ? got.prepared : null,
-               published: got && got.published ? got.published : null };
-    } catch { return { prepared: null, published: null }; }
+               published: got && got.published ? got.published : null, case: got && got.case ? got.case : null };
+    } catch { return { prepared: null, published: null, case: null }; }
   }
 
   /** R43 (fix round 3, C14; project-roster R42): THE DRAFTS SHARED FOR REVIEW, BY PROJECT, in reads that do not grow with
