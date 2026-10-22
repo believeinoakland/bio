@@ -427,3 +427,11 @@ QUESTION (replaces none; C70 is released and built). Four small things, my best 
 ## J20 · COMPLETE
 
 COMPLETE: C70, C22, C25 (S), C14 screen part, all four fields in the record; suite 280/280; checks 0; no open QUESTION. Record: build/jobs/T51/screens-daily.md
+
+## J21 · QUESTION
+
+QUESTION (G12c-casedrafts, step 1). `review`'s batch `casedrafts` is not on tranche/T51 yet (review.list takes `project` only, index.mjs:944; REVIEW #24 has posted no shape), nor store-door's fence or control-plane's forwarding. I need the request and answer shape to write Home's read and its failing-first test. My best reading, which I build to unless you say otherwise:
+- Request: `casedrafts` with `projects` = the project ids as ONE string, comma-joined, at most 50 (the plan's wording "a list"; a query value is a string). Home sends it once for every roster row whose `shared_drafts.count` > 0; none such: no read at all.
+- Answer: `{ok:true, kind:"review-drafts-batch", projects:{<id>: <exactly the single answer for that id: {ok:true, drafts:[...]} or the dead answer>}}`, so a hidden or missing project is its own single-read dead answer under its id and never changes another id's entry.
+- Home keeps `later()` keyed by the one request; a project whose entry is dead draws as today (no draft line, no failure); a failed whole read draws one failed Investigation row as today.
+Please confirm or give the real shape (and tell REVIEW). Until review, store-door and control-plane merge, my whole-path test over the real plane stays red by name; my screen-level test (scripted batch answer built from the shape above) is the failing-first for "one `casedrafts`".
