@@ -411,3 +411,17 @@ Local proof: with an UNCOMMITTED stand-in of publication's field (`findings` fro
 **Requirement lines proposed (you write them):** R13 gains: "(fix round 5, C48) The sitting's findings are the roster the signed document pins (`casedocument`'s `findings`), and its evidence the document's `citations.rows`; when the sitting lists fewer findings than the document pins, or none while the draft names findings, the Sign step says so in words before the press and `caseratify` and `publishat` send nothing and ask no key." R70/R77: "after a reload the prepared edition's findings are read from the document's roster."
 
 Size (session_01CbZX6kMXs3nBMuMvqC2NcN): test runs 7, module lines 3612
+
+## J24 · COMPLETE
+
+COMPLETE · SCREENS-PUBLISH #17 · fix round 5, E4 / C48 (B30 taken). Merged tranche/T51 (publication #35 included); code on job/T51/screens-publish at 659d2b2c69 plus the merge, pushed. Nothing deferred, no question open.
+
+**Applied:** as J23 (parts.mjs `rosterOf`, `sitting`, `sittingGap`, `notPublished`; ceremony.mjs reload branch and the fail-closed refusal in `caseratify` and `publishat`; fixtures and four tests moved to the real `{state, rows}` / `findings` shapes). The row owed (K4269): a sentence for "this page could not read what the edition pins"; stand-in `screen.ceremony.sign.nodoc`.
+
+**Failing-first (`seam4.test.mjs`, real case-authoring world, real `publishCase`, reload = fresh page):** the reload test was red on the old source and is now green on the real merged publication, no stand-in: count "the edition and its 1 finding", `caseratify` members = the finding with the sha the document pins. Controls green: no reload sends the same sitting; a document stating no roster refuses in words and sends nothing. Platform check: N. Not shown: `publishedcase` findings 1 / complete true needs the store (the re-walk's reloaded ceremony).
+
+**Tests and checks:** screens-publish 260 tests, 258 pass, 0 fail, 2 todo (as before). Users: control-plane 365/365; plane 298/299, the one red `release.test.mjs` R24 (`screen.objective.purpose`), not mine. run.mjs: format, architecture, coverage (80/80 for the module), words 0 failures. ownership 8 files, 0 failures.
+
+**Requirement lines proposed:** as J23 (R13; R70/R77). Live-behaviour note from J23 stands: evidence now read from `citations.rows` (the written R13).
+
+Size (session_01CbZX6kMXs3nBMuMvqC2NcN): test runs 10, module lines 3612
