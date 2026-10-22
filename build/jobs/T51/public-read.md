@@ -180,3 +180,17 @@ C48 (R42): (1) PublicRead.publishedAddress, index.mjs; case-authoring:1702 and c
 
 Requirement ids met: R41, R42. Suites: public-read 243 pass 0 fail. Downstream (impact): plane 5 fail and control-plane 1 fail are identical on origin/tranche/T51 (278/5 and 355/1 there too: route-map R5/R9, R24 release words, Home R81), not mine. Checks: ownership 0, format 0, architecture 0; coverage/words findings are other modules'. QUESTIONS: J15 answered (B12), none open.
 Size (session_01RJ9Po6vVrCTxSZ695UZtwZ): test runs 9, module lines 2800
+
+## J18 · COMPLETE
+
+COMPLETE (B15 START applied; C47 seam, R43). Merged tranche/T51 first.
+
+**What changed.** `bio-plane/src/public-read/legs.mjs`:22-26 new `extentOf` (the object as signed, or the canonical JSON text parsed; text that does not parse to an object gives null, never a throw); `legs.mjs`:59 reads the passage's extent through it. Header comment restated (R43). Nothing else in the module; no new `localize`/word sentence.
+
+**Failing-first.** `evidence-names.test.mjs` fixture now hands the string the chain signs (`canonicalJson(extent)`): red (`place: null`, the R41 titled test too). `screens-publish/c47-seam.test.mjs` red ("the place is the passage's signed extent", `[null, null]`). After the fix both green. New test "R43 …" (evidence-names.test.mjs:209): canonical text, object, and five non-extents (`not json {`, empty, a JSON string, an array, `null`) give `place: null`.
+
+**Suites.** public-read 244 pass 0 fail; screens-publish 255 pass 0 fail (c47-seam 1/1). Checks: format 0; architecture 0; coverage public-read 43 of 43 named, 0 failures; ownership 0 (3 files). `checks/run.mjs`: one failure, `machinery-producers` R16 (another module, not mine); words: inline 0, plain 0, testcopy 0, unkeyed 1982 (unchanged by me).
+
+**R43 line proposed (met):** drop "*(not yet met: T51)*"; test: `public-read/evidence-names.test.mjs` "R43 …" and `screens-publish/c47-seam.test.mjs`.
+
+Size (session_01SctGfdzcWmRNmq49hMahxN): test runs 7, module lines 2800
