@@ -247,3 +247,19 @@ Ownership check: 1 failure, build/requirements/bundler.md is outside bundler's p
 ## J11 · COMPLETE
 
 COMPLETE (B9, CHANGE). R25 over the fleet: agent-runner's expected migrations are now read from its own wrangler.jsonc (v1 AgentRunner, v2 RemoteSession), not a hand list; the binding stays hand-listed. Test-only change, one file. Results: bundler tests 135 pass, 0 fail; checks/run.mjs: format, architecture, words 0 failures; coverage of bundler 40 of 40; ownership 0 failures. Other modules' coverage gaps (agent-harness R17, agent-runner R37 R38 R40, installer-steps R26 R31, journey-check R19) are reported, not mine. Record: build/jobs/T51/bundler.md, Size line included. Pushed job/T51/bundler at 3bc868c6db.
+
+## J12 · COMPLETE
+
+COMPLETE (B10, fix round 6, G1). bundler is done; pushed to job/T51/bundler (41effdabd4). Record: build/jobs/T51/bundler.md, section "BUNDLER #26, B10".
+
+What changed: bio-plane/scripts/deploy.mjs sets the plane's cron schedules after every upload (PUT .../schedules from wrangler.jsonc triggers.crons, then GET read-back) and refuses success on a failed PUT [SCHEDULES_NOT_SET], an unreadable read-back [SCHEDULES_UNREADABLE] or a different list [SCHEDULES_MISMATCH], exit 1, before the rollout wait (deploy.mjs:260, :278, :298, :505). "Nothing to do" now also needs the schedules to match (:416). --dry-run prints the step, shows what the script holds, and refuses an invalid list and unreadable schedules (:456). New pure functions deriveCrons and schedulesReadBack in derive-bindings.mjs:179, :196 (an invalid list refuses [INVALID_CRONS] before any request).
+
+Failing-first, run through the real command against the stubbed account: 6 tests red on the unchanged deploy.mjs (0 pass, 6 fail), the same 6 green after. Stub, fixture and two nothing-to-do assertions extended, none weakened.
+
+Measurements: live read-only GET on the test account confirmed the answer shape (biosmoke8 holds no schedule today; file-scanner's is */10). Not testable without a deploy: that the deploy token's scope covers /schedules; if not, the deploy refuses with HTTP 403 and the bytes stay deployed. The real wrangler.jsonc has no triggers until plane merges its cron, so until then a deploy sets none and says so.
+
+Suites: bundler module + impact users (bundler 3 files, plane limits.test.mjs) 147 of 147. checks: architecture 0, coverage 40 of 40, ownership 0, words 18421 (unchanged vs tranche), format 1 (build/plan/next.md:38, not mine). fleetbundles: STALE BUNDLE in other modules' sources only (plan section 4, yours at round end).
+
+Requirement lines proposed for R18, R34, R40: in the record.
+
+Size (session_01FbECsyjXqtTMFuzfiwnPxH): test runs 8, module lines 4340
