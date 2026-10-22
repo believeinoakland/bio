@@ -1,6 +1,6 @@
 # notice-producers (T51)
 
-**Status** · session_01SbR9Bp7b1UDZG4sWc5dbrm · depth 2 · WORKING · handled B1
+**Status** · session_01SbR9Bp7b1UDZG4sWc5dbrm · depth 2 · WAITING ON BOB (J3) · handled B1
 
 ## J1 · COMPLETE
 
