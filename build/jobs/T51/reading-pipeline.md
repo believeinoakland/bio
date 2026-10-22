@@ -284,3 +284,7 @@ Module suite meanwhile: 216 tests, 215 pass, the 1 fail is that seam test.
 - **R14/R18** (provenance): `text_scope` is present only for a reading read in ranges. **R35**: `words_total` is null for a reading read in ranges.
 
 Size (session_01EELF7tdeuCRAdwEDTmo1ya): test runs 24, module lines 2290
+
+## J13 · COMPLETE
+
+COMPLETE G26 (READING-PIPELINE #23): a PDF in pieces mode is read by page ranges (pdf-reader extractPdfRange, 200 pages a piece, cursor = page). Seam test green on the real 15.2 MiB volume at 112 MB (7 pieces, slowest 3.3 s, 1.4 parses; workerd probe: 35 MB old space beside the bytes, 77 with a 60 MB ballast). Checks 0 failures, words 18421 unchanged, extraction 287/287. Details, notes (first piece digests its range only; run pdf-pieces.test.mjs alone) and proposed R40/R14/R35 lines in my record, section 'G26 · COMPLETE'.
