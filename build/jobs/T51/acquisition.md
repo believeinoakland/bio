@@ -400,3 +400,19 @@ Proposed amendments to existing lines: R46 gains the `fetch_pending` key of a pa
 **For others (all told in J25/B27 or J26, none mine).** plane: `fetch` kind keyed by session, owner calls `owedFetch` with `deliver`; control-plane: deliver = `deliverOwedRender` generalised (reads `state.opened_by`, `state.project`, `answer.document`; calls capture's `recordFetchDone`), update `t51-visitor-copy.test.mjs` (J26); capture: pass `fetch_pending` through `opencaptures`, `notArchivesAmong`; machinery-producers: skip a `fetch_pending` session; screens-intake: the "being fetched" lines from `fetch_pending`.
 
 Size (session_01BQ74v1Ra7Q8F2p147wPF6y): test runs 16, module lines 3887
+
+## J28 · COMPLETE
+
+COMPLETE (B28 applied): G19 (provider). tranche/T51 merged; head = this branch's last commit.
+
+**Cause (rule 1).** The skips were recorded per file (`subresources.mjs` records `CAP_REACHED` with `cap`, `BUDGET_EXHAUSTED` with `budgetBytes`, `TOO_LARGE`, `DEFERRED`; `render.mjs:346-368` marks bodies not kept `sha256: "undetermined"` with `digest_reason`; index.mjs `walkSubresources` returns `TOO_LARGE_TO_PARSE` etc. as `subresources_skipped`) but the answer summed none of it for a member. **Missed (2):** no requirement said a bound must reach the member and no test drove a page past 400.
+
+**Change** (index.mjs): `supportingOf({subs, render, notWalked})` (exported) builds `supporting: {kept, skipped, total, reasons: [{reason, count, limit?, detail?}], not_walked?}` from those records, most-common reason first, `limit` the cap's or budget's figure, `detail` the renderer's own words (`BODY_NOT_KEPT`); `not_walked` names a walk asked for and not made (`TOO_LARGE_TO_PARSE`, `PRIMARY_UNREADABLE`, `NO_SUCH_SESSION`, `SESSION_UNREADABLE`, `RENDER_PENDING`); absent when no walk or render was asked for, and for `NOT_HTML`. It is in the answer (`acquire` and each continuation tick) and in `document.capture.supporting`. New data only. The `reasons` are codes plus the renderer's words: no sentence of mine, no word row owed; screens-intake / screens-inquiry word "N of M supporting files kept" with the reason (stand-in words are theirs).
+
+**Failing-first (3)**, fix6-t51.test.mjs, 2 tests, R108: a page of 450 images: red `supporting` undefined; green kept 400, skipped 50, total 450, reasons `[{CAP_REACHED, 50, limit 400}]`, in the answer and in `document.capture`; controls: 3 images all kept with no reason; no walk asked, none stated; a 9 MiB page `not_walked: TOO_LARGE_TO_PARSE`; a PDF asked with supporting files states none; a render with 3 loaded files of which one body was not kept: kept 2, skipped 1, the renderer's "400-body ceiling" words; a walk that ran out of subrequests states `DEFERRED`, and its continuation holds more.
+
+**Suites/checks:** acquisition 239/239; capture 256/256; screens-intake + doorbell 368/368; format, architecture, coverage (58/58), words (0 inline/plain/testcopy/missingkey), ownership: 0 failures.
+
+**Requirement line I propose:** **R108** (T51 fix round 6, G19; K4571 S10; amends R19, R6) **A capture states what of its supporting files was kept.** The answer of `acquire` (every continuation tick included) and the document's `capture` facts carry `supporting: {kept, skipped, total, reasons, not_walked?}` from the records the walk and the render keep: `reasons` the distinct reasons a file was not kept with their counts, a bound's figure as `limit`, the renderer's words as `detail`; `not_walked` the reason a walk asked for was not made. Absent when none was asked for. Test: a page of 450 supporting files answers kept 400, skipped 50, reason `CAP_REACHED`, limit 400. Controls as fix6-t51.test.mjs.
+
+J26 (control-plane's `t51-visitor-copy.test.mjs`) is still the one thing I need from BOB. Size (session_01BQ74v1Ra7Q8F2p147wPF6y): test runs 21, module lines 3925
