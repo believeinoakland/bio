@@ -254,3 +254,11 @@ EXTRACTION #32 · T51-fix-4b entry 7 · R82 done (commit 1ec27147da on job/T51/e
 **Requirement lines I propose (BOB writes them).** R82: "(fix round 4b, F4, F8, F9, F12; K4487) A transient failure is read again; nothing read is cut short. `readHeld` replaces a failed reading carrying `failure: "transient"` (reading-pipeline R37), never one marked `final`, unmarked, or with text. It offers every unit of the text to the index, which keeps R22's bound and states what it skips; only the acquire answer carries the wire's budget; the re-read, the transcription and the migrations do the same. `readHeld({sha, kind: "ocr"})` asks the OCR member for the pages the stored units lack and writes the re-read as a composed reading. Its answer carries `owed: true` when work remains: the reading just written failed transiently, pages remain and an OCR member is bound, or a pass read nothing because the member was down; pages the member declines end it. A migration's candidate whose bytes are not held is queued, tried at every later run, and the migration is done only when none waits; a migration that finished before this scans again once." Tests: r82.test.mjs, 12 tests above. Wording: no new sentence (`why` values are codes; the stored page text is the screens' via `unread_says`); rows owed: none.
 
 Size (session_019RcTbWsRRhrZ7k5jcyP7gC): test runs 21, module lines 3497
+
+## J14 · COMPLETE
+
+CHANGE B15 done. Merged tranche/T51 (502edbc26f); `read` (extraction/index.mjs:601) now forwards the provider's name, `unitsBudget`, keeping my own `read(..., {budget})` signature. `r82.test.mjs`: 12/12. Extraction suite: 235 tests, 234 pass; the one fail is `c5b-memory`, the pre-existing flake near its 128 MB line (5 runs here: pass, pass, pass, pass, 132 MB; clean tranche earlier: 138, 130). Ownership 0 failures.
+
+On `owe`: not passed from `read`, and not needed. `readHeld` answers `owed: true` itself whenever the reading written has `tier3_candidate` and an OCR member is bound (or failed transiently), and `kind: "ocr"` passes keep it owed while pages remain; the plane's ledger entry for that digest is kept by that answer. The `owe` hook is for callers with no answer to give (the acquire path), which is the door's and reading-pipeline's seam, not `readHeld`'s.
+
+Size (session_019RcTbWsRRhrZ7k5jcyP7gC): test runs 27, module lines 3497
