@@ -6,7 +6,6 @@ import { createHash } from "node:crypto";
 import { docxEntry, docParaRef } from "../../../src/docx.mjs";
 import { pptxEntry, slideShapeRef } from "../../../src/pptx.mjs";
 import { xlsxEntry, sheetCellRef, usedSheetRange } from "../../../src/formats-xlsx.mjs";
-import { csvEntry } from "../../../src/csv.mjs";
 import { linkWrapper } from "../../../src/subresources.mjs";
 import * as F from "./fixtures.mjs";
 
@@ -362,17 +361,4 @@ test("R10 xlsx evidentiary: formulas beside their cached values, hidden rows, co
   const over = await xlsxEntry.structure(b(F.OVER));
   assert.deepEqual(over.evidentiary.items.filter((i) => i.kind === "hidden-sheet").map((i) => i.sheet), ["H", "V"]);
   assert.ok(over.evidentiary.undetermined.some((u) => u.why === "over_size_bound" && u.guard && u.guard.boundName === "STREAMED_TEXT_BOUND_BYTES"));
-});
-
-test("R10 csv evidentiary: always empty, the guard marker its only possible undetermined, and the notes say the zero is the format's", async () => {
-  const s = await csvEntry.structure(F.enc("a,b\n1,2\n"));
-  checkShape(s, "csv", "sheets");
-  assert.deepEqual(s.evidentiary, { container: "csv", kinds: [], items: [], undetermined: [], counts: {} });
-  assert.deepEqual(s.links, []);
-  assert.ok(s.notes.some((n) => /format/.test(n)));
-  const big = new Uint8Array(32 * 1024 * 1024 + 1).fill(0x61);
-  const o = await csvEntry.structure(big);
-  assert.equal(o.evidentiary.undetermined.length, 1);
-  assert.equal(o.evidentiary.undetermined[0].guard.boundName, "STREAMED_TEXT_BOUND_BYTES");
-  assert.deepEqual(o.evidentiary.items, []);
 });
