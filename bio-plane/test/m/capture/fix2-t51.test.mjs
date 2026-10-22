@@ -361,7 +361,9 @@ function wholeWorld() {
   const s = f.s;
   const doc = (i, created) => s.sql.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version)
                                           VALUES (?, 'information', 'g', ?, 'collected', ?, ?, 'x', 1)`, `INFO-${i}`, `title ${i}`, created, created);
-  const reg = (i, d) => s.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, registered, bytes) VALUES (?, ?, 'x', '2026-01-01T00:00:00.000Z', 10)`, d, `INFO-${i}`);
+  /* R77 (fix round 5; E13): INFO-1 is recorded as held in one part (its own whole: the store is not asked), INFO-2 as held in parts, INFO-3 with no size */
+  const sizes = { 1: 10, 2: 9 * 1024 * 1024, 3: null };
+  const reg = (i, d) => s.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, registered, bytes) VALUES (?, ?, 'x', '2026-01-01T00:00:00.000Z', ?)`, d, `INFO-${i}`, sizes[i]);
   doc(1, "2026-01-01T00:00:00Z"); doc(2, "2026-01-02T00:00:00Z"); doc(3, "2026-01-03T00:00:00Z"); doc(4, "2026-01-04T00:00:00Z");
   reg(1, H("1")); reg(2, H("2")); reg(3, H("3"));            // INFO-4 has no capture at all
   b.held.set(`bio/captures/${H("1")}`, new Uint8Array([1]));    // whole
@@ -369,14 +371,14 @@ function wholeWorld() {
   return { ...f, b };
 }
 
-test("R77 (K4328; C10): a held row, the picker's and the whole read's, states whole: true when an object is held under its fingerprint, false when none is (a copy held in parts only), null where it cannot be said (no capture, no evidence store, a head that fails); each distinct fingerprint is asked once", async () => {
+test("R77 (K4328; C10): a held row, the picker's and the whole read's, states whole: true when an object is held under its fingerprint, false when none is (a copy held in parts only), null where it cannot be said (no capture, no evidence store, a head that fails); each distinct fingerprint is asked once, and none the register records as held in one part", async () => {
   const w = wholeWorld();
   /* R77 (fix round 3; C14): the picker's `whole` is the register's (fix3b-t51.test.mjs); the full row's is the store's */
   const r = await w.c.heldCaptures({ viewer: "class:admin", now: NOW });
   assert.deepEqual(r.held.map((x) => [x.bundle_id, x.whole]), [["INFO-1", true], ["INFO-2", false], ["INFO-3", false], ["INFO-4", null]]);
   const heads = w.b.calls.filter((x) => x[0] === "head").map((x) => x[1]);
-  assert.equal(heads.length, 3, "three fingerprints, none twice");
-  assert.deepEqual([...new Set(heads)].sort(), [1, 2, 3].map((i) => `bio/captures/${H(String(i))}`).sort());
+  assert.equal(heads.length, 2, "two fingerprints, none twice: INFO-1 is recorded as held in one part, its own whole, and is not asked");
+  assert.deepEqual([...new Set(heads)].sort(), [2, 3].map((i) => `bio/captures/${H(String(i))}`).sort());
   /* no evidence store: undetermined, never false */
   const none = fresh();
   none.s.sql.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version) VALUES ('INFO-1', 'information', 'g', 't', 'collected', '2026-01-01', '2026-01-01', 'x', 1)`);
@@ -386,7 +388,7 @@ test("R77 (K4328; C10): a held row, the picker's and the whole read's, states wh
   const bad = wholeWorld();
   bad.b.head = async () => { throw new Error("down"); };
   const br = await bad.c.heldCaptures({ viewer: "class:admin", now: NOW });
-  assert.deepEqual(br.held.map((x) => x.whole), [null, null, null, null]);
+  assert.deepEqual(br.held.map((x) => x.whole), [true, null, null, null], "INFO-1 needs no head; a head that fails reads null for the rest");
   /* control: an empty page asks the store nothing */
   const calls = w.b.calls.length;
   assert.deepEqual((await w.c.heldCaptures({ viewer: "junk", now: NOW })).held, []);
