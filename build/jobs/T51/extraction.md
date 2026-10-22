@@ -388,3 +388,27 @@ COMPLETE · EXTRACTION #34 · fix round 6 (B22; B23-B27). Pushed on job/T51/extr
 **Others:** control-plane's readUploaded must carry reading_pending/diag and pendSha (told by you); screens-inquiry draws completeness/units_total/repairable/`after`+`next`.
 
 Size (session_01WXFSyuYPNQSifvTQ2HqNyW): test runs 52, module lines 3854
+
+## J21 · COMPLETE
+
+COMPLETE · EXTRACTION #35 · fix round 6, wave 3 · G33 (B28). Branch job/T51/extraction at 3eee7e96a9 (+ this record), tranche/T51 merged.
+
+**Cause (1), file:line.** `readHeld` of the digest the register named for a multipart capture (its lowest-sorting part, capture `REGISTER_FIRST`) found no document and wrote its stub against the part (the old press); nothing ever removed that row, and `#caseCitations` (case-authoring:1960-1963) unions `readings.capture_sha`, so the document counted two captures. R88/R89 (merged earlier) fix new data and owe old "not read" readings, but R89 only owes the part's own entry and leaves its row.
+
+**Cause (2), why the tests missed it.** round6.test.mjs:73-78 seeded the old part-keyed reading only as an answer of `readingFor`, never as a stored row a start-up repair must act on. Gap fixed: g33.test.mjs makes the old state with the real writer (`writeReading` against a part digest, as the old press did), in 0115's shape (register names the five parts, not the whole; 41,502,904 B, over the ceiling, whole not held), and runs the repair and the tick.
+
+**What changed.** `bio-plane/src/extraction/index.mjs`: `PART_MIGRATION` ("g33-part-readings", its own `reading_migrations` row, so a store whose R89 repair finished is still scanned) and `PART_KEPT_IN`; `migratePartReadings()` (after `migrateRepairs`); it is drained by `startMigrations` and by the run `registerOwe` starts. Per `found = 0` reading in digest order: when the reading's bundle holds no document of that digest and a document of the bundle names it as a part (`#storedDocument`, `#wholeOfPart`), the whole is owed to the ledger first (unless it holds a reading, or was owed in this batch), then every row kept against the part is deleted in one transaction. No ledger registered: nothing deleted, undone. A refusing ledger: stops, part kept, next run owes again. The tick is the existing `readHeld(whole)`: over the ceiling it writes the final statement with the size (R84).
+
+**Failing-first.** g33.test.mjs, first run red (the old state persisted; `migratePartReadings` absent), then green: 5 tests: the 5-part/part-4 case (after repair and tick: `readings` holds the whole only, with "41502904" and "5 parts" in its basis; every table empty for the part; `readingFor(part)` answers the whole), whole already read (nothing owed; two parts owe once), controls (a whole's own failed reading, a reading with text under a part digest, a part digest that is also a document of its bundle, another bundle's, a lone digest: all stand), done once / refusing ledger / no ledger, and the object path (handing the ledger in starts it; R89's row done does not skip it).
+The case-authoring half ("the document reads `only_capture`") is that module's reading of `readings.capture_sha`; my test asserts its input: the document's one capture holds the one reading.
+
+**Platform (4).** N. P (read-only probe of 0115's provenance) not taken: this session has no probe of the live copy; the repair reads the same stored provenance document shape R81/R88 read (`documents[].parts`), so the first walk after deploy checks it: `readings` rows for 0115's bundle = the whole only.
+
+**Suites and checks.** extraction directory 287 tests, 287 pass; plane fix6-pending + round6-extraction 13 pass (the only users naming migrations/registerOwe). `node checks/run.mjs`: format, architecture, coverage (6,656 of 6,656), channels, words 0 failures (words count unchanged: no sentence added); ownership 0 failures. The impact list names 107 modules through shared tables; I ran the users of what I changed.
+
+**Words.** No new sentence. Rows owed: none.
+
+**Requirement line proposed (BOB writes it; the id R92 is named in my tests):**
+- **R92** (fix round 6, G33; K4598; R-OLD, a repair; amends R88, R89) **A reading stored against a part's digest is superseded by the whole's.** `migratePartReadings` (run at start on an object, and when `registerOwe`'s ledger arrives, beside R89's repair, in its own `reading_migrations` row `g33-part-readings` so a store whose R89 repair finished is scanned) takes each failed reading (`found` false) in digest order whose bundle holds no document of that digest and has a document naming it as a part; it owes the whole to the ledger as a `reading` entry (not when the whole holds a reading), then deletes every row this module keeps against the part (`readings`, `reading_history`, `reading_refs`, `reading_ref_terms`, `reading_text_source`, `capture_text`, `capture_text_skipped`, `capture_text_state`, `reading_repairs`); the tick writes the whole's statement (R84, sized). A reading with text, a digest that is also a document of its bundle, and one its bundle does not name as a part are left. With no ledger handed in it deletes nothing and stays undone; a refusing ledger stops it with the part's reading kept. Test: `g33.test.mjs`; controls as listed there.
+
+Size (session_01FmqneErcygihRzzyTS4emY): test runs 8, module lines 3900
