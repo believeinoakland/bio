@@ -81,3 +81,12 @@ Size (session_012xGAhuEiWYxdWHqLzyKcUo): test runs 8, module lines 1182
 ## J4 · COMPLETE
 
 COMPLETE (fix round 3, wave 1, B4). C28: knocksof now answers file_name and media_type (inboxlist and inboxget already did); the name is held in doorbell's inbox row, nothing outside. Small 1: inboxlist declared in DECLARED_OPS where routed. Tests seen failing first, with controls: knock-name.test.mjs (R27 R15) and declared-ops.test.mjs (R26). Doorbell 88/88; sources, op-declarations, op-grades, test-support green; plane and store-door each one red (R24 words, groupdescriptiondraft) also on the tranche tip. format has one red (rulings.md:4346, K4349) on the tip; architecture, coverage 27/27, words, ownership 0. Proposed lines: R27 amended (knocksOf rows answer both), R26 gains inboxlist. For BOB (P9): the alias half of Small 1 is op-declarations' and control-plane's: OP_ALIASES needs inbox -> inboxlist and the hand row renamed; until then both are declared and the alias answers. Safe view needs a requirement, file-safety in uses, the op declared and routed, and an intake door (record). Record: build/jobs/T51/doorbell.md.
+
+## Round 5 (E5), DOORBELL #7 · session_01SJ3MSM2hnThczxNQgrgj8g
+
+Read whole: `fix-round-5-T51.md`, `build/requirements/doorbell.md`, `src/doorbell/index.mjs`; `fix-round-5-step0.md` does not exist yet (none of my entries waits on it).
+
+**Root cause** (`src/doorbell/index.mjs:652`): `profileOf({... ct: null ...})`; the pull ignores the knock's stored `media_type` and `file_name` (columns written at :463, read at :502), so `profile.profiled_from_text` is false for a `text/plain` knock and the reading states "not read as text".
+**Why the tests missed it:** `knock-origin` and the control-plane F6 case pull a probe type and a PDF; no test pulls plain text.
+**Failing-first** (`test/m/doorbell/knock-text.test.mjs`, R13): the walker's case (273 bytes of text, `knock-b.txt`, `text/plain`) and the `.TXT`/`.md` no-type case are red now (`false !== true`); the NUL, not-UTF-8, `application/pdf` and no-name-no-type controls pass today and must stay green.
+**Provider not merged:** the fix calls acquisition's `textTypeOf({bytes, type, name})` (plan section 3, merge 2). It is not on `tranche/T51` at 7115408d02 (`git grep textTypeOf` finds nothing). The test is written; the code waits for the merge (no copy of the rule is made here).
