@@ -311,3 +311,31 @@ Suites so far: reading-pipeline + `extraction/read.test.mjs` 221 tests, 220 pass
 ## J14 · REPORT
 
 REPORT G37 (READING-PIPELINE #24): the once-per-read change is built and tested (classify-once.test.mjs: CSV red 4 calls vs 2, green); PDF_RANGE_PAGES set to 100 by measurement (g26 tick 1 12.4 s -> 5.7 s; pdf-pieces 1.40 parses). Not yet complete: the 24 MiB text (tick 1 12.2 s) and the 1 MB CSV (dies at 127) still wait on roster-reader's recogniser cost (profile: 6.5 s of 12.2 s in roster-reader lines.mjs/staff-roster/org-chart; this module's share ~1 s). I will re-run the three probes alone when you send CHANGE after ROSTER-READER #5 merges. Details in my record, section 'G37 work in progress'.
+
+## G37 · COMPLETE except G15's memory (READING-PIPELINE #24, session_01EihK7Mkuc9VE8VdK74jysx; B16 START, B17 CHANGE)
+
+**(1) Root cause, file:line.** A read through a format entry classified the intake decode at `index.mjs:1916-1918` (old numbering) and `docprofile.readText` classified the entry's text again (`index.mjs:2125` → `readtext.mjs:273-274`): twice over the whole text, the recognisers' cost growing with the text (roster-reader's `lines.mjs`, `staff-roster.mjs:123-128`, `org-chart.mjs:50-56`: its fix merged, B17). **What changed:** `classify()` (`index.mjs:1922`), memoised, asked only where a reading is made from it (text read as text; the `!bytes` and failed readings); `PDF_RANGE_PAGES` stays 200 (measured, `:1216` comment).
+**(2) Why the tests missed it, gap fixed.** No test counted classifications or ran a read at the plane's cap: `classify-once.test.mjs` counts the `detect` calls of a registered type at `read`'s interface; the shape probes are plane's.
+**(3) Failing-first.** `classify-once.test.mjs`: CSV RED before ("one classification is 2 detect calls over text, a CSV read made 4"), GREEN after; the text and PDF reads (one classification) and two controls (a failed reading takes its content type from the intake text; a text capture's reading as it was) green throughout.
+**(4) Platform check, each probe alone, after ROSTER-READER #5 merged and this branch merged `tranche/T51` (G38's paging too):**
+
+| probe | before | now |
+|---|---|---|
+| `g13.probe.mjs` 24 MiB text, cap 104 | tick 1 14.0 s (16.6) | **tick 1 7.2 s**, 62 ticks, 27.8 s, ENDMARKER found, peak 119.4 MB |
+| `g13` 12,000,060 B, cap 116 | tick 1 6.9 s | tick 1 3.6 s, 30 ticks, peak 103.3 MB |
+| `g26.probe.mjs` BUDGET-2024-APP, cap 112 | tick 1 12.4 s | **tick 1 8.2 s** at 200 pages (5.2 s at 100, 6.5 s at 150), 7 ticks, 33.6 s, `op=reading` now answers (G38) |
+| `g15.probe.mjs 127` 1 MB CSV | dies | **still dies at 127, 128, 129, 130; survives 133** (tick 1 1.7 s, peak 121.7 MB, 33.8 above the 87.9 idle); dies for memory, not time |
+
+`PDF_RANGE_PAGES`, by measurement after the recogniser fix (`pdf-pieces.test.mjs` bar: pieces under 1.5 parses; tick bar 10 s at the shape): 100 pages: tick 1 5.2 s, ratio 1.40-1.51 (a run over the bar); 150: 6.5 s, 1.45-1.47; **200: 8.2 s, 1.40-1.42** (three runs), kept.
+
+**G15's remaining cost, profile and owners (not this module).** Needing about 6 MB under what the object gives (39.4 MB above the plane's idle; the tick needs ~45). Live heap at the cap (a near-limit snapshot of the child): strings 110 MB of 160 MB, of them **an 11.3 MB JSON string of the stored reading** and the entry's output. Stage by stage (`csvstages.mjs`, outside the plane): the csv entry's `text()` output alone retains **+18.3 MB for a 1 MB file** (`sheets[0].cells`, 72,392 cell objects, and `lineRows`; the reading carries them as R28 states); this module's own stages add 1 MB (units 0.1, `readText` 0.9, provenance 0.1) and the intake's 1 MB decode. **Owners:** `extraction` serialises the whole reading, cells included, four times in one store (`extraction/index.mjs:658`, `:999`, `:1064` as `JSON.parse(JSON.stringify(reading))`, `:1086`), the 11.3 MB string; `csv-reader` / `format-registry` (the csv entry) for a cell as an object of ~155 B in JSON and far more in heap. The smallest fix inside this module would be to stop carrying `cells` (R28) and that is BOB's to decide, not mine. I ask BOB: the owner of `extraction/index.mjs:1064` (drop the deep copy) and, if still short, the csv entry's cell shape.
+Also seen: `words_read` 162,906 exceeds `words_total` 162,878 on that CSV (words.test-style counts differ between the units' words and the sheet's); not G37; reported for BOB.
+
+**Suites:** reading-pipeline (less `pdf-pieces`) + `extraction/read.test.mjs`: 220 tests, 220 pass; `pdf-pieces.test.mjs` alone 3 of 3 pass at 200 (ratio 1.40-1.42); extraction 292/292. Checks: `run.mjs`: format, architecture, channels 0; coverage 6670 of 6670; words 18421 → 18421; ownership: 3 files, 0 failures.
+
+**Requirement lines proposed (BOB writes them):**
+- **R42** (fix round 6, G37; K4615) **A read classifies its text once.** The recognisers (`docprofile.doctypeFor`) run over the capture's text once per `read`: over the intake's decode for a capture read as text (R1, R32), and for a read through a format entry only over that entry's text, inside `docprofile.readText` (R11); the intake's decode is classified for such a read only when its failure names a content type (R24, R11's failed branch), then once. The content type of any reading, and of a failed one, is the one that classification gives. Test: a registered type's `detect` receives, over non-empty text, the calls one classification costs, for a text, a CSV and a PDF read; a failed reading still names the type the intake's text gives.
+- **R40**: `PDF_RANGE_PAGES` is 200, measured at the plane's shape (first piece 8.2 s of 10).
+- Nothing else changes: no new sentence (words 18421), no census op owned (K4208), no stored data touched (R-OLD: new reads only).
+
+Size (session_01EihK7Mkuc9VE8VdK74jysx): test runs 22, module lines 2221
