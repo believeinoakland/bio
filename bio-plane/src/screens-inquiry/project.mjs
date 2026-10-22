@@ -338,21 +338,28 @@ function render(cs, view) {
   if (drawAct) {
     const drawn = new Set(items.map((x) => String(x.inquiry)));
     const drawInner = cs.state("others", view, (v) => {
-      /* C35 (R16, R1): one option per question (a row the list repeats is one), each named with the project that draws on it, as the cite
-         picker names them (`screen.document.cite.option`): the projects she may see are `projectlist`'s (project-roster R26) and each one's
-         questions `projectquestions`' (basis-versions R50), read only for a project that holds some and only once there is a question to
-         choose; a question no project of hers draws on is named by its title alone. `list` rows carry no project. */
+      /* C35 (R16, R1), C14: one option per question (a row the list repeats is one). A question is named with its project where the project is
+         known: the one its list row states (`project`), else, only where its title is another candidate's too (the two are told apart by their
+         project), the one its own `image` states: a read for each such question, never one `projectquestions` read for each project she may see
+         (`list` rows carry no project; the project's name is `projectlist`'s, project-roster R26). A question whose project is not known is
+         named by its title alone. */
       const seen = new Set();
       const rows = (Array.isArray(v.bundles) ? v.bundles : []).filter((q) => q && q.bundle_id && !drawn.has(q.bundle_id) && q.title)
         .filter((q) => (seen.has(String(q.bundle_id)) ? false : (seen.add(String(q.bundle_id)), true)));
       if (!rows.length) return "";
       const projectOf = new Map();
       const pl = later("projects", "projectlist", { limit: "200" });
-      for (const pr of pl.state === "ok" && pl.value && Array.isArray(pl.value.projects) ? pl.value.projects : []) {
-        if (!pr || !pr.id || String(pr.id) === id || !pr.name || pr.question_count === 0) continue;
-        const pq = later("projectq:" + pr.id, "projectquestions", { project: String(pr.id), limit: "100" });
-        for (const x of pq.state === "ok" && pq.value && Array.isArray(pq.value.items) ? pq.value.items : [])
-          if (x && x.inquiry && !projectOf.has(String(x.inquiry))) projectOf.set(String(x.inquiry), String(pr.name));
+      const nameOf = new Map((pl.state === "ok" && pl.value && Array.isArray(pl.value.projects) ? pl.value.projects : []).filter((x) => x && x.id && x.name).map((x) => [String(x.id), String(x.name)]));
+      const sameTitle = new Map();
+      for (const q of rows) sameTitle.set(String(q.title), (sameTitle.get(String(q.title)) || 0) + 1);
+      for (const q of rows) {
+        let pid = /^PROJ-/.test(String(q.project || "")) ? String(q.project) : "";
+        if (!pid && sameTitle.get(String(q.title)) > 1 && pl.state !== "loading") {
+          const qi = later("qimg:" + q.bundle_id, "image", { id: String(q.bundle_id) });
+          const qf = qi.state === "ok" && qi.value && typeof qi.value["bundle.md"] === "string" ? P.front(qi.value["bundle.md"]) : null;
+          pid = qf && /^PROJ-/.test(String(qf.project || "")) ? String(qf.project) : "";
+        }
+        if (pid && nameOf.has(pid)) projectOf.set(String(q.bundle_id), nameOf.get(pid));
       }
       const opts = rows.map((q) => (projectOf.has(String(q.bundle_id))
         ? { value: String(q.bundle_id), key: "screen.document.cite.option", fills: { question: String(q.title), project: projectOf.get(String(q.bundle_id)) } }

@@ -170,6 +170,9 @@ function render(cs, view) {
   const cur = project ? later("current", "basisversions", { id, project }) : null;
   const current = cur && cur.state === "ok" && cur.value.current ? cur.value.current : null;
   const currentName = current ? String(current.version || "") : "";
+  /* C14 (R2, R24): what depends on the reading shown is asked once that reading is settled: `basisversions` has answered and, when the project's
+     own reading is asked for, that has answered too, so a reading that changes when the second arrives is not asked about first */
+  const readingSettled = !!d.basis && d.basis.state !== "loading" && !(cur && cur.state === "loading");
   const accepted = vs.filter((v) => v && v.state === "accepted");
   const machine = (v) => !!(v && (v.run || /^class:/.test(String(v.author || ""))));
   const picked = ui["choice:question-reading"];
@@ -222,7 +225,32 @@ function render(cs, view) {
     return pageOf(l) !== null ? say("screen.document.passage.where", { page: String(pageOf(l)) })
       : paraOf(l) !== null ? say("screen.question.leg.paragraph", { n: String(paraOf(l)) }) : "";
   };
-  const legName = (l) => legTitle(l) + (whereOf(l, true) ? " · " + whereOf(l, true) : "");
+  /* C36 (R23, R24, R34): the first words of the passage a leg cites. The leg's own words, else the reading shown's; else the passage of the
+     cited capture's reading (`reading`, extraction R27) whose extent the leg states (`parts.legWords`: every `extent_*` field the unit's extent
+     carries, equal), the capture being the leg's `extent_capture`, else the one the document's provenance names; none found, none drawn */
+  const clip = (t, n) => { const x = String(t || "").replace(/\s+/g, " ").trim(); const m = n || 160; return x.length > m ? x.slice(0, m).replace(/\s+\S*$/, "") + "\u2026" : x; };
+  const wordsOf = (l, r) => {
+    if (l.words || (r && r.words)) return String(l.words || r.words);
+    const target = String(l.target);
+    if (impRef(target)) return "";
+    let sha = typeof l.extent_capture === "string" && /^[0-9a-f]{64}$/.test(l.extent_capture) ? l.extent_capture : "";
+    if (!sha) {
+      const im = later("doc:" + target, "image", { id: target });
+      try { const pj = JSON.parse(String((im.state === "ok" && im.value && im.value["data/provenance.json"]) || "")); sha = String((pj && pj.documents && pj.documents[0] && pj.documents[0].capture && pj.documents[0].capture.sha256) || ""); } catch { sha = ""; }
+    }
+    if (!/^[0-9a-f]{64}$/.test(sha)) return "";
+    const rd = later("legread:" + sha, "reading", { sha256: sha });
+    const units = rd.state === "ok" && rd.value && Array.isArray(rd.value.text_units) ? rd.value.text_units : [];
+    /* the leg's extent as the record states it: its own `extent_*` fields, else the reading shown's leg (flat fields or an `extent` object) */
+    const own = P.legExtent(l);
+    return P.legWords(units, Object.keys(own).length ? own : P.legExtent(r));
+  };
+  /* C36 (fix round 4, aside): every place that names a passage draws the words it cites as well (R23, R24, R34): the leg's title, its place, and its words */
+  const shownLeg = (l) => (shown && Array.isArray(shown.legs) ? shown.legs.find((x) => String(x.target_id || x.target) === String(l.target)) : null) || null;
+  const legWordsShort = (l) => { const w = clip(wordsOf(l, shownLeg(l)), 90); return w ? "\u201c" + w + "\u201d" : ""; };
+  const legName = (l) => legTitle(l) + (whereOf(l, true) ? " \u00b7 " + whereOf(l, true) : "");
+  /* the lists that say what the answer rests on name each passage by its words too (R24, R34) */
+  const legNameWords = (l) => legName(l) + (legWordsShort(l) ? " \u00b7 " + legWordsShort(l) : "");
 
   /* R116, R120: a leg the strength leaves out is named by its document's title (the reading's, else the record's), never its id;
      a document with no title by the plain word `shell.card.document`; each leg once in a list */
@@ -591,44 +619,6 @@ function render(cs, view) {
   const partOf = (l) => parts.find((p) => p.legs.some((x) => x.ord === l.ord)) || null;
 
   /* Supports (R34): every passage the question cites, from its own legs; R25's chooser; R23's line beneath each; R12 */
-  /* C36 (R23, R24, R34): the first words of the passage a leg cites. The leg's own words, else the reading shown's; else the passage of the
-     cited capture's reading (`reading`, extraction R27) whose extent the leg states (every `extent_*` field the unit's extent carries, equal),
-     the capture being the leg's `extent_capture`, else the one the document's provenance names; none found, none drawn */
-  const clip = (t) => { const x = String(t || "").replace(/\s+/g, " ").trim(); return x.length > 160 ? x.slice(0, 160).replace(/\s+\S*$/, "") + "\u2026" : x; };
-  const wordsOf = (l, r) => {
-    if (l.words || (r && r.words)) return String(l.words || r.words);
-    const target = String(l.target);
-    if (impRef(target)) return "";
-    let sha = typeof l.extent_capture === "string" && /^[0-9a-f]{64}$/.test(l.extent_capture) ? l.extent_capture : "";
-    if (!sha) {
-      const im = later("doc:" + target, "image", { id: target });
-      try { const pj = JSON.parse(String((im.state === "ok" && im.value && im.value["data/provenance.json"]) || "")); sha = String((pj && pj.documents && pj.documents[0] && pj.documents[0].capture && pj.documents[0].capture.sha256) || ""); } catch { sha = ""; }
-    }
-    if (!/^[0-9a-f]{64}$/.test(sha)) return "";
-    const rd = later("legread:" + sha, "reading", { sha256: sha });
-    const units = rd.state === "ok" && rd.value && Array.isArray(rd.value.text_units) ? rd.value.text_units : [];
-    /* the leg's extent as the record states it: its own `extent_*` fields, else the reading shown's leg (flat fields or an `extent` object) */
-    const bagOf = (x) => {
-      const bag = {};
-      if (!x) return bag;
-      for (const [k, v] of Object.entries(x)) if (k.startsWith("extent_") && k !== "extent_capture" && k !== "extent_cited_as" && v !== undefined && v !== null && v !== "") bag[k.slice(7)] = String(v);
-      if (x.extent && typeof x.extent === "object") for (const [k, v] of Object.entries(x.extent)) if (v !== undefined && v !== null && v !== "" && bag[k] === undefined) bag[k] = String(v);
-      return bag;
-    };
-    const own = bagOf(l), want = Object.keys(own).length ? own : bagOf(r);
-    /* a unit's extent is the extent grammar's (reading-pipeline R15): the fields it does not narrow to are null (`rect`, `run`), and a null field
-       states nothing; a leg draws a unit's words when it names exactly the fields the unit states, equal; a leg narrower (a rect) or wider
-       (no page) than the unit is not the unit's words */
-    const stated = (e) => Object.entries(e).filter(([, v]) => v !== undefined && v !== null && v !== "").map(([k, v]) => [k, String(v)]);
-    const hit = units.find((u) => {
-      if (!u || !u.extent || typeof u.extent !== "object" || !String(u.text || "").trim()) return false;
-      const have = stated(u.extent);
-      const keys = Object.keys(want).filter((k) => k !== "kind");
-      return have.length > 0 && keys.length > 0 && (want.kind === undefined || have.some(([k, v]) => k === "kind" && v === want.kind))
-        && have.filter(([k]) => k !== "kind").length === keys.length && have.every(([k, v]) => k === "kind" || want[k] === v);
-    });
-    return hit ? String(hit.text) : "";
-  };
   const legRow = (l, role) => {
     const g = legGrade(l);
     const scale = l.grade_axis || l.scale || (role === "cuts_against" && l.testimony ? "testimony" : role === "cuts_against" && /testimony/.test(String(l.grade_axis || "")) ? "testimony" : "capture");
@@ -642,7 +632,7 @@ function render(cs, view) {
     })() : "";
     const isLive = status === "confirmed" || status === "proposed" || status === "active";
     const part = role === "supports" && partitioned && !severed ? partOf(l) : null;
-    const others = part ? part.legs.filter((x) => x.ord !== l.ord).map(legName) : [];
+    const others = part ? part.legs.filter((x) => x.ord !== l.ord).map(legNameWords) : [];
     /* C37 (R2): each part of the row is its own element, set off from the one before it by a break, so none runs into the next */
     const line = part ? `<br><span class="mk-small" data-carries="${others.length ? "holds" : "falls"}">${others.length
       ? W("question.holds", { others: others.join(", ") }) : W("question.falls")}</span>` : "";
@@ -674,7 +664,7 @@ function render(cs, view) {
   if (partitioned) {
     /* R24: the read-back, the shared origins, who set it and every later change */
     const singles = parts.filter((p) => p.legs.length === 1), many = parts.filter((p) => p.legs.length > 1);
-    const ind = later("independence", "partitionindependence", shownName ? { id, version: shownName }
+    const ind = !readingSettled ? { state: "loading" } : later("independence", "partitionindependence", shownName ? { id, version: shownName }
       : { id, partition: JSON.stringify(citedLegs.reduce((acc, l) => { const p = partOf(l); const k = p ? p.label : "#" + l.ord; if (!acc.keys.includes(k)) { acc.keys.push(k); acc.list.push([]); } acc.list[acc.keys.indexOf(k)].push(l.ord); return acc; }, { keys: [], list: [] }).list) }, String(ui.legSeq || 0));
     const iv = ind.state === "ok" && ind.value && ind.value.independence ? ind.value.independence : null;
     const nameOfPart = (x) => {
@@ -697,8 +687,8 @@ function render(cs, view) {
     const now = pc && pc.strength_now ? pair(pc.strength_now) : d.strength && d.strength.state === "ok" ? strengthText(d.strength.value) : "";
     const strengthOf = (x) => (typeof x === "string" ? x : x && typeof x === "object" ? pair(x) : { html: cs.mark("gap", "undetermined", { reason: "" }) });
     restsBack = cs.sec("question.rests.title",
-      (singles.length ? `<p><b>${W("question.rests.any")}</b></p>` + singles.map((p) => `<p class="mk-small">· ${cs.esc(legName(p.legs[0]))}</p>`).join("") : "")
-      + many.map((p) => `<p class="mk-small">${W("question.rests.all", { passages: p.legs.map(legName).join(", ") })}</p>`).join("")
+      (singles.length ? `<p><b>${W("question.rests.any")}</b></p>` + singles.map((p) => `<p class="mk-small">· ${cs.esc(legNameWords(p.legs[0]))}</p>`).join("") : "")
+      + many.map((p) => `<p class="mk-small">${W("question.rests.all", { passages: p.legs.map(legNameWords).join(", ") })}</p>`).join("")
       + shared + (iv && iv.complete === false ? `<p class="mk-small" data-complete="false">${cs.mark("gap", "undetermined", { reason: "" })}</p>` : "")
       + (d.partition && d.partition.state === "failed" ? cs.state(d.partition, () => "") : "")
       + (set.asserted_by || set.at ? `<p class="mk-small">${W("question.rests.set", { who: whoIs(set.asserted_by || ""), date: { html: set.at ? cs.date(String(set.at), { year: true }) : "" } })}</p>` : "")
