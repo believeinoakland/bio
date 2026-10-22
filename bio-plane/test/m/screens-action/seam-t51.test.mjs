@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { main, text, ops, press, last, ok, W, D, button } from "./page.mjs";
-import { realWorld, realPlane, realProfiles, profilesOf, open, V } from "./real.mjs";
+import { realWorld, realPlane, realProfiles, profilesOf, open, until, V } from "./real.mjs";
 
 const OGIS = "Office of Government Information Services";
 const FED = "5 U.S.C. § 552";
@@ -25,6 +25,7 @@ async function walk(profiles) {
   assert.ok(at >= 0, "the federal law is among the profile's records laws");
   await press(p, "entitycreate", { values: { "req-noff-name": OGIS, "req-noff-where": "https://www.archives.gov/ogis", "req-noff-law": String(at),
     "req-noff-note": "It answers federal records requests for the archives." } });
+  await until(p, () => p.doc.getElementById("req-office"), "the office she named to be chosen");
   assert.equal(last(p, "entitycreate").body.label, OGIS);
   assert.equal(last(p, "entitycreate").body.law, FED);
   assert.deepEqual(p.doc.getElementById("req-office").querySelectorAll("option").map((o) => o.textContent.trim()), [OGIS], "chosen at once and drawn once");
@@ -34,6 +35,7 @@ async function walk(profiles) {
   await press(again, "entitycreate", { values: { "req-noff-name": ` ${OGIS.toLowerCase()} `, "req-noff-note": "x again" } });
   assert.equal(x.rows("SELECT COUNT(*) AS n FROM entities WHERE label = ?", OGIS)[0].n, 1, "one entry for the office");
   await press(p, "actioncreate", { values: { "req-what": "Records of how the Archives handled federal records requests in 2024", "req-office": "0" }, reason: "start" });
+  await until(p, () => /ACTN-/.test(p.location.pathname) && p.doc.getElementById("req-law"), "the started request's page");
   const ACTN = p.location.pathname.split("/").pop();
   assert.match(ACTN, /^ACTN-/);
   // the law: the profile's records laws, the Freedom of Information Act with its own level
@@ -44,15 +46,28 @@ async function walk(profiles) {
   // the text: a plain request prepares although the period, form and cost boxes are filled (the text names no blank for them)
   const boxes = { "req-from": "2024-01-01", "req-to": "2024-12-31", "req-form": "pdf", "req-cost": "$25" };
   await press(p, "communicationprepare", { values: { ...boxes, "send-text-0": "Please send me the records of how the Archives handled federal records requests in 2024." }, reason: "ready" });
+  await until(p, () => button(p, "filingapprove"), "the prepared text to be drawn for approval");
   assert.ok(!("fills" in last(p, "communicationprepare").body), "no fills for blanks the text does not have");
   assert.equal(x.rows("SELECT COUNT(*) AS n FROM communication_drafts WHERE action_id = ?", ACTN)[0].n, 1, "prepared and stored by the real filings");
   assert.ok(text(p).includes(W("screen.start-send.text.help")) && !text(p).includes(W("screen.request.text.help")), "no template is claimed");
   await press(p, "filingapprove", { reason: "ready", confirm: true });
   // the send step: nothing of "the city" for a federal request
+  await until(p, () => button(p, "filingrecordsent"), "the send step after the approval");
   assert.ok(button(p, "filingrecordsent"), "approved: the sending is recorded here");
   assert.ok(!text(p).includes(W("screen.request.howsend.3")), "not 'the city can't send you updates'");
   await press(p, "filingrecordsent", { values: { "send-at": "2026-09-27", "send-account": "through the Archives' online form", "send-reference": "NARA-2026-0042" }, reason: "sent" });
+  await until(p, () => text(p).includes(W("screen.start-send.sent", { date: D("2026-09-27") })), "the sending to be drawn as recorded");
   said(p, "screen.start-send.sent", { date: D("2026-09-27") });
+  // the due date: the machine proposes the first-request window the profile's law names and the member adopts it (action-clocks), then the
+  // action words it by the profile's label, never by the rule's code (the walker's "foia_appeal_response")
+  const prop = x.clocks.clockPropose({ target: ACTN, rule: "foia_response", proposer: "class:daemon", viewer: "class:daemon" });
+  assert.equal(prop.ok, true, JSON.stringify(prop).slice(0, 300));
+  const adopted = x.clocks.clockAdopt({ target: ACTN, proposal: prop.proposal.key, author: V("olive"), viewer: V("olive"), date: "2026-11-19" });
+  assert.equal(adopted.ok, true, JSON.stringify(adopted).slice(0, 300));
+  const dated = await open(`/app/action/${ACTN}`, plane);
+  assert.ok(text(dated).includes("answer to a first request"), "the profile's label for the first-request window");
+  assert.ok(!text(dated).includes("foia_response") && !text(dated).includes("foia_appeal_response"), "no rule's code");
+  assert.ok(text(dated).includes("5 U.S.C. § 552(a)(6)(A)(i)"), "the first-request clause, not the appeal's (A)(ii)");
   // the help for this request: the law's own first-request window, no state or city text
   const help = await open(`/app/help-records/${ACTN}`, plane);
   assert.ok(text(help).includes("5 U.S.C. § 552(a)(6)(A)(i)"), "the first-request clause");
@@ -64,6 +79,7 @@ async function walk(profiles) {
   assert.ok(door && door.textContent.includes(W("screen.start-send.template.heading")), "C65: the reference");
   const send = await open(`/app/start-send/${ACTN}`, plane);
   await press(send, "templatesave", { values: { "template-name": "A federal records request", "template-use": "file" }, reason: "keep" });
+  await until(send, () => x.rows("SELECT name FROM tpl_templates").length === 1, "the template to be kept");
   const saved = last(send, "templatesave").body;
   assert.deepEqual({ ...saved, reason: undefined }, { filing: saved.filing, name: "A federal records request", use: "file", project: x.proj, reason: undefined });
   const kept = x.rows("SELECT kind, use, name, project FROM tpl_templates");

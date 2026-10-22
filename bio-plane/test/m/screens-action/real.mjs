@@ -8,6 +8,7 @@ import { world, V } from "../filings/fixture.mjs";
 import { filingsOps } from "../../../src/filings/index.mjs";
 import { actionsOps } from "../../../src/actions/index.mjs";
 import { entitiesOps } from "../../../src/entities/index.mjs";
+import { actionClocksOf, actionClocksOps } from "../../../src/action-clocks/index.mjs";
 import { get as profileOf, combine } from "../../../../jurisdictions/index.mjs";
 import { OP_ALIASES } from "../../../src/op-declarations/index.mjs";
 import { boot as bootSetup } from "../instance-setup/fixture.mjs";
@@ -17,12 +18,16 @@ import { open, ok, DATA_PLANE } from "./page.mjs";
 export function realWorld(profile = "oakland-alameda") {
   const x = world({ profiles: [profile] });
   x.w.record.setSetting("jurisdiction_profiles", [profile], V("olive"));
+  /* action-clocks (the due date a member adopts and the reminders), the real one, on the same host */
+  x.clocks = actionClocksOf(x.w.host, { record: x.w.record, membership: x.w.membership, actions: x.actions, conformance: x.conformance,
+    now: () => Date.parse(x.w.clock.now) });
   return x;
 }
 
 /** The door's stamps and envelope around each owner's op: `member` is the session's member (the viewer and the author). */
 export function realPlane(x, member = V("olive"), base = DATA_PLANE) {
-  const owners = [(url, body) => filingsOps(x.f, url, body), (url, body) => actionsOps(x.actions, url, body), (url, body) => entitiesOps(x.ents, url, body)];
+  const owners = [(url, body) => filingsOps(x.f, url, body), (url, body) => actionsOps(x.actions, url, body), (url, body) => entitiesOps(x.ents, url, body),
+    (url, body) => actionClocksOps(x.clocks, url, body)];
   const plane = {};
   const names = new Set();
   for (const make of owners) for (const op of Object.keys(make(new URL("http://do/"), null))) names.add(op);
@@ -47,6 +52,17 @@ export function realPlane(x, member = V("olive"), base = DATA_PLANE) {
 }
 
 export { open, world, V };
+
+/** The real owners answer on their own time: wait, settling the page between looks, until `done()` holds (the page redraws when an answer
+ *  lands), never longer than about two seconds. */
+export async function until(p, done, what) {
+  for (let i = 0; i < 200; i++) {
+    if (done()) return;
+    await new Promise((r) => setTimeout(r, 10));
+    await p.settle();
+  }
+  throw new Error(`waited for ${what}`);
+}
 
 /** The REAL `profiles()` of `instance-setup`, booted as the plane boots it with the first profile chosen: the answer the screens read. */
 export async function realProfiles(id = "oakland-alameda") {
