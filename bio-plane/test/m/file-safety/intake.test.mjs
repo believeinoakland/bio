@@ -3,7 +3,7 @@
    module's services answer. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, pdf, sha, enc, T0, DAY } from "./fixture.mjs";
+import { filedWorld as world, pdf, sha, enc, T0, DAY } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
 import { RESCAN_INTERVAL_MS, DEEPER_CHECK_FRESH_MS, DEEPER_CHECKS_PER_MONTH, SCAN_BATCH_MAX, LOG_COUNT_KINDS, FILE_SAFETY_CHECKS,
   FILE_SAFETY_POLL_MS, REPUTATION_REFRESH_MS } from "../../../src/file-safety/index.mjs";

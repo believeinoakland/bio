@@ -3,7 +3,7 @@
    clock the test moves; an instant is epoch milliseconds, as the scheduler's own `due(now)` reads it. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, pdf, sha, T0, DAY } from "./fixture.mjs";
+import { filedWorld as world, pdf, sha, T0, DAY } from "./fixture.mjs";
 import { FileSafety, FILE_SAFETY_POLL_MS, REPUTATION_REFRESH_MS, RESCAN_INTERVAL_MS, FILE_WORK_BATCHES, WAITING_RECHECK_MS } from "../../../src/file-safety/index.mjs";
 
 const HOUR = 3_600_000;

@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
-import { world, pdf, sha, enc } from "./fixture.mjs";
+import { filedWorld as world, pdf, sha, enc } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
 import * as FS from "../../../src/file-safety/index.mjs";
 import * as CHECKS from "../../../src/file-safety/checks.mjs";

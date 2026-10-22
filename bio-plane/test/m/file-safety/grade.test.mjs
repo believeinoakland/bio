@@ -3,7 +3,7 @@
    Archives are captured and unpacked by acquisition's real act (`unpack`), so their members are captures of their own. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, pdf, sha, enc } from "./fixture.mjs";
+import { filedWorld as world, pdf, sha, enc } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
 import { FileSafety, THREAT_REASONS } from "../../../src/file-safety/index.mjs";
 

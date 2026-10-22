@@ -277,7 +277,7 @@ export class FileSafety {
      same answer, byte for byte, for a capture whose home the viewer may not see (membership R43), so no answer tells a
      hidden capture from one never held (DEC-36); else null. A viewer left out is an in-plane caller, which sees every
      capture. */
-  #held(captureSha, viewer) {
+  #held(captureSha, viewer, { serves = false } = {}) {
     const sha = shaOf(captureSha);
     /* DEC-49 REGION is-capture-held */
     if (!HEX64.test(sha)) return { sha, refused: refusal("FILE_NOT_HELD", "captureSha names a capture by its SHA-256, 64 hex.", { captureSha: captureSha ?? null }) };
@@ -288,9 +288,9 @@ export class FileSafety {
     if (viewer !== undefined) {
       const gate = viewerPredicate(viewer);
       if (gate.scope === "DENY") return absent();
-      /* R51 (D6, F3a): a member's sight is judged by the capture's home; a capture whose home is not found is refused, never
-         served as though it had no sight to check */
-      if (gate.scope !== "member" && (!home || !this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id = ? AND (${gate.sql})`, home, ...gate.args)))
+      /* R51 (D6, F3a): a member's sight is judged by the capture's home; a service that serves the file's bytes or a view or copy of
+         them (`serves`) refuses a capture whose home is not found, never serving it as though it had no sight to check */
+      if (gate.scope !== "member" && ((serves && !home) || (home && !this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id = ? AND (${gate.sql})`, home, ...gate.args))))
         return absent();
     }
     /* END DEC-49 REGION is-capture-held */
@@ -859,7 +859,7 @@ export class FileSafety {
   /** R8: the original's bytes, or the first refusal that applies. `warned` is never stored (R10). */
   async openOriginal({ captureSha = null, viewer = undefined, override = false, warned = undefined } = {}) {
     try {
-      const h = this.#held(captureSha, viewer);
+      const h = this.#held(captureSha, viewer, { serves: true });
       if (h.refused) return h.refused;
       const d = await this.#decide(h.sha, { override, warned, run: true });
       if (d.refuse) return FileSafety.#refusalFor(d);
@@ -870,7 +870,7 @@ export class FileSafety {
   /** R9: what R8 would answer now, without opening, scanning or serving anything. */
   async originalState({ captureSha = null, viewer = undefined } = {}) {
     try {
-      const h = this.#held(captureSha, viewer);
+      const h = this.#held(captureSha, viewer, { serves: true });
       if (h.refused) return h.refused;
       return { ok: true, captureSha: h.sha, ...(await this.#stateOf(h.sha)) };
     } catch { return { ok: true, captureSha: shaOf(captureSha) || null, may_open: false, path: null, why: "NOT_SCANNED" }; }
@@ -894,7 +894,7 @@ export class FileSafety {
    *  spreadsheet's cells as data or (R45) a plain-text file's own characters; a file under a scan hold still gets it (K1892). */
   async safeView({ captureSha = null, viewer = undefined } = {}) {
     try {
-      const h = this.#held(captureSha, viewer);
+      const h = this.#held(captureSha, viewer, { serves: true });
       if (h.refused) return h.refused;
       const sha = h.sha;
       const cache = new Map();
@@ -1735,7 +1735,7 @@ export class FileSafety {
   /** R33: a member who may see the file asks the first `on` CDR tool for a rebuilt file. Who asked is not kept (R10). */
   async requestSafeCopy({ captureSha = null, viewer = undefined } = {}) {
     try {
-      const h = this.#held(captureSha, viewer);
+      const h = this.#held(captureSha, viewer, { serves: true });
       if (h.refused) return h.refused;
       const tool = this.#onTools("cdr")[0];
       /* DEC-49 REGION is-copy-tool-on */
@@ -1752,7 +1752,7 @@ export class FileSafety {
    *  a deeper check and stays available under a scan hold: it is the derived document, never the original. */
   async safeCopy({ captureSha = null, viewer = undefined } = {}) {
     try {
-      const h = this.#held(captureSha, viewer);
+      const h = this.#held(captureSha, viewer, { serves: true });
       if (h.refused) return h.refused;
       const sha = h.sha;
       const row = this.#one(`SELECT * FROM fs_copies WHERE capture_sha = ?`, sha);

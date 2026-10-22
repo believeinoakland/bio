@@ -4,7 +4,7 @@
    and a register that names the parts alone (today), or the parts and the whole (provenance D1, once it lands). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, pdf, sha, enc } from "./fixture.mjs";
+import { filedWorld as world, pdf, sha, enc } from "./fixture.mjs";
 import { fileSafetyOps, GRADE_READ_MAX, WAITING_RECHECK_MS } from "../../../src/file-safety/index.mjs";
 
 const MIB = 1024 * 1024;
