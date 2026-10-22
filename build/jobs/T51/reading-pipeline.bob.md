@@ -1,6 +1,6 @@
 # BOB to reading-pipeline (T51)
 
-**Read** · handled J8
+**Read** · handled J10
 
 ## B1 · START
 
@@ -110,3 +110,17 @@ Mail with `--module reading-pipeline`; record `build/jobs/T51/reading-pipeline.m
 (2) **G13 provider (owner extraction): a large text is read whole, in pieces by cursor (Bob, K4571).** Walker A: "2,324 units ... 117,316 further units stated as `text_units_over_bound`/skipped, so the last line 'ENDMARKER' is NOT in the text". A plain text with no blank line makes each LINE a unit (index.mjs:1145-1149); `textUnitsFor` (:879-905) answers at most 512 KiB (:30,36). Fix: a resumable reading over text: given a cursor (offset) it returns the next piece (units within the bound, the new cursor, `more`), so extraction can store segments and the ledger continue; the grain is unchanged for a text that fits. Failing-first: the 12,000,060 B text read in pieces equals the whole read once: every line appears exactly once, the last piece has `more:false`, a cursor that no longer matches the bytes is refused. Platform L: a piece within the object's memory and CPU.
 
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio reading-pipeline tranche/T51 job/T51/reading-pipeline`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B10 · ANSWER · re J9
+
+ANSWER (BOB #253, K4577) to J9. Your contract is accepted as R39: a bare digest stub answers exactly `{refused: {code: "BARE_DIGEST", why}}`, no `reading` key; `refused` absent from every other answer except R40's. No transient-reading fallback. EXTRACTION #34 is told to never hand `read` a stub, treat `refused` as write-nothing, and change `r80.test.mjs:60` with it; that red is accepted by name on the tranche between your merge and extraction's.
+G13: EXTRACTION #34 codes against this cursor shape; build `read` to it, or tell me at once where yours differs: `read(document, {..., unitsBudget, cursor})`; no `cursor` is the first piece (today's read); the answer carries `more` (boolean), `cursor` (opaque string for the next call; a cursor whose held bytes no longer match is refused with a reason, not a reading), `read_through` and `total` (both in bytes of text), and each unit's `seq` and extent are global to the capture (a later piece continues the numbering). A piece is what `unitsBudget` allows.
+
+## B11 · CHANGE
+
+CHANGE (BOB #253, K4578): fix round 6 gains causes from the K4571 audit. Merge tranche/T51 into your branch, then read `build/plan/fix-round-6-T51.md` section "G14-G25" whole (it is short) and apply the causes named below as part of this job, with the four fields (R-FOUR), failing-first past the bound, stand-in words named in COMPLETE (the rows go to UX-DESIGN). Bob (K4571): never a silent partial read; a bound that must stay is stated to the member.
+Yours: **G14 (provider)**: the door path continues past the 512 KiB wire bound by the same cursor as G13, for every format; the adjacent HTML finding: an unclosed `<head>` (HTML allows it) never drops the body's text (state your reading of the spec in COMPLETE). **G15 (owner)**: a sheet is read in row-range units (header row repeated in each unit's text, the extent naming the rows), and a long line or paragraph in pieces, never cut at 128 Ki characters.
+
+## B12 · ANSWER · re J10
+
+ANSWER (BOB #253, K4579) to J10. Your build is accepted: blocks of whole lines with the header repeated; with `lineRows` the true row range, without it the used range, none cut; long lines and paragraphs in runs; a pdf-page or slide unit over the cap stays cut and flagged `truncated` (observation-log counts it partial in wave 2, and the screens draw it). csv-reader, office-readers (`formats-xlsx.mjs`) and odf-reader join wave 2 to emit `lineRows` exactly as you name it (one 1-based row number per line of `sheet.text`, same length; absent = unknown); read it when present. Your G13 cursor reading and `piece: {units, words, units_total}` are accepted.
