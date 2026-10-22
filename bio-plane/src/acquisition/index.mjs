@@ -994,6 +994,11 @@ async function acquireRun(cap, body0, opts, t) {
     else sessionSkip = { reason: "NO_SUCH_SESSION", detail: ld && ld.note };
   }
 
+  /* one code per condition (K231; fix round 5): a continuation naming a session that is gone (finished, closed, expired) with no address of its
+     own to capture instead is NO_SUCH_SESSION, never BAD_LOCATOR. */
+  if (sessionSkip && (typeof body.locator !== "string" || !body.locator))
+    return answer(404, { ok: false, reason: "NO_SUCH_SESSION", op, session: String(body.continue).slice(0, 80),
+      detail: localize("acquisition.index.no_such_session", "no capture session of that name is held: it was finished, closed or has expired; nothing was fetched") });
   let locator = session ? session.locator : body.locator;
   if (!(archiveAsked && !session) && (typeof locator !== "string" || !isPublicHttpsLocator(locator)))
     return answer(400, { ok: false, reason: "BAD_LOCATOR",

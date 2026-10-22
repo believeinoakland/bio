@@ -109,3 +109,13 @@ test("R104 (E8): a second \"Finish it\" on a session whose visitor copy is alrea
   assert.deepEqual([out.ok, out.done], [true, true]);
   assert.equal(delivered.length, 1);
 });
+
+test("R12 (fix round 5): a continuation naming a session that is gone answers NO_SUCH_SESSION, not BAD_LOCATOR; control: with an address of its own it is captured as an ordinary capture", async () => {
+  const w = world();
+  const gone = await run(w, {}, { continue: "cs_gone" });
+  assert.equal(gone.status, 404);
+  assert.equal(gone.body.reason, "NO_SUCH_SESSION");
+  const own = await run(w, { [PG]: () => page(SHELL) }, { continue: "cs_gone", locator: PG });
+  assert.equal(own.status, 200);
+  assert.equal(own.body.ok, true);
+});
