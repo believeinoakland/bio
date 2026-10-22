@@ -147,6 +147,13 @@ Rows S1-S14 of `audit-silent-partial-reads-K4571.md` (file:line there; each job 
 
 **Second wave (wave 2):** csv-reader, office-readers, odf-reader (G15 `lineRows`), observation-log (G15), screens-investigate (G20), screens-action (G20), following (G21), corpus-export (G22), doctypes (G23), calculations (G24), machinery-producers (G25), and retrieval only if G16's QUESTION names it; each STARTed as a first-wave job merges and is archived (at most 20 at once, K4215, K4219), lowest layer first; each merges in `modules.json` order before the round's deploy.
 
+### G26-G28 · Gaps found against K4426 before the redeploy (BOB #254, K4596)
+
+Bob asked (2026-10-22) whether the round follows K4426. Three items had no researched cause or fix, only a check after the deploy; each now has its research before the redeploy, and a job in this round when the cause is found (P10):
+- **G26 · Large-PDF object deaths (A E7 0111, 15.9 MB volume killed eight times; A E3 40 MB `keep` memory watch).** Diagnosis worker (sonnet medium) → `diagnosis-R6-memory.md`: root cause by file:line, measured at workerd's 128 MB, the owning module's fix and failing-first test. Owner: named by the diagnosis; its job starts at once.
+- **G27 · G4's cause.** The member-facing fix is merged (`reading_pending` with `diag`, never 502); the cause was not reproduced offline. Diagnosis worker → `diagnosis-R6-G4.md`: the platform behaviours Miniflare lacks (broken stubs, object resets, the background render outliving its request), Cloudflare's documentation quoted. If a cause is found, its fix is a job in this round; if not, K4428's logging stands and the deploy names it.
+- **G28 · Speed beyond 2 s (§2 G12 end).** PERFORMANCE measures in-app navigation and the two levers ((a) one combined read, (b) where the objects live) on the copy now, so the two questions go to Bob with numbers before the redeploy and whichever he chooses enters the plan (this round if it is a job, else the next with its reason named).
+
 ## 3. Jobs
 
 Every job: medium effort, claude-sonnet-5-5; its suites then `build/plan/impact.mjs tranche/T51 HEAD`; "declare every census op you own" (K4208); R-FOUR, R-SEAM, R-STOP, R-NOTMET, R-OLD, R-CLOCK. Providers merge before users; each seam owner last on its path (K1965). Order is `modules.json` order. At most 20 at once: all 20 start together.
