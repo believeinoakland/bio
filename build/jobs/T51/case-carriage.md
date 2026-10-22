@@ -66,3 +66,35 @@ COMPLETE. T51-225 (words, K3949 and K3957) is applied on `job/T51/case-carriage`
 - `checks/run.mjs`: 0 failures in format and architecture; the other failures are the other-module findings above.
 
 Size (session_013V7QhsFKttVRZGCkN2oybJ): test runs 4, module lines 1659
+
+## J4 · COMPLETE
+
+COMPLETE: B4 (G9 provider). case-carriage gains `copyNow`, the awaited, bounded `copyBatch` for named documents.
+
+**What changed** (`bio-plane/src/case-carriage/index.mjs`; commit on `job/T51/case-carriage`)
+- :101 `COPY_NOW_MAX_BYTES` (2 MiB, exported).
+- `copyNow({shas, maxBytes})` (:1301) and `#copyNow` (:1307). Of `shas` it takes those queued; each is made exactly as `copyBatch` makes it (same `#copyOne`, same recording, same `DOCUMENT_COPY_NO_STORE` refusal with no store or bucket). A document over `maxBytes` (capped at 2 MiB), by its register byte count or the store's `head` size, is answered `skipped`: not read, left queued for the alarm. It ignores the retry delay (the act asked), is serial with `copyBatch` (same chain), never rejects. Answer `{ok, copied, clean, public, refused, failed, skipped, remaining}`.
+- `#copyRows` (:1270): the per-document loop, moved out of `#copyBatch` unchanged and shared. `copyBatch`'s answer keeps its shape (no `skipped`).
+- `#copyOne` takes `maxBytes` (default unbounded, so `copyBatch` behaves as before).
+- `documentCopy` is unchanged and synchronous. `copyNow` is a service, not an op: no route, nothing to declare (K4208); `DECLARED_OPS` unchanged.
+
+**Live binding** (asked by the START): yes, the live worker binds both. `plane/store.mjs:163` hands record-core `env.CAPTURES` as its evidence bucket (so `evidenceStore()` is non-null), and `store.mjs:283` hands publication `bucket: env.CAPTURES`, which its factory forwards to this module (`publication/index.mjs:285`); `bio-plane/wrangler.jsonc:42` binds `CAPTURES`. So `copyWake` is null only if `CAPTURES` is missing. The re-walk checks it live.
+
+**Tests** (`bio-plane/test/m/case-carriage/documents.test.mjs`, both named R15)
+1. "copyNow: a queued 356-byte text document is made in the act...": queue a 356-byte text file and a 5 MB one; `documentCopy` answers `pending` (the prepare's own answer); `copyNow` answers the small one `clean` (`{clean: 1, skipped: 1, remaining: 1}`), the next `documentCopy` answers `clean` with no scheduler tick; the 5 MB one is never read (no `get` on it), stays queued and `copyBatch` (the alarm) makes it.
+2. "copyNow keeps copyBatch's rules": only named and queued documents; a copy is held as `copyBatch` holds it; a doc-clean refusal is recorded; `maxBytes: 1e12` is held to 2 MiB; a failed read leaves it queued; no store: `DOCUMENT_COPY_NO_STORE`, nothing written; bad arguments never reject.
+Red then green: before the change the file failed to load (`COPY_NOW_MAX_BYTES` and `copyNow` do not exist; SyntaxError on the import), after it both pass. The through-the-door walker case (the real `publish` op over case-carriage and case-disclosures) is case-authoring's seam test, G9 owner; it is written first and stays red by its name until this merges. Why missed: documents tests drive `copyBatch` by hand.
+
+**Measurements:** none needed (plan G9 (4) is N): the bound is 2 MiB, one awaited R2 read plus doc-clean on at most 2 MiB; P at the re-walk.
+
+**Suites** (`node --test --test-force-exit`): case-carriage 92 tests, 92 pass, 0 fail. Users: case-disclosures + case-check 143/143; scheduler + publication + case-authoring 514 pass, 0 fail, 1 todo (already there). `impact.mjs` names 980 test files because `DECLARED_OPS` is a shared table; I ran the modules that call this module's copy path, not all 980.
+
+**Checks** (`checks/run.mjs`): architecture 0 failures; coverage 6617 of 6617 ids; words 0 failures, no finding in my module (inline 0, plain 0, testcopy 0); channels 0 failures; ownership case-carriage `tranche/T51..job/T51/case-carriage`: 1 file changed... 0 failures. format: 1 failure, `build/plan/next.md:38` (N1265 names no P19 hard reason), BOB's file, not mine, not caused by this job.
+
+**Proposed requirement lines** (BOB writes `build/requirements/`), under R15 after copyBatch:
+- **copyNow.** `copyNow({shas, maxBytes})` (no route; `case-authoring`'s prepare) makes the queued documents among `shas` as `copyBatch` does, awaited, ignoring the retry delay, except a document whose register byte count or stored size is over `maxBytes` (default and bound `COPY_NOW_MAX_BYTES`, 2 MiB, exported), which it leaves queued unread for the alarm. It answers `{ok: true, copied, clean, public, refused, failed, skipped, remaining}` or `DOCUMENT_COPY_NO_STORE`; it is serial with `copyBatch`, never rejects, and `documentCopy` stays synchronous. Controls: a 356-byte text document is `clean` after it with no tick; a 5 MB document is skipped, never read, and the alarm makes it.
+- Header: "Last changed T51 (G9: R15)" and the R23 note unchanged.
+
+**Words:** no new sentence; no row owed.
+Deferred: none. Found in another module: none. No QUESTION open.
+Size (session_01TiUC4aAJHXVFiQ6sXRqvjg): test runs 9, module lines 1706
