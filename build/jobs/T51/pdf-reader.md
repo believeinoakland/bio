@@ -1,6 +1,6 @@
 # pdf-reader (T51)
 
-**Status** · session_014rsq68z5SGk7R183eVVx8C · depth 2 · COMPLETE · handled B7
+**Status** · session_01B7MEiXsVRUtMmYX6BygGKT · depth 2 · WAITING ON BOB (J7) · handled B9
 
 ## Completion (T51-7, R39)
 
@@ -197,3 +197,31 @@ Suites: pdf-reader 136 of 136; reading-pipeline 183 of 183; pdf-worker 70 of 70;
 For you: (1) stale bundles to regenerate at the layer close: pdf-worker, ocr-worker, agent-worker, bio-plane.bundled. (2) The case "the same file read by `reading-pipeline.read` under 110 MB" cannot be a test of this module (architecture: a module after it in the order); I ran it as the L probe (`workerd-index.probe.mjs`: 30 / 22 MB old space for the two files, APP 82 unchanged), and `smallobjects.mjs` can serve reading-pipeline's job. (3) acquisition `stage-times.test.mjs` R95 fails in a group run, passes alone with this code and the tip's: load-dependent. No question open, nothing deferred.
 
 Size (session_014rsq68z5SGk7R183eVVx8C): test runs 41, module lines 4440
+
+## Restart note (PDF-READER #11)
+
+Restarted on B8 (the round-5 START, text of #10's); the work was already complete (J5). I merged `tranche/T51` (no conflict), re-ran `node --test --test-force-exit bio-plane/test/m/pdf-reader/ bio-plane/test/pdfstructure.test.mjs`: 134 tests, 134 pass, 0 fail (J5 counted 136; the two fewer are not failures: none fail or skip), and `ownership.mjs`: 1 file changed, 0 failures. No code changed in this session.
+
+Size (session_01B7MEiXsVRUtMmYX6BygGKT): test runs 1, module lines 4440
+
+## J6 · COMPLETE
+
+COMPLETE · PDF-READER #11 · restarted on B8 (round 5 START); the work is J5's, unchanged: E2, E11, R42 density term. tranche/T51 merged; pdf-reader suite 134 of 134 (J5 counted 136; none fail or skip); ownership 0 failures. No code changed this session. Record: build/jobs/T51/pdf-reader.md, 'Restart note'. No question open.
+
+## J7 · QUESTION
+
+QUESTION · PDF-READER #11 · G26 seam. B9 puts `structureRange` in pdf-reader's `pdf` format entry in bio-plane/src/formats.mjs, but that file is format-registry's (modules.json: format-registry paths), and ownership.mjs fails my diff if I touch it (verified: 'formats.mjs: outside pdf-reader's paths'). Built and green on my side: `extractPdfRange(bytes, {from, count})` exported from pdfstructure.mjs with exactly the ruled answer shape. Best reading: the one registry line `structureRange: (bytes, range) => extractPdfRange(bytes, range),` after `structure:` (and the import) is format-registry's job (a small CHANGE to it), and reading-pipeline calls getFormat('pdf').structureRange. If you would rather I write that line, say so and add formats.mjs to my paths for this job. I carry on with the record and checks; I need the answer before COMPLETE.
+
+## Completion (fix round 6, G26: the page-range entry; PDF-READER #11)
+
+**What changed.** `bio-plane/src/pdfstructure.mjs`: new export `extractPdfRange(bytes, {from, count})` (before `destNameOf`). It opens the document once per call (R8's read), builds the text of pages `[from, from + count)` (0-based, `count` clamped to the pages left) with the same `extractPageText` the whole reading uses, and answers `{ok: true, container: "pdf", pages: <total>, from, count: <built>, text: {pages: [{page, text, undetermined}], undetermined, counts: {chars, undetermined}}}`. `from` at or past the pages answers `count: 0` and no pages; non-bytes and not-a-PDF answer as `extractPdfStructure` does; an encrypted document answers its one `encrypted` marker and no pages. No R42 refusal (the range is how the large file is read). The range's own pages also get R26's and R34's image markers as the whole reading gives them (checked: page 0 and page 1353 of BUDGET-2024-APP carry them in both); the one difference is that a page elsewhere that cannot be walked drops the markers in the whole reading and a range cannot know it. `structure(bytes)` unchanged.
+
+**The seam line (QUESTION J7).** `structureRange` on the `pdf` entry in `bio-plane/src/formats.mjs` is format-registry's file; `ownership.mjs` fails my diff if I write it (seen, then reverted). The line is `structureRange: (bytes, range) => extractPdfRange(bytes, range),` and its import; format-registry's job or BOB's paths ruling. My test is at the module's interface (`extractPdfRange`), since a pdf-reader test may not import format-registry (architecture).
+
+**Four fields.** (1) Root cause: diagnosis-R6-memory.md (a whole-document parse per tick and per piece); the provider half is that no entry could read part of a document. (2) Test gap: every pdf-reader memory test read the whole file; `range.test.mjs` reads the real 15.2 MiB volume in ranges in a child at `--max-old-space-size` = 128 less the file's MiB (113), no "idle +". (3) Failing-first: `range.test.mjs` (3 tests, R43) on the tranche code: red, `extractPdfRange` is not exported (SyntaxError); green with the change, 3 of 3. It asserts: a 100-page range equals the same pages of `extractPdfStructure`; the union of 14 ranges is the whole reading's 1,354 pages, each once (digest equal); on small files the ranges of 1, 2, 3, 7, 10 equal the whole, `counts.chars` is the joined length; `from` past the end answers `count: 0`; a clamped tail; not-a-PDF answers as the whole does. (4) **L**, raw workerd (`workerd-range.probe.mjs`, v8 `--max-old-space-size` bisected): BUDGET-2024-APP, 100 pages a call: 14 calls, slowest 1,251 ms, completes from **25 MB of old space, + 15.2 MB bytes = ~40 MB** (the whole read: ~98); 50 pages a call: 28 calls, slowest 960 ms, 25 MB (+ bytes ~40). Node child at heap 113: peak heap + array buffers above idle 45.5 MB, slowest call 1.99 s, all 14 calls. Each call re-opens the file (about 1 s of the call).
+
+**Proposed requirement (BOB writes).** R43: a PDF can be read by page ranges. `extractPdfRange(bytes, {from, count})` answers the text of the pages `[from, from + count)` (count clamped) in the shape of the whole reading's `text` for those pages, with the document's total `pages`; a `from` at or past the end answers `count: 0`; the union of ranges over the document is the whole reading's pages, each once; a range of 100 pages of a 15.2 MiB, 1,354-page volume completes in a V8 old space of 25 MB beside its bytes.
+
+**Tests and checks.** `node --test --test-force-exit bio-plane/test/m/pdf-reader/ bio-plane/test/pdfstructure.test.mjs`: 137 tests, 137 pass, 0 fail. `checks/run.mjs`: format, architecture, coverage (6,657 of 6,657), channels, words: 0 failures. `ownership.mjs pdf-reader origin/tranche/T51 job/T51/pdf-reader`: 5 files, 0 failures. Stale bundles (manifest §14): pdf-worker, ocr-worker, agent-worker, bio-plane.bundled (they embed `pdfstructure.mjs`).
+
+Size (session_01B7MEiXsVRUtMmYX6BygGKT): test runs 9, module lines 4,505
