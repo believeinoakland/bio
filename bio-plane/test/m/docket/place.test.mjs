@@ -72,6 +72,22 @@ test("R4 the entry: NO_SUCH_DOCKET_ENTRY, DOCKET_ENTRY_SETTLED, then R1's form c
   rowOk(prepare(w, { kind: "pamphlet" }), "DOCKET_KIND_UNKNOWN");
 });
 
+test("R4 K4557 a prepare that names no shelf (the screens' own call: case, entry, kind) is answered the kind's shelf; a named wrong one is still refused", () => {
+  const w = seeded();
+  const e = file(w).entry;
+  const r = file(w, { kind: "reaction", from: { kind: "other", name: "The Daily Example" } }).entry;
+  const bare = (x) => prepare(w, { shelf: undefined, ...x });
+  const listed = bare({ kind: "response", entry: e });
+  assert.equal(listed.ok, true, JSON.stringify(listed).slice(0, 200));
+  assert.deepEqual(listed, prepare(w, { kind: "response", entry: e, shelf: "listed" }), "the same answer as naming listed");
+  assert.equal(JSON.parse(listed.entry).shelf, "listed");
+  const reacted = bare({ kind: "reaction", entry: r, summary: "A column calling the case unfair." });
+  assert.equal(reacted.ok, true, JSON.stringify(reacted).slice(0, 200));
+  assert.equal(JSON.parse(reacted.entry).shelf, "reactions");
+  for (const shelf of ["reactions", "record"]) rowOk(prepare(w, { kind: "response", entry: e, shelf }), "DOCKET_WRONG_SHELF");
+  rowOk(prepare(w, { kind: "reaction", entry: r, shelf: "listed", summary: "x" }), "DOCKET_WRONG_SHELF");
+});
+
 test("R4 the shelf, a reaction's summary and its archive copy", () => {
   const w = seeded();
   const react = (x = {}) => file(w, { kind: "reaction", from: { kind: "other", name: "The Daily Example" }, ...x }).entry;
