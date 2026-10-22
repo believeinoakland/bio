@@ -123,3 +123,27 @@ Checks: format 175 modules 0 failures; architecture store-door 0 failures; cover
 Wording: no new sentence. Deferred: none. Found in another module: none new.
 
 Size (session_014oBokwMxB7BUQaUUJzFq9K): test runs 6, module lines 683
+
+## J9 · COMPLETE
+
+COMPLETE · fix round 6 · B8 (G12c provider, the fence for the batch keys). Commit on job/T51/store-door; tests and checks below.
+
+**What changed.**
+- `bio-plane/src/store-door/dispatch.mjs`: `PROJECT_NAMING_READS` gains `casedrafts` `projects` and `inquirystrength` `ids` beside their single keys (:57, :60). New `PROJECT_NAMING_LISTS` (`casedrafts: [projects]`, `inquirystrength: [ids]`) and `listedIds` name which parameters are lists. `existenceRead` (:~215) reads a list parameter from the body (array or string) and from the query (a JSON array, a comma list or the key repeated), splitting on anything that cannot be in an id, so no spelling a route accepts leaves an id unasked; it asks `visibilityOf` once per distinct id and `existenceAct` only for a discoverable one, exactly the single read's test. A single parameter is read as before (a comma in `id` is not a list).
+- `reviewcopy` stays among `PROJECT_NAMING_READS_NOT`: its `draft` and the batch `drafts` are DRAFT ids (a thing inside a project), not bundle ids, so the single read has no door fence and the batch has none; the reason now names `drafts`. R2's tests still classify each read in at most one table. If BOB wants `drafts` in the naming table anyway, it is one line, but the read would then sit in both classes' meaning.
+- Where the answer is concerned: a list holding an id the caller sees only at EXISTENCE is answered with the single read's answer for that id, byte for byte, before the route runs. With several such ids the lowest id answers, so the answer does not depend on the order the caller listed them. The door cannot give a per-id entry inside a batch answer, because the answer's shape is the owner's; the screens build their lists from projects the caller sees at FULL (Home's list is `projectlist`), so a mixed list is only a hand-made call. A hidden id falls through to the owner (the owner's own fence, as for the single read). Tell the owners' jobs this convention: the batch key is an array in the body or a JSON array or comma list in the query; their bounds (50, 20, 50) are theirs to refuse over (the door asks every distinct id it is given, one indexed lookup each, and never truncates).
+- Test: `bio-plane/test/m/store-door/dispatch.test.mjs`, "R2 (fix round 6, G12c; K4571): the batch reads ...".
+
+**Failing-first.** Seen red before the change (assertion `casedrafts array in the body PROJ-seen: the single read's answer, byte for byte`: the door routed the batch, `answered: casedrafts`), then green. It drives `dispatch` through five spellings of the list, six id mixes, hidden/seen controls, order independence, the lookup count (3 `visibilityOf` for 5 ids with repeats, `existenceAct` for the discoverable one only), no viewer (membership not consulted), malformed lists (no throw), and `reviewcopy`.
+
+**Why missed.** No batch read existed, and R2's sweep drives only a single value per parameter.
+
+**Platform check:** none needed (one in-object lookup per id; no clock, no I/O).
+
+**Requirement line for BOB (R2 amended, or an R19):** "(fix round 6, G12c; K4571) A read whose parameter is a list of bundle ids (`casedrafts` `projects`, `inquirystrength` `ids`) is fenced id by id exactly as the single read: each distinct id is asked of `visibilityOf`, and `existenceAct` for a discoverable one, before the route runs; a project the viewer sees only at EXISTENCE answers the single read's answer, the lowest such id when several; a hidden or fully seen id falls through to the route with the list as sent. A list is an array (body) or a JSON array, comma list or repeated key (query). `reviewcopy`'s `drafts` are draft ids and stay among the reads naming no project." Also in Provides R2 text: "the declared PROJECT_NAMING_READS" now includes the two list keys.
+
+**Tests.** `node --test --test-force-exit bio-plane/test/m/store-door/*.test.mjs`: 56 tests, 56 pass, 0 fail. Users named by `impact.mjs origin/tranche/T51 HEAD` (control-plane 16, plane 46): 402 tests, 401 pass, 1 fail: plane `release.test.mjs` "R24 (DEC-149 ...)" `screen.objective.purpose is held by the words list`, which fails identically with the tranche's `dispatch.mjs` swapped back in (stale generated `rows.mjs`, BOB regenerates at the round end; plan section 4), not mine.
+**Checks** (`node checks/run.mjs /home/user/bio`): format 1 failure, `build/plan/next.md:38` N1265 (BOB's file, not mine); architecture 0; coverage 6617 of 6617 live ids named; words 0 failures, unkeyed 1982 (my change adds no sentence); channels 0. ownership store-door tranche/T51 job/T51/store-door: 3 files, 0 failures.
+**Deferred:** none. **Found in another module:** none (the format failure above is in `build/plan/next.md`).
+
+Size (session_01Y1tK2bChnRiKo7qQwUbbEF): test runs 7, module lines 705
