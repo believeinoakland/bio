@@ -49,3 +49,7 @@ COMPLETE · cause-whole-rows-2 (job 17): retrieval-browse R19 and machinery-prod
 **Found in other modules.** The `public-read` R43 coverage failure above.
 
 Size (session_017xrsneguU1xum1pmphBbk5): test runs 11, module lines 36 (31 added and 5 removed across 2 source files; 92 lines of new tests in 1 file); cumulative with J1: test runs 25, module lines 81.
+
+## J4 · COMPLETE
+
+COMPLETE (CHANGE B2) · retrieval R94 met on job/T51/cause-whole-rows-2 (pushed, no PR). frontier.mjs #wholes: content and meaning missing-capture supplies skip provenance's part_of rows (partsHeldIn in index.mjs), reading on so parts never spend the bound. Red then green with the three-part fixture (3 of 4 new tests failed before: 4 listed vs 1; parts stuck after the whole's rows; limit 1 never reaches the control). retrieval 183/183, retrieval-browse+queue-producers 207/207, screens-daily frontier readers 52/52. format, architecture, coverage (retrieval 83/83), ownership 0 failures; words 18421 unchanged. NOTE: run.mjs coverage shows public-read R43 named by no test (from the tranche merge, not my module). Record J3 has the R94 line and Size.
