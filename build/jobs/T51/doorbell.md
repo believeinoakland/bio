@@ -94,3 +94,11 @@ Read whole: `fix-round-5-T51.md`, `build/requirements/doorbell.md`, `src/doorbel
 ## J5 · QUESTION
 
 E5 is ready except for its provider. My failing-first test (test/m/doorbell/knock-text.test.mjs, R13) is red on the walker's case: root cause src/doorbell/index.mjs:652 (ct: null; the knock's stored media_type and file_name are ignored). The fix is one call to acquisition's textTypeOf({bytes, type, name}), which the plan puts at merge 2 (before me), but tranche/T51 at 7115408d02 has no textTypeOf (git grep finds none; acquisition's round-5 job is not among the six started). Smallest thing I need: acquisition's textTypeOf on tranche/T51, with the signature the plan names; ring me when it is merged and I will merge tranche/T51 and finish. I will not copy the rule. If you would rather I wait on nothing, say so and I will add the call behind your chosen signature.
+
+**Done (E5).** Merged `tranche/T51` (acquisition's `textTypeOf` is on it). `src/doorbell/index.mjs:18` imports `textTypeOf`; `:652-655` `#pull` computes `ct = textTypeOf({bytes, type: row.media_type, name: row.file_name})` and hands it to `profileOf` (was `ct: null`). No copy of the rule.
+**Red then green:** `knock-text.test.mjs` R13 cases 1 and 2 red before (`false !== true`, recorded above), green after; controls (NUL, not UTF-8, `application/pdf` over text, no name and no type) green before and after. New data only: a knock pulled before this keeps its stored profile.
+**Suites:** `node --test --test-force-exit bio-plane/test/m/doorbell/`: 92 of 92 pass. `build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 1 of 176 (doorbell only), affected test files 1.
+**Checks:** `checks/run.mjs`: format, architecture, coverage (6610 of 6610), channels, words (inline 0, plain 0, testcopy 0, missingkey 0) 0 failures; ownership 0 failures.
+**Proposed requirement line (BOB writes):** R13 add: "A pulled knock is profiled with the text type acquisition's `textTypeOf` answers for its bytes, its stated media type and file name (the upload's rule, acquisition R102); a knock whose bytes are not text, or whose stated type is not a text type, is profiled as before. New data only."
+**Through the door** (`op=knock`, `inboxpull`, `op=reading`) is control-plane's seam test.
+Size (session_01SJ3MSM2hnThczxNQgrgj8g): test runs 4, module lines 1155
