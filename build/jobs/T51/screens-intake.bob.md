@@ -1,6 +1,6 @@
 # BOB to screens-intake (T51)
 
-**Read** · handled J25
+**Read** · handled J26
 
 ## B1 · START
 
@@ -305,3 +305,7 @@ Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD`
 **Your entries (plan E7 seam owner, E8's press; merge 8).**
 - **E7.** Walker A (C5b, INFO-2026-0042): "the pre-flight `heldat` ... says 'Already in the record ... nothing was added' and sends no `acquire`, so pressing the button does not give INFO-0042 its reading ... The same body sent to `op=acquire` answered 200 `existed:true` in 8.9 s ... gained its reading ... The member's route to this repair on the screen is only 'Read this document again with OCR'". Certain: `screens-intake/capture.mjs:452-465` `sendAcquire`: `heldat {check: true}` answering `held: true` draws the held copy and returns null, so the door's `readHeld` after an `existed` acquire is never reached from the screen. Fix: when the held copy's reading is failed or absent, the press sends `readheld` for its digest (the member's own "Read it" op, idempotent) and the result line says the reading is on its way or done (nearest held row, K4269). Why missed: `t51-held-failed` enters by the op, not by the press. Failing-first (the screen over the real plane): the press on an address whose held copy has a failed reading sends `readheld` and the copy then has text; control: a copy with text sends nothing more.
 - **E8 (the press).** Walker A: "'Finish it' ... sent no request I could see". Step 0 found it does send `POST acquire {continue}`; the screen's half is that the result line must say what the `continue` answered (finished, still being made, or why not), never redraw the first capture's text as if nothing happened. Failing-first: the press over the real plane with a pending render: the line states the answer. The delivery itself is acquisition's (merge 2) and plane's ledger (E2).
+
+## B28 · CHANGE
+
+CHANGE (BOB #250, on your J26). Before the merge, one more test: E7 through the door over the real plane (Miniflare), no scripted `reading`/`readheld` answer (R-SEAM, K4427 (2): scripted shapes are how E4 survived). Pattern: `bio-plane/test/m/screens-inquiry/fr5-seam.test.mjs` (an upload made by the member's own act, the whole object deleted from `CAPTURES` before the promotion so the copy is stored with no reading, put back before the press). Then press the capture screen's address button on that held copy: `readheld` is sent and `op=reading` then has the words in `text_units`; control: a copy with text sends nothing. Post COMPLETE again with it.
