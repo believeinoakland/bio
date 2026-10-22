@@ -11,6 +11,11 @@ export function homeReadings(cs, view, d) {
   const failed = d.failed;
   const rd = d.rd;
 
+  // The drawn form of a refusal or a failed read (one place, so a batch entry and a single read are drawn alike).
+  const failure = function (f) {
+    const code = String(f.code || f.reason || "");
+    return { state: "failed", refusal: { code: code, words: cs.esc(f.translation || code), fields: f } };
+  };
   // A read made as the screen draws: once per key and query, kept in page memory, drawn on arrival.
   const later = function (key, op, query) {
     const L = ui.later || (ui.later = {});
@@ -20,11 +25,8 @@ export function homeReadings(cs, view, d) {
       const settle = function (o) { L[key] = Object.assign({ q: q }, o); cs.set("later", L); };
       cs.call(op, { query: query }).then(function (a) {
         const r = a && a.result !== undefined ? a.result : a;
-        if (!a || a.ok === false || (r && r.ok === false)) {
-          const f = r && r.ok === false ? r : a || {};
-          const code = String(f.code || f.reason || "");
-          settle({ state: "failed", refusal: { code: code, words: cs.esc(f.translation || code), fields: f } });
-        } else settle({ state: "ok", value: r });
+        if (!a || a.ok === false || (r && r.ok === false)) settle(failure(r && r.ok === false ? r : a || {}));
+        else settle({ state: "ok", value: r });
       }, function () { settle({ state: "failed", refusal: null }); });
     }
     return L[key];
@@ -52,19 +54,22 @@ export function homeReadings(cs, view, d) {
   if (published) out.investigation.rds.push(rd(caseIds.length, "screen.home.rd.case", "screen.home.rd.cases"));
   else if (failed(data.published)) out.investigation.fails.push(data.published);
 
-  // The editions (`publishedlist`, `publishedcase`) and the drafts shared for review (`casedrafts` per project, `reviewcopy` per
+  // The editions (`publishedlist`, `publishedcase`) and the drafts shared for review (`casedrafts` once for all, `reviewcopy` per
   // draft): the latest edition's line, and a line for each case with a draft shared until a date, with the recipients' comments to
   // answer (review R14: a grant is live while unrevoked and unlapsed, its `until` its end).
   if (published) {
     const byCase = {};
     // C14 (P2.2; project-roster R42): the roster row says whether a draft is shared for review (`shared_drafts.count`), so only the projects
     // that hold one are asked for their drafts; a row answering `null` (not known, or seen only at existence) is not read one by one.
-    (d.projects || []).forEach(function (p) {
-      if (!p || !p.id || !p.shared_drafts || !(Number(p.shared_drafts.count) > 0)) return;
-      const dr = later("drafts:" + p.id, "casedrafts", { project: String(p.id) });
-      if (dr.state === "failed") { out.investigation.fails.push(dr); return; }
-      if (dr.state !== "ok") return;
-      list(dr.value, "drafts").forEach(function (x) {
+    // G12c (fix round 6): those projects are asked in ONE `casedrafts` read (`projects`, review R19), each project's answer read from its own
+    // entry: a project the viewer may not see answers as the single read answers it, so it is drawn failed as before, never as none.
+    const shared = (d.projects || []).filter(function (p) { return p && p.id && p.shared_drafts && Number(p.shared_drafts.count) > 0; });
+    const batch = shared.length ? later("drafts", "casedrafts", { projects: shared.map(function (p) { return String(p.id); }).join(",") }) : null;
+    if (batch && batch.state === "failed") out.investigation.fails.push(batch);
+    if (batch && batch.state === "ok") shared.forEach(function (p) {
+      const entry = batch.value && batch.value.projects && batch.value.projects[String(p.id)];
+      if (!entry || entry.ok === false) { out.investigation.fails.push(failure(entry || {})); return; }
+      list(entry, "drafts").forEach(function (x) {
         if (!x || !x.draft_id || !x.case || !x.case.case_id) return;
         const cp = later("copy:" + x.draft_id, "reviewcopy", { draft: String(x.draft_id) });
         if (cp.state === "failed") { out.investigation.fails.push(cp); return; }

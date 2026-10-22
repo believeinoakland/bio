@@ -12,6 +12,8 @@ const MONTHS = ["january", "february", "march", "april", "may", "june", "july", 
 export const dmy = (iso) => word("date.daymonthyear", { day: String(Number(iso.slice(8, 10))), month: word("date.month." + MONTHS[Number(iso.slice(5, 7)) - 1]), year: iso.slice(0, 4) });
 /** True when each of `parts` is found in `hay`, one after the other (a screen's words read in their order). */
 export const inOrder = (hay, parts) => { let at = 0; for (const x of parts) { const i = hay.indexOf(x, at); if (i < 0) return false; at = i + x.length; } return true; };
+/** `casedrafts` for many projects in one read (review R19): `single(id)` is the answer the single read gives for that project; the batch holds each under its id. */
+export const batched = (single) => (req) => ok({ ok: true, kind: "review-drafts-batch", projects: Object.fromEntries(String(req.query.projects || "").split(",").filter(Boolean).map((id) => [id, single(id)])) });
 /** The seven screens and a bare stand-in for each other screen named, so a reference to it is a link (the screen's page is another module's). */
 export const withScreens = (...ids) => [...SCREENS, ...ids.map((id) => ({ id, reads: () => ({}), acts: [], render: () => "", words: [] }))];
 export const screen = (id) => SCREENS.find((s) => s.id === id);

@@ -3,7 +3,7 @@
    sentence is asserted as `word(key, vars)` (R34): no test here holds a sentence's English. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, ok, refused, text, ops, button, press, beside, last, main, screen, settle, MEMBER, word, hasWord, dmy, inOrder, withScreens } from "./page.mjs";
+import { open, ok, refused, batched, text, ops, button, press, beside, last, main, screen, settle, MEMBER, word, hasWord, dmy, inOrder, withScreens } from "./page.mjs";
 import { ADMIN } from "../interface-shell/harness.mjs";
 
 // A busy group's home, as the plane answers each read Home draws (R17).
@@ -457,8 +457,8 @@ const R64 = {
   publishedcase: (req) => ok({ ok: true, caseId: req.query.caseId, edition: Number(req.query.edition), scope: req.query.caseId === "CASE-1" ? "The Coliseum lease" : "Pothole repairs" }),
   peopledirectory: ok({ ok: true, following: 10, in_your_projects: 2, rows: [], limit: 1 }),
   clocksrunning: ok({ ok: true, total: 3, by_owed: { group: { count: 1, next: "2026-10-23" }, body: { count: 2, next: "2026-10-14" }, undetermined: { count: 0, next: null } }, truncated: false }),
-  casedrafts: (req) => ok({ ok: true, project: req.query.project, count: 1, drafts: req.query.project === "PROJ-1"
-    ? [{ draft_id: "DRAFT-1", case: { case_id: "CASE-1", edition: 3, identity: "x" } }, { draft_id: "DRAFT-2", case: { case_id: "CASE-2", edition: 2, identity: "x" } }, { draft_id: "DRAFT-3", case: { case_id: null, edition: null, identity: "x" } }] : [] }),
+  casedrafts: batched((id) => ({ ok: true, project: id, count: 1, drafts: id === "PROJ-1"
+    ? [{ draft_id: "DRAFT-1", case: { case_id: "CASE-1", edition: 3, identity: "x" } }, { draft_id: "DRAFT-2", case: { case_id: "CASE-2", edition: 2, identity: "x" } }, { draft_id: "DRAFT-3", case: { case_id: null, edition: null, identity: "x" } }] : [] })),
   reviewcopy: (req) => ok({ ok: true, comments: req.query.draft === "DRAFT-2" ? [{ author_kind: "recipient", text: "x" }] : [],
     grants: [{ grant_id: "G-1", live: true, until: "2026-10-20T00:00:00Z" }, { grant_id: "G-0", live: false, until: "2026-10-30T00:00:00Z" }] }),
   securitymap: ok({ ok: true, level: "Raised", levelAt: null, buckets: [], totals: {} }),
@@ -499,19 +499,19 @@ test("R64: edition lines: a case with a draft shared until a date says so, with 
   const inv = text(p, main(p).querySelector('[data-area="investigation"]'));
   assert.ok(inv.includes(word("screen.home.area.edition", { n: "2", case: "The Coliseum lease", date: dmy("2026-09-18"), until: dmy("2026-10-20") })), "no comment: the sentence that says none is to answer");
   assert.ok(inv.includes(word("screen.home.area.edition.comments.one", { n: "1", case: "Pothole repairs", date: dmy("2026-10-02"), until: dmy("2026-10-20") })), "one recipient commented");
-  assert.deepEqual(p.byOp("casedrafts").map((r) => r.query.project).sort(), ["PROJ-1"], "only the project whose row says a draft is shared (project-roster R42)");
+  assert.deepEqual(p.byOp("casedrafts").map((r) => r.query.projects), ["PROJ-1"], "one read, for the project whose row says a draft is shared (project-roster R42)");
   assert.deepEqual(p.byOp("reviewcopy").map((r) => r.query.draft).sort(), ["DRAFT-1", "DRAFT-2"], "a draft of no case reads no grant");
   assert.equal(p.byOp("publishedcase").filter((r) => r.query.caseId === "CASE-1")[0].query.edition, "2", "the latest edition");
-  const bare = await open("/app", { ...R64_ADMIN, casedrafts: ok({ ok: true, drafts: [] }) });
+  const bare = await open("/app", { ...R64_ADMIN, casedrafts: batched(() => ({ ok: true, drafts: [] })) });
   await settle();
   assert.ok(text(bare, main(bare).querySelector('[data-area="investigation"]')).includes(word("screen.home.area.edition.published", { n: "1", case: "Pothole repairs", date: dmy("2026-10-02") })), "the latest edition, no draft");
   const only = await open("/app", { ...R64_ADMIN, publishedlist: ok({ bundles: [], cases: [] }),
-    casedrafts: (req) => ok({ ok: true, drafts: req.query.project === "PROJ-1" ? [{ draft_id: "DRAFT-1", case: { case_id: "CASE-9", edition: 1 } }] : [] }),
+    casedrafts: batched((id) => ({ ok: true, drafts: id === "PROJ-1" ? [{ draft_id: "DRAFT-1", case: { case_id: "CASE-9", edition: 1 } }] : [] })),
     reviewcopy: ok({ ok: true, comments: [], grants: [{ live: true, until: "2026-10-20T00:00:00Z" }] }) });
   await settle();
   assert.ok(text(only, main(only).querySelector('[data-area="investigation"]')).includes(word("screen.home.area.edition.draftonly", { case: "CASE-9", until: dmy("2026-10-20") })), "a draft on a case with no edition yet");
   const one = await open("/app", { ...R64_ADMIN, publishedlist: ok({ bundles: [], cases: [] }),
-    casedrafts: (req) => ok({ ok: true, drafts: req.query.project === "PROJ-1" ? [{ draft_id: "DRAFT-1", case: { case_id: "CASE-9", edition: 1 } }] : [] }),
+    casedrafts: batched((id) => ({ ok: true, drafts: id === "PROJ-1" ? [{ draft_id: "DRAFT-1", case: { case_id: "CASE-9", edition: 1 } }] : [] })),
     reviewcopy: ok({ ok: true, comments: [{ author_kind: "recipient", text: "x" }], grants: [{ live: true, until: "2026-10-20T00:00:00Z" }] }) });
   await settle();
   assert.ok(text(one, main(one).querySelector('[data-area="investigation"]')).includes(word("screen.home.area.edition.draftonly.comments.one", { case: "CASE-9", until: dmy("2026-10-20") })), "one comment on a draft with no edition yet");
