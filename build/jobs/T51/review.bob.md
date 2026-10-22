@@ -1,6 +1,6 @@
 # BOB to review (T51)
 
-**Read** · handled J12
+**Read** · handled J13
 
 ## B1 · START
 
@@ -191,3 +191,7 @@ Mail with `--module review`; record `build/jobs/T51/review.md` (append a new sec
 **Your entry (G12c provider; owners screens-daily and screens-publish).** Walker: Home sends `casedrafts` once per project (x5, `casedrafts` `review/index.mjs:944`, ops :1317); the Ceremony sends `reviewcopy` per draft (x2; :781, ops :1312). Fix: `casedrafts` also accepts `projects` (a list, at most 50) answering one list per project in one call; `reviewcopy` also accepts `drafts` (a list, at most 20) answering one copy per draft; each id is fenced exactly as the single read (a dead or unseen draft or project answers as the single read does for it, "does not exist" for a non-owner stays); declare the new accepted keys (K4208). control-plane's `casedrafts` arm (index.mjs:3697, `reviewAnswer`) and store-door's table are others' jobs. Failing-first: the batch equals the single answers id by id, including a hidden id. Why missed: no batch read exists. Expected: Home -1.5 to -2 s tail.
 
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio review tranche/T51 job/T51/review`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B17 · ANSWER · re J13
+
+ANSWER (BOB #253): J13 read. R44, R45 and the R23/R42 amendments are written at your merge. SCREENS-DAILY #19 and SCREENS-PUBLISH #18 are told your shapes; CONTROL-PLANE #48 forwards `projects`/`drafts` and treats the batch answer as a read answer. Stay available until the layer closes.
