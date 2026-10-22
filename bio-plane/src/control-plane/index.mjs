@@ -2567,13 +2567,22 @@ export function makeFetch(hooks = {}) {
        reading once the evidence store holds its bytes whole, and answers `{ok, read, why?}` (`why`: `NO_HOME`, `READING_HELD`,
        `NO_WHOLE_OBJECT`; never shown to a member, K4365). A refusal or a silence of the route is `null`: it never turns a kept
        capture into a failed one, and the answer it follows is relayed as it was. */
-    async function readHeld(sha, defer = false) {
+    async function readHeld(sha) {
       if (typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha)) return null;
       try {
-        /* R125 (fix round 6, G5): `defer` asks only whether a reading is held, after the owner's own gates; nothing is read */
-        const asked = await doAnswer(stub.fetch(new Request(`http://do/readheldfor?sha=${sha}&store=${encodeURIComponent(storeName)}${defer ? "&defer=1" : ""}`)));
+        const asked = await doAnswer(stub.fetch(new Request(`http://do/readheldfor?sha=${sha}&store=${encodeURIComponent(storeName)}`)));
         return asked.answered && asked.result && typeof asked.result === "object" && asked.result.ok === true ? asked.result : null;
       } catch { return null; }
+    }
+    /* R125 (fix round 6, G5): whether the record already holds a made reading for the digest, as the member may see it, asked of the store's plain `reading`
+       read (nothing is read, and the owner's `readHeld` is not asked); a statement or a failed reading is not a made one, so it stays owed. */
+    async function readingHeld(sha) {
+      if (!viaSession || typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha)) return false;
+      try {
+        const a = await doAnswer(stub.fetch(new Request(`http://do/reading?sha256=${sha}&viewer=${encodeURIComponent(sessViewer)}`)));
+        const r = a.answered ? a.result : null;
+        return !!(r && r.found === true && r.reading && !r.reading.failure);
+      } catch { return false; }
     }
     /* R120: a reading deferred (`reading_pending: true`) is registered with the plane's alarm, the store-internal `pendingadd`, which finishes it by
        `readHeld` within a minute (plane R75); a refusal or a silence of the registration changes nothing the caller receives (the screen's
@@ -2659,8 +2668,7 @@ export function makeFetch(hooks = {}) {
         /* R117 (fix round 5, E2): bytes held whose reading will not fit are owed, not read inside the request; (fix round 6, G5) unless the
            record already holds their reading, which is neither read again nor promised again */
         if (readingWontFit(hasDocument ? r.document : { capture: r.capture })) {
-          const held = await readHeld(shaOf(r), true);
-          return held && held.read === false && held.why === "READING_HELD" ? got : owed();
+          return await readingHeld(shaOf(r)) ? got : owed();
         }
         const held = await readHeld(shaOf(r));
         if (held && held.read === false && held.why === "NO_WHOLE_OBJECT") return owed();
@@ -2686,8 +2694,7 @@ export function makeFetch(hooks = {}) {
         const sha = shaOf(b);
         if (typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha)) return res;
         /* (fix round 6, G5) a reading the record already holds is neither promised again nor written down */
-        const held = await readHeld(sha, true);
-        if (held && held.read === false && held.why === "READING_HELD") return res;
+        if (await readingHeld(sha)) return res;
         /* the entry itself is written down by `pendReading`, which reads `reading_pending` off this answer */
         const headers = new Headers(res.headers);
         headers.delete("content-length");

@@ -86,18 +86,18 @@ test("R123, R125 (G5, `existed` with no home): bytes held whose upload was never
 
 test("R123, R125 (G5, a promoted upload): the same 12 MB text uploaded again once its reading is held answers `existed` with no read and no promise: nothing is owed and `reading_pending` is not said", async () => {
   const landed = { ok: true, existed: true, capture: { sha256: SHA, bytes: 12000060 }, receipt: { address: `upload:${SHA}` } };
-  const w = world({ answer: storeFor(landed, { held: () => ({ ok: true, read: false, why: "READING_HELD" }) }) });
+  const made = { found: true, reading: { found: true, entities: 0 }, text_units: [{ text: "x" }] };
+  const w = world({ answer: (c) => (c.route === "reading" ? ok(made) : storeFor(landed)(c)) });
   const r = await upload(w);
   assert.equal(r.status, 200, r.text);
   assert.deepEqual(r.json.result, landed, "relayed as it was");
   assert.equal(asked(w.env, "extractread").length, 0);
   assert.equal(asked(w.env, "pendingadd").length, 0);
-  const [q] = asked(w.env, "readheldfor");
-  assert.equal(q.params.defer, "1", "the question is asked of the owner without reading");
-  /* control: a held small file asks without the deferral, as before */
-  const small = world({ answer: storeFor({ ...landed, capture: { sha256: SHA, bytes: 9 } }, { held: () => ({ ok: true, read: false, why: "READING_HELD" }) }) });
-  await upload(small);
-  assert.equal(asked(small.env, "readheldfor")[0].params.defer, undefined);
+  assert.equal(asked(w.env, "readheldfor").length, 0, "the owner is not asked to read");
+  assert.ok(asked(w.env, "reading")[0].params.viewer, "the plain read, as the member may see");
+  /* control: a held statement is not a made reading, so it stays owed */
+  const stated = world({ answer: (c) => (c.route === "reading" ? ok({ found: true, reading: { found: false, failure: "transient" } }) : storeFor(landed)(c)) });
+  assert.equal((await upload(stated)).json.result.reading_pending, true);
 });
 
 /* ---- G7 ---- */

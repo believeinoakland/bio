@@ -181,7 +181,7 @@ test("R125 E2: \"Read it\" on a 16 MB PDF whole is asked of the owner with `defe
   assert.equal(r.json.result.reading_pending, true);
   assert.deepEqual(asked(w.env, "readheld").map((c) => c.params.defer), ["1"]);
   assert.deepEqual(asked(w.env, "pendingadd").map((c) => [c.params.kind, c.params.sha]), [["reading", SHA]]);
-  for (const [label, setup] of [["a 1 MB PDF", (x) => withBucket(x, 1 * MB)], ["a 16 MB text", (x) => withBucket(x, 16 * MB, "hello")], ["no whole", (x) => { x.env.CAPTURES = { head: async () => null }; }],
+  for (const [label, setup] of [["a 1 MB PDF", (x) => withBucket(x, 1 * MB)], ["a 3 MiB text", (x) => withBucket(x, 3 * MB, "hello")], ["no whole", (x) => { x.env.CAPTURES = { head: async () => null }; }],
                                 ["a 41 MB whole (a statement)", (x) => withBucket(x, 41 * MB)]]) {
     const c = world({ answer: (q) => (q.route === "readheld" ? ok({ ok: true, read: true }) : null) });
     setup(c);
