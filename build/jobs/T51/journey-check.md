@@ -201,3 +201,13 @@ Also found while diagnosing, fixed and tested (route-encoding.test.mjs, red then
 **Found in other modules.** None open. (`act.scanmirror.does` said "the group's file scanner"; the tranche's later wording cleared it.)
 
 Size (session_013CXae57CSmbZXAkv1DtdMS): test runs 30, module lines 3450
+
+## J10 · COMPLETE
+
+COMPLETE (B11 to B14; K4435, K4473, K4486). Pushed on `job/T51/journey-check` (merged with `tranche/T51` as of B14's answer).
+
+Cause 1, the local arm's moved fixture: the fake account models container applications, Durable Object classes and schedules; the installer's whole install runs over it in process, test first, and every call must be answered (`account-installer.test.mjs`). Cause 2, R30: the 600 cap is gone; the test takes every sentence row. Behind them the arm showed more, all in this module, each fixed test first: the invitation selector, the pseudo route (the page's words stand in the shell's script, and its integrity hash), "Start a project" asking who can find it, the conclusion's reason box, the routes asking the copy for no compression (gzip answers had gone unjudged), R8's pending-reading excuse (K4473) and a reading's own `found` as data (K4486).
+
+`journey.test.mjs` (the local arm), the eighth run: 23 pass, 0 fail. The module's other files: 83 tests, 81 pass, 1 fail: R17 (T52, K4269). format, words, architecture, coverage (30 of 30), ownership: 0 failures; impact: journey-check only. The local arm's stand-in workers answer only /version, as R1 (a) states; the plane reads the capture and the upload itself, so no reading stayed pending here (the pending excuse is proved by its walker test; the live re-walk proves a real PDF's reading). `live.test.mjs` not run (K4149). Record: `build/jobs/T51/journey-check.md`, with each cause's four fields and the red-then-green evidence.
+
+Size (session_013CXae57CSmbZXAkv1DtdMS): test runs 30, module lines 3450
