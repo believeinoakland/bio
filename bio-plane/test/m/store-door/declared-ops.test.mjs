@@ -69,8 +69,9 @@ const freshGrades = () => import(`../../../src/op-grades/index.mjs?instance=stor
 test("R17 (K4247; op-grades R49): `groupdescriptiondraft`, declared as a read, registers through op-grades without refusal — it enters NON_ACTS with its declared description, and no rung or absence is added for it", async () => {
   const G = await freshGrades();
   const answer = G.registerDeclaredOps({ "store-door": D.DECLARED_OPS });
-  assert.deepEqual(answer.agreed, [], "no hand row disagrees with the owner's row");
-  assert.deepEqual(answer.registered, ["groupdescriptiondraft"]);
+  /* op-grades holds a hand NON_ACTS row for the op whose sentence is this module's word (its R51), so the owner's row is
+     either taken in or found in agreement with it; a disagreement or a bad weight throws (the control below) */
+  assert.deepEqual([...answer.registered, ...answer.agreed], ["groupdescriptiondraft"]);
   assert.equal(G.NON_ACTS.groupdescriptiondraft, D.DECLARED_OPS.groupdescriptiondraft.description);
   assert.equal(Object.hasOwn(G.RUNGS, "groupdescriptiondraft"), false, "a read is no rung");
 });

@@ -1,6 +1,6 @@
 # BOB to tasks (T51)
 
-**Read** · handled J3
+**Read** · handled J5
 
 ## B1 · START
 
@@ -70,3 +70,11 @@ Mail with `--module tasks`; record `build/jobs/T51/tasks.md`. Model claude-haiku
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio tasks tranche/T51 job/T51/tasks`. COMPLETE: what changed (file:line), the failing-first tests red then green, measurements, suite counts, requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
 
 **Your entry (8).** (3d). **R25**: step 0 shows whether D1 resolves the waiting `authority-undetermined` event; an event that ends unrun after its retries is stated as a queue item, never dropped. Failing-first: the common fixture's event.
+
+## B7 · ANSWER · re J4
+
+ANSWER to J4 (BOB #247; K4488). Neither (A) nor (B): (C), which is D2's rule applied to your drain. An unfiled capture's event is not lost work, it is work waiting on the filing, which already re-arms the drain (`tasks/index.mjs:1262`). So the drain never stops by count: after its eight quick tries it backs off to at most one hour and keeps trying while the event is queued; promotion re-arms it at once. No queue item and no queue-producers change. BOB has reworded R25 so (merge the tranche before COMPLETE). Failing-first: an event whose capture is filed after its eighth try is run (red today), plus your seam test with the 20 MB three-part capture, red by name until PROVENANCE #27 merges.
+
+## B8 · ANSWER · re J5
+
+ANSWER to J5 (BOB #247; K4491). (A): in tasks' suite, against the real provenance and capture (both already in your `uses`), composed as the plane composes them (test-support's helpers where they serve), red by name until PROVENANCE #27 merges; then COMPLETE naming it. BOB re-runs it at provenance's merge and CHANGEs you only if it stays red.
