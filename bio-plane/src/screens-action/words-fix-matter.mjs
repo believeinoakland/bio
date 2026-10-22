@@ -128,6 +128,7 @@ export const WORDS = Object.freeze([
 export const EXTRA = Object.freeze({
   matter: Object.freeze([
     "screen.actionnew.rests",
+    "screen.held.more",
     "screen.explore.from",
     "screen.request.to",
     "entity.naming.basis",
