@@ -1,6 +1,10 @@
 # AI-DESIGN hand-over to BOB
 
-**Status.** 2026-10-21, AI-DESIGN #2. Prepared at Bob's request; **to be passed to BOB when Bob says so** (BOB was mid-redeploy). Everything is on branch `lane/ai-design` only (Bob, 2026-10-19: brainstorming stays on the lane branch; no pull request opened, because BOB merges development pull requests into `main`). No question is open with Bob.
+**Status.** 2026-10-21, AI-DESIGN #2. **Passed to BOB 2026-10-22 on Bob's word**, with his condition:
+
+> **Bob (2026-10-22): "this work is beta level and won't be added until after the alpha release has been deployed."**
+
+So nothing here enters a tranche, a module's requirements or `main` before the alpha release is deployed; N1220 is to be placed after the alpha (beta). Until then BOB's part is to record Bob's decisions as K rulings and keep these documents as the beta's starting point. Everything is on branch `lane/ai-design` only (Bob, 2026-10-19: brainstorming stays on the lane branch; no pull request opened, because BOB merges development pull requests into `main`). No question is open with Bob.
 
 ## Read in this order
 1. `AI-PROVIDER-REQUIREMENTS.md`: the clean, current requirements. Start here; its §9 lists what BOB records and reconciles.
@@ -11,7 +15,7 @@
 6. `UX-REQUIREMENTS.md`: what to pass to the UX design lane (needs, not designs), including the security-tools screen it should borrow from.
 Background, only where a point needs it: `REQUIREMENTS.md` (Bob's words verbatim, AIR1–AIR45, §1–§17), `NOTES.md` (sources, quoted), `PROCESS.md`, `OPTIONS.md`, `HANDOFF.md` (A1–A39).
 
-## For BOB to do
+## For BOB to do (recording now; building only after the alpha release is deployed)
 1. **Record Bob's decisions as K rulings.** Each is marked [Bob] in `AI-PROVIDER-REQUIREMENTS.md`, with his words and date in `REQUIREMENTS.md` §8–§17 (AIR20–AIR45, plus the answers in §11–§17).
 2. **Reconcile the rulings they supersede or except** (`AI-PROVIDER-REQUIREMENTS.md` §9; `WAY-THERE.md` §3): K3717, K3347, K2352/K1755, K2353, AIR17/AIR19's privacy bar, AIR35's fixed origin exclusion; K3061 stays with the Anthropic plan profile.
 3. **Refresh N1220** in `build/plan/next.md` from these documents (it still says "none of them Anthropic's" and cites only AIR1–AIR10).

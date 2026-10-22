@@ -174,3 +174,6 @@ Bob: "Okay: C." Recorded in `REQUIREMENTS.md` §17 as AIR45: a key reaches the g
 
 ## A40 · 2026-10-21 · L1 clean-up complete
 Bob deleted the test gateway and both test secrets (he had already revoked the OpenAI key); the lane had deleted its test Worker. Recorded in `TESTS.md` and `HANDOVER.md`. The hand-over waits for Bob's word.
+
+## A41 · 2026-10-22 · Hand-over to BOB: beta level, after the alpha release
+Bob: "The AI-related decisions we've made can now be sent to BOB, though it's important that they understand that this work is beta level and won't be added until after the alpha release has been deployed." **For BOB (#253 at the time of writing):** read `build/plan/lane-ai-design/HANDOVER.md` on branch **`lane/ai-design`** (not the tranche branch); record Bob's decisions as K rulings; place N1220 after the alpha release (beta); add nothing from this work to a tranche, a module's requirements or `main` before the alpha is deployed. No question is open with Bob. The lane stays available for Bob's refinements; its next work is whatever Bob or BOB asks.
