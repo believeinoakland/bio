@@ -161,3 +161,24 @@ A 22 MiB upload held in parts adds the assembled copy beside its parts (about +2
 **Found elsewhere / stale artifacts:** none in another module. `bio-plane/dist/bio-plane.bundled.mjs` (the plane bundles `read`) is stale until BOB rebuilds it at the layer close; not edited. No census op owned. R-OLD: this fixes new reads; an older stored "(multipart)" reading is repaired by extraction's `readHeld` replacing it once (extraction's entry in the plan), not here.
 
 Size (session_01SnD31Lo4LuZRr5JLS6rug9): test runs 11, module lines 2183
+
+## J8 · COMPLETE · re B8
+
+COMPLETE (B8, E2: R42 re-measured at the index bound with the merged reader). `tranche/T51` merged into the branch (pdf-reader's d071cdc9ec: object table bound, ASCII85/Hex, R42 density term `READ_BASE_DENSE_MB` 29 / `READ_PAGE_DENSE_MB` 0.001). E1 stands as posted in J7.
+
+Local workerd, `workerd-ceiling.probe.mjs` with `PROBE_BUDGET=2097152` (the index bound), smallest V8 old space in which `read` completes, plus the file's bytes (object limit 128), before the merge (J7) and after it:
+| file | pages | MB | old space before / after | heap + bytes before / after |
+|---|---|---|---|---|
+| BUDGET-2025-BUD | 188 | 2.4 | 33 / 33 | 35 / 35 |
+| BUDGET-2025-PER | 295 | 8.4 | 42 / 42 | 50 / 50 |
+| BUDGET-2024-APP | 1,354 | 15.2 | 83 / 83 | 98 / 98 |
+| text pages, 120 lines | 1,000 | 4.8 | 56 / 56 | 61 / 61 |
+| text pages, 120 lines | 2,000 | 9.6 | 88 / 88 | 98 / 98 |
+| synthetic 21 MB | 1,300 | 20.1 | 65 / 65 | 85 / 85 |
+| synthetic 22 MiB | 300 | 22.0 | 37 / 37 | 59 / 59 |
+| text pages, 120 lines | 3,500 | 17.6 | refused by R42 (`TOO_LARGE_TO_READ`), as before; the probe prints "does not complete" for a refusal |
+So the merged reader changes none of these seven figures: the index bound and the object-table bound cost this module's read nothing more, and R42's rule (needs 61 / 97 / 150 for 1,000 / 2,000 / 3,500 text pages; 33 / 43 / 82 for the govinfo volumes) still sits within 16 MB of the measured need (the largest gap: BUDGET-2024-APP, rule 82 against 98 measured, as pdf-reader's R42 text already states). Whether the rule's constants move for dense pages is pdf-reader's (its density term was measured on its own files); nothing here argues for a change.
+
+Tests after the merge: module + d606 + tier2-wire + pdf-worker-binding `tests 193, pass 193, fail 0`; `checks/ownership.mjs ... job/T51/reading-pipeline`: `0 failures`. No file changed in this entry other than the merge.
+
+Size (session_01SnD31Lo4LuZRr5JLS6rug9): test runs 12, module lines 2183
