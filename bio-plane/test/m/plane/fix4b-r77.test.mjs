@@ -136,7 +136,7 @@ test("R77 (F9, F5, F11): an `ocr` entry is continued by `readHeld({sha, kind: \"
   await x.s.onAlarm(now += 1000);
   assert.deepEqual(rows(x).map((r) => [r.kind, r.sha === session ? "session" : "sha", r.last_why]), [["subresources", "session", "NO_OWNER"], ["unpack", "sha", "NOT_CONFIGURED"]], "with no owner they stay, named");
   const ran = []; let outstanding = 30;
-  acquisitionOf(x.ctx).owedRun = async (cap, e) => { ran.push([cap === captureOf(x.ctx), e]); return outstanding ? { ok: true, done: false, outstanding } : { ok: true, done: true }; };
+  acquisitionOf(x.ctx).owedRun = async (cap, e, o) => { ran.push([cap === captureOf(x.ctx), e]); return outstanding ? { ok: true, done: false, outstanding } : { ok: true, done: true }; };
   const answers = [{ ok: true, result: { ok: true, complete: false, waiting_on: { code: "UNPACK_DAILY_BYTES" } } }];
   x.env.SELF = { fetch: async () => new Response(JSON.stringify(answers[0]), { status: 200 }) };
   x.env.DAEMON_TOKEN = "t";
@@ -182,4 +182,15 @@ test("R77: `owedwork` is declared (read, no required field, one accepted) and re
     const r = (await (await x.fetch(`/owedwork?cls=${cls}&viewer=member:ann`)).json()).result;
     assert.deepEqual(r, { ok: true, owed: {} }, cls);
   }
+});
+
+test("R77 B29 (seam, control-plane): the alarm runs a pending render with the door's `deliverOwedRender` handed as `deliver`, and the delivery reaches it with the answer and the session (RED BY NAME until control-plane exports `deliverOwedRender`)", async () => {
+  const x = await world();
+  const door = await import("../../../src/control-plane/index.mjs");
+  assert.equal(typeof door.deliverOwedRender, "function", "control-plane exports deliverOwedRender({ctx, env, storeName, answer, session})");
+  let handed = null;
+  acquisitionOf(x.ctx).owedRun = async (_cap, _e, o) => { handed = o; return { ok: true, done: false }; };
+  await captureOf(x.ctx).owedLater({ kind: "subresources", sha: sha("shell"), session: "s-render" });
+  await x.s.onAlarm(Date.now() + 1000);
+  assert.equal(typeof handed.deliver, "function", "plane hands `deliver`");
 });

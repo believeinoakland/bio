@@ -26,6 +26,7 @@ import { recordOf } from "../record-core/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
 import { acquisitionOf } from "../acquisition/index.mjs";
 import { captureOf } from "../capture/index.mjs";
+import * as door from "../control-plane/index.mjs";
 import { schedulerOf } from "../scheduler/index.mjs";
 
 export const KEEPS_PENDING_DDL = `CREATE TABLE IF NOT EXISTS keeps_pending (
@@ -115,9 +116,11 @@ export function pendingOf(ctx, deps = {}) {
     subresources: async (row, at) => {
       const acq = acquisitionOf(ctx);
       if (!acq || typeof acq.owedRun !== "function") return attempt(row, at, "NO_OWNER");
-      const r = await call(() => acq.owedRun(captureOf(ctx), { kind: "subresources", session: row.sha }));
-      if (r && r.ok === true && r.done === true) return end(row);
+      /* a rendered document is promoted beside its shell by the door's own function (control-plane, B29); without it a pending render stays the member's "Finish it" */
+      const deliver = typeof door.deliverOwedRender === "function" ? (a) => door.deliverOwedRender({ ctx, env, storeName: store(), ...a }) : undefined;
+      const r = await call(() => acq.owedRun(captureOf(ctx), { kind: "subresources", session: row.sha }, { storeName: store(), env, ...(deliver ? { deliver } : {}) }));
       if (r && r.final === true && r.reason) return stop(row, at, String(r.reason).slice(0, 160));
+      if (r && r.ok === true && r.done === true) return end(row);
       return attempt(row, at, String(r && (r.reason || r.code || r.why) || (r && r.outstanding ? "OUTSTANDING" : "NOT_DONE")));
     },
     /* the archive-unpack drain's call (plane/unpack.mjs): `op=unpack` as the daemon, through the door */
