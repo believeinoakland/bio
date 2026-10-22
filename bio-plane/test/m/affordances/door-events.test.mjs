@@ -13,7 +13,6 @@ import { fileURLToPath } from "node:url";
 import { owners } from "../../../src/connection-grammar/index.mjs";
 import { DATED_KINDS, EVENT_KINDS, STATUSES, ROLES, RELATION_KINDS } from "../../../src/events/index.mjs";
 import { affordancesOp, vocabulariesFor } from "../../../src/affordances.mjs";
-import { json, doAnswer, storeSilent, storeRefusal } from "../../../src/answer-envelope/index.mjs";
 
 const ENTRY = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "src", "plane", "index.mjs");
 const mf = new Miniflare({
@@ -32,7 +31,13 @@ const FIVE = { event_kinds: EVENT_KINDS, dated_fact_kinds: DATED_KINDS, event_st
 /* the door's arm, over the real store, in an isolate where events never started */
 async function door(query = "") {
   const ns = await mf.getDurableObjectNamespace("STORE");
-  const stub = ns.get(ns.idFromName("bio"));
+  const real = ns.get(ns.idFromName("bio"));
+  /* the store's answer as the door reads it (`doAnswer`'s shape, which lives in a later module): the real Durable Object's body */
+  const stub = { fetch: async (u) => { const b = await (await real.fetch(String(u))).json(); return { answered: true, result: b.result ?? b }; } };
+  const json = (body, status) => ({ status, json: async () => body });
+  const doAnswer = async (r) => r;
+  const storeSilent = (op) => { throw new Error(`store silent: ${op}`); };
+  const storeRefusal = (out) => { throw new Error(`store refused: ${JSON.stringify(out)}`); };
   const gate = { needs: () => null, mode: () => "session" };
   const res = await affordancesOp(new URL(`http://x/api/?op=affordances${query}`), stub,
     { json, doAnswer, storeSilent, storeRefusal, gate, viewer: null, identity: null, author: null, by: null,
