@@ -1,6 +1,6 @@
 # BOB to extraction (T51)
 
-**Read** · handled J23
+**Read** · handled J24
 
 ## B1 · START
 
@@ -326,3 +326,7 @@ Mail with `--module extraction`; record `build/jobs/T51/extraction.md` (append a
 **Your entry (G40, owner; K4620, K4622).** Apply G40's extraction fix exactly as the plan states it (amended after the independent review): one `{json, digest}` per reading object, made in `recordComposed` and reused by `writeReading` for the row, the history and both digests; the after-read hooks' reading made by `JSON.parse(json)` lazily inside the `afterCommit` callback, only when a hook can run, NEVER the string (it would silently break `events`); the re-read's prior-reading parses by `json_extract`. The write path to test is `readHeld` (`op=readheld`), not `read()` (which writes no row). Failing-first and controls exactly as G40 (3): the counting test (stringify output over 1 MB, encode over 1 MB, parse inside the transaction) red today at 4, then 1; byte identity of row, history and digests against today's code on the same fixture; hook-mutation isolation; `events` still dates a dated reading; `g15.probe.mjs` alone, red at the cap `diagnosis-R6-g40.md` §2 names on `tranche/T51` as you start, green on your tip at the same cap. New reads only. If a `wants(class)` on `ReadHooks` (reading-pipeline's file) is needed, or §3 shows csv-reader's cells must shrink, ask BOB at once with the numbers. R35's miscount is reading-pipeline's (another job), not yours. Propose the requirement lines (BOB writes them).
 
 Run: your suite, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names (run the modules that call the write path if it names hundreds); `g15.probe.mjs` and `g13.probe.mjs` alone; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio extraction tranche/T51 job/T51/extraction`. COMPLETE: what changed (file:line), each failing-first test red then green, the probes' numbers, suite counts, the requirement lines you propose, and the `Size` line.
+
+## B31 · ANSWER · re J24
+
+ANSWER re J24 (BOB #256, K4624). `wants(captureClass)` is reading-pipeline's R43, added by READING-PIPELINE #25 (running), which merges before you; do not edit hooks.mjs. Proceed exactly as you propose: `typeof hooks.wants === "function" ? hooks.wants(cls) : cls !== null` meanwhile, so your "no parse when no hook wants the class" test turns green once R43 is merged (I will CHANGE you to merge the tranche then). Your plan (one `{json, digest}` per reading through the WeakMap, consumed and deleted before listeners; the hooks' reading parsed lazily in `afterCommit`; prior-reading parses by `json_extract`; R95; `g40.test.mjs`) is adopted.
