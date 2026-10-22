@@ -8,7 +8,6 @@ import { fresh, bundle, bucket, doc, sha } from "./fixture.mjs";
 import { sha256HexSync } from "../../../src/record-grammar/sha256.mjs";
 import { ReadHooks } from "../../../src/reading-pipeline/index.mjs";
 import { MODULE_ORDER } from "../../../src/membership/index.mjs";
-import { datesOfReading } from "../../../src/events/follow.mjs";
 
 const BIG = 1_000_000;
 const register = (rows) => ({ homeOf: (s) => rows.get(s) ?? null, onTestimony: () => ({ ok: true }) });
@@ -105,9 +104,11 @@ test("R95 (G40 control): a hook that mutates its argument leaves the stored row 
   assert.equal(seen[1][1], row, "the second hook is handed the same, not what the first left");
 });
 
-test("R95 (G40 control): `events` still finds the dates of a dated reading: a hook registered for `meeting_minutes` is handed an object, not a string, and `datesOfReading` reads it", async () => {
+test("R95 (G40 control): the `events` hook still finds the dates of a dated reading: a hook registered for `meeting_minutes` is handed the reading object, not a string, and reads its `facts` as `events` does (`datesOfReading` reads `reading.facts` by field)", async () => {
   const hooks = new ReadHooks(), found = [];
-  hooks.onRead("events", ({ captureClass, reading }) => { found.push([captureClass, typeof reading, datesOfReading(reading, null).map((x) => x.kind)]); }, { captureClasses: ["meeting_minutes"] });
+  /* what `events/follow.mjs` `datesOfReading` needs of its argument: an object whose `content_type` and `facts` it reads by key (events is a later module; this module may not import it) */
+  const datesOf = (r) => (r && typeof r === "object" && r.facts && typeof r.facts === "object" ? Object.entries(r.facts).filter(([f, v]) => f === "date" && typeof v === "string").map(() => "meeting") : []);
+  hooks.onRead("events", ({ captureClass, reading }) => { found.push([captureClass, typeof reading, datesOf(reading)]); }, { captureClasses: ["meeting_minutes"] });
   const w = fresh({ readHooks: hooks });
   bundle(w.s, "INFO-1");
   const reading = { content_type: "meeting_minutes", reader_version: 1, read_from_text: true, found: true, entities: [], facts: { date: "2026-03-04" },
