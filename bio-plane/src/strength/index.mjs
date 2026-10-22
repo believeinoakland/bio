@@ -129,6 +129,8 @@ export { OCCURRENCE_REF_RE, parseOccurrenceRef } from "./legs.mjs";
 export const VERSION_STRENGTH_STATES_MAX = VERSION_MACHINE.legal.length;
 /** R26: the longest error message a candidate pair answers. */
 export const CANDIDATE_ERROR_MAX = 200;
+/** R44: the most inquiries one `inquirystrength` call may name in `ids`. */
+export const INQUIRY_STRENGTH_IDS_MAX = 50;
 
 /* R10: every spelling this record has reached for when it meant "the strength". The guard fails on the NAME, before
    anybody reasons about the value; `pair` is checked separately, by totality. */
@@ -716,6 +718,25 @@ export class Strength {
     const ungraded = ungradedEverywhere(axes);
     return { ok: true, target: id, depth_bound: s.depth_bound, ...axes, ungraded, ungraded_count: ungraded.length,
              hunches_left_out: seenHunches, ...(withheld ? { out_of_view: true } : {}) };
+  }
+
+  /** R44 (fix round 6; G12c): `op=inquirystrength` with `ids`, one `inquiryStrength` per id in one call: `{ok: true,
+   *  results: {<id>: that id's single answer}}`, in the order asked, an id named twice answered once. Each id is gated
+   *  exactly as the single read gates it, so an inquiry the viewer may not see has its result, `NO_SUCH_BUNDLE` as an
+   *  absent one, never an omission. More than `INQUIRY_STRENGTH_IDS_MAX` ids, or anything but ids, is `BAD_IDS`, whole;
+   *  none named is `NO_ID`. Computed on read, as the single read is. */
+  inquiryStrengthMany({ ids = null, viewer = null } = {}) {
+    const list = idsOf(ids);
+    if (list === null)
+      return { ok: false, reason: "BAD_IDS", limit: INQUIRY_STRENGTH_IDS_MAX,
+        detail: localize("strength.index.ids_must_be_a_list_of_record_ids",
+          "ids must be a list of at most {max} record ids, each named once: pass ids=<record id>,<record id>…",
+          { max: INQUIRY_STRENGTH_IDS_MAX }) };
+    if (!list.length)
+      return { ok: false, reason: "NO_ID",
+        detail: localize("strength.index.the_derived_pairs_are_asked_of_ids",
+          "the derived pairs are asked of the inquiries named: pass ids=<record id>,<record id>…") };
+    return { ok: true, results: Object.fromEntries(list.map((id) => [id, this.inquiryStrength({ id, viewer })])) };
   }
 
   /** R13: the pair the search cache holds for an inquiry, `{capture: {grade, state}, connection: {grade, state}}`, or
@@ -1581,6 +1602,16 @@ export class Strength {
   }
 }
 
+/* R44: the inquiry ids `ids` names, as a list of at most `INQUIRY_STRENGTH_IDS_MAX` distinct non-blank strings: a
+   comma-separated string (the op's query) is split and its blanks dropped; a list holds only non-blank strings; anything
+   else, or more than the bound, is null, a refusal. */
+function idsOf(ids) {
+  const list = typeof ids === "string" ? ids.split(",").map((i) => i.trim()).filter(Boolean) : ids;
+  if (!Array.isArray(list) || list.some((i) => typeof i !== "string" || !i.trim() || i.length > 300)) return null;
+  const distinct = [...new Set(list.map((i) => i.trim()))];
+  return distinct.length > INQUIRY_STRENGTH_IDS_MAX ? null : distinct;
+}
+
 /* The distinct non-blank groups a set of legs carries: a leg naming no part is not a part anybody declared. */
 function distinctParts(legs) {
   return new Set(legs.map((l) => String(l.ground ?? "").trim()).filter(Boolean)).size;
@@ -1708,12 +1739,17 @@ function refusePairComposed(out) {
 export { refusePairComposed };
 
 /** The module's ops (K3): `strength` (in-process), `inquirystrength`, `versionstrength`, `partitionindependence`,
- *  `strengthbar` and `strengthbarset` (R41), `projectbarset` (R40), `strengthbarof`. `viewer` and `author` are the control plane's stamps. */
+ *  `strengthbar` and `strengthbarset` (R41), `projectbarset` (R40), `strengthbarof`; `inquirystrength` reads one `id` or a list of `ids` (R44). `viewer` and `author` are the control plane's stamps. */
 export function strengthOps(s, url, body) {
   const q = (k) => url.searchParams.get(k);
   return {
     strength: () => s.strengthOf(q("id")),
-    inquirystrength: () => s.inquiryStrength({ id: q("id"), viewer: q("viewer") }),
+    /* R44: `ids` (the body's list, else the query's comma-separated one) asks many in one call; absent, the single read. */
+    inquirystrength: () => {
+      const ids = body && body.ids != null ? body.ids : q("ids");
+      return ids == null ? s.inquiryStrength({ id: q("id"), viewer: q("viewer") })
+                         : s.inquiryStrengthMany({ ids, viewer: q("viewer") });
+    },
     versionstrength: () => s.versionStrength({ id: q("id"), version: q("version"), project: q("project"),
                                                states: q("states"), viewer: q("viewer") }),
     partitionindependence: () => s.partitionIndependence({ id: q("id"),
@@ -1737,6 +1773,8 @@ export function strengthOps(s, url, body) {
 export const DECLARED_OPS = Object.freeze({
   strengthbarset: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", needs: "publish", description: localize("strength.declared.strengthbarset", "governance: the GROUP's declared default required strength, keyed by group and not by any bundle — a declaration about the group's own work, never a property of an object or of a reader"),
     fields: { accepts: ["group","capture","connection","reason"], requires: [["capture","connection"],"reason"] } },
+  inquirystrength: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("strength.declared.inquirystrength", "read: the derived pair for one question — the panel the acts are rendered under, never an act on an object"),
+    fields: { accepts: ["id","ids"], requires: [["id","ids"]] } },
   projectbarset: { classes: ["admin","member","probe"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("strength.declared.projectbarset", "project-directed: keyed by a project; the project's own required strength, set with the member's reason; never the group's bar, and it gates nothing (`strength` R21)"),
     fields: { accepts: ["project","capture","connection","reason"], requires: ["project","reason"] } },
 });

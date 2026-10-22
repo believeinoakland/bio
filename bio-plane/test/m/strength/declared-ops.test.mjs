@@ -120,3 +120,8 @@ test("R41 strength declares projectbarset: its requires alone raise no refusal n
   await declaredOpHolds({ op: "projectbarset", declaration: DECLARED_OPS["projectbarset"], call: mk("projectbarset", {"author":"alice","viewer":"member:alice"}, null, null, (fields, env) => (({ ...fields, ...("project" in fields ? { project: env.P } : {}) }))),
     refusedNaming: named({"project":["NO_SUCH_PROJECT"],"reason":["PROJECT_BAR_NO_REASON"]}, true), values: { reason: WHY }, same: sameCode });
 });
+
+test("R41, R44 strength declares inquirystrength: its requires (an id or a list of ids) alone raise no refusal naming a field, a call without either is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "inquirystrength", declaration: DECLARED_OPS["inquirystrength"], call: mk("inquirystrength", {"viewer":"member:ann"}),
+    refusedNaming: named({"id":["NO_ID"],"ids":["NO_ID"]}, true), values: {}, same: sameCode });
+});
