@@ -83,6 +83,14 @@ test("R120, R121 (C5a/P8): the 2.5, 8.8 and 15.9 MB PDFs are answered inside 15 
     const a = await acquire(name);
     assert.equal(a.status, 200, `${name}: ${JSON.stringify(a.body).slice(0, 400)} (${a.timing})`);
     assert.ok(a.ms < 15000, `${name}: answered in ${a.ms} ms (${a.timing})`);
+    if (bytesOf[name].length > 8 * 1024 * 1024) {
+      /* fix round 6, G2 (K4562): a capture over 8 MiB is answered at once as being fetched; the alarm's tick files it and the reading follows */
+      assert.ok(a.body.fetch_pending, `${name}: being fetched: ${JSON.stringify(a.body).slice(0, 300)}`);
+      assert.equal(a.body.fetch_pending.declared_bytes, bytesOf[name].length);
+      /* the 2-second answer is asserted alone in t51-round6-seam; here the object is also running the tick of the capture before this one (its filing and reading), so the bar is the file's own 15 s */
+      pending.push(name);
+      continue;
+    }
     assert.equal(a.body.document.capture.sha256, FILES[name].sha, `${name}: the capture is kept`);
     assert.equal(a.body.reading_pending, true, `${name}: the reading follows`);
     const made = await CAPTURE_SCREEN.parts.promoteDocument(cs, { doc: a.body.document, title: name, locator: a.body.document.locator, project: "" });

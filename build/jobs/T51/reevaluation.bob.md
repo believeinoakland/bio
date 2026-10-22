@@ -1,6 +1,6 @@
 # BOB to reevaluation (T51)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -17,3 +17,29 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio reevaluation tranche/T51 job/T51/reevaluation`. Your Size line counts only your module's own code (K2513).
+
+## B2 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/reevaluation tranche/T51 && git branch -m job/T51/reevaluation stale/reevaluation-local && git checkout -b job/T51/reevaluation origin/job/T51/reevaluation`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · REEVALUATION #24 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #254 is depth 1; fix round 6, wave 4; K4426, K4597, K4602) · reading set per mechanics §6 step 2 (your other tests are run, not read)
+
+Mail with `--module reevaluation`; record `build/jobs/T51/reevaluation.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). You are the module job (P8, mechanics §6) for `reevaluation`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first.
+
+**Read in full:** `build/plan/fix-round-6-T51.md` section 0 (its rules bind you) and the section "G26-G28" / "G29-G33" that holds your entry (your cause, with its four fields), `build/plan/diagnosis-R6-unplaced.md` (the diagnosis of your cause), your requirements (both parts), the used services your entry touches, and your code. The file:line evidence is your starting point, never a substitute for reading the code.
+
+**Bob (K4426):** "We need to be rigorous about truely understanding the issues we're experiencing, understanding (and fixing) why they weren't caught in the fixtures, and be confident that we do understand, can properly tes, and have really fixed every issue before we do another deployment." Each defect has (1) its root cause with evidence, (2) why the tests missed it and that gap fixed, (3) a test on the walker's exact case through its real entry path, seen failing then passing, (4) a check at the live platform's real shape where it depends on it. **Bob's focus: an alpha release as quickly and efficiently as possible: do what the entry needs, nothing more.**
+
+**Rules** (plan section 0; K4426-K4428): (1) root cause with file:line; (2) why the tests missed it, and the gap fixed; (3) a failing-first test past the bound, through the module's real entry (the op or the provided service, never an inner helper), seen red in your record, then green; (4) the platform check named in the cause (most are N). R-NOTMET: no "not met", deferred, REPORT or open QUESTION at COMPLETE: name the smallest thing you need and ask BOB now. R-OLD: stored data: "new data only" or a repair. A new sentence a member reads uses a stand-in (a drawn-screen module uses the nearest held row; any other module `localize(id, en)`), the row owed named in your record (BOB's HANDOFF B485 asks the design). Declare every census op you own whose accepted keys change (K4208).
+
+**Your entry (G36).** Read `build/plan/diagnosis-R6-2a.md` whole. The cause, from `build/plan/fix-round-6-T51.md` section G34-G36:
+
+**G36 · C69's "newer version" item: unproven.** Owner **reevaluation** (the `notice-sweep` consumer, `scheduler/index.mjs:375`, reevaluation R25). (1) Probable: the dead alarm; no test drives capture, cite, recapture, sweep and the Queue item through the real Store. **Fix:** that seam test; a fix if it is red. (2) Missed: `reevaluation/sweep.test.mjs` uses a stand-in host. (3) Failing-first: the seam above. (4) **P** C69 at the re-walk.
+
+Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names (the users of what you changed; when it names hundreds because of a shared table, run the modules that call your changed service); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio reevaluation tranche/T51 job/T51/reevaluation`. COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+**The platform check (L) for a memory or broken-stub case:** no shared harness exists yet; use the raw workerd pattern in `build/plan/diagnosis-R6-memory.md` section "Platform check" (raw workerd, `v8Flags = ["--max-old-space-size=N"]`, `plane/register.mjs` imported, N = 128 less the file's bytes), committed in your own tests as a `.probe.mjs`, its numbers in your record.
+
+## B3 · ANSWER · re J2
+
+ANSWER re J2 (BOB #255, K4607). Your best reading, done by BOB (test only, K4297 (2)): your file from 5767968f14 is now plane's `bio-plane/test/m/plane/round6-reevaluation.test.mjs` (imports re-pointed: `./fixture.mjs` for the Store, `../reevaluation/fixture.mjs` for `inquiryMd`/`infoMd`), 3/3 green on the merged tranche, architecture 0. Leave your branch as it is (without the file). Post COMPLETE with your four fields as in J2 (cause: the dead alarm, merged; missed: `sweep.test.mjs`'s stand-in host; failing-first: the seam, red on 5ff8b5e01b, green now; P: C69 at the re-walk), no requirement change unless you propose one, and your Size line. Then you are done.
