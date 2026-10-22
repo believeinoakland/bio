@@ -703,7 +703,7 @@ export class Extraction {
       const whole = this.#wholeOfPart(home.bundleId, digest);
       if (whole) return this.readHeld({ sha: whole, storeName, env, viewer, kind, defer });
     }
-    const document = stored || { capture: { sha256: digest } };
+    let document = stored || { capture: { sha256: digest } };
     const held = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
     const heldReading = held ? safeJson(held.reading) : null;
     const ocr = kind === "ocr";
@@ -725,7 +725,14 @@ export class Extraction {
       return left("READING_HELD");
     /* (fix round 6, G6; R88) a digest that no stored document names (a bare stub) is read as no document: it has no parts, size or
        capture instant to read it by, and the reading it would write is stored against a digest that is no document. */
-    if (!stored && !ocr) return left("NO_DOCUMENT");
+    if (!stored && !ocr) {
+      /* a home whose provenance document states none of this digest (the register names it) is given the size the store holds the object
+         at, so the reader is handed a document that states its object, never a digest alone (BOB, K4577); with none held it is no document */
+      let size = null;
+      try { const h = ev ? await ev.head(digest) : null; size = h && Number.isFinite(h.size) && h.size > 0 ? h.size : null; } catch { size = null; }
+      if (size === null) return left("NO_DOCUMENT");
+      document = { capture: { sha256: digest, bytes: size } };
+    }
     /* (fix round 5, E3) a capture over the reading ceiling is stated from its size alone (reading-pipeline R37), so no
        whole is needed to write the statement; one at or under it still needs its whole. */
     const size = this.#sizeOf(document);
