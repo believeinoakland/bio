@@ -178,7 +178,7 @@ function chainTierOf(chain, page) {
  *                                       an HTML page's text, read at intake in the plane
  */
 export async function readingProvenance({ text = null, chain = null, tier = null, container = null,
-                                          planeVersion = null, member: offLadder = null } = {}) {
+                                          planeVersion = null, member: offLadder = null, textFrom = null } = {}) {
   const out = { scheme: PROVENANCE_SCHEME, text_tier: Number.isInteger(tier) ? tier : null,
                 container: typeof container === "string" ? container : null,
                 text_sha256: null, text_chars: 0, text_from: null,
@@ -189,7 +189,8 @@ export async function readingProvenance({ text = null, chain = null, tier = null
     return out;
   }
   const flat = flattenText(text);
-  out.text_from = flat.source;
+  /* `textFrom`: the text was handed without its joined `document` (the reading's memory), which is the pages' own join. */
+  out.text_from = textFrom && flat.source === "pages" ? textFrom : flat.source;
   out.text_chars = flat.text.length;
   /* AN EMPTY TEXT IS NOT DIGESTED. Two empty strings agree on nothing (`CLAUDE.md` §5), so a digest of
      one would let two readings that read NOTHING compare as agreeing. */

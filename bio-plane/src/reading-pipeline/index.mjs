@@ -66,11 +66,37 @@ export function decodeView(text) {
    glyphs of the text in hand (D-514: glyphs, never raw characters; `counts.chars` only when there is no document
    string), unless every marker is a scan marker, since tier 2 reads no image (CPDF-10; D-627's image-content
    markers are scan markers too). A mixed document still escalates. A missing or malformed text escalates nothing. */
+/* The reading's memory (R2): a PDF's `document` is its pages' non-empty text joined by a newline (pdf-reader R2), held
+   as a lazily-joined string until something reads it, and reading it makes a second flat copy of the whole book (two
+   bytes a character once one page holds a character past U+00FF). When the pages are held beside it and the document's
+   length is exactly theirs joined, the glyphs are counted over the pages and the document is never read. */
+function pagesJoinLength(text) {
+  const pages = text && Array.isArray(text.pages) ? text.pages : null;
+  if (!pages || !pages.length || typeof text.document !== "string") return false;
+  let n = 0, held = 0;
+  for (const p of pages) {
+    const t = p && typeof p.text === "string" ? p.text : "";
+    if (t.length) { n += t.length; held++; }
+  }
+  return held > 0 && n + held - 1 === text.document.length;
+}
+export function glyphsOfDocument(text) {
+  if (!text || typeof text.document !== "string") return null;
+  return pagesJoinLength(text) ? text.pages.reduce((n, p) => n + (p && typeof p.text === "string" ? glyphCount(p.text) : 0), 0)
+                               : glyphCount(text.document);
+}
+/* The same text without the joined copy, for the stages that read it whole (`docprofile.readText` joins the pages
+   itself when the document is absent, R38), or the text itself when its document is not the pages joined. */
+export function withoutJoinedDocument(text) {
+  if (!pagesJoinLength(text)) return text;
+  const { document, ...rest } = text;
+  return rest;
+}
 export function needsTier2(text0) {
   const text = decodeView(text0);
   const c = text && text.counts;
   if (!c || typeof c.chars !== "number" || typeof c.undetermined !== "number") return false;
-  const glyphs = typeof text.document === "string" ? glyphCount(text.document) : c.chars;
+  const glyphs = typeof text.document === "string" ? glyphsOfDocument(text) : c.chars;
   if (!(c.undetermined > glyphs)) return false;
   const marks = Array.isArray(text.undetermined) ? text.undetermined : [];
   if (marks.length && marks.every((m) => m && (m.reason === "no_text_layer"
@@ -1184,7 +1210,7 @@ export function textCountsOf(text) {
   const c = decodeView(text).counts;
   const n = (v) => (Number.isInteger(v) && v >= 0 ? v : null);
   return { text_chars: n(c && c.chars),
-           text_glyphs: typeof text.document === "string" ? glyphCount(text.document) : null,
+           text_glyphs: typeof text.document === "string" ? glyphsOfDocument(text) : null,
            text_undetermined: n(c && c.undetermined) };
 }
 
@@ -1471,7 +1497,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   const entry = fmt && fmt !== "undetermined" ? getFormat(fmt) : null;
   const wireable = !!(entry && (typeof entry.text === "function" || typeof entry.structure === "function"));
   let reading, classifiedText = null, member = null;
-  let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null, readDialect, emitted = null;
+  let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null, readDialect, emitted = null, heldCounts = null, joinedDropped = false;
 
   if (!wireable && textRead) {
     /* R1: text read as text with no format entry that reads it goes to the content type's reader. */
@@ -1587,6 +1613,9 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       if (i2text && Object.prototype.hasOwnProperty.call(i2text, "dialect")) {
         try { readDialect = readingDialect(i2text.dialect); } catch { readDialect = undefined; }
       }
+      /* R17 over the text in hand, then the joined copy let go: the stages below read the pages. */
+      heldCounts = textCountsOf(i2text);
+      { const lean = withoutJoinedDocument(i2text); if (lean !== i2text) joinedDropped = true; i2text = lean; }
       emitted = i2text;
       const extent = containerExtentOf(i2text, { pdfPaints, fmt });
       ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsFor(i2text));
@@ -1625,7 +1654,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       reading.container_extent = extent;
     } catch (e) {
       reading = failed(doc, docType, localize("reading-pipeline.index.entry_not_read_bytes", "the {fmt} entry could not read these bytes ({detail}), so nothing is claimed about its text", { fmt: String(fmt), detail: String(String(e && e.message || e).slice(0, 200)) }), { page_count: null, page_boxes: null, container_extent: null });
-      textUnits = null; textUnitsOverBound = 0; textUnitsSkipped = null; classifiedText = null; emitted = null;
+      textUnits = null; textUnitsOverBound = 0; textUnitsSkipped = null; classifiedText = null; emitted = null; heldCounts = null; joinedDropped = false;
     }
   } else {
     reading = failed(doc, docType, localize("reading-pipeline.index.document_not_read_text", "the document was not read as text ({why}), so no reading was attempted", { why: multipart ? localize("reading-pipeline.index.multipart", "multipart") : localize("reading-pipeline.index.non_textual_large", "non-textual or too large") }),
@@ -1638,9 +1667,9 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     text: classifiedText, chain: Array.isArray(reading.text_source) ? reading.text_source : null,
     tier: Number.isInteger(reading.text_tier) ? reading.text_tier : null,
     container: typeof reading.text_container === "string" ? reading.text_container : null,
-    planeVersion, member });
+    planeVersion, member, ...(joinedDropped ? { textFrom: "document" } : {}) });
   /* N139 (R17): the counts of exactly the text the reader was handed; none when no text was. */
-  { const n = textCountsOf(classifiedText); if (n) Object.assign(reading, n); }
+  { const n = heldCounts || textCountsOf(classifiedText); if (n) Object.assign(reading, n); }
   /* R28: the entry's metadata, or null, and a workbook's or a `.docx` document's cells, as emitted. */
   Object.assign(reading, emittedFieldsOf(emitted));
   /* R13: absent when no entry answered a decoding choice. */
