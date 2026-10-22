@@ -415,20 +415,32 @@ export const PARTS = Object.freeze({
   /* the findings a review copy names (a draft that names none cannot be published, R66) */
   findingsOf: function (copy) { return (copy && Array.isArray(copy.findings) ? copy.findings : []).map(function (f) { return f.target; }).filter(Boolean); },
 
+  /* E4 (fix round 5; publication `casedocument`'s `findings`; case-grammar R4, R6): `casedocument` answers `citations` as `{state, rows}`
+     (never an array) and the roster the signed document pins as `findings`, `[{target, version_sha, role}]`. `rosterOf` is that roster as
+     `[{target, bundleSha}]`, null when the answer states none, an entry with no full SHA-256 left out. */
+  rosterOf: function (doc) {
+    if (!doc || !Array.isArray(doc.findings)) return null;
+    return doc.findings.filter(function (f) { return f && typeof f.target === "string" && f.target && /^[0-9a-f]{64}$/.test(String(f.version_sha || "")); })
+      .map(function (f) { return { target: f.target, bundleSha: f.version_sha }; });
+  },
+
   /* What one sitting signs (interface-shell R41; ratification R52; this module's R13): the case statement `casedocument`
-     answers, one `bio-ratify <id> <sha>` line per finding the prepared edition pins, and one per piece of evidence the
-     signed document cites (`citations`' `{target, version}`), each once and none a finding already. */
+     answers, one `bio-ratify <id> <sha>` line per finding the edition pins (the document's own roster, else what `publish`
+     answered), and one per piece of evidence the signed document cites (`citations.rows`' `{target, version}`), each once and
+     none a finding already. */
   sitting: function (doc, prepared) {
     if (!doc || !doc.sign || typeof doc.sign.statement !== "string") return null;
     const list = [{ kind: "case", id: doc.case_id, edition: doc.edition, sha: doc.doc_sha, text: doc.sign.statement, namespace: doc.sign.namespace || "bio-ratify" }];
     const seen = {};
-    const findings = prepared && Array.isArray(prepared.findings) ? prepared.findings : [];
+    const pins = Array.isArray(doc.findings) ? doc.findings.filter(function (f) { return f && typeof f.target === "string" && /^[0-9a-f]{64}$/.test(String(f.version_sha || "")); })
+      .map(function (f) { return { target: f.target, bundleSha: f.version_sha }; }) : null;
+    const findings = pins || (prepared && Array.isArray(prepared.findings) ? prepared.findings : []);
     findings.forEach(function (f) {
       if (!f || !f.target || !f.bundleSha || seen[f.target]) return;
       seen[f.target] = true;
       list.push({ kind: "finding", id: f.target, sha: f.bundleSha, text: "bio-ratify " + f.target + " " + f.bundleSha + "\n", namespace: "bio-ratify" });
     });
-    (Array.isArray(doc.citations) ? doc.citations : []).forEach(function (c) {
+    (doc.citations && Array.isArray(doc.citations.rows) ? doc.citations.rows : []).forEach(function (c) {
       const id = c && (c.target || c.bundle_id), sha = c && (c.version || c.bundle_sha);
       if (!id || typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha) || seen[id]) return;
       seen[id] = true;
@@ -437,14 +449,24 @@ export const PARTS = Object.freeze({
     return list;
   },
 
+  /* E4 (fix round 5, C48): the Sign step fails closed. True when the sitting lists fewer findings than the document pins, or none while
+     the draft names findings (`named`, their count) or the document pins some: an edition signed with its findings missing publishes an
+     incomplete case, and that cannot be taken back. */
+  sittingGap: function (doc, list, named) {
+    const listed = (list || []).filter(function (x) { return x.kind === "finding"; }).length;
+    const pinned = doc && Array.isArray(doc.findings) ? doc.findings.length : 0;
+    return listed < pinned || (listed === 0 && named > 0);
+  },
+
   /* C47 (fix round 2; public-read R39): how many documents the edition's document cites that are not published with the case: a
      citation that is no finding of the edition and whose version is no full SHA-256 (what a sitting signs as evidence is published),
      each counted once. */
   notPublished: function (doc, prepared) {
     const pinned = {}, seen = {};
-    (prepared && Array.isArray(prepared.findings) ? prepared.findings : []).forEach(function (f) { if (f && f.target) pinned[f.target] = true; });
+    const roster = doc && Array.isArray(doc.findings) ? doc.findings : prepared && Array.isArray(prepared.findings) ? prepared.findings : [];
+    roster.forEach(function (f) { if (f && f.target) pinned[f.target] = true; });
     let n = 0;
-    (doc && Array.isArray(doc.citations) ? doc.citations : []).forEach(function (c) {
+    (doc && doc.citations && Array.isArray(doc.citations.rows) ? doc.citations.rows : []).forEach(function (c) {
       const id = c && (c.target || c.bundle_id), sha = c && (c.version || c.bundle_sha);
       if (!id || pinned[id] || seen[id]) return;
       seen[id] = true;

@@ -58,14 +58,21 @@ const number = (p) => { const e = p.root().querySelector(".cs-rail a .count"); r
 const tip = (p) => { const e = p.root().querySelector('.cs-mast [data-kind="todo"]'); return e ? e.getAttribute("data-tip") : null; };
 const h = (t) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-test("R93 R122 (P9) loading a screen that draws the queue sends one count read for the frame and one list read for the screen, the list read once; the number is the count and the explanation names the kinds", async () => {
+test("R93 R122 (P9) R7 (E12, K4530) loading a screen that reads the whole open queue sends that one list read and no count read of the frame's; the number is the sum of the list's three kinds and the explanation names them", async () => {
   const p = await boot({ screens: [LIST], path: "/app/queue", plane: { queue: queueOf(ITEMS) } });
   const reads = p.byOp("queue");
-  const counts = reads.filter((r) => r.query.count), lists = reads.filter((r) => !r.query.count);
-  assert.equal(counts.length, 1, "the frame asks for the count once");
-  assert.equal(lists.length, 1, "the list is read once, by the screen alone");
+  assert.equal(reads.filter((r) => r.query.count).length, 0, "the frame asks for no count: the screen's list gives the number");
+  assert.equal(reads.filter((r) => !r.query.count).length, 1, "the list is read once, by the screen alone");
   assert.equal(number(p), "5", "the number the rail draws");
   assert.equal(tip(p), h(word("shell.queue.waiting", { n: 5, todo: 2, noticed: 1, status: 2 })) + '<span class="more">' + h(word("shell.queue.open")) + "</span>");
+});
+
+test("R7 (E12, K4530) control: a whole open list that was refused or not answered leaves the frame to ask for the count, once, after it; the number is the count", async () => {
+  for (const list of [silent, ok({ ok: false, reason: "NOPE", code: "NOPE" })]) {
+    const p = await boot({ screens: [LIST], path: "/app/queue", plane: { queue: (req) => (req.query.count ? ok({ ok: true, member: "mai", count: 4 }) : list) } });
+    assert.deepEqual(p.byOp("queue").map((r) => !!r.query.count), [false, true], "the list, then one count read");
+    assert.equal(number(p), "4");
+  }
 });
 
 test("R93 (P9) a screen that reads no list gets the number from the count and sends no list read at all; the explanation is not drawn with a kind unanswered", async () => {
@@ -81,6 +88,7 @@ test("R93 (P9) control: a list cut by its limit gives the frame no kinds, and a 
   const plane = { queue: (req) => (req.query.count ? ok({ ok: true, member: "mai", count: 5 }) : ok({ items: ITEMS.slice(0, 2), truncated: true })) };
   const p = await boot({ screens: [cut], path: "/app/queue", plane });
   assert.equal(number(p), "5", "the count stands");
+  assert.equal(p.byOp("queue").filter((r) => r.query.count).length, 1, "a cut list gives no number, so the frame asks for the count once");
   assert.equal(tip(p), null, "two of five items name no kinds");
   const other = { id: "queue", words: [], reads: () => ({ muted: { op: "queue", query: { muted: "true" } }, mine: { op: "queue", query: { project: "P1" } } }), acts: [], render: () => "<p>x</p>" };
   const q = await boot({ screens: [other], path: "/app/queue", plane: { queue: (req) => (req.query.count ? ok({ ok: true, member: "mai", count: 5 }) : ok({ items: [{ id: "z", class: "OBLIGATION" }] })) } });

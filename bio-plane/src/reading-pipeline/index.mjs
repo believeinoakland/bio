@@ -12,7 +12,7 @@
    what the object can hold is never loaded. */
 import { layerChain, appendStep, describeChain, checkChain, checkAnchor, applyConfidenceFloor, mergedChain,
          convertedChain, readingSource, mergeTier2Text, tier2Note, glyphCount, stepCovers } from "../textchain.mjs";
-import { getFormat, readingDialect } from "../formats.mjs";
+import { getFormat, readingDialect, detectFormat } from "../formats.mjs";
 import { identify, doctypeFor, readText } from "../../../docprofile/registry.mjs";
 import { driveConvertStep } from "../drive.mjs";
 import { readingProvenance, describePages } from "./readingprov.mjs";
@@ -1523,6 +1523,14 @@ export async function bytesOf(evidence, doc) {
                       : { bytes: null, failure: FAILURE_TRANSIENT, why: word("reading-pipeline.why.parts_held_add") };
 }
 
+/* R2/R32 (fix round 5, E1): a declared type that is text, as acquisition's `profilesAsText` judges it; and the bytes as text
+   when they are UTF-8 without a NUL, else null. */
+const TEXT_TYPE = /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i;
+function utf8TextOf(bytes) {
+  if (bytes.includes(0)) return null;
+  try { return new TextDecoder("utf-8", { fatal: true }).decode(bytes); } catch { return null; }
+}
+
 async function readInner(doc, { evidence, env, storeName, view, planeVersion, liveCalibration, transcription,
                               unitsBudget, ocrInvocations, owe }) {
   const retrieved = doc && typeof doc.retrieved === "string" ? doc.retrieved : null;
@@ -1534,7 +1542,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   for (const [hk, hv] of (Array.isArray(headerPairs) ? headerPairs : [])) headers[String(hk).toLowerCase()] = hv;
   const locator = documentAddressOf(doc);
   const multipart = Array.isArray(doc && doc.parts);
-  const fmt = profile.format && typeof profile.format.format === "string" ? profile.format.format : null;
+  const recorded = profile.format && typeof profile.format.format === "string" ? profile.format.format : null;
+  let fmt = recorded;
   const vw = view ? { view } : {};
 
   /* R24: no store bound, no digest or no object is a failed reading saying so. No field the caller sends supplies
@@ -1551,8 +1560,18 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   const got = await bytesOf(evidence, doc).catch(() => ({ bytes: null, failure: FAILURE_TRANSIENT, why: word("acquisition.why.evidence_store_read") }));
   let bytes = got.bytes;
   got.bytes = null;
-  const textRead = !multipart && profile.profiled_from_text === true && bytes;
-  const text = textRead ? new TextDecoder("utf-8", { fatal: false }).decode(bytes) : "";
+  /* R2 (T51 fix round 5, E1; K4530): the recorded profile is never trusted over bytes the reader holds. A capture held in
+     parts is profiled from no byte, so an upload's recorded format is `undetermined` (or none): it is detected again from
+     the held bytes, the declared type only where they say nothing. Bytes still undetermined are text when the profile's
+     declared type is a text type and they are UTF-8 without a NUL, even in parts (R32). */
+  if (bytes && (fmt === null || fmt === "undetermined"))
+    fmt = detectFormat(bytes, profile.source_content_type || ct || null).format;
+  let textRead = !multipart && profile.profiled_from_text === true && bytes;
+  let text = textRead ? new TextDecoder("utf-8", { fatal: false }).decode(bytes) : "";
+  if (!textRead && multipart && bytes && fmt === "undetermined" && TEXT_TYPE.test(profile.source_content_type || "")) {
+    const decoded = utf8TextOf(bytes);
+    if (decoded !== null) { textRead = true; text = decoded; }
+  }
   /* N615 (K1683, K1773): every recogniser is handed the capture's origin, `"member"` only for bytes a member supplied by
      their own act outside the copy. The document records none: every capture it can be is a fetch the copy made, a
      member session's request included (acquisition, K1775), or a knock, which carries no member session (capture R30,

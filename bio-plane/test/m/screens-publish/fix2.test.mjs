@@ -96,7 +96,7 @@ test("R1 R13 C47 the editor's box for what the case leaves out is labelled for i
   const label = e.doc.querySelector('label[for="ce-statement"]');
   assert.ok(label && norm(label.textContent) === norm(word("review.statement.title")), "the box is labelled by the key of what it holds");
   assert.notEqual(norm(label.textContent), norm(word("screen.case-editor.statement.label")), "not \"what it says\"");
-  const two = DOCUMENT({ citations: [{ target: "INFO-2026-0004", version: "undetermined" }, { target: "INFO-2026-0005", version: "undetermined" }, { target: "FND-2026-0031", version: B1 }] });
+  const two = DOCUMENT({ citations: { state: "signed", rows: [{ target: "INFO-2026-0004", version: "undetermined" }, { target: "INFO-2026-0005", version: "undetermined" }, { target: "FND-2026-0031", version: "no_bytes" }] } });
   const p = await prepared({ plane: { casedocument: ok(two) } });
   assert.ok(drew(p, "screen.published.rests.on.the.council.minutes", { count: "2" }), "two documents not published with the case");
   assert.ok(!drew(p, "screen.ceremony.signs.count", { n: "2", findings: "1", evidence: "0" }), "\"0 pieces of evidence\" is not the whole truth");
@@ -104,7 +104,7 @@ test("R1 R13 C47 the editor's box for what the case leaves out is labelled for i
   assert.ok(drew(q, "screen.ceremony.signs.count", { n: "3", findings: "1", evidence: "1" }), "control: published evidence is counted and listed");
   assert.deepEqual(main(q).querySelectorAll("[data-statement]").map((li) => li.getAttribute("data-statement")), ["case", "finding", "evidence"]);
   assert.ok(drew(q, "screen.published.rests.on.the.council.minutes.one"), "the one document not published with it");
-  const none = await prepared({ plane: { casedocument: ok(DOCUMENT({ citations: [{ target: "FND-2026-0031", version: B1 }] })) } });
+  const none = await prepared({ plane: { casedocument: ok(DOCUMENT({ citations: { state: "signed", rows: [{ target: "FND-2026-0031", version: "no_bytes", capture: null }] } })) } });
   assert.ok(!drew(none, "screen.published.rests.on.the.council.minutes", { count: "0" }) && !drew(none, "screen.published.rests.on.the.council.minutes.one"), "control: a case resting on no document says none");
 });
 
