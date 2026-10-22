@@ -57,7 +57,7 @@ test("R100 (the door): an upload capture answers as new is read by extraction as
 test("R100 (controls): bytes already held (`existed: true`) and a refusal are not read; a reading the store refuses leaves the upload standing and is answered as the failed reading, as acquire answers it", async () => {
   for (const landed of [{ ok: true, existed: true, capture: { sha256: SHA, bytes: 9 } }, { ok: false, reason: "EMPTY", status: 400 }]) {
     const { env, S } = world({ answer: (c) => c.route === "captureupload" ? ok(landed) : null });
-    const r = await call(env, { op: "captureupload", token: S.ann, method: "POST", params: { statement: "s" }, body: "x" });
+    const r = await call(env, { op: "captureupload", token: S.ann, method: "POST", params: { statement: "s" }, body: "x", hooks: UNBOUND });
     assert.deepEqual(r.json.result, landed);
     assert.equal(opCalls(env).some((c) => c.route === "extractread"), false, JSON.stringify(landed));
   }
