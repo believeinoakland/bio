@@ -3,8 +3,8 @@
  *   node g27-reset.probe.mjs <dir>
  * It writes <dir>/probe.mjs, a Durable Object (SQLite) whose `/acquire` answers a kept capture and whose `/extractread` aborts the object
  * (`ctx.abort`, the reset a memory limit causes) on its first call, counted in the object's storage so it survives the reset, and answers
- * from the second. It then drives `captureOp("acquire")` as the plane's door does (stubs of the live namespace, extraction's own
- * `acquireReadingOp` behind `readAcquired`) and prints: whether the first read failed, whether the SAME stub answers after the reset (what
+ * from the second. It then drives `captureOp("acquire")` as the plane's door does (stubs of the live namespace, the reader of `reader.mjs`,
+ * written to extraction's `acquireReadingOp` contract, behind `readAcquired`) and prints: whether the first read failed, whether the SAME stub answers after the reset (what
  * Cloudflare says may not be relied on), the number of stubs the door made, and the document read. Workerd here enforces no memory limit
  * (diagnosis-R6-G4.md), so the reset is made by `ctx.abort`, which is the same reset the platform makes at the limit. */
 import { mkdirSync, writeFileSync, readFileSync, mkdtempSync } from "node:fs";
@@ -13,7 +13,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { Miniflare } from "miniflare";
 import { captureOp } from "../../../src/capture/ops.mjs";
-import { acquireReadingOp } from "../../../src/extraction/ops.mjs";
+import { readerFor } from "./reader.mjs";
 
 const dir = process.argv[2];
 if (!dir) { console.error("usage: g27-reset.probe.mjs <dir>"); process.exit(2); }
@@ -53,9 +53,9 @@ try {
   const doAnswer = async (res) => { try { const r = await res; const out = await r.json(); return out.ok === true ? { answered: true, result: out.result, reply: { status: r.status, body: out } } : { answered: false }; } catch { return { answered: false }; } };
   const h = { json, storeSilent: (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502), doAnswer, storageAbsent: () => json({}, 503),
     cls: "member", member: true, sessMember: "member:ann", storeName: "bio",
-    readAcquired: (answer, st) => acquireReadingOp(answer, st, { json, storeSilent: h.storeSilent, doAnswer, storeName: "bio" }) };
-  const quiet = console.error; const logged = [];
-  console.error = (...a) => logged.push(a.join(" "));
+    readAcquired: readerFor({ doAnswer, storeSilent: (op) => json({ ok: false, reason: "STORE_DID_NOT_ANSWER", op }, 502) }) };
+  const quiet = console.error;
+  console.error = () => {};
   let res;
   try {
     res = await captureOp("acquire", new Request("https://p/?op=acquire", { method: "POST", body: JSON.stringify({ locator: "https://t.example/d" }) }),
@@ -67,5 +67,5 @@ try {
   const ns2 = await mf.getDurableObjectNamespace("PROBE");
   const same = ns2.get(ns2.idFromName("p"));
   console.log(JSON.stringify({ status: res.status, read: b.document.reading ?? null, reading_pending: b.reading_pending ?? false, stubs_made: stubs,
-    first_read_logged: logged.filter((x) => /unanswered|deferred/.test(x)).length, same_stub_after_reset_answers: await same.fetch("http://x/extractread").then((r) => r.ok, () => false) }));
+    same_stub_after_reset_answers: await same.fetch("http://x/extractread").then((r) => r.ok, () => false) }));
 } finally { await mf.dispose(); }

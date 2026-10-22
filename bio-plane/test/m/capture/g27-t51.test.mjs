@@ -1,13 +1,13 @@
 /* capture, fix round 6 of T51 (G27, from G4's diagnosis `diagnosis-R6-G4.md`): the door's read after a kept acquire takes a fresh
    stub and tries once more when the first read throws or is not answered, never when the object is overloaded, and only then
-   defers. At the module's interface: `captureOp("acquire", ...)` as the plane's door calls it, with extraction's own reader
-   (`acquireReadingOp`) behind `readAcquired` exactly as `door.mjs` hands it, over stubs that fail the way a reset object's does
+   defers. At the module's interface: `captureOp("acquire", ...)` as the plane's door calls it, with a reader written to extraction's
+   `acquireReadingOp` contract (`reader.mjs`; capture cannot import extraction) behind `readAcquired` as `door.mjs` hands it, over stubs that fail the way a reset object's does
    (a rejected fetch carrying `remote: true`). R73 (the act's answer). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { H } from "./fixture.mjs";
 import { captureOp } from "../../../src/capture/ops.mjs";
-import { acquireReadingOp } from "../../../src/extraction/ops.mjs";
+import { readerFor } from "./reader.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const doAnswer = async (res) => {
@@ -33,12 +33,12 @@ const stub = (onRead) => {
 const gone = (flags = {}, message = "Durable Object reset because its code was updated.") => () => { throw Object.assign(new Error(message), flags); };
 const answers = () => json(READ);
 
-/* The door as the plane builds it: one `store()` per call, handed to `acquireReadingOp` as the plane's door does. */
+/* The door as the plane builds it: one `store()` per call, handed to the reader as the plane's door does. */
 const door = (stubs) => {
   let n = 0;
   const store = () => stubs[Math.min(n++, stubs.length - 1)];
   const h = { json, storeSilent, doAnswer, storageAbsent: () => json({}, 503), cls: "member", member: true, sessMember: "member:ann", storeName: "bio",
-    readAcquired: (answer, st) => acquireReadingOp(answer, st, { json, storeSilent, doAnswer, storeName: "bio" }) };
+    readAcquired: readerFor({ doAnswer, storeSilent }) };
   return { store, calls: () => n, run: () => captureOp("acquire", post(), new URL("https://p/?op=acquire"), env, store, h) };
 };
 const quiet = async (fn) => { const w = console.error; console.error = () => {}; try { return await fn(); } finally { console.error = w; } };
@@ -98,7 +98,7 @@ test("R73 G27 (fix round 6): a readAcquired that itself throws is retried on a f
   const store = () => (n++ === 0 ? stub(answers) : fresh);
   let attempts = 0;
   const h = { json, storeSilent, doAnswer, storageAbsent: () => json({}, 503), cls: "member", member: true, sessMember: "member:ann", storeName: "bio",
-    readAcquired: async (answer, st) => { attempts++; if (st !== fresh) throw Object.assign(new Error("stub broken"), { remote: true }); return acquireReadingOp(answer, st, { json, storeSilent, doAnswer, storeName: "bio" }); } };
+    readAcquired: async (answer, st) => { attempts++; if (st !== fresh) throw Object.assign(new Error("stub broken"), { remote: true }); return readerFor({ doAnswer, storeSilent })(answer, st); } };
   const b = await (await quiet(() => captureOp("acquire", post(), new URL("https://p/?op=acquire"), env, store, h))).json();
   assert.deepEqual([b.document.reading, b.reading_pending, attempts, n], [{ read: true, units: 3 }, undefined, 2, 2]);
 });
