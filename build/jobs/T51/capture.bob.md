@@ -1,6 +1,6 @@
 # BOB to capture (T51)
 
-**Read** · handled J14
+**Read** · handled J16
 
 ## B1 · START
 
@@ -173,3 +173,31 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 ## B14 · RESUME
 
 RESUME (BOB #245): nothing pushed on your branch for 20+ minutes while WORKING. If you are mid-step, carry on; otherwise read your mailbox past your cursor and continue. Push your progress and say in your record what you are doing.
+
+## B15 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/capture tranche/T51 && git branch -m job/T51/capture stale/capture-local && git checkout -b job/T51/capture origin/job/T51/capture`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · CAPTURE #46 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #247 is depth 1; fix round 4b, job 4 of 12; K4487)
+
+Mail with `--module capture`; record `build/jobs/T51/capture.md`. Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). You are the module job (P8, mechanics §6) for `capture`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first.
+
+**Why this round.** Bob asked (K4483): "Are there other file extraction situations where only part of the file is read at a time, possibly causing it to be lost and abandoned the why big PDFs were? We should identify and fix any similar conditions." Read in full: `build/plan/fix-round-4b-T51.md` (the plan: section 1's decisions D1-D6 bind you, section 2's table gives the merge order and seam owners) and, in `build/plan/audit-partial-reads-T51.md`, "Root facts" and every finding your entry names (its file:line evidence is your starting point, never a substitute for reading the code). Then your requirements (both parts; your new id is written there, marked not yet met), the used services your entry touches, and your code.
+
+**Rules** (fix round 4 §0, `build/plan/fix-round-4-T51.md`; K4426-K4428): (1) root cause stated with file:line, else step 0 is a diagnosis posted as a QUESTION before any fix; (2) why the tests missed it, and the test-gap fix; (3) a failing-first test on the case named, through the real entry path (press the act or call the op, never the done function), seen red in your record, then green; (4) where the platform matters (128 MB object, `waitUntil` cut ~30 s after the response, 25 s door bound), a local workerd check with real sizes, numbers in your record; no deploy. R-SEAM: the seam owner's test runs the whole path with the real merged providers; a provider tests the same case at its interface; a seam test needing an unmerged provider is written first and stays red by name. A lower module never imports plane: it registers owed work through the hook plane hands it at composition (as acquisition's `keepLater` does today). R-NOTMET: no "not met", "deferred", REPORT or open QUESTION at COMPLETE: name the smallest thing you need and ask BOB now. R-OLD: stored data is "new data only" or has a repair. Wording waits for T52 (K4269): a new sentence uses the nearest held row as stand-in (a drawn-screen module never adds `localize`), the row owed named in your record. Declare every census op you own. Bob's focus: an alpha release deployed as efficiently as possible: do what the entry needs, nothing more.
+
+Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio capture tranche/T51 job/T51/capture`. COMPLETE: what changed (file:line), the failing-first tests red then green, measurements, suite counts, requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+**Your entry (4).** (F2, F5). **R103**: `captureupload` over 32 MiB keeps the whole as `acquire` does (awaited within the bound, else `keepLater`); a capture session's expiry ends no owed work. Failing-first: a 40 MB five-part upload through the real door: the whole held after one alarm.
+
+## B16 · CHANGE
+
+CHANGE (BOB #247; K4488): acquisition R100 (its J19) exports `keepPast(cap, ev, {sha, parts, boundMs, elapsedMs, keepLater})` (awaits `putFromParts` within the bound, else `keepLater`; answers `{kept, keep_pending}`): use it for the upload arm (F2). Owed capture sessions are parked by acquisition with a 30-day ttl and dropped when done: keep `liveCaptureSessions` and "Unfinished" right for that ttl; your one-hour pruning must not drop them.
+
+## B17 · ANSWER · re J15
+
+ANSWER to J15 (BOB #247; K4489). Your reading is ruled: a saved `capture_sessions` row is owed resume state, never pruned by the clock; `loadCaptureSession` answers an expired row with `expired: true` and its state; `dropCaptureSession` alone removes a row; `liveCaptureSessions` unchanged. Update the two pinned tests as you say. Propose R22, R46 and R74's amended lines at COMPLETE. Acquisition is told by CHANGE to call `dropCaptureSession` when its ledger work ends or is final.
+
+## B18 · ANSWER · re J16
+
+ANSWER to J16 (BOB #247): acquisition is merged on tranche/T51 (K4492, 02:23). Merge the tranche, replace the local helper by `keepPast` (one copy, K4164), re-run, COMPLETE.

@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J19
+**Read** · handled J23
 
 ## B1 · START
 
@@ -209,3 +209,35 @@ CHANGE (BOB #245, K4442). (1) Your J18 is read: you will get a CHANGE the moment
 ## B25 · CHANGE
 
 CHANGE (BOB #245, K4448): ACQUISITION #24 is merged on tranche/T51 (keepLater, keep_pending). Merge the tranche, run your suite and fix4-seam, apply B24 (the fixture's transactionSync rollback), and COMPLETE.
+
+## B26 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/plane tranche/T51 && git branch -m job/T51/plane stale/plane-local && git checkout -b job/T51/plane origin/job/T51/plane`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · PLANE #49 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #247 is depth 1; fix round 4b, job 11 of 12; K4487)
+
+Mail with `--module plane`; record `build/jobs/T51/plane.md`. Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). You are the module job (P8, mechanics §6) for `plane`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first.
+
+**Why this round.** Bob asked (K4483): "Are there other file extraction situations where only part of the file is read at a time, possibly causing it to be lost and abandoned the why big PDFs were? We should identify and fix any similar conditions." Read in full: `build/plan/fix-round-4b-T51.md` (the plan: section 1's decisions D1-D6 bind you, section 2's table gives the merge order and seam owners) and, in `build/plan/audit-partial-reads-T51.md`, "Root facts" and every finding your entry names (its file:line evidence is your starting point, never a substitute for reading the code). Then your requirements (both parts; your new id is written there, marked not yet met), the used services your entry touches, and your code.
+
+**Rules** (fix round 4 §0, `build/plan/fix-round-4-T51.md`; K4426-K4428): (1) root cause stated with file:line, else step 0 is a diagnosis posted as a QUESTION before any fix; (2) why the tests missed it, and the test-gap fix; (3) a failing-first test on the case named, through the real entry path (press the act or call the op, never the done function), seen red in your record, then green; (4) where the platform matters (128 MB object, `waitUntil` cut ~30 s after the response, 25 s door bound), a local workerd check with real sizes, numbers in your record; no deploy. R-SEAM: the seam owner's test runs the whole path with the real merged providers; a provider tests the same case at its interface; a seam test needing an unmerged provider is written first and stays red by name. A lower module never imports plane: it registers owed work through the hook plane hands it at composition (as acquisition's `keepLater` does today). R-NOTMET: no "not met", "deferred", REPORT or open QUESTION at COMPLETE: name the smallest thing you need and ask BOB now. R-OLD: stored data is "new data only" or has a repair. Wording waits for T52 (K4269): a new sentence uses the nearest held row as stand-in (a drawn-screen module never adds `localize`), the row owed named in your record. Declare every census op you own. Bob's focus: an alpha release deployed as efficiently as possible: do what the entry needs, nothing more.
+
+Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio plane tranche/T51 job/T51/plane`. COMPLETE: what changed (file:line), the failing-first tests red then green, measurements, suite counts, requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+**Your entry (11).** (D2). **R77**: the ledger as D2; `owedwork` op (declared, census); `fix4-r75.test.mjs`'s "a digest with no home yet ends there" made current (it pinned the defect). Failing-first: the audit's `audit-partial-reads/pending-gap.test.mjs` turned to assert the right behaviour (red now), the 40 MB keep promoted at 90 s, re-arm after exhaustion.
+
+## B27 · CHANGE
+
+CHANGE (BOB #247; K4488): shapes pinned with your providers, build to them. (1) acquisition R100 (J19): plane assigns `captureOf(ctx).owedLater` at composition beside `keepLater`: async `owedLater(entry) -> {ok:true}`, never throws. Entries `{kind:"subresources", sha, session}` (ledger key is `session`, not `sha`) and `{kind:"unpack", sha}`. The alarm runs `subresources` by `acquisition.owedRun(cap, {kind:"subresources", session}) -> {ok, done, outstanding?, final?, reason?}`: `done` ends, `final`+`reason` ends with the reason stated, else retry after back-off. `unpack` runs as the archive-unpack drain does today (`op=unpack` as the daemon through the door): ends on `complete` or a `waiting_on` of `ARCHIVE_TREE_*`/`ARCHIVE_DEPTH_MAX`; a daily-budget `waiting_on` stays owed. (2) extraction R82 (J12): the `ocr` entry calls `readHeld({sha, kind:"ocr"})`; an answer with `owed: true` keeps the entry, and READING_HELD with `owed` is not an end; no `owed` ends it. A failed reading carries `failure: "transient"|"final"`; `readHeld` replaces a transient one.
+
+## B28 · ANSWER · re J20
+
+ANSWER to J20 (BOB #247; K4490). Your B27 CHANGE (K4488, posted 02:13) already pinned the owners' side; acquisition and extraction are building to it, so plane matches it where yours differs: (1) the hook is `owedLater(entry)` handed at composition beside `keepLater` (keep `owe` as an alias if you like; `owedLater` is the name the owners call); a `subresources` entry is keyed by `session` (two captures of one page share a primary digest), so the ledger key is `sha` for keep/reading/ocr/unpack and `session` for subresources; `detail` as you built is fine. (2) reading and ocr: `extraction.readHeld({sha, storeName, env, kind})`; an answer with `owed: true` (and its new cursor, if any) keeps the entry and runs again at once; `read: true` or `READING_HELD` without `owed` ends it; `failure: "final"` (or your `{final:true, why}`) ends it with the reason shown by `owedwork`; anything else retries. (3) subresources: `acquisition.owedRun(cap, {kind: "subresources", session})` -> `{ok, done, outstanding?, final?, reason?}`; unpack: run as today's archive-unpack drain (`op=unpack` as the daemon), ending on `complete` or `waiting_on` ARCHIVE_TREE_*/ARCHIVE_DEPTH_MAX, a daily-budget stop owed. Until a provider merges its side, the entry stays owed (`NO_OWNER`), as you built. (4) `owedwork` and the migration as you built: accepted.
+
+## B29 · CHANGE
+
+CHANGE (BOB #247; K4492): ACQUISITION #26 is merged on tranche/T51 (merge it in). `owedRun(store, entry, opts)` finishes a pending render and hands its document to `opts.deliver({answer, session})`, which the caller must supply: promote the rendered document in the shell document's home, as screens-intake's `doneAcquire` does through `op=promote`. Plane's alarm (PLANE #49) calls `owedRun` for `subresources` and passes `deliver`; if the promotion belongs to the door, control-plane (CONTROL-PLANE #46) exports the function plane hands as `deliver`. Without `deliver` a pending render stays the member's "Finish it" (never dropped). PLANE and CONTROL-PLANE: agree the one place by QUESTION to BOB if it is not plain; the seam test is plane's (owed render delivered by the alarm, then the document's reading pending per R123).
+
+## B30 · ANSWER · re J23
+
+ANSWER to J23 (BOB #247; K4493): your reading is ruled. CONTROL-PLANE #46 exports `deliverOwedRender` (CHANGE sent); keep your seam test red by name; a CHANGE brings you back at its merge.
