@@ -445,3 +445,13 @@ Probe numbers (E3, `g26.probe.mjs` and `g15.probe.mjs` run alone, unedited):
 - **R94** (fix round 6, G38; K4615; amends R27; R70 holds for `readingOf`) **A bulky part of the stored reading is named, never carried.** A top-level key of the stored reading whose JSON is over 262,144 B is left out of `readingFor`'s `reading` and named in `reading_omitted`, `[{key, bytes}]`, absent when none is; every other key is as stored; `readingOf` (R30) answers the stored reading whole. `unread_pages` (R27) is computed without holding the capture's page text whole. Test: `g38.test.mjs`.
 
 Size (session_01HrxtmpnnxSr8WgbmGib4AF): test runs 16, module lines 3954
+
+## J24 · QUESTION
+
+QUESTION · G40 · I need `wants(captureClass)` on `ReadHooks` (reading-pipeline's file `bio-plane/src/reading-pipeline/hooks.mjs`).
+
+Why: the 1 MB CSV's reading is class `generic` (measured), 11.8 MB of JSON; `JSON.parse` of it is +18.4 MB live heap. The plan says the after-read hooks' reading is parsed lazily inside `afterCommit`, only when a hook can run. `ReadHooks.#hooks` is private and the only hook (`events`) lists classes that do not include `generic`, so extraction cannot tell from its side that no hook can run; without `wants` it would parse 18 MB after every commit of every large reading, still on the object's 128 MB.
+
+What I ask (smallest thing): a method `wants(captureClass) → boolean` on `ReadHooks`: true exactly when some registered hook's classes include the class (`captureClass` null or a class no hook holds: false); no other change to hooks.mjs. Either reading-pipeline's job adds it (one line plus a test) or BOB lets me add it in my diff; I proceed with `typeof hooks.wants === "function" ? hooks.wants(cls) : cls !== null` meanwhile, so my code works either way and the test for "no parse when no hook wants the class" turns green once `wants` exists.
+
+My other plan: one `{json, digest}` per reading (WeakMap filled in `recordComposed`, consumed and deleted by `writeReading` before listeners), the hooks' reading `JSON.parse(json)` lazily in `afterCommit`, prior-reading parses by `json_extract`. Proposed requirement: R95 (G40). Test file `g40.test.mjs` red today at stringify 4, encode 2, parse-in-transaction 1.
