@@ -201,3 +201,38 @@ Tests and checks:
 - `checks/ownership.mjs strength tranche/T51 job/T51/strength`: 1 failure, `build/requirements/strength.md` (accepted at merge per B7/B8).
 
 Size (session_01GoYzWEmtdrTTKn5jDCjkaM): test runs 5, module lines 3010
+
+## J13 · COMPLETE
+
+STRENGTH #21 (B14, fix round 6, G12c provider). `inquirystrength` also reads a list: one call, one result per id (commit ce8347fac4 on `job/T51/strength`; `tranche/T51` was merged first, nothing else pending).
+
+**What changed.** `bio-plane/src/strength/index.mjs`: `inquiryStrengthMany({ids, viewer})` (new, beside `inquiryStrength`), `idsOf` and `INQUIRY_STRENGTH_IDS_MAX` = 50 (new exports/consts, ~:131 and before `distinctParts`); the ops map's `inquirystrength` arm reads `ids` (the body's list, else the query's comma-separated one) and answers `inquiryStrengthMany`, else the single read as before; `DECLARED_OPS.inquirystrength` (new row, K4208): classes admin/member/probe, `mutating: false`, weight `read`, `fields: {accepts: [id, ids], requires: [[id, ids]]}`, class/weight/description copied from the hand rows (op-declarations R81 and op-grades R50 hold: their suites pass).
+
+**The answer.** `{ok: true, results: {<id>: that id's single answer}}`, keys in the order asked, an id named twice answered once. Each result is exactly `inquiryStrength({id, viewer})`: an inquiry the viewer may not see has its result, `{ok: false, reason: "NO_SUCH_BUNDLE", target}` as an absent one, never an omission. More than 50 ids, an entry that is not a non-blank string, or a non-list: `BAD_IDS` (with `limit`), whole, no partial answer. None named: `NO_ID`. The single read (`id=`) is untouched.
+
+**Failing-first, red then green** (`test/m/strength/batch.test.mjs`, names R44; through the ops map as the door calls it, `url` and `body`; the expected answers are the single reads of the same ids, never a hand-written shape):
+1. a batch of 5 differing inquiries equals the 5 single answers for a machine viewer, a participant and a non-participant, by query list and by body list (control: the five answers differ). Red before (4 of 4 red: no `results`), green after.
+2. a hidden id is withheld as the single read withholds it, under its own key, and an absent id has the same shape; control: a participant of the project sees the same id whole.
+3. the bound: 51 refused `BAD_IDS` whole, 50 answered, a repeated id answered once.
+4. wrong shapes `BAD_IDS`, empty `NO_ID`; control: the single read unchanged.
+5. `declared-ops.test.mjs`: `declaredOpHolds` for `inquirystrength` (R41, R44).
+Why missed: no batch read existed or was ruled (the speed diagnosis, item 4).
+
+**Platform (R-FOUR (4)): N.** A pure in-object loop over the single read; no clock, size or limit of the platform enters. Not timed (R-CLOCK); the saving is the hops (one per question to one per page), re-timed by PERFORMANCE. Cost bound: at most 50 single reads in one call, each bounded as before.
+
+**Requirement line proposed for BOB (R44, new; amends R41's list, which gains `inquirystrength`):**
+"**R44** (T51 fix round 6; G12c; K4426) **`inquirystrength` also answers a list.** Given `ids` (a list in the body, or a comma-separated string in the query; at most 50 distinct non-blank record ids) it answers `{ok: true, results}`, one result per id in the order asked, each exactly the answer R6 gives that id for this viewer, so an inquiry the viewer may not see is its result `NO_SUCH_BUNDLE`, never left out. More than 50, an entry that is not an id, or a non-list is `BAD_IDS` (with `limit`), whole; none named is `NO_ID`. Without `ids`, R6 as it stands. Test: `batch.test.mjs`, with its controls." R41: the declared ops gain `inquirystrength` (`declared-ops.test.mjs`).
+
+**For others (store-door, screens-inquiry; not mine):** the batch key is `ids`; store-door's `PROJECT_NAMING_READS.inquirystrength` lists `["id"]`, so it must name `ids` as well, fenced exactly as `id`; the control plane's door forwards `ids`; screens-inquiry reads `results[id]`.
+
+**Words:** two new `localize` ids for the caller's sentences (details of `BAD_IDS`, `NO_ID`): `strength.index.ids_must_be_a_list_of_record_ids`, `strength.index.the_derived_pairs_are_asked_of_ids` (strength is no drawn-screen module; the design may row them). Words count: strength 0 failures, unkeyed 16 as before.
+
+**Deferred:** nothing. **Found outside this module:** nothing new. Standing reports unchanged (J1/J4/J8: `program.mjs`, the plane bundle, rule 11 unkeyed).
+
+**Tests and checks:**
+- `node --test --test-force-exit bio-plane/test/m/strength/`: 182 pass, 0 fail (177 before, +5).
+- Suites the declaration table touches (`impact.mjs` names 63 modules because `DECLARED_OPS` is a shared table; run the ones that read it): op-declarations 149/0, op-grades 227/0, op-capabilities + store-door 64 (the one red, `routes.test.mjs` "R16 (T48; N996…)", passes alone on my tree and on the base, a load flake under two suites at once), screens-inquiry 486/0 (the single read's user).
+- `checks/run.mjs`: format 1 failure, `build/plan/next.md:38` (BOB's file, not mine); architecture 0; coverage 6617 of 6617 (strength 43 of 43); channels 0; words 0 failures.
+- `checks/ownership.mjs strength tranche/T51 job/T51/strength`: 4 files, 0 failures.
+
+Size (session_01QZu1kbM1Tfpcwi3si6nhVz): test runs 9, module lines 3048
