@@ -291,3 +291,17 @@ COMPLETE · INTERFACE-SHELL #15 (session_01XNRmAuR8VXqdzNrDodxNZ8) · T51 · ent
 **Found in this module's paths:** none beyond the above. Deferred: none.
 
 Size (session_01XNRmAuR8VXqdzNrDodxNZ8): test runs 29, module lines 3124
+
+## J21 · QUESTION
+
+QUESTION (E12 step 1, offline through my harness with the nine modules' real SCREENS; every `(op, query)` sent per load, admin, assistant reachable). Only two repeats are identical requests; the rest differ in a parameter and each is a screen's own declaration.
+
+IDENTICAL (mine, I fix them): Home `groupidentity` x2 (frame `browser.mjs` loadFrame :2584 + `screens-daily/home.mjs`:37); Project `groupidentity` x2 (frame + `screens-inquiry/project.mjs`:41). Fix: a read request (op declared not mutating) identical to one in flight, or answered in this load with no act since, is shared; every act and every route opens a new epoch, so an act's re-reads and a re-visit still re-read. No requirement text changes.
+
+DIFFER IN A PARAMETER (not identical):
+- Home `queue` x2: frame `{count:true}` (R7, browser.mjs:2584) + the screen's open list `{}` (`home.mjs`:38).
+- Queue `queue` x3: the same count + the open list `{sort?}` (`screens-daily/queue.mjs`:44) + `{muted:true}` (:48; answered/aside in their states, :37-38).
+- Project `inquirystrength` x2: two questions, ids differ (`project.mjs`:313, one per question).
+- Held `heldcaptures` x3: picker list `{limit:50,fields:picker}` (`screens-intake/held.mjs`:11), set-aside list `{state:set_aside}` (:13), and the full fields `{bundle_ids}` (:31, E13's, capture).
+
+ASK (changes R7's text): on Home and Queue the screen reads the whole open queue, which already gives the frame its number and its three kinds (`noteQueue`, R93/R96). My best reading, RECOMMENDED: the frame sends its `count:true` read only when the screen reads no whole open list, or that list came back cut/failed (then right after); so Home and Queue send one `queue` request fewer, and a screen that reads no list (Find, Projects...) is unchanged. Cost: on those two screens the masthead number waits for the list instead of the cheaper count (same time as the screen's own list). Alternative: leave R7 as is (the count stays a separate request). I build the recommended reading only on your word; everything else of E12 goes on now.
