@@ -249,3 +249,35 @@ Checks: format 0 failures; ownership 0 failures (3 files: index.mjs, lists.test.
 Requirements met: R19 (the `editions.case` sentence). No open QUESTION. No deferred item.
 
 Size (session_01Mgd8f9TtwZNsFGWYR1ET9V): test runs 10, module lines 1633
+
+## Completion record (fix round 6, B16 START, K4570, K4571; REVIEW #24, session_016SWyQAUyjKySSg7jMkWWY1)
+
+COMPLETE for fix round 6, job 9 (G12c, provider for screens-daily's `casedrafts` and screens-publish's `reviewcopy`). Branch job/T51/review, `tranche/T51` merged at the start (up to date; nothing of this round was read from a double).
+
+**What changed**
+1. `bio-plane/src/review/index.mjs`: `listMany` (after `list`) and `copyMany` (after `copy`); `idList` (list or comma text, each id once, in order); `batchTooLarge`; `REVIEW_BATCH_LISTS_MAX` = 50 and `REVIEW_BATCH_COPIES_MAX` = 20; the ops map's `casedrafts` and `reviewcopy` arms take `projects` / `drafts` (a body list, else comma-separated in the query) and answer `{ok, kind: "review-drafts-batch", count, lists: {[project]: <the single answer>}}` / `{ok, kind: "review-copies", count, copies: {[draft]: <the single answer>}}`. Each id is answered by calling the single read itself (`list` / `copy`), so a project or draft the viewer may not see, or that does not exist, answers `NO_REVIEW_COPY`, byte-identical to the single read, and a recipient's batch (`bySecret`) gets her own draft's copy and the dead answer for every other. `limit` passes to each. Writes nothing.
+2. A list longer than its bound is refused whole, `REVIEW_BATCH_TOO_LARGE` (C-87.18, `checks.mjs`; `max` named), never answered in part. Its member words are the nearest held row's, `refusal.REVIEW_DRAFT_TOO_LARGE` (stand-in); **row owed: `refusal.REVIEW_BATCH_TOO_LARGE`** (the detail is `review.index.a_batch_names_at_most`). No screen reaches it: the owners send at most 50 projects / 20 drafts.
+3. `DECLARED_OPS` (K4208) gains `casedrafts` (classes admin/member/probe, read; accepts `project`, `projects`, `limit`) and `reviewcopy` (classes null, read; accepts `draft`, `drafts`, `limit`, `secret`); both require nothing, because a call with none of the keys is the one dead answer, which names nothing (R10, R19). `casedrafts`'s description is the hand row's (op-grades); `reviewcopy` has no hand description, so its sentence is new.
+
+**Failing-first tests** (`bio-plane/test/m/review/batch.test.mjs`, 8 tests, through `reviewOps` as the door runs it). Red on the unchanged source: the file did not load (`REVIEW_BATCH_COPIES_MAX` not exported), and the unchanged ops map ignores `projects` and `drafts`, answering the single dead answer. Green with the change: 8/8. They check: the batch equals the single answer id by id, with a hidden id and an unknown one (both the dead answer, byte-identical); a body list; a repeated id once; an empty list; no viewer / an outsider; a recipient's own draft and not another's, and a revoked grant; the bounds (at and over); `limit`; a snapshot proving nothing is written; the declarations held by `declaredOpHolds`.
+**Why the tests missed it:** no batch read existed, so every test (and the screens) asked per item. **Test-gap fix:** the batch tests compare each id with the single read it replaces.
+**Other test edits:** `declared-ops.test.mjs` (R42: all six ops, the list derived from the ops map, K3268; `casedrafts` and `reviewcopy` are reads), `invariants.test.mjs` (C-87.18 in the family table and driven at its interface).
+
+**Platform check: N** (a data read; the dry-run gates of a copy still run once per draft, as the single reads did, so a batch of 20 copies costs what 20 single reads cost in the object, and saves 19 hops at 115-160 ms). No timing is asserted from the object's clock (R-CLOCK). Expected for the walker's rows: Home sends one `casedrafts` for its projects instead of five; the Ceremony one `reviewcopy` instead of two (the owners' jobs change the calls).
+
+**Requirement lines I propose** (BOB writes `build/requirements/review.md`; test titles name R19, R10 R11 and R42 until then)
+- **R44** (G12c; amends R19) `casedrafts` also takes `projects`, a list of at most 50 project ids (a body list, else comma-separated in the query), and answers `{ok, kind: "review-drafts-batch", count, lists}`: for each project asked, once, in the order given, exactly the answer the single read gives it (`NO_REVIEW_COPY` for a project the viewer has no standing in and for one that does not exist alike). A longer list is `REVIEW_BATCH_TOO_LARGE` (C-87.18), naming `max`, and nothing is read. Test: the batch equals the single answers id by id, a hidden id and an unknown one included. Control: an empty list answers `lists: {}`; a call with neither key is the dead answer.
+- **R45** (G12c; amends R10, R11) `reviewcopy` also takes `drafts`, at most 20 draft ids, and answers `{ok, kind: "review-copies", count, copies}`, one copy per draft exactly as the single read gives it at either door (a recipient gets her grant's own draft and the dead answer for every other); `limit` applies to each; a longer list is `REVIEW_BATCH_TOO_LARGE`.
+- Amend **R23** (C-87.18 `REVIEW_BATCH_TOO_LARGE`) and **R42** (`DECLARED_OPS` also declares `casedrafts` and `reviewcopy`, reads, with the accepted keys above and nothing required).
+
+**For the seam owners (not mine):** control-plane's `casedrafts` arm (`index.mjs:3697`, `reviewAnswer`) and its `reviewcopy` stamping must forward `projects` / `drafts` and treat the answer, which is `ok` with the per-id answers inside, as a read answer (not as the dead answer's 404); store-door's `PROJECT_NAMING_READS` names `projects` and `drafts` and fences each id as the single read. Parameters: query `projects=a,b,c` / `drafts=a,b,c`, or a body list `{projects: [...]}`.
+
+**Deferred:** nothing. **Found in another module:** nothing new. **Words owed:** `refusal.REVIEW_BATCH_TOO_LARGE` (stand-in above).
+
+**Tests and checks run**
+- `node --test --test-force-exit bio-plane/test/m/review/` = 95 pass, 0 fail (was 87; 8 new).
+- The users `impact.mjs origin/tranche/T51 HEAD` names (10 modules, 184 files; 171 run besides review's 13): 1144 tests, 1143 pass, 1 fail: plane `release.test.mjs:74` R24 ("screen.objective.purpose is held by the words list"), a words-list state of the tranche, not touched by this change (the plan accepts `plane` `release` R24 by name).
+- `node checks/run.mjs /home/user/bio`: format 1 failure, `build/plan/next.md:38` (N1265), inherited and not mine; architecture 0; coverage 0 (6617 of 6617); channels 0; words 0 failures (handlist 0, testcopy 0, missingkey 0).
+- `node checks/ownership.mjs /home/user/bio review tranche/T51 job/T51/review`: 6 files changed by review, 0 failures.
+
+Size (session_016SWyQAUyjKySSg7jMkWWY1): test runs 9, module lines 1703
