@@ -345,3 +345,13 @@ COMPLETE for B13 (START, fix round 4, wave 1, #3), `job/T51/capture` (tranche/T5
 
 **Tests and checks.** capture + cap13-reuse-pages + d57selflink: 247 tests, 247 pass (p10-t51 5). Users run: screens-inquiry, screens-daily, interface-shell (1,026 pass), screens-intake, capture-requests (all pass; `screens-intake/capture.test.mjs` R22 failed once with another suite running at the same time and passes twice alone), op-grades + op-declarations 396 tests, 395 pass: the red is op-declarations `t36` R34 (affordances R48), which is red on `tranche/T51`'s tip too (checked with my `index.mjs` swapped for the tip's: same failure), not mine. `checks/run.mjs`: format 0, architecture 0, coverage: no capture id unnamed, words: none in capture (3 failures are op-grades', as before), ownership 0 failures.
 Size (session_012XpvBxY8DzCpmcr55C2RtT): test runs 14, module lines 4171
+
+## J15 · QUESTION
+
+QUESTION (not blocking; I carry on on this reading). R103's "a capture session's expiry ends no owed work" conflicts with R22's text ("load answers found: false for an unknown or expired session") and R46.
+
+My reading: every saved `capture_sessions` row is resume state for work still owed (acquisition saves one only while supporting files or a render are outstanding, and drops it when they end), so the clock must never delete it. Built: save and load no longer prune expired rows; `loadCaptureSession` finds an expired session and answers `expired: true` beside its state; `dropCaptureSession` (work done or ended with a stated final reason) is the only thing that removes a row; `liveCaptureSessions` (R46) still lists only unexpired sessions, so queue's partial-capture condition and the member's "Finish it" window are unchanged. Old rows already pruned stay lost (new data only, R-OLD); nothing to repair.
+
+Consequence: two existing tests pin the old behaviour (services.test.mjs R22 "an expired session found: false", and R74's list of writers, which counted `loadCaptureSession` as one because it pruned). I update both to the new reading, not weaken them. acquisition's ledger entry (R100) must call `dropCaptureSession` when its work ends or is final, or the row stays.
+
+If you want a different seam (e.g. the ledger entry carries the state itself and sessions still expire), say so and I redo this part; the upload half (R103's first sentence) does not depend on it.
