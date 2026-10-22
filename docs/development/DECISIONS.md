@@ -6383,3 +6383,18 @@ decided: 2026-10-22 · the design session (P17)
 the design: `screens/words-reads.json` regenerated from origin/tranche/T51's bio-plane/src (163 modules, 18,887 keys read, 5,868 inline strings unkeyed), with DEC-412's handoff additions (op-grades' moneysets and scanmirror strings). Nine strings it left untriaged are triaged: control-plane's six owner-op descriptions and the plane's `ask` description as builders' grading text (`dev("grade")`; their member sentences are act.<op>.does rows), screens-settings' bias file label "## What This Does Not Enforce" as file grammar; and affordances' last stand-in gets its row, `act.readheld.does`, word for word its default (extraction R80). The words check on T51 with these files: 0 failures (from 3).
 reasoning recorded in: this entry; `screens/words-reads.src.mjs` (block "DEC-413"), `screens/words-drawn.src.py`.
 owed: none.
+
+### DEC-414 · answered
+raised: 2026-10-22 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (BOB's B474: T51 fix round 4's design asks)
+for: design
+question: (1) 44 px targets at 390 px for small controls and inline links; (2) "Give a login"'s submit label, and the agency and office as one field or two; (3) one number or two for the queue's vouch band; (4) five owed rows.
+why it is Bob's: it is not (P17): drawing and words beneath his rulings.
+provisional: as below.
+alternative: (3) the bell and sidebar counting the band's captures too.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-22 · the design session (P17)
+the design: (1) Every control at 390 px keeps a 44 px target (the design's phone rule stands; the controls under 30 px on Home, Queue, Find and Projects are a defect of the shell's stylesheet, not a new rule); a link inside running text is exempt, with about 24 px by padding (DEC-412 (4), `visual-language/components.css`). (2) The submit is "Store this login" (`screen.capture.logins.store`, DEC-403); the agency and the office are two fields, "The agency" and "The office within it" (DEC-412 (3)). (3) Two numbers, each saying what it counts: the bell and the sidebar count queue items only; the vouch band draws its own number apart, "Captures waiting for a vouch: {n}. They are not counted in your queue." (`screen.queue.vouchband.apart`), matching K4429 (the band's rows are not queue items). (4) Rows: `act.readheld.label.document` "Read it now"; `screen.document.readnow.refused.NO_HOME`, `.NO_WHOLE_OBJECT`; `screen.document.cite.repair.says`; `screen.capture.reading.pending`.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-414").
+owed: BOB: the shell's 44 px rule reaching the small controls (T52 under K4269); the six keys read in their modules.

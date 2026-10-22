@@ -7258,6 +7258,16 @@ w412('screen.action.routes.none', 'No route is known for this kind of action yet
 
 # DEC-413 (B473): affordances' last stand-in, act.readheld.does (extraction R80), word for word its default
 W.append(dict(key='act.readheld.does', en='Reads a document this record holds whole but has no reading of yet, or whose reading found nothing. The earlier reading stays in the history. Moves nothing.', protected=False, note='DEC-413: B473 affordances (T51 fix round 4, extraction R80): the stand-in default, word for word'))
+# DEC-414: T51 fix round 4's design asks (B474)
+def w414(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-414: B474 ' + note))
+w414('act.readheld.label.document', 'Read it now', 'screens-inquiry: the button on an unread copy (readheld), replacing the stand-in "Read it"')
+w414('screen.document.readnow.refused.NO_HOME', "Your team's Civicsmith holds no copy of this document that you can see, so there is nothing to read. Nothing was changed.", 'screens-inquiry: Read it now refused, NO_HOME')
+w414('screen.document.readnow.refused.NO_WHOLE_OBJECT', 'The stored copy is not whole, so it cannot be read. Capture the document again; the new copy is read when it arrives.', 'screens-inquiry: Read it now refused, NO_WHOLE_OBJECT (a copy promoted without its whole object)')
+w414('screen.document.cite.repair.says', 'This passage cannot be cited yet. Do one of the steps below, then cite it again.', 'screens-inquiry: above a refused cite\'s repairs (citation R21)')
+w414('screen.capture.reading.pending', 'Kept. The reading follows: its words can be found and cited once it has been read.', 'screens-intake / control-plane: a capture kept with reading_pending')
+w414('screen.queue.vouchband.apart', 'Captures waiting for a vouch: {n}. They are not counted in your queue.', 'screens-daily (C70): the vouch band\'s own number, drawn apart from the bell and sidebar count, which count queue items only')
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

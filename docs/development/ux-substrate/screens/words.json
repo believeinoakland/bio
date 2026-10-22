@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7149,
+  "screen": 7154,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1177,
+  "act": 1178,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -231,7 +231,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 18422,
+  "total": 18428,
   "protected": 1108
  },
  "words": [
@@ -77076,6 +77076,48 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-413: B473 affordances (T51 fix round 4, extraction R80): the stand-in default, word for word"
+  },
+  {
+   "key": "act.readheld.label.document",
+   "en": "Read it now",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-414: B474 screens-inquiry: the button on an unread copy (readheld), replacing the stand-in \"Read it\""
+  },
+  {
+   "key": "screen.document.readnow.refused.NO_HOME",
+   "en": "Your team's Civicsmith holds no copy of this document that you can see, so there is nothing to read. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-414: B474 screens-inquiry: Read it now refused, NO_HOME"
+  },
+  {
+   "key": "screen.document.readnow.refused.NO_WHOLE_OBJECT",
+   "en": "The stored copy is not whole, so it cannot be read. Capture the document again; the new copy is read when it arrives.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-414: B474 screens-inquiry: Read it now refused, NO_WHOLE_OBJECT (a copy promoted without its whole object)"
+  },
+  {
+   "key": "screen.document.cite.repair.says",
+   "en": "This passage cannot be cited yet. Do one of the steps below, then cite it again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-414: B474 screens-inquiry: above a refused cite's repairs (citation R21)"
+  },
+  {
+   "key": "screen.capture.reading.pending",
+   "en": "Kept. The reading follows: its words can be found and cited once it has been read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-414: B474 screens-intake / control-plane: a capture kept with reading_pending"
+  },
+  {
+   "key": "screen.queue.vouchband.apart",
+   "en": "Captures waiting for a vouch: {n}. They are not counted in your queue.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-414: B474 screens-daily (C70): the vouch band's own number, drawn apart from the bell and sidebar count, which count queue items only"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
