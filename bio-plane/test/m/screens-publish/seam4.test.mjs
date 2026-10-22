@@ -271,3 +271,25 @@ test("R73 C49 G12c (fix round 6, seam) the ceremony of a project with four draft
   const labels = p.doc.getElementById("drafts-ceremony").querySelectorAll("option").map((o) => o.textContent);
   for (const scope of ["Second scope", "Third scope", "Fourth scope"]) assert.ok(labels.some((t) => t.includes(scope)), scope);
 });
+
+/* ---------- G29 (fix round 6; R13; K4607, K4609): the evidence a case rests on is signed with the edition, at the document's head ---------- */
+test("R13 G29 (seam) the real cite, conclude and prepare: the ceremony signs a line for the cited document at its head `bundle_sha` (what ratification verifies, R4/R52), beside the finding's; RED BY NAME until case-authoring's rows carry `bundle_sha` (K4609)", async () => {
+  const { w, P, plane } = prep();
+  const first = await open(CER2(P), { plane });
+  tick(first, "ce-tie", "yes");
+  await press(first, "publish", { reason: "because" });
+  const caseId = w.row(`SELECT case_id FROM case_documents`).case_id;
+  const rows = w.fm(w.row(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, caseId, 1).text).case_citations;
+  const head = w.record.head(DOC).bundleSha;
+  assert.match(head, /^[0-9a-f]{64}$/);
+  const row = rows.find((r) => r.target === DOC);
+  assert.ok(row, "the cited document is a row");
+  assert.equal(row.bundle_sha, head, "the row carries the document's head (case-authoring, K4609)");
+  const asked = [];
+  const again = await open(CER2(P), { boot: { idb: await keptKey() }, plane: planeFor(plane, asked) });
+  assert.deepEqual(main(again).querySelectorAll("[data-statement]").map((li) => li.getAttribute("data-statement")), ["case", "finding", "evidence"]);
+  await press(again, "caseratify");
+  await answerSign(again, true, "caseratify");
+  const sent = last(again, "caseratify").body;
+  assert.ok(sent.members.some((m) => m.id === DOC && m.sha === head), "the document is signed at its head, not at its capture");
+});
