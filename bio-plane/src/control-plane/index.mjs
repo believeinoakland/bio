@@ -215,6 +215,8 @@ const READING_BUDGET_MS = 8000;
    read at the door; and the most documents of one promotion the door follows */
 const READING_INLINE_MAX = 20 * 1024 * 1024;
 const READING_FOLLOWED_MAX = 16;
+/* R123 (fix round 5, E3): reading-pipeline's `WHOLE_READ_MAX` (24 MiB): a capture over it is read as a statement, never from its bytes */
+const READING_STATEMENT_MIN = 24 * 1024 * 1024;
 const DOOR_TIMED_CODES = Object.freeze(["ACQUIRE_TIMED_OUT", "STORE_DID_NOT_ANSWER", "CAPTURE_NOT_KEPT"]);
 /* R105, R115 (fix round 2, C12; acquisition R13, R20, R95): WHAT A CALL THE DOOR STOPPED WAITING FOR HAD KEPT, from the stage times the
    object states for it (`stageTimes`): `held` once its stage `receipt` (the capture's record, acquisition R13) has ended, for the
@@ -679,15 +681,40 @@ function warnedOf(url) {
 }
 /* R123: the size half of "will not fit": a PDF over 2 MB (stated by capture type, declared type, profile format or name) or a capture over
    what a reading assembles from parts (20 MiB); the clock half is the door's, per request. */
+function sizeOfDocument(document) {
+  const c = document && typeof document === "object" ? document.capture : null;
+  const parts = document && Array.isArray(document.parts) ? document.parts.reduce((n, p) => n + (Number.isFinite(p?.bytes) ? p.bytes : 0), 0) : 0;
+  return Math.max(Number.isFinite(c?.bytes) ? c.bytes : 0, parts);
+}
 function tooBigToReadInline(document) {
   const c = document && typeof document === "object" ? document.capture : null;
+  const size = sizeOfDocument(document);
+  /* R123 (fix round 5, E3): past the whole-read ceiling a reading is only a statement of the size, made from the document's own parts
+     with no object read, so it is never deferred (reading-pipeline R37) */
+  if (size > READING_STATEMENT_MIN) return false;
   const type = typeof c?.content_type === "string" ? c.content_type.toLowerCase() : "";
   const declared = typeof document?.profile?.source_content_type === "string" ? document.profile.source_content_type.toLowerCase() : "";
   const named = typeof document?.locator === "string" && /\.pdf(?:[?#]|$)/i.test(document.locator);
   const pdf = type.startsWith("application/pdf") || declared.startsWith("application/pdf") || document?.profile?.format?.format === "pdf"
     || (type === "" && declared === "" && named);
-  if (pdf && Number.isFinite(c?.bytes) && c.bytes > READING_DEFER_PDF_BYTES) return true;
-  return Number.isFinite(c?.bytes) && c.bytes > READING_INLINE_MAX;
+  if (pdf && size > READING_DEFER_PDF_BYTES) return true;
+  return size > READING_INLINE_MAX;
+}
+/* R125 (fix round 5, E2): what the evidence bucket says of a whole, as a document for `tooBigToReadInline`: its size and whether it opens as a PDF.
+   Null when the bucket holds none (or is not bound): the owner then answers as it always did. */
+async function heldWholeFacts(env, storeName, sha) {
+  try {
+    if (!env?.CAPTURES || typeof env.CAPTURES.head !== "function") return null;
+    const key = captureKey(storeName, sha);
+    const head = await env.CAPTURES.head(key);
+    if (!head || !Number.isFinite(head.size)) return null;
+    let pdf = false;
+    try {
+      const got = await env.CAPTURES.get(key, { range: { offset: 0, length: 5 } });
+      pdf = !!got && new TextDecoder().decode(await got.arrayBuffer()) === "%PDF-";
+    } catch { pdf = false; }
+    return { capture: { bytes: head.size, ...(pdf ? { content_type: "application/pdf" } : {}) } };
+  } catch { return null; }
 }
 /** R124 (fix round 4b, F5; K4492, K4493; acquisition R100, plane R77): THE ALARM'S DELIVERY OF AN OWED RENDER. The plane's alarm runs a
  *  `subresources` entry through acquisition's `owedRun`, which finishes the pending render and hands its answer here as `deliver`:
@@ -757,8 +784,10 @@ function unreadDocuments(b) {
   const out = [], seenShas = new Set();
   for (const d of docs) {
     const sha = d && d.capture && d.capture.sha256;
-    if (typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha) || seenShas.has(sha) || (d.reading && typeof d.reading === "object")) continue;
+    if (typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha) || seenShas.has(sha)) continue;
     seenShas.add(sha);
+    /* R123 (fix round 5, E6): a reading the screen holds that left pages of a scan unread owes the OCR pass besides */
+    if (d.reading && typeof d.reading === "object") { if (d.reading.tier3_candidate === true) out.push({ sha, document: d, ocrOnly: true }); continue; }
     out.push({ sha, document: d });
   }
   return out;
@@ -2450,6 +2479,21 @@ export function makeFetch(hooks = {}) {
     /* R120 (fix round 4, C5a/P8; K4434): THE READING THAT WILL NOT FIT THE BOUND FOLLOWS. The handler asks this of the document it has just
        filed, before it reads it: a PDF over 2 MB, or any document once what is left of R105's bound is under the 8 seconds a reading is given,
        is answered when kept with `reading_pending: true` and no reading; the reading follows by `readHeld` and the plane's alarm. */
+    /* R125 (fix round 5, E6; K4530): THE OCR PRESS HANDS THE PAGES TO THE LEDGER AND ANSWERS AT ONCE. "Read this document again with OCR"
+       (`pdfstructure` with `ocr`) from a member's session, for a copy whose reading (as she sees it: the reading's own redaction) names pages
+       a scan left unread, with an OCR member bound, writes the `ocr` entry down (plane R77: a pass reads 24 pages, the ledger goes on by cursor)
+       instead of reading 24 pages inside the request. Any other press is the owner's, whose refusals it keeps. */
+    if (op === "pdfstructure" && viaSession && url.searchParams.get("ocr") && env.OCR_WORKER) {
+      const sha = (url.searchParams.get("sha256") || "").toLowerCase();
+      if (/^[0-9a-f]{64}$/.test(sha)) {
+        const seenReading = await doAnswer(stub.fetch(new Request(`http://do/reading?sha256=${sha}&viewer=${encodeURIComponent(sessViewer)}`)));
+        const rv = seenReading.answered ? seenReading.result : null;
+        if (rv && rv.found === true && rv.bundle_id && rv.reading && rv.reading.tier3_candidate === true) {
+          await pendSha(sha, "ocr");
+          return json({ ok: true, result: { ok: true, ocr_pending: true, reading_pending: true, sha256: sha }, store: storeName, tokenClass: cls }, 200);
+        }
+      }
+    }
     const deferReading = (document) => op === "acquire" && readingWontFit(document);
     const armed = hooks.gatedOp ? await bounded(hooks.gatedOp({ req, url, env, op, cls, viaSession, deferReading: op === "acquire" ? deferReading : undefined, sessMember, sessViewer,
       sessIdentity, sessRights, sessCaps, aiCred, aiViewer, storeName, stub, memberRef,   /* R93: the plane's ask and transcribe; R106: the `ai` caller's viewer */
@@ -2459,9 +2503,9 @@ export function makeFetch(hooks = {}) {
       seen.clock.begin("promote");
       const promoted = await promoteAcquired(armed);
       seen.clock.end("promote");
-      await readHeldAfterAcquire(promoted);
-      await pendReading(promoted);
-      const res = await doorTimedFailure(promoted);
+      const followed2 = await readHeldAfterAcquire(promoted);
+      await pendReading(followed2);
+      const res = await doorTimedFailure(followed2);
       if (!captureStep && url.searchParams.get("step") === null) return res;
       let body;
       try { body = await res.clone().json(); } catch { return res; }
@@ -2500,10 +2544,10 @@ export function makeFetch(hooks = {}) {
       if (!b || b.ok !== true || b.reading_pending !== true || typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha)) return;
       await pendSha(sha);
     }
-    async function pendSha(sha) {
+    async function pendSha(sha, kind = "reading") {
       if (typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha)) return;
       try {
-        await doAnswer(stub.fetch(new Request(`http://do/pendingadd?kind=reading&sha=${sha}&store=${encodeURIComponent(storeName)}`, { method: "POST" })));
+        await doAnswer(stub.fetch(new Request(`http://do/pendingadd?kind=${kind}&sha=${sha}&store=${encodeURIComponent(storeName)}`, { method: "POST" })));
       } catch { /* the alarm is the reading's second chance, never the capture's gate */ }
     }
     /* R120, R123: WHETHER A DOCUMENT'S READING WILL NOT FIT WHAT IS LEFT OF THE BOUND, so it follows by the alarm: a PDF over 2 MB (profile, declared
@@ -2520,9 +2564,14 @@ export function makeFetch(hooks = {}) {
     async function followEntries(entries) {
       let owed = false;
       for (const e of entries.slice(0, READING_FOLLOWED_MAX)) {
+        if (e.ocrOnly) { if (env.OCR_WORKER) { await pendSha(e.sha, "ocr"); owed = true; } continue; }
         if (readingWontFit(e.document)) { await pendSha(e.sha); owed = true; continue; }
         const held = await readHeld(e.sha);
-        if (held && (held.read === true || held.why === "READING_HELD")) continue;
+        if (held && (held.read === true || held.why === "READING_HELD")) {
+          /* E6: pages of a scan left unread are owed to the OCR pass, which the ledger goes on with by cursor */
+          if (held.owed === true) { await pendSha(e.sha, "ocr"); owed = true; }
+          continue;
+        }
         await pendSha(e.sha);
         owed = true;
       }
@@ -2563,6 +2612,8 @@ export function makeFetch(hooks = {}) {
       /* R123 (F2): a reading owed is written down and the answer says so; the upload stands as it was answered */
       const owed = async () => { await pendSha(shaOf(r)); return { body: { ...got.body, result: { ...r, reading_pending: true } }, status: got.status }; };
       if (r.existed === true) {
+        /* R117 (fix round 5, E2): bytes held whose reading will not fit are owed, not read inside the request */
+        if (readingWontFit(hasDocument ? r.document : { capture: r.capture })) return owed();
         const held = await readHeld(shaOf(r));
         if (held && held.read === false && held.why === "NO_WHOLE_OBJECT") return owed();
         if (!held || held.read !== false || held.why !== "NO_HOME" || !hasDocument || r.document.reading) return got;
@@ -2580,8 +2631,19 @@ export function makeFetch(hooks = {}) {
        the whole, which `readHeld` replaces once the whole is held. */
     async function readHeldAfterAcquire(res) {
       let b = null;
-      try { b = await res.clone().json(); } catch { return; }
-      if (b && b.ok === true && (b.existed === true || (b.existed === null && Array.isArray(b.document?.parts)))) await readHeld(shaOf(b));
+      try { b = await res.clone().json(); } catch { return res; }
+      if (!(b && b.ok === true && (b.existed === true || (b.existed === null && Array.isArray(b.document?.parts))))) return res;
+      /* R117 (fix round 5, E2): a held document whose reading will not fit is owed to the ledger, never read inside the request */
+      if (readingWontFit(b.document ?? { capture: b.capture })) {
+        const sha = shaOf(b);
+        if (typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha)) return res;
+        /* the entry itself is written down by `pendReading`, which reads `reading_pending` off this answer */
+        const headers = new Headers(res.headers);
+        headers.delete("content-length");
+        return new Response(JSON.stringify({ ...b, reading_pending: true }), { status: res.status, headers });
+      }
+      await readHeld(shaOf(b));
+      return res;
     }
     /* R71 (N820; steps R9): A MEMBER'S CAPTURE MAY CARRY `step`, the step it is a product of. Once the capture has landed
        (its answer `ok`, naming the capture's digest), the door asks the store's internal route `capturestepproduct` to
@@ -2851,6 +2913,19 @@ export function makeFetch(hooks = {}) {
     if (RUN_VERB_ACTIONS.includes(op)) {
       inner.searchParams.delete("actor");
       inner.searchParams.set("actor", viaSession ? sessMember : "");
+    }
+    /* R125 (fix round 5, E2): "Read it" (`readheld`) on a whole that will not fit is asked of the owner with `defer=1`: after its own gates
+       (the home, the sight of it, a reading already held) it answers `READING_PENDING` without reading, and the door writes the entry down.
+       The size is the bucket's own (the Worker reads it with no hop). `defer` is the door's word alone; one the caller sends is deleted. */
+    let readHeldSha = null;
+    if (op === "readheld") {
+      inner.searchParams.delete("defer");
+      const asked = reqBody && typeof reqBody === "object" && !Array.isArray(reqBody) ? reqBody.sha : null;
+      const sha = String(url.searchParams.get("sha") ?? asked ?? "").toLowerCase();
+      if (/^[0-9a-f]{64}$/.test(sha)) {
+        readHeldSha = sha;
+        if (tooBigToReadInline(await heldWholeFacts(env, storeName, sha))) inner.searchParams.set("defer", "1");
+      }
     }
     /* R72 (K2458; capture R86): the upload's bytes are the request's raw body, streamed to capture as `bytes`, never read,
        decoded or kept here; its words (`statement`, `name`, `within`) and a `step` it is a product of travel in the
@@ -3633,6 +3708,10 @@ export function makeFetch(hooks = {}) {
        and whatever the runner answers; the act's answer is unchanged. */
     const leaver = leaverOf(op, reqBody, body.result, stampOf.by);
     if (leaver) await signoutLeaver(env, leaver);
+    if (op === "readheld" && readHeldSha && body.result && body.result.ok === true && body.result.why === "READING_PENDING") {
+      await pendSha(readHeldSha);
+      return json({ ...body, result: { ...body.result, reading_pending: true }, store: storeName, tokenClass: cls }, status);
+    }
     /* R123 (fix round 4b; D3): the reading follows the promotion and the pull. The act stands as the store answered it; when a reading is
        owed it is written down and the answer's `result` says `reading_pending`. */
     if (((op === "promote" && followed.length) || op === "inboxpull") && body.result && body.result.ok === true

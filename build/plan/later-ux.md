@@ -86,3 +86,4 @@
 - Queue · old "newer version" items: two identical pairs and "was read as." with the grade missing (old data; the new-item check is in section 7) · B C69 · fix round 5 §5 · 2026-10-22
 - Capture · "Finish it" and the held-copy repair draw stand-in rows; owed: `screen.capture.finish.pending`, `.finish.files`, `.finish.done`, `screen.capture.address.reading.pending`, `.address.reading.done` (texts in `build/jobs/T51/screens-intake.md`, B27) · SCREENS-INTAKE #17 · fix round 5 E7, E8 · 2026-10-22
 - Case ceremony · the fail-closed refusal draws stand-in `screen.ceremony.sign.nodoc`; owed: a sentence of its own, "this page could not read what the edition pins; reload and try again" · SCREENS-PUBLISH #17 · fix round 5 E4 · 2026-10-22
+- Document · "Read it" and the OCR press answer "being read" (`READING_PENDING`, `ocr_pending`) with no sentence drawn; row `document.readnow.pending` owed · CONTROL-PLANE #47 J26 · 2026-10-22

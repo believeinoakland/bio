@@ -1,6 +1,6 @@
 # control-plane (T51)
 
-**Status** · session_01Gs7CrCGk5nXUSZpiDu6qAK · depth 2 · COMPLETE · handled B33
+**Status** · session_01ScsNRTFgkShQFLDCyhHJBM · depth 2 · COMPLETE · handled B38
 
 ## J1 · QUESTION
 
@@ -486,3 +486,58 @@ control-plane re-completed for CHANGE B32/B33 (K4492, K4493): `deliverOwedRender
 **Seam:** plane's seam test (an owed render delivered by the alarm, filed under the shell's project, reading pending) is plane's and runs on this once plane calls it as `deliver`; the door's part is tested here.
 
 Size (session_01Gs7CrCGk5nXUSZpiDu6qAK): test runs 32, module lines 4,423
+
+## J25 · QUESTION
+
+Q1 · CONTROL-PLANE #47 · fix round 5 · two points I cannot settle inside control-plane's paths. My best reading is given; I carry on with it.
+
+**(a) "Read it" (`readheld`) and the OCR press: answering at once when the reading will not fit (E2, E6).**
+The door can tell, without a hop, how big the held whole is: the Worker has the evidence bucket, so `env.CAPTURES.head(<store>/captures/<sha>)` gives its size and a 5-byte range gives `%PDF-`. It cannot tell whether the caller may see the document: that gate (NO_HOME for an unseen home, READING_HELD) is extraction's, and answering "being read" from the door alone would tell a member that a large file with that digest exists in a project she cannot see.
+Best reading, and what I build: when the whole will not fit (R2 head: a PDF over 2 MB, or a capture over 20 MiB and under the 24 MiB ceiling), the door forwards `readheld` with `defer=1`; extraction's arm, after its own gates, answers `{ok: true, read: false, why: "READING_PENDING"}` without reading; the door then writes the `reading` entry down and answers at once. If extraction ignores `defer`, the press is read inline as today (nothing worse). For the OCR press (`pdfstructure&ocr=1`) the same: the door asks `reading&sha256=` as the member (sight is the reading's own redaction), and if the reading names unread pages and an OCR member is bound it writes the `ocr` entry and answers at once; otherwise it forwards, so every refusal stays the owner's.
+NEED from extraction (its job is running): `readheld`/`readheldfor` honour `defer=1` as above. Please send it to EXTRACTION #33 as a CHANGE, or tell me to build the door without the sight gate (not recommended: it is an existence oracle).
+
+**(b) E10 (ii), one call instead of two to five.**
+Measured on the real plane (Miniflare, a signed-in administrator, distinct `do-*` metrics in `Server-Timing`):
+`whoami` 1 (session), `projectlist` 2 (session, projectlist), `groupidentity` 3 (session, doorwindow, groupidentity), `bootstrap` 4 (session, doorwindow, bootstrap, bootstrapfacts), `queue` 2.
+Only `whoami` meets the plan's targets. The session read must come first because every stamp (`viewer`, `by`, `author`...) is built from it, and `admission.admit` judges the class, the capability and the re-ask window from it. Folding it into the op's own call means the object resolves the session and applies `admit` and the stamps itself: admission's pure judgement exported over a resolved session, a route in store-door/plane that does lookup, judgement and stamping in process, and this door sending the raw request there. That crosses admission, store-door and plane, and is a re-architecture of the door's front half, not a fold. A short-lived session cache in the Worker would be cheaper but delays a sign-out or a revocation by its lifetime: that is policy, Bob's.
+Options: (A) the object-side admission above, placed by BOB in admission, store-door and plane; I then re-point the door, and the hop test stays red by name until they merge. (B) not this round: the floor is recorded with its numbers (K4354: "what stays over the bar is recorded, never silent"); I do (i) and (iii) only. (C) a session cache, to Bob with its trade-off.
+Recommendation: B for the alpha (Bob's focus: efficient deployment), recording the numbers above. Until you answer I write the hop-count test to pin today's counts as ceilings (so no op gets worse) and name the targets in it.
+(i) is the part I do now: the door reads the object's own time from each answer's `server-timing: object;dur=<ms>` header and adds `in-<route>;dur=<ms>` beside `do-<route>`. PLANE #50 (merge 11) must send that header; tell it, or give me the name it uses.
+
+## Completion: fix round 5 (CONTROL-PLANE #47, B34, B36-B38)
+
+**Entries applied** (`bio-plane/src/control-plane/`, line numbers at this commit)
+- **E3** `index.mjs:684-703` `sizeOfDocument`, `tooBigToReadInline`: a document whose size (capture bytes or the sum of its parts) is over `READING_STATEMENT_MIN` (24 MiB, :219, reading-pipeline's `WHOLE_READ_MAX`) is never deferred, since its reading is only a statement of its size; 20-24 MiB and a PDF over 2 MB still follow by the alarm. Used by `deferReading` (acquire), `readUploaded`, `followEntries`, `deliverOwedRender`.
+- **E2, acquire half** `readHeldAfterAcquire` (:2637) and `readUploaded`'s `existed` path (:2616): both ask `readingWontFit` of the held document first and owe the reading (`reading_pending: true`, `pendingadd`) instead of calling `readheldfor` inline.
+- **E2, "Read it"** `heldWholeFacts` (:705, the Worker's own R2 `head` plus a 5-byte range for `%PDF-`, no hop) and the `readheld` arm (:2917): a whole that will not fit is forwarded with `defer=1` (a caller's is deleted); extraction's `READING_PENDING` (R86) makes the door write the entry and answer at once. BOB's ruling B35 (a).
+- **E6** `unreadDocuments` (:790), `followEntries` (:2567), `pendSha(sha, kind)`: `held.owed` and a promoted reading with `tier3_candidate` (with an OCR member bound) write an `ocr` entry. The OCR press (`pdfstructure` with `ocr`, member session, :2482): asks `reading` as the member and, when the reading names unread pages and an OCR member is bound, writes the `ocr` entry and answers at once (`ocr_pending`); every other press is the owner's.
+- **E10 (i)** `phase-clock.mjs`: the object's `server-timing: object;dur=<ms>` on an answer is told as `in-<route>` beside `do-<route>`. (iii) is acquisition's.
+- **E1, E5** need no door change; their seam tests run on the merged providers. **E8**: the composition test of B36 (`t51-visitor-copy.test.mjs`) is E8's through-the-door test; green since acquisition merged.
+
+**Failing-first, red then green** (red on `c0b6aaedfb`, the code before this job, green now)
+- `t51-round5-door.test.mjs`, 10 tests: 9 red before (E3 x3, E2 x2, E6 x3, E2 "Read it"), all green now; the E10 (i) door test red-first is by absence of the code.
+- `t51-round5-seam.test.mjs` E6 (60-page scan, OCR member answering 24 pages a call): red before (24 pages, 1 OCR call), green now (all 60, 57 s, press under 2 s). E1 (10 MB, 22 MiB PDFs, 12 MB text), E5, E1 controls: red before acquisition/reading-pipeline/doorbell/extraction merged (10 MB 261 s timeout; E5 failed), green on the merged tranche. E3 seam (40 MB upload, 41.5 MB capture): green; it was also green on the old door in Miniflare, so the door's E3 proof is the door tests (the old `tooBigToReadInline` deferred them).
+- `r123-reading.test.mjs` F2 case and `t51-reading-follows.test.mjs` F2 re-pointed: a 40 MB upload is read as its statement at the door (R-STOP: states the size; the stored reading checked).
+
+**Measurements (E10)**: distinct calls to the object, real plane, signed-in administrator: `whoami` 1, `projectlist` 2, `groupidentity` 3, `bootstrap` 4, `queue` 2. Targets 1, 1, 2, 2. BOB ruled (B35 b): (ii) waits for the deployed copy's in-object time; `t51-hops.test.mjs` pins these as ceilings and names the targets. Its (i) test is red by name until plane sends `server-timing: object;dur=`.
+
+**Tests and checks**
+- `node --test --test-force-exit bio-plane/test/m/control-plane/` (merged tranche at 832c763e9e): 405 tests, 404 pass, 1 fail: `t51-hops` E10 (i), red by name until plane (merge 11) states the object's time.
+- `checks/run.mjs`: format 0, architecture 0, coverage 6614 of 6614, channels 0, words 0 (count 18421, unchanged). `checks/ownership.mjs control-plane tranche/T51 job/T51/control-plane`: see COMPLETE.
+
+**For BOB**
+- Proposed requirement lines. R123 amended: a document whose size is over the whole-read ceiling (24 MiB) is read at once, as its statement, never owed; "an upload over the bound is answered unread" is struck for that case. R117 amended: an `existed` acquire or upload whose reading will not fit is owed (`reading_pending`), never read inside the request. R125 new (fix round 5; E2, E6; B35): "Read it" on a whole that will not fit is asked of the owner with `defer=1` (the size from the evidence bucket) and, on `READING_PENDING`, the entry is written and the answer is at once; the OCR press on a copy whose reading, as the member sees it, names unread pages, with an OCR member bound, writes the `ocr` entry and answers `ocr_pending` at once; a promotion that read a scan with pages left, or carries a reading that left pages, owes the `ocr` entry. R121 amended: the object's `server-timing: object;dur=` is told as `in-<route>`. Tests: `t51-round5-door.test.mjs`, `t51-round5-seam.test.mjs`, `t51-hops.test.mjs`.
+- Words owed (T52): the press answers "being read" with no sentence (the screen draws none for `READING_PENDING`/`ocr_pending`); row owed `document.readnow.pending`.
+- **Found in other modules**: (1) plane: an alarm is starved by frequent requests: with the 60-page scan owed an `ocr` entry due at once, polling `op=reading` every 4 s left it unworked for 300 s (2 of 3 passes), polling every 20-30 s finished in under a minute. Plane R77's accounting should not let traffic postpone the alarm (E2 d is the same shape). (2) plane `owedwork&sha=` does not take a session key (step 0). (3) the stale `t51-hops` E10 (i) goes green when plane merges.
+- Old data (R-OLD): the OCR/defer changes act on new calls only; an old scan with pages left is repaired by the member's next press, which now hands it to the ledger.
+
+Size (session_01ScsNRTFgkShQFLDCyhHJBM): test runs 14, module lines 4,494
+
+**Users' suites** (`bio-plane/test/m/plane/`, `journey-check/`, on the merged tranche): 435 tests, 339 pass, 95 fail, none from this job. Plane: 1 red, `release.test.mjs:74` R24 (`screen.objective.purpose` not held by the words list: the design words, not this module). journey-check: 94 red, all `playwright-core cannot be loaded (run npm ci in bio-plane/src/journey-check)`: the container has no `node_modules` there (K4113 names the lockfile directories; this one was not installed). Nothing of control-plane's is among them.
+
+## J26 · COMPLETE
+
+control-plane fix round 5 complete, pushed (job/T51/control-plane, tranche/T51 merged through extraction). Record: "Completion: fix round 5" in build/jobs/T51/control-plane.md.
+E3: a capture over 24 MiB is never deferred (statement). E2: an `existed` acquire/upload that will not fit is owed; "Read it" asks the owner with `defer=1` (size from the bucket) and answers at once on READING_PENDING. E6: unread scan pages owe an `ocr` entry (promote with and without a reading); the OCR press hands the pages to the ledger and answers at once. E10 (i): `in-<route>` from the object's `server-timing: object;dur=`. E10 (ii) per B35: hop counts pinned as ceilings (whoami 1, projectlist 2, groupidentity 3, bootstrap 4, queue 2). E1, E5 seams green on the merged providers; E3 and E6 seams green; E8's composition test (t51-visitor-copy.test.mjs) is E8's through-the-door test, green.
+Suite: 405 tests, 404 pass; the one red is t51-hops E10 (i), red by name until plane sends `server-timing: object;dur=`. checks: format, architecture, coverage (6614/6614), words (count unchanged), ownership 0 failures. Users' suites: plane 1 red (release R24 words, not mine), journey-check 94 red from missing playwright-core in the container.
+For you: proposed lines for R123, R117, R121, R125 (record). Finding for plane: frequent traffic starves the alarm (60-page scan stuck 300 s at 4 s polling, done in under a minute at 20-30 s).
