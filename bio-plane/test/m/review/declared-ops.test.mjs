@@ -21,7 +21,8 @@ const sameVerdict = (x, y) => x?.ok === y?.ok && (x.code ?? null) === (y.code ??
 const asAnn = (w, query = "") => (op, body) => reviewOps(w.r, new URL(`http://x/?author=ann&viewer=${encodeURIComponent(V("ann"))}${query}`), body)[op]();
 
 test("R42: DECLARED_OPS names the four ops a screen sends and the two reads it batches (G12c, batch.test.mjs), each with the rows op-declarations and op-grades hold", () => {
-  assert.deepEqual(Object.keys(DECLARED_OPS).sort(), ["casedraft", "casedrafts", "reviewcomment", "reviewcopy", "reviewgrant", "reviewrevoke"]);
+  /* every op this module serves is declared: the list is the ops map's own (K3268), never a second hand list */
+  assert.deepEqual(Object.keys(DECLARED_OPS).sort(), Object.keys(reviewOps(standard().r, new URL("http://x/"), {})).sort());
   assert.deepEqual(DECLARED_OPS.casedraft.fields.accepts, ["draft", "project", ...REVIEW_DRAFT_FIELDS], "the fields a draft keeps, never a second list");
   for (const [op, row] of Object.entries(DECLARED_OPS)) {
     assert.equal(row.mutating, !["casedrafts", "reviewcopy"].includes(op), op);
