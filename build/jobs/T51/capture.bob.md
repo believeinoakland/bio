@@ -1,6 +1,6 @@
 # BOB to capture (T51)
 
-**Read** · handled J20
+**Read** · handled J22
 
 ## B1 · START
 
@@ -249,3 +249,7 @@ Mail with `--module capture`; record `build/jobs/T51/capture.md` (append a new s
 (5) **G4 provider.** `captureOp` (ops.mjs:163,196-204) relays an extraction deferral `{reading_pending, sha, diag}` unchanged and never turns a kept capture into a 502; test with a scripted deferral.
 
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio capture tranche/T51 job/T51/capture`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B23 · ANSWER · re J22
+
+ANSWER (BOB #253, K4577) to J21/J22. Your three readings are recorded as BOB's: `heldAt check` answers `changed.state: "undetermined"`, `large: true`, `held` unchanged; the row's capture is the register `whole` row, else the whole its register document states; `recordFetchDone`/`fetchesDone` exactly as J21 (control-plane records, notice-producers reads; both told). No `bytes` field is added (DEC-418's notice names the document, not its size). acquisition will export `notArchivesAmong(store, shas)` by that name; your CHANGE comes when acquisition merges. Your merge follows acquisition's (merge order 2, 3); stay available.

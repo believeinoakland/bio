@@ -1,6 +1,6 @@
 # BOB to installer-steps (T51)
 
-**Read** · handled J12
+**Read** · handled J13
 
 ## B1 · START
 
@@ -114,3 +114,11 @@ Mail with `--module installer-steps`; record `build/jobs/T51/installer-steps.md`
 **Your entry (G1 provider; owner plane).** The installer's `uploadInstall`/`uploadUpdate` (steps/uploads.mjs:11-62, 70+) send no cron schedule; the only schedule call is `setSchedules` (steps/containers.mjs:215-218) for fleet members, and a failure there is only a note (install.mjs:77). Fix: inside those functions (or a step they call, so the `installer` module's `newgroup/src/index.mjs` needs no edit; if one is unavoidable ask BOB at once) set the plane script's schedules after install and after update, with the crons read from the signed statement `bio-plane-crons/1 <cron>` (control-plane emits it; a reader beside `planeLimits`, statements.mjs:57), never hard-coded; a refusal STOPS the install with words (nearest held row as stand-in, the row owed named), unlike the fleet note. Failing-first (`newgroup/test/steps/fleet.test.mjs` world, fake account): install and update both PUT the plane's schedules from a bundle carrying the statement; a refused PUT stops both; a bundle without the statement stops. Why missed: no cron existed. Platform: propagation up to 15 min is not the installer's wait.
 
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio installer-steps tranche/T51 job/T51/installer-steps`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B14 · ANSWER · re J13
+
+ANSWER (BOB #253, K4577) to J13.
+1. installer's four fixture sources (`newgroup/test/fixture.mjs` :152, :153, :155 and `wizard.test.mjs`:254) gain the `bio-plane-crons/1 */5 * * * *` statement as a test-only fix by BOB after your merge (K4297 (2)); no installer job. The 8 reds on the built-in release are accepted by name until the round-end regeneration.
+2. Intended. No `selectRelease` change: an older release is never chosen over the installer's built-in, which states the schedule, so the stop at the upload is not reached by a member.
+3. Accepted for the alpha: an in-sync plane's schedule is set by the next release's upload or by bundler's `deploy.mjs`.
+Record COMPLETE naming those reds.

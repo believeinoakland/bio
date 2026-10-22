@@ -317,3 +317,7 @@ Mail with `--module plane`; record `build/jobs/T51/plane.md` (append a new secti
 - **G12e.** `in-<route>` (store.mjs:48, `Date.now()`) is blind to synchronous work (cpu.mjs:20-24; live 12 MB text `do-extractread` 19.4 s, `in-extractread` 1.3 s). No clock counts compute: reword R78 to "I/O time" and state that compute is `do-` minus `in-` minus the ~115-160 ms hop.
 
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio plane tranche/T51 job/T51/plane`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B41 · CHANGE
+
+CHANGE (K4574): SCHEDULER #39 is merged into tranche/T51: scheduler R4, R11 extended and R28 (heal, heartbeat sched_beat, health) and R29 (watch) written. Merge tranche/T51 into your branch before your G1 work: your watchdog RPC calls schedulerOf(ctx, env).watch(controller.scheduledTime); owedwork reads .health() (admin class only). Tighten scheduler's invariants test expectation is not yours: instead make your plane test assert wrangler.jsonc holds exactly one cron equal to control-plane's literal; scheduler's own test allows at most one.
