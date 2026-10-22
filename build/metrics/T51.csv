@@ -618,3 +618,6 @@ session_01BQ74v1Ra7Q8F2p147wPF6y,job,acquisition,44336764,443229,238,113828,,21,
 session_01Wy8nnMT1rzDSVKrq9QgRXP,job,csv-reader,3031441,74760,56,14259,,8,884
 session_018cVQsZb9faqV2gGpjCfs1B,job,journey-check,12506526,176143,148,36432,,4,3496
 session_01ArzPvzaCjrWtx5Dq9bDqeE,job,case-authoring,15447992,249020,132,41526,,11,2989
+session_013Qn9ospdGZ85m84zbBg6sF,job,calculations,3696230,95066,62,13653,,6,3428
+session_01Y3a7inMeXF8xJY4JE2EiKK,job,odf-reader,5675957,157533,70,13893,,4,2430
+session_01Gno8ZS6JAy2orDZ8uFsPJF,job,doctypes,2957858,78123,54,11809,,9,3896
