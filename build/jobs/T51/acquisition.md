@@ -254,3 +254,19 @@ Suite: acquisition 207 of 209. Reds: `R98 (fix round 4, C25)` (needs pdf-reader 
 Open: R98 awaiting `pdfTitle`; C5a's live stage and N-slow-refuse's 60 s, root cause unknown, for the redeploy's clocks.
 
 Size (session_01HkiEHqLtSvzj1srMtcPyNY): test runs 38, module lines 3512
+
+## J19 · QUESTION
+
+QUESTION (R100's seam with plane R77; ACQUISITION #26). I carry on on this reading; the plane job (#49) builds the other half, so please pass it on.
+
+**The hook (what acquisition calls).** Beside `keepLater`, acquisition reads `opts.owedLater ?? cap.owedLater`: an async `owedLater(entry) -> {ok: true}`, never throws (plane assigns `captureOf(ctx).owedLater` at composition, as `keepLater`). Two entries:
+- `{kind: "subresources", sha: <primary digest>, session: <capture session id>}`: a web capture's outstanding supporting files (session `cs_...`) or its pending render (session `rs_...`, `state.render_pending`). Registered each time the session is parked (a second registration re-arms it, D2). **Ledger key for this kind is `session`**, not `sha`: two captures of one page can share a primary digest.
+- `{kind: "unpack", sha: <archive digest>}`: an automatic unpack that stopped with entries still waiting, for the call's share, a daily budget (`UNPACK_DAILY_*`) or a nested archive it may open. With `owedLater` handed in, this replaces the `archive-unpack` capture event for those stops (without it, the event is enqueued as today).
+
+**What the alarm calls.** `subresources`: `acquisition.owedRun(cap, {kind: "subresources", session}, opts?) -> {ok: true, done: boolean, outstanding?, final?: true, reason?}` (new export): it continues the session (or finishes the pending render, afresh if the object lost it) as `continue` does, past the daemon-class gate of R1 (the entry is the capture's own continuation). `done: true` ends the entry (also when the session is already gone: `reason: "NO_SUCH_SESSION"`); `done: false` with `outstanding` is more work, run again after the ledger's back-off; `final: true` with `reason` (`RENDER_FAILED`) ends it with a stated reason. `unpack`: the plane runs it as the archive-unpack drain does today, `op=unpack` as the daemon through the door (it promotes what is cut); it ends when the answer is `complete`, or its `waiting_on` is `ARCHIVE_TREE_*`/`ARCHIVE_DEPTH_MAX` (permanent for an automatic run; already stated on the archive's page by R41); a daily-budget `waiting_on` leaves it owed (next UTC day).
+
+**Session expiry.** acquisition parks an owed session with `ttlMs` of 30 days (`saveCaptureSession` already takes `ttlMs`), so capture's one-hour pruning (capture/index.mjs:2590-2615) cannot drop it before the alarm; the session is dropped when its work is done. capture needs no change for this; its F5 job should keep `liveCaptureSessions`/"Unfinished" correct for the long ttl.
+
+**Tree-budget stops** I do NOT register: a tree total never shrinks, so only a member's `op=unpack` goes past it (R40) and the page already states it. Tell me if the plan meant these registered too (then the ledger entry would end as `final` at once).
+
+**Export for capture.** `keepPast(cap, ev, {sha, parts, boundMs, elapsedMs, keepLater})` (awaits `putFromParts` within the bound, else `keepLater`; answers `{kept, keep_pending}`): the `acquire` arm's keep, which `acquireRun` itself now calls.
