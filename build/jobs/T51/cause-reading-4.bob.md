@@ -1,6 +1,6 @@
 # BOB to cause-reading-4 (T51)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -17,3 +17,11 @@ Mail with `--module cause-reading-4`; record `build/jobs/T51/cause-reading-4.md`
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio reading-pipeline,text-chain tranche/T51 job/T51/cause-reading-4`. COMPLETE: what changed (file:line), the failing-first tests red then green, measurements, suite counts, requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
 
 **Your entry (6).** (D4, D5). reading-pipeline **R37**: a failed reading carries `transient` or `final`; the units budget binds the acquire answer only; OCR records its page cursor and the pages left as a ledger entry; step 0 measures the largest whole PDF read within 128 MB under workerd, and `bytesOf` refuses a larger whole as `final`, stated with its size. Failing-first: `evidence.get` throws once: `transient`; a 60-page scan: 24 read and the cursor stated.
+
+## B2 · CHANGE
+
+CHANGE (BOB #247; K4488): shapes pinned with extraction (its J12): a failed reading carries `failure: "transient" | "final"` (absent on a reading that found text); `read(document, {..., unitsBudget})` and `textUnitsFor(i2text, {budget})`, `budget` defaulting to `ACQUIRE_TEXT_UNITS_BUDGET`, `Infinity` charging no wire budget (each unit still cut to `CAPTURE_TEXT_UNIT_CAP`). The OCR cursor is the stored units' pages (R35's seeding); no new stored field needed unless you find one is.
+
+## B3 · CHANGE
+
+CHANGE (BOB #247; K4498). Merged on tranche/T51, but one test is red, on your own branch too: `bio-plane/test/m/reading-pipeline/memory.test.mjs` (run it alone): "BUDGET-2025-BUD: the answer is not the answer before" (actual 7bb5da9a…, expected 95b076e2…) and the same for BUDGET-2025-PER (actual 8f0cfb01…, expected 7889fee9…); APP and the 20 MB synthetic pass, and the memory bounds hold. Find what in the reading's answer changed. If it is your intended change (say which field, and why BUD and PER but not APP), move the pinned digests with that reason in the test's comment; otherwise fix the code. Merge the tranche first; COMPLETE with the test's result. Your page-count point is placed: PDF-READER #9 builds pdf-reader R42 now.

@@ -623,12 +623,26 @@ export async function unpack(store, { archiveSha = null, by = null, cls = null, 
   const left = inst.entryRows(sha).filter((r) => r.state === "waiting").length;
   inst.markWaiting(sha, left ? stoppedOn : null);
   /* The driver (Suggestions): an automatic run that stopped only for the call's share, or that filed a nested archive
-     it may open, asks the queue handed in to continue as `op=unpack` (capture R15's `archive-unpack`). */
-  if (mode === "automatic" && typeof st.taskEnqueue === "function") {
+     it may open, asks the queue handed in to continue as `op=unpack` (capture R15's `archive-unpack`).
+     R100 (fix round 4b, F11; plane R77): with the plane's owed-work ledger handed in (`internal.owedLater`, else the store's
+     `owedLater`), the continuation is an entry of that ledger instead, `{kind: "unpack", sha}`, which no count of tries ends,
+     and an automatic run that stopped on a daily budget is owed too: the day's figures start again at the next UTC day. A stop on
+     the tree's figures or the depth is not owed: the tree never shrinks, so only a member's own `op=unpack` goes past it
+     (R40), and the archive's page states it (R41). */
+  if (mode === "automatic") {
     const more = [...(left && stoppedForCall && !stoppedOn ? [sha] : []), ...(h.depth < ARCHIVE_DEPTH_MAX ? out.nested : [])];
-    for (const s of more) {
-      try { await st.taskEnqueue({ kind: "archive-unpack", captureSha: s, subject: s, at }); }
-      catch { /* an unqueued continuation waits for a member; it never fails the run */ }
+    const given = internal && typeof internal.owedLater === "function" ? internal.owedLater : typeof st.owedLater === "function" ? (e) => st.owedLater(e) : null;
+    if (given) {
+      const owed = [...more, ...(left && (stoppedOn === "UNPACK_DAILY_ENTRIES" || stoppedOn === "UNPACK_DAILY_BYTES") ? [sha] : [])];
+      for (const s of owed) {
+        try { await given({ kind: "unpack", sha: s }); }
+        catch { /* an unregistered continuation waits for a member; it never fails the run */ }
+      }
+    } else if (typeof st.taskEnqueue === "function") {
+      for (const s of more) {
+        try { await st.taskEnqueue({ kind: "archive-unpack", captureSha: s, subject: s, at }); }
+        catch { /* an unqueued continuation waits for a member; it never fails the run */ }
+      }
     }
   }
   return {

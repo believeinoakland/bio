@@ -301,8 +301,12 @@ test("R66 (T38, N786): a stored reading carrying a .docx cell's `paras`, its las
     bundle(w.s, "INFO-1");
     /* two old readings, so the first batch takes the cutoff and leaves the migration not done */
     const old = await oldReading();
-    for (const c of ["0".repeat(64), "f".repeat(64)])
+    for (const c of ["0".repeat(64), "f".repeat(64)]) {
       w.x.writeReading({ bundleId: "INFO-1", captureSha: c, reading: old, profileFormat: "docx", composed: true });
+      /* R82 (F12): bytes held, so neither waits for them (a candidate whose bytes are not held keeps the migration open); the
+         docx entry cannot read these, which is a reason of its own */
+      await w.evidence.put(`bio/captures/${c}`, new Uint8Array([1, 2, 3]));
+    }
     const first = await w.x.migrateDocxReadings({ limit: 1 });
     assert.deepEqual([first.done, first.examined], [false, 1]);
     /* the paras reading, written after the cutoff (a promotion after the migration started) */

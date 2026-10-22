@@ -62,6 +62,11 @@ export const DEEPER_CHECKS_PER_MONTH = 900;
 export const FILE_SAFETY_POLL_MS = 300_000;
 export const REPUTATION_REFRESH_MS = 21_600_000;
 export { SCAN_BATCH_MAX, LOG_COUNT_KINDS };
+/* R51 (fix round 4b; F3a, F10): how often a file whose bytes are not (all) held is looked at again for its scan and its safe
+   view (one hour: D2's back-off ceiling), and the most of a file the grade, the structure check and the safe view's cells load
+   into this object's memory: above it the file is judged by its start and stated unread. */
+export const WAITING_RECHECK_MS = 3_600_000;
+export const GRADE_READ_MAX = 20 * 1024 * 1024;
 
 /* R5: a file due for more than a day is overdue. R8: the scan before first opening waits this long within the call
    before it answers `SCAN_PENDING` (the Suggestions' "a few seconds"); the scan goes on and writes its note. */
@@ -160,6 +165,7 @@ export class FileSafety {
       if (have.length && !have.includes(column)) this.sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
     }
     for (const t of FILE_SAFETY_SCHEMA.replace(/--.*$/gm, "").split(";")) if (t.trim()) this.sql.exec(t);
+    this.#repairWaits();
     if (!this.#declared && this.record && typeof this.record.declareTable === "function") {
       const r = this.record.declareTable(FILE_SAFETY_MODULE, FILE_SAFETY_TABLES.map((d) => ({ ...d })));
       this.#declared = r && r.ok === true;
@@ -167,6 +173,19 @@ export class FileSafety {
     return { ok: true };
   }
   #declared = false;
+  /* R51 (R-OLD): a file whose newest ClamAV scan note is `not_scanned: NOT_FOUND`, and a safe view `failed: NOT_FOUND`, were
+     sent again at every batch and never made; they now wait for their bytes like any other (the scan, and the view, are
+     looked at again once an hour). Idempotent: a file already waiting, or whose newest note is another, is untouched. */
+  #repairWaits() {
+    try {
+      const at = iso(this.now() + WAITING_RECHECK_MS);
+      this.sql.exec(`UPDATE fs_files SET scan_wait_at = ? WHERE scan_wait_at IS NULL AND
+        (SELECT n.result || '/' || COALESCE(n.reason, '') FROM fs_notes n WHERE n.capture_sha = fs_files.capture_sha
+          AND n.kind = 'scan' AND n.tool = 'clamav' ORDER BY n.seq DESC LIMIT 1) = 'not_scanned/NOT_FOUND'`, at);
+      this.sql.exec(`UPDATE fs_files SET render_state = 'waiting', render_wait_at = ?, render_reason = 'NOT_FOUND'
+                     WHERE render_state = 'failed' AND render_reason = 'NOT_FOUND'`, at);
+    } catch { /* the next start tries again */ }
+  }
 
   /* ===== its cadences' state (R39) and the arming notice (R40) ===== */
 
@@ -258,7 +277,7 @@ export class FileSafety {
      same answer, byte for byte, for a capture whose home the viewer may not see (membership R43), so no answer tells a
      hidden capture from one never held (DEC-36); else null. A viewer left out is an in-plane caller, which sees every
      capture. */
-  #held(captureSha, viewer) {
+  #held(captureSha, viewer, { serves = false } = {}) {
     const sha = shaOf(captureSha);
     /* DEC-49 REGION is-capture-held */
     if (!HEX64.test(sha)) return { sha, refused: refusal("FILE_NOT_HELD", "captureSha names a capture by its SHA-256, 64 hex.", { captureSha: captureSha ?? null }) };
@@ -269,7 +288,9 @@ export class FileSafety {
     if (viewer !== undefined) {
       const gate = viewerPredicate(viewer);
       if (gate.scope === "DENY") return absent();
-      if (home && gate.scope !== "member" && !this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id = ? AND (${gate.sql})`, home, ...gate.args))
+      /* R51 (D6, F3a): a member's sight is judged by the capture's home; a service that serves the file's bytes or a view or copy of
+         them (`serves`) refuses a capture whose home is not found, never serving it as though it had no sight to check */
+      if (gate.scope !== "member" && ((serves && !home) || (home && !this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id = ? AND (${gate.sql})`, home, ...gate.args))))
         return absent();
     }
     /* END DEC-49 REGION is-capture-held */
@@ -316,11 +337,39 @@ export class FileSafety {
     if (obj.body instanceof Uint8Array) return obj.body;
     return null;
   }
-  /* The capture's bytes, whole or reassembled from its parts, for its reader; null when they are not held. */
+  /* R51: whether the capture's bytes can be read where they are kept: the whole under its digest, else every part its home
+     names. Heads only; nothing is loaded. */
+  async #wholeHeld(sha) {
+    const ev = this.#evidence();
+    if (!ev || typeof ev.head !== "function") return false;
+    try {
+      if (await ev.head(sha)) return true;
+      const parts = this.#parts(sha);
+      if (!parts || !parts.length) return false;
+      for (const p of parts) if (!(await ev.head(p.sha256))) return false;
+      return true;
+    } catch { return false; }
+  }
+  /* R51 (F10): the capture's size from the store's heads, without loading it: the whole's, else the sum of its parts'
+     declared bytes; null when neither is known. */
+  async #sizeOf(sha) {
+    const ev = this.#evidence();
+    if (!ev || typeof ev.head !== "function") return null;
+    try {
+      const h = await ev.head(sha);
+      if (h && Number.isFinite(Number(h.size))) return Number(h.size);
+      const parts = this.#parts(sha);
+      return parts && parts.length ? parts.reduce((n, p) => n + p.bytes, 0) : null;
+    } catch { return null; }
+  }
+  /* The capture's bytes, whole or reassembled from its parts, for its reader; null when they are not held, or when they are
+     above `GRADE_READ_MAX` (R51: a file that large is never loaded here). */
   async #bytes(sha) {
     const ev = this.#evidence();
     if (!ev) return null;
     try {
+      const size = await this.#sizeOf(sha);
+      if (size !== null && size > GRADE_READ_MAX) return null;
       const whole = await FileSafety.#bytesOf(await ev.get(sha));
       if (whole) return whole;
       const parts = this.#parts(sha);
@@ -349,11 +398,23 @@ export class FileSafety {
     const ev = this.#evidence();
     if (!ev) return null;
     try {
-      const head = await FileSafety.#headOf(await ev.get(sha), HEAD_MAX);
+      const obj = await ev.get(sha);
+      let head = await FileSafety.#headOf(obj, HEAD_MAX);
+      let size = obj && Number.isFinite(Number(obj.size)) ? Number(obj.size) : null;
+      /* R51 (F10): a capture held in parts with no whole is looked at by its first part, and sized by its parts */
+      if (!head && !obj) {
+        const parts = this.#parts(sha);
+        if (parts && parts.length) {
+          size = parts.reduce((n, p) => n + p.bytes, 0);
+          if (size > GRADE_READ_MAX) head = await FileSafety.#headOf(await ev.get(parts[0].sha256), HEAD_MAX);
+        }
+      }
       if (head && (head.complete || !needsWholeFile(head.bytes))) {
         const bytes = head.complete ? head.bytes : wholeCharacters(head.bytes);
         return { bytes, whole: head.complete, format: formatOf(bytes) };
       }
+      /* R51 (F10): above the ceiling the file is never loaded: its start says what it is, the rest is stated unread */
+      if (head && size !== null && size > GRADE_READ_MAX) return { bytes: head.bytes, whole: false, format: formatOf(head.bytes), tooLarge: size };
       const bytes = await this.#bytes(sha);
       return bytes ? { bytes, whole: true, format: formatOf(bytes) } : null;
     } catch { return null; }
@@ -390,6 +451,7 @@ export class FileSafety {
   /* R3: append-only. A `found` verdict places or widens a hold (R16, R19); a copy's note is about the copy, which is
      withheld instead (R33). Returns the note's id. */
   #writeNote(sha, v) {
+    this.#noteScanWait(sha, v);
     const same = this.#sameNotScanned(sha, v);
     if (same) return same;
     const noteId = `FSN-${[...crypto.getRandomValues(new Uint8Array(8))].map((x) => x.toString(16).padStart(2, "0")).join("")}`;
@@ -407,6 +469,18 @@ export class FileSafety {
     }
     if (v.result === "found" && v.kind !== "copy") this.#placeHold(sha, noteId, findings, v);
     return noteId;
+  }
+  /* R51 (F3a): a ClamAV verdict `not_scanned: NOT_FOUND` (its bytes are not held) puts the file to wait: it is sent again only once
+     its bytes are held, looked at once an hour, never at every batch; a real verdict ends the wait. Any other `not_scanned`
+     reason leaves the file due as R4 and R47 state. Runs before R47's dedupe, so a verdict that writes no note still waits. */
+  #noteScanWait(sha, v) {
+    try {
+      if (v.kind !== "scan" || String(v.tool ?? "unknown") !== "clamav") return;
+      if (String(v.result) === "not_scanned") {
+        if (v.reason === "NOT_FOUND")
+          this.sql.exec(`UPDATE fs_files SET scan_wait_at = ? WHERE capture_sha = ?`, iso(this.now() + WAITING_RECHECK_MS), sha);
+      } else this.sql.exec(`UPDATE fs_files SET scan_wait_at = NULL WHERE capture_sha = ?`, sha);
+    } catch { /* the file stays due, as before */ }
   }
   /* R47: a `not_scanned` verdict is recorded once for a file and reason, by tool and engine, until the reason changes: the
      newest note of that kind, tool and engine is the same `not_scanned` for the same reason, so no row is written and its
@@ -641,6 +715,9 @@ export class FileSafety {
         if (cycle) add("archive_cycle");
         if (archive.members_high) add("archive_member_high", { count: archive.members_high });
       }
+    } else if (ACTIVE_FORMATS.includes(format) && look && look.tooLarge) {
+      /* R51 (F10): too large to read here, so its active content is unread: high, as R6 states for an unread item */
+      add("unread");
     } else if (ACTIVE_FORMATS.includes(format)) {
       const read = await readActive(format, bytes);
       if (!read.ok) add("format_unchecked", { why: read.why });
@@ -782,7 +859,7 @@ export class FileSafety {
   /** R8: the original's bytes, or the first refusal that applies. `warned` is never stored (R10). */
   async openOriginal({ captureSha = null, viewer = undefined, override = false, warned = undefined } = {}) {
     try {
-      const h = this.#held(captureSha, viewer);
+      const h = this.#held(captureSha, viewer, { serves: true });
       if (h.refused) return h.refused;
       const d = await this.#decide(h.sha, { override, warned, run: true });
       if (d.refuse) return FileSafety.#refusalFor(d);
@@ -793,7 +870,7 @@ export class FileSafety {
   /** R9: what R8 would answer now, without opening, scanning or serving anything. */
   async originalState({ captureSha = null, viewer = undefined } = {}) {
     try {
-      const h = this.#held(captureSha, viewer);
+      const h = this.#held(captureSha, viewer, { serves: true });
       if (h.refused) return h.refused;
       return { ok: true, captureSha: h.sha, ...(await this.#stateOf(h.sha)) };
     } catch { return { ok: true, captureSha: shaOf(captureSha) || null, may_open: false, path: null, why: "NOT_SCANNED" }; }
@@ -817,13 +894,19 @@ export class FileSafety {
    *  spreadsheet's cells as data or (R45) a plain-text file's own characters; a file under a scan hold still gets it (K1892). */
   async safeView({ captureSha = null, viewer = undefined } = {}) {
     try {
-      const h = this.#held(captureSha, viewer);
+      const h = this.#held(captureSha, viewer, { serves: true });
       if (h.refused) return h.refused;
       const sha = h.sha;
       const cache = new Map();
       const look = await this.#look(sha, cache);
       const format = look ? look.format : "unknown";
       const route = safeViewRoute(format);
+      /* R51 (F3b): bytes not held yet, and a view queued or waiting for them: it is on its way, not a file of no route */
+      if (!look) {
+        const q = this.#one(`SELECT render_state FROM fs_files WHERE capture_sha = ?`, sha);
+        if (q && (q.render_state === "queued" || q.render_state === "waiting"))
+          return refusal("SAFE_VIEW_PENDING", "The safe view is queued.", { captureSha: sha });
+      }
       /* DEC-49 REGION is-safe-view-route */
       if (!route && format !== "text")
         return refusal("NO_SAFE_VIEW", localize("file-safety.index.a_safe_view_is_made", "A safe view is made of documents, presentations, spreadsheets and plain text only."), { captureSha: sha, format });
@@ -838,7 +921,7 @@ export class FileSafety {
       }
       if (route === "data") {
         const whole = look.whole ? look.bytes : await this.#bytes(sha);
-        const s = whole ? await sheetsOf(format, whole) : { ok: false, why: "NOT_FOUND" };
+        const s = whole ? await sheetsOf(format, whole) : { ok: false, why: (await this.#sizeOf(sha)) > GRADE_READ_MAX ? "TOO_LARGE" : "NOT_FOUND" };
         if (!s.ok) return refusal("SAFE_VIEW_FAILED", "The spreadsheet's cells could not be read.", { captureSha: sha, renderer_reason: s.why });
         this.#count("safe_views");
         return { ok: true, kind: "data", derived: true, of: sha, sheets: s.sheets, original };
@@ -866,7 +949,13 @@ export class FileSafety {
   async #render(row) {
     const sha = row.capture_sha;
     const look = await this.#look(sha);
-    if (!look) { this.sql.exec(`UPDATE fs_files SET render_state = 'failed', render_reason = 'NOT_FOUND' WHERE capture_sha = ?`, sha); return "failed"; }
+    /* R51 (F3b): bytes not held yet (the keep, after the receipt that queued this render) are waited for, not failed: the view is
+       made once they are held (`#releaseRenderWaits`), and the member's call meanwhile answers `SAFE_VIEW_PENDING` */
+    if (!look) {
+      this.sql.exec(`UPDATE fs_files SET render_state = 'waiting', render_reason = 'NOT_FOUND', render_wait_at = ? WHERE capture_sha = ?`,
+                    iso(this.now() + WAITING_RECHECK_MS), sha);
+      return "waiting";
+    }
     const format = look.format, route = safeViewRoute(format);
     if (!route || route === "data") {
       this.sql.exec(`UPDATE fs_files SET render_state = ?, render_route = ? WHERE capture_sha = ?`, route ? "data" : "none", route, sha);
@@ -890,6 +979,20 @@ export class FileSafety {
     return "rendered";
   }
 
+  /* R51 (F3b): the safe views waiting for their bytes are queued again once the bytes are held (the whole, else every part), at
+     most once an hour each, `limit` of them looked at in a round; the rest wait another hour. Never fails the round. */
+  async #releaseRenderWaits(limit) {
+    try {
+      const at = this.now();
+      for (const r of this.#rows(`SELECT capture_sha FROM fs_files WHERE render_state = 'waiting' AND COALESCE(render_wait_at, '') <= ?
+                                  ORDER BY render_wait_at, capture_sha LIMIT ?`, iso(at), limit)) {
+        if (await this.#wholeHeld(r.capture_sha))
+          this.sql.exec(`UPDATE fs_files SET render_state = 'queued', render_reason = NULL, render_wait_at = NULL WHERE capture_sha = ?`, r.capture_sha);
+        else this.sql.exec(`UPDATE fs_files SET render_wait_at = ? WHERE capture_sha = ?`, iso(at + WAITING_RECHECK_MS), r.capture_sha);
+      }
+    } catch { /* they wait for the next round */ }
+  }
+
   /** R12: renders queued files (the scheduler's wake), and makes the safe copies a routine tool queued (R32, R33); it
    *  states the copies and the files still queued after it. R43: with a renderer bound, a queue that cannot be read
    *  (the files queued to render, or the safe copies queued) answers RENDER_QUEUE_UNREADABLE, rendering, copying and
@@ -904,6 +1007,7 @@ export class FileSafety {
       this.#keep("render", { last: this.now(), unreadable: true });
       return refusal("RENDER_QUEUE_UNREADABLE", detail, extra);
     };
+    await this.#releaseRenderWaits(lim);
     let views, queuedCopies;
     try {
       /* DEC-49 REGION is-render-queue-readable */
@@ -916,7 +1020,7 @@ export class FileSafety {
     const out = { rendered: 0, failed: 0, none: 0, data: 0 };
     const copies = { made: 0, failed: 0, queued: 0 };
     try {
-      for (const row of views) out[await this.#render(row)]++;
+      for (const row of views) { const r = await this.#render(row); if (r in out) out[r]++; }
       const tool = this.#routineTools("cdr")[0];
       if (tool) for (const c of queuedCopies) {
         const r = await this.#makeCopy(c.capture_sha, tool);
@@ -936,11 +1040,13 @@ export class FileSafety {
 
   /* R4: due files, oldest due first: never scanned by ClamAV, or its newest ClamAV scan older than RESCAN_INTERVAL_MS. */
   #due(at) {
-    const rows = this.#rows(`SELECT f.capture_sha, f.queued_at,
+    const rows = this.#rows(`SELECT f.capture_sha, f.queued_at, f.scan_wait_at,
         (SELECT MAX(n.scanned_at) FROM fs_notes n WHERE n.capture_sha = f.capture_sha AND n.kind = 'scan' AND n.tool = 'clamav'
            AND n.result <> 'not_scanned') AS last
       FROM fs_files f`);
-    return rows.map((r) => ({ sha: r.capture_sha, since: r.last ? Date.parse(r.last) + RESCAN_INTERVAL_MS : Date.parse(r.queued_at) }))
+    /* R51: a file waiting for its bytes is next looked at at its wait's instant */
+    return rows.map((r) => ({ sha: r.capture_sha, waiting: !!r.scan_wait_at,
+        since: r.scan_wait_at ? Date.parse(r.scan_wait_at) : r.last ? Date.parse(r.last) + RESCAN_INTERVAL_MS : Date.parse(r.queued_at) }))
       .filter((r) => !Number.isFinite(r.since) || r.since <= at)
       .sort((a, b) => (a.since - b.since) || (a.sha < b.sha ? -1 : 1));
   }
@@ -956,7 +1062,20 @@ export class FileSafety {
       this.#keep("scan", { last: now, remaining: 0 });
       await this.#startRunWhenNoSignatures(now);
       const due = this.#due(now);
-      const batch = due.slice(0, clamp(limit, SCAN_BATCH_MAX, SCAN_BATCH_MAX));
+      const room = clamp(limit, SCAN_BATCH_MAX, SCAN_BATCH_MAX);
+      /* R51 (F3a): a file waiting for its bytes is sent only once they are held (its parts, when no whole is); else it waits
+         another hour and takes no room in the batch */
+      const batch = [];
+      let looked = 0;
+      for (const d of due) {
+        if (batch.length >= room) break;
+        looked++;
+        if (d.waiting) {
+          if (!(await this.#wholeHeld(d.sha))) { this.sql.exec(`UPDATE fs_files SET scan_wait_at = ? WHERE capture_sha = ?`, iso(now + WAITING_RECHECK_MS), d.sha); continue; }
+          this.sql.exec(`UPDATE fs_files SET scan_wait_at = NULL WHERE capture_sha = ?`, d.sha);
+        }
+        batch.push(d);
+      }
       const out = { scanned: 0, found: 0, not_scanned: 0 };
       if (batch.length) {
         const r = await this.#scanner("/scan", { store: this.store, targets: batch.map((d) => this.#target(d.sha)) });
@@ -982,7 +1101,7 @@ export class FileSafety {
           }
         }
       }
-      const remaining = Math.max(0, due.length - batch.length);
+      const remaining = Math.max(0, due.length - looked);
       this.#keep("scan", { last: now, remaining });
       return { ok: true, ...out, remaining };
     } catch { return refusal("SCANNER_UNREACHABLE", "The scan batch could not be run. No note was written."); }
@@ -1422,6 +1541,7 @@ export class FileSafety {
     const bytes = look ? look.bytes : null;
     const entry = (result, detail) => ({ check: "structure", tool: "file-safety", engine: "structure", result, detail });
     if (!bytes) return entry("not_scanned", "NOT_FOUND");
+    if (look.tooLarge) return entry("not_scanned", "TOO_LARGE");
     const format = look.format;
     if (format === "zip") {
       const l = await this.#listing(sha);
@@ -1615,7 +1735,7 @@ export class FileSafety {
   /** R33: a member who may see the file asks the first `on` CDR tool for a rebuilt file. Who asked is not kept (R10). */
   async requestSafeCopy({ captureSha = null, viewer = undefined } = {}) {
     try {
-      const h = this.#held(captureSha, viewer);
+      const h = this.#held(captureSha, viewer, { serves: true });
       if (h.refused) return h.refused;
       const tool = this.#onTools("cdr")[0];
       /* DEC-49 REGION is-copy-tool-on */
@@ -1632,7 +1752,7 @@ export class FileSafety {
    *  a deeper check and stays available under a scan hold: it is the derived document, never the original. */
   async safeCopy({ captureSha = null, viewer = undefined } = {}) {
     try {
-      const h = this.#held(captureSha, viewer);
+      const h = this.#held(captureSha, viewer, { serves: true });
       if (h.refused) return h.refused;
       const sha = h.sha;
       const row = this.#one(`SELECT * FROM fs_copies WHERE capture_sha = ?`, sha);
@@ -1781,7 +1901,12 @@ export class FileSafety {
       if (kept && kept.unreadable) return this.#answer("render", poll);
       const views = this.#one(`SELECT 1 AS x FROM fs_files WHERE render_state = 'queued' LIMIT 1`);
       const copies = this.#one(`SELECT 1 AS x FROM fs_copies WHERE state = 'queued' LIMIT 1`);
-      if (!views && !copies) return this.#answer("render", null);
+      if (!views && !copies) {
+        /* R51: views waiting for their bytes are looked at again at the earliest of their instants */
+        const w = this.#one(`SELECT MIN(render_wait_at) AS t FROM fs_files WHERE render_state = 'waiting'`);
+        const t = w && w.t ? Date.parse(w.t) : NaN;
+        return this.#answer("render", Number.isFinite(t) ? Math.max(poll, t) : w && w.t === null && this.#one(`SELECT 1 AS x FROM fs_files WHERE render_state = 'waiting' LIMIT 1`) ? poll : null);
+      }
       return this.#answer("render", poll);
     } catch { return this.#answer("render", poll); }
   }
