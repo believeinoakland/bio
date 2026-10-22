@@ -98,6 +98,7 @@ async function promoteProject(title) {
 
 const GRANT_UNTIL = "2099-01-05T00:00:00.000Z";
 const api = (op, body, query = "") => asFounder(`/api/?op=${op}${query}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+const body = (a) => (a && a.result !== undefined ? a.result : a);
 const getApi = (query) => asFounder(`/api/?${query}`);
 
 test("R87, R64 (G12c, seam): Home over the real plane sends one casedrafts for the projects that share a draft, and the plane's one answer holds each project's drafts as its single read does", { timeout: 600000 }, async () => {
@@ -120,8 +121,8 @@ test("R87, R64 (G12c, seam): Home over the real plane sends one casedrafts for t
   assert.equal(batch.ok, true, JSON.stringify(batch).slice(0, 300));
   for (const x of projects) {
     const single = await getApi("op=casedrafts&project=" + encodeURIComponent(x.project));
-    assert.deepEqual(batch.result.lists[x.project], single.result, "the entry of " + x.project + " is its single answer");
-    assert.deepEqual(single.result.drafts.map((d) => d.draft_id), [x.draft], "and holds its draft");
+    assert.deepEqual(body(batch).lists[x.project], body(single), "the entry of " + x.project + " is its single answer");
+    assert.deepEqual(body(single).drafts.map((d) => d.draft_id), [x.draft], "and holds its draft");
   }
   assert.equal(main(p).querySelector('[data-area="investigation"]').querySelectorAll('[data-state="failed"]').length, 0, "nothing on Home is drawn failed");
 });
