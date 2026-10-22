@@ -37,3 +37,7 @@ So the bound is set at 64 MiB; tier 1 (R42) refuses what is larger than about 75
 **Tests and checks.** `node --test --test-force-exit pdf-worker/test/structure.test.mjs`: 89 pass, 0 fail. `bio-plane/test/tier2-wire.test.mjs` (the user of this member's wire): 1 pass, 0 fail. `fleetbundles.test.mjs`: pdf-worker rows PASS (agent-worker's 4 fail on the tip too). The other four pdf-worker suites (pagepixels, imagecrop, jbig2, jpx) cover files this change does not touch and were not re-run. `impact.mjs origin/tranche/T51 HEAD` (run before the commit): 0 modules (it reads commits). Checks: format 0, architecture 0, coverage 6656 of 6656, channels 0, words 0 failures (inline 0, plain 0, testcopy 0; no word added), ownership `6 files changed by pdf-worker ... 0 failures`.
 
 Size (session_01TvicQZEyi2UWLiFnXQfFaz): test runs 9, module lines 217 (src/index.mjs; +10, -7 changed)
+
+## J1 · COMPLETE
+
+G34 done: MAX_PDF_BYTES default 16 -> 64 MiB, measured in raw workerd (heap+bytes 84 MB for 64 MiB, 62 MB for 23 MiB x 1,600 pages); walker-shaped 23.5 MB WinAnsi/no-ToUnicode file now tier 2 with words through the handler (red 6 fails on old bound, green 89/0); bundle rebuilt; checks all 0 failures; ownership 0. Above 64 MiB the answer keeps over_envelope with bytes and limit: G14/extraction must state the size from them (nothing in bio-plane/src reads over_envelope today). Record: build/jobs/T51/pdf-worker.md.
