@@ -21,7 +21,7 @@ const WORDS = [{ extent: { kind: "page", page: 1 }, reference: "p1", text: "2026
 const STAND_IN_ON_ITS_WAY = "screen.document.text.unread.next";
 const read = (units) => units.length ? ok({ ok: true, found: true, capture_sha: DIGEST, reading: { found: true, content_type: "application/pdf" }, text_units: units })
   : ok({ ok: true, found: false, capture_sha: DIGEST, reading: null });
-const failedFinal = ok({ ok: true, found: true, capture_sha: DIGEST, reading: { found: false, failure: "final", basis: "the text of this document is undetermined" }, text_units: [] });
+const failedFinal = ok({ ok: true, found: true, capture_sha: DIGEST, reading: { found: false, failure: "final", basis: "no text could be found" }, text_units: [] });
 
 /* capture's real store: the member (`mai`) sees INFO-2026-0042, held at the address, captured by `x` */
 function store() {
@@ -157,11 +157,11 @@ const PAGE = "https://www.nps.gov/acad/index.htm";
 const OPEN = ok({ ok: true, truncated: false, captures: [{ session: SESSION, locator: PAGE, primary_sha: PRIMARY, started: "2026-10-22T08:41:56Z", updated: "2026-10-22T08:41:56Z", outstanding: 1 }] });
 const NOTHING_OPEN = ok({ ok: true, truncated: false, captures: [] });
 const HELD = ok({ ok: true, held: [{ bundle_id: "INFO-2026-0131-acadia", title: "Acadia National Park", capture: { sha256: PRIMARY, grade: null } }] });
-const CONTINUED = { session: SESSION, primary: { sha256: PRIMARY, file: "snapshots/index.htm", locator: PAGE }, note: "a continuation files no new document: the primary was captured by the session's first tick and is never re-fetched" };
+const CONTINUED = { session: SESSION, primary: { sha256: PRIMARY, file: "snapshots/index.htm", locator: PAGE }, note: "the plane's note on the continuation" };
 const RENDERED = { capture: { method: "retrieved", sha256: "c".repeat(64), bytes: 41000, encoding: "utf-8" }, file: "snapshots/index.htm", title: null,
   pair: { primary: "rendered", rendered: { file: "snapshots/index.htm", sha256: "c".repeat(64) }, shell: { file: "snapshots/index.htm.shell", sha256: PRIMARY } } };
 const FIRST = { ok: true, existed: false, reading: { title: "Acadia National Park" }, document: { capture: { sha256: PRIMARY, bytes: 9000, encoding: "utf-8" }, file: "snapshots/index.htm", title: null,
-  render_pending: { session: SESSION, since: "2026-10-22T08:41:56Z", note: "this is the page as it was served; the page as a visitor saw it is still being made" } }, render: { state: "pending", session: SESSION } };
+  render_pending: { session: SESSION, since: "2026-10-22T08:41:56Z", note: "the plane's note on the render" } }, render: { state: "pending", session: SESSION } };
 const base = { projectlist: ok({ projects: [] }), heldat: ok({ ok: true, held: false, copy: null, versions: 0, truncated: false, changed: { state: "undetermined" } }),
   allocid: ok({ ok: true, id: "INFO-2026-0132" }), promote: (r) => ok({ ok: true, bundleId: r.body.bundleId }), heldcaptures: HELD };
 const openF = (plane) => openPage("/app/capture/address", { plane: { ...base, ...plane }, screens: [...SCREENS, DOCUMENT_STUB] });
@@ -174,7 +174,7 @@ test("R31 (E8) 'Finish it' answered with the render still being made says so, an
   fill(p, { "ci-address": PAGE });
   await press(p, "acquire");
   assert.ok(says(p, "screen.capture.address.done", { title: "Acadia National Park" }), "before: the first capture's result is drawn");
-  assert.ok(main(p).textContent.includes("still being made"), "before: with the plane's note that the visitor copy is still being made");
+  assert.ok(main(p).textContent.includes("the plane's note on the render"), "before: with the plane's note that the visitor copy is still being made");
   const finish = finishButton(p);
   assert.ok(finish, "Finish it is drawn");
   await p.click(finish);
