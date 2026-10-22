@@ -79,7 +79,7 @@ function readBoxes(raw, ctx, keep = true) {
     } else if (isName(text)) { named++; return; }
     /* A unit's label ends in its kind ("Records Division"); a line that opens with a name and ends
        otherwise is a row ("<name> District 1"), never a unit's box. */
-    const last = (text.split(" ").pop() || "").replace(/[^\p{L}]/gu, "").toLowerCase();
+    const last = text.slice(text.lastIndexOf(" ") + 1).replace(/[^\p{L}]/gu, "").toLowerCase();
     if (isUnitLine(text) && (UNIT_WORDS.has(last) || !leadingName(text.replace(/^\d{1,3}[.)]?\s+/, "")))) {
       unitLines.add(at);
       if (keep) units.push({ label: text, offset: x.offset });

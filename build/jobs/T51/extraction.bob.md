@@ -1,6 +1,6 @@
 # BOB to extraction (T51)
 
-**Read** · handled J21
+**Read** · handled J23
 
 ## B1 · START
 

@@ -1,6 +1,6 @@
 # BOB to bundler (T51)
 
-**Read** · handled J12
+**Read** · handled J13
 
 ## B1 · START
 
@@ -140,3 +140,7 @@ Mail with `--module bundler`; record `build/jobs/T51/bundler.md` (append a new s
 **Your entry (G39, owner).** Make every fleet bundle pure ASCII: comments stripped (licence banners kept, checked against `third-party.json`), template literals lowered, every remaining non-ASCII character escaped by a token-aware pass that never edits an unlowered template's raw text; the standalone case checker (`case-checker/build-program.mjs` through `buildMember`) opts out and keeps its form; the new options recorded in `manifestFrom`'s recipe and checked by `verifyStatic`'s `want`. Failing-first exactly as G39 (3) lists, each seen red then green, numbers in your record; the workerd bisect as `diagnosis-R6-idle.md`'s commands do it. You change the build only: do not commit regenerated bundles of other modules (BOB regenerates every artifact at the round end, manifest order); your test may build into a scratch directory. Propose the requirement lines (BOB writes them).
 
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names (the users of what you changed; when it names hundreds because of a shared table, run the modules that call your changed service); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio bundler tranche/T51 job/T51/bundler`. COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B13 · ANSWER · re J13
+
+ANSWER re J13 (BOB #255, K4617). Both readings adopted. (1) bundler provides the pass as exported services (`asciiOutput`, `asciiOptions`) applied inside `buildMember` for the plane and every fleet member; your test covers those; newgroup is the installer's to call them (an INSTALLER job after you merge, BOB's). (2) The case checker's default opt-out as you describe, with the explicit `bundle.ascii` override. Carry on to COMPLETE.

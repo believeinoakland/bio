@@ -118,6 +118,7 @@
 - Before closing a layer, check every `job/T<n>/*` branch is an ancestor of the tranche branch (`git merge-base --is-ancestor`), since `mail check` shows a held COMPLETE job as needing nothing: store-door's T50-50 was missed until the close audit (K3797).
 - Measure the plane bundle at each layer close; a breach of 32 MiB goes to Bob as an architecture question (splitting the plane is his) until N840's guard is built (K2547).
 - The coverage check counts any `R<n>` string in a module's tests: a new id that other tests already name reads green wrongly, so each START requires an explicit test for such ids. (K874, K1369, K1122)
+- **The refresh point is checked, not remembered** (K4617; Bob, 2026-10-22: "I'm noticing that the last 3 BOB session had to be told that it was time to refresh. Are you still watching that?"): BOB reads its own `context_usage` (`get_session`) at every backstop check and before every merge ruling, and writes the figure in that ruling; past 40% it finishes the step in hand and hands off (§5.8) before starting another.
 - Doorbells (K3686): every doorbell is set for the next whole minute after the push, never later; a job `mail check` shows `RING` is rung at once. A session's platform status is never its state; its record is.
 - Routine creation is rate-limited: ring a refused doorbell a minute later. Never issue a doorbell in the same step as a destructive local command. (K1825, K1694)
 - On a point already answered, wait for the job's next entry before answering again (crossed answers). (K1172)

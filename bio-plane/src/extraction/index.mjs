@@ -46,6 +46,10 @@ const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch
 /* R22 (CONTENT-SEARCH-DESIGN §4.3, M-20): the index's per-capture bounds. */
 export const CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;
 export const CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
+/** (fix round 6, G38; R93, R94) what one answer of `op=reading` carries: a page of units holds about 1 MiB of unit text (a unit over it alone
+ *  on its page), and a key of the stored reading over 256 KiB (a sheet's `cells`, 11.8 MB for a 1 MB CSV) is named, never carried. */
+export const READING_PAGE_BYTES = 1048576;
+export const READING_KEY_BYTES = 262144;
 /* R29, R39, R48: the one pair of bounds for the text-source rows (REC-60/REC-70's ratchet). */
 export const TEXT_SOURCE_LIMIT_DEFAULT = 200;
 export const TEXT_SOURCE_LIMIT_MAX = 5000;
@@ -1273,7 +1277,7 @@ export class Extraction {
   readingFor(captureSha, viewer = null, { after = null } = {}) {
     if (typeof captureSha !== "string" || !captureSha) return noSha("a reading is read by its capture sha256");
     const row = this.#one(
-      `SELECT capture_sha, bundle_id, content_type, reader_version, found, entity_count, reading, at,
+      `SELECT capture_sha, bundle_id, content_type, reader_version, found, entity_count, at,
               origin, asserted_by, asserted_standing, justification, capture_format
          FROM readings WHERE capture_sha=?`, captureSha);
     /* (fix round 6, G6; R88) a part's digest is no capture of its own: a reading asked for by the digest of a part of a held document
@@ -1286,7 +1290,10 @@ export class Extraction {
       if (whole) return this.readingFor(whole, viewer, { after });
     }
     if (!row) return { ok: true, found: false, capture_sha: captureSha, reading: null };
-    let reading = safeJson(row.reading);
+    /* (fix round 6, G38; R94) the stored reading is read through SQL's JSON, so a bulky key never enters the object: it is named in
+       `reading_omitted` and left out of `reading`. */
+    const { reading: stored, omitted } = this.#readingBounded(row.capture_sha);
+    let reading = stored;
     const ts = this.#one(
       `SELECT transcribed, terminal_step, engines, derivation_cap, steps FROM reading_text_source WHERE capture_sha=?`, captureSha);
     const chain = reading && reading.text_source !== undefined ? reading.text_source : null;
@@ -1295,7 +1302,7 @@ export class Extraction {
     const withheld = !!row.bundle_id && this.#redactor(viewer)(row.bundle_id) === null;
     /* (fix round 6, G13; R76 amended; BOB's K4577) at most 4,096 units an answer; `after` (a unit's `seq`) asks the page after it, and `next`
        is the `seq` to ask after this one, null at the end, so every unit of a capture read whole is reachable here. */
-    const page = withheld ? null : this.unitsOf(row.capture_sha, { after: Number.isInteger(after) ? after : null });
+    const page = withheld ? null : this.unitsOf(row.capture_sha, { after: Number.isInteger(after) ? after : null, maxBytes: READING_PAGE_BYTES });
     const text_units = page ? page.units.map((u) => ({ extent: u.extent, reference: u.ref, text: u.text, truncated: u.truncated })) : undefined;
     const next = page ? (page.next ?? null) : undefined;
     /* (G14; K4579) what the capture's text index holds of it, stated: never "full" for a text the bounds cut, never "none" for one
@@ -1338,6 +1345,7 @@ export class Extraction {
              /* R89 (fix round 6, G8): a reading that says the document was not read as text, and that no read has found nothing to
                 repair it by under this release, states it may be repaired (the member's press, "Read it", is offered for it). */
              ...(notReadAsText(reading) && !this.#repairTried(row.capture_sha) ? { repairable: true } : {}),
+             ...(omitted.length ? { reading_omitted: omitted } : {}),
              ...(text_units ? { text_units, next } : {}),
              ...(completeness ? { completeness, units_total: unitsTotal } : {}),
              ...(bytes === undefined ? {} : { bytes }),
@@ -1373,9 +1381,17 @@ export class Extraction {
     if (!(Number.isInteger(n) && n > 0)) return {};
     if (bundleId && this.#redactor(viewer)(bundleId) === null) return {};
     const read = new Set();
-    for (const u of this.#rows(`SELECT extent, text FROM capture_text WHERE capture_sha=? AND extent_kind='pdf-page'`, captureSha)) {
-      const e = safeJson(u.extent);
-      if (e && Number.isInteger(e.page) && glyphCount(u.text) > 0) read.add(e.page);
+    /* (fix round 6, G38) a few units at a time (by `seq`), never the capture's whole text at once: a 1,354-page volume's pages are 14 MB,
+       and holding them beside the answer's own page killed the object at its limit. */
+    for (let at = -1, more = true; more;) {
+      const chunk = this.#rows(
+        `SELECT seq, extent, text FROM capture_text WHERE capture_sha=? AND extent_kind='pdf-page' AND seq > ? ORDER BY seq LIMIT 32`, captureSha, at);
+      for (const u of chunk) {
+        const e = safeJson(u.extent);
+        if (e && Number.isInteger(e.page) && glyphCount(u.text) > 0) read.add(e.page);
+      }
+      more = chunk.length === 32;
+      if (chunk.length) at = chunk[chunk.length - 1].seq;
     }
     const pages = Array.from({ length: n }, (_, p) => p).filter((p) => !read.has(p));
     const picture = PICTURE_FORMATS.includes(captureFormat) || PICTURE_FORMATS.includes(reading.text_container);
@@ -1450,18 +1466,56 @@ export class Extraction {
              captureFormat: typeof row.capture_format === "string" ? row.capture_format : null };
   }
 
+  /** (fix round 6, G38; R94) the stored reading of a capture without its bulky keys: a top-level key whose JSON is over READING_KEY_BYTES is
+   *  removed by SQL (so it is never loaded) and named in `omitted` as `{key, bytes}`. A reading that is no object, or no valid JSON, is
+   *  parsed as it stands. */
+  #readingBounded(captureSha) {
+    const whole = () => ({ reading: safeJson(this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, captureSha).reading), omitted: [] });
+    let big = [];
+    try {
+      big = this.#rows(
+        `SELECT j.key AS key, length(CAST(j.value AS BLOB)) AS n FROM readings r, json_each(r.reading) j
+          WHERE r.capture_sha=? AND length(CAST(r.reading AS BLOB)) > ? AND json_valid(r.reading) AND json_type(r.reading)='object'
+            AND length(CAST(j.value AS BLOB)) > ? ORDER BY j.key`, captureSha, READING_KEY_BYTES, READING_KEY_BYTES)
+        .filter((k) => typeof k.key === "string" && !k.key.includes('"'));
+    } catch { return whole(); }
+    if (!big.length) return whole();
+    const cut = this.#one(
+      `SELECT json_remove(reading, ${big.map(() => "?").join(", ")}) AS reading FROM readings WHERE capture_sha=?`,
+      ...big.map((k) => `$."${k.key}"`), captureSha);
+    return { reading: safeJson(cut.reading), omitted: big.map((k) => ({ key: k.key, bytes: k.n })) };
+  }
+
   /** R36: the capture's indexed units in `seq` order, at most the unit bound, and the index's own state from its
    *  last write: `whole`, `partial` (with its counts and the named gaps), `none`, or null (never indexed). */
-  unitsOf(captureSha, { after = null } = {}) {
+  unitsOf(captureSha, { after = null, maxBytes = null } = {}) {
     const st = this.#one(`SELECT * FROM capture_text_state WHERE capture_sha=?`, captureSha);
     /* (fix round 6, G13; R76 amended) a page of at most CAPTURE_TEXT_CAPTURE_UNIT_BOUND units after the unit `after` (its `seq`; none:
        from the first), and `next`, the `seq` to ask after the page when more units follow it. A text read whole in pieces holds more
        than one page, and every unit of it is reachable by asking page by page. */
     const from = Number.isInteger(after) ? after : -1;
-    const page = this.#rows(
-      `SELECT extent, ref, text, truncated, seq, chain_kind FROM capture_text WHERE capture_sha=? AND seq > ? ORDER BY seq LIMIT ?`,
-      captureSha, from, CAPTURE_TEXT_CAPTURE_UNIT_BOUND + 1);
-    const more = page.length > CAPTURE_TEXT_CAPTURE_UNIT_BOUND;
+    /* (G38; R93) `maxBytes`: the page also ends where its unit text would pass that many bytes (a unit over it alone on its page). The sizes
+       are read first, so the text of the units a page leaves out is never loaded. */
+    let page, more;
+    if (Number.isInteger(maxBytes) && maxBytes > 0) {
+      const sizes = this.#rows(
+        `SELECT seq, length(CAST(text AS BLOB)) AS n FROM capture_text WHERE capture_sha=? AND seq > ? ORDER BY seq LIMIT ?`,
+        captureSha, from, CAPTURE_TEXT_CAPTURE_UNIT_BOUND + 1);
+      let used = 0, kept = 0;
+      for (const z of sizes.slice(0, CAPTURE_TEXT_CAPTURE_UNIT_BOUND)) {
+        if (kept > 0 && used + z.n > maxBytes) break;
+        used += z.n; kept++;
+      }
+      more = sizes.length > kept;
+      page = kept === 0 ? [] : this.#rows(
+        `SELECT extent, ref, text, truncated, seq, chain_kind FROM capture_text WHERE capture_sha=? AND seq > ? AND seq <= ? ORDER BY seq`,
+        captureSha, from, sizes[kept - 1].seq);
+    } else {
+      page = this.#rows(
+        `SELECT extent, ref, text, truncated, seq, chain_kind FROM capture_text WHERE capture_sha=? AND seq > ? ORDER BY seq LIMIT ?`,
+        captureSha, from, CAPTURE_TEXT_CAPTURE_UNIT_BOUND + 1);
+      more = page.length > CAPTURE_TEXT_CAPTURE_UNIT_BOUND;
+    }
     const units = page.slice(0, CAPTURE_TEXT_CAPTURE_UNIT_BOUND)
       .map((u) => ({ extent: safeJson(u.extent), ref: u.ref, text: u.text, truncated: !!u.truncated, seq: u.seq,
                      chain_kind: u.chain_kind }));

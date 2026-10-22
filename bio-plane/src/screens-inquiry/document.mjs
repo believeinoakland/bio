@@ -103,6 +103,8 @@ function render(cs, view) {
   };
   /* R78: a page the record counts from zero is drawn from one; a run of pages as "7–9", the value sent staying the record's */
   const pg = (p) => (Number.isInteger(p) && p >= 0 ? p + 1 : null);
+  /* G38: a page of the reading, for `view.parts.readPages` (the reading is one op, its pages the same op after a cursor) */
+  const readOf = (k, q) => later(k, "reading", q);
   const pagesText = (list) => {
     const n = list.slice().sort((a, b) => a - b), runs = [];
     for (const p of n) {
@@ -262,17 +264,10 @@ function render(cs, view) {
   /* G13: `op=reading` pages the passages (at most 4,096 an answer): `next` is the cursor for the rest, `after` asks for it. The member asks for more
      (`ui.readmore`, the number of pages wanted); each page is its own read, and what is drawn is never stated as the whole while `next` stands. */
   const wantPages = Math.max(1, Number(ui.readmore) || 1);
-  let allUnits = rv0 && Array.isArray(rv0.text_units) ? rv0.text_units.slice() : [];
-  let cursor = rv0 && rv0.next !== undefined && rv0.next !== null && rv0.next !== "" ? rv0.next : null;
-  let pagesPending = false, pagesFailed = null;
-  for (let i = 1; i < wantPages && cursor !== null && sha; i++) {
-    const more = later("readafter:" + String(cursor), "reading", { sha256: sha, after: String(cursor) });
-    if (more.state === "loading") { pagesPending = true; break; }
-    if (more.state !== "ok" || !more.value) { pagesFailed = more; break; }
-    allUnits = allUnits.concat(Array.isArray(more.value.text_units) ? more.value.text_units : []);
-    cursor = more.value.next !== undefined && more.value.next !== null && more.value.next !== "" ? more.value.next : null;
-  }
-  const unitsCut = cursor !== null;
+  const shownPages = view.parts.readPages(readOf, "readafter:", sha, rv0, null, wantPages - 1);
+  const allUnits = shownPages.units;
+  const pagesPending = shownPages.state === "loading", pagesFailed = shownPages.failed;
+  const unitsCut = shownPages.more;
   /* a row of the design (DEC-418) when the words list holds it, else the nearest held row stands in (the row owed is named in the job record) */
   const heldWord = (key) => cs.w(key) !== key;
   /* R3, C25 (screens-intake R54; acquisition R98): ONE rule for a document's name, the one the capture screen follows: its own title (the reading's
@@ -637,8 +632,11 @@ function render(cs, view) {
       if (!newer || !versions.some((x) => x && (x.capture_sha === newer || x.sha256 === newer))) return "nothing";
       const rd = later("reading:" + newer, "reading", { sha256: newer });
       if (rd.state === "loading") return "wait";
-      const units = rd.state === "ok" && rd.value && Array.isArray(rd.value.text_units) ? rd.value.text_units.filter((u) => u && String(u.text || "").trim()) : [];
-      return units.length ? "chain" : "nochain";
+      /* G38: a long reading is paged (`next`), so the text may begin past the first page: the pages are followed until one holds words, or none is left */
+      const words = (us) => us.some((u) => u && String(u.text || "").trim());
+      const got = view.parts.readPages(readOf, "readingafter:" + newer + ":", newer, rd.state === "ok" ? rd.value : null, words);
+      if (words(got.units)) return "chain";
+      return got.state === "loading" ? "wait" : got.state === "failed" ? "unread" : "nochain";
     };
     const seenQ = new Set();
     const rows = [];
@@ -668,11 +666,20 @@ function render(cs, view) {
          one), and the words cited are drawn beside, whatever the kind: a row never ends on a separator with nothing after it */
       const legsHere = (qf ? qf.lists.basis || [] : []).filter((l) => l && String(l.target) === id);
       const paras = legsHere.map((l) => (l.extent_para !== undefined && l.extent_para !== "" && Number.isInteger(Number(l.extent_para)) ? Number(l.extent_para) + 1 : null)).filter((n) => n !== null);
-      const citedUnits = rv0 && Array.isArray(rv0.text_units) ? rv0.text_units : [];
-      const cited = [...new Set(legsHere.map((l) => view.parts.legWords(citedUnits, view.parts.legExtent(l))).filter(Boolean))].slice(0, 2);
+      /* G38: the unit a leg cites may sit on a later page of a long reading (`next`): the pages are followed until the unit is found, or none is left; a page
+         that cannot be read is said, never taken for the unit's absence */
+      let citedFailed = false;
+      const cited = [...new Set(legsHere.map((l) => {
+        const want = view.parts.legExtent(l);
+        if (!Object.keys(want).some((k) => k !== "kind")) return "";
+        const got = view.parts.readPages(readOf, "readafter:", sha, rv0, (us) => view.parts.legWords(us, want) !== "");
+        if (got.state === "failed") citedFailed = true;
+        return view.parts.legWords(got.units, want);
+      }).filter(Boolean))].slice(0, 2);
       if (ptitle) meta.push(cs.esc(ptitle));
       if (places.length) meta.push(W("screen.document.place.restson", { page: pagesText(places) }));
       else if (paras.length) meta.push(paras.map((n) => W("screen.question.leg.paragraph", { n: String(n) })).join(", "));
+      if (citedFailed) meta.push(cs.state({ state: "failed", refusal: null }, () => ""));
       for (const w of cited) { const t = String(w).replace(/\s+/g, " ").trim(); meta.push(`<span class="rec" data-leg-words="1">\u201c${cs.esc(t.length > 120 ? t.slice(0, 120).replace(/\s+\S*$/, "") + "\u2026" : t)}\u201d</span>`); }
       if (!open.length && closed.length) {
         /* decided: what she chose, who and when, in her own words; nothing more is offered for that capture */
@@ -974,17 +981,26 @@ function render(cs, view) {
         + cs.act("resolvetestify", { label: "act.resolvetestify.label.document", data: { sha } }) + own("resolvetestify") + "</details>" : "";
     /* R127: a passage of this reading beside a passage of another document the member can see; the other document is chosen (the choice redraws the
        page, `ui.flagOther`) and its passages are its own reading's */
-    const flagUnits = (r) => (r && r.state === "ok" && r.value && Array.isArray(r.value.text_units) ? r.value.text_units : []).filter((u) => u && String(u.text || "").trim() && u.extent && typeof u.extent === "object");
+    const flagUnits = (us) => us.filter((u) => u && String(u.text || "").trim() && u.extent && typeof u.extent === "object");
     const flagLabel = (u) => quote(excerpt(u.text)) + (u.extent && u.extent.kind === "pdf-page" && Number.isInteger(u.extent.page) ? " \u00b7 " + T("screen.document.passage.where", { page: u.extent.page + 1 }) : "");
     const flagDocs = later("docs", "list", { type: "information", limit: "500" });
     const flagOthers = flagDocs.state === "ok" && flagDocs.value && Array.isArray(flagDocs.value.bundles)
       ? flagDocs.value.bundles.filter((b) => b && b.bundle_id && String(b.bundle_id) !== id && String(b.object_type || "").toLowerCase() === "information") : [];
-    const flagHere = flagUnits(reading);
+    /* G38 (R127): the passages offered are those of every page of a long reading (`next`), this one's and the other's, read once the fold can be drawn
+       (another document exists to set it beside); a page still on its way or not readable is said in the fold, never taken for the end of the reading */
+    const flagPaged = (first, key, shaOf) => (flagOthers.length && first ? view.parts.readPages(readOf, key, shaOf, first, null)
+      : { units: first && Array.isArray(first.text_units) ? first.text_units : [], state: "ok" });
+    const hereRead = flagPaged(rv0, "readafter:", sha);
+    const flagHere = flagUnits(hereRead.units);
     const flagPick = String(ui.flagOther || "");
     const flagImg = flagPick ? later("flagimg:" + flagPick, "image", { id: flagPick }) : null;
     let flagSha = "";
     try { const fp = JSON.parse(String(flagImg && flagImg.state === "ok" && flagImg.value ? flagImg.value["data/provenance.json"] || "" : "")); const c0 = fp && fp.documents && fp.documents[0] && fp.documents[0].capture ? String(fp.documents[0].capture.sha256 || "") : ""; flagSha = /^[0-9a-f]{64}$/.test(c0) ? c0 : ""; } catch { flagSha = ""; }
-    const flagThere = flagSha ? flagUnits(later("flagread:" + flagSha, "reading", { sha256: flagSha })) : [];
+    const thereFirst = flagSha ? later("flagread:" + flagSha, "reading", { sha256: flagSha }) : null;
+    const thereRead = thereFirst && thereFirst.state === "ok" ? flagPaged(thereFirst.value, "flagreadafter:" + flagSha + ":", flagSha) : { units: [], state: thereFirst ? thereFirst.state : "ok" };
+    const flagThere = flagUnits(thereRead.units);
+    const flagState = [hereRead.state, thereRead.state].includes("failed") ? cs.state({ state: "failed", refusal: null }, () => "")
+      : [hereRead.state, thereRead.state].includes("loading") ? cs.state({ state: "loading" }, () => "") : "";
     const flagHtml = flagHere.length && flagOthers.length
       ? `<details class="mk-details" data-fold="contradict"><summary>${W("screen.document.contradict.head")}</summary><p class="mk-note">${W("screen.document.contradict.note1")} ${W("screen.document.contradict.note2")}</p>`
         + cs.choice("document-flag-here", "screen.document.contradict.here", [{ value: "", text: "" }].concat(flagHere.map((u, i) => ({ value: String(i), text: flagLabel(u) }))), { value: "" })
@@ -992,7 +1008,7 @@ function render(cs, view) {
         + cs.choice("document-flag-other", "screen.document.contradict.other", [{ value: "", text: "" }].concat(flagOthers.map((b) => ({ value: String(b.bundle_id), text: String(b.title || b.bundle_id) }))), { value: flagPick, redraw: "flagOther" })
         + (flagPick ? cs.choice("document-flag-there", "screen.document.contradict.other", [{ value: "", text: "" }].concat(flagThere.map((u, i) => ({ value: String(i), text: flagLabel(u) }))), { value: "" }) : "")
         + `<p class="mk-small">${W("screen.document.contradict.other.help")}</p>`
-        + cs.field("document-flag-why", "screen.document.contradict.why", { area: true, rec: true, help: "screen.document.contradict.why.help" })
+        + flagState + cs.field("document-flag-why", "screen.document.contradict.why", { area: true, rec: true, help: "screen.document.contradict.why.help" })
         + cs.act("contradictionflag", { data: { sha } }) + own("contradictionflag") + "</details>" : "";
     const folds = testifyHtml + flagHtml;
     if (rs.state === "failed") out.push(cs.sec("document.names.title", cs.state(rs, () => ""), { help: "document.names.help" }));
@@ -1591,14 +1607,17 @@ const acts = [
   { op: "contradictionflag", label: "act.contradictionflag.label.document", rereads: [], reasonField: "reason",
     send(view, el, cs) {
       const L = view.ui.later || {};
-      const units = (r) => (r && r.state === "ok" && r.value && Array.isArray(r.value.text_units) ? r.value.text_units : []).filter((u) => u && String(u.text || "").trim() && u.extent && typeof u.extent === "object");
+      /* G38: the passages are those the page offered, every page of the reading read so far (the pages are in the page's memory, in order, so an index the
+         page drew is the same here) */
+      const units = (r, key, sha) => view.parts.readPages((k) => L[k] || { state: "loading" }, key, sha, r && r.state === "ok" ? r.value : null, null).units
+        .filter((u) => u && String(u.text || "").trim() && u.extent && typeof u.extent === "object");
       const hereAt = String(cs.value("document-flag-here") || "");
-      const here = hereAt !== "" && /^\d+$/.test(hereAt) ? units(L.reading)[Number(hereAt)] : null;
+      const here = hereAt !== "" && /^\d+$/.test(hereAt) ? units(L.reading, "readafter:", String(el.dataset.sha || ""))[Number(hereAt)] : null;
       const otherId = String(cs.value("document-flag-other") || "");
       let otherSha = "";
       try { const img = L["flagimg:" + otherId]; const pj = JSON.parse(String(img && img.state === "ok" && img.value ? img.value["data/provenance.json"] || "" : "")); const c0 = pj && pj.documents && pj.documents[0] && pj.documents[0].capture ? String(pj.documents[0].capture.sha256 || "") : ""; otherSha = /^[0-9a-f]{64}$/.test(c0) ? c0 : ""; } catch { otherSha = ""; }
       const thereAt = String(cs.value("document-flag-there") || "");
-      const there = otherSha && thereAt !== "" && /^\d+$/.test(thereAt) ? units(L["flagread:" + otherSha])[Number(thereAt)] : null;
+      const there = otherSha && thereAt !== "" && /^\d+$/.test(thereAt) ? units(L["flagread:" + otherSha], "flagreadafter:" + otherSha + ":", otherSha)[Number(thereAt)] : null;
       if (!here || !there) return { refuse: "refusal.FLAG_NO_PASSAGE" };
       const reason = String(cs.value("document-flag-why") || "").trim();
       if (!reason) return { refuse: "refusal.FLAG_NO_REASON" };
