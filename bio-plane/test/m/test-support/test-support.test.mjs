@@ -370,10 +370,12 @@ test("R3 and R6 a child the suite starts is not handed NODE_EXTRA_CA_CERTS: with
   const saved = process.env.NODE_EXTRA_CA_CERTS;
   process.env.NODE_EXTRA_CA_CERTS = unreadable;
   try {
-    /* The control: a child given the variable as it is warns, so silence below is the strip's doing. */
-    const bare = spawnSync(process.execPath, ["-e", "0"], { env: { ...process.env, TMPDIR: H }, encoding: "utf8" });
+    /* The control: a child given the variable as it is warns, so silence below is the strip's doing. Node 26 reads the
+       extra certificates only when a TLS context is first made, so the control makes one; the stripped child below
+       makes one too. */
+    const bare = spawnSync(process.execPath, ["-e", 'require("node:tls").createSecureContext()'], { env: { ...process.env, TMPDIR: H }, encoding: "utf8" });
     assert.notEqual(bare.stderr, "", "an unstripped child reads the unreadable file and warns");
-    const r = child(`report({ seen: "NODE_EXTRA_CA_CERTS" in process.env });`, { hostDir: H });
+    const r = child(`(await import("node:tls")).createSecureContext(); report({ seen: "NODE_EXTRA_CA_CERTS" in process.env });`, { hostDir: H });
     assert.equal(r.status, 0, r.stderr);
     assert.equal(r.stderr, "", "the child warns about nothing");
     assert.deepEqual(r.result, { seen: false }, "the variable is absent in the child");
