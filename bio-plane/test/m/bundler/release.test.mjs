@@ -13,7 +13,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { stripJsonc, parseJsonc } from "../../../scripts/jsonc.mjs";
 import { versionSites, resolveVersion } from "../../../scripts/resolve-version.mjs";
-import { deriveBindings, serviceTargets, deriveLimits, limitsReadBack } from "../../../scripts/derive-bindings.mjs";
+import { deriveBindings, serviceTargets, deriveLimits, limitsReadBack, deriveCrons } from "../../../scripts/derive-bindings.mjs";
 import { planeMember, discoverMembers, buildMember, manifestFrom, verifyStatic } from "../../../scripts/fleet-bundle.mjs";
 import {
   fleetStatement, NS_FLEET, NS_RELEASE, verifySshsig, NS_RELEASE_NOTICE, releaseNoticeStatement, verifyReleaseNotice,
@@ -21,7 +21,7 @@ import {
 import { signSshsig, signerPublicLine } from "../../../scripts/sign-sshsig.mjs";
 import {
   makeRepo, addMember, addContainerMember, addScannerMember, buildAll, run, snapshot, readJson, writeJson, rm, hex, planeConfig,
-  VERSION, ACCOUNT, PLANE, DIGEST, CONTAINER_PACKAGES, SCANNER_PACKAGES, DIGEST_A, DIGEST_B, scannerClasses, NOTES,
+  VERSION, ACCOUNT, PLANE, PLANE_CRON, DIGEST, CONTAINER_PACKAGES, SCANNER_PACKAGES, DIGEST_A, DIGEST_B, scannerClasses, NOTES,
 } from "./repo.mjs";
 
 const refused = (r, code) => {
@@ -246,7 +246,9 @@ const ASSET = "dist/bio-plane.bundled.mjs";
 const deploy = (root, { args = [SLUG, VERSION, ASSET], env = CF, stub } = {}) =>
   run(root, "bio-plane", ["scripts/deploy.mjs", ...args], { env, stub });
 const okStub = (extra = {}) => ({ subdomain: "sub", put: "accept", scripts: { "alpha-worker": { settings: {} } }, ...extra });
-const puts = (r) => r.calls.filter((c) => c.method === "PUT");
+/** The script uploads: a deploy's schedules PUT (G1) is a PUT too, but is not an upload; `anyPut` counts both. */
+const puts = (r) => r.calls.filter((c) => c.method === "PUT" && !c.url.endsWith("/schedules"));
+const anyPut = (r) => r.calls.filter((c) => c.method === "PUT");
 /** The bindings R13 derives for the fixture plane, as an account that already holds them reads them back. */
 const derivedOnScript = (root) =>
   deriveBindings(parseJsonc(readFileSync(join(root, "bio-plane/wrangler.jsonc"), "utf8")), { slug: SLUG, version: VERSION });
@@ -379,11 +381,11 @@ test("R18: already-deployed bytes serving the version with matching limits uploa
   try {
     const body = readFileSync(join(root, "bio-plane", ASSET), "utf8");
     const bindings = derivedOnScript(root);
-    const done = deploy(root, { stub: okStub({ scripts: { "alpha-worker": { settings: {} }, [SLUG]: { body, settings: { limits: { subrequests: 500 }, bindings } } },
+    const done = deploy(root, { stub: okStub({ scripts: { "alpha-worker": { settings: {} }, [SLUG]: { body, settings: { limits: { subrequests: 500 }, bindings }, schedules: [PLANE_CRON] } },
       serving: { [SLUG]: VERSION } }) });
     assert.equal(done.status, 0, done.stderr);
-    assert.deepEqual(puts(done), []);
-    assert.match(done.stdout, /already byte-identical AND serving 1\.2\.3 AND limits\.subrequests 500 read back AND every derived binding present; nothing to do/);
+    assert.deepEqual(anyPut(done), [], "nothing is uploaded and no schedule is set");
+    assert.match(done.stdout, /already byte-identical AND serving 1\.2\.3 AND limits\.subrequests 500 read back AND every derived binding present AND schedules \*\/5 \* \* \* \* held; nothing to do/);
 
     for (const [label, scripts, serving] of [
       ["serving an older version", { body, settings: { limits: { subrequests: 500 }, bindings } }, "1.2.2"],
@@ -466,10 +468,10 @@ test("R34 (control): with every derived binding present and the bytes matching, 
     const body = readFileSync(join(root, "bio-plane", ASSET), "utf8");
     const bindings = [...derivedOnScript(root), { type: "plain_text", name: "JURISDICTION_PROFILES", text: "p" }, { type: "secret_text", name: "INSTANCE_AI_TOKEN" }];
     const r = deploy(root, { env: { ...CF, INSTANCE_AI_TOKEN: "x" }, stub: okStub({ scripts: { "alpha-worker": { settings: {} },
-      [SLUG]: { body, settings: { limits: { subrequests: 500 }, bindings } } }, serving: { [SLUG]: VERSION } }) });
+      [SLUG]: { body, settings: { limits: { subrequests: 500 }, bindings }, schedules: [PLANE_CRON] } }, serving: { [SLUG]: VERSION } }) });
     assert.equal(r.status, 0, r.stdout + r.stderr);
-    assert.deepEqual(puts(r), []);
-    assert.match(r.stdout, /AND every derived binding present; nothing to do/);
+    assert.deepEqual(anyPut(r), []);
+    assert.match(r.stdout, /AND every derived binding present AND schedules \*\/5 \* \* \* \* held; nothing to do/);
   } finally { rm(root); }
 });
 
@@ -486,6 +488,137 @@ test("R34 (control): settings of a script that exists that cannot be read refuse
       assert.equal(r.status, 1);
       assert.deepEqual(puts(r), []);
     }
+  } finally { rm(root); }
+});
+
+/* ------------------------------------------------------ R18, schedules (G1; K4565, K4566, K4570) */
+
+/* A script PUT carries no cron schedule, and whether it keeps the ones the script holds is unconfirmed, so every deploy sets
+   the schedules wrangler.jsonc declares (`triggers.crons`) with `PUT .../schedules` after the upload, reads them back, and
+   refuses success on a failure or a mismatch. The fixture plane declares the one cron the real plane will (PLANE_CRON). */
+const schedules = (r) => r.calls.filter((c) => c.url.endsWith(`/scripts/${SLUG}/schedules`));
+/** The fixture plane's own script as an account that already holds everything this deploy would send, schedules aside. */
+const settledScript = (root, extra = {}) => ({ body: readFileSync(join(root, "bio-plane", ASSET), "utf8"),
+  settings: { limits: { subrequests: 500 }, bindings: derivedOnScript(root) }, ...extra });
+
+test("R18: after the script upload the schedules of wrangler.jsonc's triggers.crons are PUT, then read back, and success is stated only after the read-back matches, even where the script PUT clears them", async () => {
+  const root = await deployRepo();
+  try {
+    const r = deploy(root, { stub: okStub({ scriptPutClearsSchedules: true }) });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    const at = (pred) => r.calls.findIndex(pred);
+    const upload = at((c) => c.method === "PUT" && c.url.endsWith(`/scripts/${SLUG}`));
+    const set = at((c) => c.method === "PUT" && c.url.endsWith("/schedules"));
+    const read = r.calls.findLastIndex((c) => c.method === "GET" && c.url.endsWith("/schedules"));
+    assert.ok(upload >= 0 && set > upload, "the schedules are PUT after the script is");
+    assert.ok(read > set, "and read back after they are PUT");
+    assert.deepEqual(r.calls[set].schedules, [{ cron: PLANE_CRON }], "the cron of the config, nothing else");
+    assert.ok(r.calls[set].url.endsWith(`/accounts/${ACCOUNT}/workers/scripts/${SLUG}/schedules`) && r.calls[set].bearer);
+    assert.match(r.stdout, /verified: schedules \*\/5 \* \* \* \* read back/);
+    assert.ok(r.stdout.indexOf("verified: schedules") < r.stdout.indexOf("rollout:"), "the rollout wait follows the verified schedules");
+    assert.equal(puts(r).length, 1);
+  } finally { rm(root); }
+});
+
+test("R18: a schedules PUT that fails, one that answers and keeps nothing, a read-back that lacks the cron, differs, or cannot be read each refuse success [SCHEDULES_NOT_SET | SCHEDULES_MISMATCH | SCHEDULES_UNREADABLE], exit 1, with no rollout wait and no verified line", async () => {
+  const root = await deployRepo();
+  try {
+    for (const [label, extra, code, what] of [
+      ["the PUT refused", { schedulesPut: "reject" }, "SCHEDULES_NOT_SET", /HTTP 403/],
+      ["the PUT unreachable", { unreachable: ["/schedules"] }, "SCHEDULES_NOT_SET", /fetch failed/],
+      ["the PUT answered and kept nothing, the script PUT having cleared them", { schedulesPut: "ignore", scriptPutClearsSchedules: true }, "SCHEDULES_MISMATCH", /holds none/],
+      ["the read-back differs", { schedulesStored: ["0 0 * * *"] }, "SCHEDULES_MISMATCH", /0 0 \* \* \*/],
+      ["the read-back holds the cron and another", { schedulesStored: [PLANE_CRON, "0 0 * * *"] }, "SCHEDULES_MISMATCH", /0 0 \* \* \*/],
+      ["the read-back cannot be read", { schedulesGet: 500 }, "SCHEDULES_UNREADABLE", /HTTP 500/],
+    ]) {
+      const r = deploy(root, { stub: okStub(extra) });
+      assert.equal(r.status, 1, `${label}\n${r.stdout}${r.stderr}`);
+      assert.match(r.stderr, new RegExp(`REFUSING TO REPORT SUCCESS \\[${code}\\]`), label);
+      assert.match(r.stderr, what, label);
+      assert.doesNotMatch(r.stdout, /verified: schedules|rollout:/, label);
+      assert.equal(puts(r).length, 1, `${label}: the bytes were uploaded and verified; only the schedules are refused`);
+    }
+  } finally { rm(root); }
+});
+
+test("R18: a plane whose wrangler.jsonc declares no cron sets its script's schedules to none and reads that back; an invalid cron list refuses [INVALID_CRONS] before any request", async () => {
+  const none = await makeRepo({ plane: { config: { services: [{ binding: "SELF", service: "bio-plane" }, { binding: "AGENT", service: "alpha-worker" }], triggers: null } } });
+  try {
+    const r = deploy(none, { stub: okStub({ scriptPutClearsSchedules: true }) });
+    assert.equal(r.status, 0, r.stdout + r.stderr);
+    assert.deepEqual(r.calls.find((c) => c.method === "PUT" && c.url.endsWith("/schedules")).schedules, [], "the config's own list: none");
+    assert.match(r.stdout, /schedules: wrangler\.jsonc declares no cron/);
+    assert.match(r.stdout, /verified: schedules none read back/);
+  } finally { rm(none); }
+  const services = [{ binding: "SELF", service: "bio-plane" }, { binding: "AGENT", service: "alpha-worker" }];
+  for (const [label, triggers] of [
+    ["a field short", { crons: ["*/5 * * *"] }], ["a field long", { crons: ["*/5 * * * * *"] }], ["words", { crons: ["every five minutes"] }],
+    ["a number", { crons: [5] }], ["not a list", { crons: "*/5 * * * *" }], ["four crons (three is the platform's limit)", { crons: ["0 * * * *", "1 * * * *", "2 * * * *", "3 * * * *"] }],
+    ["the same cron twice", { crons: [PLANE_CRON, PLANE_CRON] }], ["triggers not an object", ["*/5 * * * *"]],
+  ]) {
+    const root = await makeRepo({ plane: { config: { services, triggers } } });
+    try {
+      for (const flags of [[], ["--dry-run"]]) {
+        const r = deploy(root, { args: [SLUG, VERSION, ASSET, ...flags], stub: okStub() });
+        assert.notEqual(r.status, 0, label);
+        assert.match(r.stderr, /REFUSED \[INVALID_CRONS\]/, label);
+        assert.deepEqual(r.calls, [], `${label}${flags[0] ? " (dry-run)" : ""}: refused before any request`);
+      }
+    } finally { rm(root); }
+  }
+});
+
+test("R18: deriveCrons reads triggers.crons: none declared is the empty list, a valid list is returned as written, and each invalid shape is refused [INVALID_CRONS] naming the cron", () => {
+  assert.deepEqual(deriveCrons({}), []);
+  assert.deepEqual(deriveCrons({ triggers: {} }), []);
+  assert.deepEqual(deriveCrons({ triggers: { crons: [] } }), []);
+  assert.deepEqual(deriveCrons({ triggers: { crons: [PLANE_CRON] } }), [PLANE_CRON]);
+  assert.deepEqual(deriveCrons({ triggers: { crons: ["0 0 * * *", "17 3 * * 1-5", "*/10 * * * *"] } }), ["0 0 * * *", "17 3 * * 1-5", "*/10 * * * *"]);
+  for (const crons of [["*/5 * * *"], ["*/5 * * * * *"], [""], ["a b c d e f"], [7], [null], "*/5 * * * *", [PLANE_CRON, PLANE_CRON], ["0 * * * *", "1 * * * *", "2 * * * *", "3 * * * *"]])
+    assert.match(tryThrow(() => deriveCrons({ triggers: { crons } })).message, /^REFUSED \[INVALID_CRONS\]/, JSON.stringify(crons));
+  assert.match(tryThrow(() => deriveCrons({ triggers: ["*/5 * * * *"] })).message, /^REFUSED \[INVALID_CRONS\]/);
+  assert.match(tryThrow(() => deriveCrons({ triggers: { crons: ["*/5 * * *"] } })).message, /"\*\/5 \* \* \*"/, "names the cron");
+});
+
+test("R34: identical bytes serving the version with matching limits and bindings are still a metadata deploy while the script's schedules are not the config's; with them present it uploads nothing and sets nothing", async () => {
+  const root = await deployRepo();
+  try {
+    for (const [label, schedules_] of [["none held", []], ["another held", ["0 0 * * *"]], ["the cron and another held", [PLANE_CRON, "0 0 * * *"]]]) {
+      const r = deploy(root, { stub: okStub({ scripts: { "alpha-worker": { settings: {} }, [SLUG]: settledScript(root, { schedules: schedules_ }) }, serving: { [SLUG]: VERSION } }) });
+      assert.equal(r.status, 0, `${label}: ${r.stdout}${r.stderr}`);
+      assert.match(r.stdout, /schedules differ on the script — a METADATA deploy proceeds/, label);
+      assert.doesNotMatch(r.stdout, /nothing to do/, label);
+      assert.equal(puts(r).length, 1, label);
+      assert.deepEqual(r.calls.find((c) => c.method === "PUT" && c.url.endsWith("/schedules")).schedules, [{ cron: PLANE_CRON }], label);
+    }
+    const held = deploy(root, { stub: okStub({ scripts: { "alpha-worker": { settings: {} }, [SLUG]: settledScript(root, { schedules: [PLANE_CRON] }) }, serving: { [SLUG]: VERSION } }) });
+    assert.equal(held.status, 0, held.stdout + held.stderr);
+    assert.match(held.stdout, /AND every derived binding present AND schedules \*\/5 \* \* \* \* held; nothing to do/);
+    assert.deepEqual(held.calls.filter((c) => c.method === "PUT"), [], "nothing is uploaded and no schedule is set");
+    const unreadable = deploy(root, { stub: okStub({ schedulesGet: 500, scripts: { "alpha-worker": { settings: {} }, [SLUG]: settledScript(root, { schedules: [PLANE_CRON] }) }, serving: { [SLUG]: VERSION } }) });
+    assert.doesNotMatch(unreadable.stdout, /nothing to do/, "schedules that cannot be read are not ones that match");
+    assert.equal(unreadable.status, 1);
+  } finally { rm(root); }
+});
+
+test("R40: --dry-run prints the schedules step with the crons it would set and what the script holds now, sends nothing but reads, and refuses as the real run does an invalid cron list and the schedules of a script that exist and cannot be read", async () => {
+  const root = await deployRepo();
+  try {
+    const dry = (stub) => deploy(root, { args: [SLUG, VERSION, ASSET, "--dry-run"], stub });
+    const first = dry(okStub());
+    assert.equal(first.status, 0, first.stdout + first.stderr);
+    assert.match(first.stdout, /schedules: after the upload PUT \.\.\.\/schedules sets \*\/5 \* \* \* \* and reads it back; a failure or a difference refuses success/);
+    assert.match(first.stdout, /schedules now: the script is not deployed, so it holds none/);
+    assert.match(first.stdout, /--dry-run: nothing was deployed/);
+    const exists = dry(okStub({ scripts: { "alpha-worker": { settings: {} }, [SLUG]: settledScript(root, { schedules: ["0 0 * * *"] }) } }));
+    assert.equal(exists.status, 0, exists.stdout + exists.stderr);
+    assert.match(exists.stdout, /schedules now: 0 0 \* \* \* \(not the config's\)/);
+    assert.deepEqual(first.calls.concat(exists.calls).filter((c) => c.method !== "GET"), [], "reads only");
+    const unreadable = dry(okStub({ schedulesGet: 500, scripts: { "alpha-worker": { settings: {} }, [SLUG]: settledScript(root) } }));
+    refused(unreadable, "SCHEDULES_UNREADABLE");
+    assert.equal(unreadable.status, 1);
+    assert.deepEqual(unreadable.calls.filter((c) => c.method !== "GET"), []);
+    assert.doesNotMatch(unreadable.stdout, /nothing was deployed/);
   } finally { rm(root); }
 });
 

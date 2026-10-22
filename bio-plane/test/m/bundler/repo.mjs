@@ -197,7 +197,8 @@ export function addScannerMember(root, name, { classes = scannerClasses(), state
 const parseCfg = (p) => JSON.parse(readFileSync(p, "utf8").split("\n").slice(1).join("\n"));
 
 /** The plane's configuration, as a parsed object, for a fixture or a function test. */
-export function planeConfig({ version = VERSION, services = [{ binding: "SELF", service: "bio-plane" }] } = {}) {
+export const PLANE_CRON = "*/5 * * * *";
+export function planeConfig({ version = VERSION, services = [{ binding: "SELF", service: "bio-plane" }], triggers = { crons: [PLANE_CRON] } } = {}) {
   return {
     name: "bio-plane", account_id: ACCOUNT, main: "src/plane/index.mjs",
     compatibility_date: "2026-07-01", compatibility_flags: ["nodejs_compat"],
@@ -205,6 +206,7 @@ export function planeConfig({ version = VERSION, services = [{ binding: "SELF", 
     durable_objects: { bindings: [{ name: "STORE", class_name: "Store" }] },
     r2_buckets: [{ binding: "CAPTURES", bucket_name: "c" }, { binding: "PUBLISHED", bucket_name: "p" }],
     services, browser: { binding: "BROWSER" }, limits: { subrequests: 500, cpu_ms: 30000 },
+    ...(triggers ? { triggers } : {}),
   };
 }
 

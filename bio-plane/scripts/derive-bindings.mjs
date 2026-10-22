@@ -166,3 +166,38 @@ export function limitsReadBack(settings, want) {
   }
   return { verdict: "MATCH", why: `limits.subrequests ${got} read back` };
 }
+
+/* ---- G1 (K4565, K4566): the plane's cron schedule is DECLARED, carried and read back ----
+ *
+ * The upload metadata of a script PUT has no field for a cron schedule, and whether a plain PUT keeps the schedules the
+ * script holds is unconfirmed, so deploy.mjs sets them with the schedules endpoint after every upload, from the one copy
+ * here: `triggers.crons` of wrangler.jsonc. A list the platform would refuse is refused by name before any request. */
+const CRON_FIELDS = 5;       /* minute hour day-of-month month day-of-week */
+const MAX_CRONS = 3;         /* the platform's limit per Worker */
+
+/** The cron strings deploy.mjs sets, as the config states them; none declared is the empty list (the script is set to none). */
+export function deriveCrons(cfg) {
+  const t = cfg && cfg.triggers;
+  if (t === undefined || t === null) return [];
+  const bad = (why) => new Error(`REFUSED [INVALID_CRONS]: wrangler.jsonc's triggers.crons ${why}.`);
+  if (typeof t !== "object" || Array.isArray(t)) throw bad("is not under a `triggers` object");
+  if (t.crons === undefined) return [];
+  if (!Array.isArray(t.crons)) throw bad("is not a list of cron strings");
+  for (const c of t.crons)
+    if (typeof c !== "string" || c.trim().split(/\s+/).length !== CRON_FIELDS || c !== c.trim())
+      throw bad(`holds ${JSON.stringify(c)}, which is not a cron of ${CRON_FIELDS} fields`);
+  if (new Set(t.crons).size !== t.crons.length) throw bad("names the same cron twice");
+  if (t.crons.length > MAX_CRONS) throw bad(`holds ${t.crons.length}; a Worker can have ${MAX_CRONS}`);
+  return [...t.crons];
+}
+
+/** The schedules read back against the crons sent. MATCH only when the script holds exactly those, as a set; anything
+ *  else is a MISMATCH saying what it holds. `held` is the list of cron strings read, or null when it could not be. */
+export function schedulesReadBack(held, want) {
+  if (!Array.isArray(held)) return { verdict: "UNREADABLE", why: "the script's schedules could not be read" };
+  const show = (l) => (l.length ? l.join(" | ") : "none");
+  const same = held.length === want.length && want.every((c) => held.includes(c));
+  return same
+    ? { verdict: "MATCH", why: `schedules ${show(held)} read back` }
+    : { verdict: "MISMATCH", why: `the script holds ${held.length ? held.join(" | ") : "none"}, the config declares ${show(want)}` };
+}
