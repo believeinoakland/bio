@@ -30,6 +30,11 @@
  * release: the bytes deployed are the file given, verified by reading them back as ever. Each step logs what it
  * deploys and the target it can return to. `--dry-run` runs every check and read and deploys nothing.
  *
+ * THE CRON SCHEDULE (G1; K4565, K4566, K4570): after the upload the script's schedules are PUT from wrangler.jsonc's
+ * `triggers.crons` and read back, and a failure or a difference refuses success (a raw script PUT sets none, and whether it
+ * keeps the ones held is unconfirmed). Needs the token scope the upload already uses (Workers Scripts Write). The first add
+ * can take up to 15 minutes to propagate to the cron runner; the smoke waits.
+ *
  * usage (bundler R17, R18, R34, R40), from bio-plane/:
  *   CF_TOKEN=... CF_ACCT=... node scripts/deploy.mjs <slug> <version> <asset> [--test-instance] [--dry-run]
  */
@@ -230,7 +235,7 @@ const api = `https://api.cloudflare.com/client/v4/accounts/${ACCT}/workers/scrip
    monitor cadence and CAP-3's archive fallback on the deployed instance, and
    the fleet bindings arm the plane's Tier-3 paths. The targets are
    pre-flighted below so a missing worker is OUR refusal, not code 10143. */
-import { deriveBindings, serviceTargets, deriveLimits, limitsReadBack } from "./derive-bindings.mjs";
+import { deriveBindings, serviceTargets, deriveLimits, limitsReadBack, deriveCrons, schedulesReadBack } from "./derive-bindings.mjs";
 import { parseJsonc } from "./jsonc.mjs";   /* R11: the module's one reader */
 const wranglerCfg = parseJsonc(
   readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8"), "bio-plane/wrangler.jsonc");
@@ -250,6 +255,10 @@ const meta = {
      before anything is uploaded. */
   limits: deriveLimits(wranglerCfg),
 };
+/* G1: the cron schedule rides no metadata field, so it is set by its own call after the upload (below). An invalid list
+   is refused here, before any request, as a config without a subrequest ceiling is. */
+const crons = deriveCrons(wranglerCfg);
+const cronText = (l) => (l.length ? l.join(" | ") : "none");
 
 /* D-54's read-back: the deployed script's settings, asked of the account. */
 async function settingsNow() {
@@ -259,6 +268,53 @@ async function settingsNow() {
     const j = await r.json();
     return j && j.success ? j.result : null;
   } catch { return null; }
+}
+
+/* G1 (K4565, K4566, K4570): THE PLANE'S CRON SCHEDULE IS SET BY THIS DEPLOY, AND READ BACK.
+   The upload above is a raw script PUT whose metadata has no schedule field, and whether such a PUT keeps or clears the
+   schedules the script holds is unconfirmed (Cloudflare's text says wrangler replaces them). So after every upload the
+   schedules endpoint is PUT with the crons of wrangler.jsonc and read back, and success is refused on a failure or any
+   difference, never a note: the cron is the one clock outside the Durable Object that notices it has stalled. */
+async function schedulesNow() {
+  let r;
+  try { r = await fetch(`${api}/schedules`, { headers: { authorization: `Bearer ${TOKEN}` } }); }
+  catch (e) { return { unreadable: (e && e.message) || String(e) }; }
+  if (r.status === 404) return { absent: true };
+  if (!r.ok) return { unreadable: `HTTP ${r.status}` };
+  let j = null;
+  try { j = await r.json(); } catch { /* said below */ }
+  const list = j && j.success && j.result && Array.isArray(j.result.schedules) ? j.result.schedules : null;
+  if (!list || list.some((x) => !x || typeof x.cron !== "string")) return { unreadable: "an answer that is not the script's schedules" };
+  return { held: list.map((x) => x.cron) };
+}
+
+function refuseSchedules(code, why) {
+  console.error(`REFUSING TO REPORT SUCCESS [${code}]: ${why}`);
+  console.error("The bytes are deployed; the script's cron schedule is not the config's, so nothing outside the Durable Object");
+  console.error("would notice a stalled alarm (K4565). Nothing is verified past this line.");
+  process.exit(1);
+}
+
+async function setSchedules() {
+  console.log(crons.length ? `schedules: setting ${cronText(crons)} …` : "schedules: wrangler.jsonc declares no cron; setting the script's schedules to none …");
+  let r;
+  try {
+    r = await fetch(`${api}/schedules`, { method: "PUT", body: JSON.stringify(crons.map((cron) => ({ cron }))),
+      headers: { authorization: `Bearer ${TOKEN}`, "content-type": "application/json" } });
+  } catch (e) { return refuseSchedules("SCHEDULES_NOT_SET", `the schedules request failed (${(e && e.message) || e}).`); }
+  let said = null;
+  try { said = await r.json(); } catch { /* the status decides */ }
+  if (!r.ok || (said && said.success === false))
+    return refuseSchedules("SCHEDULES_NOT_SET", `HTTP ${r.status}${said && said.errors ? " " + JSON.stringify(said.errors).slice(0, 200) : ""}.`);
+  /* The answer is not evidence either way (the lesson of this file's header): the schedules are asked of the account. */
+  let last = null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const now = await schedulesNow();
+    last = now.held ? schedulesReadBack(now.held, crons) : { verdict: "UNREADABLE", why: now.absent ? "the script was not found" : `the script's schedules could not be read (${now.unreadable})` };
+    if (last.verdict === "MATCH") { console.log(`verified: ${last.why}`); return; }
+    if (attempt < 3) await new Promise((s) => setTimeout(s, 3000));
+  }
+  refuseSchedules(last.verdict === "MISMATCH" ? "SCHEDULES_MISMATCH" : "SCHEDULES_UNREADABLE", `${last.why}.`);
 }
 
 /* R34: the same read, told apart: a script that does not exist yet (404) has no bindings to keep or compare, and one
@@ -356,6 +412,8 @@ const differences = bindingDifferences(meta.bindings, onScript.bindings);
 const before = await deployed();
 console.log(`before: ${before ? before.slice(0, 16) + "\u2026" : "(unreadable)"}`);
 console.log(`signed: ${want.slice(0, 16)}\u2026  ${version}  ${source.length} bytes`);
+const schedNow = await schedulesNow();
+const schedMatch = !!schedNow.held && schedulesReadBack(schedNow.held, crons).verdict === "MATCH";
 if (TEST) {
   /* R40: what this step deploys, and where it can return to: the bytes now deployed under the copy's name. */
   console.log(`test deploy: ${slug} from ${assetPath} sha256 ${want} (a branch's built artifact: no release/ signature is read)`);
@@ -380,18 +438,35 @@ if (before === want) {
   /* D-54: and the limits must already read back, or the metadata is not ours. */
   const lim = limitsReadBack(await settingsNow(), meta.limits);
   /* R34: and so must the bindings this deploy derives, each with the same target or value. */
-  if (serving === version && lim.verdict === "MATCH" && differences.length === 0) {
-    console.log(`already byte-identical AND serving ${version} AND ${lim.why} AND every derived binding present; nothing to do`);
+  /* G1: and so must the script's schedules, or a config that gains a cron is never set on a plane whose bytes did not change. */
+  if (serving === version && lim.verdict === "MATCH" && differences.length === 0 && schedMatch) {
+    console.log(`already byte-identical AND serving ${version} AND ${lim.why} AND every derived binding present AND schedules ${cronText(crons)} held; nothing to do`);
     process.exit(0);
   }
-  if (serving === version && lim.verdict === "MATCH")
+  if (serving === version && lim.verdict === "MATCH" && !schedMatch)
+    console.log(`bytes identical, serving ${version} and limits match, but the schedules differ on the script — a METADATA deploy proceeds (the same script, the schedules set again): `
+      + (schedNow.held ? schedulesReadBack(schedNow.held, crons).why : `they ${schedNow.absent ? "could not be found" : `could not be read (${schedNow.unreadable})`}`) + ".");
+  if (serving === version && lim.verdict === "MATCH" && differences.length > 0)
     console.log(`bytes identical, serving ${version} and limits match, but the derived bindings differ on the script — a METADATA deploy proceeds (the same script, the new bindings): ${differences.join("; ")}.`);
   if (serving === version && lim.verdict !== "MATCH") console.log(`bytes identical and serving ${version}, but limits: ${lim.verdict} (${lim.why}) — a METADATA deploy proceeds.`);
   if (serving !== version)
     console.log(`bytes are identical but the instance serves ${serving ?? "(unreadable)"} — a METADATA deploy proceeds (VERSION var, derived bindings).`);
 }
 
-if (DRY) { console.log("\n--dry-run: nothing was deployed."); process.exit(0); }
+if (DRY) {
+  /* G1: the step is shown, and refused as the real run refuses what it can already see: an invalid list is refused above,
+     before any request, and schedules of a script that exists and cannot be read are refused here. */
+  console.log(crons.length
+    ? `schedules: after the upload PUT .../schedules sets ${cronText(crons)} and reads it back; a failure or a difference refuses success`
+    : "schedules: wrangler.jsonc declares no cron; after the upload PUT .../schedules sets none and reads it back; a failure or a difference refuses success");
+  if (schedNow.unreadable !== undefined) {
+    console.error(`REFUSED [SCHEDULES_UNREADABLE]: could not read the schedules now on "${slug}" (${schedNow.unreadable}); a deploy that cannot read them back cannot verify them.`);
+    process.exit(1);
+  }
+  console.log(schedNow.absent ? "schedules now: the script is not deployed, so it holds none"
+    : `schedules now: ${cronText(schedNow.held)} (${schedMatch ? "the config's" : "not the config's"})`);
+  console.log("\n--dry-run: nothing was deployed."); process.exit(0);
+}
 
 for (let attempt = 1; attempt <= 4; attempt++) {
   const fd = new FormData();
@@ -426,6 +501,8 @@ for (let attempt = 1; attempt <= 4; attempt++) {
     console.log(lim.verdict === "MATCH"
       ? `verified: ${lim.why}`
       : `limits: UNDETERMINED — ${lim.why}. The ceiling sent (${meta.limits.subrequests}) is NOT confirmed; establish it before stating it.`);
+    /* G1: after the upload, whatever it did to the schedules. */
+    await setSchedules();
     await confirmServing(version);
     process.exit(0);
   }
