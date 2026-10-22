@@ -7,7 +7,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { SCHEDULER_ORDER, SCHEDULER_KEYS, RANKED, DAILY, DETECTORS_BUDGET_MS, Scheduler, localDayOf } from "../../../src/scheduler/index.mjs";
-import { world, storage, writes, NOW } from "./fixture.mjs";
+import { world, storage, writes, NOW, pinNow } from "./fixture.mjs";
 import { world as dutiesWorld } from "../duties/fixture.mjs";
 import { world as inquiryWorld, inquiryMd, V } from "../inquiry/fixture.mjs";
 import { world as followingWorld, MEMBER as FOLLOWER, T0, DAY as F_DAY } from "../following/fixture.mjs";
@@ -216,7 +216,7 @@ test("R9: a dated wait set, told inside the promotion's transaction, arms the al
   assert.deepEqual(writes(st), [["setAlarm", WAKE]], "one arm for the two waits");
 });
 
-test("R9: a follow recorded, ended or re-dated arms the alarm at the follow's wake through following's onFollowed (its R19); arming only schedules", async () => {
+test("R9: a follow recorded, ended or re-dated arms the alarm at the follow's wake through following's onFollowed (its R19); arming only schedules", async (t) => { pinNow(t);
   const WAKE = NOW + 86_400_000;
   const { s, st, calls, set } = world({ follow: { wake: null } });
   const heard = [];

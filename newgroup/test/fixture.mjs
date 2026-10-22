@@ -149,10 +149,12 @@ export const DEFAULT_VERSION = bump(RELEASE_VERSION);
 /* Each states its limits as the plane does (R20): one string `bio-plane-limits/1 key=n …`, which survives bundling. */
 export const LIMITS = Object.freeze({ subrequests: 10000 });
 export const LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000";
-export const CAPABLE_SRC = "export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {}; export const PLANE_LIMITS_STATEMENT = \"" + LIMITS_STATEMENT + "\";";
-export const PRE116_SRC = "export default { fetch(){ return new Response('pre-D-116 plane'); } }; export class Store {}; export const PLANE_LIMITS_STATEMENT = '" + LIMITS_STATEMENT + "';";
+/* The plane's watchdog schedule, as control-plane states it (installer-steps R39, K4570). */
+export const CRONS_STATEMENT = "bio-plane-crons/1 */5 * * * *";
+export const CAPABLE_SRC = "export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {}; export const PLANE_LIMITS_STATEMENT = \"" + LIMITS_STATEMENT + "\";" + " export const PLANE_CRONS_STATEMENT = \"" + CRONS_STATEMENT + "\";";
+export const PRE116_SRC = "export default { fetch(){ return new Response('pre-D-116 plane'); } }; export class Store {}; export const PLANE_LIMITS_STATEMENT = '" + LIMITS_STATEMENT + "';" + " export const PLANE_CRONS_STATEMENT = \"" + CRONS_STATEMENT + "\";";
 /* A plane from before R20: verified, and stating no limits. */
-export const UNSTATED_SRC = "export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {};";
+export const UNSTATED_SRC = "export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {};" + " export const PLANE_CRONS_STATEMENT = \"" + CRONS_STATEMENT + "\";";
 /* Whether this tree's built-in release states its limits (R20). Until a release cut after control-plane's statement is
    embedded it does not, and an act that falls back to it is refused; the arms that read the built-in assert whichever
    holds, so they survive the cut. */

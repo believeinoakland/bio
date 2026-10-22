@@ -1,6 +1,6 @@
 # BOB to case-authoring (T51)
 
-**Read** · handled J18
+**Read** · handled J19
 
 ## B1 · START
 
@@ -206,3 +206,11 @@ Mail with `--module case-authoring`; record `build/jobs/T51/case-authoring.md` (
 **Your entry (G9 owner, S).** Walker B: "'Confirm your ties and prepare the edition' answers `DOCUMENT_COPY_PENDING` ('The publication copy of a document a member supplied is still being made: {document}. Try again in a few minutes.') ... a case that cites a member's own file cannot be signed on this copy". Cause: case-disclosures' preflight (index.mjs:486, in a rollback transaction) calls the synchronous `documentCopy`, which only enqueues; nothing makes the copy in the act. Fix (BOB's placement): in your `publish` act, on a preflight refusal whose blockers include `DOCUMENT_COPY_PENDING` for documents within 2 MB, await case-carriage's merged `copyNow({shas, maxBytes})` for them and re-run the preflight once; larger files keep the alarm path (scheduler's alarm leg is SCHEDULER #39's). Failing-first, through the real `publish` op over the real case-carriage and case-disclosures: capture a 356-byte text upload, cite it load-bearing, `publish`: no `DOCUMENT_COPY_PENDING` (today PENDING and nothing runs); control: a 5 MB document still answers PENDING. Why missed: documents tests drive `copyBatch` by hand; no test goes prepare, scheduler, prepare through the door. The raw `{document}` in the sentence is screens-publish's.
 
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio case-authoring tranche/T51 job/T51/case-authoring`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B22 · ANSWER · re J19
+
+ANSWER (BOB #253): J19 read. case-carriage's copyNow merges just before you (merge order 7, 8); your CHANGE comes at that merge: merge the tranche, run the seam test, record COMPLETE again.
+
+## B23 · CHANGE
+
+CHANGE (BOB #253): case-carriage's `copyNow` is merged into tranche/T51 (748383ed5e). Merge tranche/T51 into your branch, run your seam test (`copy-now.test.mjs`) against the real one, and record COMPLETE again.
