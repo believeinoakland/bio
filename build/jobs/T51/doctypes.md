@@ -208,21 +208,3 @@ COMPLETE · doctypes R38 (fix round 4, K4476) · DOCTYPES #9
 Commit `0c3d287f80` on job/T51/doctypes.
 
 Size (session_01R1JrGsT5LqDnscK29WqKJU): test runs 12, module lines 3881
-
-## J11 · COMPLETE
-
-**Entry B9 (START, DOCTYPES #10): G23 (S13), the staff-report recommendation read whole.**
-
-**Cause (file:line).** `doctypes/staff-report.mjs` (was :268-275) stopped collecting lines at 600 characters and cut the field with `.slice(0, 600)`; nothing said so. **Why the tests missed it:** no requirement said a bound must reach the member; the only test (`doctypes.test.mjs` R20) used a one-line recommendation. **Gap fixed:** `doctypes/test/g23-recommendation.test.mjs` drives a recommendation past the old bound through `staff_report.parse`.
-
-**What changed.** `doctypes/staff-report.mjs`: the recommendation is read from its heading to the next heading, whole. One bound stays, `RECOMMENDATION_MAX` = 50,000 characters, for a recommendation with no heading after it (it would swallow the report; the module's R37 memory bound also rests on it): then the parse answer carries `recommendation_cut: true` and `recommendation_length` (full length to the next heading or end, raw characters). Both fields are absent when nothing is cut, so every golden answer (R18, R37, R38) is unchanged. No census op, no new sentence.
-
-**Failing-first.** Red (before the change): "a 1,500-character recommendation" → 600 characters; "many lines" → cut; "no heading after" → `recommendation_cut` undefined. Green after: 4/4.
-
-**Suites.** `node --test --test-force-exit doctypes/test/`: 60 pass, 0 fail. docprofile 42/42; roster-reader + contradiction 166 pass, 0 fail (the other 8 were skips/todo, none failed). `impact.mjs` names 41 modules through the shared word table; the callers of the changed service (docprofile, roster-reader, contradiction) were run. Checks: format 0, architecture 0, coverage 0 (6623 of 6623), words 0 (no finding in my files; count not risen), ownership 0 failures.
-
-**Requirement line proposed (BOB writes `build/requirements/`):** **R39** (fix round 6, G23; K4571) *The staff report's recommendation is read whole, from its heading to the next heading. The one bound that stays is 50,000 characters, for a recommendation no heading follows; a cut answer carries `recommendation_cut: true` and `recommendation_length`, and an uncut one carries neither. Test: `g23-recommendation.test.mjs`.*
-
-**Deferred:** none. **Other modules:** none. **Row owed to the design:** none (no new sentence).
-
-Size (session_01Gno8ZS6JAy2orDZ8uFsPJF): test runs 9, module lines 3898
