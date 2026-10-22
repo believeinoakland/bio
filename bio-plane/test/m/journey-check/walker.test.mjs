@@ -14,6 +14,7 @@ import { ABSENCE } from "../../../src/journey-check/journeys.mjs";
 const COPY = "https://grp.test.workers.dev";
 const page = (body, title = "Civicsmith") => `<!doctype html><html><head><title>${title}</title><link rel="stylesheet" href="${INTERFACE_MARK}"></head><body>${body}</body></html>`;
 const SECRET = "the-member-password-123";
+const [SHA_A, SHA_B, SHA_C] = ["a", "b", "c"].map((c) => c.repeat(64));
 const WORLD = {
   "/app": page(`<main id="cs-main"><p>home</p><script>fetch("/api/?op=queue")</script></main>`),
   "/app/refused": page(`<main id="cs-main"><script>fetch("/api/?op=enroll")</script></main>`),
@@ -27,6 +28,11 @@ const WORLD = {
   "/app/d5": page(`<main id="cs-main"><script>fetch("/api/?op=planask")</script></main>`),
   /* R8: a refusal in a stream of JSON lines (an ask's answer) */
   "/app/stream": page(`<main id="cs-main"><script>fetch("/api/?op=ask")</script></main>`),
+  /* R8: a reading read while the record states it pending (RC-R1): an upload answered `reading_pending` for SHA_A, then the reading of that digest read */
+  "/app/pending": page(`<main id="cs-main"><script>fetch("/api/?op=captureupload&sha=${SHA_A}").then(() => fetch("/api/?op=reading&sha256=${SHA_A}"))</script></main>`),
+  "/app/pending-other": page(`<main id="cs-main"><script>fetch("/api/?op=captureupload&sha=${SHA_A}").then(() => fetch("/api/?op=reading&sha256=${SHA_B}"))</script></main>`),
+  "/app/pending-none": page(`<main id="cs-main"><script>fetch("/api/?op=reading&sha256=${SHA_A}")</script></main>`),
+  "/app/pending-ended": page(`<main id="cs-main"><script>fetch("/api/?op=captureupload&sha=${SHA_C}").then(() => fetch("/api/?op=reading&sha256=${SHA_C}")).then(() => fetch("/api/?op=reading&sha256=${SHA_C}"))</script></main>`),
   "/": `<!doctype html><html><head><title>${SETUP_PAGE_TITLE}</title></head><body>setup</body></html>`,
   "/other": `<!doctype html><html><head><title>x</title></head><body>an old page</body></html>`,
 };
@@ -39,6 +45,7 @@ const API = { queue: { ok: true, items: [] }, enroll: { ok: false, code: "HANDLE
   planask: { ok: true, result: { plan: { help: { ok: false, reason: "AI_RUN_NOT_PROJECT_MEMBER" } } } } };
 
 let B, dir;
+const readOnce = new Set();
 before(async () => { B = await browser(); dir = mkdtempSync(join(tmpdir(), "jc-walker-")); });
 after(async () => { await B?.close(); rmSync(dir, { recursive: true, force: true }); });
 
@@ -52,6 +59,14 @@ async function walked(path, { expect = [] } = {}) {
     if (u.origin !== COPY) { walk.foreign(u.href); return r.abort("blockedbyclient"); }
     if (u.pathname === "/api/" && u.searchParams.get("op") === "ask")
       return r.fulfill({ status: 200, contentType: "application/x-ndjson", body: '{"ok":true,"stage":"reading"}\n{"ok":false,"code":"ASK_REFUSED"}\n' });
+    /* RC-R1: the upload says its reading is pending for the digest it names; a reading of SHA_C is there on its first read, then gone (a record that ended its pending state and lost the reading) */
+    if (u.pathname === "/api/" && u.searchParams.get("op") === "captureupload")
+      return r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, result: { ok: true, reading_pending: true, document: { capture: { sha256: u.searchParams.get("sha") } } } }) });
+    if (u.pathname === "/api/" && u.searchParams.get("op") === "reading") {
+      const sha = u.searchParams.get("sha256");
+      const there = sha === SHA_C && !readOnce.has(sha) && readOnce.add(sha);
+      return r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true, result: there ? { ok: true, reading: { found: true } } : { ok: true, reading: { found: false, capture_sha: sha } } }) });
+    }
     if (u.pathname === "/api/") { const j = API[u.searchParams.get("op")]; return r.fulfill({ status: j.ok ? 200 : 409, contentType: "application/json", body: JSON.stringify(j) }); }
     if (u.pathname === INTERFACE_MARK) return r.fulfill({ status: 200, contentType: "text/css", body: "main{}" });
     if (WORLD[u.pathname]) return r.fulfill({ status: 200, contentType: "text/html", body: WORLD[u.pathname] });
@@ -118,6 +133,16 @@ test("R8: every sign of a refusal, at any depth: ok, started, dispatched or foun
   assert.deepEqual(codes({ ok: true, result: { started: true, found: true, withheld: [], items: [{ ok: true }] } }), []);
   /* one object, one refusal, under its first sign */
   assert.deepEqual(codes({ ok: false, started: false, code: "B" }), ["=B"]);
+});
+
+test("R8 (K4473): a reading read as `found: false` is excused only while the record states it pending for a capture the step itself made; control: any other `found: false` stays a refusal", async () => {
+  assert.deepEqual((await walked("/app/pending")).failures, [], "the digest the upload said pending");
+  const other = await walked("/app/pending-other");
+  assert.deepEqual(kinds(other), [FAIL.REFUSED], "a digest no upload of the step made");
+  assert.match(other.failures[0].detail, /op=reading answered found: false at result.reading/);
+  assert.deepEqual(kinds(await walked("/app/pending-none")), [FAIL.REFUSED], "no capture of the step at all");
+  /* once the reading is there the pending state has ended: a later `found: false` for it is a refusal */
+  assert.deepEqual(kinds(await walked("/app/pending-ended")), [FAIL.REFUSED]);
 });
 
 test("R2: any 4xx or 5xx fails the walk; control: a status the step expects does not", async () => {
