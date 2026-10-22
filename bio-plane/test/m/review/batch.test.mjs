@@ -22,7 +22,7 @@ function world() {
   return { w, R, mine, second, other, hidden };
 }
 
-test("R19 (G12c): casedrafts with projects answers one list per project, each equal to the single read of that project, a project the viewer may not see and one that does not exist answering the dead answer as the single read does", () => {
+test("R19 R44 (G12c): casedrafts with projects answers one list per project, each equal to the single read of that project, a project the viewer may not see and one that does not exist answering the dead answer as the single read does", () => {
   const { w, R } = world();
   const ghost = "PROJ-2026-9999-none";
   const ids = [P, R, Q, ghost];
@@ -38,7 +38,7 @@ test("R19 (G12c): casedrafts with projects answers one list per project, each eq
   assert.deepEqual(w.snapshot(), before, "a read writes nothing");
 });
 
-test("R19 (G12c): the batch of projects takes a body list as well, repeats an id once, names no project for an empty list, and answers every project dead to a viewer with no standing or none", () => {
+test("R19 R44 (G12c): the batch of projects takes a body list as well, repeats an id once, names no project for an empty list, and answers every project dead to a viewer with no standing or none", () => {
   const { w, R } = world();
   const viaBody = ask(w, "casedrafts", as(w, "ann"), { projects: [P, R, P, "  ", R] });
   assert.deepEqual(Object.keys(viaBody.lists), [P, R], "an id once, blanks dropped");
@@ -57,7 +57,7 @@ test("R19 (G12c): the batch of projects takes a body list as well, repeats an id
   assert.deepEqual(Object.keys(odd.lists), ["__proto__", P]);
 });
 
-test("R19 (G12c): a batch of projects is bounded and says so: the most it takes answers, one more is refused REVIEW_BATCH_TOO_LARGE and nothing is read", () => {
+test("R19 R44 (G12c): a batch of projects is bounded and says so: the most it takes answers, one more is refused REVIEW_BATCH_TOO_LARGE and nothing is read", () => {
   const { w } = world();
   const many = (n) => Array.from({ length: n }, (_, i) => `PROJ-2026-${String(1000 + i)}-x`);
   assert.equal(REVIEW_BATCH_LISTS_MAX, 50);
