@@ -233,3 +233,19 @@ C48 (B14, R19 `editions.case`): the change is in, committed at 13f39a4c97 on job
 - Checks: ownership 0 failures (1 file changed by review); checks/run.mjs: no finding in review; the tranche-wide coverage and architecture reds are other modules' and are not touched.
 
 Not yet done, so I have not posted COMPLETE: the review tests use the scripted `draftEditions` double (fixture `ca.editions`), because review's fixture has no real case-authoring. B14 asked for the real one. Once case-authoring #37 merges and BOB sends CHANGE, I merge tranche/T51, re-run the R19 tests against the real `draftEditions` (case-authoring's R83 with `case`), and post COMPLETE with the Size line. If you want the real module wired into review's fixture for this test instead, say so and I will do it then.
+
+## J12 · COMPLETE
+
+COMPLETE for C48 (B14, CHANGE B15 / K4469). Branch job/T51/review, tranche/T51 merged (a5415384fc, case-authoring #37 included).
+
+**C48 (review's part; seam owner screens-publish, not this job)**
+1. Change: `bio-plane/src/review/index.mjs` `#editions` (about line 979-984) copies `case` from `draftEditions` on the answer and on the throw path (`case: null`). `editions` = `{prepared, published, case}`.
+2. Why the test missed it: the earlier fixture had no case-authoring `case` field (scripted double). Test gap closed: the new test wires the real `caseAuthoringOf` over review's own world (`lists.test.mjs`, "R19 (C48) ... from the real draftEditions"). The fixture's `published_cases` stub gained `ratified_at`, which the real read needs (`fixture.mjs`).
+3. Failing-first: the test was red on the old source (`case` undefined, before B15 wiring; and on the first attempt red with the real module because the stub lacked `ratified_at`, which made the real read return nulls: `case: null`, `prepared: null`). Green after the fixture fix and the change. Control: a never-prepared draft states `case: null`. Throw path stays on a double (`case: null`).
+4. Platform check: N (no platform surface; a data read).
+
+Suite: `node --test --test-force-exit bio-plane/test/m/review/` = 87 pass, 0 fail, 0 skip.
+Checks: format 0 failures; ownership 0 failures (3 files: index.mjs, lists.test.mjs, fixture.mjs); checks/run.mjs: no review finding. Impact (`node build/plan/impact.mjs origin/tranche/T51 HEAD`): 0 affected modules at the time of the run.
+Requirements met: R19 (the `editions.case` sentence). No open QUESTION. No deferred item.
+
+Size (session_01Mgd8f9TtwZNsFGWYR1ET9V): test runs 10, module lines 1633
