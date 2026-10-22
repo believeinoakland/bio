@@ -4,10 +4,17 @@
  * R72 (K3366): `setup-words`' list is 2.08 MB and the bundle carries only the rows the installer's own keys name. The
  * one difference from a plain esbuild bundle is a plugin that, when `setup-words/rows.mjs` is loaded, answers it with
  * exactly the rows whose key is in `src/words.mjs`'s KEYS (and the keys of the words-reads list for `setup-fleet.mjs`,
- * the plane leaf the installer imports); nothing else about the bundle changes. */
+ * the plane leaf the installer imports).
+ *
+ * T51 fix round 6, G39 (R82): the bundle is pure ASCII, as every fleet bundle is (bundler R2), because V8 holds a script's whole
+ * source two bytes a character once one character is above U+00FF. The build adds bundler's own recipe, `asciiOptions()` (comments
+ * stripped, a licence banner kept, templates lowered, strings and identifiers written ASCII) and then its token-aware pass
+ * `asciiOutput` over the result, so the installer has no recipe of its own to drift; `bundleOptions` returns the options, and the
+ * pass is applied in `bundleText`, the one function the build and the freshness guard both call. */
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
+import { asciiOptions, asciiOutput } from "../../bio-plane/scripts/fleet-bundle.mjs";
 
 const NG = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const ROWS = path.resolve(NG, "../bio-plane/src/setup-words/rows.mjs");
@@ -52,13 +59,14 @@ export async function bundleOptions() {
     },
   };
   return { absWorkingDir: NG, entryPoints: ["src/index.mjs"], bundle: true, format: "esm", platform: "neutral",
-    outfile: "dist/newgroup.bundled.mjs", plugins: [cutRows], logLevel: "silent" };
+    outfile: "dist/newgroup.bundled.mjs", plugins: [cutRows], logLevel: "silent", ...asciiOptions() };
 }
 
-/* The bundle's text, built in memory with the esbuild the caller holds. */
+/* The bundle's text, built in memory with the esbuild the caller holds, then through bundler's ASCII pass (R82): a character above
+   U+007F in a string or regex literal or a banner is written \uXXXX, and one anywhere else refuses the build `[NON_ASCII_REMAINS]`. */
 export async function bundleText(esbuild) {
   const built = await esbuild.build({ ...(await bundleOptions()), write: false });
-  return built.outputFiles[0].text;
+  return asciiOutput(Buffer.from(built.outputFiles[0].contents)).toString("latin1");
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
