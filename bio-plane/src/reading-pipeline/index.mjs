@@ -7,7 +7,9 @@
    the bytes come from the evidence store the caller hands in (R24), and tiers 2 and 3 are reached only through their
    bindings with the capture's digest (R16). R32 (T49) gives text read as text through no format entry its text units
    (`textUnitsOfText`; R33, T50: a text with no blank line split at its line breaks), R34 (T50) its `title`. T33-23 adds the opt-in after-read hook (R25–R27, `hooks.mjs`), which
-   `read` never reaches. */
+   `read` never reaches. R37 (fix round 4b): a failed reading says whether its cause is `transient` or `final`; the units
+   budget binds the acquire answer only; OCR past its per-request pages states its cursor and owes the rest; a whole above
+   what the object can hold is never loaded. */
 import { layerChain, appendStep, describeChain, checkChain, checkAnchor, applyConfidenceFloor, mergedChain,
          convertedChain, readingSource, mergeTier2Text, tier2Note, glyphCount, stepCovers } from "../textchain.mjs";
 import { getFormat, readingDialect } from "../formats.mjs";
@@ -40,6 +42,15 @@ export const CAPTURE_TEXT_UNIT_CAP = 128 * 1024;
    its format entry only up to this many bytes: the office entries' measured text bound (M-20's 20 MiB, `ooxml.mjs`),
    which every entry in the registry guards at or under. Over it the capture is not read, and the reading says so. */
 export const MULTIPART_READ_MAX = 20 * 1024 * 1024;
+/* R37 (fix round 4b, F10; K4487): the largest whole the object holds to read, measured under workerd with the object's
+   128 MB (build/jobs/T51/cause-reading-4.md, step 0): the reading's heap grows with the pages (about 25 MB + 0.031 MB a
+   page), and the whole's bytes sit beside it. A whole over this is never loaded: the reading is `final` and says its size. */
+export const WHOLE_READ_MAX = 24 * 1024 * 1024;
+/* R37 (D4): why a reading failed, as `reading.failure`. `transient`: the cause is outside the document (the store did not
+   answer, a member was down or answered 5xx, an entry threw), so a later read can succeed; `final`: the document's own
+   content, or its size, so reading it again cannot. A reading that is not a failed one carries neither. */
+export const FAILURE_TRANSIENT = "transient";
+export const FAILURE_FINAL = "final";
 
 /* ===================================================================== *
  * Tier 2 (R3).
@@ -111,7 +122,8 @@ export function needsTier2(text0) {
    kept, perPage, note, memberNotes}`. `outcome`: "not_needed" (tier 1 did not get essentially nothing), "unbound"
    (no member), "unavailable" (the binding threw), "no_improvement" (the member answered and could not help),
    "merged" (the merge ran: `text` is the merged text, tier 1's where no page moved, `note` the merge's own), or
-   "refused" (the merge refused: tier 1 stands, `note` its reason). `memberNotes` are the member's own notes. */
+   "refused" (the merge refused: tier 1 stands, `note` its reason). `memberNotes` are the member's own notes.
+   `transient` is true when the member was down (the binding threw, an answer that is not JSON) or answered 5xx (R37). */
 export async function tier2Escalate(env, { sha, storeName, text }) {
   const out = { outcome: "not_needed", text, replaced: [], kept: [], perPage: null, note: null, memberNotes: [] };
   if (!needsTier2(text)) return out;
@@ -121,6 +133,7 @@ export async function tier2Escalate(env, { sha, storeName, text }) {
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ capture_sha: sha, store: storeName }),
     });
+    if (r.status >= 500) out.transient = true;
     const t2 = await r.json();
     if (!(r.ok && t2 && t2.ok && t2.text)) { out.outcome = "no_improvement"; return out; }
     out.memberNotes = (Array.isArray(t2.notes) ? t2.notes : []).filter((n) => typeof n === "string");
@@ -134,7 +147,7 @@ export async function tier2Escalate(env, { sha, storeName, text }) {
       out.perPage = m.perPageTier || null;
       out.note = tier2Note(m) || null;
     } else { out.outcome = "refused"; out.note = m.why || null; }
-  } catch { out.outcome = "unavailable"; }
+  } catch { out.outcome = "unavailable"; out.transient = true; }
   return out;
 }
 
@@ -330,7 +343,7 @@ export function tier3Note(m, memberNote, layerPages) {
 export const OCR_INVOCATIONS_PER_REQUEST = 24;
 export const OCR_SAME_PROVENANCE = ["engine", "version", "cap", "measured_by", "confidence_floor"];
 
-export async function askMemberPerPage(env, { sha, storeName, wantPages }) {
+export async function askMemberPerPage(env, { sha, storeName, wantPages, invocations = OCR_INVOCATIONS_PER_REQUEST }) {
   const call = (pages) => env.OCR_WORKER.fetch("https://ocr-worker/transcribe", {
     method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({ capture_sha: sha, store: storeName, pages }),
@@ -342,13 +355,14 @@ export async function askMemberPerPage(env, { sha, storeName, wantPages }) {
   const deferred = (first && Array.isArray(first.deferred) ? first.deferred : [])
     .filter((p) => Number.isInteger(p) && wanted.has(p));
   const answers = [{ asked: null, body: first }];
-  const loop = { invocations: 1, asked: 0, notAsked: [], threw: null, strays: [], mismatched: [], refused: [] };
+  const loop = { invocations: 1, asked: 0, notAsked: [], threw: null, strays: [], mismatched: [], refused: [], down: [] };
   for (let i = 0; i < deferred.length; i++) {
     const page = deferred[i];
-    if (loop.invocations >= OCR_INVOCATIONS_PER_REQUEST) { loop.notAsked = deferred.slice(i); break; }
+    if (loop.invocations >= invocations) { loop.notAsked = deferred.slice(i); break; }
     loop.invocations++; loop.asked++;
     try {
       const rp = await call([page]);
+      if (rp.status >= 500) loop.down.push(page);   /* R37: the member was down for this page; it is owed, not declined */
       const body = rp.ok ? await rp.json() : { ok: false, reason: `HTTP_${rp.status}` };
       answers.push({ asked: page, body });
     } catch {
@@ -513,9 +527,9 @@ export function ocrTextFromMember(res, { calibration = null } = {}) {
    calibration the chain names, or null; one that cannot be read is none, never the nearest measurement. `seed` is
    `tier3SeedFrom`'s answer (the re-read only). Never throws for a member's failure: that is `ocrNote`. */
 export async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPage, fmt, seed = null,
-                                         liveCalibration = null }) {
+                                         liveCalibration = null, invocations = OCR_INVOCATIONS_PER_REQUEST }) {
   let chain, chainSet = false, ocrNote = null, filled = [], engine = null, unanswered = [], loop = null;
-  let seeded = [];
+  let seeded = [], transient = false, owed = [];
   const wanted = !!(i2text && needsTier3(i2text));
   if (wanted) {
     const wantPages = tier3Pages(i2text);
@@ -589,12 +603,13 @@ export async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier
     } else if (env && env.OCR_WORKER) {
       let failure = null;
       try {
-        const asked = await askMemberPerPage(env, { sha, storeName, wantPages: askPages });
+        const asked = await askMemberPerPage(env, { sha, storeName, wantPages: askPages, invocations });
         loop = asked.loop || null;
         /* The status is read before the body: a 500's body may not parse, and "could not be reached" is a
            different finding from "answered an error". */
         if (!(asked.status >= 200 && asked.status < 300)) {
           failure = word("reading-pipeline.ocr_member_answered", { status: String(asked.status) });
+          if (asked.status >= 500) { transient = true; owed = askPages; }
         } else {
           const ocrAnswer = asked.answer;
           let calRef = null;
@@ -618,7 +633,12 @@ export async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier
         }
       } catch {
         failure = word("reading-pipeline.ocr_member_reached");
+        transient = true; owed = askPages;
       }
+      /* R37 (F9): the pages the request did not reach (past its calls, after a call that threw, or a call the member
+         failed with a 5xx) are owed, not lost: they are named here for the caller to carry on from the first of them. */
+      if (loop) owed = [...owed, ...loop.notAsked, ...(loop.threw ? loop.threw.rest : []), ...loop.down];
+      if (loop && (loop.threw || loop.down.length)) transient = true;
       if (failure !== null) {
         ocrNote = failure;
         if (keepSeeded().ok && seeded.length) ocrNote = `${ocrNote}; ${keptSaid()}`;
@@ -635,7 +655,12 @@ export async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier
   /* D-418 (R6): a document still wants OCR when it was selected and nothing was filled, or a selected page is
      still unread. A page kept from an earlier reading is read (D-616). */
   const stillWanting = wanted && (!(filled.length + seeded.length) || unanswered.length > 0);
-  return { i2text, wiredTier, chain, chainSet, ocrNote, filled, seeded, engine, stillWanting };
+  /* R37: `left` is the pages still owed to the OCR member, ascending, and `cursor` the first of them; none when every
+     page was read or declined (a declined page is the document's own, final). */
+  const gone = new Set([...filled, ...seeded]);
+  const pagesLeft = [...new Set(owed)].filter((p) => !gone.has(p)).sort((a, b) => a - b);
+  return { i2text, wiredTier, chain, chainSet, ocrNote, filled, seeded, engine, stillWanting, transient,
+           ...(pagesLeft.length ? { left: { cursor: pagesLeft[0], pages: pagesLeft } } : {}) };
 }
 
 /* ===================================================================== *
@@ -848,11 +873,14 @@ export function utf8Length(s) {
   }
   return n;
 }
-export function textUnitsFor(i2text) {
+/* R37 (F8): `budget` is the bytes the units may spend. The default is the acquire answer's (R15): the wire carries at
+   most that. The index path (a held reading read again, a re-read) has no wire, so its caller hands `Infinity` and
+   every unit is given, each still cut to CAPTURE_TEXT_UNIT_CAP; the index's own bound is the caller's (extraction R22). */
+export function textUnitsFor(i2text, { budget: wireBudget = ACQUIRE_TEXT_UNITS_BUDGET } = {}) {
   let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null;
   if (i2text) {
     const units = allUnitsOf(i2text);
-    let budget = ACQUIRE_TEXT_UNITS_BUDGET, dropped = 0;
+    let budget = wireBudget, dropped = 0;
     const kept = [], runs = [];
     let run = null;
     const skip = (u) => {
@@ -893,8 +921,8 @@ export function wordsIn(s) {
    text has plus the words an OCR region below its floor held (carried as a count on the page, `unread_words`, never
    as text); `words_read` is the words of the units `textUnitsFor` keeps, a unit cut to its cap by the prefix it keeps. They
    are equal when the whole text was read. */
-export function textWordsFor(i2text, keptUnits = undefined) {
-  const kept = keptUnits !== undefined ? keptUnits : textUnitsFor(i2text).textUnits;
+export function textWordsFor(i2text, keptUnits = undefined, { budget } = {}) {
+  const kept = keptUnits !== undefined ? keptUnits : textUnitsFor(i2text, { budget }).textUnits;
   if (!kept) return null;
   const all = allUnitsOf(i2text) || [];
   const unread = (Array.isArray(i2text.pages) ? i2text.pages : [])
@@ -1121,13 +1149,15 @@ function paragraphsOfText(text, html) {
     .map((p, para) => ({ para, text: p }));
   return { paragraphs };
 }
-export function textUnitsOfText(text, { html = false } = {}) {
+export function textUnitsOfText(text, { html = false, budget } = {}) {
   if (typeof text !== "string" || !text) return { textUnits: null, textUnitsOverBound: 0, textUnitsSkipped: null };
-  return textUnitsFor(paragraphsOfText(text, html));
+  return textUnitsFor(paragraphsOfText(text, html), { budget });
 }
 /* R35: the words of a capture read as text, over the text its units are drawn from. */
-export function textWordsOfText(text, { html = false } = {}) {
-  return typeof text === "string" && text ? textWordsFor(paragraphsOfText(text, html)) : null;
+export function textWordsOfText(text, { html = false, budget } = {}) {
+  if (typeof text !== "string" || !text) return null;
+  const paras = paragraphsOfText(text, html);
+  return textWordsFor(paras, textUnitsFor(paras, { budget }).textUnits);
 }
 
 /* ===================================================================== *
@@ -1419,42 +1449,73 @@ const failed = (doc, docType, basis, extra = {}) => ({
  *  fleet bindings PDF_WORKER and OCR_WORKER), `storeName` (the namespace the members read the capture under), `view` (`jurisdictions.combine`'s
  *  view of the instance's profiles, or undefined when the instance holds none, extraction R18), `planeVersion`, and
  *  `liveCalibration` (R5); and, only at a member's act, `transcription` (R29, `tier4Extend`): without it the answer is
- *  exactly what it was before R29. Never throws; every failure is a failed reading. */
+ *  exactly what it was before R29. R37: `unitsBudget` is the bytes the text units may spend (default the acquire answer's,
+ *  R15; the index path hands `Infinity`), `ocrInvocations` the OCR calls this request may make (default 24), and `owe` the
+ *  hook the caller composed, `owe({kind: "ocr", sha, cursor, pages_left})`, called once when OCR left pages unread, which
+ *  never throws out of `read` and is how the pages left become owed work. Never throws; every failure is a failed reading,
+ *  and says whether it is `transient` or `final`. */
 export async function read(document, { evidence = null, env = {}, storeName = "bio", view, planeVersion = null,
-                                        liveCalibration = null, transcription = null } = {}) {
-  try { return await readInner(document, { evidence, env, storeName, view, planeVersion, liveCalibration, transcription }); }
+                                        liveCalibration = null, transcription = null, unitsBudget, ocrInvocations,
+                                        owe = null } = {}) {
+  try { return await readInner(document, { evidence, env, storeName, view, planeVersion, liveCalibration, transcription,
+                                           unitsBudget, ocrInvocations, owe }); }
   catch (e) {
-    const reading = failed(document, null, localize("reading-pipeline.index.reading_not_composed", "the reading could not be composed ({detail}), so nothing is claimed about this document's text; it is a failed reading, never an emptied document", { detail: String(String(e && e.message || e).slice(0, 200)) }));
+    const reading = failed(document, null, localize("reading-pipeline.index.reading_not_composed", "the reading could not be composed ({detail}), so nothing is claimed about this document's text; it is a failed reading, never an emptied document", { detail: String(String(e && e.message || e).slice(0, 200)) }), { failure: FAILURE_TRANSIENT });
     reading.metadata = null;   /* R28: no entry's answer reached the reading */
     reading.provenance = await readingProvenance({ text: null, planeVersion });
     return { reading };
   }
 }
 
+/* R37 (F10): the size of a held object, from the store's `head` when it answers one, else null. */
+async function sizeHeld(evidence, digest) {
+  try {
+    const h = typeof evidence.head === "function" ? await evidence.head(digest) : null;
+    return h && Number.isFinite(h.size) ? h.size : null;
+  } catch { return null; }
+}
+/* `{bytes, why?, failure?}`. A failure is `transient` (R37: the object, or a part, is not held yet, or the parts cannot
+   be assembled within MULTIPART_READ_MAX while no whole is held: it can be) or `final` (the capture is over WHOLE_READ_MAX
+   and is never loaded: nothing later changes that). It throws only when the store does, which the caller marks transient. */
 export async function bytesOf(evidence, doc) {
   const whole = async (digest) => {
     const o = await evidence.get(digest);
     return o ? new Uint8Array(await o.arrayBuffer()) : null;
   };
-  if (!Array.isArray(doc.parts)) return { bytes: await whole(doc.capture.sha256) };
+  const parts = Array.isArray(doc.parts) ? doc.parts : null;
+  const wholeSha = typeof (doc.capture && doc.capture.sha256) === "string" ? doc.capture.sha256 : null;
+  const total = parts ? parts.reduce((n, p) => n + (Number.isFinite(p && p.bytes) ? p.bytes : 0), 0)
+                      : (Number.isFinite(doc.capture && doc.capture.bytes) ? doc.capture.bytes : null);
+  /* R37: a whole the object cannot hold is never loaded, whatever else is held; the size is the capture's own, else the
+     store's. */
+  const tooBig = (size) => ({ bytes: null, failure: FAILURE_FINAL,
+    why: word("reading-pipeline.why.capture_bytes_parts", { total: String(size), parts: String(parts ? parts.length : 1),
+                                                              multipart_read_max: String(WHOLE_READ_MAX) }) });
+  if (total !== null && total > WHOLE_READ_MAX) return tooBig(total);
+  /* the store is asked only when the document states no size */
+  const held = wholeSha && total === null ? await sizeHeld(evidence, wholeSha) : null;
+  if (held !== null && held > WHOLE_READ_MAX) return tooBig(held);
+  if (!parts) return { bytes: await whole(doc.capture.sha256) };
   /* R2 (T51 fix round 2, C5): the whole object held under the document's fingerprint is read first; parts are
      assembled, and bounded, only when none is held. */
-  const held = typeof (doc.capture && doc.capture.sha256) === "string" ? await whole(doc.capture.sha256).catch(() => null) : null;
-  if (held) return { bytes: held };
-  const total = doc.parts.reduce((n, p) => n + (Number.isFinite(p && p.bytes) ? p.bytes : 0), 0);
+  const got = wholeSha ? await whole(wholeSha).catch(() => null) : null;
+  if (got) return { bytes: got };
   if (total > MULTIPART_READ_MAX)
-    return { bytes: null, why: word("reading-pipeline.why.capture_bytes_parts", { total: String(total), parts: String(doc.parts.length), multipart_read_max: String(MULTIPART_READ_MAX) }) };
+    return { bytes: null, failure: FAILURE_TRANSIENT,
+             why: word("reading-pipeline.why.capture_bytes_parts", { total: String(total), parts: String(parts.length), multipart_read_max: String(MULTIPART_READ_MAX) }) };
   const out = new Uint8Array(total);
   let at = 0;
-  for (const p of doc.parts) {
+  for (const p of parts) {
     const b = p && typeof p.sha256 === "string" ? await whole(p.sha256) : null;
-    if (!b) return { bytes: null, why: word("reading-pipeline.why.part_held_evidence", { index_of: String(doc.parts.indexOf(p) + 1), parts: String(doc.parts.length) }) };
+    if (!b) return { bytes: null, failure: FAILURE_TRANSIENT, why: word("reading-pipeline.why.part_held_evidence", { index_of: String(parts.indexOf(p) + 1), parts: String(parts.length) }) };
     out.set(b.subarray(0, Math.max(0, total - at)), at); at += b.length;
   }
-  return { bytes: at === total ? out : null, why: at === total ? null : word("reading-pipeline.why.parts_held_add") };
+  return at === total ? { bytes: out }
+                      : { bytes: null, failure: FAILURE_TRANSIENT, why: word("reading-pipeline.why.parts_held_add") };
 }
 
-async function readInner(doc, { evidence, env, storeName, view, planeVersion, liveCalibration, transcription }) {
+async function readInner(doc, { evidence, env, storeName, view, planeVersion, liveCalibration, transcription,
+                              unitsBudget, ocrInvocations, owe }) {
   const retrieved = doc && typeof doc.retrieved === "string" ? doc.retrieved : null;
   const sha = doc && doc.capture && typeof doc.capture.sha256 === "string" ? doc.capture.sha256 : null;
   const ct = doc && doc.capture && typeof doc.capture.content_type === "string" ? doc.capture.content_type : "";
@@ -1475,10 +1536,10 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     reading.provenance = await readingProvenance({ text: null, chain: null, tier: null, container: null, planeVersion, member: null });
     return { reading };
   };
-  if (!sha) return early(failed(doc, null, localize("reading-pipeline.index.no_capture_digest", "the document names no capture digest, so there are no bytes to read")));
+  if (!sha) return early(failed(doc, null, localize("reading-pipeline.index.no_capture_digest", "the document names no capture digest, so there are no bytes to read"), { failure: FAILURE_FINAL }));
   /* DEC-149 (T35-24): member-facing, so it names the group's Civicsmith, never "this instance". */
-  if (!evidence) return early(failed(doc, null, word("reading-pipeline.no_evidence_store")));
-  const got = await bytesOf(evidence, doc).catch(() => ({ bytes: null, why: word("acquisition.why.evidence_store_read") }));
+  if (!evidence) return early(failed(doc, null, word("reading-pipeline.no_evidence_store"), { failure: FAILURE_TRANSIENT }));
+  const got = await bytesOf(evidence, doc).catch(() => ({ bytes: null, failure: FAILURE_TRANSIENT, why: word("acquisition.why.evidence_store_read") }));
   let bytes = got.bytes;
   got.bytes = null;
   const textRead = !multipart && profile.profiled_from_text === true && bytes;
@@ -1492,7 +1553,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   const stackId = identify(profCtx);
   const docType = doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind, ...vw });
   if (!bytes)
-    return early(failed(doc, docType, got.why || localize("reading-pipeline.index.bytes_not_held", "the capture's bytes are not held in the evidence store, so nothing was read")));
+    return early(failed(doc, docType, got.why || localize("reading-pipeline.index.bytes_not_held", "the capture's bytes are not held in the evidence store, so nothing was read"),
+                        { failure: got.failure || FAILURE_TRANSIENT }));
 
   const entry = fmt && fmt !== "undetermined" ? getFormat(fmt) : null;
   const wireable = !!(entry && (typeof entry.text === "function" || typeof entry.structure === "function"));
@@ -1504,7 +1566,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     classifiedText = text; member = "plane";
     /* R32: its text units, drawn from the decoded text (the page's visible text for HTML); a capture whose text holds
        no glyph has none. The reader's outcome below does not change them. */
-    ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsOfText(text, { html: fmt === "html" }));
+    ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsOfText(text, { html: fmt === "html", budget: unitsBudget }));
     /* R34: the title, read from the markup R32's units drop; null for any text that is not HTML. A reader that throws
        gives a failed reading, which carries none. */
     const title = fmt === "html" ? titleOfHtml(text) : null;
@@ -1531,6 +1593,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
           content_type: docType.type.key, reader_version: docType.type.version ?? null,
           read_from_text: true, found: false, entities: [], facts: {}, at: retrieved,
           basis: word("reading-pipeline.why.reader_parse_document", { key: String(docType.type.key), entry: String(String(e && e.message || e)) }),
+          failure: FAILURE_FINAL,   /* R37: the content type's reader threw over this text; it throws again */
         };
       }
     } else {
@@ -1552,13 +1615,14 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       reading.text_source = layerChainFor(null, { tier: null, container });
       reading.text_container = container;
       /* R35: the words of the text the units were drawn from, and the words the units hold. */
-      Object.assign(reading, textWordsOfText(text, { html: fmt === "html" }));
+      Object.assign(reading, textWordsOfText(text, { html: fmt === "html", budget: unitsBudget }));
     }
   } else if (wireable) {
     /* R2 (D-593, D-684): through the entry over the stored bytes, tier 1, including delimited text read as text at
        intake and a multi-part capture within the bound: a CSV's text is the entry's own decode. */
     let i2text = null, wiredTier = null, pageCount = null, pageBoxes = null, pdfPaints = null, wired = null;
     let chain = null, ocrNote = null, tier2note = null, tier2PerPage = null, t3Wanting = false, aiRead = null, structMeta = null;
+    let memberDown = false, ocrLeft = null;
     try {
       if (typeof entry.text === "function") {
         const parts = typeof entry.parts === "function" ? await entry.parts(bytes) : bytes;
@@ -1579,6 +1643,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
                         why: typeof st.imagesWhy === "string" ? st.imagesWhy : null };
           /* R3: tier 2, merged page by page; two page-scoped parts when both tiers hold pages. */
           const t2 = await tier2Escalate(env, { sha, storeName, text: i2text });
+          if (t2.transient) memberDown = true;
           if (t2.outcome === "refused") tier2note = t2.note;
           else if (t2.outcome !== "merged") tier2note = tier2FailureNote(t2.outcome);
           else {
@@ -1595,8 +1660,11 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         }
       }
       /* R4–R6: tier 3. */
-      const t3 = await tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPage, fmt, liveCalibration });
+      const t3 = await tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPage, fmt, liveCalibration,
+                                          ...(Number.isInteger(ocrInvocations) && ocrInvocations > 0 ? { invocations: ocrInvocations } : {}) });
       i2text = t3.i2text; wiredTier = t3.wiredTier;
+      if (t3.transient) memberDown = true;
+      ocrLeft = t3.left || null;
       if (t3.chainSet) chain = t3.chain;
       if (t3.ocrNote != null) ocrNote = t3.ocrNote;
       t3Wanting = t3.stillWanting;
@@ -1618,7 +1686,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       { const lean = withoutJoinedDocument(i2text); if (lean !== i2text) joinedDropped = true; i2text = lean; }
       emitted = i2text;
       const extent = containerExtentOf(i2text, { pdfPaints, fmt });
-      ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsFor(i2text));
+      ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsFor(i2text, { budget: unitsBudget }));
       if (i2text) {
         wired = readText(decodeView(i2text), { headers, locator, content_type: ct || null, at: retrieved, origin: CAPTURE_ORIGIN,
                                                ...vw });
@@ -1640,9 +1708,20 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       reading = wired
         ? readingFromWire({ wired, docType, chain, wiredTier, fmt, retrieved, tier2note, ocrNote, tier3Candidate: t3Wanting })
         : { ...failed(doc, docType, [tier2note, ocrNote, localize("reading-pipeline.index.entry_no_text", "the {fmt} entry produced no text from these bytes", { fmt: String(fmt) })]
-              .filter(Boolean).join(" — ")) };
+              .filter(Boolean).join(" — "), { failure: memberDown ? FAILURE_TRANSIENT : FAILURE_FINAL }) };
       /* R35: a reading with text units counts its words. */
       if (textUnits) Object.assign(reading, textWordsFor(i2text, textUnits));
+      /* R37 (D4): a reading that read nothing says whether it can be read again: a member that was down is a cause outside
+         the document, anything else is the document's own. */
+      if (!wired || !wired.determined) reading.failure = memberDown ? FAILURE_TRANSIENT : FAILURE_FINAL;
+      /* R37 (F9): the OCR pages this request did not reach, the first of them (the cursor) and how many, stated on the
+         reading and owed to the caller's ledger. */
+      if (ocrLeft) {
+        reading.ocr_left = { cursor: ocrLeft.cursor, pages: ocrLeft.pages.length };
+        if (typeof owe === "function") {
+          try { await owe({ kind: "ocr", sha, cursor: ocrLeft.cursor, pages_left: ocrLeft.pages.length }); } catch { /* the hook is the caller's */ }
+        }
+      }
       /* R34: a determined reading carries the title its entry's metadata states, else null; a failed one carries none. */
       if (wired && wired.determined) reading.title = titleOfMetadata(i2text && i2text.metadata) ?? titleOfMetadata(structMeta);
       /* R29: the pages the AI read, labeled as its reading. */
@@ -1653,12 +1732,12 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       reading.page_boxes = pageBoxes;
       reading.container_extent = extent;
     } catch (e) {
-      reading = failed(doc, docType, localize("reading-pipeline.index.entry_not_read_bytes", "the {fmt} entry could not read these bytes ({detail}), so nothing is claimed about its text", { fmt: String(fmt), detail: String(String(e && e.message || e).slice(0, 200)) }), { page_count: null, page_boxes: null, container_extent: null });
+      reading = failed(doc, docType, localize("reading-pipeline.index.entry_not_read_bytes", "the {fmt} entry could not read these bytes ({detail}), so nothing is claimed about its text", { fmt: String(fmt), detail: String(String(e && e.message || e).slice(0, 200)) }), { failure: FAILURE_TRANSIENT, page_count: null, page_boxes: null, container_extent: null });
       textUnits = null; textUnitsOverBound = 0; textUnitsSkipped = null; classifiedText = null; emitted = null; heldCounts = null; joinedDropped = false;
     }
   } else {
     reading = failed(doc, docType, localize("reading-pipeline.index.document_not_read_text", "the document was not read as text ({why}), so no reading was attempted", { why: multipart ? localize("reading-pipeline.index.multipart", "multipart") : localize("reading-pipeline.index.non_textual_large", "non-textual or too large") }),
-                     { page_count: null, page_boxes: null, container_extent: null });
+                     { failure: FAILURE_FINAL, page_count: null, page_boxes: null, container_extent: null });
   }
 
   /* R14: the reading's provenance, at one site for every branch, over exactly the text the reader was handed; text
