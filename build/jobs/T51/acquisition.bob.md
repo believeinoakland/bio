@@ -1,6 +1,6 @@
 # BOB to acquisition (T51)
 
-**Read** · handled J24
+**Read** · handled J25
 
 ## B1 · START
 
@@ -277,3 +277,16 @@ Mail with `--module acquisition`; record `build/jobs/T51/acquisition.md` (append
 (3) **G12a provider (speed).** Walker A: "the project filter: 7 rows 2.2 s and 2.9 s ... about 300-400 ms a row". `archiveList` (unpack.mjs:838-868) does `holds`, `heldParts`, `archiveProfile` (:801-826) for every capture with no recorded format and remembers nothing. Fix: remember "not an archive" per digest (immutable) and expose a batch read `notArchivesAmong` like `membersOf`/`openedAmong` (:922-929). Failing-first: a second `archiveList` of a non-archive digest makes 0 store calls. Expected: the heavy rows 0.9-2.5 s to ~0.35 s once warm.
 
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio acquisition tranche/T51 job/T51/acquisition`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B27 · ANSWER · re J25
+
+ANSWER (BOB #253, K4577).
+1. fetch_done: acquisition does NOT record it. `owedFetch` hands the finished document to `opts.deliver` and stops there; control-plane's delivery records it after the promotion succeeds, with capture's published `captureOf(ctx).recordFetchDone({session, document, opener, project, at})` (CAPTURE #48 J21; capture is later than you in the order, so you could not call it anyway). Drop the feature-detected call.
+2. The parked session: accepted as you describe (64-zero sentinel `primary_sha`, `state.fetch_pending {since, declared_bytes, why}`, why codes `LARGE_DECLARED`/`LARGE_BODY`/`SLOW_BODY`, `failed: <reason>` kept on a stated end, a refused owe runs inline). machinery-producers' `#conditionsPartialCapture` skipping a `fetch_pending` session is placed as a second-wave job (not yours). `openCaptures` keys as you name them: screens-intake and control-plane are told.
+3. G12a: the "not an archive" memo in instance memory, not persisted: accepted (a restarted object pays the first ask once).
+Name the export `notArchivesAmong(store, shas)` -> Set of digests: CAPTURE #48 already calls it by that name.
+
+## B28 · CHANGE
+
+CHANGE (BOB #253, K4578): fix round 6 gains causes from the K4571 audit. Merge tranche/T51 into your branch, then read `build/plan/fix-round-6-T51.md` section "G14-G25" whole (it is short) and apply the causes named below as part of this job, with the four fields (R-FOUR), failing-first past the bound, stand-in words named in COMPLETE (the rows go to UX-DESIGN). Bob (K4571): never a silent partial read; a bound that must stay is stated to the member.
+Yours: **G19 (provider)**: a capture's answer and its stored capture facts carry `supporting: {kept, skipped, reasons}` from the skips you already record (`subresources.mjs:51-62`, `render.mjs:346-368`, index.mjs:1852-1856; `TOO_LARGE_TO_PARSE`, `body_unavailable`, the 400 cap, the 8 MiB body, the 64 MiB budget). Test: a page with 450 subresources answers kept 400, skipped 50 with the cap's reason.

@@ -1,6 +1,6 @@
 # BOB to extraction (T51)
 
-**Read** · handled J17
+**Read** · handled J18
 
 ## B1 · START
 
@@ -242,3 +242,17 @@ Mail with `--module extraction`; record `build/jobs/T51/extraction.md` (append a
 (4) **G13 owner (S control-plane; Bob K4571: a large text is read whole in the background).** Walker A: "117,316 further units ... 'ENDMARKER' is NOT in the text". The index keeps 2 MiB / 4,096 units per capture (:47-48, 1070; R22) and `readHeld` answers `READING_HELD` for any held reading (:690). Fix: index segments beyond the bound (R22 re-ruled: per segment), `readHeld` of a held reading with `more` reads the next piece through reading-pipeline's cursor and answers `more` and `read_through`/total; the reading is never complete while `more`; plane continues the row, one piece per tick. Failing-first (S, real plane): the 12 MB text uploaded and promoted: after N ticks `ENDMARKER` is in `text_units`, `more` false, a passage near the end citable; midway the search finds only what is read and the reading says "more". Platform L: memory and CPU per piece (12 MB, 24 MiB).
 
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio extraction tranche/T51 job/T51/extraction`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B23 · ANSWER · re J18
+
+ANSWER (BOB #253, K4577) to J18.
+1. The cursor shape you wrote is the contract; READING-PIPELINE #22 is told to build `read` to it, or to tell me where it differs (then I CHANGE you).
+2. op=reading pages: `text_units` keeps its 4,096 cap per answer, and op=reading takes `after` (a unit `seq`) and answers `next` (the seq to ask next, null at the end) beside `more`, `read_through` and `total`, so every unit of the capture is reachable through op=reading, never only the first 4,096. The whole text is stored, searchable and citable (`capture_text`). The walker's check becomes: ENDMARKER found by search, cited, and reached by paging op=reading. SCREENS-INQUIRY #21 draws the first page and states it ("the first N of M passages", with a more act). Write R76's amendment in your record.
+3. Seams as you name them: confirmed.
+4. control-plane's `readUploaded`: CONTROL-PLANE #48 is told (carry `reading_pending`, `diag`, call `pendSha`).
+Also READING-PIPELINE #22's R39 (its J9): `read` now refuses a bare digest stub with exactly `{refused: {code: "BARE_DIGEST", why}}` and no `reading` key. Your G6 work must (a) never hand `read` a stub: for a whole build the document with at least `capture.bytes` (`ev.head`, or the register's `total`), also at index.mjs:1506; (b) treat `out.refused` as write nothing (`left("BARE_DIGEST")`), never reaching `writeReading`; (c) change `r80.test.mjs:60` and any test that reads a whole through a stub. Merge `job/T51/reading-pipeline` when it merges (I CHANGE you).
+
+## B24 · CHANGE
+
+CHANGE (BOB #253, K4578): fix round 6 gains causes from the K4571 audit. Merge tranche/T51 into your branch, then read `build/plan/fix-round-6-T51.md` section "G14-G25" whole (it is short) and apply the causes named below as part of this job, with the four fields (R-FOUR), failing-first past the bound, stand-in words named in COMPLETE (the rows go to UX-DESIGN). Bob (K4571): never a silent partial read; a bound that must stay is stated to the member.
+Yours: **G14 (owner, seam)**: G13's segments and cursor for every format (DOCX, HTML, PDF text, not only plain text); op=reading carries a `completeness` fact (`state` whole/partial/stated, the skipped runs, `failure`/`why`) beside `more`, `read_through`, `total` and its paging (K4577); `readingFor` keeps `state`, `counts`, `skipped`; `unreadOf` counts skipped units as unread. **G15 (provider)**: index the row-range units reading-pipeline now makes for a sheet. Your seam test adds G14's cases (a 6,000-paragraph DOCX, a 300-page dense PDF, a 24 MiB+ PDF stated).
