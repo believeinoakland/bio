@@ -40,7 +40,7 @@ const JOIN = ["screen.home.join.heading", "screen.home.join.says", "screen.home.
 const OURS = ["due.ours.passed", "due.ours.passed_says"];
 // R22: the source notices, one item of each kind with its count; R28: a subject with no title; R31: a reply not recorded.
 const SOURCES = ["queue.source-modified.one", "queue.source-modified.many", "queue.source-removed.one", "queue.source-removed.many",
-  "queue.source.detail", "queue.source.untitled"];
+  "queue.source.detail", "queue.source.untitled", "document.untitled.web"];
 const PROJECT_ROWS = (w) => [`${w}.questions.one`, `${w}.questions.many`, `${w}.owner`, `${w}.owner.none`, `${w}.lastchange`, `${w}.lastchange.none`,
   `${w}.truncated`, `${w}.stage.means`, `${w}.stage.none`, ...["forming", "investigating", "matured", "closed"].map((s) => `${w}.stage.${s}`),
   "member.founder.unnamed", "screen.matter.unknown", "shell.glance.busy", "shell.glance.steady", "shell.glance.quiet", "project.rescue.title.nodate"];
@@ -163,7 +163,7 @@ const WORDS_OF = {
     "screen.finder.covered.read.says.other", "screen.finder.covered.docs", "screen.finder.covered.docs.says.one", "screen.finder.covered.docs.says.other", "screen.finder.covered.looked",
     // R67, R77, R78: the frontier at four levels, the partial match, a hit with no title.
     "screen.answers.look", "screen.answers.state.other", ...["document", "content", "meaning", "internet"].map((l) => `screen.answers.level.${l}`), ...["LOOKED_FOUND", "LOOKED_ABSENT", "NOT_LOOKED"].map((s) => `screen.answers.state.${s}`),
-    "screen.finder.noresult.partial", "screen.finder.partial.head", "queue.source.untitled", "shell.card.document", "shell.card.member",
+    "screen.finder.noresult.partial", "screen.finder.partial.head", "queue.source.untitled", "shell.card.document", "shell.card.member", "shell.card.person",
     "screen.find-in.passage", "act.cite.label.find-in", "screen.document.cite.question", "screen.document.cite.role", "screen.document.cite.noquestion", "screen.findin.cite.supports",
     "screen.findin.cite.against", "screen.findin.cite.norole", "queue.answered.col.did", ...["newly_cited_supporting_the_question", "left_as_it_was", "the_question_already_cited_it",
       "cite_every_document_you_hold_together_in", "each_document_is_cited_whole_as_its_own_", "a_document_the_question_already_cites_is", "if_the_set_changed_after_you_held_it_wha",
