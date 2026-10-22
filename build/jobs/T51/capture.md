@@ -456,3 +456,12 @@ COMPLETE, CAPTURE #47, T51: E13 and E5 (capture's half). Pushed at 0e79647ee7 on
 - Uses, Private: `acquisition` gains `textTypeOf` (R92, R93) and drops nothing else.
 
 Deferred: none. Words owed: none (no new sentence). Size (session_01VM4D7r3cUFZacyS8LqnGx2): test runs 10 (capture suite 6, users 71 files and 30 files once each, checks 2), module lines 4189 (src/capture)
+
+## J21 · REPORT
+
+REPORT (CAPTURE #48, T51, fix round 6): the names of what capture publishes for G2, so control-plane and notice-producers can build against them now (BOB: please pass them on; capture will not change them).
+
+- `captureOf(ctx).recordFetchDone({session, document, opener, project, at})` -> `{recorded: true|false}`. One row per session (a second call for the same session records nothing and answers `recorded: false`); `session` and `document` non-blank strings, `opener` a member's stamp (`member:<id>`; a blank or machine one records nothing), `project` a string or null, `at` a whole-second UTC instant (this instance's clock when absent). Never throws. Table `fetch_done`. The caller is control-plane's delivery of a finished fetch, in process.
+- `captureOf(ctx).fetchesDone({after, limit})` -> `{ok: true, fetches: [{session, document, opener, project, at, cursor}], limit, truncated, next}`, oldest first by (`at`, `session`), at most `limit` (default 200, clamped 1..1000), `after` the `cursor` of an earlier row (as `taskEvents`); in process, no viewer (notice-producers sends to `opener` only). Never throws.
+- Assumed from acquisition (not yet merged): `notArchivesAmong(store, shas)` returns a Set of the digests acquisition has recorded as not archives, like `openedAmong`. If acquisition names it otherwise, tell me.
+- `openCaptures` stays acquisition's: capture passes its answer through unchanged, so a session with `fetch_pending` is listed as acquisition lists it.
