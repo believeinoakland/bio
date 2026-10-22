@@ -1,6 +1,6 @@
 # reading-pipeline (T51)
 
-**Status** · session_01EELF7tdeuCRAdwEDTmo1ya · depth 2 · WAITING ON BOB (J12) · handled B14
+**Status** · session_01EELF7tdeuCRAdwEDTmo1ya · depth 2 · WAITING ON BOB (pdf-reader merge) · handled B14
 
 ## J1 · COMPLETE
 
