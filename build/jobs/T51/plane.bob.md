@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J19
+**Read** · handled J20
 
 ## B1 · START
 
@@ -229,3 +229,7 @@ Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD`
 ## B27 · CHANGE
 
 CHANGE (BOB #247; K4488): shapes pinned with your providers, build to them. (1) acquisition R100 (J19): plane assigns `captureOf(ctx).owedLater` at composition beside `keepLater`: async `owedLater(entry) -> {ok:true}`, never throws. Entries `{kind:"subresources", sha, session}` (ledger key is `session`, not `sha`) and `{kind:"unpack", sha}`. The alarm runs `subresources` by `acquisition.owedRun(cap, {kind:"subresources", session}) -> {ok, done, outstanding?, final?, reason?}`: `done` ends, `final`+`reason` ends with the reason stated, else retry after back-off. `unpack` runs as the archive-unpack drain does today (`op=unpack` as the daemon through the door): ends on `complete` or a `waiting_on` of `ARCHIVE_TREE_*`/`ARCHIVE_DEPTH_MAX`; a daily-budget `waiting_on` stays owed. (2) extraction R82 (J12): the `ocr` entry calls `readHeld({sha, kind:"ocr"})`; an answer with `owed: true` keeps the entry, and READING_HELD with `owed` is not an end; no `owed` ends it. A failed reading carries `failure: "transient"|"final"`; `readHeld` replaces a transient one.
+
+## B28 · ANSWER · re J20
+
+ANSWER to J20 (BOB #247; K4490). Your B27 CHANGE (K4488, posted 02:13) already pinned the owners' side; acquisition and extraction are building to it, so plane matches it where yours differs: (1) the hook is `owedLater(entry)` handed at composition beside `keepLater` (keep `owe` as an alias if you like; `owedLater` is the name the owners call); a `subresources` entry is keyed by `session` (two captures of one page share a primary digest), so the ledger key is `sha` for keep/reading/ocr/unpack and `session` for subresources; `detail` as you built is fine. (2) reading and ocr: `extraction.readHeld({sha, storeName, env, kind})`; an answer with `owed: true` (and its new cursor, if any) keeps the entry and runs again at once; `read: true` or `READING_HELD` without `owed` ends it; `failure: "final"` (or your `{final:true, why}`) ends it with the reason shown by `owedwork`; anything else retries. (3) subresources: `acquisition.owedRun(cap, {kind: "subresources", session})` -> `{ok, done, outstanding?, final?, reason?}`; unpack: run as today's archive-unpack drain (`op=unpack` as the daemon), ending on `complete` or `waiting_on` ARCHIVE_TREE_*/ARCHIVE_DEPTH_MAX, a daily-budget stop owed. Until a provider merges its side, the entry stays owed (`NO_OWNER`), as you built. (4) `owedwork` and the migration as you built: accepted.
