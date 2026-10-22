@@ -11,7 +11,7 @@ import { store } from "./fixture.mjs";
 import { multipartBucket } from "../record-core/storage.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { captureOf } from "../../../src/capture/index.mjs";
-import { extractionOf } from "../../../src/extraction/index.mjs";
+import { extractionOf, REPAIR_MIGRATION } from "../../../src/extraction/index.mjs";
 import { pendingOf } from "../../../src/plane/pending.mjs";
 import { acquireReadingOp } from "../../../src/extraction/ops.mjs";
 import { RENDER_DEFAULTS } from "../../../src/render.mjs";
@@ -135,17 +135,21 @@ test("R89 (G8) seam: an old 'not read as text' reading of a text held in two par
   const fine = sha("another notice");
   ex.writeReading({ bundleId: "INFO-2026-0125", captureSha: fine, reading: { found: true, entities: [{ kind: "meeting", key: "1" }], basis: "read" }, composed: true });
   assert.equal(ex.readingFor(whole, "class:admin").repairable, true);
-  assert.deepEqual(pendingOf(x.ctx).list(), [], "nothing owed before the ledger is handed in");
-  /* the plane's composition hands the ledger in beside capture's `owedLater` (store.mjs); the repair then runs, with no press */
-  ex.registerOwe((e) => pendingOf(x.ctx).owedLater(e));
+  /* these readings are the old chain's, written before this release: the store has no record of the repair migration, as a
+     store that predates it has none (the plane registers the ledger at construction, store.mjs, so the first boot above ran the
+     migration over an empty store); then the release's boot over the same storage (the deploy's restart) */
+  x.ctx.storage.sql.exec(`DELETE FROM reading_migrations WHERE migration = ?`, REPAIR_MIGRATION);
+  const y = await store({ db: x.db, env: { CAPTURES: bucket } });
+  const ey = extractionOf(y.ctx);
+  /* the plane's composition handed the ledger in beside capture's `owedLater` (store.mjs); the repair runs, with no press */
   const until = async (f, ms = 5000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (f()) return true; await sleep(10); } return f(); };
-  assert.ok(await until(() => pendingOf(x.ctx).list().length > 0), "the repair owed the ledger");
-  assert.deepEqual(pendingOf(x.ctx).list().map((r) => [r.sha, r.kind, r.state]), [[whole, "reading", "owed"]]);
-  await x.s.alarm();
-  const got = ex.readingFor(whole, "class:admin");
+  assert.ok(await until(() => pendingOf(y.ctx).list().length > 0), "the repair owed the ledger");
+  assert.deepEqual(pendingOf(y.ctx).list().map((r) => [r.sha, r.kind, r.state]), [[whole, "reading", "owed"]]);
+  await y.s.alarm();
+  const got = ey.readingFor(whole, "class:admin");
   assert.match(got.text_units.map((u) => u.text).join(" "), /The board met on the first Tuesday/, "R-STOP: the words are in the text units");
   assert.equal("repairable" in got, false);
-  assert.deepEqual(pendingOf(x.ctx).list(), [], "the entry ended");
+  assert.deepEqual(pendingOf(y.ctx).list(), [], "the entry ended");
 });
 
 /* ---- G13: the walker's 12 MB text, through the real ledger and the real reader ---- */
