@@ -488,3 +488,9 @@ Size (session_01RpngLERJbtZqcnEHi985DP): test runs 24, module lines 2601
 ## J29 · COMPLETE
 
 COMPLETE (B29 START, B30, B31, B32; fix round 6). G2: acquire carries project; a fetch_pending answer is said (size, project; DEC-418 keys where in the table, stand-ins until), nothing promoted, opencaptures polled (cs.later), finished line links the document found by heldat {address}; entry with failed drawn at once; fetching sessions listed without Finish it. G3: 'Finish it' pending is watched to a finished line. G7: 'reading follows' only when the answer holds no reading. G6: multipart upload register names the whole first. G14 completeness drawn (never full while partial), G19 supporting files line, G20 inbox/chooser say when cut, held-at-address look pages by next. Failing-first t51-fix6.test.mjs: 15 red before the changes (9 + 5 + ...) green after; screens-intake 292, 291 pass. ONE RED BY NAME (R-SEAM): capture's acquire declaration (capture/index.mjs:3234) lacks project: the same cause turns screens-daily c25-seam R54/R17/R89 red; green when capture merges. B30's three tests: load-dependent (27/27 five times alone). r117-held R117 red alone on the tranche's own source (not mine); plane release R24 accepted. format failure is build/plan/next.md:38 (BOB's). Architecture, coverage 56/56, words 0, ownership 0. Fill question: .fetch.why fill name unknown. Requirement lines R57/R58 additions, R59, R60 and rows owed are in my record. Size (session_01RpngLERJbtZqcnEHi985DP): test runs 24, module lines 2601
+
+## B34 CHANGE applied: capture merged
+
+Merged `tranche/T51` (capture's `acquire` declares `project`). The stand-in in `page.mjs` that added `project` to the page's table is removed. screens-intake 292 of 292 (the R-SEAM test is green); screens-daily `c25-seam` 1 of 1 green. `r117-held` R117 still red alone (control-plane's, as before). Nothing else changed.
+
+Size (session_01RpngLERJbtZqcnEHi985DP): test runs 27, module lines 2601

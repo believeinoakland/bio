@@ -25,18 +25,8 @@ const REACH = { assistantstate: ok({ on: true }), groupkeystate: ok({ on: true, 
    page; it draws nothing of its own. */
 export const DOCUMENT_STUB = Object.freeze({ id: "document", reads: () => ({}), render: () => "", acts: Object.freeze([]), words: Object.freeze([]) });
 
-/* G2 (fix round 6): `acquire` carries the project the capture is filed under. capture's declaration (fields.accepts, the G2 provider) does not yet list
-   `project`; this stand-in adds it to the page's table and goes when capture merges. `t51-fix6.test.mjs` holds the real declaration to it, red by name
-   until then. */
-const declaredWithProject = () => {
-  const d = { ...collectOwnerRows() };
-  const a = d.acquire;
-  if (a && a.fields && ![...(a.fields.accepts || [])].includes("project")) d.acquire = { ...a, fields: { ...a.fields, accepts: [...a.fields.accepts, "project"] } };
-  return d;
-};
-
 export async function open(path, { plane = {}, me = MEMBER, reachable = false, screens = SCREENS } = {}) {
-  const p = await boot({ screens, path, declared: declaredWithProject(), plane: { whoami: ok(me), ...(reachable ? REACH : {}), ...plane } });
+  const p = await boot({ screens, path, plane: { whoami: ok(me), ...(reachable ? REACH : {}), ...plane } });
   await p.settle();
   return p;
 }
