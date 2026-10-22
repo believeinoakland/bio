@@ -64,3 +64,31 @@ Checks (process repo, against /home/user/bio on job/T51/following):
 - `checks/run.mjs /home/user/bio`: no finding names `following`; four other modules' coverage gaps are in REPORT.
 
 Size (session_01CGcpL8Q6GG6DotmRFDtXaz): test runs 6, module lines 2210
+
+## FOLLOWING #12 · G21 (START B3, fix round 6 wave 2; K4571)
+
+**(1) Root cause.** `#readBody` (`following/index.mjs`, was :700-755) made one pass of at most `BODY_READ_FETCHES` (200) fetches, the events and matters lists as one address each (`nextPage`/`$skip` never followed, `legistar.mjs:69-79`), and on the bound only set `truncated: true` on the tick's read record. The next tick began the same pass from the first address, so an unchanged fetch counted against the 200 again: nothing past the first 200 fetches was ever read, and the member was told nothing.
+
+**(2) Why the tests missed it.** No requirement said a bound must reach the member and no test drove a body past 200 fetches or a list past 1,000 rows. Gap fixed by the two tests below.
+
+**(3) Failing-first, through `followBody` and `followTick` (the module's real entry), 120 meetings with one item and one vote each, 1,500 matters over two Legistar pages, stubbed:**
+- Red before the change (a scratch run of the same stub, 11 ticks): 200 fetch calls in all (each tick repeated the same 200), page 2 of matters never read, 0 of 1,500 matters fetched. The test itself was red at its first status assertion (`body_read` absent).
+- Green after: `body.test.mjs` "R2 (G21) a body of 120 meetings and 1,500 matters…": the tick's `truncated` said, status `whole: false` with `read < total = 120`, due again at the next minute; then, over ticks, `{read: 120, total: 120, more: false, whole: true, phase: "done"}`, all 120 meetings written, page 2 and every matter read; then not due until the cadence.
+- A second test, "R2 (G21) one meeting whose items need more fetches than a tick…": 250 items in one meeting (more than one tick's fetches) read across two ticks by the item cursor; the next day's pass starts again from the first page (two fetches, `unchanged`).
+
+**What changed.**
+- `schema.mjs`: `follows.body_cursor TEXT` (in the table, and added to a table made before it by `migrateFollowing`). Old data: a follow read before this has no cursor and its next pass is whole and continues; no repair.
+- `index.mjs` `#readBody`: the pass walks the events pages then the matters pages by `page.next` (legistar-reader's own `nextPage`), keeps `{phase, addr, idx, vi, base, size, got, walk, more, meetings}` when the fetch bound is reached, and goes on from it at the next tick from the held page bytes; a pass is whole when the matters pages end. A list of items or votes that itself continues past one page (1,000 rows; none exists in practice) is a `failed` entry `PAGE_LIMIT`, never read in part silently. `bodyProgress` (exported) turns the cursor into the answer. `#readFollow`, `#nextDue`, `#followPlan`: a body whose read is not whole is due at the next tick (FINISHED-LATER) and its `last_read` stays the last whole read. `follows()`: each body follow answers `body_read: {read, total, more, whole, phase}` (`null` before a first read); `more: true` while a further page of meetings is not yet taken (the total unknown). The tick's read record gains `meetings` (the same) and keeps `truncated: true` when that tick stopped at its bound.
+- No census op's accepted keys change; no new sentence a member reads (the screen says "read N of M meetings" from `body_read`).
+
+**(4) Platform check:** N.
+
+**Words owed (stand-in, for the design, B485):** a body follow's line "read {read} of {total} meetings" (and "read {read} meetings so far, more to come" when `more`); "reading the matters" for `phase: "matters"`. `body_read` carries the numbers; no row is minted here.
+
+**Requirement lines proposed (BOB writes them).** R2 gains: "A tick that reaches its fetch bound (200) keeps where it stopped, and the next tick goes on, following every page of every Legistar list (`nextPage`), until the read is whole; the follow is due at the next tick while it is not. `follows` (R14) answers per body follow `body_read: {read, total, more, whole, phase}`: the meetings read of those counted so far, `more` while a page is not yet taken." R12: a body follow whose read is not whole is due now. R14 amended as above. Test names: the two tests above (R2).
+
+**Observed, unchanged (not this entry):** a page of a list whose bytes equal the last pass's is not walked again (its rows were walked then); a fetch that failed in the previous pass is retried only when its page changed. Same as before this job; BOB may want it as its own entry.
+
+**Suite and checks.** `node --test --test-force-exit bio-plane/test/m/following/`: see the runner line below. Scheduler and notice-producers (the callers of `followTick`/`followDue`/`follows`): 278 pass, 0 fail. `build/plan/impact.mjs origin/tranche/T51 HEAD`: names 16 modules because `DECLARED_OPS` sits in the changed file (unchanged by this job); the callers were run. Process checks (`checks/run.mjs`): format 0, architecture 0, coverage 0 (6,623 of 6,623 ids named), channels 0, words 0 (inline 0, plain 0, testcopy 0). `checks/ownership.mjs following tranche/T51 job/T51/following`: 0 failures.
+
+Size (session_01RqXFza4HAdeS4MWPxQeGug): test runs 9, module lines 2281
