@@ -173,18 +173,25 @@ export class CorpusExport {
              sha256: createSha256().update(bytes).hex(), next: p.more ? p.last : null };
   }
 
-  /** R10: one rendering in an open standard, for `viewer`, from the rows R7 would carry to that viewer and no others.
-   *  It adds no fact and writes nothing but one `export_log` row naming the format. */
-  exportRendering({ format = null, viewer = null } = {}) {
+  /** R10, R14: one part of a rendering in an open standard, for `viewer`, from the rows R7 would carry to that viewer and
+   *  no others. It adds no fact and writes nothing but one `export_log` row naming the format. A source of more than
+   *  RENDER_MAX records is continued by `part` (1-based, default 1): the answer's `next` names the following part (null
+   *  on the last) and the body states the cut itself. A `part` that is not a whole number from 1 is refused
+   *  `EXPORT_PART_MALFORMED`. */
+  exportRendering({ format = null, viewer = null, part = null } = {}) {
     if (!FORMATS.includes(format))
       return { ok: false, reason: "EXPORT_FORMAT_UNKNOWN", format, formats: [...FORMATS],
                detail: localize("corpus-export.index.a_rendering_is_one_of", "a rendering is one of {FORMATS}; nothing was rendered or logged", { FORMATS: String(FORMATS.join(", ")) }) };
+    const n = part === null || part === undefined || part === "" ? 1 : Number(part);
+    if (!Number.isInteger(n) || n < 1)
+      return { ok: false, reason: "EXPORT_PART_MALFORMED", format,
+               detail: localize("corpus-export.index.a_part_is_a_whole_number", "a part of a rendering is named by a whole number from 1; nothing was rendered or logged") };
     const at = this.#when();
-    const { body, truncated } = render(format, { sql: this.sql, record: this.record, ...this.#ownerDeps() }, viewer, at);
+    const { body, more } = render(format, { sql: this.sql, record: this.record, ...this.#ownerDeps() }, viewer, at, n);
     const items = itemsOf(format, body);
     this.sql.exec(`INSERT INTO export_log (at,scope,bundles,files,note,tables,rows,format) VALUES (?,'rendering',0,0,NULL,NULL,?,?)`,
                   at, items, format);
-    return { ok: true, at, format, standard: STANDARDS[format], items, truncated, rendering: body,
+    return { ok: true, at, format, standard: STANDARDS[format], items, part: n, next: more ? n + 1 : null, truncated: more, rendering: body,
              recorded: word("corpus-export.recorded.rendering_append_export") };
   }
 
@@ -472,9 +479,9 @@ export function corpusExportOps(ce, q) {
   return {
     export: () => ce.exportManifest({ note: q("note") }),
     exportlog: () => ce.exportLog({ limit: q("limit") }),
-    /* T33-61 (J1 (3), (4)): one page of a carried table (R8), and a rendering for the stamped viewer (R10). */
+    /* T33-61 (J1 (3), (4)): one page of a carried table (R8), and a part of a rendering for the stamped viewer (R10, R14). */
     exportpage: () => ce.exportPage({ table: q("table"), index: q("index"), after: q("after") }),
-    exportrender: () => ce.exportRendering({ format: q("format"), viewer: q("viewer") }),
+    exportrender: () => ce.exportRendering({ format: q("format"), viewer: q("viewer"), part: q("part") }),
   };
 }
 
@@ -485,6 +492,10 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["note"], requires: [] } },
   exportlog: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.exportlog.label.group",
     fields: { accepts: ["limit"], requires: [] } },
+  /* R15 (fix round 6 G22): `part` joins the keys the arm reads; `viewer` is the door's stamp. */
+  exportrender: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "substrate",
+    description: localize("corpus-export.declared.exportrender", "renders the rows the viewer would be carried in one open format and logs the export; the bytes are already the record's (corpus-export R10)"),
+    fields: { accepts: ["format","part"], requires: ["format"] } },
 });
 
 const instances = new WeakMap();
