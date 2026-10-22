@@ -15,6 +15,7 @@ import { layerChain, appendStep, describeChain, checkChain, checkAnchor, applyCo
 import { getFormat, readingDialect, detectFormat } from "../formats.mjs";
 import { identify, doctypeFor, readText } from "../../../docprofile/registry.mjs";
 import { driveConvertStep } from "../drive.mjs";
+import { extractPdfRange } from "../pdfstructure.mjs";
 import { readingProvenance, describePages } from "./readingprov.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 
@@ -1209,10 +1210,10 @@ export function textWordsOfText(text, { html = false, budget } = {}) {
    R41 (G15): in this mode a text line or paragraph over CAPTURE_TEXT_UNIT_CAP is carried whole as consecutive units
    (extent `run` 0, 1, ...), never cut; a sheet whose text is over the cap is carried as blocks of whole rows. */
 export const PIECE_UNITS_MAX = 4096;
-/* G26 (fix round 6): a PDF is read in pieces by page ranges, `PDF_RANGE_PAGES` pages a piece (the format entry's
-   `structureRange`, pdf-reader), the cursor a page. A range's structures are dropped before the next is read, so a tick
+/* G26 (fix round 6): a PDF is read in pieces by page ranges, `PDF_RANGE_PAGES` pages a piece (pdf-reader's
+   `extractPdfRange`, R43), the cursor a page. A range's structures are dropped before the next is read, so a tick
    holds the bytes and one range, and the whole is one parse, not one per piece. */
-export const PDF_RANGE_PAGES = 150;
+export const PDF_RANGE_PAGES = 200;
 export const BARE_DIGEST = "BARE_DIGEST";
 export const CURSOR_MISMATCH = "CURSOR_MISMATCH";
 export const NOT_PIECEWISE = "NOT_PIECEWISE";
@@ -1410,6 +1411,7 @@ function cursorIn(cursor, { sha, shape, chars, n }) {
 function rangeCursorIn(cursor, { sha }) {
   if (cursor == null) return { from: 0, n: null };
   const c = unb64(cursor);
+  if (c && c.v === 1 && c.s === sha && c.k === "u") return { list: true };   /* a list cursor: this document is read whole, as the entry reads it */
   if (!c || c.v !== 1 || c.s !== sha || c.k !== "p" || !natural(c.i) || !natural(c.n) || c.i >= c.n)
     return refusal(CURSOR_MISMATCH, "reading-pipeline.index.bytes_not_held");
   return { from: c.i, n: c.n };
@@ -1997,11 +1999,17 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     let chain = null, ocrNote = null, tier2note = null, tier2PerPage = null, t3Wanting = false, aiRead = null, structMeta = null;
     let memberDown = false, ocrLeft = null, refusal = null;
     /* G26: in pieces mode a PDF is read by page ranges when its entry reads them. */
-    const ranged = piecesOn && typeof entry.structureRange === "function" ? rangeCursorIn(pieceAsk.cursor, { sha }) : null;
+    let ranged = piecesOn && fmt === "pdf" ? rangeCursorIn(pieceAsk.cursor, { sha }) : null;
     if (ranged && ranged.refused) return ranged;
+    if (ranged && ranged.list) ranged = null;
     try {
+      let st = null;
       if (ranged) {
-        const st = await entry.structureRange(bytes, { from: ranged.from, count: pieceAsk.rangePages });
+        st = await extractPdfRange(bytes, { from: ranged.from, count: pieceAsk.rangePages });
+        /* bytes the range reader does not open as a PDF with pages are the format entry's to judge, as a whole read judges them */
+        if (!st.ok || !(st.pages > 0)) ranged = null;
+      }
+      if (ranged) {
         bytes = null;
         if (st && st.ok && ranged.n !== null && st.pages !== ranged.n) return refuse(CURSOR_MISMATCH, "reading-pipeline.index.bytes_not_held");
         if (!(st && st.ok)) refusal = refusalOf(st);
