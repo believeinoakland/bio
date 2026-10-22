@@ -187,13 +187,6 @@ export function eachLine(text, visit) {
   }
 }
 
-/** The non-empty lines of a text, each `{text, offset}` (offset of its first character in the text). */
-export function linesOf(text) {
-  const out = [];
-  eachLine(text, (x) => out.push(x));
-  return out;
-}
-
 /** The self-naming line `x` is, with the kinds it names, or null: a short line a `roster_words` pattern matches. */
 export function selfNamingLine(x, patterns) {
   if (words(x.text).length > TITLE_WORDS) return null;
