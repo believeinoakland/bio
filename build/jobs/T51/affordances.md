@@ -289,3 +289,23 @@ Checks: format 0 failures; architecture (affordances) 0; words (affordances) 0; 
 Reported to BOB: nothing further in other modules beyond the words-reads gap above. Earlier reds (op-grades words, coverage in other modules, case-authoring reload architecture) are not in this module.
 
 Size (session_01Di1UCztSNBX62o6BkJqmb3): test runs 9, module lines 2806
+
+## J22 · COMPLETE
+
+COMPLETE (E14 · T51 fix round 5, affordances #43). Commits 3e229c1c8a and the one after it on job/T51/affordances.
+
+Cause (proven): `events` registers as a connection owner in `events.start()` (events/index.mjs:229-233), which runs in the Durable Object; the Worker isolate that composes the door's answer never starts it, so `composedVocabularies()` (affordances/words.mjs, the `composed.has("events")` gate) left out the five events vocabularies. Lines, money and people register at load, so theirs appeared. Nothing in `events` is at fault; no QUESTION needed.
+
+Changed: affordances/facts.mjs `profileVocabularies` (store route `affordancevocab`) now also answers `events_vocabularies`, the five as the Durable Object composes them (the owner's registered words); affordances.mjs `vocabulariesFor` fills in, from a well-formed store answer, only the five keys the local isolate lacks; words.mjs exports `EVENTS_VOCABULARY_KEYS`. Both door arms use `vocabulariesFor`. New data only: nothing stored.
+
+Why missed: the Miniflare plane runs Worker and Durable Object in one isolate, so events is always started there (the same test through the Miniflare door was green); no test composed the door's answer in an isolate without events. Test gap fix: bio-plane/test/m/affordances/door-events.test.mjs composes `affordancesOp` in a Node process where events is imported and never started (asserted), over the real store (Durable Object in Miniflare).
+
+Failing-first: before the fix "AssertionError: event_kinds is in the door's answer" (red); after, 4 pass 0 fail. The Timeline screen over that answer: it reads exactly `vocabularies.event_kinds`, now present; a screen test is screens-investigate's (not my paths); I propose none further.
+
+Measurements: store answer carries 5 small vocabularies (no platform limit touched); no deploy.
+
+Suites: affordances 273 pass 0 fail; users: queue 210/0, screens-investigate 236/0 (impact lists 20 modules, I ran these two as the readers of the vocabularies; the others are untouched readers of the same unchanged keys). Checks: format 0 failures; architecture (affordances) 0; coverage 0 failures; words 0 (count unchanged); ownership 5 files, 0 failures.
+
+Requirement lines proposed (BOB writes): R39: "A vocabulary whose owner registers only in the Durable Object (events) is composed there and carried to the door by the store's `affordancevocab` answer (`events_vocabularies`), so the door's answer holds it whichever isolate composes it. Test: the door's answer, composed where events has not started, holds the five."
+
+Size (session_017j6mNDmHH2Noig5Jps6KXP): test runs 8, module lines 2828
