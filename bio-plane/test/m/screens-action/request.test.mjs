@@ -88,22 +88,22 @@ test("R4: the law it goes under is chosen among the laws the profile names for a
   const opts = p.doc.getElementById("req-law").querySelectorAll("option").map((o) => o.textContent);
   assert.deepEqual(opts, [W("screen.request.law.option", { citation: "Gov. Code § 7922.535(b)", window: W("screen.request.window.calendar", { n: "10" }) }),
     W("screen.request.law.option", { citation: "Mun. Code § 2.20.230", window: W("screen.request.window.business", { n: "3" }) })]);
-  await press(p, "actionlaws", { values: { "req-law": "1", "req-level": "city" } });
+  await press(p, "actionlaws", { values: { "req-law": "1" } });
   assert.deepEqual(last(p, "actionlaws").body, { target: ACTION_ID, laws: [{ level: "city", citation: "Mun. Code § 2.20.230" }] });
-  assert.ok(main(p).querySelector('a[href="/app/help-records"]'), "R9: help-records is reached from request");
+  assert.ok(main(p).querySelector(`a[href="/app/help-records/${ACTION_ID}"]`), "R9: help-records is reached from request, for this action's law");
   // the laws a member stated are `action`'s `governing_laws.laws` (actions R25), drawn above the choice
   const stated = main(p).querySelectorAll("section.cs-section").find((s) => s.textContent.includes(W("screen.request.step.law")));
   assert.ok(stated.querySelector(".cs-sheet").textContent.includes("Gov. Code § 7922.535(b)"));
 });
 
-test("R4, R8: 'Prepare the text' sends communicationprepare with the period, the form and the cost limit as fills; 'Approve this text' then follows", async () => {
+test("R4, R8: 'Prepare the text' sends communicationprepare with the period, the form and the cost limit, those the text names, as fills; 'Approve this text' then follows", async () => {
   let drafts = [];
   const p = await open(AT, { ...DATA_PLANE, filingsfor: () => ok(FILINGS(drafts)),
     communicationprepare: () => { drafts = [draft()]; return ok({ id: FILING, text: "We request the logs.", blanks: [] }); }, filingapprove: ok({}) });
   // the sentence about describing the records names the law's citation, which the record does not give: not drawn, never drawn short
   assert.doesNotMatch(text(p), /\{\w+\}/, "no placeholder is drawn");
   await press(p, "communicationprepare", { values: { "req-from": "2025-07-01", "req-to": "2026-06-30", "req-form": "spreadsheet", "req-cost": "$25",
-    "send-text-0": "We request the inspection logs." }, reason: "ready" });
+    "send-text-0": "We request the inspection logs for {{period}}, as a {{form}}, at no more than {{cost_limit}}." }, reason: "ready" });
   assert.deepEqual(last(p, "communicationprepare").body.fills, { period: "2025-07-01 – 2026-06-30", form: "spreadsheet", cost_limit: "$25" });
   assert.equal(last(p, "communicationprepare").body.action, ACTION_ID);
   assert.deepEqual(ops(p).filter((o) => o !== "actionlaws"), ["filingapprove"]);

@@ -96,12 +96,51 @@ export function kindsOf(cs, view, lower) {
   }).filter(Boolean);
 }
 
+/** C64-law (`jurisdictions` R95 to R97): the laws a records request can go under, as the profile's `records_laws` lists them, each with its
+ *  own first-request window: the `deadlines` rule its `response` names, never a guess. A law with no window of its own carries none. */
+export function recordsLawsOf(profiles) {
+  const v = profiles && profiles.view ? profiles.view : {};
+  const ds = Array.isArray(v.deadlines) ? v.deadlines : [];
+  return (Array.isArray(v.records_laws) ? v.records_laws : []).filter(function (l) { return l && typeof l.citation === "string" && l.citation; }).map(function (l) {
+    const d = typeof l.response === "string" ? ds.find(function (x) { return x && x.rule === l.response && x.applies_to === "records_request"; }) : null;
+    return { citation: l.citation, level: typeof l.level === "string" ? l.level : "", name: typeof l.name === "string" ? l.name : "",
+      rule: d ? d.rule : "", amount: d && d.amount ? d.amount : 0, count: d && d.count ? d.count : "", dcitation: d && d.citation ? d.citation : "" };
+  });
+}
+
+/** C64-law: the records law the action goes under, as a member stated it (`actions` R25's `governing_laws`) and the profile lists it with
+ *  its own window (as `recordsLawsOf` reads each); null when none is stated or the stated one is not one the profile lists (an older
+ *  action's). Self-contained: it is serialised beside the screen that names it. */
+export function chosenLawOf(action, profiles) {
+  const gl = action && action.governing_laws && typeof action.governing_laws === "object" ? action.governing_laws : {};
+  const stated = gl.state === "stated" && Array.isArray(gl.laws) ? gl.laws : [];
+  const v = profiles && profiles.view ? profiles.view : {};
+  const ds = Array.isArray(v.deadlines) ? v.deadlines : [];
+  const laws = Array.isArray(v.records_laws) ? v.records_laws : [];
+  for (const x of stated) {
+    const l = laws.find(function (y) { return y && typeof y.citation === "string" && y.citation === (x && x.citation); });
+    if (!l) continue;
+    const d = typeof l.response === "string" ? ds.find(function (z) { return z && z.rule === l.response && z.applies_to === "records_request"; }) : null;
+    return { citation: l.citation, level: typeof l.level === "string" ? l.level : "", name: typeof l.name === "string" ? l.name : "",
+      rule: d ? d.rule : "", amount: d && d.amount ? d.amount : 0, count: d && d.count ? d.count : "", dcitation: d && d.citation ? d.citation : "" };
+  }
+  return null;
+}
+
 /** C64-more: an office by its role and body, each once: an office named by its agency alone (role and body the same words) is
  *  drawn once, never "Office, Office". */
 export function officeLine(ad) {
   const parts = [ad && ad.role, ad && (ad.body || ad.organisation)].filter(function (x) { return typeof x === "string" && x.trim(); })
     .map(function (x) { return x.trim(); });
   return parts.filter(function (x, i) { return parts.findIndex(function (y) { return y.toLowerCase() === x.toLowerCase(); }) === i; }).join(", ");
+}
+
+/** C64-template: whether `templatesforaction` offers a template for the action's kind (a version, and no court petition); a read that did
+ *  not answer offers none (never claimed). */
+export function templateOffered(view) {
+  const t = view.data.templates;
+  const v = t && t.state === "ok" && t.value ? t.value : null;
+  return !!v && v.court_petition !== true && Array.isArray(v.versions) && v.versions.length > 0;
 }
 
 /** R21: "Sent with" and "In this matter", from `stakeatpreparation` (`filings` R62: `group_stake`, `matter_stake`) and the
@@ -182,7 +221,10 @@ export function sendSteps(cs, view, filings, o) {
   }
   if (step === "send") {
     // R3, R4, R8: the outward warning, then the member's record of the sending: the day, how, and the venue's number.
-    const how = req ? [1, 2, 3, 4].map(function (n) { return part("screen.request.howsend." + n); }).filter(Boolean) : [];
+    // C64-law: the city's own words (`howsend.3`: "the city can't send you updates") are not said of a request under the federal law
+    const fed = req && P.chosenLawOf ? (P.chosenLawOf(view.data.action && view.data.action.state === "ok" ? view.data.action.value : null,
+      view.data.profiles && view.data.profiles.state === "ok" ? view.data.profiles.value : null) || {}).level === "federal" : false;
+    const how = req ? [1, 2, 3, 4].filter(function (n) { return !(fed && n === 3); }).map(function (n) { return part("screen.request.howsend." + n); }).filter(Boolean) : [];
     return wasReleased + (how.length ? cs.sec("screen.request.howsend", '<ol class="mk-list"><li>' + how.join("</li><li>") + "</li></ol>") : "")
       + '<div class="cs-dialog" role="group" aria-label="' + cs.w("screen.start-send.outward") + '">' + '<span class="cs-tag-outward">' + cs.w("screen.start-send.outward") + "</span>"
       + '<p class="ends">' + cs.w(req ? "screen.request.outward" : "screen.start-send.outward.says") + "</p>"
@@ -220,7 +262,8 @@ export function sendSteps(cs, view, filings, o) {
     + cs.field("req-cost", "screen.request.cost", { help: "screen.request.cost.help" }) : "";
   const text = cs.field("send-text-" + n, req ? "screen.request.text" : "screen.start-send.text", {
     area: true, rec: true, value: draft ? draft.text || "" : "", draft: label,
-    help: req ? "screen.request.text.help" : "screen.start-send.text.help" });
+    // C64-template: "drafted from your team's template" only where the kind offers one; else the plain "from your own words" help
+    help: req && P.templateOffered && P.templateOffered(view) ? "screen.request.text.help" : "screen.start-send.text.help" });
   // R49 (filings R25): each exhibit's grade against what the venue accepts; a flagged exhibit stops nothing, the approval stays
   const venueWords = function (e) {
     const state = e && e.venue && typeof e.venue === "object" ? e.venue.state : "";
@@ -288,11 +331,15 @@ export const PREPARE = Object.freeze({
     const body = { action: view.subject, purpose: view.ui.purpose || "request", text: text };
     if (view.parts.isRequest && view.parts.isRequest()) {
       const from = String(cs.value("req-from") || ""), to = String(cs.value("req-to") || ""), cost = String(cs.value("req-cost") || "").trim();
+      // C64-template: the plane refuses a fill the text has no blank for (`FILL_UNKNOWN_BLANK`), so a box is sent only where her text names
+      // its blank (`{{period}}`, `{{form}}`, `{{cost_limit}}`); a plain request names none and sends no fills
+      const named = {};
+      String(text).replace(/\{\{\s*([a-z][a-z0-9_]*)\s*\}\}/g, function (m, n) { named[n] = true; return m; });
       const fills = {};
-      if (from || to) fills.period = from + " – " + to;
+      if ((from || to) && named.period) fills.period = from + " – " + to;
       const form = cs.value("req-form");
-      if (form) fills.form = String(form);
-      if (cost) fills.cost_limit = cost;
+      if (form && named.form) fills.form = String(form);
+      if (cost && named.cost_limit) fills.cost_limit = cost;
       if (Object.keys(fills).length) body.fills = fills;
     }
     return { body: body };

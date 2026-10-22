@@ -4,7 +4,7 @@
    the member's act (a press), never by calling an act's done function; every sentence is read by its key (R19). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, ops, press, last, ok, W, D, DATA_PLANE, ROUTES, PLAN, PLAN_ID, DET, PROJECT, PROFILES, ACTION_ID } from "./page.mjs";
+import { open, main, text, ops, press, last, ok, W, D, DATA_PLANE, ROUTES, PLAN, PLAN_ID, DET, PROJECT, PROFILES, PROFILES_WITH_HELP, RECORDS_HELP, ACTION, ACTION_ID, FILINGS, draft, TEMPLATES } from "./page.mjs";
 
 const withPlan = (o) => ({ ...DATA_PLANE, plan: ok({ ...PLAN, ...o }) });
 const markBtn = (p, option, disposition) => main(p).querySelectorAll('button[data-act="optiondispose"]').find((b) => b.dataset.option === option && b.dataset.disposition === disposition);
@@ -102,4 +102,145 @@ test("R20 (C64-more): naming the same office again returns the first entry, whic
   await press(other, "entitycreate", { values: { "req-noff-name": OGIS, "req-noff-role": "FOIA Public Liaison", "req-noff-note": "x" } });
   await press(other, "actioncreate", { values: { "req-what": "C", "req-office": "0" }, reason: "x" });
   assert.notEqual(/entity_id: "([^"]+)"/.exec(last(other, "actioncreate").body.document)[1], firstId);
+});
+
+/* ---------- C64-template and C64-law: a federal request through its steps (the walker's, K4429) ---------- */
+
+const FED = "5 U.S.C. § 552";
+const FED_FIRST = "5 U.S.C. § 552(a)(6)(A)(i)";
+const FED_APPEAL = "5 U.S.C. § 552(a)(6)(A)(ii)";
+/* the profile as `profiles` answers it: the state's records law with its help block, the city's, and the federal Freedom of Information Act
+   (`jurisdictions` R95, R96, R97: each law names its own first-request window; the federal deadlines carry their words) */
+const FED_VIEW = (over = {}) => ({ ...PROFILES_WITH_HELP().view, ...over,
+  records_laws: [...PROFILES.view.records_laws, { level: "federal", name: "Freedom of Information Act", citation: FED, response: "foia_response" }],
+  deadlines: [...PROFILES.view.deadlines,
+    { rule: "foia_response", label: "answer to a first request", applies_to: "records_request", units: "days", amount: 20, count: "business", citation: FED_FIRST },
+    { rule: "foia_appeal_response", label: "decision on an appeal", applies_to: "records_request", units: "days", amount: 20, count: "business", citation: FED_APPEAL }] });
+const FED_PROFILES = ok({ ...PROFILES, view: FED_VIEW() });
+const lawsStated = (level, citation) => ({ state: "stated", laws: [{ level, citation }], by: "member:mai", at: "2026-10-01T09:00:00Z", stated: "x" });
+const SENT_ONLY = [{ ord: 1, direction: "sent", at: "2026-10-20", medium: "portal", party: "Office of Government Information Services", author: "member:mai" }];
+const FED_ACTION = { ...ACTION, addressee: { role: OGIS, body: OGIS, entity_id: "ENT-2026-9999999999999999" }, correspondence: SENT_ONLY, entries: [],
+  governing_laws: lawsStated("federal", FED), governing_laws_proposals: { proposals: [] },
+  clock: [{ text: "foia_response", description: "20 business days from received", date: "2026-11-19", basis: FED_FIRST, status: "pending" }] };
+const fedPlane = (over = {}) => ({ ...DATA_PLANE, action: ok(FED_ACTION), profiles: FED_PROFILES, filingsfor: ok(FILINGS([])), communicationprepare: ok({ id: "FIL-2026-cccccccccccccccc", text: "x" }), ...over });
+const REQUEST = `/app/request/${ACTION_ID}`;
+const said = (p, key, vars) => assert.ok(text(p).includes(W(key, vars)), key);
+const unsaid = (p, key, vars) => assert.ok(!text(p).includes(W(key, vars)), key);
+const optionTexts = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => o.textContent.replace(/\s+/g, " ").trim());
+
+test("R4, R9 (C64-law): the law picker lists the profile's records laws, each with its own first-request window, never the deadlines; the federal law goes with its level", async () => {
+  const p = await open(REQUEST, fedPlane({ actionlaws: ok({}) }));
+  const texts = optionTexts(p, "req-law");
+  assert.deepEqual(texts, [
+    `Gov. Code § 7922.535(b) · ${W("screen.request.window.calendar", { n: "10" })}`,
+    `Mun. Code § 2.20.230 · ${W("screen.request.window.business", { n: "3" })}`,
+    `${FED} · ${W("screen.request.window.business", { n: "20" })}`], "records_laws, not deadlines: the appeal and the other rules are not laws");
+  assert.ok(!texts.some((t) => t.includes(FED_APPEAL)));
+  await press(p, "actionlaws", { values: { "req-law": "2" } });
+  assert.deepEqual(last(p, "actionlaws").body, { target: ACTION_ID, laws: [{ level: "federal", citation: FED }] }, "the law's own level, not a default");
+  // control: a law with no window of its own is offered by its citation alone, never with a guessed window
+  const bare = await open(REQUEST, fedPlane({ profiles: ok({ ...PROFILES, view: { ...FED_VIEW(), records_laws: [{ level: "federal", name: "Freedom of Information Act", citation: FED }] } }) }));
+  assert.deepEqual(optionTexts(bare, "req-law"), [FED]);
+});
+
+test("R9 (C64-law): the help for a federal request names 5 U.S.C. § 552(a)(6)(A)(i) and its 20 business days, no state or city statute and no 'the city'; control: a California request keeps its statute and window", async () => {
+  const HELP = `/app/help-records/${ACTION_ID}`;
+  const p = await open(HELP, fedPlane());
+  const body = text(p);
+  assert.ok(body.includes(FED_FIRST), "the chosen law's own citation");
+  said(p, "screen.request.window.business", { n: "20" });
+  assert.ok(body.includes(W("screen.help-records.must.1", { days: "20", cite: FED_FIRST })));
+  for (const state of ["Gov. Code", "Mun. Code", "TRA §", RECORDS_HELP.law, "OpenDoor", "Testville Open Ordinance"]) assert.ok(!body.includes(state), `no ${state}`);
+  for (const key of ["screen.help-records.portal.2", "screen.help-records.faster", "screen.help-records.faster.when"]) unsaid(p, key);
+  assert.ok(!/\bcity\b/i.test(body.replace(W("screen.help-records.purpose"), "").replace(W("screen.help-records.title"), "")), "no 'the city' in the help's body");
+  // control: a request under the state's law keeps the state's help, its statute and its window
+  const ca = await open(HELP, fedPlane({ action: ok({ ...FED_ACTION, governing_laws: lawsStated("state", "Gov. Code § 7922.535(b)") }) }));
+  assert.ok(text(ca).includes(W("screen.help-records.must.1", { days: String(RECORDS_HELP.days), cite: RECORDS_HELP.citations.answer })));
+  assert.ok(text(ca).includes("TRA § 2"));
+  // control: opened for no action (no law is chosen) it is the place's help as before
+  const plain = await open("/app/help-records", fedPlane());
+  assert.ok(text(plain).includes(W("screen.help-records.must.1", { days: String(RECORDS_HELP.days), cite: RECORDS_HELP.citations.answer })));
+});
+
+test("R9 (C64-law): the request page's help link carries the action, so the help is for the law chosen", async () => {
+  const p = await open(REQUEST, fedPlane());
+  assert.ok(main(p).querySelector(`a[href="/app/help-records/${ACTION_ID}"]`), "the link names the action");
+});
+
+const APPROVED = FILINGS([draft({ approval: { approved_by: "member:mai", at: "x", sha: "s" } })]);
+
+test("R9 (C64-law): the send step and the reply form say nothing of 'the city' for a federal request; control: the state's law and an undetermined law keep their wording", async () => {
+  const fed = await open(REQUEST, fedPlane({ filingsfor: ok(APPROVED) }));
+  unsaid(fed, "screen.request.howsend.3");
+  said(fed, "screen.request.howsend.4");
+  const act = await open(`/app/action/${ACTION_ID}`, fedPlane());
+  const mediums = optionTexts(act, "reply-medium");
+  assert.ok(!mediums.includes(W("screen.action.reply.medium.portal")), "not 'The city's portal'");
+  assert.ok(mediums.includes("portal"), "the vocabulary's own token stands in for the portal");
+  for (const [law, drawn] of [[lawsStated("state", "Gov. Code § 7922.535(b)"), true], [lawsStated("city", "Mun. Code § 2.20.230"), true], [{ state: "undetermined" }, true]]) {
+    const q = await open(REQUEST, fedPlane({ action: ok({ ...FED_ACTION, governing_laws: law }), filingsfor: ok(APPROVED) }));
+    assert.equal(text(q).includes(W("screen.request.howsend.3")), drawn, JSON.stringify(law));
+    const r = await open(`/app/action/${ACTION_ID}`, fedPlane({ action: ok({ ...FED_ACTION, governing_laws: law }) }));
+    assert.ok(optionTexts(r, "reply-medium").includes(W("screen.action.reply.medium.portal")), JSON.stringify(law));
+  }
+});
+
+test("R9 (C64-law): the action's due dates name the kind in the profile's words, never a rule's code; an entry with no words of the profile's is not drawn as a code", async () => {
+  const p = await open(`/app/action/${ACTION_ID}`, fedPlane());
+  said(p, "screen.action.clock.pending");
+  assert.ok(text(p).includes("answer to a first request"), "the profile's label for foia_response");
+  assert.ok(!text(p).includes("foia_response"), "no raw code");
+  // a rule the profile gives no label: the entry's own description stands in, never the code
+  const nolabel = await open(`/app/action/${ACTION_ID}`, fedPlane({ profiles: ok({ ...PROFILES, view: { ...FED_VIEW(), deadlines: FED_VIEW().deadlines.map(({ label, ...d }) => d) } }) }));
+  assert.ok(!text(nolabel).includes("foia_response"));
+  assert.ok(text(nolabel).includes("20 business days from received"));
+  // control: an entry whose text is not a rule (a member's own) is drawn as written
+  const own = await open(`/app/action/${ACTION_ID}`, fedPlane({ action: ok({ ...FED_ACTION, clock: [{ text: "Reply to the clerk", description: "x", date: "2026-11-19", basis: "our note", status: "pending" }] }) }));
+  assert.ok(text(own).includes("Reply to the clerk"));
+});
+
+test("R3, R8 (C64-template): a typed plain request prepares: the period, form and cost are sent only where the text names those blanks; control: a text naming all three sends all three", async () => {
+  const p = await open(REQUEST, fedPlane());
+  const boxes = { "req-from": "2025-01-01", "req-to": "2025-12-31", "req-form": "pdf", "req-cost": "$25" };
+  await press(p, "communicationprepare", { values: { ...boxes, "send-text-0": "Please send me the inspection logs for the Oakland field office." }, reason: "ready" });
+  assert.equal(p.byOp("communicationprepare").length, 1, "prepared, not refused in place");
+  assert.ok(!("fills" in last(p, "communicationprepare").body), "no blank the text has: no fills");
+  const named = await open(REQUEST, fedPlane());
+  await press(named, "communicationprepare", { values: { ...boxes, "send-text-0": "Records for {{period}} in {{ form }}, up to {{cost_limit}}: the inspection logs." }, reason: "ready" });
+  assert.deepEqual(last(named, "communicationprepare").body.fills, { period: "2025-01-01 – 2025-12-31", form: "pdf", cost_limit: "$25" });
+  const some = await open(REQUEST, fedPlane());
+  await press(some, "communicationprepare", { values: { ...boxes, "send-text-0": "Records for {{period}}: the inspection logs." }, reason: "ready" });
+  assert.deepEqual(last(some, "communicationprepare").body.fills, { period: "2025-01-01 – 2025-12-31" }, "only the blank the text names");
+  // control: no text is still asked for
+  const empty = await open(REQUEST, fedPlane());
+  await press(empty, "communicationprepare", { values: boxes, reason: "ready" });
+  assert.equal(empty.byOp("communicationprepare").length, 0);
+  said(empty, "screen.start-send.text.needed");
+});
+
+test("R3, R8 (C64-template): when the kind holds no template the request says so in words and never 'Drafted from your team's template'; control: with a template offered it says that", async () => {
+  const none = await open(REQUEST, fedPlane({ templatesforaction: ok({ ...TEMPLATES, versions: [] }) }));
+  said(none, "screen.start-send.text.help");
+  unsaid(none, "screen.request.text.help");
+  const read = await open(REQUEST, fedPlane({ templatesforaction: ok({ ...TEMPLATES, versions: [], court_petition: true }) }));
+  unsaid(read, "screen.request.text.help");
+  const offered = await open(REQUEST, fedPlane({ templatesforaction: ok(TEMPLATES) }));
+  said(offered, "screen.request.text.help");
+  // a template that cannot be read is never claimed
+  const failed = await open(REQUEST, fedPlane({ templatesforaction: { status: 200, json: { ok: false, code: "NO_SUCH_ACTION" } } }));
+  unsaid(failed, "screen.request.text.help");
+});
+
+test("R16, R54, R4 (C64-law): 'Change the law…' on a records request lists the records laws and sends the chosen law's own level; a law that states no level asks for one; control: other kinds list their deadlines' laws as before", async () => {
+  const p = await open(`/app/action/${ACTION_ID}`, fedPlane({ actionlaws: ok({}) }));
+  assert.deepEqual(p.doc.getElementById("law-pick").querySelectorAll("option").map((o) => o.value), ["Gov. Code § 7922.535(b)", "Mun. Code § 2.20.230", FED], "records_laws, not the appeal's or any other rule's citation");
+  assert.equal(p.doc.getElementById("law-level"), null, "every law states its level: none is asked");
+  await press(p, "actionlaws", { values: { "law-pick": "Mun. Code § 2.20.230" } });
+  assert.deepEqual(last(p, "actionlaws").body.laws, [{ level: "city", citation: "Mun. Code § 2.20.230" }]);
+  const plain = await open(`/app/action/${ACTION_ID}`, fedPlane({ actionlaws: ok({}), profiles: ok({ ...PROFILES, view: { ...FED_VIEW(), records_laws: [{ citation: "Mun. Code § 2.20.230", response: "immediate_disclosure" }] } }) }));
+  assert.ok(plain.doc.getElementById("law-level"), "a law that states no level: the member's choice");
+  await press(plain, "actionlaws", { values: { "law-pick": "Mun. Code § 2.20.230", "law-level": "county" } });
+  assert.deepEqual(last(plain, "actionlaws").body.laws, [{ level: "county", citation: "Mun. Code § 2.20.230" }]);
+  const other = await open(`/app/action/${ACTION_ID}`, fedPlane({ action: ok({ ...FED_ACTION, kind: "public_comment" }), profiles: ok({ ...PROFILES, view: { ...FED_VIEW(), deadlines: [...FED_VIEW().deadlines, { rule: "agenda", applies_to: "public_comment", amount: 72, citation: "Open meetings law" }] } }) }));
+  assert.deepEqual(other.doc.getElementById("law-pick").querySelectorAll("option").map((o) => o.value), ["Open meetings law"]);
 });

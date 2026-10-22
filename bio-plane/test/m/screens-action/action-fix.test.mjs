@@ -113,8 +113,8 @@ test("R54 (E3): 'Change the law…' and 'Propose another law…' share one list 
   const label = main(p).querySelector('label[for="law-pick"]');
   assert.ok(label && label.textContent.includes(W("law.pick")), "its label is the pick key");
   assert.deepEqual(ops(p).filter((o) => o === "actionlaws" || o === "actionlawspropose"), ["actionlaws", "actionlawspropose"], "both acts, once each");
-  await press(p, "actionlaws", { values: { "law-pick": "Mun. Code § 2.20.230", "law-level": "city" } });
-  await press(p, "actionlawspropose", { values: { "law-pick": "Mun. Code § 2.20.230", "law-level": "city" } });
+  await press(p, "actionlaws", { values: { "law-pick": "Mun. Code § 2.20.230" } });
+  await press(p, "actionlawspropose", { values: { "law-pick": "Mun. Code § 2.20.230" } });
   for (const op of ["actionlaws", "actionlawspropose"]) {
     const b = last(p, op).body;
     assert.deepEqual(b, { target: ACTION_ID, laws: [{ level: "city", citation: "Mun. Code § 2.20.230" }] }, op);

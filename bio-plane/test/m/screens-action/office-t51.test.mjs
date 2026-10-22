@@ -55,7 +55,7 @@ test("R20 (C64): where requests go is sent as an email, a portal or an address b
   assert.equal(no.doc.getElementById("req-what"), null);
   assert.equal(main(no).querySelector('[data-named="1"]'), null);
   // control: no records law in the profile
-  const bare = await open(NEW, { ...PLANE, profiles: ok(PROFILES) });
+  const bare = await open(NEW, { ...PLANE, profiles: ok({ ...PROFILES, view: { ...PROFILES.view, records_laws: [] } }) });
   assert.equal(bare.doc.getElementById("req-noff-law"), null);
   await press(bare, "entitycreate", { values: { "req-noff-name": "Records Office", "req-noff-note": "x" } });
   assert.equal(Object.hasOwn(last(bare, "entitycreate").body, "law"), false);
