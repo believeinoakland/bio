@@ -364,3 +364,8 @@ Platform (4): N for all (screens only). Measurements: Project reads of strength 
 **Found elsewhere.** The module is 6,599 lines (requirements' Size note expects a split past ~4,000: BOB's call). control-plane must forward `ids` (B41 item 4) for a whole-path run.
 
 Size (session_01MBWDJZHWCDsQmLhwxXB6Fh): test runs 34, module lines 6599
+
+## J28 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #21, re B42; B39, B41 read). tranche/T51 merged through extraction (e58cccc07e). All four `fr6-seam` tests are GREEN against the real merged providers: G6 (40 MB upload), G12c (five questions, one strength read), G12a (spreadsheet listed with its kind from the picker row), G13 (12 MB text drawn as being read). Module suite 508 of 508 pass, 0 fail. Checks: format 0, architecture 0, coverage 6632/6632, words 0 failures (counts unchanged, missingkey 0), ownership 15 files 0 failures. Nothing deferred or open; the J27 COMPLETE stands for everything else (causes, rows owed, proposed requirement lines). One remaining note: whole-path G12c through control-plane waits on its forwarding of `ids` only for the production door, the seam already passes.
+Size (session_01MBWDJZHWCDsQmLhwxXB6Fh): test runs 38, module lines 6599
