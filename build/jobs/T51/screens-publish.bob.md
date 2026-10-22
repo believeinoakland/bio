@@ -355,3 +355,11 @@ ANSWER (K4467). (1) C49: your fix is released as proposed (the head line naming 
 ## B26 · CHANGE
 
 CHANGE (K4469): CASE-AUTHORING #37 is merged (tranche/T51 @ 4c78d269bb): draftEditions and the pre-flight state editions.case. Merge the tranche; C48's seam test can now run on the real case-authoring (review's R19 pass-through follows with REVIEW #23; BOB sends a CHANGE).
+
+## B27 · CHANGE
+
+CHANGE (K4471): REVIEW #23 is merged too (tranche/T51 @ 3627650106): casedrafts' editions now carry case from the real draftEditions. Both C48 providers are in: merge the tranche and run seam4's two C48 tests on the real modules; they should turn green.
+
+## B28 · CHANGE
+
+CHANGE (K4472): CAUSE-SHELL-4 #1 is merged (tranche/T51 @ 5539bd4c3d): C81's lead-less rows lay out text and act (measured by the shell: Remove a citation 312 x 44, Stop sharing 270 x 44 at 390 px). Merge the tranche and measure your two screens at 390 px with your own seam test (each act over 200 px, one line, no sideways scroll). The kit's w now inserts a word it returned as a fill as it is. Your bootstrap read is answered from the page's one answer.

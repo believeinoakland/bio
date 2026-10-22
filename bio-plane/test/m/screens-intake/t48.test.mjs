@@ -98,7 +98,8 @@ test("R19 an empty Set aside is not drawn; one that holds a row is; a failed rea
 
 test("R19 the held reads ask a bounded page, so the unfiltered read the walk saw stall is no longer asked for 200 rows with their archive listings", async () => {
   const p = await open("/app/held", { plane: FULL });
-  assert.deepEqual(p.byOp("heldcaptures").map((r) => r.query.limit), ['50', '50']);
+  /* the picker page, the set-aside list and the full fields of the rows drawn (C14), each bounded to the page */
+  assert.deepEqual(p.byOp("heldcaptures").map((r) => r.query.limit), ['50', '50', '50']);
 });
 
 test("R20 archive and open-file opened bare draw the shell's \"Nothing is here\" with the way back, never \"Name an archive\" or \"Name a file\"", async () => {
