@@ -152,16 +152,15 @@ test("R77 (E2): `owedwork` answers a `subresources` row by its session key as we
   assert.deepEqual(DECLARED_OPS.owedwork.fields, { accepts: ["sha"], requires: [] });
 });
 
-test("R78 (E10): every route the object serves answers the time it spent in the object, in a header the door turns into its `Server-Timing` metric; a stream's time is to its first byte", async () => {
+test("R78 (E10): every route the object serves answers `server-timing: object;dur=<ms>`, the time it spent on the route, on two routes; the body is the route's own and a value carried in is replaced", async () => {
   const x = await world(undefined, () => ({ ok: true, read: true }));
-  const res = await x.fetch(`/owedwork?cls=member&viewer=member:ann`);
-  const ms = res.headers.get("x-civicsmith-object-ms");
-  assert.match(ms, /^\d{1,7}$/, "whole milliseconds");
-  const slow = await x.s.fetch(new Request("http://do/owedwork?cls=member&viewer=member:ann", { headers: {} }));
-  assert.match(slow.headers.get("x-civicsmith-object-ms"), /^\d+$/);
-  /* control: the body is the route's own, unchanged */
-  assert.deepEqual((await res.json()).result, { ok: true, owed: {} });
-  /* a caller cannot set it: the object's own measure replaces any value carried in */
-  const forged = await x.s.fetch(new Request("http://do/owedwork?cls=member&viewer=member:ann", { headers: { "x-civicsmith-object-ms": "999999" } }));
-  assert.notEqual(forged.headers.get("x-civicsmith-object-ms"), "999999");
+  const shape = /^object;dur=\d{1,7}$/;
+  for (const path of ["/owedwork?cls=member&viewer=member:ann", "/owedwork?cls=admin&viewer=member:ann&sha=" + "d".repeat(64)]) {
+    const res = await x.s.fetch(new Request("http://do" + path, { headers: { "server-timing": "object;dur=999999" } }));
+    assert.match(res.headers.get("server-timing"), shape, path);
+    assert.notEqual(res.headers.get("server-timing"), "object;dur=999999");
+    assert.equal((await res.json()).result.ok, true, "the body is the route's own");
+  }
+  const other = await x.fetch("/ailimits?cls=member&viewer=member:ann");
+  assert.match(other.headers.get("server-timing"), shape, "a second kind of route");
 });
