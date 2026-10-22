@@ -486,3 +486,20 @@ control-plane re-completed for CHANGE B32/B33 (K4492, K4493): `deliverOwedRender
 **Seam:** plane's seam test (an owed render delivered by the alarm, filed under the shell's project, reading pending) is plane's and runs on this once plane calls it as `deliver`; the door's part is tested here.
 
 Size (session_01Gs7CrCGk5nXUSZpiDu6qAK): test runs 32, module lines 4,423
+
+## J25 · QUESTION
+
+Q1 · CONTROL-PLANE #47 · fix round 5 · two points I cannot settle inside control-plane's paths. My best reading is given; I carry on with it.
+
+**(a) "Read it" (`readheld`) and the OCR press: answering at once when the reading will not fit (E2, E6).**
+The door can tell, without a hop, how big the held whole is: the Worker has the evidence bucket, so `env.CAPTURES.head(<store>/captures/<sha>)` gives its size and a 5-byte range gives `%PDF-`. It cannot tell whether the caller may see the document: that gate (NO_HOME for an unseen home, READING_HELD) is extraction's, and answering "being read" from the door alone would tell a member that a large file with that digest exists in a project she cannot see.
+Best reading, and what I build: when the whole will not fit (R2 head: a PDF over 2 MB, or a capture over 20 MiB and under the 24 MiB ceiling), the door forwards `readheld` with `defer=1`; extraction's arm, after its own gates, answers `{ok: true, read: false, why: "READING_PENDING"}` without reading; the door then writes the `reading` entry down and answers at once. If extraction ignores `defer`, the press is read inline as today (nothing worse). For the OCR press (`pdfstructure&ocr=1`) the same: the door asks `reading&sha256=` as the member (sight is the reading's own redaction), and if the reading names unread pages and an OCR member is bound it writes the `ocr` entry and answers at once; otherwise it forwards, so every refusal stays the owner's.
+NEED from extraction (its job is running): `readheld`/`readheldfor` honour `defer=1` as above. Please send it to EXTRACTION #33 as a CHANGE, or tell me to build the door without the sight gate (not recommended: it is an existence oracle).
+
+**(b) E10 (ii), one call instead of two to five.**
+Measured on the real plane (Miniflare, a signed-in administrator, distinct `do-*` metrics in `Server-Timing`):
+`whoami` 1 (session), `projectlist` 2 (session, projectlist), `groupidentity` 3 (session, doorwindow, groupidentity), `bootstrap` 4 (session, doorwindow, bootstrap, bootstrapfacts), `queue` 2.
+Only `whoami` meets the plan's targets. The session read must come first because every stamp (`viewer`, `by`, `author`...) is built from it, and `admission.admit` judges the class, the capability and the re-ask window from it. Folding it into the op's own call means the object resolves the session and applies `admit` and the stamps itself: admission's pure judgement exported over a resolved session, a route in store-door/plane that does lookup, judgement and stamping in process, and this door sending the raw request there. That crosses admission, store-door and plane, and is a re-architecture of the door's front half, not a fold. A short-lived session cache in the Worker would be cheaper but delays a sign-out or a revocation by its lifetime: that is policy, Bob's.
+Options: (A) the object-side admission above, placed by BOB in admission, store-door and plane; I then re-point the door, and the hop test stays red by name until they merge. (B) not this round: the floor is recorded with its numbers (K4354: "what stays over the bar is recorded, never silent"); I do (i) and (iii) only. (C) a session cache, to Bob with its trade-off.
+Recommendation: B for the alpha (Bob's focus: efficient deployment), recording the numbers above. Until you answer I write the hop-count test to pin today's counts as ceilings (so no op gets worse) and name the targets in it.
+(i) is the part I do now: the door reads the object's own time from each answer's `server-timing: object;dur=<ms>` header and adds `in-<route>;dur=<ms>` beside `do-<route>`. PLANE #50 (merge 11) must send that header; tell it, or give me the name it uses.
