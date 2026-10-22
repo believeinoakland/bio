@@ -397,3 +397,7 @@ Merged `tranche/T51` (nothing of `screens-intake`'s files changed by it). **Root
 **Seam note (R-SEAM):** the screen's side of D3 is met against the answers the door's contract states; whether `promote`'s answer carries `reading_pending` depends on control-plane R123 (job 10); the test scripts that answer as R123 words it. Nothing deferred; nothing found in another module.
 
 Size (session_01SfzLLc62odCrKHhMBdRKdu): test runs 9, module lines 2441
+
+## J25 · COMPLETE
+
+COMPLETE (entry 12, R57). Root cause: capture.mjs doneAcquire/doneUpload and promoteDocument ignored reading_pending, so a pending capture or upload drew no word about the reading. Now drawn once under the result (address, existed, promotion, upload with or without a project), stand-in screen.document.text.unread.next; row owed screen.capture.reading.pending named in my record for later-ux.md. Failing-first t51-pending.test.mjs: 5 of 7 red before, 7 of 7 green after. screens-intake 265/265; screens-inquiry's 42 document tests pass; format, architecture, ownership 0 failures; coverage 56/56 mine (9 ids of other modules' in-flight jobs unnamed); words 0. Exact R57 line in the record. Depends on control-plane R123 for promote's reading_pending (scripted as R123 words it). Nothing deferred. Size (session_01SfzLLc62odCrKHhMBdRKdu): test runs 9, module lines 2441
