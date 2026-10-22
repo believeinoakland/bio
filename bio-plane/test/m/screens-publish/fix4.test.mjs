@@ -67,3 +67,24 @@ test("R73 C49 control: a project with one draft draws no draft head", async () =
   const p = await open(`/app/case-editor/${P}`, { plane: { casedrafts: ok({ ...TWO, drafts: TWO.drafts.slice(1) }), reviewcopy: copyOf } });
   assert.equal(main(p).querySelector("[data-draft-head]"), null);
 });
+
+/* ---------- C51: a key file loaded at the Sign step is a key the page has; the signed strings are told apart (R72, R78) ---------- */
+import { until, tick, signDialog } from "./fixtures.mjs";
+const KEYFILE = ["BIOKEY-RAW1", "bio-ratify", Buffer.from(new Uint8Array(32).fill(7)).toString("base64")].join(".");
+test("R72 R78 C51 once a key file is chosen the page no longer says this browser holds no key; its signed strings are listed apart from their labels; the progress line is a word, never its key", async () => {
+  const p = await open(CER);
+  tick(p, "ce-tie", "yes");
+  await press(p, "publish", { reason: "because" });
+  await until(p, () => p.doc.getElementById("ce-keyfile"));
+  assert.ok(p.doc.querySelector("[data-nokey]"), "before: no key held, none loaded");
+  p.doc.getElementById("ce-keyfile").files = [{ name: "bio-signing-key.txt", size: KEYFILE.length, text: async () => KEYFILE }];
+  p.fire(p.doc.getElementById("ce-keyfile"), "input");
+  await p.clock.tick(600);
+  await p.settle();
+  assert.equal(p.doc.querySelector("[data-nokey]"), null, "after: a key file is loaded, so the page does not say it holds none");
+  await press(p, "caseratify", { reason: "because" });
+  await until(p, () => signDialog(p));
+  const labels = [...signDialog(p).querySelectorAll("li b")].map((b) => b.textContent);
+  assert.ok(labels.length > 1 && labels.every((l) => /:\s*$/.test(l)), "each label ends in a separator before the string it labels");
+  assert.deepEqual(rawKeys(main(p)).filter((k) => k.includes("registering")), [], "no progress key drawn raw");
+});

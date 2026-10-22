@@ -467,20 +467,14 @@ export const PARTS = Object.freeze({
      member types only the passphrase; an unreadable or empty file is refused in the kit's word and nothing is asked of the device; with no
      file chosen the dialog is as it was. `{signed}` is the signer's answer, or `{refuse}` a word key. */
   sitSign: async function (cs, view, list) {
-    let file = "";
+    // R116 (interface-shell): the key file's text is handed to the signer with the statements, which asks only the passphrase
+    let keyFile;
     if (view.ui.keyHeld === false) {
       const k = await cs.keyFile("ce-keyfile");
-      if (k.ok) file = k.text;
+      if (k.ok) keyFile = k;
       else if (k.word !== "shell.keyfile.none") return { refuse: k.word };
     }
-    const sitting = cs.signer.sign(list);
-    if (file) {
-      // the kit draws its dialog once it has looked for a held key, and answers a second look after the first: when this one is
-      // answered the dialog is drawn, and its box is the one place a key file's text goes (interface-shell R40)
-      await cs.signer.held();
-      if (cs.value("cs-key-file") !== null) cs.fill("cs-key-file", file);
-    }
-    return { signed: await sitting };
+    return { signed: await (keyFile ? cs.signer.sign(list, { keyFile: keyFile }) : cs.signer.sign(list)) };
   },
 
   /* R2, R62 (fix round 3, C94): a comment's or acknowledgement's author: the name an outside reader was given by the grant, as it is;

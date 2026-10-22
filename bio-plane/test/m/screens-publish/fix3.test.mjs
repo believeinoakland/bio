@@ -215,8 +215,8 @@ test("R78 R72 C51 a key file chosen at the Sign step is loaded for the sitting (
   assert.ok(p.doc.getElementById("ce-keyfile"), "the Sign step offers the key file");
   chooseKey(p, KEYFILE);
   await press(p, "caseratify", { reason: R });
-  await until(p, () => signDialog(p) && p.doc.getElementById("cs-key-file").value);
-  assert.equal(p.doc.getElementById("cs-key-file").value, KEYFILE, "the dialog holds the file's text, loaded by the kit's helper");
+  await until(p, () => signDialog(p));
+  assert.ok(!p.doc.getElementById("cs-key-file"), "the signer was handed the file's text, so the dialog asks for no key box (interface-shell R116)");
   await p.click('[data-shell="dialog-yes"]');
   await until(p, () => count(p, "caseratify") > 0);
   const b = last(p, "caseratify").body;
@@ -230,7 +230,7 @@ test("R78 R72 C51 the key a file loaded is the one registered when the plane has
   await until(p, () => p.doc.getElementById("ce-keyfile"));
   chooseKey(p, KEYFILE);
   await press(p, "caseratify", { reason: R });
-  await until(p, () => signDialog(p) && p.doc.getElementById("cs-key-file").value);
+  await until(p, () => signDialog(p));
   await p.click('[data-shell="dialog-yes"]');
   await until(p, () => p.doc.querySelector("[data-nokey]"));
   await press(p, "signerregisterown", { reason: R });

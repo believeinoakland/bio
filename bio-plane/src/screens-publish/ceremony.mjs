@@ -369,7 +369,8 @@ export const CEREMONY = Object.freeze({
           })
           // R72 (fix round 3, C51): with no signing key in this browser, the key file the member made earlier is chosen here and loaded for
           // the sitting (`cs.keyFile`); a device that holds a key is not asked for one
-          + (ui.keyHeld === false ? cs.field("ce-keyfile", "shell.signer.loadfile", { type: "file", help: "shell.signer.load" }) : "")
+          + (ui.keyHeld === false ? cs.field("ce-keyfile", "shell.signer.loadfile", { type: "file", help: "shell.signer.load",
+            typing: function (cs2) { cs2.keyFile("ce-keyfile").then(function (k) { cs2.set("keyFileChosen", !!k.ok); }); } }) : "")
           // R12 (K3147, K3150): one button that follows the choice of when (interface-shell R49's `cs.choice` with `acts`).
           + '<div class="mk-acts">' + cs.choice("ce-when", "screen.ceremony.when", [["now", "screen.ceremony.when.now"], ["at", "screen.ceremony.when.at"]],
             { acts: { now: "caseratify", at: "publishat" }, act: { tone: "primary", icon: "signed" } }) + "</div>"
@@ -377,7 +378,7 @@ export const CEREMONY = Object.freeze({
       }
       // R45 (C4): the making of a signing key is offered as soon as the step is drawn when this browser holds none
       if (ui.keyHeld === undefined && !ui.keyAsked) { ui.keyAsked = true; cs.signer.held().then(function (h) { cs.set("keyHeld", !!(h && h.held)); }, function () { cs.set("keyHeld", true); }); }
-      if (ui.nokey || ui.keyHeld === false) sign += '<div class="cs-dialog" data-nokey><p>' + cs.w("signing.ceremony.nokey") + "</p>"
+      if (ui.nokey || (ui.keyHeld === false && !ui.keyFileChosen)) sign += '<div class="cs-dialog" data-nokey><p>' + cs.w("signing.ceremony.nokey") + "</p>"
         + cs.checks("ce-keep", "screen.ceremony.keep.legend", [["keep", "signing.ceremony.keepkey", false]])
         + '<div class="mk-acts">' + cs.act("signerregisterown", { tone: "primary" }) + "</div>" + P.said(view, "register") + "</div>";
       if (ui.notowner) sign += '<div class="cs-dialog" data-notowner><p>' + cs.w("signing.ceremony.notowner", { project: projectTitle, owners: ui.notowner.owners || "" }) + "</p>"
@@ -537,7 +538,7 @@ export const CEREMONY = Object.freeze({
         const doc = P.value(a);
         const list = doc && doc.ok !== false ? P.sitting(doc, pr) : null;
         if (!list) return { refuse: "screen.ceremony.sign.nodoc" };
-        const sat = await P.sitSign(cs, view, list.map(function (x) { return { label: x.kind + " " + x.id, bytes: P.bytes(x.text), namespace: x.namespace }; }));
+        const sat = await P.sitSign(cs, view, list.map(function (x) { return { label: x.kind + " " + x.id + ": ", bytes: P.bytes(x.text), namespace: x.namespace }; }));
         if (sat.refuse) return { refuse: sat.refuse };
         const signed = sat.signed;
         if (!signed || signed.ok !== true || !Array.isArray(signed.signatures) || signed.signatures.length !== list.length) return { refuse: "signing.ceremony.declined" };
@@ -572,7 +573,7 @@ export const CEREMONY = Object.freeze({
         const doc = P.value(a);
         const list = doc && doc.ok !== false ? P.sitting(doc, pr) : null;
         if (!list) return { refuse: "screen.ceremony.sign.nodoc" };
-        const sat = await P.sitSign(cs, view, list.map(function (x) { return { label: x.kind + " " + x.id, bytes: P.bytes(x.text), namespace: x.namespace }; }));
+        const sat = await P.sitSign(cs, view, list.map(function (x) { return { label: x.kind + " " + x.id + ": ", bytes: P.bytes(x.text), namespace: x.namespace }; }));
         if (sat.refuse) return { refuse: sat.refuse };
         const signed = sat.signed;
         if (!signed || signed.ok !== true || !Array.isArray(signed.signatures) || signed.signatures.length !== list.length) return { refuse: "signing.ceremony.declined" };
