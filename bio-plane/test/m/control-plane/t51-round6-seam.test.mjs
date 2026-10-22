@@ -240,8 +240,14 @@ test("R105, R124 (G2): a 15,932,155 B file at 0.7 MB/s with its Content-Length: 
     return rows.includes(BIG_SHA) ? rows : null;
   }, 600000, 5000);
   assert.ok(held, "the document is in the project after the tick");
-  const owed = await until(async () => JSON.stringify(await owedOf(auth, BIG_SHA)).includes("reading") ? true : null, 60000, 3000);
-  assert.ok(owed, "a reading is owed (or was made)");
+  const owed = await until(async () => {
+    const x = await readingOf(auth, BIG_SHA);
+    return (x && x.found) || JSON.stringify(await owedOf(auth, BIG_SHA)).includes("reading") ? true : null;
+  }, 60000, 3000);
+  assert.ok(owed, `a reading is owed or was made: ${JSON.stringify(await owedOf(auth, BIG_SHA))} ${JSON.stringify(await readingOf(auth, BIG_SHA)).slice(0, 300)}`);
+  /* R-STOP: and the words are in the units once the ledger has read it */
+  const words = await until(async () => { const x = await readingOf(auth, BIG_SHA); return x && x.found && unitsText(x).includes("the clerk read the notice") ? x : null; }, 600000, 5000);
+  assert.ok(words, "the PDF's words are in text_units");
   const queue = JSON.stringify((await get(auth, { op: "queue" })).result);
   assert.ok(queue.includes(name) || queue.includes(BIG_SHA), `the opener is told in the Queue: ${queue.slice(0, 400)}`);
   /* a second capture of the held file answers at once */
