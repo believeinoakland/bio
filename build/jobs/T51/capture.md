@@ -465,3 +465,20 @@ REPORT (CAPTURE #48, T51, fix round 6): the names of what capture publishes for 
 - `captureOf(ctx).fetchesDone({after, limit})` -> `{ok: true, fetches: [{session, document, opener, project, at, cursor}], limit, truncated, next}`, oldest first by (`at`, `session`), at most `limit` (default 200, clamped 1..1000), `after` the `cursor` of an earlier row (as `taskEvents`); in process, no viewer (notice-producers sends to `opener` only). Never throws.
 - Assumed from acquisition (not yet merged): `notArchivesAmong(store, shas)` returns a Set of the digests acquisition has recorded as not archives, like `openedAmong`. If acquisition names it otherwise, tell me.
 - `openCaptures` stays acquisition's: capture passes its answer through unchanged, so a session with `fetch_pending` is listed as acquisition lists it.
+
+## Fix round 6 · CAPTURE #48 (B22)
+
+**Done** (commit e65bc0f3cd on `job/T51/capture`; `tranche/T51` merged).
+- **G6 (index.mjs `#pageFacts`)**: the row's `capture` is the document's whole. The register read orders `whole` rows first (provenance R72) when the column exists, and a capture that the document's own register document states as a part of a whole is replaced by that whole with its size; so `capture.sha256`, `bytes`, `actor`, `retrieved`, `grade` and `format` are the whole's. New data and data provenance's wake repair covers; a legacy bundle with no `parts` in its register document and no whole row cannot be told apart (R-OLD).
+- **G12d**: `#keptWholeBySize` is never true for a whole row or a stated part; a 40 MB row's `whole` is the store's answer under the whole's digest.
+- **G12a**: parts are never asked of the archive listing; digests in acquisition's `notArchivesAmong(store, shas)` (a Set) are dropped from the grouping; the picker row gains `format`. The call is guarded (`import * as acquisitionApi`), so until acquisition merges nothing is dropped.
+- **G2**: table `fetch_done`, `recordFetchDone`, `fetchesDone` (names posted as J21); `heldAt` check reads no body past 8 MiB (`HELD_AT_CHECK_MAX`): a declared length over it is not read at all, an undeclared one stops at it; the answer is `changed.state: "undetermined"` with `large: true` and `held` unchanged (I read "answers not held" as "not compared"). `openCaptures` stays acquisition's, passed through.
+- **G5**: `captureOp` relays a reader's deferral unchanged and answers a throwing or empty reading as 200 with the kept document, `reading_pending`, `sha` and `diag`, one `console.error`.
+
+**Failing first, red then green**: `r6-t51.test.mjs` (9 tests): red at the unchanged code (the whole not the part; `whole` from the store; no `recordFetchDone`; 100 MiB pulled; the throw reaching the door), green after. The G12a store-call test is red by name ("acquisition exports notArchivesAmong") until acquisition merges. Four old assertions of the picker's key set (fix2-t51, fix3-t51 x2, fix3b-t51) edited to state the new `format` field.
+
+**Proposed requirement lines** (BOB writes): R77 amend (the row's `capture` is the document's whole: register `whole` row first, else the whole its register document states; picker row also `format`; `whole` never from a part's size); R104 new (`recordFetchDone`/`fetchesDone`, table `fetch_done`); R105 new (`heldAt` check reads at most 8 MiB, `large: true`); R73 amend (a reading that fails after a kept acquire is a 200 deferral with `diag`). Word owed: none (diagnostics are identifiers).
+
+**Suites and checks**: capture + cap13 + d57: 266 tests, 265 pass, 1 fail (the by-name red). Users of the held rows and the act (83 files): 1050 tests, 0 fail. `checks/run.mjs`: architecture 0, coverage 6617/6617, words 0 (count unchanged), format 1 failure that is `build/plan/next.md:38` (BOB's). Ownership run before the commit.
+
+Size (session_01DvJ1NBRub48BYu8NPSwTbT): test runs 7, module lines 4390
