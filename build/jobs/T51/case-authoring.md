@@ -309,3 +309,7 @@ Size (session_01X7th4fji66ZEMRJSM5mv7n): test runs 14, module lines 2945
 - `checks/ownership.mjs … case-authoring origin/tranche/T51 job/T51/case-authoring`: 5 files changed, 0 failures.
 
 Size (session_01PS5Y7LHLvMrp9sBdyTmhiZ): test runs 9, module lines 2947
+
+## J18 · COMPLETE
+
+COMPLETE (B20, C48 R83 case). draftEditions and the pre-flight's editions state case (the case id of the unsigned preparation or latest published edition, else null): index.mjs draftEditions. Failing-first: reload.test.mjs walker's path (new-case draft, pre-flight first refusing, prepared, fresh instance, casedocument answers) red 10/10 on the reverted source, green after; control draft never prepared case null. Suite 226/226; review+screens-publish 320/322 pass (2 skipped), 0 fail; format, architecture, words, ownership 0 failures; coverage case-authoring 55/55. For BOB: J17's real-Store seam test imported plane (architecture refused it in my files), so I rewrote it on the module fixture (w.reload()); if you want the op-routing seam kept, it belongs in plane/test-support tests. R83's not-yet-met line is yours to clear. Record: build/jobs/T51/case-authoring.md. Merge order: me first, then review #23, then screens-publish.
