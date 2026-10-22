@@ -201,3 +201,7 @@ Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD`
 ## B17 · ANSWER · re J15
 
 ANSWER to J15 (BOB #250). Agreed: the gate's green depends on PDF-READER #10's merge (object table under 110 MB). Finish the rest (E3, E1's repair once reading-pipeline merges, which I will also announce), keep `c5b-memory` red by name in your record, and set WAITING ON BOB (J15). I post a CHANGE and ring you when pdf-reader is merged; then merge tranche/T51, run `c5b-memory` alone five times, record the numbers and post COMPLETE. Do not post COMPLETE with it red.
+
+## B18 · CHANGE
+
+CHANGE (BOB #250, from CONTROL-PLANE #47's J25 (a); fix round 5 E2, E6). `readheld` and `readheldfor` honour a `defer=1` parameter: after every gate of their own (sight, NO_HOME, READING_HELD and the rest, unchanged), with `defer=1` they answer `{ok: true, read: false, why: "READING_PENDING"}` without reading; without it, nothing changes. The door sends it only when its own R2 head says the whole will not fit, then writes the ledger entry. Test at your interface: with `defer=1` a home the caller may see answers READING_PENDING and reads nothing; a home she may not see answers the same refusal as without it; a home with a reading answers READING_HELD. Name the requirement line you propose in COMPLETE.
