@@ -33,6 +33,8 @@ A group that cannot leave can be held. This module exports the working corpus ve
 
 - **R10** `exportRendering({format, viewer})` answers, from the rows R7 would carry to that viewer and no others, one rendering: `ftm-event` (FollowTheMoney `Event` entities from `events`), `ocel2` (OCEL 2.0 events and objects from `events`), `popolo` (persons, organizations and memberships from `entities`, `lines` and `people`), `ftm-people` (FollowTheMoney `Person` and its relations from `people` and `lines`), `ftm` (FollowTheMoney entities and `Payment`s from `money`), `ocds` (OCDS releases from `money`) or `fdp` (a Fiscal Data Package from `money`). Every item carries the record id it renders and its citation; a field the record does not hold is omitted, never filled; a `never` table and a row the viewer may not see are never rendered; home addresses and phone numbers are never rendered (K1485). An unknown format is refused `EXPORT_FORMAT_UNKNOWN`. A rendering adds no fact and writes nothing, except one `export_log` row naming the format, as R1's.
 
+- **R13** *(not yet met: T51)* (fix round 4b, F3 verification; K4508; provenance R72, R73) **A capture held in parts verifies by its parts.** `exportManifest` and `verifyCorpusExport` treat a whole's row (provenance R73's `whole`) as an identity, verified by the concatenation of its parts' bytes, never as a file whose bytes must be handed apart; `render.mjs` likewise. Test: the bytes an exporter holds for a bundle held in parts verify, as they did before provenance R72.
+
 ## Private
 
 ### Uses
