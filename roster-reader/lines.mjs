@@ -15,7 +15,7 @@
  * two to four capitalised words that is not a person's name ("Grey Gardner" is a name; "Harbor Point" is
  * not, and both look alike) is. So nothing in this module asserts that a span IS a person: a span is
  * "name-shaped", and every reading built on one says so (R10). */
-import { vocabPatterns, vocabulary, vocabRegex, IN_PROSE, flatten } from "../docprofile/registry.mjs";
+import { vocabPatterns, vocabulary, vocabRegex, IN_PROSE } from "../docprofile/registry.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* A word that, opening or ending a span, makes it a phrase rather than a name: function words, the
@@ -167,30 +167,39 @@ export function rosterWordPatterns(ctx) {
    shorter than the sentence that mentions a roster in prose. */
 export const TITLE_WORDS = 8;
 
-/** The non-empty lines of a text, each `{text, offset}` (offset of its first character in the text). */
-export function linesOf(text) {
+/* A string made of one piece. A global replace leaves a chain of pieces behind (on node 26, ten times the
+   memory of the flat string it spells), and a line kept in a reading is kept for its whole life. */
+const flat = (s) => { if (s.length) s.charCodeAt(0); return s; };
+
+/** Calls `visit({text, offset})` for each non-empty line of a text, in order, one line at a time: nothing of the
+ *  lines is kept here, so a reader that counts and discards holds one line, however long the text (R1, R3). */
+export function eachLine(text, visit) {
   const raw = String(text || "");
-  const out = [];
   let at = 0;
-  for (const part of raw.split("\n")) {
-    const t = part.replace(/\r$/, "");
-    const lead = t.length - t.trimStart().length;
-    if (t.trim()) out.push({ text: t.trim().replace(/\s+/g, " "), offset: at + lead });
-    at += part.length + 1;
+  while (at <= raw.length) {
+    let end = raw.indexOf("\n", at);
+    if (end < 0) end = raw.length;
+    let part = raw.slice(at, end);
+    if (part.endsWith("\r")) part = part.slice(0, -1);
+    const t = part.trim();
+    if (t) visit({ text: flat(t.replace(/\s+/g, " ")), offset: at + part.length - part.trimStart().length });
+    at = end + 1;
   }
-  return out;
+}
+
+/** The self-naming line `x` is, with the kinds it names, or null: a short line a `roster_words` pattern matches. */
+export function selfNamingLine(x, patterns) {
+  if (words(x.text).length > TITLE_WORDS) return null;
+  const kinds = new Set();
+  for (const p of patterns) { p.re.lastIndex = 0; if (p.re.test(x.text)) for (const k of p.kinds) kinds.add(k); }
+  return kinds.size ? { ...x, kinds: [...kinds] } : null;
 }
 
 /** The lines that name the document as a roster or chart: short lines a `roster_words` pattern matches. */
 export function selfNamingLines(lines, patterns) {
   const out = [];
   if (!patterns.length) return out;
-  for (const x of lines) {
-    if (words(x.text).length > TITLE_WORDS) continue;
-    const kinds = new Set();
-    for (const p of patterns) { p.re.lastIndex = 0; if (p.re.test(x.text)) for (const k of p.kinds) kinds.add(k); }
-    if (kinds.size) out.push({ ...x, kinds: [...kinds] });
-  }
+  for (const x of lines) { const s = selfNamingLine(x, patterns); if (s) out.push(s); }
   return out;
 }
 
@@ -210,9 +219,15 @@ const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "
 export const DATE_IN_ROWS = new RegExp(`\\b${MONTH}\\.?\\s+\\d{1,2}\\b|\\b\\d{1,2}\\/\\d{1,2}\\/\\d{2,4}\\b`, "gi");
 const FULL_DATE = new RegExp(`\\b(${MONTH})\\.?\\s+(\\d{1,2}),?\\s+(\\d{4})\\b|\\b(\\d{1,2})[/.-](\\d{1,2})[/.-](\\d{2,4})\\b|\\b(${MONTH})\\.?,?\\s+(\\d{4})\\b`, "i");
 
-/** How many dates the document's rows carry (over flattened text, as staff_directory counts them). */
+/** How many dates the document's rows carry, as staff_directory counts them over the flattened text: the date
+ *  patterns take any run of white space where the flatten leaves one space, so the text is counted as it is,
+ *  not copied (R1). */
 export function datesIn(text) {
-  return (flatten(text).match(DATE_IN_ROWS) || []).length;
+  const re = new RegExp(DATE_IN_ROWS.source, DATE_IN_ROWS.flags);
+  const raw = String(text || "");
+  let n = 0;
+  while (re.exec(raw)) n++;
+  return n;
 }
 
 const pad = (n) => String(n).padStart(2, "0");
