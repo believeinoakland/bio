@@ -1486,13 +1486,14 @@ export async function bytesOf(evidence, doc) {
   const wholeSha = typeof (doc.capture && doc.capture.sha256) === "string" ? doc.capture.sha256 : null;
   const total = parts ? parts.reduce((n, p) => n + (Number.isFinite(p && p.bytes) ? p.bytes : 0), 0)
                       : (Number.isFinite(doc.capture && doc.capture.bytes) ? doc.capture.bytes : null);
-  /* R37: a whole the object cannot hold is never loaded, whatever else is held; the size it states is the store's when
-     the whole is held, else the capture's own. */
+  /* R37: a whole the object cannot hold is never loaded, whatever else is held; the size is the capture's own, else the
+     store's. */
   const tooBig = (size) => ({ bytes: null, failure: FAILURE_FINAL,
     why: word("reading-pipeline.why.capture_bytes_parts", { total: String(size), parts: String(parts ? parts.length : 1),
                                                               multipart_read_max: String(WHOLE_READ_MAX) }) });
   if (total !== null && total > WHOLE_READ_MAX) return tooBig(total);
-  const held = wholeSha ? await sizeHeld(evidence, wholeSha) : null;
+  /* the store is asked only when the document states no size */
+  const held = wholeSha && total === null ? await sizeHeld(evidence, wholeSha) : null;
   if (held !== null && held > WHOLE_READ_MAX) return tooBig(held);
   if (!parts) return { bytes: await whole(doc.capture.sha256) };
   /* R2 (T51 fix round 2, C5): the whole object held under the document's fingerprint is read first; parts are

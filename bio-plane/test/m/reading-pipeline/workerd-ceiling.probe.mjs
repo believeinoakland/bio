@@ -26,11 +26,11 @@ export default { async fetch(req, env) {
   if (u.pathname === "/idle") return Response.json({ ok: true });
   const f = u.searchParams.get("f"), size = Number(u.searchParams.get("size"));
   const evidence = { async get() { const r = await env.DISK.fetch("http://disk/" + f); return { arrayBuffer: () => r.arrayBuffer() }; },
-                     async head() { return { size }; } };
+                     async head() { return { size: 1 }; } };
   const document = { file: "x", locator: "https://a.example/x.pdf", retrieved: "2026-09-27T00:00:00Z",
     profile: { profiled_from_text: false, format: { format: "pdf", confidence: "certain", signals: [] } },
     provenance_chain: [{ who: "t", asserts: "served", via: "direct", bound: false }],
-    capture: { sha256: "a".repeat(64), bytes: size, content_type: "application/pdf", transport: { http_headers: [] } } };
+    capture: { sha256: "a".repeat(64), bytes: 1, content_type: "application/pdf", transport: { http_headers: [] } } };
   const made = await read(document, { evidence, env: {}, storeName: "bio", unitsBudget: Infinity });
   return Response.json({ ok: true, found: made.reading.found, failure: made.reading.failure ?? null, pages: made.reading.page_count, units: (made.text_units || []).length });
 } };`);

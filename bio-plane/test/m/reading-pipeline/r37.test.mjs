@@ -203,7 +203,7 @@ function heavy(size, calls) {
            get: async (k) => { calls.push(["get", k]); throw new Error("the whole must never be loaded"); } };
 }
 
-test("R37 (F10): a whole held over the largest the object can read is never loaded: the reading is `final`, states the size, and the store is asked its size only", async () => {
+test("R37 (F10): a whole held over the largest the object can read is never loaded: the reading is `final` and states the size, and the store is never asked for the bytes", async () => {
   const size = LIMIT + 5 * 1024 * 1024;
   const calls = [];
   const d = "f".repeat(64);
@@ -213,10 +213,10 @@ test("R37 (F10): a whole held over the largest the object can read is never load
   assert.ok(rd.basis.includes(String(size)), `the basis states the size: ${rd.basis}`);
   assert.ok(rd.basis.includes(String(LIMIT)), `and the limit: ${rd.basis}`);
   assert.ok(calls.every(([op]) => op === "head"), JSON.stringify(calls));
-  /* the store's size is the one believed over the document's own declared bytes */
-  const lied = (await read(pdfDoc(d, 1000), { evidence: heavy(size, []), env: {} })).reading;
-  assert.equal(lied.failure, "final");
-  assert.ok(lied.basis.includes(String(size)));
+  /* a document that states no size is judged by the store's */
+  const bare = (await read({ ...pdfDoc(d, 0), capture: { sha256: d, content_type: "application/pdf" } }, { evidence: heavy(size, []), env: {} })).reading;
+  assert.equal(bare.failure, "final");
+  assert.ok(bare.basis.includes(String(size)));
 });
 
 test("R37 (F10): a capture in parts whose bytes add up to more than the object can read is `final` at once, before any part is asked for; one that fits only waits (`transient`) while its whole is not held", async () => {
