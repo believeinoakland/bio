@@ -16,6 +16,13 @@
    leaves the entry for a later alarm, backed off from `PENDING_RETRY_MS` doubling to at most `PENDING_RETRY_MAX_MS` and going on
    at that rate. A second registration of the same entry re-arms it (no attempts, due now), a final one too.
 
+   THE RUN IS COUNTED BEFORE IT HAPPENS (fix round 5, E2; K4530). An owner that kills the isolate (memory, CPU) never returns, so the
+   ledger cannot learn of it from an answer. A row is stamped `started_at`, its try counted and its back-off set, before its owner
+   runs; every answer clears `started_at`. A row found started and not finished at a later tick, by an isolate that is not running
+   it, is an interrupted run: it is counted in `interrupted`, which a re-registration keeps, and the third ends it, stated. A tick
+   runs the light kinds (`subresources`, `unpack`) and at most one heavy row (`keep`, `reading`, `ocr`), so one document's read
+   never holds the object that answers every screen for the length of three.
+
    Lower modules cannot import this one (it is last in the order), so they are handed the registration at composition, as they
    are handed `cap.waitUntil`: `captureOf(ctx).keepLater({sha, parts})` and `.owedLater({kind, sha, session?, parts?, detail?})`, async, writing
    the entry and arming the alarm in one step and never throwing. The door's deferred reading arrives by the store-internal
@@ -27,20 +34,25 @@ import { extractionOf } from "../extraction/index.mjs";
 import { acquisitionOf, owedRun } from "../acquisition/index.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { schedulerOf } from "../scheduler/index.mjs";
+import { localize } from "../setup-words/index.mjs";
 
 export const KEEPS_PENDING_DDL = `CREATE TABLE IF NOT EXISTS keeps_pending (
   sha TEXT NOT NULL, kind TEXT NOT NULL, parts TEXT NOT NULL DEFAULT '[]', detail TEXT NOT NULL DEFAULT '{}',
   attempts INTEGER NOT NULL DEFAULT 0, registered_at INTEGER NOT NULL, due_at INTEGER NOT NULL, last_try INTEGER, last_why TEXT,
-  final_why TEXT, PRIMARY KEY (sha, kind))`;
+  final_why TEXT, started_at INTEGER, interrupted INTEGER NOT NULL DEFAULT 0, last_ms INTEGER, last_mem INTEGER, PRIMARY KEY (sha, kind))`;
 export const PENDING_NAME = "pending-work";
 export const PENDING_KINDS = Object.freeze(["keep", "reading", "ocr", "subresources", "unpack"]);
 export const PENDING_RETRY_MS = 15_000;
 export const PENDING_RETRY_MAX_MS = 3_600_000;
 export const PENDING_BATCH = 3;
+export const PENDING_INTERRUPTED_MAX = 3;
+const HEAVY = Object.freeze(["keep", "reading", "ocr"]);
 
 const DIGEST = /^[0-9a-f]{64}$/;
 const HOLDERS = new WeakMap();
 const why = (e) => String(e && e.message || e).slice(0, 160);
+const interruptedWhy = () => localize("plane.pending.interrupted", "the reading did not finish; the object stopped");
+const memory = () => { try { const m = globalThis.process && typeof globalThis.process.memoryUsage === "function" ? globalThis.process.memoryUsage() : null; return m ? Math.round(m.rss || m.heapUsed || 0) : null; } catch { return null; } };
 const RANK = { keep: 0, reading: 1, ocr: 2, subresources: 3, unpack: 4 };
 const json = (v, otherwise) => { try { const o = JSON.parse(v); return o && typeof o === "object" ? o : otherwise; } catch { return otherwise; } };
 
@@ -68,14 +80,15 @@ export function pendingOf(ctx, deps = {}) {
                      attempts=0, due_at=?, final_why=NULL WHERE sha=? AND kind=?`,
                   JSON.stringify(parts), JSON.stringify(parts), JSON.stringify(detail), JSON.stringify(detail), at, sha, kind);
   };
+  /* `row.attempts` already holds this run's try (`stamp`); the run's end clears `started_at` and notes how long it took and the memory marker */
+  const ended = (row) => `started_at=NULL, last_ms=${Math.max(0, Math.round(now() - (row.started_at ?? now())))}, last_mem=${memory() ?? "NULL"}`;
   const attempt = (row, at, because) => {
-    const n = row.attempts + 1;
-    sql.exec(`UPDATE keeps_pending SET attempts=?, last_try=?, due_at=?, last_why=? WHERE sha=? AND kind=?`, n, at, at + backoff(n), because, row.sha, row.kind);
+    sql.exec(`UPDATE keeps_pending SET ${ended(row)}, last_try=?, due_at=?, last_why=? WHERE sha=? AND kind=?`, at, at + backoff(row.attempts), because, row.sha, row.kind);
     return "retried";
   };
   const end = (row) => { sql.exec(`DELETE FROM keeps_pending WHERE sha=? AND kind=?`, row.sha, row.kind); return "finished"; };
   const stop = (row, at, because) => {
-    sql.exec(`UPDATE keeps_pending SET final_why=?, last_try=?, last_why=? WHERE sha=? AND kind=?`, because, at, because, row.sha, row.kind);
+    sql.exec(`UPDATE keeps_pending SET ${ended(row)}, final_why=?, last_try=?, last_why=? WHERE sha=? AND kind=?`, because, at, because, row.sha, row.kind);
     return "final";
   };
   const live = () => all(`SELECT * FROM keeps_pending WHERE final_why IS NULL`)
@@ -86,7 +99,7 @@ export function pendingOf(ctx, deps = {}) {
   const settle = (row, at, r) => {
     if (r && (r.final === true || r.failure === "final")) return stop(row, at, String(r.why || r.reason || r.code || "FINAL").slice(0, 160));
     if (r && r.ok === true && r.more === true) {
-      sql.exec(`UPDATE keeps_pending SET detail=?, attempts=0, due_at=?, last_try=?, last_why=NULL WHERE sha=? AND kind=?`,
+      sql.exec(`UPDATE keeps_pending SET ${ended(row)}, detail=?, attempts=0, due_at=?, last_try=?, last_why=NULL WHERE sha=? AND kind=?`,
                JSON.stringify(r.detail && typeof r.detail === "object" ? r.detail : json(row.detail, {})), at, at, row.sha, row.kind);
       return "retried";
     }
@@ -95,7 +108,7 @@ export function pendingOf(ctx, deps = {}) {
          down) and a reading whose own failure was transient wait their back-off. A reading that left pages of a scan unread owes an `ocr`
          entry besides, and keeps its own until the next call finds the reading held. */
       if (row.kind === "ocr" && r.read === true) {
-        sql.exec(`UPDATE keeps_pending SET attempts=0, due_at=?, last_try=?, last_why=NULL WHERE sha=? AND kind=?`, at, at, row.sha, row.kind);
+        sql.exec(`UPDATE keeps_pending SET ${ended(row)}, attempts=0, due_at=?, last_try=?, last_why=NULL WHERE sha=? AND kind=?`, at, at, row.sha, row.kind);
         return "retried";
       }
       if (row.kind !== "ocr" && r.read === true) put(row.sha, "ocr", [], {});
@@ -103,6 +116,25 @@ export function pendingOf(ctx, deps = {}) {
     }
     if (r && r.ok === true && (r.read === true || r.done === true || r.why === "READING_HELD")) return end(row);
     return attempt(row, at, String(r && (r.why || r.code || r.reason) || "NOT_DONE"));
+  };
+  /* the rows this isolate is running now: a row stamped started that is not among them was started by an isolate that is gone */
+  const running = new Set();
+  const keyOf = (row) => `${row.kind}\u0000${row.sha}`;
+  /* the run is counted before it happens: started, one more try, and the back-off it will be first again after */
+  const stamp = (row, at) => {
+    const n = row.attempts + 1;
+    sql.exec(`UPDATE keeps_pending SET started_at=?, attempts=?, last_try=?, due_at=? WHERE sha=? AND kind=?`, at, n, at, at + backoff(n), row.sha, row.kind);
+    return { ...row, attempts: n, started_at: at, last_try: at };
+  };
+  /* a row found started by an isolate that is gone: an interrupted run, counted; the third ends it, stated */
+  const startedRows = () => all(`SELECT * FROM keeps_pending WHERE final_why IS NULL AND started_at IS NOT NULL`).filter((r) => !running.has(keyOf(r)));
+  const reapInterrupted = () => {
+    for (const row of startedRows()) {
+      const n = row.interrupted + 1;
+      if (n >= PENDING_INTERRUPTED_MAX)
+        sql.exec(`UPDATE keeps_pending SET interrupted=?, started_at=NULL, final_why=?, last_why=? WHERE sha=? AND kind=?`, n, interruptedWhy(), interruptedWhy(), row.sha, row.kind);
+      else sql.exec(`UPDATE keeps_pending SET interrupted=?, started_at=NULL, last_why=? WHERE sha=? AND kind=?`, n, "OBJECT_STOPPED", row.sha, row.kind);
+    }
   };
   const call = async (fn) => { try { return await fn(); } catch (e) { return { ok: false, reason: why(e) }; } };
 
@@ -120,7 +152,7 @@ export function pendingOf(ctx, deps = {}) {
       /* the whole is held: the keep ends and the reading it owes is entered, then asked for in this same tick */
       end(row);
       put(row.sha, "reading", [], {});
-      const reading = all(`SELECT * FROM keeps_pending WHERE sha=? AND kind='reading'`, row.sha)[0];
+      const reading = stamp(all(`SELECT * FROM keeps_pending WHERE sha=? AND kind='reading'`, row.sha)[0], at);
       return await readNow(reading, at);
     },
     subresources: async (row, at) => {
@@ -156,10 +188,14 @@ export function pendingOf(ctx, deps = {}) {
       return attempt(row, at, `STATUS_${status}`);
     },
   };
-  const run = async (row, at) => {
-    const w = deps.workers && deps.workers[row.kind];
-    if (typeof w === "function") return settle(row, at, await call(() => w({ ...row, parts: json(row.parts, []), detail: json(row.detail, {}) }, { at })));
-    return await owner[row.kind](row, at);
+  const run = async (row0, at) => {
+    const row = stamp(row0, at);
+    running.add(keyOf(row));
+    try {
+      const w = deps.workers && deps.workers[row.kind];
+      if (typeof w === "function") return settle(row, at, await call(() => w({ ...row, parts: json(row.parts, []), detail: json(row.detail, {}) }, { at })));
+      return await owner[row.kind](row, at);
+    } finally { running.delete(keyOf(row)); }
   };
 
   h = {
@@ -175,6 +211,10 @@ export function pendingOf(ctx, deps = {}) {
                   SELECT sha, kind, parts, 0, registered_at, ?, last_try, last_why FROM keeps_pending_old`, at);
         sql.exec(`DROP TABLE keeps_pending_old`);
       } else sql.exec(KEEPS_PENDING_DDL);
+      /* fix round 5: the run's accounting; a ledger of the round before gains the columns and its rows start with none */
+      const have = all(`PRAGMA table_info(keeps_pending)`).map((c) => c.name);
+      for (const [col, def] of [["started_at", "INTEGER"], ["interrupted", "INTEGER NOT NULL DEFAULT 0"], ["last_ms", "INTEGER"], ["last_mem", "INTEGER"]])
+        if (!have.includes(col)) sql.exec(`ALTER TABLE keeps_pending ADD COLUMN ${col} ${def}`);
     },
     /** R77: owed work, whatever its kind. `parts` (a keep) and `detail` (a cursor, a session's key) are the owner's. */
     async owe({ kind, sha, session, parts, detail } = {}) {
@@ -203,7 +243,8 @@ export function pendingOf(ctx, deps = {}) {
       const rows = sha === undefined ? all(`SELECT * FROM keeps_pending`) : all(`SELECT * FROM keeps_pending WHERE sha=?`, sha);
       return rows.sort((a, b) => a.registered_at - b.registered_at || (a.sha < b.sha ? -1 : a.sha > b.sha ? 1 : RANK[a.kind] - RANK[b.kind]))
         .map((r) => ({ sha: r.sha, kind: r.kind, state: r.final_why === null ? "owed" : "final", attempts: r.attempts, registered_at: r.registered_at,
-                       next_try: r.final_why === null ? r.due_at : null, last_try: r.last_try, why: r.final_why ?? r.last_why, detail: json(r.detail, {}) }));
+                       next_try: r.final_why === null ? r.due_at : null, last_try: r.last_try, why: r.final_why ?? r.last_why, detail: json(r.detail, {}),
+                       interrupted: r.interrupted, running: r.started_at !== null && running.has(keyOf(r)), last_ms: r.last_ms, last_mem: r.last_mem }));
     },
     /** counts for each kind and state, with no digest: what a member's diagnosis may see */
     summary() {
@@ -215,11 +256,20 @@ export function pendingOf(ctx, deps = {}) {
     consumer() {
       return {
         name: PENDING_NAME, key: "pendingwork",
-        due: (at) => { const n = next(); return n !== null && n <= at ? at : null; },
-        wake: (at) => { const n = next(); return n === null ? null : Math.max(n, at); },
+        /* a row found started by an isolate that is gone is reaped at the next alarm, not at its back-off. `wake` is the entry's own due
+           instant, never raised to "now": the scheduler holds a consumer whose wake, read after its tick, equals the one read before it and
+           is in the past (its R27, against a spin), so a wake clamped to the tick's instant looked unchanged after a pass that went on and
+           the entry, due again at once, waited for an arm outside a firing (fix round 5, B38). A pass that went on moves its due instant. */
+        due: (at) => { const n = next(); return (n !== null && n <= at) || startedRows().length ? at : null; },
+        wake: (at) => { const n = next(); return startedRows().length ? at : n; },
         tick: async (at) => {
           const out = { asked: 0, finished: 0, retried: 0, final: 0, results: [] };
-          for (const row of live().filter((r) => r.due_at <= at).slice(0, PENDING_BATCH)) {
+          reapInterrupted();
+          const due = live().filter((r) => r.due_at <= at);
+          /* the light kinds first, then one heavy row: a read that can starve the object is never followed by another in the same tick */
+          const light = due.filter((r) => !HEAVY.includes(r.kind)).slice(0, PENDING_BATCH);
+          const heavy = due.filter((r) => HEAVY.includes(r.kind)).slice(0, 1);
+          for (const row of [...light, ...heavy]) {
             out.asked++;
             const done = await run(row, at);
             out[done === "finished" ? "finished" : done === "final" ? "final" : "retried"]++;
@@ -242,8 +292,10 @@ export function pendingOps(holder, url) {
     owedwork: () => {
       const sha = url.searchParams.get("sha");
       if (sha === null) return { ok: true, owed: holder.summary() };
-      if (!DIGEST.test(sha)) return { ok: false, reason: "BAD_SHA" };
-      return { ok: true, sha, owed: holder.list({ sha }) };
+      if (DIGEST.test(sha)) return { ok: true, sha, owed: holder.list({ sha }) };
+      /* a `subresources` row is keyed by its capture session (R77): the key is read when a row of that kind holds it */
+      const owed = holder.list({ sha }).filter((e) => e.kind === "subresources");
+      return owed.length ? { ok: true, sha, owed } : { ok: false, reason: "BAD_SHA" };
     },
   };
 }

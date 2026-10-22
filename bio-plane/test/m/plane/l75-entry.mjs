@@ -44,6 +44,24 @@ export class Held extends Store {
       return json({ pending: pendingOf(ctx).list(), whole: !!(await ev.head(d)), alarm: await ctx.storage.getAlarm(), now: Date.now(),
                     readHeld: this.readHeldCalls });
     }
+    if (step === "hang") {
+      /* R77 (fix round 5, E2): an owner that never returns, as an isolate killed in the middle of a read; the test then ends this runtime */
+      const d = url.searchParams.get("sha");
+      extractionOf(ctx).readHeld = async (a) => { this.readHeldCalls.push({ ...a, at: Date.now() }); return new Promise(() => {}); };
+      return json({ owed: await pendingOf(ctx).owe({ kind: "reading", sha: d }), at: Date.now() });
+    }
+    if (step === "ocr") {
+      /* R77 (fix round 5, B38): an `ocr` entry due now whose passes take `ms` each (the OCR member's 24 pages), 3 passes; the times each pass began are read back */
+      const d = url.searchParams.get("sha"), ms = Number(url.searchParams.get("ms") || 2000);
+      this.passes = [];
+      extractionOf(ctx).readHeld = async (a) => {
+        this.passes.push(Date.now());
+        await new Promise((r) => setTimeout(r, ms));
+        return { ok: true, read: true, owed: this.passes.length < 3, why: this.passes.length < 3 ? "READING_HELD" : undefined };
+      };
+      return json({ owed: await pendingOf(ctx).owe({ kind: "ocr", sha: d }), at: Date.now() });
+    }
+    if (step === "passes") return json({ passes: this.passes || [], pending: pendingOf(ctx).list(), alarm: await ctx.storage.getAlarm(), now: Date.now() });
     if (step === "migrate-old") {
       /* R77: a ledger of the earlier shape (one row for each digest, five tries) carried over on workerd's storage */
       const sql = ctx.storage.sql;
