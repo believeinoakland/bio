@@ -1,6 +1,6 @@
 # csv-reader (T51)
 
-**Status** · session_01Wy8nnMT1rzDSVKrq9QgRXP · depth 2 · WORKING · handled B0
+**Status** · session_01Wy8nnMT1rzDSVKrq9QgRXP · depth 2 · WORKING · handled B2
 
 ## Completion
 
@@ -16,3 +16,18 @@
 ## J1 · COMPLETE
 
 csv-reader COMPLETE. Files: bio-plane/src/csv-reader/index.mjs (865 lines), bio-plane/test/m/csv-reader/ (6 test files + 3 helpers). Enter in modules.json: paths ["bio-plane/src/csv-reader/"], tests ["bio-plane/test/m/csv-reader/"]. R1-R15 met. Tests: csv-reader 39 pass; office-readers 126 pass unchanged. Checks (scratch checkout with the two fields entered): format, architecture, coverage 15/15, words, ownership all 0 failures. No deferral, REPORT or question; one wording observation on R8 in my record. Size: test runs 4, module lines 865.
+
+## Fix round 6, wave 2 (CSV-READER #2, session_01Wy8nnMT1rzDSVKrq9QgRXP): G15 `lineRows`
+
+- **Cause (rule 1).** A sheet's `text` is the TAB-joined non-empty records, one line each (`index.mjs` `addRecord`, `if (vals.length) lines.push(...)`), so a line's index is not its row: empty records add no line and a quoted line break makes one record several lines. No field said which row a line came from; READING-PIPELINE #22 could not split a sheet into row-range units naming true rows.
+- **Why the tests missed it (rule 2).** No requirement said a line must carry its row; the R5 test pinned the sheet's keys and text only. Gap fixed: the new proposed requirement R16 and its test file.
+- **Changed.** `bio-plane/src/csv-reader/index.mjs`: `csvText` builds `lineRows` beside `lines` (one entry per `\n`-separated line of the record's text, all of that record's 1-based row; a row is the record's number, as `cells` and `usedRows` count it), emitted on `sheets[0].lineRows` for the whole-file and the streamed path (same `addRecord`); helper `countLineBreaks`. The size-guard answer has no sheet, so no `lineRows`. `text.test.mjs` R5: the exact-shape assertion now includes `lineRows: [1, 2, 3, 5]`.
+- **Failing-first (rule 3), through the real entry `csvEntry.text`**, `bio-plane/test/m/csv-reader/line-rows.test.mjs`: (a) 122 records with empty lines, empty-field records and a quoted line break: `lineRows` equals the written rows, length = lines of `text`; (b) plain `a,b / c,d / e,f` gives `[1,2,3]`, an empty-only body `[]`; (c) a body over 20 MiB read in pieces (`cells: null`, `piecewise` present) with empty records and quoted line breaks: `lineRows` equals the written rows. **Red before the change** (all three: `lineRows` undefined, `TypeError`/`undefined` vs the expected arrays); **green after** (3 pass).
+  - Note on the START's "streamed 1 MB CSV": the module streams only over the 20 MiB bound (R6, R9); a 1 MB body takes the whole-file path. Both paths are tested; (c) is a streamed body of just over 20 MiB.
+- **Platform check (rule 4).** N.
+- **Stored data (R-OLD).** Computed at read time; no stored data changed. A stored reading from before has no `lineRows` (absent = unknown, as the plan says).
+- **Words.** No new sentence.
+- **Census ops.** None owned; accepted keys unchanged.
+- **Proposed requirement lines (BOB writes `build/requirements/csv-reader.md`).** **R16** (G15, K4579; amends R5, R8, R9) `text()`'s sheet carries `lineRows`: an array with one 1-based row number per line of `sheet.text` (lines split on `"\n"`), the same length as the lines, for the whole-file and the read-in-pieces paths alike. A row is the record's number as `cells` and `usedRows` count it; empty records add no line, and each line of a record whose quoted field holds a line break carries that record's row. `[]` when the text is empty. Where the size guard stops the read there is no sheet. Test: `line-rows.test.mjs`.
+- **Ran.** `node --test --test-force-exit bio-plane/test/m/csv-reader/` 42 pass, 0 fail; `.../office-readers/` 104 pass, 0 fail (unchanged; it does not import csv-reader). `node build/plan/impact.mjs tranche/T51 HEAD` names 119 modules through shared tables; nothing imports `csv-reader/index.mjs` yet (a later OFFICE-READERS job delegates to it), so no user of the changed service exists to run. `checks/run.mjs`: format 0, architecture 0, coverage 6619 of 6619 ids named, words 0 failures with dev 268 / unkeyed 1982 unchanged, channels 0. `checks/ownership.mjs ... csv-reader tranche/T51 job/T51/csv-reader`: 4 files changed, 0 failures. (The coverage check does not yet list R16, which BOB adds with the requirement; my tests name "R16 (proposed)" in their titles.)
+- Size (session_01Wy8nnMT1rzDSVKrq9QgRXP): test runs 8, module lines 884
