@@ -30,7 +30,7 @@ export const NONE = Object.freeze({
                 securityTools: () => ({ ok: true, tools: [] }) },
   provenance: { homeOf: () => null },
   /* R27 (G2): capture's fetch_done records */
-  capture: { fetchesDone: ({ after }) => ({ ok: true, done: [], cursor: after ?? null, truncated: false }) },
+  capture: { fetchesDone: () => ({ ok: true, fetches: [], limit: 200, truncated: false, next: null }) },
   /* R16 (ai-use R5, R9; ai-accounts R13), R17 (steps, question-explorer, investigation, review), T41 */
   aiUse: { exploreAsksPending: () => ({ ok: true, asks: [] }), limitsReached: () => ({ ok: true, reached: [] }) },
   steps: { laterFound: () => ({ ok: true, found: [] }), stepsDue: () => ({ ok: true, due: [] }),

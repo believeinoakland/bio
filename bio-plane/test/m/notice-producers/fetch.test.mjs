@@ -1,6 +1,6 @@
 /* R27 (proposed, G2, K4562): a large capture's background fetch, once delivered, is told once to the member who asked.
-   `capture`'s `fetch_done` record is read through a stand-in `capture` in the shape the QUESTION J2 publishes
-   (`fetchesDone({since, after, limit, viewer}) → {ok, done, cursor, truncated}`); the seam test over the real capture
+   `capture`'s `fetch_done` record is read through a stand-in `capture` in the shape capture publishes (B3)
+   (`fetchesDone({after, limit}) → {ok, fetches, limit, truncated, next}`); the seam test over the real capture
    waits for capture's merge and stays red by name below. */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -16,7 +16,7 @@ function setup(records, over = {}) {
   w.exec(`CREATE TABLE IF NOT EXISTS duties (duty_id TEXT, obligor TEXT)`);
   const asked = [];
   const capture = over.capture ?? {
-    fetchesDone: (a) => { asked.push(a); return { ok: true, done: records, cursor: null, truncated: false }; },
+    fetchesDone: (a) => { asked.push(a); return { ok: true, fetches: records, limit: 200, truncated: false, next: null }; },
   };
   const n = fresh(w.host, { membership: w.membership, capture });
   const { read } = reader(n);
@@ -49,12 +49,10 @@ test("R27: a member no longer active is told nothing, and the same session liste
   assert.deepEqual(items("m1"), []);
 });
 
-test("R27 R1: the read is the window's, as the viewer, in pages; a capture that throws or refuses contributes no item and is named in facts.failed", () => {
+test("R27 R1: the read is in pages, and a record older than 90 days is not told; a capture that throws or refuses contributes no item and is named in facts.failed", () => {
   const { read, asked } = setup([rec("s1", "m1")]);
   const r = read("m1", { now: Date.parse("2026-10-21T00:00:00Z") });
-  assert.equal(asked[0].since, Date.parse("2026-10-21T00:00:00Z") - FETCH_DONE_DAYS * 86_400_000);
-  assert.equal(asked[0].viewer, "member:m1");
-  assert.ok(asked[0].limit <= FETCH_DONE_MAX);
+  assert.ok(asked[0].limit <= FETCH_DONE_MAX && !("viewer" in asked[0]));
   assert.deepEqual(r.facts.fetch_done, { bound: FETCH_DONE_MAX, days: FETCH_DONE_DAYS, truncated: false });
   for (const capture of [{ fetchesDone: () => { throw new Error("x"); } }, { fetchesDone: () => ({ ok: false }) }]) {
     const bad = setup([], { capture }).read("m1", { now: Date.parse("2026-10-21T00:00:00Z") });
@@ -66,7 +64,12 @@ test("R27 R1: the read is the window's, as the viewer, in pages; a capture that 
 test("R27: seam over the real capture's fetch_done record (waits for capture's merge: red by name until then)", () => {
   const w = world({});
   w.exec(`CREATE TABLE IF NOT EXISTS duties (duty_id TEXT, obligor TEXT)`);
-  const n = fresh(w.host, { membership: w.membership });
+  const n = fresh(w.host, { membership: w.membership, capture: undefined });
   const r = reader(n).read("m1", { now: Date.parse("2026-10-21T00:00:00Z") });
   assert.ok(!r.facts.failed.includes("capture"), "capture publishes fetchesDone (QUESTION J2)");
+});
+
+test("R27: a record older than the 90-day window is told to nobody", () => {
+  const { items } = setup([rec("old", "member:m1", { at: "2026-06-01T00:00:00Z" })]);
+  assert.deepEqual(items("m1"), []);
 });
