@@ -1988,10 +1988,15 @@ export async function owedRun(cap, entry, opts = {}) {
       const b = out && out.body ? out.body : {};
       if (b.subresources_skipped) {
         const why = String(b.subresources_skipped.reason || "SKIPPED");
-        return why === "PRIMARY_UNREADABLE" ? { ok: true, done: false, reason: why } : { ok: true, done: true, final: true, reason: why };
+        if (why === "PRIMARY_UNREADABLE") return { ok: true, done: false, reason: why };
+        try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ }
+        return { ok: true, done: true, final: true, reason: why };
       }
       const left = b.snapshot && Number.isFinite(b.snapshot.outstanding) ? b.snapshot.outstanding : 0;
-      return left > 0 ? { ok: true, done: false, outstanding: left } : { ok: true, done: true };
+      if (left > 0) return { ok: true, done: false, outstanding: left };
+      /* capture keeps a session until it is dropped (K4489): the end of the work is a drop, whoever ended it */
+      try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ }
+      return { ok: true, done: true };
     } finally { stageEnd(t); }
   } catch (e) { return { ok: false, reason: "OWED_RUN_FAILED", detail: String(e && e.message || e).slice(0, 200) }; }
 }

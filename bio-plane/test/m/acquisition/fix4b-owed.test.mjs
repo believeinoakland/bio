@@ -64,6 +64,7 @@ test("R100 (F5): 120 supporting files with 30 deferred, 61 minutes later the ala
   } finally { net.restore(); }
   assert.ok(done, "the entry ends");
   assert.equal(w.store.state.sessions.has(sid), false, "the session is dropped when its work is done");
+  assert.ok(w.store.state.sessionDrops.includes(sid), "by dropCaptureSession, the only removal capture keeps (K4489)");
   const imgsFetched = fetched.filter((u) => /\/img\//.test(u));
   assert.equal(imgsFetched.length, 120, "every file was fetched");
   assert.equal(new Set(imgsFetched).size, 120, "none twice");
