@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { localize } from "../../../src/setup-words/index.mjs";
 import { fresh, bundle, bucket, withEntry, i2, doc, sha } from "./fixture.mjs";
+import { extractionOps } from "../../../src/extraction/index.mjs";
 
 const pdfEntry = (text) => ({ format: "pdf",
   detect: (b) => (b && b.length >= 5 && String.fromCharCode(...b.subarray(0, 5)) === "%PDF-" ? { format: "pdf", confidence: "certain", signals: [] } : null),
@@ -423,4 +424,45 @@ test("R90 R89 (G13, R-OLD): the start-up repair owes the ledger each text the in
   assert.deepEqual([last.read, last.more], [true, undefined]);
   assert.equal(old.w.x.unitsOf(old.d).state, "whole");
   assert.equal((await old.w.x.migrateRepairs()).examined, 0, "once");
+});
+
+/* ---- R76 amended (K4577): every unit of a capture read whole is reachable through op=reading, a page at a time ---- */
+
+const viaDoor = (w, d, viewer, after = null) => {
+  const q = new URLSearchParams({ sha256: d, store: "bio", viewer, ...(after === null ? {} : { after: String(after) }) });
+  return extractionOps(w.x, new URL(`http://x/reading?${q}`), null, {}).reading();
+};
+
+test("R76 R90 (G13): `op=reading` answers at most 4,096 units and `next`, the seq to ask after the page, null at the end; asking `after` it reaches every unit of a 9,000-unit text, each once, in order", async () => {
+  const { w, d } = await pieces({ pieceUnits: [3000, 3000, 3000], perUnit: 30 });
+  for (let i = 0; i < 3; i++) await w.x.readHeld({ sha: d, kind: "reading" });
+  const seen = [], pages = [];
+  let after = null, guard = 0;
+  do {
+    const page = viaDoor(w, d, "class:admin", after);
+    assert.equal(page.found, true);
+    assert.ok(page.text_units.length <= 4096, "a page is at most 4,096 units");
+    pages.push([page.text_units.length, page.next]);
+    for (const u of page.text_units) seen.push(u.extent.para);
+    after = page.next;
+  } while (after !== null && ++guard < 10);
+  assert.deepEqual(pages, [[4096, 4095], [4096, 8191], [808, null]]);
+  assert.deepEqual(seen, Array.from({ length: 9000 }, (_, i) => i), "every unit once, in reading order");
+  assert.match(viaDoor(w, d, "class:admin", 8191).text_units.map((u) => u.text).join(" "), /ENDMARKER/, "R-STOP: the last line is reached by paging");
+});
+
+test("R76 (control): a capture of at most 4,096 units is one page with `next` null; `after` past the end is an empty page; a malformed `after` asks from the start; a viewer refused the bundle gets no page", async () => {
+  const { w, d } = await pieces({ pieceUnits: [3, 3], perUnit: 30 });
+  await w.x.readHeld({ sha: d, kind: "reading" });
+  await w.x.readHeld({ sha: d, kind: "reading" });
+  const one = viaDoor(w, d, "class:admin");
+  assert.deepEqual([one.text_units.length, one.next], [6, null]);
+  const past = viaDoor(w, d, "class:admin", 99);
+  assert.deepEqual([past.text_units, past.next], [[], null]);
+  const url = new URL(`http://x/reading?sha256=${d}&store=bio&viewer=class%3Aadmin&after=abc`);
+  assert.equal(extractionOps(w.x, url, null, {}).reading().text_units.length, 6, "a malformed after is no page position");
+  w.s.sql.exec(`UPDATE bundles SET project='PROJ-9' WHERE bundle_id='INFO-1'`);
+  const hidden = viaDoor(w, d, "member:outsider", 0);
+  assert.equal("text_units" in hidden, false);
+  assert.equal("next" in hidden, false);
 });

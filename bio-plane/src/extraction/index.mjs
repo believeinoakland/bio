@@ -1255,7 +1255,7 @@ export class Extraction {
   /* ---- reading the record (R27–R30, R36, R37) ---- */
 
   /** R27 (`op=reading`): a request naming no digest answers R63's `noSha`. */
-  readingFor(captureSha, viewer = null) {
+  readingFor(captureSha, viewer = null, { after = null } = {}) {
     if (typeof captureSha !== "string" || !captureSha) return noSha("a reading is read by its capture sha256");
     const row = this.#one(
       `SELECT capture_sha, bundle_id, content_type, reader_version, found, entity_count, reading, at,
@@ -1268,7 +1268,7 @@ export class Extraction {
       const home = this.#provenance && typeof this.#provenance.homeOf === "function" ? this.#provenance.homeOf(captureSha) : null;
       const whole = home && typeof home.bundleId === "string" && !this.#storedDocument(home.bundleId, captureSha)
         ? this.#wholeOfPart(home.bundleId, captureSha) : null;
-      if (whole) return this.readingFor(whole, viewer);
+      if (whole) return this.readingFor(whole, viewer, { after });
     }
     if (!row) return { ok: true, found: false, capture_sha: captureSha, reading: null };
     let reading = safeJson(row.reading);
@@ -1278,8 +1278,11 @@ export class Extraction {
     /* R76 (T49; K3387): the capture's units as `unitsOf` (R36) answers them, withheld with the bundle (as R27's
        `unread_pages`); `[]` for a capture read and never indexed, absent only for a capture not read (R45). */
     const withheld = !!row.bundle_id && this.#redactor(viewer)(row.bundle_id) === null;
-    const text_units = withheld ? undefined
-      : this.unitsOf(row.capture_sha).units.map((u) => ({ extent: u.extent, reference: u.ref, text: u.text, truncated: u.truncated }));
+    /* (fix round 6, G13; R76 amended; BOB's K4577) at most 4,096 units an answer; `after` (a unit's `seq`) asks the page after it, and `next`
+       is the `seq` to ask after this one, null at the end, so every unit of a capture read whole is reachable here. */
+    const page = withheld ? null : this.unitsOf(row.capture_sha, { after: Number.isInteger(after) ? after : null });
+    const text_units = page ? page.units.map((u) => ({ extent: u.extent, reference: u.ref, text: u.text, truncated: u.truncated })) : undefined;
+    const next = page ? (page.next ?? null) : undefined;
     /* R77 (T51; K4103; amends R27): `bytes` is the stored size of the capture's original as the register holds it, absent
        when the register holds no row for it, and withheld with the bundle as `text_units` is (a bundle a viewer may not
        see names no size of its own). */
@@ -1316,7 +1319,7 @@ export class Extraction {
              /* R89 (fix round 6, G8): a reading that says the document was not read as text, and that no read has found nothing to
                 repair it by under this release, states it may be repaired (the member's press, "Read it", is offered for it). */
              ...(notReadAsText(reading) && !this.#repairTried(row.capture_sha) ? { repairable: true } : {}),
-             ...(text_units ? { text_units } : {}),
+             ...(text_units ? { text_units, next } : {}),
              ...(bytes === undefined ? {} : { bytes }),
              ...(format === undefined ? {} : { format }),
              ...(progress && !withheld ? progress : {}) };
@@ -1418,11 +1421,17 @@ export class Extraction {
 
   /** R36: the capture's indexed units in `seq` order, at most the unit bound, and the index's own state from its
    *  last write: `whole`, `partial` (with its counts and the named gaps), `none`, or null (never indexed). */
-  unitsOf(captureSha) {
+  unitsOf(captureSha, { after = null } = {}) {
     const st = this.#one(`SELECT * FROM capture_text_state WHERE capture_sha=?`, captureSha);
-    const units = this.#rows(
-      `SELECT extent, ref, text, truncated, seq, chain_kind FROM capture_text WHERE capture_sha=? ORDER BY seq LIMIT ?`,
-      captureSha, CAPTURE_TEXT_CAPTURE_UNIT_BOUND)
+    /* (fix round 6, G13; R76 amended) a page of at most CAPTURE_TEXT_CAPTURE_UNIT_BOUND units after the unit `after` (its `seq`; none:
+       from the first), and `next`, the `seq` to ask after the page when more units follow it. A text read whole in pieces holds more
+       than one page, and every unit of it is reachable by asking page by page. */
+    const from = Number.isInteger(after) ? after : -1;
+    const page = this.#rows(
+      `SELECT extent, ref, text, truncated, seq, chain_kind FROM capture_text WHERE capture_sha=? AND seq > ? ORDER BY seq LIMIT ?`,
+      captureSha, from, CAPTURE_TEXT_CAPTURE_UNIT_BOUND + 1);
+    const more = page.length > CAPTURE_TEXT_CAPTURE_UNIT_BOUND;
+    const units = page.slice(0, CAPTURE_TEXT_CAPTURE_UNIT_BOUND)
       .map((u) => ({ extent: safeJson(u.extent), ref: u.ref, text: u.text, truncated: !!u.truncated, seq: u.seq,
                      chain_kind: u.chain_kind }));
     const skipped = st ? this.#rows(
@@ -1432,6 +1441,7 @@ export class Extraction {
                      first: { extent: safeJson(k.first_extent), seq: k.first_seq },
                      last: { extent: safeJson(k.last_extent), seq: k.last_seq } })) : [];
     return { capture_sha: captureSha, units,
+             ...(more ? { next: units[units.length - 1].seq } : {}),
              state: st ? st.state : null,
              ...(st ? { counts: { offered: st.offered, written: st.written, over_bound: st.over_bound,
                                   unaddressable: st.unaddressable, truncated: st.truncated,
@@ -1716,7 +1726,14 @@ export class Extraction {
     const last = this.#one(`SELECT rowid AS n FROM reading_history WHERE capture_sha=? ORDER BY seq DESC LIMIT 1`, sha);
     if (last && Number(last.n) > Number(cutoff)) return m.after;
     if (!ev) return { waiting: localize("extraction.index.no_evidence_store_set_up", "your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again") };
-    const doc = this.#storedDocument(row.bundle_id, sha) || { capture: { sha256: sha } };
+    /* (fix round 6, G6; R39 there) a digest alone is no document: a bundle that holds none for this capture is given at least the size the
+       store holds the object at, as `readHeld` would give it, before the bytes are asked for. */
+    let doc = this.#storedDocument(row.bundle_id, sha);
+    if (!doc) {
+      let size = null;
+      try { const h = await ev.head(sha); size = h && Number.isFinite(h.size) && h.size > 0 ? h.size : null; } catch { size = null; }
+      doc = { capture: { sha256: sha, ...(size === null ? {} : { bytes: size }) } };
+    }
     const got = await bytesOf(ev, doc).catch(() => ({ bytes: null }));
     if (!got.bytes) return { waiting: "the capture's bytes are not held in the evidence store" };
     const entry = getFormat(m.format);
@@ -2291,7 +2308,7 @@ const isTranscriber = (t) => !!t && typeof t === "object" && typeof t.deployable
 export function extractionOps(x, url, body, env) {
   const q = (k) => url.searchParams.get(k);
   return {
-    reading: () => x.readingFor(q("sha256"), q("viewer")),
+    reading: () => x.readingFor(q("sha256"), q("viewer"), { after: q("after") !== null && /^(0|[1-9][0-9]*)$/.test(q("after")) ? Number(q("after")) : null }),
     readingref: () => x.documentsByReference(q("ref"), q("viewer"), q("limit")),
     textprovenance: () => x.transcribedDocuments({
       terminalStep: q("step"), transcribed: q("transcribed") == null ? null : q("transcribed") === "1",
