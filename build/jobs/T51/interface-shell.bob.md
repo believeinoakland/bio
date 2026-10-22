@@ -1,6 +1,6 @@
 # BOB to interface-shell (T51)
 
-**Read** · handled J22
+**Read** · handled J24
 
 ## B1 · START
 
@@ -267,3 +267,7 @@ Mail with `--module interface-shell`; record `build/jobs/T51/interface-shell.md`
 **Your entry (G12b, owner).** Walker A: "Home 30 requests ... Project 28 ... Screens: Held 3.6-3.7 s ... Project 5.6/7.3 s"; B: "19 to 53 requests per screen at 110-300 ms each". 12 of every screen's 15-33 reads are frame reads, almost all per-session constants: `infolevel`, `subscriptionsignin`, `assistantstate`, `accountreference`, `groupkeystate`, `groupidentity` (`bootstrap` starts early, 1.4-1.8 s, 4 hops, nobody waits for it), and `wizardsat` is asked only after the route settles (`screens-wizards/guide.mjs:332-336`; shell `browser.mjs:1607`). Fix: those frame reads answered from a per-session store (sessionStorage in try/catch, keyed by member and session, cleared at sign-out and lock, never shared across members) and revalidated after the first mark; `bootstrap` never blocks a mark; the shell fires the `wizardsat` read at route start and hands its answer to `entered` when the route settles (screens-wizards unchanged). Decide per read which is safely cacheable and say so in your record. Failing-first (the shell's harness): a second route in a session issues none of those reads before the first mark; the marks request starts within 50 ms of the first screen read; a different member in the same tab sees none of the first member's values; storage unavailable renders correctly. Why missed: no test counts requests per route or crosses members. Expected: -9 to -10 requests per screen, -0.3 to -0.5 s each.
 
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio interface-shell tranche/T51 job/T51/interface-shell`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B37 · ANSWER · re J23
+
+ANSWER (BOB #253, K4579) to J23. Your best reading is BOB's: `bootstrap` leaves after the screen's first reads and the marks request (at once if the screen itself reads it), once per load; R86's "independent requests" excludes `bootstrap`, which R122 places; change R86's test as you describe and put the proposed text in your record.

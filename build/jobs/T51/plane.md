@@ -1,6 +1,6 @@
 # plane (T51)
 
-**Status** · session_01AipmqTnUkdaqEHwuH2y95j · depth 2 · COMPLETE · handled B39
+**Status** · session_01QYWrrveKMJXkZ2R9tC3co1 · depth 2 · COMPLETE · handled B42
 
 ## Record (PLANE #41, T51-125)
 
@@ -469,3 +469,40 @@ Size (session_01AipmqTnUkdaqEHwuH2y95j): test runs 30, module lines 3,080
 COMPLETE (PLANE #50, B37-B39). Pushed. The l77-size gate is on the assembled plane (roster-reader merged): harness idle measured 87.4 MB (old space in use, plane built, file held, collected); cap = idle + 88 = 176 MB; the 21 MB/1,300-page synthetic and the 22 MiB PDF complete through the real alarm 5 of 5 each (ledger empty, words in text_units; synthetic 26-30 s, peak above idle 87-90 MB; 22 MiB 6-7 s, 70-76 MB); a run that dies is red; the 15.9 MB small-object PDF is read and printed (3 s, 52 MB). Earlier in the job: B34 header, B38 root cause (scheduler R27 held plane's wake=max(due,now); fixed, node and workerd failing-first). plane suite 319 of 320 (R24 release.test.mjs, stale setup-words rows, red on the tranche before me); checks/run.mjs 0 failures; ownership 0.
 Requirement lines proposed: R77 amended (a row stamped started and its try counted before its owner runs; a started row found by a later alarm of a gone isolate is an interrupted run, counted in interrupted, kept across re-registration, third ends it "the reading did not finish; the object stopped"; a tick runs the light kinds and at most one of keep, reading, ocr; the consumer's wake is the entry's own due instant, never raised to now; owedwork&sha= also answers a subresources session key; entries state interrupted, running, last_ms, last_mem; the assembled plane reads the 21 MB/1,300-page and 22 MiB PDFs through the real alarm at idle+88 MB, 5 of 5). R78 new (every route answers server-timing: object;dur=<ms>, set by the object, a carried-in value replaced). Word owed to the design lane for T52: plane.pending.interrupted.
 Size (session_01AipmqTnUkdaqEHwuH2y95j): test runs 30, module lines 3080
+
+## Record: B40, B41 (PLANE #51), fix round 6: G1, G2, G13, G12e
+
+**Merged** `tranche/T51` (SCHEDULER #39 in: `watch`, `health`). Acquisition's `owedFetch` and extraction's cursor are NOT merged: R81 and R82 are tested against a scripted double of the stated interface (`fix6-pending.test.mjs`); their real seams are the owners' and need a re-run after they merge.
+
+**What changed.** `plane/watchdog.mjs` (new): `watchdog(controller, env)`, both objects asked in parallel, fresh stub each, 10 s bound, `busy`/`broken`/`failed` recorded in one `console.error` JSON line, then THROW; late rejections caught. `plane/index.mjs`: `scheduled` beside `fetch`, header updated. `store.mjs`: `Store.watchdog(at)` = `schedulerOf.watch(at)`; `owedwork` handed `{health, administers}`; R78 comments reworded to I/O time (compute = `do-` minus `in-` minus the ~115-160 ms hop). `pending.mjs`: `fetch` kind (session-keyed, heavy, `owedFetch` with `deliver`, `NO_OWNER` while unmerged); `readHeld` is handed the row's `detail` (cursor); `more` answers set due `at+1` and clear `interrupted` when the cursor moved; `owedwork` answers fetch rows by session key; admin-only `last_run, alarm_at, stale, oldest_overdue, watchdog_seen` (from `health()`). `wrangler.jsonc`: `triggers.crons: ["*/5 * * * *"]`.
+
+**Root causes / why tests missed / red then green.**
+- G1: no cron, no second clock (plan). Tests never began from a lost alarm. `watchdog.test.mjs` (10) and `l79.test.mjs` (5, workerd): all red before (handler absent; Store.watchdog absent; owedwork fields absent), green after. Cases: owed rows + no alarm (row runs once, 32-42 ms after the fire), double fire, fire 20 min late, restart over same storage then fire, object held 14 s (`blockConcurrencyWhile`): handler returned at 10,026 ms, outcome exception, scratch still asked; handler with throwing/hanging/broken/missing STORE: bounded, both tried, one line, no unhandled rejection; wrangler holds exactly one cron.
+- G2: `fix6-pending.test.mjs` R81 (5 tests) red on old pending.mjs, green.
+- G13: R82 (3 tests; one is a control that passed before). Found while writing: after a killed piece, the tick's "before" wake reads "now", so a `more` due "now" looked unchanged to the scheduler's R27 hold and the next piece stalled until an arm; the accounting test was red for that reason and green with due `at+1`.
+
+**Platform findings.** (1) Miniflare runs a seeded past alarm at once, so it cannot hold a spent alarm; the spent shape is the node test's (a storage whose `getAlarm` reports it). (2) A synchronous spin in a Durable Object blocks the whole local workerd process (all isolates share a thread), so "busy" is shown by a held concurrency gate. (3) **For BOB:** `owedwork` is refused CLASS_FORBIDDEN to the ADMIN_TOKEN (`machineClasses: []`); only a member session of role admin reaches it, so the admin-only fields are judged by the `viewer` stamp through membership (`class:admin` or an active admin member), never a caller's `cls` (not stripped by the door). If the lane must read it with the token, the op's `machineClasses` is op-declarations'/op-grades' to change. (4) `oldest_overdue` is the scheduler's `health()` value (earliest wake of any consumer), not a ledger-only MIN; in an unticked fixture a daily pass counts.
+
+**Suites.** plane 343 tests, 342 pass, 1 fail: R24 `release.test.mjs` (accepted by name). Scheduler 148/148. control-plane t46-e2e, t47-e2e, t51-hops 9/9. checks: format 0, architecture 0, coverage 6619 of 6619, words 0 for plane, ownership 0. `impact.mjs` names 123 modules (plane's index is imported widely); I ran the users that exercise the Worker, not all 1802 files.
+
+**Requirement lines proposed (BOB writes).** R6: default export is `{fetch, scheduled}`. R79: the Worker's `scheduled` asks `bio` and `scratch` once a cycle, bounded 10 s, fresh stub, both tried, failure = one structured line then a throw; `Store.watchdog(at)` = scheduler `watch(at)`; `wrangler.jsonc` holds exactly one cron `*/5 * * * *` (equal to control-plane's `bio-plane-crons/1` literal: its own test; I could not compare, it is unmerged). R80: `owedwork` gives an administrator the five watchdog fields, a member none, read-only. R81: `fetch` ledger kind, session-keyed, heavy, run by acquisition's `owedFetch` with `deliver`. R82: a `reading` row goes on by the cursor it was left (`more` + `detail`), one heavy piece per tick, due one millisecond on, `interrupted` cleared when the cursor moved. R78: I/O time only; compute = `do-` minus `in-` minus the hop.
+
+**Wording owed:** none (no member-read sentence). **Not mine:** the "only pulled earlier" test (BOB). Generated artifacts: `bio-plane/dist/bio-plane.bundled.mjs` is stale by this change (BOB regenerates).
+
+Size (session_01QYWrrveKMJXkZ2R9tC3co1): test runs 12, module lines 3,300
+
+## J32 · COMPLETE
+
+COMPLETE (PLANE #51, B40, B41). Pushed. G1 watchdog (scheduled, Store.watchdog, cron */5, admin owedwork fields) R79/R80; G2 fetch kind R81 and G13 cursor continuation R82 against a scripted double (acquisition owedFetch and extraction cursor unmerged: re-run seams after they merge); G12e R78 reworded. Plane 343 tests, 342 pass, 1 fail R24 release (accepted). Scheduler 148/148; control-plane e2e 9/9; checks 0, ownership 0. For BOB: owedwork is CLASS_FORBIDDEN to the ADMIN_TOKEN (machineClasses []), so admin is judged by viewer through membership; bundle bio-plane.bundled.mjs stale. Details and requirement lines in the record. Size (session_01QYWrrveKMJXkZ2R9tC3co1): test runs 12, module lines 3300
+
+## Record: B42 (PLANE #51), extraction's two items and the real owedFetch
+
+**Merged** `tranche/T51` (acquisition in). (1) `store.mjs` beside `capture.owedLater`: `extractionOf(ctx).registerOwe((a) => pending.owedLater(a))`, guarded by `typeof registerOwe === "function"` until extraction merges. Test R83 in `fix6-pending.test.mjs`: red without the line, green with it; control: an extraction without `registerOwe` builds as before. (2) Extraction's `round6-plane.test.mjs` (commit d319b550dc) taken over as `round6-extraction.test.mjs` (import paths only changed, header says whose it was): R87 (G4), R89 (G8), R90 (G13) are RED BY NAME until extraction and reading-pipeline merge (failing on the missing behaviour: "never a 502", "read in 1 ticks"). (3) G2 seam against the REAL `owedFetch` (`fix6-pending.test.mjs`): the real `acquire` parks a 9 MiB declared source as a `fetch` row with 0 body bytes pulled (stream with highWaterMark 0), the tick runs the real `owedFetch`, which pulls the body and is handed `deliver`; green. The real answers (`done:false` + `reason`, `final`, `done`) are what my owner already reads.
+
+**Suites.** plane 348 tests, 344 pass, 4 fail: R24 (accepted) and the three named seams above. checks: format 0, architecture 0, coverage 6623/6623, words 0, ownership 0. Requirement line proposed: R83: the composition hands extraction the ledger's `owedLater` once at construction (`registerOwe`, extraction R89).
+
+Size (session_01QYWrrveKMJXkZ2R9tC3co1): test runs 4, module lines 3,107
+
+## J33 · COMPLETE
+
+COMPLETE (PLANE #51, B42). Pushed. (1) registerOwe handed to extraction at construction, guarded (R83, test red without). (2) extraction's G4/G8/G13 seam tests taken over as round6-extraction.test.mjs: R87, R89, R90 red by name until extraction and reading-pipeline merge. (3) G2 seam against the real owedFetch green (real acquire parks a 9 MiB source, 0 bytes pulled; tick runs real owedFetch with deliver). Plane 348 tests, 344 pass, 4 fail = R24 (accepted) + the 3 named seams. checks 0, ownership 0. Correction to J32: module lines are 3107, not 3300. Size (session_01QYWrrveKMJXkZ2R9tC3co1): test runs 4, module lines 3107

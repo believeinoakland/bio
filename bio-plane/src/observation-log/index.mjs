@@ -429,8 +429,8 @@ export class ObservationLog {
    *  `authority_kind = derive` (indexing is a DERIVATION over what extraction produced; keeping the two apart BY
    *  AUTHORITY is what lets a reader read *what extraction established* and *what the index holds* as two facts).
    *
-   *  THE FOUR STATES, each the honest one: every unit indexed → `PRESENT`; indexed to the bound → `partial`, `bound`
-   *  naming the figure; text but no unit arm → `LOOKED_INDETERMINATE` with the container's reason (NOT
+   *  THE FOUR STATES, each the honest one: every unit indexed whole → `PRESENT`; indexed to the bound, or a unit stored
+   *  cut to the per-unit cap → `partial`, `bound` naming the figure; text but no unit arm → `LOOKED_INDETERMINATE` with the container's reason (NOT
    *  `LOOKED_ABSENT`: the text exists and the record cannot address a passage of it); no text → `LOOKED_ABSENT`. An arm
    *  that produced no unit carrying text is `LOOKED_ABSENT` too, never `PRESENT` over zero units. The referent is the
    *  READING (`result_kind: "reading"`, the capture), never a content row: indexing mints nothing (§4.5). REC-111: the
@@ -455,6 +455,12 @@ export class ObservationLog {
                 ? localize("observation-log.index.per_capture_unit_bound", "the per-capture UNIT bound, {units} units (CONTENT-SEARCH-DESIGN.md section 4.3, set from the MEASUREMENTS ledger M-20's largest-promote-that-fits and M-35's two route ceilings) -- the index costs ROWS, not only bytes, and this capture offered more pieces than a promote may spend its CPU window on", { units: String(CAPTURE_TEXT_CAPTURE_UNIT_BOUND) })
                 : localize("observation-log.index.per_capture_text_bound", "the per-capture text bound, {bytes} B (CONTENT-SEARCH-DESIGN.md section 4.3, set from the MEASUREMENTS ledger M-20)", { bytes: String(CAPTURE_TEXT_CAPTURE_BOUND) })) });
       detail = word("observation-log.detail.unit_indexed_reading", { written: String(r.written), offered: String(r.offered), bytes: String(r.bytes), over_bound: String(r.over_bound) });
+    } else if (r.truncated > 0 && r.written > 0) {
+      /* A unit stored cut to the per-unit cap holds only part of its text: the axis is partial, as an over-bound one is
+         (G15, K4571). The cut itself is said below. */
+      state = "partial";
+      bound = localize("observation-log.index.per_unit_cut_bound", "the per-unit text cap: {truncated} unit(s) were stored cut, so the record holds only the start of their text", { truncated: String(r.truncated) });
+      detail = localize("observation-log.index.written_unit_s_indexed_bytes", "{written} unit(s) indexed, {bytes} B", { written: String(r.written), bytes: String(r.bytes) });
     } else if (r.written > 0) {
       state = "PRESENT";
       detail = localize("observation-log.index.written_unit_s_indexed_bytes", "{written} unit(s) indexed, {bytes} B", { written: String(r.written), bytes: String(r.bytes) });

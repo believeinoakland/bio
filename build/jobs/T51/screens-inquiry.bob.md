@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J24
+**Read** · handled J27
 
 ## B1 · START
 
@@ -443,3 +443,19 @@ Words: use DEC-418's keys (UX-DESIGN U452; on the table at the close): `screen.d
 
 CHANGE (BOB #253, K4578): fix round 6 gains causes from the K4571 audit. Merge tranche/T51 into your branch, then read `build/plan/fix-round-6-T51.md` section "G14-G25" whole (it is short) and apply the causes named below as part of this job, with the four fields (R-FOUR), failing-first past the bound, stand-in words named in COMPLETE (the rows go to UX-DESIGN). Bob (K4571): never a silent partial read; a bound that must stay is stated to the member.
 Yours: **G14 (screen)**: the Document page draws op=reading's `completeness`: being read (progress), read in full, or stated with its reason and size (a refused-whole reading, a PDF over 16 MiB: the size reason, never "pages N have no text" and never "none"), never "full" while partial. **G17 (owner)**: the lists at document.mjs:797 (links 200), :851 (names 500), :852 (connections 200), :953 (themes 20) draw "showing N of M" from the answer's total or `truncated`, with a more act where the read pages. **G19 (screen, Document half)**: the capture facts' `supporting: {kept, skipped, reasons}` (ACQUISITION #28 provides) drawn as "N of M supporting files kept" with the reason.
+
+## B38 · ANSWER · re J25
+
+ANSWER (BOB #253, K4579) to J25. (1) EXTRACTION #34 is told to state top-level `units_total` on op=reading (the capture's indexed units so far); draw "N of M" from it, and "N" alone while it is absent. (2) DEC-418 (U452): `screen.document.reading.partial` = "Until the whole file is read, searching and citing cover only what has been read so far." drawn beside the progress line while `more`; `screen.document.reading.done` = "Read in full. Every line of this file can now be searched and cited." drawn once a reading read in pieces is complete (`more` false and `total` stated); no fills in either. Use them with your stand-in fallback until the close regenerates the rows.
+
+## B39 · CHANGE
+
+CHANGE (BOB #253): strength's `inquirystrength` batch (`ids` -> `{ok, results}`) and store-door's fence for `ids` are merged into tranche/T51 (748383ed5e). Merge tranche/T51 into your branch before your G12c seam test; control-plane's forwarding of `ids` is not merged yet (its CHANGE B41 item 4), so a whole-path test through the control plane stays red by name until it is.
+
+## B40 · ANSWER · re J26
+
+ANSWER (BOB #253) to J26, the real shapes. (1) EXTRACTION #34 R91: op=reading carries top-level `completeness: {state: "whole"|"partial"|"stated"|"none", counts, skipped, failure, why}` and `units_total`; `why` is the plane's reason for a stated reading; `skipped` the runs not indexed; a format the reader cannot read in pieces ends `stated` partial (`why` NOT_PIECEWISE). Draw as you describe; "none" draws as today. (2) ACQUISITION #28 R108 (merged): `supporting: {kept, skipped, total, reasons: [{reason, count, limit?, detail?}], not_walked?}` in the document's `capture` facts (provenance `documents[0].capture.supporting`) and in the acquire answer; `reason` codes (`CAP_REACHED`, `BUDGET_EXHAUSTED`, `TOO_LARGE`, `DEFERRED`, `BODY_NOT_KEPT`), `limit` the bound, `detail` the renderer's words; `not_walked` a code. Draw "kept of total" and each reason when `skipped` > 0 or `not_walked` is set; the codes are worded by your stand-ins. Merge tranche/T51 (acquisition is merged).
+
+## B41 · CHANGE
+
+CHANGE (BOB #253): capture is merged into tranche/T51 (b3b6b6cf16: the picker row's `format`). Merge tranche/T51 and run `fr6-seam` G12a; G13 stays red by name until extraction merges (I CHANGE you then).

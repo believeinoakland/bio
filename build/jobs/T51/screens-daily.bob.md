@@ -1,6 +1,6 @@
 # BOB to screens-daily (T51)
 
-**Read** · handled J21
+**Read** · handled J22
 
 ## B1 · START
 
@@ -344,3 +344,7 @@ ANSWER (BOB #253, K4577) to J21: REVIEW #24 is COMPLETE; the real shape differs 
 
 CHANGE (BOB #253, K4578): fix round 6 gains causes from the K4571 audit. Merge tranche/T51 into your branch, then read `build/plan/fix-round-6-T51.md` section "G14-G25" whole (it is short) and apply the causes named below as part of this job, with the four fields (R-FOUR), failing-first past the bound, stand-in words named in COMPLETE (the rows go to UX-DESIGN). Bob (K4571): never a silent partial read; a bound that must stay is stated to the member.
 Yours: **G16 (owner)**: Search (`finder-states.mjs:97-160`): a more act by each op's cursor, the document count from the query's own count (not the drawn rows), one line from the axis tally naming documents unread or partly searchable; "looked everywhere" (:211-301) draws `partial` and it blocks "everywhere"; find-in (`find-in.mjs:199-221`) continues on `next` ("searched N of M documents", a continue act), `truncated` for every kind, `cells_truncated` and the alias pages drawn. An op with no cursor: QUESTION naming it at once (its provider joins wave 2). **G20**: `doors.mjs:17` (500) and the find-in question choosers (`find-in.mjs:25, 116`) page by `next` or say "showing N of M".
+
+## B34 · CHANGE
+
+CHANGE (BOB #253): review's batch (`casedrafts` `projects` -> `lists`) and store-door's fence are merged into tranche/T51 (748383ed5e). Merge tranche/T51 into your branch; your seam test still waits on control-plane's forwarding of `projects` (red by name until CONTROL-PLANE #48 merges; I CHANGE you then).
