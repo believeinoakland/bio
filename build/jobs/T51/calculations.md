@@ -71,3 +71,7 @@ Tests run: `node --test --test-force-exit bio-plane/test/m/calculations/` 65 pas
 Users: `impact.mjs` names 78 modules through the shared table; no module outside calculations calls `runPatterns`, `patternResults` or `onPatternResult` in source or tests (searched), so no user's suite was changed by this job.
 
 Size (session_013Qn9ospdGZ85m84zbBg6sF): test runs 6, module lines 3428
+
+## J5 · COMPLETE
+
+G24 done at 60e1b785bf. A pattern's denominator now says capped: true and of_total (the whole) whenever its gather stopped at the 2,000 bound (duty transitions, flow instances; posting says capped with of_total null, and its loop now stops at the bound). Failing-first through runPatterns over real duties: 2,500 transitions red (n 2000, unflagged), now capped/of_total 2500; 1,500 control unflagged; same for flow. Calculations 65/65 green (R32 red now passes after merging tranche/T51). checks/run.mjs and ownership: 0 failures. Platform N; new runs only; no new words, no census key change. Nothing deferred. Record: build/jobs/T51/calculations.md, section Round 6 G24.
