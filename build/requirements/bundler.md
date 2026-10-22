@@ -14,23 +14,23 @@ Builds each member of the fleet (the plane and the workers) into one bundled art
 - **R1** Lists the fleet's members from the repository, each with its directory and entry point, in a stable order.
 
 **`buildMember(member, {write?})` → built.**
-- **R2** Bundles the member with one recipe (ES module output, platform-neutral, the declared externals), with the working directory pinned to the member's own directory and symlinks preserved, so the same source gives the same bytes from any checkout layout.
+- **R2** Bundles the member with one recipe (ES module output, platform-neutral, the declared externals), with the working directory pinned to the member's own directory and symlinks preserved, so the same source gives the same bytes from any checkout layout. (T51 fix round 6, G39; K4616, K4620) A fleet member's and the plane's bundle is pure ASCII: no byte over 0x7F. Comments are stripped (a licence banner is kept, its characters written as `\uXXXX` text), template literals are lowered, strings and identifiers are written ASCII, and every other non-ASCII character of a string or regex literal is written `\uXXXX` (`\u{X}` for an astral one in a `u` or `v` regex) by a pass over the output's tokens that changes no value and no regex pattern or flag. A non-ASCII character anywhere else, including the raw text of a template literal that was not lowered, refuses the build `[NON_ASCII_REMAINS]` naming the line. A descriptor that is neither a fleet member nor the plane (the standalone case checker's) keeps its form; a boolean `bundle.ascii` overrides either way. Provided beside the recipe: `asciiOptions()` (the esbuild options) and `asciiOutput(bytes)` (the pass), for a caller that builds with its own esbuild call (the installer's). Test: a fixture with a non-ASCII character in a comment, a string, an untagged, a tagged and a `String.raw` template and BMP and astral regexes builds to a bundle with no byte over 0x7F whose values and regexes equal the opt-out build's; an unlowered template or an identifier refuses; a descriptor with neither marker is unchanged; the plane and every real member build to no byte over 0x7F, and the plane boots and answers one Store op in raw workerd at `--max-old-space-size=60`.
 - **R3** Writes the artifact only when `write` is true.
 
 **`manifestFrom(member, built)` → manifest.**
-- **R4** Records the SHA-256 of the artifact, of every first-party input file, and of the member's lockfile, and the pinned working directory.
+- **R4** Records the SHA-256 of the artifact, of every first-party input file, and of the member's lockfile, and the pinned working directory. (T51 fix round 6, G39; K4620) The manifest's `recipe` also records `ascii`: R2's options, or `false` for an opt-out.
 
 **`writeMember(member)`.**
 - **R5** Builds with writing on and writes the artifact and its manifest.
 
 **`verifyStatic(member)` → result.**
-- **R6** With no dependencies installed, reports stale when any recorded input's hash, or the lockfile's, differs from the file now; reports which input.
+- **R6** With no dependencies installed, reports stale when any recorded input's hash, or the lockfile's, differs from the file now; reports which input. (T51 fix round 6, G39; K4620) A committed manifest whose `recipe.ascii` differs from the tree's is stale, naming `recipe.ascii`; the fleet gate also holds every committed bundle to no byte over 0x7F.
 
 **`verifyFresh(member, committed)` → result.**
 - **R7** Where the member's dependencies are installed, rebuilds without writing and reports stale unless the bytes equal the committed artifact exactly; where they are not installed, says it could not check, never that the artifact is fresh.
 
 **`unresolvableSpecifiers(text, allowed?)` → list.**
-- **R8** Lists every static `import` or `export … from` specifier in a built artifact that is neither bundled nor in the allowed externals (what a one-part upload must resolve at instantiation). A dynamic `import()` is not listed; `verifyFresh` checks those through the build's own metafile.
+- **R8** Lists every static `import` or `export … from` specifier in a built artifact that is neither bundled nor in the allowed externals (what a one-part upload must resolve at instantiation). A dynamic `import()` is not listed; `verifyFresh` checks those through the build's own metafile. (T51 fix round 6, G39; K4620) The scan accepts an `import` or `export` statement after `}` (a minified bundle).
 
 **Provenance (`readGitProvenance`, `stateOf`, `classifyDiscovered`, `reportProvenance`).**
 - **R9** For a set of files, states for each whether it is committed and unchanged, changed, or untracked in the repository, and reports it.
