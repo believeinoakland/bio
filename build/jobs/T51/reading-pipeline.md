@@ -196,3 +196,15 @@ QUESTION (G6, R39; best reading given; I carry on with it)
 Contract extraction can rely on (to be R39): a stub answers exactly `{refused: {code: "BARE_DIGEST", why}}`; `refused` is absent from every other answer except R40's.
 
 If you want a different contract (for example the refusal also carrying a failed `reading` marked `transient` so an old caller never crashes), say so; I would then add it. Waiting on nothing: I continue with G13.
+
+## J10 · QUESTION
+
+QUESTION (G15, sheet row blocks; best reading given; I carry on with it)
+
+Splitting a sheet into row-range units needs each text line's ROW NUMBER, and no reader emits it: a sheet's `text` is its non-empty rows tab-joined, one line each, EMPTY ROWS SKIPPED (`csv-reader/index.mjs:769` `if (vals.length) lines.push(...)`; xlsx and ods the same), and a streamed CSV (the large case) has `cells: null`, so the line index is not the row. I cannot name a true A1 range from the text.
+
+**Smallest thing I need:** csv-reader, formats-xlsx (`formats-xlsx.mjs:1038`) and odf (`odf.mjs:1858`) each emit on every sheet `lineRows`: an array, one 1-based row number per line of `sheet.text`, same length as its lines (a few hundred KB for a 1 MB CSV; optional, absent = unknown). Owners of those modules would add it in this round.
+
+**What I build now regardless:** a sheet whose text is over the 128 Ki unit cap is split into blocks of whole lines, each unit's text = the sheet's first line (header) repeated + the block's lines; with `lineRows` the extent is `sheet-range` `A{first}:{lastcol}{last}` of the block's data rows; WITHOUT `lineRows` the extent is the sheet's whole used range (honest, ambiguous but each block is a distinct searchable unit with its own seq, and NONE is cut). A long line/paragraph of a text is split into runs (`doc-para` extent `run: 0,1,..`), never cut. pdf-page and slide units over the cap (a page of > 128 Ki characters) keep today's cut, flagged `truncated`, because their extents have no run to name.
+
+**G13 cursor, as BOB #253 gave it:** `cursor` option string (opaque), answer top-level `more`, `cursor`, `read_through`, `total` (bytes of text); mode is on whenever the `cursor` key is passed (null = first piece); without the key `read` is today's. I also answer `piece: {units, words, units_total}` (units_total on the first piece only).
