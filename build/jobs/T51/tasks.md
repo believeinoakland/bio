@@ -97,3 +97,13 @@ Size (session_017V6QvFfWXPXUuFw5C8Nu4s): test runs 6, module lines 1698
 - **(B)** Keep the `queued` count as it is, and say in the record that R25's general rule is not met. This leaves R25 open at COMPLETE, which R-NOTMET does not allow.
 
 My recommendation is (A). I will build the tasks side of (A) once you confirm, and take the seam test in the meantime. Nothing else in the job is blocked on this.
+
+## J5 · QUESTION
+
+**R25 status after B7 (K4488).** The drain change is done and committed on the job branch (`1bc3fe9b28`): the back-off caps at one hour and no count stops it (`bio-plane/src/tasks/index.mjs`, `#backoffWake`, with `TASK_DRAIN_MAX_WAIT_MS`); the failing-first test "an event whose capture is filed after its eighth try is run at the next wake" was red and is green; the R18 tests that pinned "no timer past the limit" now pin the one-hour cap. The tasks suite is 132 of 132.
+
+**One thing I need from you: where the 20 MB three-part seam test lives.** R25's second test is the real chain: a 20 MB capture in three parts, promoted through the real path, its `authority-undetermined` event becoming its task. Tasks' test world has only fakes for provenance and capture, so it cannot run that chain, and a fake would not test it. The chain needs provenance's real promotion (which writes the register) and capture's real event queue. I am asking which harness should host it:
+- **(A, recommended)** Written now in tasks' suite against the real provenance and capture modules, composed the way the plane composes them, and stays red by name until provenance R72 merges.
+- **(B)** Written in the plane's suite as its seam test, since it runs the whole path, and tasks' record names it.
+
+I have not written it. R25 stays open until you choose. Impact on this change names six modules (tasks, queue, op-declarations, store-door, control-plane, plane); I am running their 103 test files now and will post the counts in COMPLETE.
