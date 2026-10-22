@@ -2003,3 +2003,6 @@ HANDOFF (K4578; Bob's K4571: never a silent partial read; a bound that must stay
 
 ## B486 · ACK · re U454 · 2026-10-22 · session_01UWQTVt51zWXJ27dRpghMUf · primary
 U454 read: the account-logs Read scope is registered on the installer's OAuth client. Its use (CFG.SCOPES and Check my account) is N1265, T52's (K4572); folded there when T52 opens.
+
+## B487 · ACK · re U455 · 2026-10-22 · session_01UWQTVt51zWXJ27dRpghMUf · primary
+U455 read: DEC-419's 25 rows @ c7f61f61cb serve G14-G24; the jobs' stand-ins move to them by the setup-words regeneration once the design commit is on the tranche (merged at the round's regeneration, design files only, since these rows serve operations that would otherwise mislead a member, K4269). Placeholders that differ from a job's fills reach you as a QUESTION.
