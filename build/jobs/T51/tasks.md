@@ -78,3 +78,22 @@ Tests and checks:
 - `checks/run.mjs`: format 0, architecture 0, channels 0; coverage 5 failures and words 16 failures, none in `tasks` (op-grades test copies and other modules). `setup-words/build.mjs --check`: rows stale as expected (a note on `ai-accounts`).
 
 Size (session_017V6QvFfWXPXUuFw5C8Nu4s): test runs 6, module lines 1698
+
+## J4 · QUESTION
+
+**Step 0 of R25 (F3d), and one decision I need.** I started (B6); my branch is realigned to origin per your B6 fallback (the earlier local commit is kept on `stale/tasks-local`). I have read the round plan, the audit's F3 and 3d, R20–R24 and the module code.
+
+**Step 0: does D1 resolve the waiting event? Yes, once provenance R72 is merged.** Evidence:
+- The event carries the capture's digest: `acquisition/index.mjs:1404` enqueues `authority-undetermined` with `captureSha: sha`.
+- The drain finds the event's home with `homeOf(q.capture_sha)` at `tasks/index.mjs:351`. `provenance/index.mjs:835-841` reads `register` by that digest, and for a multipart capture the register holds only the parts, so the lookup is null. That is the whole cause, as F3 says.
+- When provenance R72 adds the `whole` row, `homeOf` finds the bundle and the event routes like any other.
+- A committed promotion re-arms the drain (`tasks/index.mjs:1262`), so the event gets its try at the moment the capture is filed.
+- Provenance R72 is not merged yet, so the seam test (the 20 MB three-part capture's event becoming its task) waits on provenance. I will write it against the real provider and it stays red by name until then.
+
+**The part D1 does not reach.** The drain tries an event at most eight times (`tasks/index.mjs:1181`, then no more timed wakes). After that the event stays in the capture's queue and is counted only as `queued` (`tasks/index.mjs:480`). Nothing shows the member an item. A task cannot stand in for it, because the task grammar needs a bundle id and an unfiled capture has none.
+
+**Decision for Bob (who should see a stalled event):** an unfiled capture has no subject, and the capture does not store who captured it.
+- **(A, recommended)** Tasks reads out the events that have used up their retries, each saying what it could not do ("this capture is not yet filed in any record, so who issued it is undetermined"). Queue shows one queue item per such event to the administrators. This needs a change to `queue-producers`, which is another module's, so I will report it to you as a CHANGE for that module.
+- **(B)** Keep the `queued` count as it is, and say in the record that R25's general rule is not met. This leaves R25 open at COMPLETE, which R-NOTMET does not allow.
+
+My recommendation is (A). I will build the tasks side of (A) once you confirm, and take the seam test in the meantime. Nothing else in the job is blocked on this.
