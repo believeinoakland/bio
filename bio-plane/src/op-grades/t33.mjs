@@ -14,6 +14,8 @@
  * `./index.mjs` spreads these three tables into `RUNGS`, `RUNG_ABSENT` and `NON_ACTS`; this file imports nothing, so the
  * spread closes no cycle. Grouped by owner, in `modules.json` order. */
 
+import { localize } from "../setup-words/index.mjs";
+
 const R = (s) => `read: ${s}; writes nothing`;
 
 /* ---- the rungs, each with the backing it names (`affordances` R19) ---- */
@@ -211,7 +213,7 @@ export const T33_NON_ACTS = {
   moneysummable: R("whether named facts may be summed, or the first dimension that differs"),
   moneyreconcile: R("whether two money facts are consistent, or each dimension that differs"),
   moneyset: R("one money set's inclusions, exclusions and open proposals, each with its reason"),
-  moneysets: R("the money sets that concern an id, such as a project's trails, newest first, bounded"),   // money R28 (fix round 3, B3)
+  moneysets: localize("money.declared.moneysets", "read: the money sets that concern an id, such as a project's trails, newest first, bounded; writes nothing"),   // money R28 (fix round 3, B3)
   committedagainstpaid: R("a contract's committed and paid facts with their sums and the difference, never a verdict"),
   authoritychain: R("the chain of authorising events toward the event a fact concerns, bounded"),
   /* money-checks */
