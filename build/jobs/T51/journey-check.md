@@ -1,6 +1,6 @@
 # journey-check (T51)
 
-**Status** · session_01Fueqh9zRCDKCheePb5TyFi · depth 2 · COMPLETE · handled B10
+**Status** · session_013CXae57CSmbZXAkv1DtdMS · depth 2 · COMPLETE · handled B14
 
 ## Completion record (JOURNEY-CHECK #7)
 
@@ -136,3 +136,78 @@ COMPLETE (B10 CHANGE, K4295). Pushed `0e0fa0d6c2` on `job/T51/journey-check`.
 **Checks** (run from the process repository on `/home/user/bio`): format 0 failures; architecture 0 failures (an earlier version importing op-declarations and test-support directly was refused as undeclared in journey-check's `uses`, so it now goes through screens-settings, which `uses` declares); words 0; channels 0; ownership `journey-check tranche/T51 job/T51/journey-check` 0 failures (one file changed: `pseudo.test.mjs`); coverage: journey-check R19 is the only id unnamed (conditional, unmet, as before).
 
 Size (session_01Fueqh9zRCDKCheePb5TyFi): test runs 5, module lines 3372
+
+## Working record (JOURNEY-CHECK #11, B11: fix round 4, wave 1; K4435)
+
+**Cause 1: the local arm's moved fixture** (R1 (a)).
+1. *Root cause.* The fake account (`account.mjs`) answered `containers/applications` with `[]`, the Durable Object namespaces with the one class `Store` for every script, and no `schedules` PUT. The installer's container members (agent-runner, file-scanner) therefore found no namespace for their classes ("no place set up for it to run") and the schedules PUT fell through to the unanswered 599, which the installer retries for its five-minute bound: the page's load did not end, so journey 28 step 6 timed out at 180 s. Reproduced in 2 s, without a browser, by driving the installer's own routes in process over `fakeAccount` (the fleet line said `2 left out: agent-runner (…no place set up…); file-scanner (…)`).
+2. *Why missed, and the test-gap fix.* The fake was not updated when the installer began creating container applications; the installer's job ran its own fixture, not the local arm. New `account-installer.test.mjs` (R1 (a)): the installer's whole install runs over `fakeAccount` with the waits immediate; `account.unanswered` must be empty (a new call fails at once, by name), every member of the installer's own `RELEASE_MANIFEST.fleet` must be installed, and an application must exist for every class of every `Container` part, read from the manifest's descriptors as the installer fetches them. Control: with the application create hidden, the member is left out and the page says so.
+3. *Red first.* Before the fix: test 1 failed `agent-runner is installed: 4 installed (…); 2 left out: agent-runner (…); file-scanner (…)`; test 2 failed `agent-runner AgentRunner: an application on docker.io/civicsmith/agent-runner@sha256:78b09547…`. After: 3 pass.
+4. *Platform check.* L: the local arm itself (Miniflare), run five times (below).
+
+**The local arm, run for what it then showed** (each defect below was behind the one before it; all are in this module):
+- journey 28 now passes steps 1 to 8 (installer, hand-over); first run after the fixture: `the invitation form has no choice to let her start projects`: `journeys.mjs` named `#mi-cap-create_projects`, which `members` does not draw (it draws `input[name="mi-caps"][value="create_projects"]`). Fix: `START_PROJECTS_BOX`; test `invite-box.test.mjs` (R9), red (selector missing), green, with a control selector.
+- 1,421 R27 reports "escaped the word list" on every screen: since interface-shell's fix round 3 (R1) the page's words stand in the shell's versioned external script, not the document, and `pseudoRoute` rewrote only documents and fetches. Fix: the route also answers a script of the copy's host through `pseudoBody`, and drops the document's `integrity` attribute on the script tag (the hash is of the English script, which a browser refuses the pseudo one against). Test `pseudo-route.test.mjs` (R29 (a)): red (route fell back on the script; integrity kept), green; controls: another host's script and a style sheet fall back, another tag's integrity is kept.
+- R9 step 2: "Start a project" now asks who can find the project and chooses neither (`screens-daily` `start-project.mjs`); the walk's click found no project. Fix: the walk reveals the folded form and chooses hidden (`START_PROJECT_VISIBILITY`); test `start-project.test.mjs` (R9), red then green, against the real Projects screen through screens-daily's harness; it also asserts the screen refuses with neither chosen.
+- R9 step 12 and R16: the question page now requires a reason before it concludes (`question-conclude-reason`). Fix: `concludeFields` gives it. Its test (`conclude-fields.test.mjs`, red then green at 371f901d77) needs `screens-inquiry` in journey-check's `uses`, which `modules.json` does not hold, so the architecture check refuses it; I withdrew the file (it is in history at 371f901d77) and ask BOB for the edge (QUESTION J8).
+
+**Cause 2: R30** (`pseudo.mjs`).
+1. The cap `s.length > 600` returned a longer string unchanged, so 12 long rows (606 to 904 characters; the plan named five) were never made pseudo. It is in no requirement.
+2. The test sampled 300 rows by position. Now `pseudo-cost.test.mjs` takes every sentence row of the list (over 20,000), with a value filled into each placeholder, and asserts each is made pseudo and `escapedIn` finds nothing, and that the list holds a sentence over 600 characters (so the test cannot pass on a list without one); the cost test's reference no longer excludes long strings.
+3. Red: 12 rows named (`prompt.inquiryground (606)` … `case-authoring.index.this_finding_is_already_a (904)`); green after removing the cap; the cost budget test still passes (at most 1,000,000 tries; second call none).
+4. N.
+
+**Last local-arm run (the fifth; 17 of 23 tests pass, `journey.test.mjs`).** Two causes remain red, neither in this module's source:
+- `group`: `/app/security` says "the group's file scanner" in `act.scanmirror.does` (`bio-plane/src/affordances/act-help.mjs:135`, row also in `file-safety` and `op-grades`): R17's row scan names it too (the T52 acceptance, K4269, K4270); R17, R26 and the arm's `group` failure in R1 (a), R7's sweep, R9, R16 and R20 (their assertions list all failures) stay red until that row says "team".
+- `GET …/api/?op=reading&sha256=d480cc23… answered found: false` on the question page after the capture by upload (R9 steps 8, 12, the dock, and R16), HTTP 200: the screen draws and the step's own acts all work (screenshot 34 shows the citation drawn), but the walk's R8 reads the `found: false` as a refusal. See QUESTION J8.
+
+**Checks** (from the process repository, on the merged branch): format 0; words 0 (and journey-check alone 0); architecture 0 (after the withdrawal); ownership 0; coverage: 29 of 30 live ids named, R19 not (conditional, unmet, as before this job); impact: journey-check only (20 of 21 test files; no other module's test is touched).
+**Tests.** Every test file of the module except `journey.test.mjs` and `live.test.mjs`: 79 tests, 78 pass, 1 fail (R17, the T52 red).
+
+## J8 · QUESTION
+
+QUESTION (B11, fix round 4, K4435). Two causes are fixed and tested (details in my record's "Working record (JOURNEY-CHECK #11)"): the fake account now models container applications, namespaces and schedules (the installer finishes in the local arm and journey 28 passes steps 1 to 8), and R30's cap is gone (test over every row). Running the local arm for what it then showed found four more defects in this module, all fixed with a test red first: the invitation selector, the pseudo route (the page's words now stand in the shell's script), "Start a project" asking who can find it, and the conclusion's reason box. The fifth run passes 17 of 23 tests. I need two answers (smallest things) to close:
+
+1. `modules.json`: journey-check's `uses` lacks `screens-inquiry`. The test that checks the walk's conclusion-form fields against the real question page imports its harness, so the architecture check refuses it; I withdrew it (history: 371f901d77, `bio-plane/test/m/journey-check/conclude-fields.test.mjs`). Please add `screens-inquiry` to journey-check's `uses` (or tell me another way to test it); then I restore the test.
+
+2. The remaining local-arm red that is not a word: after the capture by upload (R9 step 5), `GET /api/?op=reading&sha256=d480cc23…` answers `found: false` (HTTP 200) while the question page is open (steps 8, 12, the dock, and R16's two steps). The page draws and every act works; the walker's R8 counts `found: false` as a refusal. Is a held capture with no reading row, here and later, (a) an ordinary state (RC-R1: the reading follows) that R8's walker should excuse for `op=reading` on a capture the step has just made, which I then do (a change to what R8 reads, so yours to confirm), or (b) a defect of extraction/acquisition in the local arm (the stand-in workers answer only /version; the reading's alarm may never run in Miniflare), which I report and leave? My best reading is (a) for a reading read while the reading is pending, with the step still asserting the document's words by Find-in as step 7 does.
+
+Not mine, for the record: `act.scanmirror.does` says "the group's file scanner" (affordances `act-help.mjs:135`), the one "group" the arm reports on /app/security; R17's scan names it too (T52).
+
+## J9 · QUESTION
+
+QUESTION (B13 answered; this replaces nothing in J8, it corrects its premise). Done as B13 says: the tranche merged, conclude-fields.test.mjs restored, and the walker excuses `op=reading`'s `found: false` while a capture the step made is stated pending (`reading_pending`), tested with controls. It does not clear the arm's last five reds, because the premise was wrong. Seen in the answers themselves (the world's route now prints them): the digest d480cc23… is the page captured by address (`op=acquire`, the stub city's notice 2026-118), answered with its reading at once (not deferred), and `op=reading` for it answers `{ok:true, result:{ok:true, found:true, reader_found:false, entity_count:0, reading:{found:false, entities:[], basis:"the generic reader found no entities in this document; recorded as an empty reading, never an emptied document", words_total:76, words_read:76 …}}}`. So the op found the reading (`found: true`); the nested `reading.found: false` is the generic reader's own statement that it found no entities in a stub page. Nothing is pending and nothing is refused; `walker.mjs` `refusalsIn` reads the nested `found: false` (at `result.reading`) as a refusal (R8's list: `found: false`).
+
+What I need: a ruling on R8's reading of `found: false`. My best reading: it names a refusal only on the answer object that says whether the op found its subject (the answer's own top or its `result`); inside a `reading` object (the extraction's reading, whose `found` is whether the reader found entities, shaped `{content_type, reader_version, found, entities, …}`) it is data and never a refusal. Under it I change `refusalsIn` to skip `found` on an object that has `reader_version` and `entities` (a reading), test red first with the answer above as the fixture and controls (an `op=reading` that answers `found: false` at its top, for a digest never captured, still fails; the pending excuse of B13 stays). If you rule otherwise (for instance, that the walk's stub city page should be a notice the reader finds entities in), say which and I do that instead.
+
+Also found while diagnosing, fixed and tested (route-encoding.test.mjs, red then green): the world's route and the pseudo route let the browser ask for compression and removed the header that names it, so every answer workerd compressed (`op=interfacewords`, others) reached the browser and the walker as gzip bytes and was never judged for a refusal; the routes now ask for none. No new refusal surfaced from it in the seventh run.
+
+## Completion record (JOURNEY-CHECK #11, B11 to B14: fix round 4, wave 1; K4435, K4473, K4486)
+
+**Cause 1 (the local arm's moved fixture) and cause 2 (R30): closed**, each with its four fields, in the working record above. Everything the arm then showed was in this module, each fixed test first (red then green) and each answered by BOB where a ruling was needed:
+- the fake account's container applications, Durable Object classes, schedules (`account-installer.test.mjs`);
+- R30's cap, every row (`pseudo-cost.test.mjs`);
+- the invitation selector (`invite-box.test.mjs`); "Start a project" asking who can find it (`start-project.test.mjs`); the conclusion's reason box (`conclude-fields.test.mjs`, restored after K4473 added `screens-inquiry` to `uses`);
+- the pseudo route answering the shell's script and dropping its `integrity` hash (`pseudo-route.test.mjs`); both routes asking the copy for no compression, which had left workerd's gzip answers unread and so unjudged (`route-encoding.test.mjs`);
+- R8 (K4473): `op=reading`'s `found: false` is excused while the record states the reading pending for a capture the step made (`walker.test.mjs`, with controls); R8 (K4486): a reading's own `found` (whether the reader found entities) is data, never a refusal (`walker.test.mjs`, red with the answer the plane gave for d480cc23…, then green; controls: `found: false` at an answer's top or `result` still fails, an object not shaped as a reading keeps it, a refusal inside a reading is still seen).
+
+**The local arm now.** `journey.test.mjs`, the eighth run: 23 pass, 0 fail (the walk of journey 28 through the installer and the hand-over, R9, R10, R11 and its control, R13, R15 and its control, R16, R18, R20 and its control, R22, R23, R25, R26 (its scan passes after the tranche's "team" wording), R27 and the rest). Stand-in workers: the local arm's `pdf-worker`, `ocr-worker`, `sheet-worker` and `file-scanner` answer only `/version`, as R1 (a) states; the capture by address and the upload are read by the plane itself, so no reading stayed pending here: B13's pending excuse is exercised by its walker test, and the live re-walk proves the reading of a real PDF.
+**Not walked here:** `live.test.mjs` (the live arm, never run in a module job, K4149).
+
+**Remaining red, by cause.** One test of the module's other files: `group.test.mjs` R17 (the row scan of `words.json` and `setup-words` finds rows that say "group" for a team, in other modules), the accepted red of T52 (K4269, K4270); nothing else.
+
+**Tests and checks** (from the process repository, on the branch merged with `tranche/T51` as of B14's answer): all of the module's files except the two walks: 83 tests, 81 pass, 1 fail (R17 above); `journey.test.mjs`: 23 pass, 0 fail (eight runs; the first seven are in the working record); `node checks/format.mjs`: 0 failures; `words` (journey-check): 0 failures; `architecture` journey-check: 0 failures; `coverage` journey-check: 30 of 30 live ids named by a test (R19 is named by `unmet-parked.test.mjs`, which came with the tranche); `ownership` journey-check tranche/T51: 15 files changed by journey-check, 0 failures; `impact.mjs`: affected modules 1 of 175 (journey-check, 21 of 23 test files; no other module's test file is affected). No other module's tests are touched.
+
+**Found in other modules.** None open. (`act.scanmirror.does` said "the group's file scanner"; the tranche's later wording cleared it.)
+
+Size (session_013CXae57CSmbZXAkv1DtdMS): test runs 30, module lines 3450
+
+## J10 · COMPLETE
+
+COMPLETE (B11 to B14; K4435, K4473, K4486). Pushed on `job/T51/journey-check` (merged with `tranche/T51` as of B14's answer).
+
+Cause 1, the local arm's moved fixture: the fake account models container applications, Durable Object classes and schedules; the installer's whole install runs over it in process, test first, and every call must be answered (`account-installer.test.mjs`). Cause 2, R30: the 600 cap is gone; the test takes every sentence row. Behind them the arm showed more, all in this module, each fixed test first: the invitation selector, the pseudo route (the page's words stand in the shell's script, and its integrity hash), "Start a project" asking who can find it, the conclusion's reason box, the routes asking the copy for no compression (gzip answers had gone unjudged), R8's pending-reading excuse (K4473) and a reading's own `found` as data (K4486).
+
+`journey.test.mjs` (the local arm), the eighth run: 23 pass, 0 fail. The module's other files: 83 tests, 81 pass, 1 fail: R17 (T52, K4269). format, words, architecture, coverage (30 of 30), ownership: 0 failures; impact: journey-check only. The local arm's stand-in workers answer only /version, as R1 (a) states; the plane reads the capture and the upload itself, so no reading stayed pending here (the pending excuse is proved by its walker test; the live re-walk proves a real PDF's reading). `live.test.mjs` not run (K4149). Record: `build/jobs/T51/journey-check.md`, with each cause's four fields and the red-then-green evidence.
+
+Size (session_013CXae57CSmbZXAkv1DtdMS): test runs 30, module lines 3450

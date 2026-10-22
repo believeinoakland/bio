@@ -4,7 +4,7 @@
    it is a scripted double of that interface. The refusal's words are read from its row, never copied (K3810). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, pdf, DAY, T0 } from "./fixture.mjs";
+import { filedWorld as world, pdf, DAY, T0 } from "./fixture.mjs";
 
 const HOUR = 3_600_000;
 const boss = "member:boss";

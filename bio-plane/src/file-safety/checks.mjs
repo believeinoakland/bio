@@ -91,10 +91,8 @@ export const FILE_SAFETY_CHECKS = Object.freeze({
      (T47-12); the row awaits promotion's stamp (plan T47). */
   RENDER_QUEUE_UNREADABLE: row('C-140.43', at("renderBatch", "is-render-queue-readable"), rowWord('RENDER_QUEUE_UNREADABLE')),
   /* R49 (fix round 3, C84; K4356): a check for signatures was made under fifteen minutes ago, so no run was started. New at
-     fix round 3 of T51; the row awaits promotion's stamp and the design stream's words (`refusal.SIGNATURES_RUN_RECENT`, a
-     stand-in sentence until its row lands). */
-  SIGNATURES_RUN_RECENT: row('C-140.44', at("scanMirror", "is-signature-run-due"), localize("refusal.SIGNATURES_RUN_RECENT",
-    "Your team's Civicsmith checked for new signatures a few minutes ago, so it did not start another check just now. Try again in a quarter of an hour.")),
+     fix round 3 of T51; the row awaits promotion's stamp; its words are the design's (DEC-412, `refusal.SIGNATURES_RUN_RECENT`). */
+  SIGNATURES_RUN_RECENT: row('C-140.44', at("scanMirror", "is-signature-run-due"), rowWord('SIGNATURES_RUN_RECENT')),
   /* R50 (fix round 4, C84; K4429): the scanner shows a run alive (its stage under fifteen minutes old), so no second one was started.
      Words owed by the design stream as `refusal.SIGNATURES_RUN_UNDER_WAY`; a stand-in sentence until its row lands. */
   SIGNATURES_RUN_UNDER_WAY: row('C-140.45', at("scanMirror", "is-signature-run-under-way"), localize("refusal.SIGNATURES_RUN_UNDER_WAY",

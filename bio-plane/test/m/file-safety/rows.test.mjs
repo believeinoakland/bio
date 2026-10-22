@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
-import { world, pdf, sha, enc } from "./fixture.mjs";
+import { filedWorld as world, pdf, sha, enc } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
 import * as FS from "../../../src/file-safety/index.mjs";
 import * as CHECKS from "../../../src/file-safety/checks.mjs";
@@ -49,6 +49,7 @@ test("R23: no member identity, file name, address or record text reaches file-sc
   const z = makeZip([{ name: "budget-confidential.txt", data: "member names inside" }]);
   const zs = await w.capture(z, { address: "https://secret-host.example/pack.zip" });
   await w.acq.unpack({ core: w.record, provenance: w.prov }, { archiveSha: zs, by: "m1", member: true });
+  w.homeAll();
   await w.tool("scanii"); await w.tool("joe-sandbox"); await w.tool("glasswall-halo", { config: { host: "halo.example.org" } });
   await w.tool("splunk-hec", { config: { host: "splunk.example.org" } });
   await w.tool("metadefender-core", { use: "routine", config: { host: "md.example.org" } });
@@ -111,7 +112,7 @@ test("R24: every refusal and every R6 reason is named in this module's own table
   for (const w of Object.values(PROVIDER_REASON_WORDS)) assert.ok(w.length > 10);
   /* T50 (plan rule 6): the member words are those of their keys, and the keys are the module's `reads` in words-reads.json */
   /* a row whose word the design stream has not written is a named stand-in (fix round 3, C84): its own sentence until the row lands */
-  const STAND_INS = ["SIGNATURES_RUN_RECENT", "SIGNATURES_RUN_UNDER_WAY"];
+  const STAND_INS = ["SIGNATURES_RUN_UNDER_WAY"];
   for (const [code, x] of rows) {
     if (hasWord(rowKey(code))) assert.equal(x.translation, word(rowKey(code)), code);
     else assert.ok(STAND_INS.includes(code), `${code}: no word row and not a named stand-in`);

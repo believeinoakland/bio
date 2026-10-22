@@ -3,7 +3,7 @@
    module's services answer. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, pdf, sha, enc, T0, DAY } from "./fixture.mjs";
+import { filedWorld as world, pdf, sha, enc, T0, DAY } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
 import { RESCAN_INTERVAL_MS, DEEPER_CHECK_FRESH_MS, DEEPER_CHECKS_PER_MONTH, SCAN_BATCH_MAX, LOG_COUNT_KINDS, FILE_SAFETY_CHECKS,
   FILE_SAFETY_POLL_MS, REPUTATION_REFRESH_MS } from "../../../src/file-safety/index.mjs";
@@ -26,6 +26,7 @@ test("R1: every receipt (direct, web archive, doorbell, and each member of an un
   const zs = await w.capture(z);
   w.home(zs, "INFO-ZIP");
   const u = await w.acq.unpack({ core: w.record, provenance: w.prov }, { archiveSha: zs, by: "m1", member: true });
+  w.homeAll();
   assert.equal(u.ok, true, JSON.stringify(u).slice(0, 300));
   for (const m of [sha("first file"), sha("second file")])
     assert.ok(w.row("SELECT 1 AS x FROM fs_files WHERE capture_sha = ?", m), "a member of an unpacked archive is queued as its own capture");

@@ -1,6 +1,6 @@
 # file-safety (T51)
 
-**Status** · session_01Puie49xQXkuYPiR7ZSPHMk · depth 2 · COMPLETE · handled B12
+**Status** · session_01Bx8AYz89obuQALgywrmCmP · depth 2 · COMPLETE · handled B14
 
 ## Completion (T51-183, words)
 
@@ -293,3 +293,34 @@ Size (session_01Puie49xQXkuYPiR7ZSPHMk): test runs 12, module lines 2515
 ## J12 · COMPLETE
 
 COMPLETE: C84 (RC-R7: R46, R50) and K4435's WORD_KEYS red, in build/jobs/T51/file-safety.md. Suite 84/84; checks 0 failures for file-safety; users' reds are the tranche tip's named ones. The scanner is the scripted double (file-scanner not yet merged); the real-handler seam test is screens-settings'. Stand-in keys listed in the record. Re-merge after file-scanner merges on request.
+
+## Completion (fix round 4b, entry 5: R51; D6, F3a, F3b, F10; FILE-SAFETY #17, session_01Bx8AYz89obuQALgywrmCmP)
+
+**Root cause (1).** `index.mjs` `#held` (was :266-274): `if (home && gate.scope !== "member" && …)` skipped the sight check when `provenance.homeOf` was null, and a multipart capture is registered by its parts alone, so its whole digest has no home: any non-denied member was served it (`openoriginal`, safe view). F3a's scan side: `#target` has no parts without a home, so the scanner answered `not_scanned: NOT_FOUND` and `#due` re-sent the file at every batch. F3b: `#render` set `failed/NOT_FOUND` for good when the keep had not landed. F10: `#lookAt`/`#bytes` loaded any whole (up to 256 MiB) for a PDF/container.
+
+**Why the tests missed it (2).** Suites registered one row per capture, filed or not, and none built the parts-only register; scan/render tests ran one batch. Test-gap fix: `fail-closed.test.mjs` builds the 16+16+4 MiB capture as the screen leaves it (parts in the store, bundle naming them, register of parts only, and with provenance D1's whole row), and drives the ops and batches over time. file-safety's tests now run in `filedWorld` (captures filed, as the screen files them); the plain `world` keeps unfiled captures for other modules' tests.
+
+**Changes.** `index.mjs`: `#held(…, {serves})` refuses a member viewer for a capture with no home in `openOriginal`, `originalState`, `safeView`, `requestSafeCopy`, `safeCopy` (not in notes/grade/findings/deeper: those serve no bytes); `#noteScanWait`, `#due`, `scanBatch` (scan waits, checked hourly by heads, sent when whole or all parts are held); `#render` (`waiting`), `#releaseRenderWaits`, `renderWake`, `safeView` (`SAFE_VIEW_PENDING` while queued/waiting); `#wholeHeld`, `#sizeOf`, `#bytes`, `#lookAt`, `#grade`, `#structureCheck` (GRADE_READ_MAX gate); `#repairWaits` in `migrate` (R-OLD: files whose newest ClamAV note is NOT_FOUND, views failed NOT_FOUND). `schema.mjs`: columns `scan_wait_at`, `render_wait_at` (additive). B13: `checks.mjs` SIGNATURES_RUN_RECENT by `rowWord`; dropped from STAND_INS.
+
+**Failing-first (3).** `fail-closed.test.mjs` test 1, through the `openoriginal`/`safeview`/`openwithwarning` ops: on the tranche code (src stashed) red: "FILE_NOT_HELD: it was served"; green now. Tests 2-6 cover the D1 shape and parts target, the NOT_FOUND wait, R-OLD, the render wait, the grade gate.
+
+**Measurement (4).** Local workerd does not enforce 128 MB (a 110 MB PDF read there), so it proves nothing; measured as extraction's c5b does, a node child with `--expose-gc` and a constrained heap, `readActive("pdf")` on page-heavy synthetic PDFs: 19.1 MB: +38 MB work above its bytes (57 MB with bytes; unconstrained +87); 27.7 MB: +49 (77 with bytes; fails at a 48 MB heap). Within K4478's 64/96 bounds at 20 MiB, so GRADE_READ_MAX = 20 MiB (= reading-pipeline's MULTIPART_READ_MAX). If cause-reading-4's step 0 sets another ceiling, change the constant.
+
+**Wording.** No new `localize`. New details are plain English stand-ins of nearest held sentences ("The safe view is queued."); nothing owed beyond T52's pass.
+
+**Tests and checks.**
+- `node --test --test-force-exit test/m/file-safety/*.test.mjs`: all pass but R24 (`rows.test.mjs`): the design's `words-reads.json` lacks `refusal.SIGNATURES_RUN_RECENT` (B13's note): the design's, not weakened.
+- Users (`impact.mjs origin/tranche/T51 HEAD`, 11 modules, 114 files) plus file-safety: 919 pass, 21 fail, all baseline on the tranche tip (journey-check/pseudo, plane/release, store-door/declared-ops) or the R24 above.
+- format 0 failures; architecture 0; coverage 51 of 51 ids named, 0; ownership 0; words (file-safety) 0.
+
+**Proposed requirement lines (BOB writes).** R51 (met): "`openOriginal`, `originalState`, `safeView`, `requestSafeCopy` and `safeCopy` refuse a member viewer, as `FILE_NOT_HELD`, for a capture whose home is not found. The scan target is the parts the home names. A ClamAV `not_scanned: NOT_FOUND` writes one note (R47) and the file waits: it is looked at again once an hour (`WAITING_RECHECK_MS` 3,600,000) and sent when its whole or all its parts are held; a safe view whose render finds no bytes waits likewise, answering `SAFE_VIEW_PENDING`, and is queued again when they are held. The grade, structure check and spreadsheet cells load no capture above `GRADE_READ_MAX` (20 MiB): it is graded by its start, high, `unread`; its structure check is `not_scanned TOO_LARGE`; its cells are `SAFE_VIEW_FAILED TOO_LARGE`." R21: add both constants. R39: a waiting file is due at its wait instant; `renderWake` includes waiting views' earliest instant.
+
+**Found in another module.** `acquisition/unpack.mjs:833` has F3a's shape (audit). Decision for BOB, made on my best reading: fail closed applies only where bytes are served; `threatOf`, `verdictNotes`, `scanFindings`, deeper check still answer a homeless capture to a non-denied member (metadata only), because notice-producers/scheduler tests rely on it. Until provenance D1 merges, the owner is also refused a multipart capture's bytes.
+
+**Deferred.** None.
+
+**Size (session_01Bx8AYz89obuQALgywrmCmP):** test runs 16, module lines 2642
+
+## J13 · COMPLETE
+
+COMPLETE (B14, entry 5, R51). Fail closed where bytes are served; scan and safe view wait for unheld bytes (hourly heads); grade never loads over 20 MiB (measured). Failing-first red on tranche code ('it was served'), green now. File-safety suite green except R24 (design's words-reads.json lacks refusal.SIGNATURES_RUN_RECENT, B13 applied); users 919 pass, 21 baseline fails; checks 0 failures. Details, proposed R51/R21/R39 lines and the choice to limit fail-closed to byte-serving services: record build/jobs/T51/file-safety.md.

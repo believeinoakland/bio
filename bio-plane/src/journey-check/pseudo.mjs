@@ -129,9 +129,10 @@ const made = new Map();
 
 /* A string of an answer made pseudo when it is a sentence of the list, filled or not; any other string is as it was. A
    pattern is tried only by a string that starts with its first literal part, ends with its last and holds every other
-   (R30: the expression cannot match otherwise, so the result is the one of trying every pattern). */
+   (R30: the expression cannot match otherwise, so the result is the one of trying every pattern). No length bounds a
+   sentence: the list's longest are over 900 characters, and the cost is bounded by the pattern tries, not the length. */
 export function pseudoString(s) {
-  if (typeof s !== "string" || s.length < 5 || s.length > 600 || s.startsWith("[")) return s;
+  if (typeof s !== "string" || s.length < 5 || s.startsWith("[")) return s;
   const { exact, patterns } = sentences();
   if (exact.has(s)) return exact.get(s);
   if (!/\S\s+\S/.test(s)) return s;
@@ -172,8 +173,9 @@ export async function pseudoBody(body) {
   });
 }
 
-/* Routes a browser context's documents and fetches of `host` through `fetchCopy` and answers them with pseudo words (R29 (a)): a
-   document's word pairs, and the JSON a screen fetches; all else falls back to the routes before it. */
+/* Routes a browser context's documents, scripts and fetches of `host` through `fetchCopy` and answers them with pseudo words (R29 (a)):
+   the word pairs of a document or of the shell's own script (the page's words stand in that script since interface-shell's fix
+   round 3, R1: the page carries no words itself), and the JSON a screen fetches; all else falls back to the routes before it. */
 export async function pseudoRoute(context, { host, fetchCopy }) {
   await context.route("**/*", async (r) => {
     const req = r.request();
@@ -181,8 +183,10 @@ export async function pseudoRoute(context, { host, fetchCopy }) {
     const type = req.resourceType();
     if (u.host !== host) return r.fallback();
     const doc = type === "document" && req.method() === "GET";
-    if (!doc && type !== "fetch" && type !== "xhr") return r.fallback();
-    const init = { method: req.method(), headers: req.headers() };
+    const script = type === "script" && req.method() === "GET";
+    if (!doc && !script && type !== "fetch" && type !== "xhr") return r.fallback();
+    const { "accept-encoding": _ignored, ...asked } = req.headers();   /* no compression asked of the copy: the answer is read and rewritten here */
+    const init = { method: req.method(), headers: asked };
     const sent = req.postDataBuffer();
     if (sent && !["GET", "HEAD"].includes(req.method())) init.body = sent;
     const res = await fetchCopy(new Request(req.url(), init));
@@ -192,7 +196,9 @@ export async function pseudoRoute(context, { host, fetchCopy }) {
     const cookies = res.headers.getSetCookie ? res.headers.getSetCookie() : [];
     if (cookies.length) headers["set-cookie"] = cookies.join("\n");
     let body = Buffer.from(await res.arrayBuffer());
-    if (doc && /html/.test(ct)) body = Buffer.from(await pseudoBody(body.toString("utf8")));
+    /* the page names its script by the hash of the English one (`integrity`); the pseudo script has another, which a browser refuses */
+    if (doc && /html/.test(ct)) body = Buffer.from((await pseudoBody(body.toString("utf8"))).replace(/(<script\b[^>]*?)\s+integrity="[^"]*"/g, "$1"));
+    else if (script && /javascript|ecmascript/.test(ct)) body = Buffer.from(await pseudoBody(body.toString("utf8")));
     else if (/json/.test(ct)) body = Buffer.from(pseudoJson(body.toString("utf8")));
     await r.fulfill({ status: res.status, headers, body });
   });
