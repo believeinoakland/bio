@@ -41,3 +41,7 @@
 **Probe rerun (the committed `workerd-ceiling.probe.mjs`, index path, `unitsBudget: Infinity`):** mixed 24: 74 MB old space, ~98 MB with bytes; mixed 32: 88 MB, ~120 MB; text-dense 8: 98 MB, ~109 MB. The same as the table within 3 MB.
 
 Size (session_01Xg9yrTHu7epTQVfzdejX4W): test runs 14, module lines 2,196
+
+## J1 · COMPLETE
+
+COMPLETE: reading-pipeline R37 met; details in build/jobs/T51/cause-reading-4.md. Shapes as pinned in B2: reading.failure transient|final; read(..., {unitsBudget, ocrInvocations, owe}); textUnitsFor(i2text, {budget}); reading.ocr_left {cursor, pages} (one added stored field: the cursor and count the ledger entry and page state); owe({kind:'ocr', sha, cursor, pages_left}). WHOLE_READ_MAX 24 MiB, measured under workerd (table in record). Failing-first: 10 tests red on the tranche code, green now. Suites: reading-pipeline 179 pass, text-chain 104, users 879/880 (extraction c5b-memory red the same on the untouched tranche code). One thing for BOB to place: a text-dense PDF of 12 MB or more (over ~3,000 pages) can still pass 128 MB inside the byte ceiling; the smallest closing step is a page-count refusal in pdf-reader before text extraction (record, step 0). Row owed for T52: the over-ceiling sentence (record). extraction R82 must call read with unitsBudget Infinity and replace failure=transient.
