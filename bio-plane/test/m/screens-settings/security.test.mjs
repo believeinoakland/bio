@@ -278,7 +278,7 @@ test("R15 C84: Security draws a button that checks for new signatures now, sends
   const r = await a.press("scanmirror");
   assert.deepEqual(r.sent.filter((x) => x.op === "scanmirror").map((x) => x.body), [{}], "asked once, with no field");
   assert.equal(stateLines(a, /^mirror$/).length, 1, "what it answered is drawn");
-  has(a, "shell.working");
+  has(a, "screen.security.mirror.started");
   assert.ok(reads() > before, "the scanner's state is read again");
   // pressing again clears the earlier answer until the next one comes
   const again = await open("security", { me: ADMIN, table: scanOf({ signatures_age_ms: null }, { scanmirror: () => refuse("SIGNATURES_RUN_RECENT", { translation: "A check was made a few minutes ago." }) }) });

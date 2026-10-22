@@ -73,7 +73,9 @@ const WORDS = {
     ...own("file-scanner.credential."),
     // the scanner's state when it holds no signatures, under file-safety's keys (DEC-396; R77): the date and the reason each fill their own
     "file-safety.index.no_signatures", "file-safety.index.no_signatures_since", "file-safety.index.signatures_refused", "file-safety.index.signatures_failed", "file-safety.index.signatures_not_fetched", "screen.security.nosignatures.next",
-    "act.monitor.label.capture", "shell.working",
+    "act.scanmirror.label.security", "screen.security.mirror.started",
+    // an unfinished run and a refusal with no status, worded by file-safety R46's keys (C84)
+    ...["signatures_refused_unnumbered", "signatures_run_seed", "signatures_run_download", "signatures_run_stage", "signatures_run_verify", "signatures_run_under_way", "signatures_run_stopped"].map((k) => "file-safety.index." + k),
     ...LABELS("security", ["securitymap", "securitytooladd", "securitytooltest", "securitytoolremove"])],
   updates: [...STATES, "screen.updates.name", ...own("screen.updates."), "refusal.UPDATE_SKIP_NO_REASON", "member.founder.unnamed", "settings.set.system",
     "updates.running.release_setup", "updates.earlier.installed_setup", "updates.running.head", "updates.running.release", "updates.running.checked",
