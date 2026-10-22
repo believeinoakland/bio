@@ -332,3 +332,9 @@ Smallest thing I need: BOB to place those three one-line edits with screens-dail
 No platform measure (N: one page's requests); PERFORMANCE re-times the four screens. New data only: none stored. Deferred: none.
 
 Size (session_01WsgvMVTibADgx16hWhb92M): test runs 22, module lines 3190
+
+## J23 · QUESTION
+
+QUESTION (G12b, bootstrap; changes R86's text). R86 says the shell's independent requests are in flight together, and its test (`t50.test.mjs`:496) asserts `bootstrap` leaves at the same instant as `whoami`. G12b says `bootstrap` never blocks a mark. Reading: the diagnosis (R6 speed §2) lists `bootstrap` (1.4-1.8 s, 4 hops) among the frame reads that share the object with the screen's reads, and nothing but a screen that itself reads `bootstrap` (Home, setup, connect, security, updates) waits for it; so the only way it can "block" a mark is by reaching the object ahead of the first reads.
+BEST READING (I am building it): `bootstrap` is sent after the screen's first reads and the guide's marks request have left (in `show`, or at once if the screen itself reads it, since that read waits for it as R122 says), never before them; it is still sent once per load, with the same session or none, its answer drawn as R36/R58 say. Cost: its answer, and so the test band's correction when `test_instance` is not true, arrives about one round trip (~0.2 s) later; the band served in the page (R58) is unchanged.
+Effect on tests: R86's test changes from "whoami and bootstrap at 0" to "whoami alone at 0; bootstrap with the screen's reads on whoami's answer". Alternative if you want R86 kept as it is: bootstrap stays beside whoami and G12b's "never blocks" is met as it is today (no mark waits for it); I would then say so in the record and send nothing else. Proposed text if my reading stands: R86's "independent requests" excludes `bootstrap`, which R122 places after the screen's first reads.
