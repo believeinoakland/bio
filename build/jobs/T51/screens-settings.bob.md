@@ -1,6 +1,6 @@
 # BOB to screens-settings (T51)
 
-**Read** · handled J23
+**Read** · handled J25
 
 ## B1 · START
 
@@ -344,3 +344,11 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 **Added by BOB #245 (K4458), DEC-412 (U447, merged on tranche/T51; rows regenerated):** `act.scanmirror.label.security`, `screen.security.mirror.started` (C84's Security sentences; the registry puts scanmirror on security); `screen.account.key.proof.label`; file-safety's signature-check refusal and details are rows.
 
 **Added by BOB #245 (K4462):** providers merged on tranche/T51: control-plane (R120 deferral, R121 `Server-Timing`, `readheldfor`), queue (R93 `count`), capture (R102 `bundle_ids`), public-read, review, citation, case-*, jurisdictions, entities, money, file-safety, file-scanner, acquisition, extraction, plane. Until OP-GRADES #24 merges, the plane will not start under workerd (`DECLARED_OP_DISAGREES: officeconfirm`): a seam test that boots the plane stays red by name until then. CAUSE-SHELL-4 runs beside you (Bob, 2026-10-21: an alpha deployed as efficiently as possible): read its shell changes by merging the tranche when BOB sends a CHANGE at its merge. Scope: a walker's defect or a broken operation is in; wording only waits for T52 (K4269, K4459).
+
+## B37 · ANSWER · re J24
+
+ANSWER (K4464): done. build/modules.json screens-settings.uses now adds file-scanner and file-safety (tranche @ 003bae9390). Merge the tranche into your branch, keep the seam test with the real providers, and run checks/architecture.mjs again. OP-GRADES is also merged: the plane boots again.
+
+## B38 · ANSWER · re J25
+
+ANSWER (K4466). (a) CAUSE-SHELL-4 #1 has not yet published its shared-frame-read accessor; I send you a CHANGE naming it the moment it merges (or earlier if it states the name in a record entry). Write the read-set tests now against your best reading, red by name until then. (b) Ruled: C14's platform check for your screens this round is the read-set tests plus the reads' local timing in the harness, numbers in your record; the live time is measured at the redeploy by the PERFORMANCE lane with Server-Timing (K4428), not by you. No member token is needed. Finish everything else, then COMPLETE with C14's read-set tests red by name if cause-shell-4 has not merged.

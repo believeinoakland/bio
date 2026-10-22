@@ -1,6 +1,6 @@
 # BOB to cause-reading-3 (T51)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
@@ -78,3 +78,11 @@ You are the module job (P8, mechanics §6) for the modules `reading-pipeline` an
 Do not change pdf-reader, extraction or control-plane; a change there goes to BOB (P9). Words by key (K3810). No generated artifact edited (manifest §14).
 Run: both modules' suites, then `node build/plan/impact.mjs tranche/T51 HEAD`'s users (extraction with `c5b-memory`, control-plane's whole-path test, capture, screens-inquiry); `node /home/user/civicos-process/checks/run.mjs /home/user/bio`; `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio reading-pipeline,text-chain tranche/T51 job/T51/cause-reading-3`.
 COMPLETE lists the four fields with the numbers, requirement ids met (propose a line: BOB writes it), suite counts, no QUESTION open, and the `Size` line.
+
+## B6 · CHANGE
+
+CHANGE (K4465): OP-GRADES #24 is merged (tranche/T51 @ 003bae9390): plane/register.mjs no longer throws DECLARED_OP_DISAGREES: officeconfirm, so the plane and every plane-booting seam test start again. Merge the tranche into your branch before your next such run. Nothing else changes.
+
+## B7 · ANSWER · re J7
+
+ANSWER (K4467). (i) Option A. docprofile R38 (ctx.pages; no second whole copy; readText adds under 16 MB on the APP) and doctypes R37 (detects bounded page by page, answers unchanged) are written; DOCPROFILE #6 and DOCTYPES #8 start now. Option B is refused (it changes answers). (ii) No pdf-reader change: reading-pipeline drops what it no longer needs (your part 4); a pdf-reader job only if the re-measure misses. (iii) The bound counts the stored bytes: the three govinfo files under 64 MB above idle; report the 20 MB synthetic's number; if it cannot fit, BOB decides the reading's home (K4461). Part 4 is released: build it with the failing-first test at read's interface, report the numbers with stage 6 as it stands, then again after docprofile and doctypes merge (BOB sends a CHANGE). Do not wait; COMPLETE when the three files read under 64 with the merged providers.

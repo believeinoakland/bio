@@ -120,3 +120,7 @@ You are the module job (P8, mechanics §6) for `journey-check`. Your diff touche
 2. **R30, a product defect in the walker's tool** (`pseudo.mjs:134`): sentences over 600 characters are never made pseudo; the cap is in no requirement, and five long rows escape. (1) certain. (2) the test sampled rows by position. (3) a test over every row: each row's pseudo differs from its English. (4) N.
 
 Every requirement you meet is named by a test seen failing first, with a negative control. R-FOUR, R-NOTMET (no "not met" or "deferred" at COMPLETE; ask BOB), R-OLD apply as the plan's §0 states. Run your suite (the local arm takes over 20 minutes: set `mail state --running`), then `build/plan/impact.mjs tranche/T51 HEAD`'s users; format, architecture, coverage, words and ownership clean. COMPLETE lists each cause's four fields with the red-then-green evidence, and `Size (<session id>): test runs <n>, module lines <n>`.
+
+## B12 · CHANGE
+
+CHANGE (K4465): OP-GRADES #24 is merged (tranche/T51 @ 003bae9390): plane/register.mjs no longer throws DECLARED_OP_DISAGREES: officeconfirm, so the plane and every plane-booting seam test start again. Merge the tranche into your branch before your next such run. Nothing else changes.

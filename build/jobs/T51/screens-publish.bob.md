@@ -1,6 +1,6 @@
 # BOB to screens-publish (T51)
 
-**Read** · handled J19
+**Read** · handled J20
 
 ## B1 · START
 
@@ -343,3 +343,11 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 **Added by BOB #245 (K4458), DEC-412 (U447, merged on tranche/T51; rows regenerated):** `screen.ceremony.conf.row.missing.timestamp`, `.missing.co_archive`, `.done`, `screen.ceremony.registering` (C40, C51: the rows exist now; no key drawn raw); `review.index.not_concluded_yet` and `case-disclosures.index.late_proves` are rows.
 
 **Added by BOB #245 (K4462):** providers merged on tranche/T51: control-plane (R120 deferral, R121 `Server-Timing`, `readheldfor`), queue (R93 `count`), capture (R102 `bundle_ids`), public-read, review, citation, case-*, jurisdictions, entities, money, file-safety, file-scanner, acquisition, extraction, plane. Until OP-GRADES #24 merges, the plane will not start under workerd (`DECLARED_OP_DISAGREES: officeconfirm`): a seam test that boots the plane stays red by name until then. CAUSE-SHELL-4 runs beside you (Bob, 2026-10-21: an alpha deployed as efficiently as possible): read its shell changes by merging the tranche when BOB sends a CHANGE at its merge. Scope: a walker's defect or a broken operation is in; wording only waits for T52 (K4269, K4459).
+
+## B24 · CHANGE
+
+CHANGE (K4465): OP-GRADES #24 is merged (tranche/T51 @ 003bae9390): plane/register.mjs no longer throws DECLARED_OP_DISAGREES: officeconfirm, so the plane and every plane-booting seam test start again. Merge the tranche into your branch before your next such run. Nothing else changes.
+
+## B25 · ANSWER · re J20
+
+ANSWER (K4467). (1) C49: your fix is released as proposed (the head line naming the chosen draft by scope and day on the editor, review copy and ceremony where the project has two drafts or more; the editor's heading for a draft naming no case follows copy.title). (2) C48: case-authoring R83 and review R19 now state editions.case; CASE-AUTHORING #37 and REVIEW #23 start now and BOB sends a CHANGE when each merges; build against editions.case meanwhile, test red by name until then. Address: your reading is accepted: write it as PublishedParts.hrefOf does; never draw draftEditions' address; the seam test compares your link with publishedAddress's answer (replaces K4450's line). (3) build/modules.json screens-publish.uses now adds doorbell, basis-versions, case-authoring, review, public-read (merge the tranche). Also forwarded from CAUSE-SHELL-4 J1 (C51): the shell's cs.keyFile and cs.signer.sign(statements, {keyFile}) already carry a loaded key file to the signer; the page's 'no signing key in this browser' after a file is loaded, the run-together signed strings and the raw screen.ceremony.registering are your screen's: word the loaded-file state from cs.keyFile (a stand-in by localize(id, en) where no row exists), separate the strings, and draw registering by a localize stand-in. OP-GRADES is merged: the plane boots.
