@@ -1,6 +1,6 @@
 /* control-plane R117 (fix round 3; amended fix round 4, C5b; K4429; extraction R80 as amended): A FAILED READING IS REPLACED ONCE THE WHOLE IS HELD.
    The walker's chain through the real plane, the member's own acts and no hand-written answer: a PDF too large to be read from its parts
-   (past `MULTIPART_READ_MAX`, 20 MiB) and past what is kept whole (`MULTIPART_KEEP_MAX`, 32 MiB) is captured by `acquire`; its reading
+   (past `MULTIPART_READ_MAX`, 20 MiB, and under the whole-read ceiling `WHOLE_READ_MAX`, 24 MiB, past which a reading is a final statement of its size, reading-pipeline R37) is captured by `acquire`; its reading
    fails for want of the whole; the capture screen promotes the document with that failed reading; the member then holds the whole (the
    original bytes put under their digest) and captures the address again. The second `acquire` answers `existed`, and `op=reading` for the
    digest then has the text (`found: true`, units). Controls: a reading with text is never replaced; the failed one is replaced once. The
@@ -49,7 +49,7 @@ function pdf(junk) {
   return out;
 }
 const hex = (b) => createHash("sha256").update(b).digest("hex");
-const PACKETS = { "big.pdf": pdf(new Uint8Array(33 * MIB).fill(0x41)), "small.pdf": pdf(new Uint8Array(0)) };
+const PACKETS = { "big.pdf": pdf(new Uint8Array(22 * MIB).fill(0x41)), "small.pdf": pdf(new Uint8Array(0)) };
 
 const mf = new Miniflare({
   modules: true, modulesRoot: "/", scriptPath: SRC, script: readFileSync(SRC, "utf8"),
@@ -99,7 +99,7 @@ test("R117 (C5b, through the door, the real plane): a document promoted with a r
   const first = await acquire("big.pdf", "a");
   assert.equal(first.ok, true, JSON.stringify(first).slice(0, 400));
   assert.equal(first.document.capture.sha256, sha);
-  assert.ok(first.document.parts && first.document.parts.length >= 5, "the packet is held in parts");
+  assert.ok(first.document.parts && first.document.parts.length >= 3, "the packet is held in parts");
   const total = first.document.parts.reduce((n, p) => n + p.bytes, 0);
   const failed = { content_type: "generic", reader_version: 1, read_from_text: false, found: false, entities: [], facts: {}, at: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"),
     basis: word("reading-pipeline.why.capture_bytes_parts", { total: String(total), parts: String(first.document.parts.length), multipart_read_max: String(MULTIPART_READ_MAX) }),

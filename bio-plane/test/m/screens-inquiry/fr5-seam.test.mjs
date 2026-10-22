@@ -62,15 +62,20 @@ test("R129 N5 (the real plane): interface-shell lists readheld among the acts of
   assert.ok(Array.isArray(RE_POINTS.document) && RE_POINTS.document.includes("readheld"));
 });
 
-test("R129 N5 (the real plane) a copy stored with no reading, made by the member's own upload and a promotion that carried no reading, draws Read it now; the press reads it through the real op=readheld and the page then draws the reading", async () => {
+test("R129 N5 (the real plane) a copy stored with no reading (its upload promoted while the store held no whole to read, as a record filed before R123 or a reading deferred), draws Read it now; the press reads it through the real op=readheld and the page then draws the reading", async () => {
   const auth = await founder();
   const cs = screenCall(auth);
   const bytes = Buffer.from(`a photo's words filed unread ${Date.now()}\nline two of the photo\nline three of the photo\n`);
   const sha = createHash("sha256").update(bytes).digest("hex");
   const up = (await (await door("/api/?op=captureupload&statement=seam&name=notes.txt&type=text%2Fplain", { method: "POST", headers: auth, body: bytes })).json()).result;
   assert.equal(up.existed, false);
-  /* the promotion request as an aborted one leaves it: the document filed WITHOUT its reading (the register names a home, the readings table holds nothing) */
+  /* the promotion request as an aborted one leaves it: the document filed WITHOUT its reading (the register names a home, the readings table holds nothing).
+     Since control-plane R123 the door reads a document after its promotion, so the unread state is made at the plane's real shape: the store holds
+     no whole object while the promotion's reading is tried (it is owed to the alarm, which finds none either), and the whole is back before the press. */
   const { reading: _r, text_units: _t, ...bare } = up.document;
+  const captures = await mf.getR2Bucket("CAPTURES"), key = `bio/captures/${sha}`;
+  assert.ok(await captures.head(key), "the upload is held whole under its digest");
+  await captures.delete(key);
   const made = await CAPTURE_SCREEN.parts.promoteDocument(cs, { doc: bare, title: "notes.txt", locator: bare.locator, project: "" });
   assert.equal(made.refused, undefined, JSON.stringify(made).slice(0, 300));
   const bundle = made.bundleId || made.bundle_id || (made.result && (made.result.bundleId || made.result.bundle_id));
@@ -80,6 +85,7 @@ test("R129 N5 (the real plane) a copy stored with no reading, made by the member
   const p = await boot({ screens: SCREENS, plane: forwarded(auth), path: "/app/document/" + bundle });
   await until(p, () => actsIn(main(p)).includes("readheld"));
   assert.ok(actsIn(main(p)).includes("readheld"), "Read it now is offered on the unread copy");
+  await captures.put(key, bytes);
   await press(p, "readheld", { reason: "filed before it could be read" });
   await until(p, () => main(p).textContent.includes("line two of the photo"));
   const after = (await (await door(`/api/?op=reading&sha256=${sha}`, { headers: auth })).json()).result;

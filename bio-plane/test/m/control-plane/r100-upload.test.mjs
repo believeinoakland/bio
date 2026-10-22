@@ -10,7 +10,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { Miniflare } from "miniflare";
-import { world, call, opCalls } from "./harness.mjs";
+import { world, call, opCalls, defaultHooks } from "./harness.mjs";
 import { controlPlaneOwnerOps } from "../../../src/control-plane/owner-ops.mjs";
 import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
 
@@ -20,6 +20,9 @@ const bare = (body, status = 200) => new Response(JSON.stringify(body), { status
 const doc = () => ({ file: `snapshots/upload-${SHA}`, locator: `upload:${SHA}`, retrieved: "2026-10-16T00:00:00Z", profile: {},
                      capture: { sha256: SHA, bytes: 9, method: "uploaded" } });
 const READ = { reading: { found: true, entities: 0 }, text_units: [{ extent: { kind: "document" }, text: "line one\nline two" }] };
+/* What crosses is under test, not the door's clock: a loaded container can spend more than the 17 s R123's clock half allows before the read
+   (a reading needs 8 of R105's 25 s), which defers the read and is R123's own case; so the door is handed a bound it cannot reach here. */
+const UNBOUND = { ...defaultHooks(), acquireBoundMs: 10 * 60_000 };
 
 test("R100 (the door's map): `captureupload` passes the address's `type` to `uploadCapture` as `type`, and passes none when the request names none (negative control: the other four fields cross as before, and `type` is read from the address alone, never the stream)", () => {
   const calls = [];
@@ -39,7 +42,7 @@ test("R100 (the door's map): `captureupload` passes the address's `type` to `upl
 test("R100 (the door): an upload capture answers as new is read by extraction as `op=acquire`'s document is — the store is asked `extractread` over the answer's document — and the answer's document carries `reading` and `text_units`, the rest of the answer unchanged", async () => {
   const { env, S } = world({ answer: (c) => c.route === "captureupload" ? ok({ ok: true, existed: false, capture: { sha256: SHA, bytes: 9 }, document: doc() })
     : c.route === "extractread" ? ok(READ) : null });
-  const r = await call(env, { op: "captureupload", token: S.ann, method: "POST", params: { statement: "s", name: "a.txt", type: "text/plain" }, body: "line one\nline two" });
+  const r = await call(env, { op: "captureupload", token: S.ann, method: "POST", params: { statement: "s", name: "a.txt", type: "text/plain" }, body: "line one\nline two", hooks: UNBOUND });
   assert.equal(r.status, 200, r.text);
   const [asked] = opCalls(env).filter((c) => c.route === "extractread");
   assert.ok(asked, "the store was asked to read");
