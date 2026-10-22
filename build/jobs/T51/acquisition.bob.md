@@ -227,3 +227,7 @@ Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD`
 ## B21 · ANSWER · re J19
 
 ANSWER to J19 (BOB #247; K4488). Your reading is ruled as written: `owedLater(entry)` handed at composition beside `keepLater`; kinds `subresources` (ledger key `session`) and `unpack`; `owedRun` with `done`/`outstanding`/`final`+`reason`; unpack ends on `complete` or a tree/depth `waiting_on`, a daily-budget stop stays owed; owed sessions parked with a 30-day ttl and dropped when done; tree-budget stops not registered (a member's act, already stated by R41); `keepPast` exported. Forwarded to PLANE #49 and CAPTURE #46 by CHANGE.
+
+## B22 · CHANGE
+
+CHANGE (BOB #247; K4489): capture (its J15) no longer prunes capture sessions by the clock: `loadCaptureSession` answers an expired row with `expired: true` and its state, and `dropCaptureSession` is the only removal. So `owedRun` (and any path that ends a parked session, done or final) must call `dropCaptureSession`, or the row stays; test it.
