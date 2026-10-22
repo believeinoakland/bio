@@ -1573,6 +1573,8 @@ async function acquireRun(cap, body0, opts, t) {
     subs = w.subs; subsSkipped = w.skipped; sessionId = w.sessionId;
   }
 
+  /* R108 (G19): what of the supporting files was kept, stated in the capture's facts and in the answer */
+  const supporting = supportingOf({ subs, render: renderRecorded, notWalked: body.subresources === true ? subsSkipped : null });
   /* R5 (T51; C13): the render still running is parked as a capture session, which the member finishes (`continue`, R12); the
      run is kept beside it so finishing it waits for the very render begun here. */
   let renderPending = null;
@@ -1685,6 +1687,7 @@ async function acquireRun(cap, body0, opts, t) {
       /* R16 (T51; C25): the file name the source gave the document, when it gave one, so a document with no title of its own is named by it */
       ...(fileNameOf(res.headers, resolvedUrl || locator) ? { file_name: fileNameOf(res.headers, resolvedUrl || locator) } : {}),
       ...(renderRecorded ? {} : { transport }),
+      ...(supporting ? { supporting } : {}),
       /* R23: that a supplied credential rode the fetch, whose and at which scope, never its secret. */
       ...(crCredential ? { credentialed: { credential: crCredential.credential ?? null, kind: crCredential.kind,
                                            supplied_by: crCredential.supplied_by ?? null, scope: crCredential.scope ?? null,
@@ -1744,6 +1747,7 @@ async function acquireRun(cap, body0, opts, t) {
     ...(renderPending ? { render: { state: "pending", session: renderPending.session } } : {}),
     ...snapshotOf(subs, sessionId, name, shellRecorded),
     ...(subsSkipped ? { subresources_skipped: subsSkipped } : {}),
+    ...(supporting ? { supporting } : {}),
     ...(receiptSignature ? { receipt_signature: receiptSignature } : {}),
     ...(unpacked ? { unpack: unpacked } : {}),
     /* R44: what the scanner said of the address, stated to the caller as the receipt records it */
@@ -1888,6 +1892,39 @@ async function zipPastBound(ev, parts, head = null) {
     return { format: "zip", confidence: "likely",
              signals: ["magic: PK\\x03\\x04 in the stored bytes", localize("acquisition.index.listed_whole_over_the_stored", "listed whole over the stored parts"),
                        `part: ${CONTENT_TYPES_PART} absent`, `part: ${ODF_MIMETYPE_PART} absent`, `entries: ${l.count}`] };
+  } catch { return null; }
+}
+
+/** R108 (fix round 6, G19; K4571 S10): WHAT OF A PAGE'S SUPPORTING FILES WAS KEPT, STATED. `supporting: {kept, skipped, total, reasons}` from the
+ *  records this module already holds: the walk's (`subs.subresources`, each `{ok, reason, cap | budgetBytes}`) and the render's (`render.subresources`,
+ *  each a loaded file whose digest is `undetermined` with a `digest_reason` when its bytes were not kept). `reasons` is `[{reason, count, limit?,
+ *  detail?}]`, one for each distinct reason a file was not kept, most first; `limit` is the cap's or the budget's figure; `detail` the renderer's own
+ *  words. A walk that was asked for and not made (`notWalked`: the page over 8 MiB or in parts, the primary unreadable, the session gone, the render
+ *  still pending) adds `not_walked` with its reason. Absent (null) when no walk or render was asked for or recorded, and for a page that has no
+ *  supporting files to speak of (`NOT_HTML`). Pure; never throws. */
+export function supportingOf({ subs = null, render = null, notWalked = null } = {}) {
+  try {
+    let kept = 0, total = 0;
+    const why = new Map();
+    const note = (reason, extra = {}) => { const g = why.get(reason) || { reason, count: 0, ...extra }; g.count++; why.set(reason, g); };
+    if (subs && Array.isArray(subs.subresources))
+      for (const r of subs.subresources) {
+        total++;
+        if (r && r.ok) { kept++; continue; }
+        const limit = r && Number.isFinite(r.cap) ? r.cap : r && Number.isFinite(r.budgetBytes) ? r.budgetBytes : undefined;
+        note(String(r && r.reason || "NOT_KEPT"), limit !== undefined ? { limit } : {});
+      }
+    if (render && Array.isArray(render.subresources))
+      for (const r of render.subresources) {
+        total++;
+        if (r && r.sha256 && r.sha256 !== "undetermined") { kept++; continue; }
+        note("BODY_NOT_KEPT", typeof (r && r.digest_reason) === "string" ? { detail: r.digest_reason } : {});
+      }
+    const stopped = notWalked && notWalked.reason && notWalked.reason !== "NOT_HTML" ? String(notWalked.reason) : null;
+    if (!total && !stopped) return null;
+    return { kept, skipped: total - kept, total,
+             reasons: [...why.values()].sort((a, b) => b.count - a.count || (a.reason < b.reason ? -1 : 1)),
+             ...(stopped ? { not_walked: stopped } : {}) };
   } catch { return null; }
 }
 
@@ -2110,6 +2147,7 @@ async function continueCapture(cap, { body, session, cls, storeName, ev, own = n
                  note: word("acquisition.note.continuation_files_new") },
     ...snapshotOf(w.subs, w.sessionId, name, null),
     ...(w.skipped ? { subresources_skipped: w.skipped } : {}),
+    ...(supportingOf({ subs: w.subs, notWalked: w.skipped }) ? { supporting: supportingOf({ subs: w.subs, notWalked: w.skipped }) } : {}),
     store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE } };
 }
 

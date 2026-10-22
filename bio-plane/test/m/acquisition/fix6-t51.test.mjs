@@ -365,3 +365,55 @@ test("R105 (G2): `owedFetch` states what became of the capture: a source that re
   try { const out = await owedFetch(w.store, { kind: "fetch", session: sid }, {}); assert.deepEqual([out.done, out.reason, fetched], [false, "DELIVERY_NOT_HANDED", 1]); }
   finally { none.restore(); }
 });
+
+/* ---------------------------------------------------------------------------------------------------------------------------- *
+ * G19 · R108: a capture's skipped supporting files are stated (K4571 S10: 400 bodies a capture, no screen said it)
+ * ---------------------------------------------------------------------------------------------------------------------------- */
+const PNG1 = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 1, 2, 3]);
+const imgPage = (n) => `<html><head><title>t</title></head><body>${Array.from({ length: n }, (_, i) => `<img src="/img/n${i}.png">`).join("")}</body></html>`;
+const siteOf = (html) => (u) => (/\.html$/.test(new URL(u).pathname) ? page(html) : /\/img\//.test(u) ? new Response(PNG1, { headers: { "content-type": "image/png" } }) : null);
+
+test("R108 (G19): a page of 450 supporting files answers `supporting` kept 400, skipped 50, with the cap's reason and figure, in the answer and in the document's capture facts; a page within the cap answers all kept and no reason", async () => {
+  const w = world();
+  const r = await run(w, siteOf(imgPage(450)), { locator: "https://w.example/p.html", subresources: true });
+  assert.equal(r.status, 200);
+  const want = { kept: 400, skipped: 50, total: 450, reasons: [{ reason: "CAP_REACHED", count: 50, limit: 400 }] };
+  assert.deepEqual(r.body.supporting, want);
+  assert.deepEqual(r.body.document.capture.supporting, want, "the stored capture facts carry it too");
+  /* control: within the cap */
+  const small = await run(world(), siteOf(imgPage(3)), { locator: "https://w.example/q.html", subresources: true });
+  assert.deepEqual(small.body.supporting, { kept: 3, skipped: 0, total: 3, reasons: [] });
+  /* control: no supporting files asked for, none stated */
+  const none = await run(world(), siteOf(imgPage(3)), { locator: "https://w.example/q.html" });
+  assert.equal(none.body.supporting, undefined);
+  assert.equal(none.body.document.capture.supporting, undefined);
+});
+
+test("R108 (G19): a walk asked for and not made is stated (the page over 8 MiB); the files a render loaded whose bytes were not kept are counted with the renderer's own words; a continuation states what its walk holds", async () => {
+  const w = world();
+  const huge = `<html><body>${"x".repeat(9 * MIB)}<img src="/img/a.png"></body></html>`;
+  const big = await run(w, siteOf(huge), { locator: "https://w.example/huge.html", subresources: true });
+  assert.deepEqual([big.body.supporting.kept, big.body.supporting.not_walked, big.body.subresources_skipped.reason], [0, "TOO_LARGE_TO_PARSE", "TOO_LARGE_TO_PARSE"]);
+  /* a PDF asked for with supporting files has none to speak of */
+  const pdf = await run(w, { "https://w.example/a.pdf": () => fastBody(bytesOf(1000)) }, { locator: "https://w.example/a.pdf", subresources: true });
+  assert.equal(pdf.body.supporting, undefined);
+  /* the render */
+  const html = HTML("<p>rendered</p>");
+  const req = (url, extra) => ({ url, type: "Script", status: 200, outcome: "completed", ...extra });
+  const env = { RENDERER: { fetch: async (u, init) => new Response(JSON.stringify({ ok: true, html, elapsed_ms: 5, engine: "Chrome", engine_version: "1", viewport: { width: 1280, height: 800 },
+    dpr: 1, locale: "en-US", timezone: "UTC", navigated_to: JSON.parse(init.body).url, status: 200, scripts: [], wait: { asked: { until: "networkidle", timeout_ms: 15000 }, fired: "networkidle" },
+    requests: [req("https://r.example/a.js", { body_text: "a()" }), req("https://r.example/b.js", { body_text: "b()" }), req("https://r.example/c.js", { body_unavailable: "past the 400-body ceiling" })] })) } };
+  const rw = world({ env });
+  const rd = await run(rw, { [PG]: () => page(SHELL) }, { locator: PG, render: true }, { renderWaitMs: 2000 });
+  assert.equal(rd.body.document.capture.method, "rendered");
+  assert.deepEqual(rd.body.supporting, { kept: 2, skipped: 1, total: 3, reasons: [{ reason: "BODY_NOT_KEPT", count: 1, detail: rd.body.supporting.reasons[0].detail }] });
+  assert.match(rd.body.supporting.reasons[0].detail, /400-body ceiling/);
+  /* a continuation of a walk that ran out of its subrequests states what the walk holds so far */
+  const cw = world();
+  cw.store.recordCaptureLimit({ runtime: "subrequests", observed: 12 });
+  const first = await run(cw, siteOf(imgPage(30)), { locator: "https://w.example/c.html", subresources: true });
+  assert.equal(first.body.supporting.kept + first.body.supporting.skipped, first.body.supporting.total);
+  assert.ok(first.body.supporting.reasons.some((x) => x.reason === "DEFERRED"));
+  const next = await run(cw, siteOf(imgPage(30)), { locator: "https://w.example/c.html", subresources: true, continue: first.body.snapshot.continuation.session });
+  assert.ok(next.body.supporting.kept > first.body.supporting.kept, "the continuation holds more");
+});
