@@ -1,6 +1,6 @@
 # capture (T51)
 
-**Status** · session_01VM4D7r3cUFZacyS8LqnGx2 · depth 2 · COMPLETE · handled B21
+**Status** · session_01DvJ1NBRub48BYu8NPSwTbT · depth 2 · COMPLETE · handled B24
 
 ## J1 · COMPLETE
 
@@ -456,3 +456,47 @@ COMPLETE, CAPTURE #47, T51: E13 and E5 (capture's half). Pushed at 0e79647ee7 on
 - Uses, Private: `acquisition` gains `textTypeOf` (R92, R93) and drops nothing else.
 
 Deferred: none. Words owed: none (no new sentence). Size (session_01VM4D7r3cUFZacyS8LqnGx2): test runs 10 (capture suite 6, users 71 files and 30 files once each, checks 2), module lines 4189 (src/capture)
+
+## J21 · REPORT
+
+REPORT (CAPTURE #48, T51, fix round 6): the names of what capture publishes for G2, so control-plane and notice-producers can build against them now (BOB: please pass them on; capture will not change them).
+
+- `captureOf(ctx).recordFetchDone({session, document, opener, project, at})` -> `{recorded: true|false}`. One row per session (a second call for the same session records nothing and answers `recorded: false`); `session` and `document` non-blank strings, `opener` a member's stamp (`member:<id>`; a blank or machine one records nothing), `project` a string or null, `at` a whole-second UTC instant (this instance's clock when absent). Never throws. Table `fetch_done`. The caller is control-plane's delivery of a finished fetch, in process.
+- `captureOf(ctx).fetchesDone({after, limit})` -> `{ok: true, fetches: [{session, document, opener, project, at, cursor}], limit, truncated, next}`, oldest first by (`at`, `session`), at most `limit` (default 200, clamped 1..1000), `after` the `cursor` of an earlier row (as `taskEvents`); in process, no viewer (notice-producers sends to `opener` only). Never throws.
+- Assumed from acquisition (not yet merged): `notArchivesAmong(store, shas)` returns a Set of the digests acquisition has recorded as not archives, like `openedAmong`. If acquisition names it otherwise, tell me.
+- `openCaptures` stays acquisition's: capture passes its answer through unchanged, so a session with `fetch_pending` is listed as acquisition lists it.
+
+## Fix round 6 · CAPTURE #48 (B22)
+
+**Done** (commit e65bc0f3cd on `job/T51/capture`; `tranche/T51` merged).
+- **G6 (index.mjs `#pageFacts`)**: the row's `capture` is the document's whole. The register read orders `whole` rows first (provenance R72) when the column exists, and a capture that the document's own register document states as a part of a whole is replaced by that whole with its size; so `capture.sha256`, `bytes`, `actor`, `retrieved`, `grade` and `format` are the whole's. New data and data provenance's wake repair covers; a legacy bundle with no `parts` in its register document and no whole row cannot be told apart (R-OLD).
+- **G12d**: `#keptWholeBySize` is never true for a whole row or a stated part; a 40 MB row's `whole` is the store's answer under the whole's digest.
+- **G12a**: parts are never asked of the archive listing; digests in acquisition's `notArchivesAmong(store, shas)` (a Set) are dropped from the grouping; the picker row gains `format`. The call is guarded (`import * as acquisitionApi`), so until acquisition merges nothing is dropped.
+- **G2**: table `fetch_done`, `recordFetchDone`, `fetchesDone` (names posted as J21); `heldAt` check reads no body past 8 MiB (`HELD_AT_CHECK_MAX`): a declared length over it is not read at all, an undeclared one stops at it; the answer is `changed.state: "undetermined"` with `large: true` and `held` unchanged (I read "answers not held" as "not compared"). `openCaptures` stays acquisition's, passed through.
+- **G5**: `captureOp` relays a reader's deferral unchanged and answers a throwing or empty reading as 200 with the kept document, `reading_pending`, `sha` and `diag`, one `console.error`.
+
+**Failing first, red then green**: `r6-t51.test.mjs` (9 tests): red at the unchanged code (the whole not the part; `whole` from the store; no `recordFetchDone`; 100 MiB pulled; the throw reaching the door), green after. The G12a store-call test is red by name ("acquisition exports notArchivesAmong") until acquisition merges. Four old assertions of the picker's key set (fix2-t51, fix3-t51 x2, fix3b-t51) edited to state the new `format` field.
+
+**Proposed requirement lines** (BOB writes): R77 amend (the row's `capture` is the document's whole: register `whole` row first, else the whole its register document states; picker row also `format`; `whole` never from a part's size); R104 new (`recordFetchDone`/`fetchesDone`, table `fetch_done`); R105 new (`heldAt` check reads at most 8 MiB, `large: true`); R73 amend (a reading that fails after a kept acquire is a 200 deferral with `diag`). Word owed: none (diagnostics are identifiers).
+
+**Suites and checks**: capture + cap13 + d57: 266 tests, 265 pass, 1 fail (the by-name red). Users of the held rows and the act (83 files): 1050 tests, 0 fail. `checks/run.mjs`: architecture 0, coverage 6617/6617, words 0 (count unchanged), format 1 failure that is `build/plan/next.md:38` (BOB's). Ownership run before the commit.
+
+Size (session_01DvJ1NBRub48BYu8NPSwTbT): test runs 7, module lines 4390
+
+## J22 · COMPLETE
+
+COMPLETE, CAPTURE #48, T51 fix round 6 (G2, G4, G5-relay, G6, G12a, G12d). Pushed on job/T51/capture; the record's "Fix round 6" section has file-level detail, the red-then-green tests (r6-t51.test.mjs), suites and the proposed lines.
+
+Smallest thing I need: one CHANGE from you when acquisition's `notArchivesAmong(store, shas)` (a Set of digests it holds as no archive) is merged into tranche/T51. My code calls it guarded and my test "R77 R91 G12a ... acquisition exports notArchivesAmong" is red by name until then; on your CHANGE I merge, make it green and swap the guard for a named import.
+
+Rulings of mine for you to record: "answers not held, large: true" for heldAt check is read as `changed.state: undetermined` + `large: true` (held stays true); the row's capture is the register `whole` row, else the whole the register document states; fetch_done API as posted in J21 (recordFetchDone, fetchesDone). Proposed requirement lines are in the record: R77, R73 amended; R104, R105 new.
+Checks: architecture 0, coverage 0, words 0, ownership 0; format has one failure at build/plan/next.md:38 (yours). Users of the held rows: 83 files, 1050 tests, 0 fail.
+
+### Fix round 6, after B24 (CHANGE)
+`tranche/T51` merged (acquisition's `notArchivesAmong`). The guard is now a named import (`index.mjs` import line, `#pageFacts`). The G12a test "acquisition exports notArchivesAmong" is green: 20 null-format captures drawn twice, the second draw makes 0 `archiveList` calls and 0 store calls; mutation check: with the filter removed that test is red. `acquire`'s declaration now accepts `project` (index.mjs DECLARED_OPS, never required); test in `declared-ops.test.mjs` (R97). One old assertion in `t49.test.mjs` stated that a capture whose listing once failed to answer is always asked again; acquisition now remembers a decided non-archive, so it is edited to the new rule.
+Suites: capture + cap13 + d57 267/267. Users of the held rows and the act (83 files): 1061 tests, 1 fail, `control-plane/t51-visitor-copy.test.mjs` (E8), which fails identically on `origin/tranche/T51` without my commits (TypeError reading `capture` of undefined; control-plane's). Checks: format 0, architecture 0, coverage 6623/6623, words 0 (count unchanged).
+Size (session_01DvJ1NBRub48BYu8NPSwTbT): test runs 12, module lines 4390
+
+## J23 · COMPLETE
+
+COMPLETE (CAPTURE #48, B24): tranche/T51 merged; notArchivesAmong is a named import and the G12a test is green (mutation-checked); acquire declares and accepts `project` (test in declared-ops). Capture suite 267/267; format, architecture, coverage, words 0. One user failure, control-plane/t51-visitor-copy.test.mjs (E8), fails identically on tranche/T51 without my commits (control-plane). One old assertion in t49.test.mjs edited to the new rule (a decided non-archive is not asked again). Details in my record.

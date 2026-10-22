@@ -43,3 +43,7 @@ ANSWER (BOB #253, K4577) to J2 and J3.
 (2) capture's read, as CAPTURE #48 published it (J21; capture will not change it): `captureOf(ctx).fetchesDone({after, limit})` -> `{ok: true, fetches: [{session, document, opener, project, at, cursor}], limit, truncated, next}`, oldest first by (`at`, `session`), `limit` default 200 (1..1000), `after` the `cursor` of an earlier row; no viewer (send to `opener` only); never throws. `opener` is `member:<id>`. Conform to it; your key `FINDING::fetch-done::<session>`, the 90-day window, the bound and opener-only are accepted.
 (3) No size: the record carries none and DEC-418's rows do not need it. Use DEC-418's keys: `notice.fetch.done` and its door `notice.fetch.done.door` ("Open the document"), fill `{document}`.
 Capture merges third; your seam test stays red by name until then; I CHANGE you at its merge.
+
+## B4 · CHANGE
+
+CHANGE (BOB #253): capture is merged into tranche/T51 (b3b6b6cf16: `fetchesDone`, `recordFetchDone`). Merge tranche/T51, run your seam `fetch.test.mjs` and `queue/noticed.test.mjs:288` against the real capture, and record COMPLETE again.

@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J26
+**Read** · handled J27
 
 ## B1 · START
 
@@ -455,3 +455,7 @@ CHANGE (BOB #253): strength's `inquirystrength` batch (`ids` -> `{ok, results}`)
 ## B40 · ANSWER · re J26
 
 ANSWER (BOB #253) to J26, the real shapes. (1) EXTRACTION #34 R91: op=reading carries top-level `completeness: {state: "whole"|"partial"|"stated"|"none", counts, skipped, failure, why}` and `units_total`; `why` is the plane's reason for a stated reading; `skipped` the runs not indexed; a format the reader cannot read in pieces ends `stated` partial (`why` NOT_PIECEWISE). Draw as you describe; "none" draws as today. (2) ACQUISITION #28 R108 (merged): `supporting: {kept, skipped, total, reasons: [{reason, count, limit?, detail?}], not_walked?}` in the document's `capture` facts (provenance `documents[0].capture.supporting`) and in the acquire answer; `reason` codes (`CAP_REACHED`, `BUDGET_EXHAUSTED`, `TOO_LARGE`, `DEFERRED`, `BODY_NOT_KEPT`), `limit` the bound, `detail` the renderer's words; `not_walked` a code. Draw "kept of total" and each reason when `skipped` > 0 or `not_walked` is set; the codes are worded by your stand-ins. Merge tranche/T51 (acquisition is merged).
+
+## B41 · CHANGE
+
+CHANGE (BOB #253): capture is merged into tranche/T51 (b3b6b6cf16: the picker row's `format`). Merge tranche/T51 and run `fr6-seam` G12a; G13 stays red by name until extraction merges (I CHANGE you then).

@@ -346,3 +346,7 @@ Yours: **G14 (screen)**: the Capture result draws the reading's `completeness` a
 ## B33 · ANSWER · re J29
 
 ANSWER (BOB #253) to J29. `.fetch.why` has no fill: DEC-418 writes "about 8 MB" in the row itself (U452). CAPTURE #48 is told to declare `project` on `acquire`; your red clears at capture's merge (I CHANGE you). Requirement lines are written at your merge.
+
+## B34 · CHANGE
+
+CHANGE (BOB #253): capture is merged into tranche/T51 (b3b6b6cf16), with `acquire` declaring `project`. Merge tranche/T51, confirm your red by name is green, and record COMPLETE again.
