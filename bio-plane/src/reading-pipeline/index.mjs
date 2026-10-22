@@ -918,6 +918,16 @@ export function wordsIn(s) {
   return n;
 }
 
+/* R35 (fix round 6, G40; K4622): the words a carried unit holds of the text, counted once. A piece's unit can hold words the text
+   has once: the header a sheet's later block repeats (R41) and the tail of a word a hard cut split (R41's runs). Those units are
+   entered here with their own words, so the pieces' words add up to the text's, never past it; any other unit holds `wordsIn` of
+   its text. A cut unit holds fewer words than the text had, as R35 states. */
+const ownWords = new WeakMap();
+const wordsOfUnit = (u) => ownWords.get(u) ?? wordsIn(u.text);
+const withOwnWords = (u, lead) => { ownWords.set(u, Math.max(0, wordsIn(u.text) - lead)); return u; };
+/* The words a chunk of a run adds: the word it continues from the chunk before is not a new one. */
+const continuesWord = (before, chunk) => before.length > 0 && chunk.length > 0 && !SPACE.test(before[before.length - 1]) && !SPACE.test(chunk[0]);
+
 /* R35: `{words_total, words_read}` of a text that has text units, else null. `words_total` is the words of every unit the
    text has plus the words an OCR region below its floor held (carried as a count on the page, `unread_words`, never
    as text); `words_read` is the words of the units `textUnitsFor` keeps, a unit cut to its cap by the prefix it keeps. They
@@ -928,7 +938,7 @@ export function textWordsFor(i2text, keptUnits = undefined, { budget } = {}) {
   const all = allUnitsOf(i2text) || [];
   const unread = (Array.isArray(i2text.pages) ? i2text.pages : [])
     .reduce((n, p) => n + (p && Number.isInteger(p.unread_words) && p.unread_words > 0 ? p.unread_words : 0), 0);
-  const sum = (units) => units.reduce((n, u) => n + wordsIn(u.text), 0);
+  const sum = (units) => units.reduce((n, u) => n + wordsOfUnit(u), 0);
   return { words_total: sum(all) + unread, words_read: sum(kept) };
 }
 
@@ -1309,10 +1319,11 @@ function textPiece(visible, { html, at, budget, maxUnits }) {
     const n = chunks ? chunks.length : 1;
     for (let k = chunks ? run0 : 0; k < n; k++) {
       const text = chunks ? chunks[k] : r.text;
+      const lead = chunks && k > 0 && continuesWord(chunks[k - 1], text) ? 1 : 0;
       const size = utf8Length(text) + ACQUIRE_TEXT_UNIT_ENVELOPE;
       if (!fits(units, size, room, maxUnits)) { more = true; resume = { o: r.from, p: para, q: seq, r: chunks ? k : 0 }; break; }
       room -= size;
-      units.push(unitOf(para, chunks ? k : null, seq, text));
+      units.push(withOwnWords(unitOf(para, chunks ? k : null, seq, text), lead));
       seq++;
     }
     run0 = 0;
@@ -1347,7 +1358,7 @@ function sheetBlocks(u, sheet) {
     if (!cur.length) return;
     const withHead = first > 0 ? `${head}\n${cur.join("\n")}` : cur.join("\n");
     const range = rows && lastCol ? `A${rows[first]}:${lastCol}${rows[end - 1]}` : u.extent.range;
-    blocks.push({ ...u, extent: { ...u.extent, range }, text: withHead });
+    blocks.push({ ...u, extent: { ...u.extent, range }, text: withHead, ...(first > 0 ? { leadWords: wordsIn(head) } : {}) });
     cur = []; size = 0;
   };
   for (let i = 0; i < lines.length; i++) {
@@ -1374,11 +1385,12 @@ function pieceUnitsOf(i2text) {
     if (u.extent.kind === "sheet-range" && u.text.length > CAPTURE_TEXT_UNIT_CAP)
       parts = sheetBlocks({ ...u, extent: { ...u.extent, range: u.extent.range } }, sheets[u.seq]);
     else if (u.extent.kind === "doc-para" && u.text.length > CAPTURE_TEXT_UNIT_CAP)
-      parts = chunksOf(u.text).map((t, k) => ({ ...u, extent: { ...u.extent, run: k }, text: t }));
+    { const cs = chunksOf(u.text);
+      parts = cs.map((t, k) => ({ ...u, extent: { ...u.extent, run: k }, text: t, ...(k > 0 && continuesWord(cs[k - 1], t) ? { leadWords: 1 } : {}) })); }
     else parts = [u];
-    for (const p of parts) {
+    for (const { leadWords = 0, ...p } of parts) {
       const cut = p.text.length > CAPTURE_TEXT_UNIT_CAP;
-      out.push({ ...p, seq: out.length, text: cut ? p.text.slice(0, CAPTURE_TEXT_UNIT_CAP) : p.text, ...(cut || p.truncated ? { truncated: true } : {}) });
+      out.push(withOwnWords({ ...p, seq: out.length, text: cut ? p.text.slice(0, CAPTURE_TEXT_UNIT_CAP) : p.text, ...(cut || p.truncated ? { truncated: true } : {}) }, leadWords));
     }
   }
   return out;
@@ -1428,7 +1440,7 @@ function rangePieceAnswer(i2text, { sha, from, count, total, budget, maxUnits })
   const next = p.more ? all[p.next].extent.page : from + count;
   const more = next < total;
   let words = 0;
-  for (const u of p.units) words += wordsIn(u.text);
+  for (const u of p.units) words += wordsOfUnit(u);
   return { units: p.units, from, next,
            fields: { more, cursor: more ? b64({ v: 1, s: sha, k: "p", n: total, i: next }) : null, read_through: next, total },
            piece: { units: p.units.length, words, pages: [from, next] } };
@@ -1447,7 +1459,7 @@ function textPieceAnswer(visible, { html, sha, cursor, budget, maxUnits }) {
   const cur = p.more ? b64({ v: 1, s: sha, k: "t", c: visible.length, ...p.at }) : null;
   const through = p.more ? utf8Length(visible.slice(0, p.at.o)) : utf8Length(visible);
   let words = 0;
-  for (const u of p.units) words += wordsIn(u.text);
+  for (const u of p.units) words += wordsOfUnit(u);
   return { units: p.units, grain: p.grain,
            fields: { more: p.more, cursor: cur, read_through: through, total: utf8Length(visible) },
            piece: { units: p.units.length, words } };
@@ -1463,7 +1475,7 @@ function listPieceAnswer(all, { sha, cursor, budget, maxUnits }) {
   }
   const p = listPiece(all, { i, budget, maxUnits });
   let words = 0;
-  for (const u of p.units) words += wordsIn(u.text);
+  for (const u of p.units) words += wordsOfUnit(u);
   return { units: p.units,
            fields: { more: p.more, cursor: p.more ? b64({ v: 1, s: sha, k: "u", n: all.length, i: p.next }) : null,
                      read_through: bytesOfUnits(all, p.next), total: bytesOfUnits(all, all.length) },

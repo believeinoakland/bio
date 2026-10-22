@@ -1,6 +1,6 @@
 # reading-pipeline (T51)
 
-**Status** · session_01EihK7Mkuc9VE8VdK74jysx · depth 2 · COMPLETE · handled B17
+**Status** · session_019VpajmgG3BFzWYz8moVQRC · depth 2 · COMPLETE · handled B19
 
 ## J1 · COMPLETE
 
@@ -343,3 +343,37 @@ Size (session_01EihK7Mkuc9VE8VdK74jysx): test runs 22, module lines 2221
 ## J15 · COMPLETE
 
 COMPLETE G37 (READING-PIPELINE #24) except G15's memory. A read classifies once (classify-once.test.mjs: CSV red 4 calls vs 2, green); PDF_RANGE_PAGES stays 200 (measured: 100 flakes the 1.5-parse bar, 150 thin, 200 gives tick 1 8.2 s and 1.40-1.42). Probes alone after ROSTER-READER merge: g13 24 MiB tick 1 14.0 s -> 7.2 s (62 ticks, ENDMARKER found); g26 tick 1 12.4 s -> 8.2 s, op=reading answers; g15 127 STILL DIES (survives 133): needs ~6 MB; not this module's: the csv entry's text() retains +18.3 MB for a 1 MB file (72,392 cell objects), and extraction serialises the whole reading (cells included) four times (extraction/index.mjs:658, :999, :1064 JSON.parse(JSON.stringify(reading)), :1086), an 11.3 MB string live at the cap. I ask: extraction to drop the deep copy at :1064 (and the repeated stringify), else the csv entry's cell shape. Also seen: words_read 162906 > words_total 162878 on that CSV. Proposed R42 and R40 lines, suites (220/220, extraction 292/292), checks (0 failures, words 18421) and Size line are in my record, section 'G37 · COMPLETE'.
+
+## J16 · REPORT
+
+REPORT (READING-PIPELINE #25, G40 R35) — root cause, measured, not yet fixed.
+
+Cause: the two sides of R35 count different texts in pieces mode. `words_total` is the words of the entry's text once (`textWordsFor`, index.mjs:925-932 over `allUnitsOf`, :849; or `totalsOfText`, :1326-1332 over whole runs). `piece.words`, which extraction adds up as `words_read` (extraction/index.mjs:1250), is `wordsIn` over each carried unit's text, summed at index.mjs:1431 (`rangePieceAnswer`), :1450 (`textPieceAnswer`) and :1466 (`listPieceAnswer`). Two things make a carried unit hold words the text has once: (1) `sheetBlocks` (:1348) repeats the sheet's first line at the head of every later block (R41), so each later block counts the header's words again; (2) `chunksOf` (:1247) cuts a run over the cap at the cap when no space is near, so a word split across two chunks counts as two words.
+Evidence (new test `words-pieces.test.mjs`, red on today's code): 1 MB CSV: pieces sum 177,619 over total 177,539 (+80 = header words x later blocks); 9,000-row sheet: 72,007 over 71,995, with and without lineRows (+12 = 4 header words x 3 later blocks... the header is "Fund Amount Note" plus block count); a text with one 266,000-char word: 11 over 9.
+Why the tests missed it: R35's tests read pages and small texts whole; R41's test checked units and extents, never counts, and no test added the pieces' words up.
+Fix (this module only): each carried unit's own words (a repeated header and the second half of a split word excluded) are counted once, by one helper used at all three piece sites; totals unchanged. New reads only. Doing it now.
+
+## J17 · COMPLETE
+
+COMPLETE G40 R35 (READING-PIPELINE #25), with one failing test I did not cause (below).
+
+Cause (J16): `words_total` counts the text's words once (`textWordsFor`, index.mjs:925-932; `totalsOfText`, :1326-1332); `piece.words`, which extraction adds up as `words_read` (extraction/index.mjs:1250), summed `wordsIn` over each carried unit (:1431, :1450, :1466). A carried unit can hold words the text has once: `sheetBlocks` (:1348) repeats the header at the head of each later block (R41), and `chunksOf` (:1247) can cut a word in two. (Correction to J16: the 9,000-row sheet's +12 is its 3 header words x 4 later blocks.)
+Why the tests missed it: R35's tests read pages and small texts whole; R41's test checked units and extents, never counts; no test added the pieces' words up. Gap fixed: `words-pieces.test.mjs`.
+Changed (index.mjs, 21 insertions): a unit's own words, `ownWords` WeakMap with `wordsOfUnit`, `withOwnWords`, `continuesWord` (:921-935); set where a unit is made (`textPiece`, `pieceUnitsOf`: a later sheet block less its repeated header, a run chunk less a continued word); used by `textWordsFor` and the three piece sums. Units' shape, totals and stored data unchanged: new reads only. No new sentence; no census op changes (K4208).
+Failing-first, through `read` (words-pieces.test.mjs). Red before the fix: 1 MB CSV (the E3 probe's shape) pieces sum 177,619 over total 177,539; 9,000-row sheet with and without lineRows 72,007 over 71,995; one word cut by chunking 11 over 9. Green after: sum == total in all, every running sum <= total. Controls: a text read whole answers 6/6/6; a unit cut to its cap answers fewer read than total; the picture with an unreadable part (words.test.mjs) still answers 4 of 9.
+Suites: new test 4/4; reading-pipeline less pdf-pieces 220 tests, 219 pass, 1 fail (below); pdf-pieces alone 1 of 1 pass; extraction c17, round5, round6, round6-pieces, words, r82 61/61; extraction read 4/4; plane round6-extraction 3/3. impact.mjs names 108 modules (shared table); I ran those that read words_read. Checks: format, architecture, channels 0 failures; coverage 6672 of 6672; words 18524 with inline 0, plain 0, testcopy 0 (I added no string); ownership 3 files, 0 failures.
+THE ONE FAILURE, not from this change: memory.test.mjs (R36) BUDGET-2024-APP "did not complete in a 87 MB heap (SIGABRT)", a whole read without cursor. It fails identically with my change stashed, on tranche/T51 as merged (J15 recorded 220/220 on an earlier tip); the other three volumes pass. I did not touch that path. Smallest thing I need: BOB to say whether that failure is known on tranche/T51 or this module should diagnose it; I stand ready on a CHANGE.
+Requirement line proposed (BOB writes it), R35: "(fix round 6, G40; K4622) A reading read in pieces counts each word of the text once: `piece.words` is the words a piece's units hold of the text, a header a sheet's later block repeats (R41) and the tail of a word a hard cut splits being no words; the pieces' words add up to `words_total`, never past it, and exactly to it when the whole text was read. Test: a 1 MB CSV, a 9,000-row sheet with and without `lineRows` and a text with one word over the cap, each read whole in pieces, answer a sum equal to `words_total`."
+Size (session_019VpajmgG3BFzWYz8moVQRC): test runs 12, module lines 2223
+
+## J18 · COMPLETE
+
+COMPLETE G40, both halves (READING-PIPELINE #25; answers B19). Supersedes J17's open item.
+
+1. R43 (B19): `ReadHooks.wants(captureClass)` added in `hooks.mjs`, true exactly when a registered hook's classes include the class, false for null, a non-string, an empty string, or a class no hook holds; it runs and changes nothing. Test `hooks.test.mjs` "R43: ..." red first (`h.wants is not a function`), then green: events-style registration (`minutes`, `agenda` true; `generic`, null, undefined, 42, an array, "" false), empty registry false, a refused registration holds no class, nothing ran, `readHooksOf` registry too. Merged `tranche/T51` first (R43's wording is there).
+2. R35 (J16, J17): unchanged from J17: pieces' words sum to `words_total`, never past it (index.mjs `ownWords`/`wordsOfUnit`; words-pieces.test.mjs red then green).
+
+The failure J17 reported (memory.test.mjs BUDGET-2024-APP, 87 MB heap) did not recur after merging the tranche tip: the whole module suite is 221 of 221 (less pdf-pieces, which passed alone before this merge; I did not re-run it, nothing it reads changed). I never found its cause; it passed on the earlier tip and failed identically on a stashed tree in my container, so treat it as environment-sensitive, not mine.
+Checks: format, architecture, channels 0 failures; coverage 6673 of 6673; words 18524, inline 0, plain 0, testcopy 0 (unchanged); ownership 5 files, 0 failures. Pushed.
+Requirement lines proposed: R35 as in J17; R43 stands as written. K4208: no census op changes. No new sentence.
+Size (session_019VpajmgG3BFzWYz8moVQRC): test runs 16, module lines 2230

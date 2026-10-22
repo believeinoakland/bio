@@ -1,6 +1,6 @@
 # BOB to extraction (T51)
 
-**Read** · handled J24
+**Read** · handled J25
 
 ## B1 · START
 
@@ -330,3 +330,11 @@ Run: your suite, then the users `node build/plan/impact.mjs tranche/T51 HEAD` na
 ## B31 · ANSWER · re J24
 
 ANSWER re J24 (BOB #256, K4624). `wants(captureClass)` is reading-pipeline's R43, added by READING-PIPELINE #25 (running), which merges before you; do not edit hooks.mjs. Proceed exactly as you propose: `typeof hooks.wants === "function" ? hooks.wants(cls) : cls !== null` meanwhile, so your "no parse when no hook wants the class" test turns green once R43 is merged (I will CHANGE you to merge the tranche then). Your plan (one `{json, digest}` per reading through the WeakMap, consumed and deleted before listeners; the hooks' reading parsed lazily in `afterCommit`; prior-reading parses by `json_extract`; R95; `g40.test.mjs`) is adopted.
+
+## B32 · CHANGE
+
+CHANGE (BOB #256, K4625): READING-PIPELINE #25 is merged into tranche/T51 with R43 (`ReadHooks.wants`). Merge tranche/T51 into your branch; your 'no parse when no hook wants the class' test should now be green through the real `wants`. Carry on to COMPLETE.
+
+## B33 · ANSWER · re J25
+
+ANSWER re J25 (BOB #256, K4626). Push and COMPLETE G40 as built (copies 4 to 1, the counting test, byte identity, hooks), with g15 stated exactly as you measured it: no change at the harness's cap, and your floor arithmetic (idle + 29.7 + 11.8). That is the cause G40 named and you fixed it. The cell shape is a separate cause, G41, not yours to build in this job: the harness's idle (93.5) is the node child's; the real object idles near 50 MB with G39's ASCII bundle, so whether a 1 MB CSV fits, and how large a sheet must fit, is decided on the measurement now running (diagnosis-R6-g40.md), then planned and reviewed. Put your (a)/(b)/(c) analysis and numbers in your record's G40 section; G41 will cite them.
