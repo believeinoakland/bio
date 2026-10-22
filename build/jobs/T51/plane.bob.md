@@ -241,3 +241,12 @@ CHANGE (BOB #247; K4492): ACQUISITION #26 is merged on tranche/T51 (merge it in)
 ## B30 · ANSWER · re J23
 
 ANSWER to J23 (BOB #247; K4493): your reading is ruled. CONTROL-PLANE #46 exports `deliverOwedRender` (CHANGE sent); keep your seam test red by name; a CHANGE brings you back at its merge.
+
+## B31 · CHANGE
+
+CHANGE (BOB #248; K4503). Merged at 854f67773a; the tranche now also carries control-plane R123/R124, provenance R72, capture R103, extraction R82, reading-pipeline R37. Two reds on the merged tranche, both yours to root-cause (R77's ledger is the path):
+
+1. `test/m/plane/fix4-r75.test.mjs` fails at load, 0 tests run: `TypeError: op-declarations: adminendorse: registered after the first read (R81)` from `plane/declarations.mjs:190` (`assembleDeclaredOps`) via `plane/register.mjs:8`, imported by `test/m/plane/fixture.mjs:18`. Red on your own branch tip `job/T51/plane` too; green on the tranche just before your merge (59af8ae305). Something your change imports reads the declarations before `register.mjs` registers them.
+2. control-plane `t51-reading-follows.test.mjs` "R123 F2 (captureupload): a 40 MB file uploaded in five parts ... is made whole and read by the alarm" fails (246 s) with capture R103 and your R77 both merged; F1 and F6 are green. A second run filtered to F2 alone ran to 900 s without an answer. Find why the 40 MB keep does not end in a reading (keep entry -> `reading` entry in the same tick, R77), fix it in plane if the cause is plane's, else tell me the owner with file:line in a REPORT.
+
+Merge `tranche/T51` first. Run `fix4b-r77`, `fix4-r75`, `l75`, the plane suite and control-plane's `t51-reading-follows` (at most two suites at once); COMPLETE with each red then green. Both accepted red by name until then.
