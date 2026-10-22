@@ -371,6 +371,11 @@ const instances = new WeakMap();
 /* R82 (F4): reading-pipeline R37's mark. A failed reading that carries it failed for a cause outside the document. */
 const failedTransiently = (r) => !!r && r.found === false && r.failure === "transient"
   && !(Array.isArray(r.entities) && r.entities.length);
+/* (fix round 5, E1) reading-pipeline's sentence for a document it did not read as text, in either of its two causes. */
+const notReadAsText = (r) => !!r && r.found === false && r.failure === "final" && typeof r.basis === "string"
+  && !(Array.isArray(r.entities) && r.entities.length)
+  && [word("reading-pipeline.index.multipart"), word("reading-pipeline.index.non_textual_large")]
+       .some((why) => r.basis === word("reading-pipeline.index.document_not_read_text", { why }));
 /* R82 (F9): the author the ledger's own continuation of a re-read is stamped with. */
 const PLANE_AUTHOR = "plane:pending-work";
 
@@ -674,15 +679,31 @@ export class Extraction {
     const held = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
     const heldReading = held ? safeJson(held.reading) : null;
     const ocr = kind === "ocr";
-    if (held && !ocr && !this.#wantedTheWhole(heldReading, document) && !failedTransiently(heldReading)) return left("READING_HELD");
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    /* (fix round 5, E1; R-OLD: new data only, older records are repaired by the press) a `final` reading that says the
+       document was not read as text is read again once the held bytes now say what they are. */
+    const fmt0 = document.profile && document.profile.format && typeof document.profile.format.format === "string"
+      ? document.profile.format.format : null;
+    const repair = ev && !ocr && (held ? notReadAsText(heldReading) : !fmt0 || fmt0 === "undetermined")
+      ? await this.#nowDetected(document, digest, ev) : null;
+    if (held && !ocr && !(repair && notReadAsText(heldReading)) && !this.#wantedTheWhole(heldReading, document) && !failedTransiently(heldReading))
+      return left("READING_HELD");
+    /* (fix round 5, E3) a capture over the reading ceiling is stated from its size alone (reading-pipeline R37), so no
+       whole is needed to write the statement; one at or under it still needs its whole. */
+    const size = this.#sizeOf(document);
+    const overCeiling = !ocr && size !== null && size > pipeline.WHOLE_READ_MAX;
     let whole = null;
-    try { whole = ev ? (typeof ev.head === "function" ? await ev.head(digest) : await ev.get(digest)) : null; } catch { whole = null; }
-    if (!whole) return left("NO_WHOLE_OBJECT");
+    if (!overCeiling) {
+      try { whole = ev ? (typeof ev.head === "function" ? await ev.head(digest) : await ev.get(digest)) : null; } catch { whole = null; }
+      if (!whole) return left("NO_WHOLE_OBJECT");
+    }
     const e = env || this.env || {};
     if (ocr) return this.#continueOcr({ digest, heldReading, bundleId: home.bundleId, storeName, env: e, left });
-    const out = await this.read(document, { storeName, env, budget: Infinity });
-    const prof = document.profile && typeof document.profile === "object" ? document.profile : null;
+    /* (fix round 5, E2) the text units built are those the index keeps: the budget is the index's bound, never `Infinity`. */
+    const reader = repair ? { ...document, profile: { ...(document.profile || {}), format: repair } } : document;
+    const out = await this.read(reader, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND });
+    if (repair && held && notReadAsText(out.reading)) return left("READING_HELD");
+    const prof = reader.profile && typeof reader.profile === "object" ? reader.profile : null;
     const wrote = this.core.transact(() => {
       const now = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
       if (now && (!held || now.reading !== held.reading)) return null;
@@ -717,6 +738,35 @@ export class Extraction {
     const now = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
     const more = !!(now && (safeJson(now.reading) || {}).tier3_candidate === true);
     return { ok: true, read: true, bundle_id: bundleId, found: true, ...(more ? { owed: true } : {}) };
+  }
+
+  /** (fix round 5, E3) The capture's size from its own document: its parts' sizes, else its stated size; null when the
+   *  document states none (reading-pipeline then asks the store). */
+  #sizeOf(document) {
+    const parts = document && Array.isArray(document.parts) ? document.parts : null;
+    if (parts) return parts.reduce((n, p) => n + (Number.isFinite(p && p.bytes) ? p.bytes : 0), 0);
+    const b = document && document.capture ? document.capture.bytes : null;
+    return Number.isFinite(b) && b > 0 ? b : null;
+  }
+
+  /** (fix round 5, E1) The format the held bytes now detect (`format-registry.detectFormat` over the first KiB of the
+   *  object, a range), as the `profile.format` a read hands the pipeline; null when they detect none. UTF-8 without NUL
+   *  under a declared text type is not a format: that case is the pipeline's own (reading-pipeline R2), which the
+   *  caller's read then tries, so it answers the profile's recorded format unchanged. */
+  async #nowDetected(document, digest, ev) {
+    let head = null;
+    try {
+      const o = await ev.get(digest, { range: { offset: 0, length: 1024 } });
+      head = o ? new Uint8Array(await o.arrayBuffer()).subarray(0, 1024) : null;
+    } catch { head = null; }
+    if (!head || !head.length) return null;
+    const f = detectFormat(head, null);
+    if (f && f.format && f.format !== "undetermined") return f;
+    const declared = document && document.profile && typeof document.profile.source_content_type === "string"
+      ? document.profile.source_content_type.toLowerCase() : "";
+    if (!declared.startsWith("text/") || head.includes(0)) return null;
+    try { new TextDecoder("utf-8", { fatal: true }).decode(head, { stream: true }); } catch { return null; }
+    return document.profile.format ?? { format: "undetermined", confidence: "none", signals: [] };
   }
 
   /** R81: the home of a capture held in parts, or null. The bundle whose `data/provenance.json` states `capture.sha256` =

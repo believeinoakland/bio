@@ -9,7 +9,9 @@ import { promisify } from "node:util";
 
 const FIXTURE = new URL("./fixture.mjs", import.meta.url).href;
 const BIG = new URL("./bigpdf.mjs", import.meta.url).href;
+/* The gate for `readHeld` (fix round 5, E2): the object's 128 MB less the room its own baseline and a second request need. */
 const OBJECT_LIMIT_MB = 128;
+const GATE_MB = 100;
 
 const CHILD = `
 import { fresh, bundle, bucket, doc, sha } from ${JSON.stringify(FIXTURE)};
@@ -49,5 +51,5 @@ test("R80 R45 (C5b, L): `readHeld` of a 21 MB three-part PDF home promoted with 
   assert.deepEqual([out.read, out.found], [true, true], JSON.stringify(out));
   assert.doesNotMatch(out.basis, /parts, over the/, "the reading is no longer the failed one");
   assert.ok(out.pages >= 1000, `read ${out.pages} pages`);
-  assert.ok(out.peakAboveIdleMb < OBJECT_LIMIT_MB, `the read of a ${out.fileMb} MB file peaked ${out.peakAboveIdleMb} MB above idle, past the object's ${OBJECT_LIMIT_MB} MB`);
+  assert.ok(out.peakAboveIdleMb < GATE_MB, `the read of a ${out.fileMb} MB file peaked ${out.peakAboveIdleMb} MB above idle, past the gate of ${GATE_MB} MB (the object's ${OBJECT_LIMIT_MB} MB)`);
 });
