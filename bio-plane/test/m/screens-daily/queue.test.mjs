@@ -31,7 +31,7 @@ const ITEMS = [
 ];
 const FEED = { items: ITEMS, item_count: 8, truncated: true };
 const PLANE = { queue: ok(FEED) };
-const mainQueue = (p) => p.byOp("queue").filter((r) => r.query.limit !== "500" && r.query.muted === undefined);
+const mainQueue = (p) => p.byOp("queue").filter((r) => r.query.limit !== "500" && r.query.muted === undefined && r.query.count === undefined); /* the frame's count read (interface-shell R7, sent when the list comes back cut) is not the screen's */
 const itemOf = (p, id) => main(p).querySelectorAll(".cs-row").find((r) => r.querySelectorAll("button[data-act]").some((b) => b.dataset.item === id));
 const opsOf = (row) => row.querySelectorAll("button[data-act]").map((b) => b.getAttribute("data-act"));
 const UNTITLED = word("queue.source.untitled", { date: "" }).trim();
