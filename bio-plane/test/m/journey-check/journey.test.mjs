@@ -114,6 +114,11 @@ test("R1 (a): the local arm, with no account: the installer over its fake accoun
   for (const j of ["journey 28", "journey 3", "R9 as administrator", "R10 as member", "R7 as the founder, her handle held"]) assert.ok(stepsOf(r, j).length, j);
 });
 
+test("R1 (a), G1: the local arm's install leaves the plane's script holding the watchdog cron its signed statement states; a plane without it fails the walk by name (red until the installer sets it and the release carries the statement)", { timeout: 2400000 }, async () => {
+  const { r } = await local();
+  assert.deepEqual(r.walk.failures.filter((f) => f.kind === FAIL.STEP && /^install: the plane/.test(f.detail)), [], r.report);
+});
+
 test("R9: the local arm walks the journey as administrator through the screens' own controls; while the assistant does not work, steps 4, 9, 10 and 11 are not walked and the rest, 1 to 3, 5 to 8 and 12, each hold (R20)", { timeout: 2400000 }, async () => {
   const { r } = await local();
   const steps = [...numbered(r, "journey 28"), ...numbered(r, "R9 as administrator")];

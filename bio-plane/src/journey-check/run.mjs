@@ -7,6 +7,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { readdir } from "node:fs/promises";
 import http from "node:http";
 import https from "node:https";
+import { planeScheduleProblem } from "./account.mjs";
 import { Walk, StepFailed, FAIL, settle } from "./walker.mjs";
 import { drawnState } from "./screens.mjs";
 import { requireTestInstance, WalkRefused } from "./guard.mjs";
@@ -97,6 +98,9 @@ export async function runLocal({ out = join(OUT, "local"), world: makeWorld, lau
     await walkSite(walk, founder.page, SITE_ORIGIN, INSTALLER_ORIGIN);
     const { copy } = await walkInstaller(walk, founder.page, INSTALLER_ORIGIN);
     walk.copyHost = new URL(copy).host;
+    /* G1 (fix round 6): the plane's script holds the watchdog cron its signed statement states, after the install; a world with no account says nothing */
+    const noCron = world.account ? planeScheduleProblem(world.account, SLUG) : null;
+    if (noCron) walk.fail(FAIL.STEP, `install: ${noCron}`);
     /* R3: before the hand-over writes anything, the copy must be a test instance. */
     await requireTestInstance(copy, (req) => world.fetchCopy(req));
     /* R7 (K3380): every screen swept as the founder while she has no handle, DEC-230's words excepted; where the claim
