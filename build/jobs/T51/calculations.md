@@ -68,3 +68,6 @@ COMPLETE again after K3993 (B2). NO_CHANGE wording accepted as is. R32 freezeUse
 6. **Not met / deferred / open:** none.
 
 Tests run: `node --test --test-force-exit bio-plane/test/m/calculations/` 65 pass, 0 fail (the R32 red of J3 now passes after merging `tranche/T51`). Checks (process repository `checks/run.mjs`): format, architecture, coverage, channels, words 0 failures; ownership 0 failures.
+Users: `impact.mjs` names 78 modules through the shared table; no module outside calculations calls `runPatterns`, `patternResults` or `onPatternResult` in source or tests (searched), so no user's suite was changed by this job.
+
+Size (session_013Qn9ospdGZ85m84zbBg6sF): test runs 6, module lines 3428
