@@ -79,6 +79,8 @@ const ADDITIVE_COLUMNS = [
   ["readings", "capture_format", "TEXT"],
   ["readings", "origin", "TEXT"], ["readings", "asserted_by", "TEXT"], ["readings", "asserted_standing", "TEXT"],
   ["readings", "justification", "TEXT"],
+  /* R82 (F12): the candidates a migration could not read yet, and the once-only scan again for a migration that finished before. */
+  ["reading_migrations", "retry", "TEXT"], ["reading_migrations", "rescan", "INTEGER"],
 ];
 
 /* ---- REC-36 / REC-40: the name terms (R19, R37), and the term fold (R59, N108): `reading_ref_terms.term` is exactly
@@ -366,6 +368,12 @@ const MIGRATIONS = Object.freeze({
 
 const instances = new WeakMap();
 
+/* R82 (F4): reading-pipeline R37's mark. A failed reading that carries it failed for a cause outside the document. */
+const failedTransiently = (r) => !!r && r.found === false && r.failure === "transient"
+  && !(Array.isArray(r.entities) && r.entities.length);
+/* R82 (F9): the author the ledger's own continuation of a re-read is stamped with. */
+const PLANE_AUTHOR = "plane:pending-work";
+
 /* A Durable Object's own state (the composition root's `ctx`), as against a test's `{storage}` stand-in: what the
    object composes, `provenance` (R65) and the N26 and N439 migrations' background run (R66, R68), is reached only on one. */
 const isObjectState = (ctx) => !!ctx && typeof ctx.blockConcurrencyWhile === "function";
@@ -585,12 +593,12 @@ export class Extraction {
 
   /** R1, R18: reads a stored capture (`reading-pipeline.read`, its R24) with this object's evidence store, bindings and the
    *  instance's jurisdiction view (R18), and records the digest of the reading it composed (R21). */
-  async read(document, { storeName = "bio", env = null } = {}) {
+  async read(document, { storeName = "bio", env = null, budget = undefined } = {}) {
     const e = env || this.env || {};
     const out = await readDocument(document, {
       evidence: this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null,
       env: e, storeName, view: this.view(), planeVersion: e.VERSION || null,
-      liveCalibration: (q) => this.#liveCalibration(q) });
+      liveCalibration: (q) => this.#liveCalibration(q), ...(budget === undefined ? {} : { budget }) });
     this.recordComposed(out.reading, document && document.capture && document.capture.sha256);
     return out;
   }
@@ -632,13 +640,19 @@ export class Extraction {
    *  `{ok: true, read: false, why}`, `why` a stable code: `NO_HOME` (neither the register nor a reading held for the digest names a home bundle, the digest is no digest, or
    *  `viewer` is given and may not see the home bundle: an absent record), `READING_HELD` (a reading is already held) or
    *  `NO_WHOLE_OBJECT` (the store holds no object under the digest). It writes no bundle, no register row and no
-   *  promotion, and replaces no reading but one (fix round 4, C5b; K4429): a failed reading that failed for want of the
-   *  whole bytes (`#wantedTheWhole`: a capture of several parts the reader could not assemble) is replaced, in the same
-   *  transaction, when the stored reading is still the one examined. A reading with text, and a failed reading made from
-   *  the whole bytes, are never replaced, so a second call changes nothing. `viewer` is the door's stamp for the member's
-   *  op; a caller that gives none (the door's own call after a capture) is not a viewer and is not gated. A reading that
-   *  finds nothing is a failed reading, recorded (R45). */
-  async readHeld({ sha = null, storeName = "bio", env = null, viewer = undefined } = {}) {
+   *  promotion, and replaces no reading but two kinds (fix round 4, C5b; K4429; fix round 4b, F4; K4487; R82): a failed
+   *  reading that failed for want of the whole bytes (`#wantedTheWhole`: a capture of several parts the reader could not
+   *  assemble), and a failed reading that carries `failure: "transient"` (reading-pipeline R37: the store, a member or an
+   *  entry failed, not the document), are replaced, in the same transaction, when the stored reading is still the one
+   *  examined. A reading with text, a failed reading marked `final` and one with no mark are never replaced, so a second
+   *  call changes nothing. `viewer` is the door's stamp for the member's op; a caller that gives none (the door's own call
+   *  after a capture) is not a viewer and is not gated. A reading that finds nothing is a failed reading, recorded (R45).
+   *  (R82, F8) Every unit the text holds is offered to the index, which keeps its own bound (R22); only the acquire answer
+   *  carries the wire's budget. The answer carries `owed: true` when work remains for the digest: the reading just written
+   *  failed transiently, or pages of a scan are still unread and an OCR member is bound to read them. (R82, F9) With
+   *  `kind: "ocr"` the stored reading's unread pages are asked of the OCR member, those the stored units do not hold, and the
+   *  re-read is written as a composed reading; a member that is down leaves the entry owed, pages it declines end it. */
+  async readHeld({ sha = null, storeName = "bio", env = null, viewer = undefined, kind = null } = {}) {
     const digest = typeof sha === "string" ? sha.trim().toLowerCase() : "";
     let home = /^[0-9a-f]{64}$/.test(digest) && this.#provenance && typeof this.#provenance.homeOf === "function"
       ? this.#provenance.homeOf(digest) : null;
@@ -653,17 +667,21 @@ export class Extraction {
        the register names. */
     if ((!home || typeof home.bundleId !== "string" || !home.bundleId) && /^[0-9a-f]{64}$/.test(digest))
       home = this.#homeOfParts(digest);
-    const left = (why) => ({ ok: true, read: false, why });
+    const left = (why, more = {}) => ({ ok: true, read: false, why, ...more });
     if (!home || typeof home.bundleId !== "string" || !home.bundleId) return left("NO_HOME");
     if (viewer !== undefined && !this.#sees(home.bundleId, viewer)) return left("NO_HOME");
     const document = this.#storedDocument(home.bundleId, digest) || { capture: { sha256: digest } };
     const held = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
-    if (held && !this.#wantedTheWhole(safeJson(held.reading), document)) return left("READING_HELD");
+    const heldReading = held ? safeJson(held.reading) : null;
+    const ocr = kind === "ocr";
+    if (held && !ocr && !this.#wantedTheWhole(heldReading, document) && !failedTransiently(heldReading)) return left("READING_HELD");
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     let whole = null;
     try { whole = ev ? (typeof ev.head === "function" ? await ev.head(digest) : await ev.get(digest)) : null; } catch { whole = null; }
     if (!whole) return left("NO_WHOLE_OBJECT");
-    const out = await this.read(document, { storeName, env });
+    const e = env || this.env || {};
+    if (ocr) return this.#continueOcr({ digest, heldReading, bundleId: home.bundleId, storeName, env: e, left });
+    const out = await this.read(document, { storeName, env, budget: Infinity });
     const prof = document.profile && typeof document.profile === "object" ? document.profile : null;
     const wrote = this.core.transact(() => {
       const now = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
@@ -677,7 +695,28 @@ export class Extraction {
     });
     if (!wrote) return left("READING_HELD");
     await wrote.afterRead;
-    return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true };
+    const owed = failedTransiently(out.reading) || (out.reading.tier3_candidate === true && !!e.OCR_WORKER);
+    return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true, ...(owed ? { owed: true } : {}) };
+  }
+
+  /** R82 (F9): one pass of the OCR member over the pages a stored scan's reading still leaves unread (R35's seeding is the
+   *  cursor), written as a composed re-read. `owed` says whether the digest still has work: pages left after a pass that read
+   *  some, or a pass that read none because the member was down or answered an error. Pages the member declines in a 200
+   *  answer are the document's own, so that ends the entry (`why: "OCR_NO_PROGRESS"`). */
+  async #continueOcr({ digest, heldReading, bundleId, storeName, env, left }) {
+    if (!heldReading || heldReading.tier3_candidate !== true) return left(heldReading ? "NO_PAGES_LEFT" : "NO_READING");
+    if (!env.OCR_WORKER) return left("NO_OCR_MEMBER");
+    const watch = { down: false };
+    const traced = { ...env, OCR_WORKER: { fetch: async (...a) => {
+      try { const r = await env.OCR_WORKER.fetch(...a); if (!r.ok) watch.down = true; return r; }
+      catch (err) { watch.down = true; throw err; } } } };
+    const done = await this.pdfStructure({ sha: digest, ocr: "1", ungated: true, author: PLANE_AUTHOR, storeName, env: traced });
+    const re = done.status === 200 && done.body ? done.body.reextraction : null;
+    if (!re) return left(done.status === 404 ? "NO_WHOLE_OBJECT" : "UNREADABLE");
+    if (!re.performed || !re.written) return left("OCR_NO_PROGRESS", watch.down ? { owed: true } : {});
+    const now = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
+    const more = !!(now && (safeJson(now.reading) || {}).tier3_candidate === true);
+    return { ok: true, read: true, bundle_id: bundleId, found: true, ...(more ? { owed: true } : {}) };
   }
 
   /** R81: the home of a capture held in parts, or null. The bundle whose `data/provenance.json` states `capture.sha256` =
@@ -1302,8 +1341,13 @@ export class Extraction {
     let row = this.#one(`SELECT * FROM reading_migrations WHERE migration=?`, name);
     if (!row) {
       const last = this.#one(`SELECT COALESCE(max(rowid), 0) AS n FROM reading_history`);
-      this.#sql.exec(`INSERT OR IGNORE INTO reading_migrations (migration, cutoff, after, done, examined, migrated, at)
-                      VALUES (?,?,?,0,0,0,?)`, name, last ? last.n : 0, "", stampInstant("second"));
+      this.#sql.exec(`INSERT OR IGNORE INTO reading_migrations (migration, cutoff, after, done, examined, migrated, at, rescan)
+                      VALUES (?,?,?,0,0,0,?,1)`, name, last ? last.n : 0, "", stampInstant("second"));
+      row = this.#one(`SELECT * FROM reading_migrations WHERE migration=?`, name);
+    } else if (row.rescan == null) {
+      /* R82 (F12, R-OLD): a migration that ran before candidates were re-queued passed any whose bytes were not held; it
+         scans again, once, from the start (a reading already migrated or read after the cutoff costs no read). */
+      this.#sql.exec(`UPDATE reading_migrations SET after='', done=0, rescan=1 WHERE migration=?`, name);
       row = this.#one(`SELECT * FROM reading_migrations WHERE migration=?`, name);
     }
     return row;
@@ -1349,29 +1393,49 @@ export class Extraction {
      examined and did. Writes only through R19. */
   async #migrate(m, limit) {
     const st = this.#migrationState(m.name);
-    const out = { ok: true, migration: m.name, cutoff: st.cutoff, done: !!st.done, examined: 0, migrated: [],
+    const waiting = new Set(Array.isArray(safeJson(st.retry)) ? safeJson(st.retry) : []);
+    const out = { ok: true, migration: m.name, cutoff: st.cutoff, done: !!st.done && !waiting.size, examined: 0, migrated: [],
                   unmoved: 0, skipped: [] };
-    if (st.done) return out;
+    if (st.done && !waiting.size) return out;
     const cap = Math.max(1, Math.min(Math.floor(Number(limit) || 50), 5000));
-    const page = this.#rows(
-      `SELECT capture_sha, bundle_id, reading, origin, asserted_by, justification FROM readings
-        WHERE capture_sha > ? AND (capture_format = ?
-              OR (capture_format IS NULL AND json_extract(reading, '$.text_container') = ?))
-        ORDER BY capture_sha LIMIT ?`, st.after || "", m.format, m.format, cap + 1);
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
-    for (const row of page.slice(0, cap)) {
+    const COLS = `capture_sha, bundle_id, reading, origin, asserted_by, justification`;
+    const settle = async (row) => {
       const why = await this.#migrateOne(m, row, st.cutoff, ev);
-      out.examined++;
-      if (why && why.migrated) out.migrated.push({ capture_sha: row.capture_sha, moved: why.moved });
-      else if (why === "unmoved") out.unmoved++;
-      else if (why) out.skipped.push({ capture_sha: row.capture_sha, why });
-      this.#sql.exec(`UPDATE reading_migrations SET after=?, examined=examined+1, migrated=migrated+?, at=? WHERE migration=?`,
-                     row.capture_sha, why && why.migrated ? 1 : 0, stampInstant("second"), m.name);
+      if (why && why.migrated) { waiting.delete(row.capture_sha); out.migrated.push({ capture_sha: row.capture_sha, moved: why.moved }); }
+      else if (why && why.waiting) { waiting.add(row.capture_sha); out.skipped.push({ capture_sha: row.capture_sha, why: why.waiting }); }
+      else {
+        waiting.delete(row.capture_sha);
+        if (why === "unmoved") out.unmoved++;
+        else if (why) out.skipped.push({ capture_sha: row.capture_sha, why });
+      }
+      return why;
+    };
+    /* R82 (F12): the candidates a run could not read yet come first, and stay queued while their cause lasts. */
+    for (const sha of [...waiting].slice(0, cap)) {
+      const row = this.#one(`SELECT ${COLS} FROM readings WHERE capture_sha=?`, sha);
+      if (row) await settle(row); else waiting.delete(sha);
     }
-    if (page.length <= cap) {
-      this.#sql.exec(`UPDATE reading_migrations SET done=1, at=? WHERE migration=?`, stampInstant("second"), m.name);
-      out.done = true;
+    let finished = !!st.done;
+    if (!st.done) {
+      const page = this.#rows(
+        `SELECT ${COLS} FROM readings
+          WHERE capture_sha > ? AND (capture_format = ?
+                OR (capture_format IS NULL AND json_extract(reading, '$.text_container') = ?))
+          ORDER BY capture_sha LIMIT ?`, st.after || "", m.format, m.format, cap + 1);
+      for (const row of page.slice(0, cap)) {
+        const why = await settle(row);
+        out.examined++;
+        this.#sql.exec(`UPDATE reading_migrations SET after=?, examined=examined+1, migrated=migrated+?, at=? WHERE migration=?`,
+                       row.capture_sha, why && why.migrated ? 1 : 0, stampInstant("second"), m.name);
+      }
+      if (page.length <= cap) {
+        this.#sql.exec(`UPDATE reading_migrations SET done=1, at=? WHERE migration=?`, stampInstant("second"), m.name);
+        finished = true;
+      }
     }
+    this.#sql.exec(`UPDATE reading_migrations SET retry=? WHERE migration=?`, waiting.size ? JSON.stringify([...waiting].sort()) : null, m.name);
+    out.done = finished && !waiting.size;
     return out;
   }
 
@@ -1384,10 +1448,10 @@ export class Extraction {
     if (checkChain(reading.text_source) || !reading.text_source.some(m.isLayer)) return m.noLayer;
     const last = this.#one(`SELECT rowid AS n FROM reading_history WHERE capture_sha=? ORDER BY seq DESC LIMIT 1`, sha);
     if (last && Number(last.n) > Number(cutoff)) return m.after;
-    if (!ev) return localize("extraction.index.no_evidence_store_set_up", "your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again");
+    if (!ev) return { waiting: localize("extraction.index.no_evidence_store_set_up", "your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again") };
     const doc = this.#storedDocument(row.bundle_id, sha) || { capture: { sha256: sha } };
     const got = await bytesOf(ev, doc).catch(() => ({ bytes: null }));
-    if (!got.bytes) return "the capture's bytes are not held in the evidence store";
+    if (!got.bytes) return { waiting: "the capture's bytes are not held in the evidence store" };
     const entry = getFormat(m.format);
     if (!entry || typeof entry.parts !== "function" || typeof entry.text !== "function")
       return `no ${m.format} entry is registered`;
@@ -1404,7 +1468,7 @@ export class Extraction {
       next.provenance = await readingProvenance({ text, chain: next.text_source,
         tier: Number.isInteger(next.text_tier) ? next.text_tier : null, container: m.format,
         planeVersion: this.env.VERSION || null, member: null });
-    const u = textUnitsFor(text);
+    const u = textUnitsFor(text, { budget: Infinity });
     const composed = row.origin === "composed" ? true : row.origin === "asserted" ? false : this.#composedHere(reading);
     /* The stored reading must still be the one examined: a promotion or re-read that landed meanwhile wins. */
     const wrote = this.core.transact(() => {
@@ -1436,10 +1500,10 @@ export class Extraction {
   /** What a re-read needs of the stored reading (D-15: a capture whose bundle the viewer may not see answers as
    *  one never read): the reading, the locator the acquire read under (from the bundle's own provenance document,
    *  record-core's `readFile`), and the capture's whole per-page units (D-616: a truncated unit is not the page). */
-  reextractBasis({ captureSha = null, viewer = null } = {}) {
+  reextractBasis({ captureSha = null, viewer = null, ungated = false } = {}) {
     const sha = typeof captureSha === "string" ? captureSha.trim().toLowerCase() : "";
     const row = sha ? this.#one(`SELECT bundle_id, reading FROM readings WHERE capture_sha=?`, sha) : null;
-    if (!row || !this.#sees(row.bundle_id, viewer)) return { held: false };
+    if (!row || !(ungated || this.#sees(row.bundle_id, viewer))) return { held: false };
     const doc = this.#storedDocument(row.bundle_id, sha);
     const units = [];
     for (const u of this.#rows(
@@ -1456,7 +1520,7 @@ export class Extraction {
    *  `author`. Answers `{status, body}`. Without `ocr` it is a read, byte-identical to the read before `ocr=1`
    *  existed; with it, every refusal comes before any byte is read or engine called (C-51), then the re-read. */
   async pdfStructure({ sha, ocr = null, cls = null, session = false, caps = [], viewer = null, author = null,
-                       storeName = "bio", env = null } = {}) {
+                       storeName = "bio", env = null, ungated = false } = {}) {
     const e = env || this.env || {};
     const op = "pdfstructure";
     const ocrAsked = ocr !== null && ocr !== undefined;
@@ -1480,7 +1544,7 @@ export class Extraction {
         return { status: 501, body: { ok: false, reason: "REEXTRACT_NO_OCR_MEMBER", ...reextractRow("REEXTRACT_NO_OCR_MEMBER"),
           op, sha256: sha,
           detail: localize("extraction.index.no_ocr_member_is_bound", "no OCR member is bound to this instance (the OCR_WORKER service binding is absent), so there is no tier 3 to reach. Nothing was read, called or written. An instance that installs the member later can re-read this capture then (D-115, D-319).") } };
-      reBasis = this.reextractBasis({ captureSha: sha, viewer });
+      reBasis = this.reextractBasis({ captureSha: sha, viewer, ungated });
       if (!reBasis.held)
         return { status: 409, body: { ok: false, reason: "REEXTRACT_NOT_READ", ...reextractRow("REEXTRACT_NOT_READ"),
           op, sha256: sha,
@@ -1573,7 +1637,7 @@ export class Extraction {
           calibration: t3.engine ? t3.engine.calibration ?? null : null,
           pages: t3.filled, via: "op=pdfstructure&ocr=1",
         };
-        const w = await this.#writeReread({ basis: reBasis, sha, reading, text: t3.i2text, author, viewer });
+        const w = await this.#writeReread({ basis: reBasis, sha, reading, text: t3.i2text, author, viewer, ungated });
         structure.text = t3.i2text;
         structure.tier = t3.wiredTier;
         if (t3.ocrNote) structure.notes = [...structure.notes, t3.ocrNote];
@@ -1607,11 +1671,11 @@ export class Extraction {
    *  recorded as composed here (R21), with R69's after-read outcome and what the listeners and index reported. Answers
    *  `{ok: true, staled, observed, compared, afterRead, indexed}`, `{ok: false}` when the capture left the caller's
    *  sight, or `{ok: false, rolledBack: true}` when the write was refused while it ran and nothing of it was kept. */
-  async #writeReread({ basis, sha, reading, text, author, viewer }) {
-    const u = textUnitsFor(text);
+  async #writeReread({ basis, sha, reading, text, author, viewer, ungated = false }) {
+    const u = textUnitsFor(text, { budget: Infinity });
     let w = { ok: false };
     try {
-      const out = this.#sees(basis.bundleId, viewer)
+      const out = ungated || this.#sees(basis.bundleId, viewer)
         ? this.writeReading({ bundleId: basis.bundleId, captureSha: sha, reading, textUnits: u.textUnits,
                               textUnitsOverBound: u.textUnitsOverBound, textUnitsSkipped: u.textUnitsSkipped,
                               author, composed: true })
