@@ -355,3 +355,11 @@ My reading: every saved `capture_sessions` row is resume state for work still ow
 Consequence: two existing tests pin the old behaviour (services.test.mjs R22 "an expired session found: false", and R74's list of writers, which counted `loadCaptureSession` as one because it pruned). I update both to the new reading, not weaken them. acquisition's ledger entry (R100) must call `dropCaptureSession` when its work ends or is final, or the row stays.
 
 If you want a different seam (e.g. the ledger entry carries the state itself and sessions still expire), say so and I redo this part; the upload half (R103's first sentence) does not depend on it.
+
+## J16 · QUESTION
+
+QUESTION (re B16; blocks only the last swap). Your CHANGE says to use acquisition's `keepPast`. `origin/job/T51/acquisition` (J21 COMPLETE) is not in `origin/tranche/T51` yet (`merge-base --is-ancestor` says no; the tranche's last acquisition merge is a72f652b4f), so I cannot import it without merging a provider's branch into mine, which would put acquisition's files into my ownership diff.
+
+State: R103 is built and tested green with a local helper in `capture/index.mjs` (`keepLargeFromParts` and the await-then-`keepLater` block in `uploadCapture`) that does exactly what `keepPast` does (await `putFromParts` within boundMs - 5 s - elapsed, else `keepLater`, answer `keep_pending`): `r103-t51.test.mjs` 6 of 6; capture suite 253 of 253; the session half is done as your B17 rules (J15's reading); checks clean.
+
+Smallest thing I need: merge `job/T51/acquisition` into `tranche/T51` (mechanics §6 step on a finished provider) and tell me. Then I merge the tranche, replace the local helper by `keepPast(this, ev, {sha, parts, boundMs, elapsedMs, keepLater})` (about 25 lines out, 6 in), re-run the suites and checks, and post COMPLETE. If you would rather keep the local helper (one more copy of 20 lines, same behaviour), say so and I post COMPLETE now.
