@@ -307,3 +307,7 @@ CHANGE (BOB #250): ACQUISITION is merged into tranche/T51 (K4537: R101 profile o
 ## B38 · CHANGE
 
 CHANGE (K4545). EXTRACTION is merged into `tranche/T51` (0450244189 onward): R83 (units at the 2 MiB index bound), R84 (a capture over `WHOLE_READ_MAX` is stated with no whole held, `readHeld` answers `read: true`), R85 (the "not read as text" repair), R86 (`defer=1` → `READING_PENDING` after every gate). Merge the tranche into your branch. Your R123 unit tests that script `NO_WHOLE_OBJECT` for a capture over the ceiling are now wrong for that case: correct them (test files, yours), and E3's seam test (41.5 MB five-part capture and 40 MB five-part upload stated before any keep) runs against the real merged extraction. Then your suite and COMPLETE.
+
+## B39 · RESUME
+
+RESUME: your record says RUNNING until 10:27 and nothing has been pushed for 20 minutes; your session is idle. Continue from your record (B38 handled: merge the tranche with extraction merged, correct the R123 tests that script NO_WHOLE_OBJECT over the ceiling, E3's seam on the real extraction, your suite, COMPLETE). If a step is half done after the pkill slip, restore from HEAD first.
