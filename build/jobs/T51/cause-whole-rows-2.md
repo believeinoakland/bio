@@ -25,3 +25,7 @@ T51 fix round 4b, job 17 (cause-whole-rows-2): retrieval-browse **R19** and mach
 **Found in other modules (not changed).** None new. (`attestation.register_row_names` stale after R72 is already BOB's, from job 16.)
 
 Size (session_017xrsneguU1xum1pmphBbk5): test runs 14, module lines 45 (30 added and 15 removed across 4 source files; 159 lines of new tests in 2 files).
+
+## J2 · COMPLETE
+
+COMPLETE · cause-whole-rows-2 (job 17): retrieval-browse R19 and machinery-producers R16 met on job/T51/cause-whole-rows-2 (pushed, no PR). retrieval-browse find.mjs holdOf skips provenance's part_of rows (partsHeldIn, marks.mjs provenanceFor); machinery-producers index.mjs #gradeNotes reads registeredFor and skips part_of. Red then green with the three-part fixture: retrieval-browse 2 of 4 failed before (4 captures vs 1, 5 vs 2), machinery-producers 1 of 2 (4 notes vs 1); suites 55/55 and 37/37, users 156/156. Checks: format, architecture, coverage, ownership 0 failures; run.mjs words 18421 unchanged. Proposed requirement lines and the Size line are in build/jobs/T51/cause-whole-rows-2.md.
