@@ -12,7 +12,7 @@
 
 - **Re-walk:** A 24 rows (19 FIXED; STILL: 2 BLOCKER, 5 MAJOR, 6 MINOR; NEW: 1 MAJOR, 3 MINOR), B 27 rows (19 FIXED; STILL 8: 1 BLOCKER, 1 MAJOR (C14), 6 MINOR; NEW 7: 4 MAJOR, 3 MINOR). Every BLOCKER, MAJOR and NEW MAJOR is placed below; every MINOR is a WORDS line (section 5), except the ASCII85 row (E11: a member cannot cite from such a PDF).
 - **Causes in jobs: 11** (E1-E11). **Root cause stated with file:line: 7** (E1, E3, E4 (shape; one field to confirm), E5, E7, E11, and the code half of E2). **Unknown, step 0 first: 4** (E2's live cause, E6's walked case, E8, E9); E10 (speed) is measured, its floor known.
-- **Jobs: 13, all sonnet** (0 haiku, 0 opus): pdf-reader, acquisition, doorbell, reading-pipeline, extraction, capture, publication, filings, screens-intake, screens-publish, interface-shell, control-plane, plane (capture and interface-shell added at review, section 2b). **Seam owners:** control-plane (E1, E3, E5, E6), screens-publish (E4), screens-intake (E7, E8), plane (E2), filings (E9).
+- **Jobs: 14 (13 now, E9's on Bob's answer), all sonnet** (0 haiku, 0 opus): pdf-reader, acquisition, doorbell, reading-pipeline, extraction, capture, publication, filings, screens-intake, screens-publish, interface-shell, control-plane, plane (capture and interface-shell added at review, section 2b). **Seam owners:** control-plane (E1, E3, E5, E6), screens-publish (E4), screens-intake (E7, E8), plane (E2), filings (E9).
 - **Whole-suite reds (section 4):** 2 stale (BOB fixes: `t51-held-failed` R117, `fr5-seam` R129 N5), 2 defects (placed in E2: `c5b-memory`, doc-clean `measure` R4), 1 not reproduced (`r100-upload`).
 - **Bob's:** none now; one conditional point prepared (section 6).
 
@@ -134,6 +134,16 @@ Fix, in P11's order of gain: (i) the object reports its own in-object time besid
 ### E13 · Held's full rows cost about 150 ms each (P10; Held 3.0-4.7 s)
 (1) **Certain** (P10, P2.3): `capture/index.mjs` builds each full row one at a time (`#pageAnswers`, the batch examination, archive grouping, R83's reader, the grade, an evidence-store `head` per digest in `#wholeOf`). (2) **Missed:** no test times or counts per-row work. (3) **Failing-first:** `heldcaptures` of 27 rows (limit 500, full) makes at most one evidence-store `head` per distinct digest and runs the per-row work in lanes of 8 (results in row order); `whole` is answered from the size the register recorded at keeping where it holds one (`head` only when it does not); the answer is unchanged byte for byte against today's for the same store. Job: **capture**. (4) **P:** PERFORMANCE re-times Held.
 
+## 2c. Step 0, read on biosmoke8 (`fix-round-5-step0.md`, 08:33-08:49Z; K4532)
+
+- **E2:** the ledger is wedged. INFO-2026-0111's `reading` row (the oldest by `due_at`) has no try recorded after its first 22 ms (`NO_HOME`, 05:57:09Z); every row behind it (0116 keep and reading, 0117, 0121, 0125, 0127, the `subresources` rows) shows `last_try: null` for up to 2.5 h. A returned failure is excluded (it writes attempts); OOM, CPU and wall time cannot be told apart from outside. This is E2 (1) d: plane's fix stands and is the round's first priority; also `put` (re-registration) resets `attempts` to 0, so a row re-registered after each interrupted run would never end: the interrupted count is kept across a re-registration. E2 (f) stays BOB's after the L numbers.
+- **E6:** the scan's owed `reading` row never ran, so no `ocr` row was made; `OCR_NO_PROGRESS` is not supported. E6's code defect (`followEntries`) stands; the walked case is E2's.
+- **E1:** confirmed live (0125, 0127 `final` "(multipart)", no text). Old records: repaired by extraction's `readHeld` rule when the ledger or the press reaches them.
+- **E4:** `citations` is `{state:"signed", rows:[{target, version:"no_bytes", capture:null}]}`; the signed text pins the roster as `case_findings` (targets) and `case_roles[].{target, role, version_sha, edition}`. The provider's field reads those names (`version_sha`, not `bundle_sha`; checked against the `publish` answer's `findings`).
+- **E8:** "Finish it" does send `POST acquire {continue}` (the walker saw none); the visitor copy is missing and the capture's `subresources` row sits unworked behind the wedged ledger: most likely E2's, not proven (the `continue` answer was not read). acquisition's job reads that answer offline through the real path and proves the delivery through the real control-plane; `owedwork` cannot be asked by a session key (`BAD_SHA`): plane's `owedwork&sha=` also takes a `subresources` row's key.
+- **E9:** the member is **invited, not joined** (`walker`, `joined_at` null) in the action's project; the action's basis is empty, so the project is the action's. The refusal is the rule working; the door is drawn to someone the rule refuses, and the same invited member could prepare, approve and send the filing. Section 6 (2) is triggered: **put to Bob** (K4532); E9's job starts on his answer.
+- **E14 (new, MAJOR: a screen that cannot work).** Timeline draws "Could not read this, because your team's Civicsmith did not answer": `op=affordances` answers 200 but its `vocabularies` lack all five events vocabularies (`event_kinds`, ...): `affordances/words.mjs:116-122` adds them only when `events` is in the isolate's owner registry, which `events.start()` fills in the Durable Object, not in the Worker that composes the answer (likely, not proven). Job **affordances** (seam owner): failing-first through the real door (Miniflare plane): `op=affordances` holds `event_kinds`, and the Timeline screen draws its kinds; the gap: no test asks the door's answer for the events vocabularies. Where the cause lies in `events` (layer 5), the job says so by QUESTION and BOB places it.
+
 ## 3. Jobs
 
 Every job: medium effort, claude-sonnet-5-5; its suites then `build/plan/impact.mjs tranche/T51 HEAD`; "declare every census op you own" (K4208: `owedwork` is already declared; E10's timing metrics are no op); R-FOUR, R-SEAM, R-NOTMET, R-OLD, R-STOP. Providers merge before users; each seam owner last on its path (K1965).
@@ -147,10 +157,11 @@ Every job: medium effort, claude-sonnet-5-5; its suites then `build/plan/impact.
 | 4 | reading-pipeline | E1 (owner: re-detect from held bytes; text by declared type), E2 (R42 re-measured) | reading-pipeline |
 | 5 | extraction | E1 (repair), E2 (units at the index bound), E3 (owner) | extraction |
 | 6 | publication | E4 (provider: the pins as a field) | publication |
-| 7 | filings | E9 (S) | filings (+ screens-action if step 0 says) |
+| 7 | filings or screens-action | E9: starts on Bob's answer (2c) | the module his answer names |
 | 7b | interface-shell | E12 | interface-shell |
 | 8 | screens-intake | E7 (S), E8 (the press) | screens-intake |
 | 9 | screens-publish | E4 (S: owner) | screens-publish |
+| 9c | affordances | E14 (S) | affordances |
 | 10 | control-plane | E1, E3, E5, E6 (S), E2 (the press and the acquire half, 2b), E10 (S) | control-plane |
 | 11 | plane | E2 (owner, S: ledger accounting) , E6 | plane |
 

@@ -191,3 +191,63 @@ test("R80 R71 C48 N6 once edition 1 is signed, the ceremony and the case editor 
     assert.ok(!drew(p, "review.body.nocase"), `${path}: never 'names no case yet'`);
   }
 });
+
+/* ---------- E4 (fix round 5; R13, R70, R77, C48): a reloaded ceremony signs what the edition pins ---------- */
+import { keptKey, answerSign } from "./fixtures.mjs";
+const planeFor = (base, asked) => ({ ...base, caseratify: (req) => { asked.push(req); return ok({ caseId: req.body.caseId, edition: req.body.edition, sitting: [] }); } });
+const rosterOfDocument = (w, caseId, edition) => w.fm(w.row(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, caseId, edition).text).case_roles;
+
+test("R13 R70 R77 C48 E4 a ceremony reloaded after 'Edition 1 is prepared' counts the edition and its finding, and signs the finding with the edition (the walker's 'signs all 1: the edition and its 0 findings')", async () => {
+  const { w, P, plane } = prep();
+  const first = await open(CER2(P), { plane });
+  tick(first, "ce-tie", "yes");
+  await press(first, "publish", { reason: "because" });
+  const caseId = w.row(`SELECT case_id FROM case_documents`).case_id;
+  const pinned = rosterOfDocument(w, caseId, 1);
+  assert.equal(pinned.length, 1, "the real prepared document pins the finding");
+  const asked = [];
+  const again = await open(CER2(P), { boot: { idb: await keptKey() }, plane: planeFor(plane, asked) });
+  assert.ok(drew(again, "screen.ceremony.signs.count.findings", { n: "2", findings: "1" }), "the edition and its one finding, after the reload");
+  assert.equal(again.root().querySelector("[data-roster-unread]"), null, "nothing is unreadable");
+  assert.deepEqual(main(again).querySelectorAll("[data-statement]").map((li) => li.getAttribute("data-statement")), ["case", "finding"]);
+  await press(again, "caseratify");
+  await answerSign(again, true, "caseratify");
+  const sent = last(again, "caseratify").body;
+  assert.deepEqual(sent.members.map((m) => [m.id, m.sha]), [[Q, pinned[0].version_sha]], "the finding is signed with the edition, with the sha the document pins");
+  assert.equal(sent.members[0].signature.length > 0, true);
+});
+
+test("R13 R70 E4 control: the same flow with no reload counts and signs the same; the page that prepared it and the reloaded page send the same sitting", async () => {
+  const { w, P, plane } = prep();
+  const asked = [];
+  const same = await open(CER2(P), { boot: { idb: await keptKey() }, plane: planeFor(plane, asked) });
+  tick(same, "ce-tie", "yes");
+  await press(same, "publish", { reason: "because" });
+  assert.ok(drew(same, "screen.ceremony.signs.count.findings", { n: "2", findings: "1" }));
+  await press(same, "caseratify");
+  await answerSign(same, true, "caseratify");
+  const a = last(same, "caseratify").body;
+  const again = await open(CER2(P), { boot: { idb: await keptKey() }, plane: planeFor(plane, asked) });
+  await press(again, "caseratify");
+  await answerSign(again, true, "caseratify");
+  const b = last(again, "caseratify").body;
+  assert.deepEqual(b.members.map((m) => [m.id, m.sha]), a.members.map((m) => [m.id, m.sha]));
+  assert.equal(b.expectedSha, a.expectedSha);
+});
+
+test("R13 R77 E4 control: a draft whose roster cannot be read (the document states none) refuses to sign in words, and nothing is sent", async () => {
+  const { P, plane } = prep();
+  const first = await open(CER2(P), { plane });
+  tick(first, "ce-tie", "yes");
+  await press(first, "publish", { reason: "because" });
+  const asked = [];
+  const blind = { ...planeFor(plane, asked), casedocument: (req) => { const r = plane.casedocument(req); const { findings, ...rest } = r.json.result; return ok(rest); } };
+  const again = await open(CER2(P), { boot: { idb: await keptKey() }, plane: blind });
+  assert.ok(again.root().querySelector("[data-roster-unread]"), "said before the press");
+  await press(again, "caseratify");
+  await until(again, () => drew(again, "screen.ceremony.sign.nodoc"));
+  assert.ok(drew(again, "screen.ceremony.sign.nodoc"));
+  assert.equal(again.byOp("caseratify").length, 0, "nothing sent");
+  assert.equal(signDialog(again), null, "and no signing was asked of the key");
+});
+import { signDialog } from "./fixtures.mjs";
