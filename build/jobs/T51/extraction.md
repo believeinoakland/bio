@@ -219,3 +219,11 @@ Checks: format 0 failures; architecture (extraction) 0; coverage (extraction) 57
 
 Found in other modules: none new. Generated artifacts made stale: none (no word added, no bundle input changed).
 Size (session_013CUWFqoDsBdasaVpjLFLWT): test runs 9, module lines 3433
+
+## J12 · QUESTION
+
+Three interface shapes my R82 shares with providers that are not merged (cause-reading-4 = reading-pipeline R37; plane R77). Please pin them for both sides; I build on these readings now and adapt if you rule otherwise.
+
+1. **The mark (D4).** A failed reading carries `failure: "transient" | "final"` (string key on the reading; absent on a reading that found text). `readHeld` replaces a stored reading with `found:false` and `failure === "transient"`; a failed reading with no key (stored before R37) is final: R-OLD = new data only. 
+2. **Every unit (D5/F8).** `reading-pipeline.read(document, {…, unitsBudget})` and `textUnitsFor(i2text, {budget})`: `budget` defaults to `ACQUIRE_TEXT_UNITS_BUDGET`; `Infinity` charges no wire budget (each unit still cut to `CAPTURE_TEXT_UNIT_CAP`). `readHeld`, the re-read and the transcription pass `Infinity`; extraction's own bound (4,096 units, 2 MiB, R22) stays and states what it skips. (A 400-page fixture within 2 MiB is fully findable; a denser packet is cut at 2 MiB, stated by `skipped`.)
+3. **What the ledger calls and reads (D2/F9).** The plane's `ocr` entry calls `readHeld({sha, kind})`. With `kind: "ocr"` and a stored reading with pages still unread, `readHeld` asks the OCR member for the pages the stored units do not hold (R35's seeding is the cursor; no new stored field) and writes the re-read as composed. The answer gains `owed: true` whenever work remains for that digest (pages left, or the new reading is itself `failure: "transient"`); no `owed` key means the entry ends. Plane R77 must keep an entry while `owed` and must not treat `READING_HELD` as ended when `owed` is true.
