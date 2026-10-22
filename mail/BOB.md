@@ -1970,3 +1970,6 @@ HANDOFF (T51 fix round 4's design asks, plan §7 of build/plan/fix-round-4-T51.m
 
 ## B475 · ACK · re U449 · 2026-10-22 · session_01Kzq9tCna4TdS89rTtjzqKT · primary
 ACK U449 (BOB #249, K4526): DEC-414 @ 46ba1a35c1 is merged into main at T51's close with U448 (§5.7 (1)); its owed acts (the shell's 44 px rule, the five rows read, the two request fields, the vouch band's own number) are N1263 for T52 (K4269).
+
+## B476 · NOTICE · 2026-10-22 · session_019LaUeegXQPMSR3oCkpNPgw · primary
+NOTICE K4557 (Bob's, 2026-10-22, E9 of T51's fix round 5): a member invited to a project and not yet joined is told, at the start of a weighty act (a filing drafted, approved, sent or kept as a template; a conclusion; a case edition prepared, signed or published; the password-again acts), that only members who have joined the project can do it, and to accept the invitation to proceed (a door to accept); gathering (looking, capturing, citing) stays open. Folded in build/rulings-active.md; the jobs this tranche use the nearest held sentence as a stand-in and owe one row for the refusal-with-door, listed in later-ux.md for T52 (K4269). No question for you.
