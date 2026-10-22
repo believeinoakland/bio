@@ -97,6 +97,27 @@ const NO_DECLARATION_SEAM = Object.freeze({ ok: false, module: "capture", declar
 const RECEIVED_VIAS = Object.freeze([DOORBELL_VIA, UPLOAD_VIA]);
 /* R86: the parts an upload is held in, `acquisition` R10's form. */
 const UPLOAD_PART = 8 * 1024 * 1024;
+/* R103 (fix round 4b, F2; K4487): the door's bound for a member's act (control-plane R105: 25 s) and what an upload leaves of it for
+   the rest of the call after awaiting a keep; CHOSEN as `acquisition` R96's are, the plane may hand its own as `boundMs`. */
+const UPLOAD_BOUND_MS = 25000;
+const UPLOAD_KEEP_RESERVE_MS = 5000;
+/* R103: the large keeps under way, by the whole's digest, so a second press of the same file while the first is under way waits
+   for it and the store is asked once. */
+const KEEPING_LARGE = new Map();
+/** R103 (`acquisition` R96's arm for an upload): the whole of a file past `MULTIPART_KEEP_MAX` made by the store itself from the
+ *  parts it holds (record-core R87), no part read back here. Answers the promise of `{ok}` or null when the store offers no
+ *  call; never rejects. */
+function keepLargeFromParts(ev, { sha, parts }) {
+  if (!ev || typeof ev.putFromParts !== "function") return null;
+  const going = KEEPING_LARGE.get(sha);
+  if (going) return going;
+  const mine = (async () => {
+    try { const r = await ev.putFromParts(sha, parts.map((p) => p.sha256)); return { ok: !!(r && r.ok === true) }; }
+    catch { return { ok: false }; }
+  })().finally(() => { if (KEEPING_LARGE.get(sha) === mine) KEEPING_LARGE.delete(sha); });
+  KEEPING_LARGE.set(sha, mine);
+  return mine;
+}
 /** R94: the longest question id `recordCapturedFor` records, in characters (`acquisition` R47's bound). */
 export const CAPTURED_FOR_QUESTION_MAX = 200;
 /** R100: the longest project id `recordSeenIn` records, in characters. */
@@ -641,7 +662,8 @@ export class Capture {
    *  upload) answer `existed: true` the same way, with the document as a new upload's (T51 fix round 2). `within` (N380's seam, `store-door` R7): called inside the upload's own
    *  transaction after the receipt and the actor; its `{ok: false}` rolls the upload back and is the answer; a throw or a promise rolls it back as
    *  `UPLOAD_WITHIN_FAILED`. It writes no bundle. */
-  async uploadCapture({ bytes, statement, name = null, type = null, by, at = null, within = null } = {}) {
+  async uploadCapture({ bytes, statement, name = null, type = null, by, at = null, within = null, boundMs = null, keepLater = null } = {}) {
+    const startedAt = Date.now();
     if (typeof by !== "string" || !memberIdOf(by).trim() || isMachineIdentity(by))
       return { ok: false, reason: "MEMBER_SESSION_REQUIRED", status: 403,
                detail: localize("capture.index.refusal_member_brings_file", "a file is brought into the record by a signed-in member, whose stamp names them; nothing was written") };
@@ -718,6 +740,28 @@ export class Capture {
     if (multipart && !(await keepWhole(ev, { sha, parts, total })).ok)
       return { ok: false, reason: "UPLOAD_NOT_STORED", status: 502,
                detail: localize("capture.index.file_bytes_unreadable", "the file's bytes could not be read whole or held under their own digest, so nothing was written") };
+    /* R103 (fix round 4b, F2): past `MULTIPART_KEEP_MAX` the whole is made from the stored parts by the store itself and this call
+       AWAITS it within what is left of the door's bound: a promise nothing keeps alive after the answer is not a keep. One that has
+       not ended by then is handed to the plane (`keepLater`, its owed-work ledger, finished by its alarm) and the answer says
+       `keep_pending`; the file is filed in its parts either way, never refused for it. */
+    let keepPending = false;
+    if (multipart && total > MULTIPART_KEEP_MAX) {
+      const making = keepLargeFromParts(ev, { sha, parts });
+      if (making) {
+        const left = Math.max(0, (boundMs ?? UPLOAD_BOUND_MS) - UPLOAD_KEEP_RESERVE_MS - (Date.now() - startedAt));
+        let timer;
+        const got = await Promise.race([making, new Promise((res) => { timer = setTimeout(() => res(null), left); })]);
+        clearTimeout(timer);
+        if (!(got && got.ok)) {
+          const later = typeof keepLater === "function" ? keepLater : typeof this.keepLater === "function" ? (k) => this.keepLater(k) : null;
+          if (later) {
+            try { const r = await later({ sha, parts: parts.map((p) => p.sha256) }); keepPending = !!(r && r.ok === true); }
+            catch { keepPending = false; }
+          }
+        }
+      }
+    }
+    const pending = keepPending ? { keep_pending: true } : {};
     let holds = null;
     try { holds = await this.provenance?.registerHolds?.({ sha }); } catch { holds = null; }
     /* The record holds the bytes when its register files them or a receipt names them (provenance R5). Bytes merely in
@@ -740,7 +784,7 @@ export class Capture {
     if (registered) {
       /* a second sighting of bytes the record holds: the receipt only, no document, no actor, `within` not called */
       const r = this.#tx(writeReceipt);
-      return r ? { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r) } : notWritten;
+      return r ? { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r), ...pending } : notWritten;
     }
     /* R92: a text type over bytes that are text (valid UTF-8, no NUL) is the profile's declared content type, so the bytes
        are read as text; any other type, or a text type over bytes that are not text, profiles the bytes as R86 does without
@@ -767,7 +811,7 @@ export class Capture {
          interrupted before it was filed): the receipt is written as a second sighting and the document is answered as a new
          upload's, so the screen can file it for the viewer; no actor is recorded and `within` is not called. */
       const r = this.#tx(writeReceipt);
-      return r ? { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r), document } : notWritten;
+      return r ? { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r), document, ...pending } : notWritten;
     }
     let done;
     try {
@@ -786,7 +830,7 @@ export class Capture {
       throw e;
     }
     if (!done.ok) return done;
-    return { ok: true, existed: false, capture: { sha256: sha, bytes: total }, receipt: receiptOf(done.receipt), document,
+    return { ok: true, existed: false, capture: { sha256: sha, bytes: total }, receipt: receiptOf(done.receipt), document, ...pending,
              ...(typeof within === "function" ? { within: done.within } : {}) };
   }
 
@@ -2585,13 +2629,14 @@ export class Capture {
    * Capture sessions (R22, R46): a capture that needs another tick
    * ==================================================================== */
 
-  /** SCRATCH, not record. Expired rows are pruned on the way past, so an abandoned session costs one row until its
-   *  hour is up. The primary is never stored here: it is in the store under its own digest. */
+  /** SCRATCH, not record. R103 (fix round 4b, F5): a session is the resume state of work still owed (the supporting files or the
+   *  render a capture has not finished), so the clock never prunes it: `expires` says only when it stops being live (R46, the
+   *  member's "Finish it" window), and the row goes when its work ends, by `dropCaptureSession`. The primary is never stored
+   *  here: it is in the store under its own digest. */
   saveCaptureSession({ session, locator, primarySha, primaryFile, base, state, ttlMs = 3600000, at = null } = {}) {
     return this.#tx(() => {
       const now = at ? new Date(at) : new Date();
       const iso = (d) => stampSecond(d.getTime());
-      this.#sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, iso(now));
       if (!session || !state) return { session: null, saved: false };
       const cur = this.#one(`SELECT ticks FROM capture_sessions WHERE session = ?`, session);
       const body = JSON.stringify(state);
@@ -2611,12 +2656,11 @@ export class Capture {
   loadCaptureSession({ session, at = null } = {}) {
     return this.#tx(() => {
       const now = at ? new Date(at) : new Date();
-      this.#sql.exec(`DELETE FROM capture_sessions WHERE expires < ?`, stampSecond(now.getTime()));
       const r = this.#one(`SELECT * FROM capture_sessions WHERE session = ?`, session);
       if (!r) return { session, found: false, note: say("capture.note.capture_session_either") };
       let state = null;
       try { state = JSON.parse(r.state); } catch { return { session, found: false, note: "session state did not parse" }; }
-      return { session, found: true, locator: r.locator, primarySha: r.primary_sha,
+      return { session, found: true, expired: r.expires < stampSecond(now.getTime()), locator: r.locator, primarySha: r.primary_sha,
                primaryFile: r.primary_file, base: r.base, ticks: r.ticks, created: r.created, state };
     });
   }
