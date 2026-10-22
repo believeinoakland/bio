@@ -281,3 +281,7 @@ COMPLETE for fix round 6, job 9 (G12c, provider for screens-daily's `casedrafts`
 - `node checks/ownership.mjs /home/user/bio review tranche/T51 job/T51/review`: 6 files changed by review, 0 failures.
 
 Size (session_016SWyQAUyjKySSg7jMkWWY1): test runs 9, module lines 1703
+
+## J13 · COMPLETE
+
+COMPLETE for fix round 6 (G12c, provider). casedrafts takes projects (at most 50) and reviewcopy takes drafts (at most 20), each answering one single-read answer per id, a hidden or unknown id the same dead answer byte for byte; an over-long list is refused whole, REVIEW_BATCH_TOO_LARGE (C-87.18, stand-in words, row owed refusal.REVIEW_BATCH_TOO_LARGE). Both ops declared (K4208). Failing-first batch.test.mjs 8 tests (red: unchanged source ignores the keys), review suite 95/95, users 1143/1144 (plane release R24, accepted by name), checks and ownership clean for review (format failure next.md:38 inherited). Requirement lines R44, R45 and the R23/R42 amendments are proposed in my record, with the parameters control-plane and store-door must forward. No QUESTION open, nothing deferred.
