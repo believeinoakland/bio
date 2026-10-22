@@ -504,3 +504,7 @@ COMPLETE (B34 applied). Merged tranche/T51 (capture declares project); removed m
 Merged `tranche/T51` (interface-shell G12b). `common.test.mjs:172` and `open-file.test.mjs:221` now exclude the shell's one key `bio-session:frame` from the "tab storage holds nothing" check (the rest of the storage must still be empty). screens-intake 292 of 292.
 
 Size (session_01RpngLERJbtZqcnEHi985DP): test runs 29, module lines 2601
+
+## J31 · COMPLETE
+
+COMPLETE (B35 applied). Merged tranche/T51; common.test.mjs:172 and open-file.test.mjs:221 exclude bio-session:frame (the rest of tab storage still must be empty). screens-intake 292/292. Size (session_01RpngLERJbtZqcnEHi985DP): test runs 29, module lines 2601
