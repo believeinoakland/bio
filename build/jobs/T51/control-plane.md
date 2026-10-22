@@ -532,3 +532,5 @@ Recommendation: B for the alpha (Bob's focus: efficient deployment), recording t
 - Old data (R-OLD): the OCR/defer changes act on new calls only; an old scan with pages left is repaired by the member's next press, which now hands it to the ledger.
 
 Size (session_01ScsNRTFgkShQFLDCyhHJBM): test runs 14, module lines 4,494
+
+**Users' suites** (`bio-plane/test/m/plane/`, `journey-check/`, on the merged tranche): 435 tests, 339 pass, 95 fail, none from this job. Plane: 1 red, `release.test.mjs:74` R24 (`screen.objective.purpose` not held by the words list: the design words, not this module). journey-check: 94 red, all `playwright-core cannot be loaded (run npm ci in bio-plane/src/journey-check)`: the container has no `node_modules` there (K4113 names the lockfile directories; this one was not installed). Nothing of control-plane's is among them.
