@@ -2,7 +2,7 @@
    it. At the module's interface, over the scripted scanner and tools (fixture.mjs). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, pdf, sha } from "./fixture.mjs";
+import { filedWorld as world, pdf, sha } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
 import { FILE_SAFETY_CHECKS } from "../../../src/file-safety/index.mjs";
 

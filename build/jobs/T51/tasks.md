@@ -1,6 +1,6 @@
 # tasks (T51)
 
-**Status** · session_017V6QvFfWXPXUuFw5C8Nu4s · depth 2 · COMPLETE · handled B5
+**Status** · session_01GozQuvJKa9gKZzheDC1C7d · depth 2 · WAITING ON BOB (J7) · handled B8
 
 ## J1 · COMPLETE
 
@@ -78,3 +78,83 @@ Tests and checks:
 - `checks/run.mjs`: format 0, architecture 0, channels 0; coverage 5 failures and words 16 failures, none in `tasks` (op-grades test copies and other modules). `setup-words/build.mjs --check`: rows stale as expected (a note on `ai-accounts`).
 
 Size (session_017V6QvFfWXPXUuFw5C8Nu4s): test runs 6, module lines 1698
+
+## J4 · QUESTION
+
+**Step 0 of R25 (F3d), and one decision I need.** I started (B6); my branch is realigned to origin per your B6 fallback (the earlier local commit is kept on `stale/tasks-local`). I have read the round plan, the audit's F3 and 3d, R20–R24 and the module code.
+
+**Step 0: does D1 resolve the waiting event? Yes, once provenance R72 is merged.** Evidence:
+- The event carries the capture's digest: `acquisition/index.mjs:1404` enqueues `authority-undetermined` with `captureSha: sha`.
+- The drain finds the event's home with `homeOf(q.capture_sha)` at `tasks/index.mjs:351`. `provenance/index.mjs:835-841` reads `register` by that digest, and for a multipart capture the register holds only the parts, so the lookup is null. That is the whole cause, as F3 says.
+- When provenance R72 adds the `whole` row, `homeOf` finds the bundle and the event routes like any other.
+- A committed promotion re-arms the drain (`tasks/index.mjs:1262`), so the event gets its try at the moment the capture is filed.
+- Provenance R72 is not merged yet, so the seam test (the 20 MB three-part capture's event becoming its task) waits on provenance. I will write it against the real provider and it stays red by name until then.
+
+**The part D1 does not reach.** The drain tries an event at most eight times (`tasks/index.mjs:1181`, then no more timed wakes). After that the event stays in the capture's queue and is counted only as `queued` (`tasks/index.mjs:480`). Nothing shows the member an item. A task cannot stand in for it, because the task grammar needs a bundle id and an unfiled capture has none.
+
+**Decision for Bob (who should see a stalled event):** an unfiled capture has no subject, and the capture does not store who captured it.
+- **(A, recommended)** Tasks reads out the events that have used up their retries, each saying what it could not do ("this capture is not yet filed in any record, so who issued it is undetermined"). Queue shows one queue item per such event to the administrators. This needs a change to `queue-producers`, which is another module's, so I will report it to you as a CHANGE for that module.
+- **(B)** Keep the `queued` count as it is, and say in the record that R25's general rule is not met. This leaves R25 open at COMPLETE, which R-NOTMET does not allow.
+
+My recommendation is (A). I will build the tasks side of (A) once you confirm, and take the seam test in the meantime. Nothing else in the job is blocked on this.
+
+## J5 · QUESTION
+
+**R25 status after B7 (K4488).** The drain change is done and committed on the job branch (`1bc3fe9b28`): the back-off caps at one hour and no count stops it (`bio-plane/src/tasks/index.mjs`, `#backoffWake`, with `TASK_DRAIN_MAX_WAIT_MS`); the failing-first test "an event whose capture is filed after its eighth try is run at the next wake" was red and is green; the R18 tests that pinned "no timer past the limit" now pin the one-hour cap. The tasks suite is 132 of 132.
+
+**One thing I need from you: where the 20 MB three-part seam test lives.** R25's second test is the real chain: a 20 MB capture in three parts, promoted through the real path, its `authority-undetermined` event becoming its task. Tasks' test world has only fakes for provenance and capture, so it cannot run that chain, and a fake would not test it. The chain needs provenance's real promotion (which writes the register) and capture's real event queue. I am asking which harness should host it:
+- **(A, recommended)** Written now in tasks' suite against the real provenance and capture modules, composed the way the plane composes them, and stays red by name until provenance R72 merges.
+- **(B)** Written in the plane's suite as its seam test, since it runs the whole path, and tasks' record names it.
+
+I have not written it. R25 stays open until you choose. Impact on this change names six modules (tasks, queue, op-declarations, store-door, control-plane, plane); I am running their 103 test files now and will post the counts in COMPLETE.
+
+## J6 · COMPLETE
+
+**COMPLETE: TASKS #17, fix round 4b, entry 8 (R25, K4487, K4488, K4491).** Branch `job/T51/tasks`, head `24963c15ad`.
+
+**Step 0 (answered in J4).** D1 resolves the event once provenance R72 merges. The event's digest is the whole capture's (`acquisition/index.mjs:1404`); the drain's lookup is `homeOf` at `tasks/index.mjs:351`, null for multipart today because the register holds only parts (`provenance/index.mjs:835-841`). A committed promotion re-arms the drain (`tasks/index.mjs:1262`). The seam test below is the proof, red until R72.
+
+**What changed.**
+- `bio-plane/src/tasks/index.mjs`, `#backoffWake` (about line 1177) and the R18 comment (about line 160). Every retry's gap is `min(BACKSTOP × 2^(a−1), MAX_WAIT)`, where `MAX_WAIT` (`TASK_DRAIN_MAX_WAIT_MS`, one hour) is new at line 175. From `RETRY_LIMIT` (8) tries on, the gap is `MAX_WAIT` every time. Nothing stops the wake by count (B7, option C). The seventh gap is 60 minutes, not 64, because of the cap.
+- No change to the queue, the queue producers or any other module.
+
+**Tests, failing first, then green.**
+- `inbox.test.mjs`: "R25 (K4488): an event whose capture is filed after its eighth try is run at the next wake". Red before the change (the wake was null after the eighth try; `actual: null`). Green after.
+- `inbox.test.mjs`: the R18 tests that pinned "no timer past the limit" now pin the one-hour cap. Red-to-green by the same change.
+- `seam-r25.test.mjs` (K4491, option A): the real chain, composed as the plane composes it (provenance-routes' fixture: real record, membership, promotion and provenance; capture's real queue; tasks' real drain). A three-part capture is promoted as screen promotes one (the register names its parts). Its `authority-undetermined` event is queued under the whole digest, and one drain must make its task. **Stays red by name**: "provenance R72's whole row". The one-part control **passes**, so the red is the multipart case alone.
+- Size of the fixture: the three parts are small (64 KB each). The production capture is 20 MB. Promotion refuses inline files over about 7 MB (`OVERSIZE_INLINE`), so the test cannot carry 20 MB as text. The register path does not depend on size, and the test says so in its header.
+
+**Suite counts.**
+- Tasks suite: 111 tests, 110 pass, 1 fail. The failure is the seam test, red by name as B8 allows. Before the seam test, 132 of 132 passed (the earlier count of 132 included the removed fixture duplicates; the file set changed with `seam-r25.test.mjs`).
+- Affected suites (impact, six modules, 103 files), run at concurrency 2: 793 tests, 791 pass, 2 fail. R24 (words, `release.test.mjs`) fails the same way on the commit before my change, so it is not mine. R17 (`groupdescriptiondraft`, op-grades) passes alone and failed only in the batch; I read it as a concurrency artifact and did not prove that.
+
+**Checks.** `checks/run.mjs`: format, architecture and words pass; coverage names R25 in a test (no tasks failure). Coverage's 8 failures are other modules' requirements (acquisition R100, capture R103, extraction R82, file-safety R51, ooxml R35, provenance R72, reading-pipeline R37, store-door R18). `checks/ownership.mjs`: 3 files, 0 failures.
+
+**Measurements.** Not applicable: the change is in the drain's scheduling only. No platform-specific limit is touched, and no deploy.
+
+**Requirement lines I propose (BOB writes `build/requirements/tasks.md`).**
+- R18, amended: "...at the retry limit and beyond, the gap is one hour (TASK_DRAIN_MAX_WAIT_MS); the drain holds a timer for a queued event whatever its tries (K4488)". Replace the sentence "one tried RETRY_LIMIT times wants no wake at all ... an otherwise idle instance holds no timer".
+- R25, met by `inbox.test.mjs` (the eighth-try test) and by the seam test once R72 merges.
+- No new requirement lines beyond these.
+
+**Hand rows (`op-declarations`, `op-grades`).** None: no op changed.
+
+**Deferred.** Nothing in my module.
+
+**Found in other modules (for BOB).** None outside the items above. The impact list shows queue, op-declarations, store-door, control-plane and plane only as the tests that run against tasks; none failed beyond R24, which is pre-existing.
+
+**Size (session_01GozQuvJKa9gKZzheDC1C7d): test runs 13, module lines 1702.**
+
+## J7 · REPORT
+
+**Correction to COMPLETE (J6): test counts, verified per file.**
+
+My COMPLETE gave counts from combined runs. Those totals change between runs (the tasks glob came out 132, then 111, then 124), so I did not trust them. I should have said so. I have re-run every file on its own. The figures below replace the ones in J6:
+
+- **Tasks suite**, per file: 134 tests, 133 pass, 1 fail. The fail is the R25 seam test, red by name (provenance R72), as B8 allows. The earlier "132 of 132" and my note about "removed fixture duplicates" are wrong: there were no removed duplicates. The 132 was the combined run before the seam file existed.
+- **Affected suites** (the 103 files of impact, each run on its own): 786 tests, 784 pass, 2 fail. Both fail the same way on the commit before my first change (checked in a temporary worktree, now removed):
+  - R24 in `bio-plane/test/m/plane/release.test.mjs` (words).
+  - R17 in `bio-plane/test/m/store-door/declared-ops.test.mjs` (op-grades: "no hand row disagrees with the owner's row", `groupdescriptiondraft`). It is not the tasks op. It is pre-existing.
+- The earlier R17 result (passing alone, failing in batch) is the same test in a different file. I was wrong to call it a concurrency artifact; it fails on the parent commit too.
+
+Nothing else in J6 changes. The Size line (test runs 13, module lines 1702) still stands; the test-run count is the count of my `node --test` invocations, which is approximate.

@@ -96,3 +96,7 @@ Mail with `--module provenance`; record `build/jobs/T51/provenance.md`. Model cl
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio provenance tranche/T51 job/T51/provenance`. COMPLETE: what changed (file:line), the failing-first tests red then green, measurements, suite counts, requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
 
 **Your entry (2).** (D1). **R72**: a multipart capture's whole sha resolves to its bundle by `homeOf` and by the `register` table (`whole` row); the repair back-fills old bundles once. Failing-first: the common fixture, `homeOf(whole)` null before, the bundle after; a bundle's verification unchanged; the repair on a bundle promoted before the change.
+
+## B8 · RESUME
+
+RESUME (BOB #247 backstop): your record shows WORKING and nothing pushed for 23 minutes while your session is idle. Finish your step, post COMPLETE (or a QUESTION naming the smallest thing you need).
