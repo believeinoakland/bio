@@ -78,7 +78,7 @@ test("R77: a second registration of an entry re-arms it, one given a long backof
   const worn = rows(x)[0];
   assert.ok(worn.attempts >= 10 && worn.due_at > Date.now() + 1000, "worn down to the longest backoff");
   const before = Date.now();
-  await captureOf(x.ctx).owe({ kind: "reading", sha: d });   /* the member captures it again */
+  await pendingOf(x.ctx).owe({ kind: "reading", sha: d });   /* the member captures it again */
   const [again] = rows(x);
   assert.equal(again.attempts, 0);
   assert.ok(again.due_at <= Date.now() && again.due_at >= before - 1, "due now");
@@ -87,12 +87,12 @@ test("R77: a second registration of an entry re-arms it, one given a long backof
   x.state.answer = () => ({ final: true, why: "READING_FINAL_NO_TEXT" });
   await x.s.onAlarm(Date.now() + 1);
   assert.equal(rows(x)[0].final_why, "READING_FINAL_NO_TEXT");
-  await captureOf(x.ctx).owe({ kind: "reading", sha: d });
+  await pendingOf(x.ctx).owe({ kind: "reading", sha: d });
   assert.equal(rows(x)[0].final_why, null, "a final entry re-armed");
   assert.equal(rows(x)[0].attempts, 0);
   /* malformed registrations write nothing */
   for (const bad of [{ kind: "other", sha: d }, { kind: "reading", sha: "nothex" }, { kind: "keep", sha: d }, { kind: "ocr", sha: d, detail: [] }, { kind: "keep", sha: d, parts: ["x"] }])
-    assert.equal((await captureOf(x.ctx).owe(bad)).ok, false, JSON.stringify(bad));
+    assert.equal((await pendingOf(x.ctx).owe(bad)).ok, false, JSON.stringify(bad));
   assert.equal(rows(x).length, 1);
 });
 
@@ -119,26 +119,42 @@ test("R77 (D2): an entry ends only when its work is done or its owner answers a 
   assert.equal((await (await x.fetch(`/owedwork?cls=member&viewer=member:ann&sha=nothex`)).json()).result.ok, false);
 });
 
-test("R77 (F9, F5, F11): an `ocr` entry continues from its cursor until its owner says it is done; `subresources` and `unpack` are finished by acquisition's `finishOwed`; with no owner the entry stays owed", async () => {
+test("R77 (F9, F5, F11): an `ocr` entry is continued by `readHeld({sha, kind: \"ocr\"})` while its answer says `owed`, and ends without it; `subresources` (keyed by session) runs by acquisition's `owedRun`, `unpack` as the daemon through the door; with no owner an entry stays owed", async () => {
   const x = await world();
   const d = sha("a 60-page scan");
-  await captureOf(x.ctx).owe({ kind: "ocr", sha: d, detail: { next_page: 25, pages_left: 36 } });
-  x.state.answer = (a) => a.owed.detail.next_page < 49 ? { ok: true, more: true, detail: { next_page: a.owed.detail.next_page + 24, pages_left: 60 - a.owed.detail.next_page - 23 } } : { ok: true, done: true };
+  await pendingOf(x.ctx).owe({ kind: "ocr", sha: d });
+  let pages = 0;
+  x.state.answer = () => ({ ok: true, read: true, why: pages >= 48 ? undefined : "READING_HELD", owed: (pages += 24) < 60 });
   let now = Date.now() + 1000;
-  for (let i = 0; i < 4 && rows(x).length; i++) await x.s.onAlarm(now += 1000);
-  assert.deepEqual(x.state.asked.map((a) => [a.owed.kind, a.owed.detail.next_page]), [["ocr", 25], ["ocr", 49]], "continued from the cursor it was left at");
-  assert.deepEqual(rows(x), [], "every page read, so it ended");
-  const s = sha("a page with 30 files outstanding"), u = sha("an archive stopped by its budget");
-  await captureOf(x.ctx).owe({ kind: "subresources", sha: s, detail: { outstanding: 30 } });
-  await captureOf(x.ctx).owe({ kind: "unpack", sha: u });
+  for (let i = 0; i < 5 && rows(x).length; i++) await x.s.onAlarm(now += 1000);
+  assert.deepEqual(x.state.asked.map((a) => a.kind), ["ocr", "ocr", "ocr"], "continued while pages were owed (READING_HELD with owed is no end)");
+  assert.deepEqual(rows(x), [], "no owed, so it ended");
+  const u = sha("an archive stopped by its budget"), session = "session-" + "x".repeat(20);
+  assert.equal((await captureOf(x.ctx).owedLater({ kind: "subresources", sha: sha("page"), session })).ok, true);
+  assert.equal((await captureOf(x.ctx).owedLater({ kind: "unpack", sha: u })).ok, true);
+  assert.equal((await captureOf(x.ctx).owedLater({ kind: "subresources", sha: sha("page") })).ok, false, "a subresources entry needs its session");
   await x.s.onAlarm(now += 1000);
-  assert.deepEqual(rows(x).map((r) => [r.kind, r.last_why]), [["subresources", "NO_OWNER"], ["unpack", "NO_OWNER"]], "with no owner they stay, named");
-  const finished = [];
-  acquisitionOf(x.ctx).finishOwed = async (a) => { finished.push([a.kind, a.sha, a.detail]); return { ok: true, done: true }; };
-  await x.s.onAlarm(now + PENDING_RETRY_MAX_MS);
-  assert.deepEqual(finished.map((f) => f.slice(0, 2)), [["subresources", s], ["unpack", u]]);
-  assert.deepEqual(finished[0][2], { outstanding: 30 }, "with the detail it was registered with");
-  assert.deepEqual(rows(x), []);
+  assert.deepEqual(rows(x).map((r) => [r.kind, r.sha === session ? "session" : "sha", r.last_why]), [["subresources", "session", "NO_OWNER"], ["unpack", "sha", "NOT_CONFIGURED"]], "with no owner they stay, named");
+  const ran = []; let outstanding = 30;
+  acquisitionOf(x.ctx).owedRun = async (cap, e) => { ran.push([cap === captureOf(x.ctx), e]); return outstanding ? { ok: true, done: false, outstanding } : { ok: true, done: true }; };
+  const answers = [{ ok: true, result: { ok: true, complete: false, waiting_on: { code: "UNPACK_DAILY_BYTES" } } }];
+  x.env.SELF = { fetch: async () => new Response(JSON.stringify(answers[0]), { status: 200 }) };
+  x.env.DAEMON_TOKEN = "t";
+  await x.s.onAlarm(now += PENDING_RETRY_MAX_MS);
+  assert.deepEqual(ran.map((r) => [r[0], r[1]]), [[true, { kind: "subresources", session }]]);
+  assert.deepEqual(rows(x).map((r) => [r.kind, r.last_why, r.final_why]), [["subresources", "OUTSTANDING", null], ["unpack", "UNPACK_DAILY_BYTES", null]], "outstanding files and a daily budget stay owed");
+  outstanding = 0; answers[0] = { ok: true, result: { ok: true, complete: false, waiting_on: { code: "ARCHIVE_TREE_ENTRIES_MAX" } } };
+  await x.s.onAlarm(now += PENDING_RETRY_MAX_MS);
+  assert.deepEqual(rows(x).map((r) => [r.kind, r.final_why]), [["unpack", "ARCHIVE_TREE_ENTRIES_MAX"]], "done ends the one; a tree limit ends the other, stated");
+  await pendingOf(x.ctx).owe({ kind: "unpack", sha: u });
+  answers[0] = { ok: true, result: { ok: true, complete: true } };
+  await x.s.onAlarm(now += PENDING_RETRY_MAX_MS);
+  assert.deepEqual(rows(x), [], "complete ends it");
+  /* a final answer from acquisition ends a subresources entry with its reason */
+  await captureOf(x.ctx).owedLater({ kind: "subresources", sha: sha("p2"), session: "s2" });
+  acquisitionOf(x.ctx).owedRun = async () => ({ ok: true, final: true, reason: "CAPTURE_SESSION_GONE" });
+  await x.s.onAlarm(now += PENDING_RETRY_MAX_MS);
+  assert.deepEqual(rows(x).map((r) => [r.sha, r.final_why]), [["s2", "CAPTURE_SESSION_GONE"]]);
 });
 
 test("R77 (R-OLD): a ledger an earlier release wrote (one row for each digest, five tries and given up) is carried over and re-armed, so none stays given up", async () => {

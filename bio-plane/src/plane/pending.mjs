@@ -6,22 +6,26 @@
      `keep`          the whole is not yet put; `parts` are the part digests in order (acquisition R96); put by
                      `evidenceStore().putFromParts` (record-core R87), then read, in the same tick;
      `reading`       the whole is held and its reading is owed (control-plane R120, R123), by `extraction.readHeld`;
-     `ocr`           pages of a scan left unread; `detail` holds the cursor (extraction R82), continued by `extraction.readHeld`;
-     `subresources`  a web capture's outstanding supporting files and pending render (acquisition R100);
-     `unpack`        an archive stopped by the tree or the daily budget (acquisition R100); both by `acquisition.finishOwed`.
+     `ocr`           pages of a scan left unread (extraction R82), continued by `extraction.readHeld({sha, kind: "ocr"})`, which
+                     answers `owed: true` while pages remain;
+     `subresources`  a web capture's outstanding supporting files and pending render, keyed by the capture SESSION (acquisition
+                     R100), run by `acquisition.owedRun(cap, {kind, session})`;
+     `unpack`        an archive stopped by a budget (acquisition R100), run as the unpack drain does, `op=unpack` as the daemon.
    An entry ends only when its work is done, or when its owner answers a FINAL reason (`final: true`, with its `why`), which the
    row then keeps, stated, for the document's page (op `owedwork`); never by a count or a clock. A failure, `NO_HOME` among them,
    leaves the entry for a later alarm, backed off from `PENDING_RETRY_MS` doubling to at most `PENDING_RETRY_MAX_MS` and going on
    at that rate. A second registration of the same entry re-arms it (no attempts, due now), a final one too.
 
    Lower modules cannot import this one (it is last in the order), so they are handed the registration at composition, as they
-   are handed `cap.waitUntil`: `captureOf(ctx).keepLater({sha, parts})` and `.owe({kind, sha, parts?, detail?})`, async, writing
+   are handed `cap.waitUntil`: `captureOf(ctx).keepLater({sha, parts})` and `.owedLater({kind, sha, session?, parts?, detail?})`, async, writing
    the entry and arming the alarm in one step and never throwing. The door's deferred reading arrives by the store-internal
    route `pendingadd`. An owner answers one of: `{ok: true, read: true}` or `{ok: true, done: true}` (ended), `{ok: true, more:
-   true, detail}` (a stage ended, the rest follows at once), `{final: true, why}` (ended, stated), anything else (tried again). */
+   true, detail}` or `{ok: true, owed: true}` (a stage ended, the rest follows at once), `{final: true, why}` (ended, stated),
+   anything else (tried again). */
 import { recordOf } from "../record-core/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
 import { acquisitionOf } from "../acquisition/index.mjs";
+import { captureOf } from "../capture/index.mjs";
 import { schedulerOf } from "../scheduler/index.mjs";
 
 export const KEEPS_PENDING_DDL = `CREATE TABLE IF NOT EXISTS keeps_pending (
@@ -81,18 +85,18 @@ export function pendingOf(ctx, deps = {}) {
   /* what an owner answered, read: the entry's outcome */
   const settle = (row, at, r) => {
     if (r && r.final === true) return stop(row, at, String(r.why || r.code || r.reason || "FINAL").slice(0, 160));
-    if (r && r.ok === true && (r.read === true || r.done === true || r.why === "READING_HELD")) return end(row);
-    if (r && r.ok === true && r.more === true) {
+    if (r && r.ok === true && (r.more === true || r.owed === true)) {
       sql.exec(`UPDATE keeps_pending SET detail=?, attempts=0, due_at=?, last_try=?, last_why=NULL WHERE sha=? AND kind=?`,
                JSON.stringify(r.detail && typeof r.detail === "object" ? r.detail : json(row.detail, {})), at, at, row.sha, row.kind);
       return "retried";
     }
+    if (r && r.ok === true && (r.read === true || r.done === true || r.why === "READING_HELD")) return end(row);
     return attempt(row, at, String(r && (r.why || r.code || r.reason) || "NOT_DONE"));
   };
   const call = async (fn) => { try { return await fn(); } catch (e) { return { ok: false, reason: why(e) }; } };
 
-  const readNow = (row, at) => call(() => extractionOf(ctx).readHeld({ sha: row.sha, storeName: store(), env, owed: { kind: row.kind, detail: json(row.detail, {}) } }))
-    .then((r) => settle(row, at, r));
+  const readNow = (row, at) => call(() => extractionOf(ctx).readHeld(row.kind === "ocr" ? { sha: row.sha, kind: "ocr", storeName: store(), env } : { sha: row.sha, storeName: store(), env }))
+    .then((r) => row.kind === "ocr" && r && r.ok === true && r.owed !== true && r.final !== true ? end(row) : settle(row, at, r));
   const owner = {
     reading: readNow,
     ocr: readNow,
@@ -108,13 +112,35 @@ export function pendingOf(ctx, deps = {}) {
       const reading = all(`SELECT * FROM keeps_pending WHERE sha=? AND kind='reading'`, row.sha)[0];
       return await readNow(reading, at);
     },
-    subresources: (row, at) => finishOwed(row, at),
-    unpack: (row, at) => finishOwed(row, at),
-  };
-  const finishOwed = async (row, at) => {
-    const acq = acquisitionOf(ctx);
-    if (!acq || typeof acq.finishOwed !== "function") return attempt(row, at, "NO_OWNER");
-    return settle(row, at, await call(() => acq.finishOwed({ kind: row.kind, sha: row.sha, detail: json(row.detail, {}), storeName: store(), env, at })));
+    subresources: async (row, at) => {
+      const acq = acquisitionOf(ctx);
+      if (!acq || typeof acq.owedRun !== "function") return attempt(row, at, "NO_OWNER");
+      const r = await call(() => acq.owedRun(captureOf(ctx), { kind: "subresources", session: row.sha }));
+      if (r && r.ok === true && r.done === true) return end(row);
+      if (r && r.final === true && r.reason) return stop(row, at, String(r.reason).slice(0, 160));
+      return attempt(row, at, String(r && (r.reason || r.code || r.why) || (r && r.outstanding ? "OUTSTANDING" : "NOT_DONE")));
+    },
+    /* the archive-unpack drain's call (plane/unpack.mjs): `op=unpack` as the daemon, through the door */
+    unpack: async (row, at) => {
+      if (!(env && env.SELF && typeof env.SELF.fetch === "function" && typeof env.DAEMON_TOKEN === "string" && env.DAEMON_TOKEN !== ""))
+        return attempt(row, at, "NOT_CONFIGURED");
+      let status = 0, body = null;
+      try {
+        const res = await env.SELF.fetch(new Request("https://self/api/?op=unpack", { method: "POST",
+          headers: { authorization: `Bearer ${env.DAEMON_TOKEN}`, "content-type": "application/json" }, body: JSON.stringify({ archiveSha: row.sha }) }));
+        status = res.status;
+        body = await res.json();
+      } catch { /* an unreadable answer is an attempt */ }
+      const r = body && typeof body === "object" ? (body.result && typeof body.result === "object" ? body.result : body) : null;
+      if (status >= 200 && status < 300 && r && r.ok !== false) {
+        if (r.complete === true) return end(row);
+        const code = r.waiting_on && (r.waiting_on.code || r.waiting_on.reason);
+        if (typeof code === "string" && /^(ARCHIVE_TREE_|ARCHIVE_DEPTH_MAX)/.test(code)) return stop(row, at, code);   /* a limit no retry changes; the page states it */
+        return attempt(row, at, typeof code === "string" ? code : "WAITING");   /* a daily budget: owed until it renews */
+      }
+      if (status >= 400 && status < 500 && status !== 408 && status !== 429) return stop(row, at, String(r && (r.reason || r.code) || `REFUSED_${status}`).slice(0, 160));
+      return attempt(row, at, `STATUS_${status}`);
+    },
   };
   const run = async (row, at) => {
     const w = deps.workers && deps.workers[row.kind];
@@ -137,16 +163,23 @@ export function pendingOf(ctx, deps = {}) {
       } else sql.exec(KEEPS_PENDING_DDL);
     },
     /** R77: owed work, whatever its kind. `parts` (a keep) and `detail` (a cursor, a session's key) are the owner's. */
-    async owe({ kind, sha, parts, detail } = {}) {
-      if (!PENDING_KINDS.includes(kind) || typeof sha !== "string" || !DIGEST.test(sha)) return { ok: false, reason: "PENDING_MALFORMED" };
+    async owe({ kind, sha, session, parts, detail } = {}) {
+      /* the ledger's key is the digest, but a web capture's outstanding files are owed by its SESSION (acquisition R100) */
+      const key = kind === "subresources" ? session : sha;
+      if (!PENDING_KINDS.includes(kind)) return { ok: false, reason: "PENDING_MALFORMED" };
+      if (kind === "subresources" ? (typeof key !== "string" || key === "" || key.length > 200) : (typeof key !== "string" || !DIGEST.test(key)))
+        return { ok: false, reason: "PENDING_MALFORMED" };
+      if (kind === "subresources" && sha !== undefined) detail = { ...(detail || {}), sha };
       const p = parts === undefined ? [] : parts;
       if (!Array.isArray(p) || !p.every((x) => typeof x === "string" && DIGEST.test(x)) || (kind === "keep" && p.length === 0)
           || (detail !== undefined && (detail === null || typeof detail !== "object" || Array.isArray(detail))))
         return { ok: false, reason: "PENDING_MALFORMED" };
-      try { put(sha, kind, p, detail || {}); } catch (e) { return { ok: false, reason: "PENDING_NOT_KEPT", detail: why(e) }; }
+      try { put(key, kind, p, detail || {}); } catch (e) { return { ok: false, reason: "PENDING_NOT_KEPT", detail: why(e) }; }
       await arm();
       return { ok: true };
     },
+    /** acquisition R100: owed work of the kinds `subresources` and `unpack` (the hook `captureOf(ctx).owedLater`) */
+    owedLater(entry) { return h.owe(entry || {}); },
     /** acquisition R96: a keep that will not end inside the bound. `parts` are the part digests in order. */
     keepLater({ sha, parts } = {}) { return h.owe({ kind: "keep", sha, parts }); },
     /** control-plane R120, R123: work the door deferred; a keep names its parts, which only acquisition has. */

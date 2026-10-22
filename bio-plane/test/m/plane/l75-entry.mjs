@@ -52,7 +52,7 @@ export class Held extends Store {
       sql.exec(`INSERT INTO keeps_pending (sha, kind, parts, attempts, registered_at, due_at, last_try, last_why) VALUES (?, 'reading', '[]', 5, 1, 9999999999999, 2, 'NO_HOME')`, "a".repeat(64));
       pendingOf(ctx).migrate(); pendingOf(ctx).migrate();
       return json({ rows: [...sql.exec(`SELECT * FROM keeps_pending`)], old: [...sql.exec(`SELECT name FROM sqlite_master WHERE name='keeps_pending_old'`)].length,
-                    owed: await captureOf(ctx).owe({ kind: "ocr", sha: "b".repeat(64), detail: { next_page: 25 } }), list: pendingOf(ctx).list() });
+                    owed: await pendingOf(ctx).owe({ kind: "ocr", sha: "b".repeat(64), detail: { next_page: 25 } }), list: pendingOf(ctx).list() });
     }
     if (step === "stages") {
       const h = acquireTimingsOf(ctx), t = h.open(url.searchParams.get("trace"));
