@@ -299,3 +299,9 @@ Size (session_01QRhE9kJAmmqEac8ZU1rnnu): test runs 9, module lines 3606
 ## J21 · COMPLETE
 
 CHANGE B22 applied: owedRun ends every owed session by dropCaptureSession (done, and a final skip; a lost-render failure and a delivered render already did), so capture's no-prune rule leaves no row; the 120-file test asserts the drop. Acquisition 217/217, ownership 0 failures; tranche/T51 merged. Size (session_01QRhE9kJAmmqEac8ZU1rnnu): test runs 12, module lines 3612
+
+## J22 · QUESTION
+
+E8's composition test cannot live in acquisition's tests: the architecture check refuses a test of mine that imports capture, control-plane, screens-intake and promotion (later in the order; I have it failing "not earlier in the order" six times). I wrote it and it is red then green: commit 68845de064, file bio-plane/test/m/acquisition/fix5-seam-visitor.test.mjs (removed from my tree at fb9916f861; `git show 68845de064:bio-plane/test/m/acquisition/fix5-seam-visitor.test.mjs`). It runs the real path: capture's real instance over a real record, `acquire` with the visitor view (render deferred), the page as served filed by the screen's own `promoteDocument` into a project, the object's render table reset, "Finish it" (`acquire {continue}`) whose answer is never filed, then `owedRun` with control-plane's real `deliverOwedRender`; the second document is read back with `heldcaptures` (and by the project filter), once, beside the page as served; a second alarm run delivers nothing. Red now at "the session still owes it" (the session was dropped, the copy lost), green with my fix.
+
+What I need: the control-plane job (the seam owner, last on this path) adds that file to control-plane's tests, adapted from that commit (it passes against my branch once merged). Everything else of E8's acquisition half is in my branch with its own tests. Answer needed: yes, or name the module you want it in. I carry on with the record meanwhile.
