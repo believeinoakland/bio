@@ -16,11 +16,11 @@ const repeats = (p, except = ["groupidentity"]) => {
 };
 const ops = (p, op) => p.byOp(op).map((r) => r.query);
 
-test("R1 R9 C14 the project reads its own questions once, each question's strength once, and no project's questions but its own; nothing is read twice for the same thing", async () => {
+test("R1 R9 C14 the project reads its own questions once, their strength in one read, and no project's questions but its own; nothing is read twice for the same thing", async () => {
   const many = Array.from({ length: 11 }, (_, i) => ({ id: "PROJ-2026-01" + (10 + i), name: "Project " + i, question_count: 3 }));
   const p = await open("/app/project/" + P, { plane: { projectlist: ok({ ok: true, projects: [{ id: P, name: "Pothole repairs", question_count: 2 }, ...many] }) } });
   assert.deepEqual(ops(p, "projectquestions").map((q) => q.project), [P], "only this project's questions, once");
-  assert.equal(p.byOp("inquirystrength").length, 2, "one strength for each of its two questions");
+  assert.equal(p.byOp("inquirystrength").length, 1, "one strength read for its two questions (G12c: strength's batch)");
   assert.deepEqual(repeats(p), [], "nothing is asked twice");
   assert.equal(p.byOp("bootstrap").length, 1, "the frame's one bootstrap");
 });

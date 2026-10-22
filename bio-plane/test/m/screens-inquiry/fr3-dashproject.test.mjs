@@ -6,7 +6,7 @@ import { word } from "../../../src/setup-words/index.mjs";
 import { COMMON } from "../../../src/screens-inquiry/common.mjs";
 import { dashProjectScreen } from "../../../src/screens-inquiry/dashproject.mjs";
 import { boot, ok, refused } from "../interface-shell/harness.mjs";
-import "./fixtures.mjs";
+import { batchStrength } from "./fixtures.mjs";
 
 const P = "PROJ-2026-0007";
 const Q1 = "INQ-2026-0001-seven-days";
@@ -25,7 +25,7 @@ function plane(o = {}) {
     projectparticipants: ok({ ok: true, projectId: P, participants: [{ handle: "mai", state: "joined", owner: 1 }, { member: "u-7", state: "joined", owner: 0 }] }),
     strengthbarof: ok({ ok: true, project: P, bar: { declared: true, source: "project", capture: "B", connection: "B" } }),
     projectquestions: ok({ ok: true, project: P, items: [{ inquiry: Q1, title: "Seven days?" }], cursor: null }),
-    inquirystrength: ok({ ok: true, capture: { state: "graded", grade: "A" }, connection: { state: "graded", grade: "B" } }),
+    inquirystrength: batchStrength(() => ({ ok: true, capture: { state: "graded", grade: "A" }, connection: { state: "graded", grade: "B" } })),
     queue: ok({ ok: true, items: [NOTICE] }),
     heldcaptures: ok({ ok: true, held: [] }),
     casedrafts: ok({ ok: true, drafts: [] }),

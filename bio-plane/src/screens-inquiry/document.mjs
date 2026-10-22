@@ -223,7 +223,27 @@ function render(cs, view) {
   const rv0 = reading.state === "ok" && reading.value && typeof reading.value === "object" ? reading.value : null;
   const words0 = rv0 && Array.isArray(rv0.text_units) ? rv0.text_units.filter((p) => p && String(p.text || "").trim()) : [];
   const blind0 = rv0 && Array.isArray(rv0.unread_pages) ? rv0.unread_pages.filter((n) => Number.isInteger(n) && n >= 0) : [];
-  const textState = !sha ? "" : reading.state === "empty" ? "unread" : rv0 ? (!words0.length ? "none" : blind0.length ? "partial" : "full") : "";
+  /* R96 (fix round 6; G6, G8, G13): what the stored reading states. A reading that found no words and says why it did not (`reading.failure` `final`, with its
+     `basis`) is a statement, not "none": it is drawn as that statement and offers no OCR re-read after it; a statement extraction states `repairable` (an old
+     "(multipart)" final whose bytes now detect) offers "Read it" instead; a text reading with `more` is being read and is never drawn as complete. */
+  const rdObj = rv0 && rv0.reading && typeof rv0.reading === "object" ? rv0.reading : null;
+  const flagOf = (k) => !!rv0 && (rv0[k] === true || (!!rdObj && rdObj[k] === true));
+  const failure = rv0 ? String((rdObj && rdObj.failure) || rv0.failure || "") : "";
+  const isMore = flagOf("more"), isRepairable = flagOf("repairable");
+  const textState = !sha ? "" : reading.state === "empty" ? "unread"
+    : rv0 ? (isMore ? "reading" : words0.length ? (blind0.length ? "partial" : "full") : isRepairable ? "repairable" : failure === "final" ? "stated" : "none") : "";
+  /* G13 (R96): while the text is being read the page asks for it again on the page clock, at most every 10 seconds (as the dock does, R8), keeping what is
+     drawn until the new answer arrives; a whole reading is not asked again. */
+  if (isMore && sha && !ui.readPoll) {
+    ui.readPoll = true;
+    cs.later(10000, (k, v) => {
+      v.ui.readPoll = false;
+      k.call("reading", { query: { sha256: sha } }).then((a) => {
+        const r = a && a.result !== undefined ? a.result : a;
+        if (r && r.ok !== false && r.found !== false) k.set("later", Object.assign({}, v.ui.later, { reading: { q: JSON.stringify({ sha256: sha }), state: "ok", value: r } }));
+      }, () => { /* the next render asks again */ });
+    });
+  }
   /* R96 (C17; reading-pipeline R35): the reading counts its words, `words_read` of `words_total`; drawn only when it states both */
   const wordsOf = (k) => { const v = rv0 ? (rv0[k] !== undefined ? rv0[k] : rv0.reading && typeof rv0.reading === "object" ? rv0.reading[k] : undefined) : undefined; return Number.isInteger(v) && v >= 0 ? v : null; };
   const wRead = wordsOf("words_read"), wTotal = wordsOf("words_total");
@@ -244,8 +264,10 @@ function render(cs, view) {
   out.push(`<div class="mk-facts"><div><span class="k">${cs.w("screen.document.copy")}</span><span class="v">`
     + (letter ? cs.grade(testimony ? "testimony" : "capture", letter) : "")
     + cs.act("gradenote", { label: "act.gradenote.label.document", data: { capture: sha, letter }, tone: "quiet" }) + "</span></div>"
-    + (textState ? `<div><span class="v"><span data-text-state="${textState}"${textState === "full" || textState === "none" ? "" : ' tabindex="0"'} data-level="1" data-tip="${cs.esc(cs.w("screen.document.text.tip"))}">`
-      + (textState === "partial" ? cs.w("screen.document.text.partial", { pages: pagesText(blind0.map((n) => n + 1)) }) : textState === "unread" ? cs.mark("gap", "undetermined") + " " + cs.w("screen.document.text.unread") : "") + "</span>"
+    + (textState ? `<div><span class="v"><span data-text-state="${textState}"${["full", "none", "stated", "repairable"].includes(textState) ? "" : ' tabindex="0"'} data-level="1" data-tip="${cs.esc(cs.w("screen.document.text.tip"))}">`
+      /* G13: a text still being read says so; the row owed (`screen.document.reading.beingread`) is stood in for by the nearest held row, `state.loading` */
+      + (textState === "partial" ? cs.w("screen.document.text.partial", { pages: pagesText(blind0.map((n) => n + 1)) }) : textState === "unread" ? cs.mark("gap", "undetermined") + " " + cs.w("screen.document.text.unread")
+        : textState === "reading" ? cs.w("state.loading") : "") + "</span>"
       + (wRead !== null && wTotal !== null ? ` <span class="mk-small" data-words-read="1">${cs.w("screen.document.text.read", { read: String(wRead), total: String(wTotal) })}</span>` : "") + "</span></div>" : "")
     + (sha ? `<div><span class="k">${cs.w("screen.document.fingerprint")}</span><span class="v"><span class="mk-tag" tabindex="0" data-level="1" data-tip="${cs.esc(cs.w("screen.document.fingerprint.means"))}">${cs.esc(sha.slice(0, 4) + "…" + sha.slice(-4))}</span></span></div>` : "")
     + (sha ? `<div><a class="cs-btn" data-tone="quiet" href="/app/open-file/${cs.esc(sha)}">${cs.w("screen.document.open")}</a></div>` : "") + "</div>");
@@ -313,7 +335,14 @@ function render(cs, view) {
     /* K3387: the document's words are the reading's `text_units` (extraction R36's units, in seq order, withheld as
        the bundle is); a reading answers no other text, and with none the section says it holds nothing */
     const list = (Array.isArray(r.text_units) ? r.text_units : []).filter((p) => p && String(p.text || "").trim());
-    if (!list.length) return originalCard + (typed.length ? "" : `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`);
+    /* G6, G8 (R96): a copy the reading states it did not read is drawn as that statement, in the plane's own words, beside the file's size (the card above);
+       never as "Nothing here". The sentence the design owes (`screen.document.reading.stated`, `.repairable`) is stood in for by the plane's own words. */
+    const basisWords = rdObj && typeof rdObj.basis === "string" ? rdObj.basis.trim() : "";
+    const statedHtml = textState === "stated" || textState === "repairable" ? `<p class="mk-note" data-reading="stated">${basisWords ? cs.esc(basisWords) : undetermined("")}</p>` : "";
+    /* G13 (R96): a text still being read says how far it has come, and that search and Cite cover what is read (rows owed `screen.document.reading.beingread`
+       and `.coverage`; `screen.document.text.read` and `state.loading` stand in) */
+    const moreNote = isMore ? `<p class="mk-small" data-reading="more">${wRead !== null && wTotal !== null ? cs.w("screen.document.text.read", { read: String(wRead), total: String(wTotal) }) : cs.w("state.loading")}</p>` : "";
+    if (!list.length) return originalCard + moreNote + (typed.length || isMore ? "" : statedHtml || `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`);
     /* nothing is preselected unless the capture was held for a question: then the first choice says to choose one, never a blank
        (R118); a cite with it unchosen is refused in place */
     const pick = askable.length
@@ -413,7 +442,7 @@ function render(cs, view) {
       + cs.checks("document-read-page", { key: "document.read.page", fills: { n: String(cur), count: String(total) } },
           (cur > 1 ? [{ value: String(cur - 1), key: "document.read.prev", on: false }] : []).concat(cur < total ? [{ value: String(cur + 1), key: "document.read.next", on: false }] : []),
           { radio: true, redraw: "readpage" }) + "</div>" : tabs;
-    return originalCard + `<p class="mk-small">${cs.w("document.read.select")}</p>` + bar + (shown.length ? "" : `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`) + shown.map(([p, i]) => {
+    return originalCard + moreNote + `<p class="mk-small">${cs.w("document.read.select")}</p>` + bar + (shown.length ? "" : `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`) + shown.map(([p, i]) => {
       const extent = p.extent && typeof p.extent === "object" ? p.extent : null;
       /* R78: the record's page 0 is drawn "Page 1"; the extent a citation sends keeps the record's own number */
       const page = extent && Number.isInteger(extent.page) ? pg(extent.page) : null;
@@ -460,15 +489,18 @@ function render(cs, view) {
   /* R96 (C17): an act that reads the copy again is drawn only for a copy a reading is held for (`rv0`): one with none says it is unread, in the
      facts above, and draws no act that re-reads it */
   /* R129 (N5): a copy stored with no reading says so and offers to read it now (`readheld`); the sentence and the act are drawn together or not at all */
-  if (textState === "unread" && sha) {
+  /* G8 (fix round 6): "Read it" is also drawn for a statement extraction states `repairable` (an old "(multipart)" final whose bytes now detect), beside the statement */
+  if ((textState === "unread" || textState === "repairable") && sha) {
     /* its label, `act.readheld.label.document` ("Read it now"), is a row the design owes (K4269); "Read it" (`document.read.title`) stands in */
     const readNow = cs.act("readheld", { label: "document.read.title", data: { sha } });
     if (readNow) out.push(`<div class="mk-acts" data-readnow="1">${readNow}${own("readheld")}</div>`);
   }
-  if (rv0 && textState && textState !== "full" && textState !== "unread" && sha && !incomplete) {
+  /* G6, G13: no OCR re-read after a statement that stands (`stated`), beside one "Read it" repairs, or while the text is still being read; the assistant's
+     reading of a picture's page (`pagetranscribe`) stays for a picture whose reading states it did not read it */
+  if (rv0 && textState && !["full", "unread", "repairable", "reading"].includes(textState) && sha && !incomplete) {
     if (isPicture) {
       if (view.reachable && !drewTranscribe) out.push(`<div class="mk-acts">${cs.act("pagetranscribe", { label: "act.pagetranscribe.label.document", data: { sha } })}</div>`);
-    } else {
+    } else if (textState !== "stated") {
       const act = cs.act("pdfstructure", { label: "act.pdfstructure.label.document", data: { sha } });
       out.push(textState === "partial" && blind0.length ? cs.sheet(rowOf("", W("screen.document.ocr.says", { pages: pagesText(blind0.map((n) => n + 1)) }), act)) : `<div class="mk-acts">${act}</div>`);
     }

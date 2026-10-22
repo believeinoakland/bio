@@ -44,9 +44,10 @@ function reads(view) {
     plans: { op: "plans", query: { project: id }, empty: (v) => !v || !(Array.isArray(v.plans) ? v.plans : v.items || []).length },
     /* R90: the determinations the project holds, which its Matter row opens; none held is a list of none, not an absence */
     dets: { op: "determinations", query: { project: id, live: "true", limit: "200" }, empty: () => false },
-    /* R128 (DEC-394 (3a); capture R77, R88): the documents filed under the project, held and vouched, the full rows (their capture date and,
-       where the row states one, their kind), one bounded page at a time; none filed is a list of none, not an absence */
-    docs: { op: "heldcaptures", query: { project: id, state: "held_and_vouched", limit: "200" }, empty: () => false },
+    /* R128 (DEC-394 (3a); capture R77, R88): the documents filed under the project, held and vouched, as picker rows (G12a: title, id, the capture's
+       day, and its `format`; the full row's examinations of every capture with no recorded format cost the page seconds), one bounded page at a time;
+       none filed is a list of none, not an absence */
+    docs: { op: "heldcaptures", query: { project: id, state: "held_and_vouched", limit: "200", fields: "picker" }, empty: () => false },
     /* R107: the project's reruns of imported editions (case-import R31); a project that is no rerun answers none, and no tab is drawn */
     rerun: { op: "rerunread", query: { project: id }, empty: (v) => !v || !Array.isArray(v.reruns) || !v.reruns.length },
     ...directory,
@@ -249,7 +250,7 @@ function render(cs, view) {
     for (let i = 0; dmore && i < 20; i++) {
       listed.push(...(Array.isArray(dmore.held) ? dmore.held : []));
       if (!(dmore.truncated && dmore.next)) { dmore = null; break; }
-      const nx = later("dpage:" + dgen + ":" + dmore.next, "heldcaptures", { project: id, state: "held_and_vouched", limit: "200", after: String(dmore.next) });
+      const nx = later("dpage:" + dgen + ":" + dmore.next, "heldcaptures", { project: id, state: "held_and_vouched", limit: "200", fields: "picker", after: String(dmore.next) });
       if (nx.state === "loading") { dpend = true; dmore = null; } else if (nx.state === "failed") { dfail = nx; dmore = null; } else dmore = nx.value;
     }
     const kindOf = (r) => {
@@ -307,10 +308,12 @@ function render(cs, view) {
       + cs.act("promote", { label: "act.promote.label.project", data: { project: id }, tone: "primary" })
       + `<p class="mk-small">${W("act.promote.here.project")}</p>` + said + adddoc, { id: "state-b" }));
   } else {
+    /* G12c (R1, R9): the strength of every question in one read (for each 50), never one read for each */
+    const strengthOf = P.strengths((k, query) => later(k, "inquirystrength", query), items.map((x) => x.inquiry), cs.esc);
     const qInner = cs.state("questions", view, () => cs.sheet(items.map((x) => {
       const q = String(x.inquiry);
       const t = x.title || T("state.undetermined", { reason: "" });
-      const st = later("strength:" + q, "inquirystrength", { id: q });
+      const st = strengthOf(q);
       const grades = cs.state(st, (s) => {
         /* C43 (R39, R116): the card names no record id: an unrated axis is told once, by its mark (the question page's compact form,
            which draws no reason on the quiet axis), and an undetermined axis's reason has any record id put back into the plain

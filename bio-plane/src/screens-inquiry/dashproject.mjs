@@ -257,8 +257,10 @@ function render(cs, view) {
     const barOf = bar && (bar.capture || bar.connection) && bar.declared !== false ? bar : null;
     const rank = { A: 4, B: 3, C: 2, D: 1 };
     let met = 0, settled = true;
+    /* G12c: one `inquirystrength` read for the questions (for each 50), as the project page reads them */
+    const strengthOf = barOf ? P.strengths((k, query) => ask(k, "inquirystrength", { query }), items.map((x) => x.inquiry), cs.esc) : null;
     if (barOf) for (const x of items) {
-      const s = ask("strength:" + x.inquiry, "inquirystrength", { query: { id: String(x.inquiry) } });
+      const s = strengthOf(String(x.inquiry));
       if (s.state !== "ok") { settled = false; continue; }
       const sv = s.value || {};
       if (["capture", "connection"].every((a) => !barOf[a] || (sv[a] && sv[a].state === "graded" && rank[sv[a].grade] >= rank[barOf[a]]))) met++;
