@@ -149,10 +149,10 @@ const norm = (el) => String(el.textContent).replace(/\s+/g, " ").trim();
 
 /* ---------- G12c (fix round 6): the other drafts' copies are read in one `reviewcopy`, not one each ---------- */
 const MORE = ["RVD-2026-0002", "RVD-2026-0003", "RVD-2026-0004"].map((id, i) => ({ draft_id: id, case: null, created_by: "dev", updated_by: "dev", created_at: `2026-10-1${3 + i}T10:00:00Z` }));
-/* the batch as `review` is to answer it: `drafts` the ids comma-joined, `{ok, kind: "review-copies", drafts: {<id>: the single answer}}` */
+/* the batch as `review` is to answer it: `drafts` the ids comma-joined, `{ok, kind: "review-copies", count, copies: {<id>: the single answer}}` */
 const batched = (single, dead = []) => (req) => {
   if (!req.query.drafts) return single(req);
-  return ok({ ok: true, kind: "review-copies", drafts: Object.fromEntries(req.query.drafts.split(",").filter((id) => !dead.includes(id)).map((id) => [id, single({ query: { draft: id } }).json.result])) });
+  return ok({ ok: true, kind: "review-copies", count: 0, copies: Object.fromEntries(req.query.drafts.split(",").filter((id) => !dead.includes(id)).map((id) => [id, single({ query: { draft: id } }).json.result])) });
 };
 for (const [screen, path] of [["case-editor", ED], ["review-copy", RC], ["ceremony", CER]]) {
   test(`R73 C49 G12c ${screen}: a project of five drafts reads the four other drafts' copies in one reviewcopy, each draft named by its own scope; a draft the batch lacks is drawn unread (control)`, async () => {

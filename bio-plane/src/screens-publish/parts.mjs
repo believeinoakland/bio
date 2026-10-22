@@ -308,11 +308,11 @@ export const PARTS = Object.freeze({
     });
   },
 
-  /* G12c: one draft's copy out of a batch read (`{ok, kind: "review-copies", drafts: {<id>: the single answer}}`), in R10's four states: the
+  /* G12c: one draft's copy out of a batch read (`{ok, kind: "review-copies", count, copies: {<id>: the single answer}}`), in R10's four states: the
      batch while it waits or has failed; an id it does not answer, or answers with a refusal, is failed, as the single read of it is. */
   copyIn: function (cs, view, b, id) {
     if (b.state !== "ok") return b;
-    const all = b.value && typeof b.value === "object" && b.value.drafts && typeof b.value.drafts === "object" ? b.value.drafts : {};
+    const all = b.value && typeof b.value === "object" && b.value.copies && typeof b.value.copies === "object" ? b.value.copies : {};
     const a = all[id];
     if (a && typeof a === "object" && a.ok !== false) return { state: "ok", value: a, refusal: null };
     const f = a && typeof a === "object" ? a : {};
