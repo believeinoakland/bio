@@ -1241,8 +1241,8 @@ const isAllowed = (allowed, specifier) =>
 export function unresolvableSpecifiers(text, allowed = DEFAULT_EXTERNAL) {
   const ok = (s) => isAllowed(allowed, s);
   const found = new Set();
-  const re = /(?:^|[;\n])\s*(?:import|export)\b[^;]*?\bfrom\s*["']([^"']+)["']/g;
-  const bare = /(?:^|[;\n])\s*import\s*["']([^"']+)["']/g;
+  const re = /(?:^|[;}\n])\s*(?:import|export)\b[^;]*?\bfrom\s*["']([^"']+)["']/g;   /* `}`: a minified statement can follow one (R2) */
+  const bare = /(?:^|[;}\n])\s*import\s*["']([^"']+)["']/g;
   for (const re2 of [re, bare]) {
     let m;
     while ((m = re2.exec(text))) if (!ok(m[1])) found.add(m[1]);
@@ -1539,7 +1539,7 @@ export function startVerdict(member, ms, budget = BUDGET) {
 /* The names an artifact imports statically from each `cloudflare:*` specifier, so its stub can export exactly them. */
 function cloudflareImports(text) {
   const out = new Map();
-  for (const m of text.matchAll(/(?:^|[;\n])\s*import\s*\{([^}]*)\}\s*from\s*["'](cloudflare:[^"']+)["']/g)) {
+  for (const m of text.matchAll(/(?:^|[;}\n])\s*import\s*\{([^}]*)\}\s*from\s*["'](cloudflare:[^"']+)["']/g)) {
     const names = out.get(m[2]) || new Set();
     for (const part of m[1].split(",")) {
       const name = part.trim().split(/\s+as\s+/)[0].trim();

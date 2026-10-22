@@ -173,6 +173,7 @@ test("R8 (G39): unresolvableSpecifiers still lists an undeclared external in a m
     const text = (await buildMember(m, { write: false })).bytes.toString("utf8");
     assert.deepEqual(bundler.unresolvableSpecifiers(text, ["cloudflare:workers", "node:*"]), ["somewhere-else"]);
     assert.deepEqual(bundler.unresolvableSpecifiers(text, m.bundle.external), []);
+    assert.deepEqual(bundler.unresolvableSpecifiers('function f(){return 1}import{y}from"after-a-brace";export{f}', []), ["after-a-brace"], "a statement after a closing brace");
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
