@@ -1,0 +1,727 @@
+{
+ "note": "detect (and parse, as a SHA-256 of its JSON) of the detectors on each text, taken from the code as it stood before the cost work (G37, fix round 6), view FIRST; the texts are built by test/shape-texts.mjs and test/fixtures.mjs",
+ "cases": {
+  "doc r:roster_committee": {
+   "staff_roster": {
+    "detect": {
+     "match": true,
+     "confidence": "certain",
+     "signals": [
+      "32 line(s) carry a name with a title, unit or organisation beside it",
+      "58 of 79 lines carry a name (73%)",
+      "it names itself a roster (\"ROSTER AND ASSIGNED STAFF\")"
+     ]
+    },
+    "parse_sha256": "d0b41ef6202411981f37d266d0099ff191d8532e5d5a6a700c59e6abd9ab1901"
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "it names itself, with the view's words, as a roster and not as a chart"
+    },
+    "parse_sha256": null
+   }
+  },
+  "doc r:roster_committee_rev": {
+   "staff_roster": {
+    "detect": {
+     "match": true,
+     "confidence": "certain",
+     "signals": [
+      "32 line(s) carry a name with a title, unit or organisation beside it",
+      "58 of 82 lines carry a name (71%)",
+      "it names itself a roster (\"ROSTER AND ASSIGNED STAFF\")"
+     ]
+    },
+    "parse_sha256": "0d626d3f249c6d5ec64934274f22b4cf3e1c945f9f838bc72d8131e809706942"
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "it names itself, with the view's words, as a roster and not as a chart"
+    },
+    "parse_sha256": null
+   }
+  },
+  "doc r:roster_rps": {
+   "staff_roster": {
+    "detect": {
+     "match": true,
+     "confidence": "certain",
+     "signals": [
+      "131 line(s) carry a name with a title, unit or organisation beside it",
+      "148 of 179 lines carry a name (83%)",
+      "it names itself a roster (\"Reimagining Public Safety - Advisory Board Rosters\")"
+     ]
+    },
+    "parse_sha256": "c43aa0132bfde172ee70a25a5229e53ef396dfb7106036729f8d4604e84124d8"
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "20 of 179 lines are box labels (11%), below 40%: units and posts are mentioned here, not charted"
+    },
+    "parse_sha256": null
+   }
+  },
+  "doc r:roster_wdb": {
+   "staff_roster": {
+    "detect": {
+     "match": true,
+     "confidence": "likely",
+     "signals": [
+      "18 line(s) carry a name with a title, unit or organisation beside it",
+      "18 of 20 lines carry a name (90%)"
+     ],
+     "why": "no short line names it a roster with the view's words, so it is read as a roster on its rows alone"
+    },
+    "parse_sha256": "fbf22c8192f2a578c403177ffe16acbdeeccc4ec54205baa259a19cc7eb12ec3"
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "1 line(s) name a unit or a post and 0 a holder alone, below the floor (3 labeled, 8 boxes): this document does not lay out an organization's boxes"
+    },
+    "parse_sha256": null
+   }
+  },
+  "doc r:chart_opd": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "2 line(s) carry a name with more beside it, below the floor of 5: the rows are not the body of this document"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": true,
+     "confidence": "certain",
+     "signals": [
+      "43 unit line(s), 2 post line(s), 2 holder line(s)",
+      "84% of its lines are box labels; its median line is 3 word(s)",
+      "it names itself a chart (\"Organizational Chart\")"
+     ]
+    },
+    "parse_sha256": "bb7393737fe29839312515392b3b2fa5fcfa99e2e29fc02ba1e961873651e7ba"
+   }
+  },
+  "doc r:chart_opd_bos": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "1 line(s) carry a name with more beside it, below the floor of 5: the rows are not the body of this document"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": true,
+     "confidence": "likely",
+     "signals": [
+      "13 unit line(s), 5 post line(s), 2 holder line(s)",
+      "74% of its lines are box labels; its median line is 2 word(s)"
+     ],
+     "why": "no short line names it a chart with the view's words, so it is read as a chart on its boxes alone"
+    },
+    "parse_sha256": "fcdba44781eb2614dec186383bb1a65491e237da3213e71bdd3e7e3b06032bcb"
+   }
+  },
+  "doc r:chart_cao_2021": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "it names itself, with the view's words, as a chart and not as a roster"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": true,
+     "confidence": "certain",
+     "signals": [
+      "0 unit line(s), 4 post line(s), 19 holder line(s)",
+      "49% of its lines are box labels; its median line is 2 word(s)",
+      "it names itself a chart (\"Organizational Chart\")"
+     ]
+    },
+    "parse_sha256": "f6d21f918b445610d4a20b33c30a41059a49168132861ef6be69f50b6d9276ee"
+   }
+  },
+  "doc r:chart_cao_2024": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "16 line(s) print a post or unit with no name beside it, against 16 row(s): posts laid out apart from their holders are a chart's boxes, not a roster's rows"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": true,
+     "confidence": "certain",
+     "signals": [
+      "4 unit line(s), 20 post line(s), 18 holder line(s)",
+      "69% of its lines are box labels; its median line is 4 word(s)",
+      "it names itself a chart (\"Organizational Chart\")"
+     ]
+    },
+    "parse_sha256": "de22c47838745629db13583fc7252bba3085f52d8d00532851a21615196e74a5"
+   }
+  },
+  "doc r:chart_opw": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "184 line(s) print a post or unit with no name beside it, against 89 row(s): posts laid out apart from their holders are a chart's boxes, not a roster's rows"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": true,
+     "confidence": "likely",
+     "signals": [
+      "38 unit line(s), 180 post line(s), 538 holder line(s)",
+      "71% of its lines are box labels; its median line is 2 word(s)"
+     ],
+     "why": "no short line names it a chart with the view's words, so it is read as a chart on its boxes alone"
+    },
+    "parse_sha256": "6c2a883af6ef4e6de51557cb0c4bc4afb700f6d514e4bf06dc1c67cd54b3dd10"
+   }
+  },
+  "doc r:neg_cpab_chart": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "1 line(s) carry a name with more beside it, below the floor of 5: the rows are not the body of this document"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "8 of 63 lines are box labels (13%), below 40%: units and posts are mentioned here, not charted"
+    },
+    "parse_sha256": null
+   }
+  },
+  "doc r:neg_commenters": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "437 date(s) beside 42 row(s): the rows are dated events that name people, not a roster"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "6 line(s) name a unit or a post and 1 a holder alone, below the floor (3 labeled, 8 boxes): this document does not lay out an organization's boxes"
+    },
+    "parse_sha256": null
+   }
+  },
+  "doc r:neg_signin": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "0 line(s) carry a name with more beside it, below the floor of 5: the rows are not the body of this document"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "0 line(s) name a unit or a post and 0 a holder alone, below the floor (3 labeled, 8 boxes): this document does not lay out an organization's boxes"
+    },
+    "parse_sha256": null
+   }
+  },
+  "doc r:neg_business": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "19 of 82 lines carry a name (23%), below 35%: names are mentioned in this document, not listed"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "0 line(s) name a unit or a post and 0 a holder alone, below the floor (3 labeled, 8 boxes): this document does not lay out an organization's boxes"
+    },
+    "parse_sha256": null
+   }
+  },
+  "doc r:unread_cao_2023": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "0 line(s) carry a name with more beside it, below the floor of 5: the rows are not the body of this document"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "0 line(s) name a unit or a post and 5 a holder alone, below the floor (3 labeled, 8 boxes): this document does not lay out an organization's boxes"
+    },
+    "parse_sha256": null
+   }
+  },
+  "doc r:unread_pbd": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "no text was read, so there are no rows to recognise"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "no text was read, so there are no boxes to recognise"
+    },
+    "parse_sha256": null
+   }
+  },
+  "doc d:directory_nss": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "12 distinct addresses at one domain: this is a staff directory's shape, which staff_directory reads"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "9 of 51 lines are box labels (18%), below 40%: units and posts are mentioned here, not charted"
+    },
+    "parse_sha256": null
+   }
+  },
+  "doc d:directory_nsd": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "4 line(s) carry a name with more beside it, below the floor of 5: the rows are not the body of this document"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "2 line(s) name a unit or a post and 3 a holder alone, below the floor (3 labeled, 8 boxes): this document does not lay out an organization's boxes"
+    },
+    "parse_sha256": null
+   }
+  },
+  "doc d:directory_cro": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "40 distinct addresses at one domain: this is a staff directory's shape, which staff_directory reads"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "1 line(s) name a unit or a post and 0 a holder alone, below the floor (3 labeled, 8 boxes): this document does not lay out an organization's boxes"
+    },
+    "parse_sha256": null
+   }
+  },
+  "doc d:directory_benefits": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "10 distinct addresses at one domain: this is a staff directory's shape, which staff_directory reads"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "37 of 155 lines are box labels (24%), below 40%: units and posts are mentioned here, not charted"
+    },
+    "parse_sha256": null
+   }
+  },
+  "doc d:neg_candidates": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "0 line(s) carry a name with more beside it, below the floor of 5: the rows are not the body of this document"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "0 line(s) name a unit or a post and 0 a holder alone, below the floor (3 labeled, 8 boxes): this document does not lay out an organization's boxes"
+    },
+    "parse_sha256": null
+   }
+  },
+  "doc d:neg_schedule": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "2 line(s) carry a name with more beside it, below the floor of 5: the rows are not the body of this document"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "28 of 92 lines are box labels (30%), below 40%: units and posts are mentioned here, not charted"
+    },
+    "parse_sha256": null
+   }
+  },
+  "doc d:neg_recycling": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "0 line(s) carry a name with more beside it, below the floor of 5: the rows are not the body of this document"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "12 of 225 lines are box labels (5%), below 40%: units and posts are mentioned here, not charted"
+    },
+    "parse_sha256": null
+   }
+  },
+  "doc d:neg_wdb": {
+   "staff_roster": {
+    "detect": {
+     "match": true,
+     "confidence": "likely",
+     "signals": [
+      "18 line(s) carry a name with a title, unit or organisation beside it",
+      "18 of 20 lines carry a name (90%)"
+     ],
+     "why": "no short line names it a roster with the view's words, so it is read as a roster on its rows alone"
+    },
+    "parse_sha256": "fbf22c8192f2a578c403177ffe16acbdeeccc4ec54205baa259a19cc7eb12ec3"
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "1 line(s) name a unit or a post and 0 a holder alone, below the floor (3 labeled, 8 boxes): this document does not lay out an organization's boxes"
+    },
+    "parse_sha256": null
+   }
+  },
+  "doc d:neg_medical": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "4 line(s) carry a name with more beside it, below the floor of 5: the rows are not the body of this document"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "0 line(s) name a unit or a post and 4 a holder alone, below the floor (3 labeled, 8 boxes): this document does not lay out an organization's boxes"
+    },
+    "parse_sha256": null
+   }
+  },
+  "doc s:minutes": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "29 date(s) beside 12 row(s): the rows are dated events that name people, not a roster"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "33 of 243 lines are box labels (14%), below 40%: units and posts are mentioned here, not charted"
+    },
+    "parse_sha256": null
+   }
+  },
+  "doc s:minutes_council": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "14 date(s) beside 13 row(s): the rows are dated events that name people, not a roster"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "32 of 166 lines are box labels (19%), below 40%: units and posts are mentioned here, not charted"
+    },
+    "parse_sha256": null
+   }
+  },
+  "doc s:agenda": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "4 line(s) carry a name with more beside it, below the floor of 5: the rows are not the body of this document"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "23 of 110 lines are box labels (21%), below 40%: units and posts are mentioned here, not charted"
+    },
+    "parse_sha256": null
+   }
+  },
+  "doc s:regulation": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "2 line(s) carry a name with more beside it, below the floor of 5: the rows are not the body of this document"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "4 line(s) name a unit or a post and 0 a holder alone, below the floor (3 labeled, 8 boxes): this document does not lay out an organization's boxes"
+    },
+    "parse_sha256": null
+   }
+  },
+  "doc s:staff_report": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "8 date(s) beside 11 row(s): the rows are dated events that name people, not a roster"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "34 of 281 lines are box labels (12%), below 40%: units and posts are mentioned here, not charted"
+    },
+    "parse_sha256": null
+   }
+  },
+  "budget document": {
+   "staff_roster": {
+    "detect": {
+     "match": true,
+     "confidence": "likely",
+     "signals": [
+      "93 line(s) carry a name with a title, unit or organisation beside it",
+      "141 of 352 lines carry a name (40%)"
+     ],
+     "why": "no short line names it a roster with the view's words, so it is read as a roster on its rows alone"
+    },
+    "parse_sha256": "fc559e64d422eb7ed368090c8eb41432636cfacf525bbcb7d26375af11c5b431"
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "95 of 352 lines are box labels (27%), below 40%: units and posts are mentioned here, not charted"
+    },
+    "parse_sha256": null
+   }
+  },
+  "budget volume 1 MiB": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "0 line(s) carry a name with more beside it, below the floor of 5: the rows are not the body of this document"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "158 of 6305 lines are box labels (3%), below 40%: units and posts are mentioned here, not charted"
+    },
+    "parse_sha256": null
+   }
+  },
+  "roster_committee behind 30 preface lines": {
+   "staff_roster": {
+    "detect": {
+     "match": true,
+     "confidence": "certain",
+     "signals": [
+      "32 line(s) carry a name with a title, unit or organisation beside it",
+      "63 of 109 lines carry a name (58%)",
+      "it names itself a roster (\"ROSTER AND ASSIGNED STAFF\")"
+     ]
+    },
+    "parse_sha256": "d718ff73c2090afba5dd7a9d52b32a3a7764fcf01719de2d45447207c4b1d1ce"
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "it names itself, with the view's words, as a roster and not as a chart"
+    },
+    "parse_sha256": null
+   }
+  },
+  "roster_committee behind 400 preface lines": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "116 of 479 lines carry a name (24%), below 35%: names are mentioned in this document, not listed"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "57 of 479 lines are box labels (12%), below 40%: units and posts are mentioned here, not charted"
+    },
+    "parse_sha256": null
+   }
+  },
+  "roster_committee behind 6000 preface lines": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "916 of 6079 lines carry a name (15%), below 35%: names are mentioned in this document, not listed"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "57 of 6079 lines are box labels (1%), below 40%: units and posts are mentioned here, not charted"
+    },
+    "parse_sha256": null
+   }
+  },
+  "chart_opw behind 30 preface lines": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "184 line(s) print a post or unit with no name beside it, against 89 row(s): posts laid out apart from their holders are a chart's boxes, not a roster's rows"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": true,
+     "confidence": "likely",
+     "signals": [
+      "38 unit line(s), 180 post line(s), 538 holder line(s)",
+      "69% of its lines are box labels; its median line is 2 word(s)"
+     ],
+     "why": "no short line names it a chart with the view's words, so it is read as a chart on its boxes alone"
+    },
+    "parse_sha256": "a254a77447e36cfc57c67ca047b5de1edbd0a7a86bfb9b952cd0b1f403e8c80c"
+   }
+  },
+  "chart_opw behind 400 preface lines": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "184 line(s) print a post or unit with no name beside it, against 89 row(s): posts laid out apart from their holders are a chart's boxes, not a roster's rows"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": true,
+     "confidence": "likely",
+     "signals": [
+      "38 unit line(s), 180 post line(s), 538 holder line(s)",
+      "52% of its lines are box labels; its median line is 2 word(s)"
+     ],
+     "why": "no short line names it a chart with the view's words, so it is read as a chart on its boxes alone"
+    },
+    "parse_sha256": "a254a77447e36cfc57c67ca047b5de1edbd0a7a86bfb9b952cd0b1f403e8c80c"
+   }
+  },
+  "chart_opw behind 6000 preface lines": {
+   "staff_roster": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "1491 of 7064 lines carry a name (21%), below 35%: names are mentioned in this document, not listed"
+    },
+    "parse_sha256": null
+   },
+   "org_chart": {
+    "detect": {
+     "match": false,
+     "confidence": "none",
+     "why": "756 of 7064 lines are box labels (11%), below 40%: units and posts are mentioned here, not charted"
+    },
+    "parse_sha256": null
+   }
+  }
+ }
+}
