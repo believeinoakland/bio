@@ -70,6 +70,19 @@ test("R97 capture declares acquire (K4206): its requires alone raise no refusal 
   } finally { net.restore(); }
 });
 
+test("R97 capture declares acquire's `project` (fix round 6; K4208, SCREENS-INTAKE #18 J29): the screen sends it, so it is accepted, never required, and a call carrying it is not refused for it (control: the same call without it)", async () => {
+  assert.ok(DECLARED_OPS.acquire.fields.accepts.includes("project"));
+  assert.equal(DECLARED_OPS.acquire.fields.requires.flat().includes("project"), false);
+  const net = network({ [PAGE]: () => new Response(PAGE_BODY, { headers: { "content-type": "text/html; charset=utf-8" } }) });
+  try {
+    const stamps = { cls: "member", member: "1", sessMember: "member:ann" };
+    for (const body of [{ locator: PAGE, project: "PROJ-1" }, { locator: PAGE }]) {
+      const r = await mk("acquire", stamps)(body);
+      assert.equal(r.body.argument === "project" || r.body.reason === "REQUIRED_ARGUMENT_MISSING", false, JSON.stringify(body));
+    }
+  } finally { net.restore(); }
+});
+
 test("R97 capture declares captureaccount (K4206): its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
   const k = await newKey();
   const d = H("c9");

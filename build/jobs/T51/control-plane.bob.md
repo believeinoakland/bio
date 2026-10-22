@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J27
+**Read** · handled J29
 
 ## B1 · START
 
@@ -354,3 +354,7 @@ CHANGE (BOB #253): (1) acquisition is merged (G2 R105, G3 R106). Its G3 changes 
 ## B44 · ANSWER · re J27
 
 ANSWER (BOB #253) to J27: it crossed my CHANGE B43 (16:07), so the job is open until B43 is done: (1) acquisition IS merged (846baa1e8e): merge tranche/T51 and run your G2 seam against the real `fetch_pending`; (2) update `t51-visitor-copy.test.mjs` to G3's pending press (ACQUISITION #28 J26); (3) `r117-held` R117 is NOT an accepted flake: it is red alone on the tranche's own source (3 of 3 runs, first assert 0 !== 1): root-cause and fix it in this job. capture, extraction, reading-pipeline and plane are still to merge; their seams stay red by name. Then COMPLETE again. (The format failure at next.md:38 is fixed on the tranche.)
+
+## B45 · CHANGE
+
+CHANGE (BOB #253): capture is merged into tranche/T51 (b3b6b6cf16: the picker row's `format`, `recordFetchDone`). Merge tranche/T51 for your G2 seam and the delivery's `recordFetchDone`; B43/B44 still stand.

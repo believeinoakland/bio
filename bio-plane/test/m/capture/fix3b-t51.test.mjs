@@ -110,7 +110,7 @@ test("R77 (C14): a picker row answers `whole` from the size the register recorde
   assert.deepEqual(pick.held.map((x) => [x.bundle_id, x.whole]), [["INFO-A1", true], ["INFO-A2", false], ["INFO-B1", true]],
                    "a size the store keeps whole is whole; one past it is held in parts");
   assert.deepEqual(b.calls, [], "no store call for any row");
-  assert.deepEqual(Object.keys(pick.held[0]).sort(), ["actor", "bundle_id", "capture", "collected_since", "project", "source", "standing", "title", "whole"]);
+  assert.deepEqual(Object.keys(pick.held[0]).sort(), ["actor", "bundle_id", "capture", "collected_since", "format", "project", "source", "standing", "title", "whole"]);
   /* the register records nothing: undetermined, and no capture at all: undetermined */
   f.rows(`UPDATE register SET bytes = NULL WHERE bundle_id = 'INFO-B1'`);
   f.rows(`DELETE FROM register WHERE bundle_id = 'INFO-A1'`);

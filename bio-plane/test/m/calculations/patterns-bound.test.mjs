@@ -17,7 +17,7 @@ async function decided(count) {
   return { w, run };
 }
 
-test("R22 past the bound: 2,500 decided transitions give a denominator that says capped and of_total 2,500, for every pattern gathering them", { timeout: 300000 }, async () => {
+test("R22 R43 past the bound: 2,500 decided transitions give a denominator that says capped and of_total 2,500, for every pattern gathering them", { timeout: 300000 }, async () => {
   const { w, run } = await decided(UNITS_MAX + 500);
   for (const p of ["duty_lateness", "office_lateness"]) {
     const d = run(p);
@@ -29,7 +29,7 @@ test("R22 past the bound: 2,500 decided transitions give a denominator that says
   assert.ok(g.length && g.every((d) => d.capped === true && d.of_total === UNITS_MAX + 500), "each group's own denominator says it too");
 });
 
-test("R22 control: 1,500 decided transitions are read whole and unflagged", { timeout: 300000 }, async () => {
+test("R22 R43 control: 1,500 decided transitions are read whole and unflagged", { timeout: 300000 }, async () => {
   const { run } = await decided(1500);
   for (const p of ["duty_lateness", "office_lateness"]) {
     const d = run(p);
@@ -39,7 +39,7 @@ test("R22 control: 1,500 decided transitions are read whole and unflagged", { ti
   }
 });
 
-test("R22 past the bound: 2,500 open flow instances give the flow pattern's denominator capped, of_total 2,500; 1,500 are unflagged", { timeout: 300000 }, async () => {
+test("R22 R43 past the bound: 2,500 open flow instances give the flow pattern's denominator capped, of_total 2,500; 1,500 are unflagged", { timeout: 300000 }, async () => {
   for (const [count, capped] of [[UNITS_MAX + 500, true], [1500, false]]) {
     const w = seeded();
     w.progressions.feed.instances = Array.from({ length: count }, (_, i) => ({ progression_key: "contracting", entity_id: `ENT-2026-${String(i).padStart(4, "0")}`, findings: [] }));
