@@ -112,3 +112,38 @@ Size (session_01JskisLomG4e5FjS7cp5cNH): test runs 9, module lines 1012
 ## J5 · COMPLETE
 
 E2 reader half done. Root cause confirmed: linesOf/readRows/readBoxes held every line of the text (cons-string chains) in detect. detect of staff_roster and org_chart now stream one line at a time (lines.mjs eachLine, staff-roster.mjs readRows keep=false, org-chart.mjs readBoxes keep=false; datesIn no longer copies the text). Failing-first: test/big-text.test.mjs, child with a 26.6 MB, 160,000-line no-roster text held, --max-old-space-size=80: red (OOM) before, green five of five after (~8 s a run). Answers on all fixtures under both views byte-identical before/after; control roster and chart still read. Suites: roster-reader 24/24, docprofile 45/45, plane impact files 298/299 (the one red, release.test.mjs R24 'screen.objective.purpose is held by the words list', fails identically on clean tranche/T51, not this module). run.mjs and ownership: 0 failures. Proposed requirement lines (R1, R3) are in my record. Plane can now turn l77-size into a gate. Details: build/jobs/T51/roster-reader.md.
+
+## Completion (T51, B5 START, G37 roster-reader's part)
+
+**Root cause (file:line, on `tranche/T51` before the change).** Each `detect` calls `eachLine` once and, for every line, did work that allocates: `lines.mjs:185` a `replace(/\s+/g, " ")` copy of every line; `:112-118` `withoutContacts` ran four global replaces with a closure, two `split`s, a `join` and three `tidy` regex passes on every line (and `staff-roster.mjs` ran it twice a line: once in `readRows`, again in `readLine`); `:130-135` `titleSpans` made a cloned RegExp per pattern per line through `matchAll`; `:78-85` `nameSpans` the same through `matchAll(NAME_ALL)`, then `m[0].split(/\s+/)` and `cut` (`run.split(/(\s+)/)`) per match; `:192` `selfNamingLine` and `:266` `wordCount` built an array of words for every line; `:259-264` `isUnitLine` built three arrays per line (`words`, `map`, `filter`), and `staff-roster.mjs:112` and `org-chart.mjs:82` split the whole line to read its last word. Measured, one detector, a budget volume's text: 125-162 MB of allocation over 1 MiB (about 150 B a byte); over 24 MiB 1,835 / 1,452 collections of a 2 MB semi-space (staff_roster / org_chart), 5.7 s and 4.1 s.
+
+**Why the tests missed it.** The detectors were tested for what they answer (fixtures, a 20 MB text under an 80 MB heap, which only fails when the heap is gone), never for what they allocate or how long they take: no test counted collections or time on a large text. Gap fixed: `test/cost.test.mjs` (below).
+
+**What changed** (all in this module; answers identical):
+- `lines.mjs`: `eachLine` (:266) copies a line only when it holds odd white space; `withoutContacts` (:165) tidies a line with no `@`, digit or NUL without a regex pass, tests each contact recogniser before replacing (`cutAll`, :186) and counts cuts with no closure per call; `tidy` returns a string with nothing to tidy as it is; `titleSpans` (:209) and `nameSpans` (:115) use `exec` on the recogniser itself, not `matchAll`; `cut` (:90) finds the words in place; `phraseWord` (:77) caches its answer per distinct word (cleared past 4,096 words); new `hasNameSpan` (:132) answers "is there a name span" without building them; `isUnitLine` (:362), `selfNamingLine` and `wordCount` count words in place (`countWords`).
+- `staff-roster.mjs`: `readLine` takes the line's `withoutContacts` as a third argument (the caller already has it: one pass a line, not two), reads a line's last word with `lastIndexOf`, asks `hasNameSpan` where it needed `nameSpans(...).length`.
+- `org-chart.mjs`: the last word by `lastIndexOf`.
+
+**Failing-first** (`test/cost.test.mjs`, titles name R1 R3). Cost is counted in collections: a child with a 2 MB semi-space (the shape harness's setting) and `--trace-gc`, every collection between BEGIN and END is one 2 MB of allocation, whatever the machine. Bound, from measurement: **32 B of allocation a byte of text** (after: about 21 B a byte; before: about 150), and for 24 MiB also 4 s a detector (after 1.2-2.3 s; before 4.1-5.7 s on this machine).
+- Red on the old code (the tests run against `HEAD` of `tranche/T51`'s module, the new tests copied beside it): `staff_roster: 79 collections of 2 MB = 158 B a byte over 1 MiB, bound 32`; `staff_roster: 1838 collections of 2 MB = 153 B a byte over 24 MiB, bound 32`.
+- Green on the new code, five runs of five: 1 MiB: 11 / 10 collections (staff_roster / org_chart), under 0.1 s; 24 MiB: 250 / 236 collections, 1.2-2.3 s.
+- Verdict control (same file): `fixtures/pinned-verdicts.json` holds `detect` (and a SHA-256 of `parse` where it matched) of both detectors taken **from the old code before the change**, on all 29 fixture documents, the text of the real budget document held here (`fixtures/budget-pages.json`, a copy of budget-doctypes' `bb23.json`: nine pages of the FY2023-25 Adopted Policy Budget), a budget volume's 1 MiB text, and the committee roster and the Public Works chart each behind 30, 400 and 6,000 preface lines (`test/shape-texts.mjs`); the new code equals all 38 cases, on the old code the control also passes (as it should). Beside it, a differential run (not committed) over 48,045 mutated lines (doubled and tab white space, quotes, NULs, non-breaking spaces, capitals, accents, appended phone/e-mail/street) comparing the old and new `withoutContacts`, `isUnitLine`, `nameSpans`, `isName`, `leadingName`, `wordCount` and `titleSpans`, and 174 whole-document `detect`/`parse` pairs, found no difference.
+
+**Found, not changed (same verdicts were the entry).** The real budget pages (`bb23.json`, nine pages) are answered `staff_roster` (match true) by the old and the new code alike; it is pinned in the control. Whether that is right for those pages is not asked here.
+
+**Deferred.** None.
+
+**Found in another module.** None. The cost seen by the plane is classification once per read and twice in `readText` (`reading-pipeline/index.mjs:1918, 2125`); that is reading-pipeline's part of G37, which merges after this job.
+
+**Requirement lines proposed (BOB writes `build/requirements/`).**
+- R1 add: `detect` over a text allocates in proportion to the text and costs at most 32 bytes of allocation per byte of text: a 1 MiB text of a budget volume causes at most 16 collections of a 2 MB semi-space and a 24 MiB text at most 384, and the 24 MiB text takes under 4 s; the verdicts are those of the documents' own lines, not of how the text is walked (fix round 6, G37).
+- R3 add: the same for `org_chart`'s `detect`.
+
+**Checks run**
+- `node --test --test-force-exit roster-reader/test/`: `tests 27, pass 27, fail 0` (3 new in `cost.test.mjs`).
+- `node --test --test-force-exit docprofile/test/`: `tests 45, pass 45, fail 0`.
+- The plane tests `node build/plan/impact.mjs origin/tranche/T51 HEAD` names (50 files): `tests 332, pass 331, fail 1`; the failure is `release.test.mjs` R24 (`screen.objective.purpose is held by the words list`), the same red as on a clean `tranche/T51`, not this module's.
+- `node checks/run.mjs /home/user/bio` (civicos-process, current): `format … 0 failures`; `architecture … 0 failures`; `coverage: 176 modules, 6668 of 6668 live requirement ids named by a test; 0 failures`; `channels … 0 failures`; `words: … inline 0, plain 0, testcopy 0 … 0 failures`.
+- `node checks/ownership.mjs /home/user/bio roster-reader origin/tranche/T51 job/T51/roster-reader`: `9 files changed by roster-reader between origin/tranche/T51 and job/T51/roster-reader; 0 failures`.
+
+Size (session_01E1WAAUCdCBnpW5KTCteeWs): test runs 9, module lines 1122
