@@ -125,3 +125,81 @@ test("R96 G6 G8 the design's rows (DEC-418) are drawn when the words list holds 
   const door = main(rep).querySelector('button[data-act="readheld"]');
   assert.ok(text(door).includes(hasWord(OWED.door) ? word(OWED.door) : word("document.read.title")), "the door by the design's label, else 'Read it'");
 });
+
+/* ------------------------------------------------------------------------------------------------------------------ G14 (completeness) */
+
+test("R96 G14 a reading that states itself refused whole (a PDF over 16 MiB) draws its reason and the file's size: never 'none', never 'pages N have no text', no OCR re-read, its unread pages not offered as pictures of text", async () => {
+  const BYTES2 = 20971520;
+  const WHY = "the PDF is 20971520 bytes, over the 16777216 B its text is read from at the door, so only its first pages were read";
+  const p = await open(at, { plane: { reading: ok({ ok: true, found: true, capture_sha: SHA, bundle_id: D, content_type: "application/pdf", reader_found: true,
+    reading: { content_type: "application/pdf", found: true, page_count: 300 }, text_units: lines(2), unread_pages: [2, 3, 4, 5], bytes: BYTES2,
+    completeness: { state: "stated", why: WHY } }) } });
+  const m = main(p);
+  assert.equal(m.querySelector("[data-text-state]").getAttribute("data-text-state"), "stated");
+  assert.ok(text(m).includes(WHY), "the reason, in the plane's words");
+  assert.ok(text(m).includes(word("size.mb", { n: (BYTES2 / 1048576).toFixed(1) })), "with the file's size");
+  assert.ok(!text(m).includes(word("screen.document.text.partial", { pages: "3–6" })) && !m.querySelector('[data-text-state="none"]'), "never 'pages have no text', never none");
+  assert.ok(!actsIn(m).includes("pdfstructure") && !actsIn(m).includes("pagetranscribe") && !actsIn(m).includes("transcribe"), "no OCR, no typing of pages the size left unread");
+});
+
+test("R96 G14 a reading with passages left out (completeness partial, nothing more to come) is never drawn as full: it says what was left out; completeness whole is read in full; with total stated, once read in pieces, it says so", async () => {
+  const cut = await open(at, { plane: { reading: textAnswer({ completeness: { state: "partial", why: "the first 4096 passages are searchable and citable; 117316 further passages are not", skipped: [{ units: 117316 }] } }) } });
+  assert.equal(main(cut).querySelector("[data-text-state]").getAttribute("data-text-state"), "cut", "partial, not full");
+  assert.ok(text(main(cut)).includes("117316 further passages"), "said");
+  const whole = await open(at, { plane: { reading: textAnswer({ completeness: { state: "whole" } }) } });
+  assert.equal(main(whole).querySelector("[data-text-state]").getAttribute("data-text-state"), "full");
+  assert.ok(!main(whole).querySelector('[data-reading="more"]'), "a whole reading says nothing of being read");
+  const pieces = await open(at, { plane: { reading: textAnswer({ completeness: { state: "whole" }, more: false, read_through: 12000060, total: 12000060 }) } });
+  const done = hasWord("screen.document.reading.done") ? word("screen.document.reading.done") : word("screen.document.text.full");
+  assert.ok(text(main(pieces).querySelector('[data-reading="more"]')).includes(done), "read in full, once the pieces are all read");
+});
+
+/* ------------------------------------------------------------------------------------------------------------------ G17 (lists say when they stop) */
+
+const link = (i) => ({ address: "https://example.org/page-" + i, partition: "deferred", resolution: "offsite", verdict: null });
+const range = (a, b) => Array.from({ length: b - a }, (_, i) => link(a + i));
+const linksSec = (p) => main(p).querySelector('[data-tally="1"]').parentElement;
+
+test("R67 G17 a page with 250 links draws the first 200 and says so; the more control reads the next page (after the cursor) and the rest follows; at the end nothing is said to be cut", async () => {
+  const p = await open(at, { plane: { links: (r) => ok(r.query.after === "C200" ? { ok: true, links: range(200, 250), truncated: false, next: null } : { ok: true, links: range(0, 200), truncated: true, next: "C200" }) } });
+  const cut = () => main(p).querySelector('[data-cut="links"]');
+  assert.ok(cut() && text(cut()).includes(word("screen.people.more", { n: "200" })), "the first 200 are shown, said");
+  assert.equal(main(p).querySelectorAll('a[href^="https://example.org/page-"], [data-link]').length >= 0, true);
+  assert.equal(p.byOp("links").filter((r) => r.query.after !== undefined).length, 0, "the rest is not read until she asks");
+  const box = (pg) => pg.doc.getElementById("document-links-more") && pg.doc.getElementById("document-links-more").querySelectorAll("label").find((l) => l.textContent.includes(word("shell.more"))).querySelector("input");
+  const b = box(p); assert.ok(b, "a more control"); b.checked = true; p.fire(b, "change"); await p.settle();
+  assert.deepEqual(p.byOp("links").filter((r) => r.query.after !== undefined).map((r) => r.query.after), ["C200"]);
+  assert.ok(text(main(p)).includes("page-249"), "the 250th link is drawn");
+  assert.ok(!cut() && !p.doc.getElementById("document-links-more"), "and nothing is said to be cut");
+});
+
+test("R68 G17 names, name matches and connections the plane cut are said to be cut; control: lists that are whole say nothing", async () => {
+  const names = Array.from({ length: 3 }, (_, i) => ({ entity_id: "ENT-" + i, label: "Name " + i, kind: "organization", grade: "B", matched_by: "label", mentions: 1 }));
+  const cutP = await open(at, { plane: { resolutions: ok({ ok: true, names, resolutions: [], truncated: true, names_truncated: true }), connections: ok({ ok: true, connections: [], truncated: true }) } });
+  assert.ok(main(cutP).querySelector('[data-cut="names"]') && text(main(cutP).querySelector('[data-cut="names"]')).includes(word("screen.people.more", { n: "3" })));
+  const whole = await open(at, { plane: { resolutions: ok({ ok: true, names, resolutions: [], truncated: false }), connections: ok({ ok: true, connections: [], truncated: false }) } });
+  assert.ok(!main(whole).querySelector('[data-cut="names"]') && !main(whole).querySelector('[data-cut="connections"]'));
+});
+
+test("R56 G17 25 themes: 20 are drawn and the list says it is cut; the more control draws the rest", async () => {
+  const themes = Array.from({ length: 25 }, (_, i) => ({ theme_id: "TH-" + i, name: "Theme " + i }));
+  const p = await open(at, { plane: { themeread: (r) => ok(r.query.id ? { ok: true, members: [{ target: D, page: 0, placer_handle: "dev", placed_at: "2026-10-03T10:00:00Z", note: "n" }], hunches: [] } : { ok: true, themes }) } });
+  const placed = () => main(p).querySelectorAll("p[data-theme]").length;
+  assert.equal(placed(), 20, "20 themes");
+  assert.ok(main(p).querySelector('[data-cut="themes"]') && text(main(p).querySelector('[data-cut="themes"]')).includes(word("screen.people.more", { n: "20" })), "said");
+  const b = p.doc.getElementById("document-themes-more").querySelectorAll("label").find((l) => l.textContent.includes(word("shell.more"))).querySelector("input");
+  b.checked = true; p.fire(b, "change"); await p.settle();
+  assert.equal(placed(), 25, "all 25 follow");
+  assert.ok(!main(p).querySelector('[data-cut="themes"]'));
+});
+
+/* ------------------------------------------------------------------------------------------------------------------ G19 (supporting files) */
+
+test("R3 G19 a web capture that skipped supporting files says how many were kept of all, with the reason; control: none skipped says nothing", async () => {
+  const doc = (sup) => ({ [D]: { "bundle.md": DOCUMENT_MD, "data/provenance.json": JSON.stringify({ documents: [{ capture: { sha256: SHA }, supporting: sup }] }) } });
+  const p = await open(at, { images: doc({ kept: 400, skipped: 50, reasons: ["50 files were over the 8 MiB a file may be"] }) });
+  const line = main(p).querySelector("[data-supporting]");
+  assert.ok(line && text(line).includes("400 / 450") && text(line).includes("50 files were over the 8 MiB a file may be"));
+  const none = await open(at, { images: doc({ kept: 12, skipped: 0, reasons: [] }) });
+  assert.ok(!main(none).querySelector("[data-supporting]"));
+});
