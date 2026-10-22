@@ -423,3 +423,16 @@ Built and pushed on job/T51/plane (7a38e2021e): E2's ledger accounting (a row st
 ## J28 · REPORT
 
 REPORT (PLANE #50): B34 applied and pushed: every route answers server-timing: object;dur=<ms> (set by the object, a carried-in value replaced); tested on three routes in fix5-r77.test.mjs, 6 of 6 green. Still open is only J27 item 2: the L run at real sizes waits for pdf-reader, reading-pipeline and extraction to merge into tranche/T51; tell me when, or say close now.
+
+## Record: B34 and B36 (PLANE #50), L at size
+
+**B34 applied.** The object answers every route `server-timing: object;dur=<ms>` (`store.mjs` `fetch`; set by the object, a carried-in value replaced); tested on three routes in `fix5-r77.test.mjs` (R78).
+**B36: L through the real ledger and alarm, on the merged providers** (`l77-size.test.mjs`, child `l77-size-child.mjs`: the real `Store`, `keeps_pending`, `onAlarm`, extraction's real `readHeld`, the file promoted as the capture screen files one; peak = sampled heap + array buffers above idle after the file is held; node 26, no heap cap, GC not forced during the read, so each peak includes uncollected garbage; runs vary):
+| file | read by the alarm | peak above idle (idle ≈108 MB incl. the held bytes) | time |
+|---|---|---|---|
+| 21 MB / 1,300-page synthetic | 1 tick, ledger empty, 134 units, words in `text_units` | 112 MB (other runs 178, 354, 366) | 25 s |
+| 15.9 MB many-object PDF (≈100k small objects, 18.9 MB) | 1 tick, ledger empty, words in `text_units` | 79 MB | 2.4 s |
+| 22 MiB PDF (600 pages) | 1 tick, ledger empty, 266 units, words in `text_units` | 276 MB (one run, with a 160 MB old-space cap: completes, peak 65 MB above idle) | 6.2 s |
+With `--max-old-space-size` set the synthetic did not complete at 110, 130, 160, 200, 240 or 300 MB through the whole plane (extraction's own `c5b-memory` completes the same read in 88 MB), and the 22 MiB PDF failed at 110 and 130 and completed at 160. So through the assembled plane the 1,300-page read needs far more than extraction's isolated measure; the cause is not found (not extraction's units budget, now the index bound; the other 2 MiB-class candidates are the plane's promotion/index writes and the stand-in bucket's copies). Miniflare and node enforce no CPU limit and no 128 MB object. **What the deploy names:** `owedwork` states, per row, `interrupted`, `running`, `last_ms`, `last_mem` (K4428), so a row killed by memory or CPU shows as interrupted with its last markers, and ends stated after three.
+**Suite.** plane 318 tests, 317 pass, 1 fail (R24 `release.test.mjs`, stale setup-words rows, red on the tranche before). `checks/run.mjs`: 0 failures all five; ownership 0.
+Size (session_01AipmqTnUkdaqEHwuH2y95j): test runs 22, module lines 3,070
