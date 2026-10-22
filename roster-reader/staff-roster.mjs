@@ -37,7 +37,7 @@
  * line: the row is kept whole as `line`, never paired by guess, R2). */
 import { CONFIDENCE, CONTRACT, entity, diffEntities, alsoSatisfies,
          event, worstSignificance, isMeaningful, bySeverity } from "../docprofile/registry.mjs";
-import { nameSpans, isName, leadingName, withoutContacts, titlePatterns, titleSpans, removeSpans,
+import { hasNameSpan, isName, leadingName, withoutContacts, titlePatterns, titleSpans, removeSpans,
          rosterWordPatterns, selfNamingLines, selfNamingLine, namedAs, eachLine, statedDate, datesIn, isUnitLine, UNIT_WORDS, EMAIL } from "./lines.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
@@ -65,8 +65,8 @@ const SPLIT_NAMES = /\s*(?:,|&|\/|\band\b|;)\s*/;
 
 /** One line as a roster reads it: rows (possibly several, for `Chair: A & B`), and whether the line
  *  carries a name with more beside it (the floor's unit). Lines carrying no name give no row. */
-export function readLine(lineText, titles) {
-  const { text } = withoutContacts(lineText);
+export function readLine(lineText, titles, bare = withoutContacts(lineText)) {
+  const { text } = bare;
   const t = text.replace(ROW_NUMBER, "").trim();
   if (!t) return { rows: [], paired: false, named: false };
   if (TITLE_CASE_PROSE.test(t)) return { rows: [], paired: false, named: false };
@@ -100,7 +100,7 @@ export function readLine(lineText, titles) {
     const contiguous = ts.every((h, i) => i === 0 || t.slice(ts[i - 1].index + ts[i - 1].text.length, h.index).trim() === "");
     if (isName(rest) && contiguous && (lead || tail))
       return { rows: [{ name: rest, title: ts.map((h) => h.text).join(" ").trim() }], paired: true, named: true };
-    if (nameSpans(rest).length)
+    if (hasNameSpan(rest))
       return { rows: [{ line: t, why: localize("roster-reader.staff-roster.the_line_prints_staff", "the line prints staff titles and names that do not divide into one name beside its title, so it is not paired by guess") }],
                paired: true, named: true };
     /* A post with no name on its line ("Electrician Leader") is a box, not a row. */
@@ -109,12 +109,12 @@ export function readLine(lineText, titles) {
   if (!ts.length && isName(t)) return { rows: [{ name: t }], paired: false, named: true };
   /* A heading that ends in a kind of unit ("Oakland Workforce Development Board") names the
      organisation or one of its parts, not a person. */
-  if (UNIT_WORDS.has((t.split(" ").pop() || "").replace(/[^\p{L}]/gu, "").toLowerCase()))
+  if (UNIT_WORDS.has(t.slice(t.lastIndexOf(" ") + 1).replace(/[^\p{L}]/gu, "").toLowerCase()))
     return { rows: [], paired: false, named: false };
   if (leadingName(t))
     return { rows: [{ line: t, why: localize("roster-reader.staff-roster.the_line_opens_with_a", "the line opens with a name but what follows it is not one of the view's staff titles, so where the name ends is not divided by guess") }],
              paired: true, named: true };
-  return { rows: [], paired: false, named: nameSpans(t).length > 0 };
+  return { rows: [], paired: false, named: hasNameSpan(t) };
 }
 
 /** The rows of a text, each with the offset of its line, and the counts the floor reads. With `keep` false
@@ -131,7 +131,7 @@ function readRows(raw, ctx, keep = true) {
     else { const s = selfNamingLine(x, selfPatterns); if (s) self.push(s); }
     const bare = withoutContacts(x.text);
     if (bare.removed) contactLines++;
-    const r = readLine(x.text, titles);
+    const r = readLine(x.text, titles, bare);
     if (r.paired) paired++;
     if (r.named) named++;
     /* A line that is a post or a unit with no name on it: a chart's box, not a roster's row. */
