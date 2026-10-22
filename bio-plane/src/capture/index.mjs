@@ -52,8 +52,7 @@ export { CAPTURE_ACCOUNT_TOKEN, captureAccountStatement } from "../sshsig.mjs";
 import { ARCHIVE_SERVICE } from "../tsa.mjs";
 export { acquireGradeNote, ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
 import { ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
-import { unpack, archiveList, memberOf, membersOf, openedAmong, acquisitionOf, openCaptures } from "../acquisition/index.mjs";
-import * as acquisitionApi from "../acquisition/index.mjs";
+import { unpack, archiveList, memberOf, membersOf, openedAmong, notArchivesAmong, acquisitionOf, openCaptures } from "../acquisition/index.mjs";
 import { recordOf, PER_ITEM_MAX } from "../record-core/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
 /* R86 (T41-8a): `UPLOAD_VIA`, the route an upload's receipt names, provenance's one spelling (its R63). */
@@ -1811,7 +1810,7 @@ export class Capture {
     /* G12a (fix round 6): the digests acquisition holds as no archive (it remembers what it decided, so it is asked once), so
        the archive grouping asks the store about none of them; acquisition not serving the read, none is known */
     try {
-      const none = typeof acquisitionApi.notArchivesAmong === "function" ? acquisitionApi.notArchivesAmong(this, regs.map((r) => r.capture_sha)) : null;
+      const none = notArchivesAmong(this, regs.map((r) => r.capture_sha));
       if (none instanceof Set) facts.notArchives = none;
     } catch { /* nothing known: every candidate is asked, as before */ }
     return facts;
@@ -3314,7 +3313,7 @@ export const DECLARED_OPS = Object.freeze({
      continue or address is refused naming the locator (BAD_LOCATOR), an archive call without address naming it (BAD_ADDRESS).
      `matchedSweep` is never read from the body (acquisition R31), so it is not declared. */
   acquire: { classes: ["admin","member","probe","daemon"], mutating: true, weight: "substrate", description: localize("capture.declared.acquire", "substrate: the fetch layer (M2')"),
-    fields: { accepts: ["address","at","authority","coArchive","continue","file","for","locator","render","request","subresources","via"], requires: [["locator","continue","address"]] } },
+    fields: { accepts: ["address","at","authority","coArchive","continue","file","for","locator","project","render","request","subresources","via"], requires: [["locator","continue","address"]] } },
   /* R101 (T51 fix round 3; C9): a member files a held document in a project; `by` and `viewer` are stamps, so only the two body
      fields are accepted, and both are required (an absent one is the required-argument refusal naming it). It is a corpus write,
      so it needs `contribute` (op-declarations R80: a mutating op with no hand row names its capability); the project fence is

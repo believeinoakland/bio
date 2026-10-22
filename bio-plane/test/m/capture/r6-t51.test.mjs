@@ -9,6 +9,8 @@ import assert from "node:assert/strict";
 import { fresh, bucket, network, receipt, sha, governor, provenance, H } from "./fixture.mjs";
 import * as acquisition from "../../../src/acquisition/index.mjs";
 import { acquisitionOf } from "../../../src/acquisition/index.mjs";
+import { provenance as acquisitionProvenance } from "../acquisition/fixture.mjs";
+import { PROVENANCE_SCHEMA } from "../../../src/provenance/schema.mjs";
 import { captureOps } from "../../../src/capture/index.mjs";
 import { captureOp } from "../../../src/capture/ops.mjs";
 
@@ -91,9 +93,11 @@ function nullFormat(n) {
   const calls = { head: 0, get: 0 };
   for (const m of ["head", "get"]) { const o = b[m].bind(b); b[m] = async (k, ...a) => { calls[m]++; return o(k, ...a); }; }
   const f = fresh({ evidence: b, env: {} });
-  const prov = provenance(f.s);
+  for (const t of PROVENANCE_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";")) if (t.trim()) f.s.db.exec(t);
+  const registered = [];
+  const prov = acquisitionProvenance({ sql: f.s.sql, registered });
   f.c.provenance = prov;
-  f.c.acquisition = acquisitionOf({ storage: f.s }, { record: f.core, provenance: { ...prov, homes: {} }, membership: { isAdministrator: () => false } });
+  f.c.acquisition = acquisitionOf({ storage: f.s }, { record: f.core, provenance: prov, membership: { isAdministrator: () => false } });
   const docs = [];
   for (let i = 0; i < n; i++) {
     const body = new TextEncoder().encode(`plain document ${i} ${"x".repeat(50 + i)}`);
@@ -105,6 +109,7 @@ function nullFormat(n) {
     /* the register document profiles the capture with NO format: the case the walker's slow rows were */
     f.s.sql.exec(`INSERT INTO files (bundle_id, path, content, blob_sha, bytes, sha256) VALUES (?, 'data/provenance.json', ?, NULL, 1, 'x')`,
                  id, JSON.stringify({ documents: [{ capture: { sha256: d }, profile: {} }] }));
+    prov.homes[d] = id; registered.push(d);
     docs.push({ id, d });
   }
   return { ...f, b, calls, docs };
@@ -115,8 +120,11 @@ test("R77 R91 G12a (fix round 6; acquisition's notArchivesAmong): 20 captures pr
   const w = nullFormat(20);
   await w.c.heldCaptures({ viewer: ADMIN, limit: 500, now: NOW });
   const before = w.calls.head + w.calls.get;
-  assert.ok(before > 0, "the first draw pays: acquisition looks at each once");
+  let listed = 0;
+  const archiveList = w.c.archiveList.bind(w.c);
+  w.c.archiveList = (...a) => { listed++; return archiveList(...a); };
   await w.c.heldCaptures({ viewer: ADMIN, limit: 500, now: NOW });
+  assert.equal(listed, 0, "the second draw does not even ask the archive listing about them");
   assert.equal(w.calls.head + w.calls.get, before, "the second draw asks the store for none of them");
 });
 
