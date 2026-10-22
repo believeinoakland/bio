@@ -339,6 +339,12 @@ export function n439MigratedReading(reading, map, text, { at = null } = {}) {
 /* R89 (fix round 6, G8): the repair of old "not read as text" readings, its row in `reading_migrations` and one call's batch. */
 export const REPAIR_MIGRATION = "r89-repair-not-read";
 export const REPAIR_BATCH = 200;
+/* R92 (fix round 6, G33): the repair of readings the old press stored against a part's digest, its own row so a store whose R89 repair finished is scanned. */
+export const PART_MIGRATION = "g33-part-readings";
+
+/* R92: every table that keeps a reading against a capture, for the repair that takes a part's reading away. */
+const PART_KEPT_IN = Object.freeze(["readings", "reading_history", "reading_refs", "reading_ref_terms", "reading_text_source", "capture_text",
+  "capture_text_skipped", "capture_text_state", "reading_repairs"]);
 
 /* R66, R68: the two migrations, run by one machine (`#migrate`): the format they read, how a reading is marked, the
    renumbering map over the entry's parts, whether it moves anything, whether the stored reading states the old walk's
@@ -1598,6 +1604,7 @@ export class Extraction {
       await drain(() => this.migrateDocxReadings()).catch(() => null);
       await drain(() => this.migratePptxReadings()).catch(() => null);
       await drain(() => this.migrateRepairs()).catch(() => null);
+      await drain(() => this.migratePartReadings()).catch(() => null);
     })().catch(() => null);
     host.waitUntil(this.#migrationRun);
     return this.#migrationRun;
@@ -1677,6 +1684,7 @@ export class Extraction {
     if (host && typeof host.waitUntil === "function" && !this.#repairRun) {
       this.#repairRun = (async () => {
         for (let n = 0; n < 10_000; n++) { const r = await this.migrateRepairs(); if (!r || r.done || !r.examined) break; }
+        for (let n = 0; n < 10_000; n++) { const r = await this.migratePartReadings(); if (!r || r.done || !r.examined) break; }
       })().catch(() => null);
       host.waitUntil(this.#repairRun);
     }
@@ -1719,6 +1727,44 @@ export class Extraction {
     }
     if (page.length <= cap) {
       this.#sql.exec(`UPDATE reading_migrations SET done=1, at=? WHERE migration=?`, stampInstant("second"), REPAIR_MIGRATION);
+      out.done = true;
+    }
+    return out;
+  }
+
+  /** R92 (fix round 6, G33; R-OLD, a repair): once per store, a failed reading the old press stored against the digest of a PART of a
+   *  document (the register named the lowest-sorting part of a multipart capture; `readHeld` then found no document and wrote its
+   *  stub against the part) is superseded by the whole's reading. Per reading: the whole is owed to the ledger as a `reading` entry
+   *  first (unless it holds a reading already), then every row kept against the part is deleted, so the document counts one capture
+   *  and the tick writes the whole's sized statement. A reading with text, a digest that is also a document of its bundle and a digest
+   *  its bundle names as no part are left. In digest order from a cursor; with no ledger handed in (`registerOwe`) it deletes nothing
+   *  and stays undone, and a refusing ledger stops it with the part's reading kept. */
+  async migratePartReadings({ limit = REPAIR_BATCH } = {}) {
+    const st = this.#migrationState(PART_MIGRATION);
+    const out = { ok: true, migration: PART_MIGRATION, done: !!st.done, examined: 0, owed: [], superseded: [] };
+    if (st.done || !this.#owe) return out;
+    const cap = Math.max(1, Math.min(Math.floor(Number(limit) || REPAIR_BATCH), 5000));
+    const page = this.#rows(`SELECT capture_sha, bundle_id FROM readings WHERE found = 0 AND capture_sha > ? ORDER BY capture_sha LIMIT ?`,
+                            st.after || "", cap + 1);
+    for (const r of page.slice(0, cap)) {
+      const whole = typeof r.bundle_id === "string" && r.bundle_id && !this.#storedDocument(r.bundle_id, r.capture_sha)
+        ? this.#wholeOfPart(r.bundle_id, r.capture_sha) : null;
+      if (whole) {
+        if (!out.owed.includes(whole) && !this.#one(`SELECT 1 AS x FROM readings WHERE capture_sha=?`, whole)) {
+          let a = null;
+          try { a = await this.#owe({ kind: "reading", sha: whole }); } catch { a = null; }
+          if (!a || a.ok !== true) return out;
+          out.owed.push(whole);
+        }
+        this.core.transact(() => { for (const t of PART_KEPT_IN) this.#sql.exec(`DELETE FROM ${t} WHERE capture_sha=?`, r.capture_sha); });
+        out.superseded.push(r.capture_sha);
+      }
+      this.#sql.exec(`UPDATE reading_migrations SET after=?, examined=examined+1, migrated=migrated+?, at=? WHERE migration=?`,
+                     r.capture_sha, whole ? 1 : 0, stampInstant("second"), PART_MIGRATION);
+      out.examined++;
+    }
+    if (page.length <= cap) {
+      this.#sql.exec(`UPDATE reading_migrations SET done=1, at=? WHERE migration=?`, stampInstant("second"), PART_MIGRATION);
       out.done = true;
     }
     return out;
