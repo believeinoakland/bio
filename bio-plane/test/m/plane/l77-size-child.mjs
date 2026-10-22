@@ -65,6 +65,10 @@ promotionOf(x.ctx).promote({ bundleId: id, base: null, snapKey: "20261022T000000
 const direct = process.argv[2] === "direct";
 if (!direct) await x.call(`/pendingadd?kind=reading&sha=${d}`);
 const rows = () => [...x.ctx.storage.sql.exec(`SELECT kind, attempts, interrupted, final_why, last_why, last_ms FROM keeps_pending`)];
+const v8 = await import("node:v8");
+const heapMb = () => +(v8.getHeapStatistics().used_heap_size / 1048576).toFixed(1);
+global.gc(); global.gc();
+if (process.argv[2] === "idle") { console.log(JSON.stringify({ kind, idleHeapMb: heapMb() })); process.exit(0); }
 const use = () => { const m = process.memoryUsage(); return m.heapUsed + m.arrayBuffers; };
 global.gc(); global.gc();
 const base = use(); let peak = base;
