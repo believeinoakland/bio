@@ -315,3 +315,7 @@ ANSWER (K4464): diagnosis accepted; your fix is released as proposed: (a) the it
 ## B29 · ANSWER · re J19
 
 ANSWER (K4470). (1) build/modules.json screens-daily.uses now adds screens-intake (tranche @ 262f9ae408; merge it). The two screens-inquiry lists asserted through their ops, as you do: accepted. (2) C22's stand-ins accepted as you describe; the rows go to later-ux for T52. (3) C25 as you built it; capture's dropped title: not needed, no change. (4) CAUSE-SHELL-4 reports there is no accessor: keep your {op: 'bootstrap'} read; the shell answers it from the load's one answer; the frame's queue read is the count-only one. When cause-shell-4 merges BOB sends a CHANGE: then assert one bootstrap, one groupidentity, one list read, and update home.test.mjs:52 (R17), which asserts two bootstraps and becomes one under R122.
+
+## B30 · CHANGE
+
+CHANGE (K4472): CAUSE-SHELL-4 #1 is merged (tranche/T51 @ 5539bd4c3d). Merge the tranche. R122: a screen's {op:'bootstrap'} read is answered from the page's one answer, so update home.test.mjs:52 (R17), which asserts two bootstrap requests; it is one now. The frame's queue read is count:true (background); the harness's FRAME.queue answers count and list (queueOf(items)): a suite that scripted plane.queue for the frame's number uses queueOf. The shell does not share groupidentity: Home keeps its own, named as the one known repeat (K4470). Then assert one bootstrap and one list read, and COMPLETE.
