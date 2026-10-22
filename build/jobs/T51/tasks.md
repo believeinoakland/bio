@@ -107,3 +107,40 @@ My recommendation is (A). I will build the tasks side of (A) once you confirm, a
 - **(B)** Written in the plane's suite as its seam test, since it runs the whole path, and tasks' record names it.
 
 I have not written it. R25 stays open until you choose. Impact on this change names six modules (tasks, queue, op-declarations, store-door, control-plane, plane); I am running their 103 test files now and will post the counts in COMPLETE.
+
+## J6 · COMPLETE
+
+**COMPLETE: TASKS #17, fix round 4b, entry 8 (R25, K4487, K4488, K4491).** Branch `job/T51/tasks`, head `24963c15ad`.
+
+**Step 0 (answered in J4).** D1 resolves the event once provenance R72 merges. The event's digest is the whole capture's (`acquisition/index.mjs:1404`); the drain's lookup is `homeOf` at `tasks/index.mjs:351`, null for multipart today because the register holds only parts (`provenance/index.mjs:835-841`). A committed promotion re-arms the drain (`tasks/index.mjs:1262`). The seam test below is the proof, red until R72.
+
+**What changed.**
+- `bio-plane/src/tasks/index.mjs`, `#backoffWake` (about line 1177) and the R18 comment (about line 160). Every retry's gap is `min(BACKSTOP × 2^(a−1), MAX_WAIT)`, where `MAX_WAIT` (`TASK_DRAIN_MAX_WAIT_MS`, one hour) is new at line 175. From `RETRY_LIMIT` (8) tries on, the gap is `MAX_WAIT` every time. Nothing stops the wake by count (B7, option C). The seventh gap is 60 minutes, not 64, because of the cap.
+- No change to the queue, the queue producers or any other module.
+
+**Tests, failing first, then green.**
+- `inbox.test.mjs`: "R25 (K4488): an event whose capture is filed after its eighth try is run at the next wake". Red before the change (the wake was null after the eighth try; `actual: null`). Green after.
+- `inbox.test.mjs`: the R18 tests that pinned "no timer past the limit" now pin the one-hour cap. Red-to-green by the same change.
+- `seam-r25.test.mjs` (K4491, option A): the real chain, composed as the plane composes it (provenance-routes' fixture: real record, membership, promotion and provenance; capture's real queue; tasks' real drain). A three-part capture is promoted as screen promotes one (the register names its parts). Its `authority-undetermined` event is queued under the whole digest, and one drain must make its task. **Stays red by name**: "provenance R72's whole row". The one-part control **passes**, so the red is the multipart case alone.
+- Size of the fixture: the three parts are small (64 KB each). The production capture is 20 MB. Promotion refuses inline files over about 7 MB (`OVERSIZE_INLINE`), so the test cannot carry 20 MB as text. The register path does not depend on size, and the test says so in its header.
+
+**Suite counts.**
+- Tasks suite: 111 tests, 110 pass, 1 fail. The failure is the seam test, red by name as B8 allows. Before the seam test, 132 of 132 passed (the earlier count of 132 included the removed fixture duplicates; the file set changed with `seam-r25.test.mjs`).
+- Affected suites (impact, six modules, 103 files), run at concurrency 2: 793 tests, 791 pass, 2 fail. R24 (words, `release.test.mjs`) fails the same way on the commit before my change, so it is not mine. R17 (`groupdescriptiondraft`, op-grades) passes alone and failed only in the batch; I read it as a concurrency artifact and did not prove that.
+
+**Checks.** `checks/run.mjs`: format, architecture and words pass; coverage names R25 in a test (no tasks failure). Coverage's 8 failures are other modules' requirements (acquisition R100, capture R103, extraction R82, file-safety R51, ooxml R35, provenance R72, reading-pipeline R37, store-door R18). `checks/ownership.mjs`: 3 files, 0 failures.
+
+**Measurements.** Not applicable: the change is in the drain's scheduling only. No platform-specific limit is touched, and no deploy.
+
+**Requirement lines I propose (BOB writes `build/requirements/tasks.md`).**
+- R18, amended: "...at the retry limit and beyond, the gap is one hour (TASK_DRAIN_MAX_WAIT_MS); the drain holds a timer for a queued event whatever its tries (K4488)". Replace the sentence "one tried RETRY_LIMIT times wants no wake at all ... an otherwise idle instance holds no timer".
+- R25, met by `inbox.test.mjs` (the eighth-try test) and by the seam test once R72 merges.
+- No new requirement lines beyond these.
+
+**Hand rows (`op-declarations`, `op-grades`).** None: no op changed.
+
+**Deferred.** Nothing in my module.
+
+**Found in other modules (for BOB).** None outside the items above. The impact list shows queue, op-declarations, store-door, control-plane and plane only as the tests that run against tasks; none failed beyond R24, which is pre-existing.
+
+**Size (session_01GozQuvJKa9gKZzheDC1C7d): test runs 13, module lines 1702.**
