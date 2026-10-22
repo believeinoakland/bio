@@ -1,6 +1,6 @@
 # BOB to extraction (T51)
 
-**Read** · handled J18
+**Read** · handled J19
 
 ## B1 · START
 
@@ -256,3 +256,11 @@ Also READING-PIPELINE #22's R39 (its J9): `read` now refuses a bare digest stub 
 
 CHANGE (BOB #253, K4578): fix round 6 gains causes from the K4571 audit. Merge tranche/T51 into your branch, then read `build/plan/fix-round-6-T51.md` section "G14-G25" whole (it is short) and apply the causes named below as part of this job, with the four fields (R-FOUR), failing-first past the bound, stand-in words named in COMPLETE (the rows go to UX-DESIGN). Bob (K4571): never a silent partial read; a bound that must stay is stated to the member.
 Yours: **G14 (owner, seam)**: G13's segments and cursor for every format (DOCX, HTML, PDF text, not only plain text); op=reading carries a `completeness` fact (`state` whole/partial/stated, the skipped runs, `failure`/`why`) beside `more`, `read_through`, `total` and its paging (K4577); `readingFor` keeps `state`, `counts`, `skipped`; `unreadOf` counts skipped units as unread. **G15 (provider)**: index the row-range units reading-pipeline now makes for a sheet. Your seam test adds G14's cases (a 6,000-paragraph DOCX, a 300-page dense PDF, a 24 MiB+ PDF stated).
+
+## B25 · CHANGE
+
+CHANGE (BOB #253, K4579): op=reading also states top-level `units_total`, the capture's indexed units so far (SCREENS-INQUIRY #21 draws "the first N of M passages" from it). No merge needed for this.
+
+## B26 · ANSWER · re J19
+
+ANSWER (BOB #253) to J19. PLANE #51 is told to add the `registerOwe` line and to take `round6-plane.test.mjs` into its tests. READING-PIPELINE #22 has G14 (pieces for every format); your G14 seam cases stay red by name until it merges, then I CHANGE you. Acquisition is merged; reading-pipeline is next on your path.

@@ -235,9 +235,12 @@ export class Following {
   #nextDue(id) {
     const f = this.#follow(id);
     if (!f || f.ended_at) return null;
+    if (this.#pending(f)) return instant(this.now());
     const iv = MONITOR_CADENCE_MS[f.cadence] ?? MONITOR_CADENCE_MS.daily;
     return f.last_read ? instant(ms(f.last_read) + iv) : instant(this.now());
   }
+  /* G21: a followed body whose read is not yet whole is due again at once. */
+  #pending(f) { const c = f.kind === "body" ? json(f.body_cursor) : null; return !!c && !c.done; }
   /* R19: a per-meeting watch's next capture instant, or null when it is unscheduled. */
   #meetingDue(address) {
     const m = this.#meetingPlan(this.now()).find((x) => x.address === address);
@@ -537,7 +540,7 @@ export class Following {
   #followPlan(nowMs) {
     return this.#rows(`SELECT * FROM follows WHERE ended_at IS NULL ORDER BY follow_id`).map((f) => {
       const iv = MONITOR_CADENCE_MS[f.cadence] ?? MONITOR_CADENCE_MS.daily;
-      const due = f.last_read ? ms(f.last_read) + iv : null;
+      const due = f.last_read && !this.#pending(f) ? ms(f.last_read) + iv : null;
       return { kind: "follow", follow: f, id: Number(f.follow_id), due_at: due == null ? null : instant(due), dueMs: due ?? 0 };
     });
   }
@@ -653,7 +656,11 @@ export class Following {
     else r = await this.#readRegister(f, subject, nowMs);
     /* a failed read stays due (its epoch stays open, so this tick's retry reads it again only under a fresh epoch); a
        policy watch's failed attempt counts as its read, so its address is fetched at most every 7 days (R20, K1881) */
-    if (r.outcome === "failed" && f.kind !== "policy") this.#sql.exec(`UPDATE follows SET last_outcome=? WHERE follow_id=?`, r.outcome, f.follow_id);
+    if (r.pending) {
+      /* G21: a body's read not yet whole goes on at the next tick; its last read is the last whole one */
+      this.#sql.exec(`UPDATE follows SET last_outcome=? WHERE follow_id=?`, r.outcome, f.follow_id);
+      this.#tell(Number(f.follow_id), at);
+    } else if (r.outcome === "failed" && f.kind !== "policy") this.#sql.exec(`UPDATE follows SET last_outcome=? WHERE follow_id=?`, r.outcome, f.follow_id);
     else {
       this.#sql.exec(`UPDATE follows SET last_read=?, last_outcome=? WHERE follow_id=?`, at, r.outcome, f.follow_id);
       this.#tell(Number(f.follow_id), this.#nextDue(f.follow_id));
@@ -697,7 +704,9 @@ export class Following {
     return { sha, same: false, bundle: landed.bundle_id, bytes, reading: doc.reading || null };
   }
 
-  /* R2, R3: a body's Legistar records for its followed period, each read handed to `legistar-reader` and to events. */
+  /* R2, R3: a body's Legistar records for its followed period, each read handed to `legistar-reader` and to events.
+     G21 (K4571): one pass reads every page of the meetings and of the matters; a tick that reaches BODY_READ_FETCHES
+     keeps where it stopped (`follows.body_cursor`) and the next tick goes on from there, until the pass is whole. */
   async #readBody(f, s, nowMs) {
     const { client, id } = s.legistar || {};
     const to = f.until_day || null;
@@ -723,35 +732,82 @@ export class Following {
       }
       return t;
     };
-    const rowsOf = async (t, locator) => {
-      if (!t) return [];
-      const bytes = t.bytes || await this.#bytes(t.sha);
-      if (!bytes) return [];
-      try { return parseLegistar({ locator, bytes, at: null }).rows; } catch { return []; }
+    const parsed = (bytes, locator) => {
+      if (!bytes) return null;
+      try { const p = parseLegistar({ locator, bytes, at: null }); return { rows: p.rows, next: (p.page && p.page.next) || null }; } catch { return null; }
+    };
+    /* One page's rows and the address of the next. `held`: the page this pass already took, read from the held bytes
+       with no fetch. `walk` is false for a page whose bytes equal the last pass's (its rows were walked then). */
+    const pageOf = async (address, imports, held) => {
+      if (held) {
+        const h = this.#one(`SELECT capture_sha FROM follow_reads WHERE follow_id=? AND address=?`, f.follow_id, address);
+        const p = h ? parsed(await this.#bytes(h.capture_sha), address) : null;
+        if (p) return { ...p, walk: true };
+      }
+      const t = await read(address, imports);
+      const p = t ? parsed(t.bytes || await this.#bytes(t.sha), address) : null;
+      return p ? { ...p, walk: !t.same } : null;
+    };
+    /* a meeting's items, or an item's votes, are one Legistar page (1,000 rows): more is said, never read in part */
+    const listOf = async (address, held) => {
+      const p = await pageOf(address, true, held);
+      if (p && p.next) failed.push({ follow: Number(f.follow_id), address, reason: "PAGE_LIMIT" });
+      return p;
+    };
+    const prior = json(f.body_cursor);
+    /* phase, the page's address, the row to go on at (`idx`, and in a meeting the item `vi`), the meetings before this page
+       (`base`) and on it (`size`), whether the page is already taken (`got`) and whether more pages follow (`more`) */
+    let st = prior && !prior.done ? prior
+      : { phase: "events", addr: eventsAddress(client, id, f.from_day, to), idx: 0, vi: null, base: 0, size: 0, got: false, walk: false, more: false, meetings: 0 };
+    const advance = (phase, addr) => {
+      const meetings = st.phase === "events" && phase === "matters" ? st.base + st.size : st.meetings;
+      st = { ...st, phase, addr, idx: 0, vi: null, got: false, walk: false, base: phase === st.phase ? st.base + st.size : 0, size: 0, more: phase === "events", meetings };
     };
     /* the meetings, then each meeting's items, then each item's votes (an item is written within its meeting) */
-    const evAt = eventsAddress(client, id, f.from_day, to);
-    const ev = await read(evAt);
-    for (const e of await rowsOf(ev && ev.same ? null : ev, evAt)) {
-      const itAt = itemsAddress(client, e.ids.EventId);
-      const items = await read(itAt);
-      for (const it of await rowsOf(items && items.same ? null : items, itAt)) await read(votesAddress(client, it.ids.EventItemId));
+    while (st.phase === "events" && !truncated) {
+      const p = await pageOf(st.addr, true, st.got);
+      if (!p) { if (!truncated) advance("matters", mattersAddress(client, id, f.from_day, to)); break; }
+      if (!st.got) { st.got = true; st.walk = p.walk; st.size = p.rows.length; st.more = !!p.next; if (!st.walk) st.idx = st.size; }
+      for (; st.idx < st.size; st.idx++, st.vi = null) {
+        const e = p.rows[st.idx];
+        const items = await listOf(itemsAddress(client, e.ids.EventId), st.vi !== null);
+        if (truncated) break;
+        for (let j = st.vi ?? 0; items && items.walk && j < items.rows.length; j++) {
+          st.vi = j;
+          await listOf(votesAddress(client, items.rows[j].ids.EventItemId), false);
+          if (truncated) break;
+        }
+        if (truncated) break;
+      }
+      if (truncated) break;
+      if (p.next) advance("events", p.next);
+      else advance("matters", mattersAddress(client, id, f.from_day, to));
     }
     /* R3: a matter whose enactment record moved is captured anew at its own address (a new version there) */
-    const mtAt = mattersAddress(client, id, f.from_day, to);
-    const mt = await read(mtAt, false);
-    for (const m of await rowsOf(mt && mt.same ? null : mt, mtAt)) {
-      const key = matterAddress(client, m.ids.MatterId);
-      const now = enactmentOf(m);
-      const held = this.#one(`SELECT facts FROM follow_reads WHERE follow_id=? AND address=?`, f.follow_id, key);
-      if (held && JSON.stringify(json(held.facts)) === JSON.stringify(now)) continue;
-      const t = await read(key, false);
-      if (t) this.#sql.exec(`UPDATE follow_reads SET facts=? WHERE follow_id=? AND address=?`, JSON.stringify(now), f.follow_id, key);
-      if (t && !t.same) captured[captured.length - 1].enactment = now;
+    while (st.phase === "matters" && !truncated) {
+      const p = await pageOf(st.addr, false, st.got);
+      if (!p) { if (!truncated) st = { done: true, meetings: st.meetings }; break; }
+      if (!st.got) { st.got = true; st.walk = p.walk; st.size = p.rows.length; st.more = !!p.next; if (!st.walk) st.idx = st.size; }
+      for (; st.idx < st.size; st.idx++) {
+        const m = p.rows[st.idx];
+        const key = matterAddress(client, m.ids.MatterId);
+        const now = enactmentOf(m);
+        const held = this.#one(`SELECT facts FROM follow_reads WHERE follow_id=? AND address=?`, f.follow_id, key);
+        if (held && JSON.stringify(json(held.facts)) === JSON.stringify(now)) continue;
+        const t = await read(key, false);
+        if (!t && truncated) break;
+        if (t) this.#sql.exec(`UPDATE follow_reads SET facts=? WHERE follow_id=? AND address=?`, JSON.stringify(now), f.follow_id, key);
+        if (t && !t.same) captured[captured.length - 1].enactment = now;
+      }
+      if (truncated) break;
+      if (p.next) advance("matters", p.next);
+      else st = { done: true, meetings: st.meetings };
     }
+    this.#sql.exec(`UPDATE follows SET body_cursor=? WHERE follow_id=?`, JSON.stringify(st), f.follow_id);
+    const meetings = bodyProgress(st);
     const outcome = failed.length ? "failed" : captured.length ? "captured" : "unchanged";
-    return { read: { follow: Number(f.follow_id), kind: "body", outcome, fetches, imported: imported.length, ...(truncated ? { truncated: true } : {}) },
-             captured, failed, outcome };
+    return { read: { follow: Number(f.follow_id), kind: "body", outcome, fetches, imported: imported.length, meetings, ...(truncated ? { truncated: true } : {}) },
+             captured, failed, outcome, pending: !st.done };
   }
 
   /* R7, R9: a public register (or a person query on one), re-read, or re-rendered when the follow says so. */
@@ -1654,7 +1710,9 @@ export class Following {
       const s = json(f.subject) || {};
       const gated = json(f.gated);
       items.push({ follow: p.id, kind: f.kind, subject: s, author: f.kind === "policy" ? null : f.author, home: f.home,
-        period: f.kind === "body" ? { from: f.from_day, until: f.until_day } : null, cadence: f.cadence, at: f.at,
+        period: f.kind === "body" ? { from: f.from_day, until: f.until_day } : null,
+        /* G21: how far a body's read has gone: the meetings read of those counted, `more` while the count is not yet known */
+        ...(f.kind === "body" ? { body_read: bodyProgress(json(f.body_cursor)) } : {}), cadence: f.cadence, at: f.at,
         proceeding: f.kind === "register" && s.proceeding ? s.proceeding : null,
         last_read: f.last_read, last_outcome: f.last_outcome, next_due: p.ended ? null : p.due_at ?? instant(nowMs),
         ...this.#endFields(f),
@@ -1671,6 +1729,15 @@ export class Following {
     }
     return { ok: true, as_of: instant(nowMs), items };
   }
+}
+
+/** G21: how far a followed body's read has gone, as the cursor says it: the meetings read of those counted so far, `more`
+ *  while a page of meetings is not yet taken (the total is not known), `whole` once the read has finished, and its phase. */
+export function bodyProgress(c) {
+  if (!c) return null;
+  if (c.done) return { read: c.meetings, total: c.meetings, more: false, whole: true, phase: "done" };
+  if (c.phase === "matters") return { read: c.meetings, total: c.meetings, more: false, whole: false, phase: "matters" };
+  return { read: c.base + c.idx, total: c.base + c.size, more: !!c.more, whole: false, phase: "meetings" };
 }
 
 /** R10: a snapshot's validity: the capture instant, at second precision (`civil-time`'s value). */

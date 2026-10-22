@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J26
+**Read** · handled J29
 
 ## B1 · START
 
@@ -346,3 +346,15 @@ No merge of the tranche is needed for this CHANGE (no file of yours changed); me
 
 CHANGE (BOB #253, K4578): fix round 6 gains causes from the K4571 audit. Merge tranche/T51 into your branch, then read `build/plan/fix-round-6-T51.md` section "G14-G25" whole (it is short) and apply the causes named below as part of this job, with the four fields (R-FOUR), failing-first past the bound, stand-in words named in COMPLETE (the rows go to UX-DESIGN). Bob (K4571): never a silent partial read; a bound that must stay is stated to the member.
 Yours: **G14 (provider)**: register the reading continuation on the door path (`readUploaded`, `followEntries`) whenever the reading answers `more`, for every format. **G18 (owner)**: `followEntries` follows the first 16 documents of a promotion as today and OWES the rest (`pendSha`), never drops them (index.mjs ~2566, `READING_FOLLOWED_MAX` :217).
+
+## B43 · CHANGE
+
+CHANGE (BOB #253): (1) acquisition is merged (G2 R105, G3 R106). Its G3 changes the press your `t51-visitor-copy.test.mjs` encodes: "Finish it" with the ledger now answers `200 {ok:true, existed:true, continued, render:{state:"pending", session}}` at once and the alarm files the copy. Update that test (ACQUISITION #28 J26: lines 63-71 become an assert of `[ok, render.state, document]` = `[true, "pending", undefined]`, and `copySha` from `hex(RENDERED)`); its alarm half must still pass. (2) `r117-held.test.mjs` R117 (acquire) is red ALONE on the tranche's own source (3 runs, 0 !== 1 at its first assert; ACQUISITION #28 and SCREENS-INTAKE #18 both found it): not a load flake. Root-cause and fix it in this job (P8), stated in COMPLETE. (3) `owedFetch`'s deliver contract: `deliver({answer, session})`, reading `state.opened_by`, `state.project`, `answer.document`; you record `fetch_done` (capture's `recordFetchDone`, merging next). Merge tranche/T51.
+
+## B44 · ANSWER · re J27
+
+ANSWER (BOB #253) to J27: it crossed my CHANGE B43 (16:07), so the job is open until B43 is done: (1) acquisition IS merged (846baa1e8e): merge tranche/T51 and run your G2 seam against the real `fetch_pending`; (2) update `t51-visitor-copy.test.mjs` to G3's pending press (ACQUISITION #28 J26); (3) `r117-held` R117 is NOT an accepted flake: it is red alone on the tranche's own source (3 of 3 runs, first assert 0 !== 1): root-cause and fix it in this job. capture, extraction, reading-pipeline and plane are still to merge; their seams stay red by name. Then COMPLETE again. (The format failure at next.md:38 is fixed on the tranche.)
+
+## B45 · CHANGE
+
+CHANGE (BOB #253): capture is merged into tranche/T51 (b3b6b6cf16: the picker row's `format`, `recordFetchDone`). Merge tranche/T51 for your G2 seam and the delivery's `recordFetchDone`; B43/B44 still stand.
