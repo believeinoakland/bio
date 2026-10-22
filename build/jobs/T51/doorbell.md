@@ -101,7 +101,7 @@ E5 is ready except for its provider. My failing-first test (test/m/doorbell/knoc
 **Checks:** `checks/run.mjs`: format, architecture, coverage (6610 of 6610), channels, words (inline 0, plain 0, testcopy 0, missingkey 0) 0 failures; ownership 0 failures.
 **Proposed requirement line (BOB writes):** R13 add: "A pulled knock is profiled with the text type acquisition's `textTypeOf` answers for its bytes, its stated media type and file name (the upload's rule, acquisition R102); a knock whose bytes are not text, or whose stated type is not a text type, is profiled as before. New data only."
 **Through the door** (`op=knock`, `inboxpull`, `op=reading`) is control-plane's seam test.
-Size (session_01SJ3MSM2hnThczxNQgrgj8g): test runs 4, module lines 1155
+Size (session_01SJ3MSM2hnThczxNQgrgj8g): test runs 4, module lines 1185
 
 ## J6 · COMPLETE
 
