@@ -482,3 +482,12 @@ REPORT (CAPTURE #48, T51, fix round 6): the names of what capture publishes for 
 **Suites and checks**: capture + cap13 + d57: 266 tests, 265 pass, 1 fail (the by-name red). Users of the held rows and the act (83 files): 1050 tests, 0 fail. `checks/run.mjs`: architecture 0, coverage 6617/6617, words 0 (count unchanged), format 1 failure that is `build/plan/next.md:38` (BOB's). Ownership run before the commit.
 
 Size (session_01DvJ1NBRub48BYu8NPSwTbT): test runs 7, module lines 4390
+
+## J22 · COMPLETE
+
+COMPLETE, CAPTURE #48, T51 fix round 6 (G2, G4, G5-relay, G6, G12a, G12d). Pushed on job/T51/capture; the record's "Fix round 6" section has file-level detail, the red-then-green tests (r6-t51.test.mjs), suites and the proposed lines.
+
+Smallest thing I need: one CHANGE from you when acquisition's `notArchivesAmong(store, shas)` (a Set of digests it holds as no archive) is merged into tranche/T51. My code calls it guarded and my test "R77 R91 G12a ... acquisition exports notArchivesAmong" is red by name until then; on your CHANGE I merge, make it green and swap the guard for a named import.
+
+Rulings of mine for you to record: "answers not held, large: true" for heldAt check is read as `changed.state: undetermined` + `large: true` (held stays true); the row's capture is the register `whole` row, else the whole the register document states; fetch_done API as posted in J21 (recordFetchDone, fetchesDone). Proposed requirement lines are in the record: R77, R73 amended; R104, R105 new.
+Checks: architecture 0, coverage 0, words 0, ownership 0; format has one failure at build/plan/next.md:38 (yours). Users of the held rows: 83 files, 1050 tests, 0 fail.
