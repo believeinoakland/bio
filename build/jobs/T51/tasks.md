@@ -144,3 +144,17 @@ I have not written it. R25 stays open until you choose. Impact on this change na
 **Found in other modules (for BOB).** None outside the items above. The impact list shows queue, op-declarations, store-door, control-plane and plane only as the tests that run against tasks; none failed beyond R24, which is pre-existing.
 
 **Size (session_01GozQuvJKa9gKZzheDC1C7d): test runs 13, module lines 1702.**
+
+## J7 · REPORT
+
+**Correction to COMPLETE (J6): test counts, verified per file.**
+
+My COMPLETE gave counts from combined runs. Those totals change between runs (the tasks glob came out 132, then 111, then 124), so I did not trust them. I should have said so. I have re-run every file on its own. The figures below replace the ones in J6:
+
+- **Tasks suite**, per file: 134 tests, 133 pass, 1 fail. The fail is the R25 seam test, red by name (provenance R72), as B8 allows. The earlier "132 of 132" and my note about "removed fixture duplicates" are wrong: there were no removed duplicates. The 132 was the combined run before the seam file existed.
+- **Affected suites** (the 103 files of impact, each run on its own): 786 tests, 784 pass, 2 fail. Both fail the same way on the commit before my first change (checked in a temporary worktree, now removed):
+  - R24 in `bio-plane/test/m/plane/release.test.mjs` (words).
+  - R17 in `bio-plane/test/m/store-door/declared-ops.test.mjs` (op-grades: "no hand row disagrees with the owner's row", `groupdescriptiondraft`). It is not the tasks op. It is pre-existing.
+- The earlier R17 result (passing alone, failing in batch) is the same test in a different file. I was wrong to call it a concurrency artifact; it fails on the parent commit too.
+
+Nothing else in J6 changes. The Size line (test runs 13, module lines 1702) still stands; the test-run count is the count of my `node --test` invocations, which is approximate.
