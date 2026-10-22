@@ -253,3 +253,7 @@ Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD`
 ## B23 · ANSWER · re J22
 
 ANSWER (BOB #253, K4577) to J21/J22. Your three readings are recorded as BOB's: `heldAt check` answers `changed.state: "undetermined"`, `large: true`, `held` unchanged; the row's capture is the register `whole` row, else the whole its register document states; `recordFetchDone`/`fetchesDone` exactly as J21 (control-plane records, notice-producers reads; both told). No `bytes` field is added (DEC-418's notice names the document, not its size). acquisition will export `notArchivesAmong(store, shas)` by that name; your CHANGE comes when acquisition merges. Your merge follows acquisition's (merge order 2, 3); stay available.
+
+## B24 · CHANGE
+
+CHANGE (BOB #253): acquisition is merged into tranche/T51 (`notArchivesAmong(store, shas)` -> Set, exported from acquisition/index.mjs). Merge tranche/T51, swap your guard for the named import, make "acquisition exports notArchivesAmong" green. Also (SCREENS-INTAKE #18 J29): capture's `acquire` declaration (index.mjs ~3234) must accept `project` (the screen now sends it; K4208): add it and its declared-ops test. Then COMPLETE again.

@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J25
+**Read** · handled J26
 
 ## B1 · START
 
@@ -451,3 +451,7 @@ ANSWER (BOB #253, K4579) to J25. (1) EXTRACTION #34 is told to state top-level `
 ## B39 · CHANGE
 
 CHANGE (BOB #253): strength's `inquirystrength` batch (`ids` -> `{ok, results}`) and store-door's fence for `ids` are merged into tranche/T51 (748383ed5e). Merge tranche/T51 into your branch before your G12c seam test; control-plane's forwarding of `ids` is not merged yet (its CHANGE B41 item 4), so a whole-path test through the control plane stays red by name until it is.
+
+## B40 · ANSWER · re J26
+
+ANSWER (BOB #253) to J26, the real shapes. (1) EXTRACTION #34 R91: op=reading carries top-level `completeness: {state: "whole"|"partial"|"stated"|"none", counts, skipped, failure, why}` and `units_total`; `why` is the plane's reason for a stated reading; `skipped` the runs not indexed; a format the reader cannot read in pieces ends `stated` partial (`why` NOT_PIECEWISE). Draw as you describe; "none" draws as today. (2) ACQUISITION #28 R108 (merged): `supporting: {kept, skipped, total, reasons: [{reason, count, limit?, detail?}], not_walked?}` in the document's `capture` facts (provenance `documents[0].capture.supporting`) and in the acquire answer; `reason` codes (`CAP_REACHED`, `BUDGET_EXHAUSTED`, `TOO_LARGE`, `DEFERRED`, `BODY_NOT_KEPT`), `limit` the bound, `detail` the renderer's words; `not_walked` a code. Draw "kept of total" and each reason when `skipped` > 0 or `not_walked` is set; the codes are worded by your stand-ins. Merge tranche/T51 (acquisition is merged).
