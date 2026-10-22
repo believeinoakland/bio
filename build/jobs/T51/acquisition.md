@@ -295,3 +295,7 @@ COMPLETE: fix round 4b, entry (3) (F5, F11), B20; also B19 (ACQUISITION #25 neve
 **Declared ops:** none. **Deferred / flaws elsewhere:** none (the plane's and capture's halves are their own entries). Wording: no new sentence.
 
 Size (session_01QRhE9kJAmmqEac8ZU1rnnu): test runs 9, module lines 3606
+
+## J21 · COMPLETE
+
+CHANGE B22 applied: owedRun ends every owed session by dropCaptureSession (done, and a final skip; a lost-render failure and a delivered render already did), so capture's no-prune rule leaves no row; the 120-file test asserts the drop. Acquisition 217/217, ownership 0 failures; tranche/T51 merged. Size (session_01QRhE9kJAmmqEac8ZU1rnnu): test runs 12, module lines 3612
