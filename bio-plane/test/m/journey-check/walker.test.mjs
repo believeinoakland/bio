@@ -145,6 +145,20 @@ test("R8 (K4473): a reading read as `found: false` is excused only while the rec
   assert.deepEqual(kinds(await walked("/app/pending-ended")), [FAIL.REFUSED]);
 });
 
+test("R8 (K4486): a reading's own `found` (whether the reader found entities) is data, never a refusal; `found: false` still names a refusal at the answer's top or its `result`", () => {
+  /* the answer the plane gave for the page captured by address (d480cc23…): the op found its reading; the generic reader found no entities in the stub page */
+  const answer = { ok: true, result: { ok: true, found: true, capture_sha: "d".repeat(64), reader_found: false, entity_count: 0,
+    reading: { content_type: "generic", reader_version: 1, read_from_text: true, found: false, entities: [], facts: {}, words_total: 76, words_read: 76,
+      basis: "the generic reader found no entities in this document; recorded as an empty reading, never an emptied document" } } };
+  assert.deepEqual(refusalsIn(answer), []);
+  /* controls: the op found nothing, at the answer's top or its result; and an object that is not a reading keeps its `found: false` */
+  assert.deepEqual(refusalsIn({ ok: true, found: false, capture_sha: "e".repeat(64), reading: null }).map((r) => r.how), ["found: false"]);
+  assert.deepEqual(refusalsIn({ ok: true, result: { found: false, reason: "NO_SUCH_READING" } }).map((r) => `${r.at}=${r.code}`), ["result=NO_SUCH_READING"]);
+  assert.deepEqual(refusalsIn({ ok: true, result: { reading: { found: false } } }).map((r) => r.at), ["result.reading"], "not shaped as a reading: still a refusal");
+  /* a refusal inside a reading is still seen */
+  assert.deepEqual(refusalsIn({ ok: true, result: { reading: { reader_version: 1, entities: [], found: false, steps: [{ ok: false, code: "STEP" }] } } }).map((r) => r.code), ["STEP"]);
+});
+
 test("R2: any 4xx or 5xx fails the walk; control: a status the step expects does not", async () => {
   const w = await walked("/app/missing");
   assert.deepEqual(kinds(w), [FAIL.HTTP]);

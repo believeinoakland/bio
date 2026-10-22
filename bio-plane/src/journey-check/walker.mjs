@@ -48,7 +48,7 @@ export function documentKind(html) {
 /* R8 (D29): the refusals an answer carries, anywhere in it: `[{code, how, at}]`, `at` the path to the object that
    carries it ("" at the top). A refusal is an object holding `ok: false`, `started: false`, `dispatched: false` or
    `found: false`, or a non-empty `withheld`; its code is its own `code` or `reason`, else what it says. Each object
-   counts once, under its first sign. */
+   counts once, under its first sign. A reading's own `found` (whether the reader found entities) is not one (K4486). */
 export const REFUSAL_FLAGS = Object.freeze(["ok", "started", "dispatched", "found"]);
 export function refusalsIn(body) {
   const out = [];
@@ -57,7 +57,10 @@ export function refusalsIn(body) {
     if (!v || typeof v !== "object" || depth > 64 || seen.has(v)) return;
     seen.add(v);
     if (Array.isArray(v)) { v.forEach((x, i) => visit(x, `${at}[${i}]`, depth + 1)); return; }
-    const flag = REFUSAL_FLAGS.find((k) => v[k] === false);
+    /* K4486: inside a reading (`{content_type, reader_version, found, entities, …}`), `found` is the reader's statement of whether it
+       found entities: data, never a refusal. Elsewhere `found: false` says the op found no subject. */
+    const reading = v.reader_version !== undefined && Array.isArray(v.entities);
+    const flag = REFUSAL_FLAGS.find((k) => v[k] === false && !(reading && k === "found"));
     const w = v.withheld;
     const withheld = w === true || (Array.isArray(w) && w.length > 0) || (w && typeof w === "object" && !Array.isArray(w) && Object.keys(w).length > 0)
       || (typeof w === "string" && w.length > 0);
