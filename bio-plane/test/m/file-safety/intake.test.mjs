@@ -26,6 +26,7 @@ test("R1: every receipt (direct, web archive, doorbell, and each member of an un
   const zs = await w.capture(z);
   w.home(zs, "INFO-ZIP");
   const u = await w.acq.unpack({ core: w.record, provenance: w.prov }, { archiveSha: zs, by: "m1", member: true });
+  w.homeAll();
   assert.equal(u.ok, true, JSON.stringify(u).slice(0, 300));
   for (const m of [sha("first file"), sha("second file")])
     assert.ok(w.row("SELECT 1 AS x FROM fs_files WHERE capture_sha = ?", m), "a member of an unpacked archive is queued as its own capture");

@@ -49,6 +49,7 @@ test("R23: no member identity, file name, address or record text reaches file-sc
   const z = makeZip([{ name: "budget-confidential.txt", data: "member names inside" }]);
   const zs = await w.capture(z, { address: "https://secret-host.example/pack.zip" });
   await w.acq.unpack({ core: w.record, provenance: w.prov }, { archiveSha: zs, by: "m1", member: true });
+  w.homeAll();
   await w.tool("scanii"); await w.tool("joe-sandbox"); await w.tool("glasswall-halo", { config: { host: "halo.example.org" } });
   await w.tool("splunk-hec", { config: { host: "splunk.example.org" } });
   await w.tool("metadefender-core", { use: "routine", config: { host: "md.example.org" } });
