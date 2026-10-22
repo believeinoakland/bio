@@ -206,11 +206,32 @@ function subsections(lines, sec, end, form, locate) {
 /** The code headings of a text (R9): how many there are, whether the first non-blank line
  *  is one, and the label of the code the first names. */
 export function codeHeadingsIn(raw, ctx) {
-  const lines = linesOf(String(raw || ""));
-  const heads = codeHeadings(lines, codeForms(ctx));
-  const first = lines.find((l) => l.text.trim().length);
-  return { count: heads.length, first: !!(first && heads.length && heads[0].line === first),
-           label: heads.length ? heads[0].form.label : null };
+  /* R37: the same reading as `codeHeadings`, a line at a time, so a large text is never split into a list of all its
+     lines. */
+  raw = String(raw || "");
+  const forms = codeForms(ctx);
+  let count = 0, firstForm = null, lastPath = null, firstHeadAt = -1, firstLineAt = -1;
+  for (let start = 0; ;) {
+    const nl = raw.indexOf("\n", start);
+    const text = raw.slice(start, nl < 0 ? raw.length : nl);
+    if (firstLineAt < 0 && text.trim().length) firstLineAt = start;
+    for (const f of count ? [firstForm] : forms) {
+      const m = f.heading.exec(text);
+      if (!m) continue;
+      const title = titleOf(m.groups.rest, true);
+      if (!title) continue;
+      const path = f.split ? m.groups.num.split(f.split).filter(Boolean) : [m.groups.num];
+      if (count && comparePaths(path, lastPath) <= 0) break;
+      if (!count) { firstForm = f; firstHeadAt = start; }
+      count++;
+      lastPath = path;
+      break;
+    }
+    if (nl < 0) break;
+    start = nl + 1;
+  }
+  return { count, first: !!(firstLineAt >= 0 && count && firstHeadAt === firstLineAt),
+           label: count ? firstForm.label : null };
 }
 
 /** The sections of the text read, with each extent (R10–R12), or none and why (R11, R24). */

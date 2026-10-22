@@ -71,7 +71,8 @@
  *   - it does not pair a name with an address across lines. On a two-column page
  *     (document B) an address's own line may carry two people's text or none; the
  *     entry's `line` fact is that line, verbatim, never a pairing this reader guessed. */
-import { CONFIDENCE, CONTRACT, entity, diffEntities, flatten, alsoSatisfies } from "../docprofile/doctypes/index.mjs";
+import { CONFIDENCE, CONTRACT, entity, diffEntities, alsoSatisfies } from "../docprofile/doctypes/index.mjs";
+import { flatCount, firstLines } from "./windows.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
@@ -116,8 +117,7 @@ function sdAddresses(raw) {
 /** The title line, if the document names itself as this kind in its first lines. A
     title, not a mention: only the first five non-empty lines are read. */
 function sdTitleLine(raw) {
-  const lines = raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).slice(0, 5);
-  return lines.find((l) => SD_SELF_NAMING.test(l)) || null;
+  return firstLines(raw, 5).find((l) => SD_SELF_NAMING.test(l)) || null;
 }
 
 /** The entries verified unchanged, or null when none was (R16). */
@@ -145,9 +145,12 @@ export default {
     const signals = [localize("doctypes.staff-directory.addresses", "{count} distinct contact address(es) at one organisation's domain ({domain}), {percent}% of the {total} in the document",
                               { count: String(atDomain), domain: String(domain), percent: String(Math.round((atDomain / all.length) * 100)), total: String(all.length) })];
     /* (3) NOT DATED. A schedule names its contacts; its rows are events. */
-    const dates = (flatten(raw).match(SD_DATE) || []).length;
-    if (dates >= Math.max(3, atDomain / 2)) return { match: false, confidence: CONFIDENCE.NONE };
-    const phones = new Set((raw.match(SD_PHONE) || []).map((p) => p.replace(/\D/g, ""))).size;
+    /* R37: the dates are counted in the flattened text a window at a time, no further than the count that decides. */
+    const floor = Math.max(3, atDomain / 2);
+    if (flatCount(raw, SD_DATE, Math.ceil(floor)) >= floor) return { match: false, confidence: CONFIDENCE.NONE };
+    const phoneSet = new Set();
+    for (const p of raw.matchAll(SD_PHONE)) phoneSet.add(p[0].replace(/\D/g, ""));
+    const phones = phoneSet.size;
     if (phones) signals.push(`${phones} distinct phone number(s)`);
     const title = sdTitleLine(raw);
     if (title) {
