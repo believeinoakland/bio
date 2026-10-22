@@ -1,6 +1,6 @@
 # screens-publish (T51)
 
-**Status** · session_01CbZX6kMXs3nBMuMvqC2NcN · depth 2 · WORKING · handled B28
+**Status** · session_01CbZX6kMXs3nBMuMvqC2NcN · depth 2 · WAITING ON BOB (J23) · handled B28
 
 ## J1 · QUESTION
 
