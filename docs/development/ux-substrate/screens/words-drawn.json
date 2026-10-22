@@ -39581,6 +39581,2220 @@
    "en": "Counted over a sample of {n} of {total} records, not all of them.",
    "protected": false,
    "note": "DEC-419: B485 (wave 2) G24 (S14) calculations: a pattern's denominator when it is a sample"
+  },
+  {
+   "key": "screen.aichecks.notrain.name",
+   "en": "Does not train on your material",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: notrain name"
+  },
+  {
+   "key": "screen.aichecks.notrain.line",
+   "en": "The provider's terms say it does not use what it is sent to train its models.",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: notrain line"
+  },
+  {
+   "key": "screen.aichecks.noread.name",
+   "en": "No person reads it by default",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: noread name"
+  },
+  {
+   "key": "screen.aichecks.noread.line",
+   "en": "People at the provider do not read what is sent unless your team asks them to.",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: noread line"
+  },
+  {
+   "key": "screen.aichecks.keeps.name",
+   "en": "Says how long it keeps material",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: keeps name"
+  },
+  {
+   "key": "screen.aichecks.keeps.line",
+   "en": "It states how long it keeps what it is sent, and keeps none where it offers that.",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: keeps line"
+  },
+  {
+   "key": "screen.aichecks.where.name",
+   "en": "Says where it runs and under which country's law",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: where name"
+  },
+  {
+   "key": "screen.aichecks.where.line",
+   "en": "It names the country where it handles what it is sent and the law that applies there.",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: where line"
+  },
+  {
+   "key": "screen.aichecks.onward.name",
+   "en": "Passes it to no one else unseen",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: onward name"
+  },
+  {
+   "key": "screen.aichecks.onward.line",
+   "en": "Anyone else it passes material to is named in its terms.",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: onward line"
+  },
+  {
+   "key": "screen.aichecks.keepaway.name",
+   "en": "Works with keeping material away from AI",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: keepaway name"
+  },
+  {
+   "key": "screen.aichecks.keepaway.line",
+   "en": "It honors your team's and projects' limits on which material may go to AI, and shows the notice that says so.",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: keepaway line"
+  },
+  {
+   "key": "screen.aichecks.origin.name",
+   "en": "Not made by an organization based in China",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: origin name"
+  },
+  {
+   "key": "screen.aichecks.origin.line",
+   "en": "The organization that made the model is not based in China.",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: origin line"
+  },
+  {
+   "key": "screen.aichecks.terms.name",
+   "en": "Its terms allow this use",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: terms name"
+  },
+  {
+   "key": "screen.aichecks.terms.line",
+   "en": "The provider's terms permit work like your team's.",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: terms line"
+  },
+  {
+   "key": "screen.aichecks.breach.name",
+   "en": "What it promises if there is a breach",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: breach name"
+  },
+  {
+   "key": "screen.aichecks.breach.line",
+   "en": "It states what it will do, and how soon, if material it holds is exposed.",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: breach line"
+  },
+  {
+   "key": "screen.aiparts.ask",
+   "en": "Asking",
+   "protected": false,
+   "note": "DEC-420: B488 aiparts: ask"
+  },
+  {
+   "key": "screen.aiparts.letters",
+   "en": "Drafting letters",
+   "protected": false,
+   "note": "DEC-420: B488 aiparts: letters"
+  },
+  {
+   "key": "screen.aiparts.read",
+   "en": "Reading inside documents",
+   "protected": false,
+   "note": "DEC-420: B488 aiparts: read"
+  },
+  {
+   "key": "screen.aiparts.unclear",
+   "en": "Reading unclear pages",
+   "protected": false,
+   "note": "DEC-420: B488 aiparts: unclear"
+  },
+  {
+   "key": "screen.aiparts.plans",
+   "en": "Working through checks and plans",
+   "protected": false,
+   "note": "DEC-420: B488 aiparts: plans"
+  },
+  {
+   "key": "screen.aiparts.account",
+   "en": "Drafting a case's account",
+   "protected": false,
+   "note": "DEC-420: B488 aiparts: account"
+  },
+  {
+   "key": "screen.aiplan.passed",
+   "en": "Passed: {parts}.",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: passed"
+  },
+  {
+   "key": "screen.aiplan.limits",
+   "en": "Passed with limits: {parts}.",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: limits"
+  },
+  {
+   "key": "screen.aiplan.notsuited",
+   "en": "Not suitable: {parts}.",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: notsuited"
+  },
+  {
+   "key": "screen.aiproviders.stands.on",
+   "en": "{n} accounts are on, in order: {order}.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: stands on"
+  },
+  {
+   "key": "screen.aiproviders.status.on",
+   "en": "On",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: status on"
+  },
+  {
+   "key": "screen.aiproviders.stands.none",
+   "en": "No account is on yet. The assistant is off for everyone until an administrator turns one on.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: stands none"
+  },
+  {
+   "key": "screen.aiproviders.status.off",
+   "en": "Off",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: status off"
+  },
+  {
+   "key": "screen.aiproviders.mock",
+   "en": "In this mockup, show the card for",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: mock"
+  },
+  {
+   "key": "screen.aiproviders.mock.a",
+   "en": "three accounts on, one of them slow",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: mock a"
+  },
+  {
+   "key": "screen.aiproviders.mock.b",
+   "en": "all accounts available",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: mock b"
+  },
+  {
+   "key": "screen.aiproviders.mock.c",
+   "en": "no account on yet",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: mock c"
+  },
+  {
+   "key": "screen.aiproviders.mock.d",
+   "en": "before Mistral is added",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: mock d"
+  },
+  {
+   "key": "screen.aiproviders.title",
+   "en": "AI providers",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: title"
+  },
+  {
+   "key": "screen.aiproviders.intro",
+   "en": "Only administrators set this up. Members choose among what is allowed here.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: intro"
+  },
+  {
+   "key": "screen.aiproviders.stands.meter",
+   "en": "This month, all accounts",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: stands meter"
+  },
+  {
+   "key": "screen.aiproviders.stands.slow",
+   "en": "{provider} is slow right now. The other accounts are available.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: stands slow"
+  },
+  {
+   "key": "screen.aiproviders.stands.allok",
+   "en": "All accounts are available.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: stands allok"
+  },
+  {
+   "key": "screen.aiproviders.use.head",
+   "en": "In use, in order",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: use head"
+  },
+  {
+   "key": "screen.aiproviders.use.line",
+   "en": "Sends {sent} to {where}. Keeps it {keep}.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: use line"
+  },
+  {
+   "key": "screen.aiproviders.use.up",
+   "en": "Move up",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: use up"
+  },
+  {
+   "key": "screen.aiproviders.use.down",
+   "en": "Move down",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: use down"
+  },
+  {
+   "key": "screen.aiproviders.use.switchoff",
+   "en": "Switch off",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: use switchoff"
+  },
+  {
+   "key": "screen.aiproviders.use.remove",
+   "en": "Remove",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: use remove"
+  },
+  {
+   "key": "screen.aiproviders.health.available",
+   "en": "available",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: health available"
+  },
+  {
+   "key": "screen.aiproviders.health.slow",
+   "en": "slow",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: health slow"
+  },
+  {
+   "key": "screen.aiproviders.health.down",
+   "en": "down",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: health down"
+  },
+  {
+   "key": "screen.aiproviders.listed.watch",
+   "en": "watch",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: listed watch"
+  },
+  {
+   "key": "screen.aiproviders.listed.lapsed",
+   "en": "lapsed",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: listed lapsed"
+  },
+  {
+   "key": "screen.aiproviders.listed.retired",
+   "en": "retired",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: listed retired"
+  },
+  {
+   "key": "screen.aiproviders.use.switchon",
+   "en": "Switch on",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: use switchon"
+  },
+  {
+   "key": "screen.aiproviders.use.note",
+   "en": "Work goes to the first account that is on, is allowed for that work and is within its limits. When it continues on a later account, the member is shown the switch and may decline it. A use that is switched off is refused, and is never moved to another account.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: use note"
+  },
+  {
+   "key": "screen.aiproviders.add.head",
+   "en": "Add an AI",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: add head"
+  },
+  {
+   "key": "screen.aiproviders.add.intro",
+   "en": "Providers are listed in alphabetical order, each with its plans and types: API account, subscription, through an aggregator, built in, or a custom endpoint. Pick the plan your team pays for.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: add intro"
+  },
+  {
+   "key": "screen.aiproviders.add.grades",
+   "en": "Each answer carries its grade. Reproduced: Civicsmith or another team repeated it. Reported: a team reported it. Stated: only the provider says so.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: add grades"
+  },
+  {
+   "key": "screen.aiplan.who.team",
+   "en": "a team",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: who team"
+  },
+  {
+   "key": "screen.aiplan.serves",
+   "en": "Serves {who}.",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: serves"
+  },
+  {
+   "key": "screen.aiplan.price",
+   "en": "Price: {basis}. Typical work: {estimate}.",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: price"
+  },
+  {
+   "key": "screen.aiplan.th.check",
+   "en": "Check",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: th check"
+  },
+  {
+   "key": "screen.aiplan.th.answer",
+   "en": "Answer",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: th answer"
+  },
+  {
+   "key": "screen.aiplan.th.source",
+   "en": "Source and date",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: th source"
+  },
+  {
+   "key": "screen.aiplan.met",
+   "en": "Met",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: met"
+  },
+  {
+   "key": "screen.aiplan.grade.reproduced",
+   "en": "Reproduced",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: grade reproduced"
+  },
+  {
+   "key": "screen.aiplan.grade.reported",
+   "en": "Reported",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: grade reported"
+  },
+  {
+   "key": "screen.aiplan.grade.stated",
+   "en": "Stated",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: grade stated"
+  },
+  {
+   "key": "screen.aiplan.confirmed",
+   "en": "Last confirmed {date}.",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: confirmed"
+  },
+  {
+   "key": "screen.aiplan.connect",
+   "en": "Connect",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: connect"
+  },
+  {
+   "key": "screen.aiplan.unconfirmed",
+   "en": "Unconfirmed",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: unconfirmed"
+  },
+  {
+   "key": "screen.aiplan.who.one",
+   "en": "one person",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: who one"
+  },
+  {
+   "key": "screen.aiplan.warn.chip",
+   "en": "Warning.",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: warn chip"
+  },
+  {
+   "key": "screen.aiplan.warn",
+   "en": "Free tier: it reads your material for training.",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: warn"
+  },
+  {
+   "key": "screen.aiplan.notmet",
+   "en": "Not met",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: notmet"
+  },
+  {
+   "key": "screen.aiplan.who.app",
+   "en": "an application",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: who app"
+  },
+  {
+   "key": "screen.aiplan.pending",
+   "en": "Its terms change on {date}: {what}.",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: pending"
+  },
+  {
+   "key": "screen.aiplan.who.unk",
+   "en": "unconfirmed",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: who unk"
+  },
+  {
+   "key": "screen.aiplan.nosrc",
+   "en": "not stated",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: nosrc"
+  },
+  {
+   "key": "screen.aiplan.testfirst",
+   "en": "Test it first",
+   "protected": false,
+   "note": "DEC-420: B488 aiplan: testfirst"
+  },
+  {
+   "key": "screen.aiproviders.refused.head",
+   "en": "Not offered",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: refused head"
+  },
+  {
+   "key": "screen.aiproviders.refused.personal",
+   "en": "Not offered as the team's account: its terms bar use by a team for work like this. A member may still use it for their own work.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: refused personal"
+  },
+  {
+   "key": "screen.aiproviders.refused.origin",
+   "en": "Not offered while the team requires the check that the model is not made by an organization based in China.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: refused origin"
+  },
+  {
+   "key": "screen.aiproviders.held.head",
+   "en": "Held until confirmed",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: held head"
+  },
+  {
+   "key": "screen.aiproviders.held.region",
+   "en": "Held: the region can't be checked yet. It is offered once the provider says where it runs and under which law.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: held region"
+  },
+  {
+   "key": "screen.aiproviders.add.test",
+   "en": "Test an AI that isn't listed",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: add test"
+  },
+  {
+   "key": "screen.aiproviders.add.results",
+   "en": "Results other teams sent",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: add results"
+  },
+  {
+   "key": "screen.aiproviders.bud.head",
+   "en": "Budgets and alerts",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: bud head"
+  },
+  {
+   "key": "screen.aiproviders.bud.why",
+   "en": "$130.00 a month overall; $64.50 spent so far.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: bud why"
+  },
+  {
+   "key": "screen.aiproviders.bud.th.acc",
+   "en": "Account",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: bud th acc"
+  },
+  {
+   "key": "screen.aiproviders.bud.th.bud",
+   "en": "Monthly budget",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: bud th bud"
+  },
+  {
+   "key": "screen.aiproviders.bud.th.spent",
+   "en": "Spent this month",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: bud th spent"
+  },
+  {
+   "key": "screen.aiproviders.bud.all",
+   "en": "All accounts together",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: bud all"
+  },
+  {
+   "key": "screen.aiproviders.bud.for",
+   "en": "Set a budget for",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: bud for"
+  },
+  {
+   "key": "screen.aiproviders.bud.amount",
+   "en": "Monthly budget",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: bud amount"
+  },
+  {
+   "key": "screen.aiproviders.bud.alert",
+   "en": "Tell administrators at",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: bud alert"
+  },
+  {
+   "key": "screen.aiproviders.bud.set",
+   "en": "Set the budget and the alert",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: bud set"
+  },
+  {
+   "key": "screen.aiproviders.bud.th.proj",
+   "en": "Cost this month, by project",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: bud th proj"
+  },
+  {
+   "key": "screen.aiproviders.bud.th.cost",
+   "en": "Cost",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: bud th cost"
+  },
+  {
+   "key": "screen.aiproviders.bud.norecord",
+   "en": "Work in the record, outside any project",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: bud norecord"
+  },
+  {
+   "key": "screen.aiproviders.bud.note",
+   "en": "Each cost sums everyone's use and names no member. A member sees their own cost on Your AI.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: bud note"
+  },
+  {
+   "key": "screen.aiproviders.chk.head",
+   "en": "Privacy and origin checks",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: chk head"
+  },
+  {
+   "key": "screen.aiproviders.chk.why",
+   "en": "Seven checks, all required to start with.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: chk why"
+  },
+  {
+   "key": "screen.aiproviders.chk.mock",
+   "en": "In this mockup, show the checks",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: chk mock"
+  },
+  {
+   "key": "screen.aiproviders.chk.mock.a",
+   "en": "as they start: all seven required",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: chk mock a"
+  },
+  {
+   "key": "screen.aiproviders.chk.mock.b",
+   "en": "after Rosa left two unticked",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: chk mock b"
+  },
+  {
+   "key": "screen.aichecks.required",
+   "en": "Required for the whole team",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: required"
+  },
+  {
+   "key": "screen.aichecks.locked",
+   "en": "Locked by the team. Project owners and members can't change it.",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: locked"
+  },
+  {
+   "key": "screen.aichecks.open",
+   "en": "Not required by the team. Project owners and members may require it for their own work.",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: open"
+  },
+  {
+   "key": "screen.aiproviders.chk.extra",
+   "en": "Shown for every AI, never required",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: chk extra"
+  },
+  {
+   "key": "screen.aiproviders.chk.save",
+   "en": "Save the checks",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: chk save"
+  },
+  {
+   "key": "screen.aiproviders.chk.note",
+   "en": "An AI that fails a required check is not offered. A check you leave unticked stays open to project owners and members, who may require it for their own work.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: chk note"
+  },
+  {
+   "key": "screen.aiproviders.mem.head",
+   "en": "What members may use",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: mem head"
+  },
+  {
+   "key": "screen.aiproviders.mem.why",
+   "en": "Which providers, plans and models members may choose among.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: mem why"
+  },
+  {
+   "key": "screen.aiproviders.mem.legend",
+   "en": "Providers, plans and models",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: mem legend"
+  },
+  {
+   "key": "screen.aiproviders.mem.models",
+   "en": "Models: {models}",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: mem models"
+  },
+  {
+   "key": "screen.aiproviders.mem.modelnote",
+   "en": "Model choices are listed exactly as each provider offers them. Members choose among the ones you tick.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: mem modelnote"
+  },
+  {
+   "key": "screen.aiproviders.mem.own",
+   "en": "Members and their own accounts",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: mem own"
+  },
+  {
+   "key": "screen.aiproviders.mem.ownacc",
+   "en": "Members may add their own accounts",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: mem ownacc"
+  },
+  {
+   "key": "screen.aiproviders.mem.personal",
+   "en": "Members may use a personal subscription, for their own work only",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: mem personal"
+  },
+  {
+   "key": "screen.aiproviders.mem.personalnote",
+   "en": "A personal subscription is always a member's own choice. It is never the team's or a project's account.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: mem personalnote"
+  },
+  {
+   "key": "screen.aiproviders.mem.save",
+   "en": "Save what members may use",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: mem save"
+  },
+  {
+   "key": "screen.aiproviders.chg.head",
+   "en": "Changes",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: chg head"
+  },
+  {
+   "key": "screen.aiproviders.chg.why",
+   "en": "Every change, with who made it, when, and at which level.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: chg why"
+  },
+  {
+   "key": "screen.aiproviders.chg.row",
+   "en": "{who} {what} · {date} · {level}",
+   "protected": false,
+   "note": "DEC-420: B488 aiproviders: chg row"
+  },
+  {
+   "key": "screen.aiconnect.mock",
+   "en": "In this mockup, show the connection for",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: mock"
+  },
+  {
+   "key": "screen.aiconnect.mock.a",
+   "en": "a plan that gives a key",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: mock a"
+  },
+  {
+   "key": "screen.aiconnect.mock.b",
+   "en": "a plan whose provider signs in",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: mock b"
+  },
+  {
+   "key": "screen.aiconnect.mock.c",
+   "en": "a free tier that reads material for training",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: mock c"
+  },
+  {
+   "key": "screen.aiconnect.mock.d",
+   "en": "a member's own subscription",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: mock d"
+  },
+  {
+   "key": "screen.aiconnect.title",
+   "en": "Connect an AI",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: title"
+  },
+  {
+   "key": "screen.aiconnect.intro",
+   "en": "Six steps for one plan. Nothing is turned on until its test passes.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: intro"
+  },
+  {
+   "key": "screen.aiconnect.what",
+   "en": "You are connecting",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: what"
+  },
+  {
+   "key": "screen.aiconnect.s1.head",
+   "en": "What you are connecting",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s1 head"
+  },
+  {
+   "key": "screen.aiconnect.s1.why",
+   "en": "What it is sent, who keeps it and for how long, and the terms that bind your use.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s1 why"
+  },
+  {
+   "key": "screen.aiconnect.th.answer",
+   "en": "The answer",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: th answer"
+  },
+  {
+   "key": "screen.aiconnect.th.source",
+   "en": "Source and date",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: th source"
+  },
+  {
+   "key": "screen.aiconnect.t.sent",
+   "en": "What it is sent",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: t sent"
+  },
+  {
+   "key": "screen.aiconnect.t.who",
+   "en": "Who receives it, and where it runs",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: t who"
+  },
+  {
+   "key": "screen.aiconnect.t.keeps",
+   "en": "How long it keeps material",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: t keeps"
+  },
+  {
+   "key": "screen.aiconnect.t.reads",
+   "en": "Whether a person reads it",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: t reads"
+  },
+  {
+   "key": "screen.aiconnect.t.trains",
+   "en": "Whether it trains on it",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: t trains"
+  },
+  {
+   "key": "screen.aiconnect.t.passes",
+   "en": "Whom it passes it to",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: t passes"
+  },
+  {
+   "key": "screen.aiconnect.terms.head",
+   "en": "The terms that bind civic use",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: terms head"
+  },
+  {
+   "key": "screen.aiconnect.terms.political",
+   "en": "Political content",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: terms political"
+  },
+  {
+   "key": "screen.aiconnect.terms.legal",
+   "en": "Legal advice",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: terms legal"
+  },
+  {
+   "key": "screen.aiconnect.terms.disclose",
+   "en": "Saying that AI was used",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: terms disclose"
+  },
+  {
+   "key": "screen.aiconnect.s1.note",
+   "en": "Each answer shows where it was read and when. An answer the provider does not state says “not stated”.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s1 note"
+  },
+  {
+   "key": "screen.aiconnect.s2.head",
+   "en": "Sign up with the provider",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s2 head"
+  },
+  {
+   "key": "screen.aiconnect.s2.why",
+   "en": "Done on the provider's own page, not here.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s2 why"
+  },
+  {
+   "key": "screen.aiconnect.s2.where",
+   "en": "Where to sign up",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s2 where"
+  },
+  {
+   "key": "screen.aiconnect.s2.link",
+   "en": "Open {provider}'s sign-up page",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s2 link"
+  },
+  {
+   "key": "screen.aiconnect.s2.choose",
+   "en": "What to choose there",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s2 choose"
+  },
+  {
+   "key": "screen.aiconnect.s2.copy",
+   "en": "What to copy or approve",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s2 copy"
+  },
+  {
+   "key": "screen.aiconnect.s2.never",
+   "en": "Civicsmith never signs anyone up and never handles payment. The provider bills your team directly.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s2 never"
+  },
+  {
+   "key": "screen.aiconnect.s2.prog",
+   "en": "If this plan needs a program on a member's own computer",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s2 prog"
+  },
+  {
+   "key": "screen.aiconnect.s2.prog.1",
+   "en": "Install the provider's program on the computer that will run it, from the provider's own page.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s2 prog 1"
+  },
+  {
+   "key": "screen.aiconnect.s2.prog.2",
+   "en": "Sign in to the program once, and leave it running.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s2 prog 2"
+  },
+  {
+   "key": "screen.aiconnect.s2.prog.3",
+   "en": "Come back to this page. Civicsmith checks that the program answers.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s2 prog 3"
+  },
+  {
+   "key": "screen.aiconnect.s3.head",
+   "en": "Give Civicsmith the key",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s3 head"
+  },
+  {
+   "key": "screen.aiconnect.s3.why",
+   "en": "Four ways. Choose one.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s3 why"
+  },
+  {
+   "key": "screen.aiconnect.s3.legend",
+   "en": "How the key reaches Cloudflare",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s3 legend"
+  },
+  {
+   "key": "screen.aiconnect.s3.here",
+   "en": "Enter it here",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s3 here"
+  },
+  {
+   "key": "screen.aiconnect.s3.here.help",
+   "en": "The key goes straight to Cloudflare's AI Gateway store in your team's own account. Civicsmith keeps no copy, and the key is never shown again.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s3 here help"
+  },
+  {
+   "key": "screen.aiconnect.s3.cf",
+   "en": "Enter it yourself in Cloudflare",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s3 cf"
+  },
+  {
+   "key": "screen.aiconnect.s3.cf.help",
+   "en": "For a team that wants the key never to touch Civicsmith.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s3 cf help"
+  },
+  {
+   "key": "screen.aiconnect.s3.signin",
+   "en": "Sign in with {provider}",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s3 signin"
+  },
+  {
+   "key": "screen.aiconnect.s3.signin.help",
+   "en": "Only for a plan whose provider signs in instead of giving a key.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s3 signin help"
+  },
+  {
+   "key": "screen.aiconnect.s3.ref",
+   "en": "Use a reference instead",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s3 ref"
+  },
+  {
+   "key": "screen.aiconnect.s3.ref.help",
+   "en": "The key stays where you keep it. Civicsmith holds only where to find it.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s3 ref help"
+  },
+  {
+   "key": "screen.aiconnect.s3.keyfield",
+   "en": "The key",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s3 keyfield"
+  },
+  {
+   "key": "screen.aiconnect.s3.keyhelp",
+   "en": "It goes to Cloudflare as you press the button, and is never shown again, to you or to anyone.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s3 keyhelp"
+  },
+  {
+   "key": "screen.aiconnect.s3.store",
+   "en": "Store the key in Cloudflare",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s3 store"
+  },
+  {
+   "key": "screen.aiconnect.s3.cfsteps",
+   "en": "Ten steps in Cloudflare",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s3 cfsteps"
+  },
+  {
+   "key": "screen.aiconnect.cf.1",
+   "en": "Open Cloudflare's dashboard at dash.cloudflare.com and sign in to your team's account.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: cf 1"
+  },
+  {
+   "key": "screen.aiconnect.cf.2",
+   "en": "In the menu on the left, click “AI”, then click “AI Gateway”.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: cf 2"
+  },
+  {
+   "key": "screen.aiconnect.cf.3",
+   "en": "Click “Create Gateway”.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: cf 3"
+  },
+  {
+   "key": "screen.aiconnect.cf.4",
+   "en": "Name the gateway civicsmith-ai, exactly like that, and click “Create”.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: cf 4"
+  },
+  {
+   "key": "screen.aiconnect.cf.5",
+   "en": "Open the gateway you just made, and click “Settings”.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: cf 5"
+  },
+  {
+   "key": "screen.aiconnect.cf.6",
+   "en": "Find “Provider Keys” and click “Add API Key”.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: cf 6"
+  },
+  {
+   "key": "screen.aiconnect.cf.7",
+   "en": "Choose {provider} from the list of providers.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: cf 7"
+  },
+  {
+   "key": "screen.aiconnect.cf.8",
+   "en": "Paste the key you copied from {provider} into the box named “API Key”.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: cf 8"
+  },
+  {
+   "key": "screen.aiconnect.cf.9",
+   "en": "In the box named “Alias”, type civicsmith-{alias}, exactly like that.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: cf 9"
+  },
+  {
+   "key": "screen.aiconnect.cf.10",
+   "en": "Click “Save”. Then come back to this page and press “I've entered it”.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: cf 10"
+  },
+  {
+   "key": "screen.aiconnect.s3.entered",
+   "en": "I've entered it",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s3 entered"
+  },
+  {
+   "key": "screen.aiconnect.s3.opencf",
+   "en": "Open Cloudflare's dashboard",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s3 opencf"
+  },
+  {
+   "key": "screen.aiconnect.s3.nosignin",
+   "en": "{provider} gives a key for this plan. It does not sign in.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s3 nosignin"
+  },
+  {
+   "key": "screen.aiconnect.s3.reffield",
+   "en": "Where the key is kept",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s3 reffield"
+  },
+  {
+   "key": "screen.aiconnect.s3.refgo",
+   "en": "Use this reference",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s3 refgo"
+  },
+  {
+   "key": "screen.aiconnect.s4.head",
+   "en": "Before you turn it on",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s4 head"
+  },
+  {
+   "key": "screen.aiconnect.s4.why",
+   "en": "What you accept, recorded once.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s4 why"
+  },
+  {
+   "key": "screen.aiconnect.s4.legend",
+   "en": "Before you turn it on",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s4 legend"
+  },
+  {
+   "key": "screen.aiconnect.s4.termsbox",
+   "en": "I accept the terms above that bind our use of this plan.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s4 termsbox"
+  },
+  {
+   "key": "screen.aiconnect.s4.go",
+   "en": "Record my acceptance",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s4 go"
+  },
+  {
+   "key": "screen.aiconnect.s4.recorded",
+   "en": "Your acceptance is recorded with your name and the date. The terms are accepted once for this plan, and shown again if they change.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s4 recorded"
+  },
+  {
+   "key": "screen.aiconnect.s5.head",
+   "en": "Test it",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s5 head"
+  },
+  {
+   "key": "screen.aiconnect.s5.why",
+   "en": "A harmless test that sends none of your team's material.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s5 why"
+  },
+  {
+   "key": "screen.aiconnect.s5.go",
+   "en": "Test the connection",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s5 go"
+  },
+  {
+   "key": "screen.aiconnect.s5.pass",
+   "en": "Passed in {seconds} seconds.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s5 pass"
+  },
+  {
+   "key": "screen.aiconnect.s5.failhead",
+   "en": "If the test fails",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s5 failhead"
+  },
+  {
+   "key": "screen.aiconnect.s5.fail",
+   "en": "{provider} did not accept the test. It said: “{words}”. {who} can fix this.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s5 fail"
+  },
+  {
+   "key": "screen.aiconnect.s5.note",
+   "en": "It stays off until the test passes.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s5 note"
+  },
+  {
+   "key": "screen.aiconnect.s6.head",
+   "en": "Turn it on",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s6 head"
+  },
+  {
+   "key": "screen.aiconnect.s6.why",
+   "en": "And where it goes in the order.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s6 why"
+  },
+  {
+   "key": "screen.aiconnect.s6.pos",
+   "en": "Where it goes in the order",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s6 pos"
+  },
+  {
+   "key": "screen.aiconnect.s6.first",
+   "en": "First",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s6 first"
+  },
+  {
+   "key": "screen.aiconnect.s6.second",
+   "en": "Second",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s6 second"
+  },
+  {
+   "key": "screen.aiconnect.s6.third",
+   "en": "Third",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s6 third"
+  },
+  {
+   "key": "screen.aiconnect.s6.last",
+   "en": "Last",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s6 last"
+  },
+  {
+   "key": "screen.aiconnect.s6.go",
+   "en": "Turn it on",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s6 go"
+  },
+  {
+   "key": "screen.aiconnect.s6.note",
+   "en": "Work goes to the first account that is on and within its limits. You can move it later on AI providers.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s6 note"
+  },
+  {
+   "key": "screen.aiconnect.s3.signinnote",
+   "en": "You sign in on {provider}'s own page. Civicsmith never sees your password.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s3 signinnote"
+  },
+  {
+   "key": "screen.aiconnect.s4.warn",
+   "en": "On the free tier, {provider} reads what is sent and uses it to train its models. Do not send anything your team wants kept private.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s4 warn"
+  },
+  {
+   "key": "screen.aiconnect.s4.freebox",
+   "en": "I understand that Google reads our material and uses it for training on this free tier, and I accept that for this account.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: s4 freebox"
+  },
+  {
+   "key": "screen.aiconnect.p.head",
+   "en": "Your own subscription",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: p head"
+  },
+  {
+   "key": "screen.aiconnect.p.levelnote",
+   "en": "This is member-level only. The subscription is yours alone. It is never the team's or a project's account.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: p levelnote"
+  },
+  {
+   "key": "screen.aiconnect.p.restr",
+   "en": "What {provider} says about using it",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: p restr"
+  },
+  {
+   "key": "screen.aiconnect.p.again",
+   "en": "If {provider} changes these restrictions, you are shown them again before your next use.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: p again"
+  },
+  {
+   "key": "screen.aiconnect.p.legend",
+   "en": "Your choice",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: p legend"
+  },
+  {
+   "key": "screen.aiconnect.p.box",
+   "en": "I will use my own subscription for my own work, within these restrictions.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: p box"
+  },
+  {
+   "key": "screen.aiconnect.p.go",
+   "en": "Use my subscription",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: p go"
+  },
+  {
+   "key": "screen.aiconnect.p.recorded",
+   "en": "Your choice is recorded with your name and the date. Nothing more is asked of you.",
+   "protected": false,
+   "note": "DEC-420: B488 aiconnect: p recorded"
+  },
+  {
+   "key": "screen.aichecks.personalfails",
+   "en": "Where the team or a project requires a check that your subscription's AI fails, it is not used for that work, and you are told why.",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: personalfails"
+  },
+  {
+   "key": "screen.aimine.mock",
+   "en": "In this mockup, show the checks for",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: mock"
+  },
+  {
+   "key": "screen.aimine.mock.a",
+   "en": "a team that requires all seven",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: mock a"
+  },
+  {
+   "key": "screen.aimine.mock.b",
+   "en": "a team that left two unticked",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: mock b"
+  },
+  {
+   "key": "screen.aimine.title",
+   "en": "Your AI",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: title"
+  },
+  {
+   "key": "screen.aimine.intro",
+   "en": "Which AI serves your work, what you may choose, and what it costs. Your team's administrators decide what is offered.",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: intro"
+  },
+  {
+   "key": "screen.aimine.now.head",
+   "en": "What serves you now",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: now head"
+  },
+  {
+   "key": "screen.aimine.now.team",
+   "en": "The team's account",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: now team"
+  },
+  {
+   "key": "screen.aimine.now.own",
+   "en": "Your own account",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: now own"
+  },
+  {
+   "key": "screen.aimine.now.note",
+   "en": "Your work goes to the first of these that is allowed for that work and within its limits. You are shown any switch to a later one, and may decline it.",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: now note"
+  },
+  {
+   "key": "screen.aimine.choose.head",
+   "en": "Choose among what the team allows",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: choose head"
+  },
+  {
+   "key": "screen.aimine.choose.prov",
+   "en": "Provider and plan",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: choose prov"
+  },
+  {
+   "key": "screen.aimine.choose.model",
+   "en": "Model",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: choose model"
+  },
+  {
+   "key": "screen.aimine.choose.effort",
+   "en": "Effort",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: choose effort"
+  },
+  {
+   "key": "screen.aimine.choose.note",
+   "en": "Models and effort levels are listed exactly as the provider offers them. Your choice applies to work you start, and an administrator or a project can narrow it.",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: choose note"
+  },
+  {
+   "key": "screen.aimine.choose.go",
+   "en": "Use this for my work",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: choose go"
+  },
+  {
+   "key": "screen.aimine.own.head",
+   "en": "Your own accounts",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: own head"
+  },
+  {
+   "key": "screen.aimine.own.team",
+   "en": "Your team allows members to add their own accounts.",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: own team"
+  },
+  {
+   "key": "screen.aimine.own.add",
+   "en": "Add an account of my own",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: own add"
+  },
+  {
+   "key": "screen.aimine.own.personal",
+   "en": "A personal subscription is yours alone. It is never the team's or a project's account, and it is used only for your own work.",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: own personal"
+  },
+  {
+   "key": "screen.aimine.own.fails",
+   "en": "Not used for work in {project}: that project requires “{check}”, which this subscription's AI does not meet.",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: own fails"
+  },
+  {
+   "key": "screen.aimine.chk.head",
+   "en": "Checks in force for you",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: chk head"
+  },
+  {
+   "key": "screen.aichecks.byteam",
+   "en": "Required by the team",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: byteam"
+  },
+  {
+   "key": "screen.aichecks.byteam.help",
+   "en": "The team's administrators require this. You can't change it.",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: byteam help"
+  },
+  {
+   "key": "screen.aichecks.mytick",
+   "en": "Require this for my own work",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: mytick"
+  },
+  {
+   "key": "screen.aimine.chk.save",
+   "en": "Save my checks",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: chk save"
+  },
+  {
+   "key": "screen.aimine.chk.proj",
+   "en": "When you work in a project, that project's checks also apply to the work done directly in it.",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: chk proj"
+  },
+  {
+   "key": "screen.aimine.chk.rule",
+   "en": "A check the team requires is locked. You can require any other for your own work. An AI that fails a check you require is not used for your work, and you are told why.",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: chk rule"
+  },
+  {
+   "key": "screen.aimine.use.head",
+   "en": "Your use and cost",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: use head"
+  },
+  {
+   "key": "screen.aimine.use.th",
+   "en": "Last 30 days",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: use th"
+  },
+  {
+   "key": "screen.aimine.use.calls",
+   "en": "Calls",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: use calls"
+  },
+  {
+   "key": "screen.aimine.use.cost",
+   "en": "Cost",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: use cost"
+  },
+  {
+   "key": "screen.aimine.use.nomoney",
+   "en": "not measurable in money",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: use nomoney"
+  },
+  {
+   "key": "screen.aimine.use.note",
+   "en": "Only you see this: your own use across every account that served you.",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: use note"
+  },
+  {
+   "key": "screen.aimine.first.head",
+   "en": "The first time material goes to a provider",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: first head"
+  },
+  {
+   "key": "screen.aimine.first.note",
+   "en": "Before material first goes to a provider, the assistant names the provider, says what is sent, and waits for you. It does the same after a switch to another provider.",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: first note"
+  },
+  {
+   "key": "screen.aimine.first.see",
+   "en": "The notice is drawn with the other moments when the AI cannot go on.",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: first see"
+  },
+  {
+   "key": "screen.aimine.first.link",
+   "en": "See when the AI cannot go on",
+   "protected": false,
+   "note": "DEC-420: B488 aimine: first link"
+  },
+  {
+   "key": "screen.aiproject.mock",
+   "en": "In this mockup, show the screen for",
+   "protected": false,
+   "note": "DEC-420: B488 aiproject: mock"
+  },
+  {
+   "key": "screen.aiproject.mock.a",
+   "en": "the project's owner",
+   "protected": false,
+   "note": "DEC-420: B488 aiproject: mock a"
+  },
+  {
+   "key": "screen.aiproject.mock.b",
+   "en": "a member",
+   "protected": false,
+   "note": "DEC-420: B488 aiproject: mock b"
+  },
+  {
+   "key": "screen.aiproject.title",
+   "en": "AI for this project",
+   "protected": false,
+   "note": "DEC-420: B488 aiproject: title"
+  },
+  {
+   "key": "screen.aiproject.intro",
+   "en": "Which of the team's AIs Pothole repairs uses, its own budget and its order.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproject: intro"
+  },
+  {
+   "key": "screen.aiproject.member",
+   "en": "{owner}, the project's owner, decides this. You can ask them to change it.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproject: member"
+  },
+  {
+   "key": "screen.aiproject.use.head",
+   "en": "Which AIs this project uses",
+   "protected": false,
+   "note": "DEC-420: B488 aiproject: use head"
+  },
+  {
+   "key": "screen.aiproject.use.legend",
+   "en": "The team's allowed AIs",
+   "protected": false,
+   "note": "DEC-420: B488 aiproject: use legend"
+  },
+  {
+   "key": "screen.aiproject.use.note",
+   "en": "A project can use fewer of the team's AIs, never more.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproject: use note"
+  },
+  {
+   "key": "screen.aiproject.use.save",
+   "en": "Save which AIs this project uses",
+   "protected": false,
+   "note": "DEC-420: B488 aiproject: use save"
+  },
+  {
+   "key": "screen.aiproject.bud.head",
+   "en": "This project's budget",
+   "protected": false,
+   "note": "DEC-420: B488 aiproject: bud head"
+  },
+  {
+   "key": "screen.aiproject.bud.field",
+   "en": "Monthly budget for this project",
+   "protected": false,
+   "note": "DEC-420: B488 aiproject: bud field"
+  },
+  {
+   "key": "screen.aiproject.bud.save",
+   "en": "Set the budget",
+   "protected": false,
+   "note": "DEC-420: B488 aiproject: bud save"
+  },
+  {
+   "key": "screen.aiproject.order.head",
+   "en": "Its order",
+   "protected": false,
+   "note": "DEC-420: B488 aiproject: order head"
+  },
+  {
+   "key": "screen.aiproject.order.up",
+   "en": "Move up",
+   "protected": false,
+   "note": "DEC-420: B488 aiproject: order up"
+  },
+  {
+   "key": "screen.aiproject.order.down",
+   "en": "Move down",
+   "protected": false,
+   "note": "DEC-420: B488 aiproject: order down"
+  },
+  {
+   "key": "screen.aiproject.order.note",
+   "en": "The order stays within the team's: a project can reorder the AIs it uses, but never put one the team has switched off back to work.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproject: order note"
+  },
+  {
+   "key": "screen.aiproject.chk.head",
+   "en": "Checks for this project",
+   "protected": false,
+   "note": "DEC-420: B488 aiproject: chk head"
+  },
+  {
+   "key": "screen.aichecks.projtick",
+   "en": "Require this for this project",
+   "protected": false,
+   "note": "DEC-420: B488 aichecks: projtick"
+  },
+  {
+   "key": "screen.aiproject.chk.line",
+   "en": "These apply to all work done directly in Pothole repairs, not to work in the record or other areas that belong to no project.",
+   "protected": false,
+   "note": "DEC-420: B488 aiproject: chk line"
+  },
+  {
+   "key": "screen.aiproject.chk.save",
+   "en": "Save the checks for this project",
+   "protected": false,
+   "note": "DEC-420: B488 aiproject: chk save"
+  },
+  {
+   "key": "screen.aiproject.chg.head",
+   "en": "Changes",
+   "protected": false,
+   "note": "DEC-420: B488 aiproject: chg head"
+  },
+  {
+   "key": "screen.aimoments.mock",
+   "en": "In this mockup, show the moment",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: mock"
+  },
+  {
+   "key": "screen.aimoments.mock.a",
+   "en": "an answer continues on another account",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: mock a"
+  },
+  {
+   "key": "screen.aimoments.mock.b",
+   "en": "before material first goes to a new provider",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: mock b"
+  },
+  {
+   "key": "screen.aimoments.mock.c",
+   "en": "the limit is reached and no account is left",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: mock c"
+  },
+  {
+   "key": "screen.aimoments.mock.d",
+   "en": "the provider is down or slow",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: mock d"
+  },
+  {
+   "key": "screen.aimoments.mock.e",
+   "en": "the model was retired",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: mock e"
+  },
+  {
+   "key": "screen.aimoments.mock.f",
+   "en": "the AI is not suited for this part",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: mock f"
+  },
+  {
+   "key": "screen.aimoments.mock.g",
+   "en": "a use was switched off",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: mock g"
+  },
+  {
+   "key": "screen.aimoments.mock.h",
+   "en": "the cost before and after a run",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: mock h"
+  },
+  {
+   "key": "screen.aimoments.title",
+   "en": "When the AI can't go on",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: title"
+  },
+  {
+   "key": "screen.aimoments.intro",
+   "en": "What the assistant panel shows, one moment at a time. It never changes account, model or provider without telling you, and it waits for your choice.",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: intro"
+  },
+  {
+   "key": "screen.aimoments.panel",
+   "en": "The assistant",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: panel"
+  },
+  {
+   "key": "screen.aimoments.a.what",
+   "en": "The team's {from} account reached its monthly limit at {time}, so this answer continues on {to}.",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: a what"
+  },
+  {
+   "key": "screen.aimoments.a.note",
+   "en": "The order is set by the team's administrators. You may decline the switch, and the answer waits until you choose.",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: a note"
+  },
+  {
+   "key": "screen.aimoments.a.keep",
+   "en": "Keep going on {provider}",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: a keep"
+  },
+  {
+   "key": "screen.aimoments.a.stop",
+   "en": "Stop here",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: a stop"
+  },
+  {
+   "key": "screen.aimoments.b.what",
+   "en": "{provider} would receive {sent}. It runs in {where}, keeps it {keep}, does not train on it and passes it to no one else unseen.",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: b what"
+  },
+  {
+   "key": "screen.aimoments.b.note",
+   "en": "This is the first time material goes to this provider from your team. The step waits until you choose.",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: b note"
+  },
+  {
+   "key": "screen.aimoments.b.send",
+   "en": "Send it to {provider}",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: b send"
+  },
+  {
+   "key": "screen.aimoments.b.nosend",
+   "en": "Don't send",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: b nosend"
+  },
+  {
+   "key": "screen.aimoments.c.what",
+   "en": "The team's {from} account reached its monthly limit at {time}, and no later account is on.",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: c what"
+  },
+  {
+   "key": "screen.aimoments.c.who",
+   "en": "Only an administrator can raise the limit: {admins}.",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: c who"
+  },
+  {
+   "key": "screen.aimoments.c.wait",
+   "en": "Wait until {date}",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: c wait"
+  },
+  {
+   "key": "screen.aimoments.without",
+   "en": "Continue without AI",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: without"
+  },
+  {
+   "key": "screen.aimoments.d.what",
+   "en": "{provider} is not answering.",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: d what"
+  },
+  {
+   "key": "screen.aimoments.d.note",
+   "en": "Your question is kept. Nothing goes to another provider unless you choose it.",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: d note"
+  },
+  {
+   "key": "screen.aimoments.d.wait",
+   "en": "Wait a little longer",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: d wait"
+  },
+  {
+   "key": "screen.aimoments.d.switch",
+   "en": "Switch to {account}",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: d switch"
+  },
+  {
+   "key": "screen.aimoments.e.what",
+   "en": "{provider} retired {old}. It says {new} replaces it.",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: e what"
+  },
+  {
+   "key": "screen.aimoments.e.choose",
+   "en": "Use this model instead",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: e choose"
+  },
+  {
+   "key": "screen.aimoments.e.go",
+   "en": "Use this model",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: e go"
+  },
+  {
+   "key": "screen.aimoments.e.none",
+   "en": "If the provider names no replacement, you choose another model from the ones it offers.",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: e none"
+  },
+  {
+   "key": "screen.aimoments.f.what",
+   "en": "The AI you chose has not passed drafting letters. Choose another for this, or continue without AI.",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: f what"
+  },
+  {
+   "key": "screen.aimoments.f.choose",
+   "en": "Choose another AI",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: f choose"
+  },
+  {
+   "key": "screen.aimoments.g.what",
+   "en": "{use} is switched off on {account}, so the assistant stopped. It was not moved to another account.",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: g what"
+  },
+  {
+   "key": "screen.aimoments.g.who",
+   "en": "Switched off by {who} on {date}. {who} can switch it back on.",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: g who"
+  },
+  {
+   "key": "screen.aimoments.g.ask",
+   "en": "Ask {who} to switch it on",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: g ask"
+  },
+  {
+   "key": "screen.aimoments.h.before",
+   "en": "Estimated: about {cost} on {account}",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: h before"
+  },
+  {
+   "key": "screen.aimoments.h.start",
+   "en": "Start the run",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: h start"
+  },
+  {
+   "key": "screen.aimoments.h.pick",
+   "en": "Choose another account",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: h pick"
+  },
+  {
+   "key": "screen.aimoments.h.after",
+   "en": "Cost: {cost}",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: h after"
+  },
+  {
+   "key": "screen.aimoments.h.note",
+   "en": "The estimate comes from the provider's published prices. The provider's own bill is what counts. A plan that reports no cost says “not measurable in money”.",
+   "protected": false,
+   "note": "DEC-420: B488 aimoments: h note"
+  },
+  {
+   "key": "screen.aitest.mock",
+   "en": "In this mockup, show",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: mock"
+  },
+  {
+   "key": "screen.aitest.mock.a",
+   "en": "before the test",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: mock a"
+  },
+  {
+   "key": "screen.aitest.mock.b",
+   "en": "the test running",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: mock b"
+  },
+  {
+   "key": "screen.aitest.mock.c",
+   "en": "the result by part",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: mock c"
+  },
+  {
+   "key": "screen.aitest.mock.d",
+   "en": "what would be sent",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: mock d"
+  },
+  {
+   "key": "screen.aitest.title",
+   "en": "Test an AI that isn't listed",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: title"
+  },
+  {
+   "key": "screen.aitest.intro",
+   "en": "Only administrators run this. Until a release lists it, a custom endpoint can be used only after this test.",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: intro"
+  },
+  {
+   "key": "screen.aitest.what.head",
+   "en": "The AI to test",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: what head"
+  },
+  {
+   "key": "screen.aitest.what.kind",
+   "en": "What kind of AI",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: what kind"
+  },
+  {
+   "key": "screen.aitest.what.custom",
+   "en": "A custom endpoint",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: what custom"
+  },
+  {
+   "key": "screen.aitest.what.plan",
+   "en": "A plan that is not listed",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: what plan"
+  },
+  {
+   "key": "screen.aitest.what.endpoint",
+   "en": "Endpoint address",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: what endpoint"
+  },
+  {
+   "key": "screen.aitest.what.key",
+   "en": "Key",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: what key"
+  },
+  {
+   "key": "screen.aitest.what.keyhelp",
+   "en": "It is sealed when you give it and never shown again, to you or to anyone.",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: what keyhelp"
+  },
+  {
+   "key": "screen.aitest.what.save",
+   "en": "Save the endpoint and key",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: what save"
+  },
+  {
+   "key": "screen.aitest.cost.head",
+   "en": "What the test costs",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: cost head"
+  },
+  {
+   "key": "screen.aitest.cost.est",
+   "en": "Civicsmith's standard test is estimated at about {cost}, from {n} requests to your endpoint.",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: cost est"
+  },
+  {
+   "key": "screen.aitest.cost.ceiling",
+   "en": "Spend ceiling",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: cost ceiling"
+  },
+  {
+   "key": "screen.aitest.cost.ceilinghelp",
+   "en": "The test stops before it spends more than this.",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: cost ceilinghelp"
+  },
+  {
+   "key": "screen.aitest.cost.run",
+   "en": "Run the test",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: cost run"
+  },
+  {
+   "key": "screen.aitest.cost.note",
+   "en": "The cost is shown before the test runs. The test sends none of your team's material.",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: cost note"
+  },
+  {
+   "key": "screen.aitest.prog.head",
+   "en": "The test is running",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: prog head"
+  },
+  {
+   "key": "screen.aitest.prog.done",
+   "en": "Done",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: prog done"
+  },
+  {
+   "key": "screen.aitest.prog.now",
+   "en": "Running",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: prog now"
+  },
+  {
+   "key": "screen.aitest.prog.wait",
+   "en": "Waiting",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: prog wait"
+  },
+  {
+   "key": "screen.aitest.prog.note",
+   "en": "The test is at $0.90 of the $3.00 ceiling so far. Leave this page open.",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: prog note"
+  },
+  {
+   "key": "screen.aitest.res.head",
+   "en": "The result, part by part",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: res head"
+  },
+  {
+   "key": "screen.aitest.res.pass",
+   "en": "Passed",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: res pass"
+  },
+  {
+   "key": "screen.aitest.res.lim",
+   "en": "Passed with limits",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: res lim"
+  },
+  {
+   "key": "screen.aitest.res.no",
+   "en": "Not suitable",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: res no"
+  },
+  {
+   "key": "screen.aitest.res.grade",
+   "en": "Your result is graded Reported. It becomes Reproduced when another team's test agrees.",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: res grade"
+  },
+  {
+   "key": "screen.aitest.send.head",
+   "en": "What would be sent",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: send head"
+  },
+  {
+   "key": "screen.aitest.send.about",
+   "en": "This is exactly what the sealed results bundle holds, in plain text. Nothing is sent until you press Send the results.",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: send about"
+  },
+  {
+   "key": "screen.aitest.send.not",
+   "en": "Not in it: the test conversations, your key, your endpoint's address, or anything your team holds.",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: send not"
+  },
+  {
+   "key": "screen.aitest.send.legend",
+   "en": "Your team",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: send legend"
+  },
+  {
+   "key": "screen.aitest.send.name",
+   "en": "Include our team's name, so others can see who tested it",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: send name"
+  },
+  {
+   "key": "screen.aitest.send.go",
+   "en": "Send the results",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: send go"
+  },
+  {
+   "key": "screen.aitest.send.no",
+   "en": "Don't send",
+   "protected": false,
+   "note": "DEC-420: B488 aitest: send no"
+  },
+  {
+   "key": "screen.airesults.title",
+   "en": "Results other teams sent",
+   "protected": false,
+   "note": "DEC-420: B488 airesults: title"
+  },
+  {
+   "key": "screen.airesults.intro",
+   "en": "Every member may read these. They hold the parts each AI passed and its limits, never a test conversation.",
+   "protected": false,
+   "note": "DEC-420: B488 airesults: intro"
+  },
+  {
+   "key": "screen.airesults.show",
+   "en": "Show the results for",
+   "protected": false,
+   "note": "DEC-420: B488 airesults: show"
+  },
+  {
+   "key": "screen.airesults.all",
+   "en": "Every AI",
+   "protected": false,
+   "note": "DEC-420: B488 airesults: all"
+  },
+  {
+   "key": "screen.airesults.speed",
+   "en": "Standard jobs: {speed}, {cost}.",
+   "protected": false,
+   "note": "DEC-420: B488 airesults: speed"
+  },
+  {
+   "key": "screen.airesults.by",
+   "en": "Tested by {who} on {date}.",
+   "protected": false,
+   "note": "DEC-420: B488 airesults: by"
+  },
+  {
+   "key": "screen.airesults.note",
+   "en": "A team is named only when it agreed to be. Otherwise it is “a team”. The grade says how well the result has held: Reproduced, Reported or Stated.",
+   "protected": false,
+   "note": "DEC-420: B488 airesults: note"
   }
  ],
  "rewrite": {

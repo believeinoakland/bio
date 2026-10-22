@@ -2961,3 +2961,377 @@ SCR.contradiction = c => { const st = CD_ST[c.v] || 'a'; const sel = v => v === 
    ${sec('Responses', sheet(row(I('testimony'), '<span class="rec mk-data">“Our notice came from the landlord\'s letter of September 12.”</span><span class="meta mk-data">Dev, The Coliseum lease · October 17, 2026</span>', '') + row(I('testimony'), '<span class="rec mk-data">“We hold only the amendment. Can you send the letter?”</span><span class="meta mk-data">A member of Pothole repairs · October 17, 2026 · shared their cover name</span>', '')))}
    ${sec('Respond', `${field('mk-cd-resp', 'Your response', '', { area: true, rec: true, act: 'contradictionrespond', help: 'Required. It reaches the other projects as you word it, with only what you choose to share below.' })}${checks('Share with the other projects', [['My cover name', false], ['My email address', false]], { act: 'contradictionrespond' })}${field('mk-cd-email', 'Your email address', 'dev@lakeshoretenants.example', { act: 'contradictionrespond', help: 'Shown only if you tick it above. It is shown as you typed it, not checked.' })}${note('A response cannot be taken back, and it is read by the other projects. Nothing about you is shared except what you tick here.')}${acts(btn('contradictionrespond', 'Send my response'))}<details class="mk-details"><summary>When it cannot be sent</summary><div class="cs-gap" data-gap="refused">${I('refused')}<span>Your project has not asked to resolve this yet, so you cannot respond. Ask first.</span></div><div class="cs-gap" data-gap="refused">${I('refused')}<span>The response is empty. Say something in your own words, then send it.</span></div><div class="cs-gap" data-gap="refused">${I('refused')}<span>You can share only your own cover name or your own email address. Untick what is not yours.</span></div></details>`)}</div>
   <div class="st st-f">${h1('Two documents in tension', 'Pairs of passages your team\'s documents give that may not agree.')}${note(c.ai ? 'Nothing has been proposed to you. Finding passages that may conflict is the assistant\'s work, and it is not available yet, so nothing appears here on its own.' : 'Nothing has been proposed to you. Finding passages that may conflict is the assistant\'s work, and the assistant is off for you, so nothing appears here on its own.')}${note('Until it is available, no document is marked as contradicted, and no item about one reaches your queue. A pair that was proposed before stays here, and you can act on it.')}</div>` }; };
+
+/* DEC-420 (B488; K4623): AI providers for the first beta. Seven screens beside the alpha's connect, teamai and projectai, which stay
+   as they are (one provider): aiproviders (administrators: what is in use, in order, budgets, the seven checks, what members may use,
+   the catalogue by provider), aiconnect (a guided connection, six steps), aimine (a member's own page), aiproject (a project owner
+   narrows), aimoments (when the AI can't go on: eight moments, drawn as the assistant panel shows them), aitest (an AI that isn't
+   listed) and airesults (results other teams sent). Every word is drawn with w4(key, text): the key and its text sit together here,
+   and words-drawn.src.py carries the same rows (DEC-420 block), so check_words_drawn.mjs finds none unkeyed. A provider's own facts
+   (its terms, prices, models, the source and date of each) are the catalogue's sample data, drawn with D() like any record.
+   Providers stand as equals, in alphabetical order, Anthropic one among them; the order of use is the team's. */
+const AIW = {};
+const aiv = (t, v, plain) => t.replace(/\{(\w+)\}/g, (m, n) => v && n in v ? (plain ? String(v[n]) : `<span class="mk-data">${esc(v[n])}</span>`) : m);
+const w4 = (k, t, v) => { if (typeof t === 'string') { if (k in AIW && AIW[k] !== t) throw new Error('DEC-420: ' + k + ' is drawn with two texts'); AIW[k] = t; } else v = t; if (!(k in AIW)) throw new Error('DEC-420: ' + k + ' has no text yet'); return aiv(AIW[k], v); };
+const w4p = (k, t, v) => { if (typeof t === 'string') w4(k, t); else v = t; return aiv(AIW[k], v, true); };
+const D = s => `<span class="mk-data">${esc(s)}</span>`;
+const AO = n => 'owed:' + n + ' DEC-420';
+const aib = (n, label, o) => btn(AO(n), label, o);
+const aigo = (html, to) => html.replace('<button', `<button data-goto="${to}"`);
+const aioff = h => h.replace(/<(button|input|textarea|select)\b/g, '<$1 disabled');
+const aimock = (id, label, opts, sel) => `<div class="mk-mockctl"><label for="${id}">${label}</label> <select id="${id}" class="cs-input" onchange="this.closest('main').dataset.st=this.value">${opts.map(([v, t]) => `<option value="${v}"${v === sel ? ' selected' : ''}>${t}</option>`).join('')}</select></div>`;
+/* the seven checks, once: every screen that shows them draws these rows, so no two explanations compete */
+const AICHK = [
+  ['notrain', w4('screen.aichecks.notrain.name', 'Does not train on your material'), w4('screen.aichecks.notrain.line', "The provider's terms say it does not use what it is sent to train its models.")],
+  ['noread', w4('screen.aichecks.noread.name', 'No person reads it by default'), w4('screen.aichecks.noread.line', 'People at the provider do not read what is sent unless your team asks them to.')],
+  ['keeps', w4('screen.aichecks.keeps.name', 'Says how long it keeps material'), w4('screen.aichecks.keeps.line', 'It states how long it keeps what it is sent, and keeps none where it offers that.')],
+  ['where', w4('screen.aichecks.where.name', "Says where it runs and under which country's law"), w4('screen.aichecks.where.line', 'It names the country where it handles what it is sent and the law that applies there.')],
+  ['onward', w4('screen.aichecks.onward.name', 'Passes it to no one else unseen'), w4('screen.aichecks.onward.line', 'Anyone else it passes material to is named in its terms.')],
+  ['keepaway', w4('screen.aichecks.keepaway.name', 'Works with keeping material away from AI'), w4('screen.aichecks.keepaway.line', "It honors your team's and projects' limits on which material may go to AI, and shows the notice that says so.")],
+  ['origin', w4('screen.aichecks.origin.name', 'Not made by an organization based in China'), w4('screen.aichecks.origin.line', 'The organization that made the model is not based in China.')],
+];
+const AICHK_EXTRA = [
+  ['terms', w4('screen.aichecks.terms.name', 'Its terms allow this use'), w4('screen.aichecks.terms.line', "The provider's terms permit work like your team's.")],
+  ['breach', w4('screen.aichecks.breach.name', 'What it promises if there is a breach'), w4('screen.aichecks.breach.line', 'It states what it will do, and how soon, if material it holds is exposed.')],
+];
+/* the team left these two unticked in the second sample state; the rest stay required */
+const AICHK_OPEN = new Set(['noread', 'onward']);
+const aiLockWords = () => `${I('withheld')} ${w4('screen.aichecks.locked', "Locked by the team. Project owners and members can't change it.")}`;
+const aiOpenWords = () => w4('screen.aichecks.open', 'Not required by the team. Project owners and members may require it for their own work.');
+/* an administrator's row: a box "Required for the whole team"; ticked shows the lock words, unticked says who may require it */
+const aiChkTeam = (open) => AICHK.map(([id, name, line]) => { const on = !(open && AICHK_OPEN.has(id)); return row(I('withheld'), `<b>${name}</b><span class="meta">${line}</span>`,
+  `<label class="mk-small" style="white-space:nowrap"><input type="checkbox"${on ? ' checked' : ''} onchange="var r=this.closest('.cs-row');r.querySelector('.ck-on').hidden=!this.checked;r.querySelector('.ck-off').hidden=this.checked"> ${w4('screen.aichecks.required', 'Required for the whole team')}</label>`,
+  `<span class="ck-on"${on ? '' : ' hidden'}>${aiLockWords()}</span><span class="ck-off"${on ? ' hidden' : ''}>${aiOpenWords()}</span>`); }).join('');
+/* a member's or project owner's row: locked where the team requires it, else a box they may tick for their own work (o.mine) or the project's (o.proj) */
+const aiChkYou = (open, o = {}) => AICHK.map(([id, name, line]) => { const team = !(open && AICHK_OPEN.has(id)), tick = o.ticked && o.ticked.includes(id);
+  return row(team ? I('withheld') : I('accepted'), `<b>${name}</b><span class="meta">${line}</span>`,
+  team ? `<span class="mk-small">${I('withheld')} ${w4('screen.aichecks.byteam', 'Required by the team')}</span>`
+       : `<label class="mk-small" style="white-space:nowrap"><input type="checkbox"${tick ? ' checked' : ''}${o.readonly ? ' disabled' : ''}> ${o.proj ? w4('screen.aichecks.projtick', 'Require this for this project') : w4('screen.aichecks.mytick', 'Require this for my own work')}</label>`,
+  team ? w4('screen.aichecks.byteam.help', "The team's administrators require this. You can't change it.") : ''); }).join('');
+const AIPARTS = [
+  ['ask', w4('screen.aiparts.ask', 'Asking')], ['letters', w4('screen.aiparts.letters', 'Drafting letters')], ['read', w4('screen.aiparts.read', 'Reading inside documents')],
+  ['unclear', w4('screen.aiparts.unclear', 'Reading unclear pages')], ['plans', w4('screen.aiparts.plans', 'Working through checks and plans')], ['account', w4('screen.aiparts.account', "Drafting a case's account")],
+];
+const aiWho = { one: () => w4('screen.aiplan.who.one', 'one person'), team: () => w4('screen.aiplan.who.team', 'a team'), app: () => w4('screen.aiplan.who.app', 'an application'), unk: () => w4('screen.aiplan.who.unk', 'unconfirmed') };
+const aiAnswer = { m: () => w4('screen.aiplan.met', 'Met'), n: () => w4('screen.aiplan.notmet', 'Not met'), u: () => w4('screen.aiplan.unconfirmed', 'Unconfirmed') };
+const aiGrade = g => `<span class="mk-tag">${{ R: w4('screen.aiplan.grade.reproduced', 'Reproduced'), P: w4('screen.aiplan.grade.reported', 'Reported'), S: w4('screen.aiplan.grade.stated', 'Stated') }[g]}</span>`;
+const aiChipOn = on => on ? `<span class="cs-due" data-due="met">${w4('screen.aiproviders.status.on', 'On')}</span>` : `<span class="cs-due">${w4('screen.aiproviders.status.off', 'Off')}</span>`;
+const aiHealth = h => `<span class="mk-tag">${{ available: w4('screen.aiproviders.health.available', 'available'), slow: w4('screen.aiproviders.health.slow', 'slow'), down: w4('screen.aiproviders.health.down', 'down') }[h]}</span>`;
+const aiListed = l => l ? `<span class="cs-due" data-due="near">${{ watch: w4('screen.aiproviders.listed.watch', 'watch'), lapsed: w4('screen.aiproviders.listed.lapsed', 'lapsed'), retired: w4('screen.aiproviders.listed.retired', 'retired') }[l]}</span>` : '';
+/* the accounts in use, in the team's order (position is the team's choice; the catalogue below is alphabetical) */
+const AIACC = [
+  { n: 1, name: 'OpenAI · Team plan · subscription', on: true, health: 'available', sent: 'the question and the passages it needs', where: 'servers in the United States', keep: '30 days' },
+  { n: 2, name: 'Mistral · Pay as you go · API account', on: true, health: 'slow', sent: 'the question and the passages it needs', where: 'servers in the European Union', keep: '30 days' },
+  { n: 3, name: 'OpenRouter · Pay as you go · through an aggregator', on: true, health: 'available', listed: 'watch', why: 'Its terms change on November 15, 2026, and the new terms are still being read.', sent: 'the question and the passages it needs', where: 'the servers of the provider it routes to, named in each answer', keep: 'none, where the model behind it offers that' },
+  { n: 4, name: 'Anthropic · API account', on: false, health: 'available', sent: 'the question and the passages it needs', where: 'servers in the United States', keep: '30 days' },
+  { n: 5, name: 'Google · Gemini 2.0 API · API account', on: false, health: 'down', listed: 'retired', why: 'Google retired this model on October 1, 2026. The account can be removed.', sent: 'the question and the passages it needs', where: 'servers in the United States', keep: '30 days' },
+];
+w4('screen.aiplan.passed', 'Passed: {parts}.'); w4('screen.aiplan.limits', 'Passed with limits: {parts}.'); w4('screen.aiplan.notsuited', 'Not suitable: {parts}.');
+
+/* the catalogue: provider first (alphabetical), then each of its plans and types. Each plan: who it serves, price basis and a typical-work estimate,
+   the seven checks' answers (m met, n not met, u unconfirmed) with source and date, a grade (R reproduced, P reported, S stated), when last confirmed,
+   a pending change of terms, and the parts of the assistant it passed, passed with limits, or is not suitable for. */
+const AICAT = [
+  { prov: 'Anthropic', plans: [
+    { plan: 'API account', type: 'API account', who: 'team', basis: 'pay for what is used, billed by the provider', est: "about $4 for a month of a five-person team's everyday questions", a: 'mmmmmmm', doc: 'Commercial terms', read: 'October 4, 2026', g: 'R', conf: 'October 12, 2026', pass: 'Asking; Drafting letters; Reading inside documents; Reading unclear pages', lim: "Working through checks and plans: it needs a person to confirm each long plan", no: 'none' },
+    { plan: 'Team plan', type: 'subscription', who: 'team', basis: 'a monthly price for each seat', est: 'about $150 a month for five seats; it reports no cost for a single answer', a: 'mmmmmmm', doc: 'Team plan terms', read: 'October 4, 2026', g: 'P', conf: 'October 9, 2026', pass: 'Asking; Drafting letters; Reading inside documents', lim: "Drafting a case's account: its drafts need more editing", no: 'Reading unclear pages: it misreads scanned text' } ] },
+  { prov: 'Cloudflare', plans: [
+    { plan: 'Workers AI', type: 'built in', who: 'team', basis: 'included in your Cloudflare account, with a free daily allowance', est: 'about $1 for a month of a five-person team\'s everyday questions', a: 'mmmmmmu', doc: 'Workers AI terms', read: 'October 6, 2026', g: 'P', conf: 'October 10, 2026', pass: 'Asking; Reading inside documents', lim: 'Drafting letters: its drafts are short and plain', no: 'Reading unclear pages: it cannot read images', origin: 'Which organization made each model varies, so the last check cannot be confirmed for the whole plan.' } ] },
+  { prov: 'Google', plans: [
+    { plan: 'Gemini API, paid', type: 'API account', who: 'team', basis: 'pay for what is used, billed by the provider', est: "about $3 for a month of a five-person team's everyday questions", a: 'mmmummm', doc: 'Gemini API terms', read: 'October 5, 2026', g: 'P', conf: 'October 11, 2026', pass: 'Asking; Reading inside documents; Reading unclear pages', lim: 'Drafting letters: it sometimes adds claims the passages do not hold', no: 'none' },
+    { plan: 'Gemini API, free tier', type: 'API account', who: 'one', basis: 'free, with a daily cap', est: 'free for a month of one person\'s everyday questions', a: 'nnmmmmm', doc: 'Gemini API terms', read: 'October 5, 2026', g: 'P', conf: 'October 11, 2026', pass: 'Asking', lim: 'Reading inside documents: it stops at the daily cap', no: 'Drafting a case\'s account: the free tier is not meant for team work', warn: true } ] },
+  { prov: 'Mistral', plans: [
+    { plan: 'Pay as you go', type: 'API account', who: 'team', basis: 'pay for what is used, billed by the provider', est: "about $2 for a month of a five-person team's everyday questions", a: 'mmmmmmm', doc: 'Terms of use', read: 'October 4, 2026', g: 'R', conf: 'October 12, 2026', pass: 'Asking; Drafting letters; Reading inside documents', lim: 'Reading unclear pages: it misses small print', no: 'none' } ] },
+  { prov: 'OpenAI', plans: [
+    { plan: 'API account', type: 'API account', who: 'app', basis: 'pay for what is used, billed by the provider', est: "about $5 for a month of a five-person team's everyday questions", a: 'mmmmmmm', doc: 'Services agreement', read: 'October 4, 2026', g: 'R', conf: 'October 12, 2026', pass: 'Asking; Drafting letters; Reading inside documents; Reading unclear pages', lim: 'Working through checks and plans: it needs a person to confirm each long plan', no: 'none' },
+    { plan: 'Team plan', type: 'subscription', who: 'team', basis: 'a monthly price for each seat', est: 'about $150 a month for five seats; it reports no cost for a single answer', a: 'mmmmmmm', doc: 'Team plan terms', read: 'October 4, 2026', g: 'P', conf: 'October 12, 2026', pass: 'Asking; Drafting letters; Reading inside documents', lim: 'Reading unclear pages: it misses small print', no: 'none', pend: { date: 'December 1, 2026', what: 'it will keep material 60 days instead of 30' } } ] },
+  { prov: 'OpenRouter', plans: [
+    { plan: 'Pay as you go', type: 'through an aggregator', who: 'unk', basis: 'pay for what is used, plus a small fee', est: "about $3 for a month of a five-person team's everyday questions", a: 'mmuumum', doc: 'Terms of service', read: 'October 5, 2026', g: 'S', conf: 'October 8, 2026', pass: 'Asking', lim: 'Reading inside documents: the model behind it can change between answers', no: 'none', pend: { date: 'November 15, 2026', what: 'it will pass requests to more hosts' } } ] },
+  { prov: 'Custom endpoint', plans: [
+    { plan: 'Your own endpoint', type: 'custom endpoint', who: 'unk', basis: 'whatever you pay the host', est: 'not known until it is tested', a: 'uuuuuuu', doc: 'Nothing stated', read: 'not read', g: 'S', conf: 'never', pass: 'none yet', lim: 'none yet', no: 'none yet', custom: true } ] },
+];
+const aiPlanEntry = (p, v) => { const name = `${v.prov} · ${p.plan} · ${p.type}`, srcOf = i => p.custom ? w4('screen.aiplan.nosrc', 'not stated') : `${p.doc}, section ${i + 2}, ${p.read}`;
+  return `<details class="mk-details"><summary>${D(name)}</summary><div class="cs-sheet" style="padding:12px 16px;display:grid;gap:8px">
+   <p class="mk-small" style="margin:0">${w4('screen.aiplan.serves', 'Serves {who}.', { who: aiWho[p.who]() })} ${w4('screen.aiplan.price', 'Price: {basis}. Typical work: {estimate}.', { basis: p.basis, estimate: p.est })}</p>
+   ${p.warn ? `<div class="cs-gap" data-gap="refused">${I('refused')}<span><b>${w4('screen.aiplan.warn.chip', 'Warning.')}</b> ${w4('screen.aiplan.warn', 'Free tier: it reads your material for training.')}</span></div>` : ''}
+   <div class="tw"><table class="mk-table"><thead><tr><th>${w4('screen.aiplan.th.check', 'Check')}</th><th>${w4('screen.aiplan.th.answer', 'Answer')}</th><th>${w4('screen.aiplan.th.source', 'Source and date')}</th></tr></thead><tbody>${AICHK.map(([id, nm], i) => `<tr><td>${nm}</td><td><b>${aiAnswer[p.a[i]]()}</b></td><td>${D(srcOf(i))}</td></tr>`).join('')}${AICHK_EXTRA.map(([id, nm], i) => `<tr><td>${nm}</td><td><b>${aiAnswer[p.custom ? 'u' : 'm']()}</b></td><td>${D(srcOf(i + 7))}</td></tr>`).join('')}</tbody></table></div>
+   ${p.origin ? `<p class="mk-small" style="margin:0">${D(p.origin)}</p>` : ''}
+   <p class="mk-small" style="margin:0">${aiGrade(p.g)} ${w4('screen.aiplan.confirmed', 'Last confirmed {date}.', { date: p.conf })}</p>
+   ${p.pend ? note(w4('screen.aiplan.pending', 'Its terms change on {date}: {what}.', p.pend)) : ''}
+   <p class="mk-small" style="margin:0">${w4('screen.aiplan.passed', 'Passed: {parts}.', { parts: p.pass })}<br>${w4('screen.aiplan.limits', 'Passed with limits: {parts}.', { parts: p.lim })}<br>${w4('screen.aiplan.notsuited', 'Not suitable: {parts}.', { parts: p.no })}</p>
+   ${acts(p.custom ? aigo(aib('aitestopen', w4('screen.aiplan.testfirst', 'Test it first'), { tone: 'primary' }), 'aitest') : aigo(aib('aiplanconnect', w4('screen.aiplan.connect', 'Connect'), { tone: 'primary' }), 'aiconnect'))}</div></details>`; };
+
+SCR.aiproviders = c => { const st = ({ allok: 'b', none: 'c', before: 'd' })[c.v] || 'a', used = c.v === 'before' ? AIACC.filter(a => !a.name.startsWith('Mistral')).map((a, i) => ({ ...a, n: i + 1 })) : AIACC;
+  const stand = `<div class="st st-a st-b">${row(I('accepted'), w4('screen.aiproviders.stands.on', '{n} accounts are on, in order: {order}.', { n: '3', order: 'OpenAI, Mistral, OpenRouter' }), aiChipOn(true))}</div><div class="st st-d">${row(I('accepted'), w4('screen.aiproviders.stands.on', { n: '2', order: 'OpenAI, OpenRouter' }), aiChipOn(true))}</div><div class="st st-c">${row(I('undetermined'), w4('screen.aiproviders.stands.none', 'No account is on yet. The assistant is off for everyone until an administrator turns one on.'), aiChipOn(false))}</div>`;
+  return { rail: 'settings', title: 'AI providers', st, crumbs: ['Settings', 'AI providers'], main: `
+  ${aimock('mk-apst', w4('screen.aiproviders.mock', 'In this mockup, show the card for'), [['a', w4('screen.aiproviders.mock.a', 'three accounts on, one of them slow')], ['b', w4('screen.aiproviders.mock.b', 'all accounts available')], ['c', w4('screen.aiproviders.mock.c', 'no account on yet')], ['d', w4('screen.aiproviders.mock.d', 'before Mistral is added')]], st)}
+  ${h1(w4('screen.aiproviders.title', 'AI providers'), w4('screen.aiproviders.intro', 'Only administrators set this up. Members choose among what is allowed here.'))}
+  ${sheet(stand + `<div class="st st-a st-b st-d">${meter(w4('screen.aiproviders.stands.meter', 'This month, all accounts'), 64.50, 130)}</div>`
+    + `<div class="st st-a">${row(I('clock'), w4('screen.aiproviders.stands.slow', '{provider} is slow right now. The other accounts are available.', { provider: 'Mistral' }), '')}</div><div class="st st-b st-d">${row(I('accepted'), w4('screen.aiproviders.stands.allok', 'All accounts are available.'), '')}</div>`)}
+  ${sec(w4('screen.aiproviders.use.head', 'In use, in order'), `<div style="display:grid;gap:12px">${sheet(used.map(a => row(`<div><b>${a.n}</b></div>`,
+    `<b>${D(a.name)}</b><span class="meta">${w4('screen.aiproviders.use.line', 'Sends {sent} to {where}. Keeps it {keep}.', { sent: a.sent, where: a.where, keep: a.keep })}</span>${a.listed ? `<span class="meta">${aiListed(a.listed)} ${D(a.why)}</span>` : ''}<span class="meta">${a.n > 1 ? aib('aiorderset', w4('screen.aiproviders.use.up', 'Move up'), { quiet: true }) : ''}${a.n < used.length ? aib('aiorderset', w4('screen.aiproviders.use.down', 'Move down'), { quiet: true }) : ''}${aib('aiaccountswitch', a.on ? w4('screen.aiproviders.use.switchoff', 'Switch off') : w4('screen.aiproviders.use.switchon', 'Switch on'), { quiet: true })}${aib('aiaccountremove', w4('screen.aiproviders.use.remove', 'Remove'), { quiet: true })}</span>`,
+    `${aiChipOn(a.on)} ${aiHealth(a.health)}`)).join(''))}
+   ${note(w4('screen.aiproviders.use.note', 'Work goes to the first account that is on, is allowed for that work and is within its limits. When it continues on a later account, the member is shown the switch and may decline it. A use that is switched off is refused, and is never moved to another account.'))}</div>`)}
+  <details class="mk-details"><summary>${w4('screen.aiproviders.add.head', 'Add an AI')}</summary>
+   <div style="display:grid;gap:12px;margin-top:8px">
+   ${note(w4('screen.aiproviders.add.intro', 'Providers are listed in alphabetical order, each with its plans and types: API account, subscription, through an aggregator, built in, or a custom endpoint. Pick the plan your team pays for.'))}
+   ${note(w4('screen.aiproviders.add.grades', 'Each answer carries its grade. Reproduced: Civicsmith or another team repeated it. Reported: a team reported it. Stated: only the provider says so.'))}
+   ${AICAT.map(v => `<div style="display:grid;gap:8px"><h3 class="t-section" style="margin:0">${D(v.prov)}</h3>${v.plans.map(p => aiPlanEntry(p, v)).join('')}</div>`).join('')}
+   ${sec(w4('screen.aiproviders.refused.head', 'Not offered'), sheet(
+     row(I('refused'), `<b>${D('OpenAI · personal plan')}</b><span class="meta">${w4('screen.aiproviders.refused.personal', "Not offered as the team's account: its terms bar use by a team for work like this. A member may still use it for their own work.")}</span>`, '') +
+     row(I('refused'), `<b>${D('Models made by organizations based in China')}</b><span class="meta">${w4('screen.aiproviders.refused.origin', 'Not offered while the team requires the check that the model is not made by an organization based in China.')}</span>`, '')))}
+   ${sec(w4('screen.aiproviders.held.head', 'Held until confirmed'), sheet(row(I('hold'), `<b>${D('Mistral · European Union region')}</b><span class="meta">${w4('screen.aiproviders.held.region', "Held: the region can't be checked yet. It is offered once the provider says where it runs and under which law.")}</span>`, '')))}
+   <div class="row" style="gap:12px;flex-wrap:wrap">${aigo(aib('aitestopen', w4('screen.aiproviders.add.test', "Test an AI that isn't listed")), 'aitest')}${aigo(aib('airesultsopen', w4('screen.aiproviders.add.results', 'Results other teams sent')), 'airesults')}</div></div></details>
+  ${part(1, w4('screen.aiproviders.bud.head', 'Budgets and alerts'), w4('screen.aiproviders.bud.why', '$130.00 a month overall; $64.50 spent so far.'), 'optional', `<div style="display:grid;gap:12px">
+    <div class="tw"><table class="mk-table"><thead><tr><th>${w4('screen.aiproviders.bud.th.acc', 'Account')}</th><th>${w4('screen.aiproviders.bud.th.bud', 'Monthly budget')}</th><th>${w4('screen.aiproviders.bud.th.spent', 'Spent this month')}</th></tr></thead><tbody>
+     <tr><td>${D('OpenAI · Team plan')}</td><td class="num">$60.00</td><td class="num">$58.40</td></tr><tr><td>${D('Mistral · Pay as you go')}</td><td class="num">$40.00</td><td class="num">$6.10</td></tr><tr><td>${D('OpenRouter · Pay as you go')}</td><td class="num">$30.00</td><td class="num">$0.00</td></tr>
+     <tr><td><b>${w4('screen.aiproviders.bud.all', 'All accounts together')}</b></td><td class="num"><b>$130.00</b></td><td class="num"><b>$64.50</b></td></tr></tbody></table></div>
+    ${meter('OpenAI · Team plan', 58.40, 60)}
+    <div class="row" style="gap:12px;align-items:end;flex-wrap:wrap">${choice('mk-apbs', w4('screen.aiproviders.bud.for', 'Set a budget for'), [w4('screen.aiproviders.bud.all'), 'Mistral · Pay as you go', 'OpenAI · Team plan', 'OpenRouter · Pay as you go'], w4('screen.aiproviders.bud.all'), { act: AO('aibudgetset'), data: 1 })}${field('mk-apba', w4('screen.aiproviders.bud.amount', 'Monthly budget'), '130.00', { act: AO('aibudgetset') })}${choice('mk-apal', w4('screen.aiproviders.bud.alert', 'Tell administrators at'), ['50%', '80%', '100%'], '80%', { act: AO('aibudgetset') })}</div>
+    ${acts(aib('aibudgetset', w4('screen.aiproviders.bud.set', 'Set the budget and the alert'), { tone: 'primary' }))}
+    <div class="tw"><table class="mk-table"><thead><tr><th>${w4('screen.aiproviders.bud.th.proj', 'Cost this month, by project')}</th><th>${w4('screen.aiproviders.bud.th.cost', 'Cost')}</th></tr></thead><tbody>
+     <tr><td>${D('Pothole repairs')}</td><td class="num">$33.20</td></tr><tr><td>${D('Bus stop shelters')}</td><td class="num">$21.10</td></tr><tr><td>${w4('screen.aiproviders.bud.norecord', 'Work in the record, outside any project')}</td><td class="num">$10.20</td></tr></tbody></table></div>
+    ${note(w4('screen.aiproviders.bud.note', "Each cost sums everyone's use and names no member. A member sees their own cost on Your AI."))}</div>`, { due: '' })}
+  ${part(2, w4('screen.aiproviders.chk.head', 'Privacy and origin checks'), w4('screen.aiproviders.chk.why', 'Seven checks, all required to start with.'), 'optional', `<div style="display:grid;gap:12px">
+    <div class="mk-mockctl"><label for="mk-apck">${w4('screen.aiproviders.chk.mock', 'In this mockup, show the checks')}</label> <select id="mk-apck" class="cs-input" onchange="var b=this.closest('.body');b.querySelectorAll('.ckv-a').forEach(e=>e.hidden=this.value!=='a');b.querySelectorAll('.ckv-b').forEach(e=>e.hidden=this.value!=='b')"><option value="a">${w4('screen.aiproviders.chk.mock.a', 'as they start: all seven required')}</option><option value="b">${w4('screen.aiproviders.chk.mock.b', 'after Rosa left two unticked')}</option></select></div>
+    <div data-act="${esc(AO('aicheckset'))}"><div class="ckv-a">${sheet(aiChkTeam(false))}</div><div class="ckv-b" hidden>${sheet(aiChkTeam(true))}</div></div>
+    <h3 class="t-section" style="margin:0">${w4('screen.aiproviders.chk.extra', 'Shown for every AI, never required')}</h3>
+    ${sheet(AICHK_EXTRA.map(([id, nm, ln]) => row(I('hint'), `<b>${nm}</b><span class="meta">${ln}</span>`, '')).join(''))}
+    ${acts(aib('aicheckset', w4('screen.aiproviders.chk.save', 'Save the checks'), { tone: 'primary' }))}
+    ${note(w4('screen.aiproviders.chk.note', 'An AI that fails a required check is not offered. A check you leave unticked stays open to project owners and members, who may require it for their own work.'))}</div>`, { due: '' })}
+  ${part(3, w4('screen.aiproviders.mem.head', 'What members may use'), w4('screen.aiproviders.mem.why', 'Which providers, plans and models members may choose among.'), 'optional', `<div style="display:grid;gap:12px">
+    ${checks(w4('screen.aiproviders.mem.legend', 'Providers, plans and models'), [['Anthropic · API account', 'Sonnet, Haiku', true], ['Mistral · Pay as you go', 'Large, Small', true], ['OpenAI · Team plan', 'GPT-5, GPT-5 mini', true], ['OpenRouter · Pay as you go', 'any model that passes the checks', false]].map(([n, m, on]) => [`<span><b>${D(n)}</b> · ${w4('screen.aiproviders.mem.models', 'Models: {models}', { models: m })}</span>`, on]), { act: AO('aimemberallow') })}
+    ${note(w4('screen.aiproviders.mem.modelnote', "Model choices are listed exactly as each provider offers them. Members choose among the ones you tick."))}
+    ${checks(w4('screen.aiproviders.mem.own', 'Members and their own accounts'), [[w4('screen.aiproviders.mem.ownacc', 'Members may add their own accounts'), true], [w4('screen.aiproviders.mem.personal', 'Members may use a personal subscription, for their own work only'), true]], { act: AO('aimemberallow') })}
+    ${note(w4('screen.aiproviders.mem.personalnote', "A personal subscription is always a member's own choice. It is never the team's or a project's account."))}
+    ${acts(aib('aimemberallow', w4('screen.aiproviders.mem.save', 'Save what members may use'), { tone: 'primary' }))}</div>`, { due: '' })}
+  ${part(4, w4('screen.aiproviders.chg.head', 'Changes'), w4('screen.aiproviders.chg.why', 'Every change, with who made it, when, and at which level.'), 'optional', aiChanges([
+    w4('screen.aiproviders.chg.row', '{who} {what} · {date} · {level}', { who: 'Rosa', what: 'turned on OpenAI · Team plan and placed it first', date: 'October 6', level: 'team' }),
+    w4('screen.aiproviders.chg.row', '{who} {what} · {date} · {level}', { who: 'Rosa', what: 'set the budget for OpenAI · Team plan to $60.00 a month', date: 'October 6', level: 'team' }),
+    w4('screen.aiproviders.chg.row', '{who} {what} · {date} · {level}', { who: 'Mai', what: 'narrowed Pothole repairs to OpenAI and Mistral', date: 'October 9', level: 'project' }),
+    w4('screen.aiproviders.chg.row', '{who} {what} · {date} · {level}', { who: 'Dev', what: 'required "Works with keeping material away from AI" for their own work', date: 'October 10', level: 'member' }),
+  ]), { due: '' })}` }; };
+
+/* DEC-420: a guided connection for one chosen plan, drawn for four: a key plan (Mistral), a plan whose provider signs in (OpenAI's team plan),
+   a free tier that reads material for training (Google), and a member's own subscription (member-level only). */
+const AICONN = {
+  a: { prov: 'Mistral', name: 'Mistral · Pay as you go · API account', way: 'key', doc: 'Terms of use', read: 'October 4, 2026',
+    sent: "The question and the passages it needs. Never a member's name or your team's address.", who: 'Mistral AI, on servers in the European Union. It uses a cloud host named in its terms.', keeps: 'Thirty days, then it deletes them.', reads: 'No, unless your team asks its support to look.', trains: 'No.', passes: 'Only its cloud host, which is named in its terms.',
+    terms: [['political', 'It bars messages written to persuade voters for a campaign. Reporting on public officials is allowed.', 'Usage policy, section 2'], ['legal', 'You may not present its output as legal advice to someone else.', 'Usage policy, section 4'], ['disclose', 'You must say that AI wrote a text when readers could be misled.', 'Usage policy, section 6']],
+    url: 'https://console.mistral.ai/', choose: 'Choose the pay-as-you-go plan, and add the payment card there.', copy: 'Create an API key, copy it once, and keep the page open. Mistral shows it only once.' },
+  b: { prov: 'OpenAI', name: 'OpenAI · Team plan · subscription', way: 'signin', doc: 'Team plan terms', read: 'October 4, 2026',
+    sent: "The question and the passages it needs. Never a member's name or your team's address.", who: 'OpenAI, on servers in the United States.', keeps: 'Thirty days, then it deletes them.', reads: 'No, unless your team asks its support to look.', trains: 'No, for a team plan.', passes: 'Only its cloud host, which is named in its terms.',
+    terms: [['political', 'It bars messages written to persuade voters for a campaign. Reporting on public officials is allowed.', 'Usage policies, section 2'], ['legal', 'You may not present its output as legal advice to someone else.', 'Usage policies, section 3'], ['disclose', 'You must say that AI wrote a text when readers could be misled.', 'Usage policies, section 5']],
+    url: 'https://chatgpt.com/team', choose: 'Choose the Team plan for the number of seats your team needs.', copy: 'Nothing to copy. You sign in with the account that holds the plan, and approve the connection on its page.' },
+  c: { prov: 'Google', name: 'Google · Gemini API, free tier · API account', way: 'key', warn: true, doc: 'Gemini API terms', read: 'October 5, 2026',
+    sent: "The question and the passages it needs. Never a member's name or your team's address.", who: 'Google, on servers in the United States.', keeps: 'Up to 55 days, and longer for what it keeps for training.', reads: 'Yes. People at Google may read what is sent on the free tier.', trains: 'Yes. The free tier uses what it is sent to train its models.', passes: 'Only to companies in Google, which are named in its terms.',
+    terms: [['political', 'It bars messages written to persuade voters for a campaign. Reporting on public officials is allowed.', 'Prohibited use policy, section 2'], ['legal', 'You may not present its output as legal advice to someone else.', 'Prohibited use policy, section 3'], ['disclose', 'You must say that AI wrote a text when readers could be misled.', 'Terms, section 5']],
+    url: 'https://aistudio.google.com/', choose: 'Choose the free tier. Do not add billing.', copy: 'Create an API key, copy it, and keep the page open.' },
+  d: { prov: 'Anthropic', name: 'Anthropic · Pro plan · subscription', way: 'signin', personal: true, doc: 'Consumer terms', read: 'October 4, 2026',
+    restr: [['one', 'The plan is for one person. You may not share the sign-in with your team.', 'Consumer terms, section 3'], ['auto', 'It may not be run by a program that sends requests without you, beyond what the provider allows for this plan.', 'Consumer terms, section 5'], ['limits', 'Your plan has its own allowance, and the provider may slow it down when you use a lot.', 'Plan page, October 4, 2026']] },
+};
+const aiKeySteps = [
+  ['Open Cloudflare\'s dashboard at dash.cloudflare.com and sign in to your team\'s account.', 'screen.aiconnect.cf.1'],
+  ['In the menu on the left, click “AI”, then click “AI Gateway”.', 'screen.aiconnect.cf.2'],
+  ['Click “Create Gateway”.', 'screen.aiconnect.cf.3'],
+  ['Name the gateway civicsmith-ai, exactly like that, and click “Create”.', 'screen.aiconnect.cf.4'],
+  ['Open the gateway you just made, and click “Settings”.', 'screen.aiconnect.cf.5'],
+  ['Find “Provider Keys” and click “Add API Key”.', 'screen.aiconnect.cf.6'],
+  ['Choose {provider} from the list of providers.', 'screen.aiconnect.cf.7'],
+  ['Paste the key you copied from {provider} into the box named “API Key”.', 'screen.aiconnect.cf.8'],
+  ['In the box named “Alias”, type civicsmith-{alias}, exactly like that.', 'screen.aiconnect.cf.9'],
+  ['Click “Save”. Then come back to this page and press “I\'ve entered it”.', 'screen.aiconnect.cf.10'],
+];
+const aiConnectBody = p => { const prov = p.prov, off = (h, yes) => yes ? h : aioff(h);
+  if (p.personal) return `${sec(w4('screen.aiconnect.p.head', 'Your own subscription'), `${note(w4('screen.aiconnect.p.levelnote', "This is member-level only. The subscription is yours alone. It is never the team's or a project's account."))}
+    <div style="display:grid;gap:8px"><h3 class="t-section" style="margin:0">${w4('screen.aiconnect.p.restr', 'What {provider} says about using it', { provider: prov })}</h3>${sheet(p.restr.map(([k, t, s]) => row(I('hint'), `<b>${D(t)}</b><span class="meta">${D(s)}</span>`, '')).join(''))}</div>
+    ${note(w4('screen.aiconnect.p.again', 'If {provider} changes these restrictions, you are shown them again before your next use.', { provider: prov }))}
+    ${checks(w4('screen.aiconnect.p.legend', 'Your choice'), [[w4('screen.aiconnect.p.box', 'I will use my own subscription for my own work, within these restrictions.'), false]], { act: AO('aipersonalchoose') })}
+    ${acts(aib('aipersonalchoose', w4('screen.aiconnect.p.go', 'Use my subscription'), { tone: 'primary' }))}
+    ${note(w4('screen.aiconnect.p.recorded', 'Your choice is recorded with your name and the date. Nothing more is asked of you.'))}
+    ${note(w4('screen.aichecks.personalfails', 'Where the team or a project requires a check that your subscription\'s AI fails, it is not used for that work, and you are told why.'))}`)}`;
+  const k = p.way === 'key';
+  return `${sheet(row(I('settings'), `<b>${w4('screen.aiconnect.what', 'You are connecting')}</b><span class="meta">${D(p.name)}</span>`, ''))}
+  ${part(1, w4('screen.aiconnect.s1.head', 'What you are connecting'), w4('screen.aiconnect.s1.why', 'What it is sent, who keeps it and for how long, and the terms that bind your use.'), 'optional', `<div style="display:grid;gap:12px"><div class="tw"><table class="mk-table"><thead><tr><th></th><th>${w4('screen.aiconnect.th.answer', 'The answer')}</th><th>${w4('screen.aiconnect.th.source', 'Source and date')}</th></tr></thead><tbody>
+    ${[['sent', w4('screen.aiconnect.t.sent', 'What it is sent'), p.sent], ['who', w4('screen.aiconnect.t.who', 'Who receives it, and where it runs'), p.who], ['keeps', w4('screen.aiconnect.t.keeps', 'How long it keeps material'), p.keeps], ['reads', w4('screen.aiconnect.t.reads', 'Whether a person reads it'), p.reads], ['trains', w4('screen.aiconnect.t.trains', 'Whether it trains on it'), p.trains], ['passes', w4('screen.aiconnect.t.passes', 'Whom it passes it to'), p.passes]].map(([id, l, a], i) => `<tr><td>${l}</td><td>${D(a)}</td><td>${D(`${p.doc}, section ${i + 2}, ${p.read}`)}</td></tr>`).join('')}</tbody></table></div>
+    <h3 class="t-section" style="margin:0">${w4('screen.aiconnect.terms.head', 'The terms that bind civic use')}</h3>
+    ${sheet(p.terms.map(([id, t, s]) => row(I('hint'), `<b>${{ political: w4('screen.aiconnect.terms.political', 'Political content'), legal: w4('screen.aiconnect.terms.legal', 'Legal advice'), disclose: w4('screen.aiconnect.terms.disclose', 'Saying that AI was used') }[id]}</b><span class="meta">${D(t)}</span><span class="meta">${D(`${s}, ${p.read}`)}</span>`, '')).join(''))}
+    ${note(w4('screen.aiconnect.s1.note', 'Each answer shows where it was read and when. An answer the provider does not state says “not stated”.'))}</div>`, { due: '', open: true })}
+  ${part(2, w4('screen.aiconnect.s2.head', 'Sign up with the provider'), w4('screen.aiconnect.s2.why', 'Done on the provider\'s own page, not here.'), 'optional', `<div style="display:grid;gap:12px">${sheet(
+    row(I('outward'), `<b>${w4('screen.aiconnect.s2.where', 'Where to sign up')}</b><span class="meta">${CF(p.url, w4p('screen.aiconnect.s2.link', "Open {provider}'s sign-up page", { provider: prov }))}</span>`, '') +
+    row(I('hint'), `<b>${w4('screen.aiconnect.s2.choose', 'What to choose there')}</b><span class="meta">${D(p.choose)}</span>`, '') +
+    row(I('hint'), `<b>${w4('screen.aiconnect.s2.copy', 'What to copy or approve')}</b><span class="meta">${D(p.copy)}</span>`, ''))}
+    ${note(w4('screen.aiconnect.s2.never', 'Civicsmith never signs anyone up and never handles payment. The provider bills your team directly.'))}
+    <details class="mk-details"><summary>${w4('screen.aiconnect.s2.prog', 'If this plan needs a program on a member\'s own computer')}</summary><ol class="mk-list"><li>${w4('screen.aiconnect.s2.prog.1', "Install the provider's program on the computer that will run it, from the provider's own page.")}</li><li>${w4('screen.aiconnect.s2.prog.2', 'Sign in to the program once, and leave it running.')}</li><li>${w4('screen.aiconnect.s2.prog.3', 'Come back to this page. Civicsmith checks that the program answers.')}</li></ol></details></div>`, { due: '', open: true })}
+  ${part(3, w4('screen.aiconnect.s3.head', 'Give Civicsmith the key'), w4('screen.aiconnect.s3.why', 'Four ways. Choose one.'), 'optional', `<div style="display:grid;gap:12px">
+    ${pick('mk-aiway' + (k ? 'k' : 's') + (p.warn ? 'f' : ''), w4('screen.aiconnect.s3.legend', 'How the key reaches Cloudflare'), [
+      [w4('screen.aiconnect.s3.here', 'Enter it here'), w4('screen.aiconnect.s3.here.help', "The key goes straight to Cloudflare's AI Gateway store in your team's own account. Civicsmith keeps no copy, and the key is never shown again."), k],
+      [w4('screen.aiconnect.s3.cf', 'Enter it yourself in Cloudflare'), w4('screen.aiconnect.s3.cf.help', 'For a team that wants the key never to touch Civicsmith.'), false],
+      [w4p('screen.aiconnect.s3.signin', 'Sign in with {provider}', { provider: prov }), w4('screen.aiconnect.s3.signin.help', 'Only for a plan whose provider signs in instead of giving a key.'), !k],
+      [w4('screen.aiconnect.s3.ref', 'Use a reference instead'), w4('screen.aiconnect.s3.ref.help', 'The key stays where you keep it. Civicsmith holds only where to find it.'), false]])}
+    ${off(`<div class="cs-sheet" style="padding:12px 16px;display:grid;gap:8px"><b>${w4('screen.aiconnect.s3.here', 'Enter it here')}</b>${field('mk-aikey', w4('screen.aiconnect.s3.keyfield', 'The key'), '', { act: AO('aikeyenter'), help: w4('screen.aiconnect.s3.keyhelp', 'It goes to Cloudflare as you press the button, and is never shown again, to you or to anyone.') })}${acts(aib('aikeyenter', w4('screen.aiconnect.s3.store', 'Store the key in Cloudflare'), { tone: 'primary' }))}</div>`, k)}
+    ${off(`<details class="mk-details"><summary>${w4('screen.aiconnect.s3.cfsteps', 'Ten steps in Cloudflare')}</summary><ol class="mk-list">${aiKeySteps.map(([t, key]) => `<li>${w4(key, t, { provider: prov, alias: prov.toLowerCase() })}</li>`).join('')}</ol>${acts(aib('aikeycloudflare', w4("screen.aiconnect.s3.entered", "I've entered it")), CF('https://dash.cloudflare.com/', w4p('screen.aiconnect.s3.opencf', "Open Cloudflare's dashboard")))}</details>`, k)}
+    ${off(`<div class="cs-sheet" style="padding:12px 16px;display:grid;gap:8px"><b>${w4p('screen.aiconnect.s3.signin', { provider: prov })}</b>${acts(aib('aisignin', w4p('screen.aiconnect.s3.signin', { provider: prov }), { tone: 'primary' }))}${note(k ? w4('screen.aiconnect.s3.nosignin', '{provider} gives a key for this plan. It does not sign in.', { provider: prov }) : w4('screen.aiconnect.s3.signinnote', 'You sign in on {provider}\'s own page. Civicsmith never sees your password.', { provider: prov }))}</div>`, !k)}
+    ${off(`<div class="cs-sheet" style="padding:12px 16px;display:grid;gap:8px"><b>${w4('screen.aiconnect.s3.ref', 'Use a reference instead')}</b>${field('mk-airef', w4('screen.aiconnect.s3.reffield', 'Where the key is kept'), '', { act: AO('aikeyreference') })}${acts(aib('aikeyreference', w4('screen.aiconnect.s3.refgo', 'Use this reference')))}</div>`, true)}</div>`, { due: '', open: true })}
+  ${part(4, w4('screen.aiconnect.s4.head', 'Before you turn it on'), w4('screen.aiconnect.s4.why', 'What you accept, recorded once.'), 'optional', `<div style="display:grid;gap:12px">
+    ${p.warn ? `<div class="cs-gap" data-gap="refused">${I('refused')}<span><b>${w4('screen.aiplan.warn.chip', 'Warning.')}</b> ${w4('screen.aiconnect.s4.warn', 'On the free tier, {provider} reads what is sent and uses it to train its models. Do not send anything your team wants kept private.', { provider: prov })}</span></div>` : ''}
+    ${checks(w4('screen.aiconnect.s4.legend', 'Before you turn it on'), [...(p.warn ? [[w4('screen.aiconnect.s4.freebox', 'I understand that Google reads our material and uses it for training on this free tier, and I accept that for this account.'), false]] : []), [w4('screen.aiconnect.s4.termsbox', 'I accept the terms above that bind our use of this plan.'), false]], { act: AO('aitermsaccept') })}
+    ${acts(aib('aitermsaccept', w4('screen.aiconnect.s4.go', 'Record my acceptance')))}
+    ${note(w4('screen.aiconnect.s4.recorded', 'Your acceptance is recorded with your name and the date. The terms are accepted once for this plan, and shown again if they change.'))}</div>`, { due: '', open: true })}
+  ${part(5, w4('screen.aiconnect.s5.head', 'Test it'), w4('screen.aiconnect.s5.why', 'A harmless test that sends none of your team\'s material.'), 'optional', `<div style="display:grid;gap:12px">
+    ${acts(aib('aiconnecttest', w4('screen.aiconnect.s5.go', 'Test the connection'), { tone: 'primary' }))}
+    ${sheet(row(I('accepted'), w4('screen.aiconnect.s5.pass', 'Passed in {seconds} seconds.', { seconds: '2.1' }), ''))}
+    <details class="mk-details"><summary>${w4('screen.aiconnect.s5.failhead', 'If the test fails')}</summary><div class="cs-gap" data-gap="refused">${I('refused')}<span>${w4('screen.aiconnect.s5.fail', '{provider} did not accept the test. It said: “{words}”. {who} can fix this.', { provider: prov, words: 'The key is not valid.', who: 'Whoever holds the provider account' })}</span></div></details>
+    ${note(w4('screen.aiconnect.s5.note', 'It stays off until the test passes.'))}</div>`, { due: '', open: true })}
+  ${part(6, w4('screen.aiconnect.s6.head', 'Turn it on'), w4('screen.aiconnect.s6.why', 'And where it goes in the order.'), 'optional', `<div style="display:grid;gap:12px">
+    ${choice('mk-aipos', w4('screen.aiconnect.s6.pos', 'Where it goes in the order'), [w4('screen.aiconnect.s6.first', 'First'), w4('screen.aiconnect.s6.second', 'Second'), w4('screen.aiconnect.s6.third', 'Third'), w4('screen.aiconnect.s6.last', 'Last')], w4('screen.aiconnect.s6.second'), { act: AO('aiaccountadd') })}
+    ${acts(aib('aiaccountadd', w4('screen.aiconnect.s6.go', 'Turn it on'), { tone: 'primary' }))}
+    ${note(w4('screen.aiconnect.s6.note', 'Work goes to the first account that is on and within its limits. You can move it later on AI providers.'))}</div>`, { due: '', open: true })}`; };
+SCR.aiconnect = c => { const st = ({ openai: 'b', google: 'c', personal: 'd', mistral: 'a' })[c.v] || 'a';
+  return { rail: 'settings', title: 'Connect an AI', st, crumbs: ['Settings', 'AI providers', 'Connect an AI'], main: `
+  ${aimock('mk-acst', w4('screen.aiconnect.mock', 'In this mockup, show the connection for'), [['a', w4('screen.aiconnect.mock.a', 'a plan that gives a key')], ['b', w4('screen.aiconnect.mock.b', 'a plan whose provider signs in')], ['c', w4('screen.aiconnect.mock.c', 'a free tier that reads material for training')], ['d', w4('screen.aiconnect.mock.d', "a member's own subscription")]], st)}
+  ${h1(w4('screen.aiconnect.title', 'Connect an AI'), w4('screen.aiconnect.intro', 'Six steps for one plan. Nothing is turned on until its test passes.'))}
+  <div class="st st-a">${aiConnectBody(AICONN.a)}</div><div class="st st-b">${aiConnectBody(AICONN.b)}</div><div class="st st-c">${aiConnectBody(AICONN.c)}</div><div class="st st-d">${aiConnectBody(AICONN.d)}</div>` }; };
+
+/* DEC-420: a member's own page. The team's choices are shown locked; the member chooses within what the team allows. */
+SCR.aimine = c => { const st = ({ open: 'b' })[c.v] || 'a';
+  return { rail: 'settings', title: 'Your AI', st, crumbs: ['Settings', 'Your AI'], main: `
+  ${aimock('mk-amst2', w4('screen.aimine.mock', 'In this mockup, show the checks for'), [['a', w4('screen.aimine.mock.a', 'a team that requires all seven')], ['b', w4('screen.aimine.mock.b', 'a team that left two unticked')]], st)}
+  ${h1(w4('screen.aimine.title', 'Your AI'), w4('screen.aimine.intro', "Which AI serves your work, what you may choose, and what it costs. Your team's administrators decide what is offered."))}
+  ${sec(w4('screen.aimine.now.head', 'What serves you now'), `${sheet(
+    row(`<div><b>1</b></div>`, `<b>${D('OpenAI · Team plan')}</b><span class="meta">${w4('screen.aimine.now.team', "The team's account")}</span>`, aiChipOn(true)) +
+    row(`<div><b>2</b></div>`, `<b>${D('Mistral · API account')}</b><span class="meta">${w4('screen.aimine.now.team', "The team's account")}</span>`, aiChipOn(true)) +
+    row(`<div><b>3</b></div>`, `<b>${D('Anthropic · Pro plan · subscription')}</b><span class="meta">${w4('screen.aimine.now.own', 'Your own account')}</span>`, aiChipOn(true)))}
+    ${note(w4('screen.aimine.now.note', 'Your work goes to the first of these that is allowed for that work and within its limits. You are shown any switch to a later one, and may decline it.'))}`)}
+  ${sec(w4('screen.aimine.choose.head', 'Choose among what the team allows'), `<div style="display:grid;gap:12px">
+    ${choice('mk-amprov', w4('screen.aimine.choose.prov', 'Provider and plan'), ['Mistral · Pay as you go', 'OpenAI · Team plan', 'OpenRouter · Pay as you go'], 'OpenAI · Team plan', { act: AO('aimineuse'), data: true })}
+    ${choice('mk-ammodel', w4('screen.aimine.choose.model', 'Model'), ['GPT-5', 'GPT-5 mini'], 'GPT-5', { act: AO('aimineuse'), data: true })}
+    ${choice('mk-amefort', w4('screen.aimine.choose.effort', 'Effort'), ['Low', 'Medium', 'High'], 'Medium', { act: AO('aimineuse'), data: true })}
+    ${note(w4('screen.aimine.choose.note', 'Models and effort levels are listed exactly as the provider offers them. Your choice applies to work you start, and an administrator or a project can narrow it.'))}
+    ${acts(aib('aimineuse', w4('screen.aimine.choose.go', 'Use this for my work'), { tone: 'primary' }))}</div>`)}
+  ${sec(w4('screen.aimine.own.head', 'Your own accounts'), `<div style="display:grid;gap:12px">
+    ${note(w4('screen.aimine.own.team', 'Your team allows members to add their own accounts.'))}
+    ${acts(aigo(aib('aiownadd', w4('screen.aimine.own.add', 'Add an account of my own')), 'aiconnect'))}
+    ${note(w4('screen.aimine.own.personal', "A personal subscription is yours alone. It is never the team's or a project's account, and it is used only for your own work."))}
+    ${sheet(row(I('refused'), `<b>${D('Anthropic · Pro plan · subscription')}</b><span class="meta">${w4('screen.aimine.own.fails', "Not used for work in {project}: that project requires “{check}”, which this subscription's AI does not meet.", { project: 'Pothole repairs', check: 'Passes it to no one else unseen' })}</span>`, ''))}</div>`)}
+  ${sec(w4('screen.aimine.chk.head', 'Checks in force for you'), `<div style="display:grid;gap:12px">
+    <div data-act="${esc(AO('aimycheckset'))}"><div class="st st-a">${sheet(aiChkYou(false))}</div><div class="st st-b">${sheet(aiChkYou(true, { ticked: ['onward'] }))}</div></div>
+    ${acts(aib('aimycheckset', w4('screen.aimine.chk.save', 'Save my checks'), { tone: 'primary' }))}
+    ${note(w4('screen.aimine.chk.proj', "When you work in a project, that project's checks also apply to the work done directly in it."))}
+    ${note(w4('screen.aimine.chk.rule', 'A check the team requires is locked. You can require any other for your own work. An AI that fails a check you require is not used for your work, and you are told why.'))}</div>`)}
+  ${sec(w4('screen.aimine.use.head', 'Your use and cost'), `<div class="tw"><table class="mk-table"><thead><tr><th>${w4('screen.aimine.use.th', 'Last 30 days')}</th><th>${w4('screen.aimine.use.calls', 'Calls')}</th><th>${w4('screen.aimine.use.cost', 'Cost')}</th></tr></thead><tbody>
+    <tr><td>${D('OpenAI · Team plan')}</td><td class="num">42</td><td class="num">${w4('screen.aimine.use.nomoney', 'not measurable in money')}</td></tr>
+    <tr><td>${D('Mistral · API account')}</td><td class="num">6</td><td class="num">$0.31</td></tr>
+    <tr><td>${D('Anthropic · Pro plan · subscription')}</td><td class="num">18</td><td class="num">${w4('screen.aimine.use.nomoney')}</td></tr></tbody></table></div>
+    ${note(w4('screen.aimine.use.note', 'Only you see this: your own use across every account that served you.'))}`)}
+  ${sec(w4('screen.aimine.first.head', 'The first time material goes to a provider'), `${note(w4('screen.aimine.first.note', 'Before material first goes to a provider, the assistant names the provider, says what is sent, and waits for you. It does the same after a switch to another provider.'))}${row(I('hint'), w4('screen.aimine.first.see', 'The notice is drawn with the other moments when the AI cannot go on.'), ref(w4('screen.aimine.first.link', 'See when the AI cannot go on'), 'aimoments', "<b>When the AI can't go on</b> · what the assistant shows when an account reaches its limit, a provider stops answering, or material is about to go to a new provider."))}`)}` }; };
+
+/* DEC-420: a project's page. The project owner narrows within the team's choices; members read the same. */
+SCR.aiproject = c => { const st = ({ member: 'b' })[c.v] || 'a', mem = st === 'b';
+  return { rail: 'projects', title: 'AI for this project', st, crumbs: ['Pothole repairs', 'AI for this project'], main: `
+  ${aimock('mk-apst2', w4('screen.aiproject.mock', 'In this mockup, show the screen for'), [['a', w4('screen.aiproject.mock.a', "the project's owner")], ['b', w4('screen.aiproject.mock.b', 'a member')]], st)}
+  ${h1(w4('screen.aiproject.title', 'AI for this project'), w4('screen.aiproject.intro', "Which of the team's AIs Pothole repairs uses, its own budget and its order."))}
+  <div class="st st-b">${note(w4('screen.aiproject.member', "{owner}, the project's owner, decides this. You can ask them to change it.", { owner: 'Mai' }))}</div>
+  ${sec(w4('screen.aiproject.use.head', 'Which AIs this project uses'), `<div style="display:grid;gap:12px">${(mem ? aioff : (x => x))(checks(w4('screen.aiproject.use.legend', "The team's allowed AIs"), [['Mistral · Pay as you go', true], ['OpenAI · Team plan', true], ['OpenRouter · Pay as you go', false]].map(([n, on]) => [`<span><b>${D(n)}</b></span>`, on]), { act: AO('aiprojectuse') }))}
+    ${note(w4('screen.aiproject.use.note', "A project can use fewer of the team's AIs, never more."))}${(mem ? aioff : (x => x))(acts(aib('aiprojectuse', w4('screen.aiproject.use.save', 'Save which AIs this project uses'), { tone: 'primary' })))}</div>`)}
+  ${sec(w4('screen.aiproject.bud.head', "This project's budget"), `<div style="display:grid;gap:12px">${meter('Pothole repairs', 33.20, 50)}
+    ${(mem ? aioff : (x => x))(field('mk-apjb', w4('screen.aiproject.bud.field', 'Monthly budget for this project'), '50.00', { act: AO('aiprojectbudget') }) + acts(aib('aiprojectbudget', w4('screen.aiproject.bud.save', 'Set the budget'))))}</div>`)}
+  ${sec(w4('screen.aiproject.order.head', 'Its order'), `<div style="display:grid;gap:12px">${sheet(
+    row(`<div><b>1</b></div>`, `<b>${D('OpenAI · Team plan')}</b>`, (mem ? '' : acts(aib('aiprojectorder', w4('screen.aiproject.order.up', 'Move up'), { quiet: true }), aib('aiprojectorder', w4('screen.aiproject.order.down', 'Move down'), { quiet: true })))) +
+    row(`<div><b>2</b></div>`, `<b>${D('Mistral · Pay as you go')}</b>`, ''))}
+    ${note(w4('screen.aiproject.order.note', "The order stays within the team's: a project can reorder the AIs it uses, but never put one the team has switched off back to work."))}</div>`)}
+  ${sec(w4('screen.aiproject.chk.head', 'Checks for this project'), `<div style="display:grid;gap:12px"><div data-act="${esc(AO('aiprojectcheckset'))}">${sheet(aiChkYou(true, { proj: true, ticked: ['onward'], readonly: mem }))}</div>
+    ${note(w4('screen.aiproject.chk.line', 'These apply to all work done directly in Pothole repairs, not to work in the record or other areas that belong to no project.'))}
+    ${(mem ? aioff : (x => x))(acts(aib('aiprojectcheckset', w4('screen.aiproject.chk.save', 'Save the checks for this project'), { tone: 'primary' })))}</div>`)}
+  ${sec(w4('screen.aiproject.chg.head', 'Changes'), aiChanges([
+    w4('screen.aiproviders.chg.row', { who: 'Mai', what: 'narrowed Pothole repairs to OpenAI and Mistral', date: 'October 9', level: 'project' }),
+    w4('screen.aiproviders.chg.row', { who: 'Mai', what: 'required “Passes it to no one else unseen” for Pothole repairs', date: 'October 9', level: 'project' })]))}` }; };
+
+/* DEC-420: when the AI can't go on. Eight moments, each drawn as the assistant panel shows it, one at a time. Never a silent change:
+   every one waits for a choice, and a switch to another account is shown, attributed and declinable. */
+SCR.aimoments = c => { const st = ({ continued: 'a', disclosure: 'b', limit: 'c', down: 'd', retired: 'e', unsuited: 'f', off: 'g', cost: 'h' })[c.v] || 'a';
+  const card = (icon, text, extra) => sheet(row(I(icon), text, '') + (extra || ''));
+  return { rail: 'projects', title: "When the AI can't go on", st, crumbs: ['Pothole repairs', "When the AI can't go on"], main: `
+  ${aimock('mk-amom', w4('screen.aimoments.mock', 'In this mockup, show the moment'), [['a', w4('screen.aimoments.mock.a', 'an answer continues on another account')], ['b', w4('screen.aimoments.mock.b', 'before material first goes to a new provider')], ['c', w4('screen.aimoments.mock.c', 'the limit is reached and no account is left')], ['d', w4('screen.aimoments.mock.d', 'the provider is down or slow')], ['e', w4('screen.aimoments.mock.e', 'the model was retired')], ['f', w4('screen.aimoments.mock.f', 'the AI is not suited for this part')], ['g', w4('screen.aimoments.mock.g', 'a use was switched off')], ['h', w4('screen.aimoments.mock.h', 'the cost before and after a run')]], st)}
+  ${h1(w4('screen.aimoments.title', "When the AI can't go on"), w4('screen.aimoments.intro', 'What the assistant panel shows, one moment at a time. It never changes account, model or provider without telling you, and it waits for your choice.'))}
+  <aside class="cs-dock" style="max-width:480px;border:var(--hair-strong)" aria-label="${esc(w4p('screen.aimoments.panel', 'The assistant'))}"><header>${I('machine')}${w4('screen.aimoments.panel')}</header><div class="body">
+   <div class="st st-a">${card('changed', w4('screen.aimoments.a.what', "The team's {from} account reached its monthly limit at {time}, so this answer continues on {to}.", { from: 'OpenAI', time: '2:10 PM', to: "Mistral · API account (the team's, second in order)" }))}
+     ${note(w4('screen.aimoments.a.note', "The order is set by the team's administrators. You may decline the switch, and the answer waits until you choose."))}
+     ${acts(aib('aicontinue', w4p('screen.aimoments.a.keep', 'Keep going on {provider}', { provider: 'Mistral' }), { tone: 'primary' }), aib('aistop', w4('screen.aimoments.a.stop', 'Stop here')))}</div>
+   <div class="st st-b">${card('hint', w4('screen.aimoments.b.what', '{provider} would receive {sent}. It runs in {where}, keeps it {keep}, does not train on it and passes it to no one else unseen.', { provider: 'Mistral', sent: 'the question and the passages it needs', where: 'the European Union', keep: '30 days' }))}
+     ${note(w4('screen.aimoments.b.note', 'This is the first time material goes to this provider from your team. The step waits until you choose.'))}
+     ${acts(aib('aisend', w4p('screen.aimoments.b.send', 'Send it to {provider}', { provider: 'Mistral' }), { tone: 'primary' }), aib('aisendrefuse', w4("screen.aimoments.b.nosend", "Don't send")))}</div>
+   <div class="st st-c">${card('hold', w4('screen.aimoments.c.what', "The team's {from} account reached its monthly limit at {time}, and no later account is on.", { from: 'OpenAI', time: '2:10 PM' }))}
+     ${note(w4('screen.aimoments.c.who', 'Only an administrator can raise the limit: {admins}.', { admins: 'Rosa' }))}
+     ${acts(aib('aiwait', w4p('screen.aimoments.c.wait', 'Wait until {date}', { date: 'November 1' }), { tone: 'primary' }), aib('aiwithout', w4('screen.aimoments.without', 'Continue without AI')))}</div>
+   <div class="st st-d">${card('clock', w4('screen.aimoments.d.what', '{provider} is not answering.', { provider: 'Mistral' }))}
+     ${note(w4('screen.aimoments.d.note', 'Your question is kept. Nothing goes to another provider unless you choose it.'))}
+     ${acts(aib('aiwait', w4('screen.aimoments.d.wait', 'Wait a little longer')), aib('aiswitchaccount', w4p('screen.aimoments.d.switch', 'Switch to {account}', { account: 'OpenRouter' })), aib('aiwithout', w4('screen.aimoments.without', 'Continue without AI')))}</div>
+   <div class="st st-e">${card('hold', w4('screen.aimoments.e.what', '{provider} retired {old}. It says {new} replaces it.', { provider: 'Mistral', old: 'Mistral Large 2', new: 'Mistral Large 3' }))}
+     ${choice('mk-amodel', w4('screen.aimoments.e.choose', 'Use this model instead'), ['Mistral Large 3', 'Mistral Small 3'], 'Mistral Large 3', { act: AO('aimodelchoose'), data: true })}
+     ${acts(aib('aimodelchoose', w4('screen.aimoments.e.go', 'Use this model'), { tone: 'primary' }))}
+     ${note(w4('screen.aimoments.e.none', "If the provider names no replacement, you choose another model from the ones it offers."))}</div>
+   <div class="st st-f">${card('refused', w4('screen.aimoments.f.what', 'The AI you chose has not passed drafting letters. Choose another for this, or continue without AI.'))}
+     ${acts(aib('aichooseother', w4('screen.aimoments.f.choose', 'Choose another AI'), { tone: 'primary' }), aib('aiwithout', w4('screen.aimoments.without', 'Continue without AI')))}</div>
+   <div class="st st-g">${card('refused', w4('screen.aimoments.g.what', "{use} is switched off on {account}, so the assistant stopped. It was not moved to another account.", { use: 'Drafting', account: "the team's OpenAI account" }))}
+     ${note(w4('screen.aimoments.g.who', 'Switched off by {who} on {date}. {who} can switch it back on.', { who: 'Rosa', date: 'October 6' }))}
+     ${acts(aib('aiaskadmin', w4p('screen.aimoments.g.ask', 'Ask {who} to switch it on', { who: 'Rosa' }), { tone: 'primary' }), aib('aiwithout', w4('screen.aimoments.without', 'Continue without AI')))}</div>
+   <div class="st st-h">${card('money', w4('screen.aimoments.h.before', 'Estimated: about {cost} on {account}', { cost: '$0.40', account: 'OpenAI · Team plan' }))}
+     ${acts(aib('airunstart', w4('screen.aimoments.h.start', 'Start the run'), { tone: 'primary' }), aib('aiaccountpick', w4('screen.aimoments.h.pick', 'Choose another account')))}
+     ${card('accepted', w4('screen.aimoments.h.after', 'Cost: {cost}', { cost: '$0.36' }))}
+     ${note(w4('screen.aimoments.h.note', "The estimate comes from the provider's published prices. The provider's own bill is what counts. A plan that reports no cost says “not measurable in money”."))}</div>
+  </div></aside>` }; };
+
+/* DEC-420: an AI that isn't listed is tested before it is used: the cost first, progress, the result by part, and exactly what would be sent. */
+SCR.aitest = c => { const st = ({ running: 'b', result: 'c', send: 'd' })[c.v] || 'a';
+  const resRow = (part, res, why) => row(I(res === 'pass' ? 'accepted' : res === 'lim' ? 'tension' : 'refused'), `<b>${part}</b><span class="meta">${D(why)}</span>`, `<span class="mk-tag">${{ pass: w4('screen.aitest.res.pass', 'Passed'), lim: w4('screen.aitest.res.lim', 'Passed with limits'), no: w4('screen.aitest.res.no', 'Not suitable') }[res]}</span>`);
+  return { rail: 'settings', title: "Test an AI that isn't listed", st, crumbs: ['Settings', 'AI providers', "Test an AI that isn't listed"], main: `
+  ${aimock('mk-atst', w4('screen.aitest.mock', 'In this mockup, show'), [['a', w4('screen.aitest.mock.a', 'before the test')], ['b', w4('screen.aitest.mock.b', 'the test running')], ['c', w4('screen.aitest.mock.c', 'the result by part')], ['d', w4('screen.aitest.mock.d', 'what would be sent')]], st)}
+  ${h1(w4('screen.aitest.title', "Test an AI that isn't listed"), w4('screen.aitest.intro', 'Only administrators run this. Until a release lists it, a custom endpoint can be used only after this test.'))}
+  <div class="st st-a">${sec(w4('screen.aitest.what.head', 'The AI to test'), `<div style="display:grid;gap:12px">
+    ${choice('mk-atkind', w4('screen.aitest.what.kind', 'What kind of AI'), [w4('screen.aitest.what.custom', 'A custom endpoint'), w4('screen.aitest.what.plan', 'A plan that is not listed')], w4('screen.aitest.what.custom'), { act: AO('aitestsetup') })}
+    ${field('mk-atend', w4('screen.aitest.what.endpoint', 'Endpoint address'), 'https://ai.example-city.org/v1', { act: AO('aitestsetup') })}
+    ${field('mk-atkey', w4('screen.aitest.what.key', 'Key'), '', { act: AO('aitestsetup'), help: w4('screen.aitest.what.keyhelp', 'It is sealed when you give it and never shown again, to you or to anyone.') })}
+    ${acts(aib('aitestsetup', w4('screen.aitest.what.save', 'Save the endpoint and key')))}</div>`)}
+   ${sec(w4('screen.aitest.cost.head', 'What the test costs'), `<div style="display:grid;gap:12px">
+    ${note(w4('screen.aitest.cost.est', "Civicsmith's standard test is estimated at about {cost}, from {n} requests to your endpoint.", { cost: '$1.80', n: '240' }))}
+    ${field('mk-atceil', w4('screen.aitest.cost.ceiling', 'Spend ceiling'), '$3.00', { act: AO('aitestrun'), help: w4('screen.aitest.cost.ceilinghelp', 'The test stops before it spends more than this.') })}
+    ${acts(aib('aitestrun', w4('screen.aitest.cost.run', 'Run the test'), { tone: 'primary' }))}
+    ${note(w4('screen.aitest.cost.note', 'The cost is shown before the test runs. The test sends none of your team\'s material.'))}</div>`)}</div>
+  <div class="st st-b">${sec(w4('screen.aitest.prog.head', 'The test is running'), sheet(
+    row(I('accepted'), `<b>${AIPARTS[0][1]}</b>`, `<span class="cs-due" data-due="met">${w4('screen.aitest.prog.done', 'Done')}</span>`) + row(I('accepted'), `<b>${AIPARTS[1][1]}</b>`, `<span class="cs-due" data-due="met">${w4('screen.aitest.prog.done')}</span>`) +
+    row(I('clock'), `<b>${AIPARTS[2][1]}</b>`, `<span class="muted">${w4('screen.aitest.prog.now', 'Running')}</span>`) + AIPARTS.slice(3).map(p => row(I('unrated'), `<b>${p[1]}</b>`, `<span class="muted">${w4('screen.aitest.prog.wait', 'Waiting')}</span>`)).join('')) + note(w4('screen.aitest.prog.note', 'The test is at $0.90 of the $3.00 ceiling so far. Leave this page open.')))}</div>
+  <div class="st st-c st-d">${sec(w4('screen.aitest.res.head', 'The result, part by part'), sheet(
+    resRow(AIPARTS[0][1], 'pass', 'It answered every question from the passages it was given.') + resRow(AIPARTS[1][1], 'lim', 'Its drafts need more editing.') + resRow(AIPARTS[2][1], 'pass', 'It found the passages in all 20 documents.') + resRow(AIPARTS[3][1], 'no', 'It misread 6 of 20 scanned pages.') + resRow(AIPARTS[4][1], 'lim', 'It loses its place in long plans.') + resRow(AIPARTS[5][1], 'pass', 'Every sentence cites a passage it found.')) +
+    note(w4('screen.aitest.res.grade', "Your result is graded Reported. It becomes Reproduced when another team's test agrees.")))}</div>
+  <div class="st st-d">${sec(w4('screen.aitest.send.head', 'What would be sent'), `<div style="display:grid;gap:12px">
+    ${note(w4('screen.aitest.send.about', 'This is exactly what the sealed results bundle holds, in plain text. Nothing is sent until you press Send the results.'))}
+    <pre class="mk-data" style="margin:0;white-space:pre-wrap">AI: custom endpoint · model reported as example-model-7
+Test: Civicsmith standard test, version 12 · October 22, 2026
+Asking: passed
+Drafting letters: passed with limits (its drafts need more editing)
+Reading inside documents: passed
+Reading unclear pages: not suitable (it misread 6 of 20 scanned pages)
+Working through checks and plans: passed with limits
+Drafting a case's account: passed
+Speed: about 4 seconds an answer · Cost: about $0.01 an answer</pre>
+    ${note(w4('screen.aitest.send.not', "Not in it: the test conversations, your key, your endpoint's address, or anything your team holds."))}
+    ${checks(w4('screen.aitest.send.legend', 'Your team'), [[w4('screen.aitest.send.name', "Include our team's name, so others can see who tested it"), false]], { act: AO('airesultsend') })}
+    ${acts(aib('airesultsend', w4('screen.aitest.send.go', 'Send the results'), { tone: 'primary' }), aib('airesultsdecline', w4("screen.aitest.send.no", "Don't send")))}</div>`)}</div>` }; };
+
+/* DEC-420: results other teams sent, for every member to read. Never a test conversation. */
+SCR.airesults = c => { const R = [
+  { n: 'Anthropic · API account · Sonnet', pass: 'Asking; Drafting letters; Reading inside documents; Reading unclear pages', lim: 'Working through checks and plans: it needs a person to confirm each long plan', no: 'none', speed: 'about 3 seconds an answer', cost: 'about $0.01 an answer', by: 'a team', date: 'October 8, 2026', g: 'R' },
+  { n: 'Google · Gemini API · Pro', pass: 'Asking; Reading inside documents; Reading unclear pages', lim: 'Drafting letters: it sometimes adds claims the passages do not hold', no: 'none', speed: 'about 4 seconds an answer', cost: 'about $0.01 an answer', by: 'Eastside Housing Team', date: 'October 5, 2026', g: 'P' },
+  { n: 'Mistral · API account · Large', pass: 'Asking; Drafting letters; Reading inside documents', lim: 'Reading unclear pages: it misses small print', no: 'none', speed: 'about 3 seconds an answer', cost: 'about $0.005 an answer', by: 'a team', date: 'October 11, 2026', g: 'R' },
+  { n: 'OpenAI · Team plan · GPT-5', pass: 'Asking; Drafting letters; Reading inside documents', lim: 'Reading unclear pages: it misses small print', no: 'none', speed: 'about 5 seconds an answer', cost: 'not measurable in money', by: 'a team', date: 'October 12, 2026', g: 'P' },
+  { n: 'OpenRouter · Pay as you go · Llama 4', pass: 'Asking', lim: 'Reading inside documents: the model behind it can change between answers', no: "Drafting a case's account: its sentences cite passages it did not find", speed: 'about 6 seconds an answer', cost: 'about $0.003 an answer', by: 'a team', date: 'October 3, 2026', g: 'S' },
+];
+  return { rail: 'settings', title: 'Results other teams sent', crumbs: ['Settings', 'AI providers', 'Results other teams sent'], main: `
+  ${h1(w4('screen.airesults.title', 'Results other teams sent'), w4('screen.airesults.intro', 'Every member may read these. They hold the parts each AI passed and its limits, never a test conversation.'))}
+  ${choice('mk-arsel', w4('screen.airesults.show', 'Show the results for'), [w4('screen.airesults.all', 'Every AI'), ...R.map(r => r.n)], w4('screen.airesults.all'), { act: AO('airesultsread'), data: 1 })}
+  ${sheet(R.map(r => row(I('finding'), `<b>${D(r.n)}</b>
+    <span class="meta">${w4('screen.aiplan.passed', { parts: r.pass })}</span><span class="meta">${w4('screen.aiplan.limits', { parts: r.lim })}</span><span class="meta">${w4('screen.aiplan.notsuited', { parts: r.no })}</span>
+    <span class="meta">${w4('screen.airesults.speed', 'Standard jobs: {speed}, {cost}.', { speed: r.speed, cost: r.cost })}</span>
+    <span class="meta">${w4('screen.airesults.by', 'Tested by {who} on {date}.', { who: r.by, date: r.date })}</span>`, aiGrade(r.g))).join(''))}
+  ${note(w4('screen.airesults.note', 'A team is named only when it agreed to be. Otherwise it is “a team”. The grade says how well the result has held: Reproduced, Reported or Stated.'))}` }; };
