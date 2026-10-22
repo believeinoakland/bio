@@ -623,3 +623,7 @@ Merged `tranche/T51`. Each of the four reds failed alone before; one root cause 
 Suite: control-plane directory minus G13 (BOB's fixed seam): 437 tests, 437 pass.
 
 Size (session_01X5bP76qJ2j296J7FB51rWp): test runs 46, module lines 4,620
+
+## J32 · COMPLETE
+
+B47: the four reds had one root cause by round 6's design: each captures a file over 8 MiB by address and read answer.document, but G2 now parks it (fetch_pending, no document) and the alarm's delivery files it. No member operation fails. Updated to the new contract: t51-held-failed R117 (old state made by upload; recapture replaced via the tick), t51-large-pdfs R120/R121 (fetch_pending for 8.8/15.9 MB; 2 s bar left to t51-round6-seam, 4.7 s seen while the object ran the previous tick), t51-round5-press-seam R125 b/c (fetch_pending, then words), t51-round5-seam E3 (fetch_pending, then final statement with size). Control-plane directory minus G13: 437/437. Pushed b5dc0aa72f + record.
