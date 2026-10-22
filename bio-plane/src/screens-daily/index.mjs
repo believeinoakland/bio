@@ -33,6 +33,10 @@ const KEYED_QUEUE = [...QUEUE_KINDS.flatMap((k) => [`queue.${k}.summary`, `queue
 const KIND_NAMES = WORD_ROWS.map((r) => r[0]).filter((k) => k.startsWith("queue.kind."));
 // R60: the feeds the word list names (`queue.feed.<id>`), the ones `queue-states.mjs` can name when one did not answer.
 const KIND_FEEDS = WORD_ROWS.map((r) => r[0]).filter((k) => k.startsWith("queue.feed."));
+// G16, G20 (fix round 6): a list or a search that stops says so, in the nearest held words until the design gives its own.
+const CUT_EXTRA = { home: ["screen.held.more"], queue: ["screen.held.more"],
+  finder: ["screen.held.archivemore", "observation-log.partial.looked_got_part", "find.browse.more", "find.browse.showmore"],
+  "find-in": ["screen.held.archivemore", "screen.people.more", "find.browse.more", "find.browse.showmore"] };
 // R42: the ways into a project, and who to ask; R50: the team's own passed date.
 const JOIN = ["screen.home.join.heading", "screen.home.join.says", "screen.home.join.lead", "screen.home.join.nocreate", "screen.home.join.none",
   "queue.project-invitation.summary.unnamed", "queue.project-invitation.detail", "projects.findable.meta", "projects.request.asked", "act.projectrequest.label.home",
@@ -207,4 +211,4 @@ const WORDS_OF = {
 /** The seven screens, in the registry's order of the rail (Home and its Where else to go, Projects, Queue, Find, Find in
     this, Ask). */
 export const SCREENS = Object.freeze([home, elsewhere, projects, queue, finder, findIn, answers]
-  .map((s) => Object.freeze({ ...s, words: Object.freeze([...new Set(WORDS_OF[s.id])]) })));
+  .map((s) => Object.freeze({ ...s, words: Object.freeze([...new Set([...WORDS_OF[s.id], ...(CUT_EXTRA[s.id] || [])])]) })));

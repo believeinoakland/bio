@@ -7,7 +7,7 @@
    are proposed in the job record. Every sentence is asserted as `word(key, vars)` (R34): no test here holds a sentence's English. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, ok, refused, text, ops, button, press, beside, main, settle, dmy, MEMBER, word, hasWord } from "./page.mjs";
+import { open, ok, refused, batched, text, ops, button, press, beside, main, settle, dmy, MEMBER, word, hasWord } from "./page.mjs";
 import { measure, FIT } from "./measure.mjs";
 
 const CREATOR = ok({ ...MEMBER, capabilities: ["contribute", "create_projects"] });
@@ -24,7 +24,7 @@ const area = (p, k) => text(p, main(p).querySelector(`[data-area="${k}"]`));
 /* ---------- R87 (C14, P2.2): the roster row carries the counts ---------- */
 
 test("R87 (C14, P2.2): Home draws each project's question count from its roster row and makes no per-project read; the reading counts what the rows say", async () => {
-  const p = await open("/app", { ...BASE, projectlist: LIST(THREE), projectquestions: ok({ ok: true, items: [{ inquiry: "Q" }], cursor: null }), casedrafts: ok({ ok: true, drafts: [] }) });
+  const p = await open("/app", { ...BASE, projectlist: LIST(THREE), projectquestions: ok({ ok: true, items: [{ inquiry: "Q" }], cursor: null }), casedrafts: batched(() => ({ ok: true, drafts: [] })) });
   await settle();
   assert.equal(p.byOp("projectlist").length, 1, "the roster is read once");
   assert.equal(p.byOp("projectquestions").length, 0, "no question read for any project");
@@ -66,7 +66,7 @@ test("R87 (C14, P2.2): a project seen only at EXISTENCE answers a null count, dr
 });
 
 const PUBLISHED = ok({ bundles: [], cases: [{ case_id: "CASE-1", edition: 1, published_at: "2026-09-01T10:00:00Z" }, { case_id: "CASE-1", edition: 2, published_at: "2026-09-18T10:00:00Z" }] });
-const DRAFTS = (reads) => (req) => { reads.push(req.query.project); return ok({ ok: true, project: req.query.project, count: 1, drafts: [{ draft_id: "DRAFT-1", case: { case_id: "CASE-1", edition: 3, identity: "x" } }] }); };
+const DRAFTS = (reads) => batched((id) => { reads.push(id); return { ok: true, project: id, count: 1, drafts: [{ draft_id: "DRAFT-1", case: { case_id: "CASE-1", edition: 3, identity: "x" } }] }; });
 
 test("R87 (C14, P2.2): the drafts shared for review are read only for the projects whose row says one is shared; a null or zero summary reads none", async () => {
   const reads = [];
