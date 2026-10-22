@@ -154,6 +154,12 @@ Bob asked (2026-10-22) whether the round follows K4426. Three items had no resea
 - **G27 · G4's cause.** The member-facing fix is merged (`reading_pending` with `diag`, never 502); the cause was not reproduced offline. Diagnosis worker → `diagnosis-R6-G4.md`: the platform behaviours Miniflare lacks (broken stubs, object resets, the background render outliving its request), Cloudflare's documentation quoted. If a cause is found, its fix is a job in this round; if not, K4428's logging stands and the deploy names it.
 - **G28 · Speed beyond 2 s (§2 G12 end).** PERFORMANCE measures in-app navigation and the two levers ((a) one combined read, (b) where the objects live) on the copy now, so the two questions go to Bob with numbers before the redeploy and whichever he chooses enters the plan (this round if it is a job, else the next with its reason named).
 
+### K4597 · Enforcing K4426 at planning (owed in this round)
+
+- **E1** `checks/fixplan.mjs` in civicos-process (`prep/T51-close-v2`, reaching `main` with T51's close PR): rule (1) of `rulings-active.md`'s K4597 line, with fixture tests; run by `checks/run.mjs`. A worker (sonnet medium) builds it; BOB reviews; this plan then made to pass it.
+- **E2** An independent review of this plan (worker, sonnet medium, walk files and plan only) before the redeploy; each finding answered here.
+- **E3** A platform-shape harness: workerd with the object's 128 MB limit enforced (and a broken-stub fault), used by G26's and G27's reproductions and by later rounds' "not reproduced" claims.
+
 ## 3. Jobs
 
 Every job: medium effort, claude-sonnet-5-5; its suites then `build/plan/impact.mjs tranche/T51 HEAD`; "declare every census op you own" (K4208); R-FOUR, R-SEAM, R-STOP, R-NOTMET, R-OLD, R-CLOCK. Providers merge before users; each seam owner last on its path (K1965). Order is `modules.json` order. At most 20 at once: all 20 start together.
