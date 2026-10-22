@@ -251,7 +251,7 @@ const LIM = "bio-plane-limits/1 subrequests=10000";
 const BUILTIN_OK = NG.planeLimits(RELEASE_SOURCE).ok;
 const CUR = await signer("current-release");
 const CUR_VER = bump(RELEASE_VERSION);
-const curSrc = RELEASE_SOURCE + `\nexport const PLANE_LIMITS_STATEMENT = "${LIM}";\n`;
+const curSrc = RELEASE_SOURCE + `\nexport const PLANE_LIMITS_STATEMENT = "${LIM}";\nexport const PLANE_CRONS_STATEMENT = "bio-plane-crons/1 */5 * * * *";\n`;
 const curMan = { version: CUR_VER, sha256: await shaHex(curSrc), bytes: curSrc.length, asset: "bio-plane.bundled.mjs",
   sig: await CUR.sign(curSrc) };
 const NEWER = () => { armWith(CUR.line); return REL({ manifest: () => jres(curMan), asset: () => new Response(curSrc) }); };
