@@ -1,6 +1,6 @@
 # acquisition (T51)
 
-**Status** · session_01BQ74v1Ra7Q8F2p147wPF6y · depth 2 · COMPLETE · handled B28
+**Status** · session_01Y4v2DQazrd7Uhg2kPv1nLA · depth 2 · COMPLETE · handled B31
 
 ## J1 · REPORT
 
@@ -416,3 +416,62 @@ COMPLETE (B28 applied): G19 (provider). tranche/T51 merged; head = this branch's
 **Requirement line I propose:** **R108** (T51 fix round 6, G19; K4571 S10; amends R19, R6) **A capture states what of its supporting files was kept.** The answer of `acquire` (every continuation tick included) and the document's `capture` facts carry `supporting: {kept, skipped, total, reasons, not_walked?}` from the records the walk and the render keep: `reasons` the distinct reasons a file was not kept with their counts, a bound's figure as `limit`, the renderer's words as `detail`; `not_walked` the reason a walk asked for was not made. Absent when none was asked for. Test: a page of 450 supporting files answers kept 400, skipped 50, reason `CAP_REACHED`, limit 400. Controls as fix6-t51.test.mjs.
 
 J26 (control-plane's `t51-visitor-copy.test.mjs`) is still the one thing I need from BOB. Size (session_01BQ74v1Ra7Q8F2p147wPF6y): test runs 21, module lines 3925
+
+## J29 · QUESTION
+
+QUESTION (ACQUISITION #29; my best reading follows; I carry on with it).
+
+1. **G32.** Your START names G32 as mine ("`acquire` looks up the held capture ... through `validatorsOf`") and also says "G32 is capture's". CAPTURE's J24 asks for one thing from me: a plain option `opts.heldSha` (64 hex, in-process only, never a body key), honoured for any caller exactly as `captureRequest.heldSha` is now (validators from `cap.validatorsOf({addressNorm, captureSha})`, not with a render, a 304 answers `unchanged` with no document, parking and the R1 fence untouched). Acquisition cannot look the held capture up itself (it has the digest only from a caller; `validatorsOf` needs it). My reading: I build `opts.heldSha` and capture's arm passes it. New requirement line: R22 amended.
+2. **G27.** The inline read (`extractread` after a kept acquire) is the door's and capture's (`capture/ops.mjs`), and the signal it needs is already in my answer: `render: {state: "pending", session}`. My part is the reply: today the deferred `run` and `PENDING_RENDERS` hold the renderer's whole reply (up to 64 MB of bodies as base64) for up to an hour. I make the deferred run keep the bodies and the rendered page in the evidence store the moment it returns and drop the reply, so "Finish it" and the alarm resume from the stored copy: same document, no second render, no second charge. Tell me if you read "the inline read skipped" as something inside acquisition.
+
+## Fix round 6 · ACQUISITION #29 (B29 START, B30 CHANGE, B31 ANSWER): G27 (the render reply), G32 (the held digest)
+
+**Applied** (head after this commit; `tranche/T51` merged at 2abf8e036b).
+- **G27 · the deferred render's reply is kept in the record, not in memory** (`acquisition/index.mjs`). (1) Root cause, certain for the retention, probable for the reset: the render `acquire` did not wait for was parked as `renderDeferred = {run, pageUrl}` and `PENDING_RENDERS.set(sid, {run})` (the old :1456, :1593), so the promise, and with it the renderer's whole parsed reply (the page and every body the page loaded, up to `SUBRESOURCE_BUDGET` 64 MiB sent as base64 text), stayed in the object from the moment the render returned until a member's "Finish it" or the alarm took it, `PENDING_RENDER_TTL_MS` (an hour) at most, and across the door's read of the kept capture. Now (:1459) the deferred run is `run.then((a) => keepReply(ev, a))` (:1773): when the render returns, its page and each body are put in the evidence store as the filing puts them (`keepRenderBodies`, the page by its digest), and what the pending render holds is `{kept: true, rsha, existed, digests, reply}`: the reply without its page and bodies. `acquireRun` (:1464-1480) reads the page back (`replyOfKept`, :1791), uses the recorded digests, and files the pair as a waited render does (same `renderBlock`, same document, `existed` as the record held the page before the render returned). `finishRender` (:2144) treats a kept render whose page the record no longer holds as a render the object lost (R99: rendered again, once). A failed or empty render is small and passed on as it came; a record that refuses any piece (put throws) leaves the reply held as before, so no render is lost. The inline read skipped while a render is pending is capture's (`capture/ops.mjs`; the signal is `render: {state: "pending"}` already in my answer; B31). (2) Missed because: renderer replies in the fixtures were a few bytes, the pending promise was never measured, local workerd enforces no memory limit, and no test asked what the object holds after the request ended. Gap fixed: the walker's case at its real size (six 7 MiB bodies, 56 MiB of base64 text) in a child with `--expose-gc` measuring the heap after collection, and the same through raw workerd at a stated old-space limit. (3) Failing-first, red then green (tests below). (4) L: raw workerd, below.
+- **G32 · the held digest handed in** (:884, :980). `opts.heldSha` (64 lowercase hex; anything else ignored; in process only, never a body key) is honoured for any caller exactly as `captureRequest.heldSha` is: validators from `cap.validatorsOf({addressNorm, captureSha})`, not with a render, a 304 answers `unchanged` with no document and reads no body; parking, the R1 fence and the answer's shape are unchanged. CAPTURE's `acquire` arm passes it (its J24; B30). The member who wants a new copy sends no digest and gets one. Census: no body or query key of `op=acquire` changed, so nothing to declare (K4208).
+
+**Failing first** (`bio-plane/test/m/acquisition/g27-g32-t51.test.mjs`, `g27-memory-child.mjs`, 8 tests; red at the unchanged code, run before the change):
+- R5 R12 (G27) kept at once, Finish it files the waited render's pair, one render, one charge: RED (`the rendered page is held as soon as the render returns`: false), then green.
+- R5 (G27) heap: the walker's case at 42 MiB of bodies, heap 56.0 MiB above where it began after the request ended and the render returned: RED; GREEN at 0.07 MiB (`node --expose-gc g27-memory-child.mjs`).
+- R22 (G32) `opts.heldSha`, second press pulls no body: RED (3,145,728 bytes pulled); green at 0. The credential case (the drain's arm, `authorization` on its own host, the condition sent beside it) and the changed-source case (a new tag, the new copy filed in full) are controls that held before and after.
+- Controls green before and after: a failed render is small and unkept; a record that refuses the pieces leaves the reply held and Finish it still files the pair; no digest, a short digest or a non-string reads the file again; a digest with no recorded validators reads it. New and green after only: a kept page the record no longer holds is rendered again, once (R99).
+
+**Platform check (L)**, raw workerd, `v8Flags = ["--max-old-space-size=N"]`, bisected, `g27-workerd.probe.mjs` (committed; the stand-in store is small; the renderer is a second service streaming the reply from disk; after the request ends and the render returns, the object holds the stated live data, standing for the read that follows). Smallest old space in which it completes, before the fix (`tranche/T51` source) and after:
+
+| reply | live data after | before | after |
+| --- | --- | --- | --- |
+| 14 MiB | 90 MiB | 132 MB | 120 MB |
+| 42 MiB | 90 MiB | 167 MB | 124 MB |
+| 42 MiB | 40 MiB | 124 MB | 124 MB |
+
+The 124 MB floor of the last two "after" rows is the renderer's reply being parsed (`capture-sources`' `render.mjs:629`, `r.json()`: the text and the parsed strings are alive together, about twice the reply), which no code of this module can lower; the retention after the parse is gone (the table's first two rows show the retained reply, 12 MB and 43 MB). A reply of that size is the 64 MiB budget's worst case; the walker's dena page is smaller (its reply size is the number the re-walk's `diag` will give).
+
+**Suites and checks.** acquisition: `node --test --test-force-exit bio-plane/test/m/acquisition/`: 247 tests, 247 pass (before my tests 246, 245 pass, 1 red that my first version of the change caused in `fix2-t51` and the `finishRender` guard cured). Users of `acquire` (capture, capture-requests, doorbell, monitoring, file-safety, standards, the two `bio-plane/test` files, control-plane, plane): 1,642 tests, 8 fail, all 8 failing identically on `tranche/T51` without my commit (file-safety `rows.test.mjs` R24; control-plane `t51-held-failed` E3, `t51-large-pdfs` R120/R121, `t51-round5-press-seam` R117 and R125 (b), (c), `t51-round5-seam` R24; plane `l77-size` R77 L): not mine. `checks/run.mjs`: format 0, architecture 0, coverage 6656/6656, words 18421 (unchanged), 0 failures.
+
+**Requirement lines proposed** (BOB writes):
+- R22 amended: "A caller in process may hand `opts.heldSha` (64 hex, never read from a body; anything else ignored): the fetch is then conditional with the validators recorded for that capture at the document address, for a member's request too (not with a render). The source answering 304 files nothing and reads no body (`unchanged`); one that serves the file serves it whole. Test: `g27-g32-t51.test.mjs`."
+- R109 new (G27; amends R5, R12, R99, R106): "A render this call did not wait for is kept in the record when it returns. Its page and each body it loaded are put in the evidence store and the renderer's reply is dropped: what the pending render holds is the page's digest, the bodies' digests and the reply without its bytes. 'Finish it' and the alarm file from them the pair a waited render files (the same document, one render, one charge). A failed render is small and kept as it came; a record that refuses a piece leaves the reply held, so no render is lost; a kept page the record no longer holds is a lost render (R99). Test: `g27-g32-t51.test.mjs`; platform check `g27-workerd.probe.mjs`."
+- Words: one stand-in, `localize("acquisition.index.render_page_not_read_back", "the page as a visitor saw it was made but could not be read back from the record")` (a refusal detail a member reads, rare); the row is owed to the design (B485).
+
+Orphans: a kept render's page and bodies are content-addressed objects named by no document until one is filed, like the ones a filing puts before it files; an abandoned render leaves them.
+
+Deferred: none. Found in another module: `capture-sources` `render.mjs:629` parses the whole reply with `r.json()`; the parse alone needs about twice the reply in old space (above); not needed for the alpha.
+Size (session_01Y4v2DQazrd7Uhg2kPv1nLA): test runs 14 (acquisition 3, users 2 batches, base comparison 1, checks 3, child and probes 5), module lines 3973 (src/acquisition)
+
+## J30 · COMPLETE
+
+COMPLETE (ACQUISITION #29, T51 fix round 6: G27 and G32; B30 CHANGE done, B31 followed). Pushed on job/T51/acquisition; the record's "Fix round 6 · ACQUISITION #29" section has file:line, the tables and the proposed lines.
+
+**What changed** (`acquisition/index.mjs`)
+- G32 (:884, :980): `opts.heldSha` (64 lowercase hex, in process only, anything else ignored) is honoured for any caller exactly as `crHeldSha` is: validators from `cap.validatorsOf`, not with a render, the 304 answer unchanged and reading no body, parking and the R1 fence untouched. Capture's `acquire` arm passes it. Named requirement line: **R22 amended**.
+- G27 (:1459, `keepReply` :1773, `replyOfKept` :1791, `finishRender` :2144): the render `acquire` did not wait for is kept in the evidence store the moment it returns (its page and each body, content-addressed), its reply dropped; the pending render holds only digests. "Finish it" and the alarm file the same pair a waited render files: one render, one charge. A failed render stays small; a record that refuses a piece leaves the reply held as before; a kept page the record no longer holds is rendered again once (R99). The inline read skipped while `render.state` is pending is capture's (B31).
+
+**Failing first** (g27-g32-t51.test.mjs, 8 tests, g27-memory-child.mjs): red then green: the rendered page held at once (false -> true); heap after the request ended 56.0 MiB above where it began -> 0.07 MiB (the walker's case, six 7 MiB bodies, `--expose-gc`); `opts.heldSha`: 3,145,728 bytes pulled -> 0, `unchanged`, no document. Controls (credential on its own host with the condition beside it, a changed source, no or bad digest, a failed render, a refusing record) hold before and after.
+
+**Platform check (L)**, raw workerd with `--max-old-space-size` (g27-workerd.probe.mjs, committed): smallest old space completing, before -> after: 14 MiB reply + 90 MiB later 132 -> 120 MB; 42 MiB + 90 MiB 167 -> 124 MB. The 124 MB floor is the renderer reply's own parse (`render.mjs:629`, capture-sources', about twice the reply); not needed for the alpha.
+
+**Suites and checks**: acquisition 247/247. Users of `acquire` (capture, capture-requests, doorbell, monitoring, file-safety, standards, control-plane, plane, cap13, d57): 1,642 tests, 8 fail, all 8 fail identically on tranche/T51 without my commit (file-safety rows R24; control-plane t51-held-failed, t51-large-pdfs, t51-round5-press-seam x3, t51-round5-seam; plane l77-size). checks/run.mjs: format 0, architecture 0, coverage 6656/6656, words 18421 (unchanged), 0 failures; ownership 0.
+
+**Proposed lines**: R22 amended; R109 new (the deferred render is kept in the record); one word stand-in owed to the design: `acquisition.index.render_page_not_read_back`. Census: no op key changed.
+
+Size (session_01Y4v2DQazrd7Uhg2kPv1nLA): test runs 14, module lines 3973
