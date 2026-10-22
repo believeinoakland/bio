@@ -1,6 +1,6 @@
 # csv-reader (T51)
 
-**Status** · session_01Wy8nnMT1rzDSVKrq9QgRXP · depth 2 · WORKING · handled B2
+**Status** · session_01Wy8nnMT1rzDSVKrq9QgRXP · depth 2 · COMPLETE · handled B2
 
 ## Completion
 
