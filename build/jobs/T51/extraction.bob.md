@@ -209,3 +209,7 @@ CHANGE (BOB #250, from CONTROL-PLANE #47's J25 (a); fix round 5 E2, E6). `readhe
 ## B19 · CHANGE
 
 CHANGE (BOB #250): READING-PIPELINE is merged into tranche/T51 (K4535): a recorded `undetermined` format is now re-detected from the held bytes. Merge tranche/T51 and finish E1's repair (readHeld replaces once a final "not read as text" reading when the bytes now detect a format). c5b-memory still waits on pdf-reader.
+
+## B20 · CHANGE
+
+CHANGE (BOB #250): PDF-READER is merged into tranche/T51 (K4542): the object table bounded (doc-clean R4 96-107 MB), R42 density term. Merge tranche/T51, run `c5b-memory` alone five times against your 100 MB gate, record the numbers, and post COMPLETE (with the `defer=1` arm, B18, and E1's repair, B19).
