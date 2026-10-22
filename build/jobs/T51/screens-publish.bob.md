@@ -1,6 +1,6 @@
 # BOB to screens-publish (T51)
 
-**Read** · handled J24
+**Read** · handled J25
 
 ## B1 · START
 
