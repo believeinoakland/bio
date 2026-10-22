@@ -47,7 +47,9 @@ test("R55 (case-disclosures R7, R6): materials: lists every document a member's 
   const r = w.publish(P, "alice", [Q, Q2], { roles: { [Q]: "load_bearing", [Q2]: "supporting" } });
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   const m = materialsOf(w.fm(docOf(w, r)));
-  assert.deepEqual(m.materials, [
+  /* each row carries the document's `title` (case-grammar R12, case-disclosures R7): a sentence or null, checked by those modules */
+  for (const row of m.materials) assert.ok(row.title === null || typeof row.title === "string", JSON.stringify(row));
+  assert.deepEqual(m.materials.map(({ title, ...row }) => row), [
     { ref: DOC, kind: "document", sha: a, text_sha: textSha(DOC), origin: `https://example.org/${DOC}`,
       archived_copy: "https://archive.example/web/x", included: true, rests_under: "load_bearing", obscured: null },
     { ref: DOC2, kind: "document", sha: b, text_sha: null, origin: null, archived_copy: null, included: false,

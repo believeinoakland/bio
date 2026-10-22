@@ -1,6 +1,6 @@
 # acquisition (T51)
 
-**Status** · session_015Ejg6oSr4Ds8qoX2TWTT9S · depth 2 · COMPLETE · handled B8
+**Status** · session_01HkiEHqLtSvzj1srMtcPyNY · depth 2 · COMPLETE · handled B18
 
 ## J1 · REPORT
 
@@ -159,3 +159,98 @@ Declared ops: none added.
 Deferred: none.
 
 Size (session_015Ejg6oSr4Ds8qoX2TWTT9S): test runs 7, module lines 3443
+
+## J12 · QUESTION
+
+STEP 0 REPORT (R-FOUR (1)): C5a/P8, C13b, N-slow-refuse. I carry on meanwhile with the causes that are certain (R95 on a throw, C5c, C25) and write nothing for the fixes below until you release them.
+
+**C5a / P8: acquire is not the slow phase.** Measured under L: the plane (`src/plane/index.mjs`) in Miniflare (workerd, R2 and Durable Object emulation, a member session, `op=acquire`), the five real files served from disk through `outboundService` (govinfo BUDGET-2025-BUD 2.5 MB, BUDGET-2025-PER 8.8 MB, BUDGET-2024-APP 15.9 MB, IRS fw9 140 KB). Stages inside `acquire` (R95), then the door's whole time:
+- fw9 140 KB: stages sum 0.11 s (total_ms 108); door 0.43 s.
+- BUDGET-2025-BUD 2.5 MB: stages sum 0.19 s (fetch 7, read 172); door 2.3 s.
+- BUDGET-2025-PER 8.8 MB (2 parts): stages sum 0.73 s (read 521, keep 188); door 6.9 s.
+- BUDGET-2024-APP 15.9 MB (2 parts): stages sum 1.5 s (fetch 108, read 1044, keep 349); door 81 s.
+The time outside `acquire` is the reading that follows it in the same call. The store's own `extractread` route, called alone on the document each acquire filed: 0.07 s (fw9), 0.9 s (2.5 MB), 3.3 s (8.8 MB), 39.0 s (15.9 MB; `read_from_text: true`, no PDF worker bound in this L). So the slow phase is `extraction`'s reading in the plane's object (`acquireReadingOp` -> `extractread`), growing faster than the size; acquisition's own share is under 2 s on all three. This fits hypothesis H and your RC-R1/R120 (keep first, read after). The 2.5 MB live `STORE_DID_NOT_ANSWER` after 17-20 s is not reproduced here (reading 0.9 s locally); live adds real R2 latency, the PDF worker binding and the 128 MB limit, which this L has not got (no `pdf-worker` bound, no memory cap). I cannot name the live stage for 2.5 MB; the door phase clock (control-plane R121) must carry that. Scripts: scratchpad `L.mjs` (the files are govinfo's, fetched once, not committed).
+Acquisition's part, which I will write once you release it: R95 amended (a throw answers a refusal with the stages and `running`), R96 amended (C5c, below). Nothing in acquisition to change for the 15.9 MB reading time.
+
+**C13b: root cause, from the code (certain in the code, the platform behaviour is the claim).** `finishRender` (`index.mjs:1823`) finds the render's `run` promise in `PENDING_RENDERS` and waits `RENDER_WAIT_MS` (10 s) for it. The render was started in the request that answered "being made"; once that request ends, nothing keeps it alive (`opts.waitUntil` is handed by nobody, the same cause as C5c), so on the platform its subrequest is cancelled or the object is evicted, and the promise never settles. Every "Finish it" then waits its 10 s (the 13.1 s seen), finds it not done, and answers `continued` + `render.state: "pending"`, which the screen shows as "Already in the record. Nothing new was saved", forever; the session is never closed and no second document is filed. The map being emptied is the milder case and already re-renders (`renderResume` null -> `acquireRun` with `render: true`). My fix, once released: R99 as written, plus a bound on how long a held run is trusted: a run not settled after `renderReserveMs(RENDER_DEFAULTS)` plus the wait is treated as lost and the render is started afresh (admitted and paid for as any render); a refusal or failure closes the session in words. Test: render deferred, the map reset, and a never-settling run, each ends with the second document stored or the session closed in words. Needs from you: nothing. L for this cause: an object restart in Miniflare with a real renderer is not available (no RENDERER binding); I will test with a scripted renderer double (said in the record) and capture-sources runs the real one.
+
+**N-slow-refuse (seam part).** `acquire` already relays a refused host at once: a governor refusal answers 429 `HOST_COOLING_OFF` with `retry_in_ms`, a 403/429 source answer `SOURCE_REFUSED`, with `timings`. Any 60 s is inside `governedFetch`/the governor sleeping out a cool-off before the request (host-governor's step 0). Nothing to change in acquisition; my whole-path test (two stub hosts through the real merged `governedFetch`) is written first and stays red by name until host-governor R30 merges.
+
+No BLOCKED. Question: release the fixes above (R99 with the stale-run bound; R95/R96 as RC-R4 states), or tell me what to change.
+
+## J13 · QUESTION
+
+QUESTION (two small items; I carry on and write nothing that waits on them). Head 0fdc2798bd on job/T51/acquisition.
+
+Done and green (red first, shown by stashing the source): R95 (a throw answers 500 `ACQUIRE_FAILED` with the stages and `running`), R96/C5c (the keep awaited within the bound as stage `keep`; past it `opts.keepLater ?? cap.keepLater({sha, parts})`, `keep_pending: true` when it answers ok; no `waitUntil` any more; a test with record-core's real `putFromParts` over a multipart bucket), R99/C13b (a held run older than `renderReserveMs` + the wait is lost; a render begun afresh is final: the visitor copy, or `RENDER_FAILED` in words and the session closed; tests with a scripted renderer double, said so), 429 `Retry-After` relayed as `retry_in_ms` on `SOURCE_REFUSED`.
+Red by name until providers merge: R98 (needs `pdfTitle` from pdf-reader R40; my code feature-detects it) and the N-slow-refuse whole-path test (a 403 host's `retry_in_ms` is host-governor R30's to give; the 429 one is mine and passes).
+
+1. **modules.json edge.** `acquisition` must declare `pdf-reader` in `uses` (pdf-reader is layer 1, acquisition layer 3); architecture fails on `bio-plane/src/acquisition/index.mjs` importing `bio-plane/src/pdfstructure.mjs` until you add it (it is yours to write, and `member-roster`'s `order.mjs` regenerates from it).
+2. **Queue subject (C25).** The enqueue is in my code (`index.mjs`, `cap.taskEnqueue({kind: "authority-undetermined", ..., subject: locator})`), so the smallest change is mine: write `subject` as the document's title when it has one, else the locator, and add the locator beside it as before. The risk is a reader of the queue that expects `subject` to be an address (the screens/queue draw it; "Vouch for the photo you captured at <subject>"). Tell me whether to do that (say if queue or screens-daily must read a different field), or leave `subject` the locator and pass the title as a new `title` key in the same call.
+
+## J14 · REPORT
+
+REPORT on B14 (P10 c, archiveList of a held non-ZIP). Head pushed on job/T51/acquisition, `tranche/T51` merged.
+
+Done: `archiveProfile` (`unpack.mjs`) reads the first part, takes its first 1 KiB, and answers `NOT_AN_ARCHIVE` at once when it does not begin with the ZIP local-file magic (R17's `zip` needs the magic, `formats.mjs`); format named from those bytes. A ZIP or an office file goes on to the full profile as before. Test: a 4 MB non-ZIP held capture answers `NOT_AN_ARCHIVE` with no digest over its whole bytes and within `ARCHIVE_CHECK_READS` reads; control: a real ZIP is still listed. Suite 201 of 204 (the three reds are the known ones: CAPTURE_NOT_KEPT word row, R98 awaiting `pdfTitle`, the 403 `retry_in_ms` awaiting host-governor R30).
+
+Honest finding (the four fields' (1) and (4)): the test is NOT failing-first. Locally `profileOf` over 4.26 MB costs about 1-3 ms (`archiveList` of a 4.26 MB PDF or text file: 38-42 ms before my change, 36-42 after; detectFormat over the whole bytes 0-1 ms). So profiling is not where the 1.7-2.4 s goes. What the check must do is read the object: `evidenceStore().get(digest)` has no range option (`record-core/index.mjs` ~1872: `get: (digest) => bucket.get(key(digest))`), so even a one-byte look transfers all 4.26 MB from R2, and provenance `partsHeld` (provenance R7) hashes the whole when the object carries no stored checksum (seen in the fixture: one whole-document digest). Both are outside acquisition. The smallest change that would fix the Held screen's time is a ranged read on record-core's evidence store (`get(digest, {range: {offset: 0, length: 64}})`, passed to the bucket) which I would then use here, plus provenance not hashing when R2 holds a checksum. If you want it, send that to record-core (and provenance); I will switch `archiveProfile` to the ranged read in a CHANGE once it merges. The Held time needs the live probe (P) to confirm.
+
+## J15 · COMPLETE
+
+COMPLETE: fix round 4, wave 0 (ACQUISITION #24; B10, B11, B12, B13, B14, B15). Head on job/T51/acquisition (tranche/T51 merged at its tip as of now).
+
+Causes (four fields)
+1. **C5a / P8.** (1) Step-0 report J12, accepted B12: under L (plane in Miniflare, R2 + DO, member session, real govinfo/IRS files) `acquire`'s stages sum 0.19 s (2.5 MB), 0.73 s (8.8 MB), 1.5 s (15.9 MB); the door's time was 2.3 / 6.9 / 81 s; the store's `extractread` alone 0.9 / 3.3 / 39 s. The slow phase is extraction's reading; acquisition has nothing to change for it. Live 2.5 MB `STORE_DID_NOT_ANSWER` NOT reproduced (no PDF worker, no 128 MB cap in this L): the stage is not named; the door phase clock (control-plane R121) must name it. (2) The walk saw `timings: {}` because a throw lost the stages: R95 amended. (3) `stage-times.test.mjs` "R95 (fix round 4, C5a): a call that throws in `read` ..." red (error escaped) then green: 500 `ACQUIRE_FAILED`, `fetch` timed, `read` running. (4) L numbers above.
+2. **C5c (R96).** (1) Certain: the keep ran after the answer on `opts.waitUntil`, which nothing hands. Now awaited within `boundMs - 5 s - elapsed` as stage `keep`; past it `opts.keepLater ?? cap.keepLater({sha, parts: [digest...]})` (B11) and `keep_pending: true` when it answers ok; none handed: the capture stays in its parts. (2) Tests used a scripted `putFromParts` and `waitUntil`. (3) fix3 tests: awaited keep with stage `keep`; keep outlasting the bound calls `keepLater` once with 5 part digests and answers `keep_pending` (control: one in time calls nothing); a 40 MB capture with record-core's real `putFromParts` over a multipart bucket holds the whole. Red with the source stashed, green with it. (4) The plane's alarm half is PLANE #48's: it needs `keepLater` to record `{sha, parts}` and finish with `putFromParts(sha, parts)`.
+3. **C13b (R99).** (1) Step-0 J12, released B12: `finishRender` waited 10 s on a held run that nothing keeps alive after its request ended and answered "pending" forever. Now a held run older than `renderReserveMs + RENDER_WAIT_MS` (override `opts.renderStaleMs`) is lost; a render begun afresh is final (`renderFinal`): the visitor copy, or `RENDER_FAILED` in words with the session closed. (2) Tests kept the run alive and never held one that does not settle. (3) fix3: never-settling run (control: within the bound still pending, session kept) and a fresh module instance as an object restart (render table gone; a render that does not return is refused and closes the session). Red then green. Scripted renderer double, said so; capture-sources runs the real one. (4) L for an object restart with a real renderer not available here; the case is run with a fresh module instance.
+4. **C25 (R98).** (1) Certain. `acquire` reads a PDF's title through `pdfstructure.pdfTitle` (feature-detected), cleaned as a page's title is, from the bytes already held (up to 32 MiB). The `taskEnqueue` call keeps `subject` the locator and carries a new key `title` when the document has one (B13): this is the field I send. (2)/(3) fix3 "R98 (fix round 4, C25)" (IRS-style Info Title, none, HTML control) and the queue-event test (green). (4) F/L for the 100 ms bound is pdf-reader's.
+5. **N-slow-refuse.** (1) Root cause unknown, kept open as BOB said (B12): host-governor measured no sleep, acquire has none; the stages on every outcome and the door clock will name it. Mine: a 429 `Retry-After` is now relayed as `retry_in_ms` on `SOURCE_REFUSED`. (3) fix3 whole-path test with the real `HostGovernor` (403 host, 429 host, a cooling host refused at once with no fetch, an ok host unchanged).
+6. **B14 / P10 (c).** `archiveProfile` decides from the first 1 KiB (J14, B15): the test is not failing-first (profiling costs ~1-3 ms locally); the transfer is record-core's.
+
+Requirement ids met in code and tests: R95 (fix round 4), R96 (C5c), R99, R98's queue key; R48 (opening bytes).
+Suite: acquisition 201 of 204. Reds, each named: (a) `R98 (fix round 4, C25)`: needs pdf-reader R40's `pdfTitle`, which is not on `tranche/T51` (the code is in place; the test goes green at its merge); (b) the N-slow-refuse test's 403 `retry_in_ms`: host-governor R30 not on `tranche/T51`; (c) checks.test.mjs R29 R31 `hasWord('refusal.CAPTURE_NOT_KEPT')`: the design's word row (J10/J11, accepted).
+Checks: format 0; architecture acquisition 0 failures (the edge to pdf-reader is on the tranche); words: no finding in acquisition; ownership 0 failures; coverage names none of mine.
+
+Open (named, not marked met): (i) P10 (c): "switch archiveProfile to get(digest, {range}) when record-core R88 merges" (BOB's CHANGE); (ii) the two reds above until pdf-reader and host-governor merge, then re-run `fix3-t51.test.mjs`; (iii) C5a's live stage and N-slow-refuse's 60 s: root cause unknown, for the redeploy's clocks.
+
+Declared ops: none added. Deferred: none.
+
+Size (session_01HkiEHqLtSvzj1srMtcPyNY): test runs 30, module lines 3504
+
+## J16 · COMPLETE
+
+COMPLETE (B16 applied; ACQUISITION #24). `tranche/T51` merged (host-governor R30 is on it); head pushed on job/T51/acquisition.
+
+B16: `acquire` keeps the governed fetch's own `retry_in_ms` (host-governor R30's `{res, retry_in_ms}`) and `SOURCE_REFUSED` answers the larger of it and a 429's `Retry-After`. The N-slow-refuse whole-path test (real `HostGovernor`: 403 host, 429 host, cooling host refused at once with no fetch, ok host unchanged) is now green.
+
+Suite: acquisition 201 of 204 on the first run after the change. Reds: `R98 (fix round 4, C25)`, red by name until pdf-reader R40's `pdfTitle` merges (not on `tranche/T51`); `R29 R31` on the design's `refusal.CAPTURE_NOT_KEPT` row (accepted). The third was `R95: the times are the only difference` (stage-times.test.mjs), a flake under load that passes alone and 4 of 4 times in its file (the T48-15 family: a second-boundary field in the comparison); not changed by this CHANGE.
+Checks: architecture acquisition 0 failures; ownership 0 failures.
+
+Open: P10 (c) as in J15 (record-core R88 ranged get, your CHANGE); R98 awaiting `pdfTitle`; C5a's live stage and N-slow-refuse's 60 s root cause unknown, for the redeploy's clocks.
+
+Size (session_01HkiEHqLtSvzj1srMtcPyNY): test runs 33, module lines 3507
+
+## J17 · COMPLETE
+
+COMPLETE (B17 applied; ACQUISITION #24). `tranche/T51` merged (record-core R88 on it); head pushed on job/T51/acquisition.
+
+P10 (c) closed: `archiveProfile` asks the store for `get(digest, {range: {offset: 0, length: 1024}})` (`unpack.mjs`); `readThrough` passes a ranged get to the store uncached, and answers it from its cache when the whole part was already read (so a store with no stored checksum, whose provenance R7 check reads the part anyway, costs no extra read). Test (t50, "R48 (P10 c)"): a 4 MB non-ZIP held capture (stored with its checksum, as R2 holds it) answers NOT_AN_ARCHIVE and every bucket `get` carries the range offset 0, length 1024; red on the previous code (it asked for the whole object), green now; control: a real ZIP is still listed (2 entries). The fixture bucket now honours `range` and records the option.
+
+Suite 202 of 204. Reds: `R98 (fix round 4, C25)`, red by name until pdf-reader R40's `pdfTitle` merges; `R29 R31`, the design's `refusal.CAPTURE_NOT_KEPT` row. N-slow-refuse green (B16). Architecture acquisition 0 failures; ownership 0 failures.
+
+Open: R98 awaiting `pdfTitle`; C5a's live stage and N-slow-refuse's 60 s, root cause unknown, for the redeploy's clocks.
+
+Size (session_01HkiEHqLtSvzj1srMtcPyNY): test runs 36, module lines 3512
+
+## J18 · COMPLETE
+
+COMPLETE (B18 applied; ACQUISITION #24). `tranche/T51` merged; head pushed on job/T51/acquisition.
+
+Added `bio-plane/test/m/acquisition/seam-render.test.mjs` from capture-sources J6's text (header note about a later module dropped; imports `../capture-sources/fake-binding.mjs` and `./fixture.mjs`; header now says acquisition owns it). The C13b tests carry `R99 R12 R5` with capture-sources' R68 in their titles. Run alone: 5 of 5 pass, with the real driver over the fake Browser Rendering binding and a store charging 0.27 s a call: C13a render stage 3778 ms, whole answer 4904 ms (the 33-body page); C13b restart, refused navigation and never-returning run each end with the visitor copy filed or the session closed in words.
+
+Suite: acquisition 207 of 209. Reds: `R98 (fix round 4, C25)` (needs pdf-reader R40's `pdfTitle`, not on `tranche/T51`); `R29 R31` (the design's `refusal.CAPTURE_NOT_KEPT` row). Architecture acquisition 0 failures; ownership 0 failures.
+
+Open: R98 awaiting `pdfTitle`; C5a's live stage and N-slow-refuse's 60 s, root cause unknown, for the redeploy's clocks.
+
+Size (session_01HkiEHqLtSvzj1srMtcPyNY): test runs 38, module lines 3512

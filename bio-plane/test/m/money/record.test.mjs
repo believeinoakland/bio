@@ -50,9 +50,9 @@ test("R1 the refusals come in their stated order, each naming its closed list, a
     [{ phase: "adopted" }, "STAGE_NOT_ACTUAL"],
     [{ stage: "collected" }, "UNKNOWN_STAGE"],
     [{ period: undefined }, "NO_PERIOD"],
-    [{ period: { fiscal: "FY1999-00X", body: "Nobody" } }, "BAD_PERIOD"],
-    [{ period: { from: "2026-02-31", to: "2026-03-01" } }, "BAD_PERIOD"],
-    [{ period: { from: "2026-03-01", to: "2026-02-01" } }, "BAD_PERIOD"],
+    [{ period: { fiscal: "FY1999-00X", body: "Nobody" } }, "MONEY_BAD_PERIOD"],
+    [{ period: { from: "2026-02-31", to: "2026-03-01" } }, "MONEY_BAD_PERIOD"],
+    [{ period: { from: "2026-03-01", to: "2026-02-01" } }, "MONEY_BAD_PERIOD"],
     [{ codes: [{ scheme: "nowhere", code: "1" }] }, "UNKNOWN_CODE_SCHEME"],
     [{ kind: "balance", stage: "incurred", balance_class: "committed" }, "BALANCE_CLASS_NOT_IN_FAMILY"],
     [{ to: { entity: "ENT-2026-9999" } }, "NO_SUCH_ENTITY"],
@@ -101,7 +101,7 @@ test("R1 a period is a date-time range with its zone (the profile's by default),
   const b = s.rec({ period: { fiscal: "HD2014", body: "Port Ellery Harbour District" } });
   const p = s.m.readFact({ factId: b, viewer: ANN }).fact.period;
   assert.deepEqual([p.from, p.to], ["2013-10-01", "2014-09-30"]);
-  assert.equal(s.m.recordFact(s.fact({ period: { fiscal: "HD2014" } })).reason, "BAD_PERIOD");
+  assert.equal(s.m.recordFact(s.fact({ period: { fiscal: "HD2014" } })).reason, "MONEY_BAD_PERIOD");
 });
 
 test("R1 balance_class is read against the family of the fund's held type (GASB 54 for a governmental fund)", () => {

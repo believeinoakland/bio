@@ -1,6 +1,6 @@
 # public-read (T51)
 
-**Status** · session_01LwWDy5JCBriNttXnEF6fAW · depth 2 · COMPLETE · handled B10
+**Status** · session_01RJ9Po6vVrCTxSZ695UZtwZ · depth 2 · COMPLETE · handled B14
 
 ## J1 · QUESTION
 
@@ -144,3 +144,39 @@ Size (session_01LwWDy5JCBriNttXnEF6fAW): test runs 12, module lines 3860
 ## J14 · COMPLETE
 
 COMPLETE (B10): publishedList and publishedEditions name signers by handle; details in J13.
+
+## J15 · QUESTION
+
+QUESTION 1 (C47: where the document's title comes from). C48's half is done: R42 `publishedAddress` is built and tested red then green (commit on my branch). C47 I cannot build inside public-read, and the START's "R41 as it stands" does not give the walker's result.
+
+Fact. R41 (1) as it stands says the entry's `name` is the signed material row's `origin` (else `ref`), which is why the page lists "https://www.foia.gov/faq.html". The signed case's `materials:` row (case-grammar R12: `{ref, kind, sha, text_sha, origin, archived_copy, included, rests_under}`; written by case-disclosures `materials.mjs:69`) carries NO title. public-read reads the published projection and the signed case only (R10, R14: answers must be identical with or without working material), so it cannot read the document's title from the register without breaking R10. The place ("Paragraph 4") already travels in `document.place` as the passage's signed `extent`; wording it ("Paragraph 4") and the "Relied on ·" dot are screens-publish's (R80).
+
+Options.
+ A (recommended): add the title to the signed material row: case-grammar R12 gains `title` (the document's title as the capture holds it, `null` when it has none), case-disclosures `materialRows` writes it, and R41 (1) becomes "name = the signed row's `title`, else `origin`, else `ref`". New case documents only (R-OLD: an older signed case keeps its address; a signed document is never rewritten). My part is then a few lines in legs.mjs plus the test on CASE-2026-4783's chain; case-grammar and case-disclosures are other modules' jobs, so BOB writes those two lines and they merge before me.
+ B: keep the address as the name (no change to signed data) and have screens-publish word the place only; the walker's MINOR "title" stays open and is recorded as such.
+ C: serve the title from the register at read time. Rejected: it makes the published answer depend on working material (R10/R14).
+
+What I need: A or B. Until answered I carry on with the rest (checks, record); for A I will build legs.mjs and its test once case-grammar R12 and case-disclosures carry `title`.
+
+## J16 · REPORT
+
+REPORT (public-read, after B12). Built and pushed; not COMPLETE only because one test waits on a merge, named below.
+
+C48 / R42 (my part): (1) CERTAIN: `PublicRead.publishedAddress({case, edition})` (index.mjs, before `publishedFrozen`), `/app/published/` + encodeURIComponent("<case>/<n>"); null for unpublished/unnamed. case-authoring:1702 composes `/app/published/${id}/${n}` unencoded and ceremony.mjs:134 its own: both to be replaced by the builder (their jobs). (2) the old tests never asked for the address; the new test uses the shell's route form as oracle. (3) published-address.test.mjs, 3 tests, red ("publishedAddress is not a function") then green, incl. the edition 2 control. (4) N.
+
+C47 / R41 (my part): legs.mjs now names an entry by the row's `title`, else `origin`, else `ref`. Test: evidence-names.test.mjs "R41 (1), C47 ..." with controls (null, absent, blank title keep the address). Seen RED: actual name is the address. It stays RED BY NAME until case-grammar R12 carries `title` (CASE-GRAMMAR #19): its `materialsOf` reader (case-grammar/materials.mjs MATERIAL_FIELDS, :86, :131) drops `title` today. Nothing else of mine is open. (2) tested on a scripted entry; the fixture now signs a titled row through the real case document writer. (4) N.
+
+Suites: public-read 242 pass before the C47 test, 1 red now by the above. Checks: ownership 0, format 0, architecture 0; coverage and words findings are other modules' (installer-steps, interface-shell, pdf-reader, queue, screens-*, op-grades t33/t51), none public-read.
+
+Need: ring me (RESUME) once case-grammar's R12 `title` is on tranche/T51; I merge, rerun the suite and checks, and COMPLETE with the Size line.
+
+## J17 · COMPLETE
+
+COMPLETE (B14 RESUME applied; replaces my REPORT J16). Merged tranche/T51 (case-grammar #19 in).
+
+C47 (R41): (1) legs.mjs:53 names an entry by the row's `title`, else `origin`, else `ref`; the place is the passage's signed extent, unchanged. (2) tests used a scripted entry with no title; evidence-names.test.mjs now signs a titled row through the real case-document writer (`caseDoc`), with controls (null, absent, blank title keep the address). (3) "R41 (1), C47 ...": RED (name was the address), red again after my edit until case-grammar's reader kept `title`, GREEN after the merge. (4) N. Said plainly: case-disclosures (the writer of `title`, #16) has not merged yet (no `title` in its materials.mjs), so the test hands a row with `title` to the real case-document writer and reader; the full path from a capture is the seam owner's (screens-publish) once #16 merges. "Paragraph 4" wording and the "Relied on ·" dot are screens-publish R80's.
+
+C48 (R42): (1) PublicRead.publishedAddress, index.mjs; case-authoring:1702 and ceremony.mjs:134 compose their own and are to use it (their jobs). (2) the address was never asserted against the route; the oracle is the shell's route form. (3) published-address.test.mjs, red ("not a function") then green, with the edition 2 control. (4) N.
+
+Requirement ids met: R41, R42. Suites: public-read 243 pass 0 fail. Downstream (impact): plane 5 fail and control-plane 1 fail are identical on origin/tranche/T51 (278/5 and 355/1 there too: route-map R5/R9, R24 release words, Home R81), not mine. Checks: ownership 0, format 0, architecture 0; coverage/words findings are other modules'. QUESTIONS: J15 answered (B12), none open.
+Size (session_01RJ9Po6vVrCTxSZ695UZtwZ): test runs 9, module lines 2800

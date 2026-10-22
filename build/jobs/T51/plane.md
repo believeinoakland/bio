@@ -1,6 +1,6 @@
 # plane (T51)
 
-**Status** · session_01Ti86WihtuNpDK1TTmcsSAd · depth 2 · COMPLETE · handled B19
+**Status** · session_01PBzWna63QzDA6ZtwyhmSwV · depth 2 · COMPLETE · handled B25
 
 ## Record (PLANE #41, T51-125)
 
@@ -237,3 +237,79 @@ Checks
 
 Requirement line for BOB (proposed, R74 already on tranche): none new.
 Size (session_01Ti86WihtuNpDK1TTmcsSAd): test runs 3, module lines 2610
+
+## J16 · QUESTION
+
+QUESTION (PLANE #48; C5c, R75; replaces none): the contract between acquisition's pending keep and the plane's alarm is written in neither module, and acquisition (#3) has not merged. My reading, which I am building now:
+
+- The plane holds the table `keeps_pending` (in the object's storage: `sha` key, `kind` keep|reading, `parts` (the part digests in order), `attempts`, `registered_at`, `last_try`) and registers one scheduler consumer, `pending-work`: due at once for a new entry, `putFromParts(sha, parts)` for a `keep`, then `extraction.readHeld({sha})` (a keep's reading follows; a `reading` entry is only the second); an entry is removed only when its work has ended (`already` counts), a failure leaves it for the next alarm, at most 5 attempts (back-off 15 s, doubling), then it stays named, never retried again.
+- Acquisition cannot import the plane, so it is handed the registration: `acquisitionOf(ctx, {record, provenance, keepLater})` built by the plane before capture's first use (the factory keeps its first instance per storage). `keepLater({sha, parts: [partDigest, ...]}) -> {ok: true}` writes the row and arms the alarm in the same call; it never throws. ACQUISITION #24 reads `deps.keepLater` and, when the awaited keep will not end in the bound, calls it and answers `keep_pending: true`. With none handed, acquisition behaves as it does without a plane.
+- control-plane's deferred reading (R120) reaches the object by a store-internal route `pendingadd` (`kind=reading&sha=`), which only the door can reach; CONTROL-PLANE #45 calls it.
+- The stage record of an acquisition (R73) moves to the object's storage (key `acqstages:<trace>`), bounded as now (64 entries, 60 s), so it survives a restart.
+
+Please confirm or correct three things: (1) `deps.keepLater` is acquisition's to read (does #24's START carry it? its record names only `opts.waitUntil`); (2) the route name `pendingadd` for control-plane; (3) R9 says the plane writes no row: R75 gives it `keeps_pending` and the stage keys, so I read R9 as amended by R75 and declare the table to purge through `record-core`. Until you answer I build the plane's half against a scripted `keepLater` caller, and write the seam test with the real acquisition first, red by name until it merges.
+
+## J17 · QUESTION
+
+QUESTION (PLANE #48; replaces J16 item (1) only; the rest of J16 stands): I read the code after posting J16 and the hook I named there is wrong. `acquisition.acquire(cap, body, opts)` is a function over the capture instance, not over `acquisitionOf`'s object, and today it reads `opts.waitUntil`, else `cap.waitUntil` (acquisition/index.mjs:1540); capture's `acquire` arm hands it only `h.timings` (capture/index.mjs:3151).
+
+Smallest contract that needs one module besides mine: ACQUISITION #24 reads `opts.keepLater ?? cap.keepLater`, an async function `keepLater({sha, parts: [partDigest, ...]}) -> {ok: true}` (never throws; with none, acquisition behaves as without a plane), exactly as it reads `cap.waitUntil`; and the plane sets `captureOf(ctx).keepLater` at start (an assignment on the capture instance, as nothing else sets `waitUntil` there). No change in `capture`. The alternative, `h.keepLater` through capture's arm like `h.timings`, also needs a CAPTURE job (not in wave 0).
+
+Please answer: (a) `cap.keepLater` (recommended), or (b) `h.keepLater` with a capture CHANGE; and tell ACQUISITION #24 (its START names only `opts.waitUntil`). I build against (a) now; switching to (b) is a one-line change in `acquireHandlerParts`.
+
+## Record: fix round 4 (B20) · PLANE #48 (session_01PBzWna63QzDA6ZtwyhmSwV)
+
+Contract (B21, K4433): acquisition #24 reads `opts.keepLater ?? cap.keepLater` (async `keepLater({sha, parts}) -> {ok: true}`, never throws); the plane assigns `captureOf(ctx).keepLater`; the door's deferred reading reaches the object by the store-internal route `pendingadd` (`kind=reading&sha=`), whose use by the door waits on control-plane R120.
+
+**C5c · the alarm (plane R75; seam owner S)**
+1. Root cause (certain, START): `acquisition/index.mjs:336-360` `keepFromParts` ran after the answer on `opts.waitUntil`, which nothing hands; in the object an un-awaited promise is not kept alive. Decision (plan 5.1): awaited within the bound, else `keeps_pending` finished by the alarm. Built: `plane/pending.mjs` (table `keeps_pending`: sha, kind keep|reading, parts, attempts, registered_at, due_at, last_try, last_why; scheduler consumer `pending-work`; `keepLater`, `add`, `list`), wired in `store.mjs` (declared to `record-core`'s purge; `capture.keepLater`; consumer registered before the scheduler's start so a restart re-derives the alarm; route `pendingadd`; migration). A keep is put by `evidenceStore().putFromParts`, then `extraction.readHeld` in the same tick; no home yet (`NO_HOME`) ends it after a keep (the door reads at promotion, control-plane R117), is an attempt for a `reading` entry; `READING_HELD` ends; any failure leaves the entry, back-off 15 s doubling, 5 attempts, then the entry stays named and is not tried again.
+2. Why the tests missed it: acquisition's test used a scripted `putFromParts` (class b), and nothing ran an alarm. Fix: `fix4-r75.test.mjs` (real `Store`, real `record-core` `putFromParts` over `multipartBucket`, the real scheduler alarm, a restart as a second construction over one database) and `fix4-seam.test.mjs` (below).
+3. Failing-first, walker's case on the same path (press -> stored result): `fix4-seam.test.mjs` presses `acquire` of a 40 MiB document (5 parts of 8 MiB) against a store whose first multipart upload never ends, within `boundMs: 4000`: the answer is `keep_pending: true` with every part held and no whole; then the object's own alarm makes the whole (second upload) and `readHeld` writes the reading (`readingFor` found), nothing left pending, a second alarm does nothing. Control: the same press with a working store and a long bound answers without `keep_pending`. RED seen: (a) on this branch without acquisition's `keepLater` (acquisition #24 unmerged): the seam test fails by name; (b) in a worktree with acquisition #24's branch merged, the plane's hook disabled: "the answer says the whole follows" fails; GREEN in that worktree with the hook (2 of 2). It stays red here until acquisition merges (R-SEAM). `fix4-r75.test.mjs` was first run with `pending.mjs` absent (module not found), then green.
+4. Platform check **L** (workerd under Miniflare, `l75.test.mjs`, entry `l75-entry.mjs`): 40 MiB in 3 parts left pending through `keepLater`: the object's own alarm made the whole over R2 multipart and removed the entry in 1533 ms with no further request; `readHeld` asked 1510 ms after the registration (alarm armed and fired at once, the instant being due). Not covered by L: Miniflare's R2 is local; the 25 s door bound and the ~30 s `waitUntil` cut are not what the alarm depends on (it is a separate invocation).
+
+**C5a · the stage record survives a restart (R75, R73; seam owner control-plane)**
+1. Root cause (START): `acquiretimings` read an in-memory holder (`plane/acquire-timings.mjs`), lost when the object restarts or is evicted; the door then read `{}`. Built: the holder also writes a snapshot (`stageTimes`) to the table `acquire_stages` each time acquisition sets a field of its timings object (a stage begins or ends; a `Proxy` over the held object), bounded as R73 (64 entries, 60 s from the start; an entry pushed out writes no more), and `acquiretimings` answers `{ok, stageTimes, restarted: true}` from storage when the live object is gone. A running stage's time in such an answer is as of the last write (acquisition times with `performance.now()`, which does not span a restart); its name is what a stalled call needs.
+2. Why missed: R73's test read the holder in the same process. Fix: the restart test below.
+3. Failing-first (`fix4-r75.test.mjs`): an `acquire` stalled in its fetch, a second construction over the same database answers the stages that ran and the running one, `restarted: true`; the live object does not say so; another trace has none. RED seen against the old holder (assertion "answered from the object's storage"), GREEN with the table. The bound test (HOLD_MAX in storage, TTL) likewise.
+4. Platform check **L**: the stage table is written and read on workerd (`l75.test.mjs`, second test: a running stage named, another trace none). **Not run**: a real eviction of a workerd object mid-acquire (Miniflare gives no way to force one); the restart is proved as a second construction over the same storage.
+
+**Found in other modules / for BOB**
+- Requirement lines: R9 (BOB's line, K4433) says "stage keys"; the stage record is a table, `acquire_stages`, declared with `keeps_pending` to `record-core`'s purge. R75 is met as written, with `restarted: true` beside `stageTimes` in `acquiretimings`' answer (control-plane R115 reads `result.stageTimes` only). `pendingadd` is the plane's own store-internal route (no spec, like `acquiretimings`): the plane tests' model of the map (`maps.mjs`) lists it under "plane".
+- Stale tests brought to the requirements (B22, K4435): the door's owner getters are now one list, `plane/owners.mjs` `ownerGettersOf`, read by `store.mjs` and by `maps.mjs`, so `readheld` and the next owner op stale no test; `roster.test.mjs` compares `projectlist` with review's reader handed in.
+- `keepFromParts` in acquisition keeps a module-level `KEEPING` map by digest for the life of the process, so two tests of one process pressing the same bytes share a keep; the seam test gives each press its own document. Not a defect in production (one object, one digest).
+
+## J18 · REPORT
+
+REPORT (PLANE #48; B20, B21, B22): the plane's half of C5c and C5a is built and pushed (df34eb824b); I cannot COMPLETE until the seam test is green, and it needs ACQUISITION #24 merged on tranche/T51.
+
+Built: `plane/pending.mjs` (`keeps_pending`, consumer `pending-work`, `captureOf(ctx).keepLater`, route `pendingadd`), the stage record kept in storage (`acquire_stages`, `restarted: true`), `plane/owners.mjs` (B22: the door's owner getters in one list, read by the store and the tests' model of it; roster test follows R118). Plane suite: 290 of 291 before the seam test was added; the one red is R24 (the design's `screen.objective.purpose`, accepted by name). Platform check L (workerd, real alarm, R2 multipart, 40 MiB in 3 parts): the alarm made the whole in 1533 ms with no request after the keep.
+
+The seam test `fix4-seam.test.mjs` (a 40 MiB `acquire` pressed with a lost first upload, `keep_pending`, the alarm, `readHeld`) is red on this branch by name until acquisition's `keepLater` is on the tranche; I ran it green in a scratch worktree with ACQUISITION #24's branch merged (2 of 2), and red with the plane's hook off.
+
+What I need: tell me (RESUME or CHANGE) when ACQUISITION #24 is merged on tranche/T51. I then merge the tranche, re-run the suite and the seam test, and COMPLETE. Nothing else is open; no question is open (J16, J17 answered by B21).
+
+## Record: CHANGE B23 (K4440) · PLANE #48
+- (1) `door.mjs`: `gatedOp` takes `deferReading` (control-plane R120 hands it for an `acquire`) and its `readAcquired` skips the read when `deferReading(answer.document) === true`, answering the filed document with `reading_pending: true` and no reading or text units (the grade note is still added); a hook that throws defers nothing. Capture needed no change: `captureOp` already calls `readAcquired(answer, store)` and relays its `{body}`. `fix4-defer.test.mjs` (three tests, through `gatedOp` and the real object over a scripted network): the deferred press answers `reading_pending` with the reading not run (`extraction.read` calls 0) and the hook asked once, of the document filed; controls: no hook, a hook answering false and a hook that throws read as before. RED first (the deferred press: "Expected values to be strictly equal", controls green), GREEN after.
+- (2) `fix3-r74.test.mjs` asks `/readheldfor`: RED on the tranche ("no route readheldfor", control-plane's arm is not merged), GREEN in a scratch worktree with CONTROL-PLANE #45's branch merged.
+- Proposed requirement line for BOB (the next free id is R76): **R76** *(not yet met: T51)* (fix round 4, C5a/P8; K4440; `control-plane` R120) The door's hook `gatedOp` for `acquire` is handed `deferReading(document)`; when it answers true the plane's read step (`readAcquired`) is skipped and the filed document is answered with `reading_pending: true`, no `reading` and no `text_units`, the reading following by `extraction.readHeld` and the alarm (R75); a hook that is absent, answers false or throws leaves the reading to be made. Test: `fix4-defer.test.mjs`. Control: the same press with no hook carries the reading. (Its tests are named R75 until the id is written; rename to R76 then.)
+
+## COMPLETE (PLANE #48; B20, B21, B22, B23)
+**Entries applied.** C5c: `plane/pending.mjs`, the alarm consumer, `captureOf(ctx).keepLater`, `pendingadd`; C5a: the stage record in storage; B22: `plane/owners.mjs` and the stale tests; B23: the deferred read and the `readheldfor` test. Four fields of each cause are in the records above.
+**Tests and checks.**
+- `node --test --test-force-exit bio-plane/test/m/plane/`: tests 297, pass 293, fail 4. The four, by name: `fix3-r74.test.mjs` "readheldfor arm" (needs CONTROL-PLANE #45's `readheldfor` arm, merges after this job: green with its branch merged); `fix4-seam.test.mjs` both tests (need ACQUISITION #24's `keepLater` call, merges before this job in BOB's order: green with its branch merged, 2 of 2); `release.test.mjs` R24 (`screen.objective.purpose` absent from the design's words list, accepted red). In a scratch worktree with `job/T51/acquisition` and `job/T51/control-plane` merged: fix3-r74, fix4-defer, fix4-seam 8 of 8.
+- `bio-plane/test/system/migrate-released.test.mjs`: see the line below.
+- `checks/run.mjs`: format 0 failures; architecture 0; coverage: no plane id unnamed (R75 named by fix4-r75, fix4-seam, fix4-defer, l75); ownership 14 files, 0 failures; words: none in plane. Failures in other modules, not mine: coverage (control-plane R120, R121, R122 and others), words (op-grades).
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: users of plane's change: affordances `t36.test.mjs`, 14 of 14 after merging the tranche tip.
+**Platform check L**: workerd under Miniflare (l75.test.mjs): 40 MiB in 3 parts, the alarm made the whole over R2 multipart in 1533 ms with no request after the registration. Not run: a real object eviction (Miniflare cannot force one) and the deployed copy's R2 (no mid-round deploy).
+**Deferred: none. Questions open: none** (J16, J17 answered by B21).
+
+## Record: CHANGE B24 (K4442) · PLANE #48
+- `test/m/plane/fixture.mjs` `storage()`: `transactionSync` is now a savepoint around the callback, released on success, rolled back and rethrown on a throw (nests), as workerd's. Plane suite after: 297 tests, 293 pass, the same four reds as before (readheldfor, the two seam tests, R24); no new red. No test outside `m/plane/` imports the fixture. Waiting for the CHANGE that says ACQUISITION #24 is merged.
+
+## COMPLETE (PLANE #48; B25, K4448): final
+Tranche merged (acquisition #24 on it). `node --test --test-force-exit bio-plane/test/m/plane/`: tests 297, pass 295, fail 2: `fix3-r74` "readheldfor arm" (needs CONTROL-PLANE #45's arm, merges after this job; green with its branch merged) and R24 (the design's `screen.objective.purpose`, accepted). `fix4-seam` 2 of 2 green with the real merged acquisition. `migrate-released.test.mjs`: pass 1, fail 0. B24 applied (above). format 0, architecture 0, ownership 0 failures. Open questions: none.
+Size (session_01PBzWna63QzDA6ZtwyhmSwV): test runs 24, module lines 2822
+
+## J19 · COMPLETE
+
+COMPLETE (PLANE #48; B20-B25): C5c (keeps_pending, pending-work alarm, cap.keepLater, pendingadd), C5a (stage record in storage, restarted:true), B22 (owners.mjs), B23 (deferReading -> reading_pending; fix3-r74 asks readheldfor), B24 (fixture transactionSync rolls back). Four fields per cause in build/jobs/T51/plane.md. Suite 297, pass 295; reds: fix3-r74 readheldfor (needs CONTROL-PLANE #45's arm, merges after me; green with its branch merged) and R24 (design's, accepted). fix4-seam 2/2 green with real acquisition; L on workerd: 40 MiB keep finished by the alarm in 1533 ms. migrate-released 1/1. format/architecture/ownership 0. Requirement lines: R9 says 'stage keys' but it is a table (acquire_stages); propose R76: gatedOp takes deferReading(document); true skips the read step and answers reading_pending:true with no reading (tests named R75 until written); acquiretimings adds restarted:true beside stageTimes.

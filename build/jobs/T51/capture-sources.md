@@ -1,6 +1,6 @@
 # capture-sources (T51)
 
-**Status** · session_016XY41FauSzZ6Ec9JTB5R7K · depth 2 · COMPLETE · handled B5
+**Status** · session_01YZ5sTpHcAyaNyqP97XCiGf · depth 2 · COMPLETE · handled B7
 
 ## J1 · REPORT
 
@@ -56,3 +56,193 @@ Fix round 3, C13 (P5), my part: the browser render. Requirements met: capture-so
 Merge: `tranche/T51` already merged, no provider named for this cause.
 
 Size (session_016XY41FauSzZ6Ec9JTB5R7K): test runs 8, module lines 2664
+
+## J5 · QUESTION
+
+QUESTION (J-seam, architecture). My two seam tests (C13a: `acquire` with the visitor render of a 33-body page, the store charging 0.27 s a call; C13b: render deferred, render table reset, "Finish it" through `acquire` with `continue`) must run the real merged `acquire`, so they import `bio-plane/src/acquisition/index.mjs` and acquisition's test fixture `bio-plane/test/m/acquisition/fixture.mjs` (its `world`, `run`). Acquisition is later than capture-sources in `build/modules.json` and not in my `uses`, so `checks/architecture.mjs` will name those imports ("not earlier in the order"), as it names `citation/register.test.mjs` on the tranche tip.
+
+My best reading, which I am carrying on with: the seam tests live in `bio-plane/test/m/capture-sources/seam-render.test.mjs` (my tests path) and import acquisition and its fixture; the architecture check names exactly those lines and nothing else of mine, and BOB takes them as the seam owner's named red (K4431: the last-merged job owns the whole-path test). Everything else (the provider fix in `render.mjs` and its interface tests) is clean.
+
+The smallest thing I need from BOB: say yes (named red accepted), or give the rule that makes the edge legal (an exemption for seam tests, or the test moved to a module that can import both). Not blocking: the provider fix and its test go ahead meanwhile.
+
+## J6 · COMPLETE
+
+COMPLETE · capture-sources · T51 fix round 4 (CAPTURE-SOURCES #16, session_01YZ5sTpHcAyaNyqP97XCiGf). Code on job/T51/capture-sources, tranche/T51 merged in (c3ca39e31f). J5 answered by B7 (K4453): the seam tests are acquisition's; they left my tests.
+
+Files: bio-plane/src/render.mjs (keepRenderBodies); tests render.test.mjs (3 new), browserrender.test.mjs (1 new; imports the shared fake), fake-binding.mjs (the fake binding moved out of browserrender.test.mjs, unchanged).
+
+C13a / P7
+(1) Root cause: render.mjs keepRenderBodies awaited sha256 then put one body at a time (~0.27 s a trip, two trips with acquisition's head-then-put). browserrender.mjs collectBodies was already concurrent (R68), so it needed no change. Now KEEP_LANES = 8 at a time, results by request index, a repeated body put once, a failed body frees its place for a later one (ceilings still held in request order). `head` before `put` is acquisition's injected put.
+(2) Tests missed it: fixtures used instant puts / 1 s fake bodies. Gap fix: the store double charges 0.27 s a trip (render.test.mjs, browserrender.test.mjs).
+(3) Failing-first, red then green: render.test.mjs "R8 (C13a, P7) thirty-three bodies ..." red 17.9 s (limit 6 s), green 2.7 s; "R8 R9 ... results stay in the requests' order" red (sequential never finishes out of order), green; control "same bytes twice put once" green. browserrender.test.mjs "R68 R8 (C13a, P7) 33 bodies by the real driver and kept" green. Whole path through the real merged acquisition (seam test below): old render.mjs render stage 18948 ms, whole answer 20063 ms (red against 6 s / 15 s); new 3781 ms / 4888 ms.
+(4) L done: keepRenderBodies bundled into a Worker, run under workerd 1.20260722 / Miniflare 4.20260722 with a real local R2 binding and 0.27 s added per call (33 bodies, head+put): 2980 ms, 33 of 33 held, 8 in flight, no limit error (sequential would be 17.8 s). LIVE-CHECK: no fresh timing, an acquire writes and is not read-only; the "before" figures are the performance lane's P7 (legistar People render stage 13.6 s for 33 bodies, iana 6.4 s for 9). To be timed at the re-walk against 15 s. R-OLD: new captures only.
+
+C13b
+(1) Root cause is acquisition's (its step 0, J12: finishRender waits on a run that never settles once its request ended); fixed there by R99 (merged). No code of mine changed.
+(2)-(3) The through-the-door test is acquisition's (B7). I ran it before handing it over: with the real driver, a render that never comes back, then "Finish it" after the live bound files the visitor copy and closes the session: red on acquisition before 0fdc2798bd, green on the merged one; the table-reset and render-cannot-be-made cases green on both. (4) L for an object restart: run as a fresh module instance (table gone), not in workerd; said so.
+
+Requirement ids: all 68 live ids named by a test (coverage 0 failures). Proposed line (BOB writes it): capture-sources R8 add at its end "(fix round 4, C13a, P7) The bodies are kept several at a time (eight), the answer by request index in the requests' order, a body asked for twice put once; the count ceiling and the byte budget are held in request order and the place of a body whose store failed goes to the next. Test: 33 bodies against a store charging 0.27 s a trip are kept in under 6 s." and R68 amended likewise.
+Suites: capture-sources 117 of 117; capture 245/245; monitoring + corpus-export 195/195; acquisition 201 of 204 (3 reds identical on the tranche tip: R29 R31, R98 C25 needing pdf-reader, R9 R95 needing host-governor R30). Checks: format 0, architecture 0, coverage 0, words 0, ownership 0 (5 files). QUESTIONs open: none (J5 answered B7).
+Size (session_01YZ5sTpHcAyaNyqP97XCiGf): test runs 14, module lines 2805
+
+Seam test for acquisition (bio-plane/test/m/acquisition/seam-render.test.mjs; imports ../capture-sources/fake-binding.mjs and ./fixture.mjs; acquisition must declare capture-sources in uses, it does; after the move drop the architecture note in its header):
+
+```js
+/* capture-sources: the SEAM tests of the visitor render (fix round 4 of T51; K4429, K4431, K4448). The seam owner is the last-merged job on the path
+ * press -> stored result, so these run the whole path with the REAL merged parts: acquisition's `acquire` (its own `world` and `run` fixture),
+ * this module's real browser driver (`renderWithBinding` over the fake Browser Rendering binding of fake-binding.mjs, which speaks CDP) and its
+ * real `keepRenderBodies`, record-core over a real SQLite database, and an evidence store that charges what the live one costs (0.27 s a call,
+ * lane-performance P7). Nothing of acquisition is a double and no answer shape is written by hand: the inputs are the member's own acts through
+ * the real op (`acquire` with `render`, then `acquire` with `continue`).
+ * IMPORTS OF A MODULE LATER IN THE ORDER, by design (the seam owner's test); see the job record (QUESTION J5). */
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { world, run, network, HTML, page } from "./fixture.mjs";
+import { acquire } from "../../../src/acquisition/index.mjs";
+import { fakeBinding, HOST } from "./fake-binding.mjs";
+import { renderWithBinding } from "../../../src/browserrender.mjs";
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const sha = (s) => createHash("sha256").update(s).digest("hex");
+const TRIP_MS = 270;
+/* The evidence store as the live one behaves: every call is a round trip. */
+function slowStore(w, ms = TRIP_MS) {
+  for (const m of ["head", "get", "put", "delete"]) {
+    const f = w.b[m].bind(w.b);
+    w.b[m] = async (...a) => { await sleep(ms); return f(...a); };
+  }
+  return w;
+}
+const SHELL = HTML("<div id=app></div>");
+const renderedText = (w, r) => new TextDecoder().decode(w.bytesOf(r.body.document.capture.sha256));
+
+/* A page of `n` sub-resources, each with a body of its own. */
+const pageOf = (n, over = {}) => ({
+  requests: Array.from({ length: n }, (_, i) => ({ url: `https://${HOST}/s${i}.js`, type: "Script", status: 200, end: "finished", bodyText: `body ${i} `.padEnd(2000, "x") })),
+  ...over });
+const asked = (path) => `https://${HOST}${path}`;
+const member = { cls: "member", member: true, sessMember: "m1", storeName: "bio" };
+
+test("R8 R68 (C13a, P7): `acquire` with the visitor render of a page of 33 bodies, through the real merged acquisition and the real driver, against a store that charges 0.27 s a call: the render stage is under 6 s and the whole answer is within 15 s", async () => {
+  const binding = fakeBinding({ "/zion": pageOf(33) });
+  const w = slowStore(world({ env: { BROWSER: binding } }));
+  const t0 = Date.now();
+  const r = await run(w, { [asked("/zion")]: () => page(SHELL) }, { locator: asked("/zion"), render: true });
+  const took = Date.now() - t0;
+  assert.equal(r.status, 200);
+  assert.equal(r.body.document.capture.method, "rendered", "the visitor copy is the primary document");
+  assert.match(renderedText(w, r), /<main>Rendered \/zion<\/main>/, "and its bytes are the browser's document");
+  const stages = r.body.timings.stages;
+  console.log(`SEAM C13a: render stage ${stages.render} ms, whole answer ${took} ms`);
+  assert.ok(stages.render < 6000, `the render stage took ${stages.render} ms (kept one at a time it is 33 x 2 trips x ${TRIP_MS} ms = ${33 * 2 * TRIP_MS} ms more)`);
+  assert.ok(took < 15000, `the whole answer took ${took} ms`);
+  /* every body was kept, under its own digest, in the place of its request */
+  const subs = w.core && r.body.document.render ? r.body.document.render.subresources : null;
+  assert.equal(subs.length, 33);
+  subs.forEach((s, i) => {
+    assert.equal(s.address, `https://${HOST}/s${i}.js`);
+    assert.equal(s.sha256, sha(`body ${i} `.padEnd(2000, "x")), `sub-resource ${i}`);
+    assert.ok(w.held(s.sha256), `sub-resource ${i} is held`);
+  });
+  assert.equal(binding.stats.browserCloses + binding.stats.socketCloses > 0, true);
+});
+
+test("R8 R68 (C13a, P7) control: a page of three bodies is rendered and kept as before, each held once", async () => {
+  const w = slowStore(world({ env: { BROWSER: fakeBinding({ "/zion": pageOf(3) }) } }));
+  const r = await run(w, { [asked("/zion")]: () => page(SHELL) }, { locator: asked("/zion"), render: true });
+  assert.equal(r.body.document.capture.method, "rendered");
+  assert.equal(r.body.document.render.subresources.length, 3);
+  for (const s of r.body.document.render.subresources) assert.equal(w.b.calls.filter((c) => c[0] === "put" && c[1].endsWith(s.sha256)).length, 1);
+});
+
+/* ---------- C13b (fix round 4): "Finish it" when the object that began the render no longer holds it. ---------- */
+
+/* The member's act: capture a page with the visitor render asked for, the answer coming before the render ends (the live bound
+   is `renderWaitMs`), so the page as served is filed and the render is pending in a capture session. */
+const begin = async (w, path, wait = 40) => {
+  const r = await run(w, { [asked(path)]: () => page(SHELL) }, { locator: asked(path), render: true }, { renderWaitMs: wait });
+  assert.equal(r.status, 200);
+  assert.notEqual(r.body.document.capture.method, "rendered", "the page as served is the document filed first");
+  const sid = r.body.document.render_pending && r.body.document.render_pending.session;
+  assert.ok(sid, "the render is pending in a capture session the member finishes");
+  return { sid, shell: r.body.document.capture.sha256 };
+};
+/* "Finish it": `acquire` with `continue`, on a module instance that is not the one which began the render when `fresh` names one. */
+const finish = async (w, sid, path, { fresh = null, ...opts } = {}) => {
+  const net = network({ [asked(path)]: () => page(SHELL) });
+  try { return await (fresh || { acquire }).acquire(w.store, { continue: sid }, { ...member, ...opts }); }
+  finally { net.restore(); }
+};
+const SLOW_LOAD = { loadAfterMs: 6000 };   // the page's load event comes 0.3 s of real time after the navigation
+
+test("R68 (C13b): a render deferred past the live bound, the object restarted (the render table is empty), then `acquire` with `continue`: the visitor copy is filed as the second document and the session is closed; control: a continuation whose render is still held by the object finishes it as before", async () => {
+  /* the restart */
+  const w = world({ env: { BROWSER: fakeBinding({ "/zion": pageOf(5, SLOW_LOAD) }) } });
+  const { sid, shell } = await begin(w, "/zion");
+  assert.ok(w.store.state.sessions.has(sid));
+  const restarted = await import("../../../src/acquisition/index.mjs?restart=seam-c13b");   // a new module instance: the render table is gone
+  const done = await finish(w, sid, "/zion", { fresh: restarted });
+  assert.equal(done.status, 200);
+  assert.notEqual(done.body.note && done.body.continued, true, "never 'already in the record, nothing new saved'");
+  assert.equal(done.body.document.capture.method, "rendered", "the second document is the visitor copy");
+  assert.notEqual(done.body.document.capture.sha256, shell);
+  assert.match(new TextDecoder().decode(w.bytesOf(done.body.document.capture.sha256)), /<main>Rendered \/zion<\/main>/);
+  assert.equal(done.body.document.render.subresources.length, 5);
+  assert.equal(w.store.state.sessions.has(sid), false, "the session is closed");
+
+  /* control: no restart, the render still held by the object that began it; the same act finishes it */
+  const w2 = world({ env: { BROWSER: fakeBinding({ "/zion": pageOf(5, SLOW_LOAD) }) } });
+  const c = await begin(w2, "/zion");
+  await sleep(1500);
+  const live = await finish(w2, c.sid, "/zion");
+  assert.equal(live.status, 200);
+  assert.equal(live.body.document.capture.method, "rendered");
+  assert.equal(live.body.document.render.subresources.length, 5);
+  assert.equal(w2.store.state.sessions.has(c.sid), false);
+});
+
+test("R68 (C13b): the render begun afresh cannot be made (the browser refuses the navigation): \"Finish it\" is refused in words that say the page could not be rendered, and the session is closed", async () => {
+  const w = world({ env: { BROWSER: fakeBinding({ "/zion": pageOf(2, SLOW_LOAD) }) } });
+  const { sid } = await begin(w, "/zion");
+  /* the browser can no longer render the page: its navigation is refused */
+  w.store.env.BROWSER = fakeBinding({ "/zion": { navError: "net::ERR_NAME_NOT_RESOLVED" } });
+  const restarted = await import("../../../src/acquisition/index.mjs?restart=seam-c13b2");
+  const bad = await finish(w, sid, "/zion", { fresh: restarted });
+  assert.deepEqual([bad.status, bad.body.reason], [502, "RENDER_FAILED"]);
+  assert.match(bad.body.detail, /ERR_NAME_NOT_RESOLVED/, "the browser's own words");
+  assert.equal(bad.body.continued, undefined);
+  assert.equal(w.store.state.sessions.has(sid), false, "the session is closed");
+});
+
+/* The runtime cuts what a request began once it has answered: the render's promise then never settles (the walker's Zion). A renderer
+   service that does that for the render begun with the member's first act, and renders with the REAL driver for any later one. */
+const cutThenReal = (binding) => {
+  const calls = [];
+  return { calls, RENDERER: { fetch: async (u, init) => {
+    const req = JSON.parse(init.body);
+    calls.push(req.url);
+    if (calls.length === 1) return new Promise(() => {});
+    return new Response(JSON.stringify(await renderWithBinding(binding, req, {})));
+  } } };
+};
+
+test("R68 (C13b): the request that began the render ended and the render never came back (the table still holds it): `acquire` with `continue` after the live bound renders afresh with the real driver, files the visitor copy as the second document and closes the session; before the bound it is still pending", async () => {
+  const renderer = cutThenReal(fakeBinding({ "/zion": pageOf(5) }));
+  const w = world({ env: renderer });
+  const { sid, shell } = await begin(w, "/zion", 20);
+  const early = await finish(w, sid, "/zion", { renderWaitMs: 10, renderStaleMs: 60000 });
+  assert.equal(early.body.render.state, "pending", "control: within the live bound it is pending");
+  assert.ok(w.store.state.sessions.has(sid), "and the session is kept");
+  await sleep(70);
+  const done = await finish(w, sid, "/zion", { renderStaleMs: 50 });
+  assert.equal(done.status, 200);
+  assert.notEqual(done.body.note && done.body.continued, true, "never 'already in the record, nothing new saved'");
+  assert.equal(done.body.document.capture.method, "rendered");
+  assert.notEqual(done.body.document.capture.sha256, shell);
+  assert.match(new TextDecoder().decode(w.bytesOf(done.body.document.capture.sha256)), /<main>Rendered \/zion<\/main>/);
+  assert.equal(done.body.document.render.subresources.length, 5, "the real driver's bodies, kept");
+  assert.equal(renderer.calls.length, 2, "the render was begun once more, not waited for again");
+  assert.equal(w.store.state.sessions.has(sid), false, "the session is closed");
+});
+```

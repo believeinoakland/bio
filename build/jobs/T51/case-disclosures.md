@@ -1,6 +1,6 @@
 # case-disclosures (T51)
 
-**Status** · session_018K9QjDh8UDnKT5iYTG88A5 · depth 2 · COMPLETE · handled B4
+**Status** · session_01NhpmPg6Tvjeaftfvxn46LM · depth 2 · COMPLETE · handled B6
 
 ## J1 · QUESTION
 
@@ -61,3 +61,26 @@ FOR BOB (case-authoring is not mine, P9): `#notCoAttested` should add `timestamp
 Proposed R2 amendment (BOB writes requirements): in "One capture's facts" add: "`timestamp_late` is true when the timestamp is one a late attempt made, and `late_words` then states 'late: proves the bytes existed by <at>, not at capture' (else null); `missing` names which of timestamp and co_archive is still absent. The gate's `CO_ATTESTATION_UNACKNOWLEDGED` entries and the disclosure capture rows carry the same."
 Ran: case-disclosures 104 pass, 0 fail; case-authoring 214 pass; case-account 48 pass. checks/run.mjs: architecture 0 failures, words 0 failures, ownership 0 failures (3 files); format 1 failure (rulings.md:4346 K4349, not mine) and coverage failures all in other modules (case-authoring R83 etc., not mine); setup-words --check: stale-rows note only, naming my new localize id (expected).
 Size (session_018K9QjDh8UDnKT5iYTG88A5): test runs 5, module lines 2417
+
+## J6 · COMPLETE
+
+COMPLETE: fix round 4, case-disclosures, cause C47 (writes `title`), requirement R7 (K4438).
+
+(1) Root cause, certain: `materials.mjs` `materialRows` wrote `{ref, kind, sha, text_sha, origin, archived_copy, included, rests_under, obscured}` and no title, so the signed row could not name the document. Now each row carries `title` after `rests_under`: for a document, the title its record states (`bundles.title` of the bundle the capture is registered under, record-core R37's stated read contract: the title acquisition R98 read from the capture and promotion filed), trimmed; `null` for an observation (not asked), for a blank or missing title, and for an unreadable one (R18: states less). The address is never taken for it. Nothing about a person is added (R26). `disclosureBlocks` hands `materialRows` a `title(m)` reader.
+STATED READING for BOB: "the capture's own title" is read from the document's bundle (the only place the record keeps it; `captured_locators` and `register` hold none). A bundle that registers several captures answers one title for all of them.
+(2) Missed because: the rows were only ever compared against hand-written expected rows with no title field; no test followed a chain to the name a signed row carries. Test-gap fix: the new R7 test builds documents through the fixture's real promote (title stated in the document), chains them through a real finding, and reads the rows `disclosureBlocks` writes; the three existing row expectations (carries, documents, photos) and the unit test now state `title`.
+(3) Red first: "R7 (fix round 4, C47; K4438): each materials: row carries `title` ..." failed before the change (actual `undefined` for all four rows; expected the FAQ and Capture B titles and two nulls), green after (105 pass, 0 fail). Walker's case: titles "Freedom of Information Act: frequently asked questions" and "Capture B" (not the address https://example.org/<id>, asserted unequal). Controls: an observation's row `title: null`; a document with no title `null`; blank words `null`. The chain was built by the fixture's real ops (promote, register, receipt, finding), not CASE-2026-4783 itself.
+(4) N (pure code). R-OLD: new cases only; nothing rewrites a signed case, and the writer (case-grammar) reads a row without `title` as before.
+
+UNTIL case-grammar R12 (`title`) merges: its writer/reader drops the field, so the case document's bytes are unchanged and the round-trip asserts (carries, documents, photos) compare every field but `title` through `fixture.sameRowsButTitle` and check `title` equal wherever the reader returns it. When case-grammar merges, that helper needs no change; the reader's `title` is then checked against the rows. A direct test of the written block with `title` waits on case-grammar's job.
+
+Ran: case-disclosures 105 pass, 0 fail. Users: case-authoring 222/0, case-account 48/0, case-inputs 71/0, review 86/0, case-check 34/0 (impact.mjs lists 47 modules through the import closure; these are the ones that call the service). `checks/format` 0 failures; `architecture case-disclosures` 0; `coverage case-disclosures` 33 of 33; `words case-disclosures` 0 failures; `ownership case-disclosures origin/tranche/T51` 0 failures (7 files, all mine). setup-words `--check`: stale-rows note names citation's row, not mine.
+Found elsewhere: none.
+Size (session_01NhpmPg6Tvjeaftfvxn46LM): test runs 9, module lines 2427
+
+## J7 · COMPLETE
+
+COMPLETE: CHANGE B6 done (case-grammar R12 merged: tranche/T51 merged into my branch).
+Applied: the three row round-trip tests (R6/R7 materials, R7 photo, R7 member document) now compare `materialsOf(fm).materials` to the written rows whole, `title` included; the tolerant helper `sameRowsButTitle` is removed. New direct test, in the R7 title test: `materialBlockLines` writes both titles into the case document's lines and `materialsOf` reads the rows back equal, `title` included (null titles too). Red first: the same test run with the pre-merge `case-grammar/materials.mjs` restored fails (file fails, 0 pass); green with the merged one. The restore was undone; no case-grammar file is changed.
+Ran: case-disclosures 105 pass, 0 fail. Users: case-authoring 225/0, case-account 48/0, case-inputs 71/0, review 86/0, case-check 34/0. format, architecture, coverage 33 of 33, words, ownership (7 files): 0 failures.
+Size (session_01NhpmPg6Tvjeaftfvxn46LM): test runs 15, module lines 2427

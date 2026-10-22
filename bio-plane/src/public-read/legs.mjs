@@ -3,7 +3,7 @@
  * list its legs (`basis:`); the signed case document states, for each member, a `grading_facts:` row per leg, the
  * `passages:` it relies on and the `materials:` it reaches. A leg that rests on a captured document is named by what the
  * case states of that document and placed at the passage the case states it relies on, so two entries of one case are
- * told apart. Nothing of the document's bytes is read or handed over (B318 4): the name is the material row's `origin`
+ * told apart. Nothing of the document's bytes is read or handed over (B318 4): the name is the material row's `title` (R41, C47), else its `origin`
  * as signed (its `ref` when the origin is not stated), the place the passage's `extent` exactly as signed, for the
  * reader's surface to word. Pure; never throws. */
 
@@ -50,7 +50,7 @@ export function legReaderOf(fm) {
           const passage = found >= 0 ? mine[found] : null;
           const extent = passage && passage.extent && typeof passage.extent === "object" ? passage.extent : null;
           const material = materials.find((m) => shas.has(String(m.sha ?? "").toLowerCase()));
-          return { name: material ? text(material.origin) ?? text(material.ref) : null, place: extent };
+          return { name: material ? text(material.title) ?? text(material.origin) ?? text(material.ref) : null, place: extent };
         },
       };
     },

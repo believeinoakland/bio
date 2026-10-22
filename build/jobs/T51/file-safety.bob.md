@@ -1,6 +1,6 @@
 # BOB to file-safety (T51)
 
-**Read** · handled J10
+**Read** · handled J12
 
 ## B1 · START
 
@@ -145,3 +145,21 @@ Run: your suite (`node --test --test-force-exit bio-plane/test/m/<module>/`), th
 COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BOB's release), (2) test-gap fix merged, (3) the failing-first test for the walker's row, red then green with the evidence, (4) the platform check L/P/F/N and its numbers; then requirement ids met, suite counts, each QUESTION with BOB's answer (none open), and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: held modules' own code).
 
 **Added by BOB (K4435): the suite's red `rows.test.mjs` R24 (diagnosis `build/plan/suite-reds-753ea4db8a.md`).** `index.mjs:53` filters `WORD_KEYS` by `hasWord`, which is true for a stand-in since the regeneration of K4422 (the table now holds the code's own default, source "code"), so the stand-in `refusal.SIGNATURES_RUN_RECENT` is counted as read while the design's `words-reads.json` lacks it. Fix: `WORD_KEYS` filters by the row's source (a design row), not `hasWord`, so no stand-in repeats this; the test red first. (1) certain, above; (2) missed because the test ran before the regeneration and no one re-ran it after; (3) `rows.test.mjs` R24 red, then green with the stand-in excluded; (4) N.
+
+## B12 · ANSWER · re J11
+
+ANSWER to J11 (BOB #244; K4438). (1) Your names are adopted: file-scanner R6 now states `signatures.stage_at` (the instant of the latest stage write) and `signatures.request` (the instant the open request was written, absent when none); FILE-SCANNER #11 is told by CHANGE. (2) Your reading is right: R50's test line is corrected on tranche/T51 (16 minutes allowed, 14 refused as under way; the guard reads `stage_at`, else `last_attempt`). (3) Accepted: remove the `mirror.started` note; the request file absorbs a double press. (4) Accepted; name the stand-in keys in COMPLETE for the word batch.
+
+## B13 · START
+
+START · FILE-SAFETY #16 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #245 is depth 1; fix round 4, after DEC-412; K4458)
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/file-safety tranche/T51 && git branch -m job/T51/file-safety stale/file-safety-local && git checkout -b job/T51/file-safety origin/job/T51/file-safety`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+Mail with `--module file-safety`; record `build/jobs/T51/file-safety.md`. Model claude-haiku-5-5, medium effort. Before tests: every lockfile directory has `node_modules` (K4113). Always `node --test --test-force-exit`. You are the module job (P8, mechanics §6) for `file-safety`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first.
+
+The design's DEC-412 rows (merged on tranche/T51, rows.mjs regenerated) made a hand-copied sentence in your module stale. Words rule (K3810, K3930): a sentence a member reads is read by its key from the word table (`word(...)`/the module's own row reader), never copied; tests assert the key or read from the table.
+
+**Your fix:** `bio-plane/src/file-safety/checks.mjs:96` still reads `SIGNATURES_RUN_RECENT` through a `localize(...)` stand-in; the design row now exists: read it with `rowWord('SIGNATURES_RUN_RECENT')` like its neighbours, and drop `"SIGNATURES_RUN_RECENT"` from the test's `STAND_INS` list (`bio-plane/test/m/file-safety/rows.test.mjs:114`). Note: `rows.test.mjs:122` (R24, `deepEqual(FS.WORD_KEYS, reads)`) compares against the design's `words-reads.json`, which lacks `refusal.SIGNATURES_RUN_RECENT` until the design regenerates it (asked at B473): if that is the only red left, name it in COMPLETE as the design's; do not weaken the test. Users: screens-settings.
+
+Run: your module's suite, then `node build/plan/impact.mjs tranche/T51 HEAD`'s users named below; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio file-safety tranche/T51 job/T51/file-safety`. COMPLETE: what changed (file:line), the failing test now green (it was red on the tranche tip), suite counts, the `Size` line.

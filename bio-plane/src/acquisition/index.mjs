@@ -48,7 +48,8 @@ import { isOwnHost } from "../capture-sources/own-hosts.mjs";
 import { ARCHIVE_CHECKS } from "./checks.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { unpack, coArchiveStateOf, partsSource } from "./unpack.mjs";
-import { titleOfBytes } from "./title.mjs";
+import { titleOfBytes, cleanedTitle } from "./title.mjs";
+import * as pdfReader from "../pdfstructure.mjs";
 
 /* R24, R29, R33: the one user agent, the one first hop's `who`, and this module's rows, for every module that sends,
    writes or judges them. The pre-rename aliases are gone (R34, N539). */
@@ -327,6 +328,10 @@ export const CAPTURE_MAX = 256 * 1024 * 1024;
    from parts without reading them (R96's past-memory arm). CHOSEN, not measured: four parts, the most the object holds in
    memory beside the whole it assembles; recorded by BOB. */
 export const MULTIPART_KEEP_MAX = 32 * 1024 * 1024;
+/* R96 (fix round 4, C5c): the door's bound for an `acquire` (control-plane R105: 25 s) and what `acquire` leaves of it for the rest of the call
+   after awaiting a keep. CHOSEN, not measured; the plane may hand its own as `opts.boundMs`. */
+const ACQUIRE_BOUND_MS = 25000;
+const KEEP_RESERVE_MS = 5000;
 
 /* R96: the keeps under way, by the whole's digest, so a second press of the same capture while the first is under way waits
    for it and finds the object kept, never writing it twice. */
@@ -772,7 +777,14 @@ export async function acquire(cap, body0, opts = {}) {
   const t = openTimings(opts && opts.timings);
   let out;
   try { out = await acquireRun(cap, body0, opts || {}, t); }
-  finally { stageEnd(t); t.end = clockNow(); }
+  catch (e) {
+    /* R95 (fix round 4, C5a): a throw is an answer too, with the times the stages had when it was thrown: the stage it cut is `running`. */
+    const cut = stageTimes(t);
+    t.end = clockNow();
+    return { status: 500, body: { ok: false, reason: "ACQUIRE_FAILED", op: "acquire", timings: cut,
+      detail: localize("acquisition.index.acquire_failed", "the capture stopped on an error ({detail}); nothing is known to have been filed", { detail: String(e && e.message || e).slice(0, 200) }) } };
+  }
+  finally { stageEnd(t); t.end = t.end ?? clockNow(); }
   /* R95: on every outcome, a refusal included, the answer carries the times of the stages that ran. */
   return out && out.body && typeof out.body === "object" && !Array.isArray(out.body)
     ? { ...out, body: { ...out.body, timings: stageTimes(t) } } : out;
@@ -1021,7 +1033,7 @@ async function acquireRun(cap, body0, opts, t) {
   const validators = crHeldSha && !renderAsked ? cap.validatorsOf({ addressNorm: addrNorm, captureSha: crHeldSha }) : null;
   const conditional = validators ? { ...(validators.etag ? { "if-none-match": validators.etag } : {}),
                                      ...(validators.lastModified ? { "if-modified-since": validators.lastModified } : {}) } : null;
-  let res = archiveMemento ? archiveMemento.res : null, resolvedUrl = null;
+  let res = archiveMemento ? archiveMemento.res : null, resolvedUrl = null, governedRetryMs = null;
   if (!res) try {
     /* R31, R42: a sweep's redirects, and every redirect when the group's own hosts are named, are followed BY HAND,
        one governed fetch per hop, each target judged (against the scope, against the group's own hosts) before
@@ -1039,6 +1051,7 @@ async function acquireRun(cap, body0, opts, t) {
           retry_in_ms: g.retry_in_ms || 0, locator });
       }
       res = g.res;
+      governedRetryMs = Number.isFinite(g.retry_in_ms) ? g.retry_in_ms : null;   // host-governor R30: the cool-off the refusal recorded
       if (!byHand) break;
       const loc = res.status >= 300 && res.status < 400 && res.status !== 304 ? res.headers.get("location") : null;
       if (!loc || hop >= REDIRECT_MAX) break;
@@ -1109,7 +1122,10 @@ async function acquireRun(cap, body0, opts, t) {
   /* END DEC-49 REGION is-drive-export */
   if (!res.ok) {
     await noteOutcome("source_refused", res.status);
-    return answer(502, { ok: false, reason: "SOURCE_REFUSED", status: res.status, locator });
+    /* R9 (fix round 4, N-slow-refuse): a source that says wait is relayed at once, with how long it said (`Retry-After`) */
+    const asked = res.status === 429 ? retryAfterMs(res.headers.get("retry-after")) : null;
+    const waitMs = Math.max(Number.isFinite(asked) ? asked : 0, governedRetryMs || 0);
+    return answer(502, { ok: false, reason: "SOURCE_REFUSED", status: res.status, locator, ...(waitMs > 0 ? { retry_in_ms: waitMs } : {}) });
   }
   /* R32: on the archive arm the success is the memento's, recorded once it is chosen (below), never for one refused. */
   if (!archiveMemento) await noteOutcome("success", res.status);
@@ -1279,7 +1295,9 @@ async function acquireRun(cap, body0, opts, t) {
         return a;
       })();
       const got = await timed(t, "render", () => within(run, captureRequest ? Infinity : (renderWaitMs ?? RENDER_WAIT_MS)));
-      if (got.done) answerR = got.value; else renderDeferred = { run, pageUrl };
+      if (got.done) answerR = got.value;
+      else if (opts.renderFinal) answerR = { ok: false, error: localize("acquisition.index.render_did_not_return", "the page as a visitor saw it did not come back in time") };   // R99: a render begun afresh is final
+      else renderDeferred = { run, pageUrl };
     }
     if (!renderDeferred) {
     stageBegin(t, "render");
@@ -1316,8 +1334,18 @@ async function acquireRun(cap, body0, opts, t) {
      render, else the single part of a page; none for a capture of several parts (past what a title is read from) or one that is
      not HTML. A fact read from the bytes, not a reading (R8): nothing is invented from a file name, a heading elsewhere or the host. */
   const titleBytes = renderRecorded ? renderedBytes : !multipart && keptParts && keptParts.length === 1 ? keptParts[0] : null;
-  const title = titleBytes && detectFormat(titleBytes, ct || null).format === "html"
+  const htmlTitle = titleBytes && detectFormat(titleBytes, ct || null).format === "html"
     ? titleOfBytes(titleBytes, renderRecorded ? null : res.headers.get("content-type")) : null;
+  /* R98 (fix round 4, C25; pdf-reader R40): a PDF's title is `pdfTitle`'s (its Info `Title`, else its XMP `dc:title`), read from the bytes this
+     call holds without reading any page, cleaned as a page's is; a PDF with neither, or one past what is held in memory, answers null. */
+  let pdfTitled = null;
+  if (!renderRecorded && keptParts && keptParts.length && typeof pdfReader.pdfTitle === "function") {
+    const whole0 = keptParts.length === 1 ? keptParts[0] : (() => { const b = new Uint8Array(keptSize); let at = 0; for (const k of keptParts) { b.set(k, at); at += k.length; } return b; })();
+    if (detectFormat(whole0.subarray(0, 1024), ct || null).format === "pdf") {
+      try { pdfTitled = cleanedTitle(await pdfReader.pdfTitle(whole0)); } catch { pdfTitled = null; }
+    }
+  }
+  const title = htmlTitle ?? pdfTitled;
   /* R96: the first bytes of the first part, held in memory, are what R17's profile reads for the ZIP magic, so it is not read back. */
   const firstPart = multipart ? firstHead : null;
 
@@ -1374,7 +1402,7 @@ async function acquireRun(cap, body0, opts, t) {
      about it. The subject is the DOCUMENT for a Drive export, else the locator. */
   if (renderedAuth ? renderedAuth.authority_state === "undetermined" : !authorityAsserted) {
     try { await cap.taskEnqueue({ kind: "authority-undetermined", captureSha: sha,
-                                  subject: driveCapture ? documentAddress : locator, locator, at: retrieved }); }
+                                  subject: driveCapture ? documentAddress : locator, locator, ...(title ? { title } : {}), at: retrieved }); }
     catch { /* an unqueued task is not a failed capture; C-18.9 still refuses it at or past verified */ }
   }
 
@@ -1400,7 +1428,7 @@ async function acquireRun(cap, body0, opts, t) {
       cap.saveCaptureSession({ session: sid, locator, primarySha: sha, primaryFile: `snapshots/${name}`, base: renderDeferred.pageUrl,
         state: { queue: [{ render: true }], ...(actor ? { opened_by: actor } : {}), render_pending: { since: retrieved, body: carried } } });
     } catch { /* the render still returns; the member captures again */ }
-    PENDING_RENDERS.set(sid, renderDeferred.run);
+    PENDING_RENDERS.set(sid, { run: renderDeferred.run, since: Date.now() });
     const forget = setTimeout(() => PENDING_RENDERS.delete(sid), PENDING_RENDER_TTL_MS);
     if (forget && typeof forget.unref === "function") forget.unref();
     renderPending = { session: sid, since: retrieved,
@@ -1533,12 +1561,26 @@ async function acquireRun(cap, body0, opts, t) {
                    why: "source_unreadable", detail: String(e && e.message || e).slice(0, 200) };
     }
   }
-  /* R96 (C5 e): past what memory holds, the whole is made from the stored parts by the store itself, after the answer: begun here,
-     handed to the caller's `waitUntil` (`opts.waitUntil`, else the store handed in's) so it outlives the answer, never awaited. */
+  /* R96 (C5 e; fix round 4, C5c): past what memory holds, the whole is made from the stored parts by the store itself, and this
+     call AWAITS it within what is left of the door's bound (stage `keep`): a promise nothing keeps alive after the answer is not a keep.
+     One that has not ended by then is registered as pending with the store handed in (`keepLater`, the plane's `keeps_pending`,
+     finished by its alarm) and the answer says `keep_pending`: the capture is kept in its parts and the whole follows. */
+  let keepPending = false;
   if (multipart && !renderRecorded && total > MULTIPART_KEEP_MAX) {
     const making = keepFromParts(ev, { sha, parts });
-    const hold = typeof opts.waitUntil === "function" ? opts.waitUntil : cap && typeof cap.waitUntil === "function" ? (p) => cap.waitUntil(p) : null;
-    if (making && hold) { try { hold(making); } catch { /* the call goes on by itself */ } }
+    if (making) {
+      const left = Math.max(0, (opts.boundMs ?? ACQUIRE_BOUND_MS) - KEEP_RESERVE_MS - (clockNow() - t.start));
+      const got = await timed(t, "keep", () => within(making, left));
+      if (!got.done || !(got.value && got.value.ok)) {
+        /* BOB #244 (K4433): the plane's hand-off is `keepLater({sha, parts: [partDigest, ...]}) -> {ok: true}`, read as `opts.keepLater` else the store's;
+           with none handed the capture stays in its parts, as without a plane. */
+        const later = typeof opts.keepLater === "function" ? opts.keepLater : typeof cap.keepLater === "function" ? (k) => cap.keepLater(k) : null;
+        if (later) {
+          try { const r = await later({ sha, parts: parts.map((p) => p.sha256) }); keepPending = !!(r && r.ok === true); }
+          catch { keepPending = false; }
+        }
+      }
+    }
   }
   return answer(200, {
     ok: true, existed,
@@ -1548,6 +1590,7 @@ async function acquireRun(cap, body0, opts, t) {
     document,
     ...(forRecorded ? { for: forRecorded } : {}),
     ...(multipart ? { parts: parts.length } : {}),
+    ...(keepPending ? { keep_pending: true } : {}),
     ...(renderPending ? { render: { state: "pending", session: renderPending.session } } : {}),
     ...snapshotOf(subs, sessionId, name, shellRecorded),
     ...(subsSkipped ? { subresources_skipped: subsSkipped } : {}),
@@ -1823,19 +1866,25 @@ async function walkSubresources(cap, { ev, sha, total, multipart, ct, name, loca
 async function finishRender(cap, { session, opts, t }) {
   const { cls = null, storeName = "bio", renderWaitMs = undefined } = opts || {};
   const rp = session.state.render_pending;
-  const running = PENDING_RENDERS.get(session.session);
-  let resume = null;
-  if (running) {
-    const got = await timed(t, "render", () => within(running, renderWaitMs ?? RENDER_WAIT_MS));
-    if (!got.done)
+  const held = PENDING_RENDERS.get(session.session);
+  /* R99 (fix round 4, C13b): a held run is trusted only as long as a live render can take (the renderer's own bound, reserved at
+     admission, plus the wait): one not settled after that was begun by a request that has ended, and is lost. */
+  const staleMs = opts && Number.isFinite(opts.renderStaleMs) ? opts.renderStaleMs : renderReserveMs(RENDER_DEFAULTS) + RENDER_WAIT_MS;
+  const stale = !!held && Date.now() - held.since >= staleMs;
+  let resume = null, lost = !held;
+  if (held) {
+    const got = await timed(t, "render", () => within(held.run, stale ? 0 : (renderWaitMs ?? RENDER_WAIT_MS)));
+    if (got.done) resume = { answer: got.value };
+    else if (!stale)
       return { status: 200, body: { ok: true, existed: true,
         continued: { session: session.session, primary: { sha256: session.primarySha, file: session.primaryFile, locator: session.locator },
                      note: word("acquisition.note.continuation_files_new") },
         render: { state: "pending", session: session.session }, store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE } };
-    resume = { answer: got.value };
+    else { lost = true; PENDING_RENDERS.delete(session.session); }
   }
+  /* A render begun afresh is waited for to the renderer's own bound and is final: it files the pair, or is refused in words and the session closes. */
   const out = await acquireRun(cap, { ...(rp && rp.body && typeof rp.body === "object" ? rp.body : {}), locator: session.locator, render: true },
-                               { ...opts, renderResume: resume }, t);
+                               { ...opts, renderResume: resume, ...(lost ? { renderFinal: true, renderWaitMs: renderReserveMs(RENDER_DEFAULTS) + 2000 } : {}) }, t);
   if (out.status === 200 || (out.body && out.body.reason === "RENDER_FAILED")) {
     try { cap.dropCaptureSession({ session: session.session }); } catch { /* harmless */ }
     PENDING_RENDERS.delete(session.session);

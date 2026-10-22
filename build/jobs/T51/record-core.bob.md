@@ -1,6 +1,6 @@
 # BOB to record-core (T51)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -47,3 +47,21 @@ You are the **module job** (P8, mechanics §6) for `record-core`. Your diff touc
 Run: `node --test --test-force-exit bio-plane/test/m/record-core/` and `bio-plane/test/stats-disclosure.test.mjs`, then the users `build/plan/impact.mjs tranche/T51 HEAD` names that read the evidence store (acquisition, extraction, capture at least). Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio record-core tranche/T51 job/T51/record-core`.
 
 COMPLETE with the cause met (C5's store half, R87), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your module's own code only).
+
+## B4 · START
+
+START · RECORD-CORE #27 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #245 is depth 1; fix round 4, wave 1; K4447)
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/record-core tranche/T51 && git branch -m job/T51/record-core stale/record-core-local && git checkout -b job/T51/record-core origin/job/T51/record-core`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+Mail with `--module record-core`; record `build/jobs/T51/record-core.md`. Model claude-sonnet-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678).
+
+You are the **module job** (P8, mechanics §6) for `record-core`. Your diff touches only that module's paths, tests and your record. Fix round 4 of T51 (`build/plan/fix-round-4-T51.md`, K4429): read its section 0 (rules R-FOUR, R-SEAM, R-NOTMET, R-OLD, R-ONE). Merge `tranche/T51` first.
+
+**Your requirement:** record-core **R88** (written on tranche/T51, K4447): `evidenceStore().get(key, {range: {offset, length}})` answers only those bytes, asked of the bucket as a range (R2's `range` option), never the whole; `get(key)` unchanged.
+
+**Your cause** (P10 (c), found by CAPTURE #45 and ACQUISITION #24, K4445, K4447): the Held screen's read of INFO-2026-0042 (a 4.26 MB PDF whose register document names no format) costs 1.7-2.4 s on the smoke copy. Acquisition's archive check now looks at the first 1 KiB only, but `evidenceStore().get(digest)` (`record-core/index.mjs` ~1872: `get: (digest) => bucket.get(key(digest))`) has no range option, so even a 1 KiB look transfers the whole object from R2. (1) Root cause: certain for the transfer (the code above); how much of the 1.7-2.4 s it is, unknown until the redeploy's `Server-Timing` (K4428). (2) Missed: the store double answers the whole instantly; no test counts bytes asked of the bucket. Fix: a bucket double that records each `get`'s options. (3) Failing-first: a 4 MB object, `get(key, {range: {offset: 0, length: 1024}})`: the bucket is asked for that range and 1024 bytes come back; red on today's code (the whole is read); control: `get(key)` answers the whole. (4) L: miniflare's R2 with `range` on a 4 MB object, the bytes transferred stated.
+
+Users: acquisition (`archiveProfile`, switched to the ranged read by CHANGE once you merge). Do not change acquisition. Declare every census op you own (K4208); words by key (K3810). No generated artifact edited (manifest §14).
+Run: your suite, then `node build/plan/impact.mjs tranche/T51 HEAD`'s direct users of `evidenceStore` (acquisition, provenance, capture, extraction); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (0 findings for your files); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio record-core tranche/T51 job/T51/record-core`.
+COMPLETE lists the four fields, R88 met, suite counts, users run, no QUESTION open, and the `Size` line.

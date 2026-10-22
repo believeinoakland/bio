@@ -5,7 +5,7 @@
   "testDir": "test",
   "surface": {
     "POST /scan": "R1-R4: ClamAV's verdicts on a duplicate of each target's stored bytes",
-    "POST /mirror": "R6: one run of the signature mirror (also the daily scheduled trigger)",
+    "POST /mirror": "R6: one run of the signature mirror (also the scheduled trigger's daily run)",
     "POST /render": "R7: the safe view, a PDF of page images",
     "GET /version": "R8: the build, ClamAV's and the renderer's versions, the mirror's and lists' state, the catalogue, the bounds",
     "POST /provider/scan": "R5: an outside scanner's verdicts",
@@ -93,7 +93,7 @@
   },
   "triggers": {
     "crons": [
-      "17 4 * * *"
+      "*/10 * * * *"
     ]
   },
   "optional_bindings": [

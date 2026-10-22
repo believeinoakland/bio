@@ -97,7 +97,7 @@ This module judges each against the owner's lists and the record at the act, and
     5. `clean` and `public` are judged as any document, by what is held (the rest of R6).
 
     Each refusal writes nothing. A member-supplied archive the chain reaches through a member document is never carried (`case-carriage` R8).
-- **R7** (was `case-authoring` R45) `disclosureBlocks(…)` answers the `materials:` and `material_attestations:` rows (`case-grammar` R12) for every material R6 answered (K2541; DEC-185 (1): the case document's body prints a material carried as its copy with its copy's label and as travelling with the case, never as "NOT INCLUDED"), with:
+- **R7** (fix round 4, C47; K4438: each `materials:` row carries `title`, `case-grammar` R12, the document's title as its capture holds it) (was `case-authoring` R45) `disclosureBlocks(…)` answers the `materials:` and `material_attestations:` rows (`case-grammar` R12) for every material R6 answered (K2541; DEC-185 (1): the case document's body prints a material carried as its copy with its copy's label and as travelling with the case, never as "NOT INCLUDED"), with:
   - its fingerprint, its extracted text's fingerprint, its origin and archived copy;
   - whether it is included;
   - its attestations:

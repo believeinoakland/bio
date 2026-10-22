@@ -1,6 +1,6 @@
 # BOB to cause-reading-3 (T51)
 
-**Read** · handled J3
+**Read** · handled J8
 
 ## B1 · START
 
@@ -52,3 +52,37 @@ Requirement lines: RC-R11 (reading-pipeline R32 amended) (`build/plan/fix-round-
 Read in full: the lines above, the code your causes name, the tests naming your ids, `build/layers.md`; other tests are run. A flaw in a module you do not hold goes to BOB (P9). One test per cause, written first, seen failing, with a control, naming its requirement id (K874). Words (K3810): by key or `localize`; tests assert the key; a missing row: stand-in key, one QUESTION. Declare every census op you own (K4208). No generated artifact edited (manifest §14).
 Run: your suite (`node --test --test-force-exit bio-plane/test/m/<module>/`), then `node build/plan/impact.mjs tranche/T51 HEAD`'s users; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (0 findings for your files; reds also on the tranche tip are named, not fixed); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio reading-pipeline,text-chain tranche/T51 job/T51/cause-reading-3`.
 COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BOB's release), (2) test-gap fix merged, (3) the failing-first test for the walker's row, red then green with the evidence, (4) the platform check L/P/F/N and its numbers; then requirement ids met, suite counts, each QUESTION with BOB's answer (none open), and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: held modules' own code).
+
+## B4 · ANSWER · re J4
+
+ANSWER to J4 (BOB #244; K4438). Your three readings are adopted and R32's amendment is rewritten to match on tranche/T51 (merge it): the rule applies with a `main` element, else an `article`, else an element with `role="main"`; tokens split on `-`, `_` and lower-to-upper case changes, lower-cased; `promo`, `promos`, `gallery` and `carousel` added (so `ContentPromos` and the subject gallery go, each still only when it holds no prose); prose is a run of three or more words ending in `.`, `!` or `?` outside headings, labels, links and controls. "Last updated: ..." is left as read (no name, no token). Your saved grca page is the walker's fixture.
+
+## B5 · START
+
+START · CAUSE-READING-3 #3 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #245 is depth 1; fix round 4, priority; K4461)
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/cause-reading-3 tranche/T51 && git branch -m job/T51/cause-reading-3 stale/cause-reading-3-local && git checkout -b job/T51/cause-reading-3 origin/job/T51/cause-reading-3`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+Mail with `--module cause-reading-3`; record `build/jobs/T51/cause-reading-3.md`. Model claude-sonnet-5-5, medium effort; workers haiku low (sonnet medium for a diagnosis). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678).
+
+You are the module job (P8, mechanics §6) for the modules `reading-pipeline` and `text-chain` (one job holds both; ownership is checked as `reading-pipeline,text-chain`). Your diff touches only their paths, tests and your record. Fix round 4 of T51 (`build/plan/fix-round-4-T51.md` section 0: R-FOUR, R-SEAM, R-NOTMET, R-OLD, R-ONE; K4426, K4427). Merge `tranche/T51` first. **This is the round's BLOCKER and comes first; Bob's focus is an alpha release deployed as efficiently as possible.**
+
+**The cause: C5a / C5b / P8, the large-PDF reading's memory.** The walker (A E07): an 8.8 MB and a 15.9 MB PDF answer 504 and nothing is kept; P8: PDFs over about 2 MB are not captured (`STORE_DID_NOT_ANSWER`). Measured three ways (K4434, K4437): a PDF's reading in the plane's object needs +136/+318/+386 MB for 2.4/8.4/15.2 MiB, past the object's 128 MB, so the object resets mid-read. pdf-reader R41 (merged, PDF-READER #8) now keeps the PDF parse itself to 40-51 MB above idle on the real files, **but the whole reading still peaks far above**: extraction's `bio-plane/test/m/extraction/c5b-memory.test.mjs` (a 20 MB, 1,300-page synthetic three-part PDF through the real chain, child process with `--expose-gc`) reads **888 MB above idle** on tranche/T51 now. PDF-READER #8's finding: `extractPdfStructure` on that file is 88 MB unconstrained / 43 MB heap-held; "the rest is above it (textchain `glyphCount`, `flatten`, collection)".
+
+**Step 0 (report to BOB before any fix; K4426 (1), K4427 (4)): measure where the memory goes.** On the three real files (govinfo `BUDGET-2025-BUD.pdf` 2.5 MB, `BUDGET-2025-PER.pdf` 8.8 MB, `BUDGET-2024-APP.pdf` 15.9 MB; their URLs and pinned sha256 are in pdf-reader's `memory.test.mjs` and control-plane's whole-path test; fetch once into the git-ignored cache) and the c5b synthetic, measure heap + array buffers above idle at each stage of a PDF's reading in reading-pipeline: the structure read, text-chain's per-page work (`glyphCount`, `flatten`, unit building), the units and index rows collected, and anything held across pages. Report the table and the line(s) that hold the memory, as a QUESTION. Then a fix is released.
+
+**The target (the fix, once released):** a PDF's whole reading holds at most a page's working set at a time beyond its output, so the reading of each of the four files stays under **64 MB above idle** (heap + array buffers; the object's limit is 128 MB) with the same units unit for unit (compare answer hashes before and after, as PDF-READER #8 did). If the units themselves (the output) cannot fit, say so with numbers: the reading then needs a different home (BOB decides; do not build one).
+
+(2) Missed because: no test read a real large PDF through the whole reading under a memory bound. Fix: a memory test over the real files and the synthetic, failing by name, never skipping, when a file cannot be had. (3) Failing-first: `c5b-memory.test.mjs` is extraction's and stays theirs; your own test asserts the bound at reading-pipeline's interface (`read` of a stored PDF capture), red now, green after. (4) L: workerd with a V8 heap limit, as PDF-READER #8 measured (its record, `build/jobs/T51/pdf-reader.md`, has the method).
+
+Do not change pdf-reader, extraction or control-plane; a change there goes to BOB (P9). Words by key (K3810). No generated artifact edited (manifest §14).
+Run: both modules' suites, then `node build/plan/impact.mjs tranche/T51 HEAD`'s users (extraction with `c5b-memory`, control-plane's whole-path test, capture, screens-inquiry); `node /home/user/civicos-process/checks/run.mjs /home/user/bio`; `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio reading-pipeline,text-chain tranche/T51 job/T51/cause-reading-3`.
+COMPLETE lists the four fields with the numbers, requirement ids met (propose a line: BOB writes it), suite counts, no QUESTION open, and the `Size` line.
+
+## B6 · CHANGE
+
+CHANGE (K4465): OP-GRADES #24 is merged (tranche/T51 @ 003bae9390): plane/register.mjs no longer throws DECLARED_OP_DISAGREES: officeconfirm, so the plane and every plane-booting seam test start again. Merge the tranche into your branch before your next such run. Nothing else changes.
+
+## B7 · ANSWER · re J7
+
+ANSWER (K4467). (i) Option A. docprofile R38 (ctx.pages; no second whole copy; readText adds under 16 MB on the APP) and doctypes R37 (detects bounded page by page, answers unchanged) are written; DOCPROFILE #6 and DOCTYPES #8 start now. Option B is refused (it changes answers). (ii) No pdf-reader change: reading-pipeline drops what it no longer needs (your part 4); a pdf-reader job only if the re-measure misses. (iii) The bound counts the stored bytes: the three govinfo files under 64 MB above idle; report the 20 MB synthetic's number; if it cannot fit, BOB decides the reading's home (K4461). Part 4 is released: build it with the failing-first test at read's interface, report the numbers with stage 6 as it stands, then again after docprofile and doctypes merge (BOB sends a CHANGE). Do not wait; COMPLETE when the three files read under 64 with the merged providers.

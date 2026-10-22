@@ -1,6 +1,6 @@
 # BOB to acquisition (T51)
 
-**Read** · handled J12
+**Read** · handled J18
 
 ## B1 · START
 
@@ -169,3 +169,41 @@ CHANGE (BOB #244; K4433): the hand-off from acquisition to the plane's alarm (yo
 ANSWER to J12 (BOB #244; K4435). Your step 0 is accepted and agrees with EXTRACTION #30's (K4434): the reading in the plane's object is the slow and heavy phase (it measured +136/+318/+386 MB over the isolate, past the 128 MB, for 2.4/8.4/15.2 MiB); pdf-reader R41 bounds its memory and control-plane R120 (released) answers when kept, the reading following.
 Released: R95 (a throw answers a refusal with the stages and `running`), R96 (C5c through `cap.keepLater`, B11), R98 (C25), and R99 for C13b with your stale-run bound (a run not settled after `renderReserveMs` plus the wait is lost; the render starts afresh, admitted and paid as any; a refusal closes the session in words), tested with a scripted renderer double, said so in your record; capture-sources owns the real render's seam.
 N-slow-refuse: HOST-GOVERNOR #12 measured (its J2) that a cooling host is refused at once and the governor never sleeps out a cool-off, and the three sites refuse in under 0.4 s; your reading finds no sleep in acquire either. So the walker's 60.5 s is in neither module by reading: keep it open as "root cause unknown" in your COMPLETE (R-NOTMET: name it, do not mark it met); your whole-path test with the two stub hosts stays, and the redeploy's door phase clock (R121) and your stages on every outcome (R95) are what will name it (K4428). Host-governor also adds a 3 s cap on its R6 wait (R30) and reads the copy's `governorstate`.
+
+## B13 · ANSWER · re J13
+
+ANSWER to J13 (BOB #244; K4437). (1) `pdf-reader` added to acquisition's `uses` in build/modules.json on tranche/T51 (architecture 0); merge it. (2) Leave `subject` the locator (its readers expect an address) and pass the title as a new key `title` in the same `taskEnqueue` call when the document has one; screens-daily (C25's seam owner, wave 2) draws `title` when present, else the locator's file name by the one rule. Note it in your COMPLETE as the field you send.
+
+## B14 · CHANGE
+
+CHANGE (BOB #245, K4445), from CAPTURE #45 (merged), P10 (c): a held, never-opened capture whose register document names no format is asked of `archiveList(limit 1)` by capture (R77), and `archiveList` runs `archiveProfile` -> `profileOf` over all its parts (`acquisition/unpack.mjs` ~790): the whole 4.26 MB of INFO-2026-0042 is read to learn it is not a ZIP (1.7-2.4 s of the Held screen's read). Fix in this job: look at the first bytes (the ZIP local-file magic, and whatever else the profile recognises by its opening bytes) before profiling the whole; a capture that is not an archive by its first bytes answers no archive at once. Failing-first test on that shape (a 4 MB non-ZIP held capture: archiveList answers without reading past the first part's head), with a control (a real ZIP still profiled). Merge tranche/T51 first (capture is merged). Report it in COMPLETE with its four fields.
+
+## B15 · ANSWER · re J14
+
+ANSWER to J14 (BOB #245, K4447). Keep your 1 KiB check (it is right, and it is the first half). The transfer is record-core's: R88 (a ranged get) is written and RECORD-CORE #27 starts now. Do not wait for it: finish your other causes and post COMPLETE, naming P10 (c) as 'switch archiveProfile to get(digest, {range}) when record-core R88 merges' in an Open line; BOB sends that as a CHANGE then. Provenance's whole-object hashing stays a hypothesis for the redeploy's Server-Timing.
+
+## B16 · CHANGE
+
+CHANGE (BOB #245, K4448): your branch is merged on tranche/T51. One of your named reds is yours, not host-governor's: with host-governor R30 merged, fix3-t51 'R9 R95 (N-slow-refuse ...)' still fails 'retry_in_ms is stated' for the 403 host. host-governor's governedFetch now returns {res, retry_in_ms} (its index.mjs ~351), but acquisition derives retry_in_ms only from a 429's Retry-After (index.mjs ~1123) and drops the governed fetch's own retry_in_ms. Carry it through your governedFetch wrapper (~238) to the SOURCE_REFUSED answer, a 429's own Retry-After when larger. Merge tranche/T51 first, make the test green, re-run your suite (R98 C25 stays red by name until pdf-reader merges), COMPLETE again.
+
+## B17 · CHANGE
+
+CHANGE (BOB #245, K4451): record-core R88 is merged on tranche/T51: evidenceStore().get(digest, {range: {offset, length}}) reads only that range. With B16's fix, switch archiveProfile's first-1-KiB look to get(digest, {range: {offset: 0, length: 1024}}); test that a 4 MB non-ZIP capture asks the bucket only for that range (red on your current code, which reads the whole), control a real ZIP still listed. Merge the tranche first; COMPLETE again with both.
+
+## B18 · CHANGE
+
+CHANGE (BOB #245, K4453, K4454): you own the C13a/C13b through-the-door tests (P4: you come directly after capture-sources and use it). CAPTURE-SOURCES #16 is merged; its COMPLETE (build/jobs/T51/capture-sources.md, J6, 'Seam test for acquisition') holds the file's full text. Merge tranche/T51, add it as bio-plane/test/m/acquisition/seam-render.test.mjs (import the fake binding from ../capture-sources/fake-binding.mjs; drop the 'IMPORTS OF A MODULE LATER' header note; name the requirement ids your module meets, R99 for C13b), run it and your suite, architecture and ownership 0, COMPLETE again with its numbers.
+
+## B19 · START
+
+START · ACQUISITION #25 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #245 is depth 1; fix round 4, after DEC-412; K4458)
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/acquisition tranche/T51 && git branch -m job/T51/acquisition stale/acquisition-local && git checkout -b job/T51/acquisition origin/job/T51/acquisition`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+Mail with `--module acquisition`; record `build/jobs/T51/acquisition.md`. Model claude-haiku-5-5, medium effort. Before tests: every lockfile directory has `node_modules` (K4113). Always `node --test --test-force-exit`. You are the module job (P8, mechanics §6) for `acquisition`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first.
+
+The design's DEC-412 rows (merged on tranche/T51, rows.mjs regenerated) made a hand-copied sentence in your module stale. Words rule (K3810, K3930): a sentence a member reads is read by its key from the word table (`word(...)`/the module's own row reader), never copied; tests assert the key or read from the table.
+
+**Your fix:** `bio-plane/src/acquisition/checks.mjs:362-366`: `CAPTURE_KEEP_CHECKS.CAPTURE_NOT_KEPT`'s translation is a `localize('acquisition.checks.capture_not_kept', ...)` stand-in; the design row `refusal.CAPTURE_NOT_KEPT` now exists: read it as its neighbours do (`word("refusal.CAPTURE_NOT_KEPT")`, as `BAD_FOR` ~:349) and drop the stand-in comment. Red now: `bio-plane/test/m/acquisition/checks.test.mjs` 'R29 R31' (correct as it is). Users: capture.
+
+Run: your module's suite, then `node build/plan/impact.mjs tranche/T51 HEAD`'s users named below; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio acquisition tranche/T51 job/T51/acquisition`. COMPLETE: what changed (file:line), the failing test now green (it was red on the tranche tip), suite counts, the `Size` line.

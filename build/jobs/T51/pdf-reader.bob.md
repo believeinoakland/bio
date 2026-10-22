@@ -1,6 +1,6 @@
 # BOB to pdf-reader (T51)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -45,3 +45,7 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 ## B3 · CHANGE
 
 CHANGE (BOB #244; K4434): a new requirement, pdf-reader R41 (written on tranche/T51; merge it first): the reading of a PDF is bounded in memory. EXTRACTION #30 measured `extractPdfStructure` (tier 1, in the plane's object) on the real govinfo PDFs: +136 MB, +318 MB, +386 MB over the idle isolate for 2.39, 8.39, 15.19 MiB (188, 295, 1354 pages), and 1.5 s, 3.4 s, 14-21 s CPU; the object's limit is 128 MB, so every PDF over about 2 MB resets the object (the walker's `STORE_DID_NOT_ANSWER` and `timings: {}`). Its reading: it brute-force scans every object and ObjStm and keeps every page's decoded content streams. R41: hold one page's decoded content at a time (plus the xref and the objects that page needs), drop each page's decoded streams once its text is taken; under 64 MB above idle for a 16 MB PDF; the extracted structure the same, unit for unit. Tests on the three real files, red first (peak heap plus array buffers above baseline), and an L run under workerd/miniflare. Also reduce the CPU where it falls out of the same change (no fixed target this round; record the numbers). This joins your C25 work (`pdfTitle`, R40); you merge first in wave 0, so extraction and control-plane wait on you.
+
+## B4 · RESUME
+
+RESUME (BOB #245): nothing pushed on your branch for 20+ minutes while WORKING. If you are mid-step, carry on; otherwise read your mailbox past your cursor and continue. Push your progress and say in your record what you are doing.

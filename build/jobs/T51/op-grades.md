@@ -1,6 +1,6 @@
 # op-grades (T51)
 
-**Status** · session_01MfAJMdL1CxJq36VfSFDQdb · depth 2 · COMPLETE · handled B32
+**Status** · session_01Q1BcrfRKSNQeK7397e6hvF · depth 2 · COMPLETE · handled B33
 
 ## J1 · QUESTION
 
@@ -306,3 +306,24 @@ Size (session_017LS3B582bpu5TBffTAibNo): test runs 11, module lines 3628
 - `setup-words/build.mjs --check`: rows match.
 
 Size (session_01MfAJMdL1CxJq36VfSFDQdb): test runs 9, module lines 3646
+
+## J25 · COMPLETE
+
+**COMPLETE (B33, fix round 4, K4458).** Pushed `07c0539161` on `job/T51/op-grades`, `tranche/T51` merged (`5de135cb08`). Start re-sent after the stale-branch route of B31/B32 (the local copy's start commit was behind origin; kept as `stale/op-grades-local`, nothing discarded).
+
+**Entries applied.**
+- `bio-plane/src/op-grades/t51.mjs:43–49`: the hand copies of the three owner sentences are replaced by `localize(<owner's declared key>, <sentence>)`: `file-safety.declared.scanmirror` (`scanmirror` in `T51_RUNG_ABSENT` and `T51_ACT_NON_ACTS`), `capture.declared.captureseenin` (both tables), and `officeconfirm` at `t51.mjs:48` now `word("entities.declared.officeconfirm")`, which the word list holds. The header now says the file imports only `setup-words`, as `t34.mjs` does.
+- `bio-plane/src/op-grades/t33.mjs:216`: `moneysets` reads `localize("money.declared.moneysets", …)` (was an inline `R(...)` copy); `import { localize }` added.
+- Why `localize` and not `word` for the first two and the money one: `words.json` (design) does not hold those three keys, so `word()` fails the words check's `missingkey` arm. `localize` takes the list's row when there is one and the literal otherwise, which is R14's rule and what the owners use.
+
+**Failing test now green.** `plane/release.test.mjs` loads: the `DECLARED_OP_DISAGREES: officeconfirm description` refusal is gone (on the tip, the plane suite reads 46 failures; with this fix it reads 2, below).
+
+**Suites (node --test --test-force-exit).** `test/m/op-grades/`: 149 tests, 149 pass, 0 fail. `test/m/plane/`: 297 tests, 295 pass, 2 fail. Both reds are outside op-grades: R24 (`screen.objective.purpose` is not held by the words list; release.test.mjs:78) and R74 (extraction R80, control-plane R117). `test/m/affordances/`: 282 tests, 281 pass, 1 fail (R61 R62, T51 B14 ACT_HELP). `test/m/op-declarations/`: 247 tests, 246 pass, 1 fail (R34, affordances R48: the ACT_HELP partition), which is red on the tip too (checked with my change stashed).
+
+**Checks.** `checks/ownership.mjs … op-grades tranche/T51 job/T51/op-grades`: 0 failures (one file changed by op-grades on the diff). `checks/words.mjs … op-grades`: 0 failures; inline 0, plain 0, missingkey 0 (it was 3 + 2). `checks/architecture.mjs … op-grades`: 0 failures. `checks/format.mjs`: 0 failures. `checks/run.mjs /home/user/bio` overall: architecture 2 failures (case-authoring `reload.test.mjs`, not op-grades); coverage 10 failures, all in other modules (agent-harness, agent-runner, control-plane, installer-steps, interface-shell, journey-check, pdf-reader, screens-daily, screens-inquiry, screens-publish); words 0 failures.
+
+**Requirement lines.** None new or amended: the three hand rows follow their owners' declared keys under R50/R51, which the existing lines already state.
+
+**Deferred / found elsewhere.** Nothing deferred in op-grades. Not mine: the plane's R24 and R74 reds above, and affordances R61 R62 and op-declarations R34 (ACT_HELP partition). Reported for BOB's routing.
+
+Size (session_01Q1BcrfRKSNQeK7397e6hvF): test runs 12, module lines 3679

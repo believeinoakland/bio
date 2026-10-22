@@ -50,6 +50,13 @@ export const CITE_CHECKS = {
     where: 'src/citation/index.mjs cite > is-cite-question',
     translation: word('refusal.NO_SUCH_QUESTION'),
   },
+  /* Fix round 4 (cite-refusal; R21): the group a new citation joins, minted in `cite`'s region is-cite-ground; the next free
+     C-33 row, awaiting the stamp. */
+  BAD_GROUND: {
+    check: 'C-33.58',
+    where: 'src/citation/index.mjs cite > is-cite-ground',
+    translation: localize('citation.checks.bad_ground', 'A new citation can join only a group its question already declares, and a case has no groups. Name one of the question\'s groups, or cite without one. Nothing was written.'),
+  },
   NOT_AN_INQUIRY: {
     check: 'C-33.53',
     where: 'src/citation/index.mjs cite > is-cite-question',

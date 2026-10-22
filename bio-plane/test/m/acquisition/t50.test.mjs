@@ -461,3 +461,29 @@ test("R38 (T50, N1064): MEMBER_MAX equals ARCHIVE_TOTAL_MAX, so a member declare
   const u2 = await unpack(w2.store, { archiveSha: sha(under), by: "m1", cls: "member" });
   assert.notEqual(u2.reason, "ARCHIVE_TOTAL_MAX");
 });
+
+/* R48 (fix round 4, P10 c; K4445): the opening bytes decide before anything profiles the whole */
+test("R48 (P10 c): a 4 MB held capture that does not begin with the ZIP magic answers NOT_AN_ARCHIVE from its opening bytes, with no digest of its whole bytes and at most ARCHIVE_CHECK_READS reads; control: a real ZIP is still profiled and listed", async () => {
+  const orig = crypto.subtle.digest.bind(crypto.subtle);
+  let whole = 0;
+  crypto.subtle.digest = (a, d) => { if ((d.byteLength ?? d.length) > 1e6) whole++; return orig(a, d); };
+  try {
+    const w = world();
+    const text4 = new TextEncoder().encode("hello world ".repeat(355000));
+    await w.b.put(`bio/captures/${sha(text4)}`, text4, { sha256: sha(text4) });   // as R2 holds it: with its checksum, so provenance R7 hashes nothing
+    w.prov.recordReceipt({ address: "https://f.example/x", addressNorm: "https://f.example/x", captureSha: sha(text4), retrieved: "2026-01-01T00:00:00Z", via: "direct" });
+    w.b.calls.length = 0; whole = 0;
+    const r = await w.acq.archiveList({ archiveSha: sha(text4), viewer: ADMIN });
+    assert.deepEqual([r.ok, r.reason, r.code], [false, "NOT_AN_ARCHIVE", "NOT_AN_ARCHIVE"]);
+    assert.equal(whole, 0, "the whole bytes were not hashed or profiled");
+    assert.ok(reads(w) <= ARCHIVE_CHECK_READS);
+    /* R88: the bucket was asked for the opening bytes alone, never the whole object */
+    const gets = w.b.calls.filter((c) => c[0] === "get");
+    assert.ok(gets.length >= 1 && gets.every((c) => c[2] && c[2].range && c[2].range.offset === 0 && c[2].range.length === 1024), "every get is the first 1024 bytes");
+    const zip = makeZip([{ name: "a", data: "a" }, { name: "b", data: "b" }]);
+    const z = world();
+    await hold(z, zip);
+    const lr = await z.acq.archiveList({ archiveSha: sha(zip), viewer: ADMIN });
+    assert.deepEqual([lr.ok, lr.archive.entries], [true, 2]);
+  } finally { crypto.subtle.digest = orig; }
+});

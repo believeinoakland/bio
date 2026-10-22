@@ -43,6 +43,10 @@ function firstElementInner(markup, names) {
   return null;
 }
 
+/** R98 (fix round 4, C25): a title some other reader found (a PDF's Info or XMP title), cleaned as an HTML page's is: markup removed,
+ *  whitespace collapsed, at most 200 characters; null for none. Pure; never throws. */
+export function cleanedTitle(s) { try { return cleanTitle(s); } catch { return null; } }
+
 /** R98: the title of an HTML page, or null when it states none. Pure; never throws. */
 export function titleOfHtml(html) {
   try {

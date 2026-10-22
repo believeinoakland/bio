@@ -1,6 +1,6 @@
 # BOB to op-grades (T51)
 
-**Read** · handled J24
+**Read** · handled J25
 
 ## B1 · START
 
@@ -194,3 +194,17 @@ You are the **module job** (P8, mechanics §6) for `op-grades`. Your diff touche
 
 **Your causes:**
 1. **Marks for DEC-394's acts and the new flag** (reported by WIZARD-SCRIPTS #21 J16 and CONTRADICTION #14, K4323). The design registry (re-taken at `0310c4953d`, wizard-scripts R47) draws `capturerequests`, `casedrafts` and `contradictionflag` (contradiction R61, a member's write, `needs: contribute`); op-grades has no mark in MARKS for them, so your own R42 and R46 tests are red on the tranche, and affordances' 'R1 R12 R24: N345's ops' test is red because `contradictionflag` writes with no rung or stated absence. Requirement: op-grades R42 and R46 as they stand (every registered act marked; every write graded). Give each its mark and grade from what its owner declares (read each owner's op row and requirement line whole: capture's `capturerequests`, case-authoring's or review's `casedrafts`, contradiction R61). If `op-capabilities` (later in the order) needs a row for the flag, REPORT it; do not write it.
+
+## B33 · START
+
+START · OP-GRADES #24 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #245 is depth 1; fix round 4, after DEC-412; K4458)
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/op-grades tranche/T51 && git branch -m job/T51/op-grades stale/op-grades-local && git checkout -b job/T51/op-grades origin/job/T51/op-grades`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+Mail with `--module op-grades`; record `build/jobs/T51/op-grades.md`. Model claude-haiku-5-5, medium effort. Before tests: every lockfile directory has `node_modules` (K4113). Always `node --test --test-force-exit`. You are the module job (P8, mechanics §6) for `op-grades`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first.
+
+The design's DEC-412 rows (merged on tranche/T51, rows.mjs regenerated) made a hand-copied sentence in your module stale. Words rule (K3810, K3930): a sentence a member reads is read by its key from the word table (`word(...)`/the module's own row reader), never copied; tests assert the key or read from the table.
+
+**Your fix:** `bio-plane/src/op-grades/t51.mjs:46` (`T51_ACT_NON_ACTS.officeconfirm`) holds a hand copy of the op's description that now differs from entities' declared description, read from the word row `entities.declared.officeconfirm`; `plane/release.test.mjs` fails at load with `DECLARED_OP_DISAGREES: officeconfirm description` (`op-grades/declared.mjs:105` via `plane/declarations.mjs:190`). Make the table read the declared description from the word table, not a copy (the words check also counts `t51.mjs:41`, `:45` (scanmirror) and `t33.mjs:214` as inline sentences: fix all four the same way, so the words check falls to 0). `t51.mjs`'s header says it imports nothing to close no cycle: `setup-words` is earlier in the order and in your `uses` if `build/modules.json` says so; check, and if an import would break the architecture check, ask BOB (QUESTION) with the smallest alternative. Users: plane (`release.test.mjs` green), op-declarations, affordances.
+
+Run: your module's suite, then `node build/plan/impact.mjs tranche/T51 HEAD`'s users named below; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio op-grades tranche/T51 job/T51/op-grades`. COMPLETE: what changed (file:line), the failing test now green (it was red on the tranche tip), suite counts, the `Size` line.

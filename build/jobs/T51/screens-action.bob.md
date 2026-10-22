@@ -1,6 +1,6 @@
 # BOB to screens-action (T51)
 
-**Read** · handled J16
+**Read** · handled J20
 
 ## B1 · START
 
@@ -202,3 +202,84 @@ Run: your suite (`node --test --test-force-exit bio-plane/test/m/screens-action/
 COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
 
 **Added at K4407:** ENTITIES #18 is merged (R63, R64 as written, with their detail line). The federal records law (5 U.S.C. § 552) enters the first profile by JURISDICTIONS #15 (R95), merged before you; until then test the request's federal office with the profile's state law and say so in your record; send `law` as a `records_laws` citation and `contact` as `{kind: address|email|portal, value}`.
+
+## B21 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/screens-action tranche/T51 && git branch -m job/T51/screens-action stale/screens-action-local && git checkout -b job/T51/screens-action origin/job/T51/screens-action`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · SCREENS-ACTION #13 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #245 is depth 1; fix round 4, wave 2; K4429)
+
+Mail with `--module screens-action`; record `build/jobs/T51/screens-action.md`. Model claude-sonnet-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678).
+
+You are the **module job** (P8, mechanics §6) for `screens-action`. Your diff touches only that module's paths, tests and your record. Fix round 4 of T51, planned whole in `build/plan/fix-round-4-T51.md` (K4429): read its section 0 and your causes' section 2 entries. Rows below are verbatim from `build/plan/walk-T51-rewalk3/A.md`, `B.md`, `build/plan/lane-performance/HANDOFF.md`. Merge `tranche/T51` first. Wave 2 (7) starts when wave 1 is merged; waves 0 and 1 are on `tranche/T51`: read the new lines and the providers' public parts. A missing word row (K4269) is drawn by a stand-in key (plain `localize` default, named in the record), the keys in ONE QUESTION to BOB.
+
+Requirement lines: RC-R10 (screens-action R9 amended) (`build/plan/fix-round-4-reqs.md`), **written by BOB on tranche/T51 before your wave**; propose any further line in COMPLETE (BOB writes `build/requirements/`).
+
+**Rules (plan section 0; K4426-K4428).** R-FOUR: each cause has four fields, which BOB checks before the one redeploy: (1) root cause with file:line, or "root cause unknown": step 0 is a diagnosis posted as a QUESTION to BOB before any fix, BOB releases the fix; (2) why the tests missed it, and the test-gap fix; (3) a failing-first test of the walker's row on the same entry path (press the act, never call the done function), seen red then green; (4) the platform check: L (local workerd/miniflare, real limits: 128 MB object, `waitUntil` cut ~30 s after the response, 25 s door bound, service binding, real-size file), P (read-only probe of the smoke copy), F (fixture from the live record or site) or N; numbers in the record; LIVE-CHECKs are read-only reads of https://biosmoke8.believeinoakland.workers.dev without the proxy, as `build/plan/walk-T51-build/BRIEF.md` says; no mid-round deploy; a check you cannot run is said so and the cause stays open. R-SEAM: for a cause spanning modules the seam owner (S) is the last-merged job on the path press -> stored result; its test is the whole path with the real merged providers, its inputs made by the member's own acts through the real ops (`conclude`, `acquire`, `knock`), no scripted double of an earlier-merged module and no hand-written answer shape; providers test the same case at their interface; a seam test needing an unmerged provider is written first and stays red by name. R-NOTMET: no "not met", "deferred", "not proved", REPORT or open QUESTION at COMPLETE; name the smallest thing you need and ask BOB now. R-OLD: a fix to stored data is "new data only" or has a repair entry. R-ONE: one owning job per cause; the walker's row names the first test.
+
+**Your causes** (your part; the walker's row verbatim; the four fields):
+
+1. **C64-template**: Seam owner (S): step 0 with filing-templates' report. Your whole-path test: the whole path with the real merged providers, its inputs made by the member's own acts through the real ops (`conclude`, `acquire`, `knock`), no scripted double of an earlier-merged module and no hand-written answer shape.
+   > | C64 (template) | CA51 | 1280 | member | "Prepare the text" for the federal law | NEW (MAJOR) | no text is drafted ("Drafted from your team's template for this law ..." but the box is empty and the page says "Write what is sent first"). Typing a plain request and pressing Prepare is refused with "You filled in a blank the text does not have. Fill only the blanks the text names. Nothing was prepared." because the period, form and cost boxes are sent whether or not the text has blanks; it works only when the text carries the hidden markers {{period}}, {{form}}, {{cost_limit}} (and {{records}} stays unfilled): a member cannot know this | shots/B/member-request-prepared2-1280.png |
+   (1) CERTAIN for the refusal: `screens-action/send-steps.mjs:275-290` sends `fills.period|form|cost_limit` whenever its boxes hold values and `filings/index.mjs:662-672` refuses any fill the text has no blank for (`FILL_UNKNOWN_BLANK`). ROOT CAUSE UNKNOWN for the empty draft (probable: no template for 5 U.S.C. section 552 in `filing-templates`; not read): STEP 0 reports the template lookup to BOB.
+   (2) Round 3 tested the California path (class a: a MAJOR new row). Fix: the federal request is a fixture end to end.
+   (3) The walker's member, "Office of Government Information Services", (A)(ii): a text is prepared; a typed plain request prepares.
+   (4) N.
+
+2. **C64-law**: Seam owner (S). Your whole-path test: the whole path with the real merged providers, its inputs made by the member's own acts through the real ops (`conclude`, `acquire`, `knock`), no scripted double of an earlier-merged module and no hand-written answer shape.
+   > | C64 (words) | CA51 | 1280 | member | help panel, send step, reply form on a federal request | NEW (MAJOR) | "Help: How a records request works" says "WHAT THE OFFICE MUST DO: Answer within 10 days ... (Cal. Gov. Code § 7922.535(a))" for a federal office; the send step says "the city can't send you updates"; the reply medium reads "The city's portal" | |
+   > | (new) | - | 1280 | member | the action's DUE DATES line | NEW (MINOR) | "November 19, 2026 / foia_appeal_response / pending · 5 U.S.C. § 552(a)(6)(A)(ii)": the kind prints as a raw code, and "appeal response" is not what a first request's due date is | |
+   (1) CERTAIN for the help (`screens-action/help-records.mjs` is California text); the kind label is the profile row's key drawn raw (jurisdictions' federal window carries the appeal kind).
+   (2) No federal fixture. Fix: the federal request as a fixture.
+   (3) The same request: help, send step and due date name 5 U.S.C. section 552(a)(6)(A)(ii), 20 business days, the first-request kind in words; "city" words are LU (RC-R10, screens-action R9).
+   (4) N.
+
+3. **C64-more**: Seam owner (S): the last-merged job on the path press -> the entity (entities, wave 1, is merged before you). Your whole-path test: the real merged `entitycreate`, a name with no comma and the same name twice, entered by pressing the act.
+   > | C64 (name) | CA51 | 1280 | member (walker), invited by me into my project | Request records > subject "Office of the City Clerk" > "No office is known to hold such records yet" > "Name the office yourself" (agency and office, where requests go, reason) | FIXED | the form is drawn; the press answered in 0.7 to 1.1 s; the office is chosen at once and marked "Named by a member" (the member can go straight on to "What you want"). MINOR: the "agency and office" line is one box split at its first comma, so a name without a comma draws twice ("Office of Government Information Services, Office of Government Information Services"); and naming the same office again makes another entry rather than finding the first | shots/B/member-request-nooffice-1280.png, member-request-named-1280.png |
+   (1) CERTAIN (`screens-action/request.mjs:204` splits one box at the comma; `entitycreate` creates without looking).
+   (2) No test names an office without a comma or twice. Fix: both cases.
+   (3) A name with no comma draws once; naming the same office twice returns the first entry.
+   (4) N.
+
+4. **C65**: Owner; step 0. One module: no seam; the test enters by the act.
+   > | C65 | CA66 | 1280 | member | "Keep as a template" after the request was sent and answered | STILL (MAJOR, not reachable) | no control for it on the request page ("Recorded as sent ... Open the action") or the action page, which reads `templatesforaction` and draws nothing | |
+   (1) ROOT CAUSE UNKNOWN (never assigned, class a; `screens-action/action.mjs:374-377` draws the template line only from `templatesforaction` rows and nothing when none). STEP 0 reports which precondition fails.
+   (2) Never tested. Fix: a fixture; an NR row carries a dated fixture check (R-OLD).
+   (3) A sent and answered request: the control, or its reason in words.
+   (4) N.
+
+5. **C53-min**: Owner: the date defaults to the option's first date. One module: no seam; the test enters by the act.
+   > | C53 | CA43/E43/E44 | 1280 | admin and member | plan: added an option with a date (1.5 s); chose it with a reminder date; action: confirmed the due date, then "Remind me" | FIXED (MINOR left) | after "Choose" the row says "chosen · <reason> · We will remind you on December 10, 2026", a "Remind me" button is now drawn on the chosen row, and it is still there after a reload (3.5 s). On the action the "Remind me" press (0.8 s) says "We will remind you on November 16, 2026." and it survives a reload (2.9 s). MINOR: before an option is chosen the reminder box has no button and its "Which date" list starts blank, so "Choose" with the date left blank is refused in words ("A reminder names a date the option has. Pick one of its dates ...") | shots/B/plan-chosen-reload-1280.png, action-reminder-reload-1280.png |
+   (1) CERTAIN (`screens-action/plan.mjs`): the reminder date is blank before choosing; it should default to the option's first date.
+   (2) No test chooses without touching the date. Fix: that test.
+   (3) Choose without touching the date succeeds.
+   (4) N.
+
+6. **C14 (this screen)**: Screen part.
+   > | C14 | CA2/CA19/CA45/E24/E29/E36 | 1280 | admin, member | timed screens (load to settled; includes the reads) | STILL (MAJOR, over 5 s) | Question 5.5 to 7.1 s (once 10.6 s; 32 to 35 reads), Document 5.6 to 7.4 s (35 to 45 reads), Project 5.0 to 6.4 s (37 to 69 reads, for an empty new project), Home 6.6 to 8.2 s (52 reads), People 7.2 s, Money 5.5 s, Plan 5.4 s, Action 8.4 s first load, published page 5.4 s, reader link 4.9 to 6.7 s, Ceremony 3.3 to 5.9 s (twice 10 s, once 37 s), Queue 4.3 s (once 14.5 s, 82 items). Within about 2 s: Add 0.9 s, cite 2.0 s, vouch 0.4 s, conclude 2.7 s, key registration 0.7 s, choose option 1.5 s, reply 1.6 s. Acts over 2 s: reattest 4.0 s, prepare edition 2.3 to 5.6 s, create money trail 3.9 s, Start the request 3.2 s, new web capture 5.1 s and 7.1 s | |
+   (1) Known (lane): the frame reads `bootstrap` and `queue` and the screen again; repeats `casedrafts` 3x, `projectquestions` 11x on Project, `inquirystrength` 2x. ROOT CAUSE UNKNOWN for where each slow act spends its time (no per-op time until control-plane's `Server-Timing`).
+   (2) Jobs counted reads, not time (class b). Fix: the screen's test asserts its read set (one `queue`, one `bootstrap`, no per-project repeat); the record gives its time.
+   (3) Failing-first: the read-set test for this screen, over the providers' merged answers (control-plane R122: one `bootstrap` per page load; queue R93: the frame reads `count`, only the Queue screen reads the list).
+   (4) LIVE-CHECK (P, read-only): this screen's reads timed on the smoke copy (`Server-Timing` if merged, else the lane's `probe.mjs`), numbers in the record; acts over 2 s at the re-walk, P11 if they miss.
+
+Read in full: the lines above, the code your causes name, the tests naming your ids, `build/layers.md`; other tests are run. A flaw in a module you do not hold goes to BOB (P9). One test per cause, written first, seen failing, with a control, naming its requirement id (K874). Words (K3810): by key or `localize`; tests assert the key; a missing row: stand-in key, one QUESTION. Declare every census op you own (K4208). No generated artifact edited (manifest §14).
+Run: your suite (`node --test --test-force-exit bio-plane/test/m/<module>/`), then `node build/plan/impact.mjs tranche/T51 HEAD`'s users; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (0 findings for your files; reds also on the tranche tip are named, not fixed); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-action tranche/T51 job/T51/screens-action`.
+COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BOB's release), (2) test-gap fix merged, (3) the failing-first test for the walker's row, red then green with the evidence, (4) the platform check L/P/F/N and its numbers; then requirement ids met, suite counts, each QUESTION with BOB's answer (none open), and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: held modules' own code).
+
+**Added by BOB (K4438), from JURISDICTIONS #16 J6 and FILING-TEMPLATES #15 J4 (step 0, both certain):** (a) the empty draft: the team's profile holds no approved records-request template for any law (R45, K921: approval is Bob's review, not this round's); so when no template is offered say so in words (never "Drafted from your team's template"), let a typed plain request prepare, and send `period`, `form` and `cost_limit` only where the text names those blanks (the walker's "You filled in a blank the text does not have"); filing-templates provides a test fixture of a kind with no template. (b) the law picker lists the profile's `deadlines`, not its `records_laws`: list `records_laws`; take a law's window from its new `response` (jurisdictions R96) and the deadline's words from `label` (R97); show a `records_help` block only when its `law` is the chosen law, else the first sentence from the law's `response` (days, citation), no California text, no "the city". A first federal request is 5 U.S.C. § 552(a)(6)(A)(i) (`foia_response`); (A)(ii) is the appeal. Your R9 amendment is corrected to (A)(i).
+
+**Added by BOB #245 (K4458), DEC-412 (U447, merged on tranche/T51; rows regenerated):** "Name the office yourself" is two fields, "The agency" (`screen.request.nameoffice.name`) and "The office within it" (`.role`, `.role.help`), with the note "Why you are naming this office" (`.why`, `.why.help`) replacing `shell.reason` (C64-more); `screen.action.routes.none`.
+
+**Added by BOB #245 (K4462):** providers merged on tranche/T51: control-plane (R120 deferral, R121 `Server-Timing`, `readheldfor`), queue (R93 `count`), capture (R102 `bundle_ids`), public-read, review, citation, case-*, jurisdictions, entities, money, file-safety, file-scanner, acquisition, extraction, plane. Until OP-GRADES #24 merges, the plane will not start under workerd (`DECLARED_OP_DISAGREES: officeconfirm`): a seam test that boots the plane stays red by name until then. CAUSE-SHELL-4 runs beside you (Bob, 2026-10-21: an alpha deployed as efficiently as possible): read its shell changes by merging the tranche when BOB sends a CHANGE at its merge. Scope: a walker's defect or a broken operation is in; wording only waits for T52 (K4269, K4459).
+
+## B22 · ANSWER · re J17
+
+ANSWER (K4464). (1) C65: your fix is released as proposed; R43 and R48 are amended on the tranche as you wrote them (a sent action's reference to start-send worded 'Keep this filing as your team's template'; R48 reachable from a sent action). Write the failing-first test first. (2) build/modules.json screens-action.uses now adds jurisdictions, entities, actions, filing-templates, filings: write the seam tests with the real providers (R-SEAM). (3) Stand-ins 1 and 2 accepted; for a non-city office draw none of the city sentences, as you propose; no note beside the unsent boxes (wording waits for T52, K4269). Merge the tranche (@ 003bae9390; OP-GRADES also merged, the plane boots).
+
+## B23 · ANSWER · re J18
+
+ANSWER (K4468). Confirmed and placed: instance-setup R12 now requires profiles().view to carry records_laws (each law whole), records_help and name as combine gives them; INSTANCE-SETUP #27 starts now and BOB sends a CHANGE when it merges. build/modules.json screens-action.uses now adds instance-setup (tranche @ b4437c407a; merge it): your seam test boots the real profiles() over the first profile, red by name until that merge. J17 (3) closed as you say (no new keys). Carry on with the rest; COMPLETE with the seam tests red by name if instance-setup has not merged.
+
+## B24 · ANSWER · re J20
+
+ANSWER (K4470). (1) build/modules.json screens-action.uses now adds action-clocks (tranche @ 262f9ae408; merge it): make the due date by the member's own proposal and adopt in the seam test. (2) Keep the groupidentity read on request and start-send, named in the test as the one known repeat; no kit accessor this round.

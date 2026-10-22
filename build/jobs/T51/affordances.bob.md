@@ -1,6 +1,6 @@
 # BOB to affordances (T51)
 
-**Read** · handled J19
+**Read** · handled J21
 
 ## B1 · START
 
@@ -115,3 +115,27 @@ Widened (K4376, OP-DECLARATIONS #34's J22): under the plane's full registration,
 ## B15 · ANSWER · re J17
 
 Agreed (K4379): cause 1's rows are op-grades' (NON_ACTS rows and rungs); I send them to CAUSE-SHELL-3, which holds op-grades. You build nothing for cause 1 beyond the control once they land (I CHANGE you). Your work is B14: the help text (act-help, your own) for the 22 member ops OP-DECLARATIONS #34 found unexplained under the full registration (affordances R34), and for scanmirror, officeconfirm, captureseenin; stand-in keys listed in one QUESTION. Then COMPLETE; t33:189 is accepted red by name until op-grades' rows merge.
+
+## B16 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/affordances tranche/T51 && git branch -m job/T51/affordances stale/affordances-local && git checkout -b job/T51/affordances origin/job/T51/affordances`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · AFFORDANCES #42 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #245 is depth 1; fix round 4, wave 2; K4437)
+
+Mail with `--module affordances`; record `build/jobs/T51/affordances.md`. Model claude-haiku-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678).
+
+You are the module job (P8, mechanics §6) for `affordances`. Your diff touches only that module's paths and tests and your record. Fix round 4 of T51 (`build/plan/fix-round-4-T51.md`; Bob's K4426). Merge `tranche/T51` first (it carries extraction's `readheld` declaration once EXTRACTION #30 has merged; it merges in wave 0).
+
+1. **Two member ops have no explanation**, so op-declarations' `t36.test.mjs` R34 (affordances R48: every op in `SESSION_OPS.member` has an `ACT_HELP` entry or is named in `ACT_HELP_ABSENT`) is red: `capturecredentiallist` (accepted red since K4381) and `readheld` (new, extraction R80, fix round 4: "Read it now" on a document whose copy is stored unread). (1) certain. (2) missed because an op's declaration and its explanation are made by two jobs and no job owned both: your test-gap fix is that affordances' own test reads the declared member ops (from the owners' declarations, K3268) and fails by name for any without an entry, so the next new op is caught in its own round. (3) op-declarations t36 R34 red now, green after; your own test red first. (4) N. Each entry follows the pattern of the T51 stand-ins (`T51_STANDIN_OPS`, `act.<op>.does` with a stand-in default via `localize`) until the design writes the rows; name the two keys in your COMPLETE for BOB's word batch.
+
+Every requirement you meet is named by a test seen failing first, with a negative control. R-NOTMET (no "not met" or "deferred" at COMPLETE; ask BOB). Run your suite, op-declarations', then `build/plan/impact.mjs tranche/T51 HEAD`'s users; format, architecture, coverage, words and ownership clean. COMPLETE lists the four fields with the red-then-green evidence and `Size (<session id>): test runs <n>, module lines <n>`.
+
+**Added by BOB #245 (K4441):** citation's `cite` now accepts an optional `ground` (citation R19, R21 as amended): its op help names it beside the others.
+
+## B17 · CHANGE
+
+CHANGE (BOB #245, K4458): the design's DEC-412 rows are merged on tranche/T51 (rows regenerated). Your module reads act.contradictionflag.does and the new act.*.does rows (origins, inboxlist, transcriptions, progressions, remindersfor, moneysets, captureseenin); the registry puts scanmirror on security and officeconfirm on places. Merge the tranche before your tests.
+
+## B18 · ANSWER · re J20
+
+ANSWER (K4464): option 1. op-declarations' R34 (t36) is the net that names a member op with no explanation; no change to modules.json or the order. Write cause 2 to that (say so in COMPLETE: no own test reads the owners' rows, by P4), keep act.readheld.does as the stand-in, and COMPLETE. Also: OP-GRADES is merged (tranche @ 003bae9390): merge the tranche into your branch; your R61 R62 and op-declarations R34 (ACT_HELP partition) are yours to bring green if they are your partition.

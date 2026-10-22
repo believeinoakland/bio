@@ -69,7 +69,7 @@ test('R10 through the binding: the bundle answers R8 and R9 from its env, and it
     return new Response(JSON.stringify({ ok: false, code: 'MIRROR_REFUSED', detail: 'exit 58: 403 Forbidden' }), { status: 200 }); } }) };
   const waits = [];
   try {
-    mod.default.scheduled({ cron: '17 4 * * *', scheduledTime: NOW }, { ...env, SCANNER }, { waitUntil: (p) => waits.push(p) });
+    mod.default.scheduled({ cron: '*/10 * * * *', scheduledTime: NOW }, { ...env, SCANNER }, { waitUntil: (p) => waits.push(p) });
     const r = await waits[0];
     assert.equal(r.ok, false);
     assert.equal(r.error, 'MIRROR_REFUSED:exit 58: 403 Forbidden');
