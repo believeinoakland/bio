@@ -114,27 +114,23 @@ export const T51_DESIGN_OPS = Object.freeze([
 
 /** T51 (B14, K4376; `op-declarations` J22): the declared ops whose `act.owed_<op>.does` words the design's reads list gives, held under
  *  their ops (R61; KEY_EXCEPTIONS below). Exported so the tests can name them. */
-export const T51_OWED_OPS = Object.freeze(["expertisewithdraw", "declareorigin", "capturecredentialsupply", "capturecredentialwithdraw",
+export const T51_OWED_OPS = Object.freeze(["expertisewithdraw", "declareorigin", "capturecredentiallist", "capturecredentialsupply", "capturecredentialwithdraw",
   "citeimported", "withdrawimported", "projectclose", "importregrade", "rerunstart", "rerunpair", "rerunread", "casedetailsset",
   "casedetails", "namedrequestset", "namedrequests", "sweepset", "sweepratify", "taskdecide"]);
 
-/** T51 (B14): `contradictionflag`'s text is in the word list as `act.contradictionflag.does` but not in the reads list (R62), so it is
- *  held under that key and the design is asked to confirm it (one QUESTION). */
-export const T51_LIST_ONLY_OPS = Object.freeze(["contradictionflag"]);
+/** T51 (B14; B17, DEC-412 K4458): the declared ops whose `act.<op>.does` rows the word list holds but the design's reads list for this
+ *  module does not give yet (R62): each is held under its key, read through `word`, until the reads list is regenerated. `contradictionflag`
+ *  (B14) and the nine rows DEC-412 wrote (origins, inboxlist, transcriptions, progressions, remindersfor, moneysets, captureseenin,
+ *  scanmirror, officeconfirm) were stand-ins until then. */
+export const T51_LIST_ONLY_OPS = Object.freeze(["contradictionflag", "origins", "inboxlist", "transcriptions", "progressions",
+  "remindersfor", "moneysets", "captureseenin", "scanmirror", "officeconfirm"]);
 
-/** T51 (B14): the declared ops the word list gives no sentence for. Each is a stand-in: its plain `localize` default, read under its
- *  own key, until the design stream's row lands (R62; setup-words R14). `localize` takes literal ids, so each is written out. Listed in
- *  one QUESTION to BOB; the words check holds these keys to their defaults, not to `hasWord`. */
+/** T51 (B14; B16, fix round 4): the declared ops the word list gives no sentence for. Each is a stand-in: its plain `localize` default, read
+ *  under its own key, until the design stream's row lands (R62; setup-words R14). `localize` takes literal ids, so each is written out. Listed
+ *  in one QUESTION to BOB; the words check holds these keys to their defaults, not to `hasWord`. `readheld` (fix round 4, extraction R80)
+ *  is the one left; its key is `act.readheld.does`, named for BOB's word batch. */
 export const T51_STANDIN_HELP = Object.freeze({
-  origins: localize("act.origins.does", "Lists, oldest first, every system members have declared this document came from, with who declared it and when. Changes nothing."),
-  inboxlist: localize("act.inboxlist.does", "Lists the knocks in the inbox, newest first, a page at a time. Changes nothing."),
-  transcriptions: localize("act.transcriptions.does", "Lists the typings a member has made of this document: each portion typed, who typed it and when. Changes nothing."),
-  progressions: localize("act.progressions.does", "Lists the progression definitions. Changes nothing."),
-  remindersfor: localize("act.remindersfor.does", "Lists this action's reminders, each with its day, who set it and its state. Changes nothing."),
-  moneysets: localize("act.moneysets.does", "Lists the money sets that concern this project, newest first. Changes nothing."),
-  scanmirror: localize("act.scanmirror.does", "Asks the group's file scanner to check for new signatures now. It answers at once and moves no document."),
-  officeconfirm: localize("act.officeconfirm.does", "An administrator confirms an office a member named."),
-  captureseenin: localize("act.captureseenin.does", "Files this held document in the project as well. It stays held under its own project."),
+  readheld: localize("act.readheld.does", "Reads a document this record holds whole but has no reading of yet, or whose reading found nothing. The earlier reading stays in the history. Moves nothing."),
 });
 export const T51_STANDIN_OPS = Object.freeze(Object.keys(T51_STANDIN_HELP));
 

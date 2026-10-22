@@ -1,6 +1,6 @@
 # screens-settings (T51)
 
-**Status** · session_01EaD3jDCDjBYrvU2dv7qq92 · depth 2 · COMPLETE · handled B35
+**Status** · session_013oBjn6cy9rDsXVNuTPr9A1 · depth 2 · COMPLETE · handled B38
 
 ## J1 · QUESTION
 
@@ -312,3 +312,46 @@ COMPLETE (SCREENS-SETTINGS #15, T51 fix round 3), re B35. tranche/T51 merged (IN
 **Tests and checks.** Module suite 247 of 247. screens-inquiry (a user) 471 of 471. Each new test was seen failing against the old source (Security's 390 px test passes either way: it had no small control). format 0, architecture 0, coverage 76 of 76, words 0 findings, ownership 0 failures. Proposed requirement lines for BOB to write are in J21.
 
 Size (session_01EaD3jDCDjBYrvU2dv7qq92): test runs 14, module lines 5301
+
+## J24 · QUESTION
+
+QUESTION (J1) · C84 seam test needs two modules in my `uses`.
+
+My whole-path test (`bio-plane/test/m/screens-settings/security-seam.test.mjs`, green on my branch) presses the Security button through the real merged `file-safety` (`scanMirror`, `scanStatus`) over the real `file-scanner` handler (`/mirror?async=1` cut 20 ms after its 202, `/version`, the cron `scheduled`), as the START asks. It imports `bio-plane/test/m/file-safety/fixture.mjs` (its `world`) and `file-scanner/src/handler.mjs` + `file-scanner/test/helpers.mjs` (its bucket double). `checks/architecture.mjs` refuses: "imports ... of file-safety / file-scanner, which screens-settings does not declare in uses" (3 failures).
+
+Smallest thing I need: `build/modules.json` `screens-settings.uses` += `"file-safety"`, `"file-scanner"` (both earlier in the order). Nothing else changes. Please write it on `tranche/T51` (or tell me to drop the test's real providers and script them, which R-SEAM forbids).
+
+Best reading, so I carry on: tests are written; everything else in C84 is done (button and sentence by DEC-412's keys, status read from `MIRROR_REFUSED` lines, stale R15 test brought to its key). I go on with C14 meanwhile.
+
+## J25 · QUESTION
+
+QUESTION (J2; does not replace J1) · C14 on my screens: what I measured, and what I need.
+
+(1) Root cause, measured by opening each of my screens in the real shell harness and counting every request (frame included): the frame reads `bootstrap`, `whoami`, `groupidentity`, `groupkeystate`, `queue` for itself, and my screens read the same again because `view` hands them none of it: security `bootstrap` x2 (security.mjs:36), updates `bootstrap` x2 (updates.mjs:24), account `whoami` x2 (account.mjs:26), group `groupidentity` x2 (group.mjs:22), teamai `groupkeystate` x2 (teamai.mjs:18). members shows `memberlist` x2 and places `entitieskind` x2 (paged to the end, so legitimate); I find no repeat of `queue` and no per-project repeat in my module. So the repeats I can remove are the frame's, and only once the shell shares its frame answers with a screen (CAUSE-SHELL-4's "shared frame reads").
+(2) Gap: reads were counted per screen nowhere in my tests. I add one read-set test per screen: each op once, frame reads not repeated.
+(3) Failing-first: written against the shell's sharing API, so it is red by name until CAUSE-SHELL-4 merges.
+(4) P: not runnable from my session. The smoke copy answers a public `bootstrap` (200) but sends no `Server-Timing` yet, and my screens' reads are member-only and I hold no member token.
+
+What I need (smallest): (a) the name of the shell's shared-frame-read accessor (what a screen's `reads(view)` / `render` reads instead of asking again), or send me a CHANGE when CAUSE-SHELL-4 merges; (b) your ruling that C14's P check for my screens is closed by the read-set tests plus the local timing of the screens' reads in the harness, or what member token / probe I may use. Until then I finish everything else and wait for the CHANGE.
+
+## Completion (SCREENS-SETTINGS #16, session_013oBjn6cy9rDsXVNuTPr9A1)
+
+**C84 words (seam owner S).**
+(1) Root cause: `security.mjs:106` read a status only from the old `REFUSED:<db>:<status>` string, so a `MIRROR_REFUSED:exit N: … 403` reason fell back to the plane's own English; the button used stand-in keys (`act.monitor.label.capture`, `shell.working`). Fixed: status read from both forms (as file-safety R46 reads it); the button and its sentence are `act.scanmirror.label.security` and `screen.security.mirror.started` (DEC-412); keys listed in `index.mjs` words (run keys `file-safety.index.signatures_run_*`, `signatures_refused_unnumbered`).
+(2) Gap: the module's fixtures held scripted `scanstatus` answers; no test went from the press to the words. Test-gap fix: `security-seam.test.mjs`.
+(3) Failing-first, entry path the press (`scanmirror` pressed on the page, never a done function): real `file-safety` (`scanMirror`, `scanStatus`) over the real `file-scanner` handler (`/mirror?async=1` cut 20 ms after the 202, `/version`, cron `scheduled`), bucket and freshclam stand-ins only; the member's own-language rows show only a sentence drawn by its key. Red 1: button label was the stand-in; red 2: `MIRROR_REFUSED:exit 1: … HTTP status 403` drawn from the plane's English not `signatures_refused` {status: 403}. Green after: stale `REFUSED:main.cvd:403` by key; press -> `mirror.started`; run under way (`signatures_run_download`), stale refusal not drawn; second press refused `SIGNATURES_RUN_UNDER_WAY` (never "a few minutes ago"); 20 min on, `signatures_run_stopped` and the next press allowed; cron tick -> `MIRROR_REFUSED … 403` by key with status. Control: unnumbered refusal by its key. Stale R15 test (`security.test.mjs`, K4435) asserts the refusal by key through the shell.
+(4) Platform check: N for the screen (words); the scanner's L/P belong to file-scanner and file-safety. Old data: the stored 04:17 string is drawn as it is (accurate to it) until the first new run overwrites it (new data only).
+
+**C14 (this module's screens).**
+(1) Root cause (measured, harness, every request counted): the frame reads `bootstrap`, `whoami`, `groupidentity`, `groupkeystate`, `queue`; screens repeat them: security `bootstrap` x2 (security.mjs:36), updates `bootstrap` x2 (updates.mjs:24), account `whoami` x2 (account.mjs:26), group `groupidentity` x2 (group.mjs:22), teamai `groupkeystate` x2 (teamai.mjs:18). No repeat of `queue`, none per project; members `memberlist` x2 is the shell's name read; places `entitieskind` x2 is paging. The screens cannot drop them until cause-shell-4 shares the frame's answers (BOB K4466: CHANGE names the accessor).
+(2) Gap: reads were counted nowhere. `readset.test.mjs` (8 screens).
+(3) Test `readset.test.mjs`: RED BY NAME for security (R15), updates (R27), account (R3), group (R18), teamai (R48) until cause-shell-4 merges; green for members, places, settings. After the CHANGE I remove the five repeats and re-run.
+(4) P ruled (K4466): read-set tests plus local timing. Harness load times (reads, ms; not live): security 16/466 (first boot), updates 12/50, account 17/53, group 18/63, teamai 18/68, members 16/67, places 16/35, settings 10/20. Live time: the PERFORMANCE lane with Server-Timing.
+
+**Requirements met:** R15, R77, RC-R7 (words side), R62, R1, R3, R17-R19, R27, R48 (suites). Proposed line for BOB: R15 amended with C84 round 4 (keys above); R78 new: a Settings screen reads once each op the frame has read (C14).
+**Tests/checks:** screens-settings 257 tests, 252 pass, 5 fail (the five C14 read-sets above, by name). screens-inquiry 471/471 (a user). `format` 0 failures; `architecture` 0 failures (after BOB's `uses`); `ownership` 0 failures; coverage: none of its 8 failures is mine (screens-publish R80 named).
+Size (session_013oBjn6cy9rDsXVNuTPr9A1): test runs 14, module lines 5308
+
+## J26 · COMPLETE
+
+COMPLETE (per K4466): C84 done and green (seam test through the real file-safety and file-scanner, stale R15 test fixed); C14: read-set tests written, RED BY NAME for security, updates, account, group, teamai until CAUSE-SHELL-4's accessor merges (send CHANGE; I then drop the five repeats). Details, four fields, counts and Size line in my record. Suite 252/257 (the five); format, architecture, ownership 0 failures. Proposed lines: R15 amended (C84 keys), R78 new (a Settings screen reads once each op the frame has read).
