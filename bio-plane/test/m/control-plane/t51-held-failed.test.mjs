@@ -96,8 +96,11 @@ test("R117 (C5b, through the door, the real plane): a document promoted with a r
   /* the starting state: a record promoted in round 2, with the reading the old build made of a capture it could not assemble (R-OLD: since R120 a
      PDF this large is answered pending, so no act of today makes this reading; the capture, the whole's upload and the promotion are the member's acts) */
   const big = PACKETS["big.pdf"], sha = hex(big);
-  const first = await acquire("big.pdf", "a");
-  assert.equal(first.ok, true, JSON.stringify(first).slice(0, 400));
+  /* fix round 6, G2 (K4562): a capture over 8 MiB by address is parked and filed by the alarm, which also reads it, so no act of today leaves this old state through
+     `acquire` either; the member's upload of the same bytes gives the same document (the same digest and parts) to promote with the old build's reading */
+  const upload = await (await plane(`/api/?op=captureupload&statement=big&name=big.pdf&type=application%2Fpdf`, { method: "POST", headers: auth, body: big })).json();
+  const first = { ok: upload.result.ok, document: upload.result.document };
+  assert.equal(first.ok, true, JSON.stringify(upload).slice(0, 400));
   assert.equal(first.document.capture.sha256, sha);
   assert.ok(first.document.parts && first.document.parts.length >= 3, "the packet is held in parts");
   const total = first.document.parts.reduce((n, p) => n + p.bytes, 0);
@@ -114,8 +117,11 @@ test("R117 (C5b, through the door, the real plane): a document promoted with a r
 
   /* the address is captured again */
   const again = await acquire("big.pdf", "a");
-  assert.equal(again.existed === true || again.existed === null, true, JSON.stringify(again).slice(0, 300));
-  const after1 = await readingOf(sha);
+  /* fix round 6, G2: a capture over 8 MiB by address is parked even when the bytes are held; the alarm's fetch ends in the delivery, whose promotion and reading follow
+     replace the failed reading once the whole is held (R117) */
+  assert.ok(again.fetch_pending || again.existed === true || again.existed === null, JSON.stringify(again).slice(0, 300));
+  let after1 = await readingOf(sha);
+  for (let i = 0; i < 100 && !JSON.stringify(after1.text_units ?? []).includes(WORDS); i++) { await new Promise((r) => setTimeout(r, 3000)); after1 = await readingOf(sha); }
   assert.equal(after1.found, true, "the home holds a reading: " + JSON.stringify(after1).slice(0, 400));
   assert.ok(JSON.stringify(after1.text_units ?? []).includes(WORDS), "the reading has its text now, the packet's words: " + JSON.stringify(after1).slice(0, 600));
 

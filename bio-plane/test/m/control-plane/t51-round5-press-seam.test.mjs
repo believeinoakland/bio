@@ -115,17 +115,21 @@ test("R125 (b) (a 16 MB, 1,300-page PDF captured twice through `acquire`): the s
   served = { [BIG_NAME]: big };
   const first = await acquire(auth, BIG_LOCATOR);
   assert.equal(first.status, 200, JSON.stringify(first.body).slice(0, 400));
-  assert.equal(first.body.document.capture.sha256, BIG);
-  assert.ok(first.body.document.parts && first.body.document.parts.length >= 2, "held in parts, the shape that reached the inline read");
-  await promote(auth, first.body, BIG_NAME);
+  /* fix round 6, G2 (K4562): a capture over 8 MiB is parked and answered at once; the alarm's tick files it (promotion and the reading follow are the delivery's),
+     so the member no longer files the document the answer carries (it carries none) and the case goes on once the record holds it */
+  assert.ok(first.body.fetch_pending, `a 16 MB capture is being fetched: ${JSON.stringify(first.body).slice(0, 300)}`);
+  assert.equal(first.body.fetch_pending.declared_bytes, big.length);
+  assert.equal(first.body.document, undefined);
+  const filed = await readingWith(auth, BIG, WORDS.slice(0, 40), 300000);
+  assert.ok(filed && filed.found, `the tick filed it and the ledger read it: ${JSON.stringify(filed).slice(0, 200)}`);
+  assert.ok(unitsText(filed).includes(WORDS.slice(0, 40)), "its words are in the units (R-STOP)");
   const second = await acquire(auth, BIG_LOCATOR);
   assert.equal(second.status, 200, JSON.stringify(second.body).slice(0, 400));
   assert.equal(second.body.ok, true);
-  assert.equal(second.body.document.capture.sha256, BIG);
+  assert.ok(second.body.document ? second.body.document.capture.sha256 === BIG : !!second.body.fetch_pending, "the held file is answered, at once");
   assert.ok(!/do-readheldfor/.test(second.timing), `the door did not ask the object to read inside the request: ${second.timing}`);
-  assert.equal(second.body.reading_pending, true, `the answer states the reading is pending: ${JSON.stringify(second.body).slice(0, 300)}`);
-  /* the entry: the door wrote it (`pendingadd`, its Server-Timing metric) and the alarm, which the real plane runs at once, has read it and drawn it from the ledger by now */
-  assert.ok(/do-pendingadd/.test(second.timing), `the door wrote the reading down in the ledger: ${second.timing}`);
+  /* the reading is held by now (the tick read it): nothing is promised again; were it not, the entry is written down */
+  assert.ok(second.body.reading_pending !== true || /do-pendingadd/.test(second.timing), `a promise is backed by a ledger entry: ${second.timing}`);
   assert.ok(!/"state":"final"/.test(await owedOf(auth, BIG)), "and no entry of it ended for a reason");
 });
 

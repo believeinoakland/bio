@@ -172,9 +172,11 @@ test("E3 (a 41.5 MB five-part address capture): stated final with its size at on
   const res = await plane("/api/?op=acquire", { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: JSON.stringify({ locator: "https://www.example.gov/files/e3-capture.pdf" }) });
   const a = await res.json();
   assert.equal(res.status, 200, JSON.stringify(a).slice(0, 400));
-  const made = await CAPTURE_SCREEN.parts.promoteDocument(screenCall(auth), { doc: a.document, title: "e3-capture.pdf", locator: a.document.locator, project: "" });
-  assert.equal(made.refused, undefined, JSON.stringify(made).slice(0, 300));
-  const end = Date.now() + 30000;
+  /* fix round 6, G2 (K4562): a 41.5 MB capture is parked and answered at once as being fetched; the alarm's tick files it (no document is answered to promote) and the
+     statement is made from its size (G7) */
+  assert.ok(a.fetch_pending, JSON.stringify(a).slice(0, 300));
+  assert.equal(a.fetch_pending.declared_bytes, bytes.length);
+  const end = Date.now() + 120000;
   let r = await readingOf(auth, sha(bytes));
   while (Date.now() < end && !(r && r.found)) { await later(1500); r = await readingOf(auth, sha(bytes)); }
   assert.equal(r.found, true);
