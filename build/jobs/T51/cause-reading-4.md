@@ -37,3 +37,7 @@
 **Proposed requirement lines (BOB writes them).** R37 as written, plus: `read` takes `unitsBudget`, `ocrInvocations` and `owe`; `bytesOf` and `read` state `failure`; `ocr_left`; `WHOLE_READ_MAX` is 24 MiB, measured.
 
 **Found in another module.** extraction: `readHeld` must call `read` with `unitsBudget: Infinity` and replace a reading whose `failure` is `transient` (its R82); `#wantedTheWhole` still matches the three old sentences, which stay unchanged. plane: the `ocr` ledger entry is `{kind: "ocr", sha, cursor, pages_left}`.
+
+**Probe rerun (the committed `workerd-ceiling.probe.mjs`, index path, `unitsBudget: Infinity`):** mixed 24: 74 MB old space, ~98 MB with bytes; mixed 32: 88 MB, ~120 MB; text-dense 8: 98 MB, ~109 MB. The same as the table within 3 MB.
+
+Size (session_01Xg9yrTHu7epTQVfzdejX4W): test runs 14, module lines 2,196
