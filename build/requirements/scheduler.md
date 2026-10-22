@@ -94,7 +94,7 @@ Terms. A **consumer** is `{name, key, due(now), wake(now), tick(now)}`: `wake` i
 
 ### Invariants
 
-- **R14** One alarm: the plane's periodic work runs on this Durable Object alarm alone; the deployed configuration declares no cron trigger, and no consumer sets an alarm of its own.
+- **R14** One alarm: the plane's periodic work runs on this Durable Object alarm alone, and no consumer sets an alarm of its own. The deployed configuration declares exactly one cron trigger, the plane Worker's watchdog (Bob, K4566; K4570), which only calls `watch` (checks the alarm and the heartbeat and re-arms) and never runs owed work.
 - **R15** Self-terminating: after any reconcile on an instance where no consumer wants a wake, no alarm is set.
 - **R16** No starvation: a reconcile weighs every consumer's wake, not only those that ticked, so a slow interval consumer's wake survives a fast one going idle (the probes prove it with two cadences).
 - **R17** Arming only schedules: `arm` and every notice this module registers write no consumer's work and run no tick.
