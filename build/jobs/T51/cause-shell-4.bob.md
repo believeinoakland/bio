@@ -63,3 +63,7 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 ## B2 · CHANGE
 
 CHANGE (K4465): OP-GRADES #24 is merged (tranche/T51 @ 003bae9390): plane/register.mjs no longer throws DECLARED_OP_DISAGREES: officeconfirm, so the plane and every plane-booting seam test start again. Merge the tranche into your branch before your next such run. Nothing else changes.
+
+## B3 · ANSWER · re J1
+
+ANSWER (K4467). (1) C59: option (a) released (a fill that is a string w itself returned is inserted as is; any other string escaped once). The empty picker is screens-investigate's (released there). (2) P9: your reading is accepted; no queue change. (3) C81 and (4) C51: your readings accepted; the page sentence and strings are forwarded to SCREENS-PUBLISH #16. ALSO (CHANGE, from SCREENS-INQUIRY J21, N5): add document: Object.freeze(['readheld']) to RE_POINTS in interface-shell (the R117 pattern, until the registry lists it), with a test that checkScreens admits readheld on document; without it any document act of readheld throws at boot. And: say in a REPORT the name of your shared-frame-read accessor as soon as it is committed (screens-settings and the other screens write their read-set tests against it). Merge the tranche (@ e6bc9aaf4e; OP-GRADES merged).
