@@ -9,7 +9,6 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { store } from "./fixture.mjs";
 import { multipartBucket } from "../record-core/storage.mjs";
-import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { captureOf } from "../../../src/capture/index.mjs";
@@ -20,17 +19,34 @@ import { PENDING_RETRY_MAX_MS } from "../../../src/plane/pending.mjs";
 const hex = (b) => createHash("sha256").update(b).digest("hex");
 const rows = (x) => [...x.ctx.storage.sql.exec(`SELECT * FROM keeps_pending ORDER BY registered_at, sha, kind`)];
 const WHO = { author: "ann", actorMemberId: "ann", actorIdentity: "member:ann", actorViewer: "member:ann" };
-/* the capture screen's own composition, in process (as control-plane's R124 test does) */
-const screen = (ctx) => ({ now: () => Date.now(), digest: async (t) => hex(t), w: (k) => k, date: (d) => d,
-  call: async (op, { query = {}, body } = {}) => (op === "allocid" ? { ok: true, ...recordOf(ctx).allocId(query.prefix, query.year) } : promotionOf(ctx).promote({ ...body, ...WHO })) });
+/* a document promoted the way the capture screen files one: its bundle, its provenance, the register (the screen's own composition is screens-intake's, not a use of this module) */
+const len = (t) => new TextEncoder().encode(t).length;
+async function promoteDoc(ctx, { doc, title }) {
+  const minted = recordOf(ctx).allocId("INFO", "2026");
+  const id = minted.id, now = "2026-10-22T00:00:00Z";
+  const text = ["---", "id: " + id, "object_type: information", "schema: information@2", "title: " + JSON.stringify(title), "current_state: collected", "prior_state: null",
+    "created: " + now, "last_updated: " + now, "produced_by:", "  mode: assisted", "  capability_tier: session", "references: []", "state_history: []", "annotations_open: 0",
+    "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []", "criticality: supporting", "source_status: unchanged",
+    "content_hash: sha256:" + hex(title), "source:", "  locator: " + JSON.stringify(doc.locator), "  authority: member-entered", "  retrieved: " + now,
+    "monitoring:", "  enabled: false", "  frequency: none", "---", "", "## Summary", "", title, "", "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+  const prov = JSON.stringify({ documents: [doc] }, null, 1);
+  const dataset = JSON.stringify({ documents: [{ bytes: doc.capture.bytes, locator: doc.locator, sha256: doc.capture.sha256 }] });
+  const sha = doc.capture.sha256;
+  const done = promotionOf(ctx).promote({ bundleId: id, base: null, snapKey: "20261022T000000_" + hex(id).slice(0, 8),
+    meta: { object_type: "information", title, current_state: "collected", created: now, last_updated: now },
+    files: [{ path: "bundle.md", text, bytes: len(text), sha256: hex(text) }, { path: "data/provenance.json", text: prov, bytes: len(prov), sha256: hex(prov) },
+            { path: "data/dataset.json", text: dataset, bytes: len(dataset), sha256: hex(dataset) }, { path: doc.file, blobSha: sha, sha256: sha, bytes: doc.capture.bytes }],
+    register: [{ sha256: sha, path: doc.file, encoding: doc.capture.encoding, bytes: doc.capture.bytes }], ...WHO });
+  return done;
+}
 const docOf = (bytes, file, format, extra = {}) => ({ file, locator: `https://example.org/${file}`, retrieved: "2026-10-22T00:00:00Z", profile: { format: { format, confidence: "certain", signals: [] } },
   authority_state: "undetermined", authority_basis: "held", origin: { kind: "named_request" },
   capture: { sha256: hex(bytes), bytes: bytes.length, content_type: format === "pdf" ? "application/pdf" : "text/html", method: format === "pdf" ? "upload" : "rendered", grade: "C", actor_class: "member", encoding: "binary" }, ...extra });
 async function promoted(x, bucket, bytes, file, format) {
   bucket.held.set(`bio/captures/${hex(bytes)}`, bytes);
   const doc = docOf(bytes, file, format);
-  const made = await CAPTURE_SCREEN.parts.promoteDocument(screen(x.ctx), { doc, title: file, locator: doc.locator, project: "" });
-  assert.equal(made.refused, undefined, JSON.stringify(made).slice(0, 300));
+  const made = await promoteDoc(x.ctx, { doc, title: file });
+  assert.ok(made && made.ok !== false, JSON.stringify(made).slice(0, 300));
   return { doc, bundleId: made.bundleId };
 }
 const pdf = (text) => ({ format: "pdf", structure: async () => ({ ok: true, text: structuredClone(text), pages: (text.pages || []).length, notes: [] }) });
