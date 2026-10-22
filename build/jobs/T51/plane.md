@@ -354,3 +354,13 @@ COMPLETE (PLANE #49, R77). B27's shapes built: `captureOf(ctx).owedLater` (subre
 ## J22 · COMPLETE
 
 COMPLETE (PLANE #49, R77) again after B28: failure:"final" ends an entry with its reason, readHeld now gets {sha, storeName, env, kind} for reading too; fix4b-r77 and fix4-r75 14/14 green. Record unchanged otherwise.
+
+## J23 · QUESTION
+
+QUESTION (B29, the one place for the render's promotion; best reading below)
+
+Plane's side is built: the alarm calls `acquisition.owedRun(cap, {kind:"subresources", session}, {storeName, env, deliver})`, with `deliver` = `controlPlane.deliverOwedRender({ctx, env, storeName, answer, session})` when control-plane exports it; without it owedRun answers DELIVERY_NOT_HANDED and the render stays the member's "Finish it". A `final` answer's reason is now stated before `done`.
+
+The promotion is not plain for plane to do: screens-intake's `promoteDocument` mints the INFO id (`allocid`), builds the information bundle text, and files it under the page's project (`filedFor`) as the member. Best reading: it belongs to the door (control-plane R123's neighbour), so please have CONTROL-PLANE #46 export `deliverOwedRender({ctx, env, storeName, answer, session}) -> {ok:true}|{ok:false, reason}`: promote the rendered document in the shell document's home (project read from the shell document, member = the session's opener) through the same `promote` step, then give R123's read (`reading_pending`). Plane then carries no promotion code.
+
+My seam test in fix4b-r77.test.mjs ("R77 B29 (seam, control-plane)") is red by name until that export exists; it asserts the export and that plane hands `deliver`. I stay available; once control-plane merges, a CHANGE brings me to run the whole path (render delivered by the alarm, the document's reading pending). If you would rather plane do the promotion itself, say so and I will, but it would duplicate screens-intake's bundle building.
