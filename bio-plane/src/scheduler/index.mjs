@@ -1,10 +1,12 @@
 /* ===========================================================================
  *  scheduler (layer 10; build/requirements/scheduler.md): THE PLANE'S ONE RECONCILING DURABLE OBJECT ALARM.
  *
- *  DECISION (REC-1, recorded in full in docs/development/SCHEDULER.md): the plane's periodic work runs on ONE
- *  reconciling Durable Object alarm, never on a Worker cron trigger (R14). A cron's floor is a minute where the task
- *  drain coalesces at a second (granularity); a cron fires forever where the alarm is deleted when nothing waits
- *  (self-termination, R15); and every consumer reconciles against the Durable Object's own storage (locality).
+ *  DECISION (REC-1, recorded in full in docs/development/SCHEDULER.md; amended by Bob, K4566): the plane's periodic work
+ *  runs on ONE reconciling Durable Object alarm, and never on a Worker cron trigger (R14). A cron's floor is a minute
+ *  where the task drain coalesces at a second (granularity); a cron fires forever where the alarm is deleted when nothing
+ *  waits (self-termination, R15); and every consumer reconciles against the Durable Object's own storage (locality).
+ *  The one cron the plane declares is the watchdog over this alarm: it calls `watch` (R29), which checks the alarm and
+ *  the heartbeat and re-arms, and never runs owed work.
  *
  *  MECHANISM. A registry of consumers `{name, key, due(now), wake(now), tick(now)}` (R5): `onAlarm` runs the tick of
  *  every consumer due at the firing instant (within the grace), in registry order, then reconciles the one alarm to
@@ -131,7 +133,9 @@ const ANSWER_FIELDS = new Set(["swept", "drained", "created", "folded", "refused
 const DRAIN_ZERO = Object.freeze({ drained: 0, created: [], folded: [], refused: [], waiting: [], remaining: 0 });
 const PROBE_KEY = "sched_probe";
 const DAILY_KEY = "sched_daily";
-const HEART_KEY = "sched_last_run";
+const BEAT_KEY = "sched_beat";   /* the heartbeat: {last_run, running_since, watchdog_seen} (R28, R29) */
+/** A `running_since` older than this is a killed run's leftover, not a run in progress (R29): one cycle. */
+const RUNNING_BOUND_MS = 5 * 60e3;
 /** One cycle of the alarm, for `health()` (R28): the monitor's own five minutes (`monitoring` R19); a stall is two of them. */
 const HEALTH_CYCLE_MS = 5 * 60e3;
 /** `heal()` looks at the alarm at most this often per instance, so a request path may call it on every request (R28). */
@@ -222,7 +226,7 @@ export class Scheduler {
   /* true while onAlarm runs: an `onFileWork` call made inside a batch leaves the arming to its reconcile (R1, R24). */
   #firing = false;
   #healedAt = -Infinity;
-  #lastRun = null;
+  #beat = null;
   /* R27: the registered consumers held, by name, at the wake that did not advance (see `#holding`). */
   #held = new Map();
 
@@ -543,6 +547,7 @@ export class Scheduler {
 
   async onAlarm(now = Date.now()) {
     const probe = await this.#probeState(now, true);
+    await this.#beatWrite({ running_since: now });   /* R29: getAlarm() is null while this runs */
     await this.#loadDaily();
     const reg = this.registry(probe);
     const answers = {};
@@ -563,11 +568,11 @@ export class Scheduler {
       if (v !== null && v !== undefined) answers[c.key] = v;
     }
     } finally { this.#firing = false; }
+    try {
     /* Reconciled over the FULL registry, not only the consumers that ticked, and authoritatively: a fired alarm is
        spent, so the fresh earliest wake is set outright (R1, R16). */
     const nextAt = await this.#reconcile(now, reg, true, answers);
-    this.#lastRun = now;
-    try { await this.#storage.put(HEART_KEY, now); } catch { /* kept in memory */ }   /* R28 */
+    await this.#beatWrite({ last_run: now, running_since: null });   /* R28 */
     if (probe) await this.#storage.put(PROBE_KEY, probe);
     if (this.#daily && DAILY.some((n) => reg.some((c) => c.name === n)) && typeof this.#storage.put === "function") {
       /* a storage that cannot hold the value keeps it for this instance alone; the firing still answers */
@@ -580,6 +585,24 @@ export class Scheduler {
     return { swept, drained: d.drained, created: count(d.created), folded: count(d.folded), refused: count(d.refused),
              waiting: count(d.waiting), remaining: d.remaining, rearmed: nextAt !== null, nextAt, probes,
              ...(drain && drain.error ? { drain } : {}), ...rest };
+    } finally { await this.#beatWrite({ running_since: null }); }   /* R29: a run that ends, however it ends, is no longer running */
+  }
+
+  /* ---- R28, R29: the heartbeat ---- */
+
+  /** The heartbeat as stored: `{last_run, running_since, watchdog_seen}`, each an epoch-millisecond instant or null. */
+  async #beatRead() {
+    if (!this.#beat) {
+      let v; try { v = await this.#storage.get(BEAT_KEY); } catch { v = null; }
+      this.#beat = { last_run: null, running_since: null, watchdog_seen: null, ...(v && typeof v === "object" ? v : {}) };
+    }
+    return this.#beat;
+  }
+  /** Merges `patch` into the heartbeat and stores it (one put); a storage that cannot hold it keeps it in memory. */
+  async #beatWrite(patch) {
+    const b = { ...(await this.#beatRead()), ...patch };
+    this.#beat = b;
+    try { await this.#storage.put(BEAT_KEY, b); } catch { /* kept in memory */ }
   }
 
   /** Sets the one alarm to the earliest wake any consumer wants, or deletes it when none does. `exact` sets it
@@ -587,7 +610,7 @@ export class Scheduler {
    *  more than `SPENT_ALARM_MS` is spent, not armed (the platform stops running one it killed too often), and is set
    *  afresh to `max(want, now)`. A consumer whose wake throws wants nothing and, when `errors` is given, is answered
    *  under its key (R3). */
-  async #reconcile(now, reg, exact, errors = null) {
+  async #reconcile(now, reg, exact, errors = null, force = false) {
     const wants = [];
     for (const c of reg) {
       let w;
@@ -597,6 +620,7 @@ export class Scheduler {
     if (!wants.length) { await this.#storage.deleteAlarm(); return null; }
     const want = Math.min(...wants);
     if (exact) { await this.#storage.setAlarm(want); return want; }
+    if (force) { const fresh = Math.max(want, now); await this.#storage.setAlarm(fresh); return fresh; }   /* R29 */
     const at = await this.#storage.getAlarm();
     if (at === null || at === undefined || at > want) { await this.#storage.setAlarm(want); return want; }
     if (!this.#firing && at < now - SPENT_ALARM_MS) { const fresh = Math.max(want, now); await this.#storage.setAlarm(fresh); return fresh; }   /* R4, R11 */
@@ -627,10 +651,8 @@ export class Scheduler {
     return await this.arm(now);
   }
 
-  /** R28: `{last_run, alarm_at, owed_since, stale}`. `last_run` is the instant of the last firing that completed (null
-   *  before any); `owed_since` the earliest wake any consumer has that has already come (null when none is owed);
-   *  `stale` is true when work has been owed for two cycles (`HEALTH_CYCLE_MS`) and no firing ran in them. Reads only. */
-  async health(now = Date.now()) {
+  /** The earliest wake any consumer has that has already come, or null (read only: each owner answers its own wake). */
+  async #oldestOverdue(now) {
     const probe = await this.#probeState(now, false);
     await this.#loadDaily();
     let owed = null;
@@ -639,11 +661,48 @@ export class Scheduler {
       try { w = await c.wake(now); } catch { continue; }
       if (w !== null && w !== undefined && Number.isFinite(w) && w <= now && (owed === null || w < owed)) owed = w;
     }
-    let last = this.#lastRun;
-    if (last === null) { const v = await this.#storage.get(HEART_KEY); last = Number.isFinite(v) ? v : null; }
+    return owed;
+  }
+
+  /** R28: `{last_run, running_since, watchdog_seen, alarm_at, oldest_overdue, stale}`. `last_run` is the instant of the
+   *  last firing that completed (null before any); `oldest_overdue` the earliest wake any consumer has that has already
+   *  come (null when none is owed); `stale` is true when work has been owed for two cycles (`HEALTH_CYCLE_MS`) and no
+   *  firing ran in them. Reads only: it re-arms nothing and runs nothing. */
+  async health(now = Date.now()) {
+    const owed = await this.#oldestOverdue(now);
+    const { last_run, running_since, watchdog_seen } = await this.#beatRead();
     const alarm = await this.#storage.getAlarm();
-    const since = owed === null ? null : Math.max(owed, last ?? -Infinity);
-    return { last_run: last, alarm_at: alarm ?? null, owed_since: owed, stale: since !== null && now - since > 2 * HEALTH_CYCLE_MS };
+    const since = owed === null ? null : Math.max(owed, last_run ?? -Infinity);
+    return { last_run, running_since, watchdog_seen, alarm_at: alarm ?? null, oldest_overdue: owed,
+             stale: since !== null && now - since > 2 * HEALTH_CYCLE_MS };
+  }
+
+  /** R29, the watchdog's one call (the plane's Worker `scheduled`, once a cycle): `watch(at)`, `at` the instant the cron
+   *  was scheduled for. It records `watchdog_seen` (never backwards), reads the alarm and the heartbeat, and re-arms, as
+   *  `arm` does but outright (the later of the earliest wake and now), only when (a) no alarm is set and no firing is in
+   *  progress (`running_since` within a cycle: `getAlarm()` is null while the handler runs), or (b) the alarm is spent
+   *  (R4), or (c) work is owed, no firing is in progress, `last_run` is older than two cycles and the alarm is still ahead (one already due is about to run). It runs no tick, reads
+   *  no consumer's rows, and is idempotent: with a live alarm and a fresh `last_run` it asks no consumer anything and
+   *  sets nothing. Answers what it saw and did: `{alarm_at, last_run, running_since, rearmed, why}`. */
+  async watch(at, now = Date.now()) {
+    const seen = Number.isFinite(at) ? at : now;
+    let beat = await this.#beatRead();
+    if (!(beat.watchdog_seen >= seen)) { await this.#beatWrite({ watchdog_seen: seen }); beat = this.#beat; }
+    const alarm = await this.#storage.getAlarm();
+    const running = Number.isFinite(beat.running_since) && now - beat.running_since < RUNNING_BOUND_MS;
+    const none = alarm === null || alarm === undefined;
+    const fresh = Number.isFinite(beat.last_run) && now - beat.last_run <= 2 * HEALTH_CYCLE_MS;
+    let why = null;
+    if (none && !running) why = "no_alarm";
+    else if (!none && alarm < now - SPENT_ALARM_MS) why = "spent";
+    else if (!running && !fresh && alarm > now && (await this.#oldestOverdue(now)) !== null) why = "stale";   /* an alarm at or before now is about to run */
+    const out = { alarm_at: none ? null : alarm, last_run: beat.last_run, running_since: beat.running_since, rearmed: false, why };
+    if (why === null) return out;
+    this.#held.clear();   /* R27 */
+    const probe = await this.#probeState(now, true);
+    await this.#loadDaily();
+    const at2 = await this.#reconcile(now, this.registry(probe), false, null, true);
+    return { ...out, alarm_at: at2, rearmed: at2 !== null };
   }
 
   /** At the instance's start: reconciles as `arm` does, so an alarm lost to a failed firing or a reset is re-derived

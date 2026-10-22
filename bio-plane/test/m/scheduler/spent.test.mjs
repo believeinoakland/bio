@@ -105,22 +105,108 @@ test("R28: health is stale when work has been owed for two cycles with no firing
   const mk = (wake) => { const { c } = owed(wake); const w = world(); w.s.register("scheduler-test", c); return w; };
   let { s, st } = mk(NOW - 3 * cycle);
   let h = await s.health(NOW);
-  assert.deepEqual([h.last_run, h.owed_since, h.stale], [null, NOW - 3 * cycle, true], "owed for three cycles, never run");
+  assert.deepEqual([h.last_run, h.oldest_overdue, h.stale], [null, NOW - 3 * cycle, true], "owed for three cycles, never run");
   ({ s } = mk(NOW - cycle));
   assert.equal((await s.health(NOW)).stale, false, "owed for one cycle");
   ({ s } = mk(NOW + cycle));
   h = await s.health(NOW);
-  assert.deepEqual([h.owed_since, h.stale], [null, false], "nothing owed");
+  assert.deepEqual([h.oldest_overdue, h.stale], [null, false], "nothing owed");
   ({ s, st } = mk(NOW - 3 * cycle));
   await s.onAlarm(NOW - 3 * cycle + 1);              // a firing records its instant, durably
-  assert.equal(st.beat.get("sched_last_run"), NOW - 3 * cycle + 1);
+  assert.deepEqual(st.beat.get("sched_beat"), { last_run: NOW - 3 * cycle + 1, running_since: null, watchdog_seen: null });
   ({ s, st } = mk(NOW - 3 * cycle));
-  st.beat.set("sched_last_run", NOW - cycle);        // the last firing was a cycle ago, work has been owed longer
+  st.beat.set("sched_beat", { last_run: NOW - cycle });        // the last firing was a cycle ago, work has been owed longer
   h = await s.health(NOW);
   assert.deepEqual([h.last_run, h.stale], [NOW - cycle, false], "a firing within two cycles");
   ({ s, st } = mk(NOW - 3 * cycle));
-  st.beat.set("sched_last_run", NOW - 5 * cycle / 2);
+  st.beat.set("sched_beat", { last_run: NOW - 5 * cycle / 2 });
   assert.equal((await s.health(NOW)).stale, true, "owed, and no firing for two cycles");
   st.alarm = NOW + 1;
   assert.equal((await s.health(NOW)).alarm_at, NOW + 1);
+});
+
+/* ---- R29: watch(at), the watchdog's one call ---- */
+const CYCLE = HEALTH_CYCLE_MS;
+function watched({ alarm = null, beat = null, wake = NOW - 3 * CYCLE } = {}) {
+  const { c, ran } = owed(wake);
+  const w = world();
+  w.s.register("scheduler-test", c);
+  w.st.alarm = alarm;
+  if (beat) w.st.beat.set("sched_beat", beat);
+  return { ...w, c, ran };
+}
+const nothingRead = (c, ran) => { assert.equal(c.wakes, 0, "no consumer asked its wake"); assert.equal(c.ticks.length, 0, "no tick"); assert.equal(ran.length, 0); };
+
+test("R29: watch re-arms a null alarm when no firing is in progress, answering what it saw and did, and runs no tick", async () => {
+  const { s, st, c, ran } = watched();
+  const r = await s.watch(NOW - 1000, NOW);
+  assert.deepEqual([r.rearmed, r.why, r.alarm_at], [true, "no_alarm", NOW]);
+  assert.deepEqual(sets(st), [NOW]);
+  assert.equal(c.ticks.length, 0, "never runs owed work");
+  assert.equal(st.beat.get("sched_beat").watchdog_seen, NOW - 1000);
+  await s.onAlarm(st.alarm);
+  assert.equal(ran.length, 1, "the alarm it set runs the work");
+});
+
+test("R29: watch re-arms a spent alarm; leaves a future alarm with a fresh last_run alone and asks no consumer anything", async () => {
+  let w = watched({ alarm: NOW - 7 * HOUR });
+  let r = await w.s.watch(NOW, NOW);
+  assert.deepEqual([r.rearmed, r.why], [true, "spent"]);
+  assert.deepEqual(sets(w.st), [NOW]);
+  w = watched({ alarm: NOW + 60e3, beat: { last_run: NOW - CYCLE } });
+  r = await w.s.watch(NOW, NOW);
+  assert.deepEqual([r.rearmed, r.why, r.alarm_at], [false, null, NOW + 60e3]);
+  assert.deepEqual(sets(w.st), []);
+  nothingRead(w.c, w.ran);
+  assert.equal(w.st.beat.get("sched_beat").watchdog_seen, NOW, "seen is recorded even when nothing is re-armed");
+});
+
+test("R29: a live alarm with work owed and no firing for two cycles is re-armed to now; one with work owed but a fresh last_run, or nothing owed, is not", async () => {
+  let w = watched({ alarm: NOW + 60e3, beat: { last_run: NOW - 3 * CYCLE } });
+  let r = await w.s.watch(NOW, NOW);
+  assert.deepEqual([r.rearmed, r.why, r.alarm_at], [true, "stale", NOW]);
+  w = watched({ alarm: NOW + 60e3, beat: { last_run: NOW - 3 * CYCLE }, wake: NOW + 3600e3 });
+  r = await w.s.watch(NOW, NOW);
+  assert.deepEqual([r.rearmed, r.why], [false, null], "nothing owed: a quiet instance is not stale");
+  assert.deepEqual(sets(w.st), []);
+});
+
+test("R29: running_since fresh means a firing is in progress: a null alarm and a stale last_run are not re-armed; a stale running_since (a killed run) is", async () => {
+  let w = watched({ alarm: null, beat: { last_run: NOW - 3 * CYCLE, running_since: NOW - 60e3 } });
+  let r = await w.s.watch(NOW, NOW);
+  assert.deepEqual([r.rearmed, r.why, r.running_since], [false, null, NOW - 60e3]);
+  assert.deepEqual(sets(w.st), []);
+  w = watched({ alarm: NOW + 60e3, beat: { last_run: NOW - 3 * CYCLE, running_since: NOW - 60e3 } });
+  assert.equal((await w.s.watch(NOW, NOW)).rearmed, false, "a busy object is not a dead one");
+  w = watched({ alarm: null, beat: { last_run: NOW - 3 * CYCLE, running_since: NOW - 2 * CYCLE } });
+  r = await w.s.watch(NOW, NOW);
+  assert.deepEqual([r.rearmed, r.why], [true, "no_alarm"]);
+});
+
+test("R29: a firing sets running_since when it starts and clears it when it ends, however it ends, and records last_run", async () => {
+  const { s, st } = world();
+  let during = null;
+  s.register("scheduler-test", consumer("ledger", { key: "ledger", due: NOW, wake: NOW + 90e3, tick: () => { during = { ...st.beat.get("sched_beat") }; return {}; } }));
+  await s.onAlarm(NOW);
+  assert.equal(during.running_since, NOW, "set before any tick");
+  assert.deepEqual(st.beat.get("sched_beat"), { last_run: NOW, running_since: null, watchdog_seen: null });
+  const bad = world();
+  bad.s.register("scheduler-test", consumer("ledger", { key: "ledger", due: NOW, wake: NOW + 90e3 }));
+  bad.st.setAlarm = async () => { throw new Error("storage broke"); };
+  await assert.rejects(bad.s.onAlarm(NOW));
+  assert.equal(bad.st.beat.get("sched_beat").running_since, null, "cleared in finally");
+});
+
+test("R29: a double or late call changes nothing the first did not; a call with an older instant never moves watchdog_seen back; health reads it", async () => {
+  const { s, st } = watched();
+  await s.watch(NOW, NOW);
+  const after = sets(st).length;
+  const again = await s.watch(NOW, NOW + 1000);
+  assert.equal(again.rearmed, false, "the alarm it set is now live");
+  const late = await s.watch(NOW - 20 * 60e3, NOW + 2000);
+  assert.equal(late.rearmed, false);
+  assert.equal(sets(st).length, after, "one effective set");
+  assert.equal(st.beat.get("sched_beat").watchdog_seen, NOW, "never backwards");
+  const h = await s.health(NOW + 2000);
+  assert.equal(h.watchdog_seen, NOW);
 });

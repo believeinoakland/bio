@@ -14,11 +14,11 @@ export function storage() {
     async getAlarm() { log.push(["getAlarm"]); return alarm; },
     async setAlarm(t) { log.push(["setAlarm", t]); alarm = t; },
     async deleteAlarm() { log.push(["deleteAlarm"]); alarm = null; },
-    async get(k) { if (k === "sched_last_run") return beat.get(k); log.push(["get", k]); return kv.has(k) ? structuredClone(kv.get(k)) : undefined; },
-    /* the heartbeat (R28) is the one value every firing writes; it is kept in `beat`, outside `kv` and `log`, so the tests
-       that say what else a path writes or holds (R17, R18) keep saying it; the R28 tests read and seed `beat.get("sched_last_run")` */
+    async get(k) { if (k === "sched_beat") return beat.get(k); log.push(["get", k]); return kv.has(k) ? structuredClone(kv.get(k)) : undefined; },
+    /* the heartbeat (R28, R29) is the one value every firing writes; it is kept in `beat`, outside `kv` and `log`, so the tests
+       that say what else a path writes or holds (R17, R18) keep saying it; the R28 tests read and seed `beat.get("sched_beat")` */
     beat,
-    async put(k, v) { if (k === "sched_last_run") { beat.set(k, v); return; } log.push(["put", k]); kv.set(k, structuredClone(v)); },
+    async put(k, v) { if (k === "sched_beat") { beat.set(k, v); return; } log.push(["put", k]); kv.set(k, structuredClone(v)); },
   };
 }
 
