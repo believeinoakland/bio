@@ -1,6 +1,6 @@
 # reevaluation (T51)
 
-**Status** · session_01LKowRiQWBdmqmB6pqf1KTq · depth 2 · COMPLETE · handled B0
+**Status** · session_01CnPVmtafMcWuWKG1dLeF7L · depth 2 · COMPLETE · handled B3
 
 ## J1 · COMPLETE
 
@@ -28,3 +28,26 @@ T51-224 (words) done. Commit 601a2b9d78 on job/T51/reevaluation.
 - `node checks/run.mjs /home/user/bio`: its format and architecture arms report 0 failures; nothing in reevaluation is among its words or coverage findings.
 
 Size (session_01LKowRiQWBdmqmB6pqf1KTq): test runs 2, module lines 3383 (index.mjs 3004, checks.mjs 171, schema.mjs 208).
+
+## J2 · QUESTION
+
+G36 (C69's "newer version" item): the seam is GREEN through the real Store; no change to reevaluation is needed. One placement I need from you.
+
+**Result.** I drove the walker's chain through the real Durable Object (every module real): `acquire` a page, file it as the promotion files it, read it (`readHeld`), mark the passage (`op=contentmint`), rest an inquiry on it, wait one second, `acquire` the page again and file/read it, restart the object over a spent alarm (48 h old, older than every consumer's wake), fire the alarm as the platform does, read `op=queue`. On the merged tree: the restart sets the alarm afresh, `noticeSweep` raises one notice `(holder, content_id, capture_sha, newer_capture)` and `op=queue` holds `FINDING::newer-capture-affects-reference::<notice id>`; the sweep rests afterwards. Both orders of "newer capture read before / after the sweep" give the item. Control: the same recapture with no question on a passage raises nothing and the sweep is not pending. **Red on the deployed code `5ff8b5e01b`** (worktree): the two chain tests fail at "the restart set the alarm afresh" (the alarm stays the spent one, so nothing ever fires); the control passes. So the cause is the dead alarm (scheduler, merged), and `sweep.test.mjs`'s stand-in host is why the tests missed it; the gap is this seam test. No change to the module's code.
+
+**What I need (the smallest thing).** The test cannot live in `bio-plane/test/m/reevaluation/`: it needs the plane's `Store` (plane is later in the order) and `capture`/`extraction` (not in my uses); `checks/architecture.mjs` refuses it (4 failures), and I may not write plane's tests. I committed it at **5767968f14** (`bio-plane/test/m/reevaluation/seam.test.mjs`, 3 tests, 153/153 of my suite green beside it) and took it off my head in the next commit so my branch passes its checks. As with extraction's round-6 seams (plane #51 took them over), please have the plane job (or you) take that file into `bio-plane/test/m/plane/` (rename e.g. `round6-reevaluation.test.mjs`; its imports are `../plane/fixture.mjs` -> `./fixture.mjs`, `./fixture.mjs` (reevaluation's `inquiryMd`, `infoMd`) -> import from `../reevaluation/fixture.mjs`, or inline the two md builders), with `git show 5767968f14:bio-plane/test/m/reevaluation/seam.test.mjs`. Its titles name R14 and R25. Say if you would rather I keep it here with `capture` and `extraction` added to reevaluation's uses and the plane import replaced; I do not see how, since plane's Store is the only real object.
+
+Best reading: plane takes the file over. Meanwhile there is nothing else in my entry; I wait.
+
+## J3 · COMPLETE
+
+G36 complete. No change to reevaluation's code or tests on my branch; the seam test (committed at 5767968f14) is now plane's `round6-reevaluation.test.mjs` (BOB, B3).
+
+1. **Cause:** the dead alarm (scheduler, merged): a spent alarm was never re-set by a restart, so the notice-sweep consumer never ran. The chain itself (capture, file, read, mark passage, question, recapture, sweep, Queue) is correct: through the real Store the sweep raises one notice and `op=queue` holds `FINDING::newer-capture-affects-reference::<notice>`, whether the newer capture is read before or after the sweep.
+2. **Missed because** `reevaluation/sweep.test.mjs` uses a stand-in host and no test started from a spent alarm; gap closed by the seam test.
+3. **Failing-first:** the two chain tests, red on `5ff8b5e01b` (alarm stays the spent one, "the restart set the alarm afresh" fails), green on the merged tree; control (recapture with no cited passage: no notice, no item, sweep not pending) green on both.
+4. **Platform check:** P, C69 at the re-walk.
+
+Requirement change: none. Suite: `node --test --test-force-exit bio-plane/test/m/reevaluation/` 153/153 with the seam file present (150 without). Checks on my head: format, architecture, coverage (40/40), words, ownership: 0 failures; `checks/run.mjs` 0 failures once the file is off my branch.
+
+Size (session_01CnPVmtafMcWuWKG1dLeF7L): test runs 12, module lines 3373 (index.mjs 2994, checks.mjs 171, schema.mjs 208; unchanged)

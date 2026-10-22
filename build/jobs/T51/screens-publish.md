@@ -1,6 +1,6 @@
 # screens-publish (T51)
 
-**Status** · session_01CbZX6kMXs3nBMuMvqC2NcN · depth 2 · COMPLETE · handled B31
+**Status** · session_018p3RDUFnhwwhQG5CBJrBfi · depth 2 · COMPLETE · handled B39
 
 ## J1 · QUESTION
 
@@ -425,3 +425,75 @@ COMPLETE · SCREENS-PUBLISH #17 · fix round 5, E4 / C48 (B30 taken). Merged tra
 **Requirement lines proposed:** as J23 (R13; R70/R77). Live-behaviour note from J23 stands: evidence now read from `citations.rows` (the written R13).
 
 Size (session_01CbZX6kMXs3nBMuMvqC2NcN): test runs 10, module lines 3612
+
+## J25 · QUESTION
+
+QUESTION (G12c-reviewcopy; replaces nothing). G10 and G11 are built and green (details at COMPLETE). G11 step 0, answered: a door that sets a team's time zone exists, Settings › Your team (`screens-settings/group.mjs:147-160`, an administrator's `factconfirm` of the profile's `time_zone`), so publishing at a set time is reachable; a team with none now sees `refusal.PUBLISH_AT_NO_ZONE` and only "Sign and publish now".
+
+G12c: review's `reviewcopy` batch is not on tranche/T51 (`review/index.mjs:1312` takes `draft` only; REVIEW #24 has posted no shape; store-door and control-plane have not merged). I need the request and answer shape and one design choice.
+1. Shape. Best reading, built to unless you say otherwise (same as SCREENS-DAILY J21's for `casedrafts`): request `reviewcopy` with `drafts` = the draft ids as one comma-joined string, at most 20, no `draft`; answer `{ok:true, kind:"review-copies", drafts:{<id>: exactly the single answer for that id, or its dead answer}}`, so an unseen draft is its own dead answer and changes no other entry.
+2. How many calls. Today: the Ceremony's wave-1 `copy` read (the address draft, needed first: the pre-flight, tensions and the whole page are built from it) plus one wave-2 `reviewcopy` per OTHER draft (`parts.mjs:291-295` `draftCopies`, read only to name a draft by its scope and count live review links). Option A (recommended): keep the wave-1 single read; send ONE batch for all other drafts. Calls: 1 + 1 = at most 2 whatever the number of drafts (5 drafts: 5 now, 2 then); a project of 2 drafts stays at 2, a project of 1 draft at 1. No added wait. Option B: drop the wave-1 read; after `casedrafts` answers send one batch for all drafts: exactly 1 call per load, but the pre-flight, tensions and every dependent read move one wave later (about +0.3 s on every Ceremony load, the opposite of the round's aim). The failing-first test's "one reviewcopy per load" is true only of B. Please choose; I build A unless told otherwise.
+Meanwhile my screen-level test uses a scripted batch answer built from (1); a whole-path test over the real plane waits red by name for review, store-door and control-plane.
+
+## J26 · COMPLETE
+
+COMPLETE (fix round 6, B32; B33 applied). Branch job/T51/screens-publish, tranche/T51 merged (c3b5a594d4), pushed.
+
+**G10** `parts.mjs` `refusalText` (the `f.translation` branch): `{name}` placeholders filled from the refusal's own field of that name (`document`, `photo`), a missing field left out, never a raw brace. Failing-first `ceremony.test.mjs` "R3 R50 (fix round 6, G10)": real canned text (`document.refused.pending` with `{document}`) and `document: INFO-2026-0134-x`: red (reference not drawn), green. Missed because `fixtures.mjs:42` had a text with no placeholder.
+**G11** `ceremony.mjs` Sign step (`timed`/`untimed`): schedule fieldset, help sentence and the "at a set time" choice only when `pre` answered, `publish_at.offered !== false` and a zone is held; otherwise `refusal.PUBLISH_AT_NO_ZONE` and the single "Sign and publish now" act. Test "R12 R15 (fix round 6, G11)": `offered:false`: no brackets, no date/time fields, only `caseratify`, the refusal sentence; with a zone unchanged. Red then green. Step 0: Settings > Your team sets the zone (screens-settings/group.mjs:147-160).
+**G12c** `parts.mjs` `draftCopies` + new `copyIn`: the other drafts' copies in one `reviewcopy` (`drafts` comma-joined, at most 20 per read) when two or more others; answer read from `copies` (K4577); an id it lacks or refuses is drawn failed, never another draft's scope. Test "R73 C49 G12c" x3 (case-editor, review-copy, ceremony): five drafts read `reviewcopy` twice (was five), the batch names the four others once; red (5 vs 2) then green. Applies to all three screens that share `draftCopies`.
+Measurements: none platform-bound (screen code only).
+Suites: screens-publish 263 pass, 0 fail, 2 todo (pre-existing); control-plane `t46-app` (the only user) 6/6. Checks: words 0 failures (this module: unkeyed 0), coverage 80/80, ownership 0 failures, architecture 0; `checks/run.mjs` shows one format failure in `build/plan/next.md:38`, not mine.
+Seam (R-SEAM): `review`'s batch and control-plane's forwarding are not on tranche/T51 yet (`grep review-copies review/index.mjs` empty), so the whole-path test over the real plane cannot be written; the screen test uses the answer shape from B33. Smallest thing I need: a CHANGE when review and control-plane merge, then I add that test and run it.
+Words owed: DEC-418's four refusal rows (K4577) serve G10 once on the table; no new sentence added.
+Proposed requirement lines: (R3/R50) a refusal drawn from the plane's text has its `{name}` placeholders filled from the refusal's fields, none drawn raw. (R12/R15) the Sign step offers a publishing time only where `publish_at.offered` is true with a zone; else `refusal.PUBLISH_AT_NO_ZONE` and Sign-now alone. (R73) a project's other drafts' copies are read in one `reviewcopy` with `drafts`, at most 2 `reviewcopy` reads per load.
+
+Size (session_018p3RDUFnhwwhQG5CBJrBfi): test runs 9, module lines 8200
+
+## J27 · REPORT
+
+Correction to J26's Size line: module lines are 3623 (wc -l of bio-plane/src/screens-publish/*.mjs), not 8200. Size (session_018p3RDUFnhwwhQG5CBJrBfi): test runs 9, module lines 3623
+
+## J28 · COMPLETE
+
+COMPLETE (B34 G20, B35 seam). Branch job/T51/screens-publish, tranche/T51 merged (review's batch 748383ed5e included), pushed.
+
+**G20 (S11), four fields.** (1) Cause, `docket.mjs:20`: the "document it rests on" picker read `heldcaptures` once with `limit: 200` and drew that page as the whole list; the answer's `truncated`/`next` were ignored. Fix (`docket.mjs`, G20 block): while a page is `truncated` with a `next`, the next page is read (`after`, `later` keys `caps:<i>`), up to 25 pages; the picker lists every row read; a page still loading draws loading in its place, a page that cannot be read draws failed and offers no picker (a partial list is never given as the whole); past 25 pages it says how many it lists. (2) Missed: the fixture answered one small page and no test drove the list past 200. (3) Failing-first `g20.test.mjs`: 250 held documents: the picker reaches the 250th with two reads (the second `after: "200"`), one page when 40 (control), a failed second page draws failed with no picker. Red on the old source (2 failures), green now. (4) N.
+Stand-in word: `screen.people.more` ("The first {n} are shown...") for the capped case; row owed: `screen.docket.capture.more`; added to the docket's word list in `keys.mjs`.
+
+**B35 seam.** `seam4.test.mjs` "R73 C49 G12c (fix round 6, seam)": four real drafts over the real merged review (`copyMany`): the Ceremony reads `reviewcopy` twice (the draft shown and one batch of the other three) and each draft is named by the scope its own real copy states. Green. It drives review directly, as the file's other seam tests do; the door path (control-plane forwarding `drafts`) is not exercised and waits for CONTROL-PLANE #48's merge: I need the CHANGE then, and will run the screen suite against it.
+
+Suites: screens-publish 266 pass, 0 fail, 2 todo (pre-existing). Checks: words 0 failures (unkeyed 0), coverage 80/80, architecture 0, ownership 0.
+Proposed requirement line (R8): the docket's document picker lists every held document, reading each next page from `next`, and says how many it lists where it cannot.
+
+Size (session_018p3RDUFnhwwhQG5CBJrBfi): test runs 14, module lines 3650
+
+## J29 · COMPLETE
+
+COMPLETE (B36). tranche/T51 merged (control-plane's batch keys included), pushed. New `door-seam.test.mjs` "R73 C49 G12c (fix round 6, door seam)": the real Worker, its object and review under Miniflare; the member's acts make a project and four drafts (`casedraft`); the Ceremony's page reads go through the real door. It sends two `reviewcopy` (the draft shown, and one batch `drafts=<the other three>`), the door answers the batch, and each draft is named by the scope of its own real copy. Green. Suites: screens-publish 267 pass, 0 fail, 2 todo (pre-existing); words, coverage 80/80, architecture, ownership 0 failures. Nothing open. Ahead: G29 CHANGE when CASE-AUTHORING #39 merges. Size (session_018p3RDUFnhwwhQG5CBJrBfi): test runs 6, module lines 3635
+
+## J30 · QUESTION
+
+QUESTION (G29, B37 item 2; replaces nothing). The row cannot give the sha ratification verifies for a document.
+What ratification verifies: `caseratify`/`publishat` `members: [{id, sha, signature}]` are each checked as R4 checks a bundle (R52): `findingFactsRefusal` (`ratification/finding.mjs:64-67`) answers `RATIFY_STALE` unless `m.sha === facts.row.bundle_sha`, the BUNDLE's head (`record-core` `head(id).bundleSha`, the sha256 of its `bundle.md`), and the signature is over `ratifyStatement(id, m.sha)` (`index.mjs:1387`; held members again at `:1383-1390`). The sitting test signs `w.sha(id)`, that head, for each INFO document (`ratification/sitting.test.mjs:63-64`).
+What the row gives (`case-authoring/index.mjs` `#caseCitations` tail, `document.mjs:141-145`): `{target: INFO-..., version: only_capture|pinned|undetermined|no_capture|no_bytes, capture: <the CAPTURE's sha256> | null}`. A capture's sha is not the document bundle's head sha (a document holds captures; its `bundle.md` has its own sha), so signing `row.capture` gets `RATIFY_STALE` (and a row with `capture: null` has nothing to sign at all). No existing row field holds the head.
+What ratification/the row would need: each evidence row carries the document's head `bundle_sha` as of the prepare act (case-authoring R16/R86, written into `case_citations`, the stored document and `casedocument`'s `citations.rows` alike), and then `sitting()` signs `ratifyStatement(row.target, row.bundle_sha)`; a document that moves between prepare and signing is refused `RATIFY_STALE` naming it, which is the right answer for an edition whose bytes were frozen. Every row of a document, `undetermined` ones too, would have it (the head does not depend on how many captures it holds), so no document needs to be left unnamed.
+Alternative (not recommended): the screen reads each evidence document's head at the Sign step (`list`/`bundlehistory`, one more read per document, and a sha the case document never recorded).
+I do not invent a mapping. Until you decide I build what is independent of it: no evidence line is drawn or signed from `version`; the seam test (cite, conclude, prepare, publish, then `caseratify`/`publishat` over the real ratification, every evidence signature verifying) written red by name. Please answer (and CHANGE case-authoring if the row is to carry `bundle_sha`).
+
+## J31 · REPORT
+
+REPORT (G29, B37/B38). Pushed. `parts.mjs` `sitting()`: an evidence line is `ratifyStatement(row.target, row.bundle_sha)` for each row carrying a 64-hex `bundle_sha`; nothing is read from `version` or `capture`. New `unsignable()` (replaces `notPublished`): the document rows (`version` not `no_bytes`) with no head, each once; the Sign step names them (`[data-unsignable]` list) beside the held sentence `screen.published.rests.on.the.council.minutes[.one]` (stand-in, row owed: a sentence saying these documents cannot be signed with the edition). Tests: fix2 "R13 G29" (signs at the head, never the capture or class; two rows without a head named; control none named) green; fixtures' DOCUMENT rows now in the real shape. Seam test seam4 "R13 G29 (seam)" (real cite, conclude, prepare, then the ceremony's sitting must hold the document at `w.record.head(DOC).bundleSha`) is RED BY NAME: `row.bundle_sha` is undefined until CASE-AUTHORING #40 merges; I need your CHANGE then. Suite: 268 pass, 1 fail (that test), 2 todo; words, coverage 80/80, architecture, ownership 0 failures. Verification by the real ratification is its own sitting test (the head is the sha it checks, `finding.mjs:64`); this seam proves the screen signs that head. No COMPLETE until green.
+
+## J32 · COMPLETE
+
+COMPLETE (G29 screen half, B37-B39). Branch job/T51/screens-publish, tranche/T51 merged (case-authoring #40 included), pushed.
+
+**G29, four fields.** (1) Cause, `parts.mjs` `sitting()`: an evidence line was kept only if the citation row's `version` was 64 hex, but real rows carry a classification word in `version` and the capture's sha in `capture`; over a real document no evidence line was drawn or signed. Fix: a document row is signed as `ratifyStatement(row.target, row.bundle_sha)` for a row carrying a 64-hex `bundle_sha` (the head ratification verifies, R4/R52: `finding.mjs:64` `RATIFY_STALE` unless `sha === bundle_sha` of the head); nothing from `version` or `capture`. New `unsignable()` (replaces `notPublished`) lists the document rows (`version` not `no_bytes`) with no head, once each; the Sign step names them in a `[data-unsignable]` list under the held sentence `screen.published.rests.on.the.council.minutes[.one]` (stand-in; row owed: a sentence saying these documents cannot be signed with the edition). (2) Missed: `seam4` and the fixtures hand-wrote rows with `version` as a sha, a shape no plane answers. Gap fix: fixtures use the real row shape; the seam below prepares through the real case-authoring. (3) Failing-first: `seam4` "R13 G29 (seam)": the real cite, conclude, prepare; the ceremony's sitting holds the cited document at `w.record.head(DOC).bundleSha`: red (row had no `bundle_sha`) until case-authoring #40, green now. `fix2` "R13 G29": signs at the row's head never at capture or class, two rows without a head named, control none named. The two E4 seam tests (reload and no-reload) now count the document too (3 statements: edition, finding, evidence) and assert its member `[DOC, head]`. (4) N.
+Ratification's own verification of an evidence member at that head is its sitting test (R52); this job proves the screen signs the head and did not re-run a signature over the real ratification.
+
+Suites: screens-publish 269 pass, 0 fail, 2 todo (pre-existing); control-plane `t46-app` 6/6 (the module's only user). Checks: words 0 failures (unkeyed 0), coverage 80/80, architecture 0, ownership 0.
+Proposed requirement lines (R13): the sitting's evidence lines are the document rows of `casedocument`'s `citations.rows` that carry `bundle_sha`, each signed as `ratifyStatement(target, bundle_sha)`; a document row with none is named in the Sign step as not signable with the edition and no line is drawn or signed for it.
+Row owed to UX-DESIGN: the unsignable-documents sentence (stand-in `screen.published.rests.on.the.council.minutes`).
+
+Size (session_018p3RDUFnhwwhQG5CBJrBfi): test runs 9, module lines 3638

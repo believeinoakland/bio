@@ -91,7 +91,8 @@ test("R16 (C67, K4303) control: a finding that is a member of the case is cited;
   const P = w.project("Many", "alice", [Q, Q2, DOC]);
   const both = w.publish(P, "alice", [Q, Q2], { tieAttested: true, selfAttested: [{ capture: b, reason: REASON }] });
   assert.equal(both.ok, true, JSON.stringify(both).slice(0, 300));
-  assert.deepEqual(both.case_citations.map((x) => x.target), [Q, Q2, DOC]);
+  /* R86: then the documents the two findings rest on that the project does not cite itself (Q rests on DOC2) */
+  assert.deepEqual(both.case_citations.map((x) => x.target), [Q, Q2, DOC, DOC2]);
 });
 
 test("R82 (C40, K4365): each not_co_attested row carries the capture's own facts — after a late timestamp it is timestamp_late with late_words and the co-archive still missing; a capture with no attempt misses both and is not late (control)", () => {

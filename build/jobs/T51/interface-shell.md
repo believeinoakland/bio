@@ -1,6 +1,6 @@
 # interface-shell (T51)
 
-**Status** · session_01AQngXihE8KDBsQRFsE7fEX · depth 2 · COMPLETE · handled B37
+**Status** · session_01GuYhDBuwX3wYXyAxnpXWHF · depth 2 · COMPLETE · handled B37
 
 ## J1 · BLOCKED
 
@@ -368,3 +368,58 @@ Existing tests amended (module's own): `t50` R86 (whoami alone at 0; bootstrap w
 Words: none added. R-OLD: new data only (a per-tab key no earlier release wrote). Census ops owned: none new. Deferred: none.
 
 Size (session_01AQngXihE8KDBsQRFsE7fEX): test runs 9, module lines 3478
+
+## J25 · COMPLETE
+
+COMPLETE · INTERFACE-SHELL #18 (session_01GuYhDBuwX3wYXyAxnpXWHF) · T51 · B38 (fix round 6, G30 and G31)
+
+**G30 · the front page's work is done once per release (B-21).**
+
+*Root cause (`bio-plane/src/interface-shell/index.mjs`, before this job).* `interfaceScript` kept the composed source but not its hash, and ran `checkScreens` and `checkGuide` on every call before looking at what it kept (old :437-440). So each `GET /` paid the whole script's hash twice (control-plane's `page()` calls `interfaceScriptHash`, :890, and `interfacePage` hashes again, old :471) and re-checked all the screens; each script fetch re-checked them. Offline that is 100-180 ms of synchronous CPU a request; on workerd it is more (measured below). The plan's cause was "probable, not reproduced"; it is now measured: it is the whole of the idle cost of the page route, and it is what a burst of requests stacks up behind.
+
+*What changed.* `index.mjs` :432-465: `release(screens, options)` keeps `{source, hash}` for the last screens and guide handed in and runs the checks, the class check and the compose only on a miss; `interfaceScriptHash` hashes once per kept script. New export `pageWork()` (:441): counts of scripts composed, hashes taken and checks run in this isolate. Counts, not times, because the Worker's clock is frozen during synchronous work (R-CLOCK); this is what control-plane's `page` log line (K4428) states. control-plane is not touched: its `page()` (:888-892) now finds the hash kept, so its two calls cost one hash per release.
+
+*Why the tests missed it (rule 2) and the gap fixed.* Nothing counted or timed the work behind the page route (`page.test.mjs` asserts two responses are equal; the second is as slow as the first). `g30.test.mjs` counts it, through the module's entries the way control-plane calls them, over the real screens of the nine modules (4.8 MB script).
+
+*Failing-first (rule 3), seen red against the code as it was (counter added first, memo not):* "twenty front pages and twenty script fetches": actual `{scripts: 1, hashes: 40, checks: 60}`, expected `{1, 1, 1}` (twice per hit, as the plan said); the "hit hands back the kept hash" control red at 45 vs 44. Green after: 4 of 4. Controls in the file: the hash is the SHA-256 of the script's UTF-8 bytes, base64, and the page's `integrity` is the same string; a different set of screens is another release (composed, checked, hashed again, its own hash); a broken screen or guide is refused on every ask and leaves the kept release as it was.
+
+*Platform check L (rule 4), `page-contention.probe.mjs` (committed, a probe not a test: it boots workerd and takes a minute).* Real screens of the nine modules plus `plane/register.mjs`, bundled with esbuild, served from one workerd isolate: `GET /` does what `page()` does (hash, then page), the versioned script, and a body drained as `captureupload` drains one. Wall clock outside the isolate. `node page-contention.probe.mjs <dir> [<index.mjs>]`.
+
+| measure (workerd, this container) | before (module at `tranche/T51`) | after |
+|---|---|---|
+| first `GET /` of a release (the build) | 1754 ms | 1374 and 1464 ms |
+| 20 `GET /` idle, one at a time | median 361 ms, max 430 ms | median 1 ms, max 4-5 ms |
+| 10 `GET /` during a 20 MB upload | median 3104 ms, max 4288 ms (bar 2000: FAILS) | median 9 ms, max 220-266 ms (bar met) |
+| 10 script fetches during it | median 4595 ms, max 4660 ms | median 389-420 ms, max 444-462 ms |
+
+The build (compose, class check, one hash) is paid once per release by the first request an isolate gets, about 1.4 s; every later page is 1-5 ms of the module's work. 10 concurrent pages in 3-4 s against a walk's 19-53 parallel reads plus uploads fits the walker's 20 and 30 s draws. Platform check P (20 timed fetches of `/` idle and during a walk on biosmoke8) is a read-only measure of the deployed fix: PERFORMANCE's after-deploy re-timing in plan section 7, not possible before the deploy.
+
+**G31 · a first sign-in sends each request once (A-27).**
+
+*The plan's reading was "by design, a walker artefact". Half of it holds; the other half was a defect.* Driven through the real entry (the real `front` screen's `login` act over the real screens of the nine modules, sign-in returning to Queue and to Home): (a) `queue` twice is by design: the open list and the muted list are two queries of one op (`screens-daily/queue.mjs`), each once; with the real op's whole-list shape (`ok, member, items, limit, sort, item_count, truncated: false`) the frame asks no `count` read and the rail and masthead draw the list's number. These two cases were green from the start; kept as controls (with the cut list, `truncated: true`, asking exactly one count). (b) But 8 of the 23 requests after the press were repeats: `whoami`, `interfacewords` and the six frame reads each went out twice (and `groupidentity` a third time on Home).
+
+*Root cause.* `screens-entry/front.mjs:106` hands the session over to stay and read `whoami` (`cs.signin(a, {…, stay: true})`) and :109 hands it over again to open the page kept (`cs.signin(a, opts)`; its comment: "the record written again, as it was"). The shell's `signedIn` (old browser.mjs:1654-1666) took each for a new session: `writeRecord` (new epoch, frame dropped), `ME = null`, then `route()` (new epoch) and so `whoami()` (:1583) with `loadWords()` and `frameBoot()` (:1639-1640) again; and the epoch change kept Home's own `groupidentity` from sharing the frame's. The walker's second document load (a second tab) is by design (R32) and is a control here: the other tab sends its one set once.
+
+*What changed (`browser.mjs`).* `signedIn` :1657: a session handed over again exactly as it is (same token, expiry, device and handle, `whoami` already answered, not locked) is one sign-in: the record is not rewritten, `whoami` not sent, and the hand-over opens the page kept as part of the same load. `route(keep)` :1549 opens no new epoch for that second hand-over, and the first (`stay`) opens the load (`LOADING = true`), so the frame's reads are shared with the screen's identical ones (R123's own rule, which the epoch change had cut). A different token, handle or device, or a session whose `whoami` has not answered, is a new hand-over as before. `screens-entry` is not touched (its two calls are harmless now, and are its R18's intent).
+
+*Why the tests missed it, and the gap fixed.* `e12` boots one page on one route with the session already in storage; no test crossed a sign-in. `g31.test.mjs` (7 tests) does, through the real front screen.
+
+*Failing-first, seen red against the old `browser.mjs` (the file put back for the run), green with the change:* first sign-in on Queue: repeats `whoami x2, interfacewords x2, groupidentity x2, infolevel x2, assistantstate x2, accountreference x2, subscriptionsignin x2, groupkeystate x2`; on Home the same; the record written twice (one write now); the other tab's set doubled. Green: 7 of 7. Controls: another token over a live session is a new session (`whoami` again, the frame read again, the record rewritten); a cut open list asks one count; the muted list and the open list are sent once each.
+
+*Count at the walker's case.* The sign-in load after the press is 15 requests (login, whoami, interfacewords, the six frame reads, the open queue, the muted list, `heldcaptures`, `inbox`, `memberlist`, `wizardsat`), was 23. The walker's 49 on the live copy is the same shape with a larger home page; PERFORMANCE counts again after the deploy. Platform check N.
+
+**Suites and checks**
+- Module `bio-plane/test/m/interface-shell/*.test.mjs`: 348 tests, 348 pass (337 before; +4 `g30`, +7 `g31`). `g30` and `g31` each seen red first (above).
+- Users, from `impact.mjs origin/tranche/T51 HEAD` (13 modules, 363 files): the screen modules, two suites at a time: screens-entry, -wizards, -settings, -intake, -daily: tests 1003, pass 1003; screens-inquiry, -investigate, -publish, -action: tests 1293, pass 1289, fail 1 (the one red is `screens-investigate/fix4-seam.test.mjs:92` "Money, the real plane", a 63 s real-plane test that failed under two suites at once and passes alone with this change, 1 of 1); control-plane page and door tests that compose the page (`doors`, `t46-app`, `t46-e2e`, `t47-door`, `t47-e2e`, `t48-door`, `t51-bootstrap`) and plane `t47`, `wizards`: 63 of 63. `journey-check/*.test.mjs` (after `npm ci` in `bio-plane/src/journey-check`, K4113): 128 tests, 104 pass, 23 fail; the SAME 23 fail at `origin/tranche/T51` with this job's files absent (run in a worktree, same failing names; the first failing step is journey 28's install step "locator.textContent: Timeout 30000ms", the installer's fake account; also the two G1 watchdog-cron tests, which stay red by name until installer-steps merges, the words R17 "group" test, and the arms that walk on after journey 28). None touches this job's code.
+- `checks/run.mjs`: format 0 failures, architecture 0, coverage 0 (6656 of 6656 ids named), channels 0, words 0 failures with counts unchanged (module: inline 0, dev 18, unkeyed 1, before and after; whole: dev 268, unkeyed 1982). `checks/ownership.mjs interface-shell tranche/T51 job/T51/interface-shell`: 0 failures.
+
+**Requirement lines for BOB**
+- R126 new (G30; B-21; K4428): "The page's script, the hash of it the page policy names, and the checks of the screens and guide it is made from are done once per release in an isolate (for the screens and guide it was last made from): a front page and a script fetch after the first only read what was kept, so no request pays for the script's build, its hash or its checks; a set that fails its checks is kept nowhere and is refused again at the next ask. The module exports `pageWork()`, the counts of scripts composed, hashes taken and checks run in this isolate (counts, not times: a Worker's clock does not see synchronous work, R-CLOCK), for control-plane's `page` log line. Test: `g30.test.mjs`. Controls: the hash is the SHA-256 of the script's UTF-8 bytes; another set of screens is another release; a broken screen is refused every time. Platform: `page-contention.probe.mjs`."
+- R127 new (G31; A-27): "A session handed to the shell again exactly as it is (the same token, expiry, device and handle, `whoami` answered, not locked), as `front` does to stay and read `whoami` and then to open the page kept, is one sign-in: the record is not written again, and `whoami`, the words and the frame's reads are not sent again; the second hand-over opens the page kept as part of the same load, which the first opened (R123: no new epoch). A different token, handle or device is a new hand-over. Test: `g31.test.mjs`, through the real `front` screen. Control: the other tab sends its own set once; a cut open list asks one count."
+- R46: `cs.signin`'s line gains "(R127: handed over again as it is, it is the one session)". R123: "every route ... opens a new epoch" gains "except the route that follows a hand-over that stayed (R127)".
+
+**Found in another module.** control-plane `page()` (:888-892): no change needed for the hash (now once per release); its `page` CPU log line (G30, K4428) is its next job's and reads `pageWork()`. screens-entry `front.mjs:106-109`: the double hand-over is now harmless; it may stay (its R18 says the record is written again). No other module.
+
+Words: none added (no member-facing string). R-OLD: new data only (no stored data). Census ops owned: none (the shell declares no op). Deferred: none. REPORT/QUESTION: none open.
+
+Size (session_01GuYhDBuwX3wYXyAxnpXWHF): test runs 20, module lines 3347

@@ -8,7 +8,7 @@ import { captureOps } from "../../../src/capture/index.mjs";
 /* a stand-in for the store's acquire: records the opts it is called with and answers a fixed body */
 const recording = () => {
   const seen = [];
-  const c = { env: {}, acquire: (body, opts) => { seen.push({ body, opts }); return { status: 200, body: { ok: true } }; } };
+  const c = { env: {}, heldCopyToCompare: () => null, acquire: (body, opts) => { seen.push({ body, opts }); return { status: 200, body: { ok: true } }; } };
   return { c, seen };
 };
 const url = new URL("http://x/acquire?cls=member&member=1&sessMember=member%3Aann&store=bio");

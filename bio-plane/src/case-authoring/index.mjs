@@ -1124,7 +1124,7 @@ export class CaseAuthoring {
     /* R40 — DEC-103: the lens it was produced under, every statement of the manifest frozen above, read at this act. */
     const lensStatements = lensRead;
     /* R16 — REC-219 / D-579(a): the project's citation edges, with the version each was made against. */
-    const citations = this.#caseCitations(proj, members);
+    const citations = this.#caseCitations(proj, members, resting);
     /* R14 (`case-inputs` R3) — REC-212 / §3 rule 13: WHO WROTE THE SENTENCE, established before the list is read, because it decides what
        the list may contain (a reading by the writer is not a second reading). */
     const writer = this.inputs.statementWriter(proj, theCase, edition, stmt, who, namedDraftRow);
@@ -1931,8 +1931,12 @@ export class CaseAuthoring {
    *  none (`no_capture`). A question has no bytes (`no_bytes`); a finding that is not a member of this case is not cited
    *  (C67; R16). Set-based: one grouped count per chunk of targets
    *  (provenance R48's `register`, extraction R58's `readings`), never one read per edge, except a document with a capture
-   *  held in parts, which is counted by identity (R84). */
-  #caseCitations(project, members) {
+   *  held in parts, which is counted by identity (R84). (G29, R86) After the project's own edges come the documents the
+   *  members' findings rest on (`resting`, `case-disclosures` R2: either role, one level deep), each once and none the
+   *  project already cites, classified the same way; a capture the findings name alone, of a document holding several, is
+   *  its pin. A case prepared from a question holds one edge, to the question, so these are the evidence's only rows.
+   *  (K4609) Every document row, `undetermined` included, also carries `bundle_sha`, the document's head at this act. */
+  #caseCitations(project, members, resting = []) {
     const text = this.#liveText(project);
     const refs = text !== null ? (parseFrontmatter(text).data?.references || []) : [];
     /* C67 (T51; K4303): the project cites the findings of all its drafts; this case cites its own. An edge to a finding
@@ -1942,7 +1946,24 @@ export class CaseAuthoring {
       && r.status !== "severed" && typeof r.target === "string" && r.target.trim()
       && (!isFinding(r.target.trim()) || (members || []).includes(r.target.trim())));
     const isDocument = (t) => normalizeType(OBJECT_TYPES[t.split("-")[0]]) === "information";
-    const docs = [...new Set(edges.map((r) => r.target.trim()).filter(isDocument))];
+    /* R86: the documents the findings rest on, found by the captures `case-disclosures.restingCaptures` names among the
+       registered captures of the documents the members' legs cite. */
+    const cited = new Set(edges.map((r) => r.target.trim()));
+    const restingDocs = new Map();
+    const caps = [...new Set((resting || []).map((x) => x.capture))];
+    const legTargets = (members || []).length ? new Set(this.#rows(
+      `SELECT DISTINCT target_id AS t FROM inquiry_basis WHERE bundle_id IN (${(members || []).map(() => "?").join(",")})`,
+      ...members).map((r) => r.t)) : new Set();
+    for (let i = 0; i < caps.length; i += SELECTION_ID_CHUNK) {
+      const part = caps.slice(i, i + SELECTION_ID_CHUNK);
+      for (const r of this.#rows(`SELECT bundle_id, capture_sha FROM register WHERE capture_sha IN (${part.map(() => "?").join(",")})
+                                  ORDER BY bundle_id, capture_sha`, ...part)) {
+        if (!legTargets.has(r.bundle_id) || !isDocument(r.bundle_id) || cited.has(r.bundle_id)) continue;
+        if (!restingDocs.has(r.bundle_id)) restingDocs.set(r.bundle_id, new Set());
+        restingDocs.get(r.bundle_id).add(r.capture_sha);
+      }
+    }
+    const docs = [...new Set([...edges.map((r) => r.target.trim()), ...restingDocs.keys()].filter(isDocument))];
     const held = new Map();
     const half = Math.floor(SELECTION_ID_CHUNK / 2);
     for (let i = 0; i < docs.length; i += half) {
@@ -1962,16 +1983,22 @@ export class CaseAuthoring {
       for (const r of this.#rows(`SELECT DISTINCT capture_sha FROM readings WHERE bundle_id=?`, t)) idents.add(r.capture_sha);
       held.set(t, { n: idents.size, one: [...idents].sort()[0] });
     }
-    return edges.map((r) => {
+    /* The findings' documents follow as edges of their own: pinned when the findings name one capture of several. */
+    const found = [...restingDocs].map(([target, shas]) => ({ target,
+      extent_capture: shas.size === 1 && (held.get(target)?.n ?? 0) > 1 ? [...shas][0] : null }));
+    return [...edges, ...found].map((r) => {
       const t = r.target.trim();
       const pin = typeof r.extent_capture === "string" && /^[0-9a-f]{64}$/.test(r.extent_capture.trim())
         ? r.extent_capture.trim() : null;
       if (!isDocument(t)) return { target: t, version: "no_bytes", capture: null };
-      if (pin) return { target: t, version: "pinned", capture: pin };
+      /* K4609: a document's row also names the head the ceremony's evidence signature is over (ratification R4's
+         `expectedSha`, the sha256 of its `bundle.md`), as it stands at this act; a capture's sha is not that head. */
+      const bundle_sha = this.record.head(t)?.bundleSha ?? null;
+      if (pin) return { target: t, version: "pinned", capture: pin, bundle_sha };
       const h = held.get(t);
-      if (!h || !h.n) return { target: t, version: "no_capture", capture: null };
-      return h.n === 1 ? { target: t, version: "only_capture", capture: h.one }
-                       : { target: t, version: "undetermined", capture: null };
+      if (!h || !h.n) return { target: t, version: "no_capture", capture: null, bundle_sha };
+      return h.n === 1 ? { target: t, version: "only_capture", capture: h.one, bundle_sha }
+                       : { target: t, version: "undetermined", capture: null, bundle_sha };
     });
   }
 

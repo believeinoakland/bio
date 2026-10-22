@@ -1,6 +1,6 @@
 # reading-pipeline (T51)
 
-**Status** · session_01AG4YHRj238neiSnHE1cvQ4 · depth 2 · COMPLETE · handled B12
+**Status** · session_01EELF7tdeuCRAdwEDTmo1ya · depth 2 · COMPLETE · handled B15
 
 ## J1 · COMPLETE
 
@@ -239,3 +239,52 @@ COMPLETE: G6 (provider), G13 (provider), G14 (provider), G15 (owner), fix round 
 - **R32** amended (G14): an unclosed `<head>` ends at the first start tag that is not head content or the first text; the body's text is read; an unclosed script, style or template is raw text to the end.
 
 Size (session_01AG4YHRj238neiSnHE1cvQ4): test runs 31, module lines 2117
+
+## J12 · QUESTION
+
+QUESTION (G26 seam, READING-PIPELINE #23). I have read the plan sections, the diagnosis, my requirements and `reading-pipeline/index.mjs` whole. Two things decide what I build; the first blocks me.
+
+1. **The provider does not exist yet.** pdf-reader's job (B8 START, PDF-READER #11) has only just started: `pdfstructure.mjs` has `openPdf` (:4255, a `PdfDoc` after the whole xref/object-stream load) and `extractPdfStructure(bytes)` (whole document), and the `pdf` format entry is `structure: (bytes) => extractPdfStructure(bytes)` (`formats.mjs:201`). No range entry. What I need, as my best reading of "cursor = page": a service on the pdf format entry (so I stay behind `getFormat`, not importing `pdfstructure.mjs`) such as `entry.structureRange(bytes, {from, count})` -> `{ok, pages: <total>, text: {pages: [{page, text, undetermined}], undetermined, counts}, ...}` for pages `[from, from+count)` only, the cross-reference parsed once per call (about 1 s) and the page structures dropped on return. Please tell me the real name and shape pdf-reader will deliver (or tell pdf-reader mine), and when it merges. Until then I write the failing-first test (it needs no provider) and the cursor/piece code against that shape.
+
+2. **What a range-read PDF's first piece carries.** Today the first piece (R40) is the reading over the WHOLE text: `text_sha256` and `text_chars` of the provenance (R14, R18), `words_total` (R35), the R17 counts, tier 2's escalation test (`needsTier2` counts undetermined markers over the whole text), tier 3's selection (`tier3Pages` over all pages), and `readText`'s determination. A range cannot give those. My best reading, to keep it small (Bob: alpha, nothing more): in pieces mode a PDF is read range by range; the first piece's reading is the reading of its range (page_count from the xref, so exact; `words_total`/`text_*`/provenance digest over the pages read so far, `words_total: null` until `more` is false), tiers 2 and 3 run per range on that range's pages only (their markers are per page; the OCR `owe` cursor stays page-based), each later piece is units alone as R40 says, and the reading is NOT re-written at the end (extraction stores the first piece's reading; `read_through`/`total` count pages for a PDF, `piece` carries `pages`). A PDF read without `cursor` is exactly as today (the door's acquire path, bounded by the 24 MiB ceiling and pdf-reader's R42 need rule). The alternative, a final summing piece that returns the whole-text reading, costs one extra pass or holding all units, which is what kills 0111.
+
+If you want the reading to be whole-text-true (digest over all pages), say so and I will carry a running SHA-256 state in the cursor instead; that costs nothing in memory but the digest then names the text as pieces joined, which I would state in the reading's provenance.
+
+Next on your word. I carry on with the failing-first test meanwhile.
+
+## G26 work in progress (READING-PIPELINE #23, session_01EELF7tdeuCRAdwEDTmo1ya)
+
+BOB's ANSWER B14 (K4606) adopted: seam `getFormat("pdf").structureRange(bytes, {from, count})` (pdf-reader, unmerged); first piece = reading of its range, `words_total` null, `provenance.text_scope = {pages:[from,to]}`.
+
+Written so far (`reading-pipeline/index.mjs`): `PDF_RANGE_PAGES` (150), `rangeCursorIn`, `rangePieceAnswer`, a ranged branch in `readInner` (pieces mode + an entry with `structureRange`; tiers 2/3 per range; later pieces units alone, `owe` still called; cursor `{k:"p", n, i}`; `seq` = page). Without a cursor, or an entry with no `structureRange`, `read` is as before.
+
+Failing-first, seen red then green:
+- `pdf-ranges.test.mjs` (4 tests, stub `structureRange`): red with the source stashed (the whole `structure` is parsed), green with it.
+- `pdf-pieces.test.mjs` (seam, real 15.2 MiB BUDGET-2024-APP, child at `--max-old-space-size=112`, pieces < 10 s, < 1.5 parses): RED BY NAME until pdf-reader merges: "1 pieces, slowest 18819 ms ... over 10 s" (one whole parse, peak 128.2 MB). Then I merge `tranche/T51` and run it.
+Module suite meanwhile: 216 tests, 215 pass, the 1 fail is that seam test.
+
+## G26 · COMPLETE (READING-PIPELINE #23, session_01EELF7tdeuCRAdwEDTmo1ya; B14 ANSWER, B15 CHANGE)
+
+**Root cause (1), file:line.** `readInner` read a PDF in pieces mode through `entry.structure(bytes)` (whole parse of every page) and then `listPieceAnswer(pieceUnitsOf(i2text))`, so each of about 7 pieces re-parsed all 1,354 pages (old `index.mjs:1978`, `:2035-2041`); the cursor branch for text (`:1872`) never applied to a PDF. **(2) Why the tests missed it:** `memory.test.mjs` read one piece in a heap of idle + 64 MB outside the plane; every piece fixture used a stub `structure` on fake bytes (extraction `round6-pieces` R91 included), so no test parsed a real PDF in pieces nor timed a piece. Gap fixed: `pdf-pieces.test.mjs` reads the real 15.2 MiB volume piece by piece, as extraction asks (2 MiB, 4,096 units), with a per-piece time and a total-versus-one-parse bar, in a child at 128 less the file's bytes (no "idle +").
+
+**What changed.** `bio-plane/src/reading-pipeline/index.mjs`: import of pdf-reader's `extractPdfRange` (R43, B15); `PDF_RANGE_PAGES` = 200 (`:1215`); `rangeCursorIn` and `rangePieceAnswer` (before `textPieceAnswer`); `read` takes `rangePages`; the ranged branch of `readInner` (pieces mode, `fmt === "pdf"`): cursor `{v:1, s, k:"p", n:total pages, i:next page}`; the range's text goes through tiers 2, 3, 4 and `readText` as a whole text does (tier 2 merges by page, so a whole-document answer touches only the range's pages); units are `allUnitsOf` with `seq` = page (as a whole read numbers them), within `unitsBudget`/`maxUnits`, and the cursor moves to the first page not carried when the budget cuts a range; a later piece is units alone and still calls `owe` for OCR pages left; the first piece's reading has `words_total: null`, `words_read` = its words, `page_count` the document's, and `provenance.text_scope = {pages: [from, to]}`; `read_through`/`total` count pages, `piece.pages = [from, to]`. Fallbacks that keep every other path as it was: no cursor; a range answer that is not ok or has 0 pages (bytes the range reader does not open: the entry's `structure` reads them whole); a list cursor (`k:"u"`) is continued as a list. Unchanged: R39, R41, the text path.
+
+**Failing-first, red then green.**
+- `pdf-ranges.test.mjs` (4 tests, real small PDFs from `bigpdf.mjs`): red with the source stashed (before the B15 change, against a stub; the whole `structure` was parsed), green after: 4 of 4.
+- `pdf-pieces.test.mjs` (seam, real BUDGET-2024-APP, 1,354 pages, child `--max-old-space-size=112`): RED before pdf-reader's range: "1 pieces, slowest 18819 ms, peak 128.2 MB" (one whole parse, over 10 s). GREEN with `extractPdfRange`: 7 pieces, slowest 3.0-3.3 s, total 17.1-17.8 s against one parse 12.1-12.8 s (ratio 1.39-1.45; at 150 pages a piece it was 1.34-1.51 and flaked, so 200), peak 104-112 MB of the 112 cap, four runs alone all pass. It is a heavy file: run it alone (in the whole-suite run beside others its ratio crosses 1.5 under load; it passes alone), as memory.test.mjs is.
+
+**Platform check (L), `pdf-pieces.probe.mjs`** (raw workerd, esbuild bundle of `read`, bytes behind a disk service, V8 old space bisected, all 7 pieces in one request): BUDGET-2024-APP 15.2 MB, no ballast: completes from 35 MB of old space (heap + bytes ~50 MB of 128); with a 60 MB live-heap ballast standing in for the plane's modules (the plane idles at 73-103 MB): from 77 MB (~92 MB with the bytes). The plane cannot be imported by this module (architecture), so the run over the real `plane/register.mjs` at N <= 100 is the plane job's L run. Per-tick time outside the isolate: not taken in workerd (frozen clock, R-CLOCK); node: slowest piece 3.3 s of 10.
+
+**Suites.** reading-pipeline `test/m/reading-pipeline/*.test.mjs` + `extraction/read.test.mjs` + d606 + tier2-wire + pdf-worker-binding: all pass (211 of 212 in a parallel run, the seam test alone failing under load; 4 of 4 alone). Users: extraction 287 of 287 (before and after: baseline 0 fail on the tranche; first attempt 35 fails because stub PDFs have fake bytes, fixed by the three fallbacks above, not by editing extraction's tests); events, observation-log, content, retrieval-browse 374 of 374. `pieces-formats.test.mjs`'s 300-page PDF case now builds a real PDF (the stub it used cannot be ranged). Checks: `checks/run.mjs`: format 0, architecture 0, coverage 6665 of 6665, channels 0, words 18421 -> 18421 (no row added), 0 failures; ownership: 5 files, 0 failures.
+
+**Notes for BOB.** (1) The first piece's reading of a range-read PDF digests the first range only (`text_scope` states it); extraction stores that reading (no rewrite at the end), as B14 ruled. (2) Tier 2 (`pdf-worker`) and tier 3 (OCR) members still take the capture's sha and read the whole file on their side; per piece they are asked only when that range's text is essentially empty (a scan), so a long scan asks them once per range: the plane's ledger/OCR rows (R37 `owe`) pace this as before. (3) Words: no new sentence. (4) No census op owned. R-OLD: nothing stored is touched; new reads only; a record read before keeps its reading.
+
+**Requirement lines proposed** (BOB writes `build/requirements/reading-pipeline.md`):
+- **R40** gains: *A PDF read in pieces is read by page ranges.* With `cursor` passed, a capture read as a PDF is read `PDF_RANGE_PAGES` (200) pages a piece through pdf-reader's `extractPdfRange` (R43), the cursor a page (opaque; a cursor for another digest, shape or page count answers `CURSOR_MISMATCH`); each piece holds the units of its pages within `unitsBudget` and `maxUnits` (the cursor moves to the first page not carried), `seq` the page, `read_through` and `total` count pages and `piece.pages` is `[from, to)`. The first piece is the reading of its range: `page_count` the document's, `words_total` null, `words_read` its words, tiers 2 to 4 run on the range's pages, and `provenance.text_scope = {pages: [from, to)}` says its `text_sha256` and `text_chars` cover those pages; a later piece is units alone, and the reading is not rewritten. A document the range reader does not open as a PDF with pages is read whole by its entry as before; without `cursor` a PDF is read exactly as R2 states. Test: the real 1,354-page volume in 128 MB less its bytes: every piece under 10 s, every page once, the pieces under 1.5 parses of the whole.
+- **R14/R18** (provenance): `text_scope` is present only for a reading read in ranges. **R35**: `words_total` is null for a reading read in ranges.
+
+Size (session_01EELF7tdeuCRAdwEDTmo1ya): test runs 24, module lines 2290
+
+## J13 · COMPLETE
+
+COMPLETE G26 (READING-PIPELINE #23): a PDF in pieces mode is read by page ranges (pdf-reader extractPdfRange, 200 pages a piece, cursor = page). Seam test green on the real 15.2 MiB volume at 112 MB (7 pieces, slowest 3.3 s, 1.4 parses; workerd probe: 35 MB old space beside the bytes, 77 with a 60 MB ballast). Checks 0 failures, words 18421 unchanged, extraction 287/287. Details, notes (first piece digests its range only; run pdf-pieces.test.mjs alone) and proposed R40/R14/R35 lines in my record, section 'G26 · COMPLETE'.

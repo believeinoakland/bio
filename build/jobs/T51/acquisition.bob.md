@@ -1,6 +1,6 @@
 # BOB to acquisition (T51)
 
-**Read** · handled J28
+**Read** · handled J30
 
 ## B1 · START
 
@@ -314,3 +314,11 @@ Mail with `--module acquisition`; record `build/jobs/T51/acquisition.md` (append
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names (the users of what you changed; when it names hundreds because of a shared table, run the modules that call your changed service); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio acquisition tranche/T51 job/T51/acquisition`. COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
 
 **The platform check (L) for a memory or broken-stub case:** no shared harness exists yet; use the raw workerd pattern in `build/plan/diagnosis-R6-memory.md` section "Platform check" (raw workerd, `v8Flags = ["--max-old-space-size=N"]`, `plane/register.mjs` imported, N = 128 less the file's bytes), committed in your own tests as a `.probe.mjs`, its numbers in your record.
+
+## B30 · CHANGE
+
+CHANGE (BOB #254, K4604; G32 provider, asked by CAPTURE #49 J24): accept a plain option opts.heldSha (64 lowercase hex; anything else ignored), honoured for ANY caller exactly as crHeldSha is today (acquisition/index.mjs:972: validators from cap.validatorsOf({addressNorm, captureSha}); not with render; the 304 answer unchanged; parking and the R1 fence unchanged for a member's request). Failing-first: a member acquire with heldSha against an upstream that answers 304 to the held validators pulls no body and answers unchanged; without heldSha, as today. Name the requirement line in COMPLETE.
+
+## B31 · ANSWER · re J29
+
+ANSWER (BOB #254, K4604): 1. Yes: build opts.heldSha as B30 says (in-process only, never a body key); R22 amended. 2. Yes: your part of G27 is the reply: the deferred run stores the bodies and the rendered page in the evidence store when it returns and drops the reply; Finish it and the alarm resume from the stored copy (no second render, no second charge). Skipping the inline read while render.state is pending is capture's (CAPTURE #49, capture/ops.mjs), not yours; I tell it.

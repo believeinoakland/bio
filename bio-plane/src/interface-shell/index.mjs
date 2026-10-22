@@ -429,26 +429,39 @@ export function checkClasses(screens, guide, program) {
 /* the page's own escaping of a served word */
 const escape = (t) => String(t).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
-/* R1, R2 (fix round 3, C15; P2.4): the shell's script, composed from the shell's own functions and each screen's and the guide's; it depends
-   on those alone (the release version and the test-instance band are the page's), so it is the same for a release. Kept for the last
-   screens and guide handed in, so the page and its hash do not build it twice. */
+/* R1, R2 (fix round 3, C15; P2.4; fix round 6, G30, R126): the shell's script, composed from the shell's own functions and each screen's and the
+   guide's; it depends on those alone (the release version and the test-instance band are the page's), so it is the same for a release. The script,
+   the checks of the screens and guide it is made from and its hash are done once, for the last screens and guide handed in (a release's isolate
+   hands in the same ones every request): a front page and a script fetch after the first only read what was kept. A set that fails its checks
+   is kept nowhere and is refused again at the next ask. */
+const WORK = { scripts: 0, hashes: 0, checks: 0 };
+/* R126: how much work the page route has done in this isolate, as counts (the Worker's clock is frozen during synchronous work, so a time
+   measured in it reads as nothing, R-CLOCK): the scripts composed, the hashes taken of one and the screen and guide checks run. For a release
+   served by one isolate each is 1, however many pages and script fetches it has answered; control-plane's `page` log line states them. */
+export function pageWork() { return { ...WORK }; }
 let SCRIPT = null;
-export function interfaceScript(screens = [], options = {}) {
-  checkScreens(screens);
+function release(screens, options) {
   const guide = options && options.guide ? options.guide : null;
+  if (SCRIPT && SCRIPT.screens === screens && SCRIPT.guide === guide) return SCRIPT;
+  WORK.checks++;
+  checkScreens(screens);
   checkGuide(guide);
-  if (SCRIPT && SCRIPT.screens === screens && SCRIPT.guide === guide) return SCRIPT.source;
   const program = shellProgram.toString();
   checkClasses(screens, guide, program);
   const D = dataOf(screens, guide);
+  WORK.scripts++;
   const source = `(${program})(${toSource(D)}, ${toSource(screens)}, window, ${toSource(guide)}).start();`;
-  SCRIPT = { screens, guide, source };
-  return source;
+  return (SCRIPT = { screens, guide, source, hash: null });
+}
+export function interfaceScript(screens = [], options = {}) {
+  return release(screens, options).source;
 }
 const base64 = (hex) => btoa(hex.match(/../g).map((h) => String.fromCharCode(parseInt(h, 16))).join(""));
 /* R1: the hash the page policy names in place of a nonce (`answer-envelope` R6): `sha256-<base64>` of the script's UTF-8 bytes */
 export function interfaceScriptHash(screens = [], options = {}) {
-  return "sha256-" + base64(sha256HexSync(interfaceScript(screens, options)));
+  const made = release(screens, options);
+  if (made.hash === null) { WORK.hashes++; made.hash = "sha256-" + base64(sha256HexSync(made.source)); }
+  return made.hash;
 }
 /* R1: the address that carries the release version (`control-plane` R75 serves the script there, `immutable`) */
 export const scriptPath = (version) => "/app/shell-" + encodeURIComponent(String(version == null || version === "" ? "0" : version)) + ".js";

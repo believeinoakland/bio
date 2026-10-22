@@ -50,7 +50,7 @@ export const DOCUMENT = (o = {}) => ({ case_id: C, edition: 2, doc_sha: SHA, tex
   sign: { namespace: "bio-ratify", statement: `bio-ratify-case ${C} 2 ${SHA}\n` },
   /* the shapes the real `casedocument` answers (publication; case-grammar R4, R6): `citations` is `{state, rows}`, and the roster the
      signed document pins is `findings`, `[{target, version_sha, role}]` */
-  citations: { state: "signed", rows: [{ target: "INFO-2026-0004", version: E1, capture: "x" }, { target: "FND-2026-0031", version: "no_bytes", capture: null }, { target: "INFO-2026-0005", version: "undetermined" }] },
+  citations: { state: "signed", rows: [{ target: "INFO-2026-0004", version: "only_capture", capture: "c".repeat(64), bundle_sha: E1 }, { target: "FND-2026-0031", version: "no_bytes", capture: null }] },
   findings: [{ target: "FND-2026-0031", version_sha: B1, role: "load_bearing" }],
   ...o });
 

@@ -5,7 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V } from "../project-roster/fixture.mjs";
-import { open, ok, text, main, settle, MEMBER, word, dmy } from "./page.mjs";
+import { open, ok, batched, text, main, settle, MEMBER, word, dmy } from "./page.mjs";
 
 const BASE = {
   whoami: ok({ ...MEMBER, capabilities: ["contribute", "create_projects"] }), groupidentity: ok({ ok: true, group: "lakeshore", display_name: "Lakeshore Tenants" }),
@@ -28,7 +28,7 @@ test("R87 (real path): Home draws the counts the real roster answers and reads t
   const reads = [];
   const plane = (projects) => ({ ...BASE, projectlist: ok({ ok: true, projects }), publishedlist: ok({ bundles: [], cases: [{ case_id: "CASE-1", edition: 1, published_at: "2026-09-01T10:00:00Z" }] }),
     publishedcase: ok({ ok: true, caseId: "CASE-1", edition: 1, scope: "Pothole repairs" }),
-    casedrafts: (req) => { reads.push(req.query.project); return ok({ ok: true, drafts: [{ draft_id: "D-1", case: { case_id: "CASE-1", edition: 2, identity: "x" } }] }); },
+    casedrafts: batched((id) => { reads.push(id); return { ok: true, drafts: [{ draft_id: "D-1", case: { case_id: "CASE-1", edition: 2, identity: "x" } }] }; }),
     reviewcopy: ok({ ok: true, comments: [], grants: [{ live: true, until: "2026-10-20T00:00:00Z" }] }) });
   const p = await open("/app", plane(rows));
   await settle();
