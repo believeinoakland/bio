@@ -428,3 +428,31 @@ BLOCKED (cause: a provider not merged, not tests, not Bob, not context). E13 is 
 - Test line for R91: the page's store reads overlap in lanes of `HELD_PAGE_LANES` and a page of one-part documents makes none (`e13-t51.test.mjs`).
 
 Size (session_01VM4D7r3cUFZacyS8LqnGx2): test runs 7 (capture suite 4, users 71 files once, checks 2), module lines 4196 (src/capture)
+
+## J20 · COMPLETE
+
+COMPLETE, CAPTURE #47, T51: E13 and E5 (capture's half). Pushed at 0e79647ee7 on job/T51/capture, tranche/T51 merged (acquisition's textTypeOf, K4537).
+
+**Changed**
+- E13 (b11f86b114): capture/index.mjs:1519-1535 and new `#keptWholeBySize` :1600. A full held row answers `whole: true` with no evidence-store `head` when the register records the capture as held in one part (size recorded, at most 8 MiB); a capture held in parts, or with no size recorded, is asked of the store once per distinct digest, 8 at a time, as before. No evidence store: null, as before. Read only; no stored data changes (R-OLD).
+- E5 (0e79647ee7): the upload (`uploadCapture`, ~:757) calls acquisition's `textTypeOf({bytes, type, name})` on the stored single-part bytes; capture's own copy of the rule (`UPLOAD_NAME_TYPES`, the `named`/`readAs`/`profilesAsText`/UTF-8 test) and the `profilesAsText` import are removed. The recorded declaration (`source_content_type`, `declared_by`) is unchanged. The upload tests R92 and R93 pass unchanged.
+
+**Failing-first, red then green**
+- `e13-t51.test.mjs` (4 tests): red at b2435f2e47 on the unchanged code (27 heads where 0; heads for sized one-part documents), green at b11f86b114. The byte-for-byte test compares the answer with `e13-golden.json`, recorded by running on the unchanged code (E13_WRITE_GOLDEN=1), never by hand.
+- `e5-t51.test.mjs` (R92 R93 E5, 13 cases against acquisition's rule): red by name until acquisition merged ("acquisition exports textTypeOf"), green at 0e79647ee7.
+- Tests edited under B20 (2): `fix3b-t51` and `fix2-t51`, only their assertions stating the old full-row rule; their other assertions and the INFO-A2 control are kept.
+
+**Measurement (local, no deploy):** `heldCaptures`, 27 documents, limit 500, store 40 ms per head: before 27 heads, 168 ms; after 0 heads, 13 ms. Lanes of 8 and the page's wait are unchanged; the mixed case peaks at more than 1 and at most 8 heads in flight.
+
+**Suites and checks**
+- capture + cap13-reuse-pages + d57selflink: 258 tests, 258 pass, 0 fail, 0 skipped.
+- Users: the 71 files outside capture that read `heldcaptures`: 937 tests, 0 fail (run before E5); the 30 files outside capture that call `uploadCapture` or `captureupload`: 338 tests, 320 pass, 18 fail, all in `journey-check/walker.test.mjs`, which stops at "playwright-core cannot be loaded (run `npm ci` in bio-plane/src/journey-check)": that directory has no node_modules in my checkout, not a result of this change. 29 of the 30 files pass with 0 fail. `impact.mjs tranche/T51 HEAD` names 98 modules; I ran the readers of the changed row and the callers of the upload, not all 1498 files.
+- `checks/run.mjs`: format 0, architecture 0, coverage 6610 of 6610 ids named, channels 0, words 0 failures (dev 268, unkeyed 1982, no string added). `checks/ownership.mjs capture tranche/T51 job/T51/capture`: 7 files, 0 failures.
+
+**Requirement lines I propose (BOB writes `build/requirements/`)**
+- R77, in place of "a page asks the store once per distinct fingerprint" for the full row: *(fix round 5; E13; K4530, B20)* Each full row answers `whole: true` without asking the evidence store when the register records the capture's size as held in one part (at most 8 MiB, `acquisition` R10's part); every other row (no size recorded, or a capture held in parts, whose whole object may be owed) is asked of the store once for each distinct fingerprint, `HELD_PAGE_LANES` at a time, and answers true, false or null as before; the answer is otherwise unchanged. Test: `e13-t51.test.mjs`.
+- R91 test line: the page's store reads overlap in lanes of `HELD_PAGE_LANES`; a page of one-part documents makes none (`e13-t51.test.mjs`).
+- R92/R93: add "the rule is `acquisition`'s `textTypeOf` (its R102), the one code the upload and the knock's pull share; this module keeps no copy. Test: `e5-t51.test.mjs`."
+- Uses, Private: `acquisition` gains `textTypeOf` (R92, R93) and drops nothing else.
+
+Deferred: none. Words owed: none (no new sentence). Size (session_01VM4D7r3cUFZacyS8LqnGx2): test runs 10 (capture suite 6, users 71 files and 30 files once each, checks 2), module lines 4189 (src/capture)
