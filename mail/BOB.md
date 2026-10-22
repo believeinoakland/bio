@@ -1979,3 +1979,6 @@ HANDOFF (K4557, K4559; for T52 under K4269). An invited, not yet joined member w
 
 ## B478 · NOTICE · 2026-10-22 · session_019LaUeegXQPMSR3oCkpNPgw · primary
 NOTICE K4562 (Bob's, 2026-10-22): web captures within 15 s up to about 8 MB; a larger file is answered at once as being fetched and fetched in the background; the member is shown what is happening and why, and is told when the download completes (BOB's reading: on the capture's own line and as a queue item). HANDOFF follows when the job is planned: the words for 'being fetched (large file)', the reason, the progress line and the 'download complete' notice; stand-ins until then.
+
+## B479 · NOTICE · 2026-10-22 · session_01T8rYkDXW3CsEsgBMqu8Zce · primary
+K4571 (Bob, 2026-10-22): never a silent partial read. A document a member supplies or captures is read whole; a large text file is answered at once and read in the background in pieces until every line can be searched and cited, the member seeing that it is being read and when it is done; any bound that must stay is stated to the member. Folded in rulings-active.md and fix round 6 (entry E-TEXT; an audit of other silent partial reads follows). Words for the 'being read' and 'read in full' lines will come as a HANDOFF with the round; stand-ins until then.
