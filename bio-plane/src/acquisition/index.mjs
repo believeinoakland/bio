@@ -24,6 +24,10 @@
  * once, with no read-back (R96); the trusted timestamp is waited for no set time (R20); the render arm asks the governor with
  * a peek and the fetch books the visit once (R97); the document carries its own title (R98, `title.mjs`).
  *
+ * T51 fix round 5 (the second re-walk's E1, E5, E8, E10): a capture held in parts is profiled from the first KiB of its first part (R101);
+ * `textTypeOf` is the one rule for reading a member's file as text (R102); `read` is split into download, hash and store (R103); a
+ * visitor copy a member's "Finish it" finishes stays owed until its document is filed (R104).
+ *
  * Every refusal is an answer `{status, body}`, never a throw. The comments carried from the legacy handler keep the
  * reasoning beside the code it explains. */
 import { isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, ISO_TS_RE, isMachineIdentity } from "../record-grammar/index.mjs";
@@ -998,6 +1002,13 @@ async function acquireRun(cap, body0, opts, t) {
      R42 (F16): no fetch goes to one of the group's own hosts, the render arm's included; refused before any request. */
   if (!archiveAsked && !session && onOwnHost(locator, own)) return answer(403, { ...ownHostRefused(locator), op });
   /* END DEC-49 REGION is-own-host */
+  /* R104: a visitor copy already finished and owed to the record: a second "Finish it" has nothing left to do and touches nothing, so the
+     session stays until `owedRun` has seen the copy filed or delivered it. */
+  if (session && session.state && session.state.render_done)
+    return answer(200, { ok: true, existed: true,
+      continued: { session: session.session, primary: { sha256: session.primarySha, file: session.primaryFile, locator: session.locator },
+                   note: word("acquisition.note.continuation_files_new") },
+      render: { state: "owed", session: session.session }, store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE });
   if (session && session.state && session.state.render_pending) return finishRender(cap, { session, opts, t });
   if (session) return continueCapture(cap, { body, session, cls, storeName, ev, own, t, owe: oweOf(cap, opts) });
 

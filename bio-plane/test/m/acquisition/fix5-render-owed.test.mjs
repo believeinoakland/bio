@@ -90,3 +90,22 @@ test("R104 (E8) control: with no ledger handed in nothing is owed, and the conti
   assert.equal(done.body.document.capture.method, "rendered");
   assert.equal(p.w.store.state.sessions.has(sid), false);
 });
+
+test("R104 (E8): a second \"Finish it\" on a session whose visitor copy is already finished and owed touches nothing: it answers the copy is owed, the session stays, and the alarm still delivers it", async () => {
+  const p = pending();
+  const sid = await begin(p);
+  p.open();
+  await new Promise((r) => setTimeout(r, 50));
+  const done = await finish(p, sid);
+  assert.equal(done.body.document.capture.method, "rendered");
+  const again = await finish(p, sid);
+  assert.equal(again.status, 200);
+  assert.equal(again.body.document, undefined, "no second document is answered");
+  assert.deepEqual(again.body.render, { state: "owed", session: sid });
+  assert.equal(again.body.continued.session, sid);
+  assert.ok(p.w.store.state.sessions.has(sid), "the session is not dropped by the second press");
+  const delivered = [];
+  const out = await owedRun(p.w.store, p.entries.get(sid), { deliver: async (d) => { delivered.push(d); return { ok: true }; } });
+  assert.deepEqual([out.ok, out.done], [true, true]);
+  assert.equal(delivered.length, 1);
+});
