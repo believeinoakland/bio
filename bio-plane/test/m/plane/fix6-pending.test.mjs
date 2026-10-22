@@ -203,3 +203,43 @@ test("R82 (G13): the interrupted-run accounting is kept across pieces: a piece t
   await y.s.onAlarm(Date.now() + 1000);
   assert.deepEqual(y.read.map((a) => a.detail), [{}]);
 });
+
+test("R83 (G8, G13): the plane hands extraction the ledger's `owedLater` at construction, once, so what extraction owes (the repair of an old reading, a partial text's restart) reaches the ledger; an extraction without `registerOwe` is built as before", async () => {
+  const given = [];
+  const d = sha("a reading extraction owes at start");
+  const x = await store({ before: (ctx) => { extractionOf(ctx).registerOwe = (fn) => given.push(fn); } });
+  assert.equal(given.length, 1, "handed once, at construction");
+  assert.deepEqual(await given[0]({ kind: "reading", sha: d }), { ok: true });
+  assert.deepEqual(pendingOf(x.ctx).list().map((r) => [r.sha, r.kind, r.state]), [[d, "reading", "owed"]]);
+  /* control: where extraction has no `registerOwe` the object is built and owes nothing */
+  const y = await store({});
+  assert.deepEqual(pendingOf(y.ctx).list(), []);
+});
+
+/* ---- R81 seam: the real acquisition behind the ledger's `fetch` kind ---- */
+import { multipartBucket } from "../record-core/storage.mjs";
+
+test("R81 (G2) seam: a 9 MiB source declared by Content-Length is parked by the real `acquire` as a `fetch` row of the plane's ledger, no body byte pulled; the tick runs the real `owedFetch`, which pulls the body and hands the document to the door's `deliver`", async () => {
+  const x = await store({ env: { CAPTURES: multipartBucket() } });
+  const BIG = new Uint8Array(9 * 1024 * 1024);
+  for (let i = 0; i < BIG.length; i += 4096) BIG.fill((i / 4096) % 251, i, Math.min(BIG.length, i + 4096));
+  let pulled = 0;
+  const real = globalThis.fetch;
+  globalThis.fetch = async () => {
+    const stream = new ReadableStream({ pull(c) { if (pulled >= BIG.length) return c.close(); const n = Math.min(262144, BIG.length - pulled); c.enqueue(BIG.subarray(pulled, pulled + n)); pulled += n; } }, { highWaterMark: 0 });
+    return new Response(stream, { headers: { "content-type": "application/pdf", "content-length": String(BIG.length) } });
+  };
+  try {
+    const out = await captureOf(x.ctx).acquire({ locator: "https://www.oaklandca.gov/files/BIG.pdf" }, { cls: "member", member: true, sessMember: "member:ann", storeName: "bio" });
+    assert.equal(out.status, 200, JSON.stringify(out.body).slice(0, 300));
+    assert.equal(typeof out.body.fetch_pending, "object", JSON.stringify(out.body).slice(0, 300));
+    assert.equal(out.body.document, undefined);
+    assert.equal(pulled, 0, "no body byte pulled in the request");
+    const parked = pendingOf(x.ctx).list().filter((r) => r.kind === "fetch");
+    assert.deepEqual(parked.map((r) => [r.sha, r.state]), [[out.body.fetch_pending.session, "owed"]], "the plane's ledger holds it, keyed by the session");
+    await x.s.onAlarm(Date.now() + 1000);
+    assert.ok(pulled > 0, "the tick ran the real owedFetch: the body was pulled");
+    const [r] = pendingOf(x.ctx).list().filter((q) => q.kind === "fetch");
+    assert.ok(r === undefined || !["NO_OWNER", "DELIVERY_NOT_HANDED"].includes(r.why), `the owner and the delivery were handed in (${r && r.why})`);
+  } finally { globalThis.fetch = real; }
+});

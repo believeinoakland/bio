@@ -422,6 +422,9 @@ export class Store extends DurableObject {
     recordOf(ctx).declarePurge("plane", ["keeps_pending", "acquire_stages"]);
     capture.keepLater = (a) => pending.keepLater(a);
     capture.owedLater = (a) => pending.owedLater(a);   /* R77, acquisition R100: the ledger's `subresources` and `unpack` entries, registered the same way */
+    /* R83 (fix round 6, G8, G13; extraction R89): the same ledger handed to extraction, which owes it the repair of an old reading and the restart of a partial text at start; guarded, as extraction's own merge is later than this line */
+    const extraction = extractionOf(ctx);
+    if (typeof extraction.registerOwe === "function") extraction.registerOwe((a) => pending.owedLater(a));
     /* R37 (T42; N826; K2607 rule 3, K2629, K2630; doorbell R25): doorbell, directly after capture in the modules' order,
        the one instance per host (actions' factory may have reached it first for its hold reader, actions R55); it takes no
        `env` of its own and reads capture's at each use, the instance above. */
