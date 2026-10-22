@@ -44,6 +44,12 @@ export class Held extends Store {
       return json({ pending: pendingOf(ctx).list(), whole: !!(await ev.head(d)), alarm: await ctx.storage.getAlarm(), now: Date.now(),
                     readHeld: this.readHeldCalls });
     }
+    if (step === "hang") {
+      /* R77 (fix round 5, E2): an owner that never returns, as an isolate killed in the middle of a read; the test then ends this runtime */
+      const d = url.searchParams.get("sha");
+      extractionOf(ctx).readHeld = async (a) => { this.readHeldCalls.push({ ...a, at: Date.now() }); return new Promise(() => {}); };
+      return json({ owed: await pendingOf(ctx).owe({ kind: "reading", sha: d }), at: Date.now() });
+    }
     if (step === "migrate-old") {
       /* R77: a ledger of the earlier shape (one row for each digest, five tries) carried over on workerd's storage */
       const sql = ctx.storage.sql;

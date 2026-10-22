@@ -42,6 +42,9 @@ import { acquisitionOf } from "../acquisition/index.mjs";
 import { captureOf, captureOps } from "../capture/index.mjs";
 import { acquireHandlerParts, acquireTimingsOps, traceStamped, ACQUIRE_STAGES_DDL } from "./acquire-timings.mjs";
 import { pendingOf, pendingOps } from "./pending.mjs";
+
+/** R78: the response header carrying the milliseconds the object spent on a route (control-plane writes its `Server-Timing` metric from it). */
+export const OBJECT_MS_HEADER = "x-civicsmith-object-ms";
 import { deliverOwedRender } from "../control-plane/index.mjs";
 import { doorbellOf, doorbellOps } from "../doorbell/index.mjs";
 import { fileSafetyOf, fileSafetyOps } from "../file-safety/index.mjs";
@@ -708,7 +711,15 @@ export class Store extends DurableObject {
      record's and fails closed), and `action-holds`' `purgeHeld` (its R9, was `actions` R60; T45, K2781 (1)) on the one
      instance R39 builds, each asked at the purge only. */
   async fetch(req0) {
+    const t0 = Date.now();
     const req = await traceStamped(req0);   /* R73: `acquire`'s trace, from the header capture sends */
+    const res = await this.#dispatch(req);
+    /* R78 (fix round 5, E10; K4530): the time this object spent on the route, to its response (a stream's, to its first byte), whole
+       milliseconds, in a header the door reads for its `Server-Timing`. The object sets it; a value carried in is replaced. */
+    try { res.headers.set(OBJECT_MS_HEADER, String(Math.max(0, Date.now() - t0))); return res; }
+    catch { const headers = new Headers(res.headers); headers.set(OBJECT_MS_HEADER, String(Math.max(0, Date.now() - t0))); return new Response(res.body, { status: res.status, statusText: res.statusText, headers }); }
+  }
+  #dispatch(req) {
     return dispatch(req, { routes: (url, body, grant) => this.routes(url, body, grant), membership: () => membershipOf(this.ctx),
       namespace: () => this.#ownNamespace() || "bio", purgeHeld: (q) => actionHoldsOf(this.ctx).purgeHeld(q),
       /* B5 (K1685; answers R1, R2): a read served under a grant is recorded in this object's read log, scrubbed. R33
