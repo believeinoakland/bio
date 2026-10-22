@@ -44,7 +44,7 @@ import { appRouteOf, appPage, appAsset, appScript, logoAsked, addressPageOf } fr
 import { interfaceWordsCache } from "./words-cache.mjs";
 /* R121 (fix round 4, C5a, P9): the door's clock, in its own isolate */
 import { makeClock, clockedEnv, withServerTiming } from "./phase-clock.mjs";
-import { interfacePage, interfaceScript, interfaceScriptHash } from "../interface-shell/index.mjs";
+import { interfacePage, interfaceScript, interfaceScriptHash, pageWork } from "../interface-shell/index.mjs";
 import { ASSET_FILES } from "../interface-assets/index.mjs";
 import { SCREENS as ENTRY_SCREENS } from "../screens-entry/index.mjs";
 import { SCREENS as SETTINGS_SCREENS } from "../screens-settings/index.mjs";
@@ -886,9 +886,14 @@ export function makeFetch(hooks = {}) {
   return planeDoor;
   /* R75: the interface's page, built for this request, and the hash of the script it loads, kept for the page policy on the way out */
   function page(req, env, seen, status = 200) {
+    const began = Date.now();
     const options = appOptions(env);
     seen.scriptHashes = [interfaceScriptHash(APP_SCREENS, options)];
-    return appPage(req, { interfacePage, screens: APP_SCREENS, options, status });
+    const answer = appPage(req, { interfacePage, screens: APP_SCREENS, options, status });
+    /* R126 (G30; K4428, K4609): one line per page naming the work the route did in this isolate, as counts (`pageWork`: scripts composed,
+       hashes taken, checks run); `ms` is the isolate's clock, which does not see synchronous work (R-CLOCK) */
+    console.log(JSON.stringify({ event: "control-plane.page", ...pageWork(), ms: Date.now() - began }));
+    return answer;
   }
   async function fetch(req, env, seen = { session: null }) {
     const url = new URL(req.url);
