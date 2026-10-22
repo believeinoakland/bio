@@ -472,3 +472,7 @@ Merged `tranche/T51` (control-plane's forwarding included). **No QUESTION open**
 **Requirement lines proposed (BOB writes):** R99, R100, R101, R102 as worded in Progress 2.
 **Runs.** `node --test --test-force-exit bio-plane/test/m/screens-daily/`: 292 of 292. Users (journey-check pseudo and start-project, control-plane t46-app, t47-e2e, plane t47, t50): 34/34. Checks: architecture 0, coverage 96 of 96, words 0, ownership 0 (14 files); `format` fails only on BOB's `build/plan/next.md`.
 Size (session_017vgaPSzbnT5yf4ULaFwgm1): test runs 14, module lines 4240
+
+## J23 · COMPLETE
+
+COMPLETE (G12c-casedrafts, G16, G20), branch job/T51/screens-daily: Home sends one casedrafts (lists shape); Search routes, covered panel, frontier partial, Find in continue/truncated, doors and choosers say when they stop. Failing-first red then green (fix6 3 tests; partial 7 red/8 green), seam over the real plane green. Suite 292/292; users 34/34; architecture, coverage, words, ownership 0. Stand-in words and requirement lines R99-R102 in my record. No question open.
