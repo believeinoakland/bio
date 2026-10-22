@@ -240,10 +240,15 @@ function render(cs, view) {
     }
     if (!/^[0-9a-f]{64}$/.test(sha)) return "";
     const rd = later("legread:" + sha, "reading", { sha256: sha });
-    const units = rd.state === "ok" && rd.value && Array.isArray(rd.value.text_units) ? rd.value.text_units : [];
+    if (rd.state !== "ok") return "";
     /* the leg's extent as the record states it: its own `extent_*` fields, else the reading shown's leg (flat fields or an `extent` object) */
     const own = P.legExtent(l);
-    return P.legWords(units, Object.keys(own).length ? own : P.legExtent(r));
+    const want = Object.keys(own).length ? own : P.legExtent(r);
+    if (!Object.keys(want).some((k) => k !== "kind")) return "";
+    /* G38: the unit the leg cites may sit on a later page of a long reading (`next`): the pages are followed until it is found, or none is left (the words
+       are the passage's own, so a page not yet read draws none until it is) */
+    const got = P.readPages((k, q) => later(k, "reading", q), "legreadafter:" + sha + ":", sha, rd.value, (us) => P.legWords(us, want) !== "");
+    return P.legWords(got.units, want);
   };
   /* C36 (fix round 4, aside): every place that names a passage draws the words it cites as well (R23, R24, R34): the leg's title, its place, and its words */
   const shownLeg = (l) => (shown && Array.isArray(shown.legs) ? shown.legs.find((x) => String(x.target_id || x.target) === String(l.target)) : null) || null;

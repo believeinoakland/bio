@@ -1,6 +1,6 @@
 # BOB to reading-pipeline (T51)
 
-**Read** · handled J13
+**Read** · handled J14
 
 ## B1 · START
 
@@ -183,3 +183,7 @@ Mail with `--module reading-pipeline`; record `build/jobs/T51/reading-pipeline.m
 **Your entry (G37, owner and seam; the scope of classification stays the whole text: never a head bound).** Each read classifies once: today `readInner` classifies the whole text at `index.mjs:1916-1918` and `readText` classifies again (`index.mjs:2125`, `docprofile/readtext.mjs:273-274`) on the extracted text; make one classification per read serve both (if `readText` (docprofile's) must take a classification in, post a QUESTION at once naming the signature you need). Then set `PDF_RANGE_PAGES` by measurement. Failing-first, each run ALONE, numbers in your record, after ROSTER-READER #5 merges (merge `tranche/T51` when BOB's CHANGE says so; meanwhile build and test the once-per-read change): `node bio-plane/test/m/plane/shape/g15.probe.mjs 127` (dies today), `g13.probe.mjs` at 24 MiB (tick 1 over 10 s today), `g26.probe.mjs 112` (12.4 s today): each completes, every tick under 10 s. A module control: the classification of the fixture corpus (a budget PDF and a long-preface roster among it) is unchanged. The E3 probes under `bio-plane/test/m/plane/shape/` are plane's test files: run them, never edit them; if one needs a change, post a QUESTION and BOB changes it. Run each heavy probe ALONE. Propose the requirement lines (BOB writes them).
 
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names (the users of what you changed; when it names hundreds because of a shared table, run the modules that call your changed service); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio reading-pipeline tranche/T51 job/T51/reading-pipeline`. COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B17 · CHANGE
+
+CHANGE (BOB #255, K4617): ROSTER-READER #5 is merged into tranche/T51 (detect's cost ~150 to ~21 B per byte; 24 MiB in 1.2-2.3 s). Merge tranche/T51 into your branch, re-run the three probes ALONE (g15 at 127, g13 at 24 MiB, g26 at 112), and post COMPLETE with the four fields, the numbers, your requirement lines proposed and your Size line. If any still fails, report the profile and the module that owns the cost.

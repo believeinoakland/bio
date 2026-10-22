@@ -186,6 +186,31 @@ export function legExtent(x) {
   return bag;
 }
 
+/** G38 (R3, R96; extraction's `op=reading` pages by bytes as well as units, so a long reading takes several pages): the units of a reading across its
+ *  pages, following `next` from the first page (`first`, an `op=reading` answer's value) until `done(units)` says it has what it needs, `limit` pages have been
+ *  followed (none: no limit), or no page remains. `read(key, query)` is the screen's own reader (`later`, or an act's view of the page's memory); each page is the
+ *  read `{sha256, after: next}` kept under `key` + the first page's totals + `next`, so a reading that grows while it is being read (its totals change) is read
+ *  again and not taken from a page kept while it was shorter, and every consumer of one reading shares its pages. Returns `{units, state, more, failed}`:
+ *  `state` `loading` while a page is on its way (the units so far), `failed` when one was refused (`failed` is that read; the units so far), else `ok`; `more`
+ *  whether a page remains unread. A cursor that comes round again ends the walk. Self-contained. */
+export function readPages(read, key, sha, first, done, limit) {
+  const cursorOf = (v) => (v && v.next !== undefined && v.next !== null && v.next !== "" ? String(v.next) : null);
+  const version = first ? [first.units_total, first.read_through, first.total].map((v) => (v === undefined || v === null ? "" : String(v))).join("/") : "";
+  let units = first && Array.isArray(first.text_units) ? first.text_units.slice() : [];
+  let cursor = cursorOf(first), state = "ok", failed = null, n = 0;
+  const seen = new Set();
+  while (cursor !== null && !(done && done(units)) && !seen.has(cursor) && !(limit !== undefined && limit !== null && n >= limit)) {
+    seen.add(cursor);
+    n++;
+    const r = read(key + version + ":" + cursor, { sha256: sha, after: cursor });
+    if (!r || r.state === "loading") { state = "loading"; break; }
+    if (r.state !== "ok" || !r.value) { state = "failed"; failed = r; break; }
+    units = units.concat(Array.isArray(r.value.text_units) ? r.value.text_units : []);
+    cursor = cursorOf(r.value);
+  }
+  return { units, state, more: cursor !== null, failed };
+}
+
 /** G12c (R1, R9; strength R6 as T51 fix round 6 amends it): the strength of many questions in ONE read for each 50 of them (`inquirystrength` with `ids`,
  *  comma-joined, strength's batch), never one read for each question. `read(key, query)` is the screen's own reader (`later`/`ask`); `esc` the kit's.
  *  Returns `of(id)`: that question's read as the single read gives it (`{state, value}`), loading while its batch is, failed with the plane's words when
@@ -209,4 +234,4 @@ export function strengths(read, ids, esc) {
 }
 
 /** The parts every screen of the module carries. */
-export const COMMON = Object.freeze({ front, later, plain, who, unavailable, ending, costLine, progress, legWords, legExtent, strengths, kinds: KIND_IDS });
+export const COMMON = Object.freeze({ front, later, plain, who, unavailable, ending, costLine, progress, legWords, legExtent, readPages, strengths, kinds: KIND_IDS });
