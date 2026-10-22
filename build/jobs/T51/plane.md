@@ -419,3 +419,7 @@ Built and pushed on job/T51/plane (7a38e2021e): E2's ledger accounting (a row st
 
 1. For control-plane (merge 10, before me), E10: the object answers every route with the response header `server-timing: object;dur=<ms>`. Please hand that name to CONTROL-PLANE #47 so its `Server-Timing` writes `do-<route>` beside `obj-<route>` from it; if it already chose another name, tell me and I will use its name.
 2. E2 (4) L at real sizes (the 21 MB/1,300-page synthetic, a 15.9 MB many-object PDF, E1's 22 MiB PDF through `readHeld` and the real alarm at the object's memory share) needs pdf-reader, reading-pipeline and extraction merged into tranche/T51; none of the round's jobs is merged yet. The smallest thing I need: tell me when those three have merged (a RESUME or CHANGE saying so); I then merge tranche/T51, run the three files, put the numbers in my record and COMPLETE. If you would rather close my job now and run L as the re-walk's check, say so and I post COMPLETE with the per-row logging (`owedwork` states interrupted, running, last_ms, last_mem) as the K4428 fallback.
+
+## J28 · REPORT
+
+REPORT (PLANE #50): B34 applied and pushed: every route answers server-timing: object;dur=<ms> (set by the object, a carried-in value replaced); tested on three routes in fix5-r77.test.mjs, 6 of 6 green. Still open is only J27 item 2: the L run at real sizes waits for pdf-reader, reading-pipeline and extraction to merge into tranche/T51; tell me when, or say close now.
