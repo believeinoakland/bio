@@ -1,6 +1,6 @@
 # machinery-producers — requirements
 
-**Status** · In force: split from `queue-producers` by copy for size (K617, K1850), meaning unchanged: R1–R5 marked "was" and retired there; R6–R10 copies of its R11, R12, R13, R24 and R36, which stay. Last changed T34 at its split (T34-95); every requirement met (MACHINERY-PRODUCERS #1, K1863). Last changed T48 (T48-58: Purpose widened; R11 new, the administrators' update to-do, and R12 new, the read it is derived from, passed in by the plane's composition; N1047; DEC-226 (1); K3158, K3189, K3195); marked not yet met (T48). Last changed T50 (L11 fold, BOB #201: R15 a completed capture request told by key; N1143; DEC-274); marked not yet met (T50).
+**Status** · In force: split from `queue-producers` by copy for size (K617, K1850), meaning unchanged: R1–R5 marked "was" and retired there; R6–R10 copies of its R11, R12, R13, R24 and R36, which stay. Last changed T34 at its split (T34-95); every requirement met (MACHINERY-PRODUCERS #1, K1863). Last changed T48 (T48-58: Purpose widened; R11 new, the administrators' update to-do, and R12 new, the read it is derived from, passed in by the plane's composition; N1047; DEC-226 (1); K3158, K3189, K3195); marked not yet met (T48). Last changed T50 (L11 fold, BOB #201: R15 a completed capture request told by key; N1143; DEC-274); marked not yet met (T50). Fix round 6 (T51): R2 amended, a parked fetch raises no partial-capture condition (G25).
 
 **Size (P6).** About 1,050 lines. It takes about 840 lines from `queue-producers/index.mjs` (353–802, 1842–1939, 1943–2027, 3031–3237) and copies about 200 lines of helpers. That leaves `queue-producers` at about 3,155.
 
@@ -24,7 +24,7 @@ Terms. An **item**, a **home set**, the **depth bound** and a **case** are `queu
 **The producers**
 - **R2** (was `queue-producers` R3) CONDITIONs, derived on read and writing nothing:
   - **governor-holding-host**, per held host. Its documents are gathered at most 16; past that, the home set states `subject_bound` and is undetermined.
-  - **partial-capture-outstanding**, per live capture session.
+  - **partial-capture-outstanding**, per live capture session that holds a capture's primary. (T51 fix round 6, G25; K4577; `acquisition` R105) A session a capture parks as owed work (`state.fetch_pending`) has captured nothing and raises none, a failed parked fetch included. Test: a parked and a failed fetch raise none; control: a real partial capture still does.
   - **capture-completed-unattended**, per bundle a machine credential wrote and per completed capture request.
   - **render-deferred**, per render request held under a code or expired. Its reason is the code's own translation.
   - **archive-fallback-eligible**, per address `monitoring.archiveEligible` answers (its R47: what the next tick would find; K406 Q2).

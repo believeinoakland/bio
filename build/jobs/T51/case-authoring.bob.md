@@ -1,6 +1,6 @@
 # BOB to case-authoring (T51)
 
-**Read** · handled J19
+**Read** · handled J20
 
 ## B1 · START
 
@@ -214,3 +214,25 @@ ANSWER (BOB #253): J19 read. case-carriage's copyNow merges just before you (mer
 ## B23 · CHANGE
 
 CHANGE (BOB #253): case-carriage's `copyNow` is merged into tranche/T51 (748383ed5e). Merge tranche/T51 into your branch, run your seam test (`copy-now.test.mjs`) against the real one, and record COMPLETE again.
+
+## B24 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/case-authoring tranche/T51 && git branch -m job/T51/case-authoring stale/case-authoring-local && git checkout -b job/T51/case-authoring origin/job/T51/case-authoring`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · CASE-AUTHORING #39 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #254 is depth 1; fix round 6, wave 3; K4426, K4597, K4598) · reading set per mechanics §6 step 2 (your other tests are run, not read)
+
+Mail with `--module case-authoring`; record `build/jobs/T51/case-authoring.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). You are the module job (P8, mechanics §6) for `case-authoring`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first.
+
+**Read in full:** `build/plan/fix-round-6-T51.md` section 0 (its rules bind you) and the section "G26-G28" / "G29-G33" that holds your entry (your cause, with its four fields), `build/plan/diagnosis-R6-unplaced.md` (the diagnosis of your cause), your requirements (both parts), the used services your entry touches, and your code. The file:line evidence is your starting point, never a substitute for reading the code.
+
+**Bob (K4426):** "We need to be rigorous about truely understanding the issues we're experiencing, understanding (and fixing) why they weren't caught in the fixtures, and be confident that we do understand, can properly tes, and have really fixed every issue before we do another deployment." Each defect has (1) its root cause with evidence, (2) why the tests missed it and that gap fixed, (3) a test on the walker's exact case through its real entry path, seen failing then passing, (4) a check at the live platform's real shape where it depends on it. **Bob's focus: an alpha release as quickly and efficiently as possible: do what the entry needs, nothing more.**
+
+**Rules** (plan section 0; K4426-K4428): (1) root cause with file:line; (2) why the tests missed it, and the gap fixed; (3) a failing-first test past the bound, through the module's real entry (the op or the provided service, never an inner helper), seen red in your record, then green; (4) the platform check named in the cause (most are N). R-NOTMET: no "not met", deferred, REPORT or open QUESTION at COMPLETE: name the smallest thing you need and ask BOB now. R-OLD: stored data: "new data only" or a repair. A new sentence a member reads uses a stand-in (a drawn-screen module uses the nearest held row; any other module `localize(id, en)`), the row owed named in your record (BOB's HANDOFF B485 asks the design). Declare every census op you own whose accepted keys change (K4208).
+
+**Your entry (G29).** You are the **owner and seam**. Note: screens-publish's `sitting()` draws the new rows (SCREENS-PUBLISH #18 is running and will get a CHANGE for it); you do not touch screens-publish, but your failing-first test pins the `casedocument` rows and the evidence line `sitting()` will draw. Read `build/plan/diagnosis-R6-unplaced.md` whole. The cause, copied from `build/plan/fix-round-6-T51.md`:
+
+**G29 · A case's evidence is not signed (B-15).** Owner **case-authoring (S)**; *prov* screens-publish. (1) Certain: `casedocument.citations.rows` are only the case's own `cites` edges (`case-authoring/index.mjs` `#caseCitations` :1936-1976); a case prepared from a question holds one unpinned edge to the question, so the passage's document is never a signed row (`citation/index.mjs:700-745`, :891). screens-publish R13 already says one line "per piece of evidence they rest on": BOB's reading, not a meaning change. **Fix:** the case's rows include every document its findings rest on, through its questions, each with its full capture sha; the ceremony signs a line for each. (2) Missed: `seam4.test.mjs:200-236` hand-writes the citations. (3) Failing-first: the real cite, conclude, prepare, publish flow: `casedocument` carries the cited document's row with its sha, `sitting()` an evidence line; red today (one `no_bytes` row). (4) N.
+
+Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names (the users of what you changed; when it names hundreds because of a shared table, run the modules that call your changed service); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio case-authoring tranche/T51 job/T51/case-authoring`. COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+**The platform check (L) for a memory or broken-stub case:** no shared harness exists yet; use the raw workerd pattern in `build/plan/diagnosis-R6-memory.md` section "Platform check" (raw workerd, `v8Flags = ["--max-old-space-size=N"]`, `plane/register.mjs` imported, N = 128 less the file's bytes), committed in your own tests as a `.probe.mjs`, its numbers in your record.

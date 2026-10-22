@@ -79,8 +79,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     } catch { /* an unreadable record is none */ }
     return null;
   }
-  function writeRecord(r) { BOOT_STALE = true; newEpoch(); local.set(D.storeKey, JSON.stringify({ t: r.t, e: r.e || 0, d: r.d, w: r.w || "" })); local.del(STATE_KEY); }
-  function clearRecord(why) { BOOT_STALE = true; newEpoch(); if (why) local.set(STATE_KEY, why); else local.del(STATE_KEY); local.del(D.storeKey); }
+  function writeRecord(r) { BOOT_STALE = true; newEpoch(); frameDrop(); local.set(D.storeKey, JSON.stringify({ t: r.t, e: r.e || 0, d: r.d, w: r.w || "" })); local.del(STATE_KEY); }
+  function clearRecord(why) { BOOT_STALE = true; newEpoch(); frameDrop(); if (why) local.set(STATE_KEY, why); else local.del(STATE_KEY); local.del(D.storeKey); }
   const working = () => ROUTE && frameOf(ROUTE.screen) === "working" && !ROUTE.root;
   /* R32: the path to return to, the address alone (never a query, a fragment or the token) */
   function keepReturn() { if (working()) tab.set(RETURN_KEY, win.location.pathname); }
@@ -112,13 +112,15 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   let EPOCH = 0, LOADING = false;
   const SHARED = new Map(), LOAD_MS = 5000, READ_OPS = new Set(D.readOps);
   const newEpoch = () => { EPOCH++; SHARED.clear(); };
-  function closeLoad() { LOADING = false; for (const [k, e] of [...SHARED]) if (e.done) SHARED.delete(k); }
+  function closeLoad() { LOADING = false; for (const [k, e] of [...SHARED]) if (e.done && !e.hold) SHARED.delete(k); }
   function copyOf(x) {
     const a = x.a;
     if (x.raw === null) return a;
     if (a.kind === "ok") { const json = JSON.parse(x.raw); return { kind: "ok", json, value: json && typeof json === "object" && "result" in json ? json.result : json }; }
     return Object.assign({}, a, { fields: JSON.parse(x.raw) });
   }
+  /* R125 (G12b): `hold: true` keeps the request's answer for its one later reader, past the end of the load and the 5 seconds: the guide's marks
+     are asked at the route's start and handed to `entered` when the route settles. The first reader to ask takes it, and it is then shared as any. */
   function call(op, req = {}) {
     const read = req.act !== true && (req.read === true || READ_OPS.has(op));
     if (!read) { newEpoch(); return send(op, req).finally(newEpoch); }
@@ -126,14 +128,14 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const asked = Object.entries(req.query || {}).filter(([, v]) => v !== undefined && v !== null).map(([k, v]) => [k, String(v)]).sort((x, y) => (x[0] < y[0] ? -1 : 1));
     const key = EPOCH + "|" + (req.public ? "p" : "s") + "|" + op + "|" + JSON.stringify([asked, req.body === undefined ? null : req.body]);
     const hit = SHARED.get(key);
-    if (hit && (!hit.done || (LOADING && Date.now() - hit.at < LOAD_MS))) return hit.snap.then(copyOf);
-    const entry = { done: false, at: 0, snap: null };
+    if (hit && (hit.hold || !hit.done || (LOADING && Date.now() - hit.at < LOAD_MS))) { hit.hold = false; return hit.snap.then(copyOf); }
+    const entry = { done: false, at: 0, snap: null, hold: req.hold === true };
     entry.snap = send(op, req).then((a) => {
       /* the answer's own copy is taken before anyone is handed it, so a reader that changes what it was handed changes nobody else's */
       let raw = null;
       try { raw = a.kind === "ok" ? JSON.stringify(a.json) : a.kind === "refused" ? JSON.stringify(a.fields) : null; } catch { raw = null; }
       entry.done = true; entry.at = Date.now();
-      if (!LOADING && SHARED.get(key) === entry) SHARED.delete(key);
+      if (!LOADING && !entry.hold && SHARED.get(key) === entry) SHARED.delete(key);
       return { a, raw };
     });
     SHARED.set(key, entry);
@@ -270,6 +272,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     LEVEL = v === "pause" ? "pause" : "prompt";
     local.set("cs-level", LEVEL);
     const body = asked ? { level: LEVEL, asked: true } : { level: LEVEL };
+    frameForget("infolevel");
     if (can("infolevelset")) {
       const a = await call("infolevelset", { body });
       if (a.kind === "ok" && asked) LEVEL_INFO = Object.assign({}, LEVEL_INFO || {}, { asked_at: "now" });
@@ -399,9 +402,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   /* R122 (P9): `bootstrap` is asked once per page load (`start`); a screen's own read of it (`{op: "bootstrap"}`, no query, no body) is answered from
      that one answer, waiting for it if it is still out. A change of session or a successful act makes it stale, and a read after either asks again
      (a screen that re-reads after `claim` sees the new state); a first answer that was no answer is asked for again. */
-  let BOOT_CALL = null, BOOT_STALE = false;
+  let BOOT_CALL = null, BOOT_STALE = false, BOOT_ARGS = null;
   async function readOne(spec, inst, background) {
-    if (spec.op === "bootstrap" && !spec.query && !spec.body && BOOT_CALL && !BOOT_STALE) {
+    if (spec.op === "bootstrap" && !spec.query && !spec.body && !BOOT_STALE && startBoot()) {
       const b = await BOOT_CALL;
       if (b.kind === "ok" && !BOOT_STALE) return b;
       BOOT_STALE = true;
@@ -451,6 +454,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       if (!names && gen !== inst.fullGen) return;
       inst.data[n] = outcome(spec, a, inst);
       noteQueue(spec, a);
+      noteFrame(spec, a);
       /* R93: a read marked `refresh: true` is re-read every 45 seconds; its answer is stamped for `cs.fresh()` */
       if (spec.refresh === true) { inst.fresh[n] = a.kind === "ok" ? Date.now() : 0; armRefresh(inst, n); }
       /* R74: a locked act is enabled again once a read started after it has redrawn the screen */
@@ -1603,9 +1607,13 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const reads = MAIN && (MAIN.pub || ME) ? readAll(MAIN) : Promise.resolve();
     if (DOCKI && DOCK && ME) readAll(DOCKI);
     if (COUNT_DUE && ME && S && frameOf(id) === "working") countQueue(MAIN, reads);
+    /* G12b: the guide's marks are asked now, beside the screen's reads, and `bootstrap` after them, so neither waits for the other */
+    marksAhead();
+    startBoot();
     if (doc.getElementById("cs-main") && doc.getElementById("cs-main").scrollTo) doc.getElementById("cs-main").scrollTo(0, 0);
     /* K3143: the guide told the screen it is on, once the screen's reads have settled */
     reads.then(() => { if (n === ROUTING) closeLoad(); });
+    reads.then(frameRevalidate);
     reads.then(() => { if (n === ROUTING && ROUTE) guideCall("entered", { screen: ROUTE.screen, subject: ROUTE.subject }); });
   }
   function showFront() {
@@ -1629,8 +1637,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
          screen on this answer): the words, the team's name, the queue, the level and the assistant's four reads; none waits
          for another, and a screen's first draw never waits for the words (they redraw it when they arrive, R5) */
       loadWords().then(() => { wordsRetry = !wordsRead; });
-      loadFrame();
-      loadReach();
+      frameBoot();
       return "ok";
     }
     if (unreachable(who)) {
@@ -1704,7 +1711,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   }
   function lock(elsewhere) {
     if (!S || LOCKED) return;
-    LOCKED = true; OVERLAY_REFUSAL = ""; stopIdle();
+    LOCKED = true; OVERLAY_REFUSAL = ""; stopIdle(); frameDrop();
     if (!elsewhere) local.set(STATE_KEY, "locked");
     closeTip();
     draw();
@@ -2633,48 +2640,140 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (typeof a.value.language === "string" && a.value.language) doc.documentElement.setAttribute("lang", a.value.language);
     draw();
   }
-  async function loadFrame() {
-    /* R7 (E12; K4530 ruling on J21): the queue count is asked once the screen's own reads are known (`countQueue`, from `show`), not here */
-    COUNT_DUE = true;
-    const [g, lv] = await Promise.all([call("groupidentity"), call("infolevel")]);
-    if (!ME) return;
-    /* R60: the display name only; the slug is never drawn as the group's name */
-    if (g.kind === "ok" && g.value) {
-      GROUP = typeof g.value.display_name === "string" && g.value.display_name.trim() ? g.value.display_name : null;
+  /* G12b (fix round 6; walkers A and B; diagnosis-R6-speed §2): twelve of a screen's fifteen to thirty-three reads were the frame's, almost all of
+     them constant for a session. Six are kept for the session in this tab's `sessionStorage` (R124), under the member and the session, and drawn from
+     it; each is asked again, once, when the screen's first reads have settled, and the frame follows the answer. Kept or not, each is read by the same
+     requests as before. */
+  const FRAME_KEY = D.storeKey + ":frame";
+  /* what the frame uses of each answer, and the request that reads it (`subscriptionsignin`'s `state` step is a read though its op is declared
+     mutating); `min` answers null for an answer of no use, and is applied to what is read back from the store too, so a stored value is never taken as it is */
+  const FRAME_READS = {
+    groupidentity: { req: {}, min: (v) => ({ display_name: typeof v.display_name === "string" && v.display_name.trim() ? v.display_name : null }) },
+    infolevel: { req: {}, min: (v) => (v.level === "prompt" || v.level === "pause" ? { level: v.level, set_at: v.set_at || null, asked_at: v.asked_at || null } : null) },
+    assistantstate: { req: {}, min: (v) => ({ on: v.on === true }) },
+    accountreference: { req: {}, min: (v) => ({ held: v.held === true }) },
+    subscriptionsignin: { req: { body: { step: "state" }, read: true }, min: (v) => ({ connected: v.connected === true }) },
+    groupkeystate: { req: {}, min: (v) => ({ on: v.on === true && v.held !== false }) },
+  };
+  const FRAME_NAMES = Object.keys(FRAME_READS), FRAME_REACH = ["assistantstate", "accountreference", "subscriptionsignin", "groupkeystate"];
+  /* FRAME_VAL: what the frame holds of each (kept or answered); FRAME_DONE: settled (held, answered, or answered with nothing of use); FRAME_KEPT: those
+     drawn from the store; FRAME_FRESH: those the plane has answered in this page; FRAME_CHECKED: the one asking-again of the kept ones is done */
+  let FRAME_VAL = {}, FRAME_DONE = new Set(), FRAME_KEPT = new Set(), FRAME_FRESH = new Set(), FRAME_CHECKED = false;
+  /* a short tag of the session's token, so the store names the session without holding anything that opens it (R3: the token is held by the record alone) */
+  function tagOf(str) {
+    let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for (let i = 0; i < str.length; i++) { const c = str.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+  }
+  const frameWho = () => (S && ME && ME.member ? String(ME.member) + "|" + tagOf(S.t) : null);
+  /* R124: the store is cleared when the record is written or cleared (sign-in, sign-out, an end) and when the page locks; what the page holds goes with it */
+  function frameDrop() { FRAME_VAL = {}; FRAME_DONE = new Set(); FRAME_KEPT = new Set(); FRAME_FRESH = new Set(); tab.del(FRAME_KEY); }
+  /* a kept level is dropped when the member changes it, so the next load asks */
+  function frameForget(name) { delete FRAME_VAL[name]; FRAME_KEPT.delete(name); frameSave(); }
+  function frameSave() {
+    const who = frameWho();
+    if (!who) return;
+    const reads = {};
+    for (const n of FRAME_NAMES) if (FRAME_VAL[n]) reads[n] = FRAME_VAL[n];
+    if (Object.keys(reads).length) tab.set(FRAME_KEY, JSON.stringify({ who, reads })); else tab.del(FRAME_KEY);
+  }
+  /* what the store holds for this member and this session, each read through `min`; a store of another member or session is dropped, and so is one that is not ours */
+  function frameKept() {
+    const who = frameWho();
+    if (!who) return {};
+    let o = null;
+    try { o = JSON.parse(tab.get(FRAME_KEY) || "null"); } catch { o = null; }
+    if (o === null) return {};
+    if (!o || typeof o !== "object" || o.who !== who || !o.reads || typeof o.reads !== "object") { tab.del(FRAME_KEY); return {}; }
+    const out = {};
+    for (const n of FRAME_NAMES) { const v = o.reads[n]; const m = v && typeof v === "object" ? FRAME_READS[n].min(v) : null; if (m) out[n] = m; }
+    return out;
+  }
+  /* R7, R17, R20, R60: the frame's state from what it holds of one read */
+  function frameApply(name) {
+    if (name === "groupidentity") {
+      if (!FRAME_VAL.groupidentity) return;
+      /* R60: the display name only; the slug is never drawn as the group's name */
+      GROUP = FRAME_VAL.groupidentity.display_name;
       GROUP_KNOWN = true;
       if (GROUP) local.set(GROUP_KEY, GROUP); else local.del(GROUP_KEY);
+    } else if (name === "infolevel") {
+      const lv = FRAME_VAL.infolevel;
+      if (lv) {
+        LEVEL_INFO = lv;
+        if (lv.set_at) { LEVEL = lv.level; local.set("cs-level", LEVEL); }
+      }
+      /* R17 (DEC-162 (2)): after the member's first month (from the first day this device served her, or the level's first setting), the shell asks once
+         whether to keep the level */
+      const firstKey = "cs-first:" + (ME.member || "");
+      if (!local.get(firstKey)) local.set(firstKey, String(Date.now()));
+      const first = Math.min(Number(local.get(firstKey)) || Date.now(), LEVEL_INFO && LEVEL_INFO.set_at ? Date.parse(LEVEL_INFO.set_at) || Date.now() : Date.now());
+      const asked = (LEVEL_INFO && LEVEL_INFO.asked_at) || local.get("cs-level-asked");
+      /* R75 (2): a member whose level is still the default, and of no other */
+      ASK_LEVEL = !asked && LEVEL === "prompt" && Date.now() - first >= 30 * 24 * 3600 * 1000;
+    } else if (FRAME_REACH.includes(name)) {
+      /* R20: reachable when the assistant is on and the member holds her own reference, is connected or the group holds a key; a read that did not answer is "not reachable" */
+      if (!FRAME_REACH.every((n) => FRAME_DONE.has(n))) return;
+      const v = FRAME_VAL, was = REACHABLE;
+      REACHABLE = !!((v.assistantstate && v.assistantstate.on) && ((v.accountreference && v.accountreference.held) || (v.subscriptionsignin && v.subscriptionsignin.connected) || (v.groupkeystate && v.groupkeystate.on)));
+      if (REACHABLE !== was) {
+        DOCKI = REACHABLE && screenOf("assistant") && ROUTE && (!MAIN || frameOf(MAIN.spec.id) === "working") ? instance(screenOf("assistant"), ROUTE.subject, "d", { screen: ROUTE.screen, subject: ROUTE.subject }) : null;
+        if (!REACHABLE) DOCK = false;
+        draw();
+        /* R113 (P2.1): no screen read of its own: only a read whose request now differs (it reads `view.reachable`) is read again */
+        if (MAIN) rereadChanged(MAIN);
+      }
     }
-    if (lv.kind === "ok" && lv.value && (lv.value.level === "prompt" || lv.value.level === "pause")) {
-      LEVEL_INFO = lv.value;
-      if (lv.value.set_at) { LEVEL = lv.value.level; local.set("cs-level", LEVEL); }
-    }
-    /* R17 (DEC-162 (2)): after the member's first month (from the first day this device served her, or the level's
-       first setting), the shell asks once whether to keep the level */
-    const firstKey = "cs-first:" + (ME.member || "");
-    if (!local.get(firstKey)) local.set(firstKey, String(Date.now()));
-    const first = Math.min(Number(local.get(firstKey)) || Date.now(), LEVEL_INFO && LEVEL_INFO.set_at ? Date.parse(LEVEL_INFO.set_at) || Date.now() : Date.now());
-    const asked = (LEVEL_INFO && LEVEL_INFO.asked_at) || local.get("cs-level-asked");
-    /* R75 (2): a member whose level is still the default, and of no other */
-    ASK_LEVEL = !asked && LEVEL === "prompt" && Date.now() - first >= 30 * 24 * 3600 * 1000;
-    draw();
   }
-  async function loadReach() {
-    const [st, ref, sub, gk] = await Promise.all([call("assistantstate"), call("accountreference"), call("subscriptionsignin", { body: { step: "state" }, read: true }), call("groupkeystate")]);
+  /* an answer of the plane for one frame read, from the frame's own request or from a screen's identical one (`noteFrame`); the frame follows it when it
+     is the read's first or differs from what the frame held, and is drawn again for it */
+  function frameTake(name, a) {
     if (!ME) return;
-    const on = st.kind === "ok" && st.value && st.value.on === true;
-    const own = ref.kind === "ok" && ref.value && ref.value.held === true;
-    const signed = sub.kind === "ok" && sub.value && sub.value.connected === true;
-    const group = gk.kind === "ok" && gk.value && gk.value.on === true && gk.value.held !== false;
-    const was = REACHABLE;
-    REACHABLE = !!(on && (own || signed || group));
-    if (REACHABLE !== was) {
-      DOCKI = REACHABLE && screenOf("assistant") && ROUTE && (!MAIN || frameOf(MAIN.spec.id) === "working") ? instance(screenOf("assistant"), ROUTE.subject, "d", { screen: ROUTE.screen, subject: ROUTE.subject }) : null;
-      if (!REACHABLE) DOCK = false;
-      draw();
-      /* R113 (P2.1): no screen read of its own: only a read whose request now differs (it reads `view.reachable`) is read again */
-      if (MAIN) rereadChanged(MAIN);
-    }
+    const m = a.kind === "ok" && a.value && typeof a.value === "object" ? FRAME_READS[name].min(a.value) : null;
+    const was = FRAME_VAL[name] === undefined ? null : JSON.stringify(FRAME_VAL[name]), first = !FRAME_DONE.has(name);
+    if (m) { FRAME_VAL[name] = m; FRAME_DONE.add(name); FRAME_FRESH.add(name); frameSave(); }
+    /* a first read that answered nothing of use is settled; a kept one that is asked again and does not answer keeps what it held */
+    else FRAME_DONE.add(name);
+    if (!first && (!m || JSON.stringify(m) === was)) return;
+    frameApply(name);
+    if (name === "groupidentity" || name === "infolevel") draw();
   }
+  const frameAsk = (name) => call(name, Object.assign({}, FRAME_READS[name].req)).then((a) => frameTake(name, a));
+  /* a screen's read of exactly a frame read (no query; `subscriptionsignin`'s `state` step) is that read's answer as well */
+  function noteFrame(spec, a) {
+    if (a.kind !== "ok" || !Object.hasOwn(FRAME_READS, spec.op) || !ME) return;
+    const q = spec.query || {};
+    if (Object.keys(q).some((k) => q[k] !== undefined && q[k] !== null)) return;
+    const body = FRAME_READS[spec.op].req.body;
+    if ((body === undefined) !== (spec.body === undefined) || (body !== undefined && JSON.stringify(spec.body) !== JSON.stringify(body))) return;
+    frameTake(spec.op, a);
+  }
+  /* the frame's reads at `whoami`'s answer: those the store holds are drawn at once and asked again once the screen's reads have settled
+     (`frameRevalidate`); the others are asked now, together, as the frame always did (R86) */
+  function frameBoot() {
+    /* R7 (E12; K4530 ruling on J21): the queue count is asked once the screen's own reads are known (`countQueue`, from `show`), not here */
+    COUNT_DUE = true;
+    FRAME_VAL = {}; FRAME_DONE = new Set(); FRAME_KEPT = new Set(); FRAME_FRESH = new Set(); FRAME_CHECKED = false;
+    const kept = frameKept();
+    for (const n of FRAME_NAMES) if (kept[n]) { FRAME_VAL[n] = kept[n]; FRAME_DONE.add(n); FRAME_KEPT.add(n); }
+    for (const n of FRAME_NAMES) if (FRAME_KEPT.has(n)) frameApply(n);
+    for (const n of FRAME_NAMES) if (!FRAME_DONE.has(n)) frameAsk(n);
+  }
+  /* once the screen's first reads have settled, the kept reads the page has not itself had answered are asked again, once */
+  function frameRevalidate() {
+    if (FRAME_CHECKED || !ME || !S) return;
+    FRAME_CHECKED = true;
+    for (const n of FRAME_KEPT) if (!FRAME_FRESH.has(n)) frameAsk(n);
+  }
+  /* G12b: the guide's marks (`screens-wizards`' `marksFor`, one `wizardsat` for the screen) asked at the route's start, in the same breath as the screen's
+     reads, and held for `entered`, which asks for the very same read when the route has settled and is handed this answer */
+  function marksAhead() {
+    if (!GUIDEI || typeof GUIDE.entered !== "function" || !Array.isArray(GUIDE.ops) || !GUIDE.ops.includes("wizardsat") || !S || !ROUTE || !ROUTE.screen) return;
+    call("wizardsat", { query: { screen: ROUTE.screen }, public: false, hold: true });
+  }
+
   /* R36: old addresses forwarded, the fragment carried and nothing else */
   function forward() {
     const p = String(win.location.pathname || "/"), h = String(win.location.hash || "");
@@ -2708,15 +2807,22 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (GUIDE) GUIDEI = instance(GUIDE, null, "g", null);
     /* R32: the record read when a screen first needs it (never for a public or published one, R30); `/` with a live
        record opens Home */
-    /* R36, R71: the test-instance band, read once; under the page's session when it holds one (so the load is counted in her window), else without */
-    BOOT_CALL = call("bootstrap", (() => {
+    /* R36, R71: the test-instance band, read once; under the page's session when it holds one (so the load is counted in her window), else without.
+       G12b: the request is sent after the first screen's reads (`startBoot`, from `show`), never before them, so the object answers the screen first. */
+    BOOT_ARGS = (() => {
       /* R30, R79: a page of the public or published frame, or an address outside the team's pages, sends no Authorization header */
       const at = parse(win.location.pathname);
       const rec = at.outside || (sessionless(at.screen) && !at.root) ? null : readRecord();
       return rec ? { bearer: rec.t } : { public: true };
-    })());
-    BOOT_CALL.then((b) => { if (b.kind === "ok" && b.value && typeof b.value === "object") { BOOT = b.value; BOOT_READ = true; testBand(); } });
+    })();
     await route();
+    startBoot();
+  }
+  function startBoot() {
+    if (BOOT_CALL || !BOOT_ARGS) return BOOT_CALL;
+    BOOT_CALL = call("bootstrap", BOOT_ARGS);
+    BOOT_CALL.then((b) => { if (b.kind === "ok" && b.value && typeof b.value === "object") { BOOT = b.value; BOOT_READ = true; testBand(); } });
+    return BOOT_CALL;
   }
   return { start, state: () => ({ ME, ROUTE, LEVEL, THEME, RAILW, REACHABLE, DOCK, TODO, GROUP, MAIN, DOCKI, LOCKED, S: !!S }), absorb, date, w };
 }

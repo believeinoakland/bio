@@ -222,11 +222,59 @@ function render(cs, view) {
   const typed = ty.state === "ok" && ty.value && Array.isArray(ty.value.transcriptions) ? ty.value.transcriptions.filter((t) => t && t.content_id) : [];
   const rv0 = reading.state === "ok" && reading.value && typeof reading.value === "object" ? reading.value : null;
   const words0 = rv0 && Array.isArray(rv0.text_units) ? rv0.text_units.filter((p) => p && String(p.text || "").trim()) : [];
-  const blind0 = rv0 && Array.isArray(rv0.unread_pages) ? rv0.unread_pages.filter((n) => Number.isInteger(n) && n >= 0) : [];
-  const textState = !sha ? "" : reading.state === "empty" ? "unread" : rv0 ? (!words0.length ? "none" : blind0.length ? "partial" : "full") : "";
+  /* G14 (R96; extraction): the reading's own account of how complete it is, `completeness: {state, why?, skipped?}` (`whole`, `partial`, `stated`). A reading
+     that states itself refused whole (its size or memory reason) names no pages that "have no text": its unread pages are the size's, not pictures of text. */
+  const comp = rv0 && rv0.completeness && typeof rv0.completeness === "object" ? rv0.completeness : null;
+  const compState = comp && ["whole", "partial", "stated"].includes(comp.state) ? comp.state : "";
+  const blind0 = rv0 && compState !== "stated" && Array.isArray(rv0.unread_pages) ? rv0.unread_pages.filter((n) => Number.isInteger(n) && n >= 0) : [];
+  /* R96 (fix round 6; G6, G8, G13): what the stored reading states. A reading that found no words and says why it did not (`reading.failure` `final`, with its
+     `basis`) is a statement, not "none": it is drawn as that statement and offers no OCR re-read after it; a statement extraction states `repairable` (an old
+     "(multipart)" final whose bytes now detect) offers "Read it" instead; a text reading with `more` is being read and is never drawn as complete. */
+  const rdObj = rv0 && rv0.reading && typeof rv0.reading === "object" ? rv0.reading : null;
+  const flagOf = (k) => !!rv0 && (rv0[k] === true || (!!rdObj && rdObj[k] === true));
+  const failure = rv0 ? String((rdObj && rdObj.failure) || rv0.failure || "") : "";
+  const isMore = flagOf("more"), isRepairable = flagOf("repairable");
+  const textState = !sha ? "" : reading.state === "empty" ? "unread"
+    : rv0 ? (isMore ? "reading" : compState === "stated" && !isRepairable ? "stated"
+      : words0.length ? (compState === "partial" ? "cut" : blind0.length ? "partial" : "full")
+      : isRepairable ? "repairable" : failure === "final" ? "stated" : compState === "partial" ? "cut" : "none") : "";
+  /* G13 (R96): while the text is being read the page asks for it again on the page clock, at most every 10 seconds (as the dock does, R8), keeping what is
+     drawn until the new answer arrives; a whole reading is not asked again. */
+  if (isMore && sha && !ui.readPoll) {
+    ui.readPoll = true;
+    cs.later(10000, (k, v) => {
+      v.ui.readPoll = false;
+      k.call("reading", { query: { sha256: sha } }).then((a) => {
+        const r = a && a.result !== undefined ? a.result : a;
+        if (r && r.ok !== false && r.found !== false) k.set("later", Object.assign({}, v.ui.later, { reading: { q: JSON.stringify({ sha256: sha }), state: "ok", value: r } }));
+      }, () => { /* the next render asks again */ });
+    });
+  }
   /* R96 (C17; reading-pipeline R35): the reading counts its words, `words_read` of `words_total`; drawn only when it states both */
   const wordsOf = (k) => { const v = rv0 ? (rv0[k] !== undefined ? rv0[k] : rv0.reading && typeof rv0.reading === "object" ? rv0.reading[k] : undefined) : undefined; return Number.isInteger(v) && v >= 0 ? v : null; };
   const wRead = wordsOf("words_read"), wTotal = wordsOf("words_total");
+  /* G13 (R96; extraction R90): a text read in pieces states how far, `read_through` of `total` (bytes of text); the words of the first piece are not the capture's */
+  const numOf0 = (v) => (Number.isFinite(v) && v >= 0 ? v : null);
+  const readThrough = rv0 ? numOf0(rv0.read_through) : null, readTotal = rv0 ? numOf0(rv0.total) : null;
+  /* a size as the original-file card draws it (`size.*`) */
+  const sizeWord = (n) => (n < 1024 ? T("size.small") : n >= 1073741824 ? T("size.gb", { n: (n / 1073741824).toFixed(1) })
+    : n >= 1048576 ? T("size.mb", { n: (n / 1048576).toFixed(1) }) : T("size.kb", { n: String(Math.round(n / 1024)) }));
+  /* G13: `op=reading` pages the passages (at most 4,096 an answer): `next` is the cursor for the rest, `after` asks for it. The member asks for more
+     (`ui.readmore`, the number of pages wanted); each page is its own read, and what is drawn is never stated as the whole while `next` stands. */
+  const wantPages = Math.max(1, Number(ui.readmore) || 1);
+  let allUnits = rv0 && Array.isArray(rv0.text_units) ? rv0.text_units.slice() : [];
+  let cursor = rv0 && rv0.next !== undefined && rv0.next !== null && rv0.next !== "" ? rv0.next : null;
+  let pagesPending = false, pagesFailed = null;
+  for (let i = 1; i < wantPages && cursor !== null && sha; i++) {
+    const more = later("readafter:" + String(cursor), "reading", { sha256: sha, after: String(cursor) });
+    if (more.state === "loading") { pagesPending = true; break; }
+    if (more.state !== "ok" || !more.value) { pagesFailed = more; break; }
+    allUnits = allUnits.concat(Array.isArray(more.value.text_units) ? more.value.text_units : []);
+    cursor = more.value.next !== undefined && more.value.next !== null && more.value.next !== "" ? more.value.next : null;
+  }
+  const unitsCut = cursor !== null;
+  /* a row of the design (DEC-418) when the words list holds it, else the nearest held row stands in (the row owed is named in the job record) */
+  const heldWord = (key) => cs.w(key) !== key;
   /* R3, C25 (screens-intake R54; acquisition R98): ONE rule for a document's name, the one the capture screen follows: its own title (the reading's
      `title` once read, else the title the capture's document states), else its file name (an upload's own, or the name its source states, never
      the file part of an address unless the source states that very name), else its host and the day captured (`document.untitled.web`, never the
@@ -244,11 +292,30 @@ function render(cs, view) {
   out.push(`<div class="mk-facts"><div><span class="k">${cs.w("screen.document.copy")}</span><span class="v">`
     + (letter ? cs.grade(testimony ? "testimony" : "capture", letter) : "")
     + cs.act("gradenote", { label: "act.gradenote.label.document", data: { capture: sha, letter }, tone: "quiet" }) + "</span></div>"
-    + (textState ? `<div><span class="v"><span data-text-state="${textState}"${textState === "full" || textState === "none" ? "" : ' tabindex="0"'} data-level="1" data-tip="${cs.esc(cs.w("screen.document.text.tip"))}">`
-      + (textState === "partial" ? cs.w("screen.document.text.partial", { pages: pagesText(blind0.map((n) => n + 1)) }) : textState === "unread" ? cs.mark("gap", "undetermined") + " " + cs.w("screen.document.text.unread") : "") + "</span>"
-      + (wRead !== null && wTotal !== null ? ` <span class="mk-small" data-words-read="1">${cs.w("screen.document.text.read", { read: String(wRead), total: String(wTotal) })}</span>` : "") + "</span></div>" : "")
+    + (textState ? `<div><span class="v"><span data-text-state="${textState}"${["full", "none", "stated", "repairable"].includes(textState) ? "" : ' tabindex="0"'} data-level="1" data-tip="${cs.esc(cs.w("screen.document.text.tip"))}">`
+      /* G13: a text still being read says so; the row owed (`screen.document.reading.beingread`) is stood in for by the nearest held row, `state.loading` */
+      + (textState === "partial" ? cs.w("screen.document.text.partial", { pages: pagesText(blind0.map((n) => n + 1)) }) : textState === "unread" ? cs.mark("gap", "undetermined") + " " + cs.w("screen.document.text.unread")
+        : textState === "cut" ? (comp && comp.why ? cs.esc(String(comp.why)) : cs.mark("gap", "undetermined"))
+        : textState === "reading" ? (heldWord("screen.document.reading.progress") && readThrough !== null && readTotal !== null
+          ? cs.w("screen.document.reading.progress", { read: sizeWord(readThrough), total: sizeWord(readTotal) })
+          : cs.w("state.loading") + (readThrough !== null && readTotal !== null ? " " + sizeWord(readThrough) + " / " + sizeWord(readTotal) : "")) : "") + "</span>"
+      + (wRead !== null && wTotal !== null && textState !== "reading" ? ` <span class="mk-small" data-words-read="1">${cs.w("screen.document.text.read", { read: String(wRead), total: String(wTotal) })}</span>` : "") + "</span></div>" : "")
     + (sha ? `<div><span class="k">${cs.w("screen.document.fingerprint")}</span><span class="v"><span class="mk-tag" tabindex="0" data-level="1" data-tip="${cs.esc(cs.w("screen.document.fingerprint.means"))}">${cs.esc(sha.slice(0, 4) + "…" + sha.slice(-4))}</span></span></div>` : "")
     + (sha ? `<div><a class="cs-btn" data-tone="quiet" href="/app/open-file/${cs.esc(sha)}">${cs.w("screen.document.open")}</a></div>` : "") + "</div>");
+  /* G19 (fix round 6; acquisition): the supporting files a web capture kept and skipped, with the reasons the capture recorded (`supporting: {kept, skipped, reasons}`
+     on the register document); drawn only when something was skipped, as the sizes kept of all and each reason in the plane's own words (the sentence is owed: stand-in) */
+  {
+    const sup = reg0.capture && reg0.capture.supporting && typeof reg0.capture.supporting === "object" ? reg0.capture.supporting : reg0.supporting && typeof reg0.supporting === "object" ? reg0.supporting : null;
+    const kept = sup ? Number(sup.kept) : NaN, skipped = sup ? Number(sup.skipped) : NaN;
+    const notWalked = sup && typeof sup.not_walked === "string" ? sup.not_walked : "";
+    if (Number.isFinite(kept) && (skipped > 0 || notWalked)) {
+      const total = Number.isFinite(Number(sup.total)) ? Number(sup.total) : kept + (Number.isFinite(skipped) ? skipped : 0);
+      /* acquisition R108: each reason `{reason, count, limit?, detail?}`; the renderer's words (`detail`) where it gave them, else the code (the worded sentence is owed) */
+      const why = (Array.isArray(sup.reasons) ? sup.reasons : []).map((r) => (typeof r === "string" ? r : r && typeof r === "object" ? (String(r.detail || r.reason || "") + (r.count ? " \u00d7" + r.count : "")) : "")).filter(Boolean);
+      if (notWalked) why.push(notWalked);
+      out.push(`<p class="mk-note" data-supporting="1">${kept} / ${total}${why.length ? " \u00b7 " + why.map((w) => cs.esc(w)).join("; ") : ""}</p>`);
+    }
+  }
   if (ui.gradenote) {
     const n = ui.gradenote.note;
     out.push(cs.sec("screen.document.gradenote.head", n
@@ -312,8 +379,31 @@ function render(cs, view) {
   const readingBody = () => secOf("document.read.title", reading, (r) => {
     /* K3387: the document's words are the reading's `text_units` (extraction R36's units, in seq order, withheld as
        the bundle is); a reading answers no other text, and with none the section says it holds nothing */
-    const list = (Array.isArray(r.text_units) ? r.text_units : []).filter((p) => p && String(p.text || "").trim());
-    if (!list.length) return originalCard + (typed.length ? "" : `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`);
+    const list = allUnits.filter((p) => p && String(p.text || "").trim());
+    /* G6, G8 (R96; DEC-418): a copy the reading states it did not read is drawn as that statement, beside the file's size (the card above), never as
+       "Nothing here": by the design's `screen.document.reading.stated` (with the size) or `.reading.repairable` where the words list holds them, else the plane's
+       own words (the stand-in; the rows are owed to T52's list). */
+    const basisWords = rdObj && typeof rdObj.basis === "string" ? rdObj.basis.trim() : "";
+    const statedSaid = textState === "repairable" && heldWord("screen.document.reading.repairable") ? cs.w("screen.document.reading.repairable")
+      : textState === "stated" && heldWord("screen.document.reading.stated") && Number.isInteger(rv0 && rv0.bytes) ? cs.w("screen.document.reading.stated", { size: sizeWord(rv0.bytes) })
+      : comp && typeof comp.why === "string" && comp.why.trim() ? cs.esc(comp.why.trim()) : basisWords ? cs.esc(basisWords) : undetermined("");
+    const statedHtml = textState === "stated" || textState === "repairable" ? `<p class="mk-note" data-reading="stated">${statedSaid}</p>` : "";
+    /* G13 (R96): a text still being read says how far it has come (R90), and what is drawn of it is never stated as the whole: the passages drawn so far
+       ("Passages: N of M", the nearest held words; the row owed is `screen.document.reading.firstn`), with the more act the page bar's own control (the
+       choice redraws the page and the next page is read: `op=reading` with `after`). Search and Cite cover what is read, which is what is drawn and stored. */
+    const progressSaid = isMore ? (heldWord("screen.document.reading.progress") && readThrough !== null && readTotal !== null
+      ? cs.w("screen.document.reading.progress", { read: sizeWord(readThrough), total: sizeWord(readTotal) })
+      : cs.w("state.loading") + (readThrough !== null && readTotal !== null ? " " + sizeWord(readThrough) + " / " + sizeWord(readTotal) : "")) : "";
+    const unitsTotal = rv0 && Number.isInteger(rv0.units_total) && rv0.units_total >= 0 ? rv0.units_total : null;
+    const cutSaid = unitsCut || pagesPending ? `${cs.w("screen.document.passages.head")}: ${allUnits.length}${unitsTotal !== null ? " / " + unitsTotal : ""}` : "";
+    const moreControl = unitsCut && !pagesPending ? cs.checks("document-read-more", "screen.document.passages.head", [{ value: String(wantPages + 1), key: "document.read.next", on: false }], { radio: true, redraw: "readmore" }) : "";
+    /* B38 (DEC-418): while a text is being read, "until the whole file is read, searching and citing cover only what has been read so far" beside the progress; once a
+       text read in pieces is whole (`more` false, `total` stated), "read in full" (`screen.document.text.full` stands in until the row is held) */
+    const partialSaid = isMore && heldWord("screen.document.reading.partial") ? cs.w("screen.document.reading.partial") : "";
+    const doneSaid = !isMore && readTotal !== null && textState === "full" ? (heldWord("screen.document.reading.done") ? cs.w("screen.document.reading.done") : cs.w("screen.document.text.full")) : "";
+    const moreNote = progressSaid || partialSaid || doneSaid || cutSaid || pagesFailed ? `<div class="mk-small" data-reading="more">${[progressSaid, partialSaid, doneSaid, cutSaid].filter(Boolean).map((t) => `<p>${t}</p>`).join("")}`
+      + (pagesPending ? cs.state({ state: "loading" }, () => "") : "") + (pagesFailed ? cs.state(pagesFailed, () => "") : "") + moreControl + "</div>" : "";
+    if (!list.length) return originalCard + moreNote + (typed.length || isMore ? "" : statedHtml || `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`);
     /* nothing is preselected unless the capture was held for a question: then the first choice says to choose one, never a blank
        (R118); a cite with it unchosen is refused in place */
     const pick = askable.length
@@ -413,7 +503,7 @@ function render(cs, view) {
       + cs.checks("document-read-page", { key: "document.read.page", fills: { n: String(cur), count: String(total) } },
           (cur > 1 ? [{ value: String(cur - 1), key: "document.read.prev", on: false }] : []).concat(cur < total ? [{ value: String(cur + 1), key: "document.read.next", on: false }] : []),
           { radio: true, redraw: "readpage" }) + "</div>" : tabs;
-    return originalCard + `<p class="mk-small">${cs.w("document.read.select")}</p>` + bar + (shown.length ? "" : `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`) + shown.map(([p, i]) => {
+    return originalCard + (textState === "stated" ? statedHtml : "") + moreNote + `<p class="mk-small">${cs.w("document.read.select")}</p>` + bar + (shown.length ? "" : `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`) + shown.map(([p, i]) => {
       const extent = p.extent && typeof p.extent === "object" ? p.extent : null;
       /* R78: the record's page 0 is drawn "Page 1"; the extent a citation sends keeps the record's own number */
       const page = extent && Number.isInteger(extent.page) ? pg(extent.page) : null;
@@ -426,8 +516,8 @@ function render(cs, view) {
 
   /* the pages its reading could not make out (extraction R27), and the two ways to their words */
   let drewTranscribe = false;
-  if (reading.state === "ok" && Array.isArray(reading.value.unread_pages) && reading.value.unread_pages.length) {
-    const un = reading.value.unread_pages.filter((p) => Number.isInteger(p) && p >= 0);
+  if (reading.state === "ok" && blind0.length) {
+    const un = blind0;
     /* R78: drawn from one, the picker's own choices one-based as well (a transcription sends the record's number) */
     if (un.length) out.push(cs.sec("screen.document.unread.head",
       `<p>${cs.w("document.unread.pages", { pages: pagesText(un.map((p) => p + 1)) })}</p>`
@@ -460,15 +550,18 @@ function render(cs, view) {
   /* R96 (C17): an act that reads the copy again is drawn only for a copy a reading is held for (`rv0`): one with none says it is unread, in the
      facts above, and draws no act that re-reads it */
   /* R129 (N5): a copy stored with no reading says so and offers to read it now (`readheld`); the sentence and the act are drawn together or not at all */
-  if (textState === "unread" && sha) {
+  /* G8 (fix round 6): "Read it" is also drawn for a statement extraction states `repairable` (an old "(multipart)" final whose bytes now detect), beside the statement */
+  if ((textState === "unread" || textState === "repairable") && sha) {
     /* its label, `act.readheld.label.document` ("Read it now"), is a row the design owes (K4269); "Read it" (`document.read.title`) stands in */
-    const readNow = cs.act("readheld", { label: "document.read.title", data: { sha } });
+    const readNow = cs.act("readheld", { label: textState === "repairable" && heldWord("screen.document.reading.repairable.door") ? "screen.document.reading.repairable.door" : "document.read.title", data: { sha } });
     if (readNow) out.push(`<div class="mk-acts" data-readnow="1">${readNow}${own("readheld")}</div>`);
   }
-  if (rv0 && textState && textState !== "full" && textState !== "unread" && sha && !incomplete) {
+  /* G6, G13: no OCR re-read after a statement that stands (`stated`), beside one "Read it" repairs, or while the text is still being read; the assistant's
+     reading of a picture's page (`pagetranscribe`) stays for a picture whose reading states it did not read it */
+  if (rv0 && textState && !["full", "unread", "repairable", "reading", "cut"].includes(textState) && sha && !incomplete) {
     if (isPicture) {
       if (view.reachable && !drewTranscribe) out.push(`<div class="mk-acts">${cs.act("pagetranscribe", { label: "act.pagetranscribe.label.document", data: { sha } })}</div>`);
-    } else {
+    } else if (textState !== "stated") {
       const act = cs.act("pdfstructure", { label: "act.pdfstructure.label.document", data: { sha } });
       out.push(textState === "partial" && blind0.length ? cs.sheet(rowOf("", W("screen.document.ocr.says", { pages: pagesText(blind0.map((n) => n + 1)) }), act)) : `<div class="mk-acts">${act}</div>`);
     }
@@ -720,9 +813,7 @@ function render(cs, view) {
     const named = stated || (rv.reading && typeof rv.reading.text_container === "string" ? rv.reading.text_container.trim() : "");
     const id0 = named || (/^text\/plain\b/.test(String(rv.content_type || "")) ? "text" : "");
     const kind = view.parts.kinds.includes(id0) ? id0 : "undetermined";
-    const n = rv.bytes;
-    const size = n < 1024 ? T("size.small") : n >= 1073741824 ? T("size.gb", { n: (n / 1073741824).toFixed(1) })
-      : n >= 1048576 ? T("size.mb", { n: (n / 1048576).toFixed(1) }) : T("size.kb", { n: String(Math.round(n / 1024)) });
+    const size = sizeWord(rv.bytes);
     return `<p class="mk-note" data-card="original">${W("document.read.original.card", { kind: T("document.kind." + kind), size })}</p>`;
   })();
   out[readingAt] = readingBody();
@@ -796,7 +887,20 @@ function render(cs, view) {
   if (sha && !testimony) {
     const lk = later("links", "links", { capture: sha, limit: "200" });
     const linked = (doc.lists.references || []).filter((r) => r && r.rel === "links_to" && r.target);
-    const rows = lk.state === "ok" && Array.isArray(lk.value.links) ? lk.value.links.filter((r) => r && r.address && !r.chrome) : [];
+    /* G17 (fix round 6): the plane pages the links (200 an answer, `truncated`, `next`): what is drawn says it is the first of more, and the more control reads the
+       next page (`after`); the tally below counts what is drawn, never the whole page */
+    const wantLinks = Math.max(1, Number(ui.linkpages) || 1);
+    let allLinks = lk.state === "ok" && Array.isArray(lk.value.links) ? lk.value.links.slice() : [];
+    let linkNext = lk.state === "ok" && lk.value.next ? lk.value.next : null, linkPending = false, linkFailed = null;
+    for (let i = 1; i < wantLinks && linkNext && !linkFailed; i++) {
+      const pgk = later("linksafter:" + String(linkNext), "links", { capture: sha, limit: "200", after: String(linkNext) });
+      if (pgk.state === "loading") { linkPending = true; break; }
+      if (pgk.state !== "ok" || !pgk.value) { linkFailed = pgk; break; }
+      allLinks = allLinks.concat(Array.isArray(pgk.value.links) ? pgk.value.links : []);
+      linkNext = pgk.value.next ? pgk.value.next : null;
+    }
+    const linksCut = lk.state === "ok" && (linkNext !== null || linkPending || (wantLinks === 1 && lk.value.truncated === true) || (!!linkFailed));
+    const rows = allLinks.filter((r) => r && r.address && !r.chrome);
     if (lk.state === "failed") out.push(cs.sec("document.links.title", cs.state(lk, () => ""), { help: "document.links.help" }));
     else if (rows.length || linked.length) {
       const g = { inside: [], beside: [], held: [], outside: [], refused: [] };
@@ -829,6 +933,9 @@ function render(cs, view) {
         : W("screen.document.a30.6_links_on_this_page_4_lead_outside_the_", { n: String(total), outside: String(g.outside.length) });
       out.push(cs.sec("document.links.title",
         `<p class="mk-note" data-tally="1">${tally} ${W("screen.document.links.navleft")}</p>`
+        + (linksCut ? `<div class="mk-small" data-cut="links"><p>${W("screen.people.more", { n: String(allLinks.length) })}</p>`
+          + (linkPending ? cs.state({ state: "loading" }, () => "") : "") + (linkFailed ? cs.state(linkFailed, () => "") : "")
+          + (linkNext && !linkPending ? cs.checks("document-links-more", "shell.more", [{ value: String(wantLinks + 1), key: "shell.more", on: false }], { radio: true, redraw: "linkpages" }) : "") + "</div>" : "")
         + groupOf("inside", g.inside, (r) => rowOf("", addr(r), "", meta(verdictOf(r, "inside"), W("screen.document.a30.a_pointer_into_this_very_copy_settled_wh"))))
         + groupOf("beside", g.beside, (r) => rowOf("", addr(r), "", meta(verdictOf(r, "beside"), W("screen.document.a64.captured_together_with_this_page_and_che"))))
         + groupOf("held", g.held, (r) => rowOf("", cs.ref("document", String(r.target_bundle), String(r.title || r.address || T("state.undetermined", { reason: "" })), []), "",
@@ -918,6 +1025,9 @@ function render(cs, view) {
           grade + " " + said);
       }).join(""))
         + (cn.state === "failed" ? cs.state(cn, () => "") : "")
+        /* G17: a list the plane cut says so (these reads page by `limit` alone, so there is no more act): the names matched, the names found, the connections */
+        + ((rs.value.truncated === true || rs.value.names_truncated === true) ? `<p class="mk-small" data-cut="names">${W("screen.people.more", { n: String(names.length) })}</p>` : "")
+        + (cn.state === "ok" && cn.value && cn.value.truncated === true ? `<p class="mk-small" data-cut="connections">${W("screen.people.more", { n: String(conns.length) })}</p>` : "")
         + own("connectionchoose")
         + (people ? cs.field("document-claim-person", "screen.document.claim.label", {})
           + cs.choice("document-claim-basis", "screen.document.claim.basis",
@@ -950,7 +1060,11 @@ function render(cs, view) {
      threaded to (`captureprogressions`) */
   if (sha) {
     const tl = later("themes", "themeread", { limit: "200" });
-    const themes = tl.state === "ok" && tl.value && Array.isArray(tl.value.themes) ? tl.value.themes.filter((t) => t && t.theme_id).slice(0, 20) : [];
+    /* G17: the first 20 themes are drawn (each is a read of its own); the plane's list is longer when it says so, and the more control draws 20 more */
+    const allThemes = tl.state === "ok" && tl.value && Array.isArray(tl.value.themes) ? tl.value.themes.filter((t) => t && t.theme_id) : [];
+    const themeCap = 20 * Math.max(1, Number(ui.themepages) || 1);
+    const themes = allThemes.slice(0, themeCap);
+    const themesCut = allThemes.length > themes.length || (tl.state === "ok" && tl.value && tl.value.truncated === true);
     const lines = [];
     /* R78: a placement's page is the record's, drawn from one; none stated, none drawn */
     const pageOf = (v) => (v === null || v === undefined || v === "" || !Number.isInteger(Number(v)) ? null : pg(Number(v)));
@@ -970,7 +1084,10 @@ function render(cs, view) {
       + cs.field("document-theme-note", "theme.place", { rec: true })
       + cs.act("themeplace", { label: "theme.place", data: { target: id } }) + cs.act("themepropose", { label: "theme.propose", data: { target: id } }) : "";
     if (tl.state === "failed") out.push(cs.sec("theme.section", cs.state(tl, () => "")));
-    else if (lines.length || placeBox) out.push(cs.sec("theme.section", lines.join("") + `<p class="mk-small">${W("theme.never.evidence")}</p>` + placeBox));
+    else if (lines.length || placeBox) out.push(cs.sec("theme.section", lines.join("")
+      + (themesCut ? `<div class="mk-small" data-cut="themes"><p>${W("screen.people.more", { n: String(themes.length) })}</p>`
+        + (allThemes.length > themes.length ? cs.checks("document-themes-more", "shell.more", [{ value: String(Math.max(1, Number(ui.themepages) || 1) + 1), key: "shell.more", on: false }], { radio: true, redraw: "themepages" }) : "") + "</div>" : "")
+      + `<p class="mk-small">${W("theme.never.evidence")}</p>` + placeBox));
     const pgr = later("progs", "captureprogressions", { sha256: sha });
     const plist = pgr.state === "ok" && pgr.value ? (Array.isArray(pgr.value.instances) ? pgr.value.instances : Array.isArray(pgr.value.progressions) ? pgr.value.progressions : []) : [];
     if (pgr.state === "failed") out.push(cs.sec("progression.threadedto", cs.state(pgr, () => "")));
@@ -1600,6 +1717,7 @@ const words = Object.freeze([
   "capture.fieldneeded", "shell.reason.needed", "progression.steps", "screen.capture.address.freq", "state.item.retired.means",
   ...["daily", "weekly", "monthly", "hourly", "per_meeting"].map((f) => "screen.capture.address.freq." + f),
   "screen.document.cite.option", "screen.document.cite.choose", "screen.document.unwatched.head", "screen.document.unwatched",
+  "screen.people.more", "shell.more", "screen.document.text.full", "screen.document.passages.head",
   "screen.document.text.tip", "screen.document.text.unread", "screen.document.text.read", "screen.document.text.partial", "screen.document.ocr.says", "screen.document.ocr.refused.capable", "screen.document.ocr.refused.member",
   "screen.document.ocr.refused.unread", "act.pdfstructure.label.document", "act.transcriptionattest.label.document", "act.provenanceroute.label.document",
   "act.connectionassert.label.document", "act.resolutiondefect.label.document", "act.owed_declareorigin.label.document",

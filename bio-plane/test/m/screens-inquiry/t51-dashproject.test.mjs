@@ -7,7 +7,7 @@ import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { COMMON } from "../../../src/screens-inquiry/common.mjs";
 import { dashProjectScreen } from "../../../src/screens-inquiry/dashproject.mjs";
 import { boot, ok, refused, refusedIn } from "../interface-shell/harness.mjs";
-import "./fixtures.mjs";
+import { batchStrength } from "./fixtures.mjs";
 
 const P = "PROJ-2026-0007";
 const Q1 = "INQ-2026-0001-seven-days", Q2 = "INQ-2026-0002-closed", Q3 = "INQ-2026-0003-third";
@@ -38,7 +38,7 @@ function plane(o = {}) {
       { handle: "rosa", state: "joined", owner: 0 }, { handle: "ana", state: "invited", owner: 0 }] }),
     strengthbarof: ok({ ok: true, project: P, bar: { declared: true, source: "project", capture: "B", connection: "B" } }),
     projectquestions: ok({ ok: true, project: P, items: [{ inquiry: Q1, title: "Seven days?" }, { inquiry: Q2, title: "Closed means repaired?" }, { inquiry: Q3, title: "Third?" }], cursor: null }),
-    inquirystrength: (r) => ok({ ok: true, target: r.query.id, ...(STRENGTH[r.query.id] || {}) }),
+    inquirystrength: batchStrength((id) => ({ ok: true, target: id, ...(STRENGTH[id] || {}) })),
     queue: ok({ ok: true, items: [NOTICE] }),
     heldcaptures: (r) => ok({ ok: true, held: r.query.member
       ? [heldRow("INFO-H1", "the east gate"), heldRow("INFO-H2", "the east gate")] : [heldRow("INFO-H1", "the east gate"), heldRow("INFO-H2", "the east gate")] }),
@@ -178,7 +178,7 @@ test("R79 This project at a glance: Questions with how many meet the bar, Events
   const nobar = await open({ strengthbarof: ok({ ok: true, project: P, bar: { declared: false } }) });
   assert.ok(!said(section(nobar, "screen.dash-project.glance.heading"), "screen.home.area.meetbar", { count: "0" }));
   assert.ok(!main(nobar).textContent.includes(word("screen.home.area.meetbar", { count: "2" })));
-  const nonemeet = await open({ inquirystrength: ok({ ok: true, capture: { state: "unrated" }, connection: { state: "unrated" } }) });
+  const nonemeet = await open({ inquirystrength: batchStrength(() => ({ ok: true, capture: { state: "unrated" }, connection: { state: "unrated" } })) });
   assert.ok(!main(nonemeet).textContent.includes(word("screen.home.area.meetbar", { count: "0" })), "no count at zero");
 });
 

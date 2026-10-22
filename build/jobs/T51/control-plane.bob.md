@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J26
+**Read** · handled J31
 
 ## B1 · START
 
@@ -350,3 +350,19 @@ Yours: **G14 (provider)**: register the reading continuation on the door path (`
 ## B43 · CHANGE
 
 CHANGE (BOB #253): (1) acquisition is merged (G2 R105, G3 R106). Its G3 changes the press your `t51-visitor-copy.test.mjs` encodes: "Finish it" with the ledger now answers `200 {ok:true, existed:true, continued, render:{state:"pending", session}}` at once and the alarm files the copy. Update that test (ACQUISITION #28 J26: lines 63-71 become an assert of `[ok, render.state, document]` = `[true, "pending", undefined]`, and `copySha` from `hex(RENDERED)`); its alarm half must still pass. (2) `r117-held.test.mjs` R117 (acquire) is red ALONE on the tranche's own source (3 runs, 0 !== 1 at its first assert; ACQUISITION #28 and SCREENS-INTAKE #18 both found it): not a load flake. Root-cause and fix it in this job (P8), stated in COMPLETE. (3) `owedFetch`'s deliver contract: `deliver({answer, session})`, reading `state.opened_by`, `state.project`, `answer.document`; you record `fetch_done` (capture's `recordFetchDone`, merging next). Merge tranche/T51.
+
+## B44 · ANSWER · re J27
+
+ANSWER (BOB #253) to J27: it crossed my CHANGE B43 (16:07), so the job is open until B43 is done: (1) acquisition IS merged (846baa1e8e): merge tranche/T51 and run your G2 seam against the real `fetch_pending`; (2) update `t51-visitor-copy.test.mjs` to G3's pending press (ACQUISITION #28 J26); (3) `r117-held` R117 is NOT an accepted flake: it is red alone on the tranche's own source (3 of 3 runs, first assert 0 !== 1): root-cause and fix it in this job. capture, extraction, reading-pipeline and plane are still to merge; their seams stay red by name. Then COMPLETE again. (The format failure at next.md:38 is fixed on the tranche.)
+
+## B45 · CHANGE
+
+CHANGE (BOB #253): capture is merged into tranche/T51 (b3b6b6cf16: the picker row's `format`, `recordFetchDone`). Merge tranche/T51 for your G2 seam and the delivery's `recordFetchDone`; B43/B44 still stand.
+
+## B46 · CHANGE
+
+CHANGE (BOB #254, K4591): plane (fetch kind, registerOwe at construction, watchdog) and extraction (G4 reading_pending/diag, G13/G14 pieces and cursor, `completeness`) are now merged into tranche/T51 (e58cccc07e). Merge tranche/T51 into your branch, then: (1) run your G2 seam against the real plane `fetch` kind and the real `owedFetch`; (2) run your G13/G14 continuation seam (`readUploaded`/`followEntries` register the continuation when the reading answers `more`, every format) and confirm `readUploaded` carries `reading_pending`, `diag` and `pendSha` (B41 (3)); (3) `r117-held` alone five times, results named. B42-B45 stand. Then COMPLETE again; your merge follows at once.
+
+## B47 · CHANGE
+
+CHANGE (BOB #254, K4598): you are merged (4c3c62c731); G13's seam was the test reading page one of op=reading, fixed by BOB (test only). Re-opened for four reds of YOUR tests that were red on the tranche before your merge and before BOB #254 took over (5b37e0c252), unnamed by anyone: t51-held-failed R117 (C5b), t51-large-pdfs R120/R121, t51-round5-press-seam R125 (b) and (c) (answer NO_HOME), t51-round5-seam E3 (41.5 MB statement). Each fails alone. Merge tranche/T51, then for each: root cause with file:line; if the test encodes behaviour round 6's providers changed on purpose (G2 park, G5 size rule, G7, G13 pieces, R88), update the test to the new contract and say which; if a member's operation fails, fix it in your code or name the provider at once (QUESTION). R-FOUR. COMPLETE with the four named.

@@ -52,7 +52,7 @@ test("R1 the project drawn: title, objective, stage, its questions with their st
   assert.deepEqual(actsIn(m).sort(), ["drawquestion", "findin", "heldcaptures", "planopen", "projectbarset", "projectleave", "projectstakeset", "promote"]);
   assert.ok(!actsIn(m).includes("strengthbarset"), "the group's bar is never set from a project (R10)");
   await p.settle();
-  assert.equal(p.byOp("inquirystrength").length, 2, "each strength read once, not at every redraw");
+  assert.equal(p.byOp("inquirystrength").length, 1, "the questions' strength read once, in one read, not at every redraw");
   assert.deepEqual(rawKeys(p.root()), []);
 });
 

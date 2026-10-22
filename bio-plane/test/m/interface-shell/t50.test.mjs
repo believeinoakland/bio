@@ -507,10 +507,11 @@ test("R86 a first load settles quickly: the working frame is drawn before the fi
   const frame = p.root().querySelector(".cs-frame");
   assert.ok(frame && frame.getAttribute("data-frame") === "working", "the working frame is drawn before the first answer");
   assert.ok(frame.querySelector(".cs-mast") && frame.querySelector(".cs-rail") && frame.querySelector(".cs-tabs") && frame.querySelector(".cs-band"));
-  assert.deepEqual(Object.keys(times).sort(), ["bootstrap", "whoami"], "the independent requests in flight together, nothing else sent before whoami answers");
+  /* G12b (R122): `bootstrap` is sent after the screen's first reads, never before them, so `whoami` goes alone and `bootstrap` with the rest on its answer */
+  assert.deepEqual(Object.keys(times).sort(), ["whoami"], "nothing else sent before whoami answers");
   assert.equal(times.whoami, 0);
-  assert.equal(times.bootstrap, 0);
   await p.clock.tick(500);
+  assert.equal(times.bootstrap, 500, "bootstrap goes with the screen's reads, after the first of them");
   /* everything else sent: the frame's own reads (the module's SHELL_OPS) and the screen's, all in flight on whoami's answer */
   const rest = Object.keys(times).filter((op) => op !== "whoami" && op !== "bootstrap");
   assert.equal(rest.filter((op) => SHELL_OPS.includes(op)).length, 8, "the frame's eight reads");

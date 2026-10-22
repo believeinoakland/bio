@@ -55,6 +55,7 @@ test("R84 (E3): a five-part capture of 41.5 MB with no whole is stated at once: 
   assert.equal(got.reading.failure, "final");
   assert.ok(got.reading.basis.includes(String(total)) && got.reading.basis.includes("5 parts"), got.reading.basis);
   assert.deepEqual(got.text_units, []);
+  assert.deepEqual([got.completeness.state, got.completeness.failure, got.completeness.why.includes(String(total))], ["stated", "final", true], "R91 (G14): stated with its size reason, never none or full");
   assert.equal(got.bundle_id, "INFO-1");
   const again = await w.x.readHeld({ sha: d });
   assert.deepEqual([again.read, again.why], [false, "READING_HELD"], "a second call changes nothing");
@@ -103,16 +104,19 @@ test("R83 (E2): `readHeld` offers the index only what it keeps: a text past the 
   const pages = Array.from({ length: 600 }, (_, page) => ({ page, text: `${page} ${line}` }));   /* about 5.4 MB */
   const document = doc({ digest: d, bytes: bytes.length, ct: "application/pdf", format: "pdf" });
   w.core.readFile = (b, p) => (b === "INFO-1" && p === "data/provenance.json" ? { text: JSON.stringify({ documents: [document] }) } : null);
+  /* R83 amended by R90 (fix round 6): the first tick offers the index what it keeps and says it has more; the ledger's later ticks read the rest */
   const r = await withEntry(pdfEntry(i2(pages)), () => w.x.readHeld({ sha: d }));
-  assert.deepEqual([r.ok, r.read], [true, true]);
-  const reading = readingOf(w, d);
-  assert.ok(reading.words_total > reading.words_read, `read ${reading.words_read} of ${reading.words_total}`);
+  assert.deepEqual([r.ok, r.read, r.more], [true, true, true]);
+  const first = readingOf(w, d);
+  assert.ok(first.words_total > first.words_read, `read ${first.words_read} of ${first.words_total}`);
   const bytesIndexed = w.one(`SELECT sum(length(CAST(text AS BLOB))) n, count(*) c FROM capture_text WHERE capture_sha=?`, d);
   assert.ok(bytesIndexed.n <= CAPTURE_TEXT_CAPTURE_BOUND, `${bytesIndexed.n} bytes indexed`);
+  assert.equal(w.one(`SELECT state FROM capture_text_state WHERE capture_sha=?`, d).state, "partial");
+  let more = true, ticks = 1;
+  while (more && ticks < 20) { const t = await withEntry(pdfEntry(i2(pages)), () => w.x.readHeld({ sha: d, kind: "reading" })); more = t.more === true; ticks++; }
   const state = w.one(`SELECT state, offered, written, over_bound FROM capture_text_state WHERE capture_sha=?`, d);
-  assert.equal(state.state, "partial");
-  assert.equal(state.offered, 600, "every page is accounted for, the rest counted over the bound");
-  assert.equal(state.written + state.over_bound, 600);
+  assert.deepEqual({ ...state }, { state: "whole", offered: 600, written: 600, over_bound: 0 }, "every page is read, each piece within the bound");
+  assert.equal(w.x.readingFor(d, "class:admin").reading.words_read, first.words_total);
 });
 
 test("R83 (control): a text within the index's bound is offered whole: words_read equals words_total", async () => {

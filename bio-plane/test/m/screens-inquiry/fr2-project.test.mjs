@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, says, section, word, SCREENS, P, Q, Q2, D } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, says, section, word, batchStrength, SCREENS, P, Q, Q2, D } from "./fixtures.mjs";
 
 const at = "/app/project/" + P;
 const cardOf = (p, q) => section(p, "screen.project.questions.head").querySelectorAll(".cs-row").find((r) => r.querySelector(`a[href$="${q}"]`));
@@ -13,7 +13,7 @@ const everything = (el) => el.outerHTML;
 test("C43 R39 R116 a question's card on the project page draws no record id and the unrated reason once, where the plane's detail names ids", async () => {
   const detail = `${Q} sentinel-head-zz: ${D} sentinel-tail-zz`;
   const unrated = { state: "unrated", detail, not_load_bearing: [{ target_id: D }], population: 1 };
-  const p = await open(at, { plane: { inquirystrength: (r) => ok({ ok: true, target: r.query.id, capture: unrated, connection: unrated }) } });
+  const p = await open(at, { plane: { inquirystrength: batchStrength((id) => ({ ok: true, target: id, capture: unrated, connection: unrated })) } });
   const card = cardOf(p, Q);
   assert.ok(card, "the question's card is drawn");
   assert.ok(card.textContent.includes("Is the city repairing"), "the card names the question by its title");
@@ -23,7 +23,7 @@ test("C43 R39 R116 a question's card on the project page draws no record id and 
   assert.ok(!card.textContent.includes("sentinel-head-zz"), "the plane's long sentence for the quiet axes is not repeated on the card");
   /* an undetermined reason the plane gives for both axes is told once */
   const und = { state: "undetermined", detail: `its owner has not settled ${D}` };
-  const q = await open(at, { plane: { inquirystrength: (r) => ok({ ok: true, target: r.query.id, capture: und, connection: und }) } });
+  const q = await open(at, { plane: { inquirystrength: batchStrength((id) => ({ ok: true, target: id, capture: und, connection: und })) } });
   const c2 = cardOf(q, Q);
   assert.equal(c2.querySelectorAll('.cs-gap[data-gap="undetermined"]').length, 2, "both axes keep their mark");
   assert.equal(c2.textContent.split("its owner has not settled").length - 1, 1, "the same reason is drawn once");

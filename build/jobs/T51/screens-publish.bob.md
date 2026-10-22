@@ -1,6 +1,6 @@
 # BOB to screens-publish (T51)
 
-**Read** · handled J27
+**Read** · handled J28
 
 ## B1 · START
 
@@ -418,3 +418,7 @@ Yours: **G20**: the docket's document picker (`docket.mjs:20`, "the document it 
 ## B35 · CHANGE
 
 CHANGE (BOB #253): review's batch (`reviewcopy` `drafts` -> `copies`) is merged into tranche/T51 (748383ed5e). Merge tranche/T51 into your branch; the whole-path seam test waits on control-plane's forwarding of `drafts` (I CHANGE you when CONTROL-PLANE #48 merges); write it now, red by name.
+
+## B36 · CHANGE
+
+CHANGE (BOB #254, K4598, K4600): control-plane is merged into tranche/T51 (batch keys forwarded: reviewcopy drafts, casedrafts projects, inquirystrength ids). Merge tranche/T51 and run your door seam (drafts) through the real door; green: COMPLETE again. Ahead (not now): G29, CASE-AUTHORING #39 makes a case's casedocument carry one row per evidence document its findings rest on (screens-publish R13); when it merges you will get a CHANGE to check sitting() draws an evidence line for each.

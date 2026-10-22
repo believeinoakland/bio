@@ -23,7 +23,10 @@ const doc = () => ({ file: `snapshots/upload-${SHA}`, locator: `upload:${SHA}`, 
 const READ = { reading: { found: true, entities: 0 }, text_units: [{ extent: { kind: "document" }, text: "line one\nline two" }] };
 const asked = (env, route) => opCalls(env).filter((c) => c.route === route);
 /* the plane's part of `acquire`: the hook answers what the object filed (acquire's answer is top-level, as acquisition answers it) */
-const acquiring = (answer) => ({ ...defaultHooks(), async gatedOp(ctx) { return ctx.op === "acquire" ? M.json(answer) : undefined; } });
+/* the door's bound is set far past this process's wall time: the file's real plane (part two) boots in this process while part one runs, which can hold the first request for
+   17 s, and the clock arm of "will not fit" (R120) must not decide a case about `readHeld` (fix round 6: the cause of this suite's old intermittent red) */
+const NO_CLOCK = 60 * 60 * 1000;
+const acquiring = (answer) => ({ ...defaultHooks(), acquireBoundMs: NO_CLOCK, async gatedOp(ctx) { return ctx.op === "acquire" ? M.json(answer) : undefined; } });
 
 test("R117 (the door's map): `readheldfor` is extraction's `readHeld` over the digest and the namespace the door names, and is a route of the door's own map only when the plane hands the getter (negative control: no getter, no route, nothing else of the map changes)", async () => {
   const seen = [];
@@ -94,7 +97,7 @@ test("R117 (acquire, controls): a refusal or a silence of `readHeld`, and a thro
 });
 
 const upload = (w, params = { statement: "s", name: "a.txt" }) =>
-  call(w.env, { op: "captureupload", token: w.S.ann, method: "POST", params, body: "line one\nline two" });
+  call(w.env, { op: "captureupload", token: w.S.ann, method: "POST", params, body: "line one\nline two", hooks: { ...defaultHooks(), acquireBoundMs: NO_CLOCK } });
 
 test("R117 (a registered home): a second upload of bytes the record holds under a home answers `existed: true` with no document; `readHeld` is asked for the digest its `capture` names, and the answer is relayed as it was (the reading is the store's to write, not the answer's); a reading already held (`READING_HELD`) changes nothing and nothing is read by the door", async () => {
   const landed = { ok: true, existed: true, capture: { sha256: SHA, bytes: 9 }, receipt: { address: `upload:${SHA}` } };

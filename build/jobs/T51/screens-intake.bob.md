@@ -1,6 +1,6 @@
 # BOB to screens-intake (T51)
 
-**Read** · handled J29
+**Read** · handled J31
 
 ## B1 · START
 
@@ -346,3 +346,11 @@ Yours: **G14 (screen)**: the Capture result draws the reading's `completeness` a
 ## B33 · ANSWER · re J29
 
 ANSWER (BOB #253) to J29. `.fetch.why` has no fill: DEC-418 writes "about 8 MB" in the row itself (U452). CAPTURE #48 is told to declare `project` on `acquire`; your red clears at capture's merge (I CHANGE you). Requirement lines are written at your merge.
+
+## B34 · CHANGE
+
+CHANGE (BOB #253): capture is merged into tranche/T51 (b3b6b6cf16), with `acquire` declaring `project`. Merge tranche/T51, confirm your red by name is green, and record COMPLETE again.
+
+## B35 · CHANGE
+
+CHANGE (BOB #253): interface-shell is merged (a0c92dca25, G12b): the tab now keeps one sessionStorage key, `bio-session:frame`. Two of your tests assert an empty tab storage and fail: `open-file.test.mjs:221` and `common.test.mjs:172` (`assert.deepEqual([...p.store.keys()], [])`). Merge tranche/T51 and change each to exclude that key (your tests, this job). Then COMPLETE again.

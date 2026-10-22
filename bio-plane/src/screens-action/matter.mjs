@@ -146,6 +146,25 @@ export const matter = Object.freeze({
       return why + acts + rests + rule + verdict + cause + '<div class="mk-acts">' + cs.act("determine", { tone: "primary", label: rev ? "screen.matter.record_the_revised_determination" : "screen.matter.record.this" }) + "</div>"
         + '<p class="mk-small muted">' + cs.w("screen.matter.this_cannot_be_edited_afterward") + " " + cs.w("screen.matter.a_mistake_is_put_right_by_recording") + "</p>";
     },
+    // G20 (S11): the project's held documents, read page after page by the read's `next` (at most five pages of 200); `more` is true
+    // when the pages read are not all that is held (a cap reached, or a later page that failed), and then the screen says so
+    heldDocs: function (cs, view, k) {
+      const P = view.parts;
+      const rows = [];
+      let after = null, state = "ok", more = false;
+      for (let n = 0; n < 5; n++) {
+        const q = { project: k.project, limit: "200", state: "held_and_vouched" };
+        const st = P.later(cs, view, "docs" + (n ? ":" + n : ""), "heldcaptures", after ? Object.assign(q, { after: after }) : q, "");
+        if (st.state === "loading") return { rows: rows, state: "loading", more: false };
+        if (st.state !== "ok") { if (n) more = true; else state = "failed"; break; }
+        const v = st.value;
+        if (Array.isArray(v.held)) rows.push.apply(rows, v.held);
+        after = v.truncated && v.next ? v.next : null;
+        if (!after) { if (v.truncated) more = true; break; }
+        if (n === 4) more = true;
+      }
+      return { rows: rows, state: state, more: more };
+    },
     // R45 (C6): the event the act was part of, chosen among the events the project's document follows (the timeline's own set), never typed
     eventChoice: function (cs, view, k, current) {
       const P = view.parts;
@@ -153,13 +172,16 @@ export const matter = Object.freeze({
       const text = doc.state === "ok" && doc.value && typeof doc.value["bundle.md"] === "string" ? doc.value["bundle.md"] : "";
       const set = P.refsOf(text);
       // K4310 (events R53): the timeline answers by the project's captures too, so the event picker needs no set of ids
-      const dl = P.later(cs, view, "docs", "heldcaptures", { project: k.project, limit: "200", state: "held_and_vouched" }, "");
-      const shas = dl.state === "ok" && dl.value && Array.isArray(dl.value.held) ? dl.value.held.map(function (r) { return r && r.capture && r.capture.sha256; }).filter(Boolean).slice(0, 200) : [];
+      const dl = P.heldDocs(cs, view, k);
+      const all = dl.rows.map(function (r) { return r && r.capture && r.capture.sha256; }).filter(Boolean);
+      // G20: the timeline reads the dated facts of at most 200 captures (events CAPTURES_MAX, a stated bound); more held is said
+      const shas = all.slice(0, 200);
+      const cut = all.length > shas.length || dl.more ? '<p class="mk-small">' + cs.w("screen.held.more", { count: shas.length }) + "</p>" : "";
       if (dl.state === "loading") return "";
       const q = {};
       if (set.length) q.set = set.join(",");
       if (shas.length) q.captures = shas.join(",");
-      const tl = set.length || shas.length ? P.later(cs, view, "events", "timeline", q, "") : { state: dl.state === "loading" ? "loading" : "ok", value: {} };
+      const tl = set.length || shas.length ? P.later(cs, view, "events", "timeline", q, "") : { state: "ok", value: {} };
       const w = tl.state === "ok" && tl.value && tl.value.world ? tl.value.world : {};
       const items = (Array.isArray(w.items) ? w.items : []).concat(Array.isArray(w.placed_nowhere) ? w.placed_nowhere : []);
       const opts = items.filter(function (e) { return e && e.event_id; }).map(function (e) {
@@ -168,17 +190,18 @@ export const matter = Object.freeze({
       });
       if (current && !opts.some(function (o) { return o.value === current; })) opts.push({ value: current, text: current });
       if (tl.state === "loading" || doc.state === "loading") return "";
-      return opts.length ? cs.choice("mt-d-event", "screen.matter.the_event_it_was_part_of", [{ value: "", text: "" }].concat(opts), { value: current })
-        : '<p class="mk-small">' + cs.w("screen.matter.the_event_it_was_part_of") + '</p><p class="cs-state" data-state="empty">' + cs.w("state.empty") + "</p>";
+      return opts.length ? cs.choice("mt-d-event", "screen.matter.the_event_it_was_part_of", [{ value: "", text: "" }].concat(opts), { value: current }) + cut
+        : cut + '<p class="mk-small">' + cs.w("screen.matter.the_event_it_was_part_of") + '</p><p class="cs-state" data-state="empty">' + cs.w("state.empty") + "</p>";
     },
     // R45 (C6): the passages that show the act, chosen among the project's documents (a passage is a whole document, as `docChoice` offers it)
     passageChoice: function (cs, view, k) {
       const P = view.parts;
-      const dl = P.later(cs, view, "docs", "heldcaptures", { project: k.project, limit: "200", state: "held_and_vouched" }, "");
+      const dl = P.heldDocs(cs, view, k);
       if (dl.state === "loading") return "";
-      const rows = dl.state === "ok" && dl.value && Array.isArray(dl.value.held) ? dl.value.held : [];
-      const opts = rows.filter(function (r) { return r && r.bundle_id; }).map(function (r) { return { value: r.bundle_id, text: r.title || r.bundle_id }; });
-      return opts.length ? cs.checks("mt-d-evidence", "screen.matter.the_evidence_that_the_act_happened", opts)
+      const opts = dl.rows.filter(function (r) { return r && r.bundle_id; }).map(function (r) { return { value: r.bundle_id, text: r.title || r.bundle_id }; });
+      // G20 (S11): what is not drawn is said: the pages read ended before the documents did
+      const cut = dl.more ? '<p class="mk-small">' + cs.w("screen.held.more", { count: opts.length }) + "</p>" : "";
+      return opts.length ? cs.checks("mt-d-evidence", "screen.matter.the_evidence_that_the_act_happened", opts) + cut
         : '<p class="mk-small">' + cs.w("screen.matter.the_evidence_that_the_act_happened") + '</p><p class="cs-state" data-state="empty">' + cs.w("state.empty") + "</p>";
     },
     // the targets a project's document references, those not severed, in order: its people, organisations and events (the timeline's own set)

@@ -38,8 +38,9 @@ test("R120: a PDF over 2 MB is answered kept with `reading_pending`, and its dig
   }
 });
 
+/* fix round 6, G5 (K4573): a file that is not a PDF follows by the ledger above 3 MiB, not 20 MiB (the walker's 12 MB text held a request for 18 s), so the control's "large file that is not a PDF" is one at the threshold; above it is `t51-round6-door.test.mjs`' */
 test("R120 control: a small PDF, a page, a large file that is not a PDF, and a PDF of exactly 2 MB are read at once: no `reading_pending`, nothing registered", async () => {
-  for (const o of [{ bytes: 140815 }, { bytes: 2 * MB }, { bytes: 20 * MB, type: "text/html", locator: "https://example.org/x.html" }, { bytes: 5, type: "text/html" }]) {
+  for (const o of [{ bytes: 140815 }, { bytes: 2 * MB }, { bytes: 3 * MB, type: "text/html", locator: "https://example.org/x.html" }, { bytes: 5, type: "text/html" }]) {
     const { r, seen, adds } = await run(o);
     assert.equal(r.status, 200, r.text);
     assert.deepEqual(seen, ["function", false], JSON.stringify(o));
