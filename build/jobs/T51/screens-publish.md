@@ -449,3 +449,7 @@ Words owed: DEC-418's four refusal rows (K4577) serve G10 once on the table; no 
 Proposed requirement lines: (R3/R50) a refusal drawn from the plane's text has its `{name}` placeholders filled from the refusal's fields, none drawn raw. (R12/R15) the Sign step offers a publishing time only where `publish_at.offered` is true with a zone; else `refusal.PUBLISH_AT_NO_ZONE` and Sign-now alone. (R73) a project's other drafts' copies are read in one `reviewcopy` with `drafts`, at most 2 `reviewcopy` reads per load.
 
 Size (session_018p3RDUFnhwwhQG5CBJrBfi): test runs 9, module lines 8200
+
+## J27 · REPORT
+
+Correction to J26's Size line: module lines are 3623 (wc -l of bio-plane/src/screens-publish/*.mjs), not 8200. Size (session_018p3RDUFnhwwhQG5CBJrBfi): test runs 9, module lines 3623
