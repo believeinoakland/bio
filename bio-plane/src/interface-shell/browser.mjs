@@ -29,11 +29,20 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   const text = (key) => (SHOWN.has(key) ? SHOWN.get(key) : BASE.has(key) ? BASE.get(key) : key);
   /* `w(key, fills)`: the word, HTML-escaped, each `{name}` filled with its value escaped; a value `{html}` is a fragment
      the kit itself made (a date, a refusal's words), inserted as it is. */
-  const w = (key, fills) => esc(text(key)).replace(/\{(\w+)\}/g, (m, n) => {
-    if (!fills || !(n in fills)) return m;
-    const v = fills[n];
-    return v && typeof v === "object" && "html" in v ? v.html : esc(v);
-  });
+  /* R5 (C59): a string `w` itself returned is already escaped, so one handed to another word as a fill (`state.failed` over
+     `shell.noanswer`) is inserted as it is and not escaped a second time; any other string, a record's own text whatever it holds, is
+     escaped once. The set is bounded: the oldest half goes when it is full. */
+  const MADE = new Set();
+  const w = (key, fills) => {
+    const out = esc(text(key)).replace(/\{(\w+)\}/g, (m, n) => {
+      if (!fills || !(n in fills)) return m;
+      const v = fills[n];
+      return v && typeof v === "object" && "html" in v ? v.html : typeof v === "string" && MADE.has(v) ? v : esc(v);
+    });
+    if (MADE.size >= 4000) { let drop = 2000; for (const x of MADE) { MADE.delete(x); if (--drop <= 0) break; } }
+    MADE.add(out);
+    return out;
+  };
   const html = (s) => ({ html: s });
   const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
   /* R6: a date by `date.daymonthyear` (or `date.daymonth` with `{year: false}`) and `date.month.*`, never ISO. */
