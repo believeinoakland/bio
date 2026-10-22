@@ -369,3 +369,34 @@ Size (session_01MBWDJZHWCDsQmLhwxXB6Fh): test runs 34, module lines 6599
 
 COMPLETE (SCREENS-INQUIRY #21, re B42; B39, B41 read). tranche/T51 merged through extraction (e58cccc07e). All four `fr6-seam` tests are GREEN against the real merged providers: G6 (40 MB upload), G12c (five questions, one strength read), G12a (spreadsheet listed with its kind from the picker row), G13 (12 MB text drawn as being read). Module suite 508 of 508 pass, 0 fail. Checks: format 0, architecture 0, coverage 6632/6632, words 0 failures (counts unchanged, missingkey 0), ownership 15 files 0 failures. Nothing deferred or open; the J27 COMPLETE stands for everything else (causes, rows owed, proposed requirement lines). One remaining note: whole-path G12c through control-plane waits on its forwarding of `ids` only for the production door, the seam already passes.
 Size (session_01MBWDJZHWCDsQmLhwxXB6Fh): test runs 38, module lines 6599
+
+## J29 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #22, re START B43). Entry A-23 (test only) is done. No product code changed; no requirement is not met.
+
+**What changed (file:line)**
+- `bio-plane/test/m/screens-inquiry/fr28-document-acts.test.mjs:49-62`: new test "A-23 an unread document page draws readheld and never pdfstructure". It opens a page whose reading answers `found: false`, asserts "Read it now" (`readheld`) is drawn and `pdfstructure` is not, presses Read it now with a reason, and asserts: the digest is in the body, nothing sends `pdfstructure`, the page then draws the text as full, and no OCR act is offered after it.
+- Commit `02f8181f31` on `job/T51/screens-inquiry`, pushed. Ownership: only this module's paths.
+
+**The four fields (K4426)**
+1. Root cause: the plane's 409 `REEXTRACT_NOT_READ` is right. The screen half is already correct: `document.mjs:554-557` offers `readheld` for an unread or repairable copy, and the OCR guard at `:561` (its act at `:565`) excludes `unread` from `pdfstructure`. The walker's 409 came from a hand-sent `pdfstructure`. The "Read it" follow over a spent alarm is the scheduler's cause (A-21), not this module's.
+2. Why the tests missed it: the existing control (`fr28-document-acts.test.mjs:37`) asserted no `pdfstructure` on an unread copy, but never pressed `readheld` and checked what the page drew after it. The follow was untested; the new test covers it through the screen's real entry path.
+3. Failing-first, honestly: the first run was red because of a bug in my test (a local name shadowed a helper), fixed in place. Against the unchanged product code the test is green, since the screen already behaves as the diagnosis says. To show it can fail I ran three temporary mutations of `document.mjs`, each restored, with `git status` clean of product files:
+   - `readheld` removed for unread: red at "Read it now is offered".
+   - `pdfstructure` drawn for unread: red at "the OCR re-read is never offered for an unread copy".
+   - the guard list changed to drop `unread` without drawing the act: still green. The OCR block also needs a reading, which an unread copy lacks, so that path is not reached; the second mutation is the one that tests the act.
+4. Platform check: N (a drawing test). The live proof the diagnosis names (P, after the deploy, `owedwork` attempts, `reading` found) is BOB's re-walk, not this job.
+
+**Suites and checks**
+- `node --test --test-force-exit test/m/screens-inquiry/*.test.mjs` (bio-plane): 509 pass, 0 fail. `fr28-document-acts`: 16 → 17 pass.
+- `checks/format.mjs /home/user/bio`: 176 modules, 0 failures. `checks/architecture.mjs … screens-inquiry`: 62 files, 0 failures. `checks/coverage.mjs … screens-inquiry`: 128 of 128 live requirement ids named by a test, 0 failures.
+- `checks/run.mjs /home/user/bio`: format, architecture, coverage, channels and words all 0 failures.
+- `checks/ownership.mjs /home/user/bio screens-inquiry origin/tranche/T51 job/T51/screens-inquiry`: 0 failures.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 1 of 176 modules affected (screens-inquiry itself), 1 of 2367 test files. `tranche/T51` is not a local branch in this checkout, so I used the origin ref.
+
+**Requirement line proposed (BOB writes `build/requirements/`)**
+- R129 (fix round 4), test sentence, add: "(A-23, fix round 6) Test: an unread page draws `readheld` and never `pdfstructure`; pressing it sends the digest, and the page then draws the reading and offers no OCR re-read."
+
+**Deferred:** none. **Open QUESTION:** none.
+
+Size (session_01DitFG3JNMsgKzedjcc5NW1): test runs 8, module lines 6599
