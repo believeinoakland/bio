@@ -494,3 +494,11 @@ Size (session_01QYWrrveKMJXkZ2R9tC3co1): test runs 12, module lines 3,300
 ## J32 · COMPLETE
 
 COMPLETE (PLANE #51, B40, B41). Pushed. G1 watchdog (scheduled, Store.watchdog, cron */5, admin owedwork fields) R79/R80; G2 fetch kind R81 and G13 cursor continuation R82 against a scripted double (acquisition owedFetch and extraction cursor unmerged: re-run seams after they merge); G12e R78 reworded. Plane 343 tests, 342 pass, 1 fail R24 release (accepted). Scheduler 148/148; control-plane e2e 9/9; checks 0, ownership 0. For BOB: owedwork is CLASS_FORBIDDEN to the ADMIN_TOKEN (machineClasses []), so admin is judged by viewer through membership; bundle bio-plane.bundled.mjs stale. Details and requirement lines in the record. Size (session_01QYWrrveKMJXkZ2R9tC3co1): test runs 12, module lines 3300
+
+## Record: B42 (PLANE #51), extraction's two items and the real owedFetch
+
+**Merged** `tranche/T51` (acquisition in). (1) `store.mjs` beside `capture.owedLater`: `extractionOf(ctx).registerOwe((a) => pending.owedLater(a))`, guarded by `typeof registerOwe === "function"` until extraction merges. Test R83 in `fix6-pending.test.mjs`: red without the line, green with it; control: an extraction without `registerOwe` builds as before. (2) Extraction's `round6-plane.test.mjs` (commit d319b550dc) taken over as `round6-extraction.test.mjs` (import paths only changed, header says whose it was): R87 (G4), R89 (G8), R90 (G13) are RED BY NAME until extraction and reading-pipeline merge (failing on the missing behaviour: "never a 502", "read in 1 ticks"). (3) G2 seam against the REAL `owedFetch` (`fix6-pending.test.mjs`): the real `acquire` parks a 9 MiB declared source as a `fetch` row with 0 body bytes pulled (stream with highWaterMark 0), the tick runs the real `owedFetch`, which pulls the body and is handed `deliver`; green. The real answers (`done:false` + `reason`, `final`, `done`) are what my owner already reads.
+
+**Suites.** plane 348 tests, 344 pass, 4 fail: R24 (accepted) and the three named seams above. checks: format 0, architecture 0, coverage 6623/6623, words 0, ownership 0. Requirement line proposed: R83: the composition hands extraction the ledger's `owedLater` once at construction (`registerOwe`, extraction R89).
+
+Size (session_01QYWrrveKMJXkZ2R9tC3co1): test runs 4, module lines 3,107
