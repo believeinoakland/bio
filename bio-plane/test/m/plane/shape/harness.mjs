@@ -13,6 +13,7 @@
  *   r.done        // { ticks, totalMs, units, state, found:{term:fts rows}, search:{term:{total,hits}}, extents, last } (SQL only: no text is loaded to make it)
  *   r.reading     // then the member's own `op=reading` on the finished reading (extraction `readingFor`): { unitsInAnswer, answerBytes, ms, peakMB, more, read_through, total, completeness, basis };
  *                 // r.readingDied: the child died asking it (spec `readingFor: false` skips it)
+ *   r.pages       // then every later page by `next`: { pages, units, largestBytes, peakMB }; r.pagingDied: the child died paging (spec `pageAll: false` skips it)
  *   report(label, r)  the run as text, one line a tick
  *   r.fed         // { sha, bytes, parts, keep_pending, uploadMs, idleMB, ... } (the feed, before the first tick)
  * SPEC: { doc, feed: "upload" (default; uploadCapture) | "held" (bytes put directly, as l77-size-child), fault: null | {remote:true},
@@ -56,7 +57,8 @@ export function shapeRun(spec, { capMB = null, semiMB = 2, timeoutMs = 1_800_000
       const done = ev.find((e) => e.ev === "done") || null, reading = ev.find((e) => e.ev === "reading") || null, staged = ev.some((e) => e.ev === "stage");
       const fatal = err.split("\n").find((l) => /FATAL|heap out of memory|Allocation failed/.test(l)) || err.split("\n").filter(Boolean).slice(0, 2).join(" | ");
       resolve({ capMB, died: !done, readingDied: !!done && staged && !reading, reading, code, signal, timedOut: killed, stderr: fatal.slice(0, 300), fed: ev.find((e) => e.ev === "fed") || null,
-                ticks: ev.filter((e) => e.ev === "tick"), done, error: (ev.find((e) => e.ev === "error") || {}).message || null });
+                ticks: ev.filter((e) => e.ev === "tick"), done, pages: ev.find((e) => e.ev === "pages") || null,
+                pagingDied: !!reading && reading.next != null && !ev.some((e) => e.ev === "pages"), error: (ev.find((e) => e.ev === "error") || {}).message || null });
     });
   });
 }
@@ -68,6 +70,8 @@ export function report(label, r) {
   for (const t of r.ticks) L.push(`  tick ${t.n}: ${t.ms} ms, peak heap+buffers ${t.peakMB} MB (${t.aboveBaseMB} above base), rows [${t.rows.map((x) => `${x.kind} att ${x.attempts} int ${x.interrupted}${x.final_why ? " final: " + x.final_why : ""}`)}], units ${t.units}`);
   if (r.done) { const d = r.done; L.push(`  done: ${d.ticks} ticks, ${d.totalMs} ms, max tick ${Math.max(0, ...r.ticks.map((t) => t.ms))} ms, peak ${d.peakMB} MB, units ${d.units}, state ${JSON.stringify(d.state)}, found ${JSON.stringify(d.found)}, search ${JSON.stringify(d.search)}, extents ${JSON.stringify(d.extents)}, left [${d.left}]`); }
   if (r.reading) { const g = r.reading; L.push(`  op=reading answer: ${g.unitsInAnswer} units, ${g.answerBytes} B, ${g.ms} ms, peak ${g.peakMB} MB, next ${g.next}, more ${g.more}, read_through ${g.read_through}/${g.total}, completeness ${JSON.stringify(g.completeness && { state: g.completeness.state, why: g.completeness.why })}, basis \"${String(g.basis || "").slice(0, 170)}\"`); }
+  { const p = r.pages; if (p) L.push(`  op=reading paged by next: ${p.pages} pages, ${p.units} units, largest answer ${p.largestBytes} B, peak ${p.peakMB} MB`); }
+  if (r.pagingDied) L.push("  op=reading paged by next: THE CHILD DIED PAGING");
   if (r.readingDied) L.push("  op=reading (extraction readingFor) on the finished reading: THE CHILD DIED ASKING IT");
   return L.join("\n");
 }
@@ -210,6 +214,18 @@ async function child(spec) {
     const answerBytes = JSON.stringify(got).length; sample();
     emit({ ev: "reading", ms: Date.now() - tr, peakMB: mb(peak), answerBytes, unitsInAnswer: (got.text_units || []).length, next: got.next ?? null, more: got.more, read_through: got.read_through, total: got.total,
            completeness: got.completeness, basis: got.reading && got.reading.basis });
+    /* then the rest of the reading, page by page by `next`, as the Document screen reads it (G38, EXTRACTION #36 J22; K4617):
+       pass = every unit seen, every page under 2 MB, the child alive */
+    if (spec.pageAll !== false && got.next != null) {
+      let pages = 1, units = (got.text_units || []).length, largest = answerBytes, after = got.next;
+      while (after != null) {
+        const pg = extractionOf(ctx).readingFor(sha, "class:admin", { after });
+        const b = JSON.stringify(pg).length; sample();
+        pages++; units += (pg.text_units || []).length; largest = Math.max(largest, b);
+        after = pg.next ?? null;
+      }
+      emit({ ev: "pages", pages, units, largestBytes: largest, peakMB: mb(peak) });
+    }
   }
   process.exit(0);
 }
