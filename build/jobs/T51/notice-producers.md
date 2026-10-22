@@ -1,6 +1,6 @@
 # notice-producers (T51)
 
-**Status** · session_01SbR9Bp7b1UDZG4sWc5dbrm · depth 2 · WORKING · handled B3
+**Status** · session_01SbR9Bp7b1UDZG4sWc5dbrm · depth 2 · COMPLETE · handled B3
 
 ## J1 · COMPLETE
 
