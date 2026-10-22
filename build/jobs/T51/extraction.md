@@ -262,3 +262,18 @@ CHANGE B15 done. Merged tranche/T51 (502edbc26f); `read` (extraction/index.mjs:6
 On `owe`: not passed from `read`, and not needed. `readHeld` answers `owed: true` itself whenever the reading written has `tier3_candidate` and an OCR member is bound (or failed transiently), and `kind: "ocr"` passes keep it owed while pages remain; the plane's ledger entry for that digest is kept by that answer. The `owe` hook is for callers with no answer to give (the acquire path), which is the door's and reading-pipeline's seam, not `readHeld`'s.
 
 Size (session_019RcTbWsRRhrZ7k5jcyP7gC): test runs 27, module lines 3497
+
+## J15 · QUESTION
+
+QUESTION (E2, `c5b-memory`): I need pdf-reader's merge before the 100 MB gate can be green.
+
+What is done: `readHeld` now reads with the index's bound (`extraction/index.mjs:699`, `budget: CAPTURE_TEXT_CAPTURE_BOUND`), and `c5b-memory.test.mjs` now fails above 100 MB (GATE_MB).
+
+Measured here (node, same 21 MB / 1,300-page file; heap + array buffers above idle, sampled every 5 ms):
+- `readHeld` with `Infinity` (the old code): 126 MB.
+- With the index bound (the fix): 112, 124, 129, 130 MB in four runs and 99 MB in one, so it is not stable under 100.
+- `pdfstructure.extractPdfStructure` alone on the same bytes: 96 MB. That is pdf-reader's object table, which sits on this branch unchanged (fix round 5 has not merged pdf-reader yet).
+
+So the budget costs only the units' share (about 13-28 MB, inside the noise); the rest is the parse. The test cannot go green under 100 MB from this module.
+
+What I need: the pdf-reader merge (plan E2 (c): the object table bounded). Tell me when `tranche/T51` carries it and I will merge it, run `c5b-memory` alone five times and record the numbers. Until then I complete everything else and name this test red, by name, in my record and COMPLETE (R-NOTMET asks me to ask now rather than defer). If you would rather close this job first, say so and I will post COMPLETE with that one test named red.
