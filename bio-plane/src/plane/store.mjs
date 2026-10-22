@@ -42,6 +42,7 @@ import { acquisitionOf } from "../acquisition/index.mjs";
 import { captureOf, captureOps } from "../capture/index.mjs";
 import { acquireHandlerParts, acquireTimingsOps, traceStamped, ACQUIRE_STAGES_DDL } from "./acquire-timings.mjs";
 import { pendingOf, pendingOps } from "./pending.mjs";
+import { deliverOwedRender } from "../control-plane/index.mjs";
 import { doorbellOf, doorbellOps } from "../doorbell/index.mjs";
 import { fileSafetyOf, fileSafetyOps } from "../file-safety/index.mjs";
 import { monitoringOf, monitoringOps } from "../monitoring/index.mjs";
@@ -410,7 +411,7 @@ export class Store extends DurableObject {
        own alarm. `keeps_pending` and `acquire_stages` are the plane's two operational tables, declared to purge as a whole-store
        clear (record-core K23). Acquisition reads `cap.keepLater` as it reads `cap.waitUntil`: a keep that will not end inside the
        door's bound is written down here and put by the alarm, never left to a promise nothing keeps alive. */
-    const pending = pendingOf(ctx, { env, store: () => this.#ownNamespace() || "bio" });
+    const pending = pendingOf(ctx, { env, store: () => this.#ownNamespace() || "bio", deliver: deliverOwedRender });
     recordOf(ctx).declarePurge("plane", ["keeps_pending", "acquire_stages"]);
     capture.keepLater = (a) => pending.keepLater(a);
     capture.owedLater = (a) => pending.owedLater(a);   /* R77, acquisition R100: the ledger's `subresources` and `unpack` entries, registered the same way */

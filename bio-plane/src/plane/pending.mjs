@@ -45,7 +45,7 @@ const RANK = { keep: 0, reading: 1, ocr: 2, subresources: 3, unpack: 4 };
 const json = (v, otherwise) => { try { const o = JSON.parse(v); return o && typeof o === "object" ? o : otherwise; } catch { return otherwise; } };
 
 /** The pending-work holder of a host (one per storage): `{migrate, keepLater, owe, add, list, summary, consumer}`. `deps`: `env`,
- *  `store` (a function answering the object's namespace), `now` (the clock; a test's own) and `workers` (kind -> async
+ *  `store` (a function answering the object's namespace), `now` (the clock; a test's own), `deliver` (control-plane's `deliverOwedRender`, handed by the composition) and `workers` (kind -> async
  *  `(entry, {at}) -> answer`, replacing the default owner of that kind; a test's). */
 export function pendingOf(ctx, deps = {}) {
   let h = HOLDERS.get(ctx);
@@ -116,9 +116,8 @@ export function pendingOf(ctx, deps = {}) {
       const acq = acquisitionOf(ctx);
       if (!acq || typeof acq.owedRun !== "function") return attempt(row, at, "NO_OWNER");
       /* a rendered document is promoted beside its shell by the door's own function (control-plane, B29); without it a pending render stays the member's "Finish it" */
-      /* read at the call, never at load: control-plane reads the op tables as it loads, so it is imported after `register.mjs` has registered them */
-      const door = await import("../control-plane/index.mjs");
-      const deliver = typeof door.deliverOwedRender === "function" ? (a) => door.deliverOwedRender({ ctx, env, storeName: store(), ...a }) : undefined;
+      /* a rendered document is promoted beside its shell by the door's own function (control-plane, B29), handed in by the composition; without it a pending render stays the member's "Finish it" */
+      const deliver = typeof deps.deliver === "function" ? (a) => deps.deliver({ ctx, env, storeName: store(), ...a }) : undefined;
       const r = await call(() => acq.owedRun(captureOf(ctx), { kind: "subresources", session: row.sha }, { storeName: store(), env, ...(deliver ? { deliver } : {}) }));
       if (r && r.final === true && r.reason) return stop(row, at, String(r.reason).slice(0, 160));
       if (r && r.ok === true && r.done === true) return end(row);
