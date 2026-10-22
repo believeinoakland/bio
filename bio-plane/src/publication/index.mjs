@@ -1931,7 +1931,28 @@ export class Publication {
                 version, so the answer states that rather than reading the project's edges as they stand
                 today — which would be the case claiming citations it never signed — and it is never
                 re-signed (rule 1). */
-             citations: signedCitations(d.text) };
+             citations: signedCitations(d.text),
+             /* T51 E4: THE FINDINGS THE DOCUMENT PINS, under its own names, beside the citations (whose rows are the
+                project's citation edges, never the roster). A reloaded ceremony rebuilds what the edition names from
+                this; null when the bytes state no roster (R28). */
+             findings: this.#pinnedFindings(d.text) };
+  }
+
+  /* `case_findings` in the document's order, each with the pin and role its `case_roles` row states (null where the
+     roster names a finding no row pins). Null, never `[]`, when the bytes state no roster; never throws. */
+  #pinnedFindings(docText) {
+    try {
+      const dfm = parseFrontmatter(String(docText || "")).data || {};
+      if (!Array.isArray(dfm.case_findings)) return null;
+      const rows = new Map((Array.isArray(dfm.case_roles) ? dfm.case_roles : [])
+        .filter((r) => r && typeof r === "object" && typeof r.target === "string").map((r) => [r.target, r]));
+      return dfm.case_findings.map((f) => {
+        const target = String(f ?? "").trim();
+        const r = rows.get(target);
+        return { target, version_sha: typeof r?.version_sha === "string" ? r.version_sha : null,
+                 role: typeof r?.role === "string" ? r.role : null };
+      });
+    } catch { return null; }
   }
 
   /* D-442 / BIO_Publication_v0_1.md §3 rule 12: a member's edition and frozen pair as the RATIFIED
