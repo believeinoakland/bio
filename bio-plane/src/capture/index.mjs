@@ -1519,12 +1519,20 @@ export class Capture {
     /* R77 (T51 fix round 2; C10): whether the evidence store holds an object under each row's fingerprint. */
     /* R77 (T51 fix round 3; C14): the picker row answers it from the size the register recorded and asks the store nothing. */
     /* R91 (fix round 4; P10): the store's reads and the page's examinations and groupings are begun together, and the page waits for both. */
+    /* R77 (fix round 5; E13; P10): a full row answers `whole` true, without asking the store, for a capture the register records as held
+       in one part (its own whole), and asks the store about the rest (no size recorded, or a capture held in parts, whose whole may be
+       owed); with no evidence store it is undetermined, as before. */
+    const store = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     const [wholes, answers] = shape === "picker" ? [new Map(), null] : await Promise.all([
-      this.#wholeOf(page.map((r) => facts.first.get(r.bundle_id)?.capture_sha)),
+      this.#wholeOf(page.map((r) => facts.first.get(r.bundle_id)).filter((reg) => reg && Capture.#keptWholeBySize(reg) !== true).map((reg) => reg.capture_sha)),
       this.#pageAnswers(page, { viewer, rowOf, vouched, facts })]);
     const wholeOf = shape === "picker"
       ? (id) => Capture.#wholeBySize(facts.first.get(id))
-      : (id) => { const s = facts.first.get(id)?.capture_sha; return s ? wholes.get(s) ?? null : null; };
+      : (id) => {
+        const reg = facts.first.get(id);
+        if (!reg?.capture_sha) return null;
+        return store && Capture.#keptWholeBySize(reg) === true ? true : wholes.get(reg.capture_sha) ?? null;
+      };
     /* R77 (T51 fix round 3; C9): a document listed because it was seen in the asked project, not because it lives there. */
     const alsoHere = (r) => (project != null && project !== "" && (r.project || "") !== String(project) ? { also_here: { home: r.project || null } } : {});
     if (shape === "picker") {
@@ -1584,6 +1592,14 @@ export class Capture {
   static #wholeBySize(reg) {
     const size = reg && (typeof reg.bytes === "number" || typeof reg.bytes === "bigint") ? Number(reg.bytes) : NaN;
     return Number.isSafeInteger(size) && size >= 0 ? size <= MULTIPART_KEEP_MAX : null;
+  }
+
+  /* R77 (fix round 5; E13; K4530, B20): true when the register recorded a size that fits one part (`UPLOAD_PART`, `acquisition`
+     R10's form), for such a capture is its own whole; null when it recorded none or a larger one, a capture held in parts, whose
+     whole object may be owed (its `keep` row unrun) or held (`keepPast`, R103), so only the store can say. */
+  static #keptWholeBySize(reg) {
+    const size = reg && (typeof reg.bytes === "number" || typeof reg.bytes === "bigint") ? Number(reg.bytes) : NaN;
+    return Number.isSafeInteger(size) && size >= 0 && size <= UPLOAD_PART ? true : null;
   }
 
   /* R77 (T51 fix round 2; C10): for the page's capture digests, a Map from digest to whether the evidence store holds an

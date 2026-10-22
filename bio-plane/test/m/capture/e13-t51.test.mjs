@@ -11,6 +11,8 @@ import { provenance as acquisitionProvenance } from "../acquisition/fixture.mjs"
 import { acquisitionOf, MULTIPART_KEEP_MAX } from "../../../src/acquisition/index.mjs";
 import { PROVENANCE_SCHEMA } from "../../../src/provenance/schema.mjs";
 
+const MiB = 1024 * 1024;
+const PART = 8 * MiB;   // R86: a capture within one part is its own whole
 const LANES = 8;   // R91: the lanes a page is read in
 const ADMIN = "class:admin";
 const NOW = "2026-03-12T00:00:00Z";
@@ -67,20 +69,25 @@ test("R77 R91 E13 (P10): the full read of 27 documents whose register recorded t
   assert.deepEqual(new Set(ids(r)), new Set(docs.map((d) => d.id)));
 });
 
-test("R77 R91 E13 (P10): a document whose register recorded no size, or one past what is kept whole, is asked of the store once, each fingerprint once, at most HELD_PAGE_LANES at a time and more than one at a time; a size the store keeps whole is not asked", async () => {
+test("R77 R91 E13 (P10): a document whose register recorded no size, or a capture held in parts (a whole may be owed), is asked of the store once, each fingerprint once, at most HELD_PAGE_LANES at a time and more than one at a time; a capture held in one part is not asked", async () => {
   const w = world({ latency: 30 });
-  const small = fill(w, 6);                                   // sizes recorded, kept whole by size: not asked
+  const small = fill(w, 6);                                   // sizes recorded within one part: their own whole, not asked
+  const edge = held(w, 50, { size: PART });                    // exactly one part: not asked
+  const parts = Array.from({ length: 3 }, (_, k) => held(w, 150 + k, { size: PART + 1 + k * MiB }));   // in parts, whole kept: asked
+  const owed = held(w, 160, { size: 20 * MiB, inStore: false });                              // in parts, the keep not yet run: asked, false
   const unknown = Array.from({ length: 14 }, (_, k) => held(w, 100 + k, { size: null }));   // no size recorded: asked
   const past = Array.from({ length: 4 }, (_, k) => held(w, 200 + k, { size: MULTIPART_KEEP_MAX + 1 + k }));   // past the bound: asked
   const gone = held(w, 300, { size: MULTIPART_KEEP_MAX + 9, inStore: false });                    // past the bound, no whole object: asked, false
   const r = await w.c.heldCaptures({ viewer: ADMIN, limit: 500, now: NOW });
-  assert.equal(r.held.length, 6 + 14 + 4 + 1);
-  const asked = [...unknown, ...past, gone].map((x) => keyOf(x.d)).sort();
-  assert.deepEqual([...w.calls.keys].sort(), asked, "exactly the unsized and the past-the-bound fingerprints, none twice, none of the sized small ones");
+  assert.equal(r.held.length, 6 + 1 + 3 + 1 + 14 + 4 + 1);
+  const asked = [...unknown, ...parts, owed, ...past, gone].map((x) => keyOf(x.d)).sort();
+  assert.deepEqual([...w.calls.keys].sort(), asked, "exactly the unsized, the in-parts and the past-the-bound fingerprints, none twice, none of those held in one part");
   assert.ok(w.calls.peak > 1, `the heads overlap (peak ${w.calls.peak})`);
   assert.ok(w.calls.peak <= LANES, `at most ${LANES} at once (peak ${w.calls.peak})`);
   const whole = new Map(r.held.map((x) => [x.bundle_id, x.whole]));
-  assert.ok(small.every((x) => whole.get(x.id) === true));
+  assert.ok([...small, edge].every((x) => whole.get(x.id) === true));
+  assert.ok(parts.every((x) => whole.get(x.id) === true), "in parts with a whole object held: whole");
+  assert.equal(whole.get(owed.id), false, "in parts and the whole not yet made (its keep owed): not whole, as the store says");
   assert.ok(unknown.every((x) => whole.get(x.id) === true), "an unsized copy held whole reads whole");
   assert.ok(past.every((x) => whole.get(x.id) === true), "a copy past the bound with a whole object (keepPast, R103) reads whole: the size alone does not say false");
   assert.equal(whole.get(gone.id), false, "past the bound and no whole object: held in parts");
@@ -105,9 +112,11 @@ function goldenWorld() {
   const sized = fill(w, 12);
   const unsized = Array.from({ length: 6 }, (_, k) => held(w, 100 + k, { size: null }));
   const unsizedGone = held(w, 150, { size: null, inStore: false });
+  const parts = Array.from({ length: 2 }, (_, k) => held(w, 160 + k, { size: PART + 1 + k * MiB }));
+  const partsOwed = held(w, 170, { size: 20 * MiB, inStore: false });
   const past = Array.from({ length: 3 }, (_, k) => held(w, 200 + k, { size: MULTIPART_KEEP_MAX + 1 + k }));
   const pastGone = held(w, 250, { size: MULTIPART_KEEP_MAX + 2, inStore: false });
-  return { w, all: [...sized, ...unsized, unsizedGone, ...past, pastGone] };
+  return { w, all: [...sized, ...unsized, unsizedGone, ...parts, partsOwed, ...past, pastGone] };
 }
 test("R77 E13 (P10): the full read answers byte for byte what the code before E13 answered, for a store consistent with its register (a recorded answer, compared)", async () => {
   const { w } = goldenWorld();
