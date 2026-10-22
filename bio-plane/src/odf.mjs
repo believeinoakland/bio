@@ -1803,6 +1803,7 @@ function odsText(parts) {
   for (const sheet of odsSheets) {
     const walked = walkSheet(sheet.xml);
     const lines = [];
+    const lineRows = [];
     for (const row of walked.rows) {
       const vals = [];
       for (const c of row.cells) {
@@ -1814,7 +1815,13 @@ function odsText(parts) {
         cellCount++;
         vals.push(v);
       }
-      if (vals.length) lines.push(vals.join("\t"));
+      if (vals.length) {
+        const line = vals.join("\t");
+        lines.push(line);
+        /* A cell holding several paragraphs puts several lines of `text` on
+           one row: each carries that row's number. */
+        for (let k = line.split("\n").length; k > 0; k--) lineRows.push(row.r);
+      }
     }
     const text = lines.join("\n");
     /* A HIDDEN sheet's text IS extracted — the record holds what the file
@@ -1857,6 +1864,10 @@ function odsText(parts) {
       /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
       range: usedSheetRange(sheet.name, usedRows, usedCols),
       text, undetermined: [],
+      /* R19: one 1-based sheet row per line of `text` (the row as a
+         spreadsheet shows it, repeated rows counted), so a block of lines
+         names its true rows; [] when the sheet has no text. */
+      lineRows,
       /* R46: the typed cells, `office-readers` R30's contract field for field. */
       cells: typedCells(sheet.name, walked.rows) });
   }
