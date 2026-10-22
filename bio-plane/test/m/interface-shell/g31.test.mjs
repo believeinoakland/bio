@@ -11,7 +11,8 @@ import { boot, ok, tabs, ADMIN, STORE_KEY, settle } from "./harness.mjs";
 const MODS = ["screens-settings", "screens-intake", "screens-daily", "screens-inquiry", "screens-entry", "screens-wizards", "screens-investigate", "screens-publish", "screens-action"];
 const REAL = []; let GUIDE = null;
 for (const m of MODS) { const x = await import(`../../../src/${m}/index.mjs`); REAL.push(...x.SCREENS); if (x.GUIDE) GUIDE = x.GUIDE; }
-const SIX = ["groupidentity", "infolevel", "assistantstate", "accountreference", "subscriptionsignin", "groupkeystate"];
+/* the frame's six reads, as the frame groups them (the team and the level; the four that decide whether the assistant is reachable) */
+const TEAM = ["groupidentity", "infolevel"], REACH = ["assistantstate", "accountreference", "subscriptionsignin", "groupkeystate"];
 /* `queue`'s answer in the shape the op makes it (`queue/index.mjs` `queueFeed`: `ok`, `member`, `items`, `limit`, `sort`, `item_count`, `truncated`, ...),
    the open list whole, the muted list and the count */
 const WHOLE = [{ id: "t1", class: "OBLIGATION", title: "Reply" }, { id: "t2", class: "FINDING", title: "A lease" }, { id: "t3", class: "CONDITION", title: "Held" }];
@@ -38,7 +39,7 @@ test("R127 (G31, A-27) a first sign-in on the real front screen, returning to Qu
   assert.equal(p.location.pathname, "/app/queue", "the page kept is opened");
   assert.ok(p.doc.getElementById("cs-main").getAttribute("data-screen") === "queue", "the Queue screen is drawn");
   assert.deepEqual(repeats(after), [], "no request twice");
-  for (const op of ["login", "whoami", "interfacewords", ...SIX]) assert.equal(after.filter((r) => r.op === op).length, 1, op);
+  for (const op of ["login", "whoami", "interfacewords", ...TEAM, ...REACH]) assert.equal(after.filter((r) => r.op === op).length, 1, op);
   assert.ok(after.length >= 12 && after.length <= 18, "the load's whole set: " + after.length);
 });
 
