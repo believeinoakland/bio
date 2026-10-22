@@ -98,18 +98,14 @@ const hereAt = (p) => p.location.pathname;
 test("R129 R3 (the real plane, citation R21) a second passage cited while the only citation is grouped is refused by the real citation with its repairs; the page draws them as acts in the member's words; each, done, lets the cite land (the group, then the grouping taken off)", async () => {
   const auth = await founder();
   const cs = screenCall(auth);
-  const { SCREENS: DAILY } = await import("../../../src/screens-daily/index.mjs");
-  const both = [...DAILY, ...SCREENS];
-  /* the project and its question, through the screens' own acts (Projects' "Start a project", the project's "Open a question") */
-  const home = await boot({ screens: both, plane: forwarded(auth), path: "/app/projects" });
-  await until(home, () => !!home.doc.getElementById("projects-title"));
-  fill(home, { "projects-title": "Potholes and repairs seam" });
-  const hidden = home.doc.getElementById("projects-visibility-hidden");
-  hidden.checked = true; home.fire(hidden, "change");
-  await press(home, "promote", { reason: "the seam of the cite refusal" });
-  await until(home, () => /^\/app\/project\//.test(hereAt(home)));
-  const projectId = decodeURIComponent(hereAt(home).split("/")[3]);
-  assert.ok(projectId, "the project is made: " + hereAt(home));
+  const both = SCREENS;
+  /* the project: the document "Start a project" files (screens-daily's body), promoted at the door as the member's own press does */
+  const iso = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+  const made = await cs.call("promote", { body: { base: null, snapKey: iso.replace(/[-:]/g, "") + "_00c0ffee", meta: { object_type: "project", title: "Potholes and repairs seam", current_state: "forming", created: iso, last_updated: iso },
+    files: [{ path: "bundle.md", text: `---\nobject_type: project\ntitle: "Potholes and repairs seam"\nobjective: "Potholes and repairs seam"\ncurrent_state: forming\ncreated: "${iso}"\nlast_updated: "${iso}"\n---\n\n## Session Log\n\n### Session ${iso} | Formation | interactive\nTrigger: the seam test\nChanges: created.\n` }], register: [], visibility: "hidden" } });
+  const projectId = (made.result && made.result.bundleId) || made.bundleId;
+  assert.ok(projectId, "the project is made: " + JSON.stringify(made).slice(0, 300));
+  const home = await boot({ screens: both, plane: forwarded(auth), path: "/app/project/" + projectId });
   await until(home, () => !!home.doc.getElementById("project-question"));
   fill(home, { "project-question": "Is the city repairing reported potholes within seven days?" });
   await press(home, "promote", { reason: "the question the seam cites into" });
@@ -148,7 +144,7 @@ test("R129 R3 (the real plane, citation R21) a second passage cited while the on
   await until(second, () => repairsOf(second).length === 2);
   assert.equal(repairsOf(second).length, 2, "the two repairs are acts: " + main(second).textContent.slice(-500));
   assert.ok(repairsOf(second)[0].textContent.includes("Add it to the group part 1"), "the first adds it to the group the question already declares");
-  assert.ok(!main(second).textContent.includes("a basis is grouped WHOLE or not at all"), "and the finding's own English is not what she is left with");
+  assert.ok(!/grouped WHOLE|C-2\.8/.test(main(second).textContent), "and the finding's own English, with its check number, is not what she is left with");
   await second.click(repairsOf(second)[0]);
   await until(second, () => repairsOf(second).length === 0);
   assert.equal(repairsOf(second).length, 0, "the repair done, the repairs go");

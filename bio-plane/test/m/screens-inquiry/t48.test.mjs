@@ -6,7 +6,6 @@ import assert from "node:assert/strict";
 import { ok, refusedIn, silent, ADMIN } from "../interface-shell/harness.mjs";
 import { interfacePage } from "../../../src/interface-shell/index.mjs";
 import { SCREEN_WORDS } from "../../../src/screens-inquiry/index.mjs";
-import { STAND_INS } from "../../../src/screens-inquiry/document.mjs";
 import { open, main, plane, says, word, SCREENS, P, Q, D, SHA, BASIS, READING, PROJECT_QUESTIONS, DOCUMENT_MD, inquiryMd } from "./fixtures.mjs";
 
 const RUN = "RUN-" + "b".repeat(16);
@@ -94,11 +93,8 @@ test("R18 R52 controls: a project with no plan still lists the plan kind (with t
 /* ---- R19: the held texts, since R44 held nowhere: the module holds no word of its own (words.test.mjs) ---- */
 test("R19 the module holds no copy of a words.json word, and none spelled \"labelled\"", () => {
   assert.deepEqual(SCREEN_WORDS, [], "no row of its own (R44)");
-  /* fix round 4 (K4269; BOB's B32): a sentence the design has no row for yet is a stand-in the module lists (`STAND_INS`, words.test.mjs), never a copy of a row */
-  const keysOf = (s) => s.words.filter((k) => typeof k === "string");
-  for (const s of SCREENS) for (const k of s.words) assert.ok(typeof k === "string" || (Array.isArray(k) && STAND_INS.some((x) => x[0] === k[0] && x[1] === k[1])), `${s.id}: ${String(k)} is a key or a listed stand-in`);
-  for (const s of SCREENS) for (const [, en] of s.words.filter((k) => Array.isArray(k))) assert.doesNotMatch(en, /labelled/i);
-  for (const s of SCREENS) for (const k of keysOf(s)) assert.doesNotMatch(word(k, new Proxy({}, { get: () => "x", has: () => true, getOwnPropertyDescriptor: () => ({ value: "x", configurable: true, enumerable: true }) })), /labelled/i, k);
+  for (const s of SCREENS) for (const k of s.words) assert.equal(typeof k, "string", `${s.id}: ${k} is a key`);
+  for (const s of SCREENS) for (const k of s.words) assert.doesNotMatch(word(k, new Proxy({}, { get: () => "x", has: () => true, getOwnPropertyDescriptor: () => ({ value: "x", configurable: true, enumerable: true }) })), /labelled/i, k);
   assert.ok(SCREENS.find((s) => s.id === "document").words.includes("act.pagetranscribe.does"), "the document draws the carried word by its key");
 });
 

@@ -5,8 +5,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok } from "../interface-shell/harness.mjs";
 import { open, main, says, word, P, Q, Q2, D, SHA, DOCUMENT_MD, inquiryMd } from "./fixtures.mjs";
-import { STAND_INS } from "../../../src/screens-inquiry/document.mjs";
-const standIn = (key) => STAND_INS.find((x) => x[0] === key)[1];
 
 process.env.TZ = "UTC";
 const at = "/app/document/" + D;
@@ -47,8 +45,9 @@ test("R3 R69 C36-aside the 'Your citations' row of a web page names the paragrap
 import { fill } from "./fixtures.mjs";
 const CHECK = "C-2.8";
 const JARGON = "1 basis leg carries no ground while 1 do: a basis is grouped WHOLE or not at all";
+/* the repairs as citation R21 answers them: each `{key, act, fields, text}` (the keys are citation's own, `citation.index.*`; the page draws them by key) */
 const REPAIRS = [{ key: "citation.index.repair_add_to_group", act: "cite", fields: { ground: "G1" }, text: "Add it to the group G1" },
-  { key: "citation.index.repair_remove_grouping", act: "inquiryground", fields: { target: Q, grounds: [] }, text: "Take the grouping off" }];
+  { key: "citation.index.repair_remove_grouping", act: "inquiryground", fields: { target: Q, grounds: [] }, text: "Take the grouping off, so the answer reads as its weakest citation" }];
 const refusedCite = (extra = {}) => ({ status: 200, json: { ok: true, result: { ok: false, reason: "BASIS_REFUSED", code: "BASIS_REFUSED",
   findings: [{ check: CHECK, code: null, detail: JARGON, repairs: [] }], repairs: REPAIRS, ...extra } } });
 const REF = `${D}#x`;
@@ -74,10 +73,9 @@ test("R129 R3 a cite refused because the only citation is grouped draws the two 
   const { p } = await pressedRefusal();
   const acts = repairButtons(p);
   assert.equal(acts.length, 2, "two repairs, each an act");
-  assert.ok(text(acts[0]).includes(word("citation.index.repair_add_to_group", { ground: "G1" })), "the first: add it to the group, naming the group");
-  assert.ok(text(acts[1]).includes(word("citation.index.repair_remove_grouping")), "the second: take the grouping off");
+  assert.ok(text(acts[0]).includes(REPAIRS[0].text), "the first: add it to the group, naming the group, in the words citation gives it");
+  assert.ok(text(acts[1]).includes(REPAIRS[1].text), "the second: take the grouping off");
   assert.ok(main(p).querySelector('[data-cite="repair"] textarea, [data-cite="repair"] input') !== null, "and the second asks her reason");
-  assert.ok(text(main(p)).includes(standIn("screen.document.cite.repair.says")), "a sentence in the member's words says what is wrong and offers the two");
   assert.ok(!text(main(p)).includes(JARGON) && !text(main(p)).includes(CHECK), "and the finding's own English, with its check number, is not what she is left with");
   const none = await open(at, { plane: { cite: () => refusedCite({ repairs: [] }) } });
   const el = none.doc.getElementById("document-cite-question");
@@ -139,8 +137,8 @@ test("R129 N5 a copy stored with no reading says so and offers Read it now; pres
     readheld: () => { state.read = true; return ok({ ok: true, read: true, bundle_id: D, found: true }); } };
   const p = await open(at, { plane: pl });
   assert.ok(actsIn(main(p)).includes("readheld"), "Read it now is offered");
-  assert.ok(text(main(p)).includes(standIn("screen.document.readnow.says")), "with the sentence that says why");
-  assert.ok(text(main(p).querySelector('button[data-act="readheld"]')).includes(standIn("act.readheld.label.document")), "and its label is a plain sentence, not a key");
+  assert.ok(says(main(p), "screen.document.text.unread"), "the page already says the copy is unread");
+  assert.ok(text(main(p).querySelector('button[data-act="readheld"]')).includes(word("document.read.title")), "and the act's label is a held word (the owed row's stand-in), not a key");
   await press(p, "readheld", { reason: "the photo was filed before it could be read" });
   const sent = p.byOp("readheld");
   assert.equal(sent.length, 1);
@@ -157,7 +155,7 @@ test("R129 N5 a refusal to read says why in words: the original not held whole, 
   for (const why of ["NO_WHOLE_OBJECT", "NO_HOME"]) {
     const p = await open(at, { plane: { reading: UNREAD, readheld: ok({ ok: true, read: false, why }) } });
     await press(p, "readheld", { reason: "read it" });
-    assert.ok(text(main(p).querySelector('[data-outcome="readheld"]')).includes(standIn("screen.document.readnow.refused." + why)), why + " is said");
+    assert.ok(says(main(p).querySelector('[data-outcome="readheld"]'), why === "NO_HOME" ? "refusal.CAPTURE_NOT_HELD" : "transcribe.why.evidenceabsent"), why + " is said, in the nearest words held (the rows owed are asked of the design)");
     assert.ok(actsIn(main(p)).includes("readheld"), "and the act stays, for when it can be done");
   }
   const state = { read: false };
