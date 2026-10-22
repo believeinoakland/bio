@@ -500,3 +500,15 @@ Size (session_01DvJ1NBRub48BYu8NPSwTbT): test runs 12, module lines 4390
 ## J23 · COMPLETE
 
 COMPLETE (CAPTURE #48, B24): tranche/T51 merged; notArchivesAmong is a named import and the G12a test is green (mutation-checked); acquire declares and accepts `project` (test in declared-ops). Capture suite 267/267; format, architecture, coverage, words 0. One user failure, control-plane/t51-visitor-copy.test.mjs (E8), fails identically on tranche/T51 without my commits (control-plane). One old assertion in t49.test.mjs edited to the new rule (a decided non-archive is not asked again). Details in my record.
+
+## J24 · QUESTION
+
+QUESTION (G32; my best reading follows; I carry on with G27 meanwhile).
+
+Acquisition reads the held digest only from `opts.captureRequest.heldSha` (acquisition/index.mjs:972), the in-process drain's arm. That arm also takes the address, purpose, agent and credential from the row, deletes `body.render`, forbids parking (`mayPark` needs `!captureRequest`) and lets the daemon class through the R1 fence (:903). So capture's door `acquire` cannot hand it a member's request without changing all of that; I will not fake a captureRequest.
+
+Smallest thing I need: acquisition accepts a plain option `opts.heldSha` (64 hex, ignored otherwise), honoured for any caller exactly as `crHeldSha` is today (validators from `cap.validatorsOf({addressNorm, captureSha})`, not with render), the 304 answer unchanged. Then capture's `acquire` arm (index.mjs:3272, `heldAt` read of the address, the viewer-independent newest direct plain capture) passes `heldSha` and everything else stays.
+
+If you would rather keep acquisition untouched, the alternative inside capture alone is a conditional governed look of my own before calling `acquire` (a second request when the source changed; the 304 answer composed here), which duplicates acquisition's R22. I recommend the one-line option in acquisition.
+
+Until you answer I build the capture side against `opts.heldSha` and its test red by name; G27 is independent and is built now.
