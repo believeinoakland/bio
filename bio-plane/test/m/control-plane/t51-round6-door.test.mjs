@@ -235,3 +235,84 @@ test("R105 (G2, G3): the timed-out answer's `kept` is asked of the store: an add
   assert.equal(h.json.kept, "held");
   assert.equal(asked(stagesHeld.env, "heldat").length, 0, "the stages sufficed");
 });
+
+/* ---- BOB's CHANGEs B41, B42 (K4577, K4578): the delivery's record, the failed read, `more`, the 16, the batches ---- */
+
+test("R123 (G4; EXTRACTION #34): an upload whose read failed or went silent after the upload stood is `reading_pending` with the failed call's `diag`, its row written once, the upload standing", async () => {
+  const landed = { ok: true, existed: false, capture: { sha256: SHA, bytes: MB }, document: docOf({ bytes: MB, type: "text/plain" }) };
+  const w = world({ answer: (c) => (c.route === "captureupload" ? ok(landed) : c.route === "extractread" ? new Response("<html>boom</html>", { status: 500 }) : null) });
+  const r = await upload(w);
+  assert.equal(r.status, 200, r.text);
+  assert.equal(r.json.result.reading_pending, true, "never a 502 for a kept upload");
+  assert.ok(r.json.result.diag !== undefined, "the failed call travels in `diag`");
+  assert.equal(r.json.result.document.capture.sha256, SHA);
+  assert.equal(asked(w.env, "pendingadd").length, 1);
+});
+
+test("R123 (G14): a reading that answers `more` is continued by the ledger on every door path: promote, a held upload, an acquire; one that does not is left", async () => {
+  const sha = "e".repeat(64);
+  const files = [{ path: "data/provenance.json", text: JSON.stringify({ documents: [{ locator: "https://x.example/a.docx", capture: { sha256: sha, bytes: MB } }] }) }];
+  const promote = (more) => { const w = world({ answer: (c) => (c.route === "promote" ? ok({ ok: true, bundle_id: "INFO-1" }) : c.route === "readheldfor" ? ok({ ok: true, read: true, found: true, ...(more ? { more: true } : {}) }) : null) });
+    return call(w.env, { op: "promote", token: w.S.ann, method: "POST", body: { files } }).then((r) => ({ r, w })); };
+  const m = await promote(true);
+  assert.equal(m.r.json.result.reading_pending, true);
+  assert.deepEqual(asked(m.w.env, "pendingadd").map((c) => c.params.sha), [sha]);
+  const n = await promote(false);
+  assert.equal(n.r.json.result.reading_pending, undefined);
+  assert.equal(asked(n.w.env, "pendingadd").length, 0);
+  /* a held upload whose reading answers more */
+  const landed = { ok: true, existed: true, capture: { sha256: SHA, bytes: 9 }, receipt: { address: `upload:${SHA}` } };
+  const u = world({ answer: storeFor(landed, { held: () => ({ ok: true, read: true, found: true, more: true }) }) });
+  const ur = await upload(u);
+  assert.equal(ur.json.result.reading_pending, true);
+  assert.equal(asked(u.env, "pendingadd").length, 1);
+  /* an acquire whose own reading answers more */
+  const doc = { ...docOf({ bytes: MB, type: "text/html", locator: "https://x.example/p.html" }), reading: { found: true, more: true }, text_units: [] };
+  const hooks = { ...defaultHooks(), async gatedOp(ctx) { return ctx.op === "acquire" ? M.json({ ok: true, existed: false, document: doc }) : undefined; } };
+  const a = world();
+  const ar = await call(a.env, { op: "acquire", token: a.S.ann, method: "POST", hooks, body: { locator: "https://x.example/p.html" } });
+  assert.equal(ar.json.reading_pending, true);
+  assert.equal(asked(a.env, "pendingadd").length, 1);
+});
+
+test("R123 (G18): a promotion of 20 documents follows the first 16 and OWES the other 4: every document has its read or its row, none is dropped", async () => {
+  const shas = Array.from({ length: 20 }, (_, i) => i.toString(16).padStart(2, "0").repeat(32));
+  const files = [{ path: "data/provenance.json", text: JSON.stringify({ documents: shas.map((s) => ({ locator: `https://x.example/${s.slice(0, 4)}`, capture: { sha256: s, bytes: 9 } })) }) }];
+  const w = world({ answer: (c) => (c.route === "promote" ? ok({ ok: true, bundle_id: "INFO-1" }) : c.route === "readheldfor" ? ok({ ok: true, read: true, found: true }) : null) });
+  const r = await call(w.env, { op: "promote", token: w.S.ann, method: "POST", body: { files } });
+  assert.equal(r.status, 200, r.text);
+  assert.equal(asked(w.env, "readheldfor").length, 16, "the first 16 are followed here");
+  assert.deepEqual(asked(w.env, "pendingadd").map((c) => c.params.sha), shas.slice(16), "the rest are owed");
+  assert.equal(r.json.result.reading_pending, true);
+  /* control: 16 documents owe nothing */
+  const f16 = [{ path: "data/provenance.json", text: JSON.stringify({ documents: shas.slice(0, 16).map((s) => ({ locator: `https://x.example/${s.slice(0, 4)}`, capture: { sha256: s, bytes: 9 } })) }) }];
+  const c = world({ answer: (q) => (q.route === "promote" ? ok({ ok: true, bundle_id: "INFO-1" }) : q.route === "readheldfor" ? ok({ ok: true, read: true, found: true }) : null) });
+  const cr = await call(c.env, { op: "promote", token: c.S.ann, method: "POST", body: { files: f16 } });
+  assert.equal(cr.json.result.reading_pending, undefined);
+  assert.equal(asked(c.env, "pendingadd").length, 0);
+});
+
+test("R123 (G2): the delivery of a finished fetch records `fetch_done` through capture; a render's delivery records none (see r124-owed-render)", async () => {
+  /* driven in r124-owed-render.test.mjs over a real record; here the contract's shape: the door exports the delivery */
+  assert.equal(typeof M.deliverOwedRender, "function");
+});
+
+test("R20 (G12c): a batch of review copies is a read answer: each copy is stamped as the single read stamps it, its in-band quartet over the copy as served; a body list of `drafts` and `projects` reaches the store as the comma list", async () => {
+  const copy = (id) => ({ ok: true, draft: id, project: "P-1", required_strength: 2, updated_by: "member:ann", last_change: { at: "2026-10-22T00:00:00Z", by: "member:ann" }, text: `copy ${id}` });
+  const batch = { ok: true, kind: "review-copies", count: 2, copies: [copy("D-1"), copy("D-2")] };
+  const w = world({ answer: (c) => (c.route === "reviewcopy" ? ok(batch) : c.route === "casedrafts" ? ok({ ok: true, kind: "review-drafts-batch", count: 1, lists: [] }) : null) });
+  const r = await call(w.env, { op: "reviewcopy", token: w.S.ann, method: "POST", body: { drafts: ["D-1", "D-2"] } });
+  assert.equal(r.status, 200, r.text);
+  assert.equal(asked(w.env, "reviewcopy")[0].params.drafts, "D-1,D-2");
+  assert.equal(r.json.kind, "review-copies");
+  for (const c of r.json.copies) {
+    assert.ok(c.inband && c.inband.hash, `copy ${c.draft} carries its in-band quartet`);
+    assert.equal(c.required_strength, undefined, "the floor is read into the quartet, not served twice");
+  }
+  const single = await call(world({ answer: (c) => (c.route === "reviewcopy" ? ok(copy("D-1")) : null) }).env, { op: "reviewcopy", token: "x" });
+  assert.notEqual(single.status, 500);
+  const d = await call(w.env, { op: "casedrafts", token: w.S.ann, method: "POST", body: { projects: ["P-1", "P-2"] } });
+  assert.equal(d.status, 200, d.text);
+  assert.equal(asked(w.env, "casedrafts")[0].params.projects, "P-1,P-2");
+  assert.equal(d.json.kind, "review-drafts-batch");
+});

@@ -286,11 +286,27 @@ async function groupOf(stub, project = null) {
     return g && typeof g === "object" && !Array.isArray(g) ? g : null;
   } catch { return null; }
 }
-async function reviewAnswer(out, op, extra = {}, group = null) {
+const INBAND_OVER = "this answer exactly as served, without its `inband` key: parse it, delete `inband`, and "
+          + "hash JSON.stringify(rest, null, 1) as UTF-8";
+async function reviewAnswer(out, op, extra = {}, group = null, batchGroup = null) {
   if (out.refused) return storeRefusal(out, extra);   /* R23: the store's own refusal, at its status */
   if (!out.answered) return storeSilent(op, out.correlation);
   const r = out.result;
   if (!r?.ok) return json({ ok: false, ...r, ...extra }, r?.reason === "NO_REVIEW_COPY" ? 404 : 400);
+  /* R20 (fix round 6, G12c; K4577): a batch of review copies (`drafts`) is a read answer, never the dead answer: each copy it holds is stamped exactly
+     as the single read stamps it (the in-band quartet over the copy as served, its group fields read for its own project) */
+  if (op === "reviewcopy" && r.kind === "review-copies" && Array.isArray(r.copies)) {
+    const copies = [];
+    for (const c of r.copies) {
+      if (!c || typeof c !== "object" || c.ok !== true) { copies.push(c); continue; }
+      const { required_strength: bar, ...copy } = c;
+      const served = { ok: true, ...copy, ...extra };
+      const { quartet } = await inbandQuartet({ subject: served, over: INBAND_OVER, date: c.last_change?.at ?? null, author: c.updated_by ?? null, bar: bar ?? null,
+                                                group: typeof batchGroup === "function" ? await batchGroup(c.project) : null });
+      copies.push({ ...served, inband: quartet });
+    }
+    return json({ ...r, ...extra, copies }, 200);
+  }
   if (op === "reviewcopy") {
     /* REC-148 / DEC-31's BOUND RULE (`BIO_Publication_v0_1.md` §6A.3 point 1): the answer carries its
        hash, date, author and both floors IN-BAND, by the SAME function the container manifest is
@@ -788,18 +804,28 @@ export async function deliverOwedRender({ ctx, env, storeName = "bio", answer, s
     if (made.refused !== undefined) return { ok: false, reason: (made.refused && (made.refused.reason || made.refused.code)) || "PROMOTE_REFUSED" };
     /* R123: the reading follows the filing */
     let pending = false;
+    const filedAt = new Date().toISOString();
     if (!(doc.reading && typeof doc.reading === "object")) {
       let held = null;
       if (!tooBigToReadInline(doc)) {
         try { held = await extractionOf(ctx).readHeld({ sha, storeName, env }); } catch { held = null; }
       }
-      if (!(held && (held.read === true || held.why === "READING_HELD"))) {
+      if (!(held && (held.read === true || held.why === "READING_HELD")) || held.more === true) {
         pending = true;
         try {
           const stub = env.STORE.get(env.STORE.idFromName(storeName));
           await doAnswer(stub.fetch(new Request(`http://do/pendingadd?kind=reading&sha=${sha}&store=${encodeURIComponent(storeName)}`, { method: "POST" })));
         } catch { /* the alarm's ledger is the reading's second chance, never the delivery's gate */ }
       }
+    }
+    /* (fix round 6, G2; K4577) a finished fetch is recorded for the notice that tells its opener (capture's `recordFetchDone`; one row a session, never throws);
+       a render session records none. A record that cannot be made never undoes the filing. */
+    if (ld.state && ld.state.fetch_pending) {
+      try {
+        const cap = captureOf(ctx);
+        if (typeof cap.recordFetchDone === "function")
+          await cap.recordFetchDone({ session, document: { bundleId: made.bundleId, sha256: sha, locator: address }, opener: viewer, project: project || null, at: filedAt });
+      } catch { /* the filing stands */ }
     }
     return { ok: true, bundleId: made.bundleId, ...(pending ? { reading_pending: true } : {}) };
   } catch (e) { return { ok: false, reason: "DELIVERY_FAILED", detail: String((e && e.message) || e).slice(0, 200) }; }
@@ -1071,7 +1097,11 @@ export function makeFetch(hooks = {}) {
             if (url.searchParams.get(k)) q.set(k, (url.searchParams.get(k) || "").trim());
         if (op === "reviewcopy" && url.searchParams.get("limit")) q.set("limit", url.searchParams.get("limit"));
         /* R20 (fix round 6, G12c): a member's read of several drafts at once names them in `drafts`; a grant's secret opens one copy, so a holder's read is single */
-        if (op === "reviewcopy" && !bySecret && url.searchParams.get("drafts")) q.set("drafts", url.searchParams.get("drafts"));
+        if (op === "reviewcopy" && !bySecret) {
+          const listed = reqBody && typeof reqBody === "object" && !Array.isArray(reqBody) && Array.isArray(reqBody.drafts) ? reqBody.drafts.filter((d) => typeof d === "string").join(",") : "";
+          const drafts = url.searchParams.get("drafts") || listed;
+          if (drafts) q.set("drafts", drafts);
+        }
         /* R64 (N761): the grant's digest crosses in the internal request's body alone, never its query; the door's mark
            `bySecret` stays in the query, where the owners read it */
         const digest = bySecret ? await sha256Hex(credential.secret || "") : null;
@@ -1103,7 +1133,8 @@ export function makeFetch(hooks = {}) {
         const out = await doAnswer(stub.fetch(`http://do/${op}?${q}`,
           innerBody === null ? undefined : { method: "POST", headers: { "content-type": "application/json" },
                                              body: JSON.stringify(innerBody) }));
-        return reviewAnswer(out, op, {}, op === "reviewcopy" && out.answered && out.result?.ok ? await groupOf(stub, out.result.project) : null);
+        return reviewAnswer(out, op, {}, op === "reviewcopy" && out.answered && out.result?.ok ? await groupOf(stub, out.result.project) : null,
+                            op === "reviewcopy" ? (project) => groupOf(stub, project) : null);
       }
       /* The sign-in and the invitation's two steps, relayed to the store's routes (credentials' `login`, membership's
          `invitelook` and `enroll`) and answered through R24's relay (D-679). The invitation ops answer from the store
@@ -2543,7 +2574,16 @@ export function makeFetch(hooks = {}) {
       seen.clock.begin("promote");
       const promoted = await promoteAcquired(armed);
       seen.clock.end("promote");
-      const followed2 = await readHeldAfterAcquire(promoted);
+      let followed2 = await readHeldAfterAcquire(promoted);
+      /* (fix round 6, G14) a reading the acquire made that answers `more` is continued by cursor */
+      try {
+        const fb = await followed2.clone().json();
+        if (fb && fb.ok === true && fb.reading_pending !== true && fb.document?.reading?.more === true) {
+          const headers = new Headers(followed2.headers);
+          headers.delete("content-length");
+          followed2 = new Response(JSON.stringify({ ...fb, reading_pending: true }), { status: followed2.status, headers });
+        }
+      } catch { /* not a JSON answer */ }
       await pendReading(followed2);
       const res = await doorTimedFailure(followed2);
       if (!captureStep && url.searchParams.get("step") === null) return res;
@@ -2623,9 +2663,17 @@ export function makeFetch(hooks = {}) {
         if (held && (held.read === true || held.why === "READING_HELD")) {
           /* E6: pages of a scan left unread are owed to the OCR pass, which the ledger goes on with by cursor */
           if (held.owed === true) { await pendSha(e.sha, "ocr"); owed = true; }
+          /* (fix round 6, G14; K4578) a reading that answers `more` is continued by cursor by the ledger, for every format */
+          if (held.more === true) { await pendSha(e.sha); owed = true; }
           continue;
         }
         await pendSha(e.sha);
+        owed = true;
+      }
+      /* (fix round 6, G18; K4578) the first READING_FOLLOWED_MAX documents are followed here; the rest are owed, never dropped: the ledger reads them one heavy row a tick */
+      for (const e of entries.slice(READING_FOLLOWED_MAX)) {
+        if (e.ocrOnly) { if (env.OCR_WORKER) await pendSha(e.sha, "ocr"); }
+        else await pendSha(e.sha);
         owed = true;
       }
       return owed;
@@ -2672,13 +2720,22 @@ export function makeFetch(hooks = {}) {
         }
         const held = await readHeld(shaOf(r));
         if (held && held.read === false && held.why === "NO_WHOLE_OBJECT") return owed();
+        /* (fix round 6, G14) a held reading that answers `more` is continued by the ledger */
+        if (held && held.more === true) return owed();
         if (!held || held.read !== false || held.why !== "NO_HOME" || !hasDocument || r.document.reading) return got;
       } else if (!hasDocument) return got;
       if (readingWontFit(r.document)) return owed();
       const read = await acquireReadingOp({ ok: true, document: r.document }, stub, { json, storeSilent, doAnswer, storeName,
         storeRefusal: (out) => storeRefusal(out, { store: storeName, tokenClass: cls }) });
       if (read.response) return { early: read.response };
-      return { body: { ...got.body, result: { ...r, document: read.body.document } }, status: got.status };
+      /* (fix round 6, G4, G14; K4577, K4578) a read that failed or went silent after the upload stood is `reading_pending` with the failed call's `diag` (not drawn), and
+         a reading that answers `more` is continued by cursor: both are owed to the ledger, and the upload stands as answered */
+      const rb = read.body;
+      const more = rb.document?.reading?.more === true || rb.more === true;
+      const pending = rb.reading_pending === true || more;
+      if (pending) await pendSha(shaOf(r));
+      return { body: { ...got.body, result: { ...r, document: rb.document, ...(pending ? { reading_pending: true } : {}),
+                                              ...(rb.diag !== undefined ? { diag: rb.diag } : {}) } }, status: got.status };
     }
     /* R117: an `acquire` answered `existed: true` (the record already holds the bytes) is asked of `readHeld` as an upload is; the
        answer is relayed as it was (it carries its own reading already: acquire reads what it files). */
@@ -2700,7 +2757,13 @@ export function makeFetch(hooks = {}) {
         headers.delete("content-length");
         return new Response(JSON.stringify({ ...b, reading_pending: true }), { status: res.status, headers });
       }
-      await readHeld(shaOf(b));
+      const held = await readHeld(shaOf(b));
+      /* (fix round 6, G14) a reading that answers `more` is continued by cursor: the answer says it is on its way and `pendReading` writes the row */
+      if (held && held.more === true) {
+        const headers = new Headers(res.headers);
+        headers.delete("content-length");
+        return new Response(JSON.stringify({ ...b, reading_pending: true }), { status: res.status, headers });
+      }
       return res;
     }
     /* R71 (N820; steps R9): A MEMBER'S CAPTURE MAY CARRY `step`, the step it is a product of. Once the capture has landed
@@ -3752,6 +3815,11 @@ export function makeFetch(hooks = {}) {
     /* REC-198: the list of a project's drafts answers in the review copy's OWN shape — through `reviewAnswer`,
        the function `reviewcopy` answers through — so the dead answer a caller outside the fence receives is the
        single read's, status and bytes, and not this handler's generic envelope. */
+    if (op === "casedrafts") {
+      /* R20 (fix round 6, G12c; K4577): `projects` is a body list or a comma-separated value of the address */
+      const listed = reqBody && typeof reqBody === "object" && !Array.isArray(reqBody) && Array.isArray(reqBody.projects) ? reqBody.projects.filter((d) => typeof d === "string").join(",") : "";
+      if (listed && !inner.searchParams.get("projects")) inner.searchParams.set("projects", listed);
+    }
     if (op === "casedrafts")
       return reviewAnswer(await doAnswer(stub.fetch(new Request(inner, withGrant({ method: "GET" })))), op);
 

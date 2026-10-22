@@ -153,3 +153,24 @@ test("R124 (G2 control): a fetch session that names no project files the documen
   assert.equal(out.ok, true, JSON.stringify(out));
   assert.ok([null, ""].includes(bundleRow(none, out.bundleId).project), `no project: ${bundleRow(none, out.bundleId).project}`);
 });
+
+test("R124 (G2; CAPTURE #48): a finished fetch is recorded through capture's `recordFetchDone({session, document, opener, project, at})`, once; a render's delivery records none; a record that throws never undoes the filing", async () => {
+  const r = await owingFetch();
+  const seen = [];
+  captureOf(r.ctx).recordFetchDone = async (a) => { seen.push(a); return { ok: true }; };
+  const doc = fetched(r, 100);
+  const out = await deliverOwedRender({ ctx: r.ctx, env: r.env, storeName: "bio", answer: { ok: true, document: doc }, session: r.session });
+  assert.equal(out.ok, true, JSON.stringify(out));
+  assert.equal(seen.length, 1);
+  assert.deepEqual([seen[0].session, seen[0].opener, seen[0].project, seen[0].document.bundleId, seen[0].document.sha256],
+                   [r.session, "member:ann", "INQ-2026-0002", out.bundleId, doc.capture.sha256]);
+  assert.match(seen[0].at, /^\d{4}-\d\d-\d\dT/);
+  const bad = await owingFetch();
+  captureOf(bad.ctx).recordFetchDone = async () => { throw new Error("boom"); };
+  assert.equal((await deliverOwedRender({ ctx: bad.ctx, env: bad.env, storeName: "bio", answer: { ok: true, document: fetched(bad, 100) }, session: bad.session })).ok, true);
+  const render = await owing();
+  const spy = [];
+  captureOf(render.ctx).recordFetchDone = async (a) => { spy.push(a); };
+  await deliverOwedRender({ ctx: render.ctx, env: render.env, storeName: "bio", answer: { ok: true, document: rendered(render) }, session: render.session });
+  assert.equal(spy.length, 0, "a render is not a fetch");
+});
