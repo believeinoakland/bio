@@ -27,6 +27,9 @@
 | 10 | control-plane | sonnet | control-plane | D3 (promote, upload over the bound, inboxpull) | F1, F2, F6 |
 | 11 | plane | sonnet | plane | D2 ledger, `owedwork`, `fix4-r75` made current | F1, F5, F9, F11 (ledger end to end) |
 | 12 | screens-intake | sonnet | screens-intake | the capture's answer says the reading is on its way | |
+| 13 | pdf-reader | sonnet | pdf-reader | F10: a page-count refusal before text (R42; added K4498; merged K4504) | |
+| 14 | cause-reading-5 | sonnet | reading-pipeline | D5: a refused PDF's reading carries its reason and pages (R38; added K4504) | |
+| 15 | office-readers split | (after round 4b, in T51) | office-readers | P6: 4,162 lines past ~4,000 (K617): `csv.mjs` and its walkers move to their own module by copy then delete (K624); a mechanical pass where it needs no judgment (P7) (added K4504) | |
 
 **After provenance merges:** a verification worker (sonnet medium) runs the audit's common fixture (a 20 MB three-part capture promoted by the real chain) through every caller of F3 (citation, lines, events, attestation, actions, monitoring, retrieval, retrieval-browse, money, standards, duties, workbooks, sources, docket, local-facts, people, progressions, queue-producers, machinery-producers, notice-producers, capture-requests, case-authoring, content, action-records, store-door); each caller that still answers as for an unknown capture gets its own job in this round.
 
@@ -44,6 +47,8 @@
 10. **control-plane** (D3). **R123**: after `promote`, `captureupload` and `inboxpull` the door reads a document stored with no reading (inline within the bound, else a `reading` ledger entry); the answer carries `reading_pending`. Failing-first: the audit's F1 case (a 3 MB PDF deferred, promoted after 10 minutes of fake time: read within one alarm), F2's 40 MB upload, F6's pulled knock.
 11. **plane** (D2). **R77**: the ledger as D2; `owedwork` op (declared, census); `fix4-r75.test.mjs`'s "a digest with no home yet ends there" made current (it pinned the defect). Failing-first: the audit's `audit-partial-reads/pending-gap.test.mjs` turned to assert the right behaviour (red now), the 40 MB keep promoted at 90 s, re-arm after exhaustion.
 12. **screens-intake** (D3). **R57**: a capture or upload answered `reading_pending` says the reading is on its way (nearest held row as stand-in; the row to `later-ux.md`). Failing-first: the press with a pending answer draws it.
+
+14. **cause-reading-5** (D5; K4504). reading-pipeline **R38**: a PDF refused `TOO_LARGE_TO_READ` (pdf-reader R42) is recorded `final` carrying `reason`, `pages`, `bytes`, `need_mb`, `limit_mb`; new data only. Failing-first: the 3,500-page synthetic through `read`. START `starts-T51-F4b/cause-reading-5.txt`.
 
 ## 4. After the round
 
