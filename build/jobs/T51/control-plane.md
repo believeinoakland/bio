@@ -1,6 +1,6 @@
 # control-plane (T51)
 
-**Status** · session_01X5bP76qJ2j296J7FB51rWp · depth 2 · COMPLETE · handled B47
+**Status** · session_01UfCsV2Sdg2bv4LCfMXB99A · depth 2 · COMPLETE · handled B47
 
 ## J1 · QUESTION
 
@@ -627,3 +627,25 @@ Size (session_01X5bP76qJ2j296J7FB51rWp): test runs 46, module lines 4,620
 ## J32 · COMPLETE
 
 B47: the four reds had one root cause by round 6's design: each captures a file over 8 MiB by address and read answer.document, but G2 now parks it (fetch_pending, no document) and the alarm's delivery files it. No member operation fails. Updated to the new contract: t51-held-failed R117 (old state made by upload; recapture replaced via the tick), t51-large-pdfs R120/R121 (fetch_pending for 8.8/15.9 MB; 2 s bar left to t51-round6-seam, 4.7 s seen while the object ran the previous tick), t51-round5-press-seam R125 b/c (fetch_pending, then words), t51-round5-seam E3 (fetch_pending, then final statement with size). Control-plane directory minus G13: 437/437. Pushed b5dc0aa72f + record.
+
+## G30, control-plane's half (CONTROL-PLANE #49, B48; K4609, K4428)
+
+**Entry.** `page()` writes one structured log line per front page: `console.log(JSON.stringify({event: "control-plane.page", ...pageWork(), ms}))`, where `pageWork()` is interface-shell R126's counts (scripts composed, hashes taken, checks run). Nothing else changed. `bio-plane/src/control-plane/index.mjs`: the `pageWork` import (:47) and `page()` (:888-896).
+
+**(1) Root cause.** Not a defect of this module's code: B-21 (a page that took 20-30 s) is `diagnosis-R6-unplaced.md` B-21, cause unknown, probable the page route's synchronous work (script hash twice per hit, checks per hit; fixed once per release by INTERFACE-SHELL #18, R126). This job's part is the evidence for the deploy: the page route states its own work (counts, not CPU times, R-CLOCK), so the live copy names it.
+**(2) Why the tests missed it.** No test observed what the page route does per request; `page-policy.test.mjs` and `doors.test.mjs` assert answers only. Gap fixed: `t51-page-log.test.mjs` reads the route's own log.
+**(3) Failing-first.** `bio-plane/test/m/control-plane/t51-page-log.test.mjs`, "R126 (G30)": twenty `GET /` through the real door log twenty `control-plane.page` lines, each with integer `scripts`, `hashes`, `checks` and a finite `ms`, and `scripts`, `hashes`, `checks` all 1 on every line (the first line included: this file is its own process); control: `/version`, the favicon and an unknown op log no page line. Red before the change: `0 !== 20` ("one line per front page"). Green after: 1 pass.
+**(4) Platform check.** N (INTERFACE-SHELL #18's `page-contention.probe.mjs` measured the route).
+**R-OLD.** No stored data. **Words.** No new sentence a member reads (a log line). **Census ops.** None changed.
+
+**Requirement line proposed (BOB writes it), control-plane R126:** (T51, fix round 6, G30; B-21; K4428, K4609; `interface-shell` R126) **The front page names its work.** Every page the door draws (`GET /`, `/app` and below, and the unknown-address page, R104) writes one structured log line `{event: "control-plane.page", scripts, hashes, checks, ms}`: the counts of scripts composed, hashes taken and screen and guide checks run in this isolate (`interface-shell`'s `pageWork()`), and `ms` the isolate's clock; counts, not CPU times (R-CLOCK). The line carries no credential, member, address or name; no other route logs it; the page's answer is unchanged. Test: `t51-page-log.test.mjs`; control: a route that is not a page logs none.
+
+**Entries applied:** the G30 entry. **Deferred:** none. **Found in another module:** `plane`'s own tests fail identically on `origin/tranche/T51` without my change: `release.test.mjs` "R24 (DEC-149; T34-87, K1784; T51)" (a screen-name words rule) and `l77-size.test.mjs` "R77 L (gate)" (21 MB PDF alarm read in a capped child; run alone, 74.9 s, red on both trees). Not caused by this job; BOB's to place (plan section 4 lists the memory gate class).
+
+**Tests and checks.** `node --test --test-force-exit bio-plane/test/m/control-plane/`: tests 439, pass 439, fail 0. `build/plan/impact.mjs origin/tranche/T51 HEAD`: control-plane 68/82, plane 50/58; affected modules 2 of 176. plane: tests 351, pass 349, fail 2 (the two above, identical on the tranche without my change). Process checks (`checks/run.mjs`): format 0 failures; architecture 0; coverage 6667 of 6667 live requirement ids named, 0 failures; channels 0; words 0 failures, count unchanged (`inline 0, plain 0, testcopy 0, missingkey 0`). `checks/ownership.mjs control-plane tranche/T51 job/T51/control-plane`: 0 failures.
+
+Size (session_01UfCsV2Sdg2bv4LCfMXB99A): test runs 9, module lines 4625
+
+## J33 · COMPLETE · re B48
+
+G30, control-plane's half, applied and pushed (job/T51/control-plane). page() (control-plane/index.mjs:888-896) writes one console.log line per page: {event:'control-plane.page', ...pageWork(), ms}. Failing-first t51-page-log.test.mjs through the real GET / door: twenty pages, twenty lines, scripts/hashes/checks 1 on every line; red 0 !== 20 before, green after; control: /version, favicon, unknown op log none. Platform check N. Suite: control-plane 439/439 pass; impact names control-plane and plane; plane 351 tests, 2 fail IDENTICALLY on origin/tranche/T51 without my change (release.test.mjs R24 words rule; l77-size R77 L memory gate, alone 74.9s red on both trees): not mine, BOB's to place. checks/run.mjs: 0 failures all five, coverage 6667/6667, words count unchanged; ownership 0 failures. Proposed requirement line (control-plane R126) is in my record. Size (session_01UfCsV2Sdg2bv4LCfMXB99A): test runs 9, module lines 4625.
