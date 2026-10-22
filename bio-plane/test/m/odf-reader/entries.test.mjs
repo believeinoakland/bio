@@ -88,7 +88,7 @@ test("R3 parts(): success carries format, container, contentXml, the declared co
     assert.equal(over.ok, true);
     assert.equal(over.contentXml, null);
     assert.equal(over.declared.total, OVER_BOUND);
-    assert.deepEqual(over.guard, sizeGuard(OVER_BOUND));
+    assert.deepEqual(over.guard, { ...sizeGuard(OVER_BOUND), final: true });
     assert.equal(over.undetermined.some((u) => u.part === "content.xml"), false, "the guard marker is the statement");
 
     // an unreadable content.xml: null, and named with its why
@@ -312,10 +312,10 @@ test("R41 every \"not read\" is stated with the part and why, R45's over_repeat_
     const so = await e.structure(over);
     const to = await e.text(over);
     assert.deepEqual(so.evidentiary.undetermined.find((u) => u.part === "content.xml"),
-      { part: "content.xml", why: "over_size_bound", guard: sizeGuard(OVER_BOUND) });
+      { part: "content.xml", why: "over_size_bound", guard: { ...sizeGuard(OVER_BOUND), final: true } });
     assert.ok(so.notes.some((n) => /size bound/.test(n)));
     assert.equal(to.document, null);
-    assert.deepEqual(to.undetermined, [sizeGuard(OVER_BOUND)]);
+    assert.deepEqual(to.undetermined, [{ ...sizeGuard(OVER_BOUND), final: true }]);
     if (f !== "ods") assert.equal(so[unit], null, "a count never read is null, never 0");
     // unreadable content.xml
     const bad = buildZip(withCd(members(f), "content.xml", { crc: 1 }));

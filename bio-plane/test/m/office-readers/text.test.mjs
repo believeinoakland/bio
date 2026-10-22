@@ -7,13 +7,15 @@ import { docxEntry } from "../../../src/docx.mjs";
 import { pptxEntry } from "../../../src/pptx.mjs";
 import { xlsxEntry } from "../../../src/formats-xlsx.mjs";
 import { csvEntry, CSV_SHEET_NAME } from "../../../src/csv.mjs";
-import { sizeGuard, MEASURED_OOXML_TEXT_BOUND_BYTES } from "../../../src/ooxml.mjs";
+import { textPlan, STREAMED_TEXT_BOUND_BYTES, MEASURED_OOXML_TEXT_BOUND_BYTES } from "../../../src/ooxml.mjs";
 import * as F from "./fixtures.mjs";
 
 const sha = (s) => createHash("sha256").update(F.enc(s)).digest("hex");
 const bytes = (s) => Uint8Array.from(s, (c) => c.charCodeAt(0));
 const MiB = 1024 * 1024;
 const BOUND = 20 * MiB;
+/* The ceiling of a read in pieces (R35): over it, and only over it, the text is refused. */
+const CEIL = STREAMED_TEXT_BOUND_BYTES;
 
 function common(t, container, unitField) {
   assert.equal(t.ok, true);
@@ -198,14 +200,16 @@ test("R11 csv text: a UTF-16 body (BOM) is decoded whole; a body that is not val
 /* ------------------------------------------------------------------ R12 */
 
 test("R12 docx guard: word/document.xml + word/comments.xml declared bytes over the bound refuse text with the guard's marker verbatim; rels and core still run", async () => {
-  const half = { usize: BOUND / 2 + 1 };
+  const half = { usize: CEIL / 2 + 1 };
   const rels = F.rels([{ id: "rIdH", target: "http://example.org/", external: true }]);
   const b = F.docx({ mainCd: half, comments: "<w:comments/>", commentsCd: half, rels, core: F.core({ creator: "c" }) });
   const t = await docxEntry.text(b);
   assert.equal(t.document, null);
   assert.deepEqual(t.paragraphs, []);
   assert.equal(t.tables, null);
-  assert.deepEqual(t.undetermined, [sizeGuard(BOUND + 2)]);
+  assert.deepEqual(t.undetermined, [textPlan(CEIL + 2).guard]);
+  assert.equal(t.undetermined[0].final, true);
+  assert.equal(t.undetermined[0].size, CEIL + 2);
   const s = await docxEntry.structure(b);
   assert.equal(s.links[0].target.url, "http://example.org/");
   assert.equal(s.evidentiary.items.find((i) => i.kind === "core-properties").creator, "c");
@@ -220,8 +224,8 @@ test("R12 docx guard: word/document.xml + word/comments.xml declared bytes over 
 
 test("R12 pptx guard: every slide + notesSlide part summed; over it text is refused while presentation.xml numbering, deckLength and hidden flags survive", async () => {
   const b = F.pptx({ slides: [
-    { file: "slide1.xml", texts: ["a"], cd: { usize: BOUND / 2 }, notes: "n" },
-    { file: "slide2.xml", texts: ["b"], sldIdShow: "0", cd: { usize: BOUND / 2 } },
+    { file: "slide1.xml", texts: ["a"], cd: { usize: CEIL / 2 }, notes: "n" },
+    { file: "slide2.xml", texts: ["b"], sldIdShow: "0", cd: { usize: CEIL / 2 } },
   ] });
   const t = await pptxEntry.text(b);
   assert.equal(t.document, null);
@@ -229,14 +233,14 @@ test("R12 pptx guard: every slide + notesSlide part summed; over it text is refu
   assert.deepEqual(t.speakerNotes, []);
   assert.equal(t.deckLength, 2);
   assert.equal(t.undetermined[0].why, "over_size_bound");
-  assert.equal(t.undetermined[0].boundName, "MEASURED_OOXML_TEXT_BOUND_BYTES");
+  assert.equal(t.undetermined[0].boundName, "STREAMED_TEXT_BOUND_BYTES");
   const s = await pptxEntry.structure(b);
   assert.equal(s.slides, 2);
   assert.deepEqual(s.evidentiary.items.filter((i) => i.kind === "hidden-slide").map((i) => i.slide), [2]);
 });
 
 test("R12 xlsx guard: every worksheet part + sharedStrings summed; over it text is refused while workbook names, order and hidden state survive", async () => {
-  const b = F.xlsx({ sheets: [{ name: "A", data: {}, cd: { usize: BOUND } }, { name: "B", state: "hidden", data: {} }], sharedStrings: F.sst(["x"]) });
+  const b = F.xlsx({ sheets: [{ name: "A", data: {}, cd: { usize: CEIL } }, { name: "B", state: "hidden", data: {} }], sharedStrings: F.sst(["x"]) });
   const t = await xlsxEntry.text(b);
   assert.equal(t.document, null);
   assert.equal(t.undetermined.length, 1);
@@ -250,10 +254,10 @@ test("R12 xlsx guard: every worksheet part + sharedStrings summed; over it text 
 
 test("R13 csv guard: the body's own byte length after any BOM against MEASURED_CSV_TEXT_BOUND_BYTES; over it both structure and text carry the marker; the dialect stands", async () => {
   const line = "aaaaaaa,b\n";
-  const body = F.enc(line.repeat(Math.ceil((BOUND + 1) / line.length)));
+  const body = F.enc(line.repeat(Math.ceil((CEIL + 1) / line.length)));
   const t = await csvEntry.text(body);
   assert.equal(t.document, null);
-  assert.deepEqual(t.undetermined, [{ ok: false, text: "undetermined", why: "over_size_bound", size: body.length, bound: BOUND, boundName: "MEASURED_CSV_TEXT_BOUND_BYTES", metric: "body_bytes" }]);
+  assert.deepEqual(t.undetermined, [{ ok: false, text: "undetermined", why: "over_size_bound", size: body.length, bound: CEIL, boundName: "STREAMED_TEXT_BOUND_BYTES", metric: "body_bytes", final: true }]);
   assert.equal(t.dialect.delimiter, "comma");
   const s = await csvEntry.structure(body);
   assert.deepEqual(s.evidentiary.undetermined[0].guard, t.undetermined[0]);

@@ -174,7 +174,7 @@ test("R32 active is [] only when nothing was found and nothing went unread; csv'
     assert.deepEqual((await csvEntry.structure(F.enc(body))).active, []);
     assert.deepEqual((await csvEntry.text(F.enc(body))).active, []);
   }
-  const big = new Uint8Array(20 * 1024 * 1024 + 1).fill(0x61);
+  const big = new Uint8Array(32 * 1024 * 1024 + 1).fill(0x61);
   assert.deepEqual((await csvEntry.structure(big)).active, []);
   assert.deepEqual((await csvEntry.text(big)).active, []);
   /* a docx's word/ is its directory: ppt/ and xl/ members, macro sheets included, are not its items */

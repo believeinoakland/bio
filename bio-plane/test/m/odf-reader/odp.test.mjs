@@ -126,7 +126,7 @@ test("R27 text() over the guard, or with no readable body: document null, lists 
   const want = (undetermined, active = []) => ({ ok: true, container: "odp", document: null, slides: [], speakerNotes: [], deckLength: null,
     undetermined, counts: { chars: 0, notesChars: 0, undetermined: 1 }, active });
   const strip = ({ images, imagesWhy, ...r }) => r;
-  assert.deepEqual(strip(over), want([sizeGuard(OVER_BOUND)], [{ kind: "unread", part: "content.xml", why: "over_size_bound" }]));
+  assert.deepEqual(strip(over), want([{ ...sizeGuard(OVER_BOUND), final: true }], [{ kind: "unread", part: "content.xml", why: "over_size_bound" }]));
   assert.deepEqual(strip(await odpEntry.text(buildZip(withCd(members("odp"), "content.xml", { crc: 5 })))),
     want([{ reason: "main_part_unreadable", part: "content.xml", why: "crc_mismatch" }], [{ kind: "unread", part: "content.xml", why: "crc_mismatch" }]));
   assert.deepEqual(strip(await odpEntry.text(pkg("odp", { content: "<office:document-content><office:body><office:text/></office:body></office:document-content>" }))),

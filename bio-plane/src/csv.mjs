@@ -138,7 +138,7 @@
  */
 
 import { sheetCellRef, usedSheetRange, columnLetters } from "./formats-xlsx.mjs";
-import { MEASURED_OOXML_TEXT_BOUND_BYTES } from "./ooxml.mjs";
+import { MEASURED_OOXML_TEXT_BOUND_BYTES, textPlan } from "./ooxml.mjs";
 import { word, localize } from "./setup-words/index.mjs";
 
 /* The declared types this entry answers to, folded for case because RFC 2045
@@ -204,8 +204,27 @@ export const CSV_SHEET_NAME = "csv";
  * (`documents/OPD_PublicCallData_2019.csv`, 73,585,498 B) and 165 are under;
  * the largest under is 7,969,780 B. That one file's text is refused with the
  * marker below and its DIALECT is still stated, so the record says which of
- * the two it is — never a silent truncation. */
+ * the two it is — never a silent truncation.
+ *
+ * R35 (F7, fix round 4b): THIS IS NOW THE BOUND ON WHAT THE WALK HOLDS, NOT ON
+ * WHAT IS READ. The 12x above is the walk's records (an array of arrays of
+ * strings) and its typed cells, both of which grow with the file in objects.
+ * Over the bound, up to ooxml.mjs's STREAMED_TEXT_BOUND_BYTES, the body is
+ * decoded and walked in 1 MiB windows (`createRecordWalk`), each record is
+ * folded into the sheet's text as it completes and none is kept, and the
+ * typed `cells` list is not made (`cells` is null, as over the guard); the
+ * answer says so (`piecewise`). A body in UTF-16 over the bound is not read in
+ * pieces (the strict decode that tells a valid UTF-16 body from an invalid
+ * one needs the whole body), and is stated with its size and `final`. Over the
+ * streamed ceiling the text is refused with the marker, its size and `final`. */
 export const MEASURED_CSV_TEXT_BOUND_BYTES = MEASURED_OOXML_TEXT_BOUND_BYTES;
+
+/** The window a body over the bound is decoded and walked in (R35), and the most
+ *  per-cell "could not be read" entries such a read lists before it says how
+ *  many more there were: a cell is a small object, and a file in a legacy
+ *  encoding can hold a million of them. */
+const CSV_WINDOW_BYTES = 1 << 20;
+const CSV_STREAMED_UNDETERMINED_MAX = 10000;
 
 /** How much of the body a SIGNATURE may look at. The signature runs over the
  *  head so that a body over the size bound still yields a dialect: a reading
@@ -360,30 +379,69 @@ export function delimiterSignature(text) {
  *  quoted fields, so a line-oriented split would have shredded 67 records. */
 export function walkRecords(text, delimiter) {
   const records = [];
-  let row = [], field = "", inQuotes = false, started = false;
-  const endField = () => { row.push(field); field = ""; };
-  const endRecord = () => { endField(); records.push(row); row = []; started = false; };
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    started = true;
-    if (inQuotes) {
-      if (c === '"') {
-        if (text[i + 1] === '"') { field += '"'; i++; }
-        else inQuotes = false;
-      } else field += c;
-      continue;
-    }
-    if (c === '"') { inQuotes = true; continue; }
-    if (delimiter && c === delimiter) { endField(); continue; }
-    if (c === "\r") { if (text[i + 1] === "\n") i++; endRecord(); continue; }
-    if (c === "\n") { endRecord(); continue; }
-    field += c;
-  }
-  /* A trailing fragment with no terminator is still a record — a producer that
-     omits the final CRLF has published a last row, not half of one. An EMPTY
-     trailing fragment is not: that is the terminator of the record before it. */
-  if (started || field !== "" || row.length) endRecord();
+  const w = createRecordWalk(delimiter, (record) => records.push(record));
+  w.feed(text);
+  w.end();
   return records;
+}
+
+/** The same walk, fed the text in pieces (R35): `feed(text)` takes each piece in
+ *  order (a piece may end anywhere, between the two quotes of a `""` and
+ *  between the CR and LF of a CRLF included), `onRecord(fields)` is called for
+ *  each record as it completes, `end()` after the last piece. One piece
+ *  holding the whole text, then `end()`, is `walkRecords`. */
+export function createRecordWalk(delimiter, onRecord) {
+  let row = [], field = "", inQuotes = false, started = false;
+  /* The last piece ended on a `"` inside quotes: the next character says
+     whether it was one half of a doubled `""`. */
+  let quoteOpen = false;
+  /* The last piece ended on a CR that ended a record: a LF now belongs to it. */
+  let skipLF = false;
+  const endField = () => { row.push(field); field = ""; };
+  const endRecord = () => { endField(); onRecord(row); row = []; started = false; };
+  return {
+    feed(text) {
+      let i = 0;
+      if (quoteOpen) {
+        if (text.length === 0) return;
+        quoteOpen = false;
+        if (text[0] === '"') { field += '"'; i = 1; } else inQuotes = false;
+      } else if (skipLF) {
+        if (text.length === 0) return;
+        skipLF = false;
+        if (text[0] === "\n") i = 1;
+      }
+      for (; i < text.length; i++) {
+        const c = text[i];
+        started = true;
+        if (inQuotes) {
+          if (c === '"') {
+            if (i + 1 >= text.length) quoteOpen = true;
+            else if (text[i + 1] === '"') { field += '"'; i++; }
+            else inQuotes = false;
+          } else field += c;
+          continue;
+        }
+        if (c === '"') { inQuotes = true; continue; }
+        if (delimiter && c === delimiter) { endField(); continue; }
+        if (c === "\r") {
+          if (i + 1 >= text.length) skipLF = true;
+          else if (text[i + 1] === "\n") i++;
+          endRecord();
+          continue;
+        }
+        if (c === "\n") { endRecord(); continue; }
+        field += c;
+      }
+    },
+    end() {
+      if (quoteOpen) { quoteOpen = false; inQuotes = false; }
+      /* A trailing fragment with no terminator is still a record — a producer that
+         omits the final CRLF has published a last row, not half of one. An EMPTY
+         trailing fragment is not: that is the terminator of the record before it. */
+      if (started || field !== "" || row.length) endRecord();
+    },
+  };
 }
 
 /* ------------------------------------------------------------------ *
@@ -430,12 +488,24 @@ async function csvParts(bytes) {
   if (!sig.ok) return sig;
   const { b, enc, body, delim } = sig;
 
-  /* THE BOUND, on the body's own length — the metric a CSV has (header §4). */
-  const guard = body.length > MEASURED_CSV_TEXT_BOUND_BYTES
-    ? { ok: false, text: "undetermined", why: "over_size_bound", size: body.length,
-        bound: MEASURED_CSV_TEXT_BOUND_BYTES, boundName: "MEASURED_CSV_TEXT_BOUND_BYTES",
-        metric: "body_bytes" }
-    : null;
+  /* THE BOUND, on the body's own length — the metric a CSV has (header §4). Up
+     to it the body is walked whole; over it, up to the streamed ceiling, in
+     windows (R35), and over that it is refused, the marker stating the size.
+     A UTF-16 body over the bound is not read in pieces (header §4) and is
+     stated at the bound, with its size and `final`. */
+  const plan = textPlan(body.length);
+  const utf16 = enc.encoding === "utf-16le" || enc.encoding === "utf-16be";
+  const bodyMetric = { metric: "body_bytes" };
+  let guard = null, piecewise = null;
+  if (plan.read === "none") guard = { ...plan.guard, ...bodyMetric };
+  else if (plan.read === "pieces" && utf16) {
+    guard = { ok: false, text: "undetermined", why: "over_size_bound", size: body.length,
+      bound: MEASURED_CSV_TEXT_BOUND_BYTES, boundName: "MEASURED_CSV_TEXT_BOUND_BYTES", ...bodyMetric,
+      final: true, encoding: enc.encoding };
+  } else if (plan.read === "pieces") {
+    piecewise = { ...plan.piecewise, boundName: "MEASURED_CSV_TEXT_BOUND_BYTES", ...bodyMetric };
+  }
+  const stream = piecewise != null;
 
   /* The records. For every encoding whose delimiters, quotes and line breaks
      are the ASCII bytes (us-ascii, utf-8, undetermined) the walk runs over the
@@ -444,11 +514,12 @@ async function csvParts(bytes) {
      that the signature's encoding cannot read must be a stated undetermined
      cell, never a character a lenient decoder made up. UTF-16 (BOM, certain)
      is decoded whole; a body that is not valid UTF-16 is marked so that the
-     cells it spoils are stated too. */
+     cells it spoils are stated too. A body read in windows keeps no records:
+     text() walks it again and folds each record in as it completes. */
   let records = null, transport = false, invalidUtf16 = false;
-  if (!guard) {
+  if (!guard && !stream) {
     let text;
-    if (enc.encoding === "utf-16le" || enc.encoding === "utf-16be") {
+    if (utf16) {
       try { text = new TextDecoder(enc.encoding, { fatal: true, ignoreBOM: true }).decode(body); }
       catch { text = new TextDecoder(enc.encoding, { fatal: false, ignoreBOM: true }).decode(body); invalidUtf16 = true; }
     } else {
@@ -460,7 +531,8 @@ async function csvParts(bytes) {
 
   return {
     ok: true, format: "csv", bytes: b,
-    bodyBytes: body.length, encoding: enc, delimiter: delim, guard, records, transport, invalidUtf16,
+    bodyBytes: body.length, encoding: enc, delimiter: delim, guard, records, transport: transport || stream, invalidUtf16,
+    stream, body, piecewise,
   };
 }
 
@@ -511,6 +583,7 @@ function csvStructure(parts) {
     word("csv.notes.url_cell_text"),
   ];
   if (parts.guard) notes.push("text_body_over_bound");
+  if (parts.piecewise) notes.push("text_read_in_pieces");
   return {
     ok: true,
     container: "csv",
@@ -601,17 +674,22 @@ function csvText(parts) {
   const lines = [];
   /* R30: one typed cell per field holding a value — every csv field is
      `text`, the format declaring no type (`declared` null), and a field the
-     encoding cannot read keeps its entry with a null value. */
-  const cells = [];
+     encoding cannot read keeps its entry with a null value. A body read in
+     windows lists none (`cells` is null, R35), and lists at most
+     CSV_STREAMED_UNDETERMINED_MAX of the cells it could not read, then says
+     how many more there were. */
+  const cells = parts.stream ? null : [];
+  let undeterminedMore = 0;
   const typedCell = (row, col, value) => ({ source: csvCellRef(row, col), value, type: "text",
     declared: null, cached: null, formula: null });
   let cellCount = 0, usedRows = 0, usedCols = 0;
 
-  parts.records.forEach((record, r0) => {
+  let r0 = 0;
+  const addRecord = (record) => {
     /* ROW 1 IS ROW 1 (BOB #32). No header is consumed, skipped or renamed:
        whether record 1 names the columns is a READING, and this entry makes
        no readings. 1-BASED, because A1 notation is. */
-    const row = r0 + 1;
+    const row = ++r0;
     const vals = [];
     record.forEach((raw, c0) => {
       const col = c0 + 1;
@@ -620,9 +698,10 @@ function csvText(parts) {
         /* The grid survives an encoding that cannot read these bytes; these
            characters do not. Named per cell with its own reference, never
            mojibake. */
-        undetermined.push({ sheet: 0, cell: `${columnLetters(col)}${row}`,
-          reason: read.why });
-        cells.push(typedCell(row, col, null));
+        if (undetermined.length < (parts.stream ? CSV_STREAMED_UNDETERMINED_MAX : Infinity)) {
+          undetermined.push({ sheet: 0, cell: `${columnLetters(col)}${row}`, reason: read.why });
+        } else undeterminedMore++;
+        if (cells) cells.push(typedCell(row, col, null));
         if (row > usedRows) usedRows = row;
         if (col > usedCols) usedCols = col;
         return;
@@ -630,7 +709,7 @@ function csvText(parts) {
       const field = read.value;
       if (field === "") return;   // an empty cell is a measured emptiness, not text
       cellCount++;
-      cells.push(typedCell(row, col, field));
+      if (cells) cells.push(typedCell(row, col, field));
       if (row > usedRows) usedRows = row;
       if (col > usedCols) usedCols = col;
       vals.push(field);
@@ -639,7 +718,17 @@ function csvText(parts) {
        row: one text stream shape across every spreadsheet container, so a
        consumer does not learn three. */
     if (vals.length) lines.push(vals.join("\t"));
-  });
+  };
+  if (parts.stream) {
+    const walk = createRecordWalk(parts.delimiter.delimiter, addRecord);
+    for (let at = 0; at < parts.body.length; at += CSV_WINDOW_BYTES) {
+      walk.feed(BYTE_TRANSPORT.decode(parts.body.subarray(at, at + CSV_WINDOW_BYTES)));
+    }
+    walk.end();
+  } else parts.records.forEach(addRecord);
+  if (undeterminedMore) {
+    undetermined.push({ sheet: 0, cell: null, reason: "more_cells_undetermined", count: undeterminedMore });
+  }
 
   const text = lines.join("\n");
   const sheet = {
@@ -659,6 +748,7 @@ function csvText(parts) {
     undetermined,
     counts: { chars: text.length, cells: cellCount, formulas: 0,
       undetermined: undetermined.length },
+    ...(parts.piecewise ? { piecewise: parts.piecewise } : {}),
   };
 }
 

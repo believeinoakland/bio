@@ -75,6 +75,10 @@ const T47_FUNCTIONS = {
   readContainer: 1, readCoreProperties: 2, readPart: 3, readVbaProject: 3, relsPartFor: 0, sizeGuard: 1, streamMember: 2,
   walkRels: 2, withContainerImages: 3,
 };
+/* What T51 (F7, R35) added, each by its name: the piece reader, its plan and its two cuts, and the ceiling of a read
+ * in pieces. R34 pins every name T47 held, and these. */
+const T51_FUNCTIONS = { cutAfterTag: 1, cutBefore: 1, readPartPieces: 5, textPlan: 1 };
+const T51_CONSTANTS = { STREAMED_TEXT_BOUND_BYTES: 33554432 };
 const T47_CONSTANTS = {
   ARCHIVE_DEPTH_MAX: 3, ARCHIVE_ENTRIES_MAX: 10000, ARCHIVE_RATIO_MAX: 1100, ARCHIVE_TOTAL_MAX: 268435456,
   ARCHIVE_TREE_ENTRIES_MAX: 10000, ARCHIVE_TREE_TOTAL_MAX: 268435456, CONTENT_TYPES_PART: "[Content_Types].xml",
@@ -124,14 +128,15 @@ const T47_VBA = {
 };
 
 function assertT47Exports(ns) {
-  const names = [...Object.keys(T47_FUNCTIONS), ...Object.keys(T47_CONSTANTS), "ARCHIVE_LIMITS", "CONTAINER_FLAVOURS",
+  const names = [...Object.keys(T47_FUNCTIONS), ...Object.keys(T51_FUNCTIONS), ...Object.keys(T47_CONSTANTS),
+    ...Object.keys(T51_CONSTANTS), "ARCHIVE_LIMITS", "CONTAINER_FLAVOURS",
     "IMAGE_MIME_BY_EXT", "OOXML_FLAVOURS", "ODF_FLAVOURS", ...Object.keys(T47_VBA)].sort();
   assert.deepEqual(Object.keys(ns).sort(), names);
-  for (const [name, arity] of Object.entries(T47_FUNCTIONS)) {
+  for (const [name, arity] of Object.entries({ ...T47_FUNCTIONS, ...T51_FUNCTIONS })) {
     assert.equal(typeof ns[name], "function", name);
     assert.equal(ns[name].length, arity, name);
   }
-  for (const [name, value] of Object.entries(T47_CONSTANTS)) assert.equal(ns[name], value, name);
+  for (const [name, value] of Object.entries({ ...T47_CONSTANTS, ...T51_CONSTANTS })) assert.equal(ns[name], value, name);
 
   assert.deepEqual(ns.OOXML_FLAVOURS, T47_OOXML_FLAVOURS);
   assert.deepEqual(ns.ODF_FLAVOURS, T47_ODF_FLAVOURS);
