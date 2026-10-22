@@ -1,4 +1,4 @@
-/* store-door: THE RECORD STORE'S DOOR (R1–R4, R6, R8–R11, R13–R15). `dispatch(req, store)` is the one frame every Durable Object
+/* store-door: THE RECORD STORE'S DOOR (R1–R4, R6, R8–R11, R13–R15, R17). `dispatch(req, store)` is the one frame every Durable Object
    request passes: the body read, the route looked up in the modules' own maps (the `membershipOps` pattern;
    `store.routes(url, body)`, the union `plane` composes, its R5), the existence answer of a read naming a discoverable
    project (R2), a purge's hold check (R4), the `{ok: true, result}` envelope, and the one catch (R6). Moved from
@@ -53,11 +53,11 @@ import { localize } from "../setup-words/index.mjs";
  * an id that row calls discoverable. A viewer never sent (an internal call) is not asked. */
 export const PROJECT_NAMING_READS = Object.freeze({
   image: ["id"], file: ["id"], projection: ["id"], excludedby: ["id"], backlinks: ["target"],
-  reevaluations: ["target"], inquirystrength: ["id"], earnedbasis: ["id"], partitionindependence: ["id"],
+  reevaluations: ["target"], inquirystrength: ["id", "ids"], earnedbasis: ["id"], partitionindependence: ["id"],
   narrowcandidates: ["target"], versionnotice: ["target"], basisversions: ["id", "project"],
   versionstrength: ["id", "project"], strengthbarof: ["project", "target"], extractproposals: ["bundle"],
   capturerequests: ["target"], tasks: ["refers"], biasmanifest: ["scopeId"], airuns: ["contextId"],
-  casedrafts: ["project"], gatefacts: ["id"], affordancefacts: ["target"],
+  casedrafts: ["project", "projects"], gatefacts: ["id"], affordancefacts: ["target"],
   projectownerarith: ["projectId"], projectvisibility: ["projectId"], projectparticipants: ["projectId"],
   /* REC-196 x REC-150: REC-150's requests read names the project by its own id, so the door answers
      C-70.1 at EXISTENCE before the route, as for every read above; without `projectId` it lists the caller's own. */
@@ -93,6 +93,19 @@ export const PROJECT_NAMING_READS = Object.freeze({
   /* K2900: case-account's checks of a member's own text name her project (the query's, else the body's; plane's route). */
   advocacychecks: ["project"],
 });
+/* R2 (fix round 6, G12c; K4571): the batch reads. Each key below is a LIST of bundle ids, named in the table above beside the
+   single read's key (`casedrafts` `projects`, review R19; `inquirystrength` `ids`, strength R6), and every id in it is fenced
+   exactly as the single read fences its one. A list is an array (the body), or a string holding a JSON array, a comma list
+   or the same key repeated (the query): `listedIds` reads all of them, splitting on anything that cannot be in an id, so no
+   spelling a route accepts leaves an id unasked. `reviewcopy`'s `drafts` are DRAFT ids, so the read stays among those naming
+   no project (below), as its single key does. */
+export const PROJECT_NAMING_LISTS = Object.freeze({ casedrafts: ["projects"], inquirystrength: ["ids"] });
+const ID_SEPARATORS = /[\s,;|[\]"']+/;
+function listedIds(value, out = []) {
+  if (Array.isArray(value)) for (const v of value) listedIds(v, out);
+  else if (typeof value === "string") for (const t of value.split(ID_SEPARATORS)) if (t !== "") out.push(t);
+  return out;
+}
 export const PROJECT_NAMING_READS_NOT = Object.freeze({
   content: "`id` is a content row's fixed key, hash(capture, extent, chain) — never a bundle id",
   concerns: "`id` is an ENTITY id", connections: "`id` is an ENTITY id", instance: "`id` is an ENTITY id",
@@ -104,7 +117,7 @@ export const PROJECT_NAMING_READS_NOT = Object.freeze({
   airunspawn: "`run` is a RUN id — a thing inside a project, whose existence is contents",
   /* `biasdebt` (REC-207) reached REC-196's sweep only when the two met. */
   biasdebt: "`run` is a RUN id — a thing inside a project, whose existence is contents",
-  reviewcopy: "`draft` is a DRAFT id — a thing inside a project, whose existence is contents",
+  reviewcopy: "`draft` and, in the batch read, `drafts` are DRAFT ids — things inside a project, whose existence is contents",
   casedocument: "`case` is a CASE id, answered by the case door's own fence",
   reading: "`sha256` is a CAPTURE's digest", resolutions: "`sha256` is a CAPTURE's digest",
   textattest: "`sha256` is a CAPTURE's digest", readingname: "`entity` is an ENTITY id",
@@ -188,13 +201,31 @@ export function existenceRead(membershipOf, op, url, body) {
   const params = Object.hasOwn(PROJECT_NAMING_READS, op) ? PROJECT_NAMING_READS[op] : null;
   const viewer = url.searchParams.get("viewer");
   if (!params || viewer === null) return null;
+  const lists = Object.hasOwn(PROJECT_NAMING_LISTS, op) ? PROJECT_NAMING_LISTS[op] : [];
   const membership = membershipOf();
+  /* one lookup per distinct id; the answer is the single read's for that id */
+  const asked = new Map();
+  const existenceOf = (id) => {
+    if (!asked.has(id)) asked.set(id, membership.visibilityOf(id) === "discoverable" ? membership.existenceAct(id, viewer) : null);
+    return asked.get(id);
+  };
   for (const p of params) {
-    const fromBody = body && typeof body === "object" && typeof body[p] === "string" ? body[p] : null;
-    for (const id of [url.searchParams.get(p), fromBody]) {
+    const fromBody = body && typeof body === "object" ? body[p] : undefined;
+    if (lists.includes(p)) {
+      /* a list: every id asked, and where several are at EXISTENCE the lowest id answers, so the answer does not depend on
+         the order the caller listed them in */
+      const ids = listedIds([...url.searchParams.getAll(p), fromBody]);
+      let found = null;
+      for (const id of [...new Set(ids)].sort()) {
+        const existence = existenceOf(id);
+        if (existence && found === null) found = existence;
+      }
+      if (found) return found;
+      continue;
+    }
+    for (const id of [url.searchParams.get(p), typeof fromBody === "string" ? fromBody : null]) {
       if (typeof id !== "string" || id === "") continue;
-      if (membership.visibilityOf(id) !== "discoverable") continue;
-      const existence = membership.existenceAct(id, viewer);
+      const existence = existenceOf(id);
       if (existence) return existence;
     }
   }

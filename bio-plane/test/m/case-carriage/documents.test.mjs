@@ -9,7 +9,7 @@ import { world, caseFm, makePng, sha, NOW } from "./fixture.mjs";
 import { pdf, has, SECRETS } from "../doc-clean/fixtures.mjs";
 import { makeZip } from "../../make-zip.mjs";
 import { CLEAN_MAX_BYTES } from "../../../src/doc-clean/index.mjs";
-import { DOCUMENT_COPY_BATCH_MAX, DOCUMENT_COPY_RETRY_MS, COPY_CLEANED_LABEL, OBSCURED_LABEL, CASE_CARRIAGE_CHECKS,
+import { DOCUMENT_COPY_BATCH_MAX, DOCUMENT_COPY_RETRY_MS, COPY_NOW_MAX_BYTES, COPY_CLEANED_LABEL, OBSCURED_LABEL, CASE_CARRIAGE_CHECKS,
          CASE_CARRIAGE_DOCUMENT_TABLES, MEMBER_DOCUMENT_ONLY_AS_COPY, ARCHIVE_SUPPLIED_BY_MEMBER, obscuredKey }
   from "../../../src/case-carriage/index.mjs";
 import { word, localize } from "../../../src/setup-words/index.mjs";
@@ -462,4 +462,61 @@ test("R18 (T40; N818, K2383) a refused onReceipt registration ({ok: false}, a th
   const before = w.snapshot();
   assert.doesNotThrow(() => w.cc.faults());
   assert.deepEqual(w.snapshot(), before, "faults() writes nothing");
+});
+
+/* ---------------------------------------------------------------- R15 (T51; K4570 G9) copyNow */
+
+test("R15 (T51; G9) copyNow: a queued 356-byte text document is made in the act, awaited: copyNow answers it clean and the next documentCopy answers clean, with no scheduler tick; a 5 MB document is not copied by copyNow, is never read, and stays queued for the alarm's copyBatch", async () => {
+  assert.equal(COPY_NOW_MAX_BYTES, 2 * 1024 * 1024);
+  const w = world();
+  const text = Buffer.from("street,count\n".padEnd(356, "x"));
+  assert.equal(text.length, 356);
+  const small = supplied(w, "INFO-2026-0101-small", text, { name: "notes.txt", type: "text/plain" });
+  const big = supplied(w, "INFO-2026-0102-big", Buffer.alloc(5 * 1024 * 1024, "a"), { name: "big.txt", type: "text/plain" });
+  assert.equal(w.cc.documentCopy(small).state, "pending", "the prepare's own answer, before copyNow: queued, nothing runs");
+  const r = await w.cc.copyNow({ shas: [small, big], maxBytes: COPY_NOW_MAX_BYTES });
+  assert.deepEqual(r, { ok: true, copied: 0, clean: 1, public: 0, refused: 0, failed: 0, skipped: 1, remaining: 1 });
+  assert.deepEqual(w.cc.documentCopy(small), { state: "clean", copy: null, refused: null });
+  assert.equal(w.cc.documentCopy(big).state, "pending", "the large one is left to the alarm");
+  assert.deepEqual(queue(w).map((q) => q.capture), [big]);
+  assert.equal(w.evidence.calls.some(([op, k]) => op === "get" && k === big), false, "a document over the bound is not read");
+  const alarm = await w.cc.copyBatch({});
+  assert.deepEqual([alarm.clean, alarm.remaining], [1, 0], "the alarm path makes it");
+  assert.equal(w.cc.documentCopy(big).state, "clean");
+});
+
+test("R15 (T51; G9) copyNow keeps copyBatch's rules: only documents named and queued are made; a maxBytes above COPY_NOW_MAX_BYTES is held to it; a read that fails leaves the document queued; with no evidence store it answers DOCUMENT_COPY_NO_STORE and derives nothing; a document with a doc-clean refusal is recorded refused; a copy is held as copyBatch holds it", async () => {
+  const w = world();
+  const a = supplied(w, "INFO-2026-0101-knock", KNOCKED);
+  const other = supplied(w, "INFO-2026-0104-csv", CSV, { name: "c.csv", type: "text/csv" });
+  const refused = supplied(w, "INFO-2026-0103-refused", REFUSED, { via: null });
+  w.cc.documentCopy(refused);
+  const r = await w.cc.copyNow({ shas: [a, refused, sha("never captured"), "not a digest"], maxBytes: 1e12 });
+  assert.deepEqual(r, { ok: true, copied: 1, clean: 0, public: 0, refused: 1, failed: 0, skipped: 0, remaining: 1 });
+  assert.deepEqual(queue(w).map((q) => q.capture), [other], "a document not named stays queued");
+  const k = w.cc.documentCopy(a);
+  assert.equal(k.state, "copy");
+  assert.ok(w.bucket.held.get(obscuredKey("bio", k.copy)), "held as copyBatch holds it");
+  assert.equal(w.cc.documentCopy(refused).refused.code, "IMAGE_NOT_CLEANABLE");
+  /* the bound is held whatever maxBytes says */
+  const w2 = world();
+  const huge = supplied(w2, "INFO-2026-0105-huge", REFUSED, { stated: COPY_NOW_MAX_BYTES + 1 });
+  assert.equal((await w2.cc.copyNow({ shas: [huge], maxBytes: 1e12 })).skipped, 1);
+  assert.equal(w2.evidence.calls.some(([op]) => op === "get"), false);
+  /* a read that fails leaves it queued */
+  const w3 = world();
+  const s3 = supplied(w3, "INFO-2026-0101-knock", KNOCKED);
+  w3.evidence.held.delete(s3);
+  const f = await w3.cc.copyNow({ shas: [s3] });
+  assert.deepEqual([f.failed, f.remaining], [1, 1]);
+  assert.equal(w3.cc.documentCopy(s3).state, "pending");
+  /* no store bound: nothing derived */
+  const w4 = world();
+  const s4 = supplied(w4, "INFO-2026-0101-knock", KNOCKED);
+  w4.record.evidenceStore = () => null;
+  const before = w4.snapshot();
+  assert.equal((await w4.cc.copyNow({ shas: [s4] })).code, "DOCUMENT_COPY_NO_STORE");
+  assert.deepEqual(w4.snapshot(), before);
+  /* never rejects on bad input */
+  for (const bad of [undefined, null, {}, { shas: "x" }, { shas: [] }]) assert.equal((await w.cc.copyNow(bad)).ok, true);
 });

@@ -1,6 +1,6 @@
 # BOB to acquisition (T51)
 
-**Read** · handled J25
+**Read** · handled J28
 
 ## B1 · START
 
@@ -285,3 +285,8 @@ ANSWER (BOB #253, K4577).
 2. The parked session: accepted as you describe (64-zero sentinel `primary_sha`, `state.fetch_pending {since, declared_bytes, why}`, why codes `LARGE_DECLARED`/`LARGE_BODY`/`SLOW_BODY`, `failed: <reason>` kept on a stated end, a refused owe runs inline). machinery-producers' `#conditionsPartialCapture` skipping a `fetch_pending` session is placed as a second-wave job (not yours). `openCaptures` keys as you name them: screens-intake and control-plane are told.
 3. G12a: the "not an archive" memo in instance memory, not persisted: accepted (a restarted object pays the first ask once).
 Name the export `notArchivesAmong(store, shas)` -> Set of digests: CAPTURE #48 already calls it by that name.
+
+## B28 · CHANGE
+
+CHANGE (BOB #253, K4578): fix round 6 gains causes from the K4571 audit. Merge tranche/T51 into your branch, then read `build/plan/fix-round-6-T51.md` section "G14-G25" whole (it is short) and apply the causes named below as part of this job, with the four fields (R-FOUR), failing-first past the bound, stand-in words named in COMPLETE (the rows go to UX-DESIGN). Bob (K4571): never a silent partial read; a bound that must stay is stated to the member.
+Yours: **G19 (provider)**: a capture's answer and its stored capture facts carry `supporting: {kept, skipped, reasons}` from the skips you already record (`subresources.mjs:51-62`, `render.mjs:346-368`, index.mjs:1852-1856; `TOO_LARGE_TO_PARSE`, `body_unavailable`, the 400 cap, the 8 MiB body, the 64 MiB budget). Test: a page with 450 subresources answers kept 400, skipped 50 with the cap's reason.

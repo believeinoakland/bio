@@ -32,15 +32,17 @@ function statementsInBytes(bytes, tag) {
   }
   return bodies;
 }
-function statedLimits(source, tag) {
+function statementBodies(source, tag) {
   const isBytes = source instanceof Uint8Array;
-  if (typeof source !== "string" && !isBytes) return { ok: false, why: "none" };
-  let bodies = new Set();
-  if (isBytes) bodies = statementsInBytes(source, tag);
-  else {
-    const re = new RegExp("([\"'`])" + tag.replace("/", "\\/") + "( [^\"'`\\\\\\n]*)\\1", "g");
-    for (const m of source.matchAll(re)) bodies.add(m[2]);
-  }
+  if (typeof source !== "string" && !isBytes) return new Set();
+  if (isBytes) return statementsInBytes(source, tag);
+  const bodies = new Set();
+  const re = new RegExp("([\"'`])" + tag.replace("/", "\\/") + "( [^\"'`\\\\\\n]*)\\1", "g");
+  for (const m of source.matchAll(re)) bodies.add(m[2]);
+  return bodies;
+}
+function statedLimits(source, tag) {
+  const bodies = statementBodies(source, tag);
   if (bodies.size === 0) return { ok: false, why: "none" };
   if (bodies.size > 1) return { ok: false, why: "unreadable", detail: `statements=${bodies.size}` };
   const [body] = bodies;
@@ -55,6 +57,39 @@ function statedLimits(source, tag) {
   return { ok: true, limits: Object.freeze(limits) };
 }
 export const planeLimits = (source) => statedLimits(source, "bio-plane-limits/1");
+/* R39 (K4566; fix round 6, G1) — THE PLANE'S SCHEDULE, AS THE SIGNED RELEASE STATES IT. control-plane signs the plane's one
+ * cron beside its limits, as one quoted string `bio-plane-crons/1 <five fields>`; this reads it from the same verified bytes, as
+ * R20 reads the limits, so the installer holds no schedule of its own. Exactly one distinct statement, of one schedule:
+ * `{ok: true, crons}` (frozen, the one schedule); `{ok: false, why: "none"}`; or `{ok: false, why: "unreadable", detail}`. */
+const CRONS_TAG = "bio-plane-crons/1";
+const CRON = /^(?:[0-9*,/?LW#A-Za-z-]+ ){4}[0-9*,/?LW#A-Za-z-]+$/;
+function statedCrons(bodies) {
+  if (bodies.size === 0) return { ok: false, why: "none" };
+  if (bodies.size > 1) return { ok: false, why: "unreadable", detail: `statements=${bodies.size}` };
+  const [body] = bodies, cron = body.slice(1);
+  if (!CRON.test(cron)) return { ok: false, why: "unreadable", detail: `form="${CRONS_TAG}${body}"` };
+  return { ok: true, crons: Object.freeze([cron]) };
+}
+export const planeCrons = (source) => statedCrons(statementBodies(source, CRONS_TAG));
+/* The same, read from a stream as it arrives (R38: the plane's 29 MB module is never held whole). A statement is found in the
+   window of the last chunk and the tail kept from the one before, long enough for the tag, its quotes and a schedule, so a
+   chunk boundary falls anywhere in it without changing the answer. */
+const CARRY_BYTES = 256;
+export async function planeCronsOfStream(stream) {
+  const bodies = new Set(), reader = stream.getReader();
+  let carry = new Uint8Array(0);
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const window = new Uint8Array(carry.length + value.length);
+      window.set(carry); window.set(value, carry.length);
+      for (const b of statementsInBytes(window, CRONS_TAG)) bodies.add(b);
+      carry = window.slice(Math.max(0, window.length - CARRY_BYTES));
+    }
+  } finally { reader.releaseLock(); }
+  return statedCrons(bodies);
+}
 /* The key each `why` of a refused release is said by (the installer, which knows the version, draws the sentence). */
 const LIMITS_NOT_STATED = Object.freeze({ none: "installer.release.nolimits", unreadable: "installer.release.badlimits" });
 
