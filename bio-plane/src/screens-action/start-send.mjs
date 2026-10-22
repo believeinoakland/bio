@@ -4,7 +4,7 @@
    started): prepare what is sent, approve it, give the second approval where the project asks one, and record the
    sending. Every function here is self-contained (interface-shell R21 (1)). */
 import { OPS } from "../op-declarations/index.mjs";
-import { draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, stakeAsk, readOnly, kindWord, kindsOf, PREPARE, PREPARE_FILING, APPROVE, STAKE, SECOND, RECORD_SENT, TEMPLATE_SAVE, WRITE_HELP } from "./send-steps.mjs";
+import { draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, stakeAsk, readOnly, kindWord, kindsOf, officeLine, PREPARE, PREPARE_FILING, APPROVE, STAKE, SECOND, RECORD_SENT, TEMPLATE_SAVE, WRITE_HELP } from "./send-steps.mjs";
 
 // R21: `actionstake` is an owed act (`interface-shell` R73): it is registered once `op-declarations` declares it, and the
 // shell draws it as it draws every act (R12).
@@ -73,7 +73,7 @@ export const startSend = Object.freeze({
         + '<div class="mk-acts">' + save + help + "</div>");
     },
     isRequest: function () { return false; },
-    readOnly: readOnly, kindWord: kindWord, kindsOf: kindsOf,
+    readOnly: readOnly, kindWord: kindWord, kindsOf: kindsOf, officeLine: officeLine,
     // R2: the preview's answer drawn: the kind, the office by its role, what it rests on, the clock, the breach, and the
     // refusal it would meet, first.
     preview: function (cs, view, pv) {
@@ -81,7 +81,7 @@ export const startSend = Object.freeze({
       const ad = a.addressee;
       const to = !ad ? cs.w("screen.start-send.noaddressee")
         : ad.state === "audience" ? cs.esc(ad.description || "")
-          : cs.esc([ad.role, ad.body || ad.organisation].filter(Boolean).join(", ")) + " · " + cs.w("screen.start-send.byrole");
+          : cs.esc(view.parts.officeLine(ad)) + " · " + cs.w("screen.start-send.byrole");
       const legs = (Array.isArray(a.legs) ? a.legs : []).flatMap(function (l) { return l.subjects || []; });
       const rests = legs.length ? legs.map(function (s) {
         const key = s.subject && s.subject.kind === "outcome" ? s.subject.determination : s.subject && s.subject.inquiry;
@@ -116,7 +116,7 @@ export const startSend = Object.freeze({
       // Step 2: the action started.
       return cs.state("action", function (a) {
         return P.readOnly(cs, "screen.start-send.name") + cs.title(null)
-          + '<p class="mk-sub">' + cs.w("screen.start-send.titlestarted") + " · " + cs.esc(a.addressee ? [a.addressee.role, a.addressee.body].filter(Boolean).join(", ") : "") + "</p>"
+          + '<p class="mk-sub">' + cs.w("screen.start-send.titlestarted") + " · " + cs.esc(a.addressee ? P.officeLine(a.addressee) : "") + "</p>"
           + cs.sec("screen.start-send.step2", cs.state("filings", function (f) { return P.sendSteps(cs, view, f, {}); }));
       });
     }

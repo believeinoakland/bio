@@ -153,6 +153,8 @@ export const RE_POINTS = Object.freeze({
   /* R117 (fix round 3; C84, C64): each until the registry lists the op on that screen */
   security: Object.freeze(["scanmirror"]),
   places: Object.freeze(["officeconfirm"]),
+  /* B3 (K4467; screens-inquiry J21, N5): the read of a record stored unread, until the registry lists `readheld` on `document` */
+  document: Object.freeze(["readheld"]),
 });
 export const LOCKED_OPS = Object.freeze(["unlock"]);
 export const ANY_SCREEN_OPS = Object.freeze(["infolevelset"]);
@@ -340,13 +342,17 @@ function dataOf(screens, guide) {
 
 /* The shell's own styles (R56, R65: only these two, never a hand copy of a design rule, which `shell.css` carries): the
    page's height settings, so the frame's main column scrolls and the page never does (R57; the frame's own fixed height is
-   the design's `.cs-frame`), and motion stopped under reduced motion (R22). Every element the shell draws is a design
+   the design's `.cs-frame`), and motion stopped under reduced motion (R22); with the phone block (R108) and, R120, the grid of a
+   `cs.row` whose first part is empty (`data-lead="none"`: the design's grid is lead, text, act, and a row with no lead would give
+   the text the first column and the act what is left of the row). Every element the shell draws is a design
    class (R65), so nothing else is carried; no rule gives `cursor: help`, nor a pointer to an element that only explains
    itself (R52). */
 const STYLE = `html,body.cs{height:100%}body.cs{margin:0;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 #cs-root{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}#cs-root>.cs-frame{flex:1 1 auto;min-height:0;height:auto;overflow:hidden}
 #cs-root>.cs-frame>.cs-main{overflow:auto;min-height:0}#cs-root>.cs-frame:not(.cs-shell){display:grid;grid-template-rows:minmax(0,1fr)}
+.cs-main .cs-row[data-lead=none]{grid-template-columns:minmax(0,1fr) auto}.cs-main .cs-row[data-lead=none]>.meta{grid-column:1/-1}
 @media (max-width:${PHONE_WIDTH}px){
+:root:root .cs-main .cs-row[data-lead=none]{grid-template-columns:minmax(0,1fr)}:root:root .cs-main .cs-row[data-lead=none]>*{grid-column:1}
 .cs-main{overflow-x:hidden;overflow-wrap:anywhere}.cs-main .cs-row,.cs-main .mk-rowname{grid-template-columns:auto minmax(0,1fr);min-width:0}.cs-main .cs-row>*{min-width:0}
 .cs-main td,.cs-main th{min-width:0;overflow-wrap:anywhere}.cs-main .cs-field label{min-width:0}.cs-main fieldset.cs-field label{display:flex;align-items:flex-start;gap:8px}
 .cs-main fieldset.cs-field label>span{display:block;min-width:0}.cs-main [role=tablist]{flex-wrap:wrap}

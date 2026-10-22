@@ -7,7 +7,7 @@
    after it and the action is not resolved; our move when a prepared or approved text awaits approval or sending; an action
    that is neither says neither, and "overdue" is never drawn before a member determines it. It holds no member-facing English
    (R19). Every function here is self-contained (interface-shell R21 (1)). */
-import { readOnly, kindWord, draftsOf, stepOf, later } from "./send-steps.mjs";
+import { readOnly, kindWord, draftsOf, stepOf, later, officeLine } from "./send-steps.mjs";
 
 export const dashAction = Object.freeze({
   id: "dash-action",
@@ -25,7 +25,7 @@ export const dashAction = Object.freeze({
   },
 
   parts: {
-    readOnly: readOnly, kindWord: kindWord, draftsOf: draftsOf, stepOf: stepOf, later: later,
+    readOnly: readOnly, kindWord: kindWord, draftsOf: draftsOf, stepOf: stepOf, later: later, officeLine: officeLine,
     // R30: an action that is not resolved or abandoned is open
     isOpen: function (state) { return state !== "resolved" && state !== "abandoned"; },
     // R30: whose move it is, from facts the action states: "theirs", "ours" or ""
@@ -107,14 +107,14 @@ export const dashAction = Object.freeze({
       // every open action: to whom, whose move, the clock as a sentence with its rule and date, the next step
       const whoOf = function (v) {
         const ad = v.addressee;
-        return ad ? cs.esc([ad.role, ad.body || ad.organisation].filter(Boolean).join(", ") || ad.description || "") : "";
+        return ad ? cs.esc(P.officeLine(ad) || ad.description || "") : "";
       };
       const clockOf = function (x) {
         const v = x.v, c = P.nextClock(v);
         if (!c) return "";
         const law = v.governing_laws && Array.isArray(v.governing_laws.laws) && v.governing_laws.laws.length ? v.governing_laws.laws[0] : null;
         const win = law ? windows.find(function (d) { return d.citation === law.citation; }) : null;
-        const ad = v.addressee ? [v.addressee.role, v.addressee.body].filter(Boolean).join(", ") : "";
+        const ad = v.addressee ? P.officeLine(v.addressee) : "";
         const sent = (Array.isArray(v.correspondence) ? v.correspondence : []).find(function (e) { return e.direction === "sent"; });
         if (x.whose === "theirs" && win && win.amount && ad) return cs.w("screen.dash-action.clock.due", { office: ad, date: { html: cs.date(c.date) }, days: String(win.amount), law: law.citation });
         if (sent && c.date) return cs.w("screen.dash-action.clock.sent", { date: { html: cs.date(sent.at) }, due: { html: cs.date(c.date) } });

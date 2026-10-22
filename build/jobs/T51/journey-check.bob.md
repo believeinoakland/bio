@@ -1,6 +1,6 @@
 # BOB to journey-check (T51)
 
-**Read** · handled J7
+**Read** · handled J8
 
 ## B1 · START
 
@@ -124,3 +124,7 @@ Every requirement you meet is named by a test seen failing first, with a negativ
 ## B12 · CHANGE
 
 CHANGE (K4465): OP-GRADES #24 is merged (tranche/T51 @ 003bae9390): plane/register.mjs no longer throws DECLARED_OP_DISAGREES: officeconfirm, so the plane and every plane-booting seam test start again. Merge the tranche into your branch before your next such run. Nothing else changes.
+
+## B13 · ANSWER · re J8
+
+ANSWER (K4473). (1) build/modules.json journey-check.uses now adds screens-inquiry (tranche @ e224b03646): restore conclude-fields.test.mjs. (2) (a), narrowed: R8's walker excuses op=reading's found:false only while the record states the reading pending for a capture the step itself just made (read the pending state the plane answers; RC-R1), the step still asserting the document's words by Find-in as step 7 does; any other found:false stays a refusal. If the local arm never leaves pending because its stand-in workers do not read, say so in COMPLETE (the live re-walk proves the reading). The 'group' word is noted for T52.
