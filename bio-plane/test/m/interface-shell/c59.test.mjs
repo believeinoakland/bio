@@ -18,16 +18,17 @@ test("R5 (C59) a word handed to another word as a fill is drawn escaped once: th
   const said = textNodes(p.root()).map((n) => n.data).join(" ");
   assert.equal(said.includes("&#39;"), false, "not escaped twice: " + said.slice(said.indexOf("Could not"), said.indexOf("Could not") + 90));
   assert.ok(said.includes(word("state.failed", { reason: word("shell.noanswer") })), "the sentence, whole: " + said);
-  assert.ok(said.includes("your team's Civicsmith did not answer"), "with a plain apostrophe");
+  assert.ok(said.includes(word("shell.noanswer")), "with the word's own apostrophe, plain");
 });
 
 test("R5 (C59) control: record data handed to a word as a fill is escaped once, markup and an entity-looking text included; a fragment the kit made as {html} is inserted as it is; the shell's own silent-store sentence is escaped once", async () => {
   const p = await boot({ screens: [draws], path: "/app/timeline/P1", plane: { affordances: silent } });
   const cs = p.win.__cs;
-  assert.equal(cs.w("state.failed", { reason: "<b>x</b> & more" }), "Could not read this, because &lt;b&gt;x&lt;/b&gt; &amp; more");
-  assert.equal(cs.w("state.failed", { reason: "Fish &amp; chips" }), "Could not read this, because Fish &amp;amp; chips", "a record's own text is data, whatever it looks like");
-  assert.equal(cs.w("state.failed", { reason: { html: "<i>kept</i>" } }), "Could not read this, because <i>kept</i>");
-  assert.equal(cs.w("shell.noanswer"), "your team&#39;s Civicsmith did not answer");
+  const head = word("state.failed", { reason: "" });
+  assert.equal(cs.w("state.failed", { reason: "<b>x</b> & more" }), head + "&lt;b&gt;x&lt;/b&gt; &amp; more");
+  assert.equal(cs.w("state.failed", { reason: "Fish &amp; chips" }), head + "Fish &amp;amp; chips", "a record's own text is data, whatever it looks like");
+  assert.equal(cs.w("state.failed", { reason: { html: "<i>kept</i>" } }), head + "<i>kept</i>");
+  assert.equal(cs.w("shell.noanswer"), word("shell.noanswer").replace(/'/g, "&#39;"));
   /* the shell's own refusal draw: an act the store did not answer */
   const act = { id: "home", words: [], reads: () => ({}), acts: [{ op: "taskresolve", send: fitSend("taskresolve") }],
     render: (c) => c.act("taskresolve", { label: "act.taskresolve.label.home" }) };
@@ -35,5 +36,5 @@ test("R5 (C59) control: record data handed to a word as a fill is escaped once, 
   await q.click('button[data-act="taskresolve"]');
   const beside = textNodes(q.root()).map((n) => n.data).join(" ");
   assert.equal(beside.includes("&#39;"), false, "the act's refusal beside it is escaped once");
-  assert.ok(beside.includes("your team's Civicsmith did not answer"), "and drawn: " + beside.slice(-120));
+  assert.ok(beside.includes(word("shell.noanswer")), "and drawn: " + beside.slice(-120));
 });

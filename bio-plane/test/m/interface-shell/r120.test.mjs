@@ -6,6 +6,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { fitSend } from "./harness.mjs";
 import { inChromium } from "./chromium.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const ROWS = 30;
 const LONG = "legislation:26-0788 and the quoted passage it cites, a sentence long enough to fill most of the width of a phone and wrap onto a second line";
@@ -60,7 +61,7 @@ function measureRows({ W, sel }) {
 }
 const measure = (screen, width, sel = ".cs-main .cs-row") => inChromium([screen], { width, path: "/app/" + screen.id + "/P1", ready: "#cs-main .cs-row" }, (page) => page.evaluate(measureRows, { W: width, sel }));
 
-for (const [screen, name] of [[EDITOR, "Remove a citation"], [COPY, "Stop sharing"]]) {
+for (const [screen, name] of [[EDITOR, word("act.sever.label.case-editor")], [COPY, word("act.reviewrevoke.label.review-copy")]]) {
   test(`R120 (C81) at 390 px the ${screen.id}'s "${name}" is one line, over 200 px wide, inside the screen and as tall as its text, in each of ${ROWS} rows`, { timeout: 120000 }, async () => {
     const natural = (await measure(screen, 1280)).rows[0];
     const m = await measure(screen, 390);
