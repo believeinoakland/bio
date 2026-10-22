@@ -12,6 +12,7 @@ import { aiAccountsOf } from "../ai-accounts/index.mjs";
 import { doorbellOf } from "../doorbell/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
+import { extractionOf } from "../extraction/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { sourcesOf, sourcesOps } from "../sources/index.mjs";
 import { queueOf, queueOps } from "../queue/index.mjs";
@@ -492,7 +493,7 @@ export function controlPlaneRoutes(ctx, url, body, grant = null) {
     },
     /* R7 (T42; N826; K2656): the pull is the doorbell's (its R13, R3), handed `doorbellOf(ctx)`, never capture's copy */
     inboxpullfile: () => pullAndFile({ doorbell: doorbellOf(ctx), promotion: promotionOf(ctx), record: recordOf(ctx),
-                                       provenance: provenanceOf(ctx) },
+                                       provenance: provenanceOf(ctx), extraction: extractionOf(ctx) },
                                      { knockId: (typeof b.knockId === "string" && b.knockId) || q("id"),
                                        by: q("by"), identity: q("identity"), viewer: q("viewer"),
                                        /* R7 (doorbell R3; DEC-88 (2)): the `pulled` resolve, marked by the Worker's
