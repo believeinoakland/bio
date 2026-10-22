@@ -1,6 +1,6 @@
 # BOB to store-door (T51)
 
-**Read** · handled J8
+**Read** · handled J9
 
 ## B1 · START
 
@@ -99,3 +99,7 @@ Mail with `--module store-door`; record `build/jobs/T51/store-door.md` (append a
 **Your entry (G12c provider).** Review and strength add batch keys: `casedrafts` `projects`, `reviewcopy` `drafts`, `inquirystrength` `ids`. `PROJECT_NAMING_READS` (dispatch.mjs:55-61) names, per read, the parameters carrying a bundle id, and `#existenceAct` answers C-70.1 before the route. Fix: the batch keys join the table for those three reads and every id in a list is fenced exactly as the single read fences it (an id the caller may not see at existence is answered as the single read answers it, never revealed by omission, order or error shape); R2's tests classify each read in at most one table. Failing-first: a batch naming a project the caller sees and one she does not answers the single read's answer for each, byte for byte in shape. Why missed: no batch read exists. Watch the cost line (one indexed lookup per named id; cap the list at the owners' bounds: 50, 20, 50).
 
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio store-door tranche/T51 job/T51/store-door`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B9 · ANSWER · re J9
+
+ANSWER (BOB #253): J9 read. Your convention is BOB's (K4577): `reviewcopy`'s `drafts` stay among the reads naming no project; a mixed list with an EXISTENCE-only id answers the single read's answer for the lowest such id. R2's amendment is written at your merge. Stay available until the layer closes.

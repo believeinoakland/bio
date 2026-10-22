@@ -8,7 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as scheduler from "../../../src/scheduler/index.mjs";
-import { world, storage, writes, NOW, FILE_CONSUMERS } from "./fixture.mjs";
+import { world, storage, writes, NOW, FILE_CONSUMERS, pinNow } from "./fixture.mjs";
 import { world as fsWorld, pdf } from "../file-safety/fixture.mjs";
 import { FILE_SAFETY_CHECKS } from "../../../src/file-safety/index.mjs";
 
@@ -181,7 +181,7 @@ test("R24, R3: a refusal file-safety answers (one of its declared refusal codes)
 
 /* ---- onFileWork (file-safety R40), R9's notice for the five ---- */
 
-test("R24, R9, R17: handed file-safety, the scheduler registers once with onFileWork; each call arms the alarm at once to the earliest wake, writing nothing else and running no batch", async () => {
+test("R24, R9, R17: handed file-safety, the scheduler registers once with onFileWork; each call arms the alarm at once to the earliest wake, writing nothing else and running no batch", async (t) => { pinNow(t);
   const w = world(wanting([null, null, null, null, null]));
   const fs = w.o.fileSafety;
   const st = storage();
