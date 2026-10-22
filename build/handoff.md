@@ -1,39 +1,48 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #249 (`session_01Kzq9tCna4TdS89rTtjzqKT`, depth 1, parent ROOT #8 `session_01R3hvN64bYHG3vPQmYmaeLR`, secondary account), 2026-10-22 ~08:20 UTC, at about 37 % of its window, at a clean point (fix round 5 drafted, not reviewed; no job runs). **T51 is OPEN** on `tranche/T51`. Read `build/rulings-active.md` whole, then **K4519 to the last line** of `build/rulings.md` whole, then `build/plan/fix-round-5-T51.md` whole (45 KB: the review is your first act).
+**Status** · Replaced whole at each handoff. Written by BOB #250 (`session_01G6Txo7f9iCv4SnYdk5Zypv`, depth 1, parent ROOT #8 `session_01R3hvN64bYHG3vPQmYmaeLR`, secondary account), 2026-10-22 ~09:45 UTC, at about 40 % of its window, at a clean point (every job entry answered, every merge committed). **T51 is OPEN** on `tranche/T51`; **fix round 5 is running** (5 jobs live). Read `build/rulings-active.md` whole, then **K4529 to the last line** of `build/rulings.md` whole, then `build/plan/fix-round-5-T51.md` whole (sections 2b and 2c are this session's) and `build/plan/fix-round-5-step0.md` whole.
 
 ## Bob's direction today (in force)
 
 - "the focus is on getting an alpha-level release deployed as efficiently as possible" (Bob, 2026-10-21; K4459, K4460). Weekly meter 53 % (K4516).
 
-## What happened this session (K4519-K4528)
+## What happened this session (K4529-K4539)
 
-- Round 4b regenerated, checked (all 0), redeployed to biosmoke8 at 86792d1179 (runs 39729043113 dry, 39729170252 deploy; K4520). One stale test fixed (civil-time R21).
-- The office-readers split done: CSV-READER #1 and OFFICE-READERS #13 merged (K4522, K4523); office-readers 3,310 lines; bundles regenerated after (7cb5927ff6, `fleetbundles` 153/0).
-- The whole suite: OP-DECLARATIONS #35 merged (`owedwork`'s ground, K4525). Reds that fail alone, all in round 5: control-plane R100 (alone, BOB's run: "the store was asked to read", actual undefined; the planner could not reproduce it: re-run and settle), R117 and screens-inquiry R129 (stale per the planner, §4: BOB fixes, test files only, K4297 (2)), doc-clean R4, extraction `c5b-memory` (defects, E2). journey-check 104/105 (R17, accepted, T52).
-- Re-walk 4 (two walkers, K4527): `build/plan/walk-T51-rewalk4/A.md`, `B.md`. BLOCKERs: multipart PDFs never read live; a reload before signing publishes a 0-finding edition. PERFORMANCE re-measured (P11-P14).
-- Channel: U449 MERGE (DEC-414) held with U448 for the close; its owed work N1263 (T52); ACK B475 (K4526).
+- Fix round 5 reviewed (K4530: E2's acquire half, E12, E13 added from PERFORMANCE read whole); three stale tests fixed by BOB (R117, R129 N5, R100). Step 0 read live (K4532): **the alarm's ledger is wedged since 05:57Z** behind INFO-2026-0111's reading row (E2 (d) confirmed); E14 added (Timeline lacked the events vocabularies); E9 put to Bob.
+- 13 jobs started (K4531, K4532). **Merged:** publication, reading-pipeline (session kept open), affordances, screens-publish, acquisition, interface-shell, screens-intake, doorbell (K4534-K4539). Three more stale tests fixed by BOB (K4537); screens-intake `uses` gains test-support (K4538). N1264 (E10 (ii), the session fold) to next.md on a measurement (K4533).
+
+## Running jobs (mail check; doorbell routine into each, K3686)
+
+| job | session | state | waits on |
+|---|---|---|---|
+| PDF-READER #10 | `session_014rsq68z5SGk7R183eVVx8C` | WORKING | its own work: object table < 110 MB, R42's second term (B7, J4 ruled), E11 |
+| CAPTURE #47 | `session_01VM4D7r3cUFZacyS8LqnGx2` | merging acquisition (B21) | E13 done; E5 call to `textTypeOf`, then COMPLETE |
+| EXTRACTION #33 | `session_018SGhEZ3jJD7Da7xorwia8V` | WAITING (J15) | pdf-reader's merge for `c5b-memory` (B17); `defer=1` arm (B18); E1 repair (B19) |
+| CONTROL-PLANE #47 | `session_01ScsNRTFgkShQFLDCyhHJBM` | RUNNING its seam test | B35 (J25 answers), B36 (E8 composition test from acquisition's 68845de064), B37 (acquisition merged) |
+| PLANE #50 | `session_01AipmqTnUkdaqEHwuH2y95j` | WAITING (J27) | pdf-reader **and** extraction merged (reading-pipeline is), then its L run and COMPLETE (B35) |
+| READING-PIPELINE #21 | `session_01SnD31Lo4LuZRr5JLS6rug9` | merged, kept | a CHANGE when pdf-reader merges: R42 re-measure table |
 
 ## Do next, in order
 
-1. **Take over** (§5.1): archive BOB #249 once idle (row `BOB-final`, T51); delete its WATCH #249 `trig_01TkNWkcphbLdaja4TjPTfFR` and any backstop into it; arm yours; `node_modules` (K4113); `/home/user/cp-close` at civicos-process `prep/T51-close-v2`.
-2. **Review fix round 5** (`build/plan/fix-round-5-T51.md`, a planning worker's, sonnet medium; not yet reviewed). Caveats: (a) the worker read `build/plan/lane-performance/HANDOFF.md` only in part (P8, P11-P14 and its header): read the rest whole yourself and add what it misses; (b) its E2, E6, E8, E9, E10 start with a step 0 on biosmoke8 (`op=owedwork` read-only; a Chromium request log for "Finish it"; the member's participation row for the template): do the reads yourself or by a worker before the STARTs so the jobs start from causes; (c) §6 holds two conditional questions for Bob (a capture bar for large files; who may keep a template): raise one only if its step 0 makes it real, with options and a recommendation. Then write the STARTs (`build/plan/starts-T51-F5/`; the op-declarations one there is done) and start the 11 jobs (all sonnet, §3's merge order), and fix §4's stale tests yourself.
-3. Merge each job as it completes (K4427's Open list), then regenerate, verify, checks, the whole suite (it takes over 2 h: run it in two halves, each under the 2 h background limit), K4426's four points per cause, **one redeploy** (K4296's route: push to `deploy-test/biosmoke8/dry-run`, then `deploy`), a targeted re-walk (brief like `walk-T51-rewalk4/BRIEF.md`), PERFORMANCE re-measure, one final pass.
-4. **T51's close** (§5.7): U448 then U449 merged into `main` first, `main` merged in, every module's tests, the close PR; the process PR from `prep/T51-close-v2`. Close audit: journey-check's older `not yet met: T51` marks (R20, R21, R23-R26, R28), case-disclosures R33, corpus-export R11, R12.
+1. **Take over** (§5.1): archive BOB #250 once idle (row `BOB-final`, T51); delete its backstop `trig_01UopnBe8PUaHRFYoz4yvTkG` and WATCH #250 `trig_01Sa8cRbK5RQL4HLLS2qDrxA`; arm yours (a layer runs: backstop too); `node_modules` (K4113); `/home/user/cp-close` at civicos-process `prep/T51-close-v2` (`git worktree add`; use its `tools/mail.mjs`, which has `jobbranch`).
+2. **On pdf-reader's merge:** CHANGE to EXTRACTION, READING-PIPELINE (R42 table) and, once extraction is merged too, PLANE. Merge order per plan §3: plane last, control-plane before it.
+3. **E9** starts only on Bob's answer (open below): A → a job on screens-action hiding "Keep as a template" from those `filing-templates` refuses (`cs.can("templatesave")` is a class test today); B → filing-templates' rule changes; C → a requirement change (Bob's words) on filings and filing-templates. Record his words (K1762), post to lanes (K3082).
+4. After every job: regenerate (manifest order), verify, checks, the whole suite in two halves, K4426's check per cause (a table like `k4426-check-T51.md`), **one redeploy** (K4296's route: `deploy-test/biosmoke8/dry-run`, then `deploy`), the targeted re-walk (plan §7 (3), brief like `walk-T51-rewalk4/BRIEF.md`; also Timeline (E14) and PERFORMANCE re-timing with `in-<route>` and `read_split`), one final pass. The live ledger (E2) must drain after the deploy: read `owedwork` first.
+5. **T51's close** (§5.7): U448 then U449 merged into `main` first, `main` merged in, every module's tests, the close PR; the process PR from `prep/T51-close-v2`. Close audit: journey-check's older `not yet met: T51` marks (R20, R21, R23-R26, R28), case-disclosures R33, corpus-export R11, R12.
 
 ## Accepted reds, by name, until the act named
 
-Promotion `row-census`; file-safety R24 and plane R24 (stale design rows: U448's merge at the close); journey-check R17 (T52); round 5's reds above until their jobs merge.
+Promotion `row-census`; file-safety R24 and plane R24 `release.test.mjs` (stale design rows: U448's merge at the close); journey-check R17 (T52); extraction `c5b-memory` and doc-clean `measure` R4 until pdf-reader and extraction merge.
 
 ## Acts on main or sessions (reviewed acts, §5.8)
 
 - `main` moves only by T51's close PR (§5.7 (3)), the design MERGEs U448 and U449 first (§5.7 (1), K1177); no refusal recorded. The process repository's `main` by PR at the close (K4275).
 - Job branches only by `mail jobbranch` (K4385); never a force-push (K3977, K4384).
 - Deploys to biosmoke8 by push to `deploy-test/biosmoke8/{dry-run,deploy}` (K4296's approval covers the T51 build; not refused at K4423 or K4520); none until round 5's K4426 points are checked (K4426, K4428).
-- Sessions: archive each job at its merge; lanes' sessions are not BOB's to archive.
+- Sessions: archive each job at its merge (reading-pipeline after its R42 table); lanes' sessions are not BOB's to archive.
 
 ## Open with Bob
 
-- None.
+- **Who may keep a filing as the team's template** (E9; asked 2026-10-22 ~08:55): a member invited to a project but not yet joined prepared, approved and sent a records request, then was refused "Keep as a template". Options: **A (recommended)** joined members only, the button hidden from others; B anyone who made and sent the request; C nothing weighty (sending a filing included) until the invitation is accepted. No answer yet.
 
-Lanes: AI-DESIGN A40, JOURNEYS W4, INVESTIGATION-DESIGN H43 unchanged; PERFORMANCE through P14. Channel: UX-DESIGN through U449, which has B475 to read.
+Lanes: AI-DESIGN A40, JOURNEYS W4, INVESTIGATION-DESIGN H43, PERFORMANCE P14 unchanged. Channel: UX-DESIGN through U449, nothing unread either way.
