@@ -59,7 +59,7 @@ test("R96 R129 G8 a statement extraction states repairable (the old '(multipart)
 
 /* DEC-418's rows are on the design's table and not yet in the words list: a key is drawn when the list holds it, else the nearest held row stands in. The keys are
    held in variables, so this file names no key that the list lacks (the words check). */
-const OWED = { progress: "screen.document.reading.progress", stated: "screen.document.reading.stated", repairable: "screen.document.reading.repairable", door: "screen.document.reading.repairable.door" };
+const OWED = { progress: "screen.document.reading.progress", stated: "screen.document.reading.stated", repairable: "screen.document.reading.repairable", door: "screen.document.reading.repairable.door", done: "screen.document.reading.done" };
 const sized = (n) => word(n >= 1048576 ? "size.mb" : "size.kb", { n: n >= 1048576 ? (n / 1048576).toFixed(1) : String(Math.round(n / 1024)) });
 
 const lines = (n, from = 0) => Array.from({ length: n }, (_, i) => ({ seq: from + i + 1, extent: { kind: "line", line: from + i }, reference: "u" + (from + i), truncated: false, text: "Line " + (from + i) + " of the long text." }));
@@ -150,7 +150,7 @@ test("R96 G14 a reading with passages left out (completeness partial, nothing mo
   assert.equal(main(whole).querySelector("[data-text-state]").getAttribute("data-text-state"), "full");
   assert.ok(!main(whole).querySelector('[data-reading="more"]'), "a whole reading says nothing of being read");
   const pieces = await open(at, { plane: { reading: textAnswer({ completeness: { state: "whole" }, more: false, read_through: 12000060, total: 12000060 }) } });
-  const done = hasWord("screen.document.reading.done") ? word("screen.document.reading.done") : word("screen.document.text.full");
+  const done = hasWord(OWED.done) ? word(OWED.done) : word("screen.document.text.full");
   assert.ok(text(main(pieces).querySelector('[data-reading="more"]')).includes(done), "read in full, once the pieces are all read");
 });
 
