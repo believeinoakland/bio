@@ -243,7 +243,7 @@ test("R57 (G14) a capture whose reading says it is partial never draws 'full'; s
   assert.ok(says(whole, "screen.document.text.full"));
 });
 
-test("R2 (G19) a capture that skipped supporting files says how many of how many it kept and why; none skipped says nothing", async () => {
+test("R2 R59 (G19) a capture that skipped supporting files says how many of how many it kept and why; none skipped says nothing", async () => {
   const sup = (x) => async () => { const p = await open("/app/capture/address", { acquire: CAPTURED_OK({ supporting: x }), heldat: ok(NOT_HELD) }); await pressCapture(p); return p; };
   const p = await sup({ kept: 400, skipped: 50, reasons: [{ reason: "body_unavailable", detail: "over the cap of 400" }] })();
   const line = main(p).querySelector("[data-supporting]");
@@ -258,7 +258,7 @@ test("R2 (G19) a capture that skipped supporting files says how many of how many
 
 /* ---- G20: lists that stop say so; the already-held look covers every held document ---- */
 
-test("R7 (G20) the inbox says when the doorbell stopped at its limit; an untruncated list says nothing", async () => {
+test("R7 R60 (G20) the inbox says when the doorbell stopped at its limit; an untruncated list says nothing", async () => {
   const K = { knock_id: "KNOCK-2026-10-03-9c1f0a2b", sha256: "1".repeat(64), bytes: 3, note: "n", received: "2026-10-03T10:00:00Z", status: "new" };
   const cut = await open("/app/inbox", { inbox: ok({ inbox: [K], truncated: true, next: "c1" }) });
   assert.ok(says(cut, "screen.held.more", { count: "1" }));
@@ -266,7 +266,7 @@ test("R7 (G20) the inbox says when the doorbell stopped at its limit; an untrunc
   assert.equal(says(whole, "screen.held.more", { count: "1" }), false);
 });
 
-test("R29 (G20) the question chooser says when the search stopped at its limit; and the already-held look reads every page by next", async () => {
+test("R29 R60 (G20) the question chooser says when the search stopped at its limit; and the already-held look reads every page by next", async () => {
   const hit = (n) => ({ bundle_id: `INQ-2026-000${n}-q`, title: `Q${n}` });
   const q = await open(`/app/capture/address/INQ-2026-0001-q`, { search: ok({ hits: [hit(1), hit(2)], truncated: true, next: "n1" }), image: ok({ "bundle.md": `---\ntitle: "Q1"\nproject: ${PROJ}\n---\n` }), projectquestions: ok({ items: [] }) });
   assert.ok(says(q, "screen.held.more", { count: "2" }));

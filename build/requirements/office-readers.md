@@ -1,6 +1,6 @@
 # office-readers — requirements
 
-**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Last changed T36 (T36-3: R11 amended, a `.docx` table's cells; K1972); every requirement met (OFFICE-READERS #7, K2078). Last changed T51 (T51-6: R34 new, a document's own title in `metadata`; N1202; K3627); marked not yet met (T51). Last changed T51 (csv split: the csv entry, its dialect, typed cells, large-text arm and the sheet-cell/sheet-range builders moved to `csv-reader`; K624, K531, K617, K3268, K4523); R11's csv bound note moved with it.
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Last changed T36 (T36-3: R11 amended, a `.docx` table's cells; K1972); every requirement met (OFFICE-READERS #7, K2078). Last changed T51 (T51-6: R34 new, a document's own title in `metadata`; N1202; K3627); marked not yet met (T51). Last changed T51 (csv split: the csv entry, its dialect, typed cells, large-text arm and the sheet-cell/sheet-range builders moved to `csv-reader`; K624, K531, K617, K3268, K4523); R11's csv bound note moved with it. Fix round 6 (T51): R11 amended, the xlsx entry's sheets carry `lineRows` (G15; K4579).
 
 ## Public
 
@@ -112,7 +112,7 @@ xlsx), or `{ok:false, container, reason}` when `parts` failed. csv's `structure(
 
 #### `text()` — the I2 text shape
 
-- **R11** Each entry's `text()` returns `{ok, container, document, undetermined,
+- **R11** Each entry's `text()` returns `{ok, container, document, undetermined, (T51 fix round 6, G15; K4579; amends R11) The xlsx entry's `text()` also carries, on each sheet, `lineRows`: one 1-based row number per line of the sheet's `text`, the same length, in the order of the lines (file order); a row with no readable `r` follows the row before it, and an empty sheet carries `[]`; absent (unknown) when the sheet could not be read. Test: `line-rows.test.mjs`: rows out of order, an empty row, an empty-string row, a styled empty cell and a row with no `r`.
   counts, images}` plus a format-specific per-unit list, or `{ok:false, container, reason}`
   when `parts` failed. `images` (docx/pptx/xlsx) is every image under the format's own
   media directory (`word/media/`, `ppt/media/`, `xl/media/`), content-addressed and
