@@ -46,6 +46,22 @@ test("R96 the owner's refusals of the re-read are drawn by the design's words", 
   }
 });
 
+/* ---- A-23 (fix round 6; K4426): the plane's 409 REEXTRACT_NOT_READ is right, and the screen never offers the act it refuses: an unread page draws
+ * "Read it now" (readheld) and never the OCR re-read (pdfstructure), before or after it is read */
+test("A-23 an unread document page draws readheld and never pdfstructure: pressing Read it now sends the digest and the page then draws the reading, with no OCR re-read offered", async () => {
+  const held = { read: false };
+  const p = await open(at, { plane: { reading: () => (held.read ? ok(READING({ unread_pages: [] })) : ok({ ok: true, found: false })),
+    readheld: () => { held.read = true; return ok({ ok: true, read: true, bundle_id: D, found: true }); } } });
+  assert.equal(state(p), "unread");
+  assert.ok(actsIn(main(p)).includes("readheld"), "Read it now is offered");
+  assert.ok(!actsIn(main(p)).includes("pdfstructure"), "the OCR re-read is never offered for an unread copy (the 409 it would draw)");
+  await press(p, "readheld", { reason: "the scan has no text layer" });
+  assert.equal((p.byOp("readheld")[0].body || {}).sha, SHA, "the digest, in the body");
+  assert.equal(p.byOp("pdfstructure").length, 0, "nothing sends the OCR re-read");
+  assert.equal(state(p), "full", "the page then draws the reading");
+  assert.ok(!actsIn(main(p)).includes("pdfstructure"), "and offers no OCR re-read after it");
+});
+
 /* ---- R97 ---- */
 const TYPED = (by) => ok({ ok: true, transcriptions: [{ content_id: "c".repeat(64), transcriber: by, at: "2026-10-05T09:00:00Z", extent: { kind: "pdf-page", page: 7 } }] });
 test("R97 a page typed by another member offers Confirm and sends the content id and her note", async () => {
