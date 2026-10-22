@@ -915,29 +915,59 @@ class Provenance {
                  authored: Number(r.authored) === 1 } : null;
   }
 
-  /** R11 — every register row whose home is `bundleId`, in `capture_sha` order. */
+  /** R11, R73 — every register row whose home is `bundleId`, in `capture_sha` order, each marked: `whole` 1 on the row
+   *  of a capture held in parts (R72: an identity, no file of the bundle), and `part_of` on a part's row the whole it
+   *  belongs to, else null, so a reader by bundle can tell a file from an identity. */
   registeredFor(bundleId) {
-    return this.#rows(`SELECT capture_sha, path, bytes, encoding, registered, authored FROM register
-                        WHERE bundle_id = ? ORDER BY capture_sha`, String(bundleId ?? ""))
+    const id = String(bundleId ?? "");
+    const partOf = this.#partsOfWholes(id);
+    return this.#rows(`SELECT capture_sha, path, bytes, encoding, registered, authored, whole FROM register
+                        WHERE bundle_id = ? ORDER BY capture_sha`, id)
       .map((r) => ({ capture_sha: r.capture_sha, path: r.path, bytes: r.bytes, encoding: r.encoding,
-                     registered: r.registered, authored: Number(r.authored) === 1 }));
+                     registered: r.registered, authored: Number(r.authored) === 1, whole: Number(r.whole) === 1 ? 1 : 0,
+                     part_of: partOf.get(r.capture_sha) ?? null }));
   }
 
-  /** R12 · D-580 — the bundle's captures in the order the record first held them. `held_at` is the earlier of the
+  /* R73: the parts of each whole this bundle holds as a row (R72), `Map(part sha → whole sha)`, read from the bundle's
+     own `data/provenance.json` (the repair's source, R72). A part is a part only while the whole's row is this
+     bundle's; a store without the record's tables (a module test over this module alone) has none. */
+  #partsOfWholes(bundleId) {
+    const out = new Map();
+    const has = this.#one(`SELECT 1 AS x FROM sqlite_master WHERE type = 'table' AND name = 'files'`);
+    if (!has) return out;
+    const doc = this.#one(`SELECT content FROM files WHERE bundle_id = ? AND path = 'data/provenance.json'`, bundleId);
+    if (!doc || typeof doc.content !== "string" || !doc.content.includes('"parts"')) return out;
+    const wholes = new Set(this.#rows(`SELECT capture_sha FROM register WHERE bundle_id = ? AND whole = 1`, bundleId).map((r) => r.capture_sha));
+    for (const w of wholesOf(safeJson(doc.content))) if (wholes.has(w.sha256)) for (const p of w.parts) out.set(p, w.sha256);
+    return out;
+  }
+
+  /** R12, R73 · D-580 — the bundle's captures in the order the record first held them. `held_at` is the earlier of the
    *  row's `registered` and its earliest receipt's `first_retrieved`, both this instance's clock, compared as
    *  instants and never as strings (`…:00Z` is before `…:00.123Z`). A document's own stated date never orders them,
-   *  and no other clock is put in the column. Ties break on the capture's digest, so the order is total. */
+   *  and no other clock is put in the column. Ties break on the capture's digest, so the order is total. A capture
+   *  held in parts is listed once, by its whole (its parts' rows omitted), at the earliest instant any of its rows was
+   *  held, so the bundle's first-held capture is the document's identity whatever the digests' order. */
   capturesOf(bundleId) {
+    const id = String(bundleId ?? "");
     const rows = this.#rows(
       `SELECT r.capture_sha, r.registered,
               (SELECT MIN(cl.first_retrieved) FROM captured_locators cl WHERE cl.capture_sha = r.capture_sha) AS first
-         FROM register r WHERE r.bundle_id = ?`, String(bundleId ?? ""));
+         FROM register r WHERE r.bundle_id = ?`, id);
     const ms = (v) => (typeof v === "string" && v ? Date.parse(v) : NaN);
-    return rows.map((r) => {
+    const earlier = (a, b) => (Number.isFinite(b.t) && (!Number.isFinite(a.t) || b.t < a.t) ? b : a);
+    const held = new Map(rows.map((r) => {
       const a = ms(r.registered), b = ms(r.first);
-      const held = Number.isFinite(b) && (!Number.isFinite(a) || b < a) ? r.first : r.registered;
-      return { capture_sha: r.capture_sha, held_at: held, t: ms(held) };
-    }).sort((x, y) => ((Number.isFinite(x.t) ? x.t : Infinity) - (Number.isFinite(y.t) ? y.t : Infinity))
+      const at = Number.isFinite(b) && (!Number.isFinite(a) || b < a) ? r.first : r.registered;
+      return [r.capture_sha, { capture_sha: r.capture_sha, held_at: at, t: ms(at) }];
+    }));
+    for (const [part, whole] of this.#partsOfWholes(id)) {
+      const p = held.get(part), w = held.get(whole);
+      if (!p) continue;
+      held.delete(part);
+      if (w) { const e = earlier(w, p); w.held_at = e.held_at; w.t = e.t; }
+    }
+    return [...held.values()].sort((x, y) => ((Number.isFinite(x.t) ? x.t : Infinity) - (Number.isFinite(y.t) ? y.t : Infinity))
                       || (x.capture_sha < y.capture_sha ? -1 : x.capture_sha > y.capture_sha ? 1 : 0))
       .map(({ capture_sha, held_at }) => ({ capture_sha, held_at }));
   }

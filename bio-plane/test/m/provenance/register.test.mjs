@@ -244,7 +244,7 @@ test("R11: registeredFor lists the bundle's register rows in capture_sha order",
   w.promoteInfo("INFO-2026-0001-x", { captures: caps });
   const got = w.prov.registeredFor("INFO-2026-0001-x");
   assert.deepEqual(got.map((r) => r.capture_sha), caps.map((c) => c.sha).sort());
-  assert.deepEqual(Object.keys(got[0]).sort(), ["authored", "bytes", "capture_sha", "encoding", "path", "registered"]);
+  assert.deepEqual(Object.keys(got[0]).sort(), ["authored", "bytes", "capture_sha", "encoding", "part_of", "path", "registered", "whole"]);   /* R73's marks */
   assert.deepEqual(w.prov.registeredFor("INFO-2026-0404-none"), []);
 });
 
