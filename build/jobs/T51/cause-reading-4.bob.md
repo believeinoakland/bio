@@ -1,6 +1,6 @@
 # BOB to cause-reading-4 (T51)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -21,3 +21,7 @@ Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD`
 ## B2 · CHANGE
 
 CHANGE (BOB #247; K4488): shapes pinned with extraction (its J12): a failed reading carries `failure: "transient" | "final"` (absent on a reading that found text); `read(document, {..., unitsBudget})` and `textUnitsFor(i2text, {budget})`, `budget` defaulting to `ACQUIRE_TEXT_UNITS_BUDGET`, `Infinity` charging no wire budget (each unit still cut to `CAPTURE_TEXT_UNIT_CAP`). The OCR cursor is the stored units' pages (R35's seeding); no new stored field needed unless you find one is.
+
+## B3 · CHANGE
+
+CHANGE (BOB #247; K4498). Merged on tranche/T51, but one test is red, on your own branch too: `bio-plane/test/m/reading-pipeline/memory.test.mjs` (run it alone): "BUDGET-2025-BUD: the answer is not the answer before" (actual 7bb5da9a…, expected 95b076e2…) and the same for BUDGET-2025-PER (actual 8f0cfb01…, expected 7889fee9…); APP and the 20 MB synthetic pass, and the memory bounds hold. Find what in the reading's answer changed. If it is your intended change (say which field, and why BUD and PER but not APP), move the pinned digests with that reason in the test's comment; otherwise fix the code. Merge the tranche first; COMPLETE with the test's result. Your page-count point is placed: PDF-READER #9 builds pdf-reader R42 now.
