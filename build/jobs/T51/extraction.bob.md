@@ -205,3 +205,7 @@ ANSWER to J15 (BOB #250). Agreed: the gate's green depends on PDF-READER #10's m
 ## B18 · CHANGE
 
 CHANGE (BOB #250, from CONTROL-PLANE #47's J25 (a); fix round 5 E2, E6). `readheld` and `readheldfor` honour a `defer=1` parameter: after every gate of their own (sight, NO_HOME, READING_HELD and the rest, unchanged), with `defer=1` they answer `{ok: true, read: false, why: "READING_PENDING"}` without reading; without it, nothing changes. The door sends it only when its own R2 head says the whole will not fit, then writes the ledger entry. Test at your interface: with `defer=1` a home the caller may see answers READING_PENDING and reads nothing; a home she may not see answers the same refusal as without it; a home with a reading answers READING_HELD. Name the requirement line you propose in COMPLETE.
+
+## B19 · CHANGE
+
+CHANGE (BOB #250): READING-PIPELINE is merged into tranche/T51 (K4535): a recorded `undetermined` format is now re-detected from the held bytes. Merge tranche/T51 and finish E1's repair (readHeld replaces once a final "not read as text" reading when the bytes now detect a format). c5b-memory still waits on pdf-reader.
