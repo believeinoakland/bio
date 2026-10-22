@@ -4406,6 +4406,14 @@
    "purpose": "The bound start-and-send flow: refusals first, reason in place, approve then record the send (DEC-115).",
    "acts": [
     {
+     "op": "projectjoin",
+     "label": "Join",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
      "op": "optionstartpreview",
      "label": "See what starting does",
      "status": "declared",
@@ -4541,6 +4549,14 @@
    "purpose": "A records request: the office by role, what is wanted, the law, the text, approving and recording the send.",
    "acts": [
     {
+     "op": "projectjoin",
+     "label": "Join",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
      "op": "addresseesuggest",
      "label": "Choose the office",
      "status": "declared",
@@ -4611,6 +4627,14 @@
    "frame": "working",
    "purpose": "One action: replies, deadlines, the law it goes under, its risk tier, pressure, holds; a question opened when no reply is recorded.",
    "acts": [
+    {
+     "op": "projectjoin",
+     "label": "Join",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
     {
      "op": "actionmove",
      "label": "Move the action",

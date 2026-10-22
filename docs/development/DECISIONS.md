@@ -6428,3 +6428,18 @@ decided: 2026-10-22 · the design session (P17)
 the design: `install` gains state `ready` ("Get ready", from "Get your Cloudflare account ready first" on start and on the needs list): five numbered steps, each a sentence, what the founder will see, and a button opening Cloudflare's own page in a new tab (an account in the team's name with a shared email; verify the email; a payment card; Workers Paid; containers on), then "When these are done, check your account" to Cloudflare's permission page; states `check` and `checkok` after it: "Check my account", "Checking creates nothing that stays in your account.", one line per check (Workers Paid, containers, room under the limits, the short name free, a payment card), each "Ready" or "Not ready yet" with its fix and a button to the page that fixes it, "Check again"; "Install now" (bootstrap) disabled with "Install now opens when every line is ready." until all are ready; `refused` adds "This is rare: the check before installing should have caught it." Journey 1 walks start, ready, cloudflare, check, checkok, progress, done. Act `owed:installcheck DEC-415`; 52 keys (`screen.install.getready.*`, `screen.install.check.*`, `screen.install.refused.rare`).
 reasoning recorded in: this entry; `screens/mock-screens.js`, `screens/mock-journeys.js`, `screens/mock-acts.js`, `screens/mock-kit.js`, `screens/registry.src.py`, `screens/words-drawn.src.py` (rows noted "DEC-416").
 owed: BOB: installcheck (DEC-415's requirements).
+
+### DEC-417 · answered
+raised: 2026-10-22 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (BOB's B477, K4557, K4559; B476 noted)
+for: design
+question: Where does an invited, not yet joined member find the join door on an action, and the rows owed from T51's round (later-ux.md).
+why it is Bob's: it is not (P17): drawing and words beneath his K4557.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-22 · the design session (P17)
+the design: `action`, `request` and `start-send` list `projectjoin` ("Join") and draw, near the top, a fold "If you were invited and have not joined yet" (`screen.projectact.invited.head`) holding the refusal in the invitation's words, `refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited`: "You have been invited to this project but have not joined it yet, so you can't do this here. Looking, capturing and citing stay open to you. Join the project to go on. Nothing was changed.", and Join beside it. Rows: `document.readnow.pending` "Being read now. Its words can be found and cited once the reading is done, and this page shows them then."; `plane.pending.interrupted` "The reading stopped three times before it finished, so your team's Civicsmith has stopped trying. Ask for a fresh reading, or capture the document again."
+reasoning recorded in: this entry; `screens/registry.src.py`, `screens/mock-screens.js`, `screens/words-drawn.src.py` (block "DEC-417").
+owed: BOB: the invited refusal read where the member is invited (the held sentence stays for a member not invited), Join drawn beside it, the two rows read (T52 under K4269).

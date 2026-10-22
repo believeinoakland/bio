@@ -7319,6 +7319,14 @@ w416('check.closed', 'Install now opens when every line is ready.', 'the gate, s
 w416('check.allready', 'Every line is ready.', 'the gate, open')
 w416('refused.rare', 'This is rare: the check before installing should have caught it.', "added to the install's own stop, the second line of defence")
 
+# DEC-417: B477 (K4557, K4559): an invited member's join door, and two reading rows (later-ux.md)
+def w417(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-417: B477 ' + note))
+w417('refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited', "You have been invited to this project but have not joined it yet, so you can't do this here. Looking, capturing and citing stay open to you. Join the project to go on. Nothing was changed.", 'screens-action (K4557): an invited, not yet joined member at the start of a filing step on action, request or start-send; drawn beside Join (projectjoin)')
+w417('screen.projectact.invited.head', 'If you were invited and have not joined yet', 'the fold on action, request and start-send holding the refusal and Join')
+w417('document.readnow.pending', 'Being read now. Its words can be found and cited once the reading is done, and this page shows them then.', 'control-plane #47 J26: Read it now or the OCR press answered READING_PENDING')
+w417('plane.pending.interrupted', "The reading stopped three times before it finished, so your team's Civicsmith has stopped trying. Ask for a fresh reading, or capture the document again.", 'plane #50 J29: an owed reading the object stopped three times')
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
