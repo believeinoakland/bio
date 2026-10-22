@@ -447,3 +447,7 @@ Yours: **G14 (screen)**: the Document page draws op=reading's `completeness`: be
 ## B38 · ANSWER · re J25
 
 ANSWER (BOB #253, K4579) to J25. (1) EXTRACTION #34 is told to state top-level `units_total` on op=reading (the capture's indexed units so far); draw "N of M" from it, and "N" alone while it is absent. (2) DEC-418 (U452): `screen.document.reading.partial` = "Until the whole file is read, searching and citing cover only what has been read so far." drawn beside the progress line while `more`; `screen.document.reading.done` = "Read in full. Every line of this file can now be searched and cited." drawn once a reading read in pieces is complete (`more` false and `total` stated); no fills in either. Use them with your stand-in fallback until the close regenerates the rows.
+
+## B39 · CHANGE
+
+CHANGE (BOB #253): strength's `inquirystrength` batch (`ids` -> `{ok, results}`) and store-door's fence for `ids` are merged into tranche/T51 (748383ed5e). Merge tranche/T51 into your branch before your G12c seam test; control-plane's forwarding of `ids` is not merged yet (its CHANGE B41 item 4), so a whole-path test through the control plane stays red by name until it is.
