@@ -1,6 +1,6 @@
 # publication (T51)
 
-**Status** · session_01W7ArLV5djt9odo9CqsoN5L · depth 2 · COMPLETE · handled B3
+**Status** · session_01SuyGTiBzRae5USVsWZvCRa · depth 2 · COMPLETE · handled B3
 
 ## J1 · COMPLETE
 
@@ -47,3 +47,28 @@ BLOCKED (cause: needs BOB, one act): add "setup-words" to publication's uses in 
 ## J4 · COMPLETE
 
 T51-234 done: 73 words findings and 14 plain findings converted, tests 151 (150 pass, 0 fail, 1 todo), format/architecture/coverage/ownership 0 failures; details in my record. Other modules' words findings remain (not mine).
+
+## J5 · COMPLETE
+
+T51 fix round 5, E4's provider half (plan merge 6): complete.
+
+**What changed.** `bio-plane/src/publication/index.mjs`: `caseDocument` (R1) now answers `findings: [{target, version_sha, role}]` beside `citations` (shape unchanged, `{state, rows}`), read by the new private `#pinnedFindings(docText)` right after `caseDocument`. It lists `case_findings` in the document's own order and takes each target's `version_sha` and `role` from its `case_roles` row (null where no row pins it). Null, never `[]`, when the bytes state no `case_findings` (R28); never throws. A signed and an unsigned edition answer the same; a refusal (`NO_CASE_DOCUMENT`) carries no field. `op=casedocument` passes the answer through unchanged. New data only: no stored row changes.
+
+**Failing-first.** `bio-plane/test/m/publication/t51.test.mjs`, three tests named R1. Red first (before the code): `actual: undefined` for `findings` on the unsigned edition, and `undefined !== null` for the no-roster case. Green after: `tests 154, pass 153, fail 0, todo 1` (the todo was already there). The tests assert: an unsigned two-finding edition (one load-bearing, one supporting) answers exactly the pinned roster in order; `citations` stays `{state, rows}` and is not an array; the signed edition answers the same findings to anybody; a refusal has none; a document with no roster answers null and one with an empty roster `[]`.
+
+**Equal to the `publish` answer.** The `publish` answer's findings come from case-authoring (`written`, `{target, bundleSha, ...}`); the document it stores pins the same targets and `version_sha` (= `bundleSha`). publication cannot use case-authoring (not in its uses), so the equality is tested against the roster the preparation pinned, and screens-publish (merge 9) closes the seam with the real `publish`.
+
+**Reader.** The plan said "through case-grammar (one reader)". `case-grammar` has no roster reader (`signedCitations`, `caseDocumentBlocks` read other blocks), and I may not change it, so the reader is private to this module beside R55's `#caseDocMemberFrozen` and `#pinnedMemberBasis`, which already read `case_roles` with `parseFrontmatter`. If BOB wants one reader in case-grammar, that is a small move for case-grammar's job; nothing here blocks on it.
+
+**Requirement line proposed (BOB writes `build/requirements/`).** In R1, after "and `citations` (...)": "and `findings`: `[{target, version_sha, role}]`, the roster the document pins (`case_findings` in its order, each with its `case_roles` row's `version_sha` and `role`, null where no row pins it), the same for a signed and an unsigned document; null when the bytes state no roster (R28). `citations` is not the roster." Tests name R1.
+
+**Deferred.** None. **Found in another module.** Nothing new.
+
+**Tests and checks.**
+- `node --test --test-force-exit test/m/publication/*.test.mjs`: `tests 154, pass 153, fail 0, todo 1`.
+- Readers of `casedocument` (impact.mjs names 56 modules, 958 test files; I ran the modules whose code calls `caseDocument` or `op=casedocument`): case-authoring 228/228, ratification 254/254, case-inputs 71/71, case-tensions 24/24, case-checker 95/95, case-catalogue 16/16, screens-publish 255 of 257 pass, fail 0 (2 skipped or todo, already so). I did not run the other 49 modules' suites: the change only adds a field.
+- `node checks/run.mjs /home/user/bio`: format `0 failures`; architecture `4160 product files ... 0 failures`; coverage `6605 of 6605 live requirement ids named by a test; 0 failures`; channels `0 failures`; words `18421 words ... 0 failures` (my change adds no sentence, so the count does not rise).
+- `node checks/ownership.mjs /home/user/bio publication tranche/T51 job/T51/publication`: `ownership: 3 files changed by publication between tranche/T51 and job/T51/publication; 0 failures`.
+- No platform check is needed: the field is a parse of a document already read (N).
+
+Size (session_01SuyGTiBzRae5USVsWZvCRa): test runs 5, module lines 2464
