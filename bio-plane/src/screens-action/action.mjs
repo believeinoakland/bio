@@ -7,7 +7,7 @@
    where a reply's date has passed with none recorded, behind a fold on any other. The subject is the action's id. It holds
    no member-facing English (R19). Every function here is self-contained (interface-shell R21 (1)). */
 import { OPS } from "../op-declarations/index.mjs";
-import { draftsOf, stepOf, readOnly, kindWord, later, officeLine, chosenLawOf, WRITE_HELP } from "./send-steps.mjs";
+import { draftsOf, stepOf, readOnly, kindWord, later, officeLine, chosenLawOf, joinFirst, WRITE_HELP } from "./send-steps.mjs";
 
 // R23: `actioninquiry` is an owed act (`interface-shell` R73): it is registered once `op-declarations` declares it, and the
 // shell draws it as it draws every act (R12).
@@ -37,6 +37,8 @@ export const action = Object.freeze({
       pressure: { op: "pressurefor", query: { action: view.subject },
         empty: function (v) { return !v || !Array.isArray(v.items) || v.items.length === 0; } },
       projects: { op: "list", query: { type: "project", limit: "500" } },
+      // E9 (K4557): her own place in the action's project (`participation`): an invited member is told at the start, not refused at the end
+      standing: { op: "projectlist", query: {}, empty: function () { return false; } },
       // R16: the laws the group's places name, from which a law is chosen or proposed.
       profiles: { op: "profiles", empty: function () { return false; } },
       // R28: a kind the profile defines is worded by its own label; R31 (2): the templates the action's kind holds
@@ -50,7 +52,7 @@ export const action = Object.freeze({
 
   parts: {
     draftsOf: draftsOf, stepOf: stepOf, readOnly: readOnly, kindWord: kindWord, officeLine: officeLine, chosenLawOf: chosenLawOf,
-    later: later,
+    later: later, joinFirst: joinFirst,
     // R16: the laws the profile names for this kind of action (each citation once), with the window the profile gives. C64-law: for a
     // records request they are the profile's records laws, each with the window its own `response` names (`jurisdictions` R96), never
     // the deadlines (a deadline is a rule, an appeal's window is not a law a request goes under).
@@ -195,7 +197,10 @@ export const action = Object.freeze({
       // R10: an approved text not yet sent opens its send step.
       const f = view.data.filings;
       const step = f && f.state === "ok" ? P.stepOf(f.value) : null;
-      const pickup = step === "send" || step === "second"
+      // E9 (K4557): an invited member is told here, in place of the doors to the send steps, that only members who have joined can use
+      // them, with the way to accept; the doors themselves are drawn to a joined member alone
+      const joinFirst = P.joinFirst(cs, view, a.project);
+      const pickup = !joinFirst && (step === "send" || step === "second")
         ? '<div class="cs-reason" role="region"><p>' + cs.w("screen.action.unsent") + '</p><a class="cs-ref" href="/app/'
           + (a.kind === "records_request" ? "request/" : "start-send/") + encodeURIComponent(view.subject) + '" data-nav>' + cs.w("screen.action.pickup") + "</a></div>" : "";
 
@@ -204,10 +209,10 @@ export const action = Object.freeze({
       // R43: an action not yet sent (no sent entry, no sending recorded) draws the door to the send steps, where its text is
       // prepared; a sent one does not
       const unsent = !sent.length && step !== "sent";
-      const toSend = unsent ? door("start-send", view.subject) : "";
+      const toSend = unsent && !joinFirst ? door("start-send", view.subject) : "";
       // R43, R48 (C65): once the filing's sending is recorded the way to keep it as the team's template is reachable from the action: the
       // control is on `start-send`'s step for a sent filing (the registry lists `templatesave` on that screen alone), which this opens
-      const keepDoor = step === "sent" && cs.can("templatesave") ? '<p class="mk-note">' + aLink("start-send", view.subject, "screen.start-send.template.heading") + "</p>" : "";
+      const keepDoor = step === "sent" && !joinFirst && cs.can("templatesave") ? '<p class="mk-note">' + aLink("start-send", view.subject, "screen.start-send.template.heading") + "</p>" : "";
       const owed = a.reply_owed && a.reply_owed.owed;
       const wait = owed ? '<p class="cs-wait" role="status">' + cs.w("screen.action.waiting", { office: office || cs.w("screen.action.theoffice") }) + "</p>" : "";
       const today = P.today(cs);
@@ -489,7 +494,7 @@ export const action = Object.freeze({
         + cs.act("actionscope", { data: { to: a.confidential ? "false" : "true" } });
       const manage = cs.sec("screen.action.manage", '<div class="mk-acts">' + move + "</div>" + scope);
       // R40: the counsel packet's screen is opened from the action
-      return head + pickup + toSend + wait + dueDoor + question + clocks + replies + pressureSec + lawSec + guideSec + templatesSec + keepDoor + riskSec + door("counsel", view.subject) + manage;
+      return head + (unsent || step === "send" || step === "second" || step === "sent" ? joinFirst : "") + pickup + toSend + wait + dueDoor + question + clocks + replies + pressureSec + lawSec + guideSec + templatesSec + keepDoor + riskSec + door("counsel", view.subject) + manage;
     });
   },
 
