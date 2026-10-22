@@ -332,3 +332,17 @@ Mail with `--module control-plane`; record `build/jobs/T51/control-plane.md` (ap
 - **G1.** Beside `PLANE_LIMITS_STATEMENT` (:567, emitted :824-825) emit `bio-plane-crons/1 */5 * * * *`; pass any new query keys (`casedrafts` :1653, :3697) the batch reads add. Test the literal.
 
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio control-plane tranche/T51 job/T51/control-plane`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B41 · CHANGE
+
+CHANGE (BOB #253, K4577): settled shapes from the round's providers; build to them.
+1. G2 fetch_done: YOUR delivery records it. After `deliverOwed…` promotes a finished fetch under the session's project (and registers the R123 reading follow), call capture's `captureOf(ctx).recordFetchDone({session, document, opener, project, at})` (CAPTURE #48 J21: `opener` a `member:<id>` stamp; one row per session; never throws). acquisition's `owedFetch` hands the document to `opts.deliver` and records nothing.
+2. G2 the answer: acquisition answers a parked large capture `200 {ok: true, fetch_pending: {session, since, declared_bytes|null, why}}` with no `document`, `why` one of `LARGE_DECLARED`, `LARGE_BODY`, `SLOW_BODY`; relay it untouched. `openCaptures` lists it with `fetch_pending` and, after a stated refusal, `failed`.
+3. G4/G5 (EXTRACTION #34 J18): a failed or silent `extractread` after a kept acquire now returns `{body}` with `reading_pending: true` and `diag`, never `{response}` 502. `readUploaded` (index.mjs ~2625-2627) builds its answer from `read.body.document` only: carry `reading_pending` and `diag` and call `pendSha` for the upload. `op=acquire`'s `pendReading` already reads the flag.
+4. G12c: forward the batch keys and treat each batch answer as a read answer (never the dead answer's 404): `casedrafts` `projects` (answer `{ok, kind: "review-drafts-batch", count, lists}`), `reviewcopy` `drafts` (answer `{ok, kind: "review-copies", count, copies}`; stamp each copy as the single read is stamped), `inquirystrength` `ids` (answer `{ok, results}`). Each key is a body list or a comma-separated query value.
+No merge of the tranche is needed for this CHANGE (no file of yours changed); merge when you next take the tranche.
+
+## B42 · CHANGE
+
+CHANGE (BOB #253, K4578): fix round 6 gains causes from the K4571 audit. Merge tranche/T51 into your branch, then read `build/plan/fix-round-6-T51.md` section "G14-G25" whole (it is short) and apply the causes named below as part of this job, with the four fields (R-FOUR), failing-first past the bound, stand-in words named in COMPLETE (the rows go to UX-DESIGN). Bob (K4571): never a silent partial read; a bound that must stay is stated to the member.
+Yours: **G14 (provider)**: register the reading continuation on the door path (`readUploaded`, `followEntries`) whenever the reading answers `more`, for every format. **G18 (owner)**: `followEntries` follows the first 16 documents of a promotion as today and OWES the rest (`pendSha`), never drops them (index.mjs ~2566, `READING_FOLLOWED_MAX` :217).
