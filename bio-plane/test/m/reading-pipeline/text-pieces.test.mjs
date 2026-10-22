@@ -22,7 +22,9 @@ function longLog() {
 const lineOf = (i) => `line ${String(i).padStart(6, "0")} ` + "council-minutes ".repeat(5).padEnd(87, ".");
 
 const readOf = (b, document, opts = {}) => read(document, { evidence: evidenceStore(b), env: {}, storeName: "bio", ...opts });
-const pieceOpts = (cursor = null, extra = {}) => ({ unitsBudget: BUDGET, pieces: { cursor, maxUnits: MAX_UNITS, ...extra } });
+const pieceOpts = (cursor = null, extra = {}) => ({ unitsBudget: BUDGET, cursor, maxUnits: MAX_UNITS, ...extra });
+const decode = (c) => JSON.parse(Buffer.from(c, "base64url").toString());
+const encode = (o) => Buffer.from(JSON.stringify(o)).toString("base64url");
 
 /* Every piece until `more` is false, each handed the cursor the one before answered. */
 async function allPieces(b, document, extra = {}) {
@@ -31,8 +33,8 @@ async function allPieces(b, document, extra = {}) {
   for (let guard = 0; guard < 500; guard++) {
     const out = await readOf(b, document, pieceOpts(cursor, extra));
     pieces.push(out);
-    if (!out.piece || out.piece.more === false) break;
-    cursor = out.piece.cursor;
+    if (out.more !== true) break;
+    cursor = out.cursor;
   }
   return pieces;
 }
@@ -60,18 +62,18 @@ test("R40 R15 R33: the 12,000,060 B text read in pieces is the whole read once: 
 
   pieces.forEach((p, i) => {
     const last = i === pieces.length - 1;
-    assert.equal(p.piece.more, !last, `piece ${i}`);
-    assert.equal(p.piece.cursor === null, last, `piece ${i}`);
+    assert.equal(p.more, !last, `piece ${i}`);
+    assert.equal(p.cursor === null, last, `piece ${i}`);
     assert.ok(p.text_units.length >= 1 && p.text_units.length <= MAX_UNITS, `piece ${i} within the unit bound`);
     assert.equal(p.text_units_over_bound, undefined, "a piece names no skipped run: nothing is left out");
     assert.equal(p.text_units_skipped, undefined);
     assert.equal(p.piece.units, p.text_units.length);
     assert.equal(p.reading !== undefined, i === 0, "the first piece is the reading, a later one its units alone");
   });
-  const through = pieces.map((p) => p.piece.chars_through);
+  const through = pieces.map((p) => p.read_through);
   assert.deepEqual([...through].sort((x, y) => x - y), through, "progress only grows");
-  assert.equal(through[through.length - 1], pieces[0].piece.chars_total, "the last piece has read through the end");
-  assert.equal(pieces[0].piece.chars_total, text.length);
+  assert.equal(through[through.length - 1], pieces[0].total, "the last piece has read through the end");
+  assert.equal(pieces[0].total, 12000060, "total is the text's bytes");
 
   /* R35: the first piece's reading counts the words of the whole text, and the pieces' own words add up to them */
   assert.equal(pieces[0].reading.words_total, whole.reading.words_total);
@@ -99,7 +101,7 @@ test("R40: the same text held only in parts (an upload, profiled from no byte) i
   const units = pieces.flatMap((p) => p.text_units);
   assert.equal(units.length, LINES + 1);
   assert.equal(units[LINES].text, "ENDMARKER");
-  assert.equal(pieces[pieces.length - 1].piece.more, false);
+  assert.equal(pieces[pieces.length - 1].more, false);
 });
 
 test("R40: a cursor that no longer matches the bytes is refused, with no reading and no units: another capture's cursor, a cursor over a text of another length, an offset that is no unit's start, and one that is no cursor", async () => {
@@ -108,40 +110,41 @@ test("R40: a cursor that no longer matches the bytes is refused, with no reading
   const d = await hold(b, text);
   const document = doc({ digest: d, bytes: text.length, ct: "text/plain", format: "undetermined", fromText: true });
   const first = await readOf(b, document, pieceOpts());
-  const cur = first.piece.cursor;
-  assert.equal(cur.sha256, d);
+  const cur = decode(first.cursor);
+  assert.equal(cur.s, d);
 
   const other = await hold(b, text.slice(0, 100000) + " changed");
   const otherDoc = doc({ digest: other, bytes: 100008, ct: "text/plain", format: "undetermined", fromText: true });
   for (const [name, document2, cursor] of [
     ["another capture", otherDoc, cur],
-    ["another length", document, { ...cur, chars: cur.chars + 1 }],
-    ["not a unit's start", document, { ...cur, offset: cur.offset + 3 }],
-    ["past the end", document, { ...cur, offset: text.length + 5 }],
-    ["a negative offset", document, { ...cur, offset: -1 }],
-    ["no cursor", document, { offset: 5 }],
-    ["a string", document, "12"]]) {
-    const out = await readOf(b, document2, pieceOpts(cursor));
+    ["another length", document, { ...cur, c: cur.c + 1 }],
+    ["not a unit's start", document, { ...cur, o: cur.o + 3 }],
+    ["past the end", document, { ...cur, o: text.length + 5 }],
+    ["a negative offset", document, { ...cur, o: -1 }],
+    ["another shape", document, { ...cur, k: "u" }],
+    ["no cursor", document, { o: 5 }],
+    ["not base64", document, "12 !"]]) {
+    const out = await readOf(b, document2, pieceOpts(typeof cursor === "string" ? cursor : encode(cursor)));
     assert.equal(out.refused && out.refused.code, "CURSOR_MISMATCH", name);
     assert.equal(typeof out.refused.why, "string", name);
     assert.equal(out.reading, undefined, name);
     assert.equal(out.text_units, undefined, name);
   }
   /* the right cursor still reads */
-  const next = await readOf(b, document, pieceOpts(cur));
+  const next = await readOf(b, document, pieceOpts(first.cursor));
   assert.equal(next.text_units[0].text, lineOf(first.text_units.length));
   assert.equal(next.text_units[0].extent.para, first.text_units.length);
 });
 
-test("R40: a cursor handed for a capture that is not read as text is refused; with none, such a capture is read whole as before and carries no piece", async () => {
+test("R40: a cursor handed for a capture that cannot be read in pieces is refused; with none, a capture of another format is read as before", async () => {
   const b = bucket();
-  const bytes = Buffer.concat([Buffer.from("%PDF-1.4\n"), Buffer.alloc(200, 7)]);
+  const bytes = Buffer.from(Array.from({ length: 300 }, (_, i) => (i * 37 + 11) % 256));
   const d = await hold(b, bytes);
-  const document = doc({ digest: d, bytes: bytes.length, ct: "application/pdf", format: "pdf", fromText: false });
+  const document = doc({ digest: d, bytes: bytes.length, ct: "application/octet-stream", format: "undetermined", fromText: false });
   const none = await readOf(b, document, pieceOpts());
   assert.ok(none.reading, "read whole, as before");
-  assert.equal(none.piece, undefined);
-  const withCursor = await readOf(b, document, pieceOpts({ sha256: d, chars: 10, offset: 0, para: 0 }));
+  assert.equal(none.more, undefined);
+  const withCursor = await readOf(b, document, pieceOpts(encode({ v: 1, s: d, k: "t", c: 10, o: 0, p: 0, q: 0, r: 0 })));
   assert.equal(withCursor.refused && withCursor.refused.code, "NOT_PIECEWISE");
   assert.equal(withCursor.reading, undefined);
 });
@@ -159,16 +162,16 @@ test("R40 (control): a text that fits one piece answers it with more false and n
     const plain = await readOf(b, document, { unitsBudget: BUDGET });
     const piecewise = await readOf(b, document, pieceOpts());
     assert.deepEqual(piecewise.text_units, plain.text_units, name);
-    assert.equal(piecewise.piece.more, false, name);
-    assert.equal(piecewise.piece.cursor, null, name);
+    assert.equal(piecewise.more, false, name);
+    assert.equal(piecewise.cursor, null, name);
     assert.equal(piecewise.piece.units_total, plain.text_units.length, name);
     assert.deepEqual({ ...piecewise.reading, words_read: undefined }, { ...plain.reading, words_read: undefined }, name);
     assert.equal(piecewise.reading.words_read, plain.reading.words_read, name);
-    assert.equal(plain.piece, undefined, `${name}: without pieces, no piece`);
+    assert.equal(plain.more, undefined, `${name}: without a cursor, no piece`);
   }
 });
 
-test("R40 (control): paragraphs and HTML read in pieces are the whole read once, and a unit larger than the piece's budget is still a piece of its own, cut at the unit cap as R15 states", async () => {
+test("R40 (control): paragraphs and HTML read in pieces are the whole read once, (a unit larger than a piece's budget is R41's)", async () => {
   const b = bucket();
   const paras = Array.from({ length: 5000 }, (_, i) => `Paragraph ${i} wraps\nover two lines of the minutes.`).join("\n\n");
   const dp = await hold(b, paras);
@@ -186,22 +189,28 @@ test("R40 (control): paragraphs and HTML read in pieces are the whole read once,
   assert.equal(piecesH.length, 3);
   assert.deepEqual(piecesH.flatMap((p) => p.text_units), wholeH.text_units);
 
-  const huge = "x".repeat(CAPTURE_TEXT_UNIT_CAP + 500);
-  const body = [huge, "after one", "after two"].join("\n\n");
+});
+
+test("R41: a line or paragraph over the unit cap is carried whole as consecutive units, run 0, 1, ..., never cut; every piece is at least one unit, so a tiny budget still moves", async () => {
+  const b = bucket();
+  const words = Array.from({ length: 40000 }, (_, i) => `w${i}`).join(" ");   /* ~ 250 KB: two runs */
+  const body = [words, "after one", "after two"].join("\n\n");
   const dg = await hold(b, body);
   const docG = doc({ digest: dg, bytes: body.length, ct: "text/plain", format: "undetermined", fromText: true });
-  const tiny = [];
+  const got = [];
   let cursor = null;
-  for (let i = 0; i < 6; i++) {
-    const out = await readOf(b, docG, { unitsBudget: 100, pieces: { cursor, maxUnits: 10 } });
-    tiny.push(out);
-    if (!out.piece.more) break;
-    cursor = out.piece.cursor;
+  for (let i = 0; i < 9; i++) {
+    const out = await readOf(b, docG, { unitsBudget: 100, cursor, maxUnits: 10 });
+    got.push(...out.text_units);
+    if (!out.more) break;
+    cursor = out.cursor;
   }
-  assert.deepEqual(tiny.map((p) => p.text_units.length), [1, 1, 1], "a unit that does not fit a piece is a piece of its own");
-  assert.equal(tiny[0].text_units[0].truncated, true);
-  assert.equal(tiny[0].text_units[0].text.length, CAPTURE_TEXT_UNIT_CAP);
-  assert.equal(tiny[2].piece.more, false);
+  const n = Math.ceil(words.length / CAPTURE_TEXT_UNIT_CAP);
+  assert.ok(n >= 2);
+  assert.deepEqual(got.map((u) => [u.extent.para, u.extent.run, u.seq]),
+    [...Array.from({ length: n }, (_, k) => [0, k, k]), [1, null, n], [2, null, n + 1]]);
+  assert.ok(got.every((u) => u.truncated === undefined && u.text.length <= CAPTURE_TEXT_UNIT_CAP));
+  assert.equal(got.slice(0, n).map((u) => u.text).join(""), words, "the runs are the paragraph, none of it lost");
 });
 
 test("R40 R15 (control): without pieces a text over the wire's bound is read as before: the units that fit, the rest named", async () => {
@@ -212,5 +221,5 @@ test("R40 R15 (control): without pieces a text over the wire's bound is read as 
   assert.ok(out.text_units.length < 6000);
   assert.equal(out.text_units_over_bound, 6000 - out.text_units.length);
   assert.ok(Array.isArray(out.text_units_skipped));
-  assert.equal(out.piece, undefined);
+  assert.equal(out.more, undefined);
 });

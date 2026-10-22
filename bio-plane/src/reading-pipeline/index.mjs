@@ -1113,7 +1113,39 @@ const TEMPLATE_TOKEN = /\{[0-9]+\}|\{[A-Za-z_][A-Za-z0-9_]*\}|##LOC\[[^\]]*\]##/
    drops to the end), then navigation, then the page's main or article contents or else its landmark furniture, then the rest of the furniture wherever it sits, as above, every tag is removed (a block tag ends its paragraph, `br` its line),
    and character references are decoded, so a decoded `&lt;` is text, never a tag. Template tokens go last, so one
    written as references goes too. */
-export function visibleTextOfHtml(html) {
+/* G14: `<head>` may be left unclosed (HTML ends it implicitly at the first thing that cannot be in a head): a closed head is
+   dropped whole; an unclosed one is dropped up to the first element that is no head content, or the first text, and what
+   follows is the body's. `script`, `style` and `template` left unclosed are raw text to the end of the document (the parsing
+   rules' script data state), so they drop to the end as before. */
+const HEAD_CONTENT = new Set(["title", "meta", "link", "base", "style", "script", "noscript", "template"]);
+function dropHead(html) {
+  const open = /<head\b(?:"[^"]*"|'[^']*'|[^'">])*>/i.exec(html);
+  if (!open) return html;
+  const closed = /<\/head\s*>/i.exec(html.slice(open.index));
+  const tag = new RegExp(`<(/?)([A-Za-z][A-Za-z0-9:-]*)(?:"[^"]*"|'[^']*'|[^'">])*>`, "y");
+  let at = open.index + open[0].length;
+  for (;;) {
+    const ws = /^\s*/.exec(html.slice(at, at + 1024))[0].length;
+    at += ws;
+    if (at >= html.length) break;
+    if (html.startsWith("<!--", at)) { const e = html.indexOf("-->", at + 4); at = e < 0 ? html.length : e + 3; continue; }
+    if (html[at] !== "<") break;   /* text: the body has begun */
+    tag.lastIndex = at;
+    const m = tag.exec(html);
+    if (!m) break;
+    const name = m[2].toLowerCase();
+    if (m[1] && name === "head") { at = tag.lastIndex; break; }
+    if (m[1] || !HEAD_CONTENT.has(name)) break;
+    at = tag.lastIndex;
+    if (["title", "style", "script", "noscript", "template"].includes(name) && !m[0].endsWith("/>")) {
+      const end = new RegExp(`</${name}\\s*>`, "i").exec(html.slice(at));
+      at = end ? at + end.index + end[0].length : html.length;
+    }
+  }
+  return html.slice(0, open.index) + " " + html.slice(at);
+}
+export function visibleTextOfHtml(html0) {
+  const html = dropHead(html0);
   const live = dropElements(html
     .replace(/<!--[\s\S]*?(?:-->|$)/g, " ")
     .replace(/<(script|style|template|head)\b(?:"[^"]*"|'[^']*'|[^'">])*>[\s\S]*?(?:<\/\1\s*>|$)/gi, " ")
@@ -1161,17 +1193,21 @@ export function textWordsOfText(text, { html = false, budget } = {}) {
 }
 
 /* ===================================================================== *
- * A text read in pieces (R40).
+ * A reading in pieces (R40, R41).
  * ===================================================================== */
 
-/* R40 (fix round 6, G13; K4571): a text too large for one answer is read whole, in pieces by a cursor, never in part
-   without saying so. `read(document, {pieces: {cursor, maxUnits}, unitsBudget})` answers the units of one piece, in the
-   grain R32 and R33 give, within `unitsBudget` bytes (each unit charged as R15 charges it) and `maxUnits` units
-   (default PIECE_UNITS_MAX, extraction R22's index bound), and `piece = {more, cursor, units, words, chars_through,
-   chars_total}`; the next call hands that `cursor` back. A piece holds at least one unit, so a cursor always moves. The
-   cursor is `{sha256, chars, offset, para}`: the capture's digest, the length of the text the units are drawn from, where
-   the next unit begins in it, and the next `para` (which is `seq`); one that does not fit the bytes now in hand is
-   refused, not guessed at. */
+/* R40 (fix round 6, G13, G14; K4571, K4578): a reading too large for one answer is read whole, in pieces by a cursor, never
+   in part without saying so. `read(document, {cursor, unitsBudget, maxUnits})`: with the `cursor` key passed (null for the
+   first piece, else the string the piece before answered) the answer is one piece of the capture's units, in the grain R15,
+   R32 and R33 give, within `unitsBudget` bytes (each unit charged as R15 charges it) and `maxUnits` units (default
+   PIECE_UNITS_MAX, extraction R22's index bound), and carries `more`, `cursor` (null when `more` is false),
+   `read_through` and `total` (bytes of the text the units are drawn from), and `piece = {units, words, units_total?}`. A
+   unit's `seq` is its place in the capture's whole list, so a later piece continues the numbering. A piece holds at
+   least one unit, so a cursor always moves. The first piece is the reading with its units; a later piece is its units
+   alone (no `reading`). The cursor is opaque and names the capture's digest and the shape of what it points into; one that
+   does not fit the bytes now in hand is refused, with `refused` and no reading. Without the `cursor` key `read` is as it was.
+   R41 (G15): in this mode a text line or paragraph over CAPTURE_TEXT_UNIT_CAP is carried whole as consecutive units
+   (extent `run` 0, 1, ...), never cut; a sheet whose text is over the cap is carried as blocks of whole rows. */
 export const PIECE_UNITS_MAX = 4096;
 export const BARE_DIGEST = "BARE_DIGEST";
 export const CURSOR_MISMATCH = "CURSOR_MISMATCH";
@@ -1179,6 +1215,31 @@ export const NOT_PIECEWISE = "NOT_PIECEWISE";
 /* Sentences the refusals carry. Stand-ins until T52 (K4269): the nearest held rows; owed: `reading-pipeline.index.bare_digest`,
    `.cursor_mismatch`, `.not_piecewise`. The code is the answer; the sentence only says it. */
 const refusal = (code, row) => ({ refused: { code, why: word(row) } });
+
+const b64 = (o) => btoa(JSON.stringify(o)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+function unb64(s) {
+  if (typeof s !== "string" || !/^[A-Za-z0-9_-]{1,2000}$/.test(s)) return null;
+  try { const o = JSON.parse(atob(s.replace(/-/g, "+").replace(/_/g, "/"))); return o && typeof o === "object" && !Array.isArray(o) ? o : null; }
+  catch { return null; }
+}
+const natural = (v) => Number.isInteger(v) && v >= 0;
+
+/* A run of text over the unit cap, as consecutive chunks of at most the cap, each ended at the last space in the final
+   eighth of its window when there is one, else cut at the cap (never inside a surrogate pair). */
+export function chunksOf(text, cap = CAPTURE_TEXT_UNIT_CAP) {
+  const out = [];
+  for (let at = 0; at < text.length;) {
+    let end = Math.min(text.length, at + cap);
+    if (end < text.length) {
+      const sp = text.lastIndexOf(" ", end - 1);
+      if (sp > at + cap - Math.floor(cap / 8)) end = sp + 1;
+      else if ((text.charCodeAt(end - 1) & 0xfc00) === 0xd800) end--;
+    }
+    out.push(text.slice(at, end));
+    at = end;
+  }
+  return out;
+}
 
 /* The grain of a text read as text (R32, R33): an HTML page and a text with a blank line are read by paragraph; a text with
    no blank line and at least two non-empty lines by line. */
@@ -1222,44 +1283,158 @@ function runWalker(visible, grain, html, offset) {
 }
 
 const visibleOf = (text, html) => (html ? visibleTextOfHtml(text) : text);
+const unitOf = (para, run, seq, text) => ({ extent: { kind: "doc-para", para, run }, seq, text });
+const fits = (units, size, room, maxUnits) => !units.length || (units.length < maxUnits && size <= room);
 
-/* The piece of `visible` from `cursor` (null: the start). `{units, piece}` or `{refused}`. */
-function pieceOf(visible, { html, sha, cursor, budget, maxUnits }) {
-  const bad = () => refusal(CURSOR_MISMATCH, "reading-pipeline.index.bytes_not_held");
-  let offset = 0, para = 0;
-  if (cursor != null) {
-    const c = cursor;
-    if (typeof c !== "object" || c.sha256 !== sha || c.chars !== visible.length || !Number.isInteger(c.offset)
-        || !Number.isInteger(c.para) || c.para < 0 || c.offset < 0 || c.offset > visible.length
-        || (c.offset > 0 && c.offset < visible.length && !/\s/.test(visible[c.offset - 1]))) return bad();
-    offset = c.offset; para = c.para;
-  }
+/* The piece of a text read as text, from `at` (null: the start; else `{o, p, q, r}`: the scan offset, the next `para`, the
+   next `seq`, the next run of that paragraph). `{units, grain, more, at, through}`. */
+function textPiece(visible, { html, at, budget, maxUnits }) {
   const grain = grainOf(visible, html);
-  const walk = runWalker(visible, grain, html, offset);
+  const walk = runWalker(visible, grain, html, at ? at.o : 0);
+  let para = at ? at.p : 0, seq = at ? at.q : 0, run0 = at ? at.r : 0;
   const units = [];
-  let room = budget, words = 0, more = false, resume = visible.length;
-  for (let run = walk(); run; run = walk()) {
-    if (!(glyphCount(run.text) > 0)) { para++; continue; }   /* a paragraph with no glyph is no unit, but is counted (R32) */
-    const cut = run.text.length > CAPTURE_TEXT_UNIT_CAP;
-    const text = cut ? run.text.slice(0, CAPTURE_TEXT_UNIT_CAP) : run.text;
-    const size = utf8Length(text) + ACQUIRE_TEXT_UNIT_ENVELOPE;
-    if (units.length && (units.length >= maxUnits || size > room)) { more = true; resume = run.from; break; }
-    room -= size; words += wordsIn(text);
-    units.push({ extent: { kind: "doc-para", para, run: null }, seq: para, text, ...(cut ? { truncated: true } : {}) });
+  let room = budget, more = false, resume = null;
+  for (let r = walk(); r; r = walk()) {
+    if (!(glyphCount(r.text) > 0)) { para++; seq++; continue; }   /* a paragraph with no glyph is no unit, but is counted (R32) */
+    const chunks = r.text.length > CAPTURE_TEXT_UNIT_CAP ? chunksOf(r.text) : null;
+    const n = chunks ? chunks.length : 1;
+    for (let k = chunks ? run0 : 0; k < n; k++) {
+      const text = chunks ? chunks[k] : r.text;
+      const size = utf8Length(text) + ACQUIRE_TEXT_UNIT_ENVELOPE;
+      if (!fits(units, size, room, maxUnits)) { more = true; resume = { o: r.from, p: para, q: seq, r: chunks ? k : 0 }; break; }
+      room -= size;
+      units.push(unitOf(para, chunks ? k : null, seq, text));
+      seq++;
+    }
+    run0 = 0;
+    if (more) break;
     para++;
   }
-  return { units, grain,
-           piece: { more, cursor: more ? { sha256: sha, chars: visible.length, offset: resume, para } : null,
-                    units: units.length, words, chars_through: more ? resume : visible.length, chars_total: visible.length } };
+  return { units, grain, more, at: resume };
 }
 
-/* R35 over the whole text, for a first piece: the units the text has and the words of them (a unit's words before its cut). */
-function totalsOf(visible, html, grain) {
+/* R35 over the whole text, for a first piece: the units the text has and the words of them. */
+function totalsOfText(visible, html, grain) {
   const walk = runWalker(visible, grain, html, 0);
   let units = 0, words = 0;
-  for (let run = walk(); run; run = walk())
-    if (glyphCount(run.text) > 0) { units++; words += wordsIn(run.text); }
+  for (let r = walk(); r; r = walk())
+    if (glyphCount(r.text) > 0) { units += r.text.length > CAPTURE_TEXT_UNIT_CAP ? chunksOf(r.text).length : 1; words += wordsIn(r.text); }
   return { units, words };
+}
+
+/* R41: a sheet unit over the cap as blocks of whole lines, the sheet's first line (its header) repeated at the head of each
+   later block. `lineRows` (the 1-based row of each text line, as a reader emits it) names the rows of each block in its
+   extent; without it the extent is the sheet's whole range. */
+function sheetBlocks(u, sheet) {
+  const lines = u.text.split("\n");
+  const rows = sheet && Array.isArray(sheet.lineRows) && sheet.lineRows.length === lines.length
+    && sheet.lineRows.every(Number.isInteger) ? sheet.lineRows : null;
+  const head = lines[0];
+  const corner = rows && typeof u.extent.range === "string" ? /:\$?([A-Za-z]{1,3})\$?\d+$/.exec(u.extent.range) : null;
+  const lastCol = corner ? corner[1].toUpperCase() : null;
+  const blocks = [];
+  let cur = [], size = 0, first = 0;
+  const flush = (end) => {
+    if (!cur.length) return;
+    const withHead = first > 0 ? `${head}\n${cur.join("\n")}` : cur.join("\n");
+    const range = rows && lastCol ? `A${rows[first]}:${lastCol}${rows[end - 1]}` : u.extent.range;
+    blocks.push({ ...u, extent: { ...u.extent, range }, text: withHead });
+    cur = []; size = 0;
+  };
+  for (let i = 0; i < lines.length; i++) {
+    const budget = CAPTURE_TEXT_UNIT_CAP - (i > 0 ? head.length + 1 : 0);
+    const l = lines[i].length > budget ? lines[i].slice(0, budget) : lines[i];   /* a single row over the cap stays one cut row, flagged */
+    if (cur.length && size + l.length + 1 > budget) { flush(i); first = i; }
+    if (!cur.length) first = i;
+    cur.push(l); size += l.length + 1;
+  }
+  flush(lines.length);
+  const longRow = lines.some((l) => l.length > CAPTURE_TEXT_UNIT_CAP - head.length - 1);
+  return longRow ? blocks.map((b) => ({ ...b, truncated: true })) : blocks;
+}
+
+/* The units of a text from a format entry, the way a piece carries them (R41): `allUnitsOf`'s, a sheet over the unit cap
+   in blocks of rows, a `doc-para` over it in runs; a page or slide over it is left for the wire's cut, flagged. `seq` is the
+   place in this whole list. */
+function pieceUnitsOf(i2text) {
+  const base = allUnitsOf(i2text) || [];
+  const sheets = Array.isArray(i2text && i2text.sheets) ? i2text.sheets : [];
+  const out = [];
+  for (const u of base) {
+    let parts;
+    if (u.extent.kind === "sheet-range" && u.text.length > CAPTURE_TEXT_UNIT_CAP)
+      parts = sheetBlocks({ ...u, extent: { ...u.extent, range: u.extent.range } }, sheets[u.seq]);
+    else if (u.extent.kind === "doc-para" && u.text.length > CAPTURE_TEXT_UNIT_CAP)
+      parts = chunksOf(u.text).map((t, k) => ({ ...u, extent: { ...u.extent, run: k }, text: t }));
+    else parts = [u];
+    for (const p of parts) {
+      const cut = p.text.length > CAPTURE_TEXT_UNIT_CAP;
+      out.push({ ...p, seq: out.length, text: cut ? p.text.slice(0, CAPTURE_TEXT_UNIT_CAP) : p.text, ...(cut || p.truncated ? { truncated: true } : {}) });
+    }
+  }
+  return out;
+}
+
+/* A piece of a ready list of units, from index `i`. */
+function listPiece(all, { i, budget, maxUnits }) {
+  const units = [];
+  let room = budget, at = i;
+  for (; at < all.length; at++) {
+    const size = utf8Length(all[at].text) + ACQUIRE_TEXT_UNIT_ENVELOPE;
+    if (!fits(units, size, room, maxUnits)) break;
+    room -= size; units.push(all[at]);
+  }
+  return { units, more: at < all.length, next: at };
+}
+const bytesOfUnits = (all, upto) => { let n = 0; for (let k = 0; k < upto; k++) n += utf8Length(all[k].text); return n; };
+
+/* Reads a cursor against what is in hand: `{at}` or `{refused}`. `shape` is "t" (a text read as text) or "u" (a list). */
+function cursorIn(cursor, { sha, shape, chars, n }) {
+  const bad = () => refusal(CURSOR_MISMATCH, "reading-pipeline.index.bytes_not_held");
+  const c = unb64(cursor);
+  if (!c || c.v !== 1 || c.s !== sha || c.k !== shape) return bad();
+  if (shape === "t") {
+    if (c.c !== chars || ![c.o, c.p, c.q, c.r].every(natural) || c.o >= chars) return bad();
+    return { at: { o: c.o, p: c.p, q: c.q, r: c.r } };
+  }
+  if (c.n !== n || !natural(c.i) || c.i >= n) return bad();
+  return { at: c.i };
+}
+
+/* One piece of a text read as text: `{refused}` or `{units, piece, answer}` where `answer` is the cursor fields. */
+function textPieceAnswer(visible, { html, sha, cursor, budget, maxUnits }) {
+  let at = null;
+  if (cursor != null) {
+    const r = cursorIn(cursor, { sha, shape: "t", chars: visible.length });
+    if (r.refused) return r;
+    if (r.at.o > 0 && !/\s/.test(visible[r.at.o - 1])) return refusal(CURSOR_MISMATCH, "reading-pipeline.index.bytes_not_held");
+    at = r.at;
+  }
+  const p = textPiece(visible, { html, at, budget, maxUnits });
+  const cur = p.more ? b64({ v: 1, s: sha, k: "t", c: visible.length, ...p.at }) : null;
+  const through = p.more ? utf8Length(visible.slice(0, p.at.o)) : utf8Length(visible);
+  let words = 0;
+  for (const u of p.units) words += wordsIn(u.text);
+  return { units: p.units, grain: p.grain,
+           fields: { more: p.more, cursor: cur, read_through: through, total: utf8Length(visible) },
+           piece: { units: p.units.length, words } };
+}
+
+/* One piece of a list of units (a format entry's text). */
+function listPieceAnswer(all, { sha, cursor, budget, maxUnits }) {
+  let i = 0;
+  if (cursor != null) {
+    const r = cursorIn(cursor, { sha, shape: "u", n: all.length });
+    if (r.refused) return r;
+    i = r.at;
+  }
+  const p = listPiece(all, { i, budget, maxUnits });
+  let words = 0;
+  for (const u of p.units) words += wordsIn(u.text);
+  return { units: p.units,
+           fields: { more: p.more, cursor: p.more ? b64({ v: 1, s: sha, k: "u", n: all.length, i: p.next }) : null,
+                     read_through: bytesOfUnits(all, p.next), total: bytesOfUnits(all, all.length) },
+           piece: { units: p.units.length, words } };
 }
 
 /* R39 (fix round 6, G6; K4570): a document that states nothing of its object but a digest. */
@@ -1572,17 +1747,17 @@ function refusalOf(a) {
  *  R15; the index path hands `Infinity`), `ocrInvocations` the OCR calls this request may make (default 24), and `owe` the
  *  hook the caller composed, `owe({kind: "ocr", sha, cursor, pages_left})`, called once when OCR left pages unread, which
  *  never throws out of `read` and is how the pages left become owed work. R39: a document that is a digest alone (no parts,
- *  size, retrieval instant or profile) answers `{refused: {code: "BARE_DIGEST", why}}` and no reading. R40: `pieces =
- *  {cursor, maxUnits}` reads a capture read as text in pieces (the answer adds `piece`; a refusal is `{refused}` with no
+ *  size, retrieval instant or profile) answers `{refused: {code: "BARE_DIGEST", why}}` and no reading. R40: `cursor`
+ *  (null, or the string a piece answered; with `maxUnits`) reads a capture read as text in pieces (the answer adds `piece`; a refusal is `{refused}` with no
  *  reading). Never throws; every failure is a failed reading, and says whether it is `transient` or `final`. */
 export async function read(document, { evidence = null, env = {}, storeName = "bio", view, planeVersion = null,
                                         liveCalibration = null, transcription = null, unitsBudget, ocrInvocations,
-                                        owe = null, pieces = null } = {}) {
+                                        owe = null, cursor, maxUnits } = {}) {
   /* R39: a digest alone is no document; it is refused before anything is loaded, and no reading is composed. */
   if (isBareStub(document)) return refusal(BARE_DIGEST, "reading-pipeline.index.bytes_not_held");
   try { return await readInner(document, { evidence, env, storeName, view, planeVersion, liveCalibration, transcription,
                                            unitsBudget, ocrInvocations, owe,
-                                           pieces: pieces && typeof pieces === "object" ? pieces : null }); }
+                                           pieces: cursor === undefined ? null : { cursor, maxUnits } }); }
   catch (e) {
     const reading = failed(document, null, localize("reading-pipeline.index.reading_not_composed", "the reading could not be composed ({detail}), so nothing is claimed about this document's text; it is a failed reading, never an emptied document", { detail: String(String(e && e.message || e).slice(0, 200)) }), { failure: FAILURE_TRANSIENT });
     reading.metadata = null;   /* R28: no entry's answer reached the reading */
@@ -1694,13 +1869,13 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     cursor: pieces.cursor ?? null,
     budget: unitsBudget === undefined ? ACQUIRE_TEXT_UNITS_BUDGET : unitsBudget,
     maxUnits: Number.isInteger(pieces.maxUnits) && pieces.maxUnits > 0 ? pieces.maxUnits : PIECE_UNITS_MAX } : null;
-  if (piecesOn && pieceAsk.cursor !== null && bytes) {
+  if (piecesOn && pieceAsk.cursor !== null && bytes && textRead) {
     const e0 = fmt && fmt !== "undetermined" ? getFormat(fmt) : null;
-    if (!textRead || (e0 && (typeof e0.text === "function" || typeof e0.structure === "function")))
-      return refusal(NOT_PIECEWISE, "reading-pipeline.index.non_textual_large");
-    const p = pieceOf(visibleOf(text, fmt === "html"), { html: fmt === "html", sha, ...pieceAsk });
-    if (p.refused) return p;
-    return { ...(p.units.length ? { text_units: p.units } : {}), piece: p.piece };
+    if (!(e0 && (typeof e0.text === "function" || typeof e0.structure === "function"))) {
+      const p = textPieceAnswer(visibleOf(text, fmt === "html"), { html: fmt === "html", sha, ...pieceAsk });
+      if (p.refused) return p;
+      return { ...(p.units.length ? { text_units: p.units } : {}), ...p.fields, piece: p.piece };
+    }
   }
   /* N615 (K1683, K1773): every recogniser is handed the capture's origin, `"member"` only for bytes a member supplied by
      their own act outside the copy. The document records none: every capture it can be is a fetch the copy made, a
@@ -1726,13 +1901,15 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     /* R32: its text units, drawn from the decoded text (the page's visible text for HTML); a capture whose text holds
        no glyph has none. The reader's outcome below does not change them. */
     if (piecesOn) {
-      /* R40: the first piece; the totals are of the whole text, so the reading says how much of it the piece holds. */
+      /* R40: the first piece; the totals are of the whole
+         text, so the reading says how much of it the piece holds. */
       const html = fmt === "html", visible = visibleOf(text, html);
-      const p = pieceOf(visible, { html, sha, ...pieceAsk });
+      const p = textPieceAnswer(visible, { html, sha, ...pieceAsk });
+      if (p.refused) return p;
+      const tot = totalsOfText(visible, html, p.grain);
       textUnits = p.units.length ? p.units : null;
-      pieceInfo = { ...p.piece, units_total: totalsOf(visible, html, p.grain) };
-      pieceWords = { words_total: pieceInfo.units_total.words, words_read: p.piece.words };
-      pieceInfo.units_total = pieceInfo.units_total.units;
+      pieceInfo = { ...p.fields, piece: { ...p.piece, units_total: tot.units } };
+      pieceWords = { words_total: tot.words, words_read: p.piece.words };
     } else ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsOfText(text, { html: fmt === "html", budget: unitsBudget }));
     /* R34: the title, read from the markup R32's units drop; null for any text that is not HTML. A reader that throws
        gives a failed reading, which carries none. */
@@ -1855,7 +2032,14 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       { const lean = withoutJoinedDocument(i2text); if (lean !== i2text) joinedDropped = true; i2text = lean; }
       emitted = i2text;
       const extent = containerExtentOf(i2text, { pdfPaints, fmt });
-      ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsFor(i2text, { budget: unitsBudget }));
+      if (piecesOn) {
+        /* R40/R41: the units of the entry's text in pieces, from the first or the cursor's; a piece after the first is units alone. */
+        const p = listPieceAnswer(pieceUnitsOf(i2text), { sha, ...pieceAsk });
+        if (p.refused) return p;
+        textUnits = p.units.length ? p.units : null;
+        pieceInfo = { ...p.fields, piece: { ...p.piece, units_total: pieceUnitsOf(i2text).length } };
+        if (pieceAsk.cursor !== null) return { ...(textUnits ? { text_units: textUnits } : {}), ...p.fields, piece: p.piece };
+      } else ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsFor(i2text, { budget: unitsBudget }));
       if (i2text) {
         wired = readText(decodeView(i2text), { headers, locator, content_type: ct || null, at: retrieved, origin: CAPTURE_ORIGIN,
                                                ...vw });
@@ -1907,6 +2091,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       textUnits = null; textUnitsOverBound = 0; textUnitsSkipped = null; classifiedText = null; emitted = null; heldCounts = null; joinedDropped = false;
     }
   } else {
+    if (piecesOn && pieceAsk.cursor !== null) return refusal(NOT_PIECEWISE, "reading-pipeline.index.non_textual_large");
     reading = failed(doc, docType, localize("reading-pipeline.index.document_not_read_text", "the document was not read as text ({why}), so no reading was attempted", { why: multipart ? localize("reading-pipeline.index.multipart", "multipart") : localize("reading-pipeline.index.non_textual_large", "non-textual or too large") }),
                      { failure: FAILURE_FINAL, page_count: null, page_boxes: null, container_extent: null });
   }
@@ -1925,7 +2110,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   /* R13: absent when no entry answered a decoding choice. */
   if (readDialect !== undefined) reading.dialect = readDialect;
   return { reading,
-           ...(pieceInfo ? { piece: pieceInfo } : {}),
+           ...(pieceInfo ? pieceInfo : {}),
            ...(textUnits ? { text_units: textUnits } : {}),
            ...(textUnitsOverBound ? { text_units_over_bound: textUnitsOverBound } : {}),
            ...(textUnitsSkipped ? { text_units_skipped: textUnitsSkipped } : {}) };
