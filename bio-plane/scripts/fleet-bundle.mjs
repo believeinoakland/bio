@@ -821,6 +821,10 @@ export function fleetProvenance(members, { repoRoot = REPO_ROOT, log = console.l
  * overrides the rule either way. The options are recorded in the manifest's `recipe.ascii` and `verifyStatic` checks them. */
 export const ASCII_RECIPE = Object.freeze({ charset: "ascii", legalComments: "eof", minifyWhitespace: true, templateLiterals: "lowered" });
 
+/** The esbuild options the recipe adds (for a caller that builds with its own esbuild call: pair them with `asciiOutput`). */
+export const asciiOptions = () => ({ charset: ASCII_RECIPE.charset, legalComments: ASCII_RECIPE.legalComments,
+  minifyWhitespace: ASCII_RECIPE.minifyWhitespace, supported: { "template-literal": false } });
+
 /** Does this member's bundle get the pure-ASCII recipe? */
 export const asciiOf = (member) =>
   member && member.bundle && typeof member.bundle.ascii === "boolean" ? member.bundle.ascii : !!(member && (member.marker || member.wholeWordTable));
@@ -883,8 +887,7 @@ export function optionsFor(member) {
     platform: RECIPE.platform,
     external: [...(b.external || DEFAULT_EXTERNAL)],
     metafile: true,
-    ...(asciiOf(member) ? { charset: ASCII_RECIPE.charset, legalComments: ASCII_RECIPE.legalComments,
-      minifyWhitespace: ASCII_RECIPE.minifyWhitespace, supported: { "template-literal": false } } : {}),
+    ...(asciiOf(member) ? asciiOptions() : {}),
   };
 }
 

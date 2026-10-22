@@ -89,6 +89,7 @@ test("R2 (G39): the ASCII bundle behaves as the source does: strings, templates,
 
 test("R2 (G39): a non-ASCII character the pass cannot escape without changing the program (an unlowered template's raw text) refuses the build, never edits it", () => {
   assert.equal(typeof bundler.asciiOutput, "function", "asciiOutput is provided");
+  assert.deepEqual(bundler.asciiOptions(), { charset: "ascii", legalComments: "eof", minifyWhitespace: true, supported: { "template-literal": false } });
   assert.throws(() => bundler.asciiOutput(Buffer.from("export const x = `raw — ${1}`;\n")), /NON_ASCII_REMAINS/);
   assert.throws(() => bundler.asciiOutput(Buffer.from("export const café = 1;\n")), /NON_ASCII_REMAINS/);
   const ok = bundler.asciiOutput(Buffer.from("export const x = \"a—b\"; export const r = /[—😀]/u; const d = 4 / 2 / 1;\n"));
