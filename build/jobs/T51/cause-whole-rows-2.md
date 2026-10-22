@@ -29,3 +29,23 @@ Size (session_017xrsneguU1xum1pmphBbk5): test runs 14, module lines 45 (30 added
 ## J2 · COMPLETE
 
 COMPLETE · cause-whole-rows-2 (job 17): retrieval-browse R19 and machinery-producers R16 met on job/T51/cause-whole-rows-2 (pushed, no PR). retrieval-browse find.mjs holdOf skips provenance's part_of rows (partsHeldIn, marks.mjs provenanceFor); machinery-producers index.mjs #gradeNotes reads registeredFor and skips part_of. Red then green with the three-part fixture: retrieval-browse 2 of 4 failed before (4 captures vs 1, 5 vs 2), machinery-producers 1 of 2 (4 notes vs 1); suites 55/55 and 37/37, users 156/156. Checks: format, architecture, coverage, ownership 0 failures; run.mjs words 18421 unchanged. Proposed requirement lines and the Size line are in build/jobs/T51/cause-whole-rows-2.md.
+
+## J3 · COMPLETE (CHANGE B2, K4512)
+
+**retrieval R94 is met** (the frontier counts a capture held in parts once, by its whole), on `job/T51/cause-whole-rows-2`, pushed, no pull request. `tranche/T51` merged first. Nothing deferred, no open QUESTION. R-OLD: no stored data changes. No new `localize` sentence.
+
+**What changed (file:line).**
+- `retrieval/frontier.mjs`: `#wholes` (new, before `#tally`) is a bounded supply of the register's captures in capture-sha order with provenance's `part_of` rows left out; it asks provenance only about the bundles that hold a whole's row (`register.whole`, R48), and reads on by capture-sha until `n` captures are held or the register is exhausted, so a part never spends the bound and `#fetch`'s `full` stays what it was. The content level's missing supply (R43, was `:262-269`) and the meaning level's capture supply (R46, was `:365-372`) read through it. The reference and entity supplies are unchanged.
+- `retrieval/index.mjs`: `partsHeldIn(bundleIds)` (before `rowsOf`) reads `provenanceOf(host).registeredFor` (R11, R73: `part_of`); empty with no host. `provenance` is already in retrieval's `uses`.
+
+**Tests, red then green (`test/m/retrieval/whole-rows.test.mjs`, 4 tests, R94 in each title; the three-part fixture promoted by the real chain).** 3 fail before: before any row the content level lists 4 captures (3 parts and the whole) where 1 is wanted; once the whole has its content and meaning rows the 3 parts stay in the missing lists; a limit of one never reaches the single capture behind the parts. 4 pass after, with a control (single captures listed once each; a three-part capture in a project the viewer may not see is listed for no one who may not see it). The limit-of-one test walks the content and the meaning level, observing each capture listed: it ends on exactly the whole and the control.
+
+**Suites.** retrieval 183 tests (all of `test/m/retrieval/`), 183 pass; retrieval-browse with queue-producers 207, 207 pass; the frontier's other readers, `screens-daily` (finder, fix3, fix4, contract) 52, 52 pass. `impact.mjs origin/tranche/T51 HEAD` names 79 modules (the transitive users of retrieval); I ran the direct readers of the frontier and the two modules BOB named.
+
+**Checks** (`/home/user/cp-close`): `format` 0 failures; `architecture` retrieval 35 files, 0 failures; `coverage` retrieval 83 of 83, 0 failures; `ownership` (the three modules) 0 failures; `run.mjs`: format 0, architecture 0, channels 0, words 0 failures, words 18421 (unchanged). **`run.mjs` coverage has 1 failure that is not mine:** "public-read: 1 of 43 live ids named by no test: R43", from the merge of `tranche/T51` (public-read is not a module this job holds); for BOB.
+
+**Requirement lines I propose (BOB writes them).** retrieval R94: mark it met (T51). Uses: `provenance`'s `registeredFor` (R11, R73: `part_of`) beside the `register` read contract (R48), for R43 and R46.
+
+**Found in other modules.** The `public-read` R43 coverage failure above.
+
+Size (session_017xrsneguU1xum1pmphBbk5): test runs 11, module lines 36 (31 added and 5 removed across 2 source files; 92 lines of new tests in 1 file); cumulative with J1: test runs 25, module lines 81.
