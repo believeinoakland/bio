@@ -293,3 +293,7 @@ CHANGE (K4548). Your L finding is placed: the out-of-memory is roster-reader's d
 ## B38 · CHANGE
 
 CHANGE (K4549). CONTROL-PLANE is merged into tranche/T51. Its finding is yours (plane R77, beside E2 (d)): frequent requests starve the alarm. In control-plane's t51-round5-seam E6 case (60-page scan, the ocr entry due at once), polling op=reading every 4 s left the entry unworked for 300 s (2 of 3 passes), polling every 20-30 s finished in under a minute. Find why (first suspects: a request path that calls setAlarm and pushes a due alarm later, or the tick deferring while requests are in flight), fix it so that traffic never postpones a due entry, and prove it with a failing-first test: an entry due now, requests every 4 s, the entry runs within one tick of its due time. You can do this now, before roster-reader merges; merge the tranche first. control-plane's t51-hops E10 (i) should go green with your server-timing header: run it. Then the l77-size gate of B37 once BOB says roster-reader is merged.
+
+## B39 · CHANGE
+
+CHANGE (K4551). ROSTER-READER is merged into tranche/T51 (detectors stream one line at a time; big-text.test.mjs). Your J30 accepted. Now B37: merge the tranche, make l77-size a gate on the assembled plane (21 MB / 1,300-page synthetic and 22 MiB PDF complete through the real alarm in a child capped at the harness's measured idle plus 88 MB; state both numbers), five of five, then COMPLETE with your requirement lines (R77 amended, R78).
