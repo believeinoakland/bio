@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7211,
+  "screen": 7236,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -233,7 +233,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 18499,
+  "total": 18524,
   "protected": 1112
  },
  "words": [
@@ -77582,6 +77582,181 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-418: B481 screens-publish (G10): a photo whose format the cover refused; {photo} the photo named"
+  },
+  {
+   "key": "screen.document.reading.inpart",
+   "en": "Read in part. Not yet searchable or citable: {where}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (1) G14 (S1) screens-inquiry / screens-intake: a reading that stopped short of the end, beside DEC-418's progress/partial/done rows; {where} the unread run named, such as 'pages 41 to 300' or 'paragraphs 2,001 to 6,000'"
+  },
+  {
+   "key": "screen.document.reading.inpart.going",
+   "en": "Your team's Civicsmith is still reading the rest, and this page updates as it goes.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (1) G14: with .inpart while the reading continues by cursor"
+  },
+  {
+   "key": "screen.document.reading.notext",
+   "en": "Pages {pages} have no words that can be read, so they can't be searched or cited. You can still open them.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (1) G14: pages of a PDF with no text layer; replaces any 'Partial: pages N have no text' stand-in; {pages} such as '12, 14 and 30 to 41'"
+  },
+  {
+   "key": "screen.document.reading.toolarge",
+   "en": "This file is {size}, more than the {limit} your team's Civicsmith can read whole. It is kept whole and you can open it, but its words can't be searched or cited.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (1) G14 (S6): a reading refused whole for its size on this copy, size and limit named; drawn instead of \"none\"; DEC-418's .stated serves when no limit is answered"
+  },
+  {
+   "key": "screen.finder.showmore",
+   "en": "Show more results",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (2) G16 (S3) screens-daily: the more act under search results, by the op's cursor"
+  },
+  {
+   "key": "screen.finder.unread",
+   "en": "{n} documents in what you searched are not read yet or can be searched only in part, so they may hold more than is found here.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (2) G16 (S4): one line from the axis tally (captures_in_scope less captures_counted, and truncated)"
+  },
+  {
+   "key": "screen.finder.unread.one",
+   "en": "1 document in what you searched is not read yet or can be searched only in part, so it may hold more than is found here.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (2) G16: the form of .unread for one document"
+  },
+  {
+   "key": "screen.finder.partial",
+   "en": "Not everywhere has been looked at in full: {n} of the looks covered only part of what was there.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (2) G16 (S4): drawn instead of screen.finder.nobody.none (\"looked everywhere\") when any look was partial"
+  },
+  {
+   "key": "screen.findin.searched",
+   "en": "Searched {read} of {total} documents.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (3) G16 (S5) screens-daily: find-in, while next is answered"
+  },
+  {
+   "key": "screen.findin.continue",
+   "en": "Keep searching",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (3) G16: find-in's continue act, by next"
+  },
+  {
+   "key": "screen.findin.more",
+   "en": "More matches were found than are shown here.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (3) G16: truncated, for every kind of match (terms, names, aliases)"
+  },
+  {
+   "key": "screen.findin.cells.more",
+   "en": "This row has more cells than are shown.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (3) G16: cells_truncated, under a row's cells"
+  },
+  {
+   "key": "screen.findin.cells.showall",
+   "en": "Show every cell",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (3) G16: the act beside .cells.more"
+  },
+  {
+   "key": "screen.list.showing",
+   "en": "Showing {shown} of {total}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (4)(6) G17, G20 (S7, S11): every cut list: the Document's links, names, connections and themes; pickers, the inbox and the question choosers; drawn with screen.list.showmore where the read pages, or screen.list.narrow where it does not"
+  },
+  {
+   "key": "screen.list.showing.unknown",
+   "en": "Showing the first {shown}. There are more.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (4)(6) G17, G20: when the answer says truncated but gives no total"
+  },
+  {
+   "key": "screen.list.showmore",
+   "en": "Show more",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (4)(6) G17, G20: the next page of a cut list (find.browse.showmore's words)"
+  },
+  {
+   "key": "screen.list.narrow",
+   "en": "Type part of a name to narrow the list.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (6) G20 (S11): under a picker or chooser that cannot page"
+  },
+  {
+   "key": "screen.capture.supporting.kept",
+   "en": "{kept} of {total} supporting files kept. These are the images, styles and other files the page uses.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (5) G19 (S10) screens-intake, and screens-inquiry on the Document: drawn only when some were skipped, with one or more reason lines below"
+  },
+  {
+   "key": "screen.capture.supporting.cap",
+   "en": "The rest were past the {cap} files a capture keeps.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (5) G19: reason, the cap; {cap} such as 400"
+  },
+  {
+   "key": "screen.capture.supporting.toolarge",
+   "en": "{n} were too large to keep.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (5) G19: reason, too large"
+  },
+  {
+   "key": "screen.capture.supporting.unavailable",
+   "en": "{n} couldn't be fetched from where they are published.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (5) G19: reason, unavailable"
+  },
+  {
+   "key": "screen.follow.meetings.read",
+   "en": "Read {read} of {total} meetings of {body} so far. Your team's Civicsmith is reading the rest.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (wave 2) G21 (S8) following: a followed meeting body read by cursor; {body} such as Oakland City Council"
+  },
+  {
+   "key": "screen.follow.meetings.done",
+   "en": "All {total} meetings of {body} are read.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (wave 2) G21: when the body has been read whole"
+  },
+  {
+   "key": "screen.export.cut",
+   "en": "This export holds the first {shown} of {total} items from {source}. The rest are not in it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (wave 2) G22 (S12) corpus-export: the export's stated cut, in the export and on the screen that made it"
+  },
+  {
+   "key": "screen.pattern.sample",
+   "en": "Counted over a sample of {n} of {total} records, not all of them.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-419: B485 (wave 2) G24 (S14) calculations: a pattern's denominator when it is a sample"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",
