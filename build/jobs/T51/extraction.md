@@ -1,6 +1,6 @@
 # extraction (T51)
 
-**Status** · session_01HrxtmpnnxSr8WgbmGib4AF · depth 2 · COMPLETE · handled B29
+**Status** · session_01UQSKFgKi97NTLN8hrXppFC · depth 2 · COMPLETE · handled B33
 
 ## J1 · REPORT
 
@@ -445,3 +445,43 @@ Probe numbers (E3, `g26.probe.mjs` and `g15.probe.mjs` run alone, unedited):
 - **R94** (fix round 6, G38; K4615; amends R27; R70 holds for `readingOf`) **A bulky part of the stored reading is named, never carried.** A top-level key of the stored reading whose JSON is over 262,144 B is left out of `readingFor`'s `reading` and named in `reading_omitted`, `[{key, bytes}]`, absent when none is; every other key is as stored; `readingOf` (R30) answers the stored reading whole. `unread_pages` (R27) is computed without holding the capture's page text whole. Test: `g38.test.mjs`.
 
 Size (session_01HrxtmpnnxSr8WgbmGib4AF): test runs 16, module lines 3954
+
+## J24 · QUESTION
+
+QUESTION · G40 · I need `wants(captureClass)` on `ReadHooks` (reading-pipeline's file `bio-plane/src/reading-pipeline/hooks.mjs`).
+
+Why: the 1 MB CSV's reading is class `generic` (measured), 11.8 MB of JSON; `JSON.parse` of it is +18.4 MB live heap. The plan says the after-read hooks' reading is parsed lazily inside `afterCommit`, only when a hook can run. `ReadHooks.#hooks` is private and the only hook (`events`) lists classes that do not include `generic`, so extraction cannot tell from its side that no hook can run; without `wants` it would parse 18 MB after every commit of every large reading, still on the object's 128 MB.
+
+What I ask (smallest thing): a method `wants(captureClass) → boolean` on `ReadHooks`: true exactly when some registered hook's classes include the class (`captureClass` null or a class no hook holds: false); no other change to hooks.mjs. Either reading-pipeline's job adds it (one line plus a test) or BOB lets me add it in my diff; I proceed with `typeof hooks.wants === "function" ? hooks.wants(cls) : cls !== null` meanwhile, so my code works either way and the test for "no parse when no hook wants the class" turns green once `wants` exists.
+
+My other plan: one `{json, digest}` per reading (WeakMap filled in `recordComposed`, consumed and deleted by `writeReading` before listeners), the hooks' reading `JSON.parse(json)` lazily in `afterCommit`, prior-reading parses by `json_extract`. Proposed requirement: R95 (G40). Test file `g40.test.mjs` red today at stringify 4, encode 2, parse-in-transaction 1.
+
+## J25 · QUESTION
+
+QUESTION · G40 · my fix is in and the counting test is green, but `g15.probe.mjs` does not move: the 1 MB CSV's reading itself is too big for the object. I need a decision on csv-reader's cell shape (the plan's "§3 shows csv-reader's cells must shrink" case).
+
+Done (tip of job/T51/extraction, not yet pushed): `g40.test.mjs` through `readHeld` on a 1 MB CSV: red on tranche/T51 at stringify 4, encode 2, parse-inside-transaction 1; green at 1, 1, 0. Row, history, digests byte-identical to today's code (pinned), hook mutation isolated, `events` still dates a reading, `wants` honoured. Extraction suite 297/297.
+
+The numbers (the probe, node, same cap sweep on both trees, `g15.probe.mjs 128 129 130 132 134 136 140`): tranche/T51 dies at 127, 128, 129, 130, 132 and survives 134, 136, 140; my tip: the same. Peak 133.1 MB both. So the copies were not what sets the limit at the real cap (they cost about 10 MB in a plain node process: the same read needs a cap of 90 MB on today's code, 80 on mine, and read() alone needs 70).
+
+What sets it (live heap after a forced GC, in the plane's child, idle 93.5): `read()` returns 29.7 MB live (idle -> 123.2 MB), and writing the row needs its 11.8 MB JSON string beside that. The reading is `cells` alone: 11.82 MB of the 11.82 MB JSON (18,098 rows x 4 cells, each `{source, value, type, declared, cached, formula, ...}`), about 24 MB as objects; `text_units` is 1.05 MB. With the fix the floor is idle + 29.7 + 11.8 = about 133-135 MB against 128. No change inside extraction can go lower: the reading object (needed by the listeners) and its JSON must exist together.
+
+Smallest thing I need: a ruling on the cell shape, one of (a) csv-reader emits cells without their empty fields (`declared`, `cached`, `formula` when null) and extraction/readers treat absent as null, estimate 40% fewer bytes (BOB's call: it changes the stored reading and retrieval's reads of cells); (b) the reading of a sheet over N cells stores cells in a side table instead of in the reading JSON (bigger); (c) accept that a 1 MB CSV needs the bigger object and say so to the member. Until then I finish the rest of G40 (requirements lines, the other suites) and COMPLETE with the probe stated as it is.
+
+## J26 · COMPLETE
+
+COMPLETE · G40 (EXTRACTION #37). Tip pushed on job/T51/extraction (merged tranche/T51 at R43 and R35).
+
+CHANGED (bio-plane/src/extraction/index.mjs): `recordComposed` and new `#serialOf` make one `{json, digest}` per reading object (WeakMap; `writeReading` takes and deletes it before any listener runs; a never-recorded reading is serialised once for its write); `#keepReading` takes it (no second stringify or digest); the row writes `ser.json`; `#composedHere(digest)`; `#holdAfterRead(sha, reading, json)` parses `JSON.parse(json)` lazily inside the `afterCommit` callback, only when `hooks.wants(class)` is true (a registry without `wants`: class not null), else `reading: null` and `afterRead` is still called and answers `{ran, failed}` as before, never the string; prior-reading reads by SQL: new `#readingFacts` (found/failure/basis/entities length/tier3_candidate) for `readHeld`, `chainBefore` and the history's first-time prior provenance by `json_extract`, `#continueOcr`'s `tier3_candidate`. New reads only; stored rows, history, digests unchanged.
+
+RED THEN GREEN (`bio-plane/test/m/extraction/g40.test.mjs`, 8 tests, R95): the counting test through `readHeld` on a 1 MB CSV: tranche/T51 stringify 4, encode 2, parse in transaction 1; my tip 1, 1, 0. Controls (green on both): row, history, reading_sha256, provenance and composed digest byte-identical to today's code on a pinned 4,000-row CSV; a re-read keeps both in history; two hooks, the first mutating: stored row and second hook's input unchanged; events-style hook gets an object with `facts.date`; stand-in registry saying no/yes to `wants` (no parse / one parse after commit); the real `ReadHooks` with no hook for `generic`: no parse at all (green now R43 is merged).
+
+PROBE g15.probe.mjs alone, 1 MB CSV, real cap 127, on the merged tree: tranche/T51's extraction DIES at 127 and 124; my tip SURVIVES at 127 (peak 126.9, tick 1.4 s) and 124, dies at 120. Before R35/R43 merged the two trees were equal (died <=132, lived >=134): reading-pipeline's merge shrank the reading, my change then fits it. Floor arithmetic for G41 (harness idle 93.5, node child): read() output 29.7 MB live (all `cells`, 11.82 MB of JSON, ~24 MB as objects, text_units 1.05 MB) plus the row's 11.8 MB JSON; node-only cap needed: today's code 90, mine 80, read() alone 70. Options for the cell shape: (a) omit null `declared`/`cached`/`formula` (about 40% fewer bytes, changes stored cells and their readers); (b) cells in a side table (bigger); (c) state the limit to the member. G13 probe: 12,000,060 B cap 116 survives, 30 ticks, max 4.7 s, ENDMARKER found; 24 MiB cap 104 survives, 62 ticks, max tick 9.4 s, ENDMARKER found.
+
+SUITES: extraction 299/299; events 93, observation-log 84, content 142 pass; 150 tests of the other write-path suites (reading-pipeline bare-stub, following, progressions, plane x16, control-plane x4) pass; r117-held alone 9/9; plane/l77 1/1; plane/l77-size R77 L "synthetic PDF 21 MB" FAILS identically on tranche/T51 (not mine; pdf22 passes). checks/run.mjs: format, architecture, coverage, channels, words all 0 failures (words 18524 before and after); ownership 0 failures.
+
+PROPOSED REQUIREMENT (BOB writes): R95 (fix round 6, G40; amends R19, R23, R69) A reading's JSON and its digest are made once per reading object on the write path of `readHeld`: the row, the history and the digests use that one text, so a large reading is stringified once and digested once; the after-read hooks are handed a copy parsed from that JSON after the commit, only when the registry says a hook wants the reading's class (`ReadHooks.wants`, reading-pipeline R43), never the string and never a parse inside the transaction; the prior stored reading's facts (`found`, `failure`, `basis`, entity count, `tier3_candidate`, `text_source`, `provenance`) are read by SQL, not by parsing the stored JSON. New reads only: stored rows, history and digests are unchanged. Test: `g40.test.mjs`. K4208: no census op changes.
+
+DEFERRED / FOUND: none deferred. Rows owed: none (no new sentence). Other module: plane/l77-size 21 MB synthetic PDF red on tranche already.
+
+Size (session_01UQSKFgKi97NTLN8hrXppFC): test runs 40, module lines 97

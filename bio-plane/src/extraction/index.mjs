@@ -433,7 +433,7 @@ export function extractionOf(ctx, opts = {}) {
 
 export class Extraction {
   #sql; #storage; #listeners = []; #indexListeners = []; #declared = false; #stepped = false; #calListening = false;
-  #testified = false; #counted = false; #host = null; #provenance = null; #migrationRun = null; #readHooks = null; #transcriber = null;
+  #testified = false; #counted = false; #host = null; #provenance = null; #migrationRun = null; #readHooks = null; #transcriber = null; #serials = new WeakMap();
   #owe = null; #repairRun = null;
 
   constructor(storage, { record, membership = null, calibration = null, promotion = null, provenance = null, host = null,
@@ -652,16 +652,32 @@ export class Extraction {
     try { return await c.liveCalibration(q); } catch { return null; }
   }
 
-  /** R21: this instance composed the reading whose JSON digests to this. */
+  /** R21: this instance composed the reading whose JSON digests to this. (fix round 6, G40; R95) The JSON and its digest are made here once and
+   *  kept for this object, so `writeReading` of the same object (the write of `readHeld`) takes them for the row, the history and both digests
+   *  instead of making them again. */
   recordComposed(reading, captureSha) {
     if (!reading || typeof reading !== "object") return null;
-    const digest = sha256HexSync(JSON.stringify(reading));
+    const { digest } = this.#serialOf(reading);
     this.#sql.exec(`INSERT OR IGNORE INTO composed_readings (reading_sha256, capture_sha, at) VALUES (?,?,?)`,
                    digest, typeof captureSha === "string" ? captureSha : "", stampInstant("second"));
     return digest;
   }
-  #composedHere(reading) {
-    return !!this.#one(`SELECT 1 AS x FROM composed_readings WHERE reading_sha256=?`, sha256HexSync(JSON.stringify(reading)));
+  #composedHere(digest) {
+    return !!this.#one(`SELECT 1 AS x FROM composed_readings WHERE reading_sha256=?`, digest);
+  }
+
+  /** (fix round 6, G40; R95) `{json, digest}` of a reading object: what `JSON.stringify` makes of it and the digest of that text. With `take`, an
+   *  entry `recordComposed` made for this very object is used once and forgotten (the writer consumes it before any listener can touch the
+   *  object, so it is never reused after the object could have changed); a reading nobody recorded is serialised once for the write. A
+   *  reading the caller changed between `recordComposed` and the write is not a case here: the write of `readHeld` hands on `out.reading`
+   *  untouched, and `projectPromotion`'s parsed documents are never recorded. */
+  #serialOf(reading, { take = false } = {}) {
+    const kept = this.#serials.get(reading);
+    if (kept) { if (take) this.#serials.delete(reading); return kept; }
+    const json = JSON.stringify(reading);
+    const made = { json, digest: sha256HexSync(json) };
+    if (!take) this.#serials.set(reading, made);
+    return made;
   }
 
   /* ---- reading a held home (R80) ---- */
@@ -713,7 +729,8 @@ export class Extraction {
     }
     let document = stored || { capture: { sha256: digest } };
     const held = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
-    const heldReading = held ? safeJson(held.reading) : null;
+    /* (fix round 6, G40; R95) only the stored reading's own facts are read, by SQL: a large stored reading is not parsed to ask whether it failed */
+    const heldReading = held ? this.#readingFacts(digest) : null;
     const ocr = kind === "ocr";
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     /* (fix round 5, E1; R-OLD: new data only, older records are repaired by the press) a `final` reading that says the
@@ -838,8 +855,8 @@ export class Extraction {
     const re = done.status === 200 && done.body ? done.body.reextraction : null;
     if (!re) return left(done.status === 404 ? "NO_WHOLE_OBJECT" : "UNREADABLE");
     if (!re.performed || !re.written) return left("OCR_NO_PROGRESS", watch.down ? { owed: true } : {});
-    const now = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
-    const more = !!(now && (safeJson(now.reading) || {}).tier3_candidate === true);
+    const now = this.#one(`SELECT 1 AS x FROM readings WHERE capture_sha=?`, digest);
+    const more = !!(now && (this.#readingFacts(digest) || {}).tier3_candidate === true);
     return { ok: true, read: true, bundle_id: bundleId, found: true, ...(more ? { owed: true } : {}) };
   }
 
@@ -904,6 +921,23 @@ export class Extraction {
         return { bundleId: r.bundle_id };
     }
     return null;
+  }
+
+  /** (fix round 6, G40; R95) The facts of a stored reading that `readHeld` asks (`found`, `failure`, `basis`, `tier3_candidate`, and `entities` as a
+   *  list only as long as it is, its items never read), read by SQL so the stored JSON, which for a sheet is megabytes, is not loaded and parsed
+   *  to ask whether it failed. Null for a capture with no reading, a reading that is no JSON object, as a parse of it would answer. */
+  #readingFacts(sha) {
+    const r = this.#one(
+      `SELECT json_type(reading, '$.found') AS ft, json_type(reading, '$.failure') AS ut, json_extract(reading, '$.failure') AS failure,
+              json_type(reading, '$.basis') AS bt, json_extract(reading, '$.basis') AS basis,
+              json_type(reading, '$.entities') AS et, json_array_length(reading, '$.entities') AS en,
+              json_type(reading, '$.tier3_candidate') AS tt
+         FROM readings WHERE capture_sha=? AND json_valid(reading) AND json_type(reading)='object'`, sha);
+    if (!r) return null;
+    return { found: r.ft === "true" ? true : r.ft === "false" ? false : undefined,
+             failure: r.ut === "text" ? r.failure : undefined, basis: r.bt === "text" ? r.basis : undefined,
+             entities: r.et === "array" ? new Array(r.en) : undefined,
+             tier3_candidate: r.tt === "true" ? true : r.tt === "false" ? false : undefined };
   }
 
   /** R80 (fix round 4, C5b): whether a stored reading is a failed one that failed for want of the whole bytes: it found
@@ -973,8 +1007,12 @@ export class Extraction {
                  profileFormat = null, author = null, justification = null, composed = null, more = null } = {}) {
     const sha = captureSha;
     return this.core.transact(() => {
-      const before = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, sha);
-      const chainBefore = before ? (safeJson(before.reading) || {}).text_source ?? null : null;
+      const ser = this.#serialOf(reading, { take: true });
+      /* (G40; R95) the stored reading's chain by SQL: a large stored reading is never loaded and parsed to read one field */
+      const before = this.#one(`SELECT CASE WHEN json_valid(reading) AND json_type(reading)='object'
+                                            THEN json_extract(reading, '$.text_source') END AS ts
+                                   FROM readings WHERE capture_sha=?`, sha);
+      const chainBefore = before ? safeJson(before.ts) ?? null : null;
       /* R24 (content REPORT 4): the capture's indexed units as they stood before this write, so a listener can
          weigh the old text against the new; null when the capture was never indexed. */
       const unitsBefore = this.#one(`SELECT 1 AS x FROM capture_text_state WHERE capture_sha=?`, sha)
@@ -983,8 +1021,8 @@ export class Extraction {
             .map((u) => ({ extent: safeJson(u.extent), ref: u.ref, text: u.text, truncated: !!u.truncated, seq: u.seq }))
         : null;
       const entities = Array.isArray(reading.entities) ? reading.entities : [];
-      const kept = this.#keepReading(bundleId, sha, reading);
-      const own = composed === true || (composed == null && this.#composedHere(reading));
+      const kept = this.#keepReading(bundleId, sha, reading, ser);
+      const own = composed === true || (composed == null && this.#composedHere(ser.digest));
       const asserted = !own;
       const just = asserted && justification != null
         ? (typeof justification === "string" ? justification : JSON.stringify(justification)) : null;
@@ -996,7 +1034,7 @@ export class Extraction {
         typeof reading.content_type === "string" ? reading.content_type : null,
         Number.isInteger(reading.reader_version) ? reading.reader_version : null,
         reading.found ? 1 : 0, entities.length,
-        JSON.stringify(reading), typeof reading.at === "string" ? reading.at : null,
+        ser.json, typeof reading.at === "string" ? reading.at : null,
         typeof profileFormat === "string" && profileFormat.trim() ? profileFormat.trim() : null, sha,
         asserted ? "asserted" : "composed", asserted ? (author ?? null) : null,
         asserted ? standingOf(author) : null, just);
@@ -1043,7 +1081,7 @@ export class Extraction {
       const listeners = {};
       for (const l of this.#listeners)
         listeners[l.module] = l.fn({ bundleId, captureSha: sha, reading, chainBefore, chainAfter, unitsBefore, indexed, author });
-      const afterRead = this.#holdAfterRead(sha, reading);
+      const afterRead = this.#holdAfterRead(sha, reading, ser.json);
       return { kept, indexed, listeners, origin: asserted ? "asserted" : "composed", afterRead };
     });
   }
@@ -1056,18 +1094,21 @@ export class Extraction {
    *  `MODULE_ORDER` there. Answers a promise of `{ran, failed}`, the refusals reported with the reading: a hook's
    *  failure, or `afterRead`'s own, never undoes the committed reading. The run is handed to the object's
    *  `waitUntil`, so a hook finishes. Null when no registry is reachable. */
-  #holdAfterRead(captureSha, reading) {
+  #holdAfterRead(captureSha, reading, json) {
     const hooks = this.#readHooks
       || (typeof pipeline.readHooksOf === "function" ? pipeline.readHooksOf(this.#storage) : null);
     if (!hooks || typeof hooks.afterRead !== "function" || !this.core || typeof this.core.afterCommit !== "function") return null;
     const captureClass = typeof reading.content_type === "string" && reading.content_type ? reading.content_type : null;
-    const written = JSON.parse(JSON.stringify(reading));
     let settle;
     const answer = new Promise((r) => { settle = r; });
     this.core.afterCommit(() => {
       const run = (async () => {
         try {
-          const a = await hooks.afterRead({ captureSha, captureClass, reading: written, committed: true });
+          /* (fix round 6, G40; R95) the hooks are handed their own copy of the reading as written, made here from its JSON, after the commit and
+             only when a hook can run for its class (a hook registry that cannot say is asked as before): a large reading is never parsed inside
+             the transaction, nor at all when no hook wants it. Never the string itself, which a hook would read as no reading. */
+          const wanted = typeof hooks.wants === "function" ? hooks.wants(captureClass) === true : captureClass !== null;
+          const a = await hooks.afterRead({ captureSha, captureClass, reading: wanted ? JSON.parse(json) : null, committed: true });
           return { ran: Array.isArray(a && a.ran) ? a.ran : [], failed: Array.isArray(a && a.failed) ? a.failed : [] };
         } catch (e) {
           return { ran: [], failed: [{ module: "reading-pipeline", error: String(e && e.message ? e.message : e) }] };
@@ -1082,18 +1123,18 @@ export class Extraction {
   /* D-536 (R23): every distinct reading kept in arrival order, keyed by the digest of its JSON, before the row is
      replaced; one equal to the latest kept is not kept again; a capture whose one reading predates the history has
      it kept first; each kept reading stores `compareProvenance` against the one before (reading-pipeline R19). */
-  #keepReading(bundleId, sha, reading) {
-    const json = JSON.stringify(reading);
-    const digest = sha256HexSync(json);
+  #keepReading(bundleId, sha, reading, { json, digest }) {
     const provOf = (r) => (r && typeof r === "object" && r.provenance && typeof r.provenance === "object"
                            && r.provenance.scheme === PROVENANCE_SCHEME ? r.provenance : null);
     const textShaOf = (p) => (p && typeof p.text_sha256 === "string" ? p.text_sha256 : null);
     const now = stampInstant("second");
     let last = this.#one(`SELECT seq, reading_sha256, provenance FROM reading_history WHERE capture_sha=? ORDER BY seq DESC LIMIT 1`, sha);
     if (!last) {
-      const prior = this.#one(`SELECT bundle_id, reading FROM readings WHERE capture_sha=?`, sha);
+      const prior = this.#one(`SELECT bundle_id, reading,
+                                      CASE WHEN json_valid(reading) AND json_type(reading)='object' THEN json_extract(reading, '$.provenance') END AS prov
+                                 FROM readings WHERE capture_sha=?`, sha);
       if (prior) {
-        const pp = provOf(safeJson(prior.reading));
+        const pp = provOf(safeJson(prior.prov));
         const pd = sha256HexSync(prior.reading);
         this.#sql.exec(
           `INSERT INTO reading_history (capture_sha,seq,bundle_id,reading_sha256,reading,provenance,text_sha256,compared,kept_at)
@@ -1878,7 +1919,7 @@ export class Extraction {
         tier: Number.isInteger(next.text_tier) ? next.text_tier : null, container: m.format,
         planeVersion: this.env.VERSION || null, member: null });
     const u = textUnitsFor(text, { budget: Infinity });
-    const composed = row.origin === "composed" ? true : row.origin === "asserted" ? false : this.#composedHere(reading);
+    const composed = row.origin === "composed" ? true : row.origin === "asserted" ? false : this.#composedHere(this.#serialOf(reading, { take: true }).digest);
     /* The stored reading must still be the one examined: a promotion or re-read that landed meanwhile wins. */
     const wrote = this.core.transact(() => {
       const now = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, sha);
