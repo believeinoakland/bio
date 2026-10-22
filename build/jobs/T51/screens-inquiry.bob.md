@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J23
+**Read** · handled J25
 
 ## B1 · START
 
@@ -429,3 +429,21 @@ Mail with `--module screens-inquiry`; record `build/jobs/T51/screens-inquiry.md`
 (5) **G13 screen.** A text reading with `more` draws "being read" with progress until done, never complete while `more`; search and Cite cover what is read, said so (stand-in rows).
 
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-inquiry tranche/T51 job/T51/screens-inquiry`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B36 · ANSWER · re J24
+
+ANSWER (BOB #253, K4577) to J24.
+G6: your finding stands (the page reads provenance's whole; the fix is the `final` statement drawn with its size, no OCR act after a final). CAPTURE #48 also makes the row's capture the whole.
+G8: `repairable: true` top-level on op=reading, as you read it.
+G13: op=reading carries top-level `more`, `read_through` and `total` (bytes of text), and now PAGES: it takes `after` (a unit `seq`) and answers `next` (null at the end); `text_units` stays at most 4,096 per answer. So: while `more`, draw "being read" with `read_through` of `total`; the page draws the first page of units and states it (the first N of M passages) with a more act that asks op=reading `after=<next>`, never a page drawn as the whole; passages read stay searchable and citable.
+G12c: strength's real shape (STRENGTH #21, COMPLETE): `inquirystrength` with `ids` (a body list or comma-separated in the query, at most 50) answers `{ok: true, results: {<id>: <that id's single answer>}}`, keys in the order asked; a hidden id is its own `NO_SUCH_BUNDLE` result, never omitted. Your reading is right.
+Words: use DEC-418's keys (UX-DESIGN U452; on the table at the close): `screen.document.reading.progress` ("Being read: {read} of {total} so far"), `.reading.partial`, `.reading.done`, `.reading.stated` (`{size}`), `.reading.repairable` and its door `.reading.repairable.door` ("Read it"), instead of your stand-ins; a "first N of M passages" line and its more act are new rows: stand-ins, named in COMPLETE.
+
+## B37 · CHANGE
+
+CHANGE (BOB #253, K4578): fix round 6 gains causes from the K4571 audit. Merge tranche/T51 into your branch, then read `build/plan/fix-round-6-T51.md` section "G14-G25" whole (it is short) and apply the causes named below as part of this job, with the four fields (R-FOUR), failing-first past the bound, stand-in words named in COMPLETE (the rows go to UX-DESIGN). Bob (K4571): never a silent partial read; a bound that must stay is stated to the member.
+Yours: **G14 (screen)**: the Document page draws op=reading's `completeness`: being read (progress), read in full, or stated with its reason and size (a refused-whole reading, a PDF over 16 MiB: the size reason, never "pages N have no text" and never "none"), never "full" while partial. **G17 (owner)**: the lists at document.mjs:797 (links 200), :851 (names 500), :852 (connections 200), :953 (themes 20) draw "showing N of M" from the answer's total or `truncated`, with a more act where the read pages. **G19 (screen, Document half)**: the capture facts' `supporting: {kept, skipped, reasons}` (ACQUISITION #28 provides) drawn as "N of M supporting files kept" with the reason.
+
+## B38 · ANSWER · re J25
+
+ANSWER (BOB #253, K4579) to J25. (1) EXTRACTION #34 is told to state top-level `units_total` on op=reading (the capture's indexed units so far); draw "N of M" from it, and "N" alone while it is absent. (2) DEC-418 (U452): `screen.document.reading.partial` = "Until the whole file is read, searching and citing cover only what has been read so far." drawn beside the progress line while `more`; `screen.document.reading.done` = "Read in full. Every line of this file can now be searched and cited." drawn once a reading read in pieces is complete (`more` false and `total` stated); no fills in either. Use them with your stand-in fallback until the close regenerates the rows.

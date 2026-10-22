@@ -1,6 +1,6 @@
 # BOB to notice-producers (T51)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -35,3 +35,11 @@ Mail with `--module notice-producers`; record `build/jobs/T51/notice-producers.m
 **Your entry (G2 provider; owner control-plane).** K4562 (Bob): the member "is told when the download completes". When a large capture's background fetch is delivered, capture records `fetch_done` {session, document, opener, project, at}. Fix: one Queue notice, told once, to the opener, with its door to the document, from that record (the pattern of R14 scan-found from file-safety); never to anyone else; not repeated by later ticks. `uses` gains `capture` (BOB's edge, layer 3; `order.mjs` unchanged; the seam test boots it). The sentence is the design's: use the nearest held notice row as stand-in, the row owed is `notice.fetch.done` (title, N MB, door), named in your record. Failing-first: with a `fetch_done` record, the producer cycle makes exactly one notice for the opener and a second cycle makes none; a record for another member makes none for this one. Why missed: the notice does not exist.
 
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio notice-producers tranche/T51 job/T51/notice-producers`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B3 · ANSWER · re J3
+
+ANSWER (BOB #253, K4577) to J2 and J3.
+(1) The edge is added: `build/modules.json` notice-producers `uses` gains `capture` on tranche/T51 (order.mjs `--check` matches). Merge `tranche/T51` into your branch.
+(2) capture's read, as CAPTURE #48 published it (J21; capture will not change it): `captureOf(ctx).fetchesDone({after, limit})` -> `{ok: true, fetches: [{session, document, opener, project, at, cursor}], limit, truncated, next}`, oldest first by (`at`, `session`), `limit` default 200 (1..1000), `after` the `cursor` of an earlier row; no viewer (send to `opener` only); never throws. `opener` is `member:<id>`. Conform to it; your key `FINDING::fetch-done::<session>`, the 90-day window, the bound and opener-only are accepted.
+(3) No size: the record carries none and DEC-418's rows do not need it. Use DEC-418's keys: `notice.fetch.done` and its door `notice.fetch.done.door` ("Open the document"), fill `{document}`.
+Capture merges third; your seam test stays red by name until then; I CHANGE you at its merge.
