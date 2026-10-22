@@ -98,3 +98,91 @@ test("R124 (controls): a session that is gone, one with no opener, an answer wit
   assert.equal(bad.ok, false, "a document the promotion cannot take is refused, not thrown");
   assert.equal(typeof bad.reason, "string");
 });
+
+/* ---- fix round 6, G2 (K4562): the plane's `fetch` entry hands its finished document to the same delivery ---- */
+/* a session parked for a large fetch: its primary is not a held copy (the document does not exist until the fetch ends), and its state carries the opener
+   and the project the member's act named */
+async function owingFetch({ opener = "member:ann", project = "INQ-2026-0002" } = {}) {
+  const r = await record();
+  if (project) r.ctx.storage.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated) VALUES (?, ?, 'active', 0, '2026-10-22T00:00:00Z', '2026-10-22T00:00:00Z')`, project, opener.replace(/^member:/, ""));
+  const session = `fetch-${Math.random().toString(16).slice(2)}`;
+  const locator = "https://www.example.gov/files/BUDGET.pdf";
+  captureOf(r.ctx).saveCaptureSession({ session, locator, primarySha: "f".repeat(64), primaryFile: "snapshots/BUDGET.pdf", base: locator,
+    state: { queue: [{ fetch: true }], opened_by: opener, ...(project ? { project } : {}), fetch_pending: { since: "2026-10-22T00:00:00Z", declared_bytes: 15932155, why: "LARGE" } } });
+  const added = [];
+  const env = { ...r.env, STORE: { idFromName: (n) => n, get: () => ({ fetch: async (req) => { added.push(new URL(req.url ?? req)); return new Response(JSON.stringify({ ok: true, result: { ok: true } })); } }) } };
+  return { ...r, session, env, added };
+}
+const fetched = (r, bytes, type = "text/html") => {
+  const body = new TextEncoder().encode(`<html><body>the fetched large page ${Math.random()}</body></html>`);
+  r.objects.set(`bio/captures/${hex(body)}`, body);
+  return { ...docOf(body, "BUDGET.html"), capture: { ...docOf(body, "BUDGET.html").capture, bytes, content_type: type } };
+};
+
+test("R124 (G2): a document a large fetch finished is promoted under the project the member's act named, by the session's opener, and a PDF too large to read inline is written down for the alarm", async () => {
+  const r = await owingFetch();
+  const doc = fetched(r, 15932155, "application/pdf");
+  doc.profile = { format: { format: "pdf" } };
+  const out = await deliverOwedRender({ ctx: r.ctx, env: r.env, storeName: "bio", answer: { ok: true, document: doc }, session: r.session });
+  assert.equal(out.ok, true, JSON.stringify(out));
+  assert.equal(bundleRow(r, out.bundleId).project, "INQ-2026-0002", "filed in the project the session carries");
+  assert.equal(out.reading_pending, true);
+  assert.deepEqual(r.added.map((u) => [u.pathname, u.searchParams.get("kind"), u.searchParams.get("sha")]), [["/pendingadd", "reading", doc.capture.sha256]]);
+});
+
+test("R124, R125 (G2, G5): a 12 MB text a large fetch finished is owed to the alarm as well (the size rule is by format class); a 1 MB page is read at once", async () => {
+  const big = await owingFetch();
+  const text = fetched(big, 12000060, "text/plain");
+  text.profile = { format: { format: "text" } };
+  const out = await deliverOwedRender({ ctx: big.ctx, env: big.env, storeName: "bio", answer: { ok: true, document: text }, session: big.session });
+  assert.equal(out.ok, true, JSON.stringify(out));
+  assert.equal(out.reading_pending, true);
+  assert.equal(big.added.length, 1);
+  const small = await owingFetch();
+  const page = fetched(small, 1 * MB);
+  const ok = await deliverOwedRender({ ctx: small.ctx, env: small.env, storeName: "bio", answer: { ok: true, document: page }, session: small.session });
+  assert.equal(ok.ok, true, JSON.stringify(ok));
+  assert.equal(ok.reading_pending, undefined);
+  assert.equal(small.added.length, 0);
+});
+
+test("R124 (G2 control): a fetch session that names no project files the document under none; a render session still files beside its shell", async () => {
+  const none = await owingFetch({ project: "" });
+  const doc = fetched(none, 100);
+  const out = await deliverOwedRender({ ctx: none.ctx, env: none.env, storeName: "bio", answer: { ok: true, document: doc }, session: none.session });
+  assert.equal(out.ok, true, JSON.stringify(out));
+  assert.ok([null, ""].includes(bundleRow(none, out.bundleId).project), `no project: ${bundleRow(none, out.bundleId).project}`);
+});
+
+test("R124 (G2; CAPTURE #48): a finished fetch is recorded through capture's `recordFetchDone({session, document, opener, project, at})`, once; a render's delivery records none; a record that throws never undoes the filing", async () => {
+  const r = await owingFetch();
+  const seen = [];
+  captureOf(r.ctx).recordFetchDone = async (a) => { seen.push(a); return { ok: true }; };
+  const doc = fetched(r, 100);
+  const out = await deliverOwedRender({ ctx: r.ctx, env: r.env, storeName: "bio", answer: { ok: true, document: doc }, session: r.session });
+  assert.equal(out.ok, true, JSON.stringify(out));
+  assert.equal(seen.length, 1);
+  assert.deepEqual([seen[0].session, seen[0].opener, seen[0].project, seen[0].document],
+                   [r.session, "member:ann", "INQ-2026-0002", out.bundleId]);
+  assert.match(seen[0].at, /^\d{4}-\d\d-\d\dT/);
+  const bad = await owingFetch();
+  captureOf(bad.ctx).recordFetchDone = async () => { throw new Error("boom"); };
+  assert.equal((await deliverOwedRender({ ctx: bad.ctx, env: bad.env, storeName: "bio", answer: { ok: true, document: fetched(bad, 100) }, session: bad.session })).ok, true);
+  const render = await owing();
+  const spy = [];
+  captureOf(render.ctx).recordFetchDone = async (a) => { spy.push(a); };
+  await deliverOwedRender({ ctx: render.ctx, env: render.env, storeName: "bio", answer: { ok: true, document: rendered(render) }, session: render.session });
+  assert.equal(spy.length, 0, "a render is not a fetch");
+});
+
+test("R124 (G2, CAPTURE #48 merged): with the real capture the delivery leaves one `fetch_done` row for the session: the document's bundle id, the opener and the project; a render's delivery leaves none", async () => {
+  const r = await owingFetch();
+  const doc = fetched(r, 100);
+  const out = await deliverOwedRender({ ctx: r.ctx, env: r.env, storeName: "bio", answer: { ok: true, document: doc }, session: r.session });
+  assert.equal(out.ok, true, JSON.stringify(out));
+  const rows = [...r.ctx.storage.sql.exec(`SELECT session, document, opener, project FROM fetch_done`)];
+  assert.deepEqual(rows.map((x) => ({ ...x })), [{ session: r.session, document: out.bundleId, opener: "member:ann", project: "INQ-2026-0002" }]);
+  const render = await owing();
+  await deliverOwedRender({ ctx: render.ctx, env: render.env, storeName: "bio", answer: { ok: true, document: rendered(render) }, session: render.session });
+  assert.equal([...render.ctx.storage.sql.exec(`SELECT 1 FROM fetch_done`)].length, 0);
+});

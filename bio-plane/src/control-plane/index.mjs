@@ -211,6 +211,9 @@ const ACQUIRE_BOUND_MS = 25000;
 /* R120: a PDF over this size, or less than this budget left of the bound, is answered kept and read after */
 const READING_DEFER_PDF_BYTES = 2 * 1024 * 1024;
 const READING_BUDGET_MS = 8000;
+/* R123, R125 (fix round 6, G5; K4573): text and office files are read at about 1.5 s a MiB in the object (the walker's 12 MB text held a request for 18 s),
+   so above this size their reading follows by the ledger as a PDF's does above 2 MiB */
+const READING_DEFER_TEXT_BYTES = 3 * 1024 * 1024;
 /* R123 (fix round 4b; D3): the most a reading assembles from parts (reading-pipeline's `MULTIPART_READ_MAX`), so a capture held in more is never
    read at the door; and the most documents of one promotion the door follows */
 const READING_INLINE_MAX = 20 * 1024 * 1024;
@@ -231,6 +234,24 @@ function keptOf(times) {
   const stages = times && typeof times === "object" && times.stages && typeof times.stages === "object" ? times.stages : null;
   if (!stages) return "undetermined";
   return Object.hasOwn(stages, "receipt") && times.running !== "receipt" ? "held" : "nothing";
+}
+/* R105 (fix round 6, G2, G3; K4562): THE STORE IS ASKED WHETHER THE CAPTURE IS KEPT, not only this call's stages. A call the door stopped waiting for may
+   name a capture the record already holds (the address a member captured before, the page a `continue` finishes): that is kept whatever stage the call
+   was in, and "kept nothing" is never said of it. The question is one read of the store as the member may see it, each failing to `false`. */
+async function keptInStore(stub, { address, session, viewer }) {
+  const ask = async (path) => { const a = await doAnswer(stub.fetch(new Request(`http://do/${path}`))); return a.answered ? a.result : null; };
+  try {
+    if (typeof session === "string" && session) {
+      const ld = await ask(`loadcapturesession?session=${encodeURIComponent(session)}`);
+      /* only the session's own opener is told it is kept: another's session id states nothing */
+      if (ld && ld.found === true && typeof ld.primarySha === "string" && ld.primarySha && ld.state && ld.state.opened_by === viewer) return true;
+    }
+    if (typeof address === "string" && address && viewer) {
+      const held = await ask(`heldat?address=${encodeURIComponent(address)}&viewer=${encodeURIComponent(viewer)}`);
+      if (held && held.ok === true && held.held === true) return true;
+    }
+  } catch { /* a store that cannot be asked states nothing */ }
+  return false;
 }
 
 async function fingerprint(v) {
@@ -265,11 +286,27 @@ async function groupOf(stub, project = null) {
     return g && typeof g === "object" && !Array.isArray(g) ? g : null;
   } catch { return null; }
 }
-async function reviewAnswer(out, op, extra = {}, group = null) {
+const INBAND_OVER = "this answer exactly as served, without its `inband` key: parse it, delete `inband`, and "
+          + "hash JSON.stringify(rest, null, 1) as UTF-8";
+async function reviewAnswer(out, op, extra = {}, group = null, batchGroup = null) {
   if (out.refused) return storeRefusal(out, extra);   /* R23: the store's own refusal, at its status */
   if (!out.answered) return storeSilent(op, out.correlation);
   const r = out.result;
   if (!r?.ok) return json({ ok: false, ...r, ...extra }, r?.reason === "NO_REVIEW_COPY" ? 404 : 400);
+  /* R20 (fix round 6, G12c; K4577): a batch of review copies (`drafts`) is a read answer, never the dead answer: each copy it holds is stamped exactly
+     as the single read stamps it (the in-band quartet over the copy as served, its group fields read for its own project) */
+  if (op === "reviewcopy" && r.kind === "review-copies" && Array.isArray(r.copies)) {
+    const copies = [];
+    for (const c of r.copies) {
+      if (!c || typeof c !== "object" || c.ok !== true) { copies.push(c); continue; }
+      const { required_strength: bar, ...copy } = c;
+      const served = { ok: true, ...copy, ...extra };
+      const { quartet } = await inbandQuartet({ subject: served, over: INBAND_OVER, date: c.last_change?.at ?? null, author: c.updated_by ?? null, bar: bar ?? null,
+                                                group: typeof batchGroup === "function" ? await batchGroup(c.project) : null });
+      copies.push({ ...served, inband: quartet });
+    }
+    return json({ ...r, ...extra, copies }, 200);
+  }
   if (op === "reviewcopy") {
     /* REC-148 / DEC-31's BOUND RULE (`BIO_Publication_v0_1.md` §6A.3 point 1): the answer carries its
        hash, date, author and both floors IN-BAND, by the SAME function the container manifest is
@@ -565,6 +602,10 @@ const PLANE_LIMITS = Object.freeze({ subrequests: 10000 });
    integer>` for each key of the limits, keys sorted, single spaces, no quotes or backslashes, so a reader of the bundle's
    text finds it whole. `PLANE_LIMITS` is its parsed form. */
 const PLANE_LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000";
+/* R1 (fix round 6, G1; K4566): THE PLANE'S CRON, stated in its code beside its limits so the bundle a release signs carries it: the tag, then the one five-field cron
+   the watchdog runs on (`bio-plane/wrangler.jsonc` `triggers.crons`, which plane's test pins equal). The installer sets the plane's schedules from this statement
+   and holds no value of its own. */
+const PLANE_CRONS_STATEMENT = "bio-plane-crons/1 */5 * * * *";
 
 /* R53 (K1601, K1674; credentials R27, R28; agent-worker R54): AN ASK'S GRANT. Its token has a session's shape and is
    no session, so admission answers NOT_AUTHENTICATED; for an op on the grant's list, or one of the ask's own four calls
@@ -698,6 +739,8 @@ function tooBigToReadInline(document) {
   const pdf = type.startsWith("application/pdf") || declared.startsWith("application/pdf") || document?.profile?.format?.format === "pdf"
     || (type === "" && declared === "" && named);
   if (pdf && size > READING_DEFER_PDF_BYTES) return true;
+  /* R125 (fix round 6, G5): any other format above 3 MiB (text, office, html, a file of no stated type) follows by the ledger, never read inside the request */
+  if (!pdf && size > READING_DEFER_TEXT_BYTES) return true;
   return size > READING_INLINE_MAX;
 }
 /* R125 (fix round 5, E2): what the evidence bucket says of a whole, as a document for `tooBigToReadInline`: its size and whether it opens as a PDF.
@@ -718,7 +761,9 @@ async function heldWholeFacts(env, storeName, sha) {
 }
 /** R124 (fix round 4b, F5; K4492, K4493; acquisition R100, plane R77): THE ALARM'S DELIVERY OF AN OWED RENDER. The plane's alarm runs a
  *  `subresources` entry through acquisition's `owedRun`, which finishes the pending render and hands its answer here as `deliver`:
- *  `deliverOwedRender({ctx, env, storeName, answer, session}) -> {ok: true, bundleId, reading_pending?} | {ok: false, reason}`.
+ *  `deliverOwedRender({ctx, env, storeName, answer, session}) -> {ok: true, bundleId, reading_pending?} | {ok: false, reason}`. (Fix round 6, G2; K4562:
+ *  the plane's `fetch` entry, a large capture the member's act left to the alarm, hands its finished document here as well: the same promotion under
+ *  the session's project, by its opener, and the same reading follow.)
  *  The rendered document is promoted as the capture screen promotes an acquired one: screens-intake's own `promoteDocument` builds the
  *  bundle (its text, id and register), run in process through the same `promote` step (promotion's `promote`, the route's own), filed
  *  under the project of the shell document (the capture session's primary, as its opener sees it) with the opener as author and
@@ -736,11 +781,15 @@ export async function deliverOwedRender({ ctx, env, storeName = "bio", answer, s
     /* the opener in the door's forms (R17): the viewer `member:<id>` or `admin`, her id, her positional identity */
     const memberId = viewer.startsWith("member:") ? viewer.slice("member:".length) : viewer;
     const who = { author: memberId, actorMemberId: memberId, actorIdentity: viewer === "admin" ? "member:admin" : viewer, actorViewer: viewer };
-    let project = "";
-    try {
-      const held = await captureOf(ctx).heldAt({ sha256: ld.primarySha, viewer });
-      project = held && held.held === true && held.copy && typeof held.copy.project === "string" ? held.copy.project : "";
-    } catch { project = ""; }
+    /* (fix round 6, G2; K4562) a session parked for a fetch the member's act handed to the alarm carries her project and the opener in its state;
+       a session parked for a render is filed beside its shell, under the shell's project */
+    let project = ld.state && typeof ld.state.project === "string" ? ld.state.project.trim() : "";
+    if (!project) {
+      try {
+        const held = await captureOf(ctx).heldAt({ sha256: ld.primarySha, viewer });
+        project = held && held.held === true && held.copy && typeof held.copy.project === "string" ? held.copy.project : "";
+      } catch { project = ""; }
+    }
     const record = recordOf(ctx), promotion = promotionOf(ctx);
     const cs = { now: () => Date.now(), digest: async (t) => sha256Hex(t), w: (k, v) => word(k, v), date: (d) => d,
       call: async (op, { query = {}, body } = {}) => {
@@ -755,18 +804,28 @@ export async function deliverOwedRender({ ctx, env, storeName = "bio", answer, s
     if (made.refused !== undefined) return { ok: false, reason: (made.refused && (made.refused.reason || made.refused.code)) || "PROMOTE_REFUSED" };
     /* R123: the reading follows the filing */
     let pending = false;
+    const filedAt = new Date().toISOString();
     if (!(doc.reading && typeof doc.reading === "object")) {
       let held = null;
       if (!tooBigToReadInline(doc)) {
         try { held = await extractionOf(ctx).readHeld({ sha, storeName, env }); } catch { held = null; }
       }
-      if (!(held && (held.read === true || held.why === "READING_HELD"))) {
+      if (!(held && (held.read === true || held.why === "READING_HELD")) || held.more === true) {
         pending = true;
         try {
           const stub = env.STORE.get(env.STORE.idFromName(storeName));
           await doAnswer(stub.fetch(new Request(`http://do/pendingadd?kind=reading&sha=${sha}&store=${encodeURIComponent(storeName)}`, { method: "POST" })));
         } catch { /* the alarm's ledger is the reading's second chance, never the delivery's gate */ }
       }
+    }
+    /* (fix round 6, G2; K4577) a finished fetch is recorded for the notice that tells its opener (capture's `recordFetchDone`; one row a session, never throws);
+       a render session records none. A record that cannot be made never undoes the filing. */
+    if (ld.state && ld.state.fetch_pending) {
+      try {
+        const cap = captureOf(ctx);
+        if (typeof cap.recordFetchDone === "function")
+          await cap.recordFetchDone({ session, document: made.bundleId, opener: viewer, project: project || null, at: filedAt });
+      } catch { /* the filing stands */ }
     }
     return { ok: true, bundleId: made.bundleId, ...(pending ? { reading_pending: true } : {}) };
   } catch (e) { return { ok: false, reason: "DELIVERY_FAILED", detail: String((e && e.message) || e).slice(0, 200) }; }
@@ -823,6 +882,7 @@ export function makeFetch(hooks = {}) {
   };
   planeDoor.limits = PLANE_LIMITS;
   planeDoor.limitsStatement = PLANE_LIMITS_STATEMENT;
+  planeDoor.cronsStatement = PLANE_CRONS_STATEMENT;
   return planeDoor;
   /* R75: the interface's page, built for this request, and the hash of the script it loads, kept for the page policy on the way out */
   function page(req, env, seen, status = 200) {
@@ -1036,6 +1096,12 @@ export function makeFetch(hooks = {}) {
           for (const k of ["case", "edition"])
             if (url.searchParams.get(k)) q.set(k, (url.searchParams.get(k) || "").trim());
         if (op === "reviewcopy" && url.searchParams.get("limit")) q.set("limit", url.searchParams.get("limit"));
+        /* R20 (fix round 6, G12c): a member's read of several drafts at once names them in `drafts`; a grant's secret opens one copy, so a holder's read is single */
+        if (op === "reviewcopy" && !bySecret) {
+          const listed = reqBody && typeof reqBody === "object" && !Array.isArray(reqBody) && Array.isArray(reqBody.drafts) ? reqBody.drafts.filter((d) => typeof d === "string").join(",") : "";
+          const drafts = url.searchParams.get("drafts") || listed;
+          if (drafts) q.set("drafts", drafts);
+        }
         /* R64 (N761): the grant's digest crosses in the internal request's body alone, never its query; the door's mark
            `bySecret` stays in the query, where the owners read it */
         const digest = bySecret ? await sha256Hex(credential.secret || "") : null;
@@ -1067,7 +1133,8 @@ export function makeFetch(hooks = {}) {
         const out = await doAnswer(stub.fetch(`http://do/${op}?${q}`,
           innerBody === null ? undefined : { method: "POST", headers: { "content-type": "application/json" },
                                              body: JSON.stringify(innerBody) }));
-        return reviewAnswer(out, op, {}, op === "reviewcopy" && out.answered && out.result?.ok ? await groupOf(stub, out.result.project) : null);
+        return reviewAnswer(out, op, {}, op === "reviewcopy" && out.answered && out.result?.ok ? await groupOf(stub, out.result.project) : null,
+                            op === "reviewcopy" ? (project) => groupOf(stub, project) : null);
       }
       /* The sign-in and the invitation's two steps, relayed to the store's routes (credentials' `login`, membership's
          `invitelook` and `enroll`) and answered through R24's relay (D-679). The invitation ops answer from the store
@@ -2471,7 +2538,11 @@ export function makeFetch(hooks = {}) {
         /* R105, R115 (fix round 2, C12): what was kept is read off the stages the object states, and the design's sentence ("kept
            nothing") is said only where nothing was */
         const stages = await acquireStages();
-        const kept = keptOf(stages);
+        let kept = keptOf(stages);
+        /* (fix round 6, G2, G3) a capture the record holds is kept whatever this call's stages say */
+        if (kept !== "held" && viaSession && reqBody && typeof reqBody === "object" && !Array.isArray(reqBody)
+            && await keptInStore(stub, { address: typeof reqBody.locator === "string" ? reqBody.locator : null,
+                                         session: typeof reqBody.continue === "string" ? reqBody.continue : null, viewer: sessViewer })) kept = "held";
         return json({ ok: false, reason: "ACQUIRE_TIMED_OUT", code: "ACQUIRE_TIMED_OUT", op, store: storeName, tokenClass: cls,
                       ...(detailKey(kept) ? { detail: word(detailKey(kept)) } : {}), kept, timings: failedTimings(stages) }, 504);
       }, (e) => { clearTimeout(timer); throw e; });
@@ -2503,7 +2574,16 @@ export function makeFetch(hooks = {}) {
       seen.clock.begin("promote");
       const promoted = await promoteAcquired(armed);
       seen.clock.end("promote");
-      const followed2 = await readHeldAfterAcquire(promoted);
+      let followed2 = await readHeldAfterAcquire(promoted);
+      /* (fix round 6, G14) a reading the acquire made that answers `more` is continued by cursor */
+      try {
+        const fb = await followed2.clone().json();
+        if (fb && fb.ok === true && fb.reading_pending !== true && fb.document?.reading?.more === true) {
+          const headers = new Headers(followed2.headers);
+          headers.delete("content-length");
+          followed2 = new Response(JSON.stringify({ ...fb, reading_pending: true }), { status: followed2.status, headers });
+        }
+      } catch { /* not a JSON answer */ }
       await pendReading(followed2);
       const res = await doorTimedFailure(followed2);
       if (!captureStep && url.searchParams.get("step") === null) return res;
@@ -2534,6 +2614,16 @@ export function makeFetch(hooks = {}) {
         return asked.answered && asked.result && typeof asked.result === "object" && asked.result.ok === true ? asked.result : null;
       } catch { return null; }
     }
+    /* R125 (fix round 6, G5): whether the record already holds a made reading for the digest, as the member may see it, asked of the store's plain `reading`
+       read (nothing is read, and the owner's `readHeld` is not asked); a statement or a failed reading is not a made one, so it stays owed. */
+    async function readingHeld(sha) {
+      if (!viaSession || typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha)) return false;
+      try {
+        const a = await doAnswer(stub.fetch(new Request(`http://do/reading?sha256=${sha}&viewer=${encodeURIComponent(sessViewer)}`)));
+        const r = a.answered ? a.result : null;
+        return !!(r && r.found === true && r.reading && !r.reading.failure);
+      } catch { return false; }
+    }
     /* R120: a reading deferred (`reading_pending: true`) is registered with the plane's alarm, the store-internal `pendingadd`, which finishes it by
        `readHeld` within a minute (plane R75); a refusal or a silence of the registration changes nothing the caller receives (the screen's
        promotion and the member's next look still find the capture). */
@@ -2554,6 +2644,9 @@ export function makeFetch(hooks = {}) {
        type or name), a capture held in more than a reading assembles from parts (20 MiB, so no whole is read from it here), or less than the
        8 seconds a reading is given left of R105's 25. */
     function readingWontFit(document) {
+      /* R125 (fix round 6, G7): a capture over the statement threshold is stated from its sizes with no object read, so the clock is no reason to leave
+         it: whatever time is left, its reading is made now and never owed */
+      if (sizeOfDocument(document) > READING_STATEMENT_MIN) return false;
       return tooBigToReadInline(document) || (hooks.acquireBoundMs ?? ACQUIRE_BOUND_MS) - seen.clock.elapsed() < READING_BUDGET_MS;
     }
     /* R123 (fix round 4b, F1, F2, F6; K4487; D3): A READING FOLLOWS EVERY WAY A DOCUMENT ENTERS THE RECORD. Each document the record now stores
@@ -2570,9 +2663,17 @@ export function makeFetch(hooks = {}) {
         if (held && (held.read === true || held.why === "READING_HELD")) {
           /* E6: pages of a scan left unread are owed to the OCR pass, which the ledger goes on with by cursor */
           if (held.owed === true) { await pendSha(e.sha, "ocr"); owed = true; }
+          /* (fix round 6, G14; K4578) a reading that answers `more` is continued by cursor by the ledger, for every format */
+          if (held.more === true) { await pendSha(e.sha); owed = true; }
           continue;
         }
         await pendSha(e.sha);
+        owed = true;
+      }
+      /* (fix round 6, G18; K4578) the first READING_FOLLOWED_MAX documents are followed here; the rest are owed, never dropped: the ledger reads them one heavy row a tick */
+      for (const e of entries.slice(READING_FOLLOWED_MAX)) {
+        if (e.ocrOnly) { if (env.OCR_WORKER) await pendSha(e.sha, "ocr"); }
+        else await pendSha(e.sha);
         owed = true;
       }
       return owed;
@@ -2612,17 +2713,29 @@ export function makeFetch(hooks = {}) {
       /* R123 (F2): a reading owed is written down and the answer says so; the upload stands as it was answered */
       const owed = async () => { await pendSha(shaOf(r)); return { body: { ...got.body, result: { ...r, reading_pending: true } }, status: got.status }; };
       if (r.existed === true) {
-        /* R117 (fix round 5, E2): bytes held whose reading will not fit are owed, not read inside the request */
-        if (readingWontFit(hasDocument ? r.document : { capture: r.capture })) return owed();
+        /* R117 (fix round 5, E2): bytes held whose reading will not fit are owed, not read inside the request; (fix round 6, G5) unless the
+           record already holds their reading, which is neither read again nor promised again */
+        if (readingWontFit(hasDocument ? r.document : { capture: r.capture })) {
+          return await readingHeld(shaOf(r)) ? got : owed();
+        }
         const held = await readHeld(shaOf(r));
         if (held && held.read === false && held.why === "NO_WHOLE_OBJECT") return owed();
+        /* (fix round 6, G14) a held reading that answers `more` is continued by the ledger */
+        if (held && held.more === true) return owed();
         if (!held || held.read !== false || held.why !== "NO_HOME" || !hasDocument || r.document.reading) return got;
       } else if (!hasDocument) return got;
       if (readingWontFit(r.document)) return owed();
       const read = await acquireReadingOp({ ok: true, document: r.document }, stub, { json, storeSilent, doAnswer, storeName,
         storeRefusal: (out) => storeRefusal(out, { store: storeName, tokenClass: cls }) });
       if (read.response) return { early: read.response };
-      return { body: { ...got.body, result: { ...r, document: read.body.document } }, status: got.status };
+      /* (fix round 6, G4, G14; K4577, K4578) a read that failed or went silent after the upload stood is `reading_pending` with the failed call's `diag` (not drawn), and
+         a reading that answers `more` is continued by cursor: both are owed to the ledger, and the upload stands as answered */
+      const rb = read.body;
+      const more = rb.document?.reading?.more === true || rb.more === true;
+      const pending = rb.reading_pending === true || more;
+      if (pending) await pendSha(shaOf(r));
+      return { body: { ...got.body, result: { ...r, document: rb.document, ...(pending ? { reading_pending: true } : {}),
+                                              ...(rb.diag !== undefined ? { diag: rb.diag } : {}) } }, status: got.status };
     }
     /* R117: an `acquire` answered `existed: true` (the record already holds the bytes) is asked of `readHeld` as an upload is; the
        answer is relayed as it was (it carries its own reading already: acquire reads what it files). */
@@ -2637,12 +2750,20 @@ export function makeFetch(hooks = {}) {
       if (readingWontFit(b.document ?? { capture: b.capture })) {
         const sha = shaOf(b);
         if (typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha)) return res;
+        /* (fix round 6, G5) a reading the record already holds is neither promised again nor written down */
+        if (await readingHeld(sha)) return res;
         /* the entry itself is written down by `pendReading`, which reads `reading_pending` off this answer */
         const headers = new Headers(res.headers);
         headers.delete("content-length");
         return new Response(JSON.stringify({ ...b, reading_pending: true }), { status: res.status, headers });
       }
-      await readHeld(shaOf(b));
+      const held = await readHeld(shaOf(b));
+      /* (fix round 6, G14) a reading that answers `more` is continued by cursor: the answer says it is on its way and `pendReading` writes the row */
+      if (held && held.more === true) {
+        const headers = new Headers(res.headers);
+        headers.delete("content-length");
+        return new Response(JSON.stringify({ ...b, reading_pending: true }), { status: res.status, headers });
+      }
       return res;
     }
     /* R71 (N820; steps R9): A MEMBER'S CAPTURE MAY CARRY `step`, the step it is a product of. Once the capture has landed
@@ -3694,6 +3815,11 @@ export function makeFetch(hooks = {}) {
     /* REC-198: the list of a project's drafts answers in the review copy's OWN shape — through `reviewAnswer`,
        the function `reviewcopy` answers through — so the dead answer a caller outside the fence receives is the
        single read's, status and bytes, and not this handler's generic envelope. */
+    if (op === "casedrafts") {
+      /* R20 (fix round 6, G12c; K4577): `projects` is a body list or a comma-separated value of the address */
+      const listed = reqBody && typeof reqBody === "object" && !Array.isArray(reqBody) && Array.isArray(reqBody.projects) ? reqBody.projects.filter((d) => typeof d === "string").join(",") : "";
+      if (listed && !inner.searchParams.get("projects")) inner.searchParams.set("projects", listed);
+    }
     if (op === "casedrafts")
       return reviewAnswer(await doAnswer(stub.fetch(new Request(inner, withGrant({ method: "GET" })))), op);
 
@@ -3794,7 +3920,7 @@ export function makeFetch(hooks = {}) {
   }
 }
 export { ACT_CLOCK_OPS, PUBLISHED_STORE, sha256Hex, fingerprint, caseReader, reviewAnswer, captureKey, migrationReplayOf, DRIVE_PROVENANCE_PATH,
-         storageAbsent, PLANE_LIMITS, PLANE_LIMITS_STATEMENT };
+         storageAbsent, PLANE_LIMITS, PLANE_LIMITS_STATEMENT, PLANE_CRONS_STATEMENT };
 /* K624 (1), (2): admission's namespace names, read through this door by plane's hooks and by the fleet members' pin
    (`members-pin.test.mjs`); the door itself calls admission directly. */
 export { SCRATCH, NAMESPACES } from "../admission/index.mjs";
