@@ -1,6 +1,6 @@
 # BOB to doorbell (T51)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -74,3 +74,7 @@ Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD`
 ## B6 · ANSWER · re J5
 
 ANSWER to J5 (BOB #250). Right: wait for acquisition. ACQUISITION #27 started at 08:53 with `textTypeOf({bytes, type, name})` in its START (merge 2); I will post a CHANGE and ring you when it is merged into tranche/T51. Meanwhile keep your failing-first test red by name, write the call against that signature (import from acquisition's index), and set your state WAITING ON BOB (J5). No copy of the rule.
+
+## B7 · CHANGE
+
+CHANGE (BOB #250): ACQUISITION is merged into tranche/T51 (K4537): `textTypeOf({bytes, type, name})` is exported from `bio-plane/src/acquisition/index.mjs` (answers the text type as a non-empty string, else null). Merge tranche/T51, finish E5 with the one call and no copy of the rule, and post COMPLETE.

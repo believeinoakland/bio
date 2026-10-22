@@ -1,6 +1,6 @@
 # BOB to screens-publish (T51)
 
-**Read** · handled J22
+**Read** · handled J24
 
 ## B1 · START
 
@@ -379,3 +379,11 @@ Mail with `--module screens-publish`; record `build/jobs/T51/screens-publish.md`
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-publish tranche/T51 job/T51/screens-publish`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
 
 **Your entry (plan E4, seam owner, BLOCKER, irreversible on the live copy; merge 9, after publication).** Walker B (C48): "after a reload the Sign section says 'One confirmation signs all 1: the edition and its 0 findings' and the edition is signed and published WITHOUT its finding ... `publishedcase` answers `findings: []`, `complete: false`, `awaiting: [<the question>]`. The same flow with NO reload ... says 'signs all 2: the edition and its 1 findings' and publishes a complete case (CASE-2026-6644)." Root cause (certain): `ceremony.mjs:115-117` reads `rec.citations` as an array; `casedocument` answers it as `{state, rows}` (publication :1934, case-grammar :177-184), so after a reload `prepared.findings` is `[]`, `parts.mjs:421-436` `sitting` lists the case alone (the evidence loop never runs), the words say "its 0 findings" (`ceremony.mjs:367-369`), and `caseratify` goes with `members: []`. Step 0 (`build/plan/fix-round-5-step0.md` §2) confirmed on CASE-2026-8024: `citations` is `{state:"signed", rows:[{target, version:"no_bytes", capture:null}]}`, and the signed text pins the roster as `case_findings` (targets) and `case_roles[].{target, role, version_sha, edition}`. Use publication's new `findings` field (`{target, version_sha, role}`). Fix: on a reload `prepared.findings` comes from `casedocument`'s new `findings` field (publication, merge 6) and the evidence from `citations.rows`; **fail closed**: when the draft names findings and the sitting would list none, or fewer than the document pins, the Sign step refuses in words (nearest held row as stand-in, K4269; the row owed named in your record) and sends nothing. Why missed: `fixtures.mjs:51` and the C48/C49 tests (`fix4.test.mjs:98`, `drafts.test.mjs:141`) hand-write `casedocument.citations` as an array: replace those doubles with answers from the real op (R-SEAM). Failing-first (Miniflare plane, the real ceremony screen): a question concluded, "Prepare a case", the edition prepared, the ceremony page **reloaded**, the key file loaded, "Sign and publish now": the Sign section counts the edition and its findings, `publishedcase` has `findings` 1 and `complete: true`; controls: the no-reload flow unchanged; a draft whose roster cannot be read refuses to sign and nothing is published.
+
+## B30 · CHANGE
+
+CHANGE (BOB #250): PUBLICATION #35 is merged into tranche/T51 (K4534): `casedocument` answers `findings: [{target, version_sha, role}]` (the pinned roster; null when the bytes state none), `citations` unchanged `{state, rows}`. Merge tranche/T51 into your branch and close the E4 seam with the real `publish` and the reload (your START).
+
+## B31 · ANSWER · re J23
+
+ANSWER to J23 (BOB #250). Keep the evidence branch: the sitting listing and signing each evidence row with a full SHA-256 is R13 as written and R52 takes such members; it is a defect that it never ran, now fixed. Your R13/R70/R77 lines are taken at the merge. PUBLICATION is merged (B30): merge tranche/T51, run the real suites, post COMPLETE.

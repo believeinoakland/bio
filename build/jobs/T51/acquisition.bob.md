@@ -1,6 +1,6 @@
 # BOB to acquisition (T51)
 
-**Read** · handled J21
+**Read** · handled J24
 
 ## B1 · START
 
@@ -251,3 +251,11 @@ Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD`
 - **E5 (provider).** Export `textTypeOf({bytes, type, name})`, the upload's rule (`capture/index.mjs:748-767`: a declared text type, or a `.txt/.md/.csv` name, only for bytes that are valid UTF-8 without NUL); capture (2b) and doorbell (3) call it. Test it at your interface, controls included (a NUL; no type with a `.txt` name).
 - **E10 (stage split).** PERFORMANCE P12: a large capture's read stage runs at about 0.7 MB/s (12.9 s for 8.8 MB, 23.2 s for 15.9 MB) and `timings` does not say how much is the source's download, the hash, or the store's writes. Fix: `timings` gains `download`, `hash`, `store` (the existing `read` kept as their sum). Failing-first: a 15.9 MB capture's `timings` carries the three stages; **L:** their numbers at the real R2 shape in your record (local workerd), so the re-walk can tell whether the 15 s bar is reachable for large files.
 - **E8 (seam owner).** Walker A (C13b): "the press answered in 2.5-2.6 s and sent no request I could see ... About 3-4 minutes after each capture the Unfinished line was gone on its own (`opencaptures` empty) but NO second document ('as a visitor saw it') exists". Step 0 (`fix-round-5-step0.md` §3): "Finish it" does send `POST acquire {continue}` (its answer unread); the visitor copy never came and the capture's `subresources` row sat unworked for 7 min behind the wedged ledger (E2, plane's). So: (1) offline, through the real path, record what `acquire {continue}` answers on a session whose render is pending, and fix whatever it drops (a session ended without its owed render registered is a defect of yours); (2) the gap of round 4's C13b test (a scripted `deliver`): your test runs the owed render through the real control-plane `deliverOwedRender` and reads the second document back with `heldcaptures` and the project's list (control-plane is merged code on the tranche; it is a provider-free composition test of yours); a cause that is plane's ledger alone is said so in COMPLETE with the evidence. Failing-first: a capture with the visitor view, the object's in-memory map reset, the alarm run: a second document ("as a visitor saw it") is in the project's list; "Finish it" sends `continue` or says in words why not.
+
+## B24 · CHANGE
+
+CHANGE (BOB #250; fix round 5 E5): capture and doorbell are written against `textTypeOf({bytes, type, name})` answering the text type as a non-empty string (the declared text type, or the type a .txt/.md/.csv name gives) when the bytes are valid UTF-8 with no NUL, and null otherwise. Export it with that shape from `bio-plane/src/acquisition/index.mjs`; both users wait on your merge, so post COMPLETE for E5 as early as your other entries allow, or say if E1/E8/E10 will take long and I will have you land E5 first.
+
+## B25 · ANSWER · re J22
+
+ANSWER to J22 (BOB #250). Yes: the composition test goes to control-plane (the seam owner, last on the path); I send CONTROL-PLANE #47 a CHANGE naming `git show 68845de064:bio-plane/test/m/acquisition/fix5-seam-visitor.test.mjs`. Also a finding from SCREENS-INTAKE #17 for you to deal with in this job: a finished or closed capture session answers `{continue}` with BAD_LOCATOR (`acquisition/index.mjs:957-964`) instead of NO_SUCH_SESSION; one code per condition (K231): answer NO_SUCH_SESSION, with a test. And from B24: land `textTypeOf` early if your other entries will take long; capture and doorbell both wait on it.

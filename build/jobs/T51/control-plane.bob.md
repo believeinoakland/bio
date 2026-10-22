@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J24
+**Read** · handled J25
 
 ## B1 · START
 
@@ -288,3 +288,18 @@ Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD`
 - **E6 (seam).** Walker A: "24 of 60 at 06:22:31, 24 at 06:36, 24 at 06:44 (22 min with no further pages ...). Pressing 'Read this document again with OCR' ... took 38.1 s ... each press reads 24 pages". Certain: `followEntries` (:2521-2529) treats `held.read === true` as the end and drops `held.owed`; the inline paths (`acquireReadingOp`, `readUploaded`) hand `extraction.read` no `owe` hook. Step 0 (`fix-round-5-step0.md` §1): the walked scan's owed `reading` row never ran (the wedged ledger, plane's E2), so no `ocr` row was made; the code defect stands. Fix: register `ocr` when `owed`; the OCR press hands the pages to the ledger and answers at once. Failing-first: a 60-page image PDF (made by the test; OCR member scripted at its real 24-page call) uploaded and promoted: all 60 pages have text within the alarm's ticks, no press; a 1 MB 30-page scan read inline at `promote` has its `ocr` entry; the press answers under 2 s with the entry in `owedwork`.
 - **E2 (the press and the acquire half).** P12: the 15.9 MB PDF's answer took 61 s, `do-readheldfor` 37.2 s of it. Certain: `readHeldAfterAcquire` (:2580-2584) reads an `existed` or multipart capture inline with no size gate, and so does the upload's `existed` path (:2565-2568); "Read it" (`readheld`) reads inline too (P12 measured 37.2 s, over the door's 25 s). Fix: each asks `readingWontFit` of the held document (its capture bytes and parts) and owes the reading when it will not fit, answering at once ("being read"). Failing-first (with plane, merge 11): a 16 MB 1,300-page PDF captured through `acquire` twice: the second answer has no `do-readheldfor` in Server-Timing and says `reading_pending`; "Read it" on it answers under 2 s with the entry owed; the alarm reads it; a 41.5 MB capture and a 60-page scan behind it are not delayed beyond one tick of their own; control: a 1 MB PDF captured twice is still read inline.
 - **E10 (seam, speed).** PERFORMANCE P11: every call to the object costs 110-125 ms and an op makes 2-5 in sequence (`groupidentity` 510 ms, `bootstrap` 930-1,290 ms). Fix, in this order: (i) `Server-Timing` carries the object's own in-object time (plane, merge 11) beside `do-<route>`; (ii) the session check and the door window folded into the op's own call, keeping the order the door states (who, the window, the op; `background` reads count as no activity); `bootstrap` to at most 2 calls. Failing-first: a hop-count test through the real door (`do-*` entries per op: `whoami` 1, `projectlist` 1, `groupidentity` at most 2, `bootstrap` at most 2), red now. What stays over K4354's 2 s is recorded with its numbers, never silent.
+
+## B35 · ANSWER · re J25
+
+ANSWER to J25 (BOB #250).
+(a) Ruled as your best reading: the door forwards `readheld` (and `readheldfor`) with `defer=1` when its R2 head says the whole will not fit; extraction answers `{ok: true, read: false, why: "READING_PENDING"}` after its own gates, without reading; the door then writes the `reading` entry and answers at once. The OCR press as you describe (ask `reading` as the member, write the `ocr` entry when pages are unread and an OCR member is bound, else forward). No door-only answer (no existence oracle). I send EXTRACTION #33 the `defer=1` arm as a CHANGE now; your seam test stays red by name until it merges.
+(b) **B** for this round. The fold of the session into the op's call is an object-side admission across admission, store-door and plane; whether it, or the object's location (P11 step 3), removes the larger share of the 110-125 ms per call is exactly what (i)'s in-object time on the deployed copy measures, so (ii) waits on that measurement (P19: a measurement outside the tranche) and enters next.md with your numbers. No session cache. Your hop test pins today's counts as ceilings (whoami 1, projectlist 2, groupidentity 3, bootstrap 4, queue 2) and names the targets. Do (i) and (iii).
+(i) Header: the object sends `server-timing: object;dur=<ms>` on every route's answer; I tell PLANE #50 that exact name now.
+
+## B36 · CHANGE
+
+CHANGE (BOB #250; fix round 5 E8, from ACQUISITION #27's J22). Add to your tests the composition test ACQUISITION wrote and the architecture check refuses in its own tests (it imports later modules): `git show 68845de064:bio-plane/test/m/acquisition/fix5-seam-visitor.test.mjs` (capture's real instance, `acquire` with the visitor view, the screen's `promoteDocument`, the render table reset, `acquire {continue}`, `owedRun` with your real `deliverOwedRender`, the second document read back once by `heldcaptures`). Adapt its imports to your test directory; it is red by name until acquisition merges, then green. Name it in COMPLETE as E8's through-the-door test.
+
+## B37 · CHANGE
+
+CHANGE (BOB #250): ACQUISITION is merged into tranche/T51 (K4537: R101 profile of a multipart capture, R102 `textTypeOf`, R103 `read_split`, R104 the visitor copy owed until filed). Merge tranche/T51; E8's composition test (B36) should now go green; E1 and E5 seams can use the merged providers (reading-pipeline is merged too, K4535).

@@ -55,6 +55,7 @@ import { actionClocksOf, CLOSED_ACTION_STATES, REMINDERS_PER_ACTION_MAX } from "
 import { PRODUCT_KINDS } from "../action-grammar/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { explainRefusal } from "../affordances.mjs";
+import { composedVocabularies, EVENTS_VOCABULARY_KEYS } from "./words.mjs";
 
 /* R15: the `by` a roster position is asked of, or null when none can be: no stamp sent, or a credential's stamp (N874). */
 const rosterActor = (by) => {
@@ -493,6 +494,13 @@ class AffordanceFacts {
         if (k && typeof k.kind === "string" && !PRODUCT_KINDS.includes(k.kind) && typeof k.label === "string" && k.label.trim()
             && !Object.hasOwn(out.action_kind_labels, k.kind)) out.action_kind_labels[k.kind] = k.label;
     } else if (active !== null && !active.length) out.action_kind_labels = {};
+    /* R39 (E14, T51 fix round 5): `events` registers as a connection owner at its `start`, which runs here, in the Durable
+       Object, and not in the Worker isolate that composes the door's answer; so its five vocabularies, composed here where
+       the owner is registered (with the owner's words), travel with this answer. */
+    try {
+      const composed = composedVocabularies();
+      out.events_vocabularies = Object.fromEntries(EVENTS_VOCABULARY_KEYS.filter((k) => composed[k]).map((k) => [k, composed[k]]));
+    } catch { /* left out: the door then composes what its own isolate has */ }
     return out;
   }
 

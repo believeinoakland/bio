@@ -79,8 +79,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     } catch { /* an unreadable record is none */ }
     return null;
   }
-  function writeRecord(r) { BOOT_STALE = true; local.set(D.storeKey, JSON.stringify({ t: r.t, e: r.e || 0, d: r.d, w: r.w || "" })); local.del(STATE_KEY); }
-  function clearRecord(why) { BOOT_STALE = true; if (why) local.set(STATE_KEY, why); else local.del(STATE_KEY); local.del(D.storeKey); }
+  function writeRecord(r) { BOOT_STALE = true; newEpoch(); local.set(D.storeKey, JSON.stringify({ t: r.t, e: r.e || 0, d: r.d, w: r.w || "" })); local.del(STATE_KEY); }
+  function clearRecord(why) { BOOT_STALE = true; newEpoch(); if (why) local.set(STATE_KEY, why); else local.del(STATE_KEY); local.del(D.storeKey); }
   const working = () => ROUTE && frameOf(ROUTE.screen) === "working" && !ROUTE.root;
   /* R32: the path to return to, the address alone (never a query, a fragment or the token) */
   function keepReturn() { if (working()) tab.set(RETURN_KEY, win.location.pathname); }
@@ -104,7 +104,42 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
      plane's `SESSION_LOCKED` locks the page (R33). A request with no session, or for a screen drawn without one,
      carries no Authorization header and is sent only for a public op (R30, R45). Answers `{kind: "ok", value}`,
      `{kind: "refused", code, translation, fields, server}` (R13) or `{kind: "silent"}` (no answer). */
-  async function call(op, req = {}) {
+  /* R123 (fix round 5, E12; P9): one request per `(op, query, body)` per load. A read (an op `OPS` declares not mutating, or a call that says
+     `read: true`: every read a screen's `reads` names, and the frame's `subscriptionsignin` state) identical to one still in flight, or answered during this load, is that
+     one request: the second reader waits for it and is handed its own copy of the answer. A load is a `route()`; every act, every call of
+     a mutating op, a change of the session record and a new route opens a new epoch, so an act's re-reads, a re-visit and a refresh still
+     ask. A completed answer is shared only while the load is open (until the screen's first reads settle) and for 5 seconds at most. */
+  let EPOCH = 0, LOADING = false;
+  const SHARED = new Map(), LOAD_MS = 5000, READ_OPS = new Set(D.readOps);
+  const newEpoch = () => { EPOCH++; SHARED.clear(); };
+  function closeLoad() { LOADING = false; for (const [k, e] of [...SHARED]) if (e.done) SHARED.delete(k); }
+  function copyOf(x) {
+    const a = x.a;
+    if (x.raw === null) return a;
+    if (a.kind === "ok") { const json = JSON.parse(x.raw); return { kind: "ok", json, value: json && typeof json === "object" && "result" in json ? json.result : json }; }
+    return Object.assign({}, a, { fields: JSON.parse(x.raw) });
+  }
+  function call(op, req = {}) {
+    const read = req.act !== true && (req.read === true || READ_OPS.has(op));
+    if (!read) { newEpoch(); return send(op, req).finally(newEpoch); }
+    if ((typeof req.bearer === "string" && req.bearer !== "") || req.bytes || req.raw !== undefined || typeof req.onEvent === "function") return send(op, req);
+    const asked = Object.entries(req.query || {}).filter(([, v]) => v !== undefined && v !== null).map(([k, v]) => [k, String(v)]).sort((x, y) => (x[0] < y[0] ? -1 : 1));
+    const key = EPOCH + "|" + (req.public ? "p" : "s") + "|" + op + "|" + JSON.stringify([asked, req.body === undefined ? null : req.body]);
+    const hit = SHARED.get(key);
+    if (hit && (!hit.done || (LOADING && Date.now() - hit.at < LOAD_MS))) return hit.snap.then(copyOf);
+    const entry = { done: false, at: 0, snap: null };
+    entry.snap = send(op, req).then((a) => {
+      /* the answer's own copy is taken before anyone is handed it, so a reader that changes what it was handed changes nobody else's */
+      let raw = null;
+      try { raw = a.kind === "ok" ? JSON.stringify(a.json) : a.kind === "refused" ? JSON.stringify(a.fields) : null; } catch { raw = null; }
+      entry.done = true; entry.at = Date.now();
+      if (!LOADING && SHARED.get(key) === entry) SHARED.delete(key);
+      return { a, raw };
+    });
+    SHARED.set(key, entry);
+    return entry.snap.then((x) => x.a);
+  }
+  async function send(op, req = {}) {
     const own = typeof req.bearer === "string" && req.bearer !== "";
     /* R46: `unlock` is sent under the locked session's token, from whichever frame */
     const pub = !own && (!S || (!!req.public && op !== "unlock"));
@@ -371,7 +406,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       if (b.kind === "ok" && !BOOT_STALE) return b;
       BOOT_STALE = true;
     }
-    return call(spec.op, { query: spec.query, body: spec.body, public: inst.pub, background });
+    return call(spec.op, { query: spec.query, body: spec.body, public: inst.pub, background, read: true });
   }
   /* R96, R93 (P9): the frame's number is `queue`'s count (`loadFrame`); the open list a screen reads (at most a `limit` and a `sort`), when the
      answer is the whole list (not cut by its limit), also gives the frame the three kinds for its explanation and keeps its number equal to the
@@ -382,6 +417,21 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const count = (c) => a.value.items.filter((x) => x && x.class === c).length;
     QUEUE_COUNTS = { todo: count("OBLIGATION"), noticed: count("FINDING"), status: count("CONDITION") };
     TODO = QUEUE_COUNTS.todo + QUEUE_COUNTS.noticed + QUEUE_COUNTS.status;
+    QUEUE_NOTED = true;
+  }
+  /* R7, R93, R96 (E12; K4530): the number the masthead and the rail's Queue place draw is the queue's count of the member's open items (the design's
+     sum of the three kinds). When the screen being loaded reads the whole open list (`queue` with at most a `limit` and a `sort`), its answer gives the
+     number and the three kinds (`noteQueue`) and the frame sends no read of its own; the frame asks `queue` with `count: true`, once, in the background
+     (R33), when the screen reads no such list, or when its answer was cut, refused or not given. */
+  let COUNT_DUE = false, QUEUE_NOTED = false;
+  const openList = (sp) => !!(sp && sp.op === "queue" && sp.body === undefined && Object.keys(sp.query || {}).every((k) => k === "limit" || k === "sort"));
+  function countQueue(inst, reads) {
+    COUNT_DUE = false; QUEUE_NOTED = false;
+    const ask = () => call("queue", { query: { count: true }, background: true }).then((q) => {
+      if (ME && q.kind === "ok" && q.value && typeof q.value.count === "number") { TODO = q.value.count; draw(); }
+    });
+    if (!inst || !Object.values(readsOf(inst)).some(openList)) return ask();
+    return reads.then(() => { if (ME && !QUEUE_NOTED) return ask(); });
   }
   async function readAll(inst, names, background) {
     let specs = {};
@@ -446,7 +496,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     let spec = null;
     try { spec = (inst.spec.reads ? inst.spec.reads(inst.view) || {} : {})[n] || null; } catch { spec = null; }
     if (!spec || spec.refresh !== true) return;
-    const a = await call(spec.op, { query: spec.query, body: spec.body, public: inst.pub, background: true });
+    const a = await call(spec.op, { query: spec.query, body: spec.body, public: inst.pub, background: true, read: true });
     if (!live(inst)) return;
     if (a.kind === "ok") { inst.data[n] = outcome(spec, a, inst); inst.fresh[n] = Date.now(); noteQueue(spec, a); } else inst.fresh[n] = 0;
     armRefresh(inst, n);
@@ -1492,6 +1542,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   let ROUTING = 0;
   async function route() {
     const n = ++ROUTING;
+    newEpoch(); LOADING = true;
     closing(MAIN);
     closing(DOCKI);
     MAIN = null; DOCKI = null; ENTRY_PAGE = false; RING = null; KEEP_LATER = false;
@@ -1551,8 +1602,10 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const n = ROUTING;
     const reads = MAIN && (MAIN.pub || ME) ? readAll(MAIN) : Promise.resolve();
     if (DOCKI && DOCK && ME) readAll(DOCKI);
+    if (COUNT_DUE && ME && S && frameOf(id) === "working") countQueue(MAIN, reads);
     if (doc.getElementById("cs-main") && doc.getElementById("cs-main").scrollTo) doc.getElementById("cs-main").scrollTo(0, 0);
     /* K3143: the guide told the screen it is on, once the screen's reads have settled */
+    reads.then(() => { if (n === ROUTING) closeLoad(); });
     reads.then(() => { if (n === ROUTING && ROUTE) guideCall("entered", { screen: ROUTE.screen, subject: ROUTE.subject }); });
   }
   function showFront() {
@@ -2106,6 +2159,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
        are emptied by the act's success */
     const typedSecrets = Array.from(doc.getElementById("cs-root").querySelectorAll('input[type="password"]')).map((el) => [el, String(el.value || "")]).filter(([, v]) => v);
     actState(inst, d, { busy: true });
+    req.act = true;
     let a = await call(d.op, req);
     /* R34: an act answered `REAUTH_DUE` asks the password again and, on `reauth`'s success, is sent once more */
     if (a.kind === "refused" && a.code === "REAUTH_DUE" && S) {
@@ -2580,8 +2634,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     draw();
   }
   async function loadFrame() {
-    /* R33: the queue count is the shell's own read, not the member's activity */
-    const [g, q, lv] = await Promise.all([call("groupidentity"), call("queue", { query: { count: true }, background: true }), call("infolevel")]);
+    /* R7 (E12; K4530 ruling on J21): the queue count is asked once the screen's own reads are known (`countQueue`, from `show`), not here */
+    COUNT_DUE = true;
+    const [g, lv] = await Promise.all([call("groupidentity"), call("infolevel")]);
     if (!ME) return;
     /* R60: the display name only; the slug is never drawn as the group's name */
     if (g.kind === "ok" && g.value) {
@@ -2589,9 +2644,6 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       GROUP_KNOWN = true;
       if (GROUP) local.set(GROUP_KEY, GROUP); else local.del(GROUP_KEY);
     }
-    /* R93, R96 (P9): the number the masthead and the rail's Queue place draw is the queue's count of the member's open items (the design's sum of the
-       three kinds), asked for without the list; the three kinds of R82's explanation come from the list when a screen reads it (`noteQueue`) */
-    if (q.kind === "ok" && q.value && typeof q.value.count === "number") TODO = q.value.count;
     if (lv.kind === "ok" && lv.value && (lv.value.level === "prompt" || lv.value.level === "pause")) {
       LEVEL_INFO = lv.value;
       if (lv.value.set_at) { LEVEL = lv.value.level; local.set("cs-level", LEVEL); }
@@ -2607,7 +2659,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     draw();
   }
   async function loadReach() {
-    const [st, ref, sub, gk] = await Promise.all([call("assistantstate"), call("accountreference"), call("subscriptionsignin", { body: { step: "state" } }), call("groupkeystate")]);
+    const [st, ref, sub, gk] = await Promise.all([call("assistantstate"), call("accountreference"), call("subscriptionsignin", { body: { step: "state" }, read: true }), call("groupkeystate")]);
     if (!ME) return;
     const on = st.kind === "ok" && st.value && st.value.on === true;
     const own = ref.kind === "ok" && ref.value && ref.value.held === true;

@@ -111,11 +111,9 @@ export const CEREMONY = Object.freeze({
     const recR = wanted ? P.later(cs, view, "document", "casedocument", { query: wanted }) : null;
     const rec = recR && recR.state === "ok" && recR.value && recR.value.ok !== false ? recR.value : null;
     if (rec && rec.sign && typeof rec.sign.statement === "string" && !rec.signature && !rec.published_at) {
-      const mine = {};
-      found.forEach(function (t) { mine[t] = true; });
-      prepared = { caseId: rec.case_id || caseFor, edition: rec.edition || preparedNo, docSha: rec.doc_sha || null,
-        findings: (Array.isArray(rec.citations) ? rec.citations : []).filter(function (x) { return x && mine[x.target] && /^[0-9a-f]{64}$/.test(String(x.version || "")); })
-          .map(function (x) { return { target: x.target, bundleSha: x.version }; }) };
+      // E4 (fix round 5, C48): after a reload the findings the edition pins are the signed document's own roster (`casedocument`'s
+      // `findings`), never the citations (`{state, rows}`: the project's edges); the Sign step refuses when it cannot read them
+      prepared = { caseId: rec.case_id || caseFor, edition: rec.edition || preparedNo, docSha: rec.doc_sha || null, findings: P.rosterOf(rec) || [] };
     }
     if (prepared && !ui.prepared) ui.prepared = prepared; // the acts of the Sign step read it from page memory
     const caseId = prepared ? prepared.caseId : caseFor;
@@ -358,13 +356,15 @@ export const CEREMONY = Object.freeze({
           + cs.field("ce-date", "screen.ceremony.when.date", { type: "date" }) + cs.field("ce-time", "screen.ceremony.when.time", { type: "time" }) + "</fieldset>"
           + cs.state(doc, function (d) {
             const list = P.sitting(d, prepared) || [];
+            // E4 (fix round 5, C48): said before the press as well: the page could not read what the edition pins
+            const gap = P.sittingGap(d, list, found.length);
             // C47: what the signature covers is counted; a document the case rests on that is not published with it is said, not
             // counted as nothing (public-read R39)
             const evidence = list.filter(function (x) { return x.kind === "evidence"; }).length, named = P.notPublished(d, prepared);
             return '<details data-statements><summary>' + cs.w("screen.ceremony.signs.exactly") + "</summary><ul class=\"mk-list\">"
               + list.map(function (x) {
                 return '<li data-statement="' + x.kind + '"><span class="id">' + cs.esc(x.text.trim()) + "</span> · " + cs.w("screen.ceremony.signs." + x.kind, { id: x.id, edition: String(x.edition === undefined ? "" : x.edition), case: x.id }) + "</li>";
-              }).join("") + "</ul></details><p>" + (evidence > 0 ? cs.w("screen.ceremony.signs.count", { n: String(list.length),
+              }).join("") + "</ul></details>" + (gap ? '<p role="alert" data-roster-unread>' + cs.w("screen.ceremony.sign.nodoc") + "</p>" : "") + "<p>" + (evidence > 0 ? cs.w("screen.ceremony.signs.count", { n: String(list.length),
                 findings: String(list.filter(function (x) { return x.kind === "finding"; }).length), evidence: String(evidence) })
                 : cs.w("screen.ceremony.signs.count.findings", { n: String(list.length), findings: String(list.filter(function (x) { return x.kind === "finding"; }).length) })) + "</p>"
               + (named === 1 ? '<p class="mk-note" data-unpublished="1">' + cs.w("screen.published.rests.on.the.council.minutes.one") + "</p>"
@@ -541,6 +541,8 @@ export const CEREMONY = Object.freeze({
         const doc = P.value(a);
         const list = doc && doc.ok !== false ? P.sitting(doc, pr) : null;
         if (!list) return { refuse: "screen.ceremony.sign.nodoc" };
+        // E4 (fix round 5, C48): fail closed: a sitting that lists fewer findings than the draft names or the document pins signs nothing
+        if (P.sittingGap(doc, list, P.findingsOf(P.copyOf(view)).length)) return { refuse: "screen.ceremony.sign.nodoc" };
         const sat = await P.sitSign(cs, view, list.map(function (x) { return { label: x.kind + " " + x.id + ": ", bytes: P.bytes(x.text), namespace: x.namespace }; }));
         if (sat.refuse) return { refuse: sat.refuse };
         const signed = sat.signed;
@@ -576,6 +578,8 @@ export const CEREMONY = Object.freeze({
         const doc = P.value(a);
         const list = doc && doc.ok !== false ? P.sitting(doc, pr) : null;
         if (!list) return { refuse: "screen.ceremony.sign.nodoc" };
+        // E4 (fix round 5, C48): fail closed: a sitting that lists fewer findings than the draft names or the document pins signs nothing
+        if (P.sittingGap(doc, list, P.findingsOf(P.copyOf(view)).length)) return { refuse: "screen.ceremony.sign.nodoc" };
         const sat = await P.sitSign(cs, view, list.map(function (x) { return { label: x.kind + " " + x.id + ": ", bytes: P.bytes(x.text), namespace: x.namespace }; }));
         if (sat.refuse) return { refuse: sat.refuse };
         const signed = sat.signed;
