@@ -238,3 +238,15 @@ Checks: format 0 failures in my files (one in `build/plan/next.md:38`, not mine)
 **Requirement lines proposed** (BOB writes `build/requirements/`): *R31 (T51 fix round 6, G1; K4565, K4566, K4570; amends R1 (a)) After an install and after an update, the plane's script in the walk's fake account holds exactly the cron its signed statement `bio-plane-crons/1 <cron>` states (`*/5 * * * *`); the account reads schedules back; a refused schedule stops the install and the update each in a sentence; the local walk fails by name when the installed plane holds none. Test: the install and update over the account; control: a refused schedule; a plane stating none.*
 
 Size (session_018cVQsZb9faqV2gGpjCfs1B): test runs 4, module lines 3496
+
+## J11 · COMPLETE
+
+G1 (journey-check part) applied; record section "Fix round 6 — G1 provider" in build/jobs/T51/journey-check.md.
+
+Changed: account.mjs (refuseSchedules option, GET schedules read-back, deployments answered so an update can run over the fake, WATCHDOG_CRON, statedCrons, planeScheduleProblem; sentences by localize); run.mjs (local arm fails `install: the plane's ...` when the installed plane holds no watchdog cron). Tests: new plane-cron.test.mjs (6), one in journey.test.mjs.
+
+Red then green: the assertion at the account's interface (3 tests) is green, with controls. The seam (install sets the cron; update sets it again with schedules cleared between; a refused schedule stops install and update each in a sentence; the local walk) is RED BY NAME, provider unmerged: "the plane's bytes state no watchdog cron (bio-plane-crons/1: states none)". It goes green only after installer-steps and control-plane merge AND you regenerate the plane bundle and the newgroup release (the installer checks the embedded plane's sha, so no scratch copy could show green). Tell me when merged and I merge tranche/T51 and re-run (CHANGE).
+
+Suite: 128 tests, 116 pass; the 4 seam tests above, plus R20-local and R1(a)-aggregate red only through that one failure. Red on unmodified tranche/T51 too (checked in a scratch worktree), not mine: live arm R9 step 2 "start a project" locator.check timeout (R12 x2, R20 live x2), and R17 (group for a team). Checks: format (my files) 0, architecture 0, coverage 30/30, ownership 0, words 0 and count not raised.
+
+Proposed requirement line R31 is in the record. Size (session_018cVQsZb9faqV2gGpjCfs1B): test runs 4, module lines 3496.
