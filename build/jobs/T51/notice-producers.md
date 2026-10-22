@@ -54,3 +54,5 @@ Size (session_01SbR9Bp7b1UDZG4sWc5dbrm): test runs 9, module lines 1497 (index.m
 ## J4 · COMPLETE
 
 COMPLETE (G2 provider, R27 proposed): fetch-done notice built to capture's published fetchesDone read, tests and checks in my record. Two reds are capture's absence, both by name until it merges: my seam test fetch.test.mjs 'R27: seam over the real capture...', and queue/noticed.test.mjs:288 (facts.failed gains 'capture' because the real capture has no fetchesDone yet; passes on tranche/T51 without my change). CHANGE me at capture's merge and I re-run both. Rows owed to the design: notice.fetch.done, notice.fetch.done.door (stand-ins by localize). Requirement line proposed: R27 (G2, K4562): one FINDING fetch-done per capture fetchesDone record, keyed by session, to the opener alone while active, 90-day window, 1,000 bound, facts.fetch_done, a failing capture named in facts.failed; uses gains capture.
+
+Ring failed: BOB session_01T8rYkDXW3CsEsgBMqu8Zce is archived (create_trigger refused). My pushed COMPLETE (J4) is the message; BOB's backstop reads it (mechanics §13).
