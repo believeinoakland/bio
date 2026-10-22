@@ -186,5 +186,27 @@ export function legExtent(x) {
   return bag;
 }
 
+/** G12c (R1, R9; strength R6 as T51 fix round 6 amends it): the strength of many questions in ONE read for each 50 of them (`inquirystrength` with `ids`,
+ *  comma-joined, strength's batch), never one read for each question. `read(key, query)` is the screen's own reader (`later`/`ask`); `esc` the kit's.
+ *  Returns `of(id)`: that question's read as the single read gives it (`{state, value}`), loading while its batch is, failed with the plane's words when
+ *  its entry is a refusal or the batch left it out. The answer holds `results`, one entry for each id asked, keyed by id. */
+export function strengths(read, ids, esc) {
+  const list = [...new Set((Array.isArray(ids) ? ids : []).map(String).filter(Boolean))];
+  const chunks = [];
+  for (let i = 0; i < list.length; i += 50) chunks.push(list.slice(i, i + 50));
+  const reads = chunks.map((c) => read("strengths:" + c.join(","), { ids: c.join(",") }));
+  return (id) => {
+    const i = chunks.findIndex((c) => c.includes(String(id)));
+    const r = i < 0 ? null : reads[i];
+    if (!r || r.state === "loading") return { state: "loading" };
+    if (r.state !== "ok") return r;
+    const all = r.value && r.value.results;
+    const one = Array.isArray(all) ? all.find((x) => x && String(x.target) === String(id)) : all && typeof all === "object" ? all[String(id)] : undefined;
+    if (!one || typeof one !== "object") return { state: "failed", refusal: null };
+    if (one.ok === false) return { state: "failed", refusal: { code: String(one.code || one.reason || ""), words: one.translation ? esc(String(one.translation)) : "" } };
+    return { state: "ok", value: one };
+  };
+}
+
 /** The parts every screen of the module carries. */
-export const COMMON = Object.freeze({ front, later, plain, who, unavailable, ending, costLine, progress, legWords, legExtent, kinds: KIND_IDS });
+export const COMMON = Object.freeze({ front, later, plain, who, unavailable, ending, costLine, progress, legWords, legExtent, strengths, kinds: KIND_IDS });

@@ -34,8 +34,10 @@ function reads(view) {
        fix round caps the ask at 200): the default and the cap, 200 */
     queue: { op: "queue", query: { limit: "200" }, empty: (v) => !v || !Array.isArray(v.items) || !v.items.length },
     drafts: { op: "casedrafts", query: { project: id }, empty: (v) => !v || !Array.isArray(v.drafts) || !v.drafts.length },
-    docs: { op: "heldcaptures", query: { project: id, limit: "200" }, empty: held },
-    ...(me ? { mine: { op: "heldcaptures", query: { project: id, member: String(me), limit: "500" }, empty: held } } : {}),
+    /* G12a (fix round 6): both lists are picker rows (a document's id, its place, its capture's digest are all this screen reads of them); the full row
+       examines every capture with no recorded format, which cost a page seconds */
+    docs: { op: "heldcaptures", query: { project: id, limit: "200", fields: "picker" }, empty: held },
+    ...(me ? { mine: { op: "heldcaptures", query: { project: id, member: String(me), limit: "500", fields: "picker" }, empty: held } } : {}),
     ...directory,
   };
 }
@@ -257,8 +259,10 @@ function render(cs, view) {
     const barOf = bar && (bar.capture || bar.connection) && bar.declared !== false ? bar : null;
     const rank = { A: 4, B: 3, C: 2, D: 1 };
     let met = 0, settled = true;
+    /* G12c: one `inquirystrength` read for the questions (for each 50), as the project page reads them */
+    const strengthOf = barOf ? P.strengths((k, query) => ask(k, "inquirystrength", { query }), items.map((x) => x.inquiry), cs.esc) : null;
     if (barOf) for (const x of items) {
-      const s = ask("strength:" + x.inquiry, "inquirystrength", { query: { id: String(x.inquiry) } });
+      const s = strengthOf(String(x.inquiry));
       if (s.state !== "ok") { settled = false; continue; }
       const sv = s.value || {};
       if (["capture", "connection"].every((a) => !barOf[a] || (sv[a] && sv[a].state === "graded" && rank[sv[a].grade] >= rank[barOf[a]]))) met++;
