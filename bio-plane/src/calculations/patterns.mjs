@@ -12,7 +12,8 @@ import { word } from "../setup-words/index.mjs";
 
 /** R23 (K1504, M-C8): the highest false-alarm rate at which a pattern's results are shown. */
 export const GATE_MAX_RATE = 0.2;
-/** How many units one pattern gathers in one run, at most (the rest wait for the next run's cursor). */
+/** How many units one pattern gathers in one run, at most. There is no cursor: a run that stops at the bound is a
+ *  sample, and its denominator says so (`capped: true`, `of_total` the whole when it is known; K4571). */
 export const UNITS_MAX = 2000;
 
 /** R22: the shipped patterns, data-defined, each with its denominator and method. */
@@ -37,6 +38,8 @@ const dayOf = (v) => {
     : plain(v.due) ? v.due.value : typeof v.start === "string" ? v.start : null) : null;
   return typeof s === "string" && /^\d{4}-\d{2}-\d{2}/.test(s) ? s : null;
 };
+/* A denominator, with the bound stated when the gather stopped at it: a sample is never shown as a census. */
+const stated = (den, cap) => (cap && cap.capped ? { ...den, capped: true, of_total: cap.total } : den);
 const recipe = (steps, output) => ({ method: METHOD, inputs: [{ name: "t", kind: "table" }], steps, output });
 
 /* A share through calc-grammar: rows of `t` where `field` is `value` (or all), and of those, where `late` is true. */
@@ -64,7 +67,8 @@ async function decidedOccurrences(duties, viewer) {
     const prev = latest.get(k);
     if (!prev || String(t.at ?? "") >= String(prev.at ?? "")) latest.set(k, { ...t, duty, key });
   }
-  const units = [...latest.values()].filter((t) => t.state === "met" || t.state === "met_late").slice(0, UNITS_MAX);
+  const all = [...latest.values()].filter((t) => t.state === "met" || t.state === "met_late");
+  const units = all.slice(0, UNITS_MAX);
   const meta = new Map();
   for (const u of units) {
     if (meta.has(u.duty)) continue;
@@ -74,7 +78,7 @@ async function decidedOccurrences(duties, viewer) {
     const ent = (x) => (typeof x === "string" ? x : plain(x) ? (x.entity_id ?? x.entity ?? x.id ?? null) : null);
     meta.set(u.duty, { office: duty ? ent(duty.obligor) : null, proceeding: duty ? ent(duty.arising_in) : null });
   }
-  return { units: units.map((u) => ({ ...u, ...meta.get(u.duty) })) };
+  return { units: units.map((u) => ({ ...u, ...meta.get(u.duty) })), capped: all.length > UNITS_MAX, total: all.length };
 }
 
 const EVALUATORS = {
@@ -82,14 +86,16 @@ const EVALUATORS = {
     const p = deps.progressions;
     if (!p || typeof p.proposalsFeed !== "function") return { results: [], denominator: { n: null, why: word("calculations.why.progressions_module_reachable") }, evaluated: 0 };
     const feed = await p.proposalsFeed(Date.parse(deps.now));
-    const instances = list(feed, "instances").filter(plain).slice(0, UNITS_MAX);
+    const every = list(feed, "instances").filter(plain);
+    const instances = every.slice(0, UNITS_MAX);
+    const cap = { capped: every.length > UNITS_MAX, total: every.length };
     const rows = instances.map((x) => {
       const ooo = list(x.findings, "findings").filter((f) => plain(f) && f.kind === "out_of_order");
       return { x, ooo, row: { instance: `${x.progression_key ?? x.progressionKey}\u0000${x.entity_id ?? x.entityId}`, late: ooo.length ? "true" : "false" } };
     });
     const t = { fields: [{ name: "instance", type: "string" }, { name: "late", type: "boolean" }], rows: rows.map((r) => r.row) };
     const share = rows.length ? shareOf(t, null, null) : null;
-    const denominator = { n: rows.length, of: word("calculations.threaded_flow_instances_open"), share_out_of_order: share };
+    const denominator = stated({ n: rows.length, of: word("calculations.threaded_flow_instances_open"), share_out_of_order: share }, cap);
     const results = rows.filter((r) => r.ooo.length).map((r) => ({
       subject: r.x.entity_id ?? r.x.entityId ?? null,
       value: { progression: r.x.progression_key ?? r.x.progressionKey, out_of_order: r.ooo.map((f) => ({ stage: f.stage_key ?? null, after: f.after_stage ?? null, placements: f.placements ?? null })) },
@@ -123,7 +129,7 @@ const EVALUATORS = {
         derivation: { due: x.due, met: x.met, transition: { state: x.u.state, as_of: x.u.as_of ?? null, at: x.u.at ?? null }, event: x.event },
         rests_on: [x.u.duty, ...(x.event ? [x.event] : [])] };
     });
-    return { results, denominator: { n: d.units.length, of: word("calculations.duty_occurrences_recorded_met"), late: late.length }, evaluated: d.units.length };
+    return { results, denominator: stated({ n: d.units.length, of: word("calculations.duty_occurrences_recorded_met"), late: late.length }, d), evaluated: d.units.length };
   },
 
   async posting_lateness(deps) {
@@ -132,10 +138,14 @@ const EVALUATORS = {
     if (!e || typeof e.eventsFor !== "function") return { results: [], denominator: { n: null, why: word("calculations.why.events_module_reachable") }, evaluated: 0 };
     const bodies = [...new Set((d.units || []).map((u) => u.office).filter(Boolean))];
     const units = [];
+    let capped = false;   /* the bound was reached, or a body's meetings were listed only to their own limit: of_total is not known */
     for (const body of bodies) {
+      if (units.length >= UNITS_MAX) break;
       let got = null;
       try { got = await e.eventsFor({ entity: body, kinds: ["meeting"], limit: 500, viewer: deps.viewer }); } catch { got = null; }
+      if (got && got.truncated) capped = true;
       for (const m of list(got, "events", "items").filter(plain)) {
+        if (units.length >= UNITS_MAX) break;
         const id = m.event_id ?? m.eventId;
         let full = null;
         try { full = await e.readEvent({ eventId: id, viewer: deps.viewer }); } catch { full = null; }
@@ -148,8 +158,8 @@ const EVALUATORS = {
           try { pe = await e.readEvent({ eventId: pid, viewer: deps.viewer }); } catch { pe = null; }
           const p = found(pe) ? (pe.event || pe) : null;
           if (!p || p.kind !== "publication") continue;
+          if (units.length >= UNITS_MAX) { capped = true; break; }
           units.push({ body, meeting: id, posting: pid, start, posted: dayOf(p.when), startDt: (full.event || full).when, postedDt: p.when });
-          if (units.length >= UNITS_MAX) break;
         }
       }
     }
@@ -166,7 +176,7 @@ const EVALUATORS = {
         says: word("calculations.says.posting_time_upper") },
       derivation: { meeting_when: u.startDt ?? null, posting_when: u.postedDt ?? null, method: "events R24" },
       rests_on: [u.meeting, u.posting] }));
-    return { results, denominator: { n: new Set(units.map((u) => u.meeting)).size, of: word("calculations.meetings_posting_held_within") }, evaluated: units.length };
+    return { results, denominator: stated({ n: new Set(units.map((u) => u.meeting)).size, of: word("calculations.meetings_posting_held_within") }, { capped, total: null }), evaluated: units.length };
   },
 
   async office_lateness(deps) { return byGroup(deps, "office"); },
@@ -185,11 +195,11 @@ async function byGroup(deps, field) {
     const mine = units.filter((u) => u[field] === subject);
     const share = shareOf(t, field, subject);
     results.push({ subject, value: { share_met_late: share },
-      denominator: { n: mine.length, of: word("calculations.duty_occurrences_recorded_met_met", { field: String(field === "office" ? "office" : "proceeding") }) },
+      denominator: stated({ n: mine.length, of: word("calculations.duty_occurrences_recorded_met_met", { field: String(field === "office" ? "office" : "proceeding") }) }, d),
       derivation: { occurrences: mine.map((u) => ({ duty: u.duty, occurrence: u.key, state: u.state })) },
       rests_on: [...new Set(mine.map((u) => u.duty))] });
   }
-  return { results, denominator: { n: units.length, of: word("calculations.duty_occurrences_with_recorded_met", { field: String(field === "office" ? word("calculations.obligor_office") : word("calculations.proceeding_arose")) }), subjects: results.length }, evaluated: units.length };
+  return { results, denominator: stated({ n: units.length, of: word("calculations.duty_occurrences_with_recorded_met", { field: String(field === "office" ? word("calculations.obligor_office") : word("calculations.proceeding_arose")) }), subjects: results.length }, d), evaluated: units.length };
 }
 
 /** R22: one pattern's run: `{results, denominator, evaluated}`. */
