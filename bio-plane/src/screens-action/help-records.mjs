@@ -6,12 +6,19 @@
    a sentence one of whose fills the block does not answer is not drawn, and a view with no block says so.
    Every function here is self-contained (interface-shell R21 (1)). */
 
+import { chosenLawOf } from "./send-steps.mjs";
+
 export const helpRecords = Object.freeze({
   id: "help-records",
 
-  reads: function () {
-    return { profiles: { op: "profiles", empty: function () { return false; } } };
+  // C64-law: opened for an action (`/app/help-records/<action>`, from `request`), the help is for the law that action goes under
+  reads: function (view) {
+    const r = { profiles: { op: "profiles", empty: function () { return false; } } };
+    if (/^ACTN-/.test(String(view.subject || ""))) r.action = { op: "action", query: { id: String(view.subject) }, empty: function () { return false; } };
+    return r;
   },
+
+  parts: { chosenLawOf: chosenLawOf },
 
   render: function (cs, view) {
     // R14: a section that holds nothing is not drawn: no law the profile names, no "faster" and no "sources".
@@ -45,6 +52,22 @@ export const helpRecords = Object.freeze({
     };
     // R9: the first sentence's days and citation come from the response period the view names; the block gives its own
     const response = pr && pr.state === "ok" ? held(pr.value).find(function (d) { return d.rule === "records_response" && d.amount; }) : null;
+    // C64-law: the law this request goes under, when the help is opened for an action that states one the profile lists. The place's
+    // `records_help` block is that place's law: it is drawn only when its `law` is the chosen law; for any other chosen law the help
+    // says what the law's own first-request window states (days, citation), with no other law's text and nothing of "the city".
+    const act = view.data.action;
+    const chosen = pr && pr.state === "ok" && act && act.state === "ok" ? view.parts.chosenLawOf(act.value, pr.value) : null;
+    const fold = function (x) { return String(x || "").trim().toLowerCase().replace(/\s+/g, " "); };
+    if (chosen && !(block && fold(block.law) === fold(chosen.name))) {
+      const first = chosen.amount && chosen.dcitation
+        ? said("screen.help-records.must.1", { days: String(chosen.amount), cite: chosen.dcitation }) : "";
+      const mustOwn = first ? cs.sec("screen.help-records.must", '<ul class="mk-list"><li>' + first + "</li></ul>"
+        + '<p class="mk-small">' + cs.w("screen.request.window." + (chosen.count === "business" ? "business" : "calendar"), { n: String(chosen.amount) }) + "</p>") : "";
+      const cites = [chosen.citation, chosen.dcitation].filter(Boolean);
+      const own = cs.sec("screen.help-records.does", '<p class="mk-note">' + cs.w("screen.help-records.does.text") + "</p>");
+      const src = cites.length ? cs.sec("screen.help-records.sources", '<p class="mk-note">' + cs.esc(cites.join("; ")) + "</p>") : "";
+      return cs.title(null) + mustOwn + own + src;
+    }
     const fills = { days: (block && count(block.days)) || (response ? String(response.amount) : null), cite: (block && cite("answer")) || (response ? response.citation : null) };
     const lines = {
       1: fills,
