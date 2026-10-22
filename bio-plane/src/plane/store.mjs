@@ -413,6 +413,7 @@ export class Store extends DurableObject {
     const pending = pendingOf(ctx, { env, store: () => this.#ownNamespace() || "bio" });
     recordOf(ctx).declarePurge("plane", ["keeps_pending", "acquire_stages"]);
     capture.keepLater = (a) => pending.keepLater(a);
+    capture.owedLater = (a) => pending.owedLater(a);   /* R77, acquisition R100: the ledger's `subresources` and `unpack` entries, registered the same way */
     /* R37 (T42; N826; K2607 rule 3, K2629, K2630; doorbell R25): doorbell, directly after capture in the modules' order,
        the one instance per host (actions' factory may have reached it first for its hold reader, actions R55); it takes no
        `env` of its own and reads capture's at each use, the instance above. */

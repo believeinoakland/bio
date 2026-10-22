@@ -1,6 +1,6 @@
 # plane (T51)
 
-**Status** · session_01PBzWna63QzDA6ZtwyhmSwV · depth 2 · COMPLETE · handled B25
+**Status** · session_018hyuuzAysk4N5zXFHkNnwL · depth 2 · COMPLETE · handled B30
 
 ## Record (PLANE #41, T51-125)
 
@@ -313,3 +313,60 @@ Size (session_01PBzWna63QzDA6ZtwyhmSwV): test runs 24, module lines 2822
 ## J19 · COMPLETE
 
 COMPLETE (PLANE #48; B20-B25): C5c (keeps_pending, pending-work alarm, cap.keepLater, pendingadd), C5a (stage record in storage, restarted:true), B22 (owners.mjs), B23 (deferReading -> reading_pending; fix3-r74 asks readheldfor), B24 (fixture transactionSync rolls back). Four fields per cause in build/jobs/T51/plane.md. Suite 297, pass 295; reds: fix3-r74 readheldfor (needs CONTROL-PLANE #45's arm, merges after me; green with its branch merged) and R24 (design's, accepted). fix4-seam 2/2 green with real acquisition; L on workerd: 40 MiB keep finished by the alarm in 1533 ms. migrate-released 1/1. format/architecture/ownership 0. Requirement lines: R9 says 'stage keys' but it is a table (acquire_stages); propose R76: gatedOp takes deferReading(document); true skips the read step and answers reading_pending:true with no reading (tests named R75 until written); acquiretimings adds restarted:true beside stageTimes.
+
+## J20 · QUESTION
+
+QUESTION (R77, the ledger's hand-offs to the other jobs; best reading below, I carry on with it)
+
+Plane's ledger is built and green; the lower modules reach it only through hooks plane hands them, and your START does not name the owners' side. I built these, so the six other jobs (acquisition, capture, extraction, cause-reading-4, control-plane, store-door) must match; please confirm or correct, and relay:
+
+1. Registration: `captureOf(ctx).owe({kind, sha, parts?, detail?})` beside `keepLater({sha, parts})` (same hook, async, never throws, re-arms an entry already held). `kind` is keep | reading | ocr | subresources | unpack; `detail` is a plain object the owner chooses (an ocr cursor `{next_page, pages_left}`, a web session's key). The door's `pendingadd?kind=&sha=` accepts every kind but keep. Acquisition reads it as it reads keepLater (`cap.owe`).
+2. Reading and ocr entries: plane calls `extraction.readHeld({sha, storeName, env, owed: {kind, detail}})`. extraction answers `{ok:true, read:true}` or `{ok:true, done:true}` (ended); `{ok:true, more:true, detail}` (a stage done, the rest follows at once, detail is the new cursor); `{final:true, why}` (ended for the document's own reason, kept on the row and shown on the page by `owedwork`); `NO_HOME`, a store error or anything else is tried again (backoff to one hour, never given up).
+3. subresources and unpack entries: plane calls `acquisitionOf(ctx).finishOwed({kind, sha, detail, storeName, env, at})`, answering the same shapes. Until acquisition exports it the entry stays owed (`last_why: NO_OWNER`), never dropped.
+4. `owedwork` (declared; classes admin and member; read): `?sha=` lists that digest's entries `{sha, kind, state: owed|final, attempts, next_try, why, detail}`; without `sha` it answers counts by kind and state, no digest.
+Old ledger rows (one row per digest, exhausted) are carried over and re-armed at migration; rows the old code already deleted at 'NO_HOME after a keep' are gone (no source to rebuild them from): new data only for those.
+
+## Record: fix round 4b (B26, B27) · PLANE #49 (session_018hyuuzAysk4N5zXFHkNnwL) · R77
+
+**Root cause** (audit F1, F5, F9, F11): `plane/pending.mjs` (before) ended an entry by a count (`PENDING_ATTEMPTS_MAX` = 5, `live()` selecting `attempts <` it) and, after a keep, by `NO_HOME` (`:76`, "the door reads it at the promotion", which no code does); a second registration was a no-op (`put`, `:47-54`); one row per digest; `list()` exposed by no op.
+**Why the tests missed it**: `fix4-r75.test.mjs` pinned the faulty behaviour ("a digest with no home yet ends there"; "past the attempt count it is not tried again"); `l75-entry.mjs` answered `NO_HOME` and the workerd test asserted the entry gone.
+
+**What changed**
+- `src/plane/pending.mjs` (rewritten): table `keeps_pending` keyed `(sha, kind)`, columns `detail`, `final_why`; kinds keep, reading, ocr, subresources, unpack; no count ends an entry; back-off 15 s doubling to `PENDING_RETRY_MAX_MS` (1 h) and on; `put` re-arms (attempts 0, due now, final cleared); `NO_HOME` retries; a keep that succeeds becomes a `reading` entry read in the same tick; owner answers per B27: `final: true` + why/reason stops the entry with the reason kept (listed by `owedwork`), `owed: true` continues at once (ocr; `READING_HELD` with `owed` is no end; an ocr answer without `owed` ends), `read`/`done` end. `subresources` (keyed by session, B27) runs `acquisition.owedRun(cap, {kind, session})`; `unpack` runs as the archive-unpack drain (`op=unpack` as the daemon through `env.SELF`), ending on `complete` or a `waiting_on` of `ARCHIVE_TREE_*`/`ARCHIVE_DEPTH_MAX` (stopped, stated), a daily-budget `waiting_on` stays owed; a missing owner leaves the entry owed (`NO_OWNER`/`NOT_CONFIGURED`). `migrate()` carries an old-shape table over (rename, copy, re-arm every entry, drop). `pendingOps` adds `owedwork`.
+- `src/plane/store.mjs:415-416`: `capture.keepLater` and `capture.owedLater` handed to the lower modules.
+- `src/plane/declared.mjs`: `owedwork` declared (read; admin, member; accepts `sha`).
+- Tests: new `test/m/plane/fix4b-r77.test.mjs` (7), `fix4-r75.test.mjs` two tests made current, `l75.test.mjs` + `l75-entry.mjs` (workerd: old assertion fixed, migration test added).
+
+**Failing-first**: `fix4b-r77.test.mjs` against the old `pending.mjs`/`store.mjs`/`declared.mjs` fails at import (no `PENDING_RETRY_MAX_MS`), so red; green after. The audit's case (a reading with no home for 20 minutes of alarms, then read) and the 40 MB keep promoted at 90 s are in it, with re-arm after exhaustion and after a final stop.
+**R-OLD**: entries still held are carried over and re-armed at migration (tested, and on workerd). Rows the old code had already deleted at "NO_HOME after a keep" cannot be rebuilt: new data only for them.
+**Measurements (workerd, Miniflare)**: 40 MiB in 3 parts: keep finished by the alarm and the entry gone 1520 to 1547 ms after registration, readHeld asked at 1499 to 1521 ms. Migration of the old table on workerd's storage: passes (ALTER TABLE RENAME, copy, DROP allowed).
+**Suites**: `node --test --test-force-exit test/m/plane/`: 305 tests, 304 pass, 1 fail: R24 `release.test.mjs`:78 "screen.objective.purpose is held by the words list", present on `tranche/T51` before my change (setup-words `rows.mjs` stale since other modules' words, `build.mjs --check` stale at the same word with and without my edit); BOB's regeneration clears it. `impact.mjs origin/tranche/T51 HEAD`: plane only (45 of 48 test files, all run above). Users of the ledger are the lower modules' hooks; their seam tests are theirs.
+**Checks**: format 0 failures; architecture 0 failures; coverage: plane none, the nine listed are other modules' unmerged ids; words 18421 (unchanged); ownership 0 failures.
+**Wording owed**: one row, `plane.declared.owedwork` (the op's description via `localize`, as the plane's other declared ops), to setup-words' next regeneration.
+**Requirement lines proposed** (R77, BOB writes): hooks `captureOf(ctx).keepLater({sha, parts})` and `.owedLater({kind, sha, session?, parts?, detail?})`; the owner answers of B27; `owedwork` op; old-ledger carry-over; no count or clock ends an entry.
+
+Size (session_018hyuuzAysk4N5zXFHkNnwL): test runs 9, module lines 330
+
+## J21 · COMPLETE
+
+COMPLETE (PLANE #49, R77). B27's shapes built: `captureOf(ctx).owedLater` (subresources keyed by session, unpack), `acquisition.owedRun`, unpack as the daemon through the door, ocr by `readHeld({sha, kind:"ocr"})` with `owed`, `failure` untouched by plane. Ledger never ends by count or clock; final reasons stay on the row and show in `owedwork`; old ledgers carried over and re-armed. fix4b-r77 (7 tests) red on the old code, green now; plane suite 305, 304 pass, the one red is R24 on stale setup-words rows (red on tranche before my change; clears at your regeneration). workerd: 40 MiB keep finished in ~1.5 s; migration passes. Checks clean, ownership 0 failures. Record in build/jobs/T51/plane.md has the lines for R77 and the Size line. One wording row owed: plane.declared.owedwork.
+
+## J22 · COMPLETE
+
+COMPLETE (PLANE #49, R77) again after B28: failure:"final" ends an entry with its reason, readHeld now gets {sha, storeName, env, kind} for reading too; fix4b-r77 and fix4-r75 14/14 green. Record unchanged otherwise.
+
+## J23 · QUESTION
+
+QUESTION (B29, the one place for the render's promotion; best reading below)
+
+Plane's side is built: the alarm calls `acquisition.owedRun(cap, {kind:"subresources", session}, {storeName, env, deliver})`, with `deliver` = `controlPlane.deliverOwedRender({ctx, env, storeName, answer, session})` when control-plane exports it; without it owedRun answers DELIVERY_NOT_HANDED and the render stays the member's "Finish it". A `final` answer's reason is now stated before `done`.
+
+The promotion is not plain for plane to do: screens-intake's `promoteDocument` mints the INFO id (`allocid`), builds the information bundle text, and files it under the page's project (`filedFor`) as the member. Best reading: it belongs to the door (control-plane R123's neighbour), so please have CONTROL-PLANE #46 export `deliverOwedRender({ctx, env, storeName, answer, session}) -> {ok:true}|{ok:false, reason}`: promote the rendered document in the shell document's home (project read from the shell document, member = the session's opener) through the same `promote` step, then give R123's read (`reading_pending`). Plane then carries no promotion code.
+
+My seam test in fix4b-r77.test.mjs ("R77 B29 (seam, control-plane)") is red by name until that export exists; it asserts the export and that plane hands `deliver`. I stay available; once control-plane merges, a CHANGE brings me to run the whole path (render delivered by the alarm, the document's reading pending). If you would rather plane do the promotion itself, say so and I will, but it would duplicate screens-intake's bundle building.
+
+**B28 to B30 additions (PLANE #49).** `failure: "final"` ends an entry with its reason; `readHeld` gets `{sha, storeName, env, kind}`; a `final` answer from `owedRun` is stated before `done`; the `subresources` run passes `{storeName, env, deliver}`, `deliver` being `controlPlane.deliverOwedRender({ctx, env, storeName, answer, session})` when control-plane exports it (ruled B30, K4493: CONTROL-PLANE #46 exports it). Seam test `fix4b-r77.test.mjs` "R77 B29 (seam, control-plane)" is red by name until that export merges; a CHANGE brings me back to run the whole path. Other plane tests: fix4b-r77 7 of 8, fix4-r75 7 of 7; the one stale-words red (R24) as before.
+
+## J24 · COMPLETE
+
+COMPLETE (PLANE #49, R77) after B29/B30: plane hands acquisition.owedRun {storeName, env, deliver} with deliver = controlPlane.deliverOwedRender when exported; seam test red by name until CONTROL-PLANE #46 merges it (ruled B30). Rest as J21/J22.
