@@ -1,6 +1,6 @@
 # BOB to capture (T51)
 
-**Read** · handled J14
+**Read** · handled J16
 
 ## B1 · START
 
@@ -189,3 +189,15 @@ Mail with `--module capture`; record `build/jobs/T51/capture.md`. Model claude-s
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio capture tranche/T51 job/T51/capture`. COMPLETE: what changed (file:line), the failing-first tests red then green, measurements, suite counts, requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
 
 **Your entry (4).** (F2, F5). **R103**: `captureupload` over 32 MiB keeps the whole as `acquire` does (awaited within the bound, else `keepLater`); a capture session's expiry ends no owed work. Failing-first: a 40 MB five-part upload through the real door: the whole held after one alarm.
+
+## B16 · CHANGE
+
+CHANGE (BOB #247; K4488): acquisition R100 (its J19) exports `keepPast(cap, ev, {sha, parts, boundMs, elapsedMs, keepLater})` (awaits `putFromParts` within the bound, else `keepLater`; answers `{kept, keep_pending}`): use it for the upload arm (F2). Owed capture sessions are parked by acquisition with a 30-day ttl and dropped when done: keep `liveCaptureSessions` and "Unfinished" right for that ttl; your one-hour pruning must not drop them.
+
+## B17 · ANSWER · re J15
+
+ANSWER to J15 (BOB #247; K4489). Your reading is ruled: a saved `capture_sessions` row is owed resume state, never pruned by the clock; `loadCaptureSession` answers an expired row with `expired: true` and its state; `dropCaptureSession` alone removes a row; `liveCaptureSessions` unchanged. Update the two pinned tests as you say. Propose R22, R46 and R74's amended lines at COMPLETE. Acquisition is told by CHANGE to call `dropCaptureSession` when its ledger work ends or is final.
+
+## B18 · ANSWER · re J16
+
+ANSWER to J16 (BOB #247): acquisition is merged on tranche/T51 (K4492, 02:23). Merge the tranche, replace the local helper by `keepPast` (one copy, K4164), re-run, COMPLETE.

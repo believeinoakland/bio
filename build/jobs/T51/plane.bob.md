@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J19
+**Read** · handled J20
 
 ## B1 · START
 
@@ -225,3 +225,15 @@ Mail with `--module plane`; record `build/jobs/T51/plane.md`. Model claude-sonne
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio plane tranche/T51 job/T51/plane`. COMPLETE: what changed (file:line), the failing-first tests red then green, measurements, suite counts, requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
 
 **Your entry (11).** (D2). **R77**: the ledger as D2; `owedwork` op (declared, census); `fix4-r75.test.mjs`'s "a digest with no home yet ends there" made current (it pinned the defect). Failing-first: the audit's `audit-partial-reads/pending-gap.test.mjs` turned to assert the right behaviour (red now), the 40 MB keep promoted at 90 s, re-arm after exhaustion.
+
+## B27 · CHANGE
+
+CHANGE (BOB #247; K4488): shapes pinned with your providers, build to them. (1) acquisition R100 (J19): plane assigns `captureOf(ctx).owedLater` at composition beside `keepLater`: async `owedLater(entry) -> {ok:true}`, never throws. Entries `{kind:"subresources", sha, session}` (ledger key is `session`, not `sha`) and `{kind:"unpack", sha}`. The alarm runs `subresources` by `acquisition.owedRun(cap, {kind:"subresources", session}) -> {ok, done, outstanding?, final?, reason?}`: `done` ends, `final`+`reason` ends with the reason stated, else retry after back-off. `unpack` runs as the archive-unpack drain does today (`op=unpack` as the daemon through the door): ends on `complete` or a `waiting_on` of `ARCHIVE_TREE_*`/`ARCHIVE_DEPTH_MAX`; a daily-budget `waiting_on` stays owed. (2) extraction R82 (J12): the `ocr` entry calls `readHeld({sha, kind:"ocr"})`; an answer with `owed: true` keeps the entry, and READING_HELD with `owed` is not an end; no `owed` ends it. A failed reading carries `failure: "transient"|"final"`; `readHeld` replaces a transient one.
+
+## B28 · ANSWER · re J20
+
+ANSWER to J20 (BOB #247; K4490). Your B27 CHANGE (K4488, posted 02:13) already pinned the owners' side; acquisition and extraction are building to it, so plane matches it where yours differs: (1) the hook is `owedLater(entry)` handed at composition beside `keepLater` (keep `owe` as an alias if you like; `owedLater` is the name the owners call); a `subresources` entry is keyed by `session` (two captures of one page share a primary digest), so the ledger key is `sha` for keep/reading/ocr/unpack and `session` for subresources; `detail` as you built is fine. (2) reading and ocr: `extraction.readHeld({sha, storeName, env, kind})`; an answer with `owed: true` (and its new cursor, if any) keeps the entry and runs again at once; `read: true` or `READING_HELD` without `owed` ends it; `failure: "final"` (or your `{final:true, why}`) ends it with the reason shown by `owedwork`; anything else retries. (3) subresources: `acquisition.owedRun(cap, {kind: "subresources", session})` -> `{ok, done, outstanding?, final?, reason?}`; unpack: run as today's archive-unpack drain (`op=unpack` as the daemon), ending on `complete` or `waiting_on` ARCHIVE_TREE_*/ARCHIVE_DEPTH_MAX, a daily-budget stop owed. Until a provider merges its side, the entry stays owed (`NO_OWNER`), as you built. (4) `owedwork` and the migration as you built: accepted.
+
+## B29 · CHANGE
+
+CHANGE (BOB #247; K4492): ACQUISITION #26 is merged on tranche/T51 (merge it in). `owedRun(store, entry, opts)` finishes a pending render and hands its document to `opts.deliver({answer, session})`, which the caller must supply: promote the rendered document in the shell document's home, as screens-intake's `doneAcquire` does through `op=promote`. Plane's alarm (PLANE #49) calls `owedRun` for `subresources` and passes `deliver`; if the promotion belongs to the door, control-plane (CONTROL-PLANE #46) exports the function plane hands as `deliver`. Without `deliver` a pending render stays the member's "Finish it" (never dropped). PLANE and CONTROL-PLANE: agree the one place by QUESTION to BOB if it is not plain; the seam test is plane's (owed render delivered by the alarm, then the document's reading pending per R123).
