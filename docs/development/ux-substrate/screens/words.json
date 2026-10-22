@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1176,
+  "act": 1177,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -231,7 +231,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 18421,
+  "total": 18422,
   "protected": 1108
  },
  "words": [
@@ -77069,6 +77069,13 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-412: B471 screens-action (K4409): the routes list of an action page when it is empty"
+  },
+  {
+   "key": "act.readheld.does",
+   "en": "Reads a document this record holds whole but has no reading of yet, or whose reading found nothing. The earlier reading stays in the history. Moves nothing.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-413: B473 affordances (T51 fix round 4, extraction R80): the stand-in default, word for word"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

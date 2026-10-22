@@ -7256,6 +7256,8 @@ w412('screen.request.nameoffice.why', 'Why you are naming this office', "screens
 w412('screen.request.nameoffice.why.help', 'Say how you know this office holds the records. It is kept with the office, under your name.', "screens-action (K4409): the note's help")
 w412('screen.action.routes.none', 'No route is known for this kind of action yet.', 'screens-action (K4409): the routes list of an action page when it is empty')
 
+# DEC-413 (B473): affordances' last stand-in, act.readheld.does (extraction R80), word for word its default
+W.append(dict(key='act.readheld.does', en='Reads a document this record holds whole but has no reading of yet, or whose reading found nothing. The earlier reading stays in the history. Moves nothing.', protected=False, note='DEC-413: B473 affordances (T51 fix round 4, extraction R80): the stand-in default, word for word'))
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

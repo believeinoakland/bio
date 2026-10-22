@@ -38993,6 +38993,12 @@
    "en": "No route is known for this kind of action yet.",
    "protected": false,
    "note": "DEC-412: B471 screens-action (K4409): the routes list of an action page when it is empty"
+  },
+  {
+   "key": "act.readheld.does",
+   "en": "Reads a document this record holds whole but has no reading of yet, or whose reading found nothing. The earlier reading stays in the history. Moves nothing.",
+   "protected": false,
+   "note": "DEC-413: B473 affordances (T51 fix round 4, extraction R80): the stand-in default, word for word"
   }
  ],
  "rewrite": {
