@@ -66,3 +66,10 @@ test("R79 G12c the project's dashboard asks for the questions' strength once too
   const p = await open("/app/dash-project/" + P, { plane: { projectquestions: ok(items), inquirystrength: (r) => ok({ ok: true, results: Object.fromEntries(String(r.query.ids).split(",").map((id) => [id, { ok: true, target: id, ...graded(1) }])) }) } });
   assert.equal(p.byOp("inquirystrength").length, 1);
 });
+
+test("R79 G12a the project's dashboard reads its documents and the member's own held photos as picker rows too", async () => {
+  const p = await open("/app/dash-project/" + P, { plane: { heldcaptures: ok({ ok: true, held: [] }) } });
+  const asked = p.byOp("heldcaptures");
+  assert.ok(asked.length >= 2, "both lists are read");
+  assert.deepEqual(asked.map((r) => r.query.fields), asked.map(() => "picker"), "every one a picker read");
+});

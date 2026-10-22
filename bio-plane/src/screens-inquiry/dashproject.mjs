@@ -34,8 +34,10 @@ function reads(view) {
        fix round caps the ask at 200): the default and the cap, 200 */
     queue: { op: "queue", query: { limit: "200" }, empty: (v) => !v || !Array.isArray(v.items) || !v.items.length },
     drafts: { op: "casedrafts", query: { project: id }, empty: (v) => !v || !Array.isArray(v.drafts) || !v.drafts.length },
-    docs: { op: "heldcaptures", query: { project: id, limit: "200" }, empty: held },
-    ...(me ? { mine: { op: "heldcaptures", query: { project: id, member: String(me), limit: "500" }, empty: held } } : {}),
+    /* G12a (fix round 6): both lists are picker rows (a document's id, its place, its capture's digest are all this screen reads of them); the full row
+       examines every capture with no recorded format, which cost a page seconds */
+    docs: { op: "heldcaptures", query: { project: id, limit: "200", fields: "picker" }, empty: held },
+    ...(me ? { mine: { op: "heldcaptures", query: { project: id, member: String(me), limit: "500", fields: "picker" }, empty: held } } : {}),
     ...directory,
   };
 }

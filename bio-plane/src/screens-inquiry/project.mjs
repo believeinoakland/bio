@@ -237,7 +237,7 @@ function render(cs, view) {
   }
 
   /* R128 (DEC-394 (3a); capture R77, R88): "The project's documents", after the project's acts and before its objective as the drawing has
-     it: every document filed under the project, held or vouched for, read by `heldcaptures` (`state` `held_and_vouched`, the full rows, a
+     it: every document filed under the project, held or vouched for, read by `heldcaptures` (`state` `held_and_vouched`, picker rows, a
      page of 200 at a time, read to its end). Each row is its title, a reference opening the document, and beneath it its kind (web page,
      spreadsheet or photo) where the row states a format or a content type, then `captured` and the day of its capture; a row that states no
      kind draws none, never a guess, and one that states no day draws none. None filed says so in the designed two sentences; a read that
