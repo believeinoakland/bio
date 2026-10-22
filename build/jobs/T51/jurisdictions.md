@@ -109,3 +109,14 @@ Size (session_018LcUE19WD2qKmGoB8yDoXA): test runs 14, module lines 3741
 ## J7 · COMPLETE
 
 COMPLETE (fix round 4, wave 1 #9): C64-law provider half built and C64-template needs no jurisdictions change (J6/B5). R96 (response) and R97 (label) built; failing-first test jurisdictions/test/t51-response.test.mjs red 0/3, green 3/3. Suite 171/171; coverage 97/97; ownership 0 failures; words 0 for jurisdictions. Users: screens-action 24/24; control-plane has one failure identical on the tranche tip; plane, installer, journey-check lack node_modules. No open question. Record: build/jobs/T51/jurisdictions.md.
+
+## J8 · COMPLETE
+
+COMPLETE (fix round 4, C8, K4477): the first profile's `fiscal_year` (R49), data only.
+
+Changed: `jurisdictions/profiles/oakland-alameda.mjs` (after `computation`): `fiscal_year` for Finance Department, Oakland City Council and Office Of The City Auditor (City of Oakland: start 07-01, named_by start, label `FY{start}-{end2}` = FY2025-26, basis `2026-10-22 oaklandca.gov-fy2025-27-budget`: its page says "New fiscal year 2025-2026 begins on July 1", cycle "July 1, 2025 through June 30, 2027", years written "FY 2025-26"), and for Alameda County Civil Grand Jury (the county's budget press release: "The new budget goes into effect from July 1, 2024, to June 30, 2025"; Board letter "Fiscal Year (FY) 2025-26 Final Budget"; read 2026-10-22). Left out, said so: the State Controller's Office (no page of its own read) and `*`; a figure recorded with no body on this profile still gets no year. Note: the profile has no county body except the Civil Grand Jury, so the county's entry sits on it.
+
+Failing-first: `jurisdictions/test/t51-fiscal.test.mjs` (2 tests, R49) red before the data (`combine` view had no fiscal_year: 0/2), green after (2/2). Money's `MONEY_BAD_PERIOD` came from exactly this absence; money's own suite (92/92) and the fiscal mapping (`fiscalPeriod`, label FY2025-26 over 2025-07-01..2026-06-30) are unchanged.
+
+Suite: jurisdictions 165/165; coverage 97/97; format, architecture, ownership 0 failures; words 0 for jurisdictions (the repo's one testcopy is screens-publish's). Users: money 92/92, calculations 62/62, following 100/100, screens-investigate 236/236. QUESTION open: none.
+Size (session_018n2VPXYoQnwCMwqn3JaZHt): test runs 8, module lines 3760
