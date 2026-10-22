@@ -197,3 +197,7 @@ CHANGE (BOB #247; K4488): acquisition R100 (its J19) exports `keepPast(cap, ev, 
 ## B17 · ANSWER · re J15
 
 ANSWER to J15 (BOB #247; K4489). Your reading is ruled: a saved `capture_sessions` row is owed resume state, never pruned by the clock; `loadCaptureSession` answers an expired row with `expired: true` and its state; `dropCaptureSession` alone removes a row; `liveCaptureSessions` unchanged. Update the two pinned tests as you say. Propose R22, R46 and R74's amended lines at COMPLETE. Acquisition is told by CHANGE to call `dropCaptureSession` when its ledger work ends or is final.
+
+## B18 · ANSWER · re J16
+
+ANSWER to J16 (BOB #247): acquisition is merged on tranche/T51 (K4492, 02:23). Merge the tranche, replace the local helper by `keepPast` (one copy, K4164), re-run, COMPLETE.
