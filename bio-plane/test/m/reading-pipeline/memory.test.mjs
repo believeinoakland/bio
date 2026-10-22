@@ -24,12 +24,14 @@ const GOVINFO = (n) => `https://www.govinfo.gov/content/pkg/${n}/pdf/${n}.pdf`;
 const BOUND_MB = 64, WHOLE_MB = 96;
 
 /* `digest`: the SHA-256 of the whole answer of `read` (reading, units, bound figures) as the module gave it before the
-   reading was bounded, on the tranche tip. */
+   reading was bounded, on the tranche tip. R37 (fix round 4b) moved two: BUD and PER are readings that did not determine
+   (the text is undetermined), and a failed reading now carries `failure: "final"`; that one field is the whole difference
+   (diffed key by key against the answer before), and APP and the synthetic, which determine, carry none and keep theirs. */
 const FILES = [
   { name: "BUDGET-2025-BUD", pages: 188, sha: "3f1df41cfa3cebfd675b2a6ed673b6f665e0848c293d8d3bb5ab1815a0bae36b",
-    digest: "95b076e2affca6ad31a61d57eb98d644764296f7e6af736415eff45debcbd268" },
+    digest: "7bb5da9a5e8c5f610c6f160840f36c9936da43f8af097159e8144583816b137c" },
   { name: "BUDGET-2025-PER", pages: 295, sha: "067ad707534788e9011d4b6abdb686f1c3505888218e2ca5327c04e0ad58ae7f",
-    digest: "7889fee95abbd00987ff5f6f7e31b561b60449cc6b05c8b27b4ed6b878150b42" },
+    digest: "8f0cfb0125781159e611635c26a2f2f3224291f02812174e8611bcb179a935b1" },
   { name: "BUDGET-2024-APP", pages: 1354, sha: "6e0b3dc5f2f3f5bbab8ae5032bbc29207a8dbb290ba25ebafe3feb20dfe13c1e",
     digest: "6a2425b85762bba034046913218f13ddd30647a1f06efe98165a7aa98466b10d" },
   { name: "the 20 MB synthetic", synth: true, pages: 1300,
