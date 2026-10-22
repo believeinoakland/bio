@@ -1209,12 +1209,17 @@ export function textWordsOfText(text, { html = false, budget } = {}) {
    R41 (G15): in this mode a text line or paragraph over CAPTURE_TEXT_UNIT_CAP is carried whole as consecutive units
    (extent `run` 0, 1, ...), never cut; a sheet whose text is over the cap is carried as blocks of whole rows. */
 export const PIECE_UNITS_MAX = 4096;
+/* G26 (fix round 6): a PDF is read in pieces by page ranges, `PDF_RANGE_PAGES` pages a piece (the format entry's
+   `structureRange`, pdf-reader), the cursor a page. A range's structures are dropped before the next is read, so a tick
+   holds the bytes and one range, and the whole is one parse, not one per piece. */
+export const PDF_RANGE_PAGES = 150;
 export const BARE_DIGEST = "BARE_DIGEST";
 export const CURSOR_MISMATCH = "CURSOR_MISMATCH";
 export const NOT_PIECEWISE = "NOT_PIECEWISE";
 /* Sentences the refusals carry. Stand-ins until T52 (K4269): the nearest held rows; owed: `reading-pipeline.index.bare_digest`,
    `.cursor_mismatch`, `.not_piecewise`. The code is the answer; the sentence only says it. */
 const refusal = (code, row) => ({ refused: { code, why: word(row) } });
+const refuse = refusal;   /* readInner's range branch has a local `refusal` (an entry's refusal, R38) */
 
 const b64 = (o) => btoa(JSON.stringify(o)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 function unb64(s) {
@@ -1399,6 +1404,29 @@ function cursorIn(cursor, { sha, shape, chars, n }) {
   }
   if (c.n !== n || !natural(c.i) || c.i >= n) return bad();
   return { at: c.i };
+}
+
+/* A PDF range cursor: `{from}` (the first page of this piece) and `n` (the pages in the document), or `{refused}`. */
+function rangeCursorIn(cursor, { sha }) {
+  if (cursor == null) return { from: 0, n: null };
+  const c = unb64(cursor);
+  if (!c || c.v !== 1 || c.s !== sha || c.k !== "p" || !natural(c.i) || !natural(c.n) || c.i >= c.n)
+    return refusal(CURSOR_MISMATCH, "reading-pipeline.index.bytes_not_held");
+  return { from: c.i, n: c.n };
+}
+
+/* One piece of a PDF's range text: the units of the pages the range holds (seq the page, as a whole read numbers them),
+   within the budget; `next` is the first page not yet read. */
+function rangePieceAnswer(i2text, { sha, from, count, total, budget, maxUnits }) {
+  const all = (allUnitsOf(i2text) || []).map((u) => ({ ...u, seq: u.extent.page }));
+  const p = listPiece(all, { i: 0, budget, maxUnits });
+  const next = p.more ? all[p.next].extent.page : from + count;
+  const more = next < total;
+  let words = 0;
+  for (const u of p.units) words += wordsIn(u.text);
+  return { units: p.units, from, next,
+           fields: { more, cursor: more ? b64({ v: 1, s: sha, k: "p", n: total, i: next }) : null, read_through: next, total },
+           piece: { units: p.units.length, words, pages: [from, next] } };
 }
 
 /* One piece of a text read as text: `{refused}` or `{units, piece, answer}` where `answer` is the cursor fields. */
@@ -1752,12 +1780,12 @@ function refusalOf(a) {
  *  reading). Never throws; every failure is a failed reading, and says whether it is `transient` or `final`. */
 export async function read(document, { evidence = null, env = {}, storeName = "bio", view, planeVersion = null,
                                         liveCalibration = null, transcription = null, unitsBudget, ocrInvocations,
-                                        owe = null, cursor, maxUnits } = {}) {
+                                        owe = null, cursor, maxUnits, rangePages } = {}) {
   /* R39: a digest alone is no document; it is refused before anything is loaded, and no reading is composed. */
   if (isBareStub(document)) return refusal(BARE_DIGEST, "reading-pipeline.index.bytes_not_held");
   try { return await readInner(document, { evidence, env, storeName, view, planeVersion, liveCalibration, transcription,
                                            unitsBudget, ocrInvocations, owe,
-                                           pieces: cursor === undefined ? null : { cursor, maxUnits } }); }
+                                           pieces: cursor === undefined ? null : { cursor, maxUnits, rangePages } }); }
   catch (e) {
     const reading = failed(document, null, localize("reading-pipeline.index.reading_not_composed", "the reading could not be composed ({detail}), so nothing is claimed about this document's text; it is a failed reading, never an emptied document", { detail: String(String(e && e.message || e).slice(0, 200)) }), { failure: FAILURE_TRANSIENT });
     reading.metadata = null;   /* R28: no entry's answer reached the reading */
@@ -1868,7 +1896,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   const pieceAsk = piecesOn ? {
     cursor: pieces.cursor ?? null,
     budget: unitsBudget === undefined ? ACQUIRE_TEXT_UNITS_BUDGET : unitsBudget,
-    maxUnits: Number.isInteger(pieces.maxUnits) && pieces.maxUnits > 0 ? pieces.maxUnits : PIECE_UNITS_MAX } : null;
+    maxUnits: Number.isInteger(pieces.maxUnits) && pieces.maxUnits > 0 ? pieces.maxUnits : PIECE_UNITS_MAX,
+    rangePages: Number.isInteger(pieces.rangePages) && pieces.rangePages > 0 ? pieces.rangePages : PDF_RANGE_PAGES } : null;
   if (piecesOn && pieceAsk.cursor !== null && bytes && textRead) {
     const e0 = fmt && fmt !== "undetermined" ? getFormat(fmt) : null;
     if (!(e0 && (typeof e0.text === "function" || typeof e0.structure === "function"))) {
@@ -1893,7 +1922,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   const wireable = !!(entry && (typeof entry.text === "function" || typeof entry.structure === "function"));
   let reading, classifiedText = null, member = null;
   let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null, readDialect, emitted = null, heldCounts = null, joinedDropped = false;
-  let pieceInfo = null, pieceWords = null;
+  let pieceInfo = null, pieceWords = null, rangeScope = null;
 
   if (!wireable && textRead) {
     /* R1: text read as text with no format entry that reads it goes to the content type's reader. */
@@ -1967,8 +1996,40 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     let i2text = null, wiredTier = null, pageCount = null, pageBoxes = null, pdfPaints = null, wired = null;
     let chain = null, ocrNote = null, tier2note = null, tier2PerPage = null, t3Wanting = false, aiRead = null, structMeta = null;
     let memberDown = false, ocrLeft = null, refusal = null;
+    /* G26: in pieces mode a PDF is read by page ranges when its entry reads them. */
+    const ranged = piecesOn && typeof entry.structureRange === "function" ? rangeCursorIn(pieceAsk.cursor, { sha }) : null;
+    if (ranged && ranged.refused) return ranged;
     try {
-      if (typeof entry.text === "function") {
+      if (ranged) {
+        const st = await entry.structureRange(bytes, { from: ranged.from, count: pieceAsk.rangePages });
+        bytes = null;
+        if (st && st.ok && ranged.n !== null && st.pages !== ranged.n) return refuse(CURSOR_MISMATCH, "reading-pipeline.index.bytes_not_held");
+        if (!(st && st.ok)) refusal = refusalOf(st);
+        else {
+          i2text = st.text || null; wiredTier = 1;
+          structMeta = st.metadata || null;
+          if (Number.isInteger(st.pages) && st.pages > 0) pageCount = st.pages;
+          pageBoxes = pageBoxesFrom(st.pageBoxes);
+          pdfPaints = { images: Array.isArray(st.images) ? st.images : null,
+                        why: typeof st.imagesWhy === "string" ? st.imagesWhy : null };
+          rangeScope = { from: st.from, count: st.count, total: st.pages };
+          const t2 = await tier2Escalate(env, { sha, storeName, text: i2text });
+          if (t2.transient) memberDown = true;
+          if (t2.outcome === "refused") tier2note = t2.note;
+          else if (t2.outcome !== "merged") tier2note = tier2FailureNote(t2.outcome);
+          else {
+            i2text = t2.text; tier2PerPage = t2.perPage; tier2note = t2.note;
+            if (t2.replaced.length) wiredTier = 2;
+            if (t2.replaced.length && t2.kept.length) {
+              const merged = mergedChain([
+                { pages: t2.kept,     chain: layerChainFor(i2text, { tier: 1, container: fmt }) },
+                { pages: t2.replaced, chain: layerChainFor(i2text, { tier: 2, container: fmt }) },
+              ]);
+              if (Array.isArray(merged)) chain = merged;
+            }
+          }
+        }
+      } else if (typeof entry.text === "function") {
         const parts = typeof entry.parts === "function" ? await entry.parts(bytes) : bytes;
         const tt = await entry.text(parts);
         bytes = null;
@@ -2032,7 +2093,19 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       { const lean = withoutJoinedDocument(i2text); if (lean !== i2text) joinedDropped = true; i2text = lean; }
       emitted = i2text;
       const extent = containerExtentOf(i2text, { pdfPaints, fmt });
-      if (piecesOn) {
+      if (rangeScope) {
+        /* G26: this range's units; the pages from `next` on are the next piece's. */
+        const p = rangePieceAnswer(i2text, { sha, from: rangeScope.from, count: rangeScope.count, total: rangeScope.total, ...pieceAsk });
+        textUnits = p.units.length ? p.units : null;
+        pieceInfo = { ...p.fields, piece: p.piece };
+        rangeScope = { ...rangeScope, to: p.next };
+        if (pieceAsk.cursor !== null) {
+          if (ocrLeft && typeof owe === "function") {
+            try { await owe({ kind: "ocr", sha, cursor: ocrLeft.cursor, pages_left: ocrLeft.pages.length }); } catch { /* the hook is the caller's */ }
+          }
+          return { ...(textUnits ? { text_units: textUnits } : {}), ...p.fields, piece: p.piece };
+        }
+      } else if (piecesOn) {
         /* R40/R41: the units of the entry's text in pieces, from the first or the cursor's; a piece after the first is units alone. */
         const p = listPieceAnswer(pieceUnitsOf(i2text), { sha, ...pieceAsk });
         if (p.refused) return p;
@@ -2063,7 +2136,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         : { ...failed(doc, docType, [tier2note, ocrNote, localize("reading-pipeline.index.entry_no_text", "the {fmt} entry produced no text from these bytes", { fmt: String(fmt) })]
               .filter(Boolean).join(" — "), { failure: memberDown ? FAILURE_TRANSIENT : FAILURE_FINAL }) };
       /* R35: a reading with text units counts its words. */
-      if (textUnits) Object.assign(reading, textWordsFor(i2text, textUnits));
+      if (textUnits) Object.assign(reading, rangeScope ? { words_total: null, words_read: pieceInfo.piece.words } : textWordsFor(i2text, textUnits));
       /* R37 (D4): a reading that read nothing says whether it can be read again: a member that was down is a cause outside
          the document, anything else is the document's own. */
       if (!wired || !wired.determined) reading.failure = memberDown ? FAILURE_TRANSIENT : FAILURE_FINAL;
@@ -2103,6 +2176,9 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     tier: Number.isInteger(reading.text_tier) ? reading.text_tier : null,
     container: typeof reading.text_container === "string" ? reading.text_container : null,
     planeVersion, member, ...(joinedDropped ? { textFrom: "document" } : {}) });
+  /* G26: a PDF read in ranges digests the pages of the first range only; the provenance says so. */
+  if (rangeScope && reading.provenance && typeof reading.provenance === "object")
+    reading.provenance.text_scope = { pages: [rangeScope.from, rangeScope.to ?? rangeScope.from + rangeScope.count] };
   /* N139 (R17): the counts of exactly the text the reader was handed; none when no text was. */
   { const n = heldCounts || textCountsOf(classifiedText); if (n) Object.assign(reading, n); }
   /* R28: the entry's metadata, or null, and a workbook's or a `.docx` document's cells, as emitted. */

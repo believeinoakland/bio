@@ -251,3 +251,14 @@ QUESTION (G26 seam, READING-PIPELINE #23). I have read the plan sections, the di
 If you want the reading to be whole-text-true (digest over all pages), say so and I will carry a running SHA-256 state in the cursor instead; that costs nothing in memory but the digest then names the text as pieces joined, which I would state in the reading's provenance.
 
 Next on your word. I carry on with the failing-first test meanwhile.
+
+## G26 work in progress (READING-PIPELINE #23, session_01EELF7tdeuCRAdwEDTmo1ya)
+
+BOB's ANSWER B14 (K4606) adopted: seam `getFormat("pdf").structureRange(bytes, {from, count})` (pdf-reader, unmerged); first piece = reading of its range, `words_total` null, `provenance.text_scope = {pages:[from,to]}`.
+
+Written so far (`reading-pipeline/index.mjs`): `PDF_RANGE_PAGES` (150), `rangeCursorIn`, `rangePieceAnswer`, a ranged branch in `readInner` (pieces mode + an entry with `structureRange`; tiers 2/3 per range; later pieces units alone, `owe` still called; cursor `{k:"p", n, i}`; `seq` = page). Without a cursor, or an entry with no `structureRange`, `read` is as before.
+
+Failing-first, seen red then green:
+- `pdf-ranges.test.mjs` (4 tests, stub `structureRange`): red with the source stashed (the whole `structure` is parsed), green with it.
+- `pdf-pieces.test.mjs` (seam, real 15.2 MiB BUDGET-2024-APP, child at `--max-old-space-size=112`, pieces < 10 s, < 1.5 parses): RED BY NAME until pdf-reader merges: "1 pieces, slowest 18819 ms ... over 10 s" (one whole parse, peak 128.2 MB). Then I merge `tranche/T51` and run it.
+Module suite meanwhile: 216 tests, 215 pass, the 1 fail is that seam test.
