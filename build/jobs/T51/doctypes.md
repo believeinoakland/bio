@@ -188,3 +188,23 @@ COMPLETE · doctypes R37 (fix round 4, K4467) · DOCTYPES #8
 Commits `0a64a728be` (the change), merge of the tranche `cc30fc2263`, pushed to `job/T51/doctypes`.
 
 Size (session_0148uDjHuj3piiQwEKdKFmzX): test runs 9, module lines 3788
+
+## J10 · COMPLETE
+
+COMPLETE · doctypes R38 (fix round 4, K4476) · DOCTYPES #9
+
+**What changed.** `windows.mjs`: new `lineIndex(text)` (the "\n" lines held as start offsets: `length`, `start`, `end`, `at`, `lineOf`). `sections.mjs`: `linesOf` removed; `readSections` (`codeHeadings`, `instrumentHeadings`, `subsections`) read through `lineIndex`, `subsections` walking only the lines inside its section; `passageEnd` reads the text a line at a time (it split the whole text once per definition before); `sha256Hex` is now an incremental `Sha256`, and new `textDigest(raw, start, end)` digests a section's normalised text a 64K piece at a time (it was a whole-section copy, normalisation and encoding). `policy.mjs`: `linesOf` removed; `readOutline` and `readResponsibilities` read through `lineIndex` (the tables are found first; only the lines a table holds are counted for the "printed three times" furniture rule, in one pass; no body array). `regulation.mjs` and `policy.mjs` digests use `textDigest`.
+
+**Failing-first.** `bounded.test.mjs` "R38 the parse of a policy | regulation | code text of 13.6 million characters ... adds under 16 MB, and its answer is unchanged". RED on the unchanged source: the child (`r38-child.mjs parse`) dies of V8 out-of-memory under base+16 MB for all three (policy, regulation, code); the test file itself cannot load on the old source (it imports the new helpers). GREEN now, digests equal to those taken on the old source (`fixtures/r38-answers.json`, `make-r38-answers.mjs`). The texts (`r38-texts.mjs`): a recognised fixture document (ai-594 / the fw18 ordinance / six codifier sections) with 13.6 M characters of prose put inside it before a later section, so a section runs over the prose and the answer stays small.
+
+**Measurements** (MB above what the caller holds; smallest cap that passes): policy <= 4, regulation <= 12, code <= 12 (under 16 on each). Answers unchanged: policy and regulation parse digests equal on all 164 fixture readings (whether or not the type recognises them), the three large texts equal, `fixtures/r37-answers.json` and the three govinfo answers still equal (R37 tests green), `lineIndex` equals `split` and `textDigest` equals the whole-slice digest (pieces of 1-17 characters, surrogates, 36,000 cases).
+
+**Entries applied:** R38 only. **Deferred:** none. **Observed, not changed:** a `Responsible Party / Action` table whose section runs to the end of a very large text makes its last action row that size by definition (the row's text is the answer); `policy-header.mjs` still splits a whole text when it has no anchor, which a recognised policy never has. Neither is reachable within R38's bound. `build/requirements/doctypes.md` R38 still reads "not yet met": BOB's to update.
+
+**Users.** `impact.mjs origin/tranche/T51 HEAD`: 41 modules, 666 files; the 662 outside doctypes: tests 5816, pass 5804, fail 10. The failures are the families that fail on the tranche tip (R29/R24 words and pseudo in screens/plane, R17 `groupdescriptiondraft` in store-door/op-grades, agent-worker/requirements.test.mjs), none touching doctypes. Generated artifact `bio-plane/dist/bio-plane.bundled.mjs` (carries the doctypes) is stale; BOB regenerates it.
+
+**Checks** (process repo): doctypes suite 56 pass, 0 fail, 0 skip; format 0 failures; architecture doctypes 41 files, 0 failures; coverage doctypes 38 of 38 ids named; words doctypes 0 (unkeyed 0); `checks/run.mjs`: no finding in doctypes (coverage failures in agent-harness, agent-runner, installer-steps, journey-check; one testcopy in screens-publish; unkeyed total not raised by this job); ownership 11 files, 0 failures.
+
+Commit `0c3d287f80` on job/T51/doctypes.
+
+Size (session_01R1JrGsT5LqDnscK29WqKJU): test runs 12, module lines 3881
