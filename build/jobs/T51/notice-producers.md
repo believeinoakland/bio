@@ -60,3 +60,7 @@ Ring failed: BOB session_01T8rYkDXW3CsEsgBMqu8Zce is archived (create_trigger re
 ## After CHANGE B4 (capture merged at b3b6b6cf16)
 Merged `tranche/T51`. The seam test now runs over the real capture (`recordFetchDone` once, a repeat refused; the opener is told once, a second read answers the same key, another member none): green. `queue/noticed.test.mjs:288`: green. Module + that queue file: 148 pass, 0 fail. Checks: format 0, architecture 0, coverage 6632/6632, words 0, ownership 0 failures. No red remains; no deferred item. Rows owed to the design: `notice.fetch.done`, `notice.fetch.done.door` (stand-ins by localize).
 Size (session_01SbR9Bp7b1UDZG4sWc5dbrm): test runs 14, module lines 1497 (index.mjs 1451, words.mjs 46)
+
+## J5 · COMPLETE
+
+COMPLETE again (re B4): merged tranche/T51 at capture's merge; fetch.test.mjs seam over the real capture (recordFetchDone, told once, other member none) green; queue/noticed.test.mjs:288 green. 148 pass, 0 fail; format, architecture, coverage 6632/6632, words, ownership all 0 failures. No red, nothing deferred. Owed rows: notice.fetch.done, notice.fetch.done.door. Size line in my record.
