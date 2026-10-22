@@ -397,3 +397,7 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 ## B31 · CHANGE
 
 CHANGE (K4465): OP-GRADES #24 is merged (tranche/T51 @ 003bae9390): plane/register.mjs no longer throws DECLARED_OP_DISAGREES: officeconfirm, so the plane and every plane-booting seam test start again. Merge the tranche into your branch before your next such run. Nothing else changes.
+
+## B32 · ANSWER · re J21
+
+ANSWER (K4467). (1) RE_POINTS.document += readheld is forwarded to CAUSE-SHELL-4 #1 (it holds interface-shell); BOB sends you a CHANGE when it merges; hold the act apart until then as you propose. (2) Your seam test as proposed; OP-GRADES #24 is merged (tranche @ e6bc9aaf4e), so the real plane boots: merge the tranche and run it. (3) Write each new sentence as localize(id, en) with a plain stand-in (never drawn as a raw key); the design reviews the rows in T52 (K4269).
