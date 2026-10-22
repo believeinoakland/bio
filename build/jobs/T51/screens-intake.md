@@ -351,3 +351,15 @@ Merged `tranche/T51` first (already at its tip, e0ef011f63). `node_modules` pres
 **Suites (B23):** screens-intake 256 of 256 (was 241; 15 new); screens-inquiry 471 of 471 (the user of `checkOutcome`); control-plane 69 of 69 and plane 11 of 11 affected test files red on `DECLARED_OP_DISAGREES: officeconfirm` (the named red until OP-GRADES #24 merges; no other error in either run; not mine). Checks: format 0, architecture 0, coverage 55 of 55, words 0, ownership 0 (whole-product run: other modules' reds only: case-authoring `reload.test.mjs` imports, agent-harness R17, agent-runner R37 R38, installer-steps R26 R31, interface-shell R120, journey-check R19, screens-daily R95, screens-inquiry R129, screens-publish R80, op-grades inline words). I own no census op to declare.
 
 Size (session_01PM8Gp86w4h8nprHYCkdss3): test runs 17, module lines 2434
+
+## J22 · COMPLETE
+
+COMPLETE (B23, fix round 4). Details, the four fields of each cause, proposed lines R4 and R38 and the reports are in my record (section "B23 START applied").
+- C9 (R49): met. The pre-flight now files the held copy through the same step as the done path (`filedHeld`), for unchanged and undetermined; test enters by pressing the act; red then green. Limit: the plane in the test is scripted to capture R96/R100/R101/R77 (screens-intake's `uses` forbids importing the real providers); the real-object path is the system test.
+- FC-23 label: NOT a defect. Live read of the smoke copy: textContent "Store this login", innerText empty because the control is inside a closed `<details>` (the walker read innerText). Test added (green before and after; red by mutation). NR with the dated live check.
+- C14: Held reads picker rows, then the full fields once by bundle_ids (<=50), asserted; baseline times taken on the smoke copy (Held 6.2 s; heldcaptures full 3.28 s; Add 4.0 s; picker 0.53 s). Held's new timing and the bundle_ids read are first measurable after the deploy (re-walk).
+- C25 (R54): draw already right; tests with acquisition's real answer shape (the real IRS PDF's title "2026 Form 1040-ES" confirmed by pdfTitle, 11 ms).
+- DEC-412 rows drawn; stand-ins removed.
+Suites: screens-intake 256/256; screens-inquiry 471/471; control-plane and plane affected files red only on DECLARED_OP_DISAGREES officeconfirm (named). format, architecture, coverage 55/55, words, ownership 0.
+Reports: captured_for is not recorded on a pre-flight hold from a question (capture's); real-provider seam test needs `capture` in `uses` if wanted. No question open.
+Size (session_01PM8Gp86w4h8nprHYCkdss3): test runs 17, module lines 2434
