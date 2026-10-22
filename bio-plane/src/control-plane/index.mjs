@@ -30,6 +30,12 @@ import { draftDue, draftAsk, checkedDraft, untestedOf, TRANSLATION_DRAFT, TRANSL
 /* R58 (T35): the promotions of what an unpack files. */
 import { archiveDocuments, promoteArchive } from "./archive.mjs";
 import { acquireReadingOp } from "../extraction/ops.mjs";
+/* R124 (fix round 4b; K4493): the alarm's delivery of an owed render is this door's promotion, built by screens-intake's own builder */
+import { CAPTURE_SCREEN } from "../screens-intake/capture.mjs";
+import { captureOf } from "../capture/index.mjs";
+import { promotionOf } from "../promotion/index.mjs";
+import { recordOf } from "../record-core/index.mjs";
+import { extractionOf } from "../extraction/index.mjs";
 /* R75, R81, R82 (T46, T47; N897 (1); K3137): the member interface's page and its assets: interface-shell's page over the
    nine screen modules' screens (R81's order), with screens-wizards' guide in the dock (interface-shell R31), and
    interface-assets' files. */
@@ -670,6 +676,73 @@ function warnedOf(url) {
   const w = url.searchParams.get("warned");
   if (w === null) return undefined;
   try { return JSON.parse(w); } catch { return w; }
+}
+/* R123: the size half of "will not fit": a PDF over 2 MB (stated by capture type, declared type, profile format or name) or a capture over
+   what a reading assembles from parts (20 MiB); the clock half is the door's, per request. */
+function tooBigToReadInline(document) {
+  const c = document && typeof document === "object" ? document.capture : null;
+  const type = typeof c?.content_type === "string" ? c.content_type.toLowerCase() : "";
+  const declared = typeof document?.profile?.source_content_type === "string" ? document.profile.source_content_type.toLowerCase() : "";
+  const named = typeof document?.locator === "string" && /\.pdf(?:[?#]|$)/i.test(document.locator);
+  const pdf = type.startsWith("application/pdf") || declared.startsWith("application/pdf") || document?.profile?.format?.format === "pdf"
+    || (type === "" && declared === "" && named);
+  if (pdf && Number.isFinite(c?.bytes) && c.bytes > READING_DEFER_PDF_BYTES) return true;
+  return Number.isFinite(c?.bytes) && c.bytes > READING_INLINE_MAX;
+}
+/** R124 (fix round 4b, F5; K4492, K4493; acquisition R100, plane R77): THE ALARM'S DELIVERY OF AN OWED RENDER. The plane's alarm runs a
+ *  `subresources` entry through acquisition's `owedRun`, which finishes the pending render and hands its answer here as `deliver`:
+ *  `deliverOwedRender({ctx, env, storeName, answer, session}) -> {ok: true, bundleId, reading_pending?} | {ok: false, reason}`.
+ *  The rendered document is promoted as the capture screen promotes an acquired one: screens-intake's own `promoteDocument` builds the
+ *  bundle (its text, id and register), run in process through the same `promote` step (promotion's `promote`, the route's own), filed
+ *  under the project of the shell document (the capture session's primary, as its opener sees it) with the opener as author and
+ *  the door's promote stamps; then R123's read of the document, inline when it fits, else written down for the alarm. Nothing is
+ *  delivered for a session that is gone or has no opener; a refusal is `{ok: false, reason}` and the render stays owed. */
+export async function deliverOwedRender({ ctx, env, storeName = "bio", answer, session } = {}) {
+  try {
+    const doc = answer && typeof answer === "object" ? answer.document : null;
+    const sha = doc && doc.capture && doc.capture.sha256;
+    if (typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha)) return { ok: false, reason: "NO_RENDERED_DOCUMENT" };
+    const ld = captureOf(ctx).loadCaptureSession({ session });
+    if (!ld || !ld.found) return { ok: false, reason: "NO_SUCH_SESSION" };
+    const viewer = ld.state && typeof ld.state.opened_by === "string" ? ld.state.opened_by : "";
+    if (!viewer) return { ok: false, reason: "NO_OPENER" };
+    /* the opener in the door's forms (R17): the viewer `member:<id>` or `admin`, her id, her positional identity */
+    const memberId = viewer.startsWith("member:") ? viewer.slice("member:".length) : viewer;
+    const who = { author: memberId, actorMemberId: memberId, actorIdentity: viewer === "admin" ? "member:admin" : viewer, actorViewer: viewer };
+    let project = "";
+    try {
+      const held = await captureOf(ctx).heldAt({ sha256: ld.primarySha, viewer });
+      project = held && held.held === true && held.copy && typeof held.copy.project === "string" ? held.copy.project : "";
+    } catch { project = ""; }
+    const record = recordOf(ctx), promotion = promotionOf(ctx);
+    const cs = { now: () => Date.now(), digest: async (t) => sha256Hex(t), w: (k, v) => word(k, v), date: (d) => d,
+      call: async (op, { query = {}, body } = {}) => {
+        if (op === "allocid") return { ok: true, ...record.allocId(query.prefix, query.year) };
+        if (op === "promote") return promotion.promote({ ...body, ...who });
+        return { ok: false, reason: "UNKNOWN_OP" };
+      } };
+    const address = String(doc.locator || "");
+    let title;
+    try { title = CAPTURE_SCREEN.parts.titleOf(cs, { reading: answer.reading, doc, address }); } catch { title = address; }
+    const made = await CAPTURE_SCREEN.parts.promoteDocument(cs, { doc, title, locator: address, project });
+    if (made.refused !== undefined) return { ok: false, reason: (made.refused && (made.refused.reason || made.refused.code)) || "PROMOTE_REFUSED" };
+    /* R123: the reading follows the filing */
+    let pending = false;
+    if (!(doc.reading && typeof doc.reading === "object")) {
+      let held = null;
+      if (!tooBigToReadInline(doc)) {
+        try { held = await extractionOf(ctx).readHeld({ sha, storeName, env }); } catch { held = null; }
+      }
+      if (!(held && (held.read === true || held.why === "READING_HELD"))) {
+        pending = true;
+        try {
+          const stub = env.STORE.get(env.STORE.idFromName(storeName));
+          await doAnswer(stub.fetch(new Request(`http://do/pendingadd?kind=reading&sha=${sha}&store=${encodeURIComponent(storeName)}`, { method: "POST" })));
+        } catch { /* the alarm's ledger is the reading's second chance, never the delivery's gate */ }
+      }
+    }
+    return { ok: true, bundleId: made.bundleId, ...(pending ? { reading_pending: true } : {}) };
+  } catch (e) { return { ok: false, reason: "DELIVERY_FAILED", detail: String((e && e.message) || e).slice(0, 200) }; }
 }
 /* R123 (fix round 4b, F1, F6; D3): the documents a promotion states in its `data/provenance.json` that carry a capture digest and no
    reading (a reading the screen holds goes in with the promotion, extraction R20), in the order stated, each once; none for a verified
@@ -2437,15 +2510,7 @@ export function makeFetch(hooks = {}) {
        type or name), a capture held in more than a reading assembles from parts (20 MiB, so no whole is read from it here), or less than the
        8 seconds a reading is given left of R105's 25. */
     function readingWontFit(document) {
-      const c = document && typeof document === "object" ? document.capture : null;
-      const type = typeof c?.content_type === "string" ? c.content_type.toLowerCase() : "";
-      const declared = typeof document?.profile?.source_content_type === "string" ? document.profile.source_content_type.toLowerCase() : "";
-      const named = typeof document?.locator === "string" && /\.pdf(?:[?#]|$)/i.test(document.locator);
-      const pdf = type.startsWith("application/pdf") || declared.startsWith("application/pdf") || document?.profile?.format?.format === "pdf"
-        || (type === "" && declared === "" && named);
-      if (pdf && Number.isFinite(c?.bytes) && c.bytes > READING_DEFER_PDF_BYTES) return true;
-      if (Number.isFinite(c?.bytes) && c.bytes > READING_INLINE_MAX) return true;
-      return (hooks.acquireBoundMs ?? ACQUIRE_BOUND_MS) - seen.clock.elapsed() < READING_BUDGET_MS;
+      return tooBigToReadInline(document) || (hooks.acquireBoundMs ?? ACQUIRE_BOUND_MS) - seen.clock.elapsed() < READING_BUDGET_MS;
     }
     /* R123 (fix round 4b, F1, F2, F6; K4487; D3): A READING FOLLOWS EVERY WAY A DOCUMENT ENTERS THE RECORD. Each document the record now stores
        with no reading (`entries`: `{sha, document}`, at most READING_FOLLOWED_MAX) is read here when its reading fits (extraction's `readHeld`;
