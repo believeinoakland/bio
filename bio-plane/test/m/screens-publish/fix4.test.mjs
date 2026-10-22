@@ -101,3 +101,22 @@ test("R80 C48 a draft naming no case whose pre-flight refused first still reads 
   assert.ok(main(p).querySelector('[data-act="caseratify"]'), "Sign is offered");
   assert.ok(!drew(p, "review.body.nocase"));
 });
+
+/* ---------- C81 (R120 of interface-shell; R79): the walker's two screens at 390 px with a live-sized count of rows ---------- */
+import { measure } from "./phone.mjs";
+import { GRANT_UNTIL } from "./fixtures.mjs";
+const refsMd = ["---", `id: ${P}`, "title: \"The Coliseum lease\"", "references:", ...Array.from({ length: 12 }, (_, i) => [`  - target: INQ-2026-00${10 + i}-what-does-the-federal-freedom-of-information-act-require-agencies`, "    rel: cites", "    status: live"]).flat(), "---", ""].join("\n");
+const manyGrants = Array.from({ length: 6 }, (_, i) => ({ grant_id: "GRT-" + i, recipient: "Professor Reader Number " + i + " of the Housing Law Clinic · housing law and tenant organizing", until: GRANT_UNTIL, zone: "America/Los_Angeles" }));
+test("R79 C81 at 390 px the case editor's 'Remove a citation' and the review copy's 'Stop sharing' are each one line, as wide as its words, inside the screen, with a live-sized number of rows", { timeout: 120000 }, async () => {
+  const body = (act) => `(W) => { const bs = [...document.querySelectorAll('#cs-main button[data-act="${act}"]')].map((b) => b.getBoundingClientRect());
+    return { n: bs.length, minW: Math.min(...bs.map((r) => r.width)), maxH: Math.max(...bs.map((r) => r.height)), right: Math.max(...bs.map((r) => r.right)), main: document.getElementById("cs-main").scrollWidth }; }`;
+  const one = (act) => new Function("return " + body(act))();
+  const ed = await measure(`/app/case-editor/${P}/${DR}`, 390, { answers: { image: ok({ "bundle.md": refsMd }) }, inspect: one("sever") });
+  const rc = await measure(`/app/review-copy/${P}/${DR}`, 390, { answers: { reviewcopy: ok(COPY({ grants: manyGrants })) }, inspect: one("reviewrevoke") });
+  for (const [who, m, n] of [["editor", ed, 12], ["review copy", rc, 6]]) {
+    assert.equal(m.n, n, who + ": every row has its button");
+    assert.ok(m.minW >= 150, who + ": the button is as wide as its own words (a squeezed one is 44 px): " + m.minW);
+    assert.ok(m.maxH <= 70, who + ": the button's text is on one line: " + m.maxH);
+    assert.ok(m.right <= 390 && m.main <= 390, who + ": inside the screen");
+  }
+});
