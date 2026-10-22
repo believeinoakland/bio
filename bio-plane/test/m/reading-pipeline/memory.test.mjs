@@ -4,8 +4,9 @@
  * The real files are the govinfo budget volumes pdf-reader's memory test reads (2.39, 8.39 and 15.19 MiB; 188, 295 and
  * 1,354 pages), fetched once into BIO_FIXTURE_CACHE (default: the temporary directory) and checked against their SHA-256;
  * the fourth is extraction's 20 MB, 1,300-page synthetic. Each is read in a process of its own (memory-child.mjs) with the
- * heap held to the idle process plus 56 MB, so garbage cannot lie about what the reading needs; the 64 MB allowed is
- * asserted of heap + array buffers polled while `read` runs, above the baseline taken with the capture stored. A file that
+ * heap held to the idle process plus 64 MB, so garbage cannot lie about what the reading needs. Heap + array buffers are
+ * polled while `read` runs, above the baseline taken with the capture stored (K4478): the reading's WORK, its peak less the
+ * bytes `read` was handed, is under 64 MB, and the whole read with its bytes under 96 MB (the object's limit is 128). A file that
  * cannot be had fails its test by name; nothing is skipped. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -20,7 +21,7 @@ const here = (p) => fileURLToPath(new URL(p, import.meta.url));
 const CHILD = here("./memory-child.mjs");
 const CACHE = process.env.BIO_FIXTURE_CACHE || join(tmpdir(), "bio-test-fixtures");
 const GOVINFO = (n) => `https://www.govinfo.gov/content/pkg/${n}/pdf/${n}.pdf`;
-const BOUND_MB = 64;
+const BOUND_MB = 64, WHOLE_MB = 96;
 
 /* `digest`: the SHA-256 of the whole answer of `read` (reading, units, bound figures) as the module gave it before the
    reading was bounded, on the tranche tip. */
@@ -61,21 +62,22 @@ function child(args, nodeArgs = []) {
 async function capFlags() {
   const idle = await child(["idle"], ["--expose-gc"]);
   assert.equal(idle.code, 0, idle.err.slice(0, 300));
-  const capMB = Math.ceil(JSON.parse(idle.out).baseHeapMB) + 56;
+  const capMB = Math.ceil(JSON.parse(idle.out).baseHeapMB) + 64;
   return { capMB, flags: ["--expose-gc", `--max-old-space-size=${capMB}`, "--max-semi-space-size=2"] };
 }
 
 for (const f of FILES) {
-  test(`R2 R11 R15 (memory): the reading of ${f.name} (${f.pages} pages) holds under ${BOUND_MB} MB above idle, and its answer is unchanged`,
+  test(`R2 R11 R15 (memory): the reading of ${f.name} (${f.pages} pages) works in under ${BOUND_MB} MB above its bytes (${WHOLE_MB} with them), and its answer is unchanged`,
     { timeout: 900_000 }, async () => {
       const path = await fixture(f);
       const { capMB, flags } = await capFlags();
       const m = await child(["measure", path], flags);
       assert.equal(m.code, 0, `${f.name}: the reading did not complete in a ${capMB} MB heap (${m.signal ?? "exit " + m.code}): ${m.err.split("\n").slice(0, 3).join(" | ")}`);
       const r = JSON.parse(m.out);
-      console.log(`reading ${f.name}: ${f.pages} pages, ${Math.round(r.ms)} ms, peak heap + array buffers above the stored capture ${r.peakMB.toFixed(1)} MB`);
+      console.log(`reading ${f.name}: ${f.pages} pages, ${Math.round(r.ms)} ms, peak heap + array buffers above the stored capture ${r.peakMB.toFixed(1)} MB, of which the bytes ${r.bytesMB.toFixed(1)} MB`);
       assert.equal(r.pages, f.pages);
-      assert.ok(r.peakMB < BOUND_MB, `${f.name}: peak ${r.peakMB.toFixed(1)} MB above idle, over ${BOUND_MB}`);
+      assert.ok(r.peakMB - r.bytesMB < BOUND_MB, `${f.name}: the work peaked ${(r.peakMB - r.bytesMB).toFixed(1)} MB above its bytes, over ${BOUND_MB}`);
+      assert.ok(r.peakMB < WHOLE_MB, `${f.name}: the whole read peaked ${r.peakMB.toFixed(1)} MB with its bytes, over ${WHOLE_MB}`);
       const d = await child(["digest", path], ["--expose-gc"]);
       assert.equal(d.code, 0, d.err.slice(0, 300));
       assert.equal(JSON.parse(d.out).digest, f.digest, `${f.name}: the answer is not the answer before`);

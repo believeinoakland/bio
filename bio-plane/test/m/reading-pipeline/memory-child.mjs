@@ -26,6 +26,7 @@ if (mode === "idle") {
   const world = fresh();
   const digest = await hold(world.evidence, bytes);
   const document = doc({ digest, bytes: bytes.length, ct: "application/pdf", format: "pdf" });
+  const size = bytes.length;
   bytes = null;
   gc();
   const base = used();
@@ -37,7 +38,7 @@ if (mode === "idle") {
   clearInterval(timer);
   peak = Math.max(peak, used() - base);
   if (mode === "measure")
-    console.log(JSON.stringify({ baseMB: base / 1048576, peakMB: peak / 1048576, ms, units: (made.text_units || []).length,
+    console.log(JSON.stringify({ baseMB: base / 1048576, peakMB: peak / 1048576, bytesMB: size / 1048576, ms, units: (made.text_units || []).length,
                                  pages: made.reading.page_count }));
   else
     console.log(JSON.stringify({ digest: createHash("sha256").update(JSON.stringify(made)).digest("hex"),
