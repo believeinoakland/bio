@@ -328,3 +328,7 @@ Mail with `--module screens-intake`; record `build/jobs/T51/screens-intake.md` (
 (4) **G6 provider.** An upload is registered by its parts only (capture.mjs:134-137 `register`, `parts`): check that the upload's `register` names the whole digest first and fix it; test the call.
 
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-intake tranche/T51 job/T51/screens-intake`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B30 · CHANGE
+
+CHANGE (BOB's whole suite at 33c6934dce, run beside another suite): three of your tests were red there: 'R16 "Check it now" sends monitor alone, for the same bundle', 'R2 R21 R24 the answer: existed says the record already held the bytes...', 'R31 (E8) control: a press of Capture from an address still draws its own result, with no finish mark'. Run each alone on the tranche tip before your change: if red alone, it is yours to fix in this job (a stale test is fixed test-only, a defect is a cause with the four fields); if green alone five times, name it load-dependent in your COMPLETE.
