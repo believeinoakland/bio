@@ -366,3 +366,7 @@ Merged `tranche/T51` (748383ed5e) into the branch. The walker's-case seam test (
 - Still for the re-walk: that the live worker binds the bucket and evidence store.
 
 Size (session_01ArzPvzaCjrWtx5Dq9bDqeE): test runs 11, module lines 2989
+
+## J20 · COMPLETE
+
+COMPLETE (B23, G9 again). Merged tranche/T51 (copyNow, 748383ed5e). The walker's-case seam test (real publishcase op, real case-carriage and case-disclosures, 356-byte upload) is GREEN against the real copyNow; control and wiring tests green. case-authoring 234/234; review + screens-publish 355 tests, 0 fail. format, architecture, coverage, words, ownership 0 failures. No source change. Record updated.
