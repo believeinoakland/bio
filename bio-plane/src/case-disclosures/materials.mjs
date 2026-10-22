@@ -19,7 +19,10 @@ function materialsOfLeg(leg, io) {
     ? io.rows(`SELECT capture_sha, bundle_id, authored FROM register WHERE capture_sha=?`, cap.capture_sha)
     : io.rows(`SELECT capture_sha, bundle_id, authored FROM register WHERE bundle_id=? ORDER BY capture_sha`, leg.target_id);
   if (cap && cap.capture_sha && !regs.length) return [{ ref: leg.target_id, kind: "document", sha: cap.capture_sha }];
-  return regs.map((r) => ({ ref: r.bundle_id, kind: Number(r.authored) === 1 ? "observation" : "document",
+  /* R34: a capture held in parts is one material, its whole (provenance R73's marks); its parts' rows are files of it. */
+  const parts = !cap && typeof io.registeredFor === "function"
+    ? new Set(io.registeredFor(leg.target_id).filter((r) => r.part_of).map((r) => r.capture_sha)) : new Set();
+  return regs.filter((r) => !parts.has(r.capture_sha)).map((r) => ({ ref: r.bundle_id, kind: Number(r.authored) === 1 ? "observation" : "document",
                             sha: r.capture_sha }));
 }
 
@@ -27,14 +30,19 @@ function materialsOfLeg(leg, io) {
  *  register's `(bundle_id, path)` exists, inline or by blob (`publishCase` is synchronous, `case-authoring` R18, and so is every service here, R23, so object storage is not
  *  asked). A document's extracted text is `case-grammar.extractedTextOf` over `extraction.unitsOf`'s units (its R17;
  *  K1315), held whole only when the index is `whole` and no unit was cut; `text_sha` is its SHA-256. An
- *  observation's text is its own bytes, so it has no separate text (`text_sha` null). Answers `{bytes, text, text_sha,
+ *  observation's text is its own bytes, so it has no separate text (`text_sha` null). (R34) A capture held in parts
+ *  (provenance R72: its register row is marked `whole`, no file of the bundle) holds its bytes through its parts: each part
+ *  `provenance.partsNamed` names is a file of the bundle. Answers `{bytes, text, text_sha,
  *  whole, missing}`, `missing` naming what is not held. */
 export function materialHeld(m, io) {
-  const reg = io.one(`SELECT bundle_id, path FROM register WHERE capture_sha=?`, m.sha);
+  const reg = io.one(`SELECT bundle_id, path, whole FROM register WHERE capture_sha=?`, m.sha);
+  const fileHeld = (b, p) => { const f = io.readFile(b, p); return !!(f && (typeof f.text === "string" || f.blobSha)); };
   let bytes = false;
   try {
-    const f = reg ? io.readFile(reg.bundle_id, reg.path) : null;
-    bytes = !!(f && (typeof f.text === "string" || f.blobSha));
+    if (reg && Number(reg.whole) === 1 && typeof io.partsNamed === "function") {
+      const named = io.partsNamed(reg.bundle_id, m.sha);
+      bytes = !!(named && named.state === "named" && named.parts.length && named.parts.every((p) => fileHeld(reg.bundle_id, p.file)));
+    } else bytes = reg ? fileHeld(reg.bundle_id, reg.path) : false;
   } catch { bytes = false; }
   if (m.kind === "observation")
     return { bytes, text: bytes, text_sha: null, whole: bytes, missing: bytes ? [] : ["text"] };

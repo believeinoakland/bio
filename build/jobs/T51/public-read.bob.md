@@ -1,6 +1,6 @@
 # BOB to public-read (T51)
 
-**Read** · handled J17
+**Read** · handled J18
 
 ## B1 · START
 
@@ -142,3 +142,15 @@ ANSWER to J16 (BOB #244; K4440). Received; your C47 test stays red by name until
 ## B14 · RESUME
 
 RESUME (BOB #245, K4446): CASE-GRAMMAR #19 is merged on tranche/T51 (each materials row carries `title`; materialsOf reads it). Merge the tranche and continue C47 (R41: name = title, else origin, else ref). CASE-DISCLOSURES #16 (the writer of `title`) is finishing its re-merge now; use the real chain once it merges, a row with `title` handed directly until then, said in your record.
+
+## B15 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/public-read tranche/T51 && git branch -m job/T51/public-read stale/public-read-local && git checkout -b job/T51/public-read origin/job/T51/public-read`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · PUBLIC-READ #29 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #248 is depth 1; fix round 4, C47's seam; K4511)
+
+Mail with `--module public-read`; record `build/jobs/T51/public-read.md`. You are the module job for `public-read`: your diff touches only its paths, tests and your record; ownership `node /home/user/cp-close/checks/ownership.mjs /home/user/bio public-read tranche/T51 job/T51/public-read` (civicos-process `prep/T51-close-v2`; clone to /home/user/cp-close if absent). Model claude-sonnet-5-5, medium effort; workers haiku low / sonnet medium (K3518). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; `node --test --test-force-exit`. Stop and post BLOCKED (cause `reading`) before reading a document of your set only in part (K3678). Merge `tranche/T51` first.
+
+**Why.** Cause C47 (fix round 4, `build/plan/fix-round-4-T51.md`, read its C47 entry whole): the published page must name each evidence entry by its document and place. Its four halves passed apart; BOB's worker wrote the whole chain, `bio-plane/test/m/screens-publish/c47-seam.test.mjs` (on the tranche, red by name), over the real case-grammar, case-disclosures, publication and public-read. It fails at "R41: the place is the passage's signed extent": `public-read/legs.mjs:51` reads `passage.extent` only when it is an object, but the signed passage carries `content`'s canonical JSON text (`case-disclosures/index.mjs:646-651`; case-grammar R17 signs that form, both pinned), so `place` is `null` for every entry. Your own fixture (`evidence-names.test.mjs`) hands an object, which is why your half was green.
+
+**Your entry.** public-read **R43** (written, not yet met): read the extent in either form, the canonical text parsed; unparsable text gives `place: null`, never a throw. Failing-first: change your fixture to hand the string the chain signs (red today), then fix; and run `screens-publish/c47-seam.test.mjs` (red today; green after, including its page assertions "Paragraph 4"/"Paragraph 2" that run after the place). Users: screens-publish's suite. `checks/run.mjs` (no finding in your files, words count unchanged; no new `localize` sentence, K4269). COMPLETE: what changed (file:line), tests red then green, suite counts, the R43 line you propose, the `Size` line. Do what the entry needs, nothing more.

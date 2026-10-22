@@ -29,12 +29,12 @@ const instances = new WeakMap();
 export class RetrievalBrowse {
   #sql; #marks;
 
-  constructor({ sql, membership = null, host = null, order = null, entities = undefined, recorders = null, ...reads }) {
+  constructor({ sql, membership = null, host = null, order = null, entities = undefined, recorders = null, provenance = undefined, ...reads }) {
     if (!sql || typeof sql.exec !== "function") throw new Error("retrieval-browse: deps.sql is the Durable Object's sql");
     this.#sql = sql;
     this.membership = membership;
     this.reads = Object.freeze(Object.fromEntries(HOST_READS.filter((n) => typeof reads[n] === "function").map((n) => [n, reads[n]])));
-    this.#marks = new Marks({ order, host, entities, recorders });
+    this.#marks = new Marks({ order, host, entities, recorders, provenance });
     this.finder = new Finder(this);
     this.browser = new Browser(this);
   }
@@ -53,6 +53,17 @@ export class RetrievalBrowse {
   missing(names) { return names.filter((n) => !this.reads[n]); }
 
   entitiesFor() { return this.#marks.entitiesFor(); }
+  /** R19: the parts of the captures held in parts by `bundleIds`, as provenance marks them (its R73): the digests of the
+   *  parts' rows, which are no capture of their own. Only a bundle with a row of a whole (`register.whole`, provenance
+   *  R48) is asked. */
+  partsHeldIn(bundleIds) {
+    const prov = this.#marks.provenanceFor();
+    const parts = new Set();
+    if (!prov || typeof prov.registeredFor !== "function") return parts;
+    for (const id of bundleIds)
+      for (const row of prov.registeredFor(id)) if (row.part_of) parts.add(row.capture_sha);
+    return parts;
+  }
   recordedReads() { return this.#marks.recordedReads(); }
   browseMarks() { return this.#marks.browseMarks(); }
 

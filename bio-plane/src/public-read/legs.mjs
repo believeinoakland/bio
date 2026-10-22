@@ -4,7 +4,7 @@
  * `passages:` it relies on and the `materials:` it reaches. A leg that rests on a captured document is named by what the
  * case states of that document and placed at the passage the case states it relies on, so two entries of one case are
  * told apart. Nothing of the document's bytes is read or handed over (B318 4): the name is the material row's `title` (R41, C47), else its `origin`
- * as signed (its `ref` when the origin is not stated), the place the passage's `extent` exactly as signed, for the
+ * as signed (its `ref` when the origin is not stated), the place the passage's `extent` exactly as signed (an object, or the canonical text of one, R43), for the
  * reader's surface to word. Pure; never throws. */
 
 import { gradingFactsOf, passagesOf, materialsOf } from "../case-grammar/index.mjs";
@@ -15,6 +15,14 @@ const text = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
 const shaOf = (c) => {
   const v = typeof c === "string" ? c : c && typeof c === "object" ? c.sha ?? c.sha256 ?? c.capture ?? c.capture_sha : null;
   return typeof v === "string" && HEX64.test(v.toLowerCase()) ? v.toLowerCase() : null;
+};
+
+/* R43: a signed extent is read as the object it is, or as the canonical JSON text case-grammar R17 signs; text that does
+   not parse to an object gives null, never a throw */
+const extentOf = (v) => {
+  let x = v;
+  if (typeof x === "string") { try { x = JSON.parse(x); } catch { return null; } }
+  return x && typeof x === "object" && !Array.isArray(x) ? x : null;
 };
 
 /** R41 (1): the reader of one signed case document's account of its legs, or null when the document states none
@@ -48,7 +56,7 @@ export function legReaderOf(fm) {
           const found = named >= 0 ? named : mine.findIndex(fits);
           if (found >= 0) usedPassages.add(found);
           const passage = found >= 0 ? mine[found] : null;
-          const extent = passage && passage.extent && typeof passage.extent === "object" ? passage.extent : null;
+          const extent = extentOf(passage && passage.extent);
           const material = materials.find((m) => shas.has(String(m.sha ?? "").toLowerCase()));
           return { name: material ? text(material.title) ?? text(material.origin) ?? text(material.ref) : null, place: extent };
         },

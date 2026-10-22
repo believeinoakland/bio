@@ -107,6 +107,8 @@ Terms are `publication`'s (a case, an edition, the case document, a pin, the pub
   Controls: the same subject stamped with two different `group` values answers the same `hash`; with no source registered the identity reads null with its detail, never a guess; an unset setting answers `stake: null`, an unreadable one `"undetermined"`; a second registration is refused.
 - **R42** (fix round 4, C48/N6; K4429; amends R41) **`publishedAddress({case, edition}) → string | null`** is the one builder of a published case's public address, as `public-read` serves it (its route): the page, the case editor, the ceremony and the pre-flight (`case-authoring` R83) draw no address composed another way; `null` for a case or edition not published. Test: for `CASE-2026-4783` edition 1 the address equals the route `public-read` serves and opens the page; an unpublished edition answers `null`. Control: the address of edition 2 differs from edition 1's only by its edition.
 
+- **R43** (fix round 4, C47 seam; K4511; amends R41; case-grammar R17, case-disclosures R7) **A signed extent is read in its canonical form.** R41's `place` is read from the passage's signed `extent` whether it crosses as an object or as `content`'s canonical JSON text (the form case-grammar R17 signs and case-disclosures carries); text that does not parse to an extent gives `place: null`, never a throw. Test: `screens-publish/c47-seam.test.mjs` (the whole chain: the published page names "Paragraph 4" and "Paragraph 2"), and public-read's own fixture handing the string.
+
 ## Private
 
 ### Uses

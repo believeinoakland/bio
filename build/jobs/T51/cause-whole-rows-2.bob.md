@@ -1,0 +1,19 @@
+# BOB to cause-whole-rows-2 (T51)
+
+**Read** · handled J2
+
+## B1 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/cause-whole-rows-2 tranche/T51 && git branch -m job/T51/cause-whole-rows-2 stale/cause-whole-rows-2-local && git checkout -b job/T51/cause-whole-rows-2 origin/job/T51/cause-whole-rows-2`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · CAUSE-WHOLE-ROWS-2 #1 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #248 is depth 1; fix round 4b, job 17 (added, K4509))
+
+Mail with `--module cause-whole-rows-2`; record `build/jobs/T51/cause-whole-rows-2.md`. A cause job holding **retrieval-browse, machinery-producers**; ownership `node /home/user/cp-close/checks/ownership.mjs /home/user/bio retrieval-browse,machinery-producers tranche/T51 job/T51/cause-whole-rows-2` (civicos-process `prep/T51-close-v2`; clone to /home/user/cp-close if absent). Model claude-sonnet-5-5, medium effort; workers haiku low / sonnet medium (K3518). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; `node --test --test-force-exit`. Stop and post BLOCKED (cause `reading`) before reading a document of your set only in part (K3678). Merge `tranche/T51` first.
+
+**Why.** provenance R72 gave a capture held in parts a `register` row for its whole; R73 (merged, K4509) marks each row of `registeredFor(bundle)` with `whole` and `part_of` and lists the capture once in `capturesOf`. Two readers by bundle still meet every row (found by CAUSE-WHOLE-ROWS #1; `build/jobs/T51/cause-whole-rows.md`, "Found in other modules"): retrieval-browse `holdOf` (`find.mjs:76-81`) spends 4 of `FIND_CAPTURES_PER_CALL`'s 200 on a three-part capture and reports 4 captures; machinery-producers `#gradeNotes` (`index.mjs:445`) lists a note per row. Read provenance R11, R12, R73 (`build/requirements/provenance.md`).
+
+**Your entries.** retrieval-browse **R19**, machinery-producers **R16** (written, not yet met). Use provenance's marks (skip `part_of` rows), never re-derive parts. Failing-first through each module's real interface with the three-part fixture (`build/plan/audit-partial-reads/f3-probes/mp.mjs`; `browse.probe.mjs`, `machinery.probe.mjs` beside it), red then green; controls: single captures unchanged. R-OLD: no stored data changes. No new `localize` sentence (K4269). Run both suites and `checks/run.mjs` (no finding in your files, words count unchanged). COMPLETE: what changed (file:line), tests red then green, suite counts, proposed requirement lines, the `Size` line. Do what the entries need, nothing more.
+
+## B2 · CHANGE
+
+CHANGE (BOB #248; K4512). Merged at your J2 (R19, R16 struck; 6/6 on the tranche). One more reader of the same cause, found by BOB's second verification worker (`build/plan/audit-partial-reads/f3-verify-2.md`, its probe `f3-probes-2/ret2.probe.mjs` or the frontier part of it): **retrieval** `frontier.mjs:263-268` (content level) and `:366-371` (meaning level) list every `register` row as a capture, ignoring `whole`/`part_of`; once the whole has its content and meaning rows, the three parts stay in `never_looked` for good (before any row, all four are `missing_unexplained`). Your job now also holds **retrieval** (ownership: `retrieval-browse,machinery-producers,retrieval`): requirement **retrieval R94** (written, not yet met). Same pattern as yours: skip `part_of` rows through provenance's marks. Merge `tranche/T51` first; failing-first through `frontier` with the fixture, red then green; controls; retrieval's suite and its users `impact.mjs` names (at least retrieval-browse, queue-producers); checks; COMPLETE again with the R94 line.

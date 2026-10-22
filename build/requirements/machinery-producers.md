@@ -74,6 +74,8 @@ Terms. An **item**, a **home set**, the **depth bound** and a **case** are `queu
 
  
 
+- **R16** (fix round 4b, F3 verification; K4509; provenance R73) **One note for a capture held in parts.** `#gradeNotes` lists one note for a capture held in parts (its whole), never one per register row (skip `part_of` rows). Test: the three-part fixture yields one note. Uses provenance `registeredFor` (R11, R73); R3's bound of 8 counts after the parts are left out.
+
 ## Private
 
 ### Uses

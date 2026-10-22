@@ -76,6 +76,7 @@
 import { recordOf, stampInstant, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, noSuchProject } from "../membership/index.mjs";
 import { observationLogOf } from "../observation-log/index.mjs";
+import { provenanceOf } from "../provenance/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { strengthOf, STRENGTH_AXES } from "../strength/index.mjs";
@@ -258,6 +259,7 @@ export class CaseAuthoring {
   }
 
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
+  get provenance() { return this.#deps.provenance ||= provenanceOf(this.#deps.host); }
   get inquiry() { return this.#deps.inquiry ||= inquiryOf(this.#deps.host); }
   get basisVersions() { return this.#deps.basisVersions ||= basisVersionsOf(this.#deps.host); }
   get strength() { return this.#deps.strength ||= strengthOf(this.#deps.host); }
@@ -1897,7 +1899,8 @@ export class CaseAuthoring {
    *  many captures it holds of the document NOW: one (`only_capture`), several (`undetermined`, never back-filled),
    *  none (`no_capture`). A question has no bytes (`no_bytes`); a finding that is not a member of this case is not cited
    *  (C67; R16). Set-based: one grouped count per chunk of targets
-   *  (provenance R48's `register`, extraction R58's `readings`), never one read per edge. */
+   *  (provenance R48's `register`, extraction R58's `readings`), never one read per edge, except a document with a capture
+   *  held in parts, which is counted by identity (R84). */
   #caseCitations(project, members) {
     const text = this.#liveText(project);
     const refs = text !== null ? (parseFrontmatter(text).data?.references || []) : [];
@@ -1914,11 +1917,19 @@ export class CaseAuthoring {
     for (let i = 0; i < docs.length; i += half) {
       const part = docs.slice(i, i + half), qs = part.map(() => "?").join(",");
       for (const r of this.#rows(
-        `SELECT bundle_id AS t, COUNT(DISTINCT capture_sha) AS n, MIN(capture_sha) AS one FROM (
-           SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (${qs})
+        `SELECT bundle_id AS t, COUNT(DISTINCT capture_sha) AS n, MIN(capture_sha) AS one, MAX(whole) AS whole FROM (
+           SELECT bundle_id, capture_sha, whole FROM register WHERE bundle_id IN (${qs})
            UNION ALL
-           SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (${qs}))
-         GROUP BY bundle_id`, ...part, ...part)) held.set(r.t, { n: r.n, one: r.one });
+           SELECT bundle_id, capture_sha, 0 AS whole FROM readings WHERE bundle_id IN (${qs}))
+         GROUP BY bundle_id`, ...part, ...part)) held.set(r.t, { n: r.n, one: r.one, whole: Number(r.whole) === 1 });
+    }
+    /* R84: a document holding a capture in parts counts that capture once, by its whole (provenance R73): a part's row is
+       a file of it. Only a bundle with a whole's row is asked again, so the batch above stays one read for the rest. */
+    for (const [t, h] of held) {
+      if (!h.whole) continue;
+      const idents = new Set(this.provenance.capturesOf(t).map((c) => c.capture_sha));
+      for (const r of this.#rows(`SELECT DISTINCT capture_sha FROM readings WHERE bundle_id=?`, t)) idents.add(r.capture_sha);
+      held.set(t, { n: idents.size, one: [...idents].sort()[0] });
     }
     return edges.map((r) => {
       const t = r.target.trim();

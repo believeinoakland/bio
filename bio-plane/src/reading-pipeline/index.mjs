@@ -1444,6 +1444,15 @@ const failed = (doc, docType, basis, extra = {}) => ({
   read_from_text: false, found: false, entities: [], facts: {}, at: doc && typeof doc.retrieved === "string" ? doc.retrieved : null,
   basis, ...extra });
 
+/* R38: what an entry's final refusal states of itself: its `reason` and the size figures it measured. Nothing else of it
+   is the reading's; an answer that is not final or names no reason carries none. */
+function refusalOf(a) {
+  if (!a || a.ok !== false || a.failure !== FAILURE_FINAL || typeof a.reason !== "string" || !a.reason) return null;
+  const out = { reason: a.reason };
+  for (const k of ["pages", "bytes", "need_mb", "limit_mb"]) if (Number.isFinite(a[k])) out[k] = a[k];
+  return out;
+}
+
 /** R24 (R1–R17): reads a stored capture. `document` is capture's acquire answer's document. The rest is what the
  *  caller (`extraction`, its R1 and R18) hands in: `evidence` (record-core's `evidenceStore()`, or null), `env` (the
  *  fleet bindings PDF_WORKER and OCR_WORKER), `storeName` (the namespace the members read the capture under), `view` (`jurisdictions.combine`'s
@@ -1622,16 +1631,18 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
        intake and a multi-part capture within the bound: a CSV's text is the entry's own decode. */
     let i2text = null, wiredTier = null, pageCount = null, pageBoxes = null, pdfPaints = null, wired = null;
     let chain = null, ocrNote = null, tier2note = null, tier2PerPage = null, t3Wanting = false, aiRead = null, structMeta = null;
-    let memberDown = false, ocrLeft = null;
+    let memberDown = false, ocrLeft = null, refusal = null;
     try {
       if (typeof entry.text === "function") {
         const parts = typeof entry.parts === "function" ? await entry.parts(bytes) : bytes;
         const tt = await entry.text(parts);
         bytes = null;
         if (tt && tt.ok !== false) { i2text = tt; wiredTier = 1; }
+        else refusal = refusalOf(tt);
       } else {
         const st = await entry.structure(bytes);
         bytes = null;   /* the parse is done: the capture's bytes are held no longer (R2, the reading's memory) */
+        if (!(st && st.ok)) refusal = refusalOf(st);
         if (st && st.ok) {
           i2text = st.text || null; wiredTier = 1;
           /* R34: a structure reader states the document's own metadata beside its text (pdf-reader R39: the /Info Title). */
@@ -1714,6 +1725,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       /* R37 (D4): a reading that read nothing says whether it can be read again: a member that was down is a cause outside
          the document, anything else is the document's own. */
       if (!wired || !wired.determined) reading.failure = memberDown ? FAILURE_TRANSIENT : FAILURE_FINAL;
+      /* R38: the entry's own final refusal (a PDF too large to read, pdf-reader R42) is carried as data the page can state. */
+      if (refusal && !wired) Object.assign(reading, refusal);
       /* R37 (F9): the OCR pages this request did not reach, the first of them (the cursor) and how many, stated on the
          reading and owed to the caller's ledger. */
       if (ocrLeft) {

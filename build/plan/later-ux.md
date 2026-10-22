@@ -67,3 +67,4 @@
 - Security · `act.scanmirror.does` says "the group's file scanner" · JOURNEY-CHECK J8 · 2026-10-22
 - Money · `refusal.MONEY_BAD_PERIOD` has no design row (money's stand-in "That period is not one this team's money records can read."); the screen draws the nearest held refusal and the plane's reason · SCREENS-INVESTIGATE J24 · 2026-10-22
 - Capture result · the reading follows (row `screen.capture.reading.pending`; stand-in `screen.document.text.unread.next`) · fix round 4b R57 · 2026-10-22
+- Attestation · `attestation.register_row_names` still says a capture held in parts is named by its parts' digests, not the whole's; since provenance R72 the whole is registered (stale wording) · F3 verification (K4508) · 2026-10-22
