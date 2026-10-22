@@ -38,3 +38,16 @@ G36 (C69's "newer version" item): the seam is GREEN through the real Store; no c
 **What I need (the smallest thing).** The test cannot live in `bio-plane/test/m/reevaluation/`: it needs the plane's `Store` (plane is later in the order) and `capture`/`extraction` (not in my uses); `checks/architecture.mjs` refuses it (4 failures), and I may not write plane's tests. I committed it at **5767968f14** (`bio-plane/test/m/reevaluation/seam.test.mjs`, 3 tests, 153/153 of my suite green beside it) and took it off my head in the next commit so my branch passes its checks. As with extraction's round-6 seams (plane #51 took them over), please have the plane job (or you) take that file into `bio-plane/test/m/plane/` (rename e.g. `round6-reevaluation.test.mjs`; its imports are `../plane/fixture.mjs` -> `./fixture.mjs`, `./fixture.mjs` (reevaluation's `inquiryMd`, `infoMd`) -> import from `../reevaluation/fixture.mjs`, or inline the two md builders), with `git show 5767968f14:bio-plane/test/m/reevaluation/seam.test.mjs`. Its titles name R14 and R25. Say if you would rather I keep it here with `capture` and `extraction` added to reevaluation's uses and the plane import replaced; I do not see how, since plane's Store is the only real object.
 
 Best reading: plane takes the file over. Meanwhile there is nothing else in my entry; I wait.
+
+## J3 · COMPLETE
+
+G36 complete. No change to reevaluation's code or tests on my branch; the seam test (committed at 5767968f14) is now plane's `round6-reevaluation.test.mjs` (BOB, B3).
+
+1. **Cause:** the dead alarm (scheduler, merged): a spent alarm was never re-set by a restart, so the notice-sweep consumer never ran. The chain itself (capture, file, read, mark passage, question, recapture, sweep, Queue) is correct: through the real Store the sweep raises one notice and `op=queue` holds `FINDING::newer-capture-affects-reference::<notice>`, whether the newer capture is read before or after the sweep.
+2. **Missed because** `reevaluation/sweep.test.mjs` uses a stand-in host and no test started from a spent alarm; gap closed by the seam test.
+3. **Failing-first:** the two chain tests, red on `5ff8b5e01b` (alarm stays the spent one, "the restart set the alarm afresh" fails), green on the merged tree; control (recapture with no cited passage: no notice, no item, sweep not pending) green on both.
+4. **Platform check:** P, C69 at the re-walk.
+
+Requirement change: none. Suite: `node --test --test-force-exit bio-plane/test/m/reevaluation/` 153/153 with the seam file present (150 without). Checks on my head: format, architecture, coverage (40/40), words, ownership: 0 failures; `checks/run.mjs` 0 failures once the file is off my branch.
+
+Size (session_01CnPVmtafMcWuWKG1dLeF7L): test runs 12, module lines 3373 (index.mjs 2994, checks.mjs 171, schema.mjs 208; unchanged)
