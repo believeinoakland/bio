@@ -84,3 +84,29 @@ Fix round 5/6, B3 and B4 together (one COMPLETE; supersedes J3's, whose R4/R11 w
 Nothing needed from BOB. Generated artifacts: the plane bundle and `agent-worker` carry scheduler source; BOB regenerates at the layer close (I changed none).
 
 Size (session_01WuSBArtKWiDTrSYjdTtS8z): test runs 17, module lines 859
+
+## J5 · COMPLETE
+
+Fix round 6, G35: a same-instant stall in the scheduler. `tranche/T51` merged first.
+
+**(1) Root cause** (`bio-plane/src/scheduler/index.mjs`, `#holding`, before: 477-505). R27 holds a registered consumer whose `wake`, read after its tick, equals the one read before and is at or before `now`. The plane's `pending-work` consumer wakes at the oldest live row's own `due_at` and runs one heavy row for each tick. Rows registered in one millisecond share a `due_at`, so after the first ends, the wake it answers is the same past instant (the next row's): read as "did not advance", the consumer was held, and the other rows waited for an `arm` outside a firing. `watch()` does not release it (`last_run` is fresh). Reproduced over the real Store (below).
+
+**(2) Why the tests missed it, and the gap fixed.** R27's tests had a consumer whose tick throws or answers a flat `{done: 1}` with a constant wake (a spin), and one that moves its wake: none with a wake shared by several rows, and no test registers rows in one millisecond. Fixed in `held-ledger.test.mjs`: three heavy rows with one `due_at`, and the control that a tick ending no row is still held.
+
+**What changed.** `index.mjs` `#holding` (`endedWork`, then `note(endedWork(r, c.key))`): a tick whose answer states rows ended (`finished` or `final` above zero, under the consumer's key or at the top of the answer) does not set the hold, so the consumer is asked again at the next firing. The hold's header comment says so. A tick that throws, ends no row, or answers `finished 0 / final 0` with the wake unchanged and past is held as before (R27 unchanged for those; the existing `held.test.mjs` passes whole). No interval added (R7). The hold of the other cause (a row retried: its `due_at` moves) needed no change.
+
+**(3) Failing-first tests** (`test/m/scheduler/held-ledger.test.mjs`, 3 tests, through `register` and `onAlarm`; the consumer has the ledger's rules and answer shape):
+- Red on `origin/tranche/T51`'s scheduler: "three heavy rows with one due_at all end" fails (rows 2 and 3 never run), and the "answers that rows ended" test fails (`nextAt` null, expected the past wake); the control passes. Green with the change: 3 of 3.
+- Also run over the **real Store, the real ledger and the door's `pendingadd`** (three `reading` rows registered under a frozen clock, one `due_at`, `readHeld` stubbed to read): red `finished` per firing `[1, 0, 0]`, green `[1, 1, 1]`, ledger empty. That file cannot live in my tests (the architecture check refuses `scheduler` importing `plane` and `extraction`, 3 findings); it is kept at `/tmp/claude-0/-home-user-bio/c82bcf59-43e3-57bd-b370-3eb2e32cda0c/scratchpad/realstore-g35.test.mjs` (ephemeral) and could be added as a plane test by plane's next job if BOB wants it; nothing is owed for G35.
+
+**(4) Platform check:** N.
+
+**Results**
+- scheduler suite: ℹ tests 151, ℹ pass 151, ℹ fail 0 (was 148).
+- users (`impact.mjs origin/tranche/T51 HEAD`: scheduler, tasks, queue, instance-setup, control-plane, plane and others, 11 modules): tasks + instance-setup + queue: ℹ tests 562, ℹ pass 562, ℹ fail 0; plane: ℹ tests 348, ℹ pass 345, ℹ fail 3: `release.test.mjs` R24 (design words; red on the base too), `l77-size.test.mjs` R77 L gate "ledger holds nothing" (child-capped memory run: fails identically with the base scheduler restored, so not this change), and `l79.test.mjs` R79 L (failed under load next to another suite; 5 of 5 pass alone with my change, and on the base).
+- `checks/run.mjs`: format 0, architecture 0 (4229 files), coverage 6656 of 6656, channels 0, words 0 failures, the words count not risen (18421 words); `ownership.mjs scheduler`: 0 failures.
+- R-OLD: no stored data involved. R-NOTMET: none. No census op, no new member sentence (no stand-in row owed). No generated artifact edited; the plane bundle and `agent-worker` carry scheduler source, BOB regenerates at the layer close.
+
+**Proposed requirement line** (BOB writes it), append to R27: "A tick whose answer states rows ended (`finished` or `final` above zero, under the consumer's key or at the top of the answer) does not set the hold, so a ledger whose rows share one instant runs one row for each firing. Test: three rows with one `due_at`, one ended for each firing; control: a tick that ends none, with the wake unchanged and in the past, is held."
+
+Size (session_01XZXdT5nUD7u924MLb4BPh1): test runs 14, module lines 905
