@@ -548,3 +548,16 @@ COMPLETE, CAPTURE #49, T51 fix round 6, wave 3: G27 (done) and G32 (capture side
 - `checks/run.mjs`: format 0, architecture 0, coverage 0 (58 of 58 for capture), words 0 failures, `unkeyed` untouched (no new sentence a member reads). `checks/ownership.mjs /home/user/bio capture tranche/T51 job/T51/capture`: 0 failures.
 
 Size (session_01Uu76H7JzhRxSdMcBjFLc6j): test runs 14, module lines 4340
+
+## J26 · COMPLETE
+
+COMPLETE (CAPTURE #49, B27 CHANGE applied; J25 stands, this adds one item). Pushed on job/T51/capture; tranche/T51 merged (BOB #255's plan).
+
+**G27, B27: an acquire whose render is pending is not read inline.** `capture/ops.mjs` `captureOp`, acquire arm: when the acquire's answer carries `render.state === "pending"` (acquisition/index.mjs:1747, the kept shell with the render running on in the object) the inline `readAcquired` and its retry are skipped, and the kept capture is answered 200 with `reading_pending: true`, `sha` and the acquire's own `render` and note, with no `diag` and no log (a deferral by choice, as the door's `deferReading` answer is; the door owes the reading to the ledger from `reading_pending` as for any deferral). `owed`, `waiting`, `deferred` and no `render` are read inline as before.
+- Failing-first, seen red then green (`g27-t51.test.mjs`, two new tests): red before the change (the pending-render answer was read, `reads` 1 not 0, and carried no `reading_pending`); green after: `reads` 0 and `store()` once (no second stub), `reading_pending`, `sha`, `render` as given, `diag` undefined; control: `render` null, `owed`, `waiting`, `deferred` each read once and answered with the reading.
+- Requirement line proposed (extends the R73 line of J25): "(G27, B27) An acquire whose answer says its render is pending (`render.state` `pending`) is not read inline: it is answered at once as `reading_pending` with the digest and the render as given, no `diag`; any other render state is read as before. Test: `g27-t51.test.mjs`."
+- Platform: the probe of J25 is unchanged; the pending case needs no object (no read is made); acquisition's half (the deferred run's reply not held resident) is ACQUISITION #29's.
+
+Tests and checks after this change: capture + cap13 + d57: 279 tests, 278 pass, 1 fail (the G32 test, red by name until acquisition's `opts.heldSha` merges). Users (the 47 files of plane, control-plane, extraction, capture-requests naming `acquire`): 372 tests, 368 pass, the same 4 failures as before and on `tranche/T51` without my commits (E3 41.5 MB, R117 C5b, R120/R121, R125 (b)). `checks/run.mjs`: format, architecture, coverage (58 of 58 for capture), words 0 failures. `checks/ownership.mjs`: 8 files, 0 failures.
+
+Size (session_01Uu76H7JzhRxSdMcBjFLc6j): test runs 17, module lines 4345
