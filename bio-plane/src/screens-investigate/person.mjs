@@ -47,7 +47,7 @@ function render(cs, view) {
   const who = P.options(view, "people", (v) => v.rows, (r) => ({ value: r.entity, text: r.name || "" }));
   const nameOf = (x) => (who.find((o) => o.value === x) || {}).text || P.plain(cs, "connection.node.unnamed");
   const docTitle = (sha) => {
-    const rows = view.data.docs && view.data.docs.state === "ok" && view.data.docs.value && Array.isArray(view.data.docs.value.held) ? view.data.docs.value.held : [];
+    const rows = P.docsAll(cs, view).rows;
     const r = rows.find((x) => x && x.capture && x.capture.sha256 === sha);
     return (r && r.title) || "";
   };
@@ -243,7 +243,7 @@ function render(cs, view) {
     /* C60: what "Connect" found, said: no document names them yet (and why: a document names them once it is matched), else how many, each listed */
     const cn = view.ui.connected;
     if (cn) {
-      const heldRows = view.data.docs && view.data.docs.state === "ok" && view.data.docs.value && Array.isArray(view.data.docs.value.held) ? view.data.docs.value.held : [];
+      const heldRows = P.docsAll(cs, view).rows;
       const titleOfBundle = (b) => { const r = heldRows.find((x) => x && x.bundle_id === b); return (r && r.title) || ""; };
       says.push(cn.n
         ? `<p class="mk-small" data-connected="${cs.esc(String(cn.n))}">${cs.w("screen.people.counts", { list: cs.w("screen.people.count." + (cn.n === 1 ? "document" : "documents"), { n: String(cn.n) }) })}</p>`

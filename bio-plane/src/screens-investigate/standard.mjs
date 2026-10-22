@@ -62,7 +62,7 @@ function render(cs, view) {
     const per = v.period || {};
     /* C61: the passage's words, as `content` places the passage (its capture and extent) read against that capture's reading; the
        document it is written in by title; never the content id */
-    const heldRows = view.data.docs && view.data.docs.state === "ok" && view.data.docs.value && Array.isArray(view.data.docs.value.held) ? view.data.docs.value.held : [];
+    const heldRows = P.docsAll(cs, view).rows;
     const same = (a, b) => JSON.stringify(Object.keys(a || {}).sort().map((k) => [k, a[k]])) === JSON.stringify(Object.keys(b || {}).sort().map((k) => [k, b[k]]));
     const passage = (t) => {
       const cq = P.later(cs, view, "content:" + t.content_id, "content", { query: { id: t.content_id } });
