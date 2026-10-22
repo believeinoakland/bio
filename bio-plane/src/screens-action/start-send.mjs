@@ -4,7 +4,7 @@
    started): prepare what is sent, approve it, give the second approval where the project asks one, and record the
    sending. Every function here is self-contained (interface-shell R21 (1)). */
 import { OPS } from "../op-declarations/index.mjs";
-import { draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, stakeAsk, readOnly, kindWord, kindsOf, officeLine, PREPARE, PREPARE_FILING, APPROVE, STAKE, SECOND, RECORD_SENT, TEMPLATE_SAVE, WRITE_HELP } from "./send-steps.mjs";
+import { draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, stakeAsk, readOnly, kindWord, kindsOf, officeLine, joinFirst, PREPARE, PREPARE_FILING, APPROVE, STAKE, SECOND, RECORD_SENT, TEMPLATE_SAVE, WRITE_HELP } from "./send-steps.mjs";
 
 // R21: `actionstake` is an owed act (`interface-shell` R73): it is registered once `op-declarations` declares it, and the
 // shell draws it as it draws every act (R12).
@@ -35,6 +35,8 @@ export const startSend = Object.freeze({
       identity: { op: "groupidentity", empty: function () { return false; } },
       vocab: { op: "affordances", query: {}, empty: function () { return false; } },
       projects: { op: "list", query: { type: "project", limit: "500" } },
+      // E9 (K4557): her own place in the action's project (`participation`): an invited member is told at the start, not refused at the end
+      standing: { op: "projectlist", query: {}, empty: function () { return false; } },
     };
     const plan = s.slice(0, at), option = s.slice(at + 1);
     const body = { plan: plan, option: option, kind: view.ui.kind || "records_request", breach: view.ui.breach === true };
@@ -73,7 +75,7 @@ export const startSend = Object.freeze({
         + '<div class="mk-acts">' + save + help + "</div>");
     },
     isRequest: function () { return false; },
-    readOnly: readOnly, kindWord: kindWord, kindsOf: kindsOf, officeLine: officeLine,
+    readOnly: readOnly, kindWord: kindWord, kindsOf: kindsOf, officeLine: officeLine, joinFirst: joinFirst,
     // R2: the preview's answer drawn: the kind, the office by its role, what it rests on, the clock, the breach, and the
     // refusal it would meet, first.
     preview: function (cs, view, pv) {

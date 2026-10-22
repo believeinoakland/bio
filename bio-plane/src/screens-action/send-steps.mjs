@@ -191,6 +191,24 @@ export function stakeAsk(cs, view) {
     + '<div class="mk-acts">' + save + (view.reachable ? cs.act("writinghelp", { data: { field: "stake", id: "action-stake", forop: "actionstake" } }) : "") + "</div>", { help: "stake.ask.help" });
 }
 
+/** E9 (K4557): a member invited to the action's project and not yet joined is told at the start that only members who have joined can
+ *  draft, approve, send or keep what speaks for the team, and is given the way to accept: a reference to the project's page, where
+ *  "Join" is drawn (the registry lists `projectjoin` on that screen and not on these; the door in place waits for the design stream,
+ *  K4559); "" for any other state, including one not read (the plane still refuses what she may not do). The state is her own
+ *  `participation` on the `projectlist` row of the action's project (`standing`, project-roster R34), read with the screen's others. */
+export function joinFirst(cs, view, project) {
+  const a = view.data.action && view.data.action.state === "ok" && view.data.action.value ? view.data.action.value : null;
+  const id = project || (a && typeof a.project === "string" ? a.project : "");
+  const r = view.data.standing;
+  const rows = r && r.state === "ok" && r.value && Array.isArray(r.value.projects) ? r.value.projects : [];
+  const hit = id ? rows.find(function (x) { return x && String(x.id) === String(id); }) : null;
+  if (!hit || hit.participation !== "invited") return "";
+  const l = view.data.projects;
+  const titled = l && l.state === "ok" && l.value && Array.isArray(l.value.bundles) ? l.value.bundles.find(function (b) { return b.bundle_id === id; }) : null;
+  return '<div class="cs-reason" role="region" data-gap="join"><p class="mk-note" role="alert">' + cs.w("refusal.PROJECT_ACT_NOT_A_PARTICIPANT") + "</p>"
+    + '<p class="mk-note">' + cs.ref("project", id, (titled && titled.title) || id, []) + "</p></div>";
+}
+
 /** The steps drawn: `o.request` adds the period, form and cost limit fields (R8) and the portal's warning and number. */
 export function sendSteps(cs, view, filings, o) {
   const P = view.parts;
@@ -203,8 +221,10 @@ export function sendSteps(cs, view, filings, o) {
   const part = function (key) { const s = cs.w(key); return /\{\w+\}/.test(s) ? "" : s; };
   const ui = view.ui;
   const n = String(ui.draftN || 0);
+  // E9 (K4557): an invited member is told at the start, and offered none of the steps that speak for the team
+  const joinFirst = P.joinFirst ? P.joinFirst(cs, view) : "";
   // R48: on `start-send` alone, the filing kept as the team's template, once approved (the step is second, send or sent)
-  const keep = !req && view.parts.templateKeep ? view.parts.templateKeep(cs, view, d, step) : "";
+  const keep = !req && !joinFirst && view.parts.templateKeep ? view.parts.templateKeep(cs, view, d, step) : "";
   // what the approval released, said once it lands (who: the member who pressed it; the day: the page's clock)
   const wasReleased = ui.releasedDone && Array.isArray(ui.releasedDone.items) && ui.releasedDone.items.length && (step === "second" || step === "send" || step === "sent") && view.me && view.me.handle
     ? ui.releasedDone.items.map(function (r) { return '<p class="mk-note">' + cs.w("screen.start-send.release.done", { who: String(view.me.handle), date: { html: cs.date(new Date(cs.now()).toISOString().slice(0, 10)) }, reason: r.reason }) + "</p>"; }).join("") : "";
@@ -212,8 +232,9 @@ export function sendSteps(cs, view, filings, o) {
     const s = d.sent.sending;
     return wasReleased + '<p class="mk-note" role="status">' + cs.w("screen.start-send.sent", { date: { html: cs.date(s.sent_on || s.at) } })
       + (s.reference ? " · " + cs.w("screen.start-send.reference", { reference: s.reference }) : "") + "</p>"
-      + '<a class="cs-ref" href="/app/action/' + encodeURIComponent(view.subject) + '" data-nav>' + cs.w("screen.start-send.openaction") + "</a>" + keep;
+      + '<a class="cs-ref" href="/app/action/' + encodeURIComponent(view.subject) + '" data-nav>' + cs.w("screen.start-send.openaction") + "</a>" + keep + joinFirst;
   }
+  if (joinFirst) return joinFirst + nosend;
   if (step === "second") {
     // R3: while a second approval waits, the screen says so and offers no send.
     return wasReleased + '<p class="mk-note" role="status">' + cs.w("screen.start-send.waitsecond") + "</p>"
