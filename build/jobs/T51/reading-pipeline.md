@@ -182,3 +182,17 @@ So the merged reader changes none of these seven figures: the index bound and th
 Tests after the merge: module + d606 + tier2-wire + pdf-worker-binding `tests 193, pass 193, fail 0`; `checks/ownership.mjs ... job/T51/reading-pipeline`: `0 failures`. No file changed in this entry other than the merge.
 
 Size (session_01SnD31Lo4LuZRr5JLS6rug9): test runs 12, module lines 2183
+
+## J9 · QUESTION
+
+QUESTION (G6, R39; best reading given; I carry on with it)
+
+`read` now refuses a bare digest stub (no parts, no `capture.bytes`, no `retrieved`, no profile) with `{refused: {code: "BARE_DIGEST", why}}` and NO `reading` key (R39). Failing-first seen red, then green.
+
+**This breaks one consumer test outside my module, by design of the entry:** `bio-plane/test/m/extraction/r80.test.mjs:60` ("R80 R31 R32: after the repair the OCR re-read ... runs"): `readHeld` of a WHOLE digest registered by parts only finds no stored document (`#storedDocument`, index.mjs:679) and hands `read` the stub `{capture:{sha256: digest}}`; `read` now refuses, and `writeReading` (index.mjs:871) throws on `out.reading` undefined. The same stub is built at extraction/index.mjs:1506. `read` cannot tell a part digest from a whole one (the 8 MiB part and a real 8 MiB whole look alike), so a stub can only be refused.
+
+**What extraction's G6 job must therefore do (my reading of "extraction: resolve a part digest to its document or refuse, write nothing for a bare part"):** (a) never hand `read` a stub: for a WHOLE it reads, build the document with at least `capture.bytes` (the size `ev.head` answers, or the register's `total`), so it is no stub; (b) treat `out.refused` as "write nothing" (`left("BARE_DIGEST")`), never reach `writeReading` with no reading; (c) r80.test.mjs:60 and any test that reads a whole through a stub change with it. Until that job merges, extraction's R80 repair test is red on my branch; this is the only red I found in the direct users (extraction 35 files, content, events): 474 of 475.
+
+Contract extraction can rely on (to be R39): a stub answers exactly `{refused: {code: "BARE_DIGEST", why}}`; `refused` is absent from every other answer except R40's.
+
+If you want a different contract (for example the refusal also carrying a failed `reading` marked `transient` so an old caller never crashes), say so; I would then add it. Waiting on nothing: I continue with G13.
