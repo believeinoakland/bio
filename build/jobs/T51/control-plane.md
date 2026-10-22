@@ -584,3 +584,7 @@ Size (session_01X5bP76qJ2j296J7FB51rWp): test runs 30, module lines 4,620
 ## J28 · COMPLETE
 
 control-plane re-complete (B43): visitor-copy test updated to acquisition R106 (alarm half passes); r117-held R117 root cause = real Miniflare booting in the same process holds the first request ~17 s so the door's own R120 clock arm owes the reading (test depended on wall time); fixed by pinning acquireBoundMs in part one, 8/8 green; delivery contract (opened_by, project, answer.document, recordFetchDone) as stated. Details in the record.
+
+## B44 follow-up
+
+B44 read (it crossed J28, which answers B43). With acquisition merged, the G2 seam was run against the tranche: still red, `acquire` of the 15,932,155 B file answers in 22.2 s (39.8 s with the tick wait), the no-length case in 21.3 s, 1 MB control green. The hand-off needs the plane's `owe` (`fetch` kind, `PENDING_KINDS`) and capture's `openCaptures`/`fetch_done`, unmerged; red by name until plane and capture merge.
