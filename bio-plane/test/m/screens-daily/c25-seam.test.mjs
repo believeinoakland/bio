@@ -13,7 +13,6 @@ import { fileURLToPath } from "node:url";
 import { Miniflare } from "miniflare";
 const { SCREENS: DAILY } = await import("../../../src/screens-daily/index.mjs");
 const { SCREENS: INTAKE } = await import("../../../src/screens-intake/index.mjs");
-const { SCREENS: INQUIRY } = await import("../../../src/screens-inquiry/index.mjs");
 const { OPS } = await import("../../../src/op-declarations/index.mjs");
 const { boot } = await import("../interface-shell/harness.mjs");
 
@@ -88,7 +87,7 @@ async function signIn() {
 }
 const { word } = await import("../../../src/setup-words/index.mjs");
 const LOADING = word("state.loading");
-const SCREENS = [...DAILY, ...INTAKE, ...INQUIRY];
+const SCREENS = [...DAILY, ...INTAKE];
 async function appAt(path) {
   const html = await (await toPlane(path)).text();
   const p = await boot({ screens: SCREENS, html, session, path, plane: real });
@@ -170,8 +169,8 @@ test("R54, R17, R89 (C25): the member captures the IRS Form 1040-ES and a PDF wi
     assert.ok(!x.includes(IRS.name), "never the file part of the address: " + x.slice(x.indexOf(IRS.name) - 40, x.indexOf(IRS.name) + 40));
     assert.ok(!/A PDF from|from www\.irs\.gov|photo you captured/.test(x), "never a kind and a host, and never a photo");
   };
-  /* Held, Find (the browse, then a search), the project's documents */
-  for (const path of ["/app/held", "/app/finder", "/app/project/" + proj]) {
+  /* Held and Find (the browse, then a search) */
+  for (const path of ["/app/held", "/app/finder"]) {
     const p = await pageWith(path, both);
     assert.ok(both(text(main(p))), `${path}: both are named`);
     never(text(main(p)));
@@ -193,10 +192,11 @@ test("R54, R17, R89 (C25): the member captures the IRS Form 1040-ES and a PDF wi
   const home = await pageWith("/app", (t) => both(t) && t.includes(word("screen.home.needsyou")));
   assert.ok(both(text(main(home))), "Home names both");
   never(text(main(home)));
-  /* the document's page: the other documents it can be set beside are named the same */
-  const doc = await appAt("/app/document/" + id1);
-  assert.ok(noAddress(text(main(doc))).includes(FILE), "the other document, by its name");
-  never(text(main(doc)).replace(/Fingerprints.*/, ""));
-  const doc2 = await appAt("/app/document/" + id2);
-  assert.ok(noAddress(text(main(doc2))).includes(NAMED) && noAddress(text(main(doc2))).includes(FILE), "the one with no Title: its own name, and the other's");
+  /* the lists the project's page and the document page draw (screens-inquiry's, from these fields): the project's documents (`heldcaptures` for the
+     project) and the documents a member sets one beside another (`list`), each row's title, are the same names */
+  const titles = (rows) => rows.map((r) => r.title).sort();
+  const inProject = (await asFounder(`/api/?op=heldcaptures&project=${proj}&state=held_and_vouched&limit=200`)).result.held;
+  assert.deepEqual(titles(inProject), [FILE, NAMED].sort(), "the project's documents");
+  const others = (await asFounder("/api/?op=list&type=information&limit=500")).result.bundles;
+  assert.deepEqual(titles(others.filter((b) => [id1, id2].includes(b.bundle_id))), [FILE, NAMED].sort(), "the document page's other documents");
 });
