@@ -106,7 +106,31 @@ export const grouprules = {
       const kv = data.fields && data.fields.state === "ok" && data.fields.value ? (() => { const f = (Array.isArray(data.fields.value.fields) ? data.fields.value.fields : []).find((x) => x.field === "applies_to"); return Array.isArray(f && f.choices) ? f.choices.map(String) : []; })() : [];
       const appOpts = kv.map((id) => ({ value: id, text: id === "claim" ? T(S + "app.claim") : kindName(id) }));
       const bearOpts = kv.filter((id) => id !== "claim").map((id) => ({ value: id, text: kindName(id) }));
-      const docs = okv(data.docs) && Array.isArray(data.docs.value.held) ? data.docs.value.held.filter((r) => r && r.capture && typeof r.capture.sha256 === "string" && r.capture.sha256).map((r) => ({ value: r.capture.sha256, text: r.title || "" })) : [];
+      // G20 (K4571): the picker is the page `reads()` asked for and, while the answer says `truncated` with a `next`, the pages the cursor names
+      // (1000 rows each, twice at most, kept in `view.ui.later` and drawn on arrival); past that it says how many it shows, and a search narrows by title
+      const first = okv(data.docs) && Array.isArray(data.docs.value.held) ? data.docs.value : null;
+      const held = first ? first.held.slice() : [];
+      const L = view.ui.later || (view.ui.later = {});
+      let cur = first, k = 1, waiting = false;
+      while (cur && cur.truncated && typeof cur.next === "string" && cur.next && k < 3) {
+        const key = "docs:" + k, query = { state: "held_and_vouched", fields: "picker", limit: "1000", after: cur.next }, qs = JSON.stringify(query);
+        if (!L[key] || L[key].q !== qs) {
+          L[key] = { q: qs, state: "loading", value: null };
+          const settle = (x) => { L[key] = Object.assign({ q: qs }, x); cs.set("later", L); };
+          cs.call("heldcaptures", { query }).then((a) => {
+            const r = a && typeof a === "object" && a.result !== undefined ? a.result : a;
+            settle(a && a.ok !== false && r && typeof r === "object" && r.ok !== false && Array.isArray(r.held) ? { state: "ok", value: r } : { state: "failed", value: null });
+          }, () => settle({ state: "failed", value: null }));
+        }
+        const x = L[key];
+        if (x.state !== "ok") { waiting = x.state === "loading"; break; }
+        for (const r of x.value.held) held.push(r);
+        cur = x.value; k++;
+      }
+      const moreDocs = !waiting && !!(cur && cur.truncated);
+      const docs = held.filter((r) => r && r.capture && typeof r.capture.sha256 === "string" && r.capture.sha256).map((r) => ({ value: r.capture.sha256, text: r.title || "" }));
+      const docQ = String(ui.docq || "").trim().toLowerCase();
+      const shownDocs = docQ ? docs.filter((d) => d.text.toLowerCase().includes(docQ)) : docs;
       const timeEg = new Date(Date.UTC(2000, 0, 1, 17, 0)).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "UTC" });
       let f = "";
       f += choiceOf("gr-kind", "kind.label", [["deadline", "kind.deadline"], ["fact", "kind.fact"]]) + help("kind.help1", "kind.help2");
@@ -133,7 +157,11 @@ export const grouprules = {
       f += cs.field("gr-eff", S + "eff.label", { help: S + "eff.help1", max: 10, autocomplete: "off" });
       f += `<div data-part="source">`
         + cs.checks("gr-src", S + "src.legend", [["held", S + "src.held", true], ["first", S + "src.first", false]], { radio: true }) + help("src.help2")
-        + (docs.length ? cs.choice("gr-doc", S + "doc.label", docs, {}) + help("doc.help1") : cs.state({ state: "empty" }, () => ""))
+        + (docs.length > 1 ? cs.field("gr-doc-q", "form.choose.search", { value: String(ui.docq || ""), typing: (cs2, view2, value) => { cs2.set("docq", String(value || "").trim()); } }) : "")
+        + (!docs.length ? cs.state({ state: "empty" }, () => "")
+          : shownDocs.length ? cs.choice("gr-doc", S + "doc.label", shownDocs, {}) + help("doc.help1")
+          : `<p class="mk-small" data-note="nodocs">${W("form.choose.search.none")}</p>`)
+        + (moreDocs ? `<p class="mk-small" data-docs-more>${W("screen.people.more", { n: String(docs.length) })}</p>` : "")
         + cs.field("gr-pass", S + "pass.label", { area: true, rec: true, max: 4000, help: S + "pass.help1" }) + help("pass.help2")
         + (ui.passMiss ? `<p class="mk-msg" data-note="passage">${W(S + "pass.notfound2")}</p>` : "")
         + "</div>";
