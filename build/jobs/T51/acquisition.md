@@ -457,3 +457,21 @@ Orphans: a kept render's page and bodies are content-addressed objects named by 
 
 Deferred: none. Found in another module: `capture-sources` `render.mjs:629` parses the whole reply with `r.json()`; the parse alone needs about twice the reply in old space (above); not needed for the alpha.
 Size (session_01Y4v2DQazrd7Uhg2kPv1nLA): test runs 14 (acquisition 3, users 2 batches, base comparison 1, checks 3, child and probes 5), module lines 3973 (src/acquisition)
+
+## J30 · COMPLETE
+
+COMPLETE (ACQUISITION #29, T51 fix round 6: G27 and G32; B30 CHANGE done, B31 followed). Pushed on job/T51/acquisition; the record's "Fix round 6 · ACQUISITION #29" section has file:line, the tables and the proposed lines.
+
+**What changed** (`acquisition/index.mjs`)
+- G32 (:884, :980): `opts.heldSha` (64 lowercase hex, in process only, anything else ignored) is honoured for any caller exactly as `crHeldSha` is: validators from `cap.validatorsOf`, not with a render, the 304 answer unchanged and reading no body, parking and the R1 fence untouched. Capture's `acquire` arm passes it. Named requirement line: **R22 amended**.
+- G27 (:1459, `keepReply` :1773, `replyOfKept` :1791, `finishRender` :2144): the render `acquire` did not wait for is kept in the evidence store the moment it returns (its page and each body, content-addressed), its reply dropped; the pending render holds only digests. "Finish it" and the alarm file the same pair a waited render files: one render, one charge. A failed render stays small; a record that refuses a piece leaves the reply held as before; a kept page the record no longer holds is rendered again once (R99). The inline read skipped while `render.state` is pending is capture's (B31).
+
+**Failing first** (g27-g32-t51.test.mjs, 8 tests, g27-memory-child.mjs): red then green: the rendered page held at once (false -> true); heap after the request ended 56.0 MiB above where it began -> 0.07 MiB (the walker's case, six 7 MiB bodies, `--expose-gc`); `opts.heldSha`: 3,145,728 bytes pulled -> 0, `unchanged`, no document. Controls (credential on its own host with the condition beside it, a changed source, no or bad digest, a failed render, a refusing record) hold before and after.
+
+**Platform check (L)**, raw workerd with `--max-old-space-size` (g27-workerd.probe.mjs, committed): smallest old space completing, before -> after: 14 MiB reply + 90 MiB later 132 -> 120 MB; 42 MiB + 90 MiB 167 -> 124 MB. The 124 MB floor is the renderer reply's own parse (`render.mjs:629`, capture-sources', about twice the reply); not needed for the alpha.
+
+**Suites and checks**: acquisition 247/247. Users of `acquire` (capture, capture-requests, doorbell, monitoring, file-safety, standards, control-plane, plane, cap13, d57): 1,642 tests, 8 fail, all 8 fail identically on tranche/T51 without my commit (file-safety rows R24; control-plane t51-held-failed, t51-large-pdfs, t51-round5-press-seam x3, t51-round5-seam; plane l77-size). checks/run.mjs: format 0, architecture 0, coverage 6656/6656, words 18421 (unchanged), 0 failures; ownership 0.
+
+**Proposed lines**: R22 amended; R109 new (the deferred render is kept in the record); one word stand-in owed to the design: `acquisition.index.render_page_not_read_back`. Census: no op key changed.
+
+Size (session_01Y4v2DQazrd7Uhg2kPv1nLA): test runs 14, module lines 3973
