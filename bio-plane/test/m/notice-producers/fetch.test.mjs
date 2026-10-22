@@ -61,12 +61,22 @@ test("R27 R1: the read is in pages, and a record older than 90 days is not told;
   }
 });
 
-test("R27: seam over the real capture's fetch_done record (waits for capture's merge: red by name until then)", () => {
+test("R27: seam over the real capture's fetch_done record: recorded once, told once to its opener, never to another", async () => {
+  const { captureOf } = await import("../../../src/capture/index.mjs");
   const w = world({});
   w.exec(`CREATE TABLE IF NOT EXISTS duties (duty_id TEXT, obligor TEXT)`);
-  const n = fresh(w.host, { membership: w.membership, capture: undefined });
-  const r = reader(n).read("m1", { now: Date.parse("2026-10-21T00:00:00Z") });
-  assert.ok(!r.facts.failed.includes("capture"), "capture publishes fetchesDone (QUESTION J2)");
+  const cap = captureOf(w.host);
+  cap.migrate();
+  const at = "2026-10-20T10:00:00Z";
+  assert.deepEqual(cap.recordFetchDone({ session: "s1", document: "INFO-1", opener: "member:m1", project: null, at }), { recorded: true });
+  assert.deepEqual(cap.recordFetchDone({ session: "s1", document: "INFO-1", opener: "member:m1", at }), { recorded: false });
+  const read = reader(fresh(w.host, { membership: w.membership, capture: undefined })).read;
+  const now = Date.parse("2026-10-21T00:00:00Z");
+  const mine = read("m1", { now });
+  assert.ok(!mine.facts.failed.includes("capture"));
+  assert.deepEqual(ofKind(mine, KIND).map((i) => i.id), ["FINDING::fetch-done::s1"]);
+  assert.deepEqual(ofKind(read("m1", { now }), KIND).map((i) => i.id), ["FINDING::fetch-done::s1"]);
+  assert.deepEqual(ofKind(read("m2", { now }), KIND), []);
 });
 
 test("R27: a record older than the 90-day window is told to nobody", () => {
