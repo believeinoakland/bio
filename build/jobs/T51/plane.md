@@ -443,3 +443,12 @@ COMPLETE (PLANE #50, B33-B36). Pushed on job/T51/plane. What changed: pending.mj
 Size (session_01AipmqTnUkdaqEHwuH2y95j): test runs 22, module lines 3070
 
 **Ring failed (PLANE #50, J29):** the BOB session read from `mail addr --bob` (session_01G6Txo7f9iCv4SnYdk5Zypv) is archived, so no doorbell was rung; the pushed COMPLETE is the message and the backstop reads it (mechanics §13).
+
+## Record: B38 (PLANE #50), traffic and a due entry
+
+**Root cause (certain, reproduced).** `bio-plane/src/plane/pending.mjs` consumer `wake` (was :221) answered `Math.max(due, at)`, "now" for any due entry. The scheduler's R27 (`scheduler/index.mjs:462-467`, `#holding`) holds a registered consumer whose `wake`, read after its tick, equals the one read before it and is at or before the firing's `now`, so it cannot spin the alarm. After a pass that went on (an `ocr` pass with pages left, due again at once) both reads were "now": the consumer was held, the alarm was set for the next other consumer (hours, a day), and the entry waited for an `arm` made outside a firing (a start, another producer's registration). It is not traffic that postpones it; traffic only sometimes supplied the release. Node: `nextAt` 25,007,285 ms after the tick; workerd (Miniflare): pass 2 never began in 60 s with no request at all (`l75/ocr` entry, 2 s a pass).
+**Why the tests missed it.** Every ledger test fired `onAlarm(now)` by hand for each pass, which is what the alarm the platform keeps would not do; none read the alarm the tick left set.
+**Fix.** `wake` answers the entry's own due instant, never raised to "now" (a pass that went on moves it), so R27 sees a changed wake and the alarm stays set for the due time.
+**Failing-first.** `fix5-r77.test.mjs` "R77 (B38)": after pass 1 the alarm must be within 250 ms of the tick; red (25,007,285 ms), green after; three passes with no request between them. `l77-traffic.test.mjs` (workerd, real alarm): a quiet entry and one with a request every 4 s both begin their passes at 5, 2013, 4021 ms and 6, 2017, 4027 ms (a pass takes 2000); before the fix pass 2 never began in 60 s.
+**control-plane's `t51-hops` E10 (i):** green (2 of 2) with the server-timing header.
+**Suites.** plane 320 tests, 319 pass, 1 fail (R24 `release.test.mjs`, stale setup-words rows, red on the tranche before); `checks/run.mjs` 0 failures. Still owed: the `l77-size` gate (B37) when BOB says roster-reader is merged.

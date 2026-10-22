@@ -256,9 +256,12 @@ export function pendingOf(ctx, deps = {}) {
     consumer() {
       return {
         name: PENDING_NAME, key: "pendingwork",
-        /* a row found started by an isolate that is gone is reaped at the next alarm, not at its back-off */
+        /* a row found started by an isolate that is gone is reaped at the next alarm, not at its back-off. `wake` is the entry's own due
+           instant, never raised to "now": the scheduler holds a consumer whose wake, read after its tick, equals the one read before it and
+           is in the past (its R27, against a spin), so a wake clamped to the tick's instant looked unchanged after a pass that went on and
+           the entry, due again at once, waited for an arm outside a firing (fix round 5, B38). A pass that went on moves its due instant. */
         due: (at) => { const n = next(); return (n !== null && n <= at) || startedRows().length ? at : null; },
-        wake: (at) => { const n = next(); return startedRows().length ? at : n === null ? null : Math.max(n, at); },
+        wake: (at) => { const n = next(); return startedRows().length ? at : n; },
         tick: async (at) => {
           const out = { asked: 0, finished: 0, retried: 0, final: 0, results: [] };
           reapInterrupted();

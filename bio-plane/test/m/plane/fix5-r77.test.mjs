@@ -164,3 +164,21 @@ test("R78 (E10): every route the object serves answers `server-timing: object;du
   const other = await x.fetch("/ailimits?cls=member&viewer=member:ann");
   assert.match(other.headers.get("server-timing"), shape, "a second kind of route");
 });
+
+test("R77 (B38): an entry that went on and is due again at once keeps the alarm set for its due time, so no traffic or arm is needed to work it and none postpones it (the scheduler's R27 held it as a consumer whose wake had not changed)", async () => {
+  const d = sha("a scan whose pass left pages");
+  let passes = 0;
+  const x = await world(undefined, () => ({ ok: true, read: true, owed: ++passes < 3, why: "READING_HELD" }));
+  await pendingOf(x.ctx).owe({ kind: "ocr", sha: d });
+  let at = Date.now() + 1000;
+  for (let i = 1; i <= 3; i++) {
+    const r = await x.s.onAlarm(at);
+    if (i < 3) {
+      assert.ok(r.nextAt !== null && r.nextAt <= at + 250, `after pass ${i} the alarm is set for the entry's due time (${r.nextAt === null ? "none" : r.nextAt - at} ms after the tick, not a day)`);
+      assert.ok(await x.ctx.storage.getAlarm() <= at + 250);
+    }
+    at += 1000;
+  }
+  assert.equal(passes, 3, "three passes, one for each alarm, with no request between them");
+  assert.deepEqual(rows(x), []);
+});
