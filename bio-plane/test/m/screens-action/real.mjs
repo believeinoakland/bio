@@ -11,6 +11,8 @@ import { entitiesOps } from "../../../src/entities/index.mjs";
 import { actionClocksOf, actionClocksOps } from "../../../src/action-clocks/index.mjs";
 import { get as profileOf, combine } from "../../../../jurisdictions/index.mjs";
 import { OP_ALIASES } from "../../../src/op-declarations/index.mjs";
+import { membershipOps } from "../../../src/membership/index.mjs";
+import { projectRosterOps } from "../../../src/project-roster/index.mjs";
 import { boot as bootSetup } from "../instance-setup/fixture.mjs";
 import { open, ok, DATA_PLANE } from "./page.mjs";
 
@@ -24,10 +26,13 @@ export function realWorld(profile = "oakland-alameda") {
   return x;
 }
 
-/** The door's stamps and envelope around each owner's op: `member` is the session's member (the viewer and the author). */
-export function realPlane(x, member = V("olive"), base = DATA_PLANE) {
+/** The door's stamps and envelope around each owner's op: `member` is the session's member (the viewer and the author). With `roster`, the
+ *  real `membership` (`projectjoin`) and `project-roster` (`projectlist`, her own `participation` in each project) answer too, the door
+ *  stamping `by` (the member's id) for them as it does for a roster act (E9, K4557). */
+export function realPlane(x, member = V("olive"), base = DATA_PLANE, { roster = false } = {}) {
   const owners = [(url, body) => filingsOps(x.f, url, body), (url, body) => actionsOps(x.actions, url, body), (url, body) => entitiesOps(x.ents, url, body),
     (url, body) => actionClocksOps(x.clocks, url, body)];
+  if (roster) owners.push((url, body) => membershipOps(x.w.membership, url, body, {}), (url, body) => projectRosterOps(x.roster, url, body, {}));
   const plane = {};
   const names = new Set();
   for (const make of owners) for (const op of Object.keys(make(new URL("http://do/"), null))) names.add(op);
@@ -38,6 +43,7 @@ export function realPlane(x, member = V("olive"), base = DATA_PLANE) {
       const url = new URL(req.url, "http://do");
       url.searchParams.set("viewer", member);
       url.searchParams.set("author", member);
+      if (roster) url.searchParams.set("by", String(member).replace(/^member:/, ""));
       const body = req.body && typeof req.body === "object" ? { ...req.body } : req.body;
       if (op === "entitycreate" && body && typeof body === "object") body.declaredBy = member;
       for (const make of owners) {

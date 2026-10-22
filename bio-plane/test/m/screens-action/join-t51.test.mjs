@@ -2,8 +2,7 @@
    who have joined can draft, approve, send or keep what speaks for the team, and given the way to accept; the steps are not offered and then
    refused. The state is her own `participation` on the `projectlist` row of the action's project (project-roster R34), read with the screen's
    other reads. Every sentence is asserted by its key (R19). Three groups: the screens at their interface (scripted plane), the same member's
-   whole path over the REAL membership and filings (`join-seam-t51.test.mjs`), and the door to accept in place (registry-bound, red by name
-   until the registry lists `projectjoin` on these screens). */
+   whole path over the REAL membership and filings (`join-seam-t51.test.mjs`), and the door to accept in place (a `test.todo`, K4559). */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { open, main, text, ops, press, button, last, ok, W, DATA_PLANE, ROSTER, PROJECT, ACTION_ID, ACTION, FILING, FILINGS, READ, draft, ACTIONS } from "./page.mjs";
@@ -34,7 +33,7 @@ const writes = (p) => p.requests.filter((r) => r.op && WEIGHTY.includes(r.op));
 /** The sentence is drawn, the way to accept is the project's page (until the registry lists the door in place), no weighty act is drawn or sent. */
 function told(p, what) {
   assert.ok(text(p).includes(W(NOT_JOINED)), `${what}: the held sentence`);
-  assert.ok(main(p).querySelector(`a[href="/app/project/${PROJECT}"]`) || button(p, "projectjoin"), `${what}: the way to accept`);
+  assert.ok(main(p).querySelector(`a[href="/app/project/${PROJECT}"]`), `${what}: the way to accept: the project's page, where Join is drawn`);
   for (const op of WEIGHTY) assert.ok(!button(p, op), `${what}: no ${op}`);
   assert.equal(writes(p).length, 0, `${what}: nothing sent`);
 }
@@ -92,17 +91,8 @@ test("E9 (R30): on the Action dashboard an invited member is not offered the app
   assert.ok(button(await open("/app/dash-action", plane("joined")), "filingapprove"), "control: a joined member approves here");
 });
 
-/* ---------- the door to accept, in place: the registry-bound half (red by name until the registry lists `projectjoin` on these screens) ---------- */
+/* ---------- the door to accept, in place ---------- */
 
-test("E9 (R3): pressing 'Join' beside the sentence accepts the invitation in place, sends projectjoin for the action's project, and the steps appear", async () => {
-  let state = "invited";
-  const plane = { ...planeAt("invited", { filingsfor: () => ok(FILINGS([])) }), projectlist: () => ok({ ...ROSTER, projects: ROSTER.projects.map((r) => (r.id === PROJECT ? { ...r, participation: state } : r)) }),
-    projectjoin: () => { state = "joined"; return ok({ ok: true }); } };
-  const p = await open(STEP2, plane);
-  assert.ok(button(p, "projectjoin"), "the door is drawn in place beside the held sentence (the registry lists `projectjoin` on start-send)");
-  assert.ok(!button(p, "communicationprepare"));
-  await press(p, "projectjoin");
-  assert.deepEqual(last(p, "projectjoin").query, { projectId: PROJECT });
-  assert.ok(button(p, "communicationprepare"), "joined: the steps are offered");
-  assert.ok(!text(p).includes(W(NOT_JOINED)));
-});
+/* K4559 (BOB, K208): the registry lists `projectjoin` on `projects` and `project` and not on `action`, `request` or `start-send`, and the registry is the design
+   stream's; the door drawn beside the sentence, and the steps appearing at its press, wait for T52 (K4269). The way to accept today is the project's page. */
+test.todo("K4559: pressing 'Join' beside the sentence accepts the invitation in place, sends projectjoin for the action's project, and the steps appear (T52: the registry lists `projectjoin` on action, request and start-send)");

@@ -192,10 +192,10 @@ export function stakeAsk(cs, view) {
 }
 
 /** E9 (K4557): a member invited to the action's project and not yet joined is told at the start that only members who have joined can
- *  draft, approve, send or keep what speaks for the team, and is given the way to accept; "" for any other state, including one not
- *  read (the plane still refuses what she may not do). The state is her own `participation` on the `projectlist` row of the action's
- *  project (`standing`, project-roster R34), read with the screen's others, never a read of its own. The door is `projectjoin` where the
- *  registry lists it for the screen (`cs.act` answers "" where it does not); else a reference to the project's page, where it is. */
+ *  draft, approve, send or keep what speaks for the team, and is given the way to accept: a reference to the project's page, where
+ *  "Join" is drawn (the registry lists `projectjoin` on that screen and not on these; the door in place waits for the design stream,
+ *  K4559); "" for any other state, including one not read (the plane still refuses what she may not do). The state is her own
+ *  `participation` on the `projectlist` row of the action's project (`standing`, project-roster R34), read with the screen's others. */
 export function joinFirst(cs, view, project) {
   const a = view.data.action && view.data.action.state === "ok" && view.data.action.value ? view.data.action.value : null;
   const id = project || (a && typeof a.project === "string" ? a.project : "");
@@ -205,9 +205,8 @@ export function joinFirst(cs, view, project) {
   if (!hit || hit.participation !== "invited") return "";
   const l = view.data.projects;
   const titled = l && l.state === "ok" && l.value && Array.isArray(l.value.bundles) ? l.value.bundles.find(function (b) { return b.bundle_id === id; }) : null;
-  const door = cs.act("projectjoin", { label: "act.projectjoin.label.project", data: { project: id } });
   return '<div class="cs-reason" role="region" data-gap="join"><p class="mk-note" role="alert">' + cs.w("refusal.PROJECT_ACT_NOT_A_PARTICIPANT") + "</p>"
-    + '<div class="mk-acts">' + (door || cs.ref("project", id, (titled && titled.title) || id, [])) + "</div></div>";
+    + '<p class="mk-note">' + cs.ref("project", id, (titled && titled.title) || id, []) + "</p></div>";
 }
 
 /** The steps drawn: `o.request` adds the period, form and cost limit fields (R8) and the portal's warning and number. */
@@ -504,13 +503,6 @@ export const RECORD_SENT = Object.freeze({
     return { body: body };
   },
   refusals: { SENT_REFERENCE_MALFORMED: "screen.request.reference.malformed", SECOND_APPROVAL_NEEDED: "screen.start-send.waitsecond" },
-});
-
-export const JOIN = Object.freeze({
-  // E9 (K4557): "Join", the invitation accepted in place (membership's `projectjoin`); the screen reads her place again, now joined, and
-  // draws the steps. Registered by a screen once the registry lists it there.
-  op: "projectjoin", label: "act.projectjoin.label.project", rereads: ["standing"],
-  send: function (view, el) { return el.dataset.project ? { query: { projectId: el.dataset.project } } : null; },
 });
 
 /** The assistant's help with one own-words field (`wizard-scripts` R27, DEC-153): drawn only while it is reachable, by the
