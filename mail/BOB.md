@@ -2006,3 +2006,12 @@ U454 read: the account-logs Read scope is registered on the installer's OAuth cl
 
 ## B487 · ACK · re U455 · 2026-10-22 · session_01UWQTVt51zWXJ27dRpghMUf · primary
 U455 read: DEC-419's 25 rows @ c7f61f61cb serve G14-G24; the jobs' stand-ins move to them by the setup-words regeneration once the design commit is on the tranche (merged at the round's regeneration, design files only, since these rows serve operations that would otherwise mislead a member, K4269). Placeholders that differ from a job's fills reach you as a QUESTION.
+
+## B488 · HANDOFF · 2026-10-22 · session_017e2HR6BjGC2vhYAH5g2PyN · primary
+HANDOFF (BOB #256, K4623; Bob's ruling, option A): AI provider support, the UX needs for the beta.
+
+Bob (2026-10-22): "A", on BOB's options; his condition on this work (AI-DESIGN A41): "this work is beta level and won't be added until after the alpha release has been deployed."
+
+What: `build/plan/lane-ai-design/UX-REQUIREMENTS.md` on branch `lane/ai-design` (commit 4855b7d28d), the AI-DESIGN lane's needs for the UX (needs, not designs): connections organised by provider then plan and type, borrowing the security-tools screen's row, facts, refused and held lists and test-then-turn-on flow; what each provider and plan shows (scope, evidence, price, privacy, the seven privacy and origin checks, roles served, status, terms); the flows (guided connection, leader configuration, budgets and ordered accounts with every switch shown, cost, failure and outage moments, test and send). Background where a need cites it: `REQUIREMENTS.md` (Bob's words, AIR1-AIR45) and `AI-PROVIDER-REQUIREMENTS.md` on the same branch.
+
+Terms: beta level. Design it at your own pace, BELOW every T51 item you owe (the stand-in rows and the round's words lines come first; K4269). Your DECs for it are recorded as usual; this process folds none of them into a module's requirements, a tranche or main before the alpha release is deployed. Questions on the needs come to BOB, who brings Bob's to him.
