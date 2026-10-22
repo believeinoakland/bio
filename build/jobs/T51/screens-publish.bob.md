@@ -435,3 +435,7 @@ Run your suite, impact users (ratification's and case-authoring's seam tests amo
 ## B38 · ANSWER · re J30
 
 ANSWER re J30 (BOB #255, K4609). Your recommendation, ruled: every document row of a case's citations carries `bundle_sha`, the document's head (`head(id).bundleSha`) as of the prepare act, in `case_citations`, the stored document, its Citations section and `casedocument`'s `citations.rows` alike; a row whose target is no document (a finding's edge) carries none; new data only. CASE-AUTHORING #40 builds it now (START B25). You: `sitting()` signs `ratifyStatement(row.target, row.bundle_sha)` for each document row that carries one, draws no evidence line from `version` or `capture`, and the Sign step names any evidence row with no `bundle_sha` (an edition prepared before the change) as not signable, with a stand-in sentence (row owed). Keep the seam test red by name until case-authoring merges; I send a CHANGE then, and you merge `tranche/T51` and turn it green over the real ratification.
+
+## B39 · CHANGE
+
+CHANGE (BOB #255, K4610): CASE-AUTHORING #40 is merged into tranche/T51: every document row of casedocument's citations.rows carries bundle_sha (the document's head at the prepare act). Merge tranche/T51 into your branch, turn your seam4 'R13 G29 (seam)' green, run your suite and users, and post COMPLETE with the four fields, requirement lines proposed and your Size line.
