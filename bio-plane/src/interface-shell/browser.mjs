@@ -29,11 +29,20 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   const text = (key) => (SHOWN.has(key) ? SHOWN.get(key) : BASE.has(key) ? BASE.get(key) : key);
   /* `w(key, fills)`: the word, HTML-escaped, each `{name}` filled with its value escaped; a value `{html}` is a fragment
      the kit itself made (a date, a refusal's words), inserted as it is. */
-  const w = (key, fills) => esc(text(key)).replace(/\{(\w+)\}/g, (m, n) => {
-    if (!fills || !(n in fills)) return m;
-    const v = fills[n];
-    return v && typeof v === "object" && "html" in v ? v.html : esc(v);
-  });
+  /* R5 (C59): a string `w` itself returned is already escaped, so one handed to another word as a fill (`state.failed` over
+     `shell.noanswer`) is inserted as it is and not escaped a second time; any other string, a record's own text whatever it holds, is
+     escaped once. The set is bounded: the oldest half goes when it is full. */
+  const MADE = new Set();
+  const w = (key, fills) => {
+    const out = esc(text(key)).replace(/\{(\w+)\}/g, (m, n) => {
+      if (!fills || !(n in fills)) return m;
+      const v = fills[n];
+      return v && typeof v === "object" && "html" in v ? v.html : typeof v === "string" && MADE.has(v) ? v : esc(v);
+    });
+    if (MADE.size >= 4000) { let drop = 2000; for (const x of MADE) { MADE.delete(x); if (--drop <= 0) break; } }
+    MADE.add(out);
+    return out;
+  };
   const html = (s) => ({ html: s });
   const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
   /* R6: a date by `date.daymonthyear` (or `date.daymonth` with `{year: false}`) and `date.month.*`, never ISO. */
@@ -70,8 +79,8 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     } catch { /* an unreadable record is none */ }
     return null;
   }
-  function writeRecord(r) { local.set(D.storeKey, JSON.stringify({ t: r.t, e: r.e || 0, d: r.d, w: r.w || "" })); local.del(STATE_KEY); }
-  function clearRecord(why) { if (why) local.set(STATE_KEY, why); else local.del(STATE_KEY); local.del(D.storeKey); }
+  function writeRecord(r) { BOOT_STALE = true; local.set(D.storeKey, JSON.stringify({ t: r.t, e: r.e || 0, d: r.d, w: r.w || "" })); local.del(STATE_KEY); }
+  function clearRecord(why) { BOOT_STALE = true; if (why) local.set(STATE_KEY, why); else local.del(STATE_KEY); local.del(D.storeKey); }
   const working = () => ROUTE && frameOf(ROUTE.screen) === "working" && !ROUTE.root;
   /* R32: the path to return to, the address alone (never a query, a fragment or the token) */
   function keepReturn() { if (working()) tab.set(RETURN_KEY, win.location.pathname); }
@@ -352,6 +361,28 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     rereadChanged(inst);
   }
   const live = (inst) => inst === MAIN || inst === DOCKI || inst === GUIDEI;
+  /* R122 (P9): `bootstrap` is asked once per page load (`start`); a screen's own read of it (`{op: "bootstrap"}`, no query, no body) is answered from
+     that one answer, waiting for it if it is still out. A change of session or a successful act makes it stale, and a read after either asks again
+     (a screen that re-reads after `claim` sees the new state); a first answer that was no answer is asked for again. */
+  let BOOT_CALL = null, BOOT_STALE = false;
+  async function readOne(spec, inst, background) {
+    if (spec.op === "bootstrap" && !spec.query && !spec.body && BOOT_CALL && !BOOT_STALE) {
+      const b = await BOOT_CALL;
+      if (b.kind === "ok" && !BOOT_STALE) return b;
+      BOOT_STALE = true;
+    }
+    return call(spec.op, { query: spec.query, body: spec.body, public: inst.pub, background });
+  }
+  /* R96, R93 (P9): the frame's number is `queue`'s count (`loadFrame`); the open list a screen reads (at most a `limit` and a `sort`), when the
+     answer is the whole list (not cut by its limit), also gives the frame the three kinds for its explanation and keeps its number equal to the
+     list; a cut list, or a read of anything else the queue holds (muted, answered, aside, a project's), gives neither */
+  function noteQueue(spec, a) {
+    if (spec.op !== "queue" || a.kind !== "ok" || !a.value || !Array.isArray(a.value.items) || a.value.truncated === true) return;
+    if (!Object.keys(spec.query || {}).every((k) => k === "limit" || k === "sort")) return;
+    const count = (c) => a.value.items.filter((x) => x && x.class === c).length;
+    QUEUE_COUNTS = { todo: count("OBLIGATION"), noticed: count("FINDING"), status: count("CONDITION") };
+    TODO = QUEUE_COUNTS.todo + QUEUE_COUNTS.noticed + QUEUE_COUNTS.status;
+  }
   async function readAll(inst, names, background) {
     let specs = {};
     try { specs = inst.spec.reads ? inst.spec.reads(inst.view) || {} : {}; } catch { specs = {}; }
@@ -366,9 +397,10 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (!names && !background) inst.unavail = null;
     draw();
     await Promise.all(todo.map(async ([n, spec]) => {
-      const a = await call(spec.op, { query: spec.query, body: spec.body, public: inst.pub, background });
+      const a = await readOne(spec, inst, background);
       if (!names && gen !== inst.fullGen) return;
       inst.data[n] = outcome(spec, a, inst);
+      noteQueue(spec, a);
       /* R93: a read marked `refresh: true` is re-read every 45 seconds; its answer is stamped for `cs.fresh()` */
       if (spec.refresh === true) { inst.fresh[n] = a.kind === "ok" ? Date.now() : 0; armRefresh(inst, n); }
       /* R74: a locked act is enabled again once a read started after it has redrawn the screen */
@@ -416,7 +448,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (!spec || spec.refresh !== true) return;
     const a = await call(spec.op, { query: spec.query, body: spec.body, public: inst.pub, background: true });
     if (!live(inst)) return;
-    if (a.kind === "ok") { inst.data[n] = outcome(spec, a, inst); inst.fresh[n] = Date.now(); } else inst.fresh[n] = 0;
+    if (a.kind === "ok") { inst.data[n] = outcome(spec, a, inst); inst.fresh[n] = Date.now(); noteQueue(spec, a); } else inst.fresh[n] = 0;
     armRefresh(inst, n);
     draw();
   }
@@ -680,7 +712,10 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
         return '<section class="cs-section"' + (o.id ? ' id="' + esc(o.id) + '"' : "") + '><h2 tabindex="0"' + tipAttr(helpHtml, 2) + ">" + w(titleKey, o.fills) + "</h2>" + inner + "</section>";
       },
       sheet: (inner) => '<div class="cs-sheet">' + inner + "</div>",
-      row: (a, b, c = "", meta = "") => '<div class="cs-row">' + a + "<span>" + b + "</span>" + c + (meta ? '<span class="meta">' + meta + "</span>" : "") + "</div>",
+      /* R120 (C81): a row whose first part is empty has no lead element, and the design's grid (lead, text, act) would give the text the
+         first column and the act what is left of it; such a row says so (`data-lead="none"`), and the shell's layout draws it as text and
+         act, the act sized to its content */
+      row: (a, b, c = "", meta = "") => '<div class="cs-row"' + (String(a == null ? "" : a).trim() === "" ? ' data-lead="none"' : "") + ">" + (a == null ? "" : a) + "<span>" + b + "</span>" + c + (meta ? '<span class="meta">' + meta + "</span>" : "") + "</div>",
       /* R22: every field has its label. R62: the label bold with its help beneath, tied by `aria-describedby`, each its
          own block of the field's grid, so the two never run together */
       field(id, labelKey, o = {}) {
@@ -2093,6 +2128,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       const words = a.kind === "refused" ? refusalWords(a, d.spec.refusals, inst) : w("shell.noanswer");
       return refuseBeside(ai, words);
     }
+    BOOT_STALE = true;
     if (d.op === "unlock" && inst === MAIN && frameOf(MAIN.spec.id) !== "working") { ACTSTATE.delete(d.key); for (const el of doc.getElementById("cs-root").querySelectorAll('input[type="password"]')) el.value = ""; return unlocked(); }
     let after = null;
     /* R21 (K3009), R109 (C77): no secret survives the act that sent it: a password field whose typed value the request carried is
@@ -2545,7 +2581,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   }
   async function loadFrame() {
     /* R33: the queue count is the shell's own read, not the member's activity */
-    const [g, q, lv] = await Promise.all([call("groupidentity"), call("queue", { query: { limit: 200 }, background: true }), call("infolevel")]);
+    const [g, q, lv] = await Promise.all([call("groupidentity"), call("queue", { query: { count: true }, background: true }), call("infolevel")]);
     if (!ME) return;
     /* R60: the display name only; the slug is never drawn as the group's name */
     if (g.kind === "ok" && g.value) {
@@ -2553,13 +2589,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       GROUP_KNOWN = true;
       if (GROUP) local.set(GROUP_KEY, GROUP); else local.del(GROUP_KEY);
     }
-    if (q.kind === "ok" && q.value && Array.isArray(q.value.items)) {
-      const count = (c) => q.value.items.filter((x) => x && x.class === c).length;
-      /* R82: the queue's three kinds (To do, Noticed, Status), answered only with the queue read; none, no sentence */
-      QUEUE_COUNTS = { todo: count("OBLIGATION"), noticed: count("FINDING"), status: count("CONDITION") };
-      /* R96 (A6): the number the masthead and the rail's Queue place draw is the design's, the sum of the three kinds */
-      TODO = QUEUE_COUNTS.todo + QUEUE_COUNTS.noticed + QUEUE_COUNTS.status;
-    }
+    /* R93, R96 (P9): the number the masthead and the rail's Queue place draw is the queue's count of the member's open items (the design's sum of the
+       three kinds), asked for without the list; the three kinds of R82's explanation come from the list when a screen reads it (`noteQueue`) */
+    if (q.kind === "ok" && q.value && typeof q.value.count === "number") TODO = q.value.count;
     if (lv.kind === "ok" && lv.value && (lv.value.level === "prompt" || lv.value.level === "pause")) {
       LEVEL_INFO = lv.value;
       if (lv.value.set_at) { LEVEL = lv.value.level; local.set("cs-level", LEVEL); }
@@ -2625,12 +2657,13 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     /* R32: the record read when a screen first needs it (never for a public or published one, R30); `/` with a live
        record opens Home */
     /* R36, R71: the test-instance band, read once; under the page's session when it holds one (so the load is counted in her window), else without */
-    call("bootstrap", (() => {
+    BOOT_CALL = call("bootstrap", (() => {
       /* R30, R79: a page of the public or published frame, or an address outside the team's pages, sends no Authorization header */
       const at = parse(win.location.pathname);
       const rec = at.outside || (sessionless(at.screen) && !at.root) ? null : readRecord();
       return rec ? { bearer: rec.t } : { public: true };
-    })()).then((b) => { if (b.kind === "ok" && b.value && typeof b.value === "object") { BOOT = b.value; BOOT_READ = true; testBand(); } });
+    })());
+    BOOT_CALL.then((b) => { if (b.kind === "ok" && b.value && typeof b.value === "object") { BOOT = b.value; BOOT_READ = true; testBand(); } });
     await route();
   }
   return { start, state: () => ({ ME, ROUTE, LEVEL, THEME, RAILW, REACHABLE, DOCK, TODO, GROUP, MAIN, DOCKI, LOCKED, S: !!S }), absorb, date, w };
