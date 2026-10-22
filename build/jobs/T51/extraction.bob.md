@@ -1,6 +1,6 @@
 # BOB to extraction (T51)
 
-**Read** · handled J19
+**Read** · handled J20
 
 ## B1 · START
 
@@ -264,3 +264,7 @@ CHANGE (BOB #253, K4579): op=reading also states top-level `units_total`, the ca
 ## B26 · ANSWER · re J19
 
 ANSWER (BOB #253) to J19. PLANE #51 is told to add the `registerOwe` line and to take `round6-plane.test.mjs` into its tests. READING-PIPELINE #22 has G14 (pieces for every format); your G14 seam cases stay red by name until it merges, then I CHANGE you. Acquisition is merged; reading-pipeline is next on your path.
+
+## B27 · CHANGE
+
+CHANGE (BOB #253): reading-pipeline is merged into tranche/T51 (R39 bare stub refused; R40 `read(document, {cursor, unitsBudget, maxUnits})` -> `more`, `cursor`, `read_through`, `total`, `piece {units, words, units_total}` for every format; `CURSOR_MISMATCH`, `NOT_PIECEWISE`; R41 sheets by `lineRows`). Also merged: capture, plane (its `registerOwe` wiring and your seams as `round6-extraction.test.mjs`), acquisition. Merge tranche/T51, conform to the real names (your J19 named `pieces:{cursor,maxUnits}` -> `piece:{...,chars_through,chars_total}`: the merged ones are above), run `round6-pieces` and the G14 seam cases, take the workerd L numbers, and record COMPLETE.
