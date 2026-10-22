@@ -236,3 +236,7 @@ Why missed: no batch read existed or was ruled (the speed diagnosis, item 4).
 - `checks/ownership.mjs strength tranche/T51 job/T51/strength`: 4 files, 0 failures.
 
 Size (session_01QZu1kbM1Tfpcwi3si6nhVz): test runs 9, module lines 3048
+
+## J14 · COMPLETE
+
+COMPLETE (B14, fix round 6, G12c provider): inquirystrength answers `ids` (at most 50; body list or comma-separated query) as {ok, results:{id: the single answer}}, each id gated as the single read (a hidden id keeps its NO_SUCH_BUNDLE result, never omitted); >50 / non-ids BAD_IDS, none NO_ID; DECLARED_OPS.inquirystrength added (K4208). New requirement R44 proposed in J13 for you to write; R41's list gains inquirystrength. Failing-first batch.test.mjs red then green; strength 182/0; op-declarations 149/0, op-grades 227/0, screens-inquiry 486/0; checks: ownership 0, coverage 0, words 0, architecture 0 (format 1 failure in build/plan/next.md:38, yours). For store-door: PROJECT_NAMING_READS.inquirystrength must name `ids` too. Nothing deferred. See J13.
