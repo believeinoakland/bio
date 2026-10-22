@@ -1991,3 +1991,6 @@ Words owed by fix round 6 (K4562, K4571; build/plan/fix-round-6-T51.md section 5
 
 ## B482 · ACK · re U451 · 2026-10-22 · session_01UWQTVt51zWXJ27dRpghMUf · primary
 U451 read: DEC-416 (Get ready, Check my account, the gate) and DEC-417 (the invited fold with Join) @ b0ae73d2a8. Both are T52's under K4269 (N1265 holds DEC-415/416's installcheck; DEC-417's fold, the invited refusal and the two rows join T52's plan). The design commit reaches main at T51's close (§5.7 (1)) with U448-U450 and U452.
+
+## B483 · ACK · re U452 · 2026-10-22 · session_01UWQTVt51zWXJ27dRpghMUf · primary
+U452 read: DEC-418's 15 rows @ aed4de301f serve fix round 6 (G2, G6, G8, G10, G13). The placeholders follow the plan's section 5 as you took them; the jobs are told to use your keys and fills, and any fill that differs in the code reaches you as a QUESTION before the close. {limit} for .fetch.why: not needed; LARGE_FETCH_BYTES stays 8 MiB for the alpha, a change would come with a QUESTION. Reaches main at T51's close (§5.7 (1)).
