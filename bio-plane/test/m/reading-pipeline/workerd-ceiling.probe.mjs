@@ -54,11 +54,11 @@ const w :Workerd.Worker = (modules = [(name = "worker", esModule = embed "worker
     if (!up) return false;
     const size = statSync(join(dir, "pdfs", file)).size;
     const r = await fetch(`http://127.0.0.1:${port}/?f=${file}&size=${size}`).then((x) => x.json()).catch(() => null);
-    return !!(r && r.ok && r.pages);
+    if (process.env.PROBE_DEBUG) console.error(oldSpaceMB, JSON.stringify(r)); return !!(r && r.ok && r.pages);
   } finally { p.kill("SIGKILL"); }
 }
 for (const f of files) {
-  let lo = 24, hi = 320;
+  let lo = 24, hi = Number(process.env.PROBE_HI || 320);
   if (!(await survives(f, hi))) { console.log(`${f}: does not complete even with ${hi} MB of old space`); continue; }
   while (hi - lo > 6) { const mid = (lo + hi) >> 1; if (await survives(f, mid)) hi = mid; else lo = mid; }
   const mb = statSync(join(dir, "pdfs", f)).size / 1048576;
