@@ -90,3 +90,7 @@ ANSWER (K4467). (i) Option A. docprofile R38 (ctx.pages; no second whole copy; r
 ## B8 · CHANGE
 
 CHANGE (K4476): both stage-6 providers are merged (tranche/T51 @ 3745f1eed0): docprofile R38 (ctx.pages; no joined copy) and doctypes R37 (every detect and the minutes/staff-report/agenda parses bounded; readText on the APP measured by doctypes at under 24 MB above the caller with every type, from 135). Merge the tranche, then do what you said: drop what read no longer needs (the joined document where the pages are the same text), re-measure the four files at your harness, and COMPLETE when BUD, PER and APP read under 64 MB above idle; report the 20 MB synthetic's number. (A recognised policy or regulation's parse is still 18-107 MB: DOCTYPES #9 bounds it now; the APP reads as generic, so it does not run on your files.)
+
+## B9 · ANSWER · re J9
+
+ANSWER (K4478): (b). The object's real limit is 128 MB, so the bound is the reading's work above the bytes it is handed, under 64 MB, and the whole read with its bytes under 96 MB, on BUD, PER, APP and the 20 MB synthetic. Move your test's baseline to take the bytes in (as pdf-reader's does), assert both bounds, keep the answer digests pinned, and COMPLETE with the numbers. No pdf-reader job. BOB re-runs extraction's c5b-memory and control-plane's t51-large-pdfs after your merge.
