@@ -37,12 +37,13 @@ export default { async fetch(req, env) {
     profile: { profiled_from_text: true, format: { format: "undetermined", confidence: "none", signals: [] } },
     provenance_chain: [{ who: "t", asserts: "served", via: "direct", bound: false }],
     capture: { sha256: sha, bytes: size, content_type: "text/plain", transport: { http_headers: [] } } };
-  const cursor = at < 0 ? null : { sha256: sha, chars: size, offset: at * 100, para: at };
+  const enc = (o) => btoa(JSON.stringify(o)).replace(/\\+/g, "-").replace(/\\//g, "_").replace(/=+$/, "");
+  const cursor = at < 0 ? null : enc({ v: 1, s: sha, k: "t", c: size, o: at * 100, p: at, q: at, r: 0 });
   const made = await read(document, { evidence, env: {}, storeName: "bio", unitsBudget: ${BUDGET},
-                                      pieces: { cursor, maxUnits: ${MAX_UNITS} } });
+                                      cursor, maxUnits: ${MAX_UNITS} });
   const units = made.text_units || [];
   return Response.json({ ok: !made.refused, refused: made.refused || null, units: units.length, first: units[0] && units[0].text,
-                         lastText: units.length ? units[units.length - 1].text : null, more: made.piece && made.piece.more,
+                         lastText: units.length ? units[units.length - 1].text : null, more: made.more,
                          hasReading: !!made.reading, found: made.reading ? made.reading.found : null });
 } };`);
 execFileSync(BIN + "esbuild", [join(dir, "worker.mjs"), "--bundle", "--format=esm", "--platform=neutral", "--main-fields=module,main",
