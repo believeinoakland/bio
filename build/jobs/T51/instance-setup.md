@@ -152,3 +152,19 @@ Size (session_01HudVPERVJyVzstKHMw2ZzA): test runs 16, module lines 3668
 ## J11 · COMPLETE
 
 COMPLETE (re B6, B7): R100 (the website file in groupdomainset and groupidentity) and R101 (sixteen ops declared) applied; requirement lines are in build/requirements/instance-setup.md. instance-setup 216 pass; consumers pass except op-declarations' registryActGaps (expertisewithdraw, not mine). Details in my record J10.
+
+## J12 · COMPLETE
+
+COMPLETE (re B8, fix round 4, C64-law). R12's new sentence is met; nothing deferred, nothing "not met".
+
+**What changed.** `bio-plane/src/setup.mjs` `profileView` (~:2905-2920): the view also carries `records_laws` (each law whole, as `jurisdictions.combine` gives it), `records_help` and `name`, each absent when `combine` states none or cannot give the view; `deadlines`, `legal_organisations` and `venues` are unchanged (agent-worker R51). Header comment of `profileView` says so. Test: `bio-plane/test/m/instance-setup/profiles.test.mjs`: the new R12 test "profiles().view also carries records_laws..., records_help and name" (control: no active profile, none of the three; the first profile, `oakland-alameda`: `records_laws` deep-equals combine's three laws, each with `level, name, citation, response, stages, requesters`, the federal one `response: "foia_response"`, `name` present, `records_help` absent as combine gives none for it; the test profile: `records_help` present as combine gives it); the helper `viewOf` of the older R12/R16 test extended with the three.
+
+**Failing-first.** Before the change: `profiles.test.mjs` 5 pass, 2 fail (the new test: `records_laws` undefined against combine's three laws; the older view test, whose expected view now holds the three). After: 7 pass, 0 fail.
+
+**Suites.** instance-setup 218 pass, 0 fail. Users by `impact.mjs origin/tranche/T51 HEAD` (7 modules, 144 files): plane 296 pass, 1 fail (R24 words test); store-door 52 pass, 1 fail (R17 `groupdescriptiondraft`): both identical without my commit (checked by restoring the old `setup.mjs`); answer-envelope 43 pass; signin-door 15 pass; case-authoring 225 pass; control-plane 367 pass, 2 fail (R120/R121 PDF timings; R122 one `op=bootstrap` per load): neither touches `profiles()`; I did not re-run them on the old file (they wait on timing and the page, not on this view). agent-worker reads the three old facts; unchanged.
+
+**Checks.** `checks/run.mjs`: no finding in my files; words: inline 0, plain 0, testcopy 0, missingkey 0, marker 0 (count not risen); architecture's 2 failures are case-authoring's `reload.test.mjs` imports; coverage's 11 are other modules. `checks/ownership.mjs ... instance-setup`: 3 files, 0 failures.
+
+**Found in another module.** None. For BOB: requirement R12's "*(not yet met: T51)*" can now be lifted.
+
+Size (session_018SUX5UvD4QojUdVCPkUvFj): test runs 14, module lines 3650
