@@ -30,3 +30,31 @@ Tests and checks run:
 - `node checks/run.mjs /home/user/bio`: format 0 failures; channels 0 failures; architecture, coverage and words failures only in other modules (above).
 
 Size (session_01AQjNeHrfYEMFNuKKN2Sh1H): test runs 3, module lines 1188
+
+## J2 · COMPLETE
+
+T51 fix round 6, G25 (BOB #253, wave 2; B2 START): a parked large fetch is not a partial capture. Done.
+
+**Root cause (rule 1).** `#conditionsPartialCapture` (`bio-plane/src/machinery-producers/index.mjs`, was :389-420) raised `partial-capture-outstanding` for every live `capture_sessions` row from `capture.liveCaptureSessions` (:395). ACQUISITION #28 parks a large fetch in that table (`state.fetch_pending`, primary digest 64 zeros, `acquisition/index.mjs:392, 1253`), so it was told as "primary captured, subrequest ceiling reached" when nothing had been captured.
+
+**Why the tests missed it (rule 2).** The module's tests held only sessions of the old shape (a real primary digest, a `queue`), written before acquisition parked fetches in the same table. Gap closed by the test below, which drives a parked fetch through `conditionItems`.
+
+**Change.** `index.mjs:396-398`: a row whose `state.fetch_pending` is held is skipped (it also covers one that ended with `fetch_pending.failed`, which is still no capture). 3 lines, no new sentence, no words row owed, no census op touched, no stored data (derived on read, so nothing to repair).
+
+**Failing-first test (rule 3).** `test/m/machinery-producers/conditions.test.mjs`, "R2: partial-capture-outstanding is not raised for a large fetch parked as owed work (fetch_pending, no primary yet); control: a real partial capture still is, beside it (G25, K4577)": a parked fetch session and a failed one make no item; control: a real partial capture beside them is still raised, and only it. Red before the fix (actual: two items, `cs_parked` and `cs_failed`, expected none); green after. Rule 4: platform check N.
+
+**Tests and checks.**
+- `node --test --test-force-exit test/m/machinery-producers/`: tests 38, pass 38, fail 0 (before the fix, 37 pass, 1 fail, the new test).
+- Users (`impact.mjs origin/tranche/T51 HEAD`, 6 modules): queue-producers 152/152 pass (24 files), queue + store-door 266/266 pass, plane + control-plane named files 402 tests, 400 pass, 2 fail. The 2 fails are NOT from this change: they fail identically with `machinery-producers/index.mjs` restored to the tranche tip: `test/m/plane/release.test.mjs` "R24 (DEC-149; T34-87, K1784; T51): a title or purpose a surface draws is the screen's own key ... never 'this instance' ..." (plane) and `test/m/control-plane/t51-visitor-copy.test.mjs` "R104 R100 R99 (E8): a capture with the visitor view, the object restarted, 'Finish it' ... the visitor copy is a second document in the held list and in the record, once" (control-plane). B2 listed no inherited reds, so I report them for BOB; neither is in my module.
+- `checks/format.mjs`: 176 modules, 176 requirements files; 0 failures.
+- `checks/architecture.mjs machinery-producers`: 8 product files, 38 relative imports; 0 failures.
+- `checks/coverage.mjs machinery-producers`: 16 of 16 live requirement ids named by a test; 0 failures.
+- `checks/words.mjs machinery-producers`: 0 failures (the words count does not rise: no string added).
+- `checks/ownership.mjs machinery-producers tranche/T51 job/T51/machinery-producers`: 3 files changed by machinery-producers; 0 failures.
+- `setup-words build.mjs --check`: the stale-rows note only (docket.declared.docketprepare), no refusal naming this module.
+
+**Requirement line proposed (BOB writes `build/requirements/`).** Under R2, `partial-capture-outstanding`: "per live capture session that holds a capture's primary; a session capture parks as owed work (`state.fetch_pending`, `acquisition` R105) has captured nothing and raises none (G25; K4577). Test: a parked and a failed fetch raise none; control: a real partial capture still does."
+
+Deferred: none. Found in other modules: the two reds above (plane R24 words test; control-plane visitor-copy E8 test).
+
+Size (session_01VppNH1AogWHLFTYzaoCTBZ): test runs 7, module lines 1192
