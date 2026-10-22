@@ -27,7 +27,7 @@
  * posts, so a staffing chart that prints holders under titles is a LIKELY roster as much as a chart. */
 import { CONFIDENCE, CONTRACT, entity, alsoSatisfies } from "../docprofile/registry.mjs";
 import { isName, leadingName, withoutContacts, titlePatterns, titleSpans, removeSpans, rosterWordPatterns, selfNamingLines,
-         namedAs, linesOf, isUnitLine, UNIT_WORDS, wordCount } from "./lines.mjs";
+         namedAs, eachLine, selfNamingLine, isUnitLine, UNIT_WORDS, wordCount } from "./lines.mjs";
 import { asOfOf, organisationOf, assessRows } from "./staff-roster.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
@@ -44,35 +44,57 @@ export const CHART_SHORT = 5;
 
 const REPORTS = /^(.+?)\s+(?:reports|report|reporting)\s+(?:directly\s+)?to\s+(?:the\s+)?(.+?)[.;]?$/i;
 
-function readBoxes(raw, ctx) {
+/* `keep` false (`detect`) holds no line, unit or post: the counts, the numbers of the lines that label a box, a
+   histogram of the lines' word counts and the self-naming lines are all it keeps, so the reading of a 20 MB
+   text holds one line at a time (R3). */
+function readBoxes(raw, ctx, keep = true) {
   const titles = titlePatterns(ctx);
-  const lines = linesOf(raw);
-  const units = [], posts = [], pairs = [];
-  let named = 0;
-  for (const x of lines) {
+  const selfPatterns = keep ? [] : rosterWordPatterns(ctx);
+  const lines = [], units = [], posts = [], pairs = [], self = [];
+  const unitLines = new Set(), postLines = new Set(), wordHist = new Map();
+  let count = 0, named = 0;
+  eachLine(raw, (x) => {
+    const at = count++;
+    if (keep) lines.push(x);
+    else {
+      const w = wordCount(x.text);
+      wordHist.set(w, (wordHist.get(w) || 0) + 1);
+      const s = selfNamingLine(x, selfPatterns);
+      if (s) self.push(s);
+    }
     const { text } = withoutContacts(x.text);
-    if (!text) continue;
-    const rep = REPORTS.exec(text);
+    if (!text) return;
+    const rep = keep ? REPORTS.exec(text) : null;
     if (rep) pairs.push({ from: rep[1].trim(), to: rep[2].trim(), offset: x.offset, line: text });
     const ts = titleSpans(titles, text);
     if (ts.length) {
       const rest = removeSpans(text, ts);
-      if (ts.length === 1 && isName(rest)) { posts.push({ label: ts[0].text.trim(), name: rest, offset: x.offset }); continue; }
-      for (const h of ts) posts.push({ label: h.text.trim(), offset: x.offset + h.index });
-    } else if (isName(text)) { named++; continue; }
+      if (ts.length === 1 && isName(rest)) {
+        postLines.add(at);
+        if (keep) posts.push({ label: ts[0].text.trim(), name: rest, offset: x.offset });
+        return;
+      }
+      postLines.add(at);
+      if (keep) for (const h of ts) posts.push({ label: h.text.trim(), offset: x.offset + h.index });
+    } else if (isName(text)) { named++; return; }
     /* A unit's label ends in its kind ("Records Division"); a line that opens with a name and ends
        otherwise is a row ("<name> District 1"), never a unit's box. */
     const last = (text.split(" ").pop() || "").replace(/[^\p{L}]/gu, "").toLowerCase();
-    if (isUnitLine(text) && (UNIT_WORDS.has(last) || !leadingName(text.replace(/^\d{1,3}[.)]?\s+/, ""))))
-      units.push({ label: text, offset: x.offset });
-  }
-  return { lines, units, posts, pairs, named };
+    if (isUnitLine(text) && (UNIT_WORDS.has(last) || !leadingName(text.replace(/^\d{1,3}[.)]?\s+/, "")))) {
+      unitLines.add(at);
+      if (keep) units.push({ label: text, offset: x.offset });
+    }
+  });
+  return { lines, count, units, posts, pairs, named, unitLines, postLines, wordHist, self };
 }
 
-function median(ns) {
-  if (!ns.length) return 0;
-  const s = [...ns].sort((a, b) => a - b);
-  return s[Math.floor((s.length - 1) / 2)];
+/** The lower middle of the numbers, given as a map from each number to how often it occurs. */
+function medianOf(hist, total) {
+  if (!total) return 0;
+  const want = Math.floor((total - 1) / 2);
+  let seen = 0;
+  for (const v of [...hist.keys()].sort((a, b) => a - b)) { seen += hist.get(v); if (seen > want) return v; }
+  return 0;
 }
 
 const no = (why) => ({ match: false, confidence: CONFIDENCE.NONE, why });
@@ -86,23 +108,21 @@ export default {
 
   detect(ctx) {
     const raw = String((ctx && ctx.text) || "");
-    const { lines, units, posts, named } = readBoxes(raw, ctx);
-    if (!lines.length) return no(localize("roster-reader.org-chart.no_text_was_read_so", "no text was read, so there are no boxes to recognise"));
-    const lineOf = (o) => { let i = 0; while (i + 1 < lines.length && lines[i + 1].offset <= o) i++; return i; };
-    const unitLines = new Set(units.map((u) => lineOf(u.offset))).size;
-    const postLines = new Set(posts.map((p) => lineOf(p.offset)));
-    for (const u of units) postLines.delete(lineOf(u.offset));
+    const { count, unitLines: unitSet, postLines: postSet, named, wordHist, self: selfLines } = readBoxes(raw, ctx, false);
+    if (!count) return no(localize("roster-reader.org-chart.no_text_was_read_so", "no text was read, so there are no boxes to recognise"));
+    const unitLines = unitSet.size;
+    const postLines = new Set([...postSet].filter((i) => !unitSet.has(i)));
     const labelled = unitLines + postLines.size;
     const boxes = labelled + named;
     if (labelled < CHART_MIN_LABELS || boxes < CHART_FLOOR)
       return no(localize("roster-reader.org-chart.labelled_line_s_name_a", "{labelled} line(s) name a unit or a post and {named} a holder alone, below the floor ({min_labels} labelled, {floor} boxes): this document does not lay out an organisation's boxes", { labelled: String(labelled), named: String(named), min_labels: String(CHART_MIN_LABELS), floor: String(CHART_FLOOR) }));
-    const share = boxes / lines.length;
+    const share = boxes / count;
     if (share < CHART_SHARE)
-      return no(localize("roster-reader.org-chart.boxes_of_length_lines_are", "{boxes} of {length} lines are box labels ({round}%), below {round_2}%: units and posts are mentioned here, not charted", { boxes: String(boxes), length: String(lines.length), round: String(Math.round(share * 100)), round_2: String(Math.round(CHART_SHARE * 100)) }));
-    const mid = median(lines.map((x) => wordCount(x.text)));
+      return no(localize("roster-reader.org-chart.boxes_of_length_lines_are", "{boxes} of {length} lines are box labels ({round}%), below {round_2}%: units and posts are mentioned here, not charted", { boxes: String(boxes), length: String(count), round: String(Math.round(share * 100)), round_2: String(Math.round(CHART_SHARE * 100)) }));
+    const mid = medianOf(wordHist, count);
     if (mid > CHART_SHORT)
       return no(localize("roster-reader.org-chart.its_median_line_is_mid", "its median line is {mid} words, longer than a box label ({CHART_SHORT}): this is running text", { mid: String(mid), CHART_SHORT: String(CHART_SHORT) }));
-    const self = namedAs(selfNamingLines(lines, rosterWordPatterns(ctx)), "chart");
+    const self = namedAs(selfLines, "chart");
     if (self.only_other)
       return no(localize("roster-reader.org-chart.it_names_itself_with_the_views", "it names itself, with the view's words, as a roster and not as a chart"));
     const signals = [`${unitLines} unit line(s), ${postLines.size} post line(s), ${named} holder line(s)`,
