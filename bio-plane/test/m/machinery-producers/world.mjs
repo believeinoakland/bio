@@ -11,6 +11,7 @@ import { DatabaseSync } from "node:sqlite";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { PROVENANCE_SCHEMA } from "../../../src/provenance/schema.mjs";
 import { membershipOf, viewerPredicate } from "../../../src/membership/index.mjs";
+import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { machineryProducersOf } from "../../../src/machinery-producers/index.mjs";
 
 export const NOW = Date.parse("2026-09-01T00:00:00Z");
@@ -50,6 +51,9 @@ export function world({ updateNotice, ...fakes } = {}) {
   membership.migrate();
   const F = defaultFakes();
   for (const [k, v] of Object.entries(fakes)) F[k] = { ...F[k], ...v };
+  /* provenance R11, R73: a bundle's register rows with their marks, read from the real module over the same storage unless a
+     test fakes it; the other provenance reads stay the fakes' (`homeOf`). */
+  if (!F.provenance.registeredFor) F.provenance.registeredFor = (bundleId) => provenanceOf(host, { record, membership }).registeredFor(bundleId);
   /* R12: the plane hands the notice read in `deps.updateNotice`; none is handed unless a test gives one. */
   const p = machineryProducersOf(host, { record, membership, ...F, ...(updateNotice ? { updateNotice } : {}) });
 
