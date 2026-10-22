@@ -94,7 +94,7 @@ import { DOCUMENT } from "./fixtures.mjs";
 test("R80 C48 a draft naming no case whose pre-flight refused first still reads its prepared edition by `editions.case`: 'Edition n is prepared', no reasons beside it, Sign offered", async () => {
   const refusedFirst = PREFLIGHT({ steps: [{ stated: "not reached: op=publish refuses first (NO_STATEMENT)" }, ...PREFLIGHT().steps.slice(1)], ready: false, first: HELD_BACK, blockers: [],
     editions: { prepared: 2, published: null, case: CASE } });
-  const p = await open(CER, { plane: { reviewcopy: ok(COPY({ case: { case_id: null, edition: 1, identity: "a new case" } })), publishpreflight: ok(refusedFirst),
+  const p = await open(CER, { plane: { reviewcopy: ok(COPY({ case: { case_id: null, edition: 1, identity: "derivation-0031" } })), publishpreflight: ok(refusedFirst),
     casedocument: ok(DOCUMENT({ citations: [{ target: "FND-2026-0031", version: "7d0e" + "1".repeat(56) + "91ab" }] })), captureaccounts: ok({ actors: [] }) } });
   assert.ok(drew(p, "screen.ceremony.prepared", { edition: "2" }));
   assert.equal(main(p).querySelector("[data-blockers]"), null);
