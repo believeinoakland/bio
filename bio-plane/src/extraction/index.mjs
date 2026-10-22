@@ -388,11 +388,9 @@ const notReadAsText = (r) => !!r && r.found === false && r.failure === "final" &
 /* (fix round 6, G13; R90) reading-pipeline's R40 answer of a piece, as the index state keeps it: `more` while pieces follow, the `cursor` of
    the next (its own object, kept as JSON), how far the text is read (`chars_through` of `chars_total`) and the piece's words; null for a read
    that is not in pieces (every other read). */
-const pieceOf = (out) => {
-  const p = out && out.piece && typeof out.piece === "object" ? out.piece : null;
-  return p ? { more: p.more === true, cursor: p.cursor ? JSON.stringify(p.cursor) : null, read_through: p.chars_through ?? null,
-               total: p.chars_total ?? null, words: Number.isFinite(p.words) ? p.words : 0 } : null;
-};
+const pieceOf = (out) => (out && typeof out.more === "boolean"
+  ? { more: out.more, cursor: typeof out.cursor === "string" ? out.cursor : null, read_through: out.read_through ?? null,
+      total: out.total ?? null, words: out.piece && Number.isFinite(out.piece.words) ? out.piece.words : 0 } : null);
 /* (fix round 6, G13; R90) a reading whose units came from a text (reading-pipeline R32, R33): the only kind read in pieces. */
 const textReading = (r) => !!r && typeof r === "object";
 /* R82 (F9): the author the ledger's own continuation of a re-read is stamped with. */
@@ -624,7 +622,7 @@ export class Extraction {
       evidence: this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null,
       env: e, storeName, view: this.view(), planeVersion: e.VERSION || null,
       liveCalibration: (q) => this.#liveCalibration(q), ...(budget === undefined ? {} : { unitsBudget: budget }),
-      ...(pieces === undefined ? {} : { pieces: { cursor: pieces.cursor ?? null, maxUnits: CAPTURE_TEXT_CAPTURE_UNIT_BOUND } }) });
+      ...(pieces === undefined ? {} : { cursor: pieces.cursor ?? null, maxUnits: CAPTURE_TEXT_CAPTURE_UNIT_BOUND }) });
     this.recordComposed(out.reading, document && document.capture && document.capture.sha256);
     return out;
   }
@@ -767,8 +765,8 @@ export class Extraction {
     await wrote.afterRead;
     const owed = failedTransiently(out.reading) || (out.reading.tier3_candidate === true && !!e.OCR_WORKER);
     /* (fix round 6, G13; R90) the first piece of a text that has more: the ledger goes on at once (plane R77: `more`) */
-    if (out.piece && out.piece.more === true) return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true, more: true,
-      detail: { read_through: out.piece.chars_through ?? null, total: out.piece.chars_total ?? null } };
+    if (out.more === true) return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true, more: true,
+      detail: { read_through: out.read_through ?? null, total: out.total ?? null } };
     return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true, ...(owed ? { owed: true } : {}) };
   }
 
@@ -790,14 +788,14 @@ export class Extraction {
     /* a state with more to read and no cursor is a text read before pieces existed that the index holds only in part: it is read again
        from its start as the first piece, which replaces what the wire left (the reading itself stands) */
     const restart = st.cursor == null;
-    const out = await this.read(document, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: restart ? null : safeJson(st.cursor) } });
+    const out = await this.read(document, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: restart ? null : st.cursor } });
     if (out.refused && out.refused.code === "NOT_PIECEWISE") {
       /* (G14) a format the reader cannot continue by a cursor: its index is stated as partial, with the runs it skipped named, once */
       this.#sql.exec(`UPDATE capture_text_state SET more=0, cursor=NULL WHERE capture_sha=?`, digest);
       return left("READING_HELD");
     }
     if (out.refused) return { ok: true, read: false, final: true, why: String(out.refused.why || out.refused.code).slice(0, 160) };
-    if (!out.piece) {
+    if (typeof out.more !== "boolean") {
       /* not a text the reader reads in pieces (a PDF over the index's bound): its partial index is stated as it is, once */
       this.#sql.exec(`UPDATE capture_text_state SET more=0, cursor=NULL WHERE capture_sha=?`, digest);
       return left("READING_HELD");
@@ -810,9 +808,8 @@ export class Extraction {
         { append: !restart, more: pieceOf(out) });
     });
     if (!wrote) return left("READING_HELD");
-    const p = out.piece;
-    if (p.more === true) return { ok: true, read: true, bundle_id: bundleId, found: true, more: true,
-                                  detail: { read_through: p.chars_through ?? null, total: p.chars_total ?? null } };
+    if (out.more === true) return { ok: true, read: true, bundle_id: bundleId, found: true, more: true,
+                                    detail: { read_through: out.read_through ?? null, total: out.total ?? null } };
     return { ok: true, read: true, bundle_id: bundleId, found: true };
   }
 
