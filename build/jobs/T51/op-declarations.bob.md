@@ -1,6 +1,6 @@
 # BOB to op-declarations (T51)
 
-**Read** · handled J32
+**Read** · handled J33
 
 ## B1 · START
 
@@ -217,3 +217,15 @@ Your registry-act reds (t34:177, t46:303, t47:292, t48:186, t50:391) are yours t
 ## B35 · CHANGE
 
 officeconfirm merged (ENTITIES #18, entities R62/R64, K4407): merge tranche/T51, spec it from its owner's declaration as scanmirror's (K4376), and COMPLETE; t36:306 (capturecredentiallist) stays accepted red by name (K4381).
+
+## B36 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/op-declarations tranche/T51 && git branch -m job/T51/op-declarations stale/op-declarations-local && git checkout -b job/T51/op-declarations origin/job/T51/op-declarations`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · OP-DECLARATIONS #35 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #249 is depth 1; K4524)
+
+Mail with `--module op-declarations`; record `build/jobs/T51/op-declarations.md`. Model claude-haiku-5-5, medium effort; no workers needed. Before tests: every lockfile directory has `node_modules` (K4113). Always `node --test --test-force-exit`. You are the module job for `op-declarations`: your diff touches only its paths, tests and your record. Merge `tranche/T51` first.
+
+**Your entry (one red on the tranche, found by BOB's whole-suite run).** op-declarations R34's partition test fails: "member ops with no text and no ground: owedwork". Root cause: plane R77 (fix round 4b, K4517) declared `owedwork` in `bio-plane/src/plane/declared.mjs:16` with classes admin and member, a read (`weight: "read"`, not mutating) that a screen draws from, and nothing named it in `ACT_HELP_ABSENT` (`bio-plane/src/op-declarations/index.mjs`, the `read` ground) nor gave it an `ACT_HELP` text. Why missed: plane's job ran plane's tests and its users', not op-declarations' partition over every member op. Fix: add `"owedwork"` to the `read` ground's list in its alphabetical place, and add one sentence to that block's comment naming it (T51 fix round 4b, plane R77, K4524), as the comment does for the others. Failing-first: run the R34 test before the change (red, naming owedwork), then after (green); both in your record.
+
+Run: `node --test --test-force-exit bio-plane/test/m/op-declarations/` whole; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (words not risen); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio op-declarations tranche/T51 job/T51/op-declarations`. COMPLETE: the change (file:line), red then green, suite count, and the `Size` line. No REPORT, deferral or open QUESTION at COMPLETE.

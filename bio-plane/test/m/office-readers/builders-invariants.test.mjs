@@ -6,14 +6,12 @@ import assert from "node:assert/strict";
 import { docxEntry, docParaRef, docTableRef } from "../../../src/docx.mjs";
 import { pptxEntry, slideShapeRef } from "../../../src/pptx.mjs";
 import { xlsxEntry, sheetCellRef, usedSheetRange } from "../../../src/formats-xlsx.mjs";
-import { csvEntry } from "../../../src/csv.mjs";
 import * as F from "./fixtures.mjs";
 
-const ENTRIES = [docxEntry, pptxEntry, xlsxEntry, csvEntry];
+const ENTRIES = [docxEntry, pptxEntry, xlsxEntry];
 const ODD = [undefined, null, 0, -1, 1.5, NaN, "", "PK\x03\x04", {}, [], true, new ArrayBuffer(3), new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0, 0])];
-const letters = (n) => { let s = ""; for (let c = n; c > 0; c = Math.floor((c - 1) / 26)) s = String.fromCharCode(65 + ((c - 1) % 26)) + s; return s; };
 
-/* ------------------------------------------------------------------ R15–R19 */
+/* ------------------------------------------------------------------ R15–R16, R19 */
 
 test("R15 docParaRef(para, run=null): {kind:'doc-para', ref:'¶<para+1>', para[, run]}; run only when given", () => {
   for (let p = 0; p < 300; p++) {
@@ -32,28 +30,6 @@ test("R16 docTableRef(table, cell=null): {kind:'doc-table', ref:'table <table+1>
   }
 });
 
-test("R17 sheetCellRef(sheet, cell): {kind:'sheet-cell', ref:'<sheet>!<cell>', sheet, cell}", () => {
-  for (const sheet of ["Sheet1", "Q3 Budget", "It's", "csv", "Ω"]) for (const cell of ["A1", "Z99", "XFD1048576"]) {
-    assert.deepEqual(sheetCellRef(sheet, cell), { kind: "sheet-cell", ref: `${sheet}!${cell}`, sheet, cell });
-  }
-});
-
-test("R18 usedSheetRange(name, rows, cols): A1 to the used corner in bijective column letters, or null unless both are positive integers", () => {
-  for (let c = 1; c <= 800; c++) {
-    const r = (c * 7) % 1000 + 1;
-    assert.deepEqual(usedSheetRange("S", r, c), { kind: "sheet-range", ref: `S!A1:${letters(c)}${r}`, sheet: "S", range: `A1:${letters(c)}${r}` });
-  }
-  assert.equal(usedSheetRange("S", 1, 16384).range, "A1:XFD1");
-  assert.equal(usedSheetRange("S", 1, 26).range, "A1:Z1");
-  assert.equal(usedSheetRange("S", 1, 27).range, "A1:AA1");
-  assert.equal(usedSheetRange("S", 1, 702).range, "A1:ZZ1");
-  assert.equal(usedSheetRange("S", 1, 703).range, "A1:AAA1");
-  for (const bad of [0, -1, 1.5, NaN, null, undefined, "3", Infinity]) {
-    assert.equal(usedSheetRange("S", bad, 3), null, String(bad));
-    assert.equal(usedSheetRange("S", 3, bad), null, String(bad));
-  }
-});
-
 test("R19 slideShapeRef(slide, shape=null): {kind:'slide-shape', ref:'slide <slide>', slide[, shape]}", () => {
   for (let s = 1; s < 300; s++) {
     assert.deepEqual(slideShapeRef(s), { kind: "slide-shape", ref: `slide ${s}`, slide: s });
@@ -69,10 +45,9 @@ test("R20 pure: the same bytes always give the same answer, whatever the clock, 
     [docxEntry, F.docx({ core: F.core({ creator: "a" }), extra: [{ name: "word/embeddings/e.bin", data: "E" }, { name: "word/media/i.png", data: "I" }] })],
     [pptxEntry, F.pptx({ slides: [{ file: "slide1.xml", texts: ["x"], notes: "n" }] })],
     [xlsxEntry, F.xlsx({ definedNames: [{ name: "N", ref: "Sheet1!A1" }], extra: [{ name: "xl/embeddings/e.bin", data: "E" }] })],
-    [csvEntry, F.enc("a,b\n1,2\n")],
   ];
   const realNow = Date.now, realFetch = globalThis.fetch, RealDate = globalThis.Date;
-  const run = async (e, b) => ({ d: e.detect(b, null), s: await e.structure(b), t: await e.text(b), dl: e.dialect?.(b) });
+  const run = async (e, b) => ({ d: e.detect(b, null), s: await e.structure(b), t: await e.text(b) });
   for (const [e, b] of inputs) {
     const first = await run(e, b);
     globalThis.fetch = () => { throw new Error("network reached"); };
@@ -95,7 +70,6 @@ test("R21 never throws: odd arguments to every slot of every entry, and to the b
       await assert.doesNotReject(async () => e.parts(x), `${e.format}.parts`);
       await assert.doesNotReject(async () => e.structure(x), `${e.format}.structure`);
       await assert.doesNotReject(async () => e.text(x), `${e.format}.text`);
-      if (e.dialect) assert.doesNotThrow(() => e.dialect(x));
     }
   }
   for (const x of ODD) {
@@ -113,7 +87,7 @@ test("R21 never throws: character references past U+10FFFF, and randomly corrupt
   assert.equal(x.document, big);
   let seed = 7;
   const rnd = () => (seed = (seed * 1103515245 + 12345) >>> 0) / 2 ** 32;
-  const packages = [[docxEntry, F.docx({ comments: "<w:comments/>" })], [pptxEntry, F.pptx({ slides: [{ file: "slide1.xml", texts: ["a"], notes: "n" }] })], [xlsxEntry, F.xlsx({ sharedStrings: F.sst(["a"]) })], [csvEntry, F.enc("a,b\n1,2\n")]];
+  const packages = [[docxEntry, F.docx({ comments: "<w:comments/>" })], [pptxEntry, F.pptx({ slides: [{ file: "slide1.xml", texts: ["a"], notes: "n" }] })], [xlsxEntry, F.xlsx({ sharedStrings: F.sst(["a"]) })]];
   for (const [e, b] of packages) {
     for (let i = 0; i < 150; i++) {
       const m = b.slice();
@@ -184,7 +158,7 @@ function keysDeep(v, out = new Set()) {
 }
 
 test("R24 asserts nothing about meaning and writes nothing: no grade or judgment in any output, and the input bytes are untouched", async () => {
-  const inputs = [[docxEntry, F.docx()], [pptxEntry, F.pptx()], [xlsxEntry, F.xlsx()], [csvEntry, F.enc("a,b\n1,2\n")]];
+  const inputs = [[docxEntry, F.docx()], [pptxEntry, F.pptx()], [xlsxEntry, F.xlsx()]];
   for (const [e, b] of inputs) {
     const before = b.slice();
     const outs = [await e.parts(b), await e.structure(b), await e.text(b)];
@@ -202,7 +176,6 @@ test("R25 no place is named: a document naming one jurisdiction reads exactly as
     [docxEntry, (n) => F.docx({ body: F.wp(F.wr(`City of ${n} council`)) })],
     [pptxEntry, (n) => F.pptx({ slides: [{ file: "slide1.xml", texts: [`${n} budget`] }] })],
     [xlsxEntry, (n) => F.xlsx({ sheets: [{ name: n, data: { rows: [{ r: 1, cells: [{ r: "A1", t: "inlineStr", is: n }] }] } }] })],
-    [csvEntry, (n) => F.enc(`city,county\n${n},Alameda\n`)],
   ];
   for (const [e, build] of builds) {
     const a = build("Oakland"), b = build("Fairfax");

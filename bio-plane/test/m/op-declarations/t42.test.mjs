@@ -5,6 +5,7 @@
    seen. Each comparison has a negative control. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import "./register-owners.mjs";
 import * as O from "../../../src/op-declarations/index.mjs";
 import { explained } from "./help.mjs";
 import * as AFF from "../../../src/affordances.mjs";

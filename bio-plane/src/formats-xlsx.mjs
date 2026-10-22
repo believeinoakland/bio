@@ -181,48 +181,11 @@ async function sha256Hex(u8) {
   return out;
 }
 
-/* IC-1: the sheet-cell element reference, produced by the container that
- * knows it. `ref` is the exact human form a citation surface displays.
- *
- * EXPORTED 2026-09-14 by COFF-10, and the export is the whole change to this
- * file: the `.ods` entry (`odf.mjs`) emits `sheet-cell` references too, and
- * its brief says REUSE the sibling's builder rather than grow a fourth. A
- * second copy of two lines is how two producers of one IC-1 arm drift — the
- * same argument that made `linkWrapper` imported rather than re-derived.
- * Behaviour here is untouched; the over-strictness arm proves this entry's
- * outputs are byte-identical across the change. */
-export function sheetCellRef(sheet, cell) {
-  return { kind: "sheet-cell", ref: `${sheet}!${cell}`, sheet, cell };
-}
-
-/** FW-19 / IC-124 — `{kind:"sheet-range", ref:"Sheet1!A1:C10", sheet, range}`
- *  (EXTRACTION-BREADTH §3.2): a table in a workbook, or a sheet as a unit
- *  (`CONTENT-SEARCH-DESIGN.md` §4.1's workbook unit). `range` is A1:A1
- *  notation with the top-left corner first. EXPORTED for `odf.mjs`'s `.ods`
- *  entry — one builder per arm (COFF-10's rule, which is why `sheetCellRef`
- *  above is exported too). */
-export function sheetRangeRef(sheet, range) {
-  return { kind: "sheet-range", ref: `${sheet}!${range}`, sheet, range };
-}
-
-/** A 1-based column number -> its A1 letters (1 -> A, 27 -> AA). Bijective
- *  base 26 — there is no zero digit, which is the mistake available here. */
-export function columnLetters(n) {
-  let out = "";
-  for (let c = n; c > 0; c = Math.floor((c - 1) / 26)) out = String.fromCharCode(65 + ((c - 1) % 26)) + out;
-  return out;
-}
-
-/** The WHOLE-SHEET unit a sheet's walk can honestly name: A1 to the far
- *  corner of its USED range, or NULL when that range was not measured or is
- *  empty. The used range and not the grid, deliberately and unlike the
- *  `sheet-cell` BOUND: this is a UNIT a reader is shown ("the sheet"), and a
- *  unit of a million blank rows is not what anybody means by the sheet. The
- *  bound a citation is REFUSED against stays the grid (`rows`/`cols`). */
-export function usedSheetRange(name, usedRows, usedCols) {
-  if (!(Number.isInteger(usedRows) && usedRows > 0 && Number.isInteger(usedCols) && usedCols > 0)) return null;
-  return sheetRangeRef(name, `A1:${columnLetters(usedCols)}${usedRows}`);
-}
+/* The sheet-reference builders (IC-1 `sheet-cell`, FW-19 `sheet-range`, A1 column letters) live in
+ * `csv-reader` (module order: office-readers uses it); re-exported here so docx, odf and the
+ * tests that import them from this file are unchanged. */
+import { sheetCellRef, sheetRangeRef, columnLetters, usedSheetRange } from "./csv.mjs";
+export { sheetCellRef, sheetRangeRef, columnLetters, usedSheetRange };
 
 /* ------------------------------------------------------------------ *
  * D-415 — A WORKBOOK'S NAMED UNITS (R9; EXTRACTION-BREADTH §3.3 item 1).
