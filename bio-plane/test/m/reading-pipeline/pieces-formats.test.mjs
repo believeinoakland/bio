@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { read, CAPTURE_TEXT_UNIT_CAP, visibleTextOfHtml } from "../../../src/reading-pipeline/index.mjs";
 import { bucket, evidenceStore, hold, doc, withEntry } from "./fixture.mjs";
+import { synthPdf } from "./bigpdf.mjs";
 
 const BUDGET = 512 * 1024;
 const readOf = (b, document, opts = {}) => read(document, { evidence: evidenceStore(b), env: {}, storeName: "bio", ...opts });
@@ -59,19 +60,15 @@ test("R40: a 6,000-paragraph document read at the wire's bound is cut with its t
 
 test("R40: a dense PDF of 300 pages is read in pieces as a document is: every page once, in order, the units of the whole read", async () => {
   const b = bucket();
-  const d = await hold(b, "%PDF-1.7 pieces");
-  const pages = Array.from({ length: 300 }, (_, p) => ({ page: p, text: `Page ${p}. ` + "Dense text of the page with many words. ".repeat(120), undetermined: [] }));
-  const text = { document: pages.map((p) => p.text).join("\n"), pages, undetermined: [], counts: { chars: 1, undetermined: 0 } };
-  const entry = { format: "pdf", structure: async () => ({ ok: true, text: structuredClone(text), pages: 300, notes: [] }) };
-  const document = doc({ digest: d, bytes: 15, ct: "application/pdf", format: "pdf" });
-  await withEntry(entry, async () => {
-    const whole = await readOf(b, document, { unitsBudget: Infinity });
-    assert.equal(whole.text_units.length, 300);
-    const pieces = await allPieces(b, document);
-    assert.ok(pieces.length > 2);
-    assert.deepEqual(pieces.flatMap((p) => p.text_units), whole.text_units);
-    assert.equal(pieces[pieces.length - 1].more, false);
-  });
+  const bytes = synthPdf({ pages: 300, linesPerPage: 120, targetBytes: 0 });
+  const d = await hold(b, bytes);
+  const document = doc({ digest: d, bytes: bytes.length, ct: "application/pdf", format: "pdf" });
+  const whole = await readOf(b, document, { unitsBudget: Infinity });
+  assert.equal(whole.text_units.length, 300);
+  const pieces = await allPieces(b, document);
+  assert.ok(pieces.length > 2);
+  assert.deepEqual(pieces.flatMap((p) => p.text_units), whole.text_units);
+  assert.equal(pieces[pieces.length - 1].more, false);
 });
 
 /* A sheet of 9,000 rows: row 1 the header, rows with no cell are skipped in the text, so a line is not its row. */
