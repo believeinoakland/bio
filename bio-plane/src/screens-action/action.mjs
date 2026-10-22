@@ -205,6 +205,9 @@ export const action = Object.freeze({
       // prepared; a sent one does not
       const unsent = !sent.length && step !== "sent";
       const toSend = unsent ? door("start-send", view.subject) : "";
+      // R43, R48 (C65): once the filing's sending is recorded the way to keep it as the team's template is reachable from the action: the
+      // control is on `start-send`'s step for a sent filing (the registry lists `templatesave` on that screen alone), which this opens
+      const keepDoor = step === "sent" && cs.can("templatesave") ? '<p class="mk-note">' + aLink("start-send", view.subject, "screen.start-send.template.heading") + "</p>" : "";
       const owed = a.reply_owed && a.reply_owed.owed;
       const wait = owed ? '<p class="cs-wait" role="status">' + cs.w("screen.action.waiting", { office: office || cs.w("screen.action.theoffice") }) + "</p>" : "";
       const today = P.today(cs);
@@ -486,7 +489,7 @@ export const action = Object.freeze({
         + cs.act("actionscope", { data: { to: a.confidential ? "false" : "true" } });
       const manage = cs.sec("screen.action.manage", '<div class="mk-acts">' + move + "</div>" + scope);
       // R40: the counsel packet's screen is opened from the action
-      return head + pickup + toSend + wait + dueDoor + question + clocks + replies + pressureSec + lawSec + guideSec + templatesSec + riskSec + door("counsel", view.subject) + manage;
+      return head + pickup + toSend + wait + dueDoor + question + clocks + replies + pressureSec + lawSec + guideSec + templatesSec + keepDoor + riskSec + door("counsel", view.subject) + manage;
     });
   },
 

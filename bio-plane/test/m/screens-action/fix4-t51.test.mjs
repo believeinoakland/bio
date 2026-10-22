@@ -4,7 +4,7 @@
    the member's act (a press), never by calling an act's done function; every sentence is read by its key (R19). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, ops, press, last, ok, W, D, DATA_PLANE, ROUTES, PLAN, PLAN_ID, DET, PROJECT, PROFILES, PROFILES_WITH_HELP, RECORDS_HELP, ACTION, ACTION_ID, FILINGS, draft, TEMPLATES } from "./page.mjs";
+import { open, main, text, ops, press, last, ok, W, D, DATA_PLANE, ROUTES, PLAN, PLAN_ID, DET, PROJECT, PROFILES, PROFILES_WITH_HELP, RECORDS_HELP, ACTION, ACTION_ID, FILING, FILINGS, draft, TEMPLATES, button } from "./page.mjs";
 
 const withPlan = (o) => ({ ...DATA_PLANE, plan: ok({ ...PLAN, ...o }) });
 const markBtn = (p, option, disposition) => main(p).querySelectorAll('button[data-act="optiondispose"]').find((b) => b.dataset.option === option && b.dataset.disposition === disposition);
@@ -243,4 +243,45 @@ test("R16, R54, R4 (C64-law): 'Change the law…' on a records request lists the
   assert.deepEqual(last(plain, "actionlaws").body.laws, [{ level: "county", citation: "Mun. Code § 2.20.230" }]);
   const other = await open(`/app/action/${ACTION_ID}`, fedPlane({ action: ok({ ...FED_ACTION, kind: "public_comment" }), profiles: ok({ ...PROFILES, view: { ...FED_VIEW(), deadlines: [...FED_VIEW().deadlines, { rule: "agenda", applies_to: "public_comment", amount: 72, citation: "Open meetings law" }] } }) }));
   assert.deepEqual(other.doc.getElementById("law-pick").querySelectorAll("option").map((o) => o.value), ["Open meetings law"]);
+});
+
+/* ---------- C65: "Keep this filing as your team's template" is reachable once the request was sent and answered ---------- */
+
+const ANSWERED = { ...FED_ACTION, correspondence: [...SENT_ONLY, { ord: 2, direction: "received", at: "2026-10-28", medium: "portal", party: OGIS, author: "member:mai", account: "They sent the logs." }], entries: [{ ord: 2 }] };
+/* a plane that keeps the one filing the member's own acts make: prepared, then approved, then recorded as sent (`filingsfor` reads it back) */
+const filingPlane = (action = ANSWERED) => {
+  let d = null;
+  return { ...DATA_PLANE, action: ok(action), profiles: FED_PROFILES, templatesforaction: ok({ ...TEMPLATES, versions: [] }),
+    filingsfor: () => ok(FILINGS(d ? [d] : [])),
+    communicationprepare: () => { d = draft({}); return ok({ id: FILING, text: "We request the logs.", blanks: [] }); },
+    filingapprove: () => { d = { ...d, approval: { approved_by: "member:mai", at: "2026-10-20", sha: "s" } }; return ok({}); },
+    filingrecordsent: () => { d = { ...d, sending: { ord: 1, sent_on: "2026-10-20", reference: "26-0001" } }; return ok({}); },
+    templatesave: ok({ ok: true, template: "TPL-2" }) };
+};
+
+test("R43, R48 (C65): a request prepared, approved, sent and answered offers the way to keep its filing as the team's template: the action draws the reference, it opens `start-send`, which draws the form; control: an unsent action and an action with no filing do not", async () => {
+  const plane = filingPlane({ ...ANSWERED, correspondence: [], entries: [] });
+  const req = await open(REQUEST, plane);
+  await press(req, "communicationprepare", { values: { "send-text-0": "Please send me the logs." }, reason: "ready" });
+  await press(req, "filingapprove", { reason: "ready", confirm: true });
+  await press(req, "filingrecordsent", { values: { "send-at": "2026-10-20", "send-account": "through the portal", "send-reference": "26-0001" }, reason: "sent" });
+  said(req, "screen.start-send.sent", { date: D("2026-10-20") });
+  assert.equal(ops(req).includes("templatesave"), false, "the request page itself draws no template act (the registry lists it on start-send alone)");
+  // the member returns to the action after the answer came
+  const act = await open(`/app/action/${ACTION_ID}`, plane);
+  const door = main(act).querySelector(`a[href="/app/start-send/${ACTION_ID}"]`);
+  assert.ok(door, "the action draws a reference to start-send for a sent filing");
+  assert.ok(door.textContent.includes(W("screen.start-send.template.heading")), "worded 'Keep this filing as your team's template'");
+  assert.equal(main(act).querySelector('[data-list="start-send"]'), null, "not the card of an action still to be prepared");
+  const send = await open(`/app/start-send/${ACTION_ID}`, plane);
+  assert.ok(button(send, "templatesave"), "start-send draws the form for a sent filing");
+  await press(send, "templatesave", { values: { "template-name": "A federal records request", "template-use": "file" }, reason: "keep" });
+  assert.deepEqual({ ...last(send, "templatesave").body, reason: undefined }, { filing: FILING, name: "A federal records request", use: "file", project: PROJECT, reason: undefined });
+  // control: an action not sent draws the door to prepare a text and not this one
+  const unsent = await open(`/app/action/${ACTION_ID}`, { ...filingPlane({ ...ANSWERED, correspondence: [], entries: [] }) });
+  assert.ok(main(unsent).querySelector('[data-list="start-send"]'), "the card to prepare");
+  assert.ok(!text(unsent).includes(W("screen.start-send.template.heading")));
+  // control: an action sent with no filing (a direct sending) has nothing to keep
+  const direct = await open(`/app/action/${ACTION_ID}`, filingPlane());
+  assert.equal(main(direct).querySelector(`a[href="/app/start-send/${ACTION_ID}"]`), null);
 });
