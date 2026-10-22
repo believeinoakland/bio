@@ -534,3 +534,10 @@ Recommendation: B for the alpha (Bob's focus: efficient deployment), recording t
 Size (session_01ScsNRTFgkShQFLDCyhHJBM): test runs 14, module lines 4,494
 
 **Users' suites** (`bio-plane/test/m/plane/`, `journey-check/`, on the merged tranche): 435 tests, 339 pass, 95 fail, none from this job. Plane: 1 red, `release.test.mjs:74` R24 (`screen.objective.purpose` not held by the words list: the design words, not this module). journey-check: 94 red, all `playwright-core cannot be loaded (run npm ci in bio-plane/src/journey-check)`: the container has no `node_modules` there (K4113 names the lockfile directories; this one was not installed). Nothing of control-plane's is among them.
+
+## J26 · COMPLETE
+
+control-plane fix round 5 complete, pushed (job/T51/control-plane, tranche/T51 merged through extraction). Record: "Completion: fix round 5" in build/jobs/T51/control-plane.md.
+E3: a capture over 24 MiB is never deferred (statement). E2: an `existed` acquire/upload that will not fit is owed; "Read it" asks the owner with `defer=1` (size from the bucket) and answers at once on READING_PENDING. E6: unread scan pages owe an `ocr` entry (promote with and without a reading); the OCR press hands the pages to the ledger and answers at once. E10 (i): `in-<route>` from the object's `server-timing: object;dur=`. E10 (ii) per B35: hop counts pinned as ceilings (whoami 1, projectlist 2, groupidentity 3, bootstrap 4, queue 2). E1, E5 seams green on the merged providers; E3 and E6 seams green; E8's composition test (t51-visitor-copy.test.mjs) is E8's through-the-door test, green.
+Suite: 405 tests, 404 pass; the one red is t51-hops E10 (i), red by name until plane sends `server-timing: object;dur=`. checks: format, architecture, coverage (6614/6614), words (count unchanged), ownership 0 failures. Users' suites: plane 1 red (release R24 words, not mine), journey-check 94 red from missing playwright-core in the container.
+For you: proposed lines for R123, R117, R121, R125 (record). Finding for plane: frequent traffic starves the alarm (60-page scan stuck 300 s at 4 s polling, done in under a minute at 20-30 s).
