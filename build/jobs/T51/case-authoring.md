@@ -356,3 +356,13 @@ Failing-first (copy-now.test.mjs: the real publishcase op over the real case-car
 Suites: case-authoring 234 tests, 233 pass, 1 red (the seam test, by name); review + screens-publish 347 tests, 345 pass, 0 fail. Checks: architecture, coverage (56 of 56), words (count 18421 unchanged), ownership 0 failures; format has 1 failure in build/plan/next.md:38 (BOB's file). Proposed R85 is in my record.
 
 Smallest thing I need: tell me when case-carriage's copyNow is merged; I merge tranche/T51, re-run the seam test and report. The contract I call: copyNow enqueues each named digest not queued, skips any over maxBytes, awaits the copies, never rejects. Record: build/jobs/T51/case-authoring.md.
+
+## Completion record (T51, B23 CHANGE: case-carriage's `copyNow` merged; G9 again)
+
+Merged `tranche/T51` (748383ed5e) into the branch. The walker's-case seam test (`copy-now.test.mjs`, the real `publishcase` op over the real case-carriage and case-disclosures, 356-byte text upload) is **GREEN against the real `copyNow`**; the 5 MiB control and the wiring tests stay green. No source change.
+- `node --test --test-force-exit "bio-plane/test/m/case-authoring/*.test.mjs"`: 234 tests, 234 pass, 0 fail.
+- Users `review` + `screens-publish`: 355 tests, 353 pass, 0 fail.
+- `checks/run.mjs`: format 0, architecture 0, coverage 6623 of 6623, words 0 (count 18421 unchanged); ownership 4 files, 0 failures.
+- Still for the re-walk: that the live worker binds the bucket and evidence store.
+
+Size (session_01ArzPvzaCjrWtx5Dq9bDqeE): test runs 11, module lines 2989
