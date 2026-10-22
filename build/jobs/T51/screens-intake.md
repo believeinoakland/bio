@@ -498,3 +498,9 @@ Size (session_01RpngLERJbtZqcnEHi985DP): test runs 27, module lines 2601
 ## J30 · COMPLETE
 
 COMPLETE (B34 applied). Merged tranche/T51 (capture declares project); removed my page.mjs stand-in. screens-intake 292/292 (the R-SEAM test is green); screens-daily c25-seam green. r117-held R117 still red alone (control-plane's). Size (session_01RpngLERJbtZqcnEHi985DP): test runs 27, module lines 2601
+
+## B35 CHANGE applied: interface-shell's frame key
+
+Merged `tranche/T51` (interface-shell G12b). `common.test.mjs:172` and `open-file.test.mjs:221` now exclude the shell's one key `bio-session:frame` from the "tab storage holds nothing" check (the rest of the storage must still be empty). screens-intake 292 of 292.
+
+Size (session_01RpngLERJbtZqcnEHi985DP): test runs 29, module lines 2601
