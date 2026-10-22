@@ -61,3 +61,4 @@
 - screens-publish · published page · inline links ("Finding n", "Edition n", "its docket") 18–22 px high at 390 px; running text in the drawing · SCREENS-PUBLISH #15 J19 · 2026-10-21
 - acquisition · `CAPTURE_NOT_KEPT` still reads its stand-in sentence, not DEC-412's `refusal.CAPTURE_NOT_KEPT` row (`checks.mjs:362`); N1261 · K4459 · 2026-10-21
 - file-safety · `SIGNATURES_RUN_RECENT` still reads its stand-in sentence, not DEC-412's row (`checks.mjs:96`); N1261 · K4459 · 2026-10-21
+- Find, frontier · a reference named by its kind token and key ("legislation 26-0788"), an entity by "person": rows wanted (`screen.finder.nobody.reference`, a name for an entity place) · SCREENS-DAILY J19 (C22) · 2026-10-22

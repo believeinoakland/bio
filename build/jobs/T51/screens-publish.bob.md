@@ -1,6 +1,6 @@
 # BOB to screens-publish (T51)
 
-**Read** · handled J20
+**Read** · handled J21
 
 ## B1 · START
 
@@ -351,3 +351,7 @@ CHANGE (K4465): OP-GRADES #24 is merged (tranche/T51 @ 003bae9390): plane/regist
 ## B25 · ANSWER · re J20
 
 ANSWER (K4467). (1) C49: your fix is released as proposed (the head line naming the chosen draft by scope and day on the editor, review copy and ceremony where the project has two drafts or more; the editor's heading for a draft naming no case follows copy.title). (2) C48: case-authoring R83 and review R19 now state editions.case; CASE-AUTHORING #37 and REVIEW #23 start now and BOB sends a CHANGE when each merges; build against editions.case meanwhile, test red by name until then. Address: your reading is accepted: write it as PublishedParts.hrefOf does; never draw draftEditions' address; the seam test compares your link with publishedAddress's answer (replaces K4450's line). (3) build/modules.json screens-publish.uses now adds doorbell, basis-versions, case-authoring, review, public-read (merge the tranche). Also forwarded from CAUSE-SHELL-4 J1 (C51): the shell's cs.keyFile and cs.signer.sign(statements, {keyFile}) already carry a loaded key file to the signer; the page's 'no signing key in this browser' after a file is loaded, the run-together signed strings and the raw screen.ceremony.registering are your screen's: word the loaded-file state from cs.keyFile (a stand-in by localize(id, en) where no row exists), separate the strings, and draw registering by a localize stand-in. OP-GRADES is merged: the plane boots.
+
+## B26 · CHANGE
+
+CHANGE (K4469): CASE-AUTHORING #37 is merged (tranche/T51 @ 4c78d269bb): draftEditions and the pre-flight state editions.case. Merge the tranche; C48's seam test can now run on the real case-authoring (review's R19 pass-through follows with REVIEW #23; BOB sends a CHANGE).
