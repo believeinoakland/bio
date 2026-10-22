@@ -170,6 +170,9 @@ function render(cs, view) {
   const cur = project ? later("current", "basisversions", { id, project }) : null;
   const current = cur && cur.state === "ok" && cur.value.current ? cur.value.current : null;
   const currentName = current ? String(current.version || "") : "";
+  /* C14 (R2, R24): what depends on the reading shown is asked once that reading is settled: `basisversions` has answered and, when the project's
+     own reading is asked for, that has answered too, so a reading that changes when the second arrives is not asked about first */
+  const readingSettled = !!d.basis && d.basis.state !== "loading" && !(cur && cur.state === "loading");
   const accepted = vs.filter((v) => v && v.state === "accepted");
   const machine = (v) => !!(v && (v.run || /^class:/.test(String(v.author || ""))));
   const picked = ui["choice:question-reading"];
@@ -661,7 +664,7 @@ function render(cs, view) {
   if (partitioned) {
     /* R24: the read-back, the shared origins, who set it and every later change */
     const singles = parts.filter((p) => p.legs.length === 1), many = parts.filter((p) => p.legs.length > 1);
-    const ind = later("independence", "partitionindependence", shownName ? { id, version: shownName }
+    const ind = !readingSettled ? { state: "loading" } : later("independence", "partitionindependence", shownName ? { id, version: shownName }
       : { id, partition: JSON.stringify(citedLegs.reduce((acc, l) => { const p = partOf(l); const k = p ? p.label : "#" + l.ord; if (!acc.keys.includes(k)) { acc.keys.push(k); acc.list.push([]); } acc.list[acc.keys.indexOf(k)].push(l.ord); return acc; }, { keys: [], list: [] }).list) }, String(ui.legSeq || 0));
     const iv = ind.state === "ok" && ind.value && ind.value.independence ? ind.value.independence : null;
     const nameOfPart = (x) => {

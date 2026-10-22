@@ -49,3 +49,31 @@ test("R24 R34 C36-aside 'Your answer fails if any one of these fails' and the pa
   assert.ok(!r.textContent.includes(WEB_WORDS) && !r.textContent.includes("Page one of the audit."), "control: a leg naming no part draws no words");
   assert.ok(r.textContent.includes("The audit") && r.textContent.includes("A web page from www.oaklandca.gov"), "control: and still its title");
 });
+
+/* ---- C14 (R2, R24, R25): the screen's read set ---- */
+const VERSION = (name, extra = {}) => ({ name, state: "accepted", author: "member:dev", moved: { by: "dev", at: "2026-10-06T09:00:00Z", reason: null }, grounds: [],
+  legs: [{ ord: 1, target: D, role: "supports", grade: "B", target_title: "Policy memo 4.12" }], ...extra });
+/** the ops asked for the same thing twice: `op` and its whole query, more than once */
+const repeats = (p) => {
+  const seen = new Map();
+  for (const r of p.requests) { const k = r.op + " " + JSON.stringify(r.query || {}) + " " + JSON.stringify(r.body || null); seen.set(k, (seen.get(k) || 0) + 1); }
+  return [...seen.entries()].filter(([, n]) => n > 1).map(([k]) => k);
+};
+
+test("R2 R24 R25 C14 the question reads what depends on the reading shown once the reading shown is settled: a project whose standing reading arrives after the first answer does not make the independence of the first reading and then of the second two reads; control: no read is asked twice for the same thing", async () => {
+  let release;
+  const gate = new Promise((r) => { release = r; });
+  const versions = [VERSION("main"), VERSION("alt")];
+  const base = plane();
+  const p = await open(at, { ...base, plane: { ...base.plane,
+    basisversions: async (r) => {
+      if (r.query.project) { await gate; return ok({ ok: true, inquiry: Q, versions, current: { project: P, version: "alt", at: "2026-10-06T09:00:00Z", by: "dev" } }); }
+      return ok({ ok: true, inquiry: Q, versions });
+    } } });
+  release();
+  await p.settle();
+  const ind = p.byOp("partitionindependence");
+  assert.equal(ind.length, 1, "the independence is asked once, for the reading the project stands on: " + JSON.stringify(ind.map((r) => r.query)));
+  assert.equal(ind[0].query.version, "alt");
+  assert.deepEqual(repeats(p), [], "control: no read is made twice for the same thing");
+});
