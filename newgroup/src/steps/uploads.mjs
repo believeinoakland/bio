@@ -2,7 +2,25 @@
 import { cf } from "./api.mjs";
 import { rand, uploadForm } from "./bytes.mjs";
 import { scriptHash, releaseSha } from "./readback.mjs";
+import { planeCronsOfStream } from "./statements.mjs";
+import { setSchedules } from "./containers.mjs";
+import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 import { selfBinding, BROWSER_BINDING, memberBindings, instanceAiBinding, sealBinding, profilesBinding, ownHostsBinding, SEAL_BINDING, PROFILES_BINDING } from "./bindings.mjs";
+
+/* R39 (K4566; fix round 6, G1) — THE PLANE'S SCHEDULE. The plane's one cron is the watchdog that heals a stalled object, and
+   nothing in the account sets it but this: a script's upload carries no schedule. It is read from the signed bundle's own
+   statement (`bio-plane-crons/1`), streamed, before anything is uploaded, so a release that states none (or unreadably) is
+   refused with nothing placed; and it is set after the upload, on the install and on the update alike, and a refusal STOPS
+   the act (unlike a helper's schedule, a note), since a plane without it can stall unseen. Stand-in for the sentence:
+   `installer.fleet.why.program`; the row owed is `installer-steps.plane.crons`, one line for "this release does not say when
+   the plane's watchdog runs". Cloudflare's own refusal is thrown with its message, as every other upload's. The schedule
+   takes up to 15 minutes to reach the platform; that wait is not the installer's. */
+async function cronsOf(release) {
+  const r = await planeCronsOfStream(release.blob.stream());
+  if (!r.ok) throw new Error(word("installer.fleet.why.program"));
+  return r.crons;
+}
+const setPlaneSchedules = (token, acct, slug, crons) => setSchedules(token, acct, slug, crons);
 
 /* `opts.noSelf` exists for ONE reason: an install PUT names a service binding to
    the script the same PUT creates, and nothing here can prove Cloudflare accepts
@@ -10,6 +28,7 @@ import { selfBinding, BROWSER_BINDING, memberBindings, instanceAiBinding, sealBi
    install degrades rather than failing — see the retry in runInstall. */
 async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
   const names = opts.names;
+  const crons = await cronsOf(release);
   const meta = {
     main_module: "index.mjs",
     compatibility_date: "2026-07-01",
@@ -57,8 +76,10 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
     /* SQLite backend is the irreversible choice, made correctly, once. */
     migrations: { new_tag: "v1", new_sqlite_classes: ["Store"] },
   };
-  return cf(token, `/accounts/${acct}/workers/scripts/${slug}`,
+  const put = await cf(token, `/accounts/${acct}/workers/scripts/${slug}`,
     { method: "PUT", body: uploadForm(meta, release.blob) });
+  await setPlaneSchedules(token, acct, slug, crons);
+  return put;
 }
 
 /* The update path. No fork, no CI/CD: the wizard re-uploads the current
@@ -69,6 +90,7 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
    touch passwords or the record, and the success page says so. */
 async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
   const names = opts.names;
+  const crons = await cronsOf(release);
   /* When the account's storage is available the update binds it explicitly,
      which quietly completes any copy installed before storage became a
      requirement. When it is not, the update proceeds the old way, keeping
@@ -148,8 +170,10 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
        binding from a working instance and re-inert its monitoring. */
     keep_bindings: ["secret_text", "durable_object_namespace", ...(withR2 ? [] : ["r2_bucket"])],
   };
-  return cf(token, `/accounts/${acct}/workers/scripts/${slug}`,
+  const put = await cf(token, `/accounts/${acct}/workers/scripts/${slug}`,
     { method: "PUT", body: uploadForm(meta, release.blob) });
+  await setPlaneSchedules(token, acct, slug, crons);
+  return put;
 }
 
 /* R67 — IS THE PLANE ALREADY AS THIS RELEASE WANTS IT? "Already done" is judged by the whole deployed state: the bytes the

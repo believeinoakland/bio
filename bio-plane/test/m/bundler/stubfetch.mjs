@@ -5,7 +5,14 @@
  *
  * Scenario: { subdomain, scripts: { <name>: { body?, settings? (limits?, bindings?), settingsStatus?, scriptStatus? } },
  *             put: "accept" | "ignore", settingsAfterPut?: object, serving: { <name>: string },
- *             servingAfterPut?: "version" | "never", unreachable?: [<substring>], containers?: <status> }
+ *             servingAfterPut?: "version" | "never", unreachable?: [<substring>], containers?: <status>,
+ *             schedulesPut?: "accept" | "ignore" | "reject", schedulesStored?: [<cron>], schedulesGet?: <status>,
+ *             scriptPutClearsSchedules?: boolean }
+ * A script's cron schedules are `scripts.<name>.schedules` (an array of cron strings). Its schedules endpoint (G1) answers
+ * PUT by storing what was sent (`schedulesPut` "ignore" answers 200 and stores nothing, "reject" answers 403, and
+ * `schedulesStored` stores that list instead of what was sent) and GET with the stored list (`schedulesGet` names a status
+ * to fail with); a script that does not exist answers 404. `scriptPutClearsSchedules` makes a script PUT clear them, the
+ * platform behaviour the plan leaves unconfirmed.
  * A script with no entry does not exist (404). A PUT the scenario accepts stores the uploaded module as
  * the script's body, the metadata's limits as its settings (unless `settingsAfterPut` says otherwise),
  * and, unless `servingAfterPut` is "never", the metadata's VERSION as what the instance serves. The account's
@@ -57,6 +64,21 @@ globalThis.fetch = async (input, init = {}) => {
     if (!s) return json(404, { success: false });
     return json(200, { success: true, result: s.settings ?? {} });
   }
+  if ((m = path.match(/\/workers\/scripts\/([^/]+)\/schedules$/))) {
+    const s = S.scripts[m[1]];
+    if (method === "PUT") {
+      const sent = JSON.parse(String(init.body));
+      log({ ...entry, schedules: sent });
+      if (!s) return json(404, { success: false, errors: [{ code: 10007, message: "This Worker does not exist" }] });
+      if (S.schedulesPut === "reject") return json(403, { success: false, errors: [{ code: 10000, message: "Authentication error" }] });
+      if (S.schedulesPut !== "ignore") s.schedules = S.schedulesStored ?? sent.map((x) => x.cron);
+      return json(200, { success: true, result: { schedules: (s.schedules || []).map((cron) => ({ cron })) } });
+    }
+    log(entry);
+    if (S.schedulesGet) return json(S.schedulesGet, { success: false });
+    if (!s) return json(404, { success: false });
+    return json(200, { success: true, result: { schedules: (s.schedules || []).map((cron) => ({ cron })) } });
+  }
   if ((m = path.match(/\/workers\/scripts\/([^/]+)$/))) {
     const name = m[1];
     if (method === "PUT") {
@@ -67,6 +89,7 @@ globalThis.fetch = async (input, init = {}) => {
       if (S.put === "accept") {
         const s = (S.scripts[name] ||= {});
         s.body = module;
+        if (S.scriptPutClearsSchedules) s.schedules = [];
         s.settings = S.settingsAfterPut ?? { limits: metadata.limits, bindings: metadata.bindings };
         const v = metadata.bindings.find((b) => b.name === "VERSION");
         if (S.servingAfterPut !== "never" && v) S.serving[name] = v.text;
