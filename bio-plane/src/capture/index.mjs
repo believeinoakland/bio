@@ -44,7 +44,7 @@ import { say } from "./words.mjs";
 import { INFORMATION_GRAMMAR } from "./grammar.mjs";
 import { evidenceAbsent } from "./ops.mjs";
 import { acquire, archiveLookup, profileOf, profilesAsText, profileView, governedFetch, governedCall, INSTALLATION_CHECKS,
-         firstHopWho, CAPTURE_MAX, keepWhole, servedSubstance, PROFILE_TEXT_MAX, MULTIPART_KEEP_MAX } from "../acquisition/index.mjs";
+         firstHopWho, CAPTURE_MAX, keepWhole, keepPast, servedSubstance, PROFILE_TEXT_MAX, MULTIPART_KEEP_MAX } from "../acquisition/index.mjs";
 import { verifySshsig, NS_RATIFY, captureAccountStatement } from "../sshsig.mjs";
 /* R69 (N530, K1336): the account statement is spelled once, by `signatures` (its R41); re-exported so the names this
    module's users import (`affordances`' tests among them) still resolve, with no spelling of capture's own. */
@@ -97,27 +97,6 @@ const NO_DECLARATION_SEAM = Object.freeze({ ok: false, module: "capture", declar
 const RECEIVED_VIAS = Object.freeze([DOORBELL_VIA, UPLOAD_VIA]);
 /* R86: the parts an upload is held in, `acquisition` R10's form. */
 const UPLOAD_PART = 8 * 1024 * 1024;
-/* R103 (fix round 4b, F2; K4487): the door's bound for a member's act (control-plane R105: 25 s) and what an upload leaves of it for
-   the rest of the call after awaiting a keep; CHOSEN as `acquisition` R96's are, the plane may hand its own as `boundMs`. */
-const UPLOAD_BOUND_MS = 25000;
-const UPLOAD_KEEP_RESERVE_MS = 5000;
-/* R103: the large keeps under way, by the whole's digest, so a second press of the same file while the first is under way waits
-   for it and the store is asked once. */
-const KEEPING_LARGE = new Map();
-/** R103 (`acquisition` R96's arm for an upload): the whole of a file past `MULTIPART_KEEP_MAX` made by the store itself from the
- *  parts it holds (record-core R87), no part read back here. Answers the promise of `{ok}` or null when the store offers no
- *  call; never rejects. */
-function keepLargeFromParts(ev, { sha, parts }) {
-  if (!ev || typeof ev.putFromParts !== "function") return null;
-  const going = KEEPING_LARGE.get(sha);
-  if (going) return going;
-  const mine = (async () => {
-    try { const r = await ev.putFromParts(sha, parts.map((p) => p.sha256)); return { ok: !!(r && r.ok === true) }; }
-    catch { return { ok: false }; }
-  })().finally(() => { if (KEEPING_LARGE.get(sha) === mine) KEEPING_LARGE.delete(sha); });
-  KEEPING_LARGE.set(sha, mine);
-  return mine;
-}
 /** R94: the longest question id `recordCapturedFor` records, in characters (`acquisition` R47's bound). */
 export const CAPTURED_FOR_QUESTION_MAX = 200;
 /** R100: the longest project id `recordSeenIn` records, in characters. */
@@ -745,22 +724,8 @@ export class Capture {
        not ended by then is handed to the plane (`keepLater`, its owed-work ledger, finished by its alarm) and the answer says
        `keep_pending`; the file is filed in its parts either way, never refused for it. */
     let keepPending = false;
-    if (multipart && total > MULTIPART_KEEP_MAX) {
-      const making = keepLargeFromParts(ev, { sha, parts });
-      if (making) {
-        const left = Math.max(0, (boundMs ?? UPLOAD_BOUND_MS) - UPLOAD_KEEP_RESERVE_MS - (Date.now() - startedAt));
-        let timer;
-        const got = await Promise.race([making, new Promise((res) => { timer = setTimeout(() => res(null), left); })]);
-        clearTimeout(timer);
-        if (!(got && got.ok)) {
-          const later = typeof keepLater === "function" ? keepLater : typeof this.keepLater === "function" ? (k) => this.keepLater(k) : null;
-          if (later) {
-            try { const r = await later({ sha, parts: parts.map((p) => p.sha256) }); keepPending = !!(r && r.ok === true); }
-            catch { keepPending = false; }
-          }
-        }
-      }
-    }
+    if (multipart && total > MULTIPART_KEEP_MAX)
+      keepPending = (await keepPast(this, ev, { sha, parts, boundMs: boundMs ?? undefined, elapsedMs: Date.now() - startedAt, keepLater })).keep_pending;
     const pending = keepPending ? { keep_pending: true } : {};
     let holds = null;
     try { holds = await this.provenance?.registerHolds?.({ sha }); } catch { holds = null; }
