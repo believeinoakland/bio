@@ -2897,7 +2897,8 @@ export class InstanceSetup {
   }
 }
 
-/* R12 (N420): the three facts of the active profiles' combined view that `agent-worker` R51 reads: `deadlines` and
+/* R12 (N420): the three facts of the active profiles' combined view that `agent-worker` R51 reads (and, since fix round
+   4, `records_laws`, `records_help` and `name` for the screens): `deadlines` and
    `legal_organisations` as `jurisdictions.combine` gives them (its R29, R34), and `venues`, each `{kind, venue}` of a
    combined `action_kinds` entry that gives one (its R25, R29). A fact no active profile states, or that `combine`
    withholds (a conflict) or cannot give (its errors), is ABSENT, never an empty list: the reader then reads it
@@ -2912,6 +2913,10 @@ function profileView(combined) {
     .filter((k) => k && typeof k.kind === "string" && k.venue && typeof k.venue === "object")
     .map((k) => ({ kind: k.kind, venue: k.venue }));
   if (venues.length) view.venues = venues;
+  /* (fix round 4, C64-law) the law picker, "Change the law" and the records help read these three, as `combine` gives them */
+  if (Array.isArray(v.records_laws) && v.records_laws.length) view.records_laws = v.records_laws;
+  if (v.records_help && typeof v.records_help === "object") view.records_help = v.records_help;
+  if (typeof v.name === "string" && v.name) view.name = v.name;
   return view;
 }
 
