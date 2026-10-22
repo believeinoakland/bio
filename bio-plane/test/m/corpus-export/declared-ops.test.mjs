@@ -33,3 +33,8 @@ test("R12 corpus-export declares exportlog: its requires alone raise no refusal 
   await declaredOpHolds({ op: "exportlog", declaration: DECLARED_OPS["exportlog"], call: mk("exportlog", {"viewer":"admin"}),
     refusedNaming: named({}) });
 });
+
+test("R15 corpus-export declares exportrender: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "exportrender", declaration: DECLARED_OPS["exportrender"], call: mk("exportrender", {"viewer":"member:ann"}),
+    values: { format: "ftm", part: "1" }, refusedNaming: named({ format: ["EXPORT_FORMAT_UNKNOWN"], part: ["EXPORT_PART_MALFORMED"] }) });
+});

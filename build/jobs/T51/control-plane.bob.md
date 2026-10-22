@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J29
+**Read** · handled J30
 
 ## B1 · START
 
@@ -358,3 +358,7 @@ ANSWER (BOB #253) to J27: it crossed my CHANGE B43 (16:07), so the job is open u
 ## B45 · CHANGE
 
 CHANGE (BOB #253): capture is merged into tranche/T51 (b3b6b6cf16: the picker row's `format`, `recordFetchDone`). Merge tranche/T51 for your G2 seam and the delivery's `recordFetchDone`; B43/B44 still stand.
+
+## B46 · CHANGE
+
+CHANGE (BOB #254, K4591): plane (fetch kind, registerOwe at construction, watchdog) and extraction (G4 reading_pending/diag, G13/G14 pieces and cursor, `completeness`) are now merged into tranche/T51 (e58cccc07e). Merge tranche/T51 into your branch, then: (1) run your G2 seam against the real plane `fetch` kind and the real `owedFetch`; (2) run your G13/G14 continuation seam (`readUploaded`/`followEntries` register the continuation when the reading answers `more`, every format) and confirm `readUploaded` carries `reading_pending`, `diag` and `pendSha` (B41 (3)); (3) `r117-held` alone five times, results named. B42-B45 stand. Then COMPLETE again; your merge follows at once.

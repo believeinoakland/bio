@@ -71,3 +71,19 @@ test("R79 R80 extraction declares readheld: its requires alone raise no refusal 
     refusedNaming: (a, f) => f === "sha" && !!a && a.reason === "NO_SHA",
     same: (x, y) => !!x && !!y && x.ok === y.ok && x.reason === y.reason });
 });
+
+/* R79 R76 (fix round 6, G13; K4577): `reading` takes `after`, a unit's seq, beside the digest it requires. */
+test("R79 R76 extraction declares reading: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  const setup = async () => {
+    const w = fresh();
+    bundle(w.s, "B-1", { type: "information" });
+    const d = await hold(w.evidence, "a declared reading");
+    w.x.writeReading({ bundleId: "B-1", captureSha: d, reading: { found: false, entities: [], basis: "b" }, composed: true });
+    return { ...w, d };
+  };
+  await declaredOpHolds({ op: "reading", declaration: DECLARED_OPS["reading"],
+    call: mk("reading", { viewer: "class:admin" }, setup, async (url, fields, env) => extractionOps(env.x, url, fields, {}).reading(),
+      (fields, env) => (fields && "sha256" in fields ? { ...fields, sha256: env.d } : fields)),
+    refusedNaming: (a, f) => f === "sha256" && !!a && a.reason === "NO_SHA",
+    same: (x, y) => !!x && !!y && x.ok === y.ok && x.reason === y.reason });
+});

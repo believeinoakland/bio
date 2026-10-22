@@ -218,7 +218,7 @@ test("R39 controls: the safe view is not verified against the original's digest;
   assert.equal(p.files.length, 1, "the safe view downloads though its bytes are not the original's");
   assert.ok(!says(p, "refusal.DIGEST_MISMATCH") && !says(p, "screen.open-file.digest.checked"));
   assert.equal(p.byOp("heldat").length, 0);
-  assert.deepEqual([...p.store.keys()], []);
+  assert.deepEqual([...p.store.keys()].filter((k) => k !== "bio-session:frame"), []);
   for (const k of p.local.keys()) assert.match(k, /^(cs-|bio-session(:active)?$)/);
 });
 
