@@ -46,7 +46,7 @@ const finish = async (g, sid) => {
 const facts = (d) => ({ sha: d.capture.sha256, bytes: d.capture.bytes, method: d.capture.method, pair: d.pair, shell: d.shell && d.shell.sha256,
   requests: d.render.requests, subresources: d.render.subresources, data: d.render.data });
 
-test("R5 R12 (G27): a render that returns after the request has ended is kept in the record at once, the reply dropped: its page and each body are held before anyone finishes it, and \"Finish it\" files the pair a waited render files, from one render, one charge", async () => {
+test("R109 R5 R12 (G27): a render that returns after the request has ended is kept in the record at once, the reply dropped: its page and each body are held before anyone finishes it, and \"Finish it\" files the pair a waited render files, from one render, one charge", async () => {
   /* the control: the same render waited for */
   const waited = gated({ open: true });
   const w1 = await begin(waited, 5000);
@@ -79,7 +79,7 @@ test("R5 R12 (G27): a render that returns after the request has ended is kept in
   assert.equal(g.calls.length, 1);
 });
 
-test("R5 R12 (G27) control: a render that fails, or answers with no page, is a small answer that is not kept, and \"Finish it\" says so in words and closes the session, as before", async () => {
+test("R109 R5 R12 (G27) control: a render that fails, or answers with no page, is a small answer that is not kept, and \"Finish it\" says so in words and closes the session, as before", async () => {
   let release; const gate = new Promise((r) => (release = r));
   const w = world({ env: { RENDERER: { fetch: async () => { await gate; return new Response(JSON.stringify({ ok: false, error: "navigation timed out" })); } } } });
   w.store.owedLater = async () => ({ ok: true });
@@ -96,7 +96,7 @@ test("R5 R12 (G27) control: a render that fails, or answers with no page, is a s
   assert.equal(w.store.state.sessions.has(sid), false);
 });
 
-test("R5 R12 (G27): when the record will not take the render's pieces, the reply is not lost: it stays as it was and \"Finish it\" files the pair once the record can", async () => {
+test("R109 R5 R12 (G27): when the record will not take the render's pieces, the reply is not lost: it stays as it was and \"Finish it\" files the pair once the record can", async () => {
   const waited = gated({ open: true });
   const w1 = await begin(waited, 5000);
   const g = gated();
@@ -112,7 +112,7 @@ test("R5 R12 (G27): when the record will not take the render's pieces, the reply
   assert.equal(g.calls.length, 1, "it was not rendered a second time");
 });
 
-test("R5 R99 (G27): a kept render whose page the record no longer holds is treated as a render the object lost: \"Finish it\" renders again, once, and files the pair", async () => {
+test("R109 R5 R99 (G27): a kept render whose page the record no longer holds is treated as a render the object lost: \"Finish it\" renders again, once, and files the pair", async () => {
   const g = gated();
   const first = await begin(g, 20);
   const sid = first.body.render.session;
@@ -127,7 +127,7 @@ test("R5 R99 (G27): a kept render whose page the record no longer holds is treat
   assert.equal(g.calls.length, 2, "rendered again, because the first could not be read back");
 });
 
-test("R5 (G27): the renderer's reply is not resident after the request that did not wait for it has ended: a 42 MiB reply, six bodies, leaves the object's heap where it was (a child with --expose-gc, the heap measured after collection)", () => {
+test("R109 R5 (G27): the renderer's reply is not resident after the request that did not wait for it has ended: a 42 MiB reply, six bodies, leaves the object's heap where it was (a child with --expose-gc, the heap measured after collection)", () => {
   const child = fileURLToPath(new URL("./g27-memory-child.mjs", import.meta.url));
   const r = spawnSync(process.execPath, ["--expose-gc", child], { encoding: "utf8", timeout: 120000 });
   assert.equal(r.status, 0, r.stderr);
