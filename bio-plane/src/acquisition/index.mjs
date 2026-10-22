@@ -28,6 +28,9 @@
  * `textTypeOf` is the one rule for reading a member's file as text (R102); `read` is split into download, hash and store (R103); a
  * visitor copy a member's "Finish it" finishes stays owed until its document is filed (R104).
  *
+ * T51 fix round 6 (the third re-walk's G2, G3, G12a): a member's large or slow web capture is parked and owed to the plane's alarm, not read in the
+ * request (`owedFetch`, R105); "Finish it" renders nowhere in the request (R106); a capture decided to be no archive is not decided again (R107).
+ *
  * Every refusal is an answer `{status, body}`, never a throw. The comments carried from the legacy handler keep the
  * reasoning beside the code it explains. */
 import { isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, ISO_TS_RE, isMachineIdentity } from "../record-grammar/index.mjs";
@@ -2184,9 +2187,8 @@ export async function owedRun(cap, entry, opts = {}) {
  *  with no bound but the alarm's, and its document is handed to `opts.deliver({answer: {ok, existed, document}, session})`, the
  *  plane's promotion of it under the project the session names (no file of the record is written here, R25); with no `deliver` nothing
  *  is fetched. A document made but not delivered is kept in the session (`fetch_done`) and delivered by the next run, never fetched
- *  twice. When the delivery is accepted the store handed in is told `recordFetchDone({session, sha256, opened_by, project, locator,
- *  at})` if it offers that call (a missing or failing call never fails the delivery), and the session is dropped. Answers `{ok: true,
- *  done}` (`done` ends the entry; a session that is gone is `done` with `reason` `NO_SUCH_SESSION`), `{ok: true, done: false,
+ *  twice. When the delivery is accepted the session is dropped (what the delivery records, `capture`'s `recordFetchDone`, is the
+ *  caller's: it reads the session in `deliver`, before this drop). Answers `{ok: true, done}` (`done` ends the entry; a session that is gone is `done` with `reason` `NO_SUCH_SESSION`), `{ok: true, done: false,
  *  outstanding: 1, reason}` for a try that goes again after the ledger's back-off (a source that was busy or broke off, a delivery
  *  refused), `{ok: true, done: true, final: true, reason}` for a refusal no later try changes (the source refused it, it is over what
  *  this surface captures): the session then stays, stating `fetch_pending.failed`, for the member to read. A throw is `{ok: false,
@@ -2229,11 +2231,6 @@ export async function owedFetch(cap, entry, opts = {}) {
     }
     const given = await opts.deliver({ answer: made.answer, session: entry.session });
     if (!(given && given.ok === true)) return { ok: true, done: false, outstanding: 1, reason: "DELIVERY_REFUSED" };
-    try {
-      if (typeof cap.recordFetchDone === "function")
-        await cap.recordFetchDone({ session: entry.session, sha256: made.sha256, opened_by: opener, project: typeof st.project === "string" ? st.project : null,
-                                    locator: ld.locator, at: stampSecond() });
-    } catch { /* an unrecorded completion never fails the delivery */ }
     try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ }
     return { ok: true, done: true };
   } catch (e) { return { ok: false, reason: "OWED_FETCH_FAILED", detail: String(e && e.message || e).slice(0, 200) }; }

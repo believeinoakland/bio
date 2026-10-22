@@ -187,7 +187,6 @@ const tick = (w, session, extra = {}) => {
 test("R105 (G2): a 15.9 MB source declared by Content-Length that serves 0.7 MB/s: `acquire` answers `fetch_pending` at once with the declared size, no document, not one body byte pulled, the capture parked and owed as `{kind: fetch, session}`; the alarm's run then makes the capture and hands the document to deliver; a second press while it is owed parks no second one", async () => {
   const w = world();
   const ledger = withLedger(w);
-  const done = []; w.store.recordFetchDone = (r) => { done.push(r); return { recorded: true }; };
   const source = slowSource(WALKER_BYTES);
   const t0 = Date.now();
   const first = await run(w, { [BIG]: () => source.make() }, { locator: BIG, project: "PROJ-2026-1577-x", subresources: true }, { settle: false });
@@ -230,7 +229,7 @@ test("R105 (G2): a 15.9 MB source declared by Content-Length that serves 0.7 MB/
   assert.deepEqual([doc.capture.bytes, doc.capture.actor, doc.capture.actor_class, doc.parts.length], [WALKER_BYTES, "m1", "member", 2]);
   assert.deepEqual(w.prov.receipts.map((r) => r.captureSha), [sha(body)]);
   assert.deepEqual(w.store.state.actors.map((a) => a.actor), ["m1"], "the capture is the member's");
-  assert.deepEqual(done.map((d) => [d.session, d.sha256, d.opened_by, d.project, d.locator]), [[fp.session, sha(body), "m1", "PROJ-2026-1577-x", BIG]], "capture is told it finished");
+  assert.deepEqual([delivered[0].answer.document.locator, delivered[0].answer.existed], [BIG, null], "the answer the plane promotes (a capture in parts: existed is undetermined, R11)");
   assert.equal(w.store.state.sessions.has(fp.session), false, "delivered: the session goes");
   assert.deepEqual(openCaptures(w.store, { by: "m1" }).captures, []);
 });
