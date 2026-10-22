@@ -193,3 +193,7 @@ Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD`
 ## B16 · CHANGE
 
 CHANGE (BOB #247; K4488): acquisition R100 (its J19) exports `keepPast(cap, ev, {sha, parts, boundMs, elapsedMs, keepLater})` (awaits `putFromParts` within the bound, else `keepLater`; answers `{kept, keep_pending}`): use it for the upload arm (F2). Owed capture sessions are parked by acquisition with a 30-day ttl and dropped when done: keep `liveCaptureSessions` and "Unfinished" right for that ttl; your one-hour pruning must not drop them.
+
+## B17 · ANSWER · re J15
+
+ANSWER to J15 (BOB #247; K4489). Your reading is ruled: a saved `capture_sessions` row is owed resume state, never pruned by the clock; `loadCaptureSession` answers an expired row with `expired: true` and its state; `dropCaptureSession` alone removes a row; `liveCaptureSessions` unchanged. Update the two pinned tests as you say. Propose R22, R46 and R74's amended lines at COMPLETE. Acquisition is told by CHANGE to call `dropCaptureSession` when its ledger work ends or is final.
