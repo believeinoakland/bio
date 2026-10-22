@@ -630,9 +630,10 @@ test("R72 words by key and 'team': every key the installer reads is held by setu
   const esbuild = await import("esbuild");
   const { bundleText, bundledKeys } = await import("../scripts/build.mjs");
   const text = await bundleText(esbuild);
-  const at = text.indexOf("WORD_ROWS = Object.freeze(");
-  assert.ok(at > 0, "the bundle carries the rows");
-  const arr = text.slice(at + "WORD_ROWS = Object.freeze(".length, text.indexOf("].map(", at) + 1);
+  const head = text.match(/\bWORD_ROWS ?= ?Object\.freeze\(/);       /* the build minifies whitespace (installer R82) */
+  assert.ok(head, "the bundle carries the rows");
+  const at = head.index;
+  const arr = text.slice(at + head[0].length, text.indexOf("].map(", at) + 1);
   const rows = (await import("node:vm")).runInNewContext("(" + arr + ")");
   const keep = new Set(await bundledKeys());
   assert.ok(WORD_ROWS.length > 5000);

@@ -31,6 +31,7 @@ import { gunzipSync } from "node:zlib";
 import { fileURLToPath } from "node:url";
 import vm from "node:vm";
 import * as esbuild from "esbuild";
+import { asciiOptions } from "../../scripts/fleet-bundle.mjs";
 
 const NG = fileURLToPath(new URL("../../../newgroup/", import.meta.url));
 const DIST = NG + "dist/newgroup.bundled.mjs";
@@ -43,11 +44,11 @@ const t = (name, got, want) => {
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 /* The packed release (newgroup R33: the signed bytes gzipped, as base64) hashed as the bytes it holds once expanded. */
 const shaPacked = (s) => createHash("sha256").update(gunzipSync(Buffer.from(s ?? "", "base64"))).digest("hex");
-/* The literal `NAME = "…"` or `NAME = '…'` evaluated, found by scanning its escapes (the esbuild output re-quotes it). */
+/* The literal `NAME = "…"` or `NAME = '…'` (`NAME="…"` once the whitespace is minified, G39) evaluated, found by scanning its escapes (the esbuild output re-quotes it). */
 const literal = (src, name) => {
-  const i = src.indexOf(name + " = ");
-  if (i < 0) return null;
-  let j = i + name.length + 3; const q = src[j]; let k = j + 1;
+  const at = src.match(new RegExp("\\b" + name + " ?= ?"));
+  if (!at) return null;
+  let j = at.index + at[0].length; const q = src[j]; let k = j + 1;
   while (k < src.length) { if (src[k] === "\\") { k += 2; continue; } if (src[k] === q) break; k++; }
   return vm.runInNewContext(src.slice(j, k + 1));
 };
@@ -66,6 +67,11 @@ const options = await bundleOptions();
 t("PIN: newgroup's build is the script this guard mirrors (scripts/build.mjs: bundle, esm, neutral, dist/newgroup.bundled.mjs)",
   [/node scripts\/build\.mjs/.test(buildLine), options.bundle, options.format, options.platform, options.outfile],
   [true, true, "esm", "neutral", "dist/newgroup.bundled.mjs"]);
+/* G39 (installer R82): the build carries bundler's ASCII recipe, and the committed bundle is pure ASCII (V8 holds a script's source two
+   bytes a character once one character is above U+00FF). */
+t("PIN: the build carries bundler's ASCII options (R2) and nothing of its own beside them",
+  Object.keys(asciiOptions()).map((k) => JSON.stringify(options[k]) === JSON.stringify(asciiOptions()[k])), Object.keys(asciiOptions()).map(() => true));
+t("(D) the committed bundle holds no byte over 0x7F", readFileSync(DIST).filter((b) => b > 0x7f).length, 0);
 
 t("(A) the bundle embeds the RELEASE_VERSION src/release.mjs carries",
   literal(committed, "RELEASE_VERSION"), want.version);
