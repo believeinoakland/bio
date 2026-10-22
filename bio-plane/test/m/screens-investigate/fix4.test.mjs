@@ -5,9 +5,11 @@ import assert from "node:assert/strict";
 import { ok, silent } from "../interface-shell/harness.mjs";
 import { open, main, plane, PATHS, MORE_PATHS, GRAPH, GRAPH_PERSON, word } from "./fixtures.mjs";
 
-/* what the page's frame reads for itself (cause-shell-4, control-plane, queue): never this module's screens' */
-const FRAME = new Set(["bootstrap", "whoami", "interfacewords", "groupidentity", "queue", "infolevel", "assistantstate", "accountreference", "subscriptionsignin", "groupkeystate", "wizardsat", "memberlist"]);
-const readsOf = (p) => p.requests.filter((r) => !FRAME.has(r.op));
+/* what the page's frame reads for itself (cause-shell-4, control-plane, queue) is what `help`, a screen that reads nothing, makes the page ask */
+let frame = null;
+const framed = async () => (frame ||= new Set((await open(PATHS.help)).requests.map((r) => r.op)));
+/* and the roster the kit names members from (interface-shell R111), asked when a screen names a member */
+const readsOf = (p) => p.requests.filter((r) => !frame.has(r.op) && r.op !== "memberlist");
 const count = (rs) => rs.reduce((m, r) => { m[r.op] = (m[r.op] || 0) + 1; return m; }, {});
 const SCREENS_OF_THE_MODULE = { ...PATHS, ...MORE_PATHS };
 /* the reads of each screen of the module, as it opens (a per-item read is one for each item shown: money's `money` per figure, a matter's documents' `image`) */
@@ -30,6 +32,7 @@ const OWN = {
 };
 
 test("R4 R34 R52 C14 each screen of the module reads only what it draws, once: its own reads are exactly the set below, no read is asked twice with the same question, and the frame's `queue` and `bootstrap` are asked once", async () => {
+  await framed();
   for (const [name, path] of Object.entries(SCREENS_OF_THE_MODULE)) {
     const p = await open(path);
     const own = readsOf(p);
@@ -56,6 +59,7 @@ test("R18 C14 a graph with no step to colour does not read the connection vocabu
 const ENTITY = /&(#\d+|amp|lt|gt|quot);/;
 test("R10 C59 N3 a read of any screen of the module that did not answer, or was refused with neither code nor words, is drawn whole: the apostrophe plain, never escaped twice", async () => {
   const hows = { silent: () => silent, "refused with no code": () => ({ status: 200, json: { ok: true, result: { ok: false } } }) };
+  await framed();
   let drawn = 0;
   for (const [name, path] of Object.entries(SCREENS_OF_THE_MODULE)) {
     const reads = [...new Set(readsOf(await open(path)).map((r) => r.op))];
