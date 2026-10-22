@@ -305,11 +305,15 @@ function render(cs, view) {
   /* G19 (fix round 6; acquisition): the supporting files a web capture kept and skipped, with the reasons the capture recorded (`supporting: {kept, skipped, reasons}`
      on the register document); drawn only when something was skipped, as the sizes kept of all and each reason in the plane's own words (the sentence is owed: stand-in) */
   {
-    const sup = reg0.supporting && typeof reg0.supporting === "object" ? reg0.supporting : reg0.capture && reg0.capture.supporting && typeof reg0.capture.supporting === "object" ? reg0.capture.supporting : null;
+    const sup = reg0.capture && reg0.capture.supporting && typeof reg0.capture.supporting === "object" ? reg0.capture.supporting : reg0.supporting && typeof reg0.supporting === "object" ? reg0.supporting : null;
     const kept = sup ? Number(sup.kept) : NaN, skipped = sup ? Number(sup.skipped) : NaN;
-    if (Number.isFinite(kept) && Number.isFinite(skipped) && skipped > 0) {
-      const why = (Array.isArray(sup.reasons) ? sup.reasons : []).map((r) => (typeof r === "string" ? r : r && typeof r === "object" ? String(r.detail || r.reason || "") : "")).filter(Boolean);
-      out.push(`<p class="mk-note" data-supporting="1">${kept} / ${kept + skipped}${why.length ? " \u00b7 " + why.map((w) => cs.esc(w)).join("; ") : ""}</p>`);
+    const notWalked = sup && typeof sup.not_walked === "string" ? sup.not_walked : "";
+    if (Number.isFinite(kept) && (skipped > 0 || notWalked)) {
+      const total = Number.isFinite(Number(sup.total)) ? Number(sup.total) : kept + (Number.isFinite(skipped) ? skipped : 0);
+      /* acquisition R108: each reason `{reason, count, limit?, detail?}`; the renderer's words (`detail`) where it gave them, else the code (the worded sentence is owed) */
+      const why = (Array.isArray(sup.reasons) ? sup.reasons : []).map((r) => (typeof r === "string" ? r : r && typeof r === "object" ? (String(r.detail || r.reason || "") + (r.count ? " \u00d7" + r.count : "")) : "")).filter(Boolean);
+      if (notWalked) why.push(notWalked);
+      out.push(`<p class="mk-note" data-supporting="1">${kept} / ${total}${why.length ? " \u00b7 " + why.map((w) => cs.esc(w)).join("; ") : ""}</p>`);
     }
   }
   if (ui.gradenote) {

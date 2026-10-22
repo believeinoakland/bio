@@ -196,10 +196,12 @@ test("R56 G17 25 themes: 20 are drawn and the list says it is cut; the more cont
 /* ------------------------------------------------------------------------------------------------------------------ G19 (supporting files) */
 
 test("R3 G19 a web capture that skipped supporting files says how many were kept of all, with the reason; control: none skipped says nothing", async () => {
-  const doc = (sup) => ({ [D]: { "bundle.md": DOCUMENT_MD, "data/provenance.json": JSON.stringify({ documents: [{ capture: { sha256: SHA }, supporting: sup }] }) } });
-  const p = await open(at, { images: doc({ kept: 400, skipped: 50, reasons: ["50 files were over the 8 MiB a file may be"] }) });
+  const doc = (sup) => ({ [D]: { "bundle.md": DOCUMENT_MD, "data/provenance.json": JSON.stringify({ documents: [{ capture: { sha256: SHA, supporting: sup } }] }) } });
+  const p = await open(at, { images: doc({ kept: 400, skipped: 50, total: 450, reasons: [{ reason: "TOO_LARGE", count: 50, limit: 8388608, detail: "50 files were over the 8 MiB a file may be" }] }) });
   const line = main(p).querySelector("[data-supporting]");
   assert.ok(line && text(line).includes("400 / 450") && text(line).includes("50 files were over the 8 MiB a file may be"));
-  const none = await open(at, { images: doc({ kept: 12, skipped: 0, reasons: [] }) });
+  const nw = await open(at, { images: doc({ kept: 0, skipped: 0, total: 0, reasons: [], not_walked: "PRIMARY_TOO_LARGE" }) });
+  assert.ok(text(main(nw).querySelector("[data-supporting]")).includes("PRIMARY_TOO_LARGE"), "a page not walked at all says so");
+  const none = await open(at, { images: doc({ kept: 12, skipped: 0, total: 12, reasons: [] }) });
   assert.ok(!main(none).querySelector("[data-supporting]"));
 });
