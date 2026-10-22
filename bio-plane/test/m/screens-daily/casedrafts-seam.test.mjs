@@ -120,7 +120,7 @@ test("R87, R64 (G12c, seam): Home over the real plane sends one casedrafts for t
   assert.equal(batch.ok, true, JSON.stringify(batch).slice(0, 300));
   for (const x of projects) {
     const single = await getApi("op=casedrafts&project=" + encodeURIComponent(x.project));
-    assert.deepEqual(batch.result.projects[x.project], single.result, "the entry of " + x.project + " is its single answer");
+    assert.deepEqual(batch.result.lists[x.project], single.result, "the entry of " + x.project + " is its single answer");
     assert.deepEqual(single.result.drafts.map((d) => d.draft_id), [x.draft], "and holds its draft");
   }
   assert.equal(main(p).querySelector('[data-area="investigation"]').querySelectorAll('[data-state="failed"]').length, 0, "nothing on Home is drawn failed");

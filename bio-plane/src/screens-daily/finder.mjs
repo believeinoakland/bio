@@ -282,6 +282,8 @@ export const finder = Object.freeze({
     { op: "search", label: "act.search.label.finder", rereads: [],
       send: function (view, el, cs) {
         const ui = view.ui || {};
+        // G16: "Show more" on one of the three routes of a search asks that route's next page by its own cursor.
+        if (el.dataset.route) return view.parts.finderStates().more(view, el.dataset.route, cs);
         // R44: "Show more" asks the browse's next page (`after` its `next`) and adds it below.
         if (el.dataset.more) {
           const b = ui.browse;

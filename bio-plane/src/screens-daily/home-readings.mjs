@@ -67,7 +67,7 @@ export function homeReadings(cs, view, d) {
     const batch = shared.length ? later("drafts", "casedrafts", { projects: shared.map(function (p) { return String(p.id); }).join(",") }) : null;
     if (batch && batch.state === "failed") out.investigation.fails.push(batch);
     if (batch && batch.state === "ok") shared.forEach(function (p) {
-      const entry = batch.value && batch.value.projects && batch.value.projects[String(p.id)];
+      const entry = batch.value && batch.value.lists && batch.value.lists[String(p.id)];
       if (!entry || entry.ok === false) { out.investigation.fails.push(failure(entry || {})); return; }
       list(entry, "drafts").forEach(function (x) {
         if (!x || !x.draft_id || !x.case || !x.case.case_id) return;

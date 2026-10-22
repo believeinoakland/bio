@@ -44,7 +44,11 @@ export function doors() {
     // the doors' numbers are told apart from the queue's own items.
     const line = (screen === "home" || screen === "queue") && nHeld !== null && nNew !== null && (nHeld || nNew)
       ? '<p class="' + (screen === "home" ? "mk-sub" : "mk-small") + '">' + cs.w("screen.home.waiting.counts", { held: String(nHeld), inbox: String(nNew) }) + "</p>" : "";
-    return rows.length ? line + cs.sheet(rows.join("")) : "";
+    // G20 (S11): the held captures are one bounded read (500); when more are waiting than it holds, the door's number is the count shown and says so
+    // (a held row's nearest stand-in: Held's own "more are waiting than are shown").
+    const cut = held && held.state === "ok" && held.value && held.value.truncated === true && Array.isArray(held.value.held)
+      ? '<p class="mk-small">' + cs.w("screen.held.more", { count: String(held.value.held.length) }) + "</p>" : "";
+    return rows.length ? line + cs.sheet(rows.join("")) + cut : "";
   };
   return { reads: reads, draw: draw };
 }
