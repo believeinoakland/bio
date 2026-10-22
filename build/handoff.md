@@ -42,6 +42,6 @@ Promotion `row-census`; file-safety R24 and plane R24 `release.test.mjs` (stale 
 
 ## Open with Bob
 
-- **Who is told when background work stalls** (asked 2026-10-22 ~14:05): A (recommended) administrators get a notice in Settings and a queue item, and a member waiting on a document sees "waiting: background work is delayed"; B administrators only; C no one in the product. No answer yet; the safeguards themselves are BOB's and placed (K4563).
+- None. Answered after the handoff: no stall notice to people; the scheduler must heal itself with no human aware or acting (K4565). Plan round 6's safeguards (K4563) on that basis: self-healing and the process's own detection only.
 
 Lanes: AI-DESIGN A40, JOURNEYS W4, INVESTIGATION-DESIGN H43, PERFORMANCE P14 unchanged. Channel: BOB posted B476 (K4557 NOTICE), B477 (HANDOFF, the join door in place and two rows), B478 (K4562 NOTICE); UX-DESIGN through U449, nothing unread.
