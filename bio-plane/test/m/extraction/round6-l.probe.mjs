@@ -100,7 +100,9 @@ for (const mib of sizes) {
     const idleRss = rssOfWorkerd();
     const held = await call(`/hold?mib=${mib}`);
     await new Promise((r) => setTimeout(r, 500));
-    let peak = rssOfWorkerd(), heapPeak = 0;
+    await new Promise((r) => setTimeout(r, 1500));
+    const heldRss = rssOfWorkerd();   /* the file held, the harness's own spike let go */
+    let peak = heldRss, heapPeak = 0;
     const sampler = setInterval(() => { peak = Math.max(peak, rssOfWorkerd()); }, 25);
     const ticks = [];
     let out;
@@ -117,6 +119,6 @@ for (const mib of sizes) {
     const ok = out.r && out.r.read === true && !out.r.more && state.more === false && state.state === "whole" && state.end === 1;
     console.log(`${mib} MiB (${held.bytes} B): ${ok ? "read to ENDMARKER" : "NOT READ THROUGH " + JSON.stringify({ out: out.r, state })} in ${ticks.length} ticks; `
       + `wall per tick max ${Math.max(...ticks)} ms, mean ${Math.round(ticks.reduce((a, b) => a + b, 0) / ticks.length)} ms; `
-      + `workerd resident set idle ${mb(idleRss)} MB, peak ${mb(peak)} MB (+${mb(peak - idleRss)} MB); heap + external the isolate reports, peak ${mb(heapPeak)} MB (object limit 128)`);
+      + `workerd resident set idle ${mb(idleRss)} MB, with the file held ${mb(heldRss)} MB, peak over the ticks ${mb(peak)} MB (+${mb(peak - heldRss)} MB over the held file); heap + external the isolate reports, peak ${mb(heapPeak)} MB (object limit 128)`);
   } finally { await mf.dispose(); }
 }
