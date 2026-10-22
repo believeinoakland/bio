@@ -41,4 +41,4 @@ OFFICE-READERS COMPLETE (B6, csv split). csv.mjs is now the one line 'export * f
 - **Ran:** office-readers 105 pass, 0 fail; odf-reader + format-registry + csv-reader 155 pass, 0 fail; users that read xlsx text: reading-pipeline 190, extraction 247, content 142, all 0 fail (`impact.mjs` names 117 modules through the shared table; the callers of this service were run). Checks: format, architecture, coverage (6623/6623), words (no rise; no office-readers finding), ownership: 0 failures.
 - **Requirement line proposed (R11, xlsx arm; BOB writes it):** "each sheet also carries `lineRows`: one 1-based row number per line of `text`, the same length, in the order of the lines (a row with no `r` follows the one before it); absent when the sheet could not be read. Test: line-rows.test.mjs." No new id, no census op, no new words, no stored data (read at call time). Platform check: N.
 - **Deferred:** none. **Found in other modules:** none (csv-reader and odf-reader emit their own `lineRows`, wave 2).
-- Size (session_011kR2cnk3N8a4db55MmC9TW): test runs 6, module lines 3319
+- Size (session_011kR2cnk3N8a4db55MmC9TW): test runs 6, module lines 3317
