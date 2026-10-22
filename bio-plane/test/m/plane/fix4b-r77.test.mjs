@@ -99,7 +99,7 @@ test("R77: a second registration of an entry re-arms it, one given a long backof
 test("R77 (D2): an entry ends only when its work is done or its owner answers a final reason, which stays on the row, stated, and is not tried again; the reason reaches the member by `owedwork`", async () => {
   const x = await world();
   const d = sha("a document with no text");
-  x.state.answer = () => ({ ok: true, read: false, final: true, why: "READING_FINAL_NO_TEXT" });
+  x.state.answer = () => ({ ok: true, read: false, failure: "final", why: "READING_FINAL_NO_TEXT" });
   await x.call(`/pendingadd?kind=reading&sha=${d}`);
   await x.s.onAlarm(Date.now() + 1000);
   const [r] = rows(x);

@@ -84,7 +84,7 @@ export function pendingOf(ctx, deps = {}) {
 
   /* what an owner answered, read: the entry's outcome */
   const settle = (row, at, r) => {
-    if (r && r.final === true) return stop(row, at, String(r.why || r.code || r.reason || "FINAL").slice(0, 160));
+    if (r && (r.final === true || r.failure === "final")) return stop(row, at, String(r.why || r.reason || r.code || "FINAL").slice(0, 160));
     if (r && r.ok === true && (r.more === true || r.owed === true)) {
       sql.exec(`UPDATE keeps_pending SET detail=?, attempts=0, due_at=?, last_try=?, last_why=NULL WHERE sha=? AND kind=?`,
                JSON.stringify(r.detail && typeof r.detail === "object" ? r.detail : json(row.detail, {})), at, at, row.sha, row.kind);
@@ -95,7 +95,7 @@ export function pendingOf(ctx, deps = {}) {
   };
   const call = async (fn) => { try { return await fn(); } catch (e) { return { ok: false, reason: why(e) }; } };
 
-  const readNow = (row, at) => call(() => extractionOf(ctx).readHeld(row.kind === "ocr" ? { sha: row.sha, kind: "ocr", storeName: store(), env } : { sha: row.sha, storeName: store(), env }))
+  const readNow = (row, at) => call(() => extractionOf(ctx).readHeld({ sha: row.sha, kind: row.kind, storeName: store(), env }))
     .then((r) => row.kind === "ocr" && r && r.ok === true && r.owed !== true && r.final !== true ? end(row) : settle(row, at, r));
   const owner = {
     reading: readNow,
