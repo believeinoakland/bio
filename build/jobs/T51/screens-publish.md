@@ -425,3 +425,12 @@ COMPLETE · SCREENS-PUBLISH #17 · fix round 5, E4 / C48 (B30 taken). Merged tra
 **Requirement lines proposed:** as J23 (R13; R70/R77). Live-behaviour note from J23 stands: evidence now read from `citations.rows` (the written R13).
 
 Size (session_01CbZX6kMXs3nBMuMvqC2NcN): test runs 10, module lines 3612
+
+## J25 · QUESTION
+
+QUESTION (G12c-reviewcopy; replaces nothing). G10 and G11 are built and green (details at COMPLETE). G11 step 0, answered: a door that sets a team's time zone exists, Settings › Your team (`screens-settings/group.mjs:147-160`, an administrator's `factconfirm` of the profile's `time_zone`), so publishing at a set time is reachable; a team with none now sees `refusal.PUBLISH_AT_NO_ZONE` and only "Sign and publish now".
+
+G12c: review's `reviewcopy` batch is not on tranche/T51 (`review/index.mjs:1312` takes `draft` only; REVIEW #24 has posted no shape; store-door and control-plane have not merged). I need the request and answer shape and one design choice.
+1. Shape. Best reading, built to unless you say otherwise (same as SCREENS-DAILY J21's for `casedrafts`): request `reviewcopy` with `drafts` = the draft ids as one comma-joined string, at most 20, no `draft`; answer `{ok:true, kind:"review-copies", drafts:{<id>: exactly the single answer for that id, or its dead answer}}`, so an unseen draft is its own dead answer and changes no other entry.
+2. How many calls. Today: the Ceremony's wave-1 `copy` read (the address draft, needed first: the pre-flight, tensions and the whole page are built from it) plus one wave-2 `reviewcopy` per OTHER draft (`parts.mjs:291-295` `draftCopies`, read only to name a draft by its scope and count live review links). Option A (recommended): keep the wave-1 single read; send ONE batch for all other drafts. Calls: 1 + 1 = at most 2 whatever the number of drafts (5 drafts: 5 now, 2 then); a project of 2 drafts stays at 2, a project of 1 draft at 1. No added wait. Option B: drop the wave-1 read; after `casedrafts` answers send one batch for all drafts: exactly 1 call per load, but the pre-flight, tensions and every dependent read move one wave later (about +0.3 s on every Ceremony load, the opposite of the round's aim). The failing-first test's "one reviewcopy per load" is true only of B. Please choose; I build A unless told otherwise.
+Meanwhile my screen-level test uses a scripted batch answer built from (1); a whole-path test over the real plane waits red by name for review, store-door and control-plane.
