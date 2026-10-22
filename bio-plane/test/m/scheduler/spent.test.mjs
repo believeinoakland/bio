@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { world, consumer, storage, NOW, pinNow } from "./fixture.mjs";
 
 const HOUR = 3600e3;
+const HEALTH_CYCLE_MS = 5 * 60e3;   /* R28: the monitor's five minutes; the module keeps it private (R7) */
 const sets = (st) => st.log.filter(([m]) => m === "setAlarm").map(([, t]) => t);
 
 /* The ledger's shape: one registered consumer whose owed row was due hours ago and has not run. */
@@ -77,4 +78,49 @@ test("R4, R11: an alarm run killed more than seven times in a row, after which t
   assert.deepEqual(sets(st), [NOW]);
   await s.onAlarm(st.alarm);
   assert.equal(ran.length, 1, "the owed work proceeded");
+});
+
+test("R28: a request that finds owed work with no alarm, or a spent one, arms it at once; a live alarm is not disturbed and nothing is asked of the consumers", async () => {
+  for (const alarm of [null, NOW - 7 * HOUR]) {
+    const { c, ran } = owed(NOW - 60e3);
+    const { s, st } = world();
+    st.alarm = alarm;
+    s.register("scheduler-test", c);
+    assert.equal(await s.heal(NOW), alarm === null ? NOW - 60e3 : NOW, "armed at once, at the owed wake or now");
+    assert.equal(await s.heal(NOW + 1000), null, "looked at once in five seconds");
+    await s.onAlarm(st.alarm);
+    assert.equal(ran.length, 1);
+  }
+  const { c } = owed(NOW - 60e3);
+  const { s, st } = world();
+  st.alarm = NOW + 30e3;
+  s.register("scheduler-test", c);
+  assert.equal(await s.heal(NOW), NOW + 30e3);
+  assert.equal(c.wakes, 0, "no consumer was asked");
+  assert.deepEqual(sets(st), []);
+});
+
+test("R28: health is stale when work has been owed for two cycles with no firing, false otherwise, and records the last firing", async () => {
+  const cycle = HEALTH_CYCLE_MS;
+  const mk = (wake) => { const { c } = owed(wake); const w = world(); w.s.register("scheduler-test", c); return w; };
+  let { s, st } = mk(NOW - 3 * cycle);
+  let h = await s.health(NOW);
+  assert.deepEqual([h.last_run, h.owed_since, h.stale], [null, NOW - 3 * cycle, true], "owed for three cycles, never run");
+  ({ s } = mk(NOW - cycle));
+  assert.equal((await s.health(NOW)).stale, false, "owed for one cycle");
+  ({ s } = mk(NOW + cycle));
+  h = await s.health(NOW);
+  assert.deepEqual([h.owed_since, h.stale], [null, false], "nothing owed");
+  ({ s, st } = mk(NOW - 3 * cycle));
+  await s.onAlarm(NOW - 3 * cycle + 1);              // a firing records its instant, durably
+  assert.equal(st.beat.get("sched_last_run"), NOW - 3 * cycle + 1);
+  ({ s, st } = mk(NOW - 3 * cycle));
+  st.beat.set("sched_last_run", NOW - cycle);        // the last firing was a cycle ago, work has been owed longer
+  h = await s.health(NOW);
+  assert.deepEqual([h.last_run, h.stale], [NOW - cycle, false], "a firing within two cycles");
+  ({ s, st } = mk(NOW - 3 * cycle));
+  st.beat.set("sched_last_run", NOW - 5 * cycle / 2);
+  assert.equal((await s.health(NOW)).stale, true, "owed, and no firing for two cycles");
+  st.alarm = NOW + 1;
+  assert.equal((await s.health(NOW)).alarm_at, NOW + 1);
 });

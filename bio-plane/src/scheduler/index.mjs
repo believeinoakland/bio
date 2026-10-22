@@ -131,6 +131,11 @@ const ANSWER_FIELDS = new Set(["swept", "drained", "created", "folded", "refused
 const DRAIN_ZERO = Object.freeze({ drained: 0, created: [], folded: [], refused: [], waiting: [], remaining: 0 });
 const PROBE_KEY = "sched_probe";
 const DAILY_KEY = "sched_daily";
+const HEART_KEY = "sched_last_run";
+/** One cycle of the alarm, for `health()` (R28): the monitor's own five minutes (`monitoring` R19); a stall is two of them. */
+const HEALTH_CYCLE_MS = 5 * 60e3;
+/** `heal()` looks at the alarm at most this often per instance, so a request path may call it on every request (R28). */
+const HEAL_EVERY_MS = 5e3;
 const DAY_MS = 86_400_000;
 const message = (e) => String((e && e.message) || e).slice(0, 500);
 /* An instant in ms as civil-time's instant text, at the second (ISO_TS_RE). */
@@ -216,6 +221,8 @@ export class Scheduler {
   #faults = [];
   /* true while onAlarm runs: an `onFileWork` call made inside a batch leaves the arming to its reconcile (R1, R24). */
   #firing = false;
+  #healedAt = -Infinity;
+  #lastRun = null;
   /* R27: the registered consumers held, by name, at the wake that did not advance (see `#holding`). */
   #held = new Map();
 
@@ -559,6 +566,8 @@ export class Scheduler {
     /* Reconciled over the FULL registry, not only the consumers that ticked, and authoritatively: a fired alarm is
        spent, so the fresh earliest wake is set outright (R1, R16). */
     const nextAt = await this.#reconcile(now, reg, true, answers);
+    this.#lastRun = now;
+    try { await this.#storage.put(HEART_KEY, now); } catch { /* kept in memory */ }   /* R28 */
     if (probe) await this.#storage.put(PROBE_KEY, probe);
     if (this.#daily && DAILY.some((n) => reg.some((c) => c.name === n)) && typeof this.#storage.put === "function") {
       /* a storage that cannot hold the value keeps it for this instance alone; the firing still answers */
@@ -605,6 +614,36 @@ export class Scheduler {
     const at = await this.#reconcile(now, this.registry(probe), false);
     if (probe) await this.#storage.put(PROBE_KEY, probe);
     return at;
+  }
+
+  /** R28, the request paths' door: a cheap check that the alarm is armed. When none is set or the one set is spent
+   *  (R4) it arms as `arm` does; otherwise it asks nothing of any consumer. At most one look every few seconds per
+   *  instance. Answers the alarm as it stands, or null. Runs no tick and writes no work (R17). */
+  async heal(now = Date.now()) {
+    if (this.#firing || now - this.#healedAt < HEAL_EVERY_MS) return null;
+    this.#healedAt = now;
+    const at = await this.#storage.getAlarm();
+    if (at !== null && at !== undefined && at >= now - SPENT_ALARM_MS) return at;
+    return await this.arm(now);
+  }
+
+  /** R28: `{last_run, alarm_at, owed_since, stale}`. `last_run` is the instant of the last firing that completed (null
+   *  before any); `owed_since` the earliest wake any consumer has that has already come (null when none is owed);
+   *  `stale` is true when work has been owed for two cycles (`HEALTH_CYCLE_MS`) and no firing ran in them. Reads only. */
+  async health(now = Date.now()) {
+    const probe = await this.#probeState(now, false);
+    await this.#loadDaily();
+    let owed = null;
+    for (const c of this.registry(probe)) {
+      let w;
+      try { w = await c.wake(now); } catch { continue; }
+      if (w !== null && w !== undefined && Number.isFinite(w) && w <= now && (owed === null || w < owed)) owed = w;
+    }
+    let last = this.#lastRun;
+    if (last === null) { const v = await this.#storage.get(HEART_KEY); last = Number.isFinite(v) ? v : null; }
+    const alarm = await this.#storage.getAlarm();
+    const since = owed === null ? null : Math.max(owed, last ?? -Infinity);
+    return { last_run: last, alarm_at: alarm ?? null, owed_since: owed, stale: since !== null && now - since > 2 * HEALTH_CYCLE_MS };
   }
 
   /** At the instance's start: reconciles as `arm` does, so an alarm lost to a failed firing or a reset is re-derived
