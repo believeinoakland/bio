@@ -490,3 +490,7 @@ Size (session_01AipmqTnUkdaqEHwuH2y95j): test runs 30, module lines 3080
 **Wording owed:** none (no member-read sentence). **Not mine:** the "only pulled earlier" test (BOB). Generated artifacts: `bio-plane/dist/bio-plane.bundled.mjs` is stale by this change (BOB regenerates).
 
 Size (session_01QYWrrveKMJXkZ2R9tC3co1): test runs 12, module lines 3,300
+
+## J32 · COMPLETE
+
+COMPLETE (PLANE #51, B40, B41). Pushed. G1 watchdog (scheduled, Store.watchdog, cron */5, admin owedwork fields) R79/R80; G2 fetch kind R81 and G13 cursor continuation R82 against a scripted double (acquisition owedFetch and extraction cursor unmerged: re-run seams after they merge); G12e R78 reworded. Plane 343 tests, 342 pass, 1 fail R24 release (accepted). Scheduler 148/148; control-plane e2e 9/9; checks 0, ownership 0. For BOB: owedwork is CLASS_FORBIDDEN to the ADMIN_TOKEN (machineClasses []), so admin is judged by viewer through membership; bundle bio-plane.bundled.mjs stale. Details and requirement lines in the record. Size (session_01QYWrrveKMJXkZ2R9tC3co1): test runs 12, module lines 3300
