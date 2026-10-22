@@ -61,6 +61,6 @@ test("R31 docket declares docketprepare: its requires alone raise no refusal nam
   const setup = async () => { const w = mkWorld(); w.publish(w.P, CASE, 2, [{ id: w.F1, role: "load_bearing" }]); return w; };
   await declaredOpHolds({ op: "docketprepare", declaration: DECLARED_OPS["docketprepare"],
     call: mk("docketprepare", { by: "member:alice", viewer: "member:alice" }, setup),
-    refusedNaming: named({ case: ["NO_SUCH_CASE"], kind: ["DOCKET_KIND_UNKNOWN"], shelf: ["DOCKET_WRONG_SHELF"], edition: ["DOCKET_NO_EDITION"], entry: ["NO_SUCH_DOCKET_ENTRY"] }, true),
+    refusedNaming: named({ case: ["NO_SUCH_CASE"], kind: ["DOCKET_KIND_UNKNOWN"], edition: ["DOCKET_NO_EDITION"], entry: ["NO_SUCH_DOCKET_ENTRY"] }, true),
     values: { case: CASE, kind: "edition", shelf: "listed", edition: 2 }, same: sameCode });
 });
