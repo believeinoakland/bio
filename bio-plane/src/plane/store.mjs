@@ -43,7 +43,10 @@ import { captureOf, captureOps } from "../capture/index.mjs";
 import { acquireHandlerParts, acquireTimingsOps, traceStamped, ACQUIRE_STAGES_DDL } from "./acquire-timings.mjs";
 import { pendingOf, pendingOps } from "./pending.mjs";
 
-/** R78 (K4530, B34): the response header `server-timing: object;dur=<ms>`, the milliseconds the object spent on a route; control-plane reads it and adds `in-<route>` beside its `do-<route>`. */
+/** R78 (K4530, B34; fix round 6, G12e): the response header `server-timing: object;dur=<ms>`, the milliseconds of I/O time the object spent on a
+ *  route; control-plane reads it and adds `in-<route>` beside its `do-<route>`. It is I/O time and nothing more: workerd freezes `Date.now()` during
+ *  synchronous work (runtime-limits' `cpu.mjs`), so no clock in the object counts compute. Compute is `do-<route>` minus `in-<route>` minus the hop
+ *  to the object (about 115 to 160 ms); a heavy read whose `in-` is small beside its `do-` was computing, not waiting. */
 export const OBJECT_TIMING_HEADER = "server-timing";
 const objectTiming = (t0) => `object;dur=${Math.max(0, Date.now() - t0)}`;
 import { deliverOwedRender } from "../control-plane/index.mjs";
@@ -704,6 +707,8 @@ export class Store extends DurableObject {
   /* R4: scheduler's. */
   async alarm() { await schedulerOf(this.ctx, this.env).alarm(); }
   async onAlarm(now) { return await schedulerOf(this.ctx, this.env).onAlarm(now); }
+  /* R79 (fix round 6, G1; scheduler R29): the Worker's cron asks this once a cycle, over the object's RPC (`watchdog.mjs`): the scheduler's `watch(at)`. */
+  async watchdog(at) { return await schedulerOf(this.ctx, this.env).watch(at); }
   /* scheduler's alarm read (its R13), reached over the object's RPC by scheduler's plane test. */
   async schedAlarmAt() { return await schedulerOf(this.ctx, this.env).alarmAt(); }
 
@@ -715,8 +720,8 @@ export class Store extends DurableObject {
     const t0 = Date.now();
     const req = await traceStamped(req0);   /* R73: `acquire`'s trace, from the header capture sends */
     const res = await this.#dispatch(req);
-    /* R78 (fix round 5, E10; K4530): the time this object spent on the route, to its response (a stream's, to its first byte), whole
-       milliseconds, as `server-timing: object;dur=<ms>`, which the door reads. The object sets it; a value carried in is replaced. */
+    /* R78 (fix round 5, E10; K4530; fix round 6, G12e): the I/O time this object spent on the route, to its response (a stream's, to its first
+       byte), whole milliseconds, as `server-timing: object;dur=<ms>`, which the door reads; compute is not in it. The object sets it; a value carried in is replaced. */
     try { res.headers.set(OBJECT_TIMING_HEADER, objectTiming(t0)); return res; }
     catch { const headers = new Headers(res.headers); headers.set(OBJECT_TIMING_HEADER, objectTiming(t0)); return new Response(res.body, { status: res.status, statusText: res.statusText, headers }); }
   }
@@ -793,7 +798,9 @@ export class Store extends DurableObject {
       /* R73 (K4231, K4234): `acquiretimings`, acquisition's stage times of a call still running (its R95), at acquisition's place with the co-archive pair; `acquire` below is handed the timings object it fills, held under the door's `trace`. */
       ...acquireTimingsOps(ctx, url),
       /* R75: the door's deferred reading (control-plane R120), registered for the alarm; store-internal, no caller's own */
-      ...pendingOps(pendingOf(ctx), url),
+      ...pendingOps(pendingOf(ctx), url, { health: () => schedulerOf(ctx, env).health(),
+        /* R80: an administrator is the root of trust's credential (`class:admin`) or a member membership R64 names (the founder, an active member of role `admin`) */
+        administers: (v) => v === "class:admin" || (typeof v === "string" && v.startsWith("member:") && membershipOf(ctx).isAdministrator(v.slice(7))) }),
       ...captureOps(captureOf(ctx), url, body, env, acquireHandlerParts(ctx, url)),
       /* R37 (N826; K2630): doorbell's nine routes, directly after capture's map, each answered by doorbell's instance
          (capture's copy deleted in T43, N849). */
