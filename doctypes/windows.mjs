@@ -182,3 +182,32 @@ export function lineTable(text) {
     raw: (i) => (i >= 0 && i < n ? text.slice(starts[i], ends[i]) : undefined),
   };
 }
+
+/** The lines of `text` as `text.split("\n")` gives them (a CR stays in its line, which `lineTable` drops), held as
+ *  their start offsets only (R38): `length`, `start(i)`, `end(i)`, `at(i)` (`{start, end, text}`, the line cut from the
+ *  text when it is asked for) and `lineOf(offset)`, the index of the line whose start is at or before `offset` and whose
+ *  end is at or after it (-1 past the text). */
+export function lineIndex(text) {
+  text = String(text || "");
+  let starts = new Uint32Array(1024), n = 0;
+  for (let at = 0; ;) {
+    if (n === starts.length) { const s = new Uint32Array(n * 2); s.set(starts); starts = s; }
+    starts[n++] = at;
+    const nl = text.indexOf("\n", at);
+    if (nl < 0) break;
+    at = nl + 1;
+  }
+  const end = (i) => (i + 1 < n ? starts[i + 1] - 1 : text.length);
+  return {
+    length: n,
+    start: (i) => starts[i],
+    end,
+    at: (i) => ({ start: starts[i], end: end(i), text: text.slice(starts[i], end(i)) }),
+    lineOf(offset) {
+      if (offset < 0 || offset > text.length) return -1;
+      let lo = 0, hi = n - 1;
+      while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (starts[mid] <= offset) lo = mid; else hi = mid - 1; }
+      return lo;
+    },
+  };
+}

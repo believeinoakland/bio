@@ -55,7 +55,7 @@
 import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, alsoSatisfies,
          vocabPatterns, anyMatch, allMatches, enactmentPatterns, enactmentNumber, codePatterns } from "../docprofile/doctypes/index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
-import { codeHeadingsIn, readSections, readDefinitions, readExceptions, sha256Hex } from "./sections.mjs";
+import { codeHeadingsIn, readSections, readDefinitions, readExceptions, textDigest } from "./sections.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
 import { scanFlatMany, mergedHits } from "./windows.mjs";
 
@@ -198,7 +198,7 @@ function structure(ctx, raw, form, locate) {
   const definitions = readDefinitions(raw, sections, locate);
   const exceptions = readExceptions(raw, sections, form, ctx, locate);
   const digests = {};
-  for (const s of sections) digests[s.path.join("/")] = sha256Hex(raw.slice(s.start, s.end).replace(/\s+/g, " ").trim());
+  for (const s of sections) digests[s.path.join("/")] = textDigest(raw, s.start, s.end);
   return {
     sections, sections_why, section_digests: digests, definitions, exceptions,
     counts: { sections: sections.length, definitions: definitions.length, exceptions: exceptions.length,
