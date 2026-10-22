@@ -16,6 +16,7 @@
     {"id": "id-spaces", "layer": 1, "paths": ["bio-plane/src/idspaces.mjs"], "tests": ["bio-plane/test/m/id-spaces/"], "uses": ["jurisdictions", "court-citations", "setup-words"]},
     {"id": "subresources", "layer": 1, "paths": ["bio-plane/src/subresources.mjs"], "tests": ["bio-plane/test/m/subresources/"], "uses": ["runtime-limits", "setup-words"]},
     {"id": "ooxml", "layer": 1, "paths": ["bio-plane/src/ooxml.mjs"], "tests": ["bio-plane/test/m/ooxml/"], "uses": ["test-support"]},
+    {"id": "csv-reader", "layer": 1, "paths": ["bio-plane/src/csv-reader/"], "tests": ["bio-plane/test/m/csv-reader/"], "uses": ["ooxml", "setup-words"]},
     {"id": "office-readers", "layer": 1, "paths": ["bio-plane/src/docx.mjs", "bio-plane/src/pptx.mjs", "bio-plane/src/formats-xlsx.mjs", "bio-plane/src/csv.mjs"], "tests": ["bio-plane/test/m/office-readers/"], "uses": ["subresources", "ooxml", "setup-words"]},
     {"id": "odf-reader", "layer": 1, "paths": ["bio-plane/src/odf.mjs"], "tests": ["bio-plane/test/m/odf-reader/"], "uses": ["subresources", "ooxml", "office-readers", "setup-words"]},
     {"id": "pdf-reader", "layer": 1, "paths": ["bio-plane/src/pdfstructure.mjs"], "tests": ["bio-plane/test/m/pdf-reader/", "bio-plane/test/pdfstructure.test.mjs", "bio-plane/test/fixtures/cpdf20/", "bio-plane/test/fixtures/legistar-agenda-1425405.pdf"], "uses": ["subresources", "test-support", "setup-words"]},
