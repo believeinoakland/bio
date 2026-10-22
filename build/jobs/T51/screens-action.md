@@ -279,3 +279,20 @@ COMPLETE (SCREENS-ACTION #14, E9 under K4557; re B26, B27). Pushed on `job/T51/s
 
 **Limits stated, not deferred defects.** A project beyond `projectlist`'s first page (200) reads as unknown and the plane refuses as before; a non-participant (administrator) is not told at the start (E9 names invited; the plane refuses). Words: none new (the held row exists). Found in other modules: none.
 Size (session_012SukeKJ6jZZFc6BPcuWckQ): test runs 14, module lines 5100
+
+## J24 · COMPLETE
+
+COMPLETE (SCREENS-ACTION #15, G20 for this screen; re B28). Pushed on `job/T51/screens-action`; `tranche/T51` merged first. No open QUESTION. No generated artifact edited; I own no census op.
+
+**What changed.** `matter.mjs` (new `heldDocs`, used by `eventChoice` and `passageChoice`; was `matter.mjs:156, 177`): the project's held documents are read by `heldcaptures` page after page by the read's `next` (limit 200, at most five pages, each page once; the key `docs` is shared by both pickers so one read serves both). The evidence picker now reaches the 250th of 250. Where the pages read are not all that is held (the five-page cap reached, or a later page failed, which is not read as the end) the picker says `screen.held.more` with the count shown (the nearest held row, a stand-in; row owed: a matter-specific "Showing N of the documents held; narrow by ..." sentence, for UX-DESIGN via BOB's HANDOFF B485). The event picker asks `timeline` about at most 200 captures (events `CAPTURES_MAX`, a platform bound that stays) and says so with the same sentence when more are held. `words-fix-matter.mjs`: `screen.held.more` added to matter's EXTRA. R-OLD: reads only, no stored data.
+
+**Root cause / why missed / platform.** (1) `matter.mjs:156, 177` read one page (limit 200) and used `held` alone, dropping `truncated`/`next`; the event picker also sliced to 200. (2) No requirement said a bound must reach the member and no test drove a project past 200 documents; the gap fix is `held-pages-t51.test.mjs`, past the bound. (4) N.
+
+**Failing-first** (`held-pages-t51.test.mjs`, 5 tests, through the real screen over the shell's page; the scripted `heldcaptures` keeps capture R77's contract (`held`, `truncated`, `next`, `after`), read at `capture/index.mjs:1541`; the real capture fixture lives in another module's tests): on the source before this change 4 red (250 documents: no "Doc 250", silent at 200; timeline 200 with no sentence; 1200 documents: one read, no sentence; page-2 failure shows 200 silently), 1 control green; on this tip 5 of 5 green.
+
+**Suites and checks.** Module: 276 tests, 275 pass, 0 fail, 1 todo (K4559). Users (impact: control-plane 69/79 files, plane 46/53): plane 319 of 320, the one red is `release.test` R24 "screen.objective.purpose is held by the words list" (not mine, as J23); control-plane 407 of 409, reds: R117 (acquire) and "R104 R100 R99 (E8)" (capture/acquire, files I do not touch; I did not re-run them on the base). Checks (run.mjs): format 0, architecture 0, coverage 6623 of 6623, channels 0, words 0 (inline/plain/testcopy/missingkey 0); ownership 0 (4 files).
+
+**Requirement lines for BOB** (amend R45, R3 not touched): "The matter's pickers over the project's held documents (the passage the act rests on, the event it was part of) read them page after page by `heldcaptures`' `next` (at most five pages of 200) and say, by the word `screen.held.more`, how many are shown when more are held than were read; the event picker asks `timeline` about at most 200 captures (events R53's bound) and says so likewise."
+
+**Found in other modules:** none new.
+Size (session_01G4KPZ8PUsRbsiLajjUaHCP): test runs 9, module lines 5136
