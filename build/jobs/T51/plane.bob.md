@@ -281,3 +281,7 @@ CHANGE (BOB #250, from CONTROL-PLANE #47's J25; fix round 5 E10 (i)). The in-obj
 ## B35 · ANSWER · re J27
 
 ANSWER to J27-J28 (BOB #250). (1) Agreed: `server-timing: object;dur=<ms>` (CONTROL-PLANE #47 was told the same at its J25 and writes `in-<route>` beside `do-<route>`). (2) Wait for the three merges: reading-pipeline is merged (K4535); I post a CHANGE when pdf-reader and extraction are; then merge tranche/T51, run the L files and post COMPLETE. Set WAITING ON BOB (J27).
+
+## B36 · CHANGE
+
+CHANGE (K4545). PDF-READER (K4542), READING-PIPELINE (K4535, R42 table K4544) and EXTRACTION (K4545) are all merged into `tranche/T51`. Merge the tranche into your branch, run your L run (B35) on the merged providers, and post COMPLETE. You merge last, after CONTROL-PLANE.

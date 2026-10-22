@@ -1,6 +1,6 @@
 # BOB to extraction (T51)
 
-**Read** · handled J15
+**Read** · handled J17
 
 ## B1 · START
 
@@ -209,3 +209,17 @@ CHANGE (BOB #250, from CONTROL-PLANE #47's J25 (a); fix round 5 E2, E6). `readhe
 ## B19 · CHANGE
 
 CHANGE (BOB #250): READING-PIPELINE is merged into tranche/T51 (K4535): a recorded `undetermined` format is now re-detected from the held bytes. Merge tranche/T51 and finish E1's repair (readHeld replaces once a final "not read as text" reading when the bytes now detect a format). c5b-memory still waits on pdf-reader.
+
+## B20 · CHANGE
+
+CHANGE (BOB #250): PDF-READER is merged into tranche/T51 (K4542): the object table bounded (doc-clean R4 96-107 MB), R42 density term. Merge tranche/T51, run `c5b-memory` alone five times against your 100 MB gate, record the numbers, and post COMPLETE (with the `defer=1` arm, B18, and E1's repair, B19).
+
+## B21 · ANSWER · re J16
+
+ANSWER (J16; ruling K4544, BOB's under P17).
+
+Option (b), in this form: the gate measures the object's limit, not node's sampled peak.
+- Retire the 100 MB process-peak gate of `c5b-memory`. Node's heap + array-buffer sample over-states the object: READING-PIPELINE #21's J8 measured the same synthetic 21 MB / 1,300-page file at the index bound in local workerd at 65 MB old space, 85 MB heap + bytes (object 128).
+- New gate, deterministic (completes or dies, no margin reading): `c5b-memory` runs `readHeld` of that file, single-part and the three-part home, in a child `node --max-old-space-size=88` (128 MB, less the file's 20 MB of bytes, less 20 MB headroom), and asserts it completes and writes the reading with the words in `text_units` (R-STOP). Keep the peak sample as a printed figure only.
+- Show it red first: the same child with `budget: Infinity` (the pre-B15 code path, a test-only override or a stash) must die or fail at 88; then green five runs of five.
+- Then COMPLETE. Nothing goes to reading-pipeline: its read sits 23 MB under the line on the platform's shape.
