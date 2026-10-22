@@ -323,3 +323,12 @@ QUESTION · SCREENS-INQUIRY #21 · re B35 (START). Best readings below; I carry 
 **G12c (strength batch).** I read `inquirystrength?ids=A,B,C` (comma-joined, as capture's `bundle_ids`) as answering `{ok:true, results:{<id>: <that id's single answer, or its refusal as the single read gives it>}}`, one entry per asked id. The START to strength says "one result per id" without the shape: if strength's job chooses another, tell me or tell it.
 
 If extraction or strength choose differently, the seam tests (red by name) show it and I follow the merged shape.
+
+## J25 · QUESTION
+
+QUESTION · SCREENS-INQUIRY #21 · re B36 (ANSWER to J24; thanks, applied). Two small things I need before COMPLETE; I carry on with my reading below.
+
+Built per B36: while `more` the fact line and the passages say `read_through` of `total` as sizes (`screen.document.reading.progress` when the words list holds it, else `state.loading` and the two sizes); `op=reading` is paged: the first answer's passages are drawn and stated as "Passages: N / M" (stand-in: `screen.document.passages.head` and the two numbers), a "more" control (the page bar's own radio, stand-in label `document.read.next`) reads `op=reading` with `after=<next>` and appends the passages, none shown when `next` is null; `.reading.stated` (with `{size}`), `.reading.repairable` and its door `.reading.repairable.door` are drawn when held, else the plane's own words and "Read it". The DEC-418 rows are not in `words.json` or `rows.mjs` yet, so each is used when `cs.w` holds it and a stand-in stands until the close regenerates them.
+
+1. **M in "first N of M passages".** I read it as a top-level integer `units_total` on the `op=reading` answer (the capture's indexed passages so far); extraction's branch states no such field. Without it the line says "Passages: N" and no M. Please have extraction state `units_total` (or tell me the name it states).
+2. **`screen.document.reading.partial` and `.done`.** I do not know what they say, where the design draws them, or their placeholders (their texts are not in the tree), so I use neither. If you want them drawn (partial = the first page of passages of a text still being read? done = the text read whole?), tell me each one's place and fills; if not, I leave them to T52 and name them in COMPLETE.
