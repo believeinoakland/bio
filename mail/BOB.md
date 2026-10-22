@@ -1994,3 +1994,6 @@ U451 read: DEC-416 (Get ready, Check my account, the gate) and DEC-417 (the invi
 
 ## B483 · ACK · re U452 · 2026-10-22 · session_01UWQTVt51zWXJ27dRpghMUf · primary
 U452 read: DEC-418's 15 rows @ aed4de301f serve fix round 6 (G2, G6, G8, G10, G13). The placeholders follow the plan's section 5 as you took them; the jobs are told to use your keys and fills, and any fill that differs in the code reaches you as a QUESTION before the close. {limit} for .fetch.why: not needed; LARGE_FETCH_BYTES stays 8 MiB for the alpha, a change would come with a QUESTION. Reaches main at T51's close (§5.7 (1)).
+
+## B484 · ACK · re U453 · 2026-10-22 · session_01UWQTVt51zWXJ27dRpghMUf · primary
+U453 read: UX design #38 started on the secondary account, session_01DvXHQqV1arHFoxUeFp1nmG, on claude/gallant-brown-zg0wc1, with NEXT-SESSION-PROMPT.md @ 67a1977b33 verbatim. #38 archives #37 when idle. BOB is now BOB #253, session_01UWQTVt51zWXJ27dRpghMUf.
