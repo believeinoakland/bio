@@ -119,6 +119,79 @@ test("R2: a read naming a project (PROJECT_NAMING_READS) asked with a stamped vi
   assert.equal(t.log.some((e) => e.kind === "existence"), false);
 });
 
+test("R2 (fix round 6, G12c; K4571): the batch reads — `casedrafts` (`projects`), `inquirystrength` (`ids`) and `reviewcopy` (`drafts`) — fence every listed id exactly as the single read fences its one: a list given as an array, a JSON array or a comma list, in the query or the body, is read id by id (one `visibilityOf` per distinct id, `existenceAct` only for a discoverable one), a project the caller sees only at EXISTENCE answers the single read's answer byte for byte, whatever its place in the list, before the route runs; a list of seen or hidden ids reaches the route unchanged; `reviewcopy`'s ids are draft ids and the read stays among those naming no project", async () => {
+  const P = "PROJ-seen", P2 = "PROJ-seen2", F = "PROJ-full", H = "PROJ-hidden";
+  const BATCH = { casedrafts: ["project", "projects"], inquirystrength: ["id", "ids"] };
+  assert.deepEqual(D.PROJECT_NAMING_LISTS, { casedrafts: ["projects"], inquirystrength: ["ids"] });
+  for (const [op, params] of Object.entries(BATCH)) {
+    assert.deepEqual(PROJECT_NAMING_READS[op], params, `${op}'s row`);
+    assert.equal(Object.hasOwn(PROJECT_NAMING_READS_NOT, op), false, `${op} in both tables`);
+    const list = params[1];
+    const forms = {
+      "array in the body": (ids) => ({ q: "", init: { method: "POST", body: JSON.stringify({ [list]: ids }) } }),
+      "JSON array in the query": (ids) => ({ q: `&${list}=${encodeURIComponent(JSON.stringify(ids))}` }),
+      "comma list in the query": (ids) => ({ q: `&${list}=${ids.join(",")}` }),
+      "comma list in the body": (ids) => ({ q: "", init: { method: "POST", body: JSON.stringify({ [list]: ids.join(",") }) } }),
+      "repeated in the query": (ids) => ({ q: ids.map((i) => `&${list}=${i}`).join("") }),
+    };
+    /* the single read's answer for the project she sees only at EXISTENCE: what each batch must answer */
+    const single = await go(fakeStore({ discoverable: [P, F], existence: [P] }), `${op}?viewer=member:ann&${params[0]}=${P}`);
+    assert.equal(single.json.result.reason, "PROJECT_SEEN_NOT_A_PARTICIPANT");
+    for (const [form, make] of Object.entries(forms)) {
+      for (const ids of [[P], [F, P], [P, F], [H, F, P, H], [F, H, P, P2]]) {
+        const s = fakeStore({ discoverable: [P, P2, F], existence: [P] });
+        const { q, init } = make(ids);
+        const r = await go(s, `${op}?viewer=member:ann${q}`, init);
+        assert.deepEqual(r.json, single.json, `${op} ${form} ${ids}: the single read's answer, byte for byte`);
+        assert.equal(s.log.some((e) => e.kind === "route"), false, `${op} ${form} ${ids}: the route ran`);
+        assert.equal(JSON.stringify(r.json).includes(F) || JSON.stringify(r.json).includes(H), false, `${op} ${form} ${ids}: nothing of another id`);
+      }
+      /* controls: a list of ids she sees whole or that are hidden reaches the route with the list as sent */
+      for (const ids of [[F], [F, H], [H], [F, P2]]) {
+        const s = fakeStore({ discoverable: [P2, F], existence: [P] });
+        const { q, init } = make(ids);
+        const r = await go(s, `${op}?viewer=member:ann${q}`, init);
+        assert.deepEqual(r.json.result, { answered: op }, `${op} ${form} ${ids}`);
+        const routed = s.log.filter((e) => e.kind === "route");
+        assert.equal(routed.length, 1, `${op} ${form} ${ids}: routed once`);
+        if (init) assert.deepEqual(routed[0].body, JSON.parse(init.body), "the body as sent");
+      }
+    }
+    /* order does not decide: two ids at EXISTENCE answer alike whichever comes first (the lowest id's answer) */
+    const two = (ids) => go(fakeStore({ discoverable: [P, P2], existence: [P, P2] }), `${op}?viewer=member:ann&${list}=${ids.join(",")}`);
+    assert.deepEqual((await two([P, P2])).json, (await two([P2, P])).json);
+    assert.equal((await two([P2, P])).json.result.project, P);
+    /* the cost: one visibility lookup per distinct id, an existence answer only for a discoverable one, none without a viewer */
+    const c = fakeStore({ discoverable: [F], existence: [] });
+    await go(c, `${op}?viewer=member:ann&${list}=${[F, H, F, H, "PROJ-x"].join(",")}`);
+    assert.deepEqual(c.log.filter((e) => e.kind === "visibility").map((e) => e.id), [F, H, "PROJ-x"]);
+    assert.deepEqual(c.log.filter((e) => e.kind === "existence").map((e) => e.id), [F]);
+    const n = fakeStore({ discoverable: [P], existence: [P] });
+    assert.deepEqual((await go(n, `${op}?${list}=${P},${F}`)).json.result, { answered: op });
+    assert.equal(n.log.some((e) => e.kind === "membership"), false);
+    /* the single parameters keep their meaning: a comma in `${params[0]}` is not a list */
+    const one = fakeStore({ discoverable: [P], existence: [P] });
+    assert.deepEqual((await go(one, `${op}?viewer=member:ann&${params[0]}=${F},${P}`)).json.result, { answered: op });
+  }
+  /* malformed lists never throw at the door: they reach the owner, who refuses them */
+  for (const [bad, want] of [[{ projects: 7 }, null], [{ projects: { a: 1 } }, null], [{ projects: [1, null, ""] }, null],
+                             [{ projects: "[not json" }, null], [{ projects: [[P]] }, "PROJECT_SEEN_NOT_A_PARTICIPANT"]]) {
+    const s = fakeStore({ discoverable: [P], existence: [P] });
+    const r = await go(s, "casedrafts?viewer=member:ann", { method: "POST", body: JSON.stringify(bad) });
+    assert.equal(r.status, 200, JSON.stringify(bad));
+    if (want) assert.equal(r.json.result.reason, want, JSON.stringify(bad));
+    else assert.deepEqual(r.json.result, { answered: "casedrafts" }, JSON.stringify(bad));
+  }
+  /* reviewcopy: its ids are DRAFT ids (a thing inside a project), so the batch key is named in the reason and no existence answer is run */
+  assert.equal(Object.hasOwn(PROJECT_NAMING_READS, "reviewcopy"), false);
+  assert.match(PROJECT_NAMING_READS_NOT.reviewcopy, /`draft`/);
+  assert.match(PROJECT_NAMING_READS_NOT.reviewcopy, /`drafts`/);
+  const rc = fakeStore({ discoverable: [P], existence: [P] });
+  const rr = await go(rc, `reviewcopy?viewer=member:ann&drafts=${P},DRAFT-1`, { method: "POST", body: JSON.stringify({ drafts: [P, "DRAFT-1"], draft: P }) });
+  assert.deepEqual(rr.json.result, { answered: "reviewcopy" });
+  assert.equal(rc.log.some((e) => e.kind === "membership"), false);
+});
+
 test("R2 (T36-48; K2063, K2152; file-safety R2, R6, R9, R11, R15, R31, R33, R38): file-safety's reads that take a parameter — `verdictnotes`, `threatof`, `originalstate`, `safeview`, `safecopy` (a capture's digest), `scanfindings` and `securitytoolevents` (a cursor), `findingkind` (a finding name) — are listed as naming no project, each with its reason, so a discoverable project's id in any of their own parameters, query or body, is never asked of membership and the route answers; none is among the reads naming a project (negative control: the same id at a read naming a project is answered existence first)", async () => {
   const { fileSafetyOps } = await import("../../../src/file-safety/index.mjs");
   const served = new Set(Object.keys(fileSafetyOps(null, new URL("http://do/"), null, null)));
