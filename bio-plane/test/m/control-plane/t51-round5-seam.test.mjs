@@ -219,8 +219,9 @@ test("E6 (a 60-page scan): uploaded and promoted, all 60 pages have text within 
   const end = Date.now() + 300000;
   let r = await readingOf(auth, sha(bytes));
   const pagesDone = (x) => new Set([...unitsText(x).matchAll(/ocr scan page (\d+) words/g)].map((m) => m[1])).size;
-  while (Date.now() < end && pagesDone(r) < 60) { await later(4000); r = await readingOf(auth, sha(bytes)); }
-  assert.equal(pagesDone(r), 60, `all 60 pages have their text (OCR calls: ${ocrCalls.join(",")})`);
+  while (Date.now() < end && pagesDone(r) < 60) { await later(20000); r = await readingOf(auth, sha(bytes)); }
+  const owedNow = JSON.stringify(await (await plane(`/api/?op=owedwork&sha=${sha(bytes)}`, { headers: auth })).json()).slice(0, 400);
+  assert.equal(pagesDone(r), 60, `all 60 pages have their text (OCR calls: ${ocrCalls.join(",")}; units ${(r.text_units || []).length}; owed ${owedNow})`);
   /* the press on a scan with pages left answers under 2 s (a second scan, 40 pages, pressed before the alarm has gone on) */
   const second = scanOf(40);
   await uploadAndFile(auth, second, "scan40.pdf", "application/pdf");
