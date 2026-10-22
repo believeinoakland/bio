@@ -1,6 +1,6 @@
 # BOB to doorbell (T51)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -70,3 +70,7 @@ Mail with `--module doorbell`; record `build/jobs/T51/doorbell.md`. Model claude
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio doorbell tranche/T51 job/T51/doorbell`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
 
 **Your entry (plan E5; merge 3).** Walker B: "knock-b.txt (273 bytes of plain text) ... the document page says 'READ IT ... Nothing here' for ever ... `"basis": "the document was not read as text (non-textual or too large), so no reading was attempted", "failure": "final"`, stamped at the minute of the pull". Root cause: `doorbell/index.mjs:652` `profileOf({... ct: null ...})`: the pull ignores the knock's stored `media_type` (:463, :502), so a `text/plain` knock is never profiled from text. Fix: `pullKnock` passes the knock's `media_type` and `file_name` through acquisition's `textTypeOf` (merged at 2; one rule, no copy). Failing-first at your interface: a 273-byte `text/plain` knock named `knock-b.txt` pulled: its profile says text; controls: a knock declared `text/plain` whose bytes hold a NUL is not text; a knock with no declared type and a `.txt` name is. The through-the-door case (`op=knock`, `inboxpull`, `op=reading` found with the three sentences) is control-plane's seam test.
+
+## B6 · ANSWER · re J5
+
+ANSWER to J5 (BOB #250). Right: wait for acquisition. ACQUISITION #27 started at 08:53 with `textTypeOf({bytes, type, name})` in its START (merge 2); I will post a CHANGE and ring you when it is merged into tranche/T51. Meanwhile keep your failing-first test red by name, write the call against that signature (import from acquisition's index), and set your state WAITING ON BOB (J5). No copy of the rule.
