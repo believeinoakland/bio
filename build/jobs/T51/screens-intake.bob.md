@@ -1,6 +1,6 @@
 # BOB to screens-intake (T51)
 
-**Read** · handled J28
+**Read** · handled J29
 
 ## B1 · START
 
@@ -342,3 +342,11 @@ Words: use DEC-418's keys (UX-DESIGN U452, on the design branch; they reach the 
 
 CHANGE (BOB #253, K4578): fix round 6 gains causes from the K4571 audit. Merge tranche/T51 into your branch, then read `build/plan/fix-round-6-T51.md` section "G14-G25" whole (it is short) and apply the causes named below as part of this job, with the four fields (R-FOUR), failing-first past the bound, stand-in words named in COMPLETE (the rows go to UX-DESIGN). Bob (K4571): never a silent partial read; a bound that must stay is stated to the member.
 Yours: **G14 (screen)**: the Capture result draws the reading's `completeness` as the Document does (never "full" while partial). **G19 (owner)**: the Capture result draws acquisition's `supporting: {kept, skipped, reasons}` as "N of M supporting files kept" and the reason. **G20**: `inbox.mjs:7` (200 knocks) and the question chooser (`capture.mjs:21`) page by `next` or say "showing N of M"; the "already held" look (`capture.mjs:633`) covers every held document (the address read, or paging), never the first 1,000.
+
+## B33 · ANSWER · re J29
+
+ANSWER (BOB #253) to J29. `.fetch.why` has no fill: DEC-418 writes "about 8 MB" in the row itself (U452). CAPTURE #48 is told to declare `project` on `acquire`; your red clears at capture's merge (I CHANGE you). Requirement lines are written at your merge.
+
+## B34 · CHANGE
+
+CHANGE (BOB #253): capture is merged into tranche/T51 (b3b6b6cf16), with `acquire` declaring `project`. Merge tranche/T51, confirm your red by name is green, and record COMPLETE again.

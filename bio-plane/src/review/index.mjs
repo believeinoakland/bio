@@ -105,6 +105,10 @@ export const APPROVAL_REASON_MAX = 4000;
  *  earlier in the order, reads `case_drafts` under the same bound and keeps its own copy of it, `DRAFTS_READ_MAX`
  *  (its R3; K242). */
 export const REVIEW_LIST_MAX = 500;
+/** R19 (G12c): the most projects one `casedrafts` read names, and the most drafts one `reviewcopy` read names. A longer
+ *  list is refused whole (`REVIEW_BATCH_TOO_LARGE`), never answered in part. */
+export const REVIEW_BATCH_LISTS_MAX = 50;
+export const REVIEW_BATCH_COPIES_MAX = 20;
 /** R11: the marking every copy carries. Read by members and by recipients outside the group, so it names no machine
  *  and addresses no one as the group (DEC-149, T34-87). */
 export const REVIEW_MARKING = word("review.review_marking");
@@ -124,6 +128,14 @@ function validInstant(s) {
 function refusal(code, detail, extra) {
   const row = REVIEW_COPY_CHECKS[code];
   return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
+}
+
+/* R10, R19 (G12c): a batch longer than its bound is refused whole, naming the bound. */
+function batchTooLarge(max) {
+  /* DEC-49 REGION is-review-batch-too-large */
+  return refusal("REVIEW_BATCH_TOO_LARGE",
+           localize("review.index.a_batch_names_at_most", "a batch names at most {max} ids; ask for the rest in another call. Nothing was read.", { max: String(max) }), { max });
+  /* END DEC-49 REGION is-review-batch-too-large */
 }
 
 /** R10: THE ONE DEAD ANSWER. A revoked grant, a grant whose draft has moved to another edition, a secret that never
@@ -183,6 +195,14 @@ const printed = (s) => String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g
 function listCap(limit) {
   const asked = Number.parseInt(String(limit ?? ""), 10);
   return Number.isInteger(asked) && asked >= 1 ? Math.min(asked, REVIEW_LIST_MAX) : REVIEW_LIST_MAX;
+}
+
+/* R10, R19 (G12c): the ids a batch names, from a list or a comma-separated string, each once in the order given; blanks and
+   anything that is not text are dropped. `null` when the key was not sent at all (the single read applies). */
+function idList(v) {
+  if (v === undefined || v === null) return null;
+  const raw = Array.isArray(v) ? v : typeof v === "string" ? v.split(",") : [];
+  return [...new Set(raw.filter((x) => typeof x === "string").map((x) => x.trim()).filter(Boolean))];
 }
 
 /** R17 (REC-200, BOB #32's ruling of 2026-09-23 on §6A.3 point 1): THE COPY CARRIES THE DATE OF ITS LAST CHANGE, the
@@ -888,6 +908,17 @@ export class Review {
     };
   }
 
+  /** R10, R11 (G12c): THE REVIEW COPIES OF MANY DRAFTS IN ONE READ (`op=reviewcopy` with `drafts`): for each draft named, once,
+   *  in the order given, exactly the answer the single read gives it, so a draft the reader may not see and one that does
+   *  not exist answer the same dead answer, byte for byte. More than `REVIEW_BATCH_COPIES_MAX` ids is refused whole. Writes
+   *  nothing. */
+  copyMany({ drafts = null, ...args } = {}) {
+    const ids = idList(drafts) ?? [];
+    if (ids.length > REVIEW_BATCH_COPIES_MAX) return batchTooLarge(REVIEW_BATCH_COPIES_MAX);
+    return { ok: true, kind: "review-copies", count: ids.length,
+             copies: Object.fromEntries(ids.map((id) => [id, this.copy({ ...args, draft: id })])) };
+  }
+
   /* R16 (MK-7, MEMBER-KNOWLEDGE-DESIGN.md §4.2): EVERY OBSERVATION THE EDITION WOULD REACH from its present findings,
      with whether its author has chosen an attribution level for this case edition, never the level itself (that is the
      author's to state, in the case document). A draft naming no case has no identity a level can be keyed to. */
@@ -971,6 +1002,17 @@ export class Review {
     const { concluded, truncated: concludedTruncated } = this.#concluded(pid, viewer, cap);
     return { ok: true, kind: "review-drafts", project: pid, drafts, count: drafts.length,
              total, limit: cap, truncated: total > drafts.length, concluded, concluded_truncated: concludedTruncated };
+  }
+
+  /** R19 (G12c): THE DRAFT LISTS OF MANY PROJECTS IN ONE READ (`op=casedrafts` with `projects`): for each project named, once,
+   *  in the order given, exactly the answer the single read gives it, the dead answer for a project the viewer has no
+   *  standing in and for one that does not exist alike. More than `REVIEW_BATCH_LISTS_MAX` ids is refused whole. Writes
+   *  nothing. */
+  listMany({ projects = null, ...args } = {}) {
+    const ids = idList(projects) ?? [];
+    if (ids.length > REVIEW_BATCH_LISTS_MAX) return batchTooLarge(REVIEW_BATCH_LISTS_MAX);
+    return { ok: true, kind: "review-drafts-batch", count: ids.length,
+             lists: Object.fromEntries(ids.map((id) => [id, this.list({ ...args, project: id })])) };
   }
 
   /* R19 (fix round 3; case-authoring R83, K4363): what a draft has prepared and published, `{prepared, published}` for
@@ -1309,12 +1351,21 @@ export function reviewOps(r, url, body) {
     reviewgrant: () => r.act({ act: "grant", draft: b.draft ?? q("draft"), recipient: b.recipient ?? q("recipient"),
                                until: b.until ?? q("until"), author: q("author"), secretSha: sha }),
     reviewrevoke: () => r.act({ act: "revoke", grant: b.grant ?? q("grant"), author: q("author") }),
-    reviewcopy: () => r.copy({ draft: q("draft"), secretSha: sha, viewer: q("viewer"),
-                               bySecret: q("bySecret") === "1", limit: q("limit") }),
+    /* R10, R11 (G12c): `drafts`, a list in the body or comma-separated in the query, answers one copy per draft. */
+    reviewcopy: () => {
+      const drafts = b.drafts ?? q("drafts");
+      const read = { secretSha: sha, viewer: q("viewer"), bySecret: q("bySecret") === "1", limit: q("limit") };
+      return drafts === null || drafts === undefined ? r.copy({ ...read, draft: q("draft") }) : r.copyMany({ ...read, drafts });
+    },
     reviewcomment: () => r.comment({ draft: q("draft"), secretSha: sha, viewer: q("viewer"),
                                      bySecret: q("bySecret") === "1", text: b.text }),
     /* REC-198: the store fails closed on an absent `viewer`. */
-    casedrafts: () => r.list({ project: q("project"), viewer: q("viewer"), limit: q("limit") }),
+    /* R19 (G12c): `projects`, a list in the body or comma-separated in the query, answers one list per project. */
+    casedrafts: () => {
+      const projects = b.projects ?? q("projects");
+      const read = { viewer: q("viewer"), limit: q("limit") };
+      return projects === null || projects === undefined ? r.list({ ...read, project: q("project") }) : r.listMany({ ...read, projects });
+    },
   };
 }
 
@@ -1343,6 +1394,18 @@ export const DECLARED_OPS = Object.freeze({
     classes: ["admin", "member", "probe"], mutating: true, weight: "credential",
     description: localize("review.declared.reviewrevoke", "review copy: its subject is a GRANT keyed grant_id, not a bundle in a state"),
     fields: { accepts: Object.freeze(["grant"]), requires: Object.freeze(["grant"]) },
+  },
+  /* G12c (K4208): the two reads a screen repeated once per item take a list of ids; both answer a call with none of the keys
+     with the one dead answer (R10, R19), which names nothing, so nothing is required. The descriptions are the hand rows'. */
+  casedrafts: {
+    classes: ["admin", "member", "probe"], mutating: false, weight: "read",
+    description: localize("review.declared.casedrafts", "read: the drafts of one project (BIO_Publication §6A.4), fenced exactly like reading one draft (BOB #32); each row names op=reviewcopy for its draft, and nothing is written"),
+    fields: { accepts: Object.freeze(["project", "projects", "limit"]), requires: Object.freeze([]) },
+  },
+  reviewcopy: {
+    classes: null, mutating: false, weight: "read",
+    description: localize("review.declared.reviewcopy", "read: a review copy of one draft, or one per draft named in drafts, through a live grant or as a member with standing; any other reader gets the one dead answer; writes nothing"),
+    fields: { accepts: Object.freeze(["draft", "drafts", "limit", "secret"]), requires: Object.freeze([]) },
   },
   reviewcomment: {
     classes: null, mutating: true, weight: "reversible",

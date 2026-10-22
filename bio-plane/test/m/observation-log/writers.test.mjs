@@ -141,6 +141,7 @@ test("R7 the index: one derive row per capture — PRESENT when every unit was s
   w.obs.observeIndexed("B", "c5", indexed({ written: 0, offered: 0 }), { hadText: true, unitArm: true });
   assert.equal(row().state, "LOOKED_ABSENT", "an arm that produced nothing is never PRESENT over zero units");
   w.obs.observeIndexed("B", "c6", indexed({ truncated: 2, unaddressable: 1 }), { hadText: true });
+  assert.equal(row().state, "partial", "R7 a cut unit makes the axis partial, as an over-bound one does");
   assert.match(row().detail, /2 unit\(s\) stored to the per-unit cap/); assert.match(row().detail, /1 unit\(s\) offered an address/);
   assert.ok(w.log().every((r) => r.result_kind !== "content"), "never a content row");
 });
@@ -192,10 +193,12 @@ test("R7 the index notice (extraction R62): one derive row per indexed authored 
   assert.deepEqual(fire({ indexed: indexed({ offered: 2, written: 1, over_bound: 1 }) }).observed.state, "partial");
   assert.deepEqual([row().result_kind, row().result_ref], ["reading", c]);
   assert.match(row().bound, /per-capture text bound/);
-  // a unit stored to the per-unit cap is said
-  fire({ indexed: indexed({ offered: 1, written: 1, truncated: 1 }) });
-  assert.deepEqual([row().state, row().result_ref], ["PRESENT", c]);
+  // a unit stored to the per-unit cap is a cut unit: the axis is partial, with the cap as its bound and the cut said (G15)
+  assert.equal(fire({ indexed: indexed({ offered: 1, written: 1, truncated: 1 }) }).observed.state, "partial");
+  assert.deepEqual([row().state, row().result_kind, row().result_ref], ["partial", "reading", c]);
+  assert.match(row().bound, /per-unit/);
   assert.match(row().detail, /1 unit\(s\) stored to the per-unit cap/);
+  assert.equal(fire({ indexed: indexed({ offered: 1, written: 1, truncated: 0 }) }).observed.state, "PRESENT", "control: an uncut index stays present");
   // words holding no glyph offered no unit (extraction R22): no text, LOOKED_ABSENT, saying why and naming no extraction row
   assert.deepEqual(fire({ indexed: indexed({ offered: 0, written: 0, bytes: 0 }) }).observed.state, "LOOKED_ABSENT");
   assert.deepEqual([row().state, row().condition, row().bound, row().result_kind, row().result_ref], ["LOOKED_ABSENT", null, null, null, null]);

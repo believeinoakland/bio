@@ -1,6 +1,6 @@
 # calculations (T51)
 
-**Status** · session_01Tcs5UBSYhkZ5nthcyxpECc · depth 2 · COMPLETE · handled B2
+**Status** · session_013Qn9ospdGZ85m84zbBg6sF · depth 2 · COMPLETE · handled B3
 
 ## J1 · REPORT
 
@@ -55,3 +55,23 @@ On B2's NO_CHANGE wording: accepted, noted.
 ## J4 · COMPLETE
 
 COMPLETE again after K3993 (B2). NO_CHANGE wording accepted as is. R32 freezeUses red is the lines module (its undetermined at reasons, lines/index.mjs:351-600, not keyed); reported in J3 for routing. Calculations module: words check 0 failures; the one red remains until lines fixes it.
+
+## Round 6 · G24 (START B3, CALCULATIONS #7)
+
+**G24, a pattern's denominator says when it is a sample (K4571, S14).**
+
+1. **Root cause.** `patterns.mjs` gathered at most `UNITS_MAX` (2,000) units by `slice` (decided transitions :67, flow instances :85) or by stopping the loop (posting units :152), and the denominator's `n` was the count kept. The comment's "next run's cursor" did not exist: a run past the bound was a sample shown as a census. Also found in the same loop: the `break` at :152 left only the inner loop, so a later meeting could add units past the bound, and `eventsFor`'s own `limit: 500` answer `truncated` was dropped.
+2. **Why the tests missed it.** No requirement said a bound must reach the member and no test took a pattern past 2,000 units. Gap closed by `bio-plane/test/m/calculations/patterns-bound.test.mjs` (R22).
+3. **Failing-first, through `runPatterns` over real duties (declared and recorded in the duties module).** Red before the fix: 2,500 decided transitions, `duty_lateness` and `office_lateness` denominators `n: 2000`, `capped` undefined (assertion "stated as a sample": undefined, expected true). Green after: `capped: true`, `of_total: 2500`, `n: 2000`, on the run's denominator and on each group's own. Controls: 1,500 transitions, `n` 1500, no `capped`, no `of_total`. The same for the flow pattern over 2,500 and 1,500 open instances.
+4. **Fix.** `decidedOccurrences` and the flow gather count the whole before the cut and state `capped: true` and `of_total` (the whole) in the denominator; the posting pattern states `capped: true` (with `of_total: null`, the whole is not counted without reading every meeting) when it stops at the bound or any body's meetings are listed only to `eventsFor`'s limit, and its loop now stops at the bound. A denominator never flagged when the gather was whole.
+5. **Platform check.** N. **Stored data (R-OLD).** New runs only: a stored run or result keeps the denominator it was written with; the next `runPatterns` writes the stated one. Words: no new sentence. Census ops: no op's accepted keys change (`patternResults` answers two more keys inside `denominator`).
+6. **Not met / deferred / open:** none.
+
+Tests run: `node --test --test-force-exit bio-plane/test/m/calculations/` 65 pass, 0 fail (the R32 red of J3 now passes after merging `tranche/T51`). Checks (process repository `checks/run.mjs`): format, architecture, coverage, channels, words 0 failures; ownership 0 failures.
+Users: `impact.mjs` names 78 modules through the shared table; no module outside calculations calls `runPatterns`, `patternResults` or `onPatternResult` in source or tests (searched), so no user's suite was changed by this job.
+
+Size (session_013Qn9ospdGZ85m84zbBg6sF): test runs 6, module lines 3428
+
+## J5 · COMPLETE
+
+G24 done at 60e1b785bf. A pattern's denominator now says capped: true and of_total (the whole) whenever its gather stopped at the 2,000 bound (duty transitions, flow instances; posting says capped with of_total null, and its loop now stops at the bound). Failing-first through runPatterns over real duties: 2,500 transitions red (n 2000, unflagged), now capped/of_total 2500; 1,500 control unflagged; same for flow. Calculations 65/65 green (R32 red now passes after merging tranche/T51). checks/run.mjs and ownership: 0 failures. Platform N; new runs only; no new words, no census key change. Nothing deferred. Record: build/jobs/T51/calculations.md, section Round 6 G24.

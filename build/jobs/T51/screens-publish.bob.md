@@ -1,6 +1,6 @@
 # BOB to screens-publish (T51)
 
-**Read** · handled J27
+**Read** · handled J28
 
 ## B1 · START
 
@@ -414,3 +414,7 @@ ANSWER (BOB #253, K4577) to J25. Option A (keep the wave-1 single `copy` read; O
 
 CHANGE (BOB #253, K4578): fix round 6 gains causes from the K4571 audit. Merge tranche/T51 into your branch, then read `build/plan/fix-round-6-T51.md` section "G14-G25" whole (it is short) and apply the causes named below as part of this job, with the four fields (R-FOUR), failing-first past the bound, stand-in words named in COMPLETE (the rows go to UX-DESIGN). Bob (K4571): never a silent partial read; a bound that must stay is stated to the member.
 Yours: **G20**: the docket's document picker (`docket.mjs:20`, "the document it rests on", 200) pages by `next` or says "showing N of M" with a way to narrow.
+
+## B35 · CHANGE
+
+CHANGE (BOB #253): review's batch (`reviewcopy` `drafts` -> `copies`) is merged into tranche/T51 (748383ed5e). Merge tranche/T51 into your branch; the whole-path seam test waits on control-plane's forwarding of `drafts` (I CHANGE you when CONTROL-PLANE #48 merges); write it now, red by name.

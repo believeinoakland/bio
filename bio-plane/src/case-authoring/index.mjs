@@ -89,6 +89,9 @@ import { projectRosterOf } from "../project-roster/index.mjs";
    third split. */
 import { publishScheduleOf } from "../publish-schedule/index.mjs";
 import { caseTensionsOf } from "../case-tensions/index.mjs";
+/* R85 (fix round 6, G9; K4573): `case-carriage`, the one instance on the host, whose `copyNow` makes a small member
+   document's publication copy inside `op=publish`. */
+import { caseCarriageOf } from "../case-carriage/index.mjs";
 import { ratificationOf, SUBJECT_POSITIONS, completenessFields } from "../ratification/index.mjs";
 import { networkNoticesOf } from "../network-notices/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, OBJECT_TYPES, BASIS_GRADES,
@@ -162,6 +165,11 @@ const SEARCHED_CHUNK = 50;
 const LENS_PAGE = 2000;
 /** R40: publication R12's `publishedTargets` reads at most 200 ids a call. */
 const PUBLISHED_TARGETS_CHUNK = 200;
+
+/** R85 (fix round 6, G9; K4573): the largest member document `op=publish` makes the copy of in the act itself, in bytes;
+ *  a larger one keeps the scheduler's alarm path. */
+export const COPY_NOW_MAX_BYTES = 2 * 1024 * 1024;
+const HEX64 = /^[0-9a-f]{64}$/;
 
 /** R65 (D57, D63): the authored fields of `op=publish`, exactly: the four statements, the scope, the bias acknowledgement
  *  and the account (R63), with the statements' citations (R63, K2533). A story, context or human-interest passage has
@@ -247,14 +255,15 @@ export class CaseAuthoring {
   constructor({ storage, record, membership, host = null, inquiry = null, basisVersions = null, strength = null,
                 bias = null, observations = null, reevaluation = null, publication = null, publishSchedule = null,
                 ratification = null, account = null, inputs = null, networkNotices = null, disclosures = null, calculations = null,
-                workbooks = null, events = null, caseTensions = null, projectRoster = null, now = null } = {}) {
+                workbooks = null, events = null, caseTensions = null, projectRoster = null, caseCarriage = null,
+                now = null } = {}) {
     this.sql = storage.sql;
     this.storage = storage;
     this.record = record;
     this.membership = membership;
     this.#deps = { host, inquiry, basisVersions, strength, bias, observations, reevaluation, publication, publishSchedule,
                    ratification, account, inputs, networkNotices, disclosures, calculations, workbooks, events, caseTensions,
-                   projectRoster };
+                   projectRoster, caseCarriage };
     this.now = typeof now === "function" ? now : (precision) => stampInstant(precision);
   }
 
@@ -293,6 +302,8 @@ export class CaseAuthoring {
   get workbooks() { return this.#deps.workbooks ||= workbooksOf(this.#deps.host); }
   /* R57: the timeline of the members' subjects and the events their legs cite (events R28–R30). */
   get events() { return this.#deps.events ||= eventsOf(this.#deps.host); }
+  /* R85 (fix round 6, G9): the one `case-carriage` instance on this host, read for `copyNow` only. */
+  get caseCarriage() { return this.#deps.caseCarriage ||= caseCarriageOf(this.#deps.host); }
   /* R72 (T45; N892): `projectScope` (project-roster R23), asking no viewer. */
   get projectRoster() { return this.#deps.projectRoster ||= projectRosterOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   /* R8, R55 (T33-62): `caseRelation` and `attributionStatements` are `case-tensions`' (its R1, R5): its one instance on
@@ -352,6 +363,26 @@ export class CaseAuthoring {
    * ========================================================================================================== */
   publishCase(args = {}, calculationFacts = null) {
     return this.record.transact(() => this.#publishCase(this.#withDraft(args), { calculationFacts }));
+  }
+
+  /** R85 (fix round 6, G9; K4573; amends R18): `op=publish`'s act. It gathers the calculations (R56), runs `publishCase`, and,
+   *  when that refuses `DOCUMENT_COPY_PENDING` (case-disclosures R6), awaits `case-carriage.copyNow` for the documents the
+   *  refusal names, at most `COPY_NOW_MAX_BYTES` each, and runs `publishCase` once more over the same facts. `publishCase`
+   *  itself stays synchronous (R18): the copy is made here, between the two runs. A copy not made (a larger document, no
+   *  `copyNow`, one that throws or rejects) leaves the first refusal as it was, and the alarm path makes it. */
+  async publishAct(args = {}) {
+    const facts = await this.calculationsAtPublication(args);
+    const first = this.publishCase(args, facts);
+    if (!first || first.ok !== false || first.code !== "DOCUMENT_COPY_PENDING") return first;
+    const shas = [...new Set((Array.isArray(first.pending) ? first.pending : [])
+      .flatMap((m) => (Array.isArray(m && m.materials) ? m.materials : []).map((x) => str(x && x.sha))).filter((x) => HEX64.test(x)))];
+    if (!shas.length) return first;
+    try {
+      const cc = this.caseCarriage;
+      if (!cc || typeof cc.copyNow !== "function") return first;
+      await cc.copyNow({ shas, maxBytes: COPY_NOW_MAX_BYTES });
+    } catch { return first; }
+    return this.publishCase(args, facts);
   }
 
   /* R78 (T51; C1; K4165; amends R9): THE DRAFT A CALL NAMES SUPPLIES WHAT THE CALL DID NOT SEND. The screens send the draft,
@@ -2185,7 +2216,7 @@ export function caseAuthoringOps(c, url, body) {
     /* R1–R18. The BODY carries the authored material (an exclusion list and the roles map are what a query string
        cannot express honestly); `targets`, `caseId`, `project` and `draft` also arrive on the query as the one-line
        form a probe can reach, and `newCase` from either, its string forms spelled out so `newCase=false` means false. */
-    publishcase: () => gathered(c, { ...b,
+    publishcase: () => c.publishAct({ ...b,
       target: q("target") || b.target,
       targets: b.targets || q("targets") || null,
       caseId: q("caseId") || b.caseId || null,
@@ -2193,7 +2224,7 @@ export function caseAuthoringOps(c, url, body) {
       project: q("project") || b.project || null,
       draft: q("draft") || b.draft || null,
       viewer: q("viewer"),
-      author: q("author") }, (a, f) => c.publishCase(a, f)),
+      author: q("author") }),
     /* R32 (N345): the ceremony's read before op=publish; `viewer` and `author` are the stamps, as op=publish's. */
     publishtensions: () => c.tensionsToDisclose({ ...b,
       target: q("target") || b.target,
