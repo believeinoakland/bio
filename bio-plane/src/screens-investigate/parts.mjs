@@ -5,7 +5,7 @@
 export const PARTS = Object.freeze({
   /** A refusal drawn in words beside what it answers (interface-shell R13): its translation, else the code. */
   said(cs, f) {
-    const words = f && f.translation ? cs.esc(f.translation) : cs.w("state.failed", { reason: (f && f.code) || cs.w("shell.noanswer") });
+    const words = f && f.translation ? cs.esc(f.translation) : cs.w("state.failed", { reason: f && f.code ? f.code : { html: cs.w("shell.noanswer") } });
     return `<p class="cs-gap" data-gap="refused" role="alert" data-refusal="${cs.esc((f && f.code) || "")}">${words}</p>`;
   },
   /** A read made as the screen draws, once per key: its outcome, in R10's four states, kept in the screen's memory
@@ -23,7 +23,7 @@ export const PARTS = Object.freeze({
           const f = !a ? {} : a.ok === false ? a : r;
           const code = String(f.code || f.reason || f.refused || "");
           const t = f.translation || f.why || null;
-          settle({ state: "failed", value: null, refusal: { code, words: t ? cs.esc(t) : cs.esc(code || cs.w("shell.noanswer")) } });
+          settle({ state: "failed", value: null, refusal: { code, words: t ? cs.esc(t) : code ? cs.esc(code) : cs.w("shell.noanswer") } });
         } else settle({ state: "ok", value: r, refusal: null });
       }, () => settle({ state: "failed", value: null, refusal: { code: "", words: cs.w("shell.noanswer") } }));
     }
@@ -95,12 +95,18 @@ export const PARTS = Object.freeze({
       return { value: r.capture.sha256, text: day ? titleOf(r) + " · " + day : titleOf(r) };
     });
     if (view.ui) view.ui["docshown:" + id] = shown.map((r) => r.capture.sha256);
-    if (d && d.state !== "loading" && !rows.length) return `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`;
+    const labelled = (sentence) => `<div class="cs-field" data-empty="${cs.esc(id)}"><p class="mk-small"><b>${cs.w(o.label || "form.choose.document")}</b></p><p class="cs-state" data-state="empty">${sentence}</p></div>`;
+    if (d && d.state !== "loading" && !rows.length) return labelled(cs.w("state.empty"));
     const search = rows.length > 1
       ? cs.field(id + "-q", "form.choose.search", { value: asked, typing: (cs2, view2, value) => { cs2.set("docq:" + id, String(value || "").trim()); } }) : "";
-    if (d && d.state !== "loading" && !options.length) return search + `<p class="cs-state" data-state="empty">${cs.w("form.choose.search.none")}</p>`;
+    if (d && d.state !== "loading" && !options.length) return search + labelled(cs.w("form.choose.search.none"));
     return search + cs.choice(id, o.label || "form.choose.document", options, o.drive ? { acts: {} } : {}) + `<p class="mk-small">${cs.w(o.help || "form.choose.document.help")}</p>`
       + (o.passage === false ? "" : `<p class="mk-small">${cs.w("form.choose.passage")}</p>`);
+  },
+  /** R23, R34, C59: a choice with nothing to choose from (none held), drawn under its own label in a slot of its own, so the empty state is never taken for
+   *  the sentence of the control before it. Answers HTML. */
+  emptyChoice(cs, id, labelKey) {
+    return `<div class="cs-field" data-empty="${cs.esc(id)}"><p class="mk-small"><b>${cs.w(labelKey)}</b></p><p class="cs-state" data-state="empty">${cs.w("state.empty")}</p></div>`;
   },
   /** R34, C59: the passage the member chose: the chosen document's digest and, when she selected words in `wordsId`'s picker, the extent of
    *  the first unit selected (a unit's extent is `content`'s own), else the whole document; null with no document chosen. */
@@ -195,7 +201,7 @@ export const PARTS = Object.freeze({
    *  to Explore). No score, rank or "most connected" is drawn (K1486). */
   graph(cs, g, o) {
     /* a read that answered nothing is a read that failed, never an empty graph (R18) */
-    if (!g || !Array.isArray(g.nodes)) return `<p class="cs-state" data-state="failed" role="alert">${cs.w("state.failed", { reason: cs.w("shell.noanswer") })}</p>`;
+    if (!g || !Array.isArray(g.nodes)) return `<p class="cs-state" data-state="failed" role="alert">${cs.w("state.failed", { reason: { html: cs.w("shell.noanswer") } })}</p>`;
     const W = 860, H = 660, CX = 430, CY = 322, R1 = 160, R2 = 300;
     const names = (o && o.names) || {};
     const nodes = Array.isArray(g.nodes) ? g.nodes : [];
@@ -308,6 +314,16 @@ export const PARTS = Object.freeze({
     const rows = io && io.state === "ok" && io.value && Array.isArray(io.value.entities) ? io.value.entities : [];
     for (const r of rows) if (r && typeof r.entity_id === "string" && Number(r.documents) > 0) out[r.entity_id] = Number(r.documents);
     return out;
+  },
+  /** C14, R18: the groups of the kinds a graph's steps carry, read from `affordances` (`later`, one read) only when the graph has a step to colour; a graph of
+   *  no step draws none and reads nothing. Answers `{kind: group}`. */
+  groupsFor(cs, view, g, later) {
+    if (!(g && Array.isArray(g.steps) && g.steps.length)) return {};
+    const v = later(cs, view, "vocab", "affordances", { query: {} });
+    const ck = v.state === "ok" && v.value && v.value.vocabularies && v.value.vocabularies.connection_kinds;
+    const m = {};
+    if (ck && Array.isArray(ck.values)) for (const k of ck.values) m[k] = (ck.words && ck.words[k] && ck.words[k].group) || (ck.groups && ck.groups[k]) || null;
+    return m;
   },
   /** R24, R27: the group a connection kind belongs to (`pos`, `part`, `money`, `ment`, `same`, `step_source`), from the vocabulary `affordances` answers. */
   groupMap(v) {

@@ -64,8 +64,9 @@
  * not treat a draft as final: `Meeting Minutes - DRAFT` is recorded as a fact so a
  * member can see that the record they are citing is one the body has not yet approved.
  */
-import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, selfNaming, FURNITURE_RECURS, alsoSatisfies,
+import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, FURNITURE_RECURS, alsoSatisfies,
          vocabPatterns, anyMatch, LINE_END } from "../docprofile/doctypes/index.mjs";
+import { scanFlatMany, flatFirst, countLines, lineTable } from "./windows.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
@@ -138,7 +139,7 @@ const minutesLongDate = (s) => {
   if (mo == null) return null;
   return new Date(Date.UTC(+m[3], mo, +m[2])).toISOString().slice(0, 10);
 };
-const clockOf = (s, re) => { const m = re.exec(String(s || "")); return m ? m[0] : null; };
+const clockOf = (text, re) => { const h = flatFirst(text, re); return h ? h.m[0] : null; };
 
 export default {
   key: "meeting_minutes",
@@ -163,24 +164,33 @@ export default {
    *  prose. So NONE of the shared signals appears below, and family (1) is a RATE. */
   detect(ctx) {
     const t = String(ctx.text || "");
-    const flat = flatten(t);
     const signals = [];
 
-    const named = selfNaming(t, MINUTES_MASTHEAD);
+    /* R37: the phrases are matched over the flattened text a window at a time (./windows.mjs), never over a whole
+       copy of it; the counts and the tests are the whole text's. */
+    let made = false, carried = false, tallies = 0, convened = false, adjourned = false;
+    scanFlatMany(t, [
+      { re: MOTION_MADE, on: () => (made = true) },
+      { re: MOTION_RESULT, on: () => (carried = true) },
+      { re: TALLY_LABEL, on: () => { tallies++; } },
+      { re: CONVENED, on: () => (convened = true) },
+      { re: ADJOURNED, on: () => (adjourned = true) },
+    ]);
+
+    const named = countLines(t, MINUTES_MASTHEAD);
     const furniture = named >= FURNITURE_RECURS;
     if (furniture) signals.push(localize("doctypes.meeting-minutes.self_naming_furniture", "names itself as minutes on {count} lines, which is page furniture", { count: String(named) }));
     else if (named) signals.push(localize("doctypes.meeting-minutes.self_naming_once", "names itself as minutes once ({count}), which a reference also does", { count: String(named) }));
 
-    const motion = MOTION_MADE.test(flat) && MOTION_RESULT.test(flat);
+    const motion = made && carried;
     if (motion) signals.push(localize("doctypes.meeting-minutes.motions", "motions made, seconded and carried or failed"));
-    const tallies = (flat.match(new RegExp(TALLY_LABEL.source, "gi")) || []).length;
     if (tallies >= 2) signals.push(localize("doctypes.meeting-minutes.tally_labels", "{count} roll-call vote tally label(s)", { count: String(tallies) }));
     const outcome = motion || tallies >= 2;
 
-    const frame = CONVENED.test(flat) && ADJOURNED.test(flat);
+    const frame = convened && adjourned;
     if (frame) signals.push(localize("doctypes.meeting-minutes.frame", "a meeting that convened and adjourned at stated times"));
 
-    const roster = selfNaming(t, ROSTER_LABEL) >= 2;
+    const roster = countLines(t, ROSTER_LABEL) >= 2;
     if (roster) signals.push("an attendance roster");
 
     /* CERTAIN needs the masthead AT FURNITURE RATE plus one other family. The
@@ -219,20 +229,15 @@ export default {
    *  verdict stand for the whole document. */
   parse(ctx) {
     const raw = String(ctx.text || "");
-    const lines = raw.split(/\r?\n/).map((l) => l.trim());
-    /* The start offset of each line IN THE UNSPLIT TEXT, the only coordinate
-       `ctx.locate` understands. Derived from the separators the split actually
-       matched, never from `length + 1`: a CRLF document drifts one character per line
-       under the arithmetic, and a drift that grows silently down a 40,000-line packet
-       is the class of wrong address position exists to avoid. */
-    const offsets = [];
-    { let last = 0; const re = /\r?\n/g; let m;
-      while ((m = re.exec(raw)) !== null) { offsets.push(last); last = m.index + m[0].length; }
-      offsets.push(last); }
+    /* The lines, trimmed, held as offsets into the text (R37): a line is cut from it when it is read, so no copy of the
+       whole text or of all its lines is built. `L.start(i)` is the start offset of each line IN THE UNSPLIT TEXT, the
+       only coordinate `ctx.locate` understands. Derived from the separators the split actually matched, never from
+       `length + 1`: a CRLF document drifts one character per line under the arithmetic, and a drift that grows
+       silently down a 40,000-line packet is the class of wrong address position exists to avoid. */
+    const L = lineTable(raw);
     /* Always a function: `readText` supplies one and a direct caller that does not gets
        the honest null rather than a TypeError. */
     const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
-    const flat = flatten(raw);
     const filePats = minutesFileLines(ctx);
     const isMinutesFurniture = minutesFurniture(ctx);
     const bodyEnds = vocabPatterns(ctx, "bodies", LINE_END);
@@ -241,8 +246,10 @@ export default {
     /* The meeting's own facts. Every one of them may honestly be null; an unread fact
        is never invented. */
     let date = null;
-    for (const l of lines.slice(0, 80))
+    for (let i = 0; i < Math.min(L.length, 80); i++) {
+      const l = L.get(i);
       if (/^[A-Za-z]+day, [A-Za-z]+ \d{1,2}, \d{4}$/.test(l)) { date = minutesLongDate(l); break; }
+    }
 
     /* THE BODY'S NAME IS FURNITURE OR IT IS NOTHING, and this is the rate test again
        rather than a second heuristic. In document A the line `*Rules & Legislation
@@ -258,21 +265,24 @@ export default {
     {
       /* Every line's own recurrence, so both the candidate test and the wrap test
          below can ask the same question. */
-      const freq = new Map();
-      for (const l of lines) if (l) freq.set(l, (freq.get(l) || 0) + 1);
+      const recurs = new Map();
+      const recursAt = (l) => {
+        if (!recurs.has(l)) { let n = 0; for (let k = 0; k < L.length && n < FURNITURE_RECURS; k++) if (L.get(k) === l) n++; recurs.set(l, n >= FURNITURE_RECURS); }
+        return recurs.get(l);
+      };
       /* SEARCHED IN THE MASTHEAD ONLY. A body's name is where the clerk puts it — at
          the head of the document — and a line elsewhere that merely ends in `Council`
          is not the body that met. Without this bound the reader reached further down
          document B and named the body `Office Of The City Council`, a recurring
          address block. The bound is what makes the two guards below sufficient rather
          than the start of an endless list of them. */
-      for (let i = 0; i < Math.min(lines.length, 40) && !body; i++) {
-        const l = lines[i];
+      for (let i = 0; i < Math.min(L.length, 40) && !body; i++) {
+        const l = L.get(i);
         if (!l || l.length > 80) continue;
         if (!anyMatch(bodyEnds, l)) continue;
         if (/^(and|or|of|the)\b/i.test(l) || /^[a-z]/.test(l)) continue;
         if (anyMatch(memberTitles, l) || isMinutesFurniture(l)) continue;
-        if ((freq.get(l) || 0) < FURNITURE_RECURS) continue;
+        if (!recursAt(l)) continue;
         /* THE WRAP TEST, and it is what stopped this reader naming the wrong body. A
            header the producer broke across lines repeats EVERY ONE of its lines at the
            furniture rate, so recurrence alone cannot tell the last line of a wrapped
@@ -282,8 +292,8 @@ export default {
            and the City Council` sits `Oakland Redevelopment Successor`, recurring 37
            times and not furniture — so that is a tail, and the reader declines. */
         let prev = null;
-        for (let j = i - 1; j >= 0 && j >= i - 3; j--) if (lines[j]) { prev = lines[j]; break; }
-        if (prev && !isMinutesFurniture(prev) && (freq.get(prev) || 0) >= FURNITURE_RECURS) continue;
+        for (let j = i - 1; j >= 0 && j >= i - 3; j--) if (L.get(j)) { prev = L.get(j); break; }
+        if (prev && !isMinutesFurniture(prev) && recursAt(prev)) continue;
         body = l.replace(/^[*\s]+/, "").trim();
       }
     }
@@ -291,12 +301,13 @@ export default {
       : !bodyEnds.length
       ? localize("doctypes.meeting-minutes.no_body_profile", "no active jurisdiction profile says how a body is named, so which body met is not read")
       : localize("doctypes.meeting-minutes.no_body_line", "no single line of this document names the body at the rate a running header does, so which body met is not stated here rather than guessed from one line");
-    const convened = clockOf(flat, CONVENED);
-    const adjourned = clockOf(flat, ADJOURNED);
+    const convened = clockOf(raw, CONVENED);
+    const adjourned = clockOf(raw, ADJOURNED);
     /* DRAFT is a first-class fact about the record a member would be citing, not a
        cosmetic label: minutes the body has not yet approved can still change. */
     let status = null;
-    for (const l of lines) {
+    for (let i = 0; i < L.length; i++) {
+      const l = L.get(i);
       const m = MINUTES_MASTHEAD.exec(l);
       if (!m) continue;
       status = /[-–—]\s*(\S.*)$/.exec(l) ? /[-–—]\s*(\S.*)$/.exec(l)[1].trim() : "unqualified";
@@ -313,12 +324,12 @@ export default {
        which reports a re-spelling as a person leaving the body. So the roster is a
        fact, stated, and who attended stays readable without being addressable. */
     const roster = {};
-    for (let i = 0; i < lines.length; i++) {
-      const lab = ROSTER_LABEL.exec(lines[i]);
+    for (let i = 0; i < L.length; i++) {
+      const lab = ROSTER_LABEL.exec(L.get(i));
       if (!lab) continue;
       /* The names sit on the line ABOVE the label (measured in both documents); the
          count sits below it. Neither is assumed present. */
-      const above = lines[i - 1] || "";
+      const above = L.get(i - 1) || "";
       if (!above || isMinutesFurniture(above) || ROSTER_LABEL.test(above)) continue;
       const key = lab[1].toLowerCase();
       if (!roster[key]) roster[key] = above;
@@ -328,8 +339,8 @@ export default {
     /* D-454: key -> the entity, so a repeat is recorded as another occurrence (`readAgain`). */
     const seen = new Map();
     let pendingSubject = null, pendingFrom = null, pendingItem = null, expect = null;
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
+    for (let i = 0; i < L.length; i++) {
+      const line = L.get(i);
       if (!line) continue;
       /* THE ITEM NUMBER IS CARRIED FORWARD, not scanned back for, and the difference
          is the measured layout. In the AGENDA the item number sits immediately before
@@ -351,14 +362,14 @@ export default {
       }
       const key = minutesFileKey(filePats, line);
       if (key == null) continue;
-      if (seen.has(key)) { readAgain(seen.get(key), locate(offsets[i])); continue; }
+      if (seen.has(key)) { readAgain(seen.get(key), locate(L.start(i))); continue; }
 
       /* A section item with no Subject block takes its heading from the nearest
          substantive line above; the item number was carried forward (see above). */
       const item = pendingItem;
       let heading = null;
       for (let j = i - 1, hops = 0; j >= 0 && hops < 8; j--) {
-        const prev = lines[j];
+        const prev = L.get(j);
         if (!prev) continue;
         hops++;
         if (MINUTES_ITEM_LINE.test(prev)) continue;
@@ -376,9 +387,11 @@ export default {
          Bounded by the next file-number line so an item can never borrow the next
          item's result, and the window is read as flattened text because both shapes
          wrap across lines. */
-      let end = lines.length;
-      for (let j = i + 1; j < lines.length; j++) if (minutesFileKey(filePats, lines[j]) != null) { end = j; break; }
-      const window = flatten(lines.slice(i + 1, end).join("\n"));
+      let end = L.length;
+      for (let j = i + 1; j < L.length; j++) if (minutesFileKey(filePats, L.get(j)) != null) { end = j; break; }
+      const span = [];
+      for (let j = i + 1; j < end; j++) span.push(L.get(j));
+      const window = flatten(span.join("\n"));
       /* Shape 1, a motion: who moved, who seconded, what was moved, and whether it
          carried. Shape 2, a disposition: `This <matter kind> be <action>`. */
       const mo = /\bA motion was made by\s+(.+?),\s*seconded by\s+(.+?),\s*that\s+this matter be\s+(.+?)\.\s*The motion\s+(carried|failed)\b/i.exec(window);
@@ -408,7 +421,7 @@ export default {
         result: result || null,
         moved_by, seconded_by,
         vote: Object.keys(vote).length ? vote : null,
-      }, locate(offsets[i])));
+      }, locate(L.start(i))));
       seen.set(key, entities[entities.length - 1]);
       pendingSubject = null; pendingFrom = null; pendingItem = null;
     }

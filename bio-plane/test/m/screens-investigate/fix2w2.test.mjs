@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import { SESSION_OPS } from "../../../src/op-declarations/index.mjs";
-import { open, main, fill, press, plane, PATHS, MORE_PATHS, TRAIL, TIMELINE, FACTS, MATTER, DEF, PERSON, PERSON_ENTITY, STANDARD, STD_PROPOSALS, WALK, SPOT, CALCULATION,
+import { open, main, fill, press, plane, PATHS, MORE_PATHS, TRAIL, TIMELINE, FACTS, moneyAnswer, MATTER, DEF, PERSON, PERSON_ENTITY, STANDARD, STD_PROPOSALS, WALK, SPOT, CALCULATION,
   PROJECT_MD, ACTION, PROPOSALS, M1, P, ENT, ORG, SHA, SHA2, SHA3, STD, MSR, word, drew, dayOf } from "./fixtures.mjs";
 
 const optsOf = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent]);
@@ -153,7 +153,7 @@ test("R3 R33 C94 timeline: who threaded a document to a step and who declared a 
 
 test("R4 R23 C94 money: who started the trail and who read a figure are handles", async () => {
   const trail = TRAIL({ set: { ...TRAIL().set, by: "member:admin" } });
-  const p = await open(PATHS.money, { plane: { moneyset: ok(trail), money: (r) => ok(r.query.id === M1 ? { ...FACTS[M1], by: "member:admin" } : FACTS[r.query.id]) } });
+  const p = await open(PATHS.money, { plane: { moneyset: ok(trail), money: (r) => ok(moneyAnswer(r.query.id === M1 ? { ...FACTS[M1], by: "member:admin" } : FACTS[r.query.id])) } });
   const card = (key, vars) => main(p).querySelectorAll("[data-tip]").some((e) => e.getAttribute("data-tip").includes(word(key, vars)));
   assert.ok(card("screen.money.startedby", { by: "sparky" }), "the trail's card says who started it, by handle");
   const row = main(p).querySelectorAll("tr.cs-r").find((r) => r.querySelector(`[data-id="${M1}"]`));

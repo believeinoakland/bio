@@ -1,6 +1,6 @@
 # extraction (T51)
 
-**Status** · session_01RnSLEohe5ooQjmP6bd8UAC · depth 2 · COMPLETE · handled B11
+**Status** · session_013CUWFqoDsBdasaVpjLFLWT · depth 2 · COMPLETE · handled B12
 
 ## J1 · REPORT
 
@@ -201,3 +201,21 @@ Reds not mine / expected: (a) op-declarations t36 R34 names `readheld` and `capt
 Words rows to regenerate at the layer close: extraction.declared.readheld, extraction.index.readheld_no_sha (setup-words --check reports rows.mjs stale on them; expected).
 QUESTIONs: J8 answered B9, J9 answered B10; none open. Proposed requirement lines: none beyond RC-R3 (K4440's home-by-reading's-bundle is stated by the tests; add to R80 if you want it written).
 Size (session_01RnSLEohe5ooQjmP6bd8UAC): test runs 24, module lines 3409
+
+## J11 · COMPLETE
+
+COMPLETE (EXTRACTION #31, fix round 4, R81). Commit on job/T51/extraction: the change and its test (tranche/T51 merged first). No open item.
+
+Cause (as B12 diagnosed, confirmed): `readHeld` found no home for a capture held in parts, because capture's `promoteDocument` registers only the part shas, so `provenance.homeOf(whole)` is null and the K4440 fallback looks in `readings` for the very reading that is owed: every alarm tick answered NO_HOME.
+
+Change: `bio-plane/src/extraction/index.mjs:651-656` (the call in `readHeld`, after the register and the held-reading fallbacks) and `:686-700` (`#homeOfParts(whole)`). It finds the bundle whose `data/provenance.json` states `capture.sha256 = whole` (`files` joined to `bundles`, `instr`, at most 8 candidates), takes the document's `parts`, and accepts the bundle only when `provenance.homeOf(part)` names that same bundle for every part, so a bundle that merely mentions the digest is no home. The viewer gate, the held-reading checks, `bytesOf` (which assembles the parts) and the writer are unchanged. No new use, no provenance change.
+
+Failing-first: `bio-plane/test/m/extraction/r81.test.mjs`. Red before the change (`readHeld` answered read:false, NO_HOME for the promoted two-part capture; second-call test the same); green after: a two-part capture promoted (register names the parts, the bundle's provenance names the whole), whole held, `readHeld` reads it (`read: true`, bundle INFO-1), `op=reading` finds it with units; a second call answers READING_HELD and changes nothing. Controls: unpromoted capture still NO_HOME; a bundle naming the digest whose parts the register does not give it is NO_HOME; a viewer who may not see the bundle is NO_HOME. R81 is now named by a test; its "not yet met" mark is BOB's to lift.
+
+Measurements: `t51-large-pdfs.test.mjs` whole: 1 test, pass, 82.6 s wall. BUD, PER and APP are all read after the alarm (the line that failed, `BUDGET-2025-PER.pdf: found after the alarm: {"found":false}`, passes), 2.5/8.8/15.9 MB answered inside 15 s with the capture kept, the 140 KB IRS file answered with its reading. The test asserts the memory bound itself; I took no separate workerd measurement (the reading's cost stays K4479's 54-57 MB above its bytes in node).
+
+Suites: extraction 223 tests, 223 pass, 0 fail (run alone; `c5b-memory.test.mjs` passes, it read 145 MB and failed only when run beside the 4-minute test, so do not run them together). control-plane + plane whole: 666 tests, 665 pass, 1 fail, which is not mine: plane `release.test.mjs` R24 (`screen.objective.purpose` not in the words list), red on the tranche tip already (named in the J10 record). impact.mjs lists 107 of 175 modules because it reads extraction's `DECLARED_OPS` as a shared table; the users that call `readHeld` are control-plane and plane, run whole above.
+Checks: format 0 failures; architecture (extraction) 0; coverage (extraction) 57 of 57 live ids named; ownership (extraction, tranche/T51..job/T51/extraction) 0 failures. `checks/run.mjs` whole: no finding in my files; coverage (agent-harness R17, agent-runner R37 R38, installer-steps R26 R31, journey-check R19) and words (testcopy in screens-publish fix4.test.mjs:97) fail in other modules; the words count is not raised by me (no sentence added).
+
+Found in other modules: none new. Generated artifacts made stale: none (no word added, no bundle input changed).
+Size (session_013CUWFqoDsBdasaVpjLFLWT): test runs 9, module lines 3433

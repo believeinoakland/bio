@@ -1,0 +1,667 @@
+{
+ "note": "the parse of the policy and the regulation type on every fixture reading, and on the large texts, as digests, before R38 (doctypes R38)",
+ "taken_at": "2026-10-22",
+ "readings": {
+  "fw18:minutes@held": {
+   "policy": "2826aa250c4ff0dd2a4548c4532487f37e5751d7f650011f2d9148419e95039d",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "fw18:minutes_council@held": {
+   "policy": "3eb2944dcf8a12157931d372ead2c7521ed413cdb8cfff135f05a4a27fe70a4b",
+   "regulation": "8507333df1c446fb0163e0c6dfe4aee7ba4dbd76074327632db95c1e91cbe50c"
+  },
+  "fw18:agenda@held": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "fw18:regulation@held": {
+   "policy": "75d3ac0e515441120c817944ce608bbeff22b227bcaf4122080e0a6b6d5c8051",
+   "regulation": "fe4743887aa2fa774373c181a6bc426610c7185e5530ed83e1354717b6dd3c43"
+  },
+  "fw18:staff_report@held": {
+   "policy": "466c202e9d463bffe922e13c6b273abadac2fec27dc3ecdf7b9e225223ba4e1f",
+   "regulation": "43002e2d1fea839dedaf5862588288542bb8c2a802cbb4b28b0c61434572d363"
+  },
+  "fw20:directory_nss@held": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "fw20:directory_nsd@held": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "fw20:directory_cro@held": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "fw20:directory_benefits@held": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "fw20:neg_candidates@held": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "fw20:neg_schedule@held": {
+   "policy": "a0348917576d65ef51731b0fbcdc6acb8fafd1fc5b05a7d5abbff06a8cccab6e",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "fw20:neg_recycling@held": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "fw20:neg_wdb@held": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "fw20:neg_medical@held": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "pa:agenda@pa": {
+   "policy": "05672e5bd15d55d29aec35ab05170d7f5915bccc8d8324c84e32cf28d98a78db",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "pa:minutes@pa": {
+   "policy": "05672e5bd15d55d29aec35ab05170d7f5915bccc8d8324c84e32cf28d98a78db",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "pa:report@pa": {
+   "policy": "05672e5bd15d55d29aec35ab05170d7f5915bccc8d8324c84e32cf28d98a78db",
+   "regulation": "1a638d4514668934d4123749a14e4c85781f0fb9415e1e969cbf72af8a073b66"
+  },
+  "pa:bylaw@pa": {
+   "policy": "05672e5bd15d55d29aec35ab05170d7f5915bccc8d8324c84e32cf28d98a78db",
+   "regulation": "6a26b06aa6d9946b0c2cfb3b7141b5a14446c635bbdb8eb224bb2bc15e2a2c42"
+  },
+  "pa:directory@pa": {
+   "policy": "05672e5bd15d55d29aec35ab05170d7f5915bccc8d8324c84e32cf28d98a78db",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "pa:calendar@pa": {
+   "policy": "05672e5bd15d55d29aec35ab05170d7f5915bccc8d8324c84e32cf28d98a78db",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "pa:calendar_cancelled@pa": {
+   "policy": "05672e5bd15d55d29aec35ab05170d7f5915bccc8d8324c84e32cf28d98a78db",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "pa:agenda@lk": {
+   "policy": "05672e5bd15d55d29aec35ab05170d7f5915bccc8d8324c84e32cf28d98a78db",
+   "regulation": "360b834fa16f7693a96f8dea8dcfc52d6b81fb7bcf841f07058f15a2c1f8cff6"
+  },
+  "pa:minutes@lk": {
+   "policy": "05672e5bd15d55d29aec35ab05170d7f5915bccc8d8324c84e32cf28d98a78db",
+   "regulation": "360b834fa16f7693a96f8dea8dcfc52d6b81fb7bcf841f07058f15a2c1f8cff6"
+  },
+  "pa:report@lk": {
+   "policy": "05672e5bd15d55d29aec35ab05170d7f5915bccc8d8324c84e32cf28d98a78db",
+   "regulation": "360b834fa16f7693a96f8dea8dcfc52d6b81fb7bcf841f07058f15a2c1f8cff6"
+  },
+  "pa:bylaw@lk": {
+   "policy": "05672e5bd15d55d29aec35ab05170d7f5915bccc8d8324c84e32cf28d98a78db",
+   "regulation": "951124b133e28c79167005cb020bbf0e72649d02ffc00e42697fce00637124ce"
+  },
+  "pa:directory@lk": {
+   "policy": "05672e5bd15d55d29aec35ab05170d7f5915bccc8d8324c84e32cf28d98a78db",
+   "regulation": "360b834fa16f7693a96f8dea8dcfc52d6b81fb7bcf841f07058f15a2c1f8cff6"
+  },
+  "pa:calendar@lk": {
+   "policy": "05672e5bd15d55d29aec35ab05170d7f5915bccc8d8324c84e32cf28d98a78db",
+   "regulation": "360b834fa16f7693a96f8dea8dcfc52d6b81fb7bcf841f07058f15a2c1f8cff6"
+  },
+  "pa:calendar_cancelled@lk": {
+   "policy": "05672e5bd15d55d29aec35ab05170d7f5915bccc8d8324c84e32cf28d98a78db",
+   "regulation": "360b834fa16f7693a96f8dea8dcfc52d6b81fb7bcf841f07058f15a2c1f8cff6"
+  },
+  "pa:agenda@empty": {
+   "policy": "05672e5bd15d55d29aec35ab05170d7f5915bccc8d8324c84e32cf28d98a78db",
+   "regulation": "360b834fa16f7693a96f8dea8dcfc52d6b81fb7bcf841f07058f15a2c1f8cff6"
+  },
+  "pa:minutes@empty": {
+   "policy": "05672e5bd15d55d29aec35ab05170d7f5915bccc8d8324c84e32cf28d98a78db",
+   "regulation": "360b834fa16f7693a96f8dea8dcfc52d6b81fb7bcf841f07058f15a2c1f8cff6"
+  },
+  "pa:report@empty": {
+   "policy": "05672e5bd15d55d29aec35ab05170d7f5915bccc8d8324c84e32cf28d98a78db",
+   "regulation": "360b834fa16f7693a96f8dea8dcfc52d6b81fb7bcf841f07058f15a2c1f8cff6"
+  },
+  "pa:bylaw@empty": {
+   "policy": "05672e5bd15d55d29aec35ab05170d7f5915bccc8d8324c84e32cf28d98a78db",
+   "regulation": "951124b133e28c79167005cb020bbf0e72649d02ffc00e42697fce00637124ce"
+  },
+  "pa:directory@empty": {
+   "policy": "05672e5bd15d55d29aec35ab05170d7f5915bccc8d8324c84e32cf28d98a78db",
+   "regulation": "360b834fa16f7693a96f8dea8dcfc52d6b81fb7bcf841f07058f15a2c1f8cff6"
+  },
+  "pa:calendar@empty": {
+   "policy": "05672e5bd15d55d29aec35ab05170d7f5915bccc8d8324c84e32cf28d98a78db",
+   "regulation": "360b834fa16f7693a96f8dea8dcfc52d6b81fb7bcf841f07058f15a2c1f8cff6"
+  },
+  "pa:calendar_cancelled@empty": {
+   "policy": "05672e5bd15d55d29aec35ab05170d7f5915bccc8d8324c84e32cf28d98a78db",
+   "regulation": "360b834fa16f7693a96f8dea8dcfc52d6b81fb7bcf841f07058f15a2c1f8cff6"
+  },
+  "policy:642": {
+   "policy": "a9faa48bade1e999fff3ed6495647184c9576276aa2073e1848386e40c9de458",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:693": {
+   "policy": "0b4110d1dc8ac863869d12b56bbf5fd7f63601a06a902e9a38d232b5cc5a0039",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:694": {
+   "policy": "6789af46e7cf39b2bdac02bec0f04db136880e352fdd5b0b3ba31a4b4ba09284",
+   "regulation": "d20048e52f82a53c0e3eb1851260d2b088c1e6c2c4691612f8805b771628bbdc"
+  },
+  "policy:698": {
+   "policy": "a92aa3467ed4fcb063da238b5144d5623e79b63306f2fe8cdf1a0c695d75f697",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:743": {
+   "policy": "8cd46a843e7630487d6cfc2de8915715b1d78625e73b40793d68a47a49972096",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:774": {
+   "policy": "15c17ade558f57910f1c4a30e096c5f5389ef943ab0ce43b3ed21f0a5e5d24c3",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:1893442": {
+   "policy": "803f48517f23924a21c39e265acb3566a4b81f1c6738f37cc80a1b079ad68de4",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:2227646": {
+   "policy": "458ec80667d87ac2b89bcf6e301d1cca71c815e8b8cfcfc65edcac6a882f6512",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:2706547": {
+   "policy": "516d08e8edf5a00fdc979823c6b389a4fbb82a110ae1a59329818862e4f8db86",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:3327411": {
+   "policy": "f396e3c174a7e277c2538e414e113fb9ee3cd19b8db87f4fb9d003d7de196a4d",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:579540": {
+   "policy": "58fb16681ef3abe3b64f16074a99e77e84e5a9e32b41f2ccdd4a98769a2dd130",
+   "regulation": "a273341cfcb4a14ea0f2b2063753f57f3954ff9bd975234726923ba5d8b1c575"
+  },
+  "policy:2108538": {
+   "policy": "acb6576a8ef32fcb2ddbc3d90eeec41f325f2989b9e4a38c6e87c846df4d283b",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:2663632": {
+   "policy": "b274dfd31c6d3ed06db4eba5e71140362947b897d2c52f1b202e66be0be56f17",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:2674928": {
+   "policy": "2e6799af78353fd48c75d4983a6f0d7a321062fd9f3ad2d611929c6c83a83ca9",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:415": {
+   "policy": "3548594a264e17712d2ab9fd10f6e6d2cce8614f123ecedd0799760d2388a036",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:416": {
+   "policy": "812db4f3e6b5e77f8d1af0c832f984baa73440be4ef7d16cafede9201549f9cc",
+   "regulation": "2d630ad6685e0482d97ef7b01c8f29e32bc86df89873cf2a3a636e819027ee63"
+  },
+  "policy:417": {
+   "policy": "37dfb664fe60d03f2d25c31698d7499685e9ea8cd13f2248eb2e226baf48cdde",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:1266222": {
+   "policy": "9bd73859f291d8013fbece54cad6fbddfc785cd7fe661f86e78da7111a6a1301",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:1431388": {
+   "policy": "bb3209d3b12d456d6ffd7ee48cfeb77e47623843638a26633d5dbdcdd830c7c8",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:5": {
+   "policy": "4cd1e6baf2d861049acca8357d6bff5cf115c90cdd7f37a3dabe74dfde5dc651",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:17": {
+   "policy": "8c6bbdbcee39916268ada66abef6053740328fab3332a631425208daa04d68c7",
+   "regulation": "adae99eccc3b21824039b6b73b48363713c655b06cdf071d017d792c06478e45"
+  },
+  "policy:25": {
+   "policy": "b0fc0a5d3fe5690e132d56f2e3c97d48f4498d16d901c736e077a31dc4879b42",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:30": {
+   "policy": "913670530b36385389cdec335964167981d62e9e9d9c4bd46a8216231c2ea71b",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:35": {
+   "policy": "a49be80c517859f0a95f21e745f3d1326810af3057a0284a4408daa52e6e7852",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:41": {
+   "policy": "3ad3c3331885373623a747a50820590fece89d44edd698a3b8beed604c548bc2",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:59": {
+   "policy": "72d289324a7db0403ad8ce0d8b446899e8ba480890c33f0989d1273cd050f257",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:97": {
+   "policy": "16b3969509483d256a0adabe107ae3b2f65398d0cd293a4fb5e739372f5032f0",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:103": {
+   "policy": "0b0e17c471f3590a40aa66808d05276a7cd66f36d1df406016eff619b2785fdb",
+   "regulation": "8242bcf858374188e16c6597fd146c02fbacfe6a9b44370938207f36bb82d503"
+  },
+  "policy:2665968": {
+   "policy": "8d12be193ea857de7b17586150b1ad4d0db5fcb3493823946337b2e3549fc09e",
+   "regulation": "86af00b08f0a139f7483840518331e725665ea5e0c2f996cadb250ebfe25f75e"
+  },
+  "policy:117": {
+   "policy": "34c3ced7af0f03efd951798580b038e7e63496b1301b8013c48c57e4b49bc48d",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:123": {
+   "policy": "8c3cb1e52dc27fb0a06293d4ec7e202b82122e41528e6e62fd830b123698e508",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:133": {
+   "policy": "c07012d6e36ea70672ace960550f2afaae2dd4bea151a8358e014a792e7b1d69",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:148": {
+   "policy": "d74db7fc7bfafd507c48f06be95df4ee1cec8a40d6986bb2b30277fef538d807",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:196": {
+   "policy": "3dc562a2cb7320498f20a879f1d0ebb066bf0a09a579b3eae34a54565d369c29",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:202": {
+   "policy": "687df993a836c0e12e846a07c30734eca3f1b4bf02c740ad060615bb95dfc290",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:3622083": {
+   "policy": "e5a1605ed7a11d9b4242130f80e9470450a8d1d5a88ddd36db53edfa84471fe6",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:219": {
+   "policy": "d2cbbe9724d284331d4f71846c46b8db6492cd096bbca19359746b031a8a65bf",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:3250232": {
+   "policy": "28542d9f9ad705dc6a0f810c605edddce290697f52813b3f8f2b991a30a5a3ed",
+   "regulation": "8ed5f25fdcab28fc87d6077ef52487ffa55146ea3a76abc745b46872eb96329d"
+  },
+  "policy:2868228": {
+   "policy": "7f826fb4c7929799ea045ce9e72cdf197140a28d092d7ddf77aa753d84299445",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:3256441": {
+   "policy": "8e1a519823a0ff370f733592550777d11e3b79d5e06fcb6bade0612a1e225557",
+   "regulation": "993b414504f8511840df74f8cf1c61cdff4705df9c706dbf2d0b3988c2fa9534"
+  },
+  "policy:439": {
+   "policy": "2de2c876f95880dd4fff865030ad415334e51b6ac612953dc3bd6399f5012f54",
+   "regulation": "ae6f66d566dbd7b642689b72f2bef6852664af0f4ea613d28854c34c6e6b019a"
+  },
+  "policy:1262403": {
+   "policy": "a9d7ac24c0f43102a1d403462c5f10a55431e0dc3d8f2175546a130d94c7b821",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:454": {
+   "policy": "0d1a0f8b8ebfe0a3a09331901b3c05d34305fc6ce030979bb10f737849f40d3b",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:462": {
+   "policy": "671a00e208fa5d6528f5ae639da4d9cc810af1815d2ba199fb99068ad486f71a",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:472": {
+   "policy": "b6b6d1658a77dd45a1b9cedc0fe5c09266cf7161218667efc972b6008e9d7602",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:477": {
+   "policy": "4f050bc9286df431a57d65fb9c65bb6b914f5ad72a7d771410d9a84f3f7a5943",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:486": {
+   "policy": "d997f1ce38d4f015b53d20c3c20b91ef70d8850450defacf352cabe661197cf4",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:498": {
+   "policy": "bf7bc6eb69ddafab237ad93f2255c0e5d1387358ad39ac2777776b6c98774227",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:ai-594": {
+   "policy": "e20d4b80ab8ebbe32e15e20481eb4ea947847242f2808ac87f2fbee36822b8a0",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy:ai-123": {
+   "policy": "f8d5ed98a4716ddf3526cc49a69565fcfdf1468e92a70d45c7a8cebf246e88cb",
+   "regulation": "0a3e01fe4a0bb15f1daa9a036bf1f681431d52bda7f366e67a2d04ffaddf49a6"
+  },
+  "policy-fresh:ai-139": {
+   "policy": "d1ead33eb056055938f4b23cbb2e625460850b1655520c5e940aaec1e22bd436",
+   "regulation": "ce7ea1fcbd975905ebdc45ac7aab1d44cd567d5caf982c8b747b3892acdb0dcb"
+  },
+  "policy-fresh:1431392": {
+   "policy": "2a53bc137f91bbf9f08d78fe72b631a7637b7b2236f84748edf411e781bffe18",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy-fresh:13": {
+   "policy": "f8bbc0dd3479c882992cd0e39c237e5ad37c985f9ab5412827728821bffd6b9a",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy-fresh:23": {
+   "policy": "de00a64ede1c732109c11423482e21c973a5a459207caff019f5e76de2870cce",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy-fresh:29": {
+   "policy": "a96afad52fe5f203b46d9e7b1ddf4f82d97d672b6e1ef7a1af1b6963d625ea9e",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy-fresh:37": {
+   "policy": "a540355c32100e8c602bcc2192c9f37fcf93d506e35716ee779453583d7dd5e4",
+   "regulation": "f27c2af1ea9649832a985ac2fb7c0971f48c98a4c44a6eb45314bcfaba7d040c"
+  },
+  "policy-fresh:56": {
+   "policy": "0cf6b47dfa2215aebec51bc10c4b70f1f3a00d9012cd547b13ba4a55df8a5893",
+   "regulation": "985fbb394565d35a3161a89fb2710856aca8471ede9a17c3b4e8a8e8580645cf"
+  },
+  "policy-fresh:96": {
+   "policy": "52cf8581d6ed74fbd76d5d1123599250c82e6f9367950d09b9cb3729f8a2a1be",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy-fresh:108": {
+   "policy": "70368f9e46b323425033bdb688d24b5e1a5dc99c01dee2ab3e836700ff2bb292",
+   "regulation": "edc72bfe9aa49ac769e3fbf152595c7d43abd0c0950153e010bed58ed3223b79"
+  },
+  "policy-fresh:2665492": {
+   "policy": "77bc1fba8d7afba97f6880b54e6b327375786394d0c0c3eadc6b1172c9a1ded9",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy-fresh:121": {
+   "policy": "21af807cdf556bedad5b819e0bf57c63446b42a61910131067f196d219884438",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy-fresh:134": {
+   "policy": "a619767243652bb2cc9db9d815e14c414085c7a7c5c4d07139c9a2c3cfaf1e01",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy-fresh:192": {
+   "policy": "910c601fd583786fad8bcc2b3626f4fb1895360db47b4542229575c1862eef7e",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy-fresh:200": {
+   "policy": "7901cb0e51450c3081b57e20102f696f92f8c941b6e178de7591c9962f2d0cd4",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy-fresh:213": {
+   "policy": "6291c9f1fd676290d65f1e29ec05135dacde9b2a8ad5445625610300b780b9e5",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy-fresh:221": {
+   "policy": "0f6f1bfdf7bb01983b6fa20f3bf2d1ceada978e476f0fdfb6ef266613bdc1229",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy-fresh:406": {
+   "policy": "b6af9bfa0e043f0c2251d3336dd932eed0144218cc39296d7daa17d4c12c1593",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy-fresh:419": {
+   "policy": "7b139ef42a01f3755c1725d862a0e54199972bcd1646e9e884595ea15e602d68",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy-fresh:440": {
+   "policy": "adabed6b7606918d1555880623fb7fb9e1db3e9423901fb933753409c3fc816c",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy-fresh:3017275": {
+   "policy": "d3ca128dcef43973644d9ce3335a68cce2877f2ffd4d8f4e1cfd1e5c31e8bf32",
+   "regulation": "a118f8247d0b81225e9d4bbce2b79433473e46f951d37844ae24eb976e48c97f"
+  },
+  "policy-fresh:461": {
+   "policy": "06f7d831b6c2b98f40a59ee257a1e0f61deeceba07c27565cdf27c188a92a84b",
+   "regulation": "f3bf15b4b2176b3b6adc8baf05126d03915343e4f84d207b680ff3b7504894b4"
+  },
+  "policy-fresh:473": {
+   "policy": "845dfd9c9130ba5114d37deb2daf4cf6396ff4ffa9ce7732fc5a1140d9b5fcd5",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy-fresh:482": {
+   "policy": "b4449e6c23cfda691746de6b1e5e6cfba8de391ff57a55fd60e602d5e42c24e2",
+   "regulation": "e9a7c360c4c45545ecdc9504d242573910efaf63e9a1922a5891df1e028620a9"
+  },
+  "policy-fresh:497": {
+   "policy": "749e8a20e1508f0bb66fe2d90f7d0376524623c50fa305ce09a8dcfcbddb9d3a",
+   "regulation": "16df3b1bad55385ba2cd4b679c3d1dd8e080fdd8242f44a831f2e31a22be81e2"
+  },
+  "codifier:0": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "b01d9410afb1d4298a67e85c66f0394a58140817577cb439ab46ce2bd2b7987d"
+  },
+  "codifier:1": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "8087ae6cca350c6355d248da115a682d8cb550b8306de093e87b75a7f669e776"
+  },
+  "codifier:2": {
+   "policy": "fe3bfbbdea14d047bae69db8fb5b84e4a6e9f52eedbe92f2e5ba888e6309c282",
+   "regulation": "8920aad3828bbccc664e4449df9f34b6910a41bea465a7ce4de7eacfcde57844"
+  },
+  "codifier:3": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "f24b2ac460c54465a9013f9ee2db6e69f177a37508b3d7c25b28e0f19584e058"
+  },
+  "codifier:4": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "bd88f4b618bae78002f3b96dfd9f29164dd4841bc00be6936b5623516fe82d05"
+  },
+  "codifier:5": {
+   "policy": "b1cfb9e2cad827f470649fd1a91afefa22f15fd8055e01f7f7d82ef6309b0f2a",
+   "regulation": "2e4406db930c4208cb4ce0bf9d174d0a509df50a5b15b84a97c248fa3307b4e7"
+  },
+  "codifier:6": {
+   "policy": "b6fc57e25d0332a4deebd1f540be63576f3c451a8a05b70bb517c743ddf31cb4",
+   "regulation": "8aade062bc24271bdd791824422aaad61a741a9da712e120c4c3247d075f5aa0"
+  },
+  "codifier:7": {
+   "policy": "bc3da298236fc8351740eae5c357f1e75e59cba0ffea016e7dbaa5479e634fde",
+   "regulation": "76ca60e63e4484826a62577b756ce66e693dc59ab4d0349c39b953af9a7aac4f"
+  },
+  "codifier:8": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "c6b7ef91bb133a4064d2b094197bb0a0dae6012e2ec6350b07eb6b7988f60582"
+  },
+  "codifier:9": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "47ad59ba6f4e1fff7a568dd2d5c6d185b7006ca8e39068a75eaf9d7ea7d25549"
+  },
+  "codifier:10": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "031aab4296073ec7ee3819e007c2ca9ed8a63298993908da2c0a53f206996a9a"
+  },
+  "codifier:11": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "06c9473096e01a0558523be9d66afb4cfd7d3093655b99b1f95b656cbcc4c4b2"
+  },
+  "codifier:12": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "45c9cc66f27dc2bfc107bb9a2123207518ccb4e7cff86bcf7ef106a84a12942d"
+  },
+  "codifier:13": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "9f73aa9022b73e6336d1d442e2fe536c7bb61724d5d3bce463d666fe5890e7dc"
+  },
+  "codifier:14": {
+   "policy": "c124bfae14eedd0ec1761094c5ebd3826a2acd4ae285a09cca042dd205f0cbe1",
+   "regulation": "220ebb57207988f358f07fca16fa2055accb5e315a6cb199bfb03bfdbd180a33"
+  },
+  "codifier:15": {
+   "policy": "de6e940977a6cb6e602d3d7f4db2d0b94e46f6269a6d5ed193ea65b7b98111db",
+   "regulation": "1929cbaa568a778e2407328c8045054ff9087ff59813d1b46487b18aa8a27085"
+  },
+  "codifier:16": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "14a203a1168c1ecd4e361dffd8ad9b5ae0d4903f5a8055d92bbb39835579035a"
+  },
+  "codifier:17": {
+   "policy": "c1798dabb1ec244efccf8f914651aefc4e99f6a56a3025a57dd826fb46b7b206",
+   "regulation": "ce239b6eac2c07015a0f83901f2fec2cc5851a92ea3603c1f74d10b5fe4a7387"
+  },
+  "codifier:18": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "f9895447c6ad032e2f58085fa467e4ef19264fb6067bdab11a18e23905875b3b"
+  },
+  "codifier:19": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "2246286694496e246aa27d639ab5f480aa2e54e025595588920b5699d906007b"
+  },
+  "codifier:20": {
+   "policy": "b2757992cbb9f9a670c598b23f091d3b8db24d70a51102c6aca3a94a2c86d464",
+   "regulation": "5cc0a8671172be7af05275a02f0f753fb78fc8cb242febc238a27dc2a95dbfdd"
+  },
+  "codifier:21": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "3eeeee4b9df86ca90161ae9c6e550020d419c1d9cdbd140e7d4cbed0eaed21ae"
+  },
+  "codifier:22": {
+   "policy": "31b341cca4ee483d043f51ed017100e5492d3196d83efcbb554039ac5b0e9f38",
+   "regulation": "89c6975f5a6915926f3ab313b09dbc8fcfc56ac2b5cfacb5173af54723fea31b"
+  },
+  "codifier:23": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "9bb8c037eec61755069f2faa594460048cb55877d1675c4103ffbe8950d86e2e"
+  },
+  "codifier:24": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "14805c68bb7c42c2c04e3bb31793f6bc83ce4990b176ad267305cb2e9610b3d8"
+  },
+  "codifier:25": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "982938328af4e056362b4ed7663184c596adbcc941ec74036c4e2a5d8fae477a"
+  },
+  "codifier:26": {
+   "policy": "513e3b31750e4c3d1ddb788f3b92ed2502f1fc014d9efc2e2d0cc561156ab611",
+   "regulation": "12aa3db74d7978aac4ab193c8870aa00466d9e4b7ce1c87fceed749994db5208"
+  },
+  "codifier:27": {
+   "policy": "d50b7bfca7fdcae7bbf8925fd785d3dd5ddc741fec0496241eb716877bfb0643",
+   "regulation": "0851502c2d0dba9e29633697be410ac990f7d913880ff6d14748ab2a3cbc5ab8"
+  },
+  "codifier:28": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "12ca23bd62177c7a3c88384a2d49f9e4f42070fbe4367757c80e81d5e081aa0d"
+  },
+  "codifier:29": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "febe96163df3261cab815d20dade523c5d8110daae7a083b9288f305837dacd6"
+  },
+  "codifier:30": {
+   "policy": "ed94bd158f47c2a264d0811394ba219b6f5aa8e27e8bca8807864b2cadc28dca",
+   "regulation": "53ac389060c13d057a348104cb7f079a9512cebd204316a2cde985eac1faff35"
+  },
+  "codifier:31": {
+   "policy": "5bbaf8dd059abede95f5d8fcff56062e1e565a607f7bf6832e7104eeb258ee73",
+   "regulation": "0679366e7b0403754c995c8c9f98c53225363839d0067ea12d861e47e8ce12ad"
+  },
+  "codifier:32": {
+   "policy": "f5f681b991480a106bb839d287b7956c534aba3cfbcd4f741575b53c332362d8",
+   "regulation": "a4de5071f3e8d04afc1a49548a52de94d7e2f68257bb75a736d49c19e1def94a"
+  },
+  "codifier:33": {
+   "policy": "f879d8faa024012331b56f4512406675535539bba20ecf4e07a390e3cb832466",
+   "regulation": "4eed680203e9a4a0c745b67f2ece3f25985b60c444261db28637fd4f83cb7c02"
+  },
+  "codifier:34": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "8061047352116a40b5abe4317251c75b536213e36a1b79ccd21069633321cc88"
+  },
+  "codifier:35": {
+   "policy": "8efd1439de0fd49c9adcf3eff563a07312ace2ec3589719cea44ab738ef87d77",
+   "regulation": "1457e21cbba33245adf2fe4052f535cad4bc66ad6e0c395deaf0d9434b12a22e"
+  },
+  "codifier:36": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "063afc96a2d38a0f99a8e262e4049646dc7368c79b9fb7a72fe96af76994d503"
+  },
+  "codifier:37": {
+   "policy": "c8fd92dd4366d72f884a517f07105182cd94e4b408ae321bc12173380d37f677",
+   "regulation": "bac86a035b0a6ab381b27f46c1a40a830f2988f12c5cb951d8a6fefced1d9a28"
+  },
+  "codifier:38": {
+   "policy": "3c3630adb68d87a34d8b559c95715c5fae0f21346de3282697c08c0e0f0f5917",
+   "regulation": "e1226954cbbf02480c97398d29c27cd06a22ff7a57368dc88cbb38fdbba813d6"
+  },
+  "codifier:39": {
+   "policy": "5c1a53f92671a66aa4dd5fd0cdb2ea231ec000f975b04b686b3064b9721ebc92",
+   "regulation": "eeda629372693fe42bb1af6e142a31ccff7399fb11021f90a547cfa342346a23"
+  },
+  "codifier:40": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "cd14279768ee19be4cc6d90218e0ff31c198defde17a6f7e1d9773aba9fa29fb"
+  },
+  "codifier:41": {
+   "policy": "f856f4a94f2abb9801c3162dd136e74f7399932f9cc26e93e5d6c04b3e2e405c",
+   "regulation": "8f9bccead74e7f553fc3f1b9d8a5500243f22c6c1e033dec4e8a415bfacdeb3e"
+  },
+  "codifier:42": {
+   "policy": "ae46b403dd9523bfe7e5f0db2e43a54e5b0d931e2da2b34dd1b7b754d33bb658",
+   "regulation": "be5467fd0db6598de58d4e8ca0a789e85dffca39dbd952bceefc20f7c8bdccf0"
+  },
+  "codifier:43": {
+   "policy": "50f4e5272f41571132ba41e88961ed1b60ffaf8052f3b83514465942230bca4c",
+   "regulation": "baa5664c278c880bf7260e9e15b29c3f811b6ab31b94765fb26584d4492d6a72"
+  },
+  "codifier:44": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "6bfeecb939ae36123c7412b23dc6ac81e4c385c7a22881eff01dd54d75912c71"
+  },
+  "codifier:45": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "304350d7290605e1a96d5e35a2805218cf32111d4afe4d88192ed810787e1db9"
+  },
+  "codifier:46": {
+   "policy": "97f849ec5bf7787aef005015c1c035e41176f978ad2b8056f4db87809f701a2c",
+   "regulation": "8a4ad06ab5f846cb31ce76eb14b927cd7bbeba2618b2a3a7b9130205ee09c6f4"
+  },
+  "codifier:47": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "c9209e4df88a207f7bc76aa4b6122a68e43f29562246730e2e33903f82193224"
+  },
+  "codifier:48": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "34305f5b00b20507d860ae5285095c81f02e72d6c3fa390a464335969a373381"
+  },
+  "codifier:49": {
+   "policy": "0f3150fda733cf537aea91cbadc3bf2c5f5c7ccf1c1ba8464b36dcd34aa4a9e6",
+   "regulation": "cb535221760be751d390a85b22c4b0d2b993440de4d57afce4ba00ea4c8e6208"
+  },
+  "codifier:50": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "4b696ee448fd8d57ab6f86e804cb3d74fac9b40cdce57e2198b74e01ccb5a9f8"
+  },
+  "codifier:51": {
+   "policy": "9209b6dd34b31a1889822b20ada79fd03bfe8c9196e926151b948946e4a87f3d",
+   "regulation": "509cb58ac9c30d106a99e5792aed67f04b731727f46ac47680b711f960ebfd86"
+  },
+  "codifier:52": {
+   "policy": "7a4f722d663980a815dc8e58f741782585feee565fd749eff991d793a89318c4",
+   "regulation": "137eea96b96f740bcedb7c0699e7c737fba9d763286a6928b236643b9f46923d"
+  },
+  "codifier:53": {
+   "policy": "d13f9e135935867ba7f70b32e3e5da955e2851b744a8eef20ecf14f2257ed273",
+   "regulation": "20f1f3f455d4cac42c9bfab32cec53d6b1b4b78309ab594b558c4b8b9c48362e"
+  },
+  "codifier:54": {
+   "policy": "3b82ca528e234c1de7c90e18b7b427f8b58019179f9b2f317e228d43cba7f0f2",
+   "regulation": "ab69ab28bc9aa23e19b407ee7eaab578ef760d6bd5834e645b000b6e816d6602"
+  }
+ },
+ "large": {
+  "policy": "43cfabbd055642ef8ae1a8ca345badcd924e5fa78d942b40861c02f41668b472",
+  "regulation": "f4a82f2b2220362d324c9b53b16b91247263916ffdb629cae1912d0b745a9228",
+  "code": "c174e9b5441df1103ac5bace87d01401b000f538257ff926784df4bd70f5d366"
+ }
+}

@@ -52,11 +52,12 @@
  * `R\nESOLUTION \nN\nO\n.` from a drop cap and splits its own enacting formula across a
  * line break. Line-anchored phrase tests find neither. See `flatten` in ./index.mjs.
  */
-import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, flatten, alsoSatisfies,
+import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, alsoSatisfies,
          vocabPatterns, anyMatch, allMatches, enactmentPatterns, enactmentNumber, codePatterns } from "../docprofile/doctypes/index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
-import { codeHeadingsIn, readSections, readDefinitions, readExceptions, sha256Hex } from "./sections.mjs";
+import { codeHeadingsIn, readSections, readDefinitions, readExceptions, textDigest } from "./sections.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
+import { scanFlatMany, mergedHits } from "./windows.mjs";
 
 /* THE OPERATIVE VOICE — a body enacting, in the forms the measured instruments use plus
    the general shapes. It is the language of enactment, the same in every jurisdiction
@@ -113,15 +114,30 @@ const regBodyEnds = (ctx) => vocabPatterns(ctx, "bodies", (re) => `(?:${re})[^A-
  *  caption pattern matches — gets a null number with its reason stated, never the
  *  nearest number in the text. That is the direction this reader has already been
  *  wrong in twice. */
-function ownCaption(flat, captions, bodies) {
-  for (const { m, tag } of allMatches(captions, flat)) {
+function ownCaption(text, captions, bodies, afterChars = 0) {
+  /* R37: the captions are met in the flattened text a window at a time (./windows.mjs), in the order and with the
+     overlap rule `allMatches` gives them over all of it; `after` is the flattened text that follows the caption found. */
+  let found = null;
+  mergedHits(text, captions, ({ m, tag }, abs, w) => {
     /* Tested as printed and in capitals: a caption's body is set in capitals, and a
        profile may write a body's name in either case. */
-    const before = flat.slice(Math.max(0, m.index - 120), m.index);
-    if (anyMatch(bodies, before) || anyMatch(bodies, before.toUpperCase()))
-      return { m, kind: tag.kind, number: enactmentNumber(tag.forms, m.groups && m.groups.num) };
-  }
-  return null;
+    const before = w.buf.slice(Math.max(0, m.index - 120), m.index);
+    if (!(anyMatch(bodies, before) || anyMatch(bodies, before.toUpperCase()))) return false;
+    const at = m.index + m[0].length;
+    found = { kind: tag.kind, number: enactmentNumber(tag.forms, m.groups && m.groups.num),
+              after: afterChars ? w.buf.slice(at, at + afterChars) : "" };
+    return true;
+  });
+  return found;
+}
+
+/** How many matches of a global pattern the text holds. The patterns it is used for bridge words with `\s` only, so the
+ *  count is the same over the text as it stands as over its flattened form (R37: no flattened copy). */
+function countIn(text, re) {
+  const g = new RegExp(re.source, re.flags.includes("g") ? re.flags : re.flags + "g");
+  let n = 0;
+  while (g.exec(text) !== null) n++;
+  return n;
 }
 
 /** What was verified unchanged between two readings of an instrument, or null when
@@ -182,7 +198,7 @@ function structure(ctx, raw, form, locate) {
   const definitions = readDefinitions(raw, sections, locate);
   const exceptions = readExceptions(raw, sections, form, ctx, locate);
   const digests = {};
-  for (const s of sections) digests[s.path.join("/")] = sha256Hex(raw.slice(s.start, s.end).replace(/\s+/g, " ").trim());
+  for (const s of sections) digests[s.path.join("/")] = textDigest(raw, s.start, s.end);
   return {
     sections, sections_why, section_digests: digests, definitions, exceptions,
     counts: { sections: sections.length, definitions: definitions.length, exceptions: exceptions.length,
@@ -208,16 +224,18 @@ export default {
    *  no enacting formula at all. */
   detect(ctx) {
     const t = String(ctx.text || "");
-    const flat = flatten(t);
     const signals = [];
 
-    const enacting = ENACTING.test(flat);
+    /* R37: one pass over the flattened text, a window at a time; the counts are the whole text's. */
+    let enacting = false, caption = false, codeCites = 0;
+    scanFlatMany(t, [{ re: ENACTING, on: () => (enacting = true) }]);
+    mergedHits(t, regCaptions(ctx), () => (caption = true));
+    mergedHits(t, codePatterns(ctx), () => { codeCites++; });
     if (enacting) signals.push(localize("doctypes.regulation.enacting", "an enacting formula in the operative voice"));
-    const recitals = (flat.match(RECITAL) || []).length;
+    const recitals = countIn(t, RECITAL);
     if (recitals >= 2) signals.push(localize("doctypes.regulation.recital_chain", "a recital chain of {count} WHEREAS clause(s)", { count: String(recitals) }));
-    const caption = allMatches(regCaptions(ctx), flat).length > 0;
     if (caption) signals.push("an instrument caption");
-    const codify = (flat.match(CODIFYING) || []).length + allMatches(codePatterns(ctx), flat).length;
+    const codify = countIn(t, CODIFYING) + codeCites;
     if (codify) signals.push(`${codify} codification phrase(s)`);
 
     /* The caption alone is NEVER a match, at any confidence — that is the measured
@@ -227,7 +245,7 @@ export default {
        section heading, or is divided by several, is the code before it is an instrument;
        an instrument's own caption under its body still decides for the instrument. */
     const heads = codeHeads(ctx, t);
-    if ((heads.first || heads.count >= 2) && !ownCaption(flat, regCaptions(ctx), regBodyEnds(ctx))) {
+    if ((heads.first || heads.count >= 2) && !ownCaption(t, regCaptions(ctx), regBodyEnds(ctx))) {
       signals.push(localize("doctypes.regulation.code_headings", "{count} section heading(s) of {label}", { count: String(heads.count), label: String(heads.label) }));
       return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
     }
@@ -268,13 +286,13 @@ export default {
    *  not a fact here and `number` being null is reported as exactly what it is. */
   parse(ctx) {
     const raw = String(ctx.text || "");
-    const flat = flatten(raw);
     const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
 
-    const enacts = ENACTING.test(flat);
-    const cap = ownCaption(flat, regCaptions(ctx), regBodyEnds(ctx));
+    let enacts = false;
+    scanFlatMany(raw, [{ re: ENACTING, on: () => (enacts = true) }]);
+    const cap = ownCaption(raw, regCaptions(ctx), regBodyEnds(ctx), 2500);
     const number = cap && cap.number ? cap.number : null;
-    const instrument = cap ? cap.kind : (/\bORDAIN/i.test(flat) ? "ordinance" : null);
+    const instrument = cap ? cap.kind : (/\bORDAIN/i.test(raw) ? "ordinance" : null);
 
     /* The caption's TITLE — the capitalised sentence that says what the instrument
        does. Taken from the OWN caption only, for the same reason the number is, and
@@ -284,7 +302,7 @@ export default {
        that demanded adjacency returned null on the one document it was written from. */
     let title = null;
     if (cap) {
-      const after = flat.slice(cap.m.index + cap.m[0].length, cap.m.index + cap.m[0].length + 2500);
+      const after = cap.after;
       const blanks = vocabPatterns(ctx, "template_blanks", null, "g");
       for (const s of after.split(/(?<=\.)\s+/)) {
         const t = s.trim();
@@ -307,7 +325,7 @@ export default {
       }
     }
 
-    const recitals = (flat.match(RECITAL) || []).length;
+    const recitals = countIn(raw, RECITAL);
 
     const entities = [];
     /* D-454: a repeat is ANOTHER OCCURRENCE of the one reference (`readAgain`), never dropped. */

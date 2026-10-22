@@ -278,9 +278,11 @@ export const PARTS = Object.freeze({
   titleOf2: function (cs, copy, fallback) {
     return copy && typeof copy.title === "string" && copy.title ? copy.title : fallback;
   },
-  noCase: function (cs, copy) {
+  noCase: function (cs, copy, editions) {
     const c = copy && copy.case ? copy.case : {};
-    return copy && !c.case_id ? '<p class="mk-sub" data-nocase>' + cs.w("review.body.nocase") + "</p>" : "";
+    // R80: a draft the record holds an edition of (prepared or published) is no draft that names no case
+    const known = editions && (editions.prepared || editions.published);
+    return copy && !c.case_id && !known ? '<p class="mk-sub" data-nocase>' + cs.w("review.body.nocase") + "</p>" : "";
   },
 
   /* C49 (DEC-394, DEC-395): the project's drafts as `casedrafts` lists them (oldest first), each with the review copy it answers: the one
@@ -338,6 +340,26 @@ export const PARTS = Object.freeze({
     const here = view.ui.draft ? view.ui.draft.draft_id : view.ui.draftId || "";
     if (!pick || pick === here || !(Array.isArray(r.drafts) && r.drafts.some(function (x) { return x && x.draft_id === pick; }))) { P.forget(view); return { stay: true }; }
     cs.go(screen, String(view.subject || "").split("/")[0] + "/" + pick);
+  },
+
+  /* R80 (C48/N6; case-authoring R83, review R19): what the record holds for a draft: "Published: edition n" with the address of that edition
+     (the case page's route, written as `hrefOf` writes it: one encoded part), else "Edition n is prepared". Nothing for a draft the record
+     says neither of; the case it belongs to is the record's own (`editions.case`) or the draft's. */
+  editionsLine: function (cs, view, draft) {
+    const ed = draft && draft.editions && typeof draft.editions === "object" ? draft.editions : null;
+    if (!ed) return "";
+    const id = typeof ed.case === "string" && ed.case ? ed.case : draft.case && draft.case.case_id ? draft.case.case_id : "";
+    const pub = ed.published && Number(ed.published.edition) > 0 ? Number(ed.published.edition) : 0;
+    if (pub && id) return '<p role="status" data-published="' + pub + '">' + cs.w("screen.ceremony.published.edition", { n: String(pub) }) + ' <a href="/app/published/'
+      + encodeURIComponent(id + "/" + pub) + '" data-nav data-published-link>' + cs.w("screen.ceremony.publicpage") + "</a></p>";
+    return !pub && Number(ed.prepared) > 0 ? '<p role="status" data-prepared="' + Number(ed.prepared) + '">' + cs.w("screen.ceremony.prepared", { edition: String(Number(ed.prepared)) }) + "</p>" : "";
+  },
+
+  /* C49 (R73): under the heading, the draft the page shows named by its scope and the day it was prepared, drawn where the project has two
+     drafts or more and once that draft's own copy is read (a scope is never guessed). */
+  draftHead: function (cs, view, screen, list, chosenId, projectTitle) {
+    const e = list.length > 1 ? list.find(function (x) { return x.draft.draft_id === chosenId; }) : null;
+    return e && e.r.state === "ok" ? '<p class="mk-sub" data-draft-head>' + cs.esc(view.parts.draftLine(cs, view, screen, e, projectTitle)) + "</p>" : "";
   },
 
   /* C49 (DEC-394, DEC-395): beneath the chooser, how many review links are live and how many sit on an earlier draft than the newest, as
@@ -460,20 +482,14 @@ export const PARTS = Object.freeze({
      member types only the passphrase; an unreadable or empty file is refused in the kit's word and nothing is asked of the device; with no
      file chosen the dialog is as it was. `{signed}` is the signer's answer, or `{refuse}` a word key. */
   sitSign: async function (cs, view, list) {
-    let file = "";
+    // R116 (interface-shell): the key file's text is handed to the signer with the statements, which asks only the passphrase
+    let keyFile;
     if (view.ui.keyHeld === false) {
       const k = await cs.keyFile("ce-keyfile");
-      if (k.ok) file = k.text;
+      if (k.ok) keyFile = k;
       else if (k.word !== "shell.keyfile.none") return { refuse: k.word };
     }
-    const sitting = cs.signer.sign(list);
-    if (file) {
-      // the kit draws its dialog once it has looked for a held key, and answers a second look after the first: when this one is
-      // answered the dialog is drawn, and its box is the one place a key file's text goes (interface-shell R40)
-      await cs.signer.held();
-      if (cs.value("cs-key-file") !== null) cs.fill("cs-key-file", file);
-    }
-    return { signed: await sitting };
+    return { signed: await (keyFile ? cs.signer.sign(list, { keyFile: keyFile }) : cs.signer.sign(list)) };
   },
 
   /* R2, R62 (fix round 3, C94): a comment's or acknowledgement's author: the name an outside reader was given by the grant, as it is;

@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T51)
 
-**Read** · handled J23
+**Read** · handled J25
 
 ## B1 · START
 
@@ -284,3 +284,7 @@ CHANGE (K4472): CAUSE-SHELL-4 #1 is merged (tranche/T51 @ 5539bd4c3d). Merge the
 ## B28 · ANSWER · re J23
 
 ANSWER (K4473): yes. build/modules.json screens-investigate.uses now adds test-support (tranche @ e224b03646): merge the tranche, keep the sandbox import, run the architecture check clean, then COMPLETE.
+
+## B29 · ANSWER · re J24
+
+ANSWER (K4476): neither: the close needs the words check at zero, and the design row is T52's. Draw money's refusal by the nearest held refusal row (a held key, never a raw one), followed by the plane's own detail (the reason), as K4473 ruled for screens-inquiry; the row is in later-ux for T52. Then words 0 and COMPLETE.

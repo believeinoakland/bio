@@ -648,6 +648,11 @@ export class Extraction {
       const mine = this.#one(`SELECT bundle_id FROM readings WHERE capture_sha=?`, digest);
       home = mine && typeof mine.bundle_id === "string" && mine.bundle_id ? { bundleId: mine.bundle_id } : null;
     }
+    /* (fix round 4, C5a/P8; K4481; R81) a capture promoted in parts is registered by its parts only (capture's
+       `promoteDocument`), and a deferred reading has none yet: the home is the bundle that states the whole and whose parts
+       the register names. */
+    if ((!home || typeof home.bundleId !== "string" || !home.bundleId) && /^[0-9a-f]{64}$/.test(digest))
+      home = this.#homeOfParts(digest);
     const left = (why) => ({ ok: true, read: false, why });
     if (!home || typeof home.bundleId !== "string" || !home.bundleId) return left("NO_HOME");
     if (viewer !== undefined && !this.#sees(home.bundleId, viewer)) return left("NO_HOME");
@@ -673,6 +678,25 @@ export class Extraction {
     if (!wrote) return left("READING_HELD");
     await wrote.afterRead;
     return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true };
+  }
+
+  /** R81: the home of a capture held in parts, or null. The bundle whose `data/provenance.json` states `capture.sha256` =
+   *  `whole` with parts, every part of which the register names as that bundle's own (`provenance.homeOf`), so a bundle
+   *  that merely mentions the digest is no home. */
+  #homeOfParts(whole) {
+    if (!this.#provenance || typeof this.#provenance.homeOf !== "function") return null;
+    let rows = [];
+    try {
+      rows = this.#rows(`SELECT f.bundle_id AS bundle_id FROM files f JOIN bundles b ON b.bundle_id = f.bundle_id
+                          WHERE f.path = 'data/provenance.json' AND instr(f.content, ?) > 0 ORDER BY f.bundle_id LIMIT 8`, whole);
+    } catch { return null; }
+    for (const r of rows) {
+      const parts = (this.#storedDocument(r.bundle_id, whole) || {}).parts;
+      if (!Array.isArray(parts) || !parts.length) continue;
+      if (parts.every((p) => p && typeof p.sha256 === "string" && (this.#provenance.homeOf(p.sha256) || {}).bundleId === r.bundle_id))
+        return { bundleId: r.bundle_id };
+    }
+    return null;
   }
 
   /** R80 (fix round 4, C5b): whether a stored reading is a failed one that failed for want of the whole bytes: it found

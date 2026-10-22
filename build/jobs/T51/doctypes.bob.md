@@ -1,6 +1,6 @@
 # BOB to doctypes (T51)
 
-**Read** · handled J8
+**Read** · handled J10
 
 ## B1 · START
 
@@ -71,3 +71,15 @@ Your part: every type in `doctypes/` reads page by page (`ctx.pages`, which DOCP
 ## B7 · CHANGE
 
 CHANGE (K4470): DOCPROFILE #6 is merged (tranche/T51 @ 262f9ae408). ctx.pages, as committed: readText hands every detect and parse ctx.pages = the supplied pages array itself (never copied), each item I2's page {page, text, undetermined[]} (text may be '' or absent: test typeof p.text), [] when the text carries no pages (a bare string or paragraphs). It is NOT guaranteed to join to ctx.text: when I2's document is present ctx.text is it, and the pages equal it only when position_parts > 0; a type that must agree with ctx.text offsets uses ctx.text (in bounded windows), and may scan ctx.pages for detection. doctypeFor passes ctx through: a direct caller supplies pages itself. Measured by docprofile with your real types on the APP: readText still adds about 460 MB, all of it the four types' detects: yours to bring under 16 MB. Merge the tranche.
+
+## B8 · START
+
+START · DOCTYPES #9 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #246 is depth 1; fix round 4, C5a/C5b/P8, the round's blocker; K4476)
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/doctypes tranche/T51 && git branch -m job/T51/doctypes stale/doctypes-local && git checkout -b job/T51/doctypes origin/job/T51/doctypes`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+Mail with `--module doctypes`; record `build/jobs/T51/doctypes.md`. Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). Always `node --test --test-force-exit`. You are the module job (P8, mechanics §6) for `doctypes`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first. Read in full (never scan; a document you cannot read whole: BLOCKED, cause `reading`, K3678) your requirements, the lines named below, and the code they name. Fix round 4 rules (`build/plan/fix-round-4-T51.md` §0): the failing-first test is seen red in your record, then green; no "not met" or deferred line at COMPLETE without naming the smallest thing you need; declare every census op you own. Wording waits for T52 (K4269): a new sentence is `localize(id, en)` with a plain stand-in, never a raw key. Bob's focus: an alpha release deployed as efficiently as possible: do what the cause needs, nothing more.
+
+Run: your suite, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio doctypes tranche/T51 job/T51/doctypes`. COMPLETE: what changed (file:line), the failing-first test red then green, the measurements, suite counts, the `Size` line.
+
+**Your entry: doctypes R38 (new).** DOCTYPES #8 bounded every detect and three parses (its COMPLETE, `build/jobs/T51/doctypes.md` J9: read it whole; its `doctypes/windows.mjs` is yours to reuse) and left one thing: the parse of a text *recognised* as `policy` or `regulation` still splits the whole text into line lists (`sections.mjs` `linesOf`, `policy.mjs` `linesOf`, `readOutline`, `readResponsibilities`): 107 MB (policy) and 18 MB (regulation) on a 13.6 M-character text. A large policy manual or code would then exceed the object's 128 MB while it is read. Fix: hold lines as offsets (as `lineTable` does) in those parses. Failing-first test: a 13.6 M-character text that detects as `policy` (and one as `regulation`), built from the fixtures' own headers repeated, parse under base+16 MB (red today), every answer on all 164 fixture readings and the three govinfo files equal to the tranche tip's (`fixtures/r37-answers.json` and its maker). Small job: the change, the test, COMPLETE.

@@ -1,6 +1,6 @@
 # BOB to extraction (T51)
 
-**Read** · handled J10
+**Read** · handled J11
 
 ## B1 · START
 
@@ -138,3 +138,15 @@ ANSWER to J9 (BOB #244; K4437). `readheld`'s explanation is placed in a new wave
 ## B11 · CHANGE
 
 CHANGE (BOB #244; K4440), from CONTROL-PLANE #45's J21: `promoteDocument` registers a multipart capture's parts, not its whole digest, so `homeOf(whole)` is null and `acquire` answers `existed: null` on every re-capture of INFO-2026-0042's kind; `readHeld` must also find the home by the `readings` row's `bundle_id` when the register holds none for the whole. Test it through the real chain (C5b), red first. control-plane's C5b chain test waits on this.
+
+## B12 · START
+
+START · EXTRACTION #31 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #246 is depth 1; fix round 4, C5a/P8, the round's last blocker; K4481)
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/extraction tranche/T51 && git branch -m job/T51/extraction stale/extraction-local && git checkout -b job/T51/extraction origin/job/T51/extraction`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+Mail with `--module extraction`; record `build/jobs/T51/extraction.md`. Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). Always `node --test --test-force-exit`. You are the module job (P8, mechanics §6) for `extraction`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first. Read in full (never scan; a document you cannot read whole: BLOCKED, cause `reading`, K3678) your requirements, the lines named below, and the code they name. Fix round 4 rules (`build/plan/fix-round-4-T51.md` §0): the failing-first test is seen red in your record, then green; no "not met" or deferred line at COMPLETE without naming the smallest thing you need; declare every census op you own. Wording waits for T52 (K4269): a new sentence is `localize(id, en)` with a plain stand-in, never a raw key. Bob's focus: an alpha release deployed as efficiently as possible: do what the cause needs, nothing more.
+
+Run: your suite, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio extraction tranche/T51 job/T51/extraction`. COMPLETE: what changed (file:line), the failing-first test red then green, the measurements, suite counts, the `Size` line.
+
+**Your entry: extraction R81 (new).** control-plane's `bio-plane/test/m/control-plane/t51-large-pdfs.test.mjs` (R120, R121; run it, ~4.5 min) fails: `BUDGET-2025-PER.pdf: found after the alarm: {"found":false}`. BOB's diagnosis worker found the cause, with logs: BUD (no parts) is read on the alarm's retry; PER and APP are held in two parts, and capture's `promoteDocument` (`capture.mjs` ~134-143) registers a multipart capture only by its part shas, so `readHeld` (`extraction/index.mjs:641-650`) finds no home: `provenance.homeOf(whole)` queries `register WHERE capture_sha=?` (`provenance/index.mjs:835`) and returns null, and the fallback (K4440) looks in `readings` for the very reading that is owed. So every alarm tick answers `NO_HOME` in 0-1 ms and the reading never runs (no memory, CPU or throw involved). Fix in your module: when `homeOf(whole)` is null, find the bundle whose `data/provenance.json` names `capture.sha256 == whole` (the parts; `partsNamed(bundleId, sha)` already reads that file), through a path your `uses` allows (the part shas' homes are registered), then read `#storedDocument(bundle, sha)` as today (`bytesOf` assembles the parts). If the clean place is a provenance service (`homeOfWhole`), ask BOB (QUESTION) with the smallest line. Failing-first test at your interface: the PER PDF (or a two-part fixture) captured, deferred, promoted through the real ops, `readHeld` reads it and `op=reading` finds it; control: unpromoted is `NO_HOME`. Then run `t51-large-pdfs` whole and report its numbers (BUD, PER, APP read after the alarm; memory under the object's 128 MB in workerd: the reading itself was measured at 54-57 MB above its bytes in node, K4479). Users: control-plane, plane (`impact.mjs`).
