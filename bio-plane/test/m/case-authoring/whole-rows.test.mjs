@@ -39,7 +39,7 @@ test("R84: a document held in parts cited without a pin is only_capture, naming 
     const P = w.project("Team", "alice", [Q, BIG]);
     const r = w.publish(P, "alice", [Q]);
     assert.equal(r.ok, true, `${label}: ${JSON.stringify(r).slice(0, 400)}`);
-    assert.deepEqual(r.case_citations.filter((c) => c.target === BIG), [{ target: BIG, version: "only_capture", capture: m.whole }], label);
+    assert.deepEqual(r.case_citations.filter((c) => c.target === BIG), [{ target: BIG, version: "only_capture", capture: m.whole, bundle_sha: w.record.head(BIG).bundleSha }], label);
     const doc = w.row(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, r.caseId, r.edition);
     const fm = w.fm(doc.text);
     const mat = (fm.materials || []).filter((x) => x.ref === BIG);
@@ -56,8 +56,8 @@ test("R84 (control): a document holding a second, different capture is still und
   const P = w.project("Team", "alice", [Q, BIG, DOC]);
   const r = w.publish(P, "alice", [Q]);
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
-  assert.deepEqual(r.case_citations.filter((c) => c.target === BIG), [{ target: BIG, version: "undetermined", capture: null }]);
+  assert.deepEqual(r.case_citations.filter((c) => c.target === BIG), [{ target: BIG, version: "undetermined", capture: null, bundle_sha: w.record.head(BIG).bundleSha }]);
   const only = w.row(`SELECT capture_sha FROM register WHERE bundle_id=?`, DOC).capture_sha;
-  assert.deepEqual(r.case_citations.filter((c) => c.target === DOC), [{ target: DOC, version: "only_capture", capture: only }]);
+  assert.deepEqual(r.case_citations.filter((c) => c.target === DOC), [{ target: DOC, version: "only_capture", capture: only, bundle_sha: w.record.head(DOC).bundleSha }]);
   assert.ok(m.whole);
 });

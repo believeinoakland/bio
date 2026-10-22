@@ -1934,7 +1934,8 @@ export class CaseAuthoring {
    *  held in parts, which is counted by identity (R84). (G29, R86) After the project's own edges come the documents the
    *  members' findings rest on (`resting`, `case-disclosures` R2: either role, one level deep), each once and none the
    *  project already cites, classified the same way; a capture the findings name alone, of a document holding several, is
-   *  its pin. A case prepared from a question holds one edge, to the question, so these are the evidence's only rows. */
+   *  its pin. A case prepared from a question holds one edge, to the question, so these are the evidence's only rows.
+   *  (K4609) Every document row, `undetermined` included, also carries `bundle_sha`, the document's head at this act. */
   #caseCitations(project, members, resting = []) {
     const text = this.#liveText(project);
     const refs = text !== null ? (parseFrontmatter(text).data?.references || []) : [];
@@ -1990,11 +1991,14 @@ export class CaseAuthoring {
       const pin = typeof r.extent_capture === "string" && /^[0-9a-f]{64}$/.test(r.extent_capture.trim())
         ? r.extent_capture.trim() : null;
       if (!isDocument(t)) return { target: t, version: "no_bytes", capture: null };
-      if (pin) return { target: t, version: "pinned", capture: pin };
+      /* K4609: a document's row also names the head the ceremony's evidence signature is over (ratification R4's
+         `expectedSha`, the sha256 of its `bundle.md`), as it stands at this act; a capture's sha is not that head. */
+      const bundle_sha = this.record.head(t)?.bundleSha ?? null;
+      if (pin) return { target: t, version: "pinned", capture: pin, bundle_sha };
       const h = held.get(t);
-      if (!h || !h.n) return { target: t, version: "no_capture", capture: null };
-      return h.n === 1 ? { target: t, version: "only_capture", capture: h.one }
-                       : { target: t, version: "undetermined", capture: null };
+      if (!h || !h.n) return { target: t, version: "no_capture", capture: null, bundle_sha };
+      return h.n === 1 ? { target: t, version: "only_capture", capture: h.one, bundle_sha }
+                       : { target: t, version: "undetermined", capture: null, bundle_sha };
     });
   }
 
