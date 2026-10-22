@@ -233,6 +233,8 @@ evidentiary, basis} | {determined:false, flavour, evidentiary:null, basis}>`**
   `presentation:event-listener` whose `presentation:action` is `execute`; `{kind:"unread", part, why}` for a
   part it could not read for this list. A file with none answers `[]`.
 
+- **R48** (fix round 4b, F7; K4489, K4504) **Large content is stated, not read.** A `content.xml` over `MEASURED_OOXML_TEXT_BOUND_BYTES` is not read in pieces (one string re-walked by the reader) and is stated with its size: `parts().guard`, R10, R13, R20 and R27's marker and the envelope's `guard` carry `sizeGuard`'s marker plus `final: true`; R45 and R34 unchanged. Test: `large.test.mjs`.
+
 ## Private
 
 ### Uses
