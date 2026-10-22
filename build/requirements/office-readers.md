@@ -33,7 +33,7 @@ Three registry entries, each the shape `format-registry` requires: `format` (a s
   returns `{format, confidence:"likely", signals}` when `contentType` exactly equals the
   format's registered content type (`DOCX_CONTENT_TYPE`, `PPTX_CONTENT_TYPE`,
   `XLSX_CONTENT_TYPE`), else `null`.
-- **R3** (retired: moved to csv-reader R2.)
+- **R3** *(retired: moved to csv-reader R2, K4523)*
 
 #### `parts()`
 
@@ -48,7 +48,7 @@ Three registry entries, each the shape `format-registry` requires: `format` (a s
   state all come from it and nothing downstream can proceed without it. Any other part
   (a sheet, `sharedStrings.xml`, `docProps/core.xml`) failing is carried in `undetermined`
   while `ok` stays `true`.
-- **R6** (retired: moved to csv-reader R3.)
+- **R6** *(retired: moved to csv-reader R3, K4523)*
 
 #### `structure()` — the I2 shape
 
@@ -179,11 +179,11 @@ xlsx), or `{ok:false, container, reason}` when `parts` failed. csv's `structure(
   limit's name where that part's failure is stated today (an `undetermined` link or entry,
   `images:null` with `imagesWhy`, an `active` item with `read:false`), never omitted
   silently.
-- **R13** (retired: moved to csv-reader R6.)
+- **R13** *(retired: moved to csv-reader R6, K4523)*
 
 #### `dialect()` (csv only; moved)
 
-- **R14** (retired: moved to csv-reader R7.)
+- **R14** *(retired: moved to csv-reader R7, K4523)*
 
 ### Reference builders (reused by `odf-reader`)
 
@@ -198,8 +198,8 @@ second copy that could drift.
   table[, cell]}`. `table` is the table's 0-based ordinal in document order (nested tables
   included, counted as they open; a table in an `mc:AlternateContent` branch not read, R11, is not counted); `cell` is A1 notation over the table's own grid,
   included only when given.
-- **R17** (retired: moved to csv-reader R10; `formats-xlsx.mjs` re-exports `sheetCellRef`.)
-- **R18** (retired: moved to csv-reader R11; `formats-xlsx.mjs` re-exports `usedSheetRange`.)
+- **R17** *(retired: moved to csv-reader R10; `formats-xlsx.mjs` re-exports `sheetCellRef`, K4523)*
+- **R18** *(retired: moved to csv-reader R11; `formats-xlsx.mjs` re-exports `usedSheetRange`, K4523)*
 - **R19** `slideShapeRef(slide, shape=null) -> {kind:"slide-shape", ref:"slide <slide>",
   slide[, shape]}`. `slide` is 1-based and equal to the number in `ref`; `shape` is the
   0-based shape-sequence index, included only when the reference genuinely targets a shape.
