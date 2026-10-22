@@ -152,7 +152,7 @@ If you want the page rule alone left as it is, say so: I will drop the second te
 
 ## Completion (fix round 5, job 1: E2 object table, E11 ASCII filters; R42's density term, B7)
 
-**Entries applied.** `bio-plane/src/pdfstructure.mjs` only (4,219 → 4,458 lines); tests under `bio-plane/test/m/pdf-reader/`: `smallobjects.test.mjs` (5), `ascii-filters.test.mjs` (6), `density.test.mjs` (3), helper `smallobjects.mjs` (doc-clean R4's file and a structure tree, 16 MiB each), `memory-child.mjs` (modes `objects`, `objdigest`), probe `workerd-index.probe.mjs` (L, `reading-pipeline.read` at the index budget; a probe, not a test: reading-pipeline is after this module in the order, so a test of this module may not import it, checks/architecture says so). No other module's file touched.
+**Entries applied.** `bio-plane/src/pdfstructure.mjs` only (4,219 → 4,440 lines); tests under `bio-plane/test/m/pdf-reader/`: `smallobjects.test.mjs` (5), `ascii-filters.test.mjs` (6), `density.test.mjs` (3), helper `smallobjects.mjs` (doc-clean R4's file and a structure tree, 16 MiB each), `memory-child.mjs` (modes `objects`, `objdigest`), probe `workerd-index.probe.mjs` (L, `reading-pipeline.read` at the index budget; a probe, not a test: reading-pipeline is after this module in the order, so a test of this module may not import it, checks/architecture says so). No other module's file touched.
 
 ### E2 (object table) — the four fields
 1. **Root cause** (measured). doc-clean `measure` R4 is `openPdf` + `objects()` over 124,718 objects, whose answer (R37, every object parsed and held) is the memory: 148 MB live after `objects()` (16 MB of it the table), 1.2 KB an object. Per object: (a) every dictionary's map was `Object.create(null)`, a V8 dictionary-mode object (288 B for five keys, 72 B as a shared-shape object) (`parseDict`); (b) a name value `{t:"name"}` was a new object (72 B + string) at every `/Type /Annot`; (c) the table kept a Map and a seven-field object a row (129 B); (d) a string's `raw` was a typed array of its own (240 B; 112 B as a view of a chunk); (e) `parseArray` left room for seventeen elements in an array of four (~150 B); (f) `objects()` held a Map entry and an entry object a found object.
@@ -173,7 +173,7 @@ If you want the page rule alone left as it is, say so: I will drop the second te
 4. **Platform check: N** (code).
 
 ### Tests and checks
-- `node --test --test-force-exit bio-plane/test/m/pdf-reader/ bio-plane/test/pdfstructure.test.mjs`: **136 tests, 136 pass, 0 fail** (120 before + 5 + 6 + 3 + 2 existing helper-free ones counted by the runner).
+- `node --test --test-force-exit bio-plane/test/m/pdf-reader/ bio-plane/test/pdfstructure.test.mjs`: **136 tests, 136 pass, 0 fail**.
 - doc-clean `measure` R4 alone, five runs: 5 of 5 pass (104.8, 95.9, 106.5, 103.4, 106.3 MB). doc-clean + file-safety + format-registry: 175 tests, 173 pass, 1 fail, 1 skipped: file-safety `R24` (rows.test.mjs: `TOO_LARGE_TO_READ` has no row; red on the tip, named in the last record; file-safety's). reading-pipeline: 183 of 183 (its `memory.test.mjs` included). acquisition + content + capture: 610 tests, 609 pass; 1 fail, `stage-times.test.mjs` R95 in the group run, 5 of 5 passing alone (three times, with this code and with the tip's): load-dependent, not this job's. extraction: 235 tests, 234 pass; `c5b-memory.test.mjs` (R80 R45) is on the line: with the tip's reader 133 MB above idle (red), with this code 2 of 4 runs green: the rest is extraction's `readHeld` budget (plan E2 (a)). pdf-worker/test: 70 of 70.
 - `node checks/run.mjs /home/user/bio`: format 0, architecture 0, coverage 0 failures (6605 of 6605 ids named), channels 0, words 0 failures, count 18,421 (no sentence added). `ownership.mjs`: 1 file changed (this record), 0 failures. (Architecture caught my first test importing reading-pipeline; the case is the probe.)
 - Stale generated artifacts (manifest §14), BOB regenerates at the layer close: `pdf-worker`, `ocr-worker`, `agent-worker` bundles and `bio-plane/dist/bio-plane.bundled.mjs` (all embed `pdfstructure.mjs`).
@@ -182,4 +182,4 @@ If you want the page rule alone left as it is, say so: I will drop the second te
 
 **Questions.** None open. **Deferred.** None.
 
-Size (session_014rsq68z5SGk7R183eVVx8C): test runs 41, module lines 4458
+Size (session_014rsq68z5SGk7R183eVVx8C): test runs 41, module lines 4440
