@@ -425,3 +425,29 @@ Checks: coverage 82 of 82 for this module; ownership 0 failures; format clean; w
 Note for BOB: owner-declared mutating ops officeconfirm and scanmirror carry NEEDS null (the owner's needs: null). This is the owner's declaration, taken as is (R80); flagging only.
 
 Size (session_01G3X5QPGSsvGq7xCMfaNpTz): test runs 34, module lines 3466
+
+## J33 · COMPLETE
+
+Applied B36 (the R34 partition red, found by BOB's whole-suite run). Pushed at 1993156d7b; tranche/T51 merged in first.
+
+**Change.**
+- `bio-plane/src/op-declarations/index.mjs:2679`: `owedwork` added to the `read` ground's list, between `overridesof` and `partiesof` (sorted).
+- `bio-plane/src/op-declarations/index.mjs:2649-2651`: one sentence in that block's comment naming it (T51 fix round 4b, plane R77, K4524).
+- `bio-plane/test/m/op-declarations/t42.test.mjs:1`: `import "./register-owners.mjs";` before the module import. Reason: R47 (t42) requires every named op to be held by OPS. `owedwork` is plane's declared op (plane `declared.mjs:16`), which reaches OPS only through the owners' registration; t42 did not register the owners, so the newly named op had no spec there. The other suites that check the partition (t23, t31, t36, ...) already import register-owners. This adds the registration; no assertion was loosened.
+
+**Red then green.**
+- Before the change: `node --test --test-force-exit bio-plane/test/m/op-declarations/` failed on t36, "member ops with no text and no ground: owedwork".
+- After the ground change alone: t42 R47 failed, "owedwork: named, no spec" (the registration gap above).
+- After the t42 import: 247 tests, 247 pass, 0 fail.
+
+**Checks.**
+- `node /home/user/civicos-process/checks/run.mjs /home/user/bio`: format 176 modules, 0 failures; architecture 0 failures; coverage 6605 of 6605 live ids, 0 failures; channels 0 failures; words 0 failures (inline 0, plain 0, testcopy 0, missingkey 0, handlist 0, marker 0).
+- `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio op-declarations tranche/T51 job/T51/op-declarations`: 3 files changed by op-declarations (index.mjs, t42.test.mjs, the record), 0 failures.
+
+**Deferred.** Nothing.
+
+**Found in other modules.** None.
+
+**Notes.** My first `mail start` pull hit a rebase conflict on the record: my local commit carried a stale status line (`handled B12`). I skipped that local commit (it was never pushed), then re-ran `mail start`, which recorded this session at `handled B35`. The branch was fast-forwarded to origin before my work.
+
+Size (session_01UtphkgeNiefrhZDFoSHZ1a): test runs 3, module lines 3468
