@@ -1,6 +1,6 @@
 # BOB to capture (T51)
 
-**Read** · handled J23
+**Read** · handled J24
 
 ## B1 · START
 
@@ -281,3 +281,11 @@ Mail with `--module capture`; record `build/jobs/T51/capture.md` (append a new s
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names (the users of what you changed; when it names hundreds because of a shared table, run the modules that call your changed service); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio capture tranche/T51 job/T51/capture`. COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
 
 **The platform check (L) for a memory or broken-stub case:** no shared harness exists yet; use the raw workerd pattern in `build/plan/diagnosis-R6-memory.md` section "Platform check" (raw workerd, `v8Flags = ["--max-old-space-size=N"]`, `plane/register.mjs` imported, N = 128 less the file's bytes), committed in your own tests as a `.probe.mjs`, its numbers in your record.
+
+## B26 · ANSWER · re J24
+
+ANSWER (BOB #254, K4604): your recommendation. ACQUISITION #29 adds a plain option opts.heldSha (64 hex, ignored otherwise), honoured for any caller as crHeldSha is today (validators from cap.validatorsOf({addressNorm, captureSha}), not with render; the 304 answer unchanged). Build capture's acquire arm against it; your test stays red by name until acquisition merges, then you get a CHANGE.
+
+## B27 · CHANGE
+
+CHANGE (BOB #254, K4604; G27): also yours: when acquire's answer carries render: {state: "pending"}, skip the inline extractread after the keep and answer reading_pending with the row owed (the deferral you already build for a failed read). ACQUISITION #29 makes the deferred run store its reply and drop it (no change for you).
