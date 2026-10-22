@@ -1,4 +1,4 @@
-/* office-readers, R1–R6: the four entries' formats, detection and parts()
+/* office-readers, R1, R2, R4, R5: the three entries' formats, detection and parts()
  * (build/requirements/office-readers.md). Every test drives the entries
  * through their exported interface on packages built by ./fixtures.mjs. */
 import { test } from "node:test";
@@ -6,7 +6,6 @@ import assert from "node:assert/strict";
 import { docxEntry, DOCX_CONTENT_TYPE } from "../../../src/docx.mjs";
 import { pptxEntry, PPTX_CONTENT_TYPE } from "../../../src/pptx.mjs";
 import { xlsxEntry, XLSX_CONTENT_TYPE } from "../../../src/formats-xlsx.mjs";
-import { csvEntry } from "../../../src/csv.mjs";
 import * as F from "./fixtures.mjs";
 
 const OOXML = [
@@ -19,15 +18,13 @@ const ALL_TYPES = [DOCX_CONTENT_TYPE, PPTX_CONTENT_TYPE, XLSX_CONTENT_TYPE, "tex
 
 /* ------------------------------------------------------------------ R1 */
 
-test("R1 each entry's format is docx, pptx, xlsx or csv", () => {
+test("R1 each entry's format is docx, pptx or xlsx", () => {
   assert.equal(docxEntry.format, "docx");
   assert.equal(pptxEntry.format, "pptx");
   assert.equal(xlsxEntry.format, "xlsx");
-  assert.equal(csvEntry.format, "csv");
-  for (const e of [docxEntry, pptxEntry, xlsxEntry, csvEntry]) {
+  for (const e of [docxEntry, pptxEntry, xlsxEntry]) {
     for (const slot of ["detect", "parts", "structure", "text"]) assert.equal(typeof e[slot], "function", `${e.format}.${slot}`);
   }
-  assert.equal(typeof csvEntry.dialect, "function");
 });
 
 /* ------------------------------------------------------------------ R2 */
@@ -76,29 +73,6 @@ test("R2 docx/pptx/xlsx detect(null, contentType): likely exactly for the format
     assert.equal(entry.detect(null, type.toUpperCase()), null, "exact equality, not case-folded");
     assert.equal(entry.detect(null, ` ${type}`), null);
     assert.equal(entry.detect(null, `${type}; charset=binary`), null);
-  }
-});
-
-/* ------------------------------------------------------------------ R3 */
-
-test("R3 csv detect(bytes, _) is null for every bytes value, whatever the content type", () => {
-  const bodies = [new Uint8Array(0), new TextEncoder().encode("a,b\n1,2\n3,4\n"), new TextEncoder().encode("x;y\n"),
-    F.docx(), new Uint8Array([0xef, 0xbb, 0xbf, 0x61, 0x2c, 0x62, 0x0a]), new ArrayBuffer(8)];
-  for (const b of bodies) for (const ct of ["text/csv", "application/csv", "text/comma-separated-values", null]) {
-    assert.equal(csvEntry.detect(b, ct), null);
-  }
-});
-
-test("R3 csv detect(null, contentType): likely for text/csv and its two older synonyms, case-folded; null otherwise", () => {
-  for (const ct of ["text/csv", "TEXT/CSV", "Text/Csv", "application/csv", "APPLICATION/CSV", "text/comma-separated-values", "Text/Comma-Separated-Values"]) {
-    const d = csvEntry.detect(null, ct);
-    assert.equal(d.format, "csv", ct);
-    assert.equal(d.confidence, "likely");
-    assert.ok(d.signals.length > 0);
-    assert.deepEqual(csvEntry.detect(undefined, ct), d);
-  }
-  for (const ct of ["text/plain", "text/tab-separated-values", "application/vnd.ms-excel", XLSX_CONTENT_TYPE, "text/csvx", "csv", "", null, undefined, 42, {}]) {
-    assert.equal(csvEntry.detect(null, ct), null, String(ct));
   }
 });
 
@@ -176,39 +150,4 @@ test("R5 xlsx parts: an unreadable sheet, sharedStrings or core part is carried 
   const withBadCore = await xlsxEntry.parts(F.xlsx({ extra: [{ name: "docProps/core.xml", data: F.core({ creator: "x" }), cd: F.CORRUPT }] }));
   assert.equal(withBadCore.ok, true);
   assert.ok(withBadCore.undetermined.some((u) => u.part === "docProps/core.xml" && u.why === "crc_mismatch"));
-});
-
-/* ------------------------------------------------------------------ R6 */
-
-test("R6 csv parts: empty_body for zero-length bytes", async () => {
-  assert.deepEqual(await csvEntry.parts(new Uint8Array(0)), { ok: false, why: "empty_body" });
-  assert.deepEqual(await csvEntry.parts(new ArrayBuffer(0)), { ok: false, why: "empty_body" });
-  assert.deepEqual(await csvEntry.structure(new Uint8Array(0)), { ok: false, container: "csv", reason: "empty_body" });
-  assert.deepEqual(await csvEntry.text(new Uint8Array(0)), { ok: false, container: "csv", reason: "empty_body" });
-});
-
-test("R6 csv parts: decoder_unavailable:<encoding> when the BOM declares an encoding the runtime cannot decode", async () => {
-  const Real = globalThis.TextDecoder;
-  globalThis.TextDecoder = class extends Real {
-    constructor(label, o) { if (/utf-16/i.test(String(label))) throw new RangeError("no decoder"); super(label, o); }
-  };
-  try {
-    const le = await csvEntry.parts(new Uint8Array([0xff, 0xfe, 0x61, 0x00, 0x2c, 0x00]));
-    assert.equal(le.ok, false);
-    assert.equal(le.why, "decoder_unavailable:utf-16le");
-    const be = await csvEntry.parts(new Uint8Array([0xfe, 0xff, 0x00, 0x61]));
-    assert.equal(be.why, "decoder_unavailable:utf-16be");
-  } finally { globalThis.TextDecoder = Real; }
-});
-
-test("R6 csv parts: ok:true for every non-empty decodable body, whatever the dialect could determine", async () => {
-  const bodies = ["a,b\n1,2\n", "one line only", "a;b\n1,2\n", "\n", "x", "caf\xe9,1\n2,3\n", "a,b;c\n1,2;3\n"];
-  for (const s of bodies) {
-    const bytes = Uint8Array.from(s, (c) => c.charCodeAt(0));
-    const p = await csvEntry.parts(bytes);
-    assert.equal(p.ok, true, JSON.stringify(s));
-  }
-  const undetermined = await csvEntry.parts(new Uint8Array([0x61, 0x96, 0x2c, 0x62, 0x0a]));
-  assert.equal(undetermined.ok, true);
-  assert.equal(undetermined.encoding.encoding, null);
 });

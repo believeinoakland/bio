@@ -10,7 +10,6 @@ import { readFileSync } from "node:fs";
 import { docxEntry } from "../../../src/docx.mjs";
 import { pptxEntry } from "../../../src/pptx.mjs";
 import { xlsxEntry } from "../../../src/formats-xlsx.mjs";
-import { csvEntry } from "../../../src/csv.mjs";
 import { readContainer, readVbaProject, VBA_SUSPICIOUS_KEYWORDS, VBA_AUTORUN_NAMES, MEMBER_MAX, ARCHIVE_TOTAL_MAX } from "../../../src/ooxml.mjs";
 import * as F from "./fixtures.mjs";
 
@@ -165,18 +164,11 @@ test("R32 an unreadable .rels part is an unread item: the list may be missing it
   }
 });
 
-test("R32 active is [] only when nothing was found and nothing went unread; csv's is always []; another format's directories are not this one's", async () => {
+test("R32 active is [] only when nothing was found and nothing went unread; another format's directories are not this one's", async () => {
   for (const { entry, format, build } of FORMATS) {
     assert.deepEqual((await entry.structure(build())).active, [], format);
     assert.deepEqual((await entry.text(build())).active, [], format);
   }
-  for (const body of ["a,b\n1,2\n", "x"]) {
-    assert.deepEqual((await csvEntry.structure(F.enc(body))).active, []);
-    assert.deepEqual((await csvEntry.text(F.enc(body))).active, []);
-  }
-  const big = new Uint8Array(32 * 1024 * 1024 + 1).fill(0x61);
-  assert.deepEqual((await csvEntry.structure(big)).active, []);
-  assert.deepEqual((await csvEntry.text(big)).active, []);
   /* a docx's word/ is its directory: ppt/ and xl/ members, macro sheets included, are not its items */
   const strays = [{ name: "ppt/activeX/a.xml", data: "x" }, { name: "xl/embeddings/oleObject1.bin", data: "x" }, { name: "xl/macrosheets/m.xml", data: "x" }, { name: "word/activeXish/a.xml", data: "x" }];
   assert.deepEqual((await docxEntry.structure(F.docx({ extra: strays }))).active, []);
@@ -246,9 +238,6 @@ test("R33 each macro-enabled twin reads as its plain twin through the same parts
     /* the byte ladder is the plain entry's (R2) */
     assert.deepEqual(tw.entry.detect(twin, null), tw.entry.detect(plain, null));
   }
-  /* csv carries no variant */
-  assert.ok(!("variant" in await csvEntry.structure(F.enc("a,b\n1,2\n"))));
-  assert.ok(!("variant" in await csvEntry.text(F.enc("a,b\n1,2\n"))));
 });
 
 test("R33 detect(null, contentType): each twin's package type is likely, format the entry's own; exact, never case-folded; no other entry claims it", () => {
@@ -257,7 +246,7 @@ test("R33 detect(null, contentType): each twin's package type is likely, format 
     assert.equal(d.format, tw.format, tw.pkg);
     assert.equal(d.confidence, "likely");
     assert.ok(d.signals.length > 0 && d.signals.some((s) => s.includes(tw.variant)), tw.pkg);
-    for (const e of [docxEntry, pptxEntry, xlsxEntry, csvEntry]) if (e !== tw.entry) assert.equal(e.detect(null, tw.pkg), null, `${e.format} on ${tw.pkg}`);
+    for (const e of [docxEntry, pptxEntry, xlsxEntry]) if (e !== tw.entry) assert.equal(e.detect(null, tw.pkg), null, `${e.format} on ${tw.pkg}`);
     assert.equal(tw.entry.detect(null, tw.pkg.toUpperCase()), null);
     assert.equal(tw.entry.detect(null, `${tw.pkg}; charset=binary`), null);
     assert.equal(tw.entry.detect(null, tw.main), null, "the main part's type is not the package's");

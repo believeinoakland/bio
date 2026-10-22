@@ -5,7 +5,6 @@ import * as F from "./fixtures.mjs";
 import { docxEntry } from "../../../src/docx.mjs";
 import { pptxEntry } from "../../../src/pptx.mjs";
 import { xlsxEntry } from "../../../src/formats-xlsx.mjs";
-import { csvEntry, CSV_SHEET_NAME } from "../../../src/csv.mjs";
 
 const NS = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"';
 const ref = (sheet, cell) => ({ kind: "sheet-cell", ref: `${sheet}!${cell}`, sheet, cell });
@@ -66,33 +65,10 @@ test("R30 xlsx cells: an unresolved shared string keeps its entry with value nul
   assert.equal(unread.sheets[0].cells, null, "a sheet not walked has null cells, never []");
 });
 
-test("R30 over the size guard: no sheet is walked, so no cells are given (sheets [] for xlsx and csv)", async () => {
+test("R30 over the size guard: no sheet is walked, so no cells are given (sheets [] for xlsx)", async () => {
   const x = await xlsxEntry.text(F.xlsx({ sheets: [{ name: "S", data: { rows: [{ r: 1, cells: [{ r: "A1", v: "1" }] }] }, cd: F.OVER }] }));
   assert.equal(x.document, null);
   assert.deepEqual(x.sheets, []);
-  const big = new Uint8Array(32 * 1024 * 1024 + 2).fill(0x61);
-  const c = await csvEntry.text(big);
-  assert.equal(c.document, null);
-  assert.deepEqual(c.sheets, []);
-});
-
-test("R30 csv cells: one per non-empty field, every one text with no declared type, the decoded text as value, row then column; an unreadable field keeps its entry with value null", async () => {
-  const t = await csvEntry.text(F.enc('a,0.10\r\n,"x, y"\r\nlast,\r\n'));
-  assert.deepEqual(t.sheets[0].cells, [
-    cellOf(CSV_SHEET_NAME, "A1", "a", "text", null),
-    cellOf(CSV_SHEET_NAME, "B1", "0.10", "text", null),
-    cellOf(CSV_SHEET_NAME, "B2", "x, y", "text", null),
-    cellOf(CSV_SHEET_NAME, "A3", "last", "text", null),
-  ]);
-  const u = await csvEntry.text(new Uint8Array([0x61, 0x2c, 0x96, 0x0a, 0x62, 0x2c, 0x63, 0x0a]));
-  assert.equal(u.dialect.encoding, null);
-  assert.deepEqual(u.sheets[0].cells, [
-    cellOf(CSV_SHEET_NAME, "A1", "a", "text", null),
-    cellOf(CSV_SHEET_NAME, "B1", null, "text", null),
-    cellOf(CSV_SHEET_NAME, "A2", "b", "text", null),
-    cellOf(CSV_SHEET_NAME, "B2", "c", "text", null),
-  ]);
-  assert.deepEqual(u.undetermined, [{ sheet: 0, cell: "B1", reason: "encoding_undetermined" }]);
 });
 
 const CORE = { creator: "A. Clerk", lastModifiedBy: "B. Editor", revision: "4",
@@ -120,7 +96,7 @@ test("R31 docx, pptx and xlsx text() carry metadata: the core part's author, las
   }
 });
 
-test("R31 metadata is null with no readable core part: absent (no marker) or unreadable (its reason in undetermined); given over the size guard too; csv always null", async () => {
+test("R31 metadata is null with no readable core part: absent (no marker) or unreadable (its reason in undetermined); given over the size guard too", async () => {
   for (const [fmt, entry] of Object.entries(entries)) {
     const none = await entry.text(build[fmt]({}));
     assert.equal(none.metadata, null, fmt);
@@ -144,10 +120,9 @@ test("R31 metadata is null with no readable core part: absent (no marker) or unr
     assert.equal(t.document, null, fmt);
     assert.equal(t.metadata.author, "A. Clerk", fmt);
   }
-  assert.equal((await csvEntry.text(F.enc("a,b\n1,2\n"))).metadata, null);
 });
 
-test("R34 docx and pptx metadata carries the core part's title as written; no title key when absent, empty or blank; null with no core part; xlsx and csv unchanged", async () => {
+test("R34 docx and pptx metadata carries the core part's title as written; no title key when absent, empty or blank; null with no core part; xlsx unchanged", async () => {
   for (const fmt of ["docx", "pptx"]) {
     const entry = entries[fmt];
     const titled = await entry.text(build[fmt]({ core: F.core({ creator: "A", title: "Budget  Memo " }) }));
@@ -162,5 +137,4 @@ test("R34 docx and pptx metadata carries the core part's title as written; no ti
   }
   const x = (await xlsxEntry.text(build.xlsx({ core: F.core({ title: "T" }) }))).metadata;
   assert.ok(!("title" in x));
-  assert.equal((await csvEntry.text(F.enc("a,b\n1,2\n"))).metadata, null);
 });

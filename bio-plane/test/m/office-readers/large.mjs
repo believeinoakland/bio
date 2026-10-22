@@ -109,30 +109,6 @@ export function bigPptx({ slides, shapes = 100, strLen = 5000, seed = 13 }) {
   return { bytes: pptx({ slides: deck }), slideTexts, expected: slideTexts.join("\n"), declared };
 }
 
-/** One RFC 4180 field, quoted when it holds a delimiter, a quote or a line break. */
-export function csvField(v) {
-  return /[",\r\n]/.test(v) ? `"${v.replaceAll('"', '""')}"` : v;
-}
-
-/** A comma-separated body of `rows` records of six fields; every 7th record
- *  after the 60th (the delimiter signature reads the first 50 lines) holds a quoted field with a comma, a doubled quote and a bare line break,
- *  and every 11th an empty field. */
-export function bigCsv({ rows, strLen = 400, seed = 17 }) {
-  const rand = prng(seed);
-  const out = [];
-  const lines = [];
-  for (let r = 1; r <= rows; r++) {
-    const fields = [String(r)];
-    for (let c = 0; c < 5; c++) fields.push(randomText(rand, strLen));
-    if (r > 60 && r % 7 === 0) fields[2] = `a,b "quoted"\nsecond line ${fields[2].slice(0, 20)}`;
-    if (r % 11 === 0) fields[3] = "";
-    out.push(fields.map(csvField).join(","));
-    lines.push(fields.filter((f) => f !== "").join("\t"));
-  }
-  const bytes = enc(out.join("\r\n") + "\r\n");
-  return { bytes, expected: lines.join("\n"), declared: bytes.length, rows };
-}
-
 /** An XLSX of 28,000 numbered rows, `rows` of them carrying a shared-string cell, with a hidden row, a hidden
  *  column, hyperlinks after the rows and a sharedStrings part: what a sheet read in pieces has to carry across its
  *  pieces. `expected` is the document text. */
