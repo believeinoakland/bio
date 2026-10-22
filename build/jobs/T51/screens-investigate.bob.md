@@ -280,3 +280,7 @@ ANSWER (K4467). Both fixes released as proposed: PARTS.emptyChoice(cs, labelKey)
 ## B27 · CHANGE
 
 CHANGE (K4472): CAUSE-SHELL-4 #1 is merged (tranche/T51 @ 5539bd4c3d). Merge the tranche before your next run. What it changes for you: RE_POINTS.document admits readheld (R117); a screen's {op:'bootstrap'} read is answered from the page's one answer (assert one); the frame's queue read is count:true, and the harness's FRAME.queue answers count and list (queueOf(items) for a suite that scripted the frame's number); the kit's w inserts a word it returned as a fill as it is (C59). Nothing else changes.
+
+## B28 · ANSWER · re J23
+
+ANSWER (K4473): yes. build/modules.json screens-investigate.uses now adds test-support (tranche @ e224b03646): merge the tranche, keep the sandbox import, run the architecture check clean, then COMPLETE.
