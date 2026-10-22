@@ -18456,6 +18456,7 @@ var WORD_ROWS = Object.freeze([
   ["acquisition.index.keep_store_refused", "the store would not take it ({detail})", null, null, false, "code"],
   ["acquisition.index.listed_whole_over_the_stored", "listed whole over the stored parts", null, null, false, "code"],
   ["acquisition.index.no_renderer_is_bound_to", "no renderer is bound to this instance (no RENDERER service binding and no BROWSER binding). Nothing was fetched.", null, null, false, "code"],
+  ["acquisition.index.no_such_session", "no capture session of that name is held: it was finished, closed or has expired; nothing was fetched", null, null, false, "code"],
   ["acquisition.index.render_did_not_return", "the page as a visitor saw it did not come back in time", null, null, false, "code"],
   ["acquisition.index.render_pending_files", "the page as a visitor saw it is still being made, and its supporting files are captured with it when you finish this capture", null, null, false, "code"],
   ["acquisition.index.render_pending_note", "this is the page as it was served; the page as a visitor saw it is still being made, and is filed as a second document when this capture is finished", null, null, false, "code"],
@@ -23992,6 +23993,7 @@ var WORD_ROWS = Object.freeze([
   ["plane.declared.ask", "member-directed: a member's own question to the assistant under their own account; no object is before them", null, null, false, "code"],
   ["plane.declared.owedwork", "what the object still owes one document, or the counts of what it owes: the keeps, readings, scan pages, supporting files and archive entries left for its alarm, each owed or ended for a stated reason; writes nothing", null, null, false, "code"],
   ["plane.declared.readtranslate", "draft: a machine translation of one passage of the group's own writing (a note, question, finding or notice) into the member's language, labeled machine work, the original one tap away; held nowhere and writes nothing (plane R50)", null, null, false, "code"],
+  ["plane.pending.interrupted", "the reading did not finish; the object stopped", null, null, false, "code"],
   ["progressions.checks.not_a_disposition_detail", "a disposition is deferred (set aside for now) or dismissed (declined); taking a question up is a different act and is not a disposition", null, null, false, "code"],
   ["progressions.declared.discharge", "exception document, keyed by (progression, entity, stage)", null, null, false, "code"],
   ["progressions.declared.progressiondefine", "progression definition, keyed by progression key", null, null, false, "code"],
@@ -32026,6 +32028,70 @@ var linkWrapper = {
 };
 
 // ../bio-plane/src/pdfstructure.mjs
+var ASCII_FILTERS = /* @__PURE__ */ new Set(["ASCII85Decode", "A85", "ASCIIHexDecode", "AHx"]);
+function ascii85Decode(src) {
+  let i = 0;
+  while (i < src.length && isWhitespace(src[i])) i++;
+  if (src[i] === 60 && src[i + 1] === 126) i += 2;
+  let zs = 0;
+  for (let k = src.indexOf(122); k !== -1; k = src.indexOf(122, k + 1)) zs++;
+  const out = new Uint8Array(Math.ceil(src.length * 4 / 5) + 3 * zs + 4);
+  let o = 0, n = 0, acc = 0;
+  for (; i < src.length; i++) {
+    const c = src[i];
+    if (isWhitespace(c)) continue;
+    if (c === 126) break;
+    if (c === 122 && n === 0) {
+      o += 4;
+      continue;
+    }
+    if (c < 33 || c > 117) return null;
+    acc = acc * 85 + (c - 33);
+    if (++n === 5) {
+      if (acc > 4294967295) return null;
+      out[o++] = acc >>> 24;
+      out[o++] = acc >>> 16 & 255;
+      out[o++] = acc >>> 8 & 255;
+      out[o++] = acc & 255;
+      n = 0;
+      acc = 0;
+    }
+  }
+  if (n === 1) return null;
+  if (n > 1) {
+    for (let k = n; k < 5; k++) acc = acc * 85 + 84;
+    if (acc > 4294967295) return null;
+    const four = [acc >>> 24, acc >>> 16 & 255, acc >>> 8 & 255, acc & 255];
+    for (let k = 0; k < n - 1; k++) out[o++] = four[k];
+  }
+  return out.slice(0, o);
+}
+function asciiHexDecode(src) {
+  const out = new Uint8Array((src.length >> 1) + 1);
+  let o = 0, hi = -1;
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i];
+    if (isWhitespace(c)) continue;
+    if (c === 62) break;
+    const d = c >= 48 && c <= 57 ? c - 48 : c >= 65 && c <= 70 ? c - 55 : c >= 97 && c <= 102 ? c - 87 : -1;
+    if (d < 0) return null;
+    if (hi < 0) hi = d;
+    else {
+      out[o++] = hi << 4 | d;
+      hi = -1;
+    }
+  }
+  if (hi >= 0) out[o++] = hi << 4;
+  return out.slice(0, o);
+}
+function undoAscii(names, raw) {
+  let data = raw, i = 0;
+  for (; i < names.length && ASCII_FILTERS.has(names[i]); i++) {
+    data = names[i] === "ASCIIHexDecode" || names[i] === "AHx" ? asciiHexDecode(data) : ascii85Decode(data);
+    if (!data) return null;
+  }
+  return { data, rest: names.slice(i) };
+}
 var PDF_LINK_TYPES = [...LINK_TYPES, "undetermined"];
 function binaryString(u8) {
   if (!(u8 instanceof Uint8Array)) return "";
@@ -32179,6 +32245,15 @@ function skipWs(s, pos) {
   }
   return pos;
 }
+var NAME_VALUES = /* @__PURE__ */ new Map();
+var NAME_VALUES_MAX = 4096;
+function nameValue(v) {
+  let n = NAME_VALUES.get(v);
+  if (n) return n;
+  n = Object.freeze({ t: "name", v });
+  if (NAME_VALUES.size < NAME_VALUES_MAX && v.length <= 64) NAME_VALUES.set(v, n);
+  return n;
+}
 function parseName(s, pos) {
   pos++;
   let out = "";
@@ -32196,7 +32271,7 @@ function parseName(s, pos) {
     out += s[pos];
     pos++;
   }
-  return { value: { t: "name", v: out }, pos };
+  return { value: nameValue(out), pos };
 }
 function parseNumber(s, pos) {
   const start = pos;
@@ -32250,11 +32325,14 @@ function parseArray(buf, s, pos) {
     items.push(r.value);
     pos = r.pos;
   }
-  return { value: { t: "arr", items }, pos };
+  return { value: { t: "arr", items: items.length < 16 ? items.slice() : items }, pos };
 }
+function Dict() {
+}
+Dict.prototype = /* @__PURE__ */ Object.create(null);
 function parseDict(buf, s, pos) {
   pos += 2;
-  const map = /* @__PURE__ */ Object.create(null);
+  const map = new Dict();
   while (true) {
     pos = skipWs(s, pos);
     if (pos >= s.length) break;
@@ -32305,38 +32383,97 @@ function parseWindow(bytes, pos, first = 512) {
     return { value: r.value, len: r.pos };
   }
 }
-function objectFacts(v) {
-  const map = v && v.t === "dict" ? v.map : v && v.t === "stream" ? v.dict : null;
-  return {
-    k: v && v.t === "dict" ? 1 : v && v.t === "stream" ? 2 : 0,
-    ty: map && map.Type && map.Type.t === "name" ? map.Type.v : null,
-    sd: !!(map && map.Filter && map.Filter.t === "name" && map.Filter.v === "Standard" && map.R != null)
-  };
-}
-var ObjectTable = class {
+var ObjectTable = class _ObjectTable {
   constructor(doc) {
     this.doc = doc;
-    this.e = /* @__PURE__ */ new Map();
     this.hot = /* @__PURE__ */ new Map();
     this.pins = /* @__PURE__ */ new Map();
     this.cost = 0;
+    this.n = 0;
+    this.num = new Float64Array(256);
+    this.p = new Uint32Array(256);
+    this.w = new Int32Array(256);
+    this.stm = new Float64Array(256);
+    this.g = new Float64Array(256);
+    this.fl = new Uint8Array(256);
+    this.ty = new Uint16Array(256);
+    this.types = [null];
+    this.typeIx = /* @__PURE__ */ new Map();
+    this.slots = new Int32Array(512);
   }
   get size() {
-    return this.e.size;
+    return this.n;
+  }
+  static hash(n) {
+    return Math.imul(n % 4294967296 | 0, 2654435761) >>> 0;
+  }
+  row(n) {
+    const mask = this.slots.length - 1;
+    for (let i = _ObjectTable.hash(n) & mask, s; s = this.slots[i]; i = i + 1 & mask) if (this.num[s - 1] === n) return s - 1;
+    return -1;
   }
   has(n) {
-    return this.e.has(n);
+    return this.row(n) >= 0;
   }
-  keys() {
-    return this.e.keys();
+  *keys() {
+    for (let i = 0; i < this.n; i++) yield this.num[i];
   }
   gen(n) {
-    const en = this.e.get(n);
-    return en ? en.g : void 0;
+    const r = this.row(n);
+    return r < 0 ? void 0 : this.g[r];
   }
-  /** A definition: the later one replaces an earlier one's, keeping the number's place in the order. */
-  put(n, entry) {
-    this.e.set(n, entry);
+  grow() {
+    const cap = this.num.length * 2;
+    for (const k of ["num", "p", "w", "stm", "g", "fl", "ty"]) {
+      const a = new this[k].constructor(cap);
+      a.set(this[k]);
+      this[k] = a;
+    }
+  }
+  rehash() {
+    this.slots = new Int32Array(this.slots.length * 2);
+    const mask = this.slots.length - 1;
+    for (let r = 0; r < this.n; r++) {
+      let i = _ObjectTable.hash(this.num[r]) & mask;
+      while (this.slots[i]) i = i + 1 & mask;
+      this.slots[i] = r + 1;
+    }
+  }
+  /** A definition of `n` whose value, parsed at `p` of the file (`stm` -1) or of object stream `stm`, is `v`: the later
+   *  one replaces an earlier one's, keeping the number's place in the order. */
+  put(n, p, w, stm, g, v) {
+    let r = this.row(n);
+    if (r < 0) {
+      if (this.n === this.num.length) this.grow();
+      if ((this.n + 1) * 2 > this.slots.length) this.rehash();
+      r = this.n++;
+      this.num[r] = n;
+      const mask = this.slots.length - 1;
+      let i = _ObjectTable.hash(n) & mask;
+      while (this.slots[i]) i = i + 1 & mask;
+      this.slots[i] = r + 1;
+    }
+    this.p[r] = p;
+    this.w[r] = w;
+    this.stm[r] = stm;
+    this.g[r] = g;
+    const map = v && v.t === "dict" ? v.map : v && v.t === "stream" ? v.dict : null;
+    const ty = map && map.Type && map.Type.t === "name" ? map.Type.v : null;
+    let t = 0;
+    if (ty !== null) {
+      t = this.typeIx.get(ty);
+      if (t === void 0) {
+        t = this.types.length;
+        if (t > 65535) t = 0;
+        else {
+          this.types.push(ty);
+          this.typeIx.set(ty, t);
+        }
+      }
+    }
+    this.ty[r] = t;
+    const sd = map && map.Filter && map.Filter.t === "name" && map.Filter.v === "Standard" && map.R != null;
+    this.fl[r] = (v && v.t === "dict" ? 1 : v && v.t === "stream" ? 2 : 0) | (sd ? 4 : 0);
     this.pins.delete(n);
     const h = this.hot.get(n);
     if (h) {
@@ -32346,8 +32483,8 @@ var ObjectTable = class {
   }
   /** The parsed value of object `n`, or undefined; parsed objects are reused while they are recent. */
   get(n) {
-    const en = this.e.get(n);
-    if (!en) return void 0;
+    const r = this.row(n);
+    if (r < 0) return void 0;
     if (this.pins.has(n)) return this.pins.get(n);
     const h = this.hot.get(n);
     if (h) {
@@ -32355,7 +32492,7 @@ var ObjectTable = class {
       this.hot.set(n, h);
       return h.v;
     }
-    const got = this.parse(en);
+    const got = this.parse(r);
     if (!got) return void 0;
     const c = 1 + got.len * 3;
     this.hot.set(n, { v: got.value, c });
@@ -32369,12 +32506,12 @@ var ObjectTable = class {
   }
   /** The parsed value of `n` without keeping it. */
   peek(n) {
-    const en = this.e.get(n);
-    if (!en) return void 0;
+    const r = this.row(n);
+    if (r < 0) return void 0;
     if (this.pins.has(n)) return this.pins.get(n);
     const h = this.hot.get(n);
     if (h) return h.v;
-    const got = this.parse(en);
+    const got = this.parse(r);
     return got ? got.value : void 0;
   }
   /** Keep object `n`'s parsed value for good: a caller that compares the identity of what it resolved asks for this. */
@@ -32388,14 +32525,28 @@ var ObjectTable = class {
     }
     this.pins.set(n, v);
   }
-  parse(en) {
-    const src = en.stm < 0 ? this.doc._b : this.doc._innerBytes(en.stm);
-    return src ? parseWindow(src, en.p, en.w) : null;
+  parse(r) {
+    const stm = this.stm[r];
+    const src = stm < 0 ? this.doc._b : this.doc._innerBytes(stm);
+    return src ? parseWindow(src, this.p[r], this.w[r]) : null;
   }
-  /** Object numbers, in order, whose winning definition has the given facts. */
-  nums(test) {
+  /** Object numbers, in order, whose winning definition is of kind `kind` (1 dictionary, 2 stream, 3 either) and, when
+   *  given, has the `/Type` name `type`. */
+  nums(kind, type) {
     const out = [];
-    for (const [n, en] of this.e) if (test(en)) out.push(n);
+    const t = type === void 0 ? -1 : this.typeIx.get(type);
+    if (t === void 0) return out;
+    for (let r = 0; r < this.n; r++) {
+      const k = this.fl[r] & 3;
+      if (!(kind === 3 ? k > 0 : k === kind) || t >= 0 && this.ty[r] !== t) continue;
+      out.push(this.num[r]);
+    }
+    return out;
+  }
+  /** Object numbers that could be the Standard security handler. */
+  standard() {
+    const out = [];
+    for (let r = 0; r < this.n; r++) if (this.fl[r] & 4) out.push(this.num[r]);
     return out;
   }
 };
@@ -32456,7 +32607,7 @@ var PdfDoc = class {
       const num = parseInt(binaryString(b.subarray(numStart, numEnd)), 10);
       const bodyStart = j + 1;
       const r = parseWindow(b, bodyStart);
-      if (r) this._objs.put(num, { p: bodyStart, w: r.len + 64, stm: -1, g: parseInt(binaryString(b.subarray(genStart, genEnd)), 10), ...objectFacts(r.value) });
+      if (r) this._objs.put(num, bodyStart, r.len + 64, -1, parseInt(binaryString(b.subarray(genStart, genEnd)), 10), r.value);
     }
   }
   resolve(v, seen = 0) {
@@ -32515,12 +32666,15 @@ var PdfDoc = class {
     }
   }
   async _streamDecoded(streamObj) {
-    const raw = this.streamRawBytes(streamObj);
+    let raw = this.streamRawBytes(streamObj);
     if (!raw) return null;
     const filter = this.resolve(streamObj.dict.Filter);
     const names = filter == null ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f4) => f4 && f4.t === "name" ? f4.v : null) : [null];
     if (names.length === 0) return raw;
-    if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null;
+    const un2 = undoAscii(names, raw);
+    if (!un2 || !un2.rest.every((n) => n === "FlateDecode" || n === "Fl")) return null;
+    raw = un2.data;
+    if (!un2.rest.length) return this._unpredicted(streamObj, raw);
     if (raw.length >= LARGE_RAW_BYTES) {
       const exact = inflateChecked(raw, INNER_DECODE_MAX);
       if (exact) return this._unpredicted(streamObj, exact);
@@ -32562,8 +32716,10 @@ var PdfDoc = class {
       const filter = this.resolve(streamObj.dict.Filter);
       const names = filter == null ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f4) => f4 && f4.t === "name" ? f4.v : null) : [null];
       if (names.length === 0) return raw;
-      if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null;
-      const data = inflateChecked(raw, INNER_DECODE_MAX, expect);
+      const un2 = undoAscii(names, raw);
+      if (!un2 || !un2.rest.every((n) => n === "FlateDecode" || n === "Fl")) return null;
+      if (!un2.rest.length) return this._unpredicted(streamObj, un2.data);
+      const data = inflateChecked(un2.data, INNER_DECODE_MAX, expect);
       return data ? this._unpredicted(streamObj, data) : null;
     } catch {
       return null;
@@ -32599,7 +32755,7 @@ var PdfDoc = class {
    *  uncompressed one is the safer read). Each is parsed once here, to know it
    *  parses and what it is, and read again from the decoded stream when asked for (R41). */
   async loadObjectStreams() {
-    const streams = this._objs.nums((en) => en.k === 2 && en.ty === "ObjStm");
+    const streams = this._objs.nums(2, "ObjStm");
     for (const stm of streams) {
       const st = this._objs.get(stm);
       if (!st || st.t !== "stream") continue;
@@ -32637,7 +32793,7 @@ var PdfDoc = class {
           const at8 = first + off;
           const r = parseWindow(data, at8, nextAbove(at8) - at8 + 16);
           if (r) {
-            this._objs.put(objNum, { p: Math.trunc(at8), w: r.len + 64, stm, g: 0, ...objectFacts(r.value) });
+            this._objs.put(objNum, Math.trunc(at8), r.len + 64, stm, 0, r.value);
             added++;
           }
         }
@@ -32662,7 +32818,7 @@ var PdfDoc = class {
    *  object-number order if the tree cannot be walked (leniency). */
   buildPageIndex() {
     let root = null;
-    const cat = this._objs.nums((en) => en.k === 1 && en.ty === "Catalog")[0];
+    const cat = this._objs.nums(1, "Catalog")[0];
     if (cat !== void 0) {
       this._objs.pin(cat);
       root = this._objs.get(cat).map;
@@ -32690,7 +32846,7 @@ var PdfDoc = class {
       walkRef(root.Pages.n, /* @__PURE__ */ new Set([root.Pages.n]));
     }
     if (this.pageIndexByObj.size === 0) {
-      const pages = this._objs.nums((en) => en.ty === "Page" && en.k > 0);
+      const pages = this._objs.nums(3, "Page");
       pages.sort((a, b) => a - b);
       pages.forEach((num, i) => this.pageIndexByObj.set(num, i));
       this.pageCount = pages.length;
@@ -32719,7 +32875,7 @@ var PdfDoc = class {
   isEncrypted() {
     if (this._encrypted !== void 0) return this._encrypted;
     let enc = false;
-    for (const num of this._objs.nums((en) => en.sd)) {
+    for (const num of this._objs.standard()) {
       const v = this._objs.peek(num);
       const map = v && (v.t === "dict" ? v.map : v.t === "stream" ? v.dict : null);
       if (map && typeof this.resolve(map.R) === "number") {
@@ -32764,7 +32920,7 @@ var PdfDoc = class {
       const r = parseWindow(b, t + 7);
       if (r && r.value && r.value.t === "dict") cands.push([t, r.value.map]);
     }
-    for (const num of this._objs.nums((en) => en.k === 2 && en.ty === "XRef")) {
+    for (const num of this._objs.nums(2, "XRef")) {
       const v = this._objs.peek(num);
       if (v && v.t === "stream") cands.push([v.start, v.dict]);
     }
@@ -32779,11 +32935,13 @@ var PdfDoc = class {
    *  never throws. The walk is iterative, so a deep or cyclic file cannot
    *  exhaust the stack. */
   objects() {
+    ARENA = { buf: new ArrayBuffer(32768), off: 0 };
     try {
       const trailers = this._trailers();
       if (!trailers.length) return null;
       const trailer = trailers[trailers.length - 1];
-      const found2 = /* @__PURE__ */ new Map(), missing2 = /* @__PURE__ */ new Map(), queue = [];
+      const found2 = [], missing2 = /* @__PURE__ */ new Map(), queue = [];
+      const done = new Uint8Array(this._objs.size);
       const refsIn = (v) => {
         for (const stack = [v]; stack.length; ) {
           const x = stack.pop();
@@ -32796,16 +32954,24 @@ var PdfDoc = class {
       refsIn({ t: "dict", map: trailer });
       for (let i = 0; i < queue.length; i++) {
         const { n, g } = queue[i];
-        if (found2.has(n) || missing2.has(n)) continue;
+        const row3 = this._objs.row(n);
+        if (row3 >= 0 ? done[row3] : missing2.has(n)) continue;
         const value = this.resolve({ t: "ref", n, g });
-        if (value === null) missing2.set(n, { num: n, gen: g });
-        else found2.set(n, { num: n, gen: this._objs.gen(n) ?? 0, value });
+        if (value === null) {
+          missing2.set(n, { num: n, gen: g });
+          if (row3 >= 0) done[row3] = 1;
+        } else {
+          done[row3] = 1;
+          found2.push({ num: n, gen: this._objs.gen(n) ?? 0, value });
+        }
         refsIn(this._objs.get(n));
       }
-      const asc = (m) => [...m.values()].sort((a, b) => a.num - b.num);
-      return { trailer, objects: asc(found2), unresolved: asc(missing2) };
+      queue.length = 0;
+      return { trailer, objects: found2.sort((a, b) => a.num - b.num), unresolved: [...missing2.values()].sort((a, b) => a.num - b.num) };
     } catch {
       return null;
+    } finally {
+      ARENA = null;
     }
   }
 };
@@ -33108,6 +33274,14 @@ function textShowBytes(toks) {
   }
   return n;
 }
+var ARENA = null;
+function newBytes(n) {
+  if (!ARENA || n > 512) return new Uint8Array(n);
+  if (ARENA.off + n > ARENA.buf.byteLength) ARENA = { buf: new ArrayBuffer(32768), off: 0 };
+  const u = new Uint8Array(ARENA.buf, ARENA.off, n);
+  ARENA.off += n;
+  return u;
+}
 function readLiteralBytes(s, pos) {
   pos++;
   let q = pos;
@@ -33117,9 +33291,9 @@ function readLiteralBytes(s, pos) {
     q++;
   }
   if (q < s.length && s.charCodeAt(q) === 41) {
-    const out = new Uint8Array(q - pos);
-    for (let i = 0; i < out.length; i++) out[i] = s.charCodeAt(pos + i);
-    return { bytes: out, pos: q + 1 };
+    const out2 = newBytes(q - pos);
+    for (let i = 0; i < out2.length; i++) out2[i] = s.charCodeAt(pos + i);
+    return { bytes: out2, pos: q + 1 };
   }
   const bytes = [];
   let depth = 1;
@@ -33220,7 +33394,9 @@ function readLiteralBytes(s, pos) {
     bytes.push(c);
     pos++;
   }
-  return { bytes: Uint8Array.from(bytes), pos };
+  const out = newBytes(bytes.length);
+  out.set(bytes);
+  return { bytes: out, pos };
 }
 function readHexBytes(s, pos) {
   pos++;
@@ -33232,7 +33408,7 @@ function readHexBytes(s, pos) {
   }
   pos++;
   if (hex3.length % 2) hex3 += "0";
-  const bytes = new Uint8Array(hex3.length / 2);
+  const bytes = newBytes(hex3.length / 2);
   for (let i = 0; i < hex3.length; i += 2) bytes[i / 2] = parseInt(hex3.substr(i, 2), 16);
   return { bytes, pos };
 }
@@ -34846,6 +35022,38 @@ async function sampledTextShare(doc) {
   doc._trailingNoted = noted;
   return k ? showing / k : 0;
 }
+var READ_BASE_DENSE_MB = 29;
+var READ_PAGE_DENSE_MB = 1e-3;
+var READ_MCHAR_MB = 1.8;
+var READ_SAMPLE_FROM = 64;
+var denseNeedMB = (pages, bytes, mchars) => READ_BASE_DENSE_MB + bytes / 1048576 + pages * READ_PAGE_DENSE_MB + mchars * READ_MCHAR_MB;
+async function sampledMChars(doc) {
+  const n = doc.pageCount, k = Math.min(READ_SAMPLE_PAGES, n);
+  const notes = doc.notes.length, noted = new Set(doc._trailingNoted);
+  const fontCache = new FontCache();
+  let total = 0, most = 0, unread = 0;
+  for (let i = 0; i < k; i++) {
+    const pageMap = doc.pageDict(k === 1 ? 0 : Math.round(i * (n - 1) / (k - 1)));
+    let chars = null;
+    if (pageMap) {
+      try {
+        const got = await extractPageText(doc, i, pageMap, fontCache);
+        chars = got.text.length + got.undetermined.reduce((c, m) => c + (Number.isFinite(m.count) ? m.count : 0), 0);
+      } catch {
+        chars = null;
+      }
+    }
+    if (chars === null) {
+      unread++;
+      continue;
+    }
+    total += chars;
+    most = Math.max(most, chars);
+  }
+  doc.notes.length = notes;
+  doc._trailingNoted = noted;
+  return k ? (total + unread * most) / k * n / 1e6 : 0;
+}
 async function loadPdf(bytes) {
   const doc = new PdfDoc(bytes);
   doc.scanTopLevel();
@@ -34868,6 +35076,11 @@ async function extractPdfStructure(bytes) {
   if (needMB > READ_LIMIT_MB) {
     textShare = doc.isEncrypted() ? 0 : await sampledTextShare(doc);
     needMB = readingNeedMB(doc.pageCount, bytes.length, textShare);
+  }
+  let mchars = null;
+  if (needMB <= READ_LIMIT_MB && doc.pageCount > READ_SAMPLE_FROM && !doc.isEncrypted()) {
+    mchars = await sampledMChars(doc);
+    needMB = Math.max(needMB, denseNeedMB(doc.pageCount, bytes.length, mchars));
   }
   if (needMB > READ_LIMIT_MB) {
     return {
@@ -59166,6 +59379,7 @@ var acquireGradeNote = (ceiling, unreachable) => {
 var ACQUIRE_GRADE_NOTE = acquireGradeNote(EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE);
 var PROFILE_TEXT_MAX = 8 * 1024 * 1024;
 var ODF_DIGEST_MAX = 8 * 1024 * 1024;
+var NAME_TEXT_TYPES = Object.freeze({ txt: "text/plain", md: "text/markdown", csv: "text/csv" });
 var CREDENTIAL_KINDS = Object.freeze(["login", "user-agent", "other"]);
 var CAPTURE_MAX = 256 * 1024 * 1024;
 var MULTIPART_KEEP_MAX = 32 * 1024 * 1024;
@@ -61099,6 +61313,15 @@ async function bytesOf(evidence, doc) {
   }
   return at8 === total ? { bytes: out } : { bytes: null, failure: FAILURE_TRANSIENT, why: word("reading-pipeline.why.parts_held_add") };
 }
+var TEXT_TYPE = /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i;
+function utf8TextOf(bytes) {
+  if (bytes.includes(0)) return null;
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    return null;
+  }
+}
 async function readInner(doc, {
   evidence,
   env,
@@ -61120,7 +61343,8 @@ async function readInner(doc, {
   for (const [hk, hv] of Array.isArray(headerPairs) ? headerPairs : []) headers[String(hk).toLowerCase()] = hv;
   const locator = documentAddressOf(doc);
   const multipart = Array.isArray(doc && doc.parts);
-  const fmt = profile.format && typeof profile.format.format === "string" ? profile.format.format : null;
+  const recorded = profile.format && typeof profile.format.format === "string" ? profile.format.format : null;
+  let fmt = recorded;
   const vw = view ? { view } : {};
   const early = async (reading2) => {
     reading2.metadata = null;
@@ -61132,8 +61356,17 @@ async function readInner(doc, {
   const got = await bytesOf(evidence, doc).catch(() => ({ bytes: null, failure: FAILURE_TRANSIENT, why: word("acquisition.why.evidence_store_read") }));
   let bytes = got.bytes;
   got.bytes = null;
-  const textRead = !multipart && profile.profiled_from_text === true && bytes;
-  const text2 = textRead ? new TextDecoder("utf-8", { fatal: false }).decode(bytes) : "";
+  if (bytes && (fmt === null || fmt === "undetermined"))
+    fmt = detectFormat(bytes, profile.source_content_type || ct || null).format;
+  let textRead = !multipart && profile.profiled_from_text === true && bytes;
+  let text2 = textRead ? new TextDecoder("utf-8", { fatal: false }).decode(bytes) : "";
+  if (!textRead && multipart && bytes && fmt === "undetermined" && TEXT_TYPE.test(profile.source_content_type || "")) {
+    const decoded = utf8TextOf(bytes);
+    if (decoded !== null) {
+      textRead = true;
+      text2 = decoded;
+    }
+  }
   const profCtx = { headers, locator, content_type: ct || null, text: text2, origin: CAPTURE_ORIGIN };
   const stackId = identify(profCtx);
   const docType = doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind, ...vw });
@@ -61681,6 +61914,10 @@ var MIGRATIONS = Object.freeze({
   })
 });
 var failedTransiently = (r) => !!r && r.found === false && r.failure === "transient" && !(Array.isArray(r.entities) && r.entities.length);
+var notReadAsText = (r) => !!r && r.found === false && r.failure === "final" && typeof r.basis === "string" && !(Array.isArray(r.entities) && r.entities.length) && [
+  localize("reading-pipeline.index.multipart", "multipart"),
+  localize("reading-pipeline.index.non_textual_large", "non-textual or too large")
+].some((why) => r.basis === localize("reading-pipeline.index.document_not_read_text", "the document was not read as text ({why}), so no reading was attempted", { why }));
 var PLANE_AUTHOR = "plane:pending-work";
 var Extraction = class _Extraction {
   #sql;
@@ -61973,7 +62210,7 @@ var Extraction = class _Extraction {
    *  failed transiently, or pages of a scan are still unread and an OCR member is bound to read them. (R82, F9) With
    *  `kind: "ocr"` the stored reading's unread pages are asked of the OCR member, those the stored units do not hold, and the
    *  re-read is written as a composed reading; a member that is down leaves the entry owed, pages it declines end it. */
-  async readHeld({ sha = null, storeName = "bio", env = null, viewer = void 0, kind = null } = {}) {
+  async readHeld({ sha = null, storeName = "bio", env = null, viewer = void 0, kind = null, defer = false } = {}) {
     const digest = typeof sha === "string" ? sha.trim().toLowerCase() : "";
     let home = /^[0-9a-f]{64}$/.test(digest) && this.#provenance && typeof this.#provenance.homeOf === "function" ? this.#provenance.homeOf(digest) : null;
     if ((!home || typeof home.bundleId !== "string" || !home.bundleId) && /^[0-9a-f]{64}$/.test(digest)) {
@@ -61989,19 +62226,29 @@ var Extraction = class _Extraction {
     const held2 = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
     const heldReading = held2 ? safeJson(held2.reading) : null;
     const ocr = kind === "ocr";
-    if (held2 && !ocr && !this.#wantedTheWhole(heldReading, document) && !failedTransiently(heldReading)) return left2("READING_HELD");
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    const fmt0 = document.profile && document.profile.format && typeof document.profile.format.format === "string" ? document.profile.format.format : null;
+    const repair = ev && !ocr && (held2 ? notReadAsText(heldReading) : !fmt0 || fmt0 === "undetermined") ? await this.#nowDetected(document, digest, ev) : null;
+    if (held2 && !ocr && !(repair && notReadAsText(heldReading)) && !this.#wantedTheWhole(heldReading, document) && !failedTransiently(heldReading))
+      return left2("READING_HELD");
+    const size2 = this.#sizeOf(document);
+    const overCeiling = !ocr && size2 !== null && size2 > WHOLE_READ_MAX;
     let whole = null;
-    try {
-      whole = ev ? typeof ev.head === "function" ? await ev.head(digest) : await ev.get(digest) : null;
-    } catch {
-      whole = null;
+    if (!overCeiling) {
+      try {
+        whole = ev ? typeof ev.head === "function" ? await ev.head(digest) : await ev.get(digest) : null;
+      } catch {
+        whole = null;
+      }
+      if (!whole) return left2("NO_WHOLE_OBJECT");
     }
-    if (!whole) return left2("NO_WHOLE_OBJECT");
+    if (defer === true) return left2("READING_PENDING");
     const e = env || this.env || {};
     if (ocr) return this.#continueOcr({ digest, heldReading, bundleId: home.bundleId, storeName, env: e, left: left2 });
-    const out = await this.read(document, { storeName, env, budget: Infinity });
-    const prof = document.profile && typeof document.profile === "object" ? document.profile : null;
+    const reader = repair ? { ...document, profile: { ...document.profile || {}, format: repair } } : document;
+    const out = await this.read(reader, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND });
+    if (repair && held2 && notReadAsText(out.reading)) return left2("READING_HELD");
+    const prof = reader.profile && typeof reader.profile === "object" ? reader.profile : null;
     const wrote = this.core.transact(() => {
       const now = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
       if (now && (!held2 || now.reading !== held2.reading)) return null;
@@ -62047,6 +62294,38 @@ var Extraction = class _Extraction {
     const now = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
     const more = !!(now && (safeJson(now.reading) || {}).tier3_candidate === true);
     return { ok: true, read: true, bundle_id: bundleId, found: true, ...more ? { owed: true } : {} };
+  }
+  /** (fix round 5, E3) The capture's size from its own document: its parts' sizes, else its stated size; null when the
+   *  document states none (reading-pipeline then asks the store). */
+  #sizeOf(document) {
+    const parts = document && Array.isArray(document.parts) ? document.parts : null;
+    if (parts) return parts.reduce((n, p) => n + (Number.isFinite(p && p.bytes) ? p.bytes : 0), 0);
+    const b = document && document.capture ? document.capture.bytes : null;
+    return Number.isFinite(b) && b > 0 ? b : null;
+  }
+  /** (fix round 5, E1) The format the held bytes now detect (`format-registry.detectFormat` over the first KiB of the
+   *  object, a range), as the `profile.format` a read hands the pipeline; null when they detect none. UTF-8 without NUL
+   *  under a declared text type is not a format: that case is the pipeline's own (reading-pipeline R2), which the
+   *  caller's read then tries, so it answers the profile's recorded format unchanged. */
+  async #nowDetected(document, digest, ev) {
+    let head = null;
+    try {
+      const o = await ev.get(digest, { range: { offset: 0, length: 1024 } });
+      head = o ? new Uint8Array(await o.arrayBuffer()).subarray(0, 1024) : null;
+    } catch {
+      head = null;
+    }
+    if (!head || !head.length) return null;
+    const f4 = detectFormat(head, null);
+    if (f4 && f4.format && f4.format !== "undetermined") return f4;
+    const declared = document && document.profile && typeof document.profile.source_content_type === "string" ? document.profile.source_content_type.toLowerCase() : "";
+    if (!declared.startsWith("text/") || head.includes(0)) return null;
+    try {
+      new TextDecoder("utf-8", { fatal: true }).decode(head, { stream: true });
+    } catch {
+      return null;
+    }
+    return document.profile.format ?? { format: "undetermined", confidence: "none", signals: [] };
   }
   /** R81: the home of a capture held in parts, or null. The bundle whose `data/provenance.json` states `capture.sha256` =
    *  `whole` with parts, every part of which the register names as that bundle's own (`provenance.homeOf`), so a bundle
@@ -63781,7 +64060,7 @@ var DECLARED_OPS7 = Object.freeze({
     needs: null,
     weight: "undetermined",
     description: localize("extraction.declared.readheld", "reading-directed: keyed by a capture's digest; at a member's act, Civicsmith reads a document its record holds whole and holds no reading of, or holds a reading of that found nothing for want of the whole; the reading is machine-made and undetermined, the earlier one kept in the history; moves no bundle"),
-    fields: { accepts: ["sha"], requires: ["sha"] }
+    fields: { accepts: ["sha", "defer"], requires: ["sha"] }
   },
   pdfstructure: {
     classes: ["admin", "member", "probe"],

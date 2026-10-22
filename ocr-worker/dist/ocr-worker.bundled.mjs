@@ -202,6 +202,70 @@ var SPREAD_CLOCKS = {
 var LINK_TYPES = ["anchor", "intra", "deferred", "refused"];
 
 // ../bio-plane/src/pdfstructure.mjs
+var ASCII_FILTERS = /* @__PURE__ */ new Set(["ASCII85Decode", "A85", "ASCIIHexDecode", "AHx"]);
+function ascii85Decode(src) {
+  let i = 0;
+  while (i < src.length && isWhitespace(src[i])) i++;
+  if (src[i] === 60 && src[i + 1] === 126) i += 2;
+  let zs = 0;
+  for (let k = src.indexOf(122); k !== -1; k = src.indexOf(122, k + 1)) zs++;
+  const out = new Uint8Array(Math.ceil(src.length * 4 / 5) + 3 * zs + 4);
+  let o = 0, n = 0, acc = 0;
+  for (; i < src.length; i++) {
+    const c = src[i];
+    if (isWhitespace(c)) continue;
+    if (c === 126) break;
+    if (c === 122 && n === 0) {
+      o += 4;
+      continue;
+    }
+    if (c < 33 || c > 117) return null;
+    acc = acc * 85 + (c - 33);
+    if (++n === 5) {
+      if (acc > 4294967295) return null;
+      out[o++] = acc >>> 24;
+      out[o++] = acc >>> 16 & 255;
+      out[o++] = acc >>> 8 & 255;
+      out[o++] = acc & 255;
+      n = 0;
+      acc = 0;
+    }
+  }
+  if (n === 1) return null;
+  if (n > 1) {
+    for (let k = n; k < 5; k++) acc = acc * 85 + 84;
+    if (acc > 4294967295) return null;
+    const four = [acc >>> 24, acc >>> 16 & 255, acc >>> 8 & 255, acc & 255];
+    for (let k = 0; k < n - 1; k++) out[o++] = four[k];
+  }
+  return out.slice(0, o);
+}
+function asciiHexDecode(src) {
+  const out = new Uint8Array((src.length >> 1) + 1);
+  let o = 0, hi = -1;
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i];
+    if (isWhitespace(c)) continue;
+    if (c === 62) break;
+    const d = c >= 48 && c <= 57 ? c - 48 : c >= 65 && c <= 70 ? c - 55 : c >= 97 && c <= 102 ? c - 87 : -1;
+    if (d < 0) return null;
+    if (hi < 0) hi = d;
+    else {
+      out[o++] = hi << 4 | d;
+      hi = -1;
+    }
+  }
+  if (hi >= 0) out[o++] = hi << 4;
+  return out.slice(0, o);
+}
+function undoAscii(names, raw) {
+  let data = raw, i = 0;
+  for (; i < names.length && ASCII_FILTERS.has(names[i]); i++) {
+    data = names[i] === "ASCIIHexDecode" || names[i] === "AHx" ? asciiHexDecode(data) : ascii85Decode(data);
+    if (!data) return null;
+  }
+  return { data, rest: names.slice(i) };
+}
 var PDF_LINK_TYPES = [...LINK_TYPES, "undetermined"];
 function binaryString(u8) {
   if (!(u8 instanceof Uint8Array)) return "";
@@ -355,6 +419,15 @@ function skipWs(s, pos) {
   }
   return pos;
 }
+var NAME_VALUES = /* @__PURE__ */ new Map();
+var NAME_VALUES_MAX = 4096;
+function nameValue(v) {
+  let n = NAME_VALUES.get(v);
+  if (n) return n;
+  n = Object.freeze({ t: "name", v });
+  if (NAME_VALUES.size < NAME_VALUES_MAX && v.length <= 64) NAME_VALUES.set(v, n);
+  return n;
+}
 function parseName(s, pos) {
   pos++;
   let out = "";
@@ -372,7 +445,7 @@ function parseName(s, pos) {
     out += s[pos];
     pos++;
   }
-  return { value: { t: "name", v: out }, pos };
+  return { value: nameValue(out), pos };
 }
 function parseNumber(s, pos) {
   const start = pos;
@@ -426,11 +499,14 @@ function parseArray(buf, s, pos) {
     items.push(r.value);
     pos = r.pos;
   }
-  return { value: { t: "arr", items }, pos };
+  return { value: { t: "arr", items: items.length < 16 ? items.slice() : items }, pos };
 }
+function Dict() {
+}
+Dict.prototype = /* @__PURE__ */ Object.create(null);
 function parseDict(buf, s, pos) {
   pos += 2;
-  const map = /* @__PURE__ */ Object.create(null);
+  const map = new Dict();
   while (true) {
     pos = skipWs(s, pos);
     if (pos >= s.length) break;
@@ -481,38 +557,97 @@ function parseWindow(bytes, pos, first = 512) {
     return { value: r.value, len: r.pos };
   }
 }
-function objectFacts(v) {
-  const map = v && v.t === "dict" ? v.map : v && v.t === "stream" ? v.dict : null;
-  return {
-    k: v && v.t === "dict" ? 1 : v && v.t === "stream" ? 2 : 0,
-    ty: map && map.Type && map.Type.t === "name" ? map.Type.v : null,
-    sd: !!(map && map.Filter && map.Filter.t === "name" && map.Filter.v === "Standard" && map.R != null)
-  };
-}
-var ObjectTable = class {
+var ObjectTable = class _ObjectTable {
   constructor(doc) {
     this.doc = doc;
-    this.e = /* @__PURE__ */ new Map();
     this.hot = /* @__PURE__ */ new Map();
     this.pins = /* @__PURE__ */ new Map();
     this.cost = 0;
+    this.n = 0;
+    this.num = new Float64Array(256);
+    this.p = new Uint32Array(256);
+    this.w = new Int32Array(256);
+    this.stm = new Float64Array(256);
+    this.g = new Float64Array(256);
+    this.fl = new Uint8Array(256);
+    this.ty = new Uint16Array(256);
+    this.types = [null];
+    this.typeIx = /* @__PURE__ */ new Map();
+    this.slots = new Int32Array(512);
   }
   get size() {
-    return this.e.size;
+    return this.n;
+  }
+  static hash(n) {
+    return Math.imul(n % 4294967296 | 0, 2654435761) >>> 0;
+  }
+  row(n) {
+    const mask = this.slots.length - 1;
+    for (let i = _ObjectTable.hash(n) & mask, s; s = this.slots[i]; i = i + 1 & mask) if (this.num[s - 1] === n) return s - 1;
+    return -1;
   }
   has(n) {
-    return this.e.has(n);
+    return this.row(n) >= 0;
   }
-  keys() {
-    return this.e.keys();
+  *keys() {
+    for (let i = 0; i < this.n; i++) yield this.num[i];
   }
   gen(n) {
-    const en = this.e.get(n);
-    return en ? en.g : void 0;
+    const r = this.row(n);
+    return r < 0 ? void 0 : this.g[r];
   }
-  /** A definition: the later one replaces an earlier one's, keeping the number's place in the order. */
-  put(n, entry) {
-    this.e.set(n, entry);
+  grow() {
+    const cap = this.num.length * 2;
+    for (const k of ["num", "p", "w", "stm", "g", "fl", "ty"]) {
+      const a = new this[k].constructor(cap);
+      a.set(this[k]);
+      this[k] = a;
+    }
+  }
+  rehash() {
+    this.slots = new Int32Array(this.slots.length * 2);
+    const mask = this.slots.length - 1;
+    for (let r = 0; r < this.n; r++) {
+      let i = _ObjectTable.hash(this.num[r]) & mask;
+      while (this.slots[i]) i = i + 1 & mask;
+      this.slots[i] = r + 1;
+    }
+  }
+  /** A definition of `n` whose value, parsed at `p` of the file (`stm` -1) or of object stream `stm`, is `v`: the later
+   *  one replaces an earlier one's, keeping the number's place in the order. */
+  put(n, p, w, stm, g, v) {
+    let r = this.row(n);
+    if (r < 0) {
+      if (this.n === this.num.length) this.grow();
+      if ((this.n + 1) * 2 > this.slots.length) this.rehash();
+      r = this.n++;
+      this.num[r] = n;
+      const mask = this.slots.length - 1;
+      let i = _ObjectTable.hash(n) & mask;
+      while (this.slots[i]) i = i + 1 & mask;
+      this.slots[i] = r + 1;
+    }
+    this.p[r] = p;
+    this.w[r] = w;
+    this.stm[r] = stm;
+    this.g[r] = g;
+    const map = v && v.t === "dict" ? v.map : v && v.t === "stream" ? v.dict : null;
+    const ty = map && map.Type && map.Type.t === "name" ? map.Type.v : null;
+    let t = 0;
+    if (ty !== null) {
+      t = this.typeIx.get(ty);
+      if (t === void 0) {
+        t = this.types.length;
+        if (t > 65535) t = 0;
+        else {
+          this.types.push(ty);
+          this.typeIx.set(ty, t);
+        }
+      }
+    }
+    this.ty[r] = t;
+    const sd = map && map.Filter && map.Filter.t === "name" && map.Filter.v === "Standard" && map.R != null;
+    this.fl[r] = (v && v.t === "dict" ? 1 : v && v.t === "stream" ? 2 : 0) | (sd ? 4 : 0);
     this.pins.delete(n);
     const h = this.hot.get(n);
     if (h) {
@@ -522,8 +657,8 @@ var ObjectTable = class {
   }
   /** The parsed value of object `n`, or undefined; parsed objects are reused while they are recent. */
   get(n) {
-    const en = this.e.get(n);
-    if (!en) return void 0;
+    const r = this.row(n);
+    if (r < 0) return void 0;
     if (this.pins.has(n)) return this.pins.get(n);
     const h = this.hot.get(n);
     if (h) {
@@ -531,7 +666,7 @@ var ObjectTable = class {
       this.hot.set(n, h);
       return h.v;
     }
-    const got = this.parse(en);
+    const got = this.parse(r);
     if (!got) return void 0;
     const c = 1 + got.len * 3;
     this.hot.set(n, { v: got.value, c });
@@ -545,12 +680,12 @@ var ObjectTable = class {
   }
   /** The parsed value of `n` without keeping it. */
   peek(n) {
-    const en = this.e.get(n);
-    if (!en) return void 0;
+    const r = this.row(n);
+    if (r < 0) return void 0;
     if (this.pins.has(n)) return this.pins.get(n);
     const h = this.hot.get(n);
     if (h) return h.v;
-    const got = this.parse(en);
+    const got = this.parse(r);
     return got ? got.value : void 0;
   }
   /** Keep object `n`'s parsed value for good: a caller that compares the identity of what it resolved asks for this. */
@@ -564,14 +699,28 @@ var ObjectTable = class {
     }
     this.pins.set(n, v);
   }
-  parse(en) {
-    const src = en.stm < 0 ? this.doc._b : this.doc._innerBytes(en.stm);
-    return src ? parseWindow(src, en.p, en.w) : null;
+  parse(r) {
+    const stm = this.stm[r];
+    const src = stm < 0 ? this.doc._b : this.doc._innerBytes(stm);
+    return src ? parseWindow(src, this.p[r], this.w[r]) : null;
   }
-  /** Object numbers, in order, whose winning definition has the given facts. */
-  nums(test) {
+  /** Object numbers, in order, whose winning definition is of kind `kind` (1 dictionary, 2 stream, 3 either) and, when
+   *  given, has the `/Type` name `type`. */
+  nums(kind, type) {
     const out = [];
-    for (const [n, en] of this.e) if (test(en)) out.push(n);
+    const t = type === void 0 ? -1 : this.typeIx.get(type);
+    if (t === void 0) return out;
+    for (let r = 0; r < this.n; r++) {
+      const k = this.fl[r] & 3;
+      if (!(kind === 3 ? k > 0 : k === kind) || t >= 0 && this.ty[r] !== t) continue;
+      out.push(this.num[r]);
+    }
+    return out;
+  }
+  /** Object numbers that could be the Standard security handler. */
+  standard() {
+    const out = [];
+    for (let r = 0; r < this.n; r++) if (this.fl[r] & 4) out.push(this.num[r]);
     return out;
   }
 };
@@ -632,7 +781,7 @@ var PdfDoc = class {
       const num = parseInt(binaryString(b.subarray(numStart, numEnd)), 10);
       const bodyStart = j + 1;
       const r = parseWindow(b, bodyStart);
-      if (r) this._objs.put(num, { p: bodyStart, w: r.len + 64, stm: -1, g: parseInt(binaryString(b.subarray(genStart, genEnd)), 10), ...objectFacts(r.value) });
+      if (r) this._objs.put(num, bodyStart, r.len + 64, -1, parseInt(binaryString(b.subarray(genStart, genEnd)), 10), r.value);
     }
   }
   resolve(v, seen = 0) {
@@ -691,12 +840,15 @@ var PdfDoc = class {
     }
   }
   async _streamDecoded(streamObj) {
-    const raw = this.streamRawBytes(streamObj);
+    let raw = this.streamRawBytes(streamObj);
     if (!raw) return null;
     const filter = this.resolve(streamObj.dict.Filter);
     const names = filter == null ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f) => f && f.t === "name" ? f.v : null) : [null];
     if (names.length === 0) return raw;
-    if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null;
+    const un = undoAscii(names, raw);
+    if (!un || !un.rest.every((n) => n === "FlateDecode" || n === "Fl")) return null;
+    raw = un.data;
+    if (!un.rest.length) return this._unpredicted(streamObj, raw);
     if (raw.length >= LARGE_RAW_BYTES) {
       const exact = inflateChecked(raw, INNER_DECODE_MAX);
       if (exact) return this._unpredicted(streamObj, exact);
@@ -738,8 +890,10 @@ var PdfDoc = class {
       const filter = this.resolve(streamObj.dict.Filter);
       const names = filter == null ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f) => f && f.t === "name" ? f.v : null) : [null];
       if (names.length === 0) return raw;
-      if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null;
-      const data = inflateChecked(raw, INNER_DECODE_MAX, expect);
+      const un = undoAscii(names, raw);
+      if (!un || !un.rest.every((n) => n === "FlateDecode" || n === "Fl")) return null;
+      if (!un.rest.length) return this._unpredicted(streamObj, un.data);
+      const data = inflateChecked(un.data, INNER_DECODE_MAX, expect);
       return data ? this._unpredicted(streamObj, data) : null;
     } catch {
       return null;
@@ -775,7 +929,7 @@ var PdfDoc = class {
    *  uncompressed one is the safer read). Each is parsed once here, to know it
    *  parses and what it is, and read again from the decoded stream when asked for (R41). */
   async loadObjectStreams() {
-    const streams = this._objs.nums((en) => en.k === 2 && en.ty === "ObjStm");
+    const streams = this._objs.nums(2, "ObjStm");
     for (const stm of streams) {
       const st = this._objs.get(stm);
       if (!st || st.t !== "stream") continue;
@@ -813,7 +967,7 @@ var PdfDoc = class {
           const at = first + off;
           const r = parseWindow(data, at, nextAbove(at) - at + 16);
           if (r) {
-            this._objs.put(objNum, { p: Math.trunc(at), w: r.len + 64, stm, g: 0, ...objectFacts(r.value) });
+            this._objs.put(objNum, Math.trunc(at), r.len + 64, stm, 0, r.value);
             added++;
           }
         }
@@ -838,7 +992,7 @@ var PdfDoc = class {
    *  object-number order if the tree cannot be walked (leniency). */
   buildPageIndex() {
     let root = null;
-    const cat = this._objs.nums((en) => en.k === 1 && en.ty === "Catalog")[0];
+    const cat = this._objs.nums(1, "Catalog")[0];
     if (cat !== void 0) {
       this._objs.pin(cat);
       root = this._objs.get(cat).map;
@@ -866,7 +1020,7 @@ var PdfDoc = class {
       walkRef(root.Pages.n, /* @__PURE__ */ new Set([root.Pages.n]));
     }
     if (this.pageIndexByObj.size === 0) {
-      const pages = this._objs.nums((en) => en.ty === "Page" && en.k > 0);
+      const pages = this._objs.nums(3, "Page");
       pages.sort((a, b) => a - b);
       pages.forEach((num, i) => this.pageIndexByObj.set(num, i));
       this.pageCount = pages.length;
@@ -895,7 +1049,7 @@ var PdfDoc = class {
   isEncrypted() {
     if (this._encrypted !== void 0) return this._encrypted;
     let enc = false;
-    for (const num of this._objs.nums((en) => en.sd)) {
+    for (const num of this._objs.standard()) {
       const v = this._objs.peek(num);
       const map = v && (v.t === "dict" ? v.map : v.t === "stream" ? v.dict : null);
       if (map && typeof this.resolve(map.R) === "number") {
@@ -940,7 +1094,7 @@ var PdfDoc = class {
       const r = parseWindow(b, t + 7);
       if (r && r.value && r.value.t === "dict") cands.push([t, r.value.map]);
     }
-    for (const num of this._objs.nums((en) => en.k === 2 && en.ty === "XRef")) {
+    for (const num of this._objs.nums(2, "XRef")) {
       const v = this._objs.peek(num);
       if (v && v.t === "stream") cands.push([v.start, v.dict]);
     }
@@ -955,11 +1109,13 @@ var PdfDoc = class {
    *  never throws. The walk is iterative, so a deep or cyclic file cannot
    *  exhaust the stack. */
   objects() {
+    ARENA = { buf: new ArrayBuffer(32768), off: 0 };
     try {
       const trailers = this._trailers();
       if (!trailers.length) return null;
       const trailer = trailers[trailers.length - 1];
-      const found = /* @__PURE__ */ new Map(), missing = /* @__PURE__ */ new Map(), queue = [];
+      const found = [], missing = /* @__PURE__ */ new Map(), queue = [];
+      const done = new Uint8Array(this._objs.size);
       const refsIn = (v) => {
         for (const stack = [v]; stack.length; ) {
           const x = stack.pop();
@@ -972,16 +1128,24 @@ var PdfDoc = class {
       refsIn({ t: "dict", map: trailer });
       for (let i = 0; i < queue.length; i++) {
         const { n, g } = queue[i];
-        if (found.has(n) || missing.has(n)) continue;
+        const row = this._objs.row(n);
+        if (row >= 0 ? done[row] : missing.has(n)) continue;
         const value = this.resolve({ t: "ref", n, g });
-        if (value === null) missing.set(n, { num: n, gen: g });
-        else found.set(n, { num: n, gen: this._objs.gen(n) ?? 0, value });
+        if (value === null) {
+          missing.set(n, { num: n, gen: g });
+          if (row >= 0) done[row] = 1;
+        } else {
+          done[row] = 1;
+          found.push({ num: n, gen: this._objs.gen(n) ?? 0, value });
+        }
         refsIn(this._objs.get(n));
       }
-      const asc = (m) => [...m.values()].sort((a, b) => a.num - b.num);
-      return { trailer, objects: asc(found), unresolved: asc(missing) };
+      queue.length = 0;
+      return { trailer, objects: found.sort((a, b) => a.num - b.num), unresolved: [...missing.values()].sort((a, b) => a.num - b.num) };
     } catch {
       return null;
+    } finally {
+      ARENA = null;
     }
   }
 };
@@ -1090,6 +1254,14 @@ function tokenizeContent(s, opts = {}) {
   }
   return toks;
 }
+var ARENA = null;
+function newBytes(n) {
+  if (!ARENA || n > 512) return new Uint8Array(n);
+  if (ARENA.off + n > ARENA.buf.byteLength) ARENA = { buf: new ArrayBuffer(32768), off: 0 };
+  const u = new Uint8Array(ARENA.buf, ARENA.off, n);
+  ARENA.off += n;
+  return u;
+}
 function readLiteralBytes(s, pos) {
   pos++;
   let q = pos;
@@ -1099,9 +1271,9 @@ function readLiteralBytes(s, pos) {
     q++;
   }
   if (q < s.length && s.charCodeAt(q) === 41) {
-    const out = new Uint8Array(q - pos);
-    for (let i = 0; i < out.length; i++) out[i] = s.charCodeAt(pos + i);
-    return { bytes: out, pos: q + 1 };
+    const out2 = newBytes(q - pos);
+    for (let i = 0; i < out2.length; i++) out2[i] = s.charCodeAt(pos + i);
+    return { bytes: out2, pos: q + 1 };
   }
   const bytes = [];
   let depth = 1;
@@ -1202,7 +1374,9 @@ function readLiteralBytes(s, pos) {
     bytes.push(c);
     pos++;
   }
-  return { bytes: Uint8Array.from(bytes), pos };
+  const out = newBytes(bytes.length);
+  out.set(bytes);
+  return { bytes: out, pos };
 }
 function readHexBytes(s, pos) {
   pos++;
@@ -1214,7 +1388,7 @@ function readHexBytes(s, pos) {
   }
   pos++;
   if (hex.length % 2) hex += "0";
-  const bytes = new Uint8Array(hex.length / 2);
+  const bytes = newBytes(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
   return { bytes, pos };
 }
