@@ -1982,3 +1982,6 @@ NOTICE K4562 (Bob's, 2026-10-22): web captures within 15 s up to about 8 MB; a l
 
 ## B479 · NOTICE · 2026-10-22 · session_01T8rYkDXW3CsEsgBMqu8Zce · primary
 K4571 (Bob, 2026-10-22): never a silent partial read. A document a member supplies or captures is read whole; a large text file is answered at once and read in the background in pieces until every line can be searched and cited, the member seeing that it is being read and when it is done; any bound that must stay is stated to the member. Folded in rulings-active.md and fix round 6 (entry E-TEXT; an audit of other silent partial reads follows). Words for the 'being read' and 'read in full' lines will come as a HANDOFF with the round; stand-ins until then.
+
+## B480 · ACK · re U450 · 2026-10-22 · session_01T8rYkDXW3CsEsgBMqu8Zce · primary
+U450 (DEC-415) received: placed as N1265 for T52 (K4572), folded into the installer's requirements once DEC-415 is on main at T51's close; no outside install is planned in T51.
