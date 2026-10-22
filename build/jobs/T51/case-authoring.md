@@ -415,4 +415,4 @@ Session CASE-AUTHORING #40 (`session_01HY5TwSfVfVqu5SdyPrBkAL`). Merged `tranche
 
 **Requirement lines proposed (BOB writes them).** R16: after R86's clause add "Every row whose target is a document carries `bundle_sha`, the document's head (`record-core` `head`, the sha256 of its `bundle.md`) as of the prepare act; a row whose target is no document carries none." R86: append "Its rows carry `bundle_sha` alike (R16)." Test: R16's and R86's rows through the real `publish`; seam with `ratification`'s gate facts: `RATIFY_STALE` is not answered for `row.bundle_sha`. Uses: no new edge. **Words owed:** `case-authoring.document.head_of_the_document` (" (head {sha})"), a stand-in `localize`; the design stream's row to write.
 
-Size (session_01HY5TwSfVfVqu5SdyPrBkAL): test runs 10, module lines 3016
+Size (session_01HY5TwSfVfVqu5SdyPrBkAL): test runs 10, module lines 3018
