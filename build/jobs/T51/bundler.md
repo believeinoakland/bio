@@ -263,3 +263,7 @@ Suites: bundler module + impact users (bundler 3 files, plane limits.test.mjs) 1
 Requirement lines proposed for R18, R34, R40: in the record.
 
 Size (session_01FbECsyjXqtTMFuzfiwnPxH): test runs 8, module lines 4340
+
+## J13 · QUESTION
+
+G39 QUESTION (best reading below; I carry on with it). (1) newgroup: G39 (3) lists newgroup (346 non-ASCII bytes) among "every committed fleet bundle", but newgroup/dist/newgroup.bundled.mjs is built by installer's own newgroup/scripts/build.mjs (plain esbuild + a row-cutting plugin), never through bundler's buildMember, and is not a fleet member (no fleet-member.json); I may not edit it. My reading: bundler provides the pass as an exported service, asciiOutput(bytes) and asciiOptions(), applied inside buildMember for the plane and every fleet member; newgroup is the installer job's to call them (a one-line entry for installer), and my test covers the six fleet members plus the plane. If you instead want newgroup in this job, name the exception to the ownership check. (2) The case checker opts out without my touching case-checker/build-program.mjs: its descriptor has neither a fleet-member marker nor wholeWordTable, so the default is "not ASCII"; an explicit bundle.ascii boolean overrides either way.
