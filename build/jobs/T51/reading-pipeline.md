@@ -1,6 +1,6 @@
 # reading-pipeline (T51)
 
-**Status** · session_019VpajmgG3BFzWYz8moVQRC · depth 2 · WORKING · handled B18
+**Status** · session_019VpajmgG3BFzWYz8moVQRC · depth 2 · COMPLETE · handled B18
 
 ## J1 · COMPLETE
 
