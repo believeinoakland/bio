@@ -278,7 +278,7 @@ test("R15 C84: Security draws a button that checks for new signatures now, sends
   const r = await a.press("scanmirror");
   assert.deepEqual(r.sent.filter((x) => x.op === "scanmirror").map((x) => x.body), [{}], "asked once, with no field");
   assert.equal(stateLines(a, /^mirror$/).length, 1, "what it answered is drawn");
-  has(a, "shell.working");
+  has(a, "screen.security.mirror.started");
   assert.ok(reads() > before, "the scanner's state is read again");
   // pressing again clears the earlier answer until the next one comes
   const again = await open("security", { me: ADMIN, table: scanOf({ signatures_age_ms: null }, { scanmirror: () => refuse("SIGNATURES_RUN_RECENT", { translation: "A check was made a few minutes ago." }) }) });
@@ -291,7 +291,8 @@ test("R15 C84: a run asked for inside the minimum gap, or with no scanner bound,
   const recent = await open("security", { me: ADMIN, table: scanOf({ signatures_age_ms: null }, { scanmirror: () => refuse("SIGNATURES_RUN_RECENT", { translation: "the owner's own words for a run started lately" }) }) });
   await recent.press("scanmirror");
   assert.ok(recent.refused, "refused beside the button");
-  assert.equal(recent.refused.text, "the owner's own words for a run started lately", "the refusal's own words while the list lacks the code");
+  assert.equal(recent.refused.key, "refusal.SIGNATURES_RUN_RECENT", "the refusal is drawn by its key, through the shell (K3810)");
+  assert.equal(recent.refused.text, said("refusal.SIGNATURES_RUN_RECENT"), "the list's sentence, now that the list holds the code");
   const absent = await open("security", { me: ADMIN, table: scanOf({ signatures_age_ms: null }, { scanmirror: () => refuse("SCANNER_ABSENT") }) });
   await absent.press("scanmirror");
   assert.equal(absent.refused.text, said("refusal.SCANNER_ABSENT"), "the owner's row's words");

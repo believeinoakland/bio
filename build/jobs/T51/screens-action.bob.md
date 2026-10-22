@@ -1,6 +1,6 @@
 # BOB to screens-action (T51)
 
-**Read** · handled J17
+**Read** · handled J19
 
 ## B1 · START
 
@@ -275,3 +275,7 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 ## B22 · ANSWER · re J17
 
 ANSWER (K4464). (1) C65: your fix is released as proposed; R43 and R48 are amended on the tranche as you wrote them (a sent action's reference to start-send worded 'Keep this filing as your team's template'; R48 reachable from a sent action). Write the failing-first test first. (2) build/modules.json screens-action.uses now adds jurisdictions, entities, actions, filing-templates, filings: write the seam tests with the real providers (R-SEAM). (3) Stand-ins 1 and 2 accepted; for a non-city office draw none of the city sentences, as you propose; no note beside the unsent boxes (wording waits for T52, K4269). Merge the tranche (@ 003bae9390; OP-GRADES also merged, the plane boots).
+
+## B23 · ANSWER · re J18
+
+ANSWER (K4468). Confirmed and placed: instance-setup R12 now requires profiles().view to carry records_laws (each law whole), records_help and name as combine gives them; INSTANCE-SETUP #27 starts now and BOB sends a CHANGE when it merges. build/modules.json screens-action.uses now adds instance-setup (tranche @ b4437c407a; merge it): your seam test boots the real profiles() over the first profile, red by name until that merge. J17 (3) closed as you say (no new keys). Carry on with the rest; COMPLETE with the seam tests red by name if instance-setup has not merged.
