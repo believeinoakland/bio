@@ -108,3 +108,7 @@ B3 done: test copies of product sentences compare with localize(id, en) or the e
 **Deferred / found in other modules.** None deferred. In `plane` (not mine): `release.test.mjs` R24 as above, red on the base.
 
 Size (session_01JskisLomG4e5FjS7cp5cNH): test runs 9, module lines 1012
+
+## J5 · COMPLETE
+
+E2 reader half done. Root cause confirmed: linesOf/readRows/readBoxes held every line of the text (cons-string chains) in detect. detect of staff_roster and org_chart now stream one line at a time (lines.mjs eachLine, staff-roster.mjs readRows keep=false, org-chart.mjs readBoxes keep=false; datesIn no longer copies the text). Failing-first: test/big-text.test.mjs, child with a 26.6 MB, 160,000-line no-roster text held, --max-old-space-size=80: red (OOM) before, green five of five after (~8 s a run). Answers on all fixtures under both views byte-identical before/after; control roster and chart still read. Suites: roster-reader 24/24, docprofile 45/45, plane impact files 298/299 (the one red, release.test.mjs R24 'screen.objective.purpose is held by the words list', fails identically on clean tranche/T51, not this module). run.mjs and ownership: 0 failures. Proposed requirement lines (R1, R3) are in my record. Plane can now turn l77-size into a gate. Details: build/jobs/T51/roster-reader.md.
