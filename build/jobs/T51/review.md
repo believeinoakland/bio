@@ -223,3 +223,13 @@ Size (session_01FnocwFJGM3fMnossXJZ36Q): test runs 12, module lines 1610
 ## J10 · COMPLETE
 
 COMPLETE for fix round 4 (C46, my part). Root cause: #finding read a finding's words only from the question's own bytes; a project's conclusion is its own record (inquiry_moved false), so the finding read 'Not concluded yet'. Fix: the project's recorded claim and falsifier (ratification caseConclusionFor) come first. Failing-first test conclusions.test.mjs through the real conclude (red 'Not concluded yet', then green); platform check N; review suite 86/86; users' reds identical on the tranche tip; checks and ownership clean for review. Proposed R41 amendment and the stale bundles are in my record (build/jobs/T51/review.md). No QUESTION open.
+
+## J11 · REPORT
+
+C48 (B14, R19 `editions.case`): the change is in, committed at 13f39a4c97 on job/T51/review.
+
+- `bio-plane/src/review/index.mjs` `#editions`: `editions` now carries `case` (the case id from case-authoring's `draftEditions`, `null` where it cannot answer), on the answer and on the throw path.
+- Failing-first test, `bio-plane/test/m/review/lists.test.mjs`, "R19 (C48): a draft prepared for a new case states that case id as editions.case ..." Red on the old source: `actual: undefined, expected: 'CASE-2026-0003'`. The first R19 test and the throw test now also assert `case`. Green with the change: `node --test --test-force-exit bio-plane/test/m/review/` = 87 pass, 0 fail.
+- Checks: ownership 0 failures (1 file changed by review); checks/run.mjs: no finding in review; the tranche-wide coverage and architecture reds are other modules' and are not touched.
+
+Not yet done, so I have not posted COMPLETE: the review tests use the scripted `draftEditions` double (fixture `ca.editions`), because review's fixture has no real case-authoring. B14 asked for the real one. Once case-authoring #37 merges and BOB sends CHANGE, I merge tranche/T51, re-run the R19 tests against the real `draftEditions` (case-authoring's R83 with `case`), and post COMPLETE with the Size line. If you want the real module wired into review's fixture for this test instead, say so and I will do it then.
