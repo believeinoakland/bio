@@ -65,13 +65,13 @@ test("R95 (G40 control): the row, the history, `reading_sha256`, the history's p
   const { w, d } = await home(csv4000());
   await w.x.readHeld({ sha: d, kind: "reading", storeName: "bio", env: {} });
   const row = w.one(`SELECT reading, origin FROM readings WHERE capture_sha=?`, d);
-  /* taken from the code before G40 (the reading is deterministic on this fixture: two runs agree) */
-  assert.deepEqual([row.reading.length, sha256HexSync(row.reading)], [2585472, "1755e2e5588b621761021b990a1e38b3a59c6acbbfd776f0a720140e6969c3a3"]);
+  /* taken from the tranche code before G40 after reading-pipeline R35 merged (extraction before and after G40 agree; deterministic: two runs agree) */
+  assert.deepEqual([row.reading.length, sha256HexSync(row.reading)], [2585472, "190adb18a978566d0fe7eb5885ef69ed92121c8a2af54a1bad93885b43b781e0"]);
   const hist = w.rows(`SELECT reading_sha256, reading, provenance FROM reading_history WHERE capture_sha=?`, d);
   assert.equal(hist.length, 1);
   assert.deepEqual([hist[0].reading_sha256, hist[0].reading === row.reading, sha256HexSync(String(hist[0].provenance))],
-                   ["1755e2e5588b621761021b990a1e38b3a59c6acbbfd776f0a720140e6969c3a3", true, "fd686251d57c441d44c159ea60eba1a1c54ff8efa79394c08a41d21290b0a31d"]);
-  assert.deepEqual(w.rows(`SELECT reading_sha256 FROM composed_readings`).map((r) => r.reading_sha256), ["1755e2e5588b621761021b990a1e38b3a59c6acbbfd776f0a720140e6969c3a3"]);
+                   ["190adb18a978566d0fe7eb5885ef69ed92121c8a2af54a1bad93885b43b781e0", true, "fd686251d57c441d44c159ea60eba1a1c54ff8efa79394c08a41d21290b0a31d"]);
+  assert.deepEqual(w.rows(`SELECT reading_sha256 FROM composed_readings`).map((r) => r.reading_sha256), ["190adb18a978566d0fe7eb5885ef69ed92121c8a2af54a1bad93885b43b781e0"]);
   assert.equal(row.origin, "composed");
   assert.equal(JSON.stringify(JSON.parse(row.reading)), row.reading, "the stored text is JSON.stringify's own");
 });
@@ -98,7 +98,7 @@ test("R95 (G40 control): a hook that mutates its argument leaves the stored row 
   assert.deepEqual([done.ok, done.read], [true, true]);
   await new Promise((r) => setTimeout(r, 20));
   const row = w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading;
-  assert.equal(sha256HexSync(row), "1755e2e5588b621761021b990a1e38b3a59c6acbbfd776f0a720140e6969c3a3", "the stored row is untouched by the first hook's changes");
+  assert.equal(sha256HexSync(row), "190adb18a978566d0fe7eb5885ef69ed92121c8a2af54a1bad93885b43b781e0", "the stored row is untouched by the first hook's changes");
   assert.deepEqual(seen.map((x) => x[0]), [A, B], "both ran, in order");
   assert.equal(seen[0][1], row, "the first hook was handed the reading as written");
   assert.equal(seen[1][1], row, "the second hook is handed the same, not what the first left");
