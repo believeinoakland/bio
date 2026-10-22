@@ -824,7 +824,7 @@ export async function deliverOwedRender({ ctx, env, storeName = "bio", answer, s
       try {
         const cap = captureOf(ctx);
         if (typeof cap.recordFetchDone === "function")
-          await cap.recordFetchDone({ session, document: { bundleId: made.bundleId, sha256: sha, locator: address }, opener: viewer, project: project || null, at: filedAt });
+          await cap.recordFetchDone({ session, document: made.bundleId, opener: viewer, project: project || null, at: filedAt });
       } catch { /* the filing stands */ }
     }
     return { ok: true, bundleId: made.bundleId, ...(pending ? { reading_pending: true } : {}) };

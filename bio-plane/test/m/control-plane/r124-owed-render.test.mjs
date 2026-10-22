@@ -162,8 +162,8 @@ test("R124 (G2; CAPTURE #48): a finished fetch is recorded through capture's `re
   const out = await deliverOwedRender({ ctx: r.ctx, env: r.env, storeName: "bio", answer: { ok: true, document: doc }, session: r.session });
   assert.equal(out.ok, true, JSON.stringify(out));
   assert.equal(seen.length, 1);
-  assert.deepEqual([seen[0].session, seen[0].opener, seen[0].project, seen[0].document.bundleId, seen[0].document.sha256],
-                   [r.session, "member:ann", "INQ-2026-0002", out.bundleId, doc.capture.sha256]);
+  assert.deepEqual([seen[0].session, seen[0].opener, seen[0].project, seen[0].document],
+                   [r.session, "member:ann", "INQ-2026-0002", out.bundleId]);
   assert.match(seen[0].at, /^\d{4}-\d\d-\d\dT/);
   const bad = await owingFetch();
   captureOf(bad.ctx).recordFetchDone = async () => { throw new Error("boom"); };
@@ -173,4 +173,16 @@ test("R124 (G2; CAPTURE #48): a finished fetch is recorded through capture's `re
   captureOf(render.ctx).recordFetchDone = async (a) => { spy.push(a); };
   await deliverOwedRender({ ctx: render.ctx, env: render.env, storeName: "bio", answer: { ok: true, document: rendered(render) }, session: render.session });
   assert.equal(spy.length, 0, "a render is not a fetch");
+});
+
+test("R124 (G2, CAPTURE #48 merged): with the real capture the delivery leaves one `fetch_done` row for the session: the document's bundle id, the opener and the project; a render's delivery leaves none", async () => {
+  const r = await owingFetch();
+  const doc = fetched(r, 100);
+  const out = await deliverOwedRender({ ctx: r.ctx, env: r.env, storeName: "bio", answer: { ok: true, document: doc }, session: r.session });
+  assert.equal(out.ok, true, JSON.stringify(out));
+  const rows = [...r.ctx.storage.sql.exec(`SELECT session, document, opener, project FROM fetch_done`)];
+  assert.deepEqual(rows.map((x) => ({ ...x })), [{ session: r.session, document: out.bundleId, opener: "member:ann", project: "INQ-2026-0002" }]);
+  const render = await owing();
+  await deliverOwedRender({ ctx: render.ctx, env: render.env, storeName: "bio", answer: { ok: true, document: rendered(render) }, session: render.session });
+  assert.equal([...render.ctx.storage.sql.exec(`SELECT 1 FROM fetch_done`)].length, 0);
 });

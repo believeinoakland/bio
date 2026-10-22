@@ -592,3 +592,7 @@ B44 read (it crossed J28, which answers B43). With acquisition merged, the G2 se
 ## J29 · REPORT
 
 B44: all three done in J28 (visitor-copy test, r117-held root cause = wall-clock test fixed, contract). G2 seam re-run with acquisition merged: still red (22 s) until plane's fetch kind and capture merge. Nothing else open.
+
+## B45
+
+Merged `tranche/T51` (capture). Capture's `recordFetchDone` takes `document` as a string (the real call refused my object as `recorded: false`, which the spy test could not see): the delivery now passes the document's bundle id. The real-capture test (`r124-owed-render.test.mjs`, last test) finds one `fetch_done` row `{session, document: bundleId, opener, project}` for a fetch and none for a render; red before the fix, green now (9 of 9 in the file). The G2 seam still waits on the plane's `fetch` kind.
