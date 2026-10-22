@@ -34,3 +34,7 @@ T51-254 (docprofile, the words pass) is done on `job/T51/docprofile` @ 157656c64
 Not done, noted only: `docprofile/test/docprofile.test.mjs:501` still matches a fragment ("could not be compared") of the already-localized row at `pipeline.mjs:94`. It is outside my findings and passes; I left it.
 
 Size (session_01Phw2ukvoHBtkdX53EAUpB2): test runs 3, module lines 1114
+
+## J3 · REPORT
+
+REPORT (ctx.pages, committed and pushed on job/T51/docprofile). readText hands doctypeFor (so every type's detect, and via dctx identify) ctx.pages = the supplied pages array itself, the very object the caller gave (identity, never copied), beside ctx.text; each element is I2's page item {page, text, undetermined[]} (a page with no text layer included, text may be '' or absent on a malformed item, so test typeof p.text). It is [] (always an array, never undefined) when the supplied text carries no pages: a bare string or a paragraphs shape. ctx.pages is NOT guaranteed to join to ctx.text: when I2 document is present it is what ctx.text is, and the pages equal it only when position_parts>0; so a type that must agree with text on a producer whose document is not its pages joined should use ctx.text, and may use ctx.pages when ctx.supplied.pages.length matches. Joined form when they do agree: non-empty page texts, newline-joined. parse receives the same ctx.pages. doctypeFor itself adds nothing: it passes ctx through, so a direct caller of doctypeFor supplies pages itself.
