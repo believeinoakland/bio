@@ -140,7 +140,7 @@ function reviewProvider(w) {
 }
 
 export function world({ group = "test-group", provider = true, now = null, record: recordWrap = null, ratification: ratWrap = null,
-                        inquiry: inqWrap = null, deps = {}, realImports = false, standards = null } = {}) {
+                        inquiry: inqWrap = null, deps = {}, realImports = false, standards = null, copying = false } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -161,6 +161,29 @@ export function world({ group = "test-group", provider = true, now = null, recor
      use it itself: the fixture reaches the one instance through inquiry's (below). */
   const prov = provenanceOf(host, { record, membership, now: () => clock.now });
   prov.migrate();
+  /* G9 (fix round 6; K4573): `copying` gives case-carriage the evidence store and the bucket a member document's copy is
+     made from and held in (as the live plane binds them), so a test can run its real `copyBatch` and `copyNow`: bytes held
+     in `w.evidence.held` by digest, copies in `w.bucket.held`. The instance is made here, before any module that reaches it
+     without them (the host keeps the first). */
+  const evidence = copying ? (() => {
+    const held = new Map();
+    return { held,
+      async head(k) { const b = held.get(k); return b ? { size: b.length } : null; },
+      async get(k) { const b = held.get(k); return b ? { arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) } : null; },
+      async put(k, bytes) { held.set(k, Buffer.from(bytes)); return { key: k }; } };
+  })() : null;
+  const bucket = copying ? (() => {
+    const objects = new Map();
+    return { held: objects,
+      async put(k, bytes, opts = {}) { objects.set(k, { bytes: Buffer.from(bytes), opts }); return { key: k }; },
+      async get(k) { const o = objects.get(k); return o ? { arrayBuffer: async () => o.bytes, ...o.opts } : null; },
+      async head(k) { const o = objects.get(k); return o ? { size: o.bytes.length } : null; } };
+  })() : null;
+  if (copying) {
+    record.evidenceStore = () => ({ head: (d) => evidence.head(String(d)), get: (d) => evidence.get(String(d)),
+                                    put: (d, b) => evidence.put(String(d), b) });
+    caseCarriageOf(host, { record, membership, bucket, store: "bio", provenance: prov, now: () => clock.now });
+  }
   /* attestation (layer 3, after provenance), the real one: the attestations a capture holds (its R7), R55 (case-disclosures R2)'s read. */
   const attestation = attestationOf(host, { record, provenance: prov });
   /* capture (layer 3), its late attestations and signed accounts (its R68, R69) and its inbox (R72's read), and sources
@@ -300,10 +323,15 @@ export function world({ group = "test-group", provider = true, now = null, recor
      to an answer R16's read gives case-disclosures in place of the real one, or to a function of the digest answering
      it (one that throws: a read that fails). A test's own `deps.caseCarriage` replaces it whole. */
   w.copies = new Map();
+  if (copying) Object.assign(w, { evidence, bucket });
   const carriage = caseCarriageOf(host);
+  /* `w.copyNow`, when a test sets it, answers `copyNow` in place of the real one (G9: the act's wiring, apart from case-carriage's
+     own copy); unset, the real instance answers, whatever it has. */
   const caseCarriage = new Proxy(carriage, { get: (t, p) => (p === "documentCopy"
     ? (captureSha) => { const a = w.copies.get(captureSha); return typeof a === "function" ? a(captureSha) : a ?? t.documentCopy(captureSha); }
+    : p === "copyNow" && w.copyNow ? w.copyNow
     : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
+  w.cc = carriage;
   const disclosures = caseDisclosuresOf(host, { storage: st, entities, events, lines, money, people, membership,
     now: () => clock.now, record: caseRecord, contradiction, provenance: prov, attestation, capture, sources,
     extraction: ex, caseImport: imports, promotion, inquiry, strength, caseCarriage,
@@ -331,7 +359,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
     ci ??= caseInputsOf(h, { record: caseRecord, membership, publication, publishSchedule, account: cacc, now: clockOf });
     const ca = caseAuthoringOf(h, { record: caseRecord, membership, basisVersions, inputs: ci,
       strength, bias, observations, reevaluation, publication, publishSchedule, ratification: ratWrap ? ratWrap(ratification) : ratification,
-      networkNotices, now: clockOf,
+      networkNotices, now: clockOf, caseCarriage: deps.caseCarriage || caseCarriage,
       disclosures: judgedDisclosures, events,
       ...given((d) => !READ_BY_DISCLOSURES.includes(d) || d === "inquiry" || d === "strength"),
       inquiry: caseInquiry });
