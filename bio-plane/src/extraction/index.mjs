@@ -658,7 +658,7 @@ export class Extraction {
    *  failed transiently, or pages of a scan are still unread and an OCR member is bound to read them. (R82, F9) With
    *  `kind: "ocr"` the stored reading's unread pages are asked of the OCR member, those the stored units do not hold, and the
    *  re-read is written as a composed reading; a member that is down leaves the entry owed, pages it declines end it. */
-  async readHeld({ sha = null, storeName = "bio", env = null, viewer = undefined, kind = null } = {}) {
+  async readHeld({ sha = null, storeName = "bio", env = null, viewer = undefined, kind = null, defer = false } = {}) {
     const digest = typeof sha === "string" ? sha.trim().toLowerCase() : "";
     let home = /^[0-9a-f]{64}$/.test(digest) && this.#provenance && typeof this.#provenance.homeOf === "function"
       ? this.#provenance.homeOf(digest) : null;
@@ -698,6 +698,9 @@ export class Extraction {
       try { whole = ev ? (typeof ev.head === "function" ? await ev.head(digest) : await ev.get(digest)) : null; } catch { whole = null; }
       if (!whole) return left("NO_WHOLE_OBJECT");
     }
+    /* (fix round 5, E2/E6; B18) the door's `defer`: after every gate above, a read that will not fit the request is left to
+       the ledger, which the door writes; nothing is read. */
+    if (defer === true) return left("READING_PENDING");
     const e = env || this.env || {};
     if (ocr) return this.#continueOcr({ digest, heldReading, bundleId: home.bundleId, storeName, env: e, left });
     /* (fix round 5, E2) the text units built are those the index keeps: the budget is the index's bound, never `Infinity`. */
@@ -2096,7 +2099,7 @@ export function extractionOps(x, url, body, env) {
     readheld: () => {
       const sha = q("sha") ?? (body && body.sha);
       if (typeof sha !== "string" || !sha) return noSha(localize("extraction.index.readheld_no_sha", "a read of a held document is about one captured document, named by its fingerprint"));
-      return x.readHeld({ sha, viewer: q("viewer") ?? "", storeName: q("store") || "bio", env });
+      return x.readHeld({ sha, viewer: q("viewer") ?? "", storeName: q("store") || "bio", env, defer: q("defer") === "1" });
     },
     /* R71: the control plane's stamps in the query; `by` is its author stamp. */
     pagetranscribe: () => x.pageTranscribe({ captureSha: q("sha256"), project: q("project") || null, cls: q("cls"),
@@ -2112,7 +2115,7 @@ export const DECLARED_OPS = Object.freeze({
   pagetranscribe: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("extraction.declared.pagetranscribe", "reading-directed: keyed by a capture; at a member's act, the AI reads the pages Civicsmith could not, on the account that pays and within its limits; the text is labeled the AI's reading and undetermined; moves no bundle"),
     fields: { accepts: ["sha256","project"], requires: ["sha256"] } },
   readheld: { classes: ["admin","member"], machineClasses: [], mutating: true, needs: null, weight: "undetermined", description: localize("extraction.declared.readheld", "reading-directed: keyed by a capture's digest; at a member's act, Civicsmith reads a document its record holds whole and holds no reading of, or holds a reading of that found nothing for want of the whole; the reading is machine-made and undetermined, the earlier one kept in the history; moves no bundle"),
-    fields: { accepts: ["sha"], requires: ["sha"] } },
+    fields: { accepts: ["sha","defer"], requires: ["sha"] } },
   pdfstructure: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.pdfstructure.label.document",
     fields: { accepts: ["sha256","ocr"], requires: ["sha256"] } },
 });

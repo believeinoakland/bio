@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bundle, bucket, withEntry, i2, doc, sha } from "./fixture.mjs";
-import { CAPTURE_TEXT_CAPTURE_BOUND } from "../../../src/extraction/index.mjs";
+import { CAPTURE_TEXT_CAPTURE_BOUND, extractionOps } from "../../../src/extraction/index.mjs";
 import { WHOLE_READ_MAX } from "../../../src/reading-pipeline/index.mjs";
 
 const MIB = 1024 * 1024;
@@ -175,4 +175,45 @@ test("R85 (control): a final reading that says it was over the ceiling is not th
   const r = await withEntry(pdfEntry(i2([{ page: 0, text: "alpha" }])), () => made.w.x.readHeld({ sha: made.d }));
   assert.deepEqual([r.read, r.why], [false, "READING_HELD"]);
   assert.equal(made.w.one(`SELECT reading FROM readings WHERE capture_sha=?`, made.d).reading, stored);
+});
+
+/* ---- R86 (B18): `defer=1`, the door's way to leave a read it cannot fit to the ledger ---- */
+
+async function unreadHome(bundleOpts = {}) {
+  const rows = new Map(), evidence = bucket();
+  const w = fresh({ evidence, provenance: register(rows) });
+  bundle(w.s, "INFO-80", bundleOpts);
+  const bytes = new TextEncoder().encode("%PDF-1.7 held whole " + Math.random());
+  const d = sha(bytes);
+  rows.set(d, row("INFO-80", bytes.length));
+  await evidence.put(`bio/captures/${d}`, bytes);
+  const stored = JSON.stringify({ documents: [doc({ digest: d, bytes: bytes.length, ct: "application/pdf", format: "pdf" })] });
+  w.core.readFile = (b, p) => (b === "INFO-80" && p === "data/provenance.json" ? { text: stored } : null);
+  return { w, d };
+}
+const viaDoor = (w, d, viewer, defer) => {
+  const q = new URLSearchParams({ sha: d, store: "bio", viewer, ...(defer ? { defer: "1" } : {}) });
+  return extractionOps(w.x, new URL(`http://x/readheld?${q}`), { sha: d }, {}).readheld();
+};
+const TXT = i2([{ page: 0, text: "alpha beta gamma delta" }]);
+
+test("R86 (B18): with defer=1 a home the caller may see answers READING_PENDING and reads nothing; without it the same home is read", async () => {
+  const { w, d } = await unreadHome();
+  const pending = await withEntry(pdfEntry(TXT), () => viaDoor(w, d, "class:admin", true));
+  assert.deepEqual([pending.ok, pending.read, pending.why], [true, false, "READING_PENDING"]);
+  assert.equal(count(w, "readings", d), 0);
+  const read = await withEntry(pdfEntry(TXT), () => viaDoor(w, d, "class:admin", false));
+  assert.deepEqual([read.ok, read.read], [true, true]);
+});
+
+test("R86 (control): with defer=1 a home she may not see answers as without it, and a home with a reading answers READING_HELD", async () => {
+  const hidden = await unreadHome({ project: "PROJ-9" });
+  const a = await viaDoor(hidden.w, hidden.d, "member:outsider", true);
+  const b = await viaDoor(hidden.w, hidden.d, "member:outsider", false);
+  assert.deepEqual(a, b);
+  assert.equal(a.why, "NO_HOME");
+  const { w, d } = await unreadHome();
+  await withEntry(pdfEntry(TXT), () => viaDoor(w, d, "class:admin", false));
+  const held = await withEntry(pdfEntry(TXT), () => viaDoor(w, d, "class:admin", true));
+  assert.deepEqual([held.read, held.why], [false, "READING_HELD"]);
 });
