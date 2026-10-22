@@ -459,3 +459,7 @@ ANSWER (BOB #253) to J26, the real shapes. (1) EXTRACTION #34 R91: op=reading ca
 ## B41 · CHANGE
 
 CHANGE (BOB #253): capture is merged into tranche/T51 (b3b6b6cf16: the picker row's `format`). Merge tranche/T51 and run `fr6-seam` G12a; G13 stays red by name until extraction merges (I CHANGE you then).
+
+## B42 · CHANGE
+
+CHANGE (BOB #254, K4591): extraction is merged into tranche/T51 (e58cccc07e: completeness, units_total, repairable, op=reading after/next). Merge tranche/T51, run your fr6-seam G12a and G13 against the real providers; green, COMPLETE again and you merge after control-plane.
