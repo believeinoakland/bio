@@ -1682,7 +1682,9 @@ export class CaseAuthoring {
    *  `review` R19's draft rows share: `prepared` the edition number of the unsigned preparation, else null; `published`
    *  `{edition, address}` for the latest ratified edition, else null. `caseId` is the case the draft's identity names; with
    *  none, the case the draft's own preparation produced (publication R40: a document names the draft that made it,
-   *  `draft` an id or a row), else neither is stated. Reads only and never throws. The address is the case page's,
+   *  `draft` an id or a row), else neither is stated. (fix round 4, C48; K4467) `case` is that case id when the record holds
+   *  a preparation or a published edition of it, else null, so a reloaded page reads the prepared document by it even for a
+   *  draft that asks for a new case. Reads only and never throws. The address is the case page's,
    *  `/app/published/<case>/<edition>`, as the screens link it. */
   draftEditions({ caseId = null, draft = null } = {}) {
     try {
@@ -1696,14 +1698,14 @@ export class CaseAuthoring {
           id = made ? made.case_id : "";
         }
       }
-      if (!id) return { prepared: null, published: null };
+      if (!id) return { case: null, prepared: null, published: null };
       const prep = this.#one(`SELECT edition FROM case_documents WHERE case_id=? AND sig_armored IS NULL
                               ORDER BY edition DESC LIMIT 1`, id);
       const pub = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=? AND ratified_at IS NOT NULL`, id);
       const published = pub && pub.m != null ? Number(pub.m) : null;
-      return { prepared: prep ? Number(prep.edition) : null,
+      return { case: prep || published !== null ? id : null, prepared: prep ? Number(prep.edition) : null,
                published: published === null ? null : { edition: published, address: `/app/published/${id}/${published}` } };
-    } catch { return { prepared: null, published: null }; }
+    } catch { return { case: null, prepared: null, published: null }; }
   }
 
 
