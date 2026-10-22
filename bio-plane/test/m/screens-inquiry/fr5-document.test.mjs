@@ -47,7 +47,7 @@ const CHECK = "C-2.8";
 const JARGON = "1 basis leg carries no ground while 1 do: a basis is grouped WHOLE or not at all";
 /* the repairs as citation R21 answers them: each `{key, act, fields, text}` (the keys are citation's own, `citation.index.*`; the page draws them by key) */
 const REPAIRS = [{ key: "citation.index.repair_add_to_group", act: "cite", fields: { ground: "G1" }, text: "Add it to the group G1" },
-  { key: "citation.index.repair_remove_grouping", act: "inquiryground", fields: { target: Q, grounds: [] }, text: "Take the grouping off, so the answer reads as its weakest citation" }];
+  { key: "citation.index.repair_remove_grouping", act: "inquiryground", fields: { target: Q, grounds: [] }, text: "Take the grouping off" }];
 const refusedCite = (extra = {}) => ({ status: 200, json: { ok: true, result: { ok: false, reason: "BASIS_REFUSED", code: "BASIS_REFUSED",
   findings: [{ check: CHECK, code: null, detail: JARGON, repairs: [] }], repairs: REPAIRS, ...extra } } });
 const REF = `${D}#x`;
