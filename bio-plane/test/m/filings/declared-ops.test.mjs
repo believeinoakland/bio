@@ -88,6 +88,22 @@ test("R68 filings declares templatesave: its requires alone raise no refusal nam
     refusedNaming: named({ filing: ["NO_SUCH_FILING"], name: ["TEMPLATE_NAME_REFUSED"], template: ["TEMPLATE_NAME_REFUSED"] }) });
 });
 
+test("R68 filings declares jointsignatory: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  /* a partner's signature needs an approved draft of an action naming the partner; the fingerprint is the approval's */
+  const world = async () => {
+    const env = await mkWorld()();
+    env.x.revise(env.A, (t) => t.replace("---\n\nAn action.", 'partners:\n  - role: "chair"\n    organisation: "Harbour Watch"\n---\n\nAn action.'));
+    env.d = env.x.f.filingPrepare({ action: env.A, text: TEXT, language: "en", preparer: V("bo"), viewer: V("bo") });
+    env.ap = await env.x.f.filingApprove({ filing: env.d.id, author: V("bo"), viewer: V("bo") });
+    if (!env.ap.ok) throw new Error("fixture approval refused: " + JSON.stringify(env.ap).slice(0, 300));
+    return env;
+  };
+  const adapt = (fields, env) => ({ ...placed(fields, env), ...("body_sha" in fields ? { body_sha: env.ap.body_sha } : {}) });
+  await holds("jointsignatory", { call: mk("jointsignatory", "jointsignatory", CY, world, adapt),
+    values: { organisation: "Harbour Watch", account: "by their own email" },
+    refusedNaming: named({ filing: ["NO_SUCH_FILING"], organisation: ["NOT_A_PARTNER"], body_sha: ["JOINT_FINGERPRINT_MISMATCH"] }) });
+});
+
 test("R68 every op the module declares has a class, a mutating flag, a weight and a description, and the declaration is frozen", async () => {
   const declared = Object.keys(DECLARED_OPS);
   assert.ok(declared.length > 0);
