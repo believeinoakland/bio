@@ -65,3 +65,4 @@
 - Document · rows owed by screens-inquiry (stood in by the nearest held row): `act.readheld.label.document` "Read it now", `screen.document.readnow.refused.NO_HOME`, `.NO_WHOLE_OBJECT`, `screen.document.cite.repair.says`, `screen.document.a34.para_same` / `.para_differs` (paragraph legs not drawn until they exist) · SCREENS-INQUIRY J22 · 2026-10-22
 - Document · "Read it now" asks the member a reason first (op-grades marks `readheld` Reasoned; extraction does not accept `reason`): whether a reason is wanted · SCREENS-INQUIRY J22 (a) · 2026-10-22
 - Security · `act.scanmirror.does` says "the group's file scanner" · JOURNEY-CHECK J8 · 2026-10-22
+- Money · `refusal.MONEY_BAD_PERIOD` has no design row (money's stand-in "That period is not one this team's money records can read."); the screen draws the nearest held refusal and the plane's reason · SCREENS-INVESTIGATE J24 · 2026-10-22
