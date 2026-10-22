@@ -346,3 +346,13 @@ COMPLETE (B20, C48 R83 case). draftEditions and the pre-flight's editions state 
 **The smallest thing I need:** BOB's word that case-carriage's `copyNow` is merged on `tranche/T51`; I then merge it, re-run the seam test (expected green) and report.
 
 Size (session_01ArzPvzaCjrWtx5Dq9bDqeE): test runs 8, module lines 2989
+
+## J19 · COMPLETE
+
+COMPLETE (B21, G9). op=publish makes a small member document's copy in the act: publishAct (case-authoring index.mjs ~:373) awaits case-carriage.copyNow({shas, maxBytes: 2 MiB}) for the digests a DOCUMENT_COPY_PENDING refusal names, then runs publishCase once more; larger files keep the alarm path; the pre-flight is unchanged. Root cause: case-disclosures index.mjs:486 asks the synchronous documentCopy, and only the scheduler tick makes a copy.
+
+Failing-first (copy-now.test.mjs: the real publishcase op over the real case-carriage and case-disclosures, a 356-byte text upload): RED now by name (DOCUMENT_COPY_PENDING) because case-carriage.copyNow is not yet merged on tranche/T51; GREEN against a local, reverted shim of copyNow. Wiring tests and the 5 MiB control (still PENDING, the alarm's copyBatch makes it) are green.
+
+Suites: case-authoring 234 tests, 233 pass, 1 red (the seam test, by name); review + screens-publish 347 tests, 345 pass, 0 fail. Checks: architecture, coverage (56 of 56), words (count 18421 unchanged), ownership 0 failures; format has 1 failure in build/plan/next.md:38 (BOB's file). Proposed R85 is in my record.
+
+Smallest thing I need: tell me when case-carriage's copyNow is merged; I merge tranche/T51, re-run the seam test and report. The contract I call: copyNow enqueues each named digest not queued, skips any over maxBytes, awaits the copies, never rejects. Record: build/jobs/T51/case-authoring.md.
