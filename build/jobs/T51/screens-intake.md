@@ -396,4 +396,4 @@ Merged `tranche/T51` (nothing of `screens-intake`'s files changed by it). **Root
 
 **Seam note (R-SEAM):** the screen's side of D3 is met against the answers the door's contract states; whether `promote`'s answer carries `reading_pending` depends on control-plane R123 (job 10); the test scripts that answer as R123 words it. Nothing deferred; nothing found in another module.
 
-Size (session_01SfzLLc62odCrKHhMBdRKdu): test runs 9, module lines 2462
+Size (session_01SfzLLc62odCrKHhMBdRKdu): test runs 9, module lines 2441
