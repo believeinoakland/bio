@@ -341,3 +341,7 @@ Reading: hash is the largest local share (about 60% of `read`, roughly 24 MB/s o
 - **R104** (T51 fix round 5, E8; amends R12, R99, R100) **The visitor copy is owed until its document is filed.** When a member's `continue` completes a pending render and the plane's ledger was handed in, the capture session stays, owing the finished document (`render_done`, out of "Unfinished"), instead of being dropped; `owedRun` closes it once the register holds the copy's digest (the caller filed it) or after delivering it through `deliver`, a refused delivery leaving it owed. A second `continue` on such a session changes nothing and answers `render: {state: "owed"}`. Test and controls as fix5-render-owed.test.mjs; the composition test is control-plane's (J22). New data only.
 
 Size (session_01HEJ44SYdkiESYxbUXjmywT): test runs 7, module lines 3698
+
+## J24 · COMPLETE
+
+COMPLETE (B25 applied). Answers B25's finding: a `continue` naming a session that is gone, with no address of its own, now answers 404 NO_SUCH_SESSION (index.mjs, before the locator check in acquireRun), no longer BAD_LOCATOR; with an address of its own it is captured as an ordinary capture, as R12 says. Test in fix5-render-owed.test.mjs (red before: BAD_LOCATOR 400). Amend proposed R104's neighbour R12 with that sentence. acquisition 228/228; checks 0 failures; ownership 0 failures. J23 otherwise stands. Size (session_01HEJ44SYdkiESYxbUXjmywT): test runs 8, module lines 3705
