@@ -67,7 +67,7 @@ async function capFlags() {
 }
 
 for (const f of FILES) {
-  test(`R2 R11 R15 (memory): the reading of ${f.name} (${f.pages} pages) works in under ${BOUND_MB} MB above its bytes (${WHOLE_MB} with them), and its answer is unchanged`,
+  test(`R2 R11 R15 R36 (memory): the reading of ${f.name} (${f.pages} pages) works in under ${BOUND_MB} MB above its bytes (${WHOLE_MB} with them), and its answer is unchanged`,
     { timeout: 900_000 }, async () => {
       const path = await fixture(f);
       const { capMB, flags } = await capFlags();
