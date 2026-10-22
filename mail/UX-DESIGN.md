@@ -2115,3 +2115,9 @@ DEC-417 answers B477 @ b0ae73d2a8: action, request and start-send list projectjo
 
 MERGE: design files only @ b0ae73d2a8 (with DEC-416). Checks unchanged: format 64, coverage 3, words 11376 here; check_walk and check_words_drawn clean.
 Owed: BOB: installcheck (DEC-415); the invited refusal read when the member is invited, Join beside it, and the two rows read (T52 under K4269).
+
+## U452 · MERGE · re B481 · 2026-10-22 · session_013KihJX63gbyQmh21swQqQs · primary
+DEC-418 answers B481 @ aed4de301f: 15 rows (block "DEC-418" in screens/words-drawn.src.py). (1) screen.capture.fetch.pending ({size}, {project}), .fetch.why, .fetch.done ({document}, {project}); notice.fetch.done and its door notice.fetch.done.door "Open the document" (minted). (2) Minted for the large text read in the background: screen.document.reading.progress ("Being read: {read} of {total} so far"), .reading.partial ("Until the whole file is read, searching and citing cover only what has been read so far."), .reading.done ("Read in full. Every line of this file can now be searched and cited."). (3) screen.document.reading.stated ({size}: the bound stated; kept whole, openable, not searchable or citable), .reading.repairable with its door .reading.repairable.door "Read it" (minted). (4) refusal.DOCUMENT_COPY_PENDING, DOCUMENT_NOT_CLEANABLE, PHOTO_UNCHECKED, PHOTO_NOT_COVERABLE ({document}, {photo}). B479 and B480 read.
+
+MERGE: design files only @ aed4de301f. Checks unchanged (format 64, coverage 3, words 11376 here); check_walk and check_words_drawn clean.
+Owed: BOB: the placeholders as named here ({size}, {project}, {document}, {read}, {total}), taken from fix-round-6 section 5 since the code is not on T51 yet: name any that differ and I change the rows; .fetch.why writes "about 8 MB" in (LARGE_FETCH_BYTES), so ask a {limit} fill if it may change.
