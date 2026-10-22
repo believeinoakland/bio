@@ -58,7 +58,7 @@ export const TIMELINE_PARTS = Object.freeze({
       };
       const fold = (summary, inner) => `<details class="mk-details" open><summary>${cs.w(summary)}</summary>${inner}</details>`;
       const chain = m.grade_determined && m.grade ? `<p>${cs.grade("capture", m.grade)}</p>` : `<p>${cs.w("progression.chain.undetermined")}</p>`;
-      return `<p class="mk-sub"><b>${cs.esc((m.entity && m.entity.label) || "")}</b> · ${cs.w("progression.followed", { progression: cs.esc(m.label || ""), n: String(m.definition_version) })}</p>`
+      return `<p class="mk-sub"><b>${cs.esc((m.entity && m.entity.label) || "")}</b> · ${cs.w("progression.followed", { progression: m.label || "", n: String(m.definition_version) })}</p>`
         + `<p class="mk-note">${cs.w("progression.finding.never")}</p>`
         + P.actSec(cs.sec("progression.steps", cs.sheet(stages.map(stepRow).join("")), { help: S + "tip.steps" }), "instance")
         + cs.sec("progression.chain", chain, { help: S + "tip.sure" })

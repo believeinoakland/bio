@@ -98,11 +98,11 @@ function render(cs, view) {
   const vk = view.data.vocab && view.data.vocab.state === "ok" && view.data.vocab.value && view.data.vocab.value.vocabularies ? view.data.vocab.value.vocabularies.event_kinds : null;
   const kindOptions = vk && Array.isArray(vk.values) ? vk.values.map((k) => (cs.w(S + "evkind." + k) !== cs.esc(S + "evkind." + k) ? [k, S + "evkind." + k]
     : { value: k, text: String((vk.words && vk.words[k] && vk.words[k].word) || k) })) : null;
-  const kindChoice = kindOptions ? cs.choice("tl-kind", S + "evkind", kindOptions, {}) : cs.state("vocab", view, () => `<p class="cs-state" data-state="failed" role="alert">${cs.w("state.failed", { reason: cs.w("shell.noanswer") })}</p>`);
+  const kindChoice = kindOptions ? cs.choice("tl-kind", S + "evkind", kindOptions, {}) : cs.state("vocab", view, () => `<p class="cs-state" data-state="failed" role="alert">${cs.w("state.failed", { reason: { html: cs.w("shell.noanswer") } })}</p>`);
   const precisions = ["day", "minute", "second", "edtf"];
   const datedRow = (f) => cs.row("", `<span class="mk-date">${P.when(cs, f.upper_bound ? { precision: "upper_bound", end: f.value } : { value: f.value, precision: f.precision })}</span>`
     + (kinds.includes(f.kind) ? ` <b>${cs.w(S + "datekind." + f.kind)}</b>` : ""), "",
-  cs.w(S + "dated.meta", { precision: precisions.includes(f.precision) ? cs.w("label.timeprecisions." + f.precision) : "", document: cs.esc(titleOf(f.capture_sha) || P.plain(cs, S + "source")), grade: cs.esc(String(f.grade || "")) }));
+  cs.w(S + "dated.meta", { precision: precisions.includes(f.precision) ? cs.w("label.timeprecisions." + f.precision) : "", document: titleOf(f.capture_sha) || P.plain(cs, S + "source"), grade: String(f.grade || "") }));
   if (!proj || proj.state !== "ok") out.push(cs.state("project", view, () => ""));
   else if (!tl) out.push(`<p>${cs.w(S + "noset")}</p>`);
   else out.push(cs.state(tl, (v) => {
@@ -130,7 +130,7 @@ function render(cs, view) {
     const known = view.parts.options(view, "people", (v) => v.rows, (r) => ({ value: r.entity, text: r.name || "" }));
     if (inst.state !== "ok" || ((inst.value && inst.value.items) || []).length) out.push(P.actSec(cs.sec("progression.follows", cs.state(inst, (v) => cs.sheet(((v && v.items) || []).map((m) => cs.row("",
       `<b>${P.refOf(cs, [id, "matter", m.progression_key, m.entity_id].join("/"), (known.find((o) => o.value === m.entity_id) || {}).text || P.plain(cs, "connection.node.unnamed"), [m.label || ""], "timeline")}</b>`
-      + `<br><span class="mk-small">${cs.w("progression.followed", { progression: cs.esc(m.label || ""), n: String(m.definition_version) })} · ${cs.w("progression.threadedto")}: ${String(m.placed_count)} / ${String(m.stage_count)}`
+      + `<br><span class="mk-small">${cs.w("progression.followed", { progression: m.label || "", n: String(m.definition_version) })} · ${cs.w("progression.threadedto")}: ${String(m.placed_count)} / ${String(m.stage_count)}`
       + (m.finding_count ? ` · ${cs.w("progression.findings")}: ${String(m.finding_count)}` : "") + "</span>")).join(""))), { help: S + "tip.progressions" }), "instance"));
   }
   /* R33 (5): "Dated in the documents": a third list apart from the two lanes; it creates no event and is never merged into a lane */

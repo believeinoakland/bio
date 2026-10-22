@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, fill, press, TRAIL, VOCAB, PLANE_EVENT_KINDS, P, ENT, SHA, SHA2, MSR, M1, M2, word, drew, notDrew } from "./fixtures.mjs";
+import { open, main, actsIn, fill, press, TRAIL, FACTS, moneyAnswer, VOCAB, PLANE_EVENT_KINDS, P, ENT, SHA, SHA2, MSR, M1, M2, word, drew, notDrew } from "./fixtures.mjs";
 
 const optsOf = (p, id) => p.doc.getElementById(id).querySelectorAll("option").map((o) => [o.getAttribute("value"), o.textContent]);
 const rowOf = (p, key) => main(p).querySelectorAll("tr.cs-r").find((r) => r.querySelector(`[data-id="${key}"]`));
@@ -56,7 +56,7 @@ test("R4 R23 C57 committed against paid chooses the contract from the contracts 
 /* ---------------------------------------------------------------- C8 */
 
 const NEWFACT = "MNY-2026-new";
-const factOf = (id) => ({ ok: true, fact_id: id, amount: "310000.00", as_read: "310,000", currency: "USD", sign: "+", precision: "exact", kind: "allocation", phase: "actual", stage: "paid", basis: "budgetary",
+const factOf = (id) => ({ fact_id: id, amount: "310000.00", as_read: "310,000", currency: "USD", sign: "+", precision: "exact", kind: "allocation", phase: "actual", stage: "paid", basis: "budgetary",
   period: { from: "2021-07-01", to: "2022-06-30", fiscal: "FY2021-22" }, from: { as_written: "Sewer Fund 3100" }, to: { as_written: "General Fund 1010" }, codes: [], concerns: [], source: { capture_sha: SHA, extent: { kind: "document" } },
   citation: "page 88", method: "typed", grade: { reading: "B" }, by: "member:ana", at: "2026-10-01T09:00:00Z", withdrawn: null, question: null });
 const proposedTrail = () => TRAIL({ proposals: [{ proposal_id: 1, fact_id: NEWFACT, method: "member", by: "member:ana", at: "2026-10-21T09:00:00Z", label: "proposed",
@@ -66,7 +66,7 @@ const figureForm = { "mf-amount": "310,000", "mf-asread": "Overhead allocation â
 test("R4 C8 a figure read in for a trail is proposed to that trail (the money propose act) and drawn from the trail's record: after a reload it is a row that can be included", async () => {
   let held = false;
   const plane = { recordfact: ok({ ok: true, fact_id: NEWFACT }), moneysetpropose: (r) => { held = true; return ok({ ok: true, set_id: r.body.setId, fact_id: r.body.factId, proposal_id: 1 }); },
-    moneyset: () => ok(held ? proposedTrail() : TRAIL()), money: (r) => ok(r.query.id === NEWFACT ? factOf(NEWFACT) : { ok: true, ...TRAIL().inclusions.find((i) => i.fact_id === r.query.id) && { fact_id: r.query.id } }), include: ok({ ok: true }) };
+    moneyset: () => ok(held ? proposedTrail() : TRAIL()), money: (r) => ok(moneyAnswer(r.query.id === NEWFACT ? factOf(NEWFACT) : FACTS[r.query.id] || { fact_id: r.query.id })), include: ok({ ok: true }) };
   const p = await open(money, { plane });
   fill(p, figureForm);
   await press(p, "recordfact", { el: main(p).querySelectorAll('button[data-act="recordfact"]')[0] });

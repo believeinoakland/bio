@@ -89,10 +89,13 @@ export const TIMELINE = (o = {}) => ({ ok: true, set: [ENT],
   ours: { label: "what we did", sources: [{ source: "actions", items: [{ at: "2026-09-04", label: "We requested the rent schedules", ref: ACT, kind: "request" }], truncated: false }] }, ...o });
 export const EVENT = (id) => ({ ok: true, found: true, event: { event_id: id, kind: "vote", attestations: [{ attestation_id: 1, capture_sha: SHA, extent: { kind: "pdf-page", page: 6 }, grade: "B" }],
   participants: [{ participant_id: 1, entity_id: ORG, role: "decider", superseded: false }] } });
-const fact = (id, o = {}) => ({ ok: true, fact_id: id, amount: "4200000.00", as_read: "4,200,000", currency: "USD", sign: "+", precision: "exact", kind: "transfer", phase: "adopted", basis: "budgetary",
+/** A money fact as `money` holds it (the `fact` of its answer). */
+const fact = (id, o = {}) => ({ fact_id: id, amount: "4200000.00", as_read: "4,200,000", currency: "USD", sign: "+", precision: "exact", kind: "transfer", phase: "adopted", basis: "budgetary",
   period: { from: "2021-07-01", to: "2022-06-30", precision: "day", zone: "UTC", fiscal: "FY2021-22" }, from: { fund: "ENT-2026-0500", as_written: "Sewer Fund 3100" }, to: { fund: "ENT-2026-0501", as_written: "General Fund 1010" },
   codes: [], concerns: [], source: { capture_sha: SHA, extent: { kind: "pdf-page", page: 87 } }, citation: "page 88", method: "typed", grade: { reading: "B", reading_basis: "direct capture", parties: {} },
   by: "member:ana", at: "2026-10-01T09:00:00Z", withdrawn: null, question: null, ...o });
+/** `money`'s answer as the plane gives it: `{ok, found, fact}` (the fact is not the answer itself; C8). */
+export const moneyAnswer = (f) => ({ ok: true, found: true, fact: f });
 export const FACTS = { [M1]: fact(M1), [M2]: fact(M2, { amount: "4750000.00", phase: "actual", stage: "paid", period: { from: "2021-07-01", to: "2022-06-30", fiscal: "FY2021-22" } }),
   [M3]: fact(M3, { amount: "310000.00", kind: "allocation", phase: "actual", stage: "paid", to: null }) };
 export const TRAIL = (o = {}) => ({ ok: true, found: true, set: { set_id: MSR, purpose: "trail", label: "Stormwater fund transfers, FY2023", concerns: P, by: "member:ana", at: "2026-10-01T09:00:00Z" },
@@ -173,7 +176,7 @@ export function plane(o = {}) {
     timeline: ok(TIMELINE()),
     event: (r) => ok(EVENT(r.query.id)),
     moneyset: ok(TRAIL()),
-    money: (r) => ok(FACTS[r.query.id] || { ok: false, reason: "NO_SUCH_FACT" }),
+    money: (r) => ok(FACTS[r.query.id] ? moneyAnswer(FACTS[r.query.id]) : { ok: false, reason: "NO_SUCH_FACT" }),
     calculation: (r) => ok(r.query.id === "CALC-2026-0002" ? ESTIMATE : CALCULATION()),
     spotcheck: ok(SPOT()),
     entity: (r) => ok(r.query.id === PROC ? ENTITY : PERSON_ENTITY),

@@ -18,7 +18,6 @@ import { rereading } from "./rereads.mjs";
 function reads(view) {
   const id = String(view.subject || "");
   return {
-    vocab: { op: "affordances", query: {} },
     people: { op: "peopledirectory", query: { limit: "200" } },
     entity: { op: "entity", query: { id }, subject: true, empty: (v) => !v || v.found === false },
     naming: { op: "readingname", query: { entity: id } },
@@ -44,8 +43,6 @@ function render(cs, view) {
   const p = d && d.state === "ok" ? d.value : null;
   const name = p && Array.isArray(p.names) && p.names.length ? p.names[0].name : (ent && ent.label) || id;
   const out = [cs.title(name, { thing: { kind: "person", facts: p ? (p.names || []).slice(1).map((n) => n.name) : [] } })];
-  const vocab = view.data.vocab && view.data.vocab.state === "ok" ? view.data.vocab.value : null;
-  const groups = P.groupMap(vocab);
   const org = !!(ent && ent.kind && ent.kind !== "person");
   const who = P.options(view, "people", (v) => v.rows, (r) => ({ value: r.entity, text: r.name || "" }));
   const nameOf = (x) => (who.find((o) => o.value === x) || {}).text || P.plain(cs, "connection.node.unnamed");
@@ -70,7 +67,7 @@ function render(cs, view) {
   const aliasSec = () => {
     const aliases = ((ent && ent.aliases) || []).filter((a) => !a.withdrawn);
     const aliasRow = (a) => cs.row("", `<b>${cs.esc(a.alias)}</b>`,
-      `<span class="mk-small">${/^member:/.test(String(a.declared_by || "")) ? cs.w("entity.alias.by", { who: cs.esc(P.who(cs, a.declared_by)), date: cs.date(a.at || "", { year: true }) }) : cs.w("entity.alias.roster")}</span>`
+      `<span class="mk-small">${/^member:/.test(String(a.declared_by || "")) ? cs.w("entity.alias.by", { who: P.who(cs, a.declared_by), date: cs.date(a.at || "", { year: true }) }) : cs.w("entity.alias.roster")}</span>`
       + (!a.canonical && /^member:/.test(String(a.declared_by || "")) ? cs.act("aliaswithdraw", { label: "act.owed_aliaswithdraw.label.person", data: { alias: a.alias } }) : ""));
     return cs.sec("entity.alias.title", (aliases.length ? cs.sheet(aliases.map(aliasRow).join("")) : "")
       + cs.field("person-alias", org ? "entity.alias.label.org" : "entity.alias.label", { help: "entity.alias.help" })
@@ -99,7 +96,7 @@ function render(cs, view) {
     const docs = nm ? (nm.documents || []).filter((x) => x && x.capture_sha) : [];
     if (!docs.length) return "";
     const docRow = (x) => cs.row("", `<b>${P.refOf(cs, x.bundle_id || x.capture_sha, x.label || x.ref || P.plain(cs, S + "source"), [x.matched_alias || ""], x.bundle_id ? "document" : "capture")}</b>`
-      + ` <span class="mk-small">${x.page !== undefined && x.page !== null ? cs.w("entity.naming.row", { page: String(x.page), alias: cs.esc(x.matched_alias || "") }) : cs.esc(x.matched_alias || "")}</span>`,
+      + ` <span class="mk-small">${x.page !== undefined && x.page !== null ? cs.w("entity.naming.row", { page: String(x.page), alias: x.matched_alias || "" }) : cs.esc(x.matched_alias || "")}</span>`,
     cs.act("resolve", { label: "entity.naming.match", data: { sha: x.capture_sha, ref: x.ref } })
       + cs.act("resolvetestify", { label: "entity.naming.testify", data: { sha: x.capture_sha, ref: x.ref } }));
     return cs.sec("entity.naming.title", `<p class="mk-small">${cs.w("entity.naming.says")}</p>` + cs.sheet(docs.map(docRow).join(""))
@@ -148,7 +145,7 @@ function render(cs, view) {
   if (!(gq.state === "ok" && none(gq.value))) out.push(`<div class="mk-acts">${cs.act("explore", { label: "act.explore.label.person", data: { entity: id } })}</div>`);
   out.push(cs.sec(S + "connections", cs.state(gq, (g) => (none(g)
     ? `<p class="cs-state" data-state="empty">${cs.w("person.graph.none")}</p>`
-    : P.graph(cs, g, { idonly: P.idonlyMap(P.unnamedIds(g) ? P.later(cs, view, "idonly", "entityidonly", { query: { ids: P.unnamedIds(g) } }) : null), groupOf: (k) => groups[k] || null, trail: Array.isArray(view.ui.trail) && view.ui.trail.length ? view.ui.trail : [centre], act: "explore", names: { [id]: name },
+    : P.graph(cs, g, { idonly: P.idonlyMap(P.unnamedIds(g) ? P.later(cs, view, "idonly", "entityidonly", { query: { ids: P.unnamedIds(g) } }) : null), groupOf: ((groups) => (k) => groups[k] || null)(P.groupsFor(cs, view, g, P.later)), trail: Array.isArray(view.ui.trail) && view.ui.trail.length ? view.ui.trail : [centre], act: "explore", names: { [id]: name },
       words: { cited: S + "g.cited", declared: S + "g.declared", hunch: S + "g.hunch", nosource: S + "g.nosource", attached: "screen.explore.attached" } })))));
   /* R22: a section that holds nothing is not drawn (loading and failed are still drawn) */
   if (!p || (p.posts || []).length) out.push(cs.sec(S + "positions", cs.state(d, (v) => {
@@ -222,7 +219,7 @@ function render(cs, view) {
       const dated = (l) => (span(l.valid) || cs.mark("gap", "undetermined"));
       const srcNow = view.ui["choice:kp-src"] === "own" ? "own" : "doc";
       out.push(cs.sec(K + "heading", `<p>${cs.w(K + "intro.a")} ${cs.w(K + "intro.b")}</p>`
-        + (kept.length ? cs.sheet(kept.map((x) => cs.row(gradeOf({ assertion: x.line.assertion }), `${cs.esc(x.office)} ${x.line.kind === "custodian_of" ? cs.w(K + "line", { subject: cs.esc(subjectName(x.line.to)) }) : cs.w(K + "line.responsible", { subject: cs.esc(subjectName(x.line.to)) })} · ${dated(x.line)}`,
+        + (kept.length ? cs.sheet(kept.map((x) => cs.row(gradeOf({ assertion: x.line.assertion }), `${cs.esc(x.office)} ${x.line.kind === "custodian_of" ? cs.w(K + "line", { subject: subjectName(x.line.to) }) : cs.w(K + "line.responsible", { subject: subjectName(x.line.to) })} · ${dated(x.line)}`,
           x.line.line_id ? cs.act("linewithdraw", { label: "act.linewithdraw.label.person", data: { line: x.line.line_id } }) : "",
           cite(x.line.basis && x.line.basis.captureSha ? { captureSha: x.line.basis.captureSha, extent: x.line.basis.extent } : null))).join("")) : "")
         + cs.choice("kp-office", K + "office.label", offices, {}) + `<p class="mk-small">${cs.w(K + "office.help")}</p>`
@@ -264,10 +261,10 @@ function render(cs, view) {
   const claimRow = (c, i) => {
     const kind = ["same_as", "not_same_as", "unsure"].includes(c.kind) ? c.kind : "unsure";
     const otherId = c.a === id ? c.b : c.a;
-    const because = bases.includes(c.basis) ? cs.w(S + "same.because" + sfx, { grade: cs.esc(c.grade || ""), basis: cs.w(S + "basis.row." + c.basis) }) : cs.esc(c.why || "");
+    const because = bases.includes(c.basis) ? cs.w(S + "same.because" + sfx, { grade: c.grade || "", basis: { html: cs.w(S + "basis.row." + c.basis) } }) : cs.esc(c.why || "");
     return cs.row(cs.grade("subject", c.grade || ""),
       `<b>${cs.w(orgPage ? S + "claim.kind." + kind + ".org" : "label.identityclaimkinds." + kind)}</b> · ${P.refOf(cs, otherId, nameOf(otherId), [])} · ${because}`
-      + ` <span class="mk-small">${cs.w(S + "claim.by", { by: cs.esc(P.who(cs, c.by)), date: cs.date(c.at || "") })}</span>`
+      + ` <span class="mk-small">${cs.w(S + "claim.by", { by: P.who(cs, c.by), date: { html: cs.date(c.at || "") } })}</span>`
       + (c.why && bases.includes(c.basis) ? ` <span class="rec">${cs.esc(c.why)}</span>` : ""),
       `<details class="mk-details" open><summary>${cs.w("act.withdrawidentityclaim.label.person")}</summary><p class="mk-small">${cs.w("act.withdrawidentityclaim.does")}</p>`
         + cs.field("person-wd-reason-" + i, S + "claim.withdraw.reason", { area: true, rec: true })
