@@ -5,7 +5,7 @@ import * as F from "./fixtures.mjs";
 import { docxEntry } from "../../../src/docx.mjs";
 import { pptxEntry } from "../../../src/pptx.mjs";
 import { xlsxEntry } from "../../../src/formats-xlsx.mjs";
-import { csvEntry, CSV_SHEET_NAME, MEASURED_CSV_TEXT_BOUND_BYTES } from "../../../src/csv.mjs";
+import { csvEntry, CSV_SHEET_NAME } from "../../../src/csv.mjs";
 
 const NS = 'xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"';
 const ref = (sheet, cell) => ({ kind: "sheet-cell", ref: `${sheet}!${cell}`, sheet, cell });
@@ -70,7 +70,7 @@ test("R30 over the size guard: no sheet is walked, so no cells are given (sheets
   const x = await xlsxEntry.text(F.xlsx({ sheets: [{ name: "S", data: { rows: [{ r: 1, cells: [{ r: "A1", v: "1" }] }] }, cd: F.OVER }] }));
   assert.equal(x.document, null);
   assert.deepEqual(x.sheets, []);
-  const big = new Uint8Array(MEASURED_CSV_TEXT_BOUND_BYTES + 2).fill(0x61);
+  const big = new Uint8Array(32 * 1024 * 1024 + 2).fill(0x61);
   const c = await csvEntry.text(big);
   assert.equal(c.document, null);
   assert.deepEqual(c.sheets, []);

@@ -164,7 +164,7 @@ test("R20 text() over the guard carries the guard marker verbatim; with no reada
   assert.equal(over.ok, true);
   assert.equal(over.document, null);
   assert.deepEqual(over.sheets, []);
-  assert.deepEqual(over.undetermined, [sizeGuard(OVER_BOUND)]);
+  assert.deepEqual(over.undetermined, [{ ...sizeGuard(OVER_BOUND), final: true }]);
   assert.deepEqual(over.counts, { chars: 0, cells: 0, formulas: 0, undetermined: 1 });
   for (const [bytes, reason] of [
     [buildZip(withCd(members("ods"), "content.xml", { crc: 9 })), "crc_mismatch"],

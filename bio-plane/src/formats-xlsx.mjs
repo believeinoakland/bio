@@ -60,13 +60,18 @@
  *
  * THE SIZE BOUND is COFF-6's measured metric, enacted in ooxml.mjs: 20 MiB
  * of DECLARED UNCOMPRESSED text-part bytes (sheets + sharedStrings), summed
- * from the central directory BEFORE inflation. Over the bound, the container
- * and metadata treatment still runs in full — links from rels (their cell
- * joins honestly undetermined), hidden SHEETS still flagged from the small
- * workbook.xml — but text extraction is refused as a STATED
- * text-undetermined carrying the guard's own marker verbatim. Streaming to
- * 64 MiB is DEFERRED (COFF-6's landed line) and deliberately not built.
- * Every part read passes ooxml.mjs's part cap (R12, F18).
+ * from the central directory BEFORE inflation. It is what this entry may hold
+ * in memory at once. Over it, up to ooxml.mjs's STREAMED_TEXT_BOUND_BYTES, the
+ * text is READ IN PIECES (R35, F7): each sheet part is inflated in windows and
+ * walked a run of whole rows at a time, so a sheet is never held whole and its
+ * rows are consumed as they come; the typed `cells` list (R30) is not made
+ * (`cells` is null, as over the guard) and the answer says it was read in
+ * pieces (`piecewise`). Over the streamed ceiling the text is refused as a
+ * STATED text-undetermined carrying the guard's marker, its size and
+ * `final: true`; the container and metadata treatment still runs in full —
+ * links from rels (their cell joins honestly undetermined), hidden SHEETS
+ * still flagged from the small workbook.xml. Every part read passes
+ * ooxml.mjs's part cap (R12, F18).
  *
  * ACTIVE CONTENT (R32): `active` on structure() and text(), from docx.mjs's
  * one `activeContent` builder, Excel 4.0 macro sheets included; .xlsm/.xltm/
@@ -79,8 +84,8 @@
 import {
   hasZipMagic, readContainer, readPart, discriminate,
   CONTENT_TYPES_PART, relsPartFor, normalizePartName, walkRels,
-  sizeGuard, declaredTextBytes, CORE_PROPERTIES_PART, readCoreProperties,
-  withContainerImages,
+  declaredTextBytes, CORE_PROPERTIES_PART, readCoreProperties,
+  withContainerImages, textPlan, readPartPieces, pieceWhy, cutBefore,
 } from "./ooxml.mjs";
 import { linkWrapper } from "./subresources.mjs";
 import { withMetadata, activeContent, withActive, detectByContentType } from "./docx.mjs";
@@ -516,35 +521,55 @@ async function xlsxParts(bytes) {
 
   /* THE MEASURED BOUND (COFF-6, enacted in ooxml.mjs): declared uncompressed
    * text-part bytes — the sheets and sharedStrings — summed from the central
-   * directory BEFORE any inflation. `guard` is null under the bound, the
-   * stated marker over it (the docx.mjs pattern, so the two entries carry the
-   * refusal identically). */
+   * directory BEFORE any inflation. Under the bound the parts are read whole.
+   * Over it, up to the streamed ceiling, they are read in PIECES (R35): the
+   * shared strings now, as a list, and each sheet when text() or structure()
+   * walks it, so no sheet is held. Over the ceiling `guard` is the stated
+   * marker (the docx.mjs pattern, so the two entries carry the refusal
+   * identically). */
   const sheetParts = new Set(sheets.map((s) => s.part).filter(Boolean));
   const isTextPart = (n) => sheetParts.has(n) || n === SHARED_STRINGS_PART;
   const declared = declaredTextBytes(container, isTextPart);
-  const guardR = sizeGuard(declared.total);
-  const guard = guardR.ok ? null : guardR;
+  const plan = textPlan(declared.total);
+  const guard = plan.read === "none" ? plan.guard : null;
+  const piecewise = plan.read === "pieces" ? plan.piecewise : null;
 
   let sharedStrings = null;
-  if (!guard) {
+  if (plan.read !== "none") {
     /* sharedStrings, if the package has one. Absence is normal; presence
      * that cannot be read is a stated undetermined every t="s" cell will
      * inherit rather than a guessed string. */
     if (container.byName.has(SHARED_STRINGS_PART)) {
-      const ss = await readPart(b, container, SHARED_STRINGS_PART);
-      if (ss.ok) sharedStrings = elements(UTF8.decode(ss.bytes), "si").map((si) => textRuns(si.inner));
-      else undetermined.push({ part: SHARED_STRINGS_PART, why: ss.why });
+      if (plan.read === "whole") {
+        const ss = await readPart(b, container, SHARED_STRINGS_PART);
+        if (ss.ok) sharedStrings = elements(UTF8.decode(ss.bytes), "si").map((si) => textRuns(si.inner));
+        else undetermined.push({ part: SHARED_STRINGS_PART, why: ss.why });
+      } else {
+        const strings = [];
+        const ss = await readPartPieces(b, container, SHARED_STRINGS_PART, SI_CUT, (piece) => {
+          for (const si of elements(piece, "si")) strings.push(textRuns(si.inner));
+        });
+        if (ss.ok) sharedStrings = strings;
+        else undetermined.push({ part: SHARED_STRINGS_PART, ...pieceWhy(ss) });
+      }
     }
     for (const sheet of sheets) {
       if (!sheet.part) { undetermined.push({ part: `(sheet ${sheet.name})`, why: sheet.why }); continue; }
+      if (plan.read === "pieces") {
+        /* Walked in pieces by text() and structure(), each time it is asked
+           for; a sheet the package does not hold is stated now. */
+        if (container.byName.has(sheet.part) || container.entries.some((e) => normalizePartName(e.name) === sheet.part)) sheet.pieces = true;
+        else { sheet.why = "part_absent"; undetermined.push({ part: sheet.part, why: "part_absent" }); }
+        continue;
+      }
       const read = await readPart(b, container, sheet.part);
       if (read.ok) sheet.xml = UTF8.decode(read.bytes);
       else { sheet.why = read.why; undetermined.push({ part: sheet.part, why: read.why }); }
     }
   }
-  /* Over the bound, nothing is inflated and nothing is pushed here: the guard
-   * marker itself is the statement, carried by structure()'s envelope and by
-   * text() verbatim (the docx.mjs pattern). */
+  /* Over the streamed ceiling, nothing is inflated and nothing is pushed here:
+   * the guard marker itself is the statement, carried by structure()'s
+   * envelope and by text() verbatim (the docx.mjs pattern). */
 
   /* docProps/core.xml: absent is normal OPC; present-but-unreadable is a
    * stated undetermined, distinct from absence. */
@@ -561,7 +586,7 @@ async function xlsxParts(bytes) {
 
   return {
     ok: true, format: "xlsx", variant: disc.variant ?? null, bytes: b, container,
-    sheets, definedNames, tables, rels, sharedStrings, core, active, declared, guard, undetermined,
+    sheets, definedNames, tables, rels, sharedStrings, core, active, declared, guard, piecewise, undetermined,
   };
 }
 
@@ -572,33 +597,20 @@ async function xlsxParts(bytes) {
  *   hiddenRows, hiddenCols, hyperlinks
  * ------------------------------------------------------------------ */
 
-function walkSheetXml(xml) {
-  const rows = elements(xml, "row").map((row) => ({
-    r: row.attrs.r != null ? parseInt(row.attrs.r, 10) : null,
-    hidden: row.attrs.hidden === "1" || row.attrs.hidden === "true",
-    cells: elements(row.inner, "c").map((c) => {
-      const f = elements(c.inner, "f");
-      const v = elements(c.inner, "v");
-      const is = elements(c.inner, "is");
-      return {
-        cell: c.attrs.r ?? null,
-        t: c.attrs.t ?? null,
-        f: f.length ? decodeXmlEntities(f[0].inner) : null,
-        v: v.length ? decodeXmlEntities(v[0].inner) : null,
-        is: is.length ? textRuns(is[0].inner) : null,
-      };
-    }),
-  }));
-  const hiddenRows = rows.filter((r) => r.hidden && r.r != null).map((r) => r.r);
-  const hiddenCols = elements(xml, "col")
-    .filter((c) => c.attrs.hidden === "1" || c.attrs.hidden === "true")
-    .map((c) => ({ min: parseInt(c.attrs.min, 10), max: parseInt(c.attrs.max, 10) }));
-  const hyperlinks = elements(xml, "hyperlink").map((h) => ({
-    cell: h.attrs.ref ?? null,
-    relId: h.attrs.id ?? null,
-    location: h.attrs.location ?? null,
-    display: h.attrs.display ?? null,
-  }));
+/* The cuts for a sheet part read in pieces: between two rows (or a row and
+ * the first hyperlink), so every piece holds whole elements. The expressions
+ * are built here, not shared, and carry no state between cuts. */
+const SHEET_CUT = cutBefore(/<(?:[\w.-]+:)?(?:row|hyperlink)\b/g);
+const SI_CUT = cutBefore(/<(?:[\w.-]+:)?si\b/g);
+
+/* A sheet's walk, one run of whole elements at a time: `feed(xml)` takes the
+ * whole part or a piece of it that ends between two rows, `done()` the totals.
+ * `onRow` is called with each row as it is walked. The whole part given to
+ * `feed` once is the walk this function has always made. */
+function sheetWalker(onRow) {
+  const hiddenRows = [];
+  const hiddenCols = [];
+  const hyperlinks = [];
   /* COFF-11 — THE USED EXTENT, accumulated over the cells this walk has
      already read. It is taken from the CELLS and not from the `<row>`
      elements: a producer may declare a row to carry formatting and put no
@@ -610,15 +622,71 @@ function walkSheetXml(xml) {
      which is a MEASURED zero (this sheet holds nothing) and is a different
      fact from the NULL the bound carries when the format fixes no maximum. */
   let usedRows = 0, usedCols = 0;
-  for (const row of rows) {
-    if (!row.cells.length) continue;
-    if (Number.isInteger(row.r) && row.r > usedRows) usedRows = row.r;
-    for (const c of row.cells) {
-      const col = a1Col(c.cell);
-      if (col != null && col > usedCols) usedCols = col;
-    }
-  }
-  return { rows, hiddenRows, hiddenCols, hyperlinks, usedRows, usedCols };
+  return {
+    feed(xml) {
+      for (const el of elements(xml, "row")) {
+        const row = {
+          r: el.attrs.r != null ? parseInt(el.attrs.r, 10) : null,
+          hidden: el.attrs.hidden === "1" || el.attrs.hidden === "true",
+          cells: elements(el.inner, "c").map((c) => {
+            const f = elements(c.inner, "f");
+            const v = elements(c.inner, "v");
+            const is = elements(c.inner, "is");
+            return {
+              cell: c.attrs.r ?? null,
+              t: c.attrs.t ?? null,
+              f: f.length ? decodeXmlEntities(f[0].inner) : null,
+              v: v.length ? decodeXmlEntities(v[0].inner) : null,
+              is: is.length ? textRuns(is[0].inner) : null,
+            };
+          }),
+        };
+        if (row.hidden && row.r != null) hiddenRows.push(row.r);
+        if (row.cells.length) {
+          if (Number.isInteger(row.r) && row.r > usedRows) usedRows = row.r;
+          for (const c of row.cells) {
+            const col = a1Col(c.cell);
+            if (col != null && col > usedCols) usedCols = col;
+          }
+        }
+        onRow(row);
+      }
+      for (const c of elements(xml, "col")) {
+        if (c.attrs.hidden === "1" || c.attrs.hidden === "true") {
+          hiddenCols.push({ min: parseInt(c.attrs.min, 10), max: parseInt(c.attrs.max, 10) });
+        }
+      }
+      for (const h of elements(xml, "hyperlink")) {
+        hyperlinks.push({
+          cell: h.attrs.ref ?? null,
+          relId: h.attrs.id ?? null,
+          location: h.attrs.location ?? null,
+          display: h.attrs.display ?? null,
+        });
+      }
+    },
+    done: () => ({ hiddenRows, hiddenCols, hyperlinks, usedRows, usedCols }),
+  };
+}
+
+/** The whole sheet at once: `{ rows, hiddenRows, hiddenCols, hyperlinks, usedRows, usedCols }`. */
+function walkSheetXml(xml) {
+  const rows = [];
+  const w = sheetWalker((row) => rows.push(row));
+  w.feed(xml);
+  return { rows, ...w.done() };
+}
+
+/* One sheet part walked, whole (its XML in hand) or in pieces (R35): `onRow`
+ * gets every row as it is walked, and the answer is the walk's totals, or
+ * `{ failed: why }` when the part could not be read to its end. A caller whose
+ * answer is `failed` has been given rows of a part that is not the part, and
+ * drops what it built from them. */
+async function walkSheetPart(parts, sheet, onRow) {
+  const w = sheetWalker(onRow);
+  if (sheet.xml != null) { w.feed(sheet.xml); return w.done(); }
+  const read = await readPartPieces(parts.bytes, parts.container, sheet.part, SHEET_CUT, (piece) => w.feed(piece));
+  return read.ok ? w.done() : { failed: pieceWhy(read) };
 }
 
 /** One cell's DISPLAYED value (the cached claim the published sheet shows).
@@ -699,12 +767,37 @@ async function xlsxStructure(parts) {
       for (const r of sheet.rels.relationships) if (r.id) relTargets.set(r.id, r);
     }
 
-    if (sheet.xml == null) {
+    /* The sheet walked: whole (its XML in hand) or in pieces (R35), the
+     * formulas gathered as the rows come (DEC-5, below) and no row kept. A
+     * sheet read in pieces that cannot be read to its end is stated, with the
+     * reason, and its links fall back to the rels alone. */
+    const formulas = [];
+    let walked = null, failedWhy = null;
+    if (sheet.xml != null || sheet.pieces) {
+      walked = await walkSheetPart(parts, sheet, (row) => {
+        for (const c of row.cells) {
+          if (c.f == null) continue;
+          formulas.push({
+            kind: "formula",
+            source: c.cell ? sheetCellRef(sheet.name, c.cell) : null,
+            formula: c.f,
+            value: c.v, // the cached result, null when the file carries none — stated, not invented
+          });
+        }
+      });
+      if (walked.failed) {
+        failedWhy = walked.failed.why;
+        evUndetermined.push({ part: sheet.part, ...walked.failed });
+        walked = null;
+      }
+    }
+
+    if (walked == null) {
       /* Over the bound, or an unreadable sheet: the rels still name every
        * EXTERNAL target this sheet carries, so the outbound graph survives —
        * but the cell join lives in the unread sheet XML, so each link's
        * element reference is honestly null and the reason is on the record. */
-      const why = guard == null ? (sheet.why ?? "sheet_unreadable") : "over_size_bound";
+      const why = failedWhy ?? (guard == null ? (sheet.why ?? "sheet_unreadable") : "over_size_bound");
       for (const [, r] of relTargets) {
         if (!r.external) continue;
         const partition = classifyUrl(r.target);
@@ -719,7 +812,6 @@ async function xlsxStructure(parts) {
       continue;
     }
 
-    const walked = walkSheetXml(sheet.xml);
     const usedRels = new Set();
 
     /* Hyperlinks: the sheet XML knows the CELL, the rels know the TARGET. */
@@ -775,17 +867,7 @@ async function xlsxStructure(parts) {
     /* DEC-5: formulas BESIDE their cached values — two named fields on one
      * item, never collapsed. The value in the TEXT stream stays the cached
      * <v> (what the sheet displays); the derivation lives here, cell-keyed. */
-    for (const row of walked.rows) {
-      for (const c of row.cells) {
-        if (c.f == null) continue;
-        evItems.push({
-          kind: "formula",
-          source: c.cell ? sheetCellRef(sheet.name, c.cell) : null,
-          formula: c.f,
-          value: c.v, // the cached result, null when the file carries none — stated, not invented
-        });
-      }
-    }
+    for (const f of formulas) evItems.push(f);
 
     /* DEC-5: hidden rows and columns, flagged per sheet. */
     if (walked.hiddenRows.length) {
@@ -831,6 +913,7 @@ async function xlsxStructure(parts) {
     notes.push("text_parts_over_bound");
     evUndetermined.push({ part: "(text parts: worksheets + sharedStrings)", why: "over_size_bound", guard });
   }
+  if (parts.piecewise) notes.push("text_read_in_pieces");
 
   /* Defined names -> anchor (workbook-scoped: no single source cell, and a
    * null source is a statement, never a guess). */
@@ -900,7 +983,7 @@ async function xlsxStructure(parts) {
  * text(parts) -> the I2 text shape
  * ------------------------------------------------------------------ */
 
-function xlsxText(parts) {
+async function xlsxText(parts) {
   /* The shapes below are IC-2's pageless degenerate form AS ACCEPTED from
    * docx.mjs (paragraphs[] there, sheets[] here — the per-unit list named for
    * what the unit IS; `ok`/`container`/`document`/`undetermined`/`counts`
@@ -908,10 +991,10 @@ function xlsxText(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "xlsx", reason: parts?.why ?? "PARTS_ABSENT" };
   }
-  const { sheets, sharedStrings, guard } = parts;
+  const { sheets, sharedStrings, guard, piecewise } = parts;
 
   if (guard) {
-    /* Over the measured bound: the sizeGuard marker carried VERBATIM inside
+    /* Over the streamed ceiling: the sizeGuard marker carried VERBATIM inside
      * `undetermined` (the docx.mjs pattern — ooxml.mjs shaped the marker for
      * exactly this), never a silent truncation. */
     return {
@@ -926,30 +1009,36 @@ function xlsxText(parts) {
   const allUndetermined = [];
   let cellCount = 0, formulaCount = 0;
 
+  /* A sheet that gave no text: the marker, and the sheet as a unit with no
+   * text and no cells. */
+  const unreadable = (sheet, why, extra = {}) => {
+    const marker = { sheet: sheet.index, cell: null, reason: why, ...extra };
+    /* COFF-11: the BOUND still stands — this is a sheet of an XLSX workbook
+       whether or not its part could be read, so an impossible address is
+       still impossible and is still refused. The USED range is NULL rather
+       than 0, because nothing walked it: a zero here would say "this sheet
+       holds nothing", which is the one thing an unread sheet cannot say. */
+    outSheets.push({ sheet: sheet.index, name: sheet.name, hidden: sheet.hidden,
+      rows: XLSX_GRID_ROWS, cols: XLSX_GRID_COLS, usedRows: null, usedCols: null,
+      range: null, text: "", cells: null, undetermined: [marker] });
+    allUndetermined.push(marker);
+  };
+
   for (const sheet of sheets) {
-    if (sheet.xml == null) {
-      const marker = { sheet: sheet.index, cell: null, reason: sheet.why ?? "sheet_unreadable" };
-      /* COFF-11: the BOUND still stands — this is a sheet of an XLSX workbook
-         whether or not its part could be read, so an impossible address is
-         still impossible and is still refused. The USED range is NULL rather
-         than 0, because nothing walked it: a zero here would say "this sheet
-         holds nothing", which is the one thing an unread sheet cannot say. */
-      outSheets.push({ sheet: sheet.index, name: sheet.name, hidden: sheet.hidden,
-        rows: XLSX_GRID_ROWS, cols: XLSX_GRID_COLS, usedRows: null, usedCols: null,
-        range: null, text: "", cells: null, undetermined: [marker] });
-      allUndetermined.push(marker);
-      continue;
-    }
-    const walked = walkSheetXml(sheet.xml);
+    if (sheet.xml == null && !sheet.pieces) { unreadable(sheet, sheet.why ?? "sheet_unreadable"); continue; }
     const undetermined = [];
     const lines = [];
-    const typed = [];
-    for (const row of walked.rows) {
+    /* R30's typed cells: a sheet read in pieces lists none (`cells` is null,
+       as over the guard), because they are the one thing here that grows with
+       the sheet in objects, not in text (R35). */
+    const typed = piecewise ? null : [];
+    let sheetCells = 0, sheetFormulas = 0;
+    const walked = await walkSheetPart(parts, sheet, (row) => {
       const vals = [];
       for (const c of row.cells) {
-        if (c.f != null) formulaCount++;
+        if (c.f != null) sheetFormulas++;
         /* R30: every cell holding a value or a formula, typed as declared. */
-        if (c.v != null || c.f != null || (c.t === "inlineStr" && c.is != null)) {
+        if (typed && (c.v != null || c.f != null || (c.t === "inlineStr" && c.is != null))) {
           const tc = typedCell(c, sheet.name, sharedStrings);
           typed.push({ ref: c.cell, cell: tc.cell });
           if (tc.why === "cell_type_unknown") undetermined.push({ sheet: sheet.index, cell: c.cell, reason: tc.why });
@@ -960,11 +1049,18 @@ function xlsxText(parts) {
           continue;
         }
         if (r.value == null || r.value === "") continue;
-        cellCount++;
+        sheetCells++;
         vals.push(r.value);
       }
       if (vals.length) lines.push(vals.join("\t"));
+    });
+    if (walked.failed) {
+      const { why, ...rest } = walked.failed;
+      unreadable(sheet, why, rest);
+      continue;
     }
+    cellCount += sheetCells;
+    formulaCount += sheetFormulas;
     const text = lines.join("\n");
     /* COFF-11 / IC-100 — the sheet's own extent, in TWO figures that are two
        different facts: `rows`/`cols` is the BOUND (the grid this format makes
@@ -976,7 +1072,7 @@ function xlsxText(parts) {
       usedRows: walked.usedRows, usedCols: walked.usedCols,
       /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
       range: usedSheetRange(sheet.name, walked.usedRows, walked.usedCols),
-      text, cells: rowColumnOrder(typed).map((x) => x.cell), undetermined });
+      text, cells: typed ? rowColumnOrder(typed).map((x) => x.cell) : null, undetermined });
     for (const u of undetermined) allUndetermined.push(u);
   }
 
@@ -992,6 +1088,8 @@ function xlsxText(parts) {
     undetermined: allUndetermined,
     counts: { chars: document.length, cells: cellCount, formulas: formulaCount,
       undetermined: allUndetermined.length },
+    /* R35: said when the text was read in pieces, the figures it was judged by. */
+    ...(piecewise ? { piecewise } : {}),
   };
 }
 
@@ -1037,6 +1135,6 @@ export const xlsxEntry = {
       ? await xlsxParts(partsOrBytes)
       : partsOrBytes;
     /* FW-19 / IC-124: `images` under xl/media/, exhaustive or NULL. */
-    return withContainerImages(withActive(withMetadata(xlsxText(parts), parts), parts), parts, "xl/media/");
+    return withContainerImages(withActive(withMetadata(await xlsxText(parts), parts), parts), parts, "xl/media/");
   },
 };

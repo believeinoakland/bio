@@ -156,6 +156,101 @@ export function sizeGuard(declaredBytes, bound = MEASURED_OOXML_TEXT_BOUND_BYTES
 }
 
 /* ------------------------------------------------------------------ *
+ * Text read in pieces (F7; fix round 4b, K4487; R35)
+ * ------------------------------------------------------------------ *
+ *
+ * The 20 MiB bound above is what a reader may HOLD in memory at once: one part
+ * inflated whole, decoded whole and walked whole. A document whose declared
+ * text is over it is no longer refused. Its text parts are inflated in
+ * windows, decoded as they come and handed to the caller in PIECES (about
+ * `TEXT_PIECE_CHARS` each, cut where the caller says a piece may end), so the
+ * reader holds a piece, never the part. What the caller keeps of a piece is
+ * its own business; the formats keep the text they return and no more.
+ *
+ * `STREAMED_TEXT_BOUND_BYTES` is the ceiling of the declared text a read in
+ * pieces takes on: 32 MiB. It is set from what the readers MEASURED to hold,
+ * not from a round number. A read in pieces holds the text it returns (the
+ * document and each unit's own copy of it), so the heap it needs grows with the
+ * text, about twice over for docx and pptx; the old-space limit at which each
+ * format's read of its largest fixture (random letters and digits, one-byte
+ * strings, the worst ratio of text to markup) first completed reliably,
+ * node v26, MiB declared -> MB of heap, with the package's own bytes held beside
+ * it (T51 job record, "Measurements"):
+ *        30      45      63          package bytes at 30 / 45 / 63
+ *   xlsx 80      64      80          20 / 30 / 42
+ *   docx 96      120     160         21 / 32 / 45
+ *   pptx 80      112     152         22 / 34 / 47
+ *   csv  56      72      88          29 / 43 / 61
+ * A Worker's object holds 128 MB of heap and buffers together, with the caller's
+ * own work beside this one, and a read the object does not survive returns
+ * nothing and is retried into the same end (F10). So the ceiling is where the
+ * worst format (docx, pptx) still has room: 32 MiB. A text over it is not read,
+ * and is STATED: its size, the ceiling, and `final: true` (the document's own
+ * size, not a failure that a later try could mend). It is raised by measuring
+ * on the plane, not by arguing here; xlsx and csv alone would take more. */
+export const STREAMED_TEXT_BOUND_BYTES = 32 * 1024 * 1024;
+/* The decoded text a piece is cut at (when a cut point exists), and the most a
+ * reader will carry waiting for one: a part with no cut point in this much text
+ * cannot be read in pieces. */
+const TEXT_PIECE_CHARS = 1 << 20;
+const TEXT_PIECE_MAX_CHARS = 8 << 20;
+/* The window the deflated (or stored) bytes are fed through. */
+const INFLATE_WINDOW = 1 << 20;
+
+/** How a text read of `declaredBytes` DECLARED uncompressed text goes (R35):
+ *    { read: "whole" }                      at or under MEASURED_OOXML_TEXT_BOUND_BYTES;
+ *    { read: "pieces", piecewise }          over it, up to STREAMED_TEXT_BOUND_BYTES;
+ *    { read: "none", guard }                over that: nothing is read, and `guard` states why.
+ *  `piecewise` is what a text answer carries to say it was read in pieces
+ *  (`declared`, `bound`, `boundName`, `metric`); `guard` is `sizeGuard`'s
+ *  marker for the streamed ceiling, with `final: true`. A size that is not a
+ *  number is never shown to be under a bound. Never throws. */
+export function textPlan(declaredBytes) {
+  const number = typeof declaredBytes === "number";
+  if (number && declaredBytes <= MEASURED_OOXML_TEXT_BOUND_BYTES) return { read: "whole" };
+  if (number && declaredBytes <= STREAMED_TEXT_BOUND_BYTES) {
+    return { read: "pieces", piecewise: {
+      declared: declaredBytes, bound: MEASURED_OOXML_TEXT_BOUND_BYTES,
+      boundName: "MEASURED_OOXML_TEXT_BOUND_BYTES", metric: "declared_uncompressed_text_part_bytes",
+    } };
+  }
+  return { read: "none", guard: {
+    ok: false, text: "undetermined", why: "over_size_bound", size: declaredBytes, bound: STREAMED_TEXT_BOUND_BYTES,
+    boundName: "STREAMED_TEXT_BOUND_BYTES", metric: "declared_uncompressed_text_part_bytes", final: true,
+  } };
+}
+
+/** A cut for `readPartPieces`: the position after the last `>` in the buffer,
+ *  for a reader that tokenises its own markup and carries an unfinished tag
+ *  into the next piece. 0 when there is none. */
+export const cutAfterTag = (buf) => buf.lastIndexOf(">") + 1;
+
+/** A cut for `readPartPieces`: the position of the last match of `re` (a
+ *  global expression for the START of an element the reader takes whole), so a
+ *  piece ends between two such elements. 0 when there is none. */
+export function cutBefore(re) {
+  return (buf) => {
+    re.lastIndex = 0;
+    let at = 0, m;
+    while ((m = re.exec(buf)) !== null) {
+      if (m.index > 0) at = m.index;
+      if (m[0].length === 0) re.lastIndex++;
+    }
+    return at;
+  };
+}
+
+/** A refusal of `readPartPieces` as the readers state it. A member with no place
+ *  to end a piece (`piece_unbounded`) is stated in the words every reader has
+ *  always used for a text it did not read for its size, `over_size_bound`, with
+ *  that size, `final: true` and the mechanism in `detail`; any other refusal is
+ *  stated as it is. */
+export function pieceWhy(read) {
+  if (read?.why !== "piece_unbounded") return { why: read?.why };
+  return { why: "over_size_bound", detail: "piece_unbounded", size: read.size, final: true };
+}
+
+/* ------------------------------------------------------------------ *
  * The archive limits (N688; K1844, K1852 (2), K1881, K1903), by name
  * ------------------------------------------------------------------ *
  *
@@ -454,18 +549,10 @@ async function inflateRaw(u8, limit) {
   }
 }
 
-/** Read ONE member's bytes, verified. Sizes and CRC come from the central
- *  directory (the authority), the data offset from the local header it points
- *  at. Every failure is a NAMED reason:
- *    part_absent · local_header_invalid · member_truncated ·
- *    unsupported_compression_method · inflate_failed · size_mismatch ·
- *    crc_mismatch
- *  A success is `{ ok:true, bytes }` and the bytes are PROVEN to be the whole
- *  member (length AND CRC-32 against the central directory) — a partial
- *  inflate can never pass as whole. */
-export async function readPart(bytes, container, name) {
-  const b = toBytes(bytes);
-  const want = normalizePartName(name);
+/* The member's compressed bytes: caps first (F18), then its local header.
+ * `{ ok:true, entry, raw }` or the named refusal `readPart` and
+ * `readPartPieces` both answer. */
+function locatePart(b, container, want) {
   const entry = findEntry(container, want);
   if (!entry) return { ok: false, why: "part_absent", name: want };
 
@@ -488,20 +575,38 @@ export async function readPart(bytes, container, name) {
   const dataStart = lh + 30 + nameLen + extraLen;
   const dataEnd = dataStart + entry.compressedSize;
   if (dataEnd > b.length) return { ok: false, why: "member_truncated", name: want };
+  if (entry.method !== 0 && entry.method !== 8) {
+    return { ok: false, why: "unsupported_compression_method", method: entry.method, name: want };
+  }
+  return { ok: true, entry, raw: b.subarray(dataStart, dataEnd) };
+}
 
-  const raw = b.subarray(dataStart, dataEnd);
+/** Read ONE member's bytes, verified. Sizes and CRC come from the central
+ *  directory (the authority), the data offset from the local header it points
+ *  at. Every failure is a NAMED reason:
+ *    part_absent · local_header_invalid · member_truncated ·
+ *    unsupported_compression_method · inflate_failed · size_mismatch ·
+ *    crc_mismatch
+ *  A success is `{ ok:true, bytes }` and the bytes are PROVEN to be the whole
+ *  member (length AND CRC-32 against the central directory) — a partial
+ *  inflate can never pass as whole. */
+export async function readPart(bytes, container, name) {
+  const b = toBytes(bytes);
+  const want = normalizePartName(name);
+  const found = locatePart(b, container, want);
+  if (!found.ok) return found;
+  const { entry, raw } = found;
+
   let out;
   if (entry.method === 0) {
     out = raw.slice();
-  } else if (entry.method === 8) {
+  } else {
     const got = await inflateRaw(raw, entry.uncompressedSize);
     if (got === null) return { ok: false, why: "inflate_failed", name: want };
     if (got.over !== undefined) {
       return { ok: false, why: "size_mismatch", name: want, expected: entry.uncompressedSize, got: got.over };
     }
     out = got.bytes;
-  } else {
-    return { ok: false, why: "unsupported_compression_method", method: entry.method, name: want };
   }
   if (out.length !== entry.uncompressedSize) {
     return { ok: false, why: "size_mismatch", name: want, expected: entry.uncompressedSize, got: out.length };
@@ -510,6 +615,101 @@ export async function readPart(bytes, container, name) {
     return { ok: false, why: "crc_mismatch", name: want };
   }
   return { ok: true, bytes: out };
+}
+
+/** Read ONE member as TEXT, in pieces (R35). `onPiece(text)` is called with
+ *  each piece in order; a piece ends where `cut(buffer)` says (the position a
+ *  piece may end at, 0 when the buffer holds none yet), so the caller is given
+ *  whole elements, or whole tokens, as it asks. The member is inflated in
+ *  windows (the host's `DecompressionStream`, or the stored bytes as they
+ *  are), decoded as UTF-8 the way `UTF8.decode` decodes it, and never held
+ *  whole: the reader carries a piece and the bytes of the window it is in.
+ *
+ *  Verification is `readPart`'s, with the same refusals (R5, R31), but it
+ *  comes AFTER the pieces: the length and the CRC-32 are checked as the
+ *  member ends, so a caller whose answer is `{ ok:false }` has been given
+ *  pieces of a member that is not the member, and discards everything it
+ *  built from them. Inflation stops one byte past the declared size
+ *  (`size_mismatch`), as `readPart`'s does. A buffer of
+ *  `TEXT_PIECE_MAX_CHARS` with no cut point in it is
+ *  `{ ok:false, why:"piece_unbounded", name, size, final:true }`: the member
+ *  cannot be read in pieces, and the answer states its size. Success is
+ *  `{ ok:true, size }`. Async; never throws (`onPiece` throwing is
+ *  `{ ok:false, why:"reader_failed" }`). */
+export async function readPartPieces(bytes, container, name, cut, onPiece) {
+  const b = toBytes(bytes);
+  const want = normalizePartName(name);
+  const found = locatePart(b, container, want);
+  if (!found.ok) return found;
+  const { entry, raw } = found;
+  const declared = entry.uncompressedSize;
+
+  const decoder = new TextDecoder("utf-8", { fatal: false });
+  let crc = 0xffffffff, size = 0, buf = "";
+  let failure = null;
+
+  /* One inflated chunk in; pieces out. Returns false to stop the member. */
+  const take = (chunk) => {
+    size += chunk.length;
+    if (size > declared) { failure = { ok: false, why: "size_mismatch", name: want, expected: declared, got: size }; return false; }
+    crc = crcUpdate(crc, chunk);
+    buf += decoder.decode(chunk, { stream: true });
+    while (buf.length >= TEXT_PIECE_CHARS) {
+      const at = cut(buf);
+      if (!(at > 0)) {
+        if (buf.length > TEXT_PIECE_MAX_CHARS) {
+          failure = { ok: false, why: "piece_unbounded", name: want, size: declared, final: true };
+          return false;
+        }
+        break;
+      }
+      const piece = buf.slice(0, at);
+      buf = buf.slice(at);
+      if (!give(piece)) return false;
+    }
+    return true;
+  };
+  const give = (piece) => {
+    try { onPiece(piece); return true; } catch {
+      failure = { ok: false, why: "reader_failed", name: want };
+      return false;
+    }
+  };
+
+  try {
+    if (entry.method === 0) {
+      for (let at = 0; at < raw.length; at += INFLATE_WINDOW) {
+        if (!take(raw.subarray(at, at + INFLATE_WINDOW))) break;
+      }
+    } else {
+      let at = 0;
+      const source = new ReadableStream({
+        pull(controller) {
+          if (at >= raw.length) { controller.close(); return; }
+          controller.enqueue(raw.subarray(at, at + INFLATE_WINDOW));
+          at += INFLATE_WINDOW;
+        },
+      });
+      const reader = source.pipeThrough(new DecompressionStream("deflate-raw")).getReader();
+      try {
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (!take(value)) { reader.cancel().catch(() => {}); break; }
+        }
+      } catch {
+        return failure ?? { ok: false, why: "inflate_failed", name: want };
+      }
+    }
+    if (failure) return failure;
+    buf += decoder.decode();
+    if (buf.length && !give(buf)) return failure;
+  } catch {
+    return failure ?? { ok: false, why: "reader_failed", name: want };
+  }
+  if (size !== declared) return { ok: false, why: "size_mismatch", name: want, expected: declared, got: size };
+  if (((crc ^ 0xffffffff) >>> 0) !== entry.crc32) return { ok: false, why: "crc_mismatch", name: want };
+  return { ok: true, size };
 }
 
 /* ------------------------------------------------------------------ *
