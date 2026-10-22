@@ -197,3 +197,9 @@ Suites: pdf-reader 136 of 136; reading-pipeline 183 of 183; pdf-worker 70 of 70;
 For you: (1) stale bundles to regenerate at the layer close: pdf-worker, ocr-worker, agent-worker, bio-plane.bundled. (2) The case "the same file read by `reading-pipeline.read` under 110 MB" cannot be a test of this module (architecture: a module after it in the order); I ran it as the L probe (`workerd-index.probe.mjs`: 30 / 22 MB old space for the two files, APP 82 unchanged), and `smallobjects.mjs` can serve reading-pipeline's job. (3) acquisition `stage-times.test.mjs` R95 fails in a group run, passes alone with this code and the tip's: load-dependent. No question open, nothing deferred.
 
 Size (session_014rsq68z5SGk7R183eVVx8C): test runs 41, module lines 4440
+
+## Restart note (PDF-READER #11)
+
+Restarted on B8 (the round-5 START, text of #10's); the work was already complete (J5). I merged `tranche/T51` (no conflict), re-ran `node --test --test-force-exit bio-plane/test/m/pdf-reader/ bio-plane/test/pdfstructure.test.mjs`: 134 tests, 134 pass, 0 fail (J5 counted 136; the two fewer are not failures: none fail or skip), and `ownership.mjs`: 1 file changed, 0 failures. No code changed in this session.
+
+Size (session_01B7MEiXsVRUtMmYX6BygGKT): test runs 1, module lines 4440
