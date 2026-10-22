@@ -36,7 +36,7 @@ const refused = (r, label) => {
   assert.match(String(r.detail), /has not joined it/, `${label}: the sentence tells the member to join`);
 };
 
-test("R1 R5 (K4557) filingPrepare for an action of the project is refused PROJECT_ACT_NOT_A_PARTICIPANT to a member invited and not joined, whether the action names the project itself or rests on a determination in it, and writes nothing; the walker's records request", async () => {
+test("R69 R1 R5 (K4557) filingPrepare for an action of the project is refused PROJECT_ACT_NOT_A_PARTICIPANT to a member invited and not joined, whether the action names the project itself or rests on a determination in it, and writes nothing; the walker's records request", async () => {
   const x = invited();
   const own = x.action({ project: x.proj, legs: [], kind: "records_request" });
   const viaDet = x.action();
@@ -51,7 +51,7 @@ test("R1 R5 (K4557) filingPrepare for an action of the project is refused PROJEC
   assert.equal(prepare(x, { author: V("olive"), viewer: V("olive") }, viaDet).ok, true);
 });
 
-test("R23 R37 (K4557) communicationPrepare is refused PROJECT_ACT_NOT_A_PARTICIPANT to a member invited and not joined, writing nothing; a machine's draft and a joined member's are unchanged", async () => {
+test("R69 R23 R37 (K4557) communicationPrepare is refused PROJECT_ACT_NOT_A_PARTICIPANT to a member invited and not joined, writing nothing; a machine's draft and a joined member's are unchanged", async () => {
   const x = invited();
   const A = x.action({ project: x.proj, legs: [] });
   const before = x.snapshot(WRITTEN);
@@ -62,7 +62,7 @@ test("R23 R37 (K4557) communicationPrepare is refused PROJECT_ACT_NOT_A_PARTICIP
                "a machine credential holds no roster position and is not asked");
 });
 
-test("R6 R7 R42 R36 (K4557) approving, second approving, recording the sending and a partner's signature are refused to a member invited and not joined, writing nothing; the draft is the project's by its action or by its basis", async () => {
+test("R69 R6 R7 R42 R36 (K4557) approving, second approving, recording the sending and a partner's signature are refused to a member invited and not joined, writing nothing; the draft is the project's by its action or by its basis", async () => {
   for (const [label, over] of [["the action's project", { project: "PROJ", legs: [] }], ["the draft's basis project", {}]]) {
     const x = invited();
     const A = x.action({ partners: [{ role: "chair", organisation: "Harbour Watch" }], ...over, ...(over.project ? { project: x.proj } : {}) });
@@ -91,7 +91,7 @@ test("R6 R7 R42 R36 (K4557) approving, second approving, recording the sending a
   }
 });
 
-test("R8 R47 (K4557) a counsel packet and a hold notice are refused to a member invited and not joined, writing nothing, and made by the same member once joined", async () => {
+test("R69 R8 R47 (K4557) a counsel packet and a hold notice are refused to a member invited and not joined, writing nothing, and made by the same member once joined", async () => {
   const x = invited();
   const A = x.action({ project: x.proj, legs: [] });
   assert.equal(x.f.actionHolds.actionHold({ target: A, hold: "in_place", reason: "a solicitor's letter", author: V("olive"), viewer: V("olive") }).ok, true);
@@ -106,7 +106,7 @@ test("R8 R47 (K4557) a counsel packet and a hold notice are refused to a member 
   assert.equal(notice.ok, true, JSON.stringify(notice).slice(0, 300));
 });
 
-test("R1 R6 R7 R32 (K4557) the walker's walk: invited and refused, then after projectjoin the member prepares, approves, records the sending and keeps the request as the team's template", async () => {
+test("R69 R1 R6 R7 R32 (K4557) the walker's walk: invited and refused, then after projectjoin the member prepares, approves, records the sending and keeps the request as the team's template", async () => {
   const x = invited();
   const A = x.action({ project: x.proj, legs: [], kind: "records_request" });
   refused(prepare(x, WALKER, A), "invited");
@@ -121,7 +121,7 @@ test("R1 R6 R7 R32 (K4557) the walker's walk: invited and refused, then after pr
   assert.equal(kept.ok, true, JSON.stringify(kept).slice(0, 300));
 });
 
-test("R1 R5 R6 R7 (K4557) controls: an administrator who has not joined is refused like anyone; a filing of an action with no project is untouched for the invited member; the owner and a joined member are unchanged", async () => {
+test("R69 R1 R5 R6 R7 (K4557) controls: an administrator who has not joined is refused like anyone; a filing of an action with no project is untouched for the invited member; the owner and a joined member are unchanged", async () => {
   const x = invited();
   const A = x.action({ project: x.proj, legs: [] });
   x.member("root", { role: "admin" });
