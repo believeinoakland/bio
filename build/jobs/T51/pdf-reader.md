@@ -183,3 +183,17 @@ If you want the page rule alone left as it is, say so: I will drop the second te
 **Questions.** None open. **Deferred.** None.
 
 Size (session_014rsq68z5SGk7R183eVVx8C): test runs 41, module lines 4440
+
+## J5 · COMPLETE
+
+COMPLETE · PDF-READER #10 · fix round 5, job 1: E2 (object table) and E11, with R42's density term (B7). Branch job/T51/pdf-reader, tranche/T51 merged. Whole record: `build/jobs/T51/pdf-reader.md`, section "Completion (fix round 5, job 1)"; the four fields of E2 and E11, the R42 table and the proposed R42 text are there.
+
+E2: `pdfstructure.mjs` only. doc-clean `measure` R4 (16 MiB of ~125,000 small objects), alone, five runs: 104.8 / 95.9 / 106.5 / 103.4 / 106.3 MB (was 146-155; limit 128). Open + `objects()` of that file and of a 148,000-element structure tree complete in a V8 heap of idle + 94 MB beside the 15.6 MiB file (under 110 MB; tip: 180 / 168 MB of heap, dies); live after `objects()` 148 → 59 MB. Cause: dictionary-mode maps, one object per name, a seven-field row per object, a typed array per string, over-allocated arrays; answers equal (digests pinned, differential check over 184 cases, 0 differences). Failing-first: `smallobjects.test.mjs` 2 of 5 red on the tip, 5 of 5 green.
+E11: ASCII85Decode and ASCIIHexDecode (alone or before Flate, short names too); LZW and every other filter, and malformed ASCII, still stated undecodable. `ascii-filters.test.mjs` 5 of 6 red on the tip (the words asserted in `text.pages[0].text`), 6 of 6 green.
+R42 (your ruling): second term as ruled; `density.test.mjs` (1,500 pages of 200 lines refused, 112 MB; red on the tip). Proposed R42 text in the record. The index budget changes nothing in pdf-reader's memory (58 / 58 MB old space for 1,000 pages).
+
+Suites: pdf-reader 136 of 136; reading-pipeline 183 of 183; pdf-worker 70 of 70; extraction 234 of 235 (`c5b-memory` is on the line: tip 133 MB red, this code green 2 of 4 runs; the rest is extraction's `readHeld` budget); doc-clean + file-safety + format-registry 173 of 175 (file-safety R24, red on the tip: `TOO_LARGE_TO_READ` has no row). checks/run: format, architecture, coverage, channels, words 0 failures; ownership 0 failures.
+
+For you: (1) stale bundles to regenerate at the layer close: pdf-worker, ocr-worker, agent-worker, bio-plane.bundled. (2) The case "the same file read by `reading-pipeline.read` under 110 MB" cannot be a test of this module (architecture: a module after it in the order); I ran it as the L probe (`workerd-index.probe.mjs`: 30 / 22 MB old space for the two files, APP 82 unchanged), and `smallobjects.mjs` can serve reading-pipeline's job. (3) acquisition `stage-times.test.mjs` R95 fails in a group run, passes alone with this code and the tip's: load-dependent. No question open, nothing deferred.
+
+Size (session_014rsq68z5SGk7R183eVVx8C): test runs 41, module lines 4440
