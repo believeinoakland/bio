@@ -1,6 +1,6 @@
 # screens-action (T51)
 
-**Status** · session_01BtTN7ZpRZCZwHDAGJpin6T · depth 2 · COMPLETE · handled B24
+**Status** · session_012SukeKJ6jZZFc6BPcuWckQ · depth 2 · COMPLETE · handled B27
 
 ## J1 · REPORT
 
@@ -250,3 +250,32 @@ COMPLETE (SCREENS-ACTION #13, re B21; fix round 4, wave 2). Pushed on `job/T51/s
 
 **Not drawn / words.** No stand-in key (J17 (3) closed). Uses added by BOB for the seam: jurisdictions, entities, actions, filing-templates, filings, instance-setup, action-clocks. Deferred: none. Found in other modules: instance-setup `profiles().view` (answered, INSTANCE-SETUP #27), the kit has no team-name accessor (answered, T52).
 Size (session_01BtTN7ZpRZCZwHDAGJpin6T): test runs 52, module lines 4869
+
+## J22 · QUESTION
+
+QUESTION (SCREENS-ACTION #14, E9 under K4557; replies to B26; the smallest things I need, asked now per R-NOTMET). I carry on with everything else.
+
+**1. The accept door cannot be drawn in place on the three screens: the design registry does not list `projectjoin` on `action`, `request` or `start-send`.** `interface-shell` R21 admits only the ops the registry lists for a screen (`contract.test` R1–R6 asserts a screen's acts are exactly its registry acts), and `docs/development/ux-substrate/screens/registry.json` lists `projectjoin` on `projects` and `project` only (`home` and `queue` draw it as a queue item); `wizard-scripts/screen-registry.mjs` is generated from that file. So `cs.act("projectjoin", ...)` on my screens returns "" and an act spec for it would throw at `interfacePage`. The census (`census-join-K4557.md`, Screens) assumed it could be drawn "as `project-rows.mjs:71` does"; that screen's registry lists it.
+Smallest ask: the registry lists `projectjoin` ("Join") on `action`, `request` and `start-send` (the design stream's file, so a NOTICE to UX-DESIGN; then wizard-scripts' data regenerated at that commit, `build-data.mjs`). Label: I reuse the existing key `act.projectjoin.label.project` ("Join"), so no new word row is owed.
+What I build now, with that unmerged: for an action of a project the member is `invited` to and has not joined (read from `projectlist`'s `participation`, once, in parallel with the screen's other reads), `request` (on an action), `start-send` (step 2) and `action` do not offer prepare, approve, second approval, record the sending or keep-as-template; they draw `refusal.PROJECT_ACT_NOT_A_PARTICIPANT` at the head of the send steps and, as the way to accept, a reference opening the project's page (`project`, which does draw "Join" for an invited member; `screens-inquiry/project.mjs:156`). The moment the registry lists `projectjoin` on a screen, its door is drawn in place beside the sentence, and the screen redraws with the steps after the press. The in-place press test is written first and stays red by name until the registry changes; everything else of the entry is built and tested now.
+
+**2. `uses`: add `membership` and `project-roster`** to screens-action (both earlier in the order than layer 11). The R-SEAM test boots the real `membership` (`projectjoin`, `invite`) and `project-roster` (`projectlist`'s `participation`) over `filings`' own world, as `seam-t51` boots the others; without them the test would write the invited state itself and hide the state the screens read.
+
+The real-filings half of the walker's case (the invited member is refused by the plane) waits on FILINGS #27, as B26 says; written first, red by name until the merge.
+
+## J23 · COMPLETE
+
+COMPLETE (SCREENS-ACTION #14, E9 under K4557; re B26, B27). Pushed on `job/T51/screens-action`; `tranche/T51` merged last. No open QUESTION (J22 answered, B27). No generated artifact edited; I own no census op.
+
+**What changed.** An action of a project the signed-in member is invited to and has not joined: `start-send` (step 2), `request` (on an action), `action` and `dash-action` draw `refusal.PROJECT_ACT_NOT_A_PARTICIPANT` at the start and a reference opening the project's page (where Join is drawn); they offer no prepare, approve, second approval, record-sending or keep-as-template (`send-steps.mjs` `joinFirst` + `sendSteps`; `action.mjs` render: the doors to prepare, pick up and keep; `dash-action.mjs`: no `filingapprove` for such an action, the action opens instead). Her place is her own `participation` on the `projectlist` row of the action's project (project-roster R34), read once in parallel with the screen's other reads (`standing`); joined, leaving, no participant, no row, or a read that failed change nothing (the plane still refuses). One new read op per screen (`projectlist`); C14 read-set tests updated, no op twice.
+
+**Failing-first.** `join-t51.test.mjs` (8 tests + 1 `test.todo` K4559) and `join-seam-t51.test.mjs`: on the source before E9 (`5e746f50d8~1`) 10 of 10 red ("the held sentence"/"no approval"); on this tip all green except the named red below. Seam (R-SEAM) over the REAL membership, project-roster, filings, actions, entities, filing-templates: `quinn` invited and not joined opens the send screen and the request screen, is told, nothing is stored; follows the reference; joins (the op the page's Join sends, answered by the real membership, since the page belongs to screens-inquiry); returns; drafts, approves, records the sending and keeps the template (real `tpl_templates` row in the project). Controls: joined, leaving, no participant, unread place, no row see the steps as today.
+
+**Named red (allowed, B26): 1.** `join-seam-t51` "the real filings refuses the invited member's draft with membership's code" waits on FILINGS #27 (today the real filings lets her draft: the walked defect). **todo:** the door in place (K4559, T52).
+
+**Suites and checks.** Module 271: 269 pass, 1 red (above), 1 todo. Users: control-plane 376 of 376; plane 305 of 306: `release.test` R24 "screen.objective.purpose is held by the words list" (the objective screen's key; I touch none of it, not mine). Checks (run.mjs): format 0, architecture 0, coverage 6616 of 6616, channels 0, words 0; ownership 0 (10 files).
+
+**Requirement lines for BOB** (amend R3, R4, R5, R30, R43, R48; Private Uses: `project-roster` `projectlist` through the plane): "An action of a project the member is invited to and has not joined offers no prepare, approval, second approval, recording of the sending or keeping as a template, on `start-send`, `request`, `action` and `dash-action`; the screen says `refusal.PROJECT_ACT_NOT_A_PARTICIPANT` and gives a reference to the project's page. Her place is `participation` on `projectlist`'s row, read once with the screen's other reads; any other state, or one not read, changes nothing. The door in place waits for the registry (K4559)."
+
+**Limits stated, not deferred defects.** A project beyond `projectlist`'s first page (200) reads as unknown and the plane refuses as before; a non-participant (administrator) is not told at the start (E9 names invited; the plane refuses). Words: none new (the held row exists). Found in other modules: none.
+Size (session_012SukeKJ6jZZFc6BPcuWckQ): test runs 14, module lines 5100
