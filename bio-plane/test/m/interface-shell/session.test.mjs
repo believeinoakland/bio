@@ -210,7 +210,10 @@ test("R24 nothing the shell does records who opened what: no storage holds a rea
   await p.click(p.root().querySelector('a[href="/app/held"]') || p.root().querySelector("a[data-nav]"));
   for (const k of p.local.keys()) assert.match(k, /^(cs-(level|theme|railw|level-asked|group|first:[\w-]*)|bio-session(:active)?)$/, k);
   for (const [k, v] of p.local) if (k !== STORE_KEY) assert.doesNotMatch(v, /held|document|home|members|\/app/);
-  assert.deepEqual([...p.store.keys()], []);
+  /* R124 (G12b): the tab keeps the frame's six constants for the session, and nothing else: no read of a screen, no route (R24 holds) */
+  assert.deepEqual([...p.store.keys()], [STORE_KEY + ":frame"]);
+  assert.deepEqual(Object.keys(JSON.parse(p.store.get(STORE_KEY + ":frame")).reads).sort(), ["accountreference", "assistantstate", "groupidentity", "groupkeystate", "infolevel", "subscriptionsignin"]);
+  assert.doesNotMatch(p.store.get(STORE_KEY + ":frame"), /heldcaptures|document|home|members|\/app/);
   /* the ops the frame and the fixture screens declare they call: the shell's own list, and each fixture screen's reads (R24) */
   const ALLOWED = new Set([...SHELL_OPS, ...SCREENS.flatMap((x) => (x.reads ? Object.values(x.reads({ subject: "s", data: {}, ui: {} })).map((r) => r.op) : []))]);
   for (const op of ALLOWED) assert.ok(Object.hasOwn(OPS, op), op + ": declared by its owner");
