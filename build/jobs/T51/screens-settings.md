@@ -351,3 +351,7 @@ What I need (smallest): (a) the name of the shell's shared-frame-read accessor (
 **Requirements met:** R15, R77, RC-R7 (words side), R62, R1, R3, R17-R19, R27, R48 (suites). Proposed line for BOB: R15 amended with C84 round 4 (keys above); R78 new: a Settings screen reads once each op the frame has read (C14).
 **Tests/checks:** screens-settings 257 tests, 252 pass, 5 fail (the five C14 read-sets above, by name). screens-inquiry 471/471 (a user). `format` 0 failures; `architecture` 0 failures (after BOB's `uses`); `ownership` 0 failures; coverage: none of its 8 failures is mine (screens-publish R80 named).
 Size (session_013oBjn6cy9rDsXVNuTPr9A1): test runs 14, module lines 5308
+
+## J26 · COMPLETE
+
+COMPLETE (per K4466): C84 done and green (seam test through the real file-safety and file-scanner, stale R15 test fixed); C14: read-set tests written, RED BY NAME for security, updates, account, group, teamai until CAUSE-SHELL-4's accessor merges (send CHANGE; I then drop the five repeats). Details, four fields, counts and Size line in my record. Suite 252/257 (the five); format, architecture, ownership 0 failures. Proposed lines: R15 amended (C84 keys), R78 new (a Settings screen reads once each op the frame has read).
