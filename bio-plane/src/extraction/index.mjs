@@ -84,6 +84,7 @@ const ADDITIVE_COLUMNS = [
   /* R90 (fix round 6, G13): a text read in pieces states how far it has been read; a store that holds none of it states none. */
   ["capture_text_state", "more", "INTEGER NOT NULL DEFAULT 0"], ["capture_text_state", "cursor", "TEXT"],
   ["capture_text_state", "read_through", "INTEGER"], ["capture_text_state", "total", "INTEGER"],
+  ["capture_text_state", "words_read", "INTEGER"],
 ];
 
 /* ---- REC-36 / REC-40: the name terms (R19, R37), and the term fold (R59, N108): `reading_ref_terms.term` is exactly
@@ -384,10 +385,16 @@ const notReadAsText = (r) => !!r && r.found === false && r.failure === "final" &
   && [localize("reading-pipeline.index.multipart", "multipart"),
       localize("reading-pipeline.index.non_textual_large", "non-textual or too large")]
        .some((why) => r.basis === localize("reading-pipeline.index.document_not_read_text", "the document was not read as text ({why}), so no reading was attempted", { why }));
-/* (fix round 6, G13; R90) what reading-pipeline's read of a piece of a text says of how far it has read: `more` while pieces follow, the
-   `cursor` for the next, `read_through` and `total` of the text; null for a read that is not in pieces (every other read). */
-const pieceOf = (out) => (out && (out.more === true || out.more === false) && (out.total != null || out.cursor != null)
-  ? { more: out.more, cursor: out.cursor ?? null, read_through: out.read_through ?? null, total: out.total ?? null } : null);
+/* (fix round 6, G13; R90) reading-pipeline's R40 answer of a piece, as the index state keeps it: `more` while pieces follow, the `cursor` of
+   the next (its own object, kept as JSON), how far the text is read (`chars_through` of `chars_total`) and the piece's words; null for a read
+   that is not in pieces (every other read). */
+const pieceOf = (out) => {
+  const p = out && out.piece && typeof out.piece === "object" ? out.piece : null;
+  return p ? { more: p.more === true, cursor: p.cursor ? JSON.stringify(p.cursor) : null, read_through: p.chars_through ?? null,
+               total: p.chars_total ?? null, words: Number.isFinite(p.words) ? p.words : 0 } : null;
+};
+/* (fix round 6, G13; R90) a reading whose units came from a text (reading-pipeline R32, R33): the only kind read in pieces. */
+const textReading = (r) => !!r && (r.text_container === "text" || r.text_container === "html");
 /* R82 (F9): the author the ledger's own continuation of a re-read is stamped with. */
 const PLANE_AUTHOR = "plane:pending-work";
 
@@ -611,13 +618,13 @@ export class Extraction {
 
   /** R1, R18: reads a stored capture (`reading-pipeline.read`, its R24) with this object's evidence store, bindings and the
    *  instance's jurisdiction view (R18), and records the digest of the reading it composed (R21). */
-  async read(document, { storeName = "bio", env = null, budget = undefined, cursor = undefined } = {}) {
+  async read(document, { storeName = "bio", env = null, budget = undefined, pieces = undefined } = {}) {
     const e = env || this.env || {};
     const out = await readDocument(document, {
       evidence: this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null,
       env: e, storeName, view: this.view(), planeVersion: e.VERSION || null,
       liveCalibration: (q) => this.#liveCalibration(q), ...(budget === undefined ? {} : { unitsBudget: budget }),
-      ...(cursor === undefined ? {} : { cursor, unitsMax: CAPTURE_TEXT_CAPTURE_UNIT_BOUND }) });
+      ...(pieces === undefined ? {} : { pieces: { cursor: pieces.cursor ?? null, maxUnits: CAPTURE_TEXT_CAPTURE_UNIT_BOUND } }) });
     this.recordComposed(out.reading, document && document.capture && document.capture.sha256);
     return out;
   }
@@ -735,7 +742,8 @@ export class Extraction {
     if (ocr) return this.#continueOcr({ digest, heldReading, bundleId: home.bundleId, storeName, env: e, left });
     /* (fix round 5, E2) the text units built are those the index keeps: the budget is the index's bound, never `Infinity`. */
     const reader = repair ? { ...document, profile: { ...(document.profile || {}), format: repair } } : document;
-    const out = await this.read(reader, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND });
+    const out = await this.read(reader, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: null } });
+    if (out.refused) return left(out.refused.code);
     if (repair && held && notReadAsText(out.reading)) { this.#markRepairTried(home.bundleId, digest, "still"); return left("READING_HELD"); }
     const prof = reader.profile && typeof reader.profile === "object" ? reader.profile : null;
     const wrote = this.core.transact(() => {
@@ -752,8 +760,8 @@ export class Extraction {
     await wrote.afterRead;
     const owed = failedTransiently(out.reading) || (out.reading.tier3_candidate === true && !!e.OCR_WORKER);
     /* (fix round 6, G13; R90) the first piece of a text that has more: the ledger goes on at once (plane R77: `more`) */
-    if (out.more === true) return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true, more: true,
-                                    detail: { read_through: out.read_through ?? null, total: out.total ?? null } };
+    if (out.piece && out.piece.more === true) return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true, more: true,
+      detail: { read_through: out.piece.chars_through ?? null, total: out.piece.chars_total ?? null } };
     return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true, ...(owed ? { owed: true } : {}) };
   }
 
@@ -772,19 +780,27 @@ export class Extraction {
   async #continueText({ digest, document, bundleId, storeName, env, left }) {
     const st = this.#one(`SELECT cursor, read_through, total FROM capture_text_state WHERE capture_sha=? AND more=1`, digest);
     if (!st) return left("READING_HELD");
-    const out = await this.read(document, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, cursor: st.cursor });
-    if (out.cursor_refused) return { ok: true, read: false, final: true, why: String(out.cursor_refused).slice(0, 160) };
-    if (!out.reading || out.reading.found === false) return left(failedTransiently(out.reading) ? "READING_RETRY" : "READ_FAILED");
+    /* a state with more to read and no cursor is a text read before pieces existed that the index holds only in part: it is read again
+       from its start as the first piece, which replaces what the wire left (the reading itself stands) */
+    const restart = st.cursor == null;
+    const out = await this.read(document, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: restart ? null : safeJson(st.cursor) } });
+    if (out.refused) return { ok: true, read: false, final: true, why: String(out.refused.why || out.refused.code).slice(0, 160) };
+    if (!out.piece) {
+      /* not a text the reader reads in pieces (a PDF over the index's bound): its partial index is stated as it is, once */
+      this.#sql.exec(`UPDATE capture_text_state SET more=0, cursor=NULL WHERE capture_sha=?`, digest);
+      return left("READING_HELD");
+    }
     const units = Array.isArray(out.text_units) ? out.text_units : [];
     const wrote = this.core.transact(() => {
       const now = this.#one(`SELECT cursor FROM capture_text_state WHERE capture_sha=? AND more=1`, digest);
       if (!now || now.cursor !== st.cursor) return null;
-      return this.indexUnits(bundleId, digest, units, out.reading.text_source ?? null,
-        { wireOverBound: out.text_units_over_bound, wireSkipped: out.text_units_skipped, append: true, more: pieceOf(out) });
+      return this.indexUnits(bundleId, digest, units, (out.reading || safeJson((this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest) || {}).reading) || {}).text_source ?? null,
+        { append: !restart, more: pieceOf(out) });
     });
     if (!wrote) return left("READING_HELD");
-    if (out.more === true) return { ok: true, read: true, bundle_id: bundleId, found: true, more: true,
-                                    detail: { read_through: out.read_through ?? null, total: out.total ?? null } };
+    const p = out.piece;
+    if (p.more === true) return { ok: true, read: true, bundle_id: bundleId, found: true, more: true,
+                                  detail: { read_through: p.chars_through ?? null, total: p.chars_total ?? null } };
     return { ok: true, read: true, bundle_id: bundleId, found: true };
   }
 
@@ -998,6 +1014,12 @@ export class Extraction {
       this.#writeTextSource(bundleId, sha, reading.text_source);
       const indexed = this.indexUnits(bundleId, sha, textUnits, reading.text_source,
         { wireOverBound: textUnitsOverBound, wireSkipped: textUnitsSkipped, more });
+      /* (fix round 6, G13; R90) a text whose units the index holds only in part, written by a read that was not in pieces (the acquire wire,
+         a promotion): it is read in pieces from its start, so no text is left silently partial. The reading itself stands. */
+      if (!more && textReading(reading) && indexed.over_bound > 0) {
+        this.#sql.exec(`UPDATE capture_text_state SET more=1, cursor=NULL WHERE capture_sha=?`, sha);
+        this.#oweAfterCommit(sha);
+      }
       const chainAfter = Array.isArray(reading.text_source) ? reading.text_source : null;
       const listeners = {};
       for (const l of this.#listeners)
@@ -1195,17 +1217,18 @@ export class Extraction {
     const sum = (k, now) => (before ? Number(before[k] || 0) : 0) + now;
     const [offeredAll, writtenAll, overAll, unaddrAll, truncAll, skippedAll] = [sum("offered", offered), sum("written", written),
       sum("over_bound", over), sum("unaddressable", unaddressable), sum("truncated", truncatedUnits), sum("skipped_named", skippedNamed)];
-    const followed = !!(more && typeof more === "object" && more.more !== false && more.cursor != null);
+    const followed = !!(more && typeof more === "object" && more.more === true && more.cursor != null);
     const state = !offeredAll ? "none" : (overAll || unaddrAll || followed) ? "partial" : "whole";
     const prog = more && typeof more === "object" ? more : null;
     const keptChain = before && before.chain_kind && before.chain_kind !== chainKind ? "mixed" : chainKind;
     this.#sql.exec(
       `INSERT OR REPLACE INTO capture_text_state (capture_sha,bundle_id,state,offered,written,over_bound,unaddressable,
-                                                  truncated,skipped_named,chain_kind,at,more,cursor,read_through,total)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+                                                  truncated,skipped_named,chain_kind,at,more,cursor,read_through,total,words_read)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       captureSha, bundleId, state, offeredAll, writtenAll, overAll, unaddrAll, truncAll, skippedAll, keptChain,
       stampInstant("second"), followed ? 1 : 0, followed ? String(prog.cursor) : null,
-      prog && Number.isFinite(prog.read_through) ? prog.read_through : null, prog && Number.isFinite(prog.total) ? prog.total : null);
+      prog && Number.isFinite(prog.read_through) ? prog.read_through : null, prog && Number.isFinite(prog.total) ? prog.total : null,
+      prog ? (before && Number.isFinite(before.words_read) ? before.words_read : 0) + (Number.isFinite(prog.words) ? prog.words : 0) : null);
     return { offered, written, bytes, truncated: truncatedUnits, over_bound: over, wire_over_bound: wire,
              unaddressable, unaddressed, chain_kind: chainKind, skipped, skipped_named: skippedNamed, state };
   }
@@ -1248,7 +1271,7 @@ export class Extraction {
       if (whole) return this.readingFor(whole, viewer);
     }
     if (!row) return { ok: true, found: false, capture_sha: captureSha, reading: null };
-    const reading = safeJson(row.reading);
+    let reading = safeJson(row.reading);
     const ts = this.#one(
       `SELECT transcribed, terminal_step, engines, derivation_cap, steps FROM reading_text_source WHERE capture_sha=?`, captureSha);
     const chain = reading && reading.text_source !== undefined ? reading.text_source : null;
@@ -1266,9 +1289,11 @@ export class Extraction {
        reading holds none, and withheld with the bundle as `bytes` is. */
     const format = withheld || row.capture_format == null || row.capture_format === "" ? undefined : row.capture_format;
     /* R90 (fix round 6, G13): a text read in pieces states how far it has been read, and is never stated complete while more follows. */
-    const piece = this.#one(`SELECT more, read_through, total FROM capture_text_state WHERE capture_sha=?`, row.capture_sha);
+    const piece = this.#one(`SELECT more, read_through, total, words_read FROM capture_text_state WHERE capture_sha=?`, row.capture_sha);
     const progress = piece && (piece.more || piece.total != null)
       ? { more: !!piece.more, read_through: piece.read_through ?? null, total: piece.total ?? null } : null;
+    /* the first piece's reading counted the words of its own piece (reading-pipeline R40); the words read are the capture's so far */
+    if (progress && reading && Number.isFinite(reading.words_total) && Number.isFinite(piece.words_read)) reading = { ...reading, words_read: piece.words_read };
     return { ok: true, found: true, capture_sha: row.capture_sha,
              bundle_id: this.#redactor(viewer)(row.bundle_id),
              content_type: row.content_type, reader_version: row.reader_version,
@@ -1632,14 +1657,24 @@ export class Extraction {
     const out = { ok: true, migration: REPAIR_MIGRATION, done: !!st.done, examined: 0, owed: [] };
     if (st.done || !this.#owe) return out;
     const cap = Math.max(1, Math.min(Math.floor(Number(limit) || REPAIR_BATCH), 5000));
-    const page = this.#rows(`SELECT capture_sha, bundle_id, reading FROM readings WHERE found=0 AND capture_sha > ? ORDER BY capture_sha LIMIT ?`,
-                            st.after || "", cap + 1);
+    /* what may need owing: a failed reading (R89), a text read in pieces with more to read, and a text whose index holds only part of it
+       with no piece state (R90): old data, which the first piece restarts */
+    const page = this.#rows(
+      `SELECT r.capture_sha AS capture_sha, r.bundle_id AS bundle_id, r.reading AS reading, s.more AS more, s.state AS state,
+              s.over_bound AS over_bound, s.total AS total
+         FROM readings r LEFT JOIN capture_text_state s ON s.capture_sha = r.capture_sha
+        WHERE r.capture_sha > ? AND (r.found = 0 OR s.more = 1 OR (s.state = 'partial' AND s.over_bound > 0 AND s.total IS NULL))
+        ORDER BY r.capture_sha LIMIT ?`, st.after || "", cap + 1);
     for (const r of page.slice(0, cap)) {
+      const reading = safeJson(r.reading);
       let owed = 0;
-      if (notReadAsText(safeJson(r.reading)) && !this.#repairTried(r.capture_sha)) {
+      const repair = notReadAsText(reading) && !this.#repairTried(r.capture_sha);
+      const restart = !repair && r.more !== 1 && r.state === "partial" && r.over_bound > 0 && r.total == null && textReading(reading);
+      if (repair || r.more === 1 || restart) {
         let a = null;
         try { a = await this.#owe({ kind: "reading", sha: r.capture_sha }); } catch { a = null; }
         if (!a || a.ok !== true) return out;
+        if (restart) this.#sql.exec(`UPDATE capture_text_state SET more=1, cursor=NULL WHERE capture_sha=?`, r.capture_sha);
         out.owed.push(r.capture_sha);
         owed = 1;
       }
@@ -1652,6 +1687,13 @@ export class Extraction {
       out.done = true;
     }
     return out;
+  }
+
+  /* R89, R90: owed to the ledger once the write that needs it has committed (the registration may not be handed in yet; the start-up
+     repair finds what it missed). Never throws. */
+  #oweAfterCommit(sha) {
+    if (!this.#owe || !this.core || typeof this.core.afterCommit !== "function") return;
+    this.core.afterCommit(() => { try { Promise.resolve(this.#owe({ kind: "reading", sha })).catch(() => {}); } catch { /* the repair finds it */ } });
   }
 
   /* R89: whether a read has looked at this capture's held bytes under this release and found nothing to read them by. */

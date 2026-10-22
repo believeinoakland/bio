@@ -388,7 +388,8 @@ CREATE TABLE IF NOT EXISTS capture_text_state (
   more           INTEGER NOT NULL DEFAULT 0,
   cursor         TEXT,
   read_through   INTEGER,
-  total          INTEGER
+  total          INTEGER,
+  words_read     INTEGER
 );
 CREATE INDEX IF NOT EXISTS capture_text_state_bundle ON capture_text_state(bundle_id);
 
