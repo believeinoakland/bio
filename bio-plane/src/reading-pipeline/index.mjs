@@ -1213,9 +1213,10 @@ export const PIECE_UNITS_MAX = 4096;
 /* G26 (fix round 6): a PDF is read in pieces by page ranges, `PDF_RANGE_PAGES` pages a piece (pdf-reader's
    `extractPdfRange`, R43), the cursor a page. A range's structures are dropped before the next is read, so a tick
    holds the bytes and one range, and the whole is one parse, not one per piece. G37 (K4615), measured at the plane's shape
-   (`g26.probe.mjs`, BUDGET-2024-APP in a child of 112 MB): 200 pages a piece made a first tick of 8.8 s and ticks of 4.5 s, 100
-   a first tick of 5.7 s and ticks of 2.1 s in the same 35 s, and `pdf-pieces.test.mjs` 1.40 parses of the whole (200: 1.39-1.45). */
-export const PDF_RANGE_PAGES = 100;
+   (`g26.probe.mjs`, BUDGET-2024-APP in a child of 112 MB, after roster-reader's recogniser fix) and by `pdf-pieces.test.mjs`
+   (pieces against one parse, bar 1.5): 100 pages a piece, first tick 5.2 s but 1.40-1.51 (one run over the bar); 150, 6.5 s and
+   1.45-1.47; 200, 8.2 s and 1.40-1.42 (three runs). 200 keeps both bars with a margin. */
+export const PDF_RANGE_PAGES = 200;
 export const BARE_DIGEST = "BARE_DIGEST";
 export const CURSOR_MISMATCH = "CURSOR_MISMATCH";
 export const NOT_PIECEWISE = "NOT_PIECEWISE";
