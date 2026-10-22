@@ -215,3 +215,7 @@ export function consumer(name, { key, due = null, wake = null, tick = null } = {
 /** The storage calls other than the probe seam's value: the alarm calls alone, for a test that nothing else is written. */
 export const writes = (st) => st.log.filter(([m]) => m === "setAlarm" || m === "deleteAlarm" || m === "put");
 export const NOW = Date.parse("2026-09-28T12:00:00Z");
+
+/** Pins the real clock at `NOW` for the test `t`, so an `arm` a notice makes (it reads `Date.now()`) sees the fixed instants
+ *  these tests seed their alarms and wakes at: an alarm more than a minute behind the clock is spent, not armed (R4, R11). */
+export function pinNow(t) { t.mock.method(Date, "now", () => NOW); }

@@ -77,6 +77,8 @@ import { localize } from "../setup-words/index.mjs";
 
 /** An alarm may fire a hair early: a consumer due within this window of the firing instant runs (R1). */
 export const SCHED_GRACE_MS = 250;
+/** An alarm this far past is spent, not armed (R4, R11): the platform stops retrying after repeated killed runs. */
+const SPENT_ALARM_MS = 60_000;
 
 /** R5: the registry's order. `capture-request-drain` before `ai-run-wake` is load-bearing: a request that completes
  *  on an alarm wakes its run on the same alarm. `gathering-sweep` (T23) stands after `monitor-cadence`, where R5
@@ -572,8 +574,10 @@ export class Scheduler {
   }
 
   /** Sets the one alarm to the earliest wake any consumer wants, or deletes it when none does. `exact` sets it
-   *  outright (after a firing); otherwise it is only ever pulled earlier (R4). A consumer whose wake throws wants
-   *  nothing and, when `errors` is given, is answered under its key (R3). */
+   *  outright (after a firing); otherwise it is only ever pulled earlier (R4), except that an alarm already past by
+   *  more than `SPENT_ALARM_MS` is spent, not armed (the platform stops running one it killed too often), and is set
+   *  afresh to `max(want, now)`. A consumer whose wake throws wants nothing and, when `errors` is given, is answered
+   *  under its key (R3). */
   async #reconcile(now, reg, exact, errors = null) {
     const wants = [];
     for (const c of reg) {
@@ -586,6 +590,7 @@ export class Scheduler {
     if (exact) { await this.#storage.setAlarm(want); return want; }
     const at = await this.#storage.getAlarm();
     if (at === null || at === undefined || at > want) { await this.#storage.setAlarm(want); return want; }
+    if (!this.#firing && at < now - SPENT_ALARM_MS) { const fresh = Math.max(want, now); await this.#storage.setAlarm(fresh); return fresh; }   /* R4, R11 */
     return at;
   }
 
