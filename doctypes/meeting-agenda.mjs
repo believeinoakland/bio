@@ -36,8 +36,9 @@
  * list of legislation references — nothing more is claimed. What the body DID
  * with each item is the minutes' business, not the agenda's.
  */
-import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, selfNaming, FURNITURE_RECURS, alsoSatisfies,
+import { CONFIDENCE, CONTRACT, entity, readAgain, diffEntities, FURNITURE_RECURS, alsoSatisfies,
          vocabPatterns, anyMatch, LINE_END } from "../docprofile/doctypes/index.mjs";
+import { eachLine, countLines, lineTable } from "./windows.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
@@ -135,23 +136,25 @@ export default {
        them alone on a line, and a staff report about ONE file does not list
        them item after item. */
     const filePats = agendaFileLines(ctx);
-    const files = t.split(/\r?\n/).filter((l) => agendaFileKey(filePats, l) != null);
-    if (files.length) signals.push(localize("doctypes.meeting-agenda.file_lines", "{count} legislation file number line(s)", { count: String(files.length) }));
+    /* R37: the lines are walked one at a time (./windows.mjs), never split into a list of all of them. */
+    let files = 0;
+    eachLine(t, (l) => { if (agendaFileKey(filePats, l) != null) files++; });
+    if (files) signals.push(localize("doctypes.meeting-agenda.file_lines", "{count} legislation file number line(s)", { count: String(files) }));
     if (/\bSubject:/.test(t) && /\bRecommendation:/.test(t))
       signals.push("Subject:/Recommendation: item blocks");
-    const named = selfNaming(t, AGENDA_MASTHEAD);
+    const named = countLines(t, AGENDA_MASTHEAD);
     const furniture = named >= FURNITURE_RECURS;
     if (furniture) signals.push(localize("doctypes.meeting-agenda.self_naming_furniture", "names itself as an agenda on {count} lines, which is page furniture", { count: String(named) }));
     else if (named) signals.push(localize("doctypes.meeting-agenda.self_naming_once", "names itself as an agenda once ({count}), which a reference also does", { count: String(named) }));
     /* Front matter: a roll call, or a line the jurisdiction's own furniture names
        (its clerk's office, in the measured instance). */
     const isFurn = agendaFurniture(ctx);
-    if (/Roll Call/i.test(t) || t.split(/\r?\n/).some((l) => { const x = l.trim(); return x && !FURNITURE.some((re) => re.test(x)) && isFurn(x); }))
+    if (/Roll Call/i.test(t) || eachLine(t, (l) => { const x = l.trim(); return !!x && !FURNITURE.some((re) => re.test(x)) && isFurn(x); }))
       signals.push("meeting front matter");
     /* CERTAIN needs the file-number lines AND the item blocks AND the masthead at
        furniture rate — all three measured on the real packet, where the masthead
        ` Agenda - SUPPLEMENTAL` recurs on every one of 33 pages. */
-    if (files.length && signals.includes("Subject:/Recommendation: item blocks") && furniture)
+    if (files && signals.includes("Subject:/Recommendation: item blocks") && furniture)
       return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
     /* LIKELY on the evidence a ONE-PAGE agenda can produce: it names itself at least
        once and two other families fired. A document that never names itself as an
@@ -183,17 +186,13 @@ export default {
    *  address disagree with the thing addressed. */
   parse(ctx) {
     const raw = String(ctx.text || "");
-    const lines = raw.split(/\r?\n/).map((l) => l.trim());
-    /* The start offset of each line IN THE UNSPLIT TEXT, which is the only
-       coordinate `ctx.locate` understands. Derived from the separators the split
-       actually matched rather than from `length + 1`: a CRLF document would
+    /* The lines, trimmed, held as offsets into the text (R37), a line cut from it when it is read. `L.start(i)` is the
+       start offset of each line IN THE UNSPLIT TEXT, which is the only coordinate `ctx.locate` understands. Derived
+       from the separators the split actually matched rather than from `length + 1`: a CRLF document would
        drift one character per line under the arithmetic, and a drift that grows
        silently down a 40,000-line packet is exactly the class of wrong address
        this whole item exists to avoid. */
-    const offsets = [];
-    { let last = 0; const re = /\r?\n/g; let m;
-      while ((m = re.exec(raw)) !== null) { offsets.push(last); last = m.index + m[0].length; }
-      offsets.push(last); }
+    const L = lineTable(raw);
     /* Always a function: `readText` supplies one, and a direct caller that does
        not gets the honest null rather than a TypeError. */
     const locate = typeof ctx.locate === "function" ? ctx.locate : () => null;
@@ -207,7 +206,8 @@ export default {
     const bodyEnds = vocabPatterns(ctx, "bodies", LINE_END);
     const memberTitles = vocabPatterns(ctx, "member_titles");
     let date = null, body = null;
-    for (const l of lines.slice(0, 60)) {
+    for (let i = 0; i < Math.min(L.length, 60); i++) {
+      const l = L.get(i);
       if (!date && /^[A-Za-z]+day, [A-Za-z]+ \d{1,2}, \d{4}$/.test(l)) date = parseLongDate(l);
       if (!body && anyMatch(bodyEnds, l) && !anyMatch(memberTitles, l))
         body = l.replace(/^[*\s]+/, "").trim() || null;
@@ -223,8 +223,8 @@ export default {
     /* D-454: key -> the entity, so a repeat is recorded as another occurrence (`readAgain`). */
     const seen = new Map();
     let pendingSubject = null, pendingFrom = null, expect = null;
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
+    for (let i = 0; i < L.length; i++) {
+      const line = L.get(i);
       if (!line) continue;
       /* Labelled blocks: the label sits on its own line and the value follows
          (measured), or the value rides the label's own line. */
@@ -243,13 +243,13 @@ export default {
       if (key == null) continue;
       /* The same file listed twice is one item of legislation; first mention
          carries the description in the measured layout. */
-      if (seen.has(key)) { readAgain(seen.get(key), locate(offsets[i])); continue; }
+      if (seen.has(key)) { readAgain(seen.get(key), locate(L.start(i))); continue; }
       /* The item number immediately precedes the file line; a section item with
          no Subject block takes its heading from the nearest substantive line
          above the item number. */
       let item = null, heading = null;
       for (let j = i - 1, hops = 0; j >= 0 && hops < 8; j--) {
-        const prev = lines[j];
+        const prev = L.get(j);
         if (!prev) continue;
         hops++;
         if (item == null && ITEM_LINE.test(prev)) { item = prev; continue; }
@@ -263,7 +263,7 @@ export default {
         subject: pendingSubject || null,
         from: pendingFrom || null,
         item: item || null,
-      }, locate(offsets[i])));
+      }, locate(L.start(i))));
       seen.set(key, entities[entities.length - 1]);
       pendingSubject = null; pendingFrom = null;
     }

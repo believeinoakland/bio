@@ -1,0 +1,2798 @@
+{
+ "note": "each type's detect, and the registry's verdict with the winner's parse, as digests, before R37 (doctypes R37)",
+ "taken_at": "2026-10-22",
+ "readings": {
+  "fw18:minutes@held": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "d864c70b407549ed3d80ee70054b0240e7b2f4e3658e379a7904213f5817a00f",
+    "meeting_agenda": "b548691b112ce5267c6eedd610e151bd5c8f81b839f488e07ed4b1cdc24f780a",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "meeting_minutes",
+   "confidence": "certain",
+   "also": [
+    "meeting_agenda"
+   ],
+   "signals": "5204fd879dae5554b5f51abcf02f631a64eb6960d55a11171a7e485e6fa59d29",
+   "parsed": "a35d9b7d9758b3cfb807dbf9b01bfa813c5059b0decd65c8681b1906775e943f"
+  },
+  "fw18:minutes_council@held": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "4cebc89b6cefc06f69c4b7b11f0066c16c1b34c13c3f02ae5a911ff0135c7634",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "meeting_minutes",
+   "confidence": "certain",
+   "also": [],
+   "signals": "dba9da9131fe390e41bf7a2d941544372509942c7cd374460bbf705693325c1e",
+   "parsed": "5846cef5c821fdb94eed9533621329cebeef0871164dd89e51eaa190563e187a"
+  },
+  "fw18:agenda@held": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "2d9689e717df7bc05b308465dfa42ec48b3532d7ec92b56fa28cd3703171f3f2",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "meeting_agenda",
+   "confidence": "certain",
+   "also": [],
+   "signals": "08023db6ed43d3c44f90d320bb176670c575bc5886b3b60326e17fa68f8ede14",
+   "parsed": "129cc19f4f881c6baeb07e289aca03a726f97e92ab638b217af52ac3eda452d0"
+  },
+  "fw18:regulation@held": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "9db018efa6cbbc9c65f8542e5829688a618a444b8cdb4a923ebf0942ebc27a5c",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "2d8b21a9dd107bfbfac35a2f969484ecbc0f0076e89e9c876cf98eccb2e434fb",
+   "parsed": "fe4743887aa2fa774373c181a6bc426610c7185e5530ed83e1354717b6dd3c43"
+  },
+  "fw18:staff_report@held": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "5c8ae36df4a38202747096cbea24f5c8b19508ee06b7cbe98bee0abf47ba84c4",
+    "regulation": "13e6457a8951370376a1b3d3b66410b33e2d83e311b9f952cb0763edf0366937",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "staff_report",
+   "confidence": "certain",
+   "also": [
+    "regulation"
+   ],
+   "signals": "5cb0d832578ce36cebfd326acf8515d0059eff51cb8a30c1785d2e334b6799d2",
+   "parsed": "5368b2137d45b4356deaec5e5f346add80779a0f1f6d7ff34691f7998a367162"
+  },
+  "fw20:directory_nss@held": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "c0e60f51bacac3d86452d8601d3897e97c04a65b0396243492926c3197cfff32",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "staff_directory",
+   "confidence": "certain",
+   "also": [],
+   "signals": "0ffc94680b54f193532df605cf4fa290dc242cf6384ff11459f727432ec5052d",
+   "parsed": "021205acb2d8df1d91955c23f0543697beef54ce91098f9ed099988e3f8b892f"
+  },
+  "fw20:directory_nsd@held": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "44edbbdf4b49516fd0db7570b806c45da6de9f36790efa293f7e1c07adde815a",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "staff_directory",
+   "confidence": "certain",
+   "also": [],
+   "signals": "e810794a505c15d5d5dceafccfc41e737307d2e85ab23944e75f3d38456aab5d",
+   "parsed": "33459b741f30d23b8145358031c4f43cf3b7957acc753e383184ff7b8bb917cf"
+  },
+  "fw20:directory_cro@held": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "a760ea5c5ed00cd0380ac2901b74cfa2a2ce19187a12944736dfb984287deee5",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "staff_directory",
+   "confidence": "likely",
+   "also": [],
+   "signals": "8c46600d8074bc4b52d3583fa4ef2d5ea7f3aab870b1bf2eea8d52f6658ad861",
+   "parsed": "57878a1ba5040a1d61152ad17abc769e511e249d39b93a732f214aa432dbac41"
+  },
+  "fw20:directory_benefits@held": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "79b50db6e854f8d5b07e1cfa0227c4516c242d1e29b9d3a1ac5448a88d948192",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "staff_directory",
+   "confidence": "certain",
+   "also": [],
+   "signals": "7efd54beeed56bdbdddca17bea2da893cf55299aa0850f79bbdb9e5a88d7674f",
+   "parsed": "8712240d487472bc22bf1535a7d99d3b92af156edf3aa5df56536d3aeff39d3e"
+  },
+  "fw20:neg_candidates@held": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "generic",
+   "confidence": "none",
+   "also": [],
+   "signals": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+   "parsed": "7a998222246a3b8ba858155fc2e39780e9b95ee60732ae149fe4a0a418438067"
+  },
+  "fw20:neg_schedule@held": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "generic",
+   "confidence": "none",
+   "also": [],
+   "signals": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+   "parsed": "7a998222246a3b8ba858155fc2e39780e9b95ee60732ae149fe4a0a418438067"
+  },
+  "fw20:neg_recycling@held": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "generic",
+   "confidence": "none",
+   "also": [],
+   "signals": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+   "parsed": "7a998222246a3b8ba858155fc2e39780e9b95ee60732ae149fe4a0a418438067"
+  },
+  "fw20:neg_wdb@held": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "generic",
+   "confidence": "none",
+   "also": [],
+   "signals": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+   "parsed": "7a998222246a3b8ba858155fc2e39780e9b95ee60732ae149fe4a0a418438067"
+  },
+  "fw20:neg_medical@held": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "generic",
+   "confidence": "none",
+   "also": [],
+   "signals": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+   "parsed": "7a998222246a3b8ba858155fc2e39780e9b95ee60732ae149fe4a0a418438067"
+  },
+  "pa:agenda@pa": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "e83f18cacee0a52fb77bedb5c8ebe49088d4e7307710d8ec4f424a6d7f0c8306",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7d34f4f59218afbd8b4d922dabe4cb52939eeb5da0dc0b873f076f2047355999",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "meeting_agenda",
+   "confidence": "certain",
+   "also": [],
+   "signals": "3c54ac77b6f8bdf3576732a4fca78160eb616a025cf648e4fc72e30085e96cc7",
+   "parsed": "26ad55d7887182a9a7feaab622ff5c07dd9c1536fe56972b162e54f596049a49"
+  },
+  "pa:minutes@pa": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "f7f7c6f5f5246989f3f336ae9c615763e3be3269375124bfca5d2196df8d113a",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7d34f4f59218afbd8b4d922dabe4cb52939eeb5da0dc0b873f076f2047355999",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "meeting_minutes",
+   "confidence": "certain",
+   "also": [],
+   "signals": "2bf6dc28067060795c6632ac9a80d57cff946966911e2156cd06b1fb4e3146c2",
+   "parsed": "1116152a9bf3d77c147c9b79b5d286de9b66f42a14648ccae21f98d53315f4b2"
+  },
+  "pa:report@pa": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "214d0145e26d5d6910e4093fba6cb08bf873bcab5df2da7c23e135e5ed26f5f2",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7d34f4f59218afbd8b4d922dabe4cb52939eeb5da0dc0b873f076f2047355999",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "staff_report",
+   "confidence": "certain",
+   "also": [],
+   "signals": "2d5b95759e381d0653c6a3b4d4226b07f988b4d08932e6edc774477b35970b49",
+   "parsed": "6b3469eb7cfc89d242f35e3968db8f12ad607d1a04fcb4246a3fd2f87615cb50"
+  },
+  "pa:bylaw@pa": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "935492b0c6ac242ac33e3b1dc9fed54d2fa8470c8718181f94f42b2670ee5e8d",
+    "policy": "7d34f4f59218afbd8b4d922dabe4cb52939eeb5da0dc0b873f076f2047355999",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "00bc52b7d0ea2bdb5b98fadb58798f5cb2fe7cace2c6fcc1947e22c555ca287e",
+   "parsed": "6a26b06aa6d9946b0c2cfb3b7141b5a14446c635bbdb8eb224bb2bc15e2a2c42"
+  },
+  "pa:directory@pa": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7d34f4f59218afbd8b4d922dabe4cb52939eeb5da0dc0b873f076f2047355999",
+    "staff_directory": "bf1b8b6f05eda5c747be2d6e06d9b8512e94cc3a8f210d528043175b3091272d",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "staff_directory",
+   "confidence": "certain",
+   "also": [],
+   "signals": "1b4ff5087b5681f06921b67827d9630004432262fefe048c77875c79201ab07b",
+   "parsed": "6498711164325f52ea2dd007aa784947119720ffab315bd9399280220dfd77b0"
+  },
+  "pa:calendar@pa": {
+   "detects": {
+    "meeting_calendar": "0f8c1bafe59aa05ea80ea309f41299b8978e4d8f27132aa7850b531b01783d14",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7d34f4f59218afbd8b4d922dabe4cb52939eeb5da0dc0b873f076f2047355999",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "meeting_calendar",
+   "confidence": "certain",
+   "also": [],
+   "signals": "6d19d405d0808a507c641ff5afcb4f28f9bbab51094811ccce68a3701c40bda4",
+   "parsed": "a478c500cea01f8c18717915d31294e215ef81afb56edaef219ee351dd0363b7"
+  },
+  "pa:calendar_cancelled@pa": {
+   "detects": {
+    "meeting_calendar": "0f8c1bafe59aa05ea80ea309f41299b8978e4d8f27132aa7850b531b01783d14",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7d34f4f59218afbd8b4d922dabe4cb52939eeb5da0dc0b873f076f2047355999",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "meeting_calendar",
+   "confidence": "certain",
+   "also": [],
+   "signals": "6d19d405d0808a507c641ff5afcb4f28f9bbab51094811ccce68a3701c40bda4",
+   "parsed": "3a5d4e389cba0d39eb98be47fb07d5d8cef4d52e5c5a650535d72ba2fe53e6ca"
+  },
+  "pa:agenda@lk": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "ede6d4d3a91e599bd1fd232e7882ffd80b4dcb863153e6a36697ca485097f0d8",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7d34f4f59218afbd8b4d922dabe4cb52939eeb5da0dc0b873f076f2047355999",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "meeting_agenda",
+   "confidence": "likely",
+   "also": [],
+   "signals": "13e99b3ad47236838b32b5769d4d9d1a774d98699049ce940298c3edf145a5bc",
+   "parsed": "8c9caa1b03d1e0b5d166151bcbaf5009b21bbd712ec1f8eb211d64f3e9dab2c5"
+  },
+  "pa:minutes@lk": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "f7f7c6f5f5246989f3f336ae9c615763e3be3269375124bfca5d2196df8d113a",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7d34f4f59218afbd8b4d922dabe4cb52939eeb5da0dc0b873f076f2047355999",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "meeting_minutes",
+   "confidence": "certain",
+   "also": [],
+   "signals": "2bf6dc28067060795c6632ac9a80d57cff946966911e2156cd06b1fb4e3146c2",
+   "parsed": "61e59b064efdbf371b32f1106cff60d7ca3436339eb1a377da85a9c7a46bb6f6"
+  },
+  "pa:report@lk": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7d34f4f59218afbd8b4d922dabe4cb52939eeb5da0dc0b873f076f2047355999",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "generic",
+   "confidence": "none",
+   "also": [],
+   "signals": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+   "parsed": "7a998222246a3b8ba858155fc2e39780e9b95ee60732ae149fe4a0a418438067"
+  },
+  "pa:bylaw@lk": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "387f8c7670c9956d18eb7f097b5b37296d7f18c1117db9f5bd80826bf70b73bc",
+    "policy": "7d34f4f59218afbd8b4d922dabe4cb52939eeb5da0dc0b873f076f2047355999",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "0897138c4d4c0849f9833081ac9bbd6eb352e836605019464cb21d645e07779f",
+   "parsed": "951124b133e28c79167005cb020bbf0e72649d02ffc00e42697fce00637124ce"
+  },
+  "pa:directory@lk": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7d34f4f59218afbd8b4d922dabe4cb52939eeb5da0dc0b873f076f2047355999",
+    "staff_directory": "bf1b8b6f05eda5c747be2d6e06d9b8512e94cc3a8f210d528043175b3091272d",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "staff_directory",
+   "confidence": "certain",
+   "also": [],
+   "signals": "1b4ff5087b5681f06921b67827d9630004432262fefe048c77875c79201ab07b",
+   "parsed": "6498711164325f52ea2dd007aa784947119720ffab315bd9399280220dfd77b0"
+  },
+  "pa:calendar@lk": {
+   "detects": {
+    "meeting_calendar": "0f8c1bafe59aa05ea80ea309f41299b8978e4d8f27132aa7850b531b01783d14",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7d34f4f59218afbd8b4d922dabe4cb52939eeb5da0dc0b873f076f2047355999",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "meeting_calendar",
+   "confidence": "certain",
+   "also": [],
+   "signals": "6d19d405d0808a507c641ff5afcb4f28f9bbab51094811ccce68a3701c40bda4",
+   "parsed": "a478c500cea01f8c18717915d31294e215ef81afb56edaef219ee351dd0363b7"
+  },
+  "pa:calendar_cancelled@lk": {
+   "detects": {
+    "meeting_calendar": "0f8c1bafe59aa05ea80ea309f41299b8978e4d8f27132aa7850b531b01783d14",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7d34f4f59218afbd8b4d922dabe4cb52939eeb5da0dc0b873f076f2047355999",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "meeting_calendar",
+   "confidence": "certain",
+   "also": [],
+   "signals": "6d19d405d0808a507c641ff5afcb4f28f9bbab51094811ccce68a3701c40bda4",
+   "parsed": "3a5d4e389cba0d39eb98be47fb07d5d8cef4d52e5c5a650535d72ba2fe53e6ca"
+  },
+  "pa:agenda@empty": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "ede6d4d3a91e599bd1fd232e7882ffd80b4dcb863153e6a36697ca485097f0d8",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7d34f4f59218afbd8b4d922dabe4cb52939eeb5da0dc0b873f076f2047355999",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "meeting_agenda",
+   "confidence": "likely",
+   "also": [],
+   "signals": "13e99b3ad47236838b32b5769d4d9d1a774d98699049ce940298c3edf145a5bc",
+   "parsed": "b032d38b9626bec3e5c8e49e1cf676958c9635e00f5f7b372eb771d0b18af6a7"
+  },
+  "pa:minutes@empty": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "f7f7c6f5f5246989f3f336ae9c615763e3be3269375124bfca5d2196df8d113a",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7d34f4f59218afbd8b4d922dabe4cb52939eeb5da0dc0b873f076f2047355999",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "meeting_minutes",
+   "confidence": "certain",
+   "also": [],
+   "signals": "2bf6dc28067060795c6632ac9a80d57cff946966911e2156cd06b1fb4e3146c2",
+   "parsed": "559326f541c4794eb1613214866d0a567240d9329e6cee6525b839412fb0e9f3"
+  },
+  "pa:report@empty": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7d34f4f59218afbd8b4d922dabe4cb52939eeb5da0dc0b873f076f2047355999",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "generic",
+   "confidence": "none",
+   "also": [],
+   "signals": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+   "parsed": "7a998222246a3b8ba858155fc2e39780e9b95ee60732ae149fe4a0a418438067"
+  },
+  "pa:bylaw@empty": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "387f8c7670c9956d18eb7f097b5b37296d7f18c1117db9f5bd80826bf70b73bc",
+    "policy": "7d34f4f59218afbd8b4d922dabe4cb52939eeb5da0dc0b873f076f2047355999",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "0897138c4d4c0849f9833081ac9bbd6eb352e836605019464cb21d645e07779f",
+   "parsed": "951124b133e28c79167005cb020bbf0e72649d02ffc00e42697fce00637124ce"
+  },
+  "pa:directory@empty": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7d34f4f59218afbd8b4d922dabe4cb52939eeb5da0dc0b873f076f2047355999",
+    "staff_directory": "bf1b8b6f05eda5c747be2d6e06d9b8512e94cc3a8f210d528043175b3091272d",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "staff_directory",
+   "confidence": "certain",
+   "also": [],
+   "signals": "1b4ff5087b5681f06921b67827d9630004432262fefe048c77875c79201ab07b",
+   "parsed": "6498711164325f52ea2dd007aa784947119720ffab315bd9399280220dfd77b0"
+  },
+  "pa:calendar@empty": {
+   "detects": {
+    "meeting_calendar": "0f8c1bafe59aa05ea80ea309f41299b8978e4d8f27132aa7850b531b01783d14",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7d34f4f59218afbd8b4d922dabe4cb52939eeb5da0dc0b873f076f2047355999",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "meeting_calendar",
+   "confidence": "certain",
+   "also": [],
+   "signals": "6d19d405d0808a507c641ff5afcb4f28f9bbab51094811ccce68a3701c40bda4",
+   "parsed": "a478c500cea01f8c18717915d31294e215ef81afb56edaef219ee351dd0363b7"
+  },
+  "pa:calendar_cancelled@empty": {
+   "detects": {
+    "meeting_calendar": "0f8c1bafe59aa05ea80ea309f41299b8978e4d8f27132aa7850b531b01783d14",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7d34f4f59218afbd8b4d922dabe4cb52939eeb5da0dc0b873f076f2047355999",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "meeting_calendar",
+   "confidence": "certain",
+   "also": [],
+   "signals": "6d19d405d0808a507c641ff5afcb4f28f9bbab51094811ccce68a3701c40bda4",
+   "parsed": "3a5d4e389cba0d39eb98be47fb07d5d8cef4d52e5c5a650535d72ba2fe53e6ca"
+  },
+  "policy:642": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "879aaa1c4f5ebbc07deeb4e6fcb032fa64217fe244b4cd739d5bb5ab34a629f8",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "296c3712926745f473bd9c5a1e56b3bb82cb81e42f26d72d5007f7a00b48c2ed",
+   "parsed": "a9faa48bade1e999fff3ed6495647184c9576276aa2073e1848386e40c9de458"
+  },
+  "policy:693": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "ae6bbf58cd1045c7487fc7c8a64cb4986be3164628f3bb7e708b9500f110753b",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "484416712d42aed429fd7eae3d0e468376550f6e9057e8c027bee54d37d0e973",
+   "parsed": "0b4110d1dc8ac863869d12b56bbf5fd7f63601a06a902e9a38d232b5cc5a0039"
+  },
+  "policy:694": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "2a5459e86596ff5e7c1c9353577976f03daf5b7fbad4c94881816180c84364e0",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "3637aa19ec6f9e2de5915f9af4d4112a92d0140870cfc315810e8cb666c9e2c6",
+   "parsed": "6789af46e7cf39b2bdac02bec0f04db136880e352fdd5b0b3ba31a4b4ba09284"
+  },
+  "policy:698": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "573dbe8d5193c85632ccce17374eb569db905c6c06dd8e7805bd36bdf5c1d19f",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "4628aca8f1edefed263d4d2d413200d3ffeda8c45110e23b284c91d48eabfeff",
+   "parsed": "a92aa3467ed4fcb063da238b5144d5623e79b63306f2fe8cdf1a0c695d75f697"
+  },
+  "policy:743": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "6b0ba5a8f43bb88be87417add607697abdf43d6918d48511db23a630fb6d16f8",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "9f2426d32d7ca68d785299ee3517400b346b8c8e8dd506de76b2a523938e1d04",
+   "parsed": "8cd46a843e7630487d6cfc2de8915715b1d78625e73b40793d68a47a49972096"
+  },
+  "policy:774": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "68dc064a15a260ec9a2ea6f84620edd308f1dd96565f2bfa5a12a094dcf8ce97",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "14f4f694f064ed1fa35b298e08f4940c1984d81017d4fb4d74bb59549969d9c5",
+   "parsed": "15c17ade558f57910f1c4a30e096c5f5389ef943ab0ce43b3ed21f0a5e5d24c3"
+  },
+  "policy:1893442": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "0f6eaec7db8961ba328cdad1c26f3ea7a1e3d5a9ac1251535a5d59900d3d589f",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "c5863da0f08a7d32a46b8bba07eb7d51b32614a401369362202f1fc7f8ad91a6",
+   "parsed": "803f48517f23924a21c39e265acb3566a4b81f1c6738f37cc80a1b079ad68de4"
+  },
+  "policy:2227646": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "a0ca65af4de65e999407c710255f42d67c088993d2960defa97b25228dae12d6",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "e8dfc097a92c5205c8a726a4121213137accdd1863e570a2ae0d36f768adea55",
+   "parsed": "458ec80667d87ac2b89bcf6e301d1cca71c815e8b8cfcfc65edcac6a882f6512"
+  },
+  "policy:2706547": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "a6fed011fd5799ffd20ca65c0eb082a49546517ac1bcbfb8c031a2619eb16ec0",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "62913f27bcf4bdd15a22d947124a5351584629cedd82e247bcfe506da9408cb9",
+   "parsed": "516d08e8edf5a00fdc979823c6b389a4fbb82a110ae1a59329818862e4f8db86"
+  },
+  "policy:3327411": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "6160dd4fd949fa5427cb32724d62ef5d3209a1c904ce58d3feff2e3369623a27",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "b0653a0043c781f6b0a408fe245b32821ec964f084ba2a8a3181526e1dcfe9a3",
+   "parsed": "f396e3c174a7e277c2538e414e113fb9ee3cd19b8db87f4fb9d003d7de196a4d"
+  },
+  "policy:579540": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "4a673b6c0e53c80d3505caf1645b6a21a20d3164f3ec278bf97c572cb9acc867",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "e9d4ab1c84bd27c734edc52ff89e7e59167f04e5861ed6d693e6296cfefbb156",
+   "parsed": "58fb16681ef3abe3b64f16074a99e77e84e5a9e32b41f2ccdd4a98769a2dd130"
+  },
+  "policy:2108538": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "77768df10bfaf5e7a6e729e38ac8622703972aac7f1008ded898f6328bc2fc39",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "a4eff0b76be4047a22c76801e0d8986e84b533b934026d26e9b53ac9bb506d8e",
+   "parsed": "acb6576a8ef32fcb2ddbc3d90eeec41f325f2989b9e4a38c6e87c846df4d283b"
+  },
+  "policy:2663632": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "generic",
+   "confidence": "none",
+   "also": [],
+   "signals": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+   "parsed": "7a998222246a3b8ba858155fc2e39780e9b95ee60732ae149fe4a0a418438067"
+  },
+  "policy:2674928": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "4066af7edf62dc55ef13c826f502d52c86bab1fcc6f63a92206d49421b49729d",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "eec9b3b4355f580689bf6effc3996d464d266caaa44c702d0781fe25e35f6c52",
+   "parsed": "2e6799af78353fd48c75d4983a6f0d7a321062fd9f3ad2d611929c6c83a83ca9"
+  },
+  "policy:415": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "ceafe9e26320e8ef131afd7a8e0812b2d9cc063d536d47a71ac52138dc2e86cc",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "09dc79f8e2b1c098841c3bcb567fd76a6f822a0122237f58dc00d9b7650a92b9",
+   "parsed": "3548594a264e17712d2ab9fd10f6e6d2cce8614f123ecedd0799760d2388a036"
+  },
+  "policy:416": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "67284a269682572ff01af0050511a57ca1fe8bd419c62025dc59a10147fcb73e",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "59ab2b76c72eeb45de2001ab647cc4598fdab4260ad74525eec4f44f1c5813ad",
+   "parsed": "812db4f3e6b5e77f8d1af0c832f984baa73440be4ef7d16cafede9201549f9cc"
+  },
+  "policy:417": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "2e49f9f7c44ed9cef8e131a78282d7876435e5a282c54fafd91e09e5e2533783",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "955f14701f51b756170f6d8338ec59a40a79f2320d8879e4c2b9b46bfe299151",
+   "parsed": "37dfb664fe60d03f2d25c31698d7499685e9ea8cd13f2248eb2e226baf48cdde"
+  },
+  "policy:1266222": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "43d500ab237f4275803022738878b0ac78c1dec4808f4bfd139a94fb63bef814",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "bb336a93f89140e01476ef2172180b83655cb1d890e24c4ebad5b6a426b69bd3",
+   "parsed": "9bd73859f291d8013fbece54cad6fbddfc785cd7fe661f86e78da7111a6a1301"
+  },
+  "policy:1431388": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "8239e7cc001391b3259da5a928477356bec185688c7fcbf46042c00419a241ea",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "98273b5f4ae8d54726a529700d1c8c3161dd2c53f146c3c63682a99b09c05266",
+   "parsed": "bb3209d3b12d456d6ffd7ee48cfeb77e47623843638a26633d5dbdcdd830c7c8"
+  },
+  "policy:5": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "f4992314092c45a85de8014c89d7bb9c4e827298e4b20b416ed2a2d12b06cdd6",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "49ee544ef31c481c94de5fc546baa76b75e2a0e5009a4b001a5ec00ca4e2202f",
+   "parsed": "4cd1e6baf2d861049acca8357d6bff5cf115c90cdd7f37a3dabe74dfde5dc651"
+  },
+  "policy:17": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "fd36fd22399e8eb3dc849499e2e1e0f4f1addb38e1c919c4f1388a687d100095",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "5ce19179c31dfb7856a66dafbb6ce039160eba8c3945eee629f8a73ae3211554",
+   "parsed": "8c6bbdbcee39916268ada66abef6053740328fab3332a631425208daa04d68c7"
+  },
+  "policy:25": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "60ce144b50d2d935f187c0ae7b0bd5dbdb016695f912f41cf4e9c3791ff5d922",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "c06d2cd4e71f70d442f2657b52293bf824a76418c44e75af0e96431da167735d",
+   "parsed": "b0fc0a5d3fe5690e132d56f2e3c97d48f4498d16d901c736e077a31dc4879b42"
+  },
+  "policy:30": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "4300fc107a1aa6dd6d174661e32debb0546399aa2a3f7d550bd9d359931e96fc",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "900824a80a85d650f42445c79df6ad67f69f163b7639cc692bc4b1e878b3ba98",
+   "parsed": "913670530b36385389cdec335964167981d62e9e9d9c4bd46a8216231c2ea71b"
+  },
+  "policy:35": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "1f966cfefac42d37c946275e6ec9a22cab904f4187bbd2c20c6cc221c4e0467e",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "8bc3e1b78640f5533a9375c445ffb774b046cca8a03a774e7680715e93bdfaf9",
+   "parsed": "a49be80c517859f0a95f21e745f3d1326810af3057a0284a4408daa52e6e7852"
+  },
+  "policy:41": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "08e965429e846bee404857fd515a6e1dcdc1805204504405a97c0819873a1968",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "1cbfd9e856d0445b9577e01968fe063fe79ebae30fa9927494b8254abea43f4e",
+   "parsed": "3ad3c3331885373623a747a50820590fece89d44edd698a3b8beed604c548bc2"
+  },
+  "policy:59": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "ede00d6dbae00d010b3f8c54521742fdb44b744dd418ac08129526e8959e4c09",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "d8b4e3733e100d94194d9bb75ba411fa562bb825331dcf6a49f40aed777a693d",
+   "parsed": "72d289324a7db0403ad8ce0d8b446899e8ba480890c33f0989d1273cd050f257"
+  },
+  "policy:97": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "8d220164095da5e42c73e14190c80aea9634cf138edffe2ce92735194ad61f32",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "38c8f7c5df0ffe3ab7d4bd601d1daee197f205a204ce21651d7061c669992364",
+   "parsed": "16b3969509483d256a0adabe107ae3b2f65398d0cd293a4fb5e739372f5032f0"
+  },
+  "policy:103": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7793f19a4b718a3702cf92086e8cdf6842f4705c68b84a6ab7e2c5f3438b690d",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "eb7f457e6e388e8a318aa8a4cb401be9af7c3a8ddce5ff138212d4571d86b150",
+   "parsed": "0b0e17c471f3590a40aa66808d05276a7cd66f36d1df406016eff619b2785fdb"
+  },
+  "policy:2665968": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "8b3f4a794fc3bc8b6df8a3175b1eb0d6800b0df744dd4d37c281f5f0300d113d",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "8540d91411d874f445b1ef3fd26d821b416805c24ca6ca59e0cc037c798810dd",
+   "parsed": "8d12be193ea857de7b17586150b1ad4d0db5fcb3493823946337b2e3549fc09e"
+  },
+  "policy:117": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "217e4b1b7c7a4f90fbfe4bb517f9f16515d7f06251c5cd05c118d9a8a72ea455",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "294d63d075b6cf536994a430e94b390406b9661797ef07714b4471f5af11f405",
+   "parsed": "34c3ced7af0f03efd951798580b038e7e63496b1301b8013c48c57e4b49bc48d"
+  },
+  "policy:123": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "257a2d985d75215e1e4cac42c105dc5a8f48113e59f5aa5d7f5566df6ec1d3c5",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "87b6b72c7534a9aaeef5765e011aa416e987c48abc20a3b6c4235bb990dbd11a",
+   "parsed": "8c3cb1e52dc27fb0a06293d4ec7e202b82122e41528e6e62fd830b123698e508"
+  },
+  "policy:133": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "a2eaa9e2529f3b3ecd38aafbfeb0261523efa84f097e3a4bd4c0005b269ed550",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "f0280eae1f7788a27f570cfa97669685114f30effefe18282ec5e6774b3fc77b",
+   "parsed": "c07012d6e36ea70672ace960550f2afaae2dd4bea151a8358e014a792e7b1d69"
+  },
+  "policy:148": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "a91643d25440ed4f5ea651343df80c9465a62cf8fb565e1d8996076a65620912",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "30b84b41a4551aaefb560bf645b780ae91df07e57f62f2c188127a6b531ae63b",
+   "parsed": "d74db7fc7bfafd507c48f06be95df4ee1cec8a40d6986bb2b30277fef538d807"
+  },
+  "policy:196": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "e840f76777495f20dd96e0c9155ea2d8af4509b5912513a1a18d5b52e0d06963",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "2842116621c3d84e21032fce5900862d63bc6a4d9062cc95c7059df0281df418",
+   "parsed": "3dc562a2cb7320498f20a879f1d0ebb066bf0a09a579b3eae34a54565d369c29"
+  },
+  "policy:202": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "593077123fc452d3ca4927cf0de28ab3799772d9f16a658a2ea030baff89d3aa",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "4a83f7e2f7d7d9e799be70261d2bb004f168c3870b18c5a2af7ffefd9db51e47",
+   "parsed": "687df993a836c0e12e846a07c30734eca3f1b4bf02c740ad060615bb95dfc290"
+  },
+  "policy:3622083": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "f270bcb691e1162f7d2a1b14ce95dd79236ca9fc2933df1047a89d11dd375eff",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "742e8c2fa6cf251f5def0ac49b3da2996ba322b00c01e77d70ba11f5885c1eff",
+   "parsed": "e5a1605ed7a11d9b4242130f80e9470450a8d1d5a88ddd36db53edfa84471fe6"
+  },
+  "policy:219": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "c91481084615fad64ecc1a8add6c64a6876c28f5a3e4a6aba1f1d78e67aede9f",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "2be621c5d1da9bcf31fdb3c602cfbaeba785609f05c9d41cc5f40fb0151ca6c0",
+   "parsed": "d2cbbe9724d284331d4f71846c46b8db6492cd096bbca19359746b031a8a65bf"
+  },
+  "policy:3250232": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "f16c35c7aec936230f71803e0dfbfff2f22462c83a0658151e79b36489f64904",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "7a628e92b7971ad69f996f49890703108368ee9a439ae7bb5d98a2c2b9771bbc",
+   "parsed": "28542d9f9ad705dc6a0f810c605edddce290697f52813b3f8f2b991a30a5a3ed"
+  },
+  "policy:2868228": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "9f2cf095fa2cbdc5de5faaa1b04e63a02d2eca68515d8a246246efee3c877d7d",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "636bb4582d0672bea91ac0ccbd554da149bfbc542d2dc05cb576234e17f81aef",
+   "parsed": "7f826fb4c7929799ea045ce9e72cdf197140a28d092d7ddf77aa753d84299445"
+  },
+  "policy:3256441": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "aa49835575535afc0463759b4a5df7529a39016b59ba24a722dff742892bdf56",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "e1ad924933a18682c157161944cf726f8ccebb49169f146d33c566629f945323",
+   "parsed": "8e1a519823a0ff370f733592550777d11e3b79d5e06fcb6bade0612a1e225557"
+  },
+  "policy:439": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "544a26e11ecd94c3323c20dcfe66e7bf0596f0d6a94ff908a5487003f2f2929f",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "003b1f4fe7229d3f58b8a89688887b6230c9011d55d0a49fd317ce5be0081967",
+   "parsed": "2de2c876f95880dd4fff865030ad415334e51b6ac612953dc3bd6399f5012f54"
+  },
+  "policy:1262403": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "b8a86888b8a37fb77cd9358d516b45090caede5170b21284bd2e165adcc482c8",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "093c0d147118d109bdba63b8728b206c79514b2992a5cf53f8c280b1cc1536a5",
+   "parsed": "a9d7ac24c0f43102a1d403462c5f10a55431e0dc3d8f2175546a130d94c7b821"
+  },
+  "policy:454": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "8bda5cf89226ddca506997b2db8fb98b8255232727949738be93456a7640aab6",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "779bcd08fb370ff05e4c44eede4bc39b48015113ff1fcb7dcf7fe339193423b8",
+   "parsed": "0d1a0f8b8ebfe0a3a09331901b3c05d34305fc6ce030979bb10f737849f40d3b"
+  },
+  "policy:462": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "a9e9f124244cb71ff05729eeaefe66b6c8f4ffe52e88fd38b94742080f8d4a71",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "94f1c80fa6a4329cfba9e1ff6f8dda6a034595eb7aeadf9333177a768176a793",
+   "parsed": "671a00e208fa5d6528f5ae639da4d9cc810af1815d2ba199fb99068ad486f71a"
+  },
+  "policy:472": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "generic",
+   "confidence": "none",
+   "also": [],
+   "signals": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+   "parsed": "7a998222246a3b8ba858155fc2e39780e9b95ee60732ae149fe4a0a418438067"
+  },
+  "policy:477": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "be88ea409f3c83d3999ecb3c9973a3c125419bff6d1750eec2f4d2f48eecec12",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "5fa535410e845c63f54f6cde2fd117f5638d2f87cf3148dc3af9b5a95d5f9f31",
+   "parsed": "4f050bc9286df431a57d65fb9c65bb6b914f5ad72a7d771410d9a84f3f7a5943"
+  },
+  "policy:486": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "d8cc97e3b6b536a52cb2681cf16dd9dbe1de9a9381e2641e337167c1a1bfdca3",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "52db9e4f8c70c2d42b072f32425db931599639966d7662af92b4988531fa769c",
+   "parsed": "d997f1ce38d4f015b53d20c3c20b91ef70d8850450defacf352cabe661197cf4"
+  },
+  "policy:498": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7fe6cc00744b6dbc3da469ac28d7a21fb3cadf74b11dbf3485b007e24822fe81",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "8b836bd14d363fbf9dd2754aa48c5eedf5dcb27a66454d71e8439708ea4d6f04",
+   "parsed": "bf7bc6eb69ddafab237ad93f2255c0e5d1387358ad39ac2777776b6c98774227"
+  },
+  "policy:ai-594": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "9c3e2ff4781d13571c72d459abb55ef82ef84000388f8e713f4a7d8cf78fcdac",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "d96ac6b0d98fed817ceacea1b1772fd12ec956f29f128b3ed79941a61247d214",
+   "parsed": "e20d4b80ab8ebbe32e15e20481eb4ea947847242f2808ac87f2fbee36822b8a0"
+  },
+  "policy:ai-123": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "c6a277ea0670891f2ceb4a7c4248ed775269e59f0639db240b107cc909f329c4",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "0b0f19d0b531c9082aa82cb979aef65dcbfd48f42c99e0b964e7db7632a5a701",
+   "parsed": "f8d5ed98a4716ddf3526cc49a69565fcfdf1468e92a70d45c7a8cebf246e88cb"
+  },
+  "policy-fresh:ai-139": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "8aefb905a60c69c4b31b7dadace2dcf25f4fcbeeca0459eec34980f65302658f",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "396df66cdeeb5e0f5e87e6958821c6b3a786179a3cee0553c923d9be7ba5e792",
+   "parsed": "d1ead33eb056055938f4b23cbb2e625460850b1655520c5e940aaec1e22bd436"
+  },
+  "policy-fresh:1431392": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "3011ace2739e2919f150834c2f170a387a3bd77366b82d2c2188ee7e5a062b36",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "dbb1d350a0abdd0b1985f9a4c216e3217fd0bf1866b880321d5996b3244787d7",
+   "parsed": "2a53bc137f91bbf9f08d78fe72b631a7637b7b2236f84748edf411e781bffe18"
+  },
+  "policy-fresh:13": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "9d2fc85568af4537e47da590b5d9ca0a06846ba648b9393e37787901f8c36adf",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "30551ba9d8348525e94908b53c828248dc54d17881c1d23fafa9d84716b5bd43",
+   "parsed": "f8bbc0dd3479c882992cd0e39c237e5ad37c985f9ab5412827728821bffd6b9a"
+  },
+  "policy-fresh:23": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "2c2c34ac17edd7712668adb8ccb872ddfd132747100b2276f6ee271d3f395dec",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "471e8808e34a18a7f597cb6bb65502f1b5bbf97d85fe328cd60fa69f690fb1de",
+   "parsed": "de00a64ede1c732109c11423482e21c973a5a459207caff019f5e76de2870cce"
+  },
+  "policy-fresh:29": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "ab3f0401a06f322a35c1057e067d2735b690c142d558ff63293f3d1b40424f45",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "54be4a9a27c822b7c34cee05a31ff96798db1ee937c58d50dcced91772b703a3",
+   "parsed": "a96afad52fe5f203b46d9e7b1ddf4f82d97d672b6e1ef7a1af1b6963d625ea9e"
+  },
+  "policy-fresh:37": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "3af73cb4bb6edfd00d55d88275f0f1d524505072e0967a989cdfbf65efaacca6",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "98979b083468f78f658086c1fc49be52b03492aab67559bb2f508b9e472ace0b",
+   "parsed": "a540355c32100e8c602bcc2192c9f37fcf93d506e35716ee779453583d7dd5e4"
+  },
+  "policy-fresh:56": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "0a85d4eee223f5bd2374640795d33b131f6c3796b0d8584574d1cc1d6c9bf0d9",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "1bfe12fd1f6ce4ef8de0b72df1eb975aad2f6b3858c19e6ea3611d69f0b9b085",
+   "parsed": "0cf6b47dfa2215aebec51bc10c4b70f1f3a00d9012cd547b13ba4a55df8a5893"
+  },
+  "policy-fresh:96": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "438db4d715c096d426f27dfd2b5acb7f57c36b01253302b4a39afc3dcb9d640f",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "354137227d4cd8f4d2ba6bbeee40fa29330741892898776f6bd09560bcd2f1b0",
+   "parsed": "52cf8581d6ed74fbd76d5d1123599250c82e6f9367950d09b9cb3729f8a2a1be"
+  },
+  "policy-fresh:108": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "206fa964198a3d1c3699ce69457cff51a9abb922abc44a08564447271b1367ca",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "9da66f9cb1fb7acb1782a5102b8f5fda37fcaa57d916197e73c883d6fc50d7bc",
+   "parsed": "70368f9e46b323425033bdb688d24b5e1a5dc99c01dee2ab3e836700ff2bb292"
+  },
+  "policy-fresh:2665492": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "7e3e318f435c3d2dc14110aea2645a1b4574ba033bf92db085c2812d79c22b47",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "4b5766c6964812e2492fbb15c6b133f63e5ddb7c9ff34f06b2f5f7960b6a17a1",
+   "parsed": "77bc1fba8d7afba97f6880b54e6b327375786394d0c0c3eadc6b1172c9a1ded9"
+  },
+  "policy-fresh:121": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "e54ce44d4f6df705476303b3834392f8d3e2e0713dbfcd6c5049b001e141eae1",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "eaeb31874e6fa6b2353ac85bda70e02eb90767f46bcccbb31b860077c955f269",
+   "parsed": "21af807cdf556bedad5b819e0bf57c63446b42a61910131067f196d219884438"
+  },
+  "policy-fresh:134": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "02c8a7629df0d07be9baa052c85c8411197a3b94f4f8206b513946f196c5ec41",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "27f94d7aac6da981d83dba3b56cf0a48377e0d65f9719c5d6eed683c3c0bb299",
+   "parsed": "a619767243652bb2cc9db9d815e14c414085c7a7c5c4d07139c9a2c3cfaf1e01"
+  },
+  "policy-fresh:192": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "9a4704c07cc86a3df348521b10866654f2745ef4821625a10c3896ae61be50d7",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "70a3fb87143bd20dc12b7ce76e3e1d975fc0e541e26e5ffff4cc513126a17444",
+   "parsed": "910c601fd583786fad8bcc2b3626f4fb1895360db47b4542229575c1862eef7e"
+  },
+  "policy-fresh:200": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "bb11af3cfb09ecb00075d11f5dff0a3c23ea45aeb7ae6048e8553c51428a506a",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "0eed37d5653f112c4dc4143819799b7d81c297cecf054758a8ac7cfbfe44c945",
+   "parsed": "7901cb0e51450c3081b57e20102f696f92f8c941b6e178de7591c9962f2d0cd4"
+  },
+  "policy-fresh:213": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "2fa24545b71301dcca6df385afb6c8acfcd3db8f0e4b585622b40b0cb177e09a",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "fb2a0433da2e386ba7e2422b747ef6d2985e924177d518e4c2eaaeecf5d2e3b6",
+   "parsed": "6291c9f1fd676290d65f1e29ec05135dacde9b2a8ad5445625610300b780b9e5"
+  },
+  "policy-fresh:221": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "63cd3d91ac3e8362187cb1cb8c2934c8c0a690cdae6bbacc2a27a8391c04d712",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "19d0d4d9d9e8763bc33b0976336b3d9c61880a9d5b921f8073a1c4333fbd3393",
+   "parsed": "0f6f1bfdf7bb01983b6fa20f3bf2d1ceada978e476f0fdfb6ef266613bdc1229"
+  },
+  "policy-fresh:406": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "1034caf4b409530627ac8de21991c06d72aee31caa38e64018cc34f5a03bdcc4",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "a2bebd0f953341518c20231b81b235f5159f798b2c51995a13729b19da0b7792",
+   "parsed": "b6af9bfa0e043f0c2251d3336dd932eed0144218cc39296d7daa17d4c12c1593"
+  },
+  "policy-fresh:419": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "b3d502d5835394a82b5232032ab68866af5e9ab7b3d1463682ddbdd2b7996aa6",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "86c1d892f73120d307bbc8ae560cfb930d0bcfaf2848bb986a92222f6de35321",
+   "parsed": "7b139ef42a01f3755c1725d862a0e54199972bcd1646e9e884595ea15e602d68"
+  },
+  "policy-fresh:440": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "944cb9ebf5df25f90f30be2c13c5eded589924bb9bd6be09b24fd43e5838e30b",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "cbb9b06594df714364cb63c72ce8679f1ec496df811e1718f6b2138f77760067",
+   "parsed": "adabed6b7606918d1555880623fb7fb9e1db3e9423901fb933753409c3fc816c"
+  },
+  "policy-fresh:3017275": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "f1280a2588579702df6950e25d1f1a88626b1cc921f933e166c85bc1b8a63f5e",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "acc2dcffb7e10f50e5f3f7fa6d9fb58b2a2552666d0bd19147fe1438adf5a36e",
+   "parsed": "d3ca128dcef43973644d9ce3335a68cce2877f2ffd4d8f4e1cfd1e5c31e8bf32"
+  },
+  "policy-fresh:461": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "205988eaad1ff8e9158939ff9556aa8b88f2bd90e36286ed99ad8316172be551",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "2ccac93d09dc1c4c277c79e0340fd28ce01b49c78e28b4372b002241f879484a",
+   "parsed": "06f7d831b6c2b98f40a59ee257a1e0f61deeceba07c27565cdf27c188a92a84b"
+  },
+  "policy-fresh:473": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "e11412bbfaddafb55d79ff7165dec9d7c41238dead4ae68f23b495421f6b4644",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "cb484f06bdb49eeb829a1dadb085deb653958470dc0af3a9b9c037a5b5af756a",
+   "parsed": "845dfd9c9130ba5114d37deb2daf4cf6396ff4ffa9ce7732fc5a1140d9b5fcd5"
+  },
+  "policy-fresh:482": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "a18a9b9715dd89909c0831acd5a98e059b980bc4607f8b2b66e611fa101cf0d6",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "bb47d720915bef3c8cc80f9f9a9e1d27f7db48de90535261f853bb5e4fe87def",
+   "parsed": "b4449e6c23cfda691746de6b1e5e6cfba8de391ff57a55fd60e602d5e42c24e2"
+  },
+  "policy-fresh:497": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "policy": "5f345e2ac5540fb5eee7d9106a2583fda633c2d0fcbf0be3c1dda3584e7cfec8",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "policy",
+   "confidence": "certain",
+   "also": [],
+   "signals": "080e8662a5dfa9a2e9429e591d84ac6cde854eec5c6589fb5e41a2e4a8dc94f8",
+   "parsed": "749e8a20e1508f0bb66fe2d90f7d0376524623c50fa305ce09a8dcfcbddb9d3a"
+  },
+  "codifier:0": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "b01d9410afb1d4298a67e85c66f0394a58140817577cb439ab46ce2bd2b7987d"
+  },
+  "codifier:1": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "8087ae6cca350c6355d248da115a682d8cb550b8306de093e87b75a7f669e776"
+  },
+  "codifier:2": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "8920aad3828bbccc664e4449df9f34b6910a41bea465a7ce4de7eacfcde57844"
+  },
+  "codifier:3": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "f24b2ac460c54465a9013f9ee2db6e69f177a37508b3d7c25b28e0f19584e058"
+  },
+  "codifier:4": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "bd88f4b618bae78002f3b96dfd9f29164dd4841bc00be6936b5623516fe82d05"
+  },
+  "codifier:5": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "2e4406db930c4208cb4ce0bf9d174d0a509df50a5b15b84a97c248fa3307b4e7"
+  },
+  "codifier:6": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "8aade062bc24271bdd791824422aaad61a741a9da712e120c4c3247d075f5aa0"
+  },
+  "codifier:7": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eac304a83f4177ddd33ac084cf4b22c37a3ef54f3cf87ba68778bce444bef964",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "9b12a99b7d4a6898e34774c6aaa3f814026c478dc4075c9c976d07853dd8d31f",
+   "parsed": "76ca60e63e4484826a62577b756ce66e693dc59ab4d0349c39b953af9a7aac4f"
+  },
+  "codifier:8": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "c6b7ef91bb133a4064d2b094197bb0a0dae6012e2ec6350b07eb6b7988f60582"
+  },
+  "codifier:9": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "47ad59ba6f4e1fff7a568dd2d5c6d185b7006ca8e39068a75eaf9d7ea7d25549"
+  },
+  "codifier:10": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "031aab4296073ec7ee3819e007c2ca9ed8a63298993908da2c0a53f206996a9a"
+  },
+  "codifier:11": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "06c9473096e01a0558523be9d66afb4cfd7d3093655b99b1f95b656cbcc4c4b2"
+  },
+  "codifier:12": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "45c9cc66f27dc2bfc107bb9a2123207518ccb4e7cff86bcf7ef106a84a12942d"
+  },
+  "codifier:13": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "9f73aa9022b73e6336d1d442e2fe536c7bb61724d5d3bce463d666fe5890e7dc"
+  },
+  "codifier:14": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "220ebb57207988f358f07fca16fa2055accb5e315a6cb199bfb03bfdbd180a33"
+  },
+  "codifier:15": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "1929cbaa568a778e2407328c8045054ff9087ff59813d1b46487b18aa8a27085"
+  },
+  "codifier:16": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "14a203a1168c1ecd4e361dffd8ad9b5ae0d4903f5a8055d92bbb39835579035a"
+  },
+  "codifier:17": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "ce239b6eac2c07015a0f83901f2fec2cc5851a92ea3603c1f74d10b5fe4a7387"
+  },
+  "codifier:18": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "f9895447c6ad032e2f58085fa467e4ef19264fb6067bdab11a18e23905875b3b"
+  },
+  "codifier:19": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "2246286694496e246aa27d639ab5f480aa2e54e025595588920b5699d906007b"
+  },
+  "codifier:20": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "5cc0a8671172be7af05275a02f0f753fb78fc8cb242febc238a27dc2a95dbfdd"
+  },
+  "codifier:21": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "3eeeee4b9df86ca90161ae9c6e550020d419c1d9cdbd140e7d4cbed0eaed21ae"
+  },
+  "codifier:22": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "89c6975f5a6915926f3ab313b09dbc8fcfc56ac2b5cfacb5173af54723fea31b"
+  },
+  "codifier:23": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "9bb8c037eec61755069f2faa594460048cb55877d1675c4103ffbe8950d86e2e"
+  },
+  "codifier:24": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "14805c68bb7c42c2c04e3bb31793f6bc83ce4990b176ad267305cb2e9610b3d8"
+  },
+  "codifier:25": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "982938328af4e056362b4ed7663184c596adbcc941ec74036c4e2a5d8fae477a"
+  },
+  "codifier:26": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "12aa3db74d7978aac4ab193c8870aa00466d9e4b7ce1c87fceed749994db5208"
+  },
+  "codifier:27": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "0851502c2d0dba9e29633697be410ac990f7d913880ff6d14748ab2a3cbc5ab8"
+  },
+  "codifier:28": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "12ca23bd62177c7a3c88384a2d49f9e4f42070fbe4367757c80e81d5e081aa0d"
+  },
+  "codifier:29": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "febe96163df3261cab815d20dade523c5d8110daae7a083b9288f305837dacd6"
+  },
+  "codifier:30": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "53ac389060c13d057a348104cb7f079a9512cebd204316a2cde985eac1faff35"
+  },
+  "codifier:31": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "f65d28081f2c6e6f7b325d8fc7f84ca10a5ce1a55716c52eb8e4a12c397088a7",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "1ad29e133de385128f2e47b11ea7fb00935984b5b93dcaf361e81bbf55aac702",
+   "parsed": "0679366e7b0403754c995c8c9f98c53225363839d0067ea12d861e47e8ce12ad"
+  },
+  "codifier:32": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "a4de5071f3e8d04afc1a49548a52de94d7e2f68257bb75a736d49c19e1def94a"
+  },
+  "codifier:33": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "ea12d4c185003f819a366650722a07f4f3fdf0060ffae84a232b09c4a7d3adc7",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "7ab719ba7431dcd1c47ca595fac7a16b7d8b4aa4f2036090ec0863b7f988ecc0",
+   "parsed": "4eed680203e9a4a0c745b67f2ece3f25985b60c444261db28637fd4f83cb7c02"
+  },
+  "codifier:34": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "8061047352116a40b5abe4317251c75b536213e36a1b79ccd21069633321cc88"
+  },
+  "codifier:35": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "1457e21cbba33245adf2fe4052f535cad4bc66ad6e0c395deaf0d9434b12a22e"
+  },
+  "codifier:36": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "063afc96a2d38a0f99a8e262e4049646dc7368c79b9fb7a72fe96af76994d503"
+  },
+  "codifier:37": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eac304a83f4177ddd33ac084cf4b22c37a3ef54f3cf87ba68778bce444bef964",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "9b12a99b7d4a6898e34774c6aaa3f814026c478dc4075c9c976d07853dd8d31f",
+   "parsed": "bac86a035b0a6ab381b27f46c1a40a830f2988f12c5cb951d8a6fefced1d9a28"
+  },
+  "codifier:38": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "e1226954cbbf02480c97398d29c27cd06a22ff7a57368dc88cbb38fdbba813d6"
+  },
+  "codifier:39": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "ea12d4c185003f819a366650722a07f4f3fdf0060ffae84a232b09c4a7d3adc7",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "7ab719ba7431dcd1c47ca595fac7a16b7d8b4aa4f2036090ec0863b7f988ecc0",
+   "parsed": "eeda629372693fe42bb1af6e142a31ccff7399fb11021f90a547cfa342346a23"
+  },
+  "codifier:40": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "cd14279768ee19be4cc6d90218e0ff31c198defde17a6f7e1d9773aba9fa29fb"
+  },
+  "codifier:41": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "8f9bccead74e7f553fc3f1b9d8a5500243f22c6c1e033dec4e8a415bfacdeb3e"
+  },
+  "codifier:42": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "be5467fd0db6598de58d4e8ca0a789e85dffca39dbd952bceefc20f7c8bdccf0"
+  },
+  "codifier:43": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "baa5664c278c880bf7260e9e15b29c3f811b6ab31b94765fb26584d4492d6a72"
+  },
+  "codifier:44": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "6bfeecb939ae36123c7412b23dc6ac81e4c385c7a22881eff01dd54d75912c71"
+  },
+  "codifier:45": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eac304a83f4177ddd33ac084cf4b22c37a3ef54f3cf87ba68778bce444bef964",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "9b12a99b7d4a6898e34774c6aaa3f814026c478dc4075c9c976d07853dd8d31f",
+   "parsed": "304350d7290605e1a96d5e35a2805218cf32111d4afe4d88192ed810787e1db9"
+  },
+  "codifier:46": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "8a4ad06ab5f846cb31ce76eb14b927cd7bbeba2618b2a3a7b9130205ee09c6f4"
+  },
+  "codifier:47": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "c9209e4df88a207f7bc76aa4b6122a68e43f29562246730e2e33903f82193224"
+  },
+  "codifier:48": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "34305f5b00b20507d860ae5285095c81f02e72d6c3fa390a464335969a373381"
+  },
+  "codifier:49": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "ea12d4c185003f819a366650722a07f4f3fdf0060ffae84a232b09c4a7d3adc7",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "7ab719ba7431dcd1c47ca595fac7a16b7d8b4aa4f2036090ec0863b7f988ecc0",
+   "parsed": "cb535221760be751d390a85b22c4b0d2b993440de4d57afce4ba00ea4c8e6208"
+  },
+  "codifier:50": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "4b696ee448fd8d57ab6f86e804cb3d74fac9b40cdce57e2198b74e01ccb5a9f8"
+  },
+  "codifier:51": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "509cb58ac9c30d106a99e5792aed67f04b731727f46ac47680b711f960ebfd86"
+  },
+  "codifier:52": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "eb733f3daf57e2a8556b99b6f44e5829ff3bfc2f3ebebd6ecf47b95d2a90615b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "56c7cfd95d426b3d3c5bba494bbb6bdfe84f56f901c378808792d066e2cfaaff",
+   "parsed": "137eea96b96f740bcedb7c0699e7c737fba9d763286a6928b236643b9f46923d"
+  },
+  "codifier:53": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "4ab502cc1da48c0be2d313d61c077d8f6ae7d22ccc9c425a3a6dd58002e991cb",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "a7f51cea8c551b5e7b2ed0d32321c330ef1b85f8ded761e16f1d1f2a5b5a3fff",
+   "parsed": "20f1f3f455d4cac42c9bfab32cec53d6b1b4b78309ab594b558c4b8b9c48362e"
+  },
+  "codifier:54": {
+   "detects": {
+    "meeting_calendar": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_minutes": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "meeting_agenda": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "staff_report": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "regulation": "5dea56124f74e4330fc3f396502d9d4b7f6f7d5fe3a79a35450b57b0ac1b5e7b",
+    "policy": "7a9a4e9d714c563c98cfcb4052f2414c841c0c33c3b9f9c5ad83a8d1d5e29322",
+    "staff_directory": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b",
+    "generic": "cae4faf2716051021f87f23c3d188434e67eb1e39bb981fb62a8a983c559b99b"
+   },
+   "type": "regulation",
+   "confidence": "certain",
+   "also": [],
+   "signals": "4367abade9013109b429eb55e8165de50a52ad33a2319cc99ac73f11055c6c15",
+   "parsed": "ab69ab28bc9aa23e19b407ee7eaab578ef760d6bd5834e645b000b6e816d6602"
+  }
+ }
+}
