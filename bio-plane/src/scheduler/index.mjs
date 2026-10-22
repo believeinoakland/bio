@@ -474,10 +474,16 @@ export class Scheduler {
 
   /* R27: a registered consumer whose `wake`, read after its tick, equals the `wake` read before it and is at or before
      the firing's `now` is held: its due and wake read as none, so it cannot keep the alarm firing at once, again and
-     again. It is released when its own `wake` changes, at an `arm` made outside a firing and at a start. The due, wake
+     again. It is not held by a tick that answers rows ended (G35). It is released when its own `wake` changes, at an `arm` made outside a firing and at a start. The due, wake
      and tick of a consumer may answer a promise; each is awaited before its answer is read. Nothing is written, and no
      interval of this module's is added (R7). */
   #holding(c) {
+    /* G35: a tick that answers rows ended (`finished` or `final` above zero, under the consumer's key or at the top) made progress: the wake it
+       leaves is another row's own, equal to the one before when several rows share an instant, and holding it would strand those rows. */
+    const endedWork = (r, key) => {
+      const a = r && typeof r === "object" ? (r[key] && typeof r[key] === "object" ? r[key] : r) : null;
+      return !!a && [a.finished, a.final].some((n) => typeof n === "number" && n > 0);
+    };
     const held = this.#held, name = c.name;
     const wakeOf = async (now) => { try { return await c.wake(now); } catch { return null; } };
     /* the consumer's wake while it is held at that wake; none then, and released when its wake has changed */
@@ -495,13 +501,13 @@ export class Scheduler {
       wake: async (now) => heldWake(await c.wake(now)),
       tick: async (now, rank) => {
         const before = await wakeOf(now);
-        const note = async () => {
+        const note = async (ended) => {
           const after = await wakeOf(now);
-          if (Number.isFinite(before) && after === before && after <= now) held.set(name, after); else held.delete(name);
+          if (!ended && Number.isFinite(before) && after === before && after <= now) held.set(name, after); else held.delete(name);
         };
         let r;
-        try { r = await c.tick(now, rank); } catch (e) { await note(); throw e; }
-        await note();
+        try { r = await c.tick(now, rank); } catch (e) { await note(false); throw e; }
+        await note(endedWork(r, c.key));
         return r;
       } };
   }
