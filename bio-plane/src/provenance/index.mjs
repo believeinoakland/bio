@@ -66,6 +66,37 @@ const bareSha = (v) => (typeof v === "string" ? v.trim().replace(/^sha256:/, "")
 /* SQLite's order over text with nulls first, so a grade read in code ranks receipts as the statement it replaced did. */
 const cmp = (a, b) => (a === b ? 0 : a == null ? -1 : b == null ? 1 : a < b ? -1 : 1);
 
+/* R72: the captures a register document states as held in parts, each as the register row of its whole sha: the
+   document's `capture.sha256` beside a non-empty list of `parts`, every part with a 64-hex digest. The row has no file
+   of its own: its `path` is the file the document names for the whole (which the bundle does not hold), its `bytes`
+   the size the document states, else the parts' sum. A document whose parts are malformed registers nothing here
+   (C-18.1 refuses it at the write); `skip` is the digests the promotion already registers by its own entry. */
+function wholesOf(reg, skip = new Set()) {
+  const out = [], seen = new Set();
+  for (const d of Array.isArray(reg?.documents) ? reg.documents : []) {
+    if (!isObj(d) || !Array.isArray(d.parts) || !d.parts.length || !isObj(d.capture)) continue;
+    const sha256 = bareSha(d.capture.sha256);
+    if (!sha256 || !/^[0-9a-f]{64}$/.test(sha256) || skip.has(sha256) || seen.has(sha256)) continue;
+    const parts = d.parts.map((p) => (isObj(p) ? bareSha(p.sha256) : null));
+    if (parts.some((x) => !x || !/^[0-9a-f]{64}$/.test(x))) continue;
+    const sum = d.parts.reduce((n, p) => n + (Number.isSafeInteger(p.bytes) && p.bytes >= 0 ? p.bytes : NaN), 0);
+    const bytes = Number.isSafeInteger(d.capture.bytes) && d.capture.bytes >= 0 ? d.capture.bytes : sum;
+    if (!Number.isSafeInteger(bytes)) continue;
+    seen.add(sha256);
+    out.push({ sha256, parts, bytes,
+               path: typeof d.file === "string" && d.file ? d.file : String(d.parts[0].file ?? ""),
+               encoding: typeof d.capture.encoding === "string" && d.capture.encoding ? d.capture.encoding : "binary" });
+  }
+  return out;
+}
+/* The wholes a promotion's files state (R72), beyond the digests its own `register` list already names. */
+function wholesOfFiles(files, register) {
+  const prov = Array.isArray(files) ? files.find((f) => f && f.path === "data/provenance.json") : null;
+  const reg = prov && typeof prov.text === "string" ? safeJson(prov.text) : null;
+  const named = new Set((Array.isArray(register) ? register : []).map((e) => (e && typeof e.sha256 === "string" ? bareSha(e.sha256) : null)));
+  return wholesOf(reg, named);
+}
+
 /* D-15: the bundle gate compiled over a QUALIFIED column (the legacy store's `#bundleGate`), for reads that join a
    row carrying a bundle id to the viewer predicate (membership R43) over record-core's `bundles` (its R37). */
 function bundleGate(col, viewer) {
@@ -413,7 +444,46 @@ class Provenance {
   /** This module's tables (R41), created or brought up to shape. Called by the host at every boot; idempotent. */
   migrate() {
     migrateProvenance(this.#sql);
+    this.#repairWholes();
     return { ok: true };
+  }
+
+  /* R72 (R-OLD): the repair at the plane's wake. A bundle promoted before a capture held in parts had an identity under
+     its whole sha registered the parts alone. For every bundle whose own `data/provenance.json` states `parts`, the
+     whole's row is written once, `whole` 1, with the first registration of its parts as its instants. A row that
+     already holds the whole under a bundle that exists is left as it is (one capture, one home, R2); a row whose home
+     is gone is registered afresh (R2). Idempotent, so a second wake writes nothing; a store without the record's
+     tables (a module test over this module alone) has nothing to repair. */
+  #repairWholes() {
+    const table = (t) => this.#one(`SELECT 1 AS x FROM sqlite_master WHERE type = 'table' AND name = ?`, t);
+    if (!table("files") || !table("bundles")) return;
+    const stated = this.#rows(`SELECT f.bundle_id, f.content FROM files f JOIN bundles b ON b.bundle_id = f.bundle_id
+                                WHERE f.path = 'data/provenance.json' AND f.content LIKE '%"parts"%'`);
+    for (const { bundle_id: bundleId, content } of stated) {
+      for (const w of wholesOf(safeJson(content))) {
+        if (this.#one(`SELECT 1 AS x FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id WHERE r.capture_sha = ?`, w.sha256)) continue;
+        const first = this.#one(`SELECT MIN(registered) AS at FROM register WHERE bundle_id = ? AND capture_sha IN (SELECT value FROM json_each(?))`,
+                                bundleId, JSON.stringify(w.parts));
+        const at = first && first.at ? first.at : this.#now();
+        this.#putWhole(bundleId, w, at, at, 0);
+      }
+    }
+  }
+
+  /* R72: the whole's register row. A re-registration under the bundle that holds it keeps `registered` when `revising`
+     (R1); a row held by another bundle that exists is never moved (`held`: only a home that is gone is replaced). */
+  #putWhole(bundleId, w, registered, last, revising) {
+    this.#sql.exec(
+      `INSERT INTO register (capture_sha,bundle_id,path,encoding,bytes,registered,last_registered,authored,whole)
+       VALUES (?,?,?,?,?,?,?,0,1)
+       ON CONFLICT(capture_sha) DO UPDATE SET
+         registered=CASE WHEN register.bundle_id = excluded.bundle_id AND ? = 1
+                         THEN register.registered ELSE excluded.registered END,
+         bundle_id=excluded.bundle_id, path=excluded.path, encoding=excluded.encoding, bytes=excluded.bytes,
+         last_registered=excluded.last_registered, authored=0, author=NULL, observed_at=NULL, whole=1
+       WHERE register.bundle_id = excluded.bundle_id
+          OR NOT EXISTS (SELECT 1 FROM bundles b WHERE b.bundle_id = register.bundle_id)`,
+      w.sha256, bundleId, w.path, w.encoding, w.bytes, registered, last, revising);
   }
 
   /* ===================================================================== *
@@ -533,7 +603,7 @@ class Provenance {
      capture's FIRST registration and `last_registered` its clock at this write; the authored columns are written from
      the testimony path's own key and never from the entry a caller sent. */
   #project(c) {
-    const { pkg, bundleId, register, head } = c;
+    const { pkg, bundleId, register, head, files } = c;
     const testimony = pkg && pkg[TESTIMONY_PATH] ? pkg[TESTIMONY_PATH] : null;
     /* MK-1 / IC-134: the three authored columns are written FROM THE
        TESTIMONY PATH'S OWN KEY and never from the entry a caller sent — `c`
@@ -569,6 +639,10 @@ class Provenance {
         r.sha256, bundleId, r.path, r.encoding ?? "utf8", r.bytes, at, at,
         own ? 1 : 0, own ? testimony.author : null, own ? testimony.observedAt : null, revising);
     }
+    /* R72: a capture the document states as held in parts also has the row of its whole sha, marked `whole`, beside the
+       parts' own rows above (which are as they were): so `homeOf(whole)` and every reader of `register` by `capture_sha`
+       find its bundle. It has no file of its own, and the bundle's verification is the parts' (R6, R7) as before. */
+    for (const w of wholesOfFiles(files, register)) this.#putWhole(bundleId, w, at, at, revising);
     return null;
   }
 
@@ -1611,7 +1685,8 @@ class Provenance {
        control plane sets beside `actorIdentity` (membership's `inSight`, fail-closed on a stamped identity with
        no viewer). An unstamped write is not a caller (the store's own writes, fixtures driven at the
        store) and is told the holder, on the legacy store's `#rosterInSight` precedent. */
-    const shas = [...new Set(regs.map((c) => c.sha256))];
+    /* R72: the whole of a capture the document states as held in parts is registered too, so it has one home as well. */
+    const shas = [...new Set([...regs.map((c) => c.sha256), ...wholesOfFiles(files, register).map((w) => w.sha256)])];
     const homes = shas.length ? this.#rows(
       `SELECT r.capture_sha, r.bundle_id FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id
         WHERE r.bundle_id <> ? AND r.capture_sha IN (SELECT value FROM json_each(?)) LIMIT ?`,

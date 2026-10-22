@@ -13,7 +13,7 @@ test("R1: one row per capture, with the module's clock, and a revision updates i
   const row = w.row(`SELECT * FROM register WHERE capture_sha=?`, a.sha);
   assert.deepEqual({ ...row }, { capture_sha: a.sha, bundle_id: "INFO-2026-0001-a", path: a.path, encoding: "utf8",
     bytes: Buffer.byteLength(a.text), registered: "2026-09-27T03:00:00.000Z", last_registered: "2026-09-27T03:00:00.000Z",
-    authored: 0, author: null, observed_at: null });
+    authored: 0, author: null, observed_at: null, whole: 0 });
   /* The clock is the module's, never a caller's: a caller's `registered` in the entry is not read. */
   w.clock.now = "2026-09-27T04:00:00.000Z";
   const head = w.head("INFO-2026-0001-a");
