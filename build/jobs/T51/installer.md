@@ -210,3 +210,32 @@ FOR BOB
 (c) For installer-steps (FR-38) nothing owed from this job; the steps half measured fine (the read-back streams).
 
 Size (session_01YSLD2TXXeo3tqTWJcDifHz): test runs ~14, module lines 2908 (src without release.mjs and scripts)
+
+## J16 · COMPLETE
+
+INSTALLER #23, B17 (G39's newgroup half) applied: pushed on job/T51/installer, tranche/T51 merged (290bdb94c2). The regenerated bundle is NOT committed (BOB regenerates it, newgroup last).
+
+**What changed.**
+- `newgroup/scripts/build.mjs:17,62,69`: `bundleOptions` spreads bundler's `asciiOptions()` (charset ascii, legal comments kept at the end, whitespace minified, templates lowered); `bundleText`, the one function `npm run build` and the freshness guard both call, runs bundler's `asciiOutput` over the bytes and returns them. The installer holds no recipe of its own. Built to a scratch: 11,566,099 bytes, 0 bytes over 0x7F (346 before), no licence banner in it.
+- `newgroup/test/t51-ascii.test.mjs` (new, in `package.json`'s test script): R82, below.
+- `bio-plane/test/system/newgroup-bundle-fresh.test.mjs`: a PIN that the build carries `asciiOptions()` and nothing beside them, arm (D) the committed bundle holds no byte over 0x7F, and `literal()` finds `NAME="..."` as well as `NAME = "..."` (minified whitespace).
+- `newgroup/test/requirements.test.mjs` (`ownBundle`) and `test/t50.test.mjs` (R72's control) located `RELEASE_PACKED = ` and `WORD_ROWS = Object.freeze(` by exact spacing; both now by pattern. They failed on the new output and nothing else changed in them.
+
+**G39's four fields, newgroup.**
+1. Root cause: `scripts/build.mjs:56-62` (before) built with no ASCII option and no pass: 346 bytes over 0x7F (138 characters, in string and regex literals), so V8 holds the 11.5 MB source two bytes a character (23 MB).
+2. Missed: nothing asked for the bundle's character set; `newgroup-bundle-fresh` compared bytes with a fresh build of the same recipe. Gap closed: R82's test, and arm (D) on the committed artifact.
+3. Failing-first (R82, `newgroup/test/t51-ascii.test.mjs`, through `bundleText`, the build's own entry): RED on the old build.mjs: `AssertionError: no character above U+007F ... actual: 138, expected: 0`; GREEN with the change (1 pass). The same test runs the built bundle and compares `/`, `/update`, `/nowhere` (status and text) with the source's: equal. `newgroup-bundle-fresh` against a scratch build: 6 passed, 0 failed; against the committed (unregenerated) bundle arms (C) and (D) are red by design until BOB regenerates (D: want 0 got 346).
+4. Platform check: N. The installer's live memory (R33's 112 MB bound) should fall by about 11.5 MB of source; not measured, since `realsize.test.mjs` fails at the tranche tip before my change too (below).
+
+**Suites** (all `node --test --test-force-exit`, two at a time at most): `newgroup/test/steps/` 103 pass 0 fail; `embed.test.mjs` 23/0; requirements, t47, t48, t50, t51, t51-ascii, corpus, realsize: 112 tests, 94 pass, 14 fail; the same set without my change: 111 tests, 93 pass, 13 fail, **the same 13 names** (R8, R11, R20, R33 x7, R44, R55, R61, R71 in requirements/t48/realsize), so none is caused by this job. `wizard.test.mjs` crashes at `sourceOf` (`planePuts[0]` undefined, line 232 from 552), also without my change. Cause seen for R20 and R8: the embedded 0.86.0 release states no plane limits (`BUILTIN_LIMITS.ok` false in `test/fixture.mjs:161`), so the built-in arms that expect an upload get none. BOB: those 14 are the embedded release's, not this entry's; the prior record's "requirements 54 green" was on a tree before that (or with a release that stated limits). I changed nothing for them.
+
+**Checks** (process repo): format 0 failures; architecture installer 0; coverage installer 71 of 71; ownership installer 7 files, 0 failures; `checks/run.mjs`: words 680886 literals, 18421 words, inline 0, plain 0, testcopy 0, missingkey 0, unkeyed 1982 (1982 before; the count does not rise), 0 failures.
+
+**Requirement lines I propose (BOB writes them).**
+- **R82** (T51 fix round 6, G39; bundler R2; K4616, K4617) The installer's bundle (`newgroup/dist/newgroup.bundled.mjs`) is pure ASCII: no byte over 0x7F, so V8 holds its source one byte a character. The build is bundler's recipe, `asciiOptions()` with `asciiOutput(bytes)` over the result, in `scripts/build.mjs`'s `bundleOptions` and `bundleText` (the one function the build and the freshness guard call), the installer stating no option of its own; a character that pass will not edit refuses the build `[NON_ASCII_REMAINS]`. The bundle still answers every route as the source does. Test: `bundleText` holds no character above U+007F, its options equal `asciiOptions()`, and the built bundle's `/`, `/update` and 404 answers equal the source's; control: `newgroup-bundle-fresh` arm (D) reads the committed bundle.
+- Uses: `bundler` (`asciiOptions`, `asciiOutput`) is already declared; list them under R82.
+- `newgroup/DEPLOY.md`'s manual path is unaffected (the bundle is pasted as text).
+
+**Found in another module / generated:** `newgroup/dist/newgroup.bundled.mjs` is stale by this change (arms (C) and (D) red until regenerated: `cd newgroup && npm run build`, committed by BOB at the round end). The embedded 0.86.0 release states no plane limits (above): the built-in arms of R8, R11, R20, R33, R44, R55, R61, R71 cannot pass until a release cut after control-plane's statement is embedded.
+
+Size (session_01SEQEwCjB36QQ1ity32UNHo): test runs 14, module lines 2922
