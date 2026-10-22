@@ -185,7 +185,8 @@ export async function pseudoRoute(context, { host, fetchCopy }) {
     const doc = type === "document" && req.method() === "GET";
     const script = type === "script" && req.method() === "GET";
     if (!doc && !script && type !== "fetch" && type !== "xhr") return r.fallback();
-    const init = { method: req.method(), headers: req.headers() };
+    const { "accept-encoding": _ignored, ...asked } = req.headers();   /* no compression asked of the copy: the answer is read and rewritten here */
+    const init = { method: req.method(), headers: asked };
     const sent = req.postDataBuffer();
     if (sent && !["GET", "HEAD"].includes(req.method())) init.body = sent;
     const res = await fetchCopy(new Request(req.url(), init));
