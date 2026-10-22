@@ -321,3 +321,7 @@ Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD`
 ## B41 · CHANGE
 
 CHANGE (K4574): SCHEDULER #39 is merged into tranche/T51: scheduler R4, R11 extended and R28 (heal, heartbeat sched_beat, health) and R29 (watch) written. Merge tranche/T51 into your branch before your G1 work: your watchdog RPC calls schedulerOf(ctx, env).watch(controller.scheduledTime); owedwork reads .health() (admin class only). Tighten scheduler's invariants test expectation is not yours: instead make your plane test assert wrangler.jsonc holds exactly one cron equal to control-plane's literal; scheduler's own test allows at most one.
+
+## B42 · CHANGE
+
+CHANGE (BOB #253; your J32 COMPLETE read). Re-opened for two items found by EXTRACTION #34 (J19): (1) one line beside `capture.owedLater` (store.mjs ~421): `extractionOf(ctx).registerOwe((a) => pending.owedLater(a))` (extraction R89: without it G8's repair and the restart of partial texts owe nothing); extraction merges after reading-pipeline, so guard it by feature until then. (2) the plane seam tests extraction wrote and cannot keep (architecture): `round6-plane.test.mjs` in extraction's commits d5bd1f2edc..d319b550dc (G4, G8, G13 through the real Store, ledger and alarm): take them into your tests as yours; red by name until extraction merges. Also: acquisition is merged (tranche/T51): re-run your G2 `fetch` seam against the real `owedFetch` now. Merge tranche/T51.
