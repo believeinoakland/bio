@@ -146,7 +146,8 @@ async function promoteDocument(cs, o) {
     files, register } });
   const p = done && (done.result || done);
   if (!p || p.ok === false) return { refused: why(p) };
-  return { bundleId: p.bundleId || id };
+  /* R57: the door reads a document stored with no reading after `promote` (control-plane R123); its answer says when that reading follows */
+  return { bundleId: p.bundleId || id, readingPending: p.reading_pending === true };
 }
 
 /* R1–R3: the page. The tab body carries no class: the design's `st` is its mock's state switch (hidden unless a `main`
@@ -179,9 +180,13 @@ function renderCapture(cs, view) {
       /* R35: "Cite a passage" opens `find-in` over the document by its capture's fingerprint, never its record id */
       + (/^INQ-/.test(at.id) && typeof g.sha === "string" && g.sha ? ` <a class="cs-btn" data-tone="quiet" href="/app/find-in/${encodeURIComponent(g.sha)}/${encodeURIComponent(at.id)}" data-nav data-level="1" data-tip="${cs.w("capture.cite.tip")}">${cs.w("capture.cite")}</a>` : "")
       + "</p>" : "";
+  /* R57 (fix round 4b, F1; K4487): a capture or upload answered `reading_pending` says the reading follows. The nearest held row stands in
+     (`screen.document.text.unread.next`, K4269; its own row is owed, named in the job record). */
+  const pendingLine = (g) => g && g.readingPending ? `<p class="mk-note" role="status" data-reading="pending">${cs.w("screen.document.text.unread.next")}</p>` : "";
   /* R2 (C17): for an upload filed under no project, whether the document was read: the text it holds (the reading's count when it states
      one), or that no reading is held and, for a picture, that its words can't be found until it is read or typed */
   const readLine = (u) => {
+    if (u && u.readingPending) return pendingLine(u);
     const r = u && u.reading;
     if (!r || !u.filed || u.filed.id) return "";
     if (!r.read) return r.picture ? said("capture.picture.unread") : said("screen.document.text.unread") + said("screen.document.text.unread.next");
@@ -290,7 +295,7 @@ function renderCapture(cs, view) {
           + (got.notPromoted ? said("screen.capture.address.notpromoted", { count: got.notPromoted }) : "")
         : said(got.existed ? "screen.capture.address.existed" : "screen.capture.address.done", { title: bare(got.title) }) + made(got)
           /* a render still being made and an attestation not yet answered, in the plane's own notes; the capture is kept */
-          + [got.renderNote, got.attestNote].filter(Boolean).map((n) => `<p class="mk-small muted" role="status">${cs.esc(n)}</p>`).join("")) : "")
+          + [got.renderNote, got.attestNote].filter(Boolean).map((n) => `<p class="mk-small muted" role="status">${cs.esc(n)}</p>`).join("") + pendingLine(got)) : "")
       + refusedPromotion("address");
     /* R47 (C20; DEC-381): "A source that asked for a login": each request a source turned away for a login, a username and a secret
        field (the secret is typed into a password field, sent once and never drawn back), the login given and the request tried
@@ -471,6 +476,8 @@ async function doneAcquire(view, answer, cs) {
   const fin = view.ui && view.ui.finishing;
   const title = fin && fin.session && fin.title ? fin.title : view.parts.titleOf(cs, { reading: a.reading, doc, address });
   const sha = doc.capture && typeof doc.capture.sha256 === "string" ? doc.capture.sha256 : "";
+  /* R57: the answer's own `reading_pending` (a reading that did not fit the door's bound), or the promotion's (the door reads after `promote`) */
+  const waiting = a.reading_pending === true;
   /* a render still being made (`render_pending`) and an attestation that had not answered (`attestation_attempts[].pending`) are said
      as they stand, in the plane's own notes: the capture is kept either way */
   const rp = doc.render_pending && typeof doc.render_pending === "object" ? doc.render_pending : a.render_pending && typeof a.render_pending === "object" ? a.render_pending : null;
@@ -496,7 +503,7 @@ async function doneAcquire(view, answer, cs) {
          in this project, as a reference, and the result says so; the document keeps its home and is linked, and shown once */
       const more = await view.parts.filedHeld(view, cs, copy, sha);
       if (more.refused) cs.set("promoteRefused", { tab: "address", html: more.refused });
-      cs.set("captured", { existed: true, title, address, bundleId: copy.document, sha, ...pend, ...(more.alsoHere ? { filed: more.filed, alsoHere: more.alsoHere } : {}) });
+      cs.set("captured", { existed: true, title, address, bundleId: copy.document, sha, ...pend, ...(waiting ? { readingPending: true } : {}), ...(more.alsoHere ? { filed: more.filed, alsoHere: more.alsoHere } : {}) });
       return;
     }
   }
@@ -504,7 +511,7 @@ async function doneAcquire(view, answer, cs) {
   if (filed === null) { cs.set("promoteRefused", { tab: "address", html: "" }); return; }
   const made = await view.parts.promoteDocument(cs, { doc, title, locator: address, project: filed.id });
   if (made.refused !== undefined) { cs.set("promoteRefused", { tab: "address", html: await view.parts.refusedHtml(view, cs, made.refused) }); return; }
-  cs.set("captured", { title, address, bundleId: made.bundleId, filed, sha, ...pend });
+  cs.set("captured", { title, address, bundleId: made.bundleId, filed, sha, ...pend, ...(waiting || made.readingPending ? { readingPending: true } : {}) });
 }
 
 /* R49 (C9, C10): the document the viewer may see that holds these bytes, asked of the record by the capture's digest (`heldat`, no
@@ -674,7 +681,7 @@ async function doneUpload(view, answer, cs) {
     if (copy) {
       const more = await view.parts.filedHeld(view, cs, copy, sha);
       if (more.refused) cs.set("promoteRefused", { tab: "file", html: more.refused });
-      cs.set("uploaded", { name, existed: true, bundleId: copy.document, title: name, sha, ...(more.alsoHere ? { filed: more.filed, alsoHere: more.alsoHere } : {}) });
+      cs.set("uploaded", { name, existed: true, bundleId: copy.document, title: name, sha, ...(a.reading_pending === true ? { readingPending: true } : {}), ...(more.alsoHere ? { filed: more.filed, alsoHere: more.alsoHere } : {}) });
       return;
     }
     if (!doc) { cs.set("uploaded", { name, existed: true, bundleId: null }); return; }
@@ -688,7 +695,7 @@ async function doneUpload(view, answer, cs) {
   if (made.refused !== undefined) { cs.set("promoteRefused", { tab: "file", html: await view.parts.refusedHtml(view, cs, made.refused) }); return; }
   /* R2 (C17): a project-less upload's result line says whether it was read (a picture, which way to have it read) */
   const reading = { ...view.parts.readingOf(a, doc || {}), picture: /^image\//i.test(String(sent.type || "")) };
-  cs.set("uploaded", { name, existed: false, bundleId: made.bundleId, title, filed, sha, reading });
+  cs.set("uploaded", { name, existed: false, bundleId: made.bundleId, title, filed, sha, reading, ...(a.reading_pending === true || made.readingPending ? { readingPending: true } : {}) });
 }
 
 /* R2 (C17; control-plane R100, R117): whether the upload was read, from the answer: its `reading` (the answer's or its document's) and the
