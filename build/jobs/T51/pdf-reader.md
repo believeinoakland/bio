@@ -1,6 +1,6 @@
 # pdf-reader (T51)
 
-**Status** · session_017eqJekosp7BFHFboXDwJNt · depth 2 · WORKING · handled B4
+**Status** · session_017eqJekosp7BFHFboXDwJNt · depth 2 · WORKING · handled B5
 
 ## Completion (T51-7, R39)
 
@@ -58,6 +58,53 @@ Size (session_01KswWpSMer2zv2tpsG99AC5): test runs 9, module lines 3247
 **Questions.** None open. **Deferred.** None.
 
 Size (session_01BSwp2Ci83HFnS5Q5bkRxry): test runs 22, module lines 4156
+
+## Completion (fix round 4b, job 13: R42)
+
+**Entry applied.** R42: a document too large to read is refused before its text. `bio-plane/src/pdfstructure.mjs` only (4,156 → 4,219 lines); tests under `bio-plane/test/m/pdf-reader/`: `refusal.test.mjs` (7 tests), helper `dense.mjs` (a deterministic text-dense, scanned or encrypted synthetic PDF), `workerd-ceiling.probe.mjs` (the L measurement, a probe and not a test), `memory-child.mjs` (its `measure` also prints `ok` and `reason`). No other module's file touched.
+
+**What changed (`pdfstructure.mjs`).** The rule and its comment block, 3979-4021 (`READ_BASE_MB` 25, `READ_PAGE_MB` 0.031, `READ_BARE_PAGE_MB` 0.006, `READ_LIMIT_MB` 100, `READ_SAMPLE_PAGES` 16, `readingNeedMB`, `sampledTextShare`); the check in `extractPdfStructure`, right after `loadPdf` and before the first link or page is read, 4050-4072. A reading whose need is over 100 MB is answered `{ ok: false, container: "pdf", reason: "TOO_LARGE_TO_READ", failure: "final", version, pages, bytes, need_mb, limit_mb, text_share }`: no `text`, no `links`. Every other answer is unchanged (below).
+
+**The rule, measured and stated.** need (MB) = 25 + bytes/MiB + pages × (0.006 + 0.025 × text share), refused over 100. With every page counted as text it is the record's `pages × 0.031 + 25 + bytes`; the text share is looked at (16 pages evenly spaced, `pageShowsText`, a page that cannot be told counts as text; notes and the trailing-bytes memory restored after) only when that already exceeds 100, so no document under the rule pays for the sample and no answer under it changes. An encrypted document builds no text (R9) and counts a share of 0. I added the share because a scanned packet of 3,000 pages under 24 MiB (an image a page) costs a small part of the same pages of text and the page count alone would have refused it as "too large", which today it is not (OCR continues by the ledger); the failing-first test of the scan control is in the suite.
+
+Measurements (workerd 1.2026-07, `reading-pipeline`'s `read` through `workerd-ceiling.probe.mjs`, smallest `--max-old-space-size` that completes, then + the file's bytes; the refusal disabled for these runs):
+
+| file | pages | file MB | old space | + bytes | the rule (all pages text) |
+|---|---|---|---|---|---|
+| synthetic, 120 lines a page | 1,000 | 4.8 | 61 | 66 | 61 |
+| synthetic, 120 lines a page | 2,000 | 9.6 | 88 | 98 | 97 |
+| synthetic, 120 lines a page | 3,500 | 16.8 | 135 | 152 | 150 |
+| synthetic, 200 lines a page | 1,500 | 11.6 | 102 | 114 | 83 |
+| synthetic, 80 lines a page | 3,000 | 10.0 | 88 | 98 | 128 |
+| synthetic, 40 lines a page | 1,000 / 2,000 / 3,500 | 1.9 / 3.7 / 6.6 | 37 / 46 / 61 | 39 / 50 / 68 | 56 / 87 / 140 |
+| synthetic, 20 lines a page | 6,000 | 6.9 | 61 | 68 | 218 |
+| BUDGET-2025-BUD (real) | 188 | 2.4 | 33 | 35 | 33 |
+| BUDGET-2025-PER (real) | 295 | 8.4 | 42 | 50 | 43 |
+| BUDGET-2024-APP (real) | 1,354 | 15.2 | 83 | 98 | 82 |
+
+`extractPdfStructure` alone (no `read`): 25 / 32 / 41 MB for 1,000 / 2,000 / 3,500 pages of 40 lines. The memory follows the text, not the pages: for the seven synthetic files (80 to 200 lines, 1,000 to 6,000 pages) old space less 25 is 2.0 to 2.3 MB per million characters of text, and the two-byte APP 4.3 (twice it). The rule's page figure is exactly right for the 120-line pages `cause-reading-4` measured; it is high for lighter pages (a file of many light pages above about 2,300 is refused though it would read: 3,500 pages of 40 lines read in 68 MB) and low for denser (1,500 pages of 200 lines need 114 where the rule says 83, still inside the 128). A rule from the characters needs the text built, which is what the refusal comes before.
+
+**(1) Root cause.** `reading-pipeline` `bytesOf` (index.mjs:1494-1497 on the tranche) refuses by bytes, the only size known before loading (WHOLE_READ_MAX 24 MiB); the pages are known only after `loadPdf` (`pdfstructure.mjs` `extractPdfStructure`, tranche :3998-4008), and from there the reading builds every page's text and holds the answer, 135 MB of old space plus the file's 16.8 for 3,500 pages of 120 lines, over the object's 128. Nothing in the module refused a reading it could not hold.
+
+**(2) Why the tests missed it, and the fix.** The memory tests read the three govinfo volumes (at most 1,354 pages) and one 20 MB, 1,300-page synthetic: nothing with more than 1,354 pages, so the ceiling by bytes was never tried against a file with many pages and few bytes (`cause-reading-4` step 0 measured it by hand). `refusal.test.mjs` reads a 3,500-page text file, the rule's two edges (2,300 pages read, 2,450 refused), and the three controls.
+
+**(3) Failing-first**, `refusal.test.mjs`, run on the tranche's `pdfstructure.mjs` (my change set aside): the 3,500-page file (16.8 MiB, 120 lines a page) dies in the heap held to idle + 64 MB (`SIGABRT`; the child's "did not complete in a 81 MB heap"), and the edge test reads 2,450 pages (`ok` true, expected false): 2 fail. The controls pass both ways, as they should (the scanned 3,500 pages, the encrypted 3,500 pages, the 20 MB synthetic with its answer digest `f79dca79…` pinned from the code before, BUDGET-2024-APP with its pinned digest `a3d4b5f4…`, a non-PDF). Green with the change: 7 of 7. The refusal of the 3,500 pages: 141 ms, peak heap + array buffers 11.0 MB above idle (idle 33.2 MB), under the 64 allowed; the test asserts the answer's fields (`failure` final, `reason`, `pages` 3500, `bytes`, `limit_mb` 100, `need_mb` over it, `text_share` 1, no `text`, no `links`) and that a non-PDF and a non-bytes input are refused as before.
+
+**(4) Platform check: L.** The same 3,500-page file under workerd with the V8 heap limit: the refusal answers from **22 MB** of old space (+ the file's 16.8 = 39 MB), where the reading needs 135 (+ 16.8 = 152, over the object's 128). End to end through `reading-pipeline.read` in workerd (the probe's worker, a 6,000-page file): `found` false, `failure` `"final"`, no crash: the reading is a final one, as R37 states.
+
+**Controls, answers unchanged.** The answer digests equal the pinned ones for BUDGET-2024-APP (a file that exceeds nothing, sampled not at all) and the 20 MB synthetic (1,300 pages). The pdf-reader suite (`bio-plane/test/m/pdf-reader/` and `bio-plane/test/pdfstructure.test.mjs`): 120 tests, 0 failures (`refusal.test.mjs` 7 of them).
+
+**Users.** `reading-pipeline` `memory.test.mjs`, alone: 2 of 4 pass (APP, the 20 MB synthetic); BUD and PER fail on `the answer is not the answer before` (`7bb5da9a…` against the pinned `95b076e2…` for BUD) and the same failure with my `pdfstructure.mjs` set aside (`git checkout HEAD~1 -- bio-plane/src/pdfstructure.mjs`): red on the tranche tip, in `reading-pipeline`'s own pins (its reading carries fields written since), not mine. format-registry, file-safety, doc-clean: 175 tests, 172 pass, 2 fail, 1 skipped: doc-clean `R4` (measure.test.mjs) and file-safety `R24` (rows.test.mjs), both red on the tranche tip and named in the previous section. `impact.mjs`: 12 pdf-reader files plus its users; I ran the direct users above.
+
+**Checks.** `checks/run.mjs`: format 0 failures; architecture 1 failure (tasks, not mine); coverage 3 failures (extraction R82, ooxml R35, provenance R72: other jobs' ids; pdf-reader has no coverage failure); channels 0; words 18,421, 0 failures (no sentence added). `ownership.mjs`: 0 failures.
+
+**Proposed requirement lines (BOB writes `build/requirements/`).** R42, replacing its text: "Before any page's text is built, `extractPdfStructure` refuses a PDF whose reading would not fit the object: need (MB) = 25 + the file's MiB + pages × (0.006 + 0.025 × the share of pages that show text) over 100 answers `{ ok: false, container: "pdf", reason: "TOO_LARGE_TO_READ", failure: "final", version, pages, bytes, need_mb, limit_mb, text_share }`, with no text and no links. The share is counted as 1 unless the rule with 1 is over 100, and then it is the share of 16 evenly spaced pages that show text (a page that cannot be told counts as text; an encrypted file counts 0); the sample leaves the document's notes as they were. Test: a 3,500-page text-dense file under 24 MiB is refused with its pages in under 64 MB above idle; 2,300 text pages are read and 2,450 refused; 3,500 scanned pages under 24 MiB, 3,500 encrypted pages, the 20 MB 1,300-page synthetic and BUDGET-2024-APP are read with their answers unchanged." And for `reading-pipeline` (BOB's to place): its reading of a refused PDF is `failure: final` today, through "the pdf entry produced no text from these bytes"; it can state the pages from `structure.pages` and `reason` `TOO_LARGE_TO_READ` (the entry's `structure()` result is dropped at `index.mjs:1633-1634` unless `ok`), which is its sentence to write.
+
+**Found in other modules (P9; reported, not touched).** (a) `reading-pipeline`: the stated sentence above; `memory.test.mjs` BUD and PER pinned digests red on the tip. (b) `file-safety` (`formats.mjs:91-94`) passes the refusal's `reason` through as `why: "TOO_LARGE_TO_READ"` for a PDF past the rule, as it does `NOT_A_PDF`; its table (R24) has no row for it. (c) `pdf-worker/src/index.mjs:166-167` answers the refusal as a 422 with it, the same path as `NOT_A_PDF`. (d) Stale generated artifacts (manifest §14): `pdf-worker`, `ocr-worker`, `agent-worker` bundles and `bio-plane/dist/bio-plane.bundled.mjs`, again, from `pdfstructure.mjs`.
+
+**Questions.** None open. **Deferred.** None.
+
+Size (session_017eqJekosp7BFHFboXDwJNt): test runs 7, module lines 4219
 
 ## J1 · COMPLETE
 
