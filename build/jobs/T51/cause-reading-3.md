@@ -1,6 +1,6 @@
 # cause-reading-3 (T51)
 
-**Status** · session_01SYgD5xwRehhbmdooREW3Fp · depth 2 · WAITING ON BOB (J9) · handled B8
+**Status** · session_01SYgD5xwRehhbmdooREW3Fp · depth 2 · COMPLETE · handled B8
 
 ## Completion
 
