@@ -1212,7 +1212,10 @@ export function textWordsOfText(text, { html = false, budget } = {}) {
 export const PIECE_UNITS_MAX = 4096;
 /* G26 (fix round 6): a PDF is read in pieces by page ranges, `PDF_RANGE_PAGES` pages a piece (pdf-reader's
    `extractPdfRange`, R43), the cursor a page. A range's structures are dropped before the next is read, so a tick
-   holds the bytes and one range, and the whole is one parse, not one per piece. */
+   holds the bytes and one range, and the whole is one parse, not one per piece. G37 (K4615), measured at the plane's shape
+   (`g26.probe.mjs`, BUDGET-2024-APP in a child of 112 MB, after roster-reader's recogniser fix) and by `pdf-pieces.test.mjs`
+   (pieces against one parse, bar 1.5): 100 pages a piece, first tick 5.2 s but 1.40-1.51 (one run over the bar); 150, 6.5 s and
+   1.45-1.47; 200, 8.2 s and 1.40-1.42 (three runs). 200 keeps both bars with a margin. */
 export const PDF_RANGE_PAGES = 200;
 export const BARE_DIGEST = "BARE_DIGEST";
 export const CURSOR_MISMATCH = "CURSOR_MISMATCH";
@@ -1914,10 +1917,17 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
      K1776). So it is `"fetch"`, never read off `capture.actor_class` or the request's `origin`, and a content type read
      only from a member's own capture (court-doctypes R2) never matches here, as it never matches at intake. */
   const profCtx = { headers, locator, content_type: ct || null, text, origin: CAPTURE_ORIGIN };
-  const stackId = identify(profCtx);
-  const docType = doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind, ...vw });
+  /* R42 (fix round 6, G37; K4615): a read classifies its text once. The classification of the intake's decode is asked only
+     where a reading is made from it (the text read as text, a failure naming its type), once, and never for a read whose
+     text is classified by `docprofile.readText` over the entry's own text (the stage that follows the entry): it was twice
+     over the whole text for a CSV, and the recognisers allocate in proportion to the text. */
+  let classified = null;
+  const classify = () => classified ??= (() => {
+    const stackId = identify(profCtx);
+    return { stackId, docType: doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind, ...vw }) };
+  })();
   if (!bytes)
-    return early(failed(doc, docType, got.why || localize("reading-pipeline.index.bytes_not_held", "the capture's bytes are not held in the evidence store, so nothing was read"),
+    return early(failed(doc, classify().docType, got.why || localize("reading-pipeline.index.bytes_not_held", "the capture's bytes are not held in the evidence store, so nothing was read"),
                         { failure: got.failure || FAILURE_TRANSIENT }));
 
   const entry = fmt && fmt !== "undetermined" ? getFormat(fmt) : null;
@@ -1929,6 +1939,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   if (!wireable && textRead) {
     /* R1: text read as text with no format entry that reads it goes to the content type's reader. */
     classifiedText = text; member = "plane";
+    const { stackId, docType } = classify();
     /* R32: its text units, drawn from the decoded text (the page's visible text for HTML); a capture whose text holds
        no glyph has none. The reader's outcome below does not change them. */
     if (piecesOn) {
@@ -2140,8 +2151,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         }
       }
       reading = wired
-        ? readingFromWire({ wired, docType, chain, wiredTier, fmt, retrieved, tier2note, ocrNote, tier3Candidate: t3Wanting })
-        : { ...failed(doc, docType, [tier2note, ocrNote, localize("reading-pipeline.index.entry_no_text", "the {fmt} entry produced no text from these bytes", { fmt: String(fmt) })]
+        ? readingFromWire({ wired, docType: wired.determined ? null : classify().docType, chain, wiredTier, fmt, retrieved, tier2note, ocrNote, tier3Candidate: t3Wanting })
+        : { ...failed(doc, classify().docType, [tier2note, ocrNote, localize("reading-pipeline.index.entry_no_text", "the {fmt} entry produced no text from these bytes", { fmt: String(fmt) })]
               .filter(Boolean).join(" — "), { failure: memberDown ? FAILURE_TRANSIENT : FAILURE_FINAL }) };
       /* R35: a reading with text units counts its words. */
       if (textUnits) Object.assign(reading, rangeScope ? { words_total: null, words_read: pieceInfo.piece.words } : textWordsFor(i2text, textUnits));
@@ -2168,12 +2179,12 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       reading.page_boxes = pageBoxes;
       reading.container_extent = extent;
     } catch (e) {
-      reading = failed(doc, docType, localize("reading-pipeline.index.entry_not_read_bytes", "the {fmt} entry could not read these bytes ({detail}), so nothing is claimed about its text", { fmt: String(fmt), detail: String(String(e && e.message || e).slice(0, 200)) }), { failure: FAILURE_TRANSIENT, page_count: null, page_boxes: null, container_extent: null });
+      reading = failed(doc, classify().docType, localize("reading-pipeline.index.entry_not_read_bytes", "the {fmt} entry could not read these bytes ({detail}), so nothing is claimed about its text", { fmt: String(fmt), detail: String(String(e && e.message || e).slice(0, 200)) }), { failure: FAILURE_TRANSIENT, page_count: null, page_boxes: null, container_extent: null });
       textUnits = null; textUnitsOverBound = 0; textUnitsSkipped = null; classifiedText = null; emitted = null; heldCounts = null; joinedDropped = false;
     }
   } else {
     if (piecesOn && pieceAsk.cursor !== null) return refusal(NOT_PIECEWISE, "reading-pipeline.index.non_textual_large");
-    reading = failed(doc, docType, localize("reading-pipeline.index.document_not_read_text", "the document was not read as text ({why}), so no reading was attempted", { why: multipart ? localize("reading-pipeline.index.multipart", "multipart") : localize("reading-pipeline.index.non_textual_large", "non-textual or too large") }),
+    reading = failed(doc, classify().docType, localize("reading-pipeline.index.document_not_read_text", "the document was not read as text ({why}), so no reading was attempted", { why: multipart ? localize("reading-pipeline.index.multipart", "multipart") : localize("reading-pipeline.index.non_textual_large", "non-textual or too large") }),
                      { failure: FAILURE_FINAL, page_count: null, page_boxes: null, container_extent: null });
   }
 
