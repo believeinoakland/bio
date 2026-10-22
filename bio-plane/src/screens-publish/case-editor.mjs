@@ -50,6 +50,7 @@ export const CASE_EDITOR = Object.freeze({
     out.push(cs.title(named ? caseOf.identity + (edition ? " · " + edition : "")
       : chosen ? P.titleOf2(cs, chosenR && chosenR.state === "ok" ? chosenR.value : null, P.plain(cs.w("case.draft.untitled", { project: projectTitle }))) : null, { thing: "case" }));
     out.push('<span id="what-goes-in"></span>');
+    if (settled && chosen) out.push(P.editionsLine(cs, view, chosen));
     if (settled) out.push(P.draftHead(cs, view, "case-editor", P.draftCopies(cs, view, drafts, chosen ? chosen.draft_id : "", chosenR), chosen ? chosen.draft_id : "", projectTitle));
     if (!settled) return out.concat([cs.sec("screen.case-editor.drafts", cs.state("drafts", function () { return ""; }))]).join("");
 
@@ -137,7 +138,7 @@ export const CASE_EDITOR = Object.freeze({
     ];
     // R63 (L14): a draft that names no case says so in a fold, by the sentence `review` states; R47 (C7): the publish gates' first
     // refusal, from the copy, as what is missing
-    if (copy.state === "ok" && !(copy.value.case && copy.value.case.case_id)) out.push(P.fold(cs, "screen.case-editor.nocase.summary", "<p>" + cs.w("review.body.nocase") + "</p>"));
+    if (copy.state === "ok" && !(copy.value.case && copy.value.case.case_id) && !(chosen.editions && (chosen.editions.prepared || chosen.editions.published))) out.push(P.fold(cs, "screen.case-editor.nocase.summary", "<p>" + cs.w("review.body.nocase") + "</p>"));
     const miss = copy.state === "ok" && copy.value.gates === "refused" && Array.isArray(copy.value.missing) ? copy.value.missing[0] : null;
     const missing = miss ? '<ul class="mk-list" data-missing><li role="alert">' + (P.refusalText(cs, miss) || cs.esc(String(miss.reason || ""))) + "</li></ul>" : "";
     // R65 (C4): the owner's way to the reader's comments, or that there are none

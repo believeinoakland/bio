@@ -88,3 +88,16 @@ test("R72 R78 C51 once a key file is chosen the page no longer says this browser
   assert.ok(labels.length > 1 && labels.every((l) => /:\s*$/.test(l)), "each label ends in a separator before the string it labels");
   assert.deepEqual(rawKeys(main(p)).filter((k) => k.includes("registering")), [], "no progress key drawn raw");
 });
+
+/* ---------- C48 (R80): what the record states, with the case it belongs to (case-authoring R83 `editions.case`) ---------- */
+import { DOCUMENT } from "./fixtures.mjs";
+test("R80 C48 a draft naming no case whose pre-flight refused first still reads its prepared edition by `editions.case`: 'Edition n is prepared', no reasons beside it, Sign offered", async () => {
+  const refusedFirst = PREFLIGHT({ steps: [{ stated: "not reached: op=publish refuses first (NO_STATEMENT)" }, ...PREFLIGHT().steps.slice(1)], ready: false, first: HELD_BACK, blockers: [],
+    editions: { prepared: 2, published: null, case: CASE } });
+  const p = await open(CER, { plane: { reviewcopy: ok(COPY({ case: { case_id: null, edition: 1, identity: "a new case" } })), publishpreflight: ok(refusedFirst),
+    casedocument: ok(DOCUMENT({ citations: [{ target: "FND-2026-0031", version: "7d0e" + "1".repeat(56) + "91ab" }] })), captureaccounts: ok({ actors: [] }) } });
+  assert.ok(drew(p, "screen.ceremony.prepared", { edition: "2" }));
+  assert.equal(main(p).querySelector("[data-blockers]"), null);
+  assert.ok(main(p).querySelector('[data-act="caseratify"]'), "Sign is offered");
+  assert.ok(!drew(p, "review.body.nocase"));
+});

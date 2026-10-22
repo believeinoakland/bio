@@ -136,3 +136,58 @@ test("R75 C46 the passages the case cites are named by the question's title, nev
   assert.ok(title && title !== Q, "the real review states the question's title");
   assert.deepEqual(cited, [[Q, title], ["INFO-2026-0099", "INFO-2026-0099"]]);
 });
+
+/* ---------- C48 / N6 (R80, R70, R71, R77): prepared and published, read from the record, in a fresh page ---------- */
+import { AUTHORED } from "../case-authoring/fixture.mjs";
+import { tick, ops } from "./fixtures.mjs";
+function prep() {
+  const w = world({ provider: false });
+  w.member("alice");
+  w.doc(DOC);
+  w.finding(Q, [{ target: DOC }], { state: "open", lines: readingLines("first", [DOC], CLAIM) });
+  const P = w.project("Team", "alice", [Q], { extra: currentLines(Q) });
+  assert.equal(w.basisVersions.conclude({ author: "alice", viewer: V("alice"), identity: V("alice"), target: Q, project: P, falsifier: "A court order." }).ok, true);
+  w.draft("DRAFT-N", P, { ...AUTHORED, targets: [Q], roles: { [Q]: "load_bearing" }, newCase: true });
+  const r = reviewOf(w.host, { record: w.record, membership: w.membership, strength: w.strength, basisVersions: w.basisVersions, publication: w.publication,
+    caseAuthoring: w.ca, caseInputs: w.ci, caseAccount: w.cacc, ratification: w.ratification, now: () => w.clock.ms });
+  const me = { viewer: V("alice"), author: "alice" };
+  const plane = {
+    image: ok({ "bundle.md": w.text(P) }),
+    casedrafts: () => ok(r.list({ project: P, ...me })),
+    reviewcopy: () => ok(r.copy({ draft: "DRAFT-N", viewer: V("alice") })),
+    publishpreflight: (req) => ok(w.ca.publishPreflight({ ...req.body, ...me })),
+    publish: (req) => ok(w.ca.publishCase({ ...req.body, ...me })),
+    /* the door's answer: the document, and beside it the statement to sign (publication door, THE STATEMENT TO SIGN) */
+    casedocument: (req) => { const d = w.publication.caseDocument(req.query.case, Number(req.query.edition), V("alice"));
+      return ok(d && d.ok ? { ...d, sign: { namespace: "bio-ratify", statement: `bio-ratify-case ${d.case_id} ${d.edition} ${d.doc_sha}\n` } } : d); },
+    publishedcase: () => ({ status: 200, json: { ok: true, result: { ok: false, reason: "NOT_PUBLISHED", code: "NOT_PUBLISHED" } } }),
+  };
+  return { w, P, plane };
+}
+const CER2 = (P) => `/app/ceremony/${P}/DRAFT-N`;
+
+test("R80 R70 C48 a draft that asks for a new case, prepared through the real act, is 'Edition 1 is prepared' in a fresh page, with no reasons that stop the signing beside it (the walker's reload)", async () => {
+  const { P, plane } = prep();
+  const first = await open(CER2(P), { plane });
+  tick(first, "ce-tie", "yes");
+  await press(first, "publish", { reason: "because" });
+  assert.ok(drew(first, "screen.ceremony.prepared", { edition: "1" }), "prepared, in the page that prepared it");
+  const again = await open(CER2(P), { plane });
+  assert.ok(drew(again, "screen.ceremony.prepared", { edition: "1" }), "and in a fresh page, from the record alone");
+  assert.equal(again.root().querySelector("[data-blockers]"), null, "no reasons that stop the signing beside a prepared edition");
+  assert.ok(ops(again).includes("caseratify") || again.root().querySelector("[data-act=caseratify],[data-phone]"), "and Sign is offered");
+});
+
+test("R80 R71 C48 N6 once edition 1 is signed, the ceremony and the case editor say 'Published: edition 1' and link the case page's route; the editor never says it names no case yet", async () => {
+  const { w, P, plane } = prep();
+  const done = w.ca.publishCase({ ...AUTHORED, project: P, draft: "DRAFT-N", viewer: V("alice"), author: "alice", tieAttested: true });
+  assert.equal(done.ok, true, JSON.stringify(done).slice(0, 200));
+  w.ratify(done);
+  const href = "/app/published/" + encodeURIComponent(done.caseId + "/1");
+  for (const path of [CER2(P), `/app/case-editor/${P}/DRAFT-N`, `/app/review-copy/${P}/DRAFT-N`]) {
+    const p = await open(path, { plane });
+    assert.ok(drew(p, "screen.ceremony.published.edition", { n: "1" }), path);
+    assert.ok(main(p).querySelector(`a[href="${href}"]`), `${path}: the link is the case page's route`);
+    assert.ok(!drew(p, "review.body.nocase"), `${path}: never 'names no case yet'`);
+  }
+});

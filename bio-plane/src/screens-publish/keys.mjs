@@ -7,6 +7,7 @@
 
 export const SCREEN_KEYS = Object.freeze({
   "case-editor": Object.freeze([
+    "screen.ceremony.published.edition", "screen.ceremony.publicpage", "screen.ceremony.prepared",
     "question.concluded.falsifier", "member.founder.unnamed", "shell.card.member",
     "refusal.NOT_THE_PROJECT_OWNER", "refusal.PROJECT_ACT_NOT_THE_OWNER", "refusal.reference",
     "screen.case-editor.details.name.area", "screen.case-editor.details.name.contact", "screen.case-editor.details.name.related", "screen.case-editor.details.name.relationships", "screen.case-editor.details.stated", "screen.case-editor.details.rel.builds_on", "screen.case-editor.details.rel.responds_to", "screen.case-editor.details.rel.disagrees_with", "screen.case-editor.details.takeout", "screen.case-editor.role.relied", "screen.case-editor.role.supporting", "screen.case-editor.finding.role", "case-inputs.details.not_stated",
@@ -51,6 +52,7 @@ export const SCREEN_KEYS = Object.freeze({
     "act.casedrafts.label.case-editor", "act.casedrafts.does", "screen.case-editor.drafts.help", "screen.case-editor.drafts.choose", "screen.case-editor.drafts.newest", "screen.case-editor.drafts.item", "screen.case-editor.links.live",
   ]),
   "review-copy": Object.freeze([
+    "screen.ceremony.published.edition", "screen.ceremony.publicpage", "screen.ceremony.prepared",
     "member.founder.unnamed", "shell.card.member",
     "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.review-copy.name", "screen.review-copy.purpose",
     "act.reviewgrant.label.review-copy", "act.reviewgrant.does", "act.reviewrevoke.label.review-copy",

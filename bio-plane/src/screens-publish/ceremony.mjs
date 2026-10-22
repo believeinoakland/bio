@@ -59,8 +59,7 @@ export const CEREMONY = Object.freeze({
     ui.draftId = draft;
     const copy = copyR && copyR.state === "ok" ? copyR.value : null;
     const c = copy && copy.case ? copy.case : {};
-    const out = [cs.title(P.titleOf2(cs, copy, c.identity ? P.plain(cs.w("screen.ceremony.heading", { case: c.identity, edition: String(c.edition || "") })) : null), { thing: "case" }),
-      P.noCase(cs, copy)];
+    const out = [cs.title(P.titleOf2(cs, copy, c.identity ? P.plain(cs.w("screen.ceremony.heading", { case: c.identity, edition: String(c.edition || "") })) : null), { thing: "case" })];
     // C49 (DEC-394, DEC-395): "Which draft" among the project's drafts, and how many review links are live on any of them; a list that
     // could not be read is drawn failed, never as one draft, and the ceremony goes on without it
     const dR = view.data.drafts;
@@ -92,8 +91,11 @@ export const CEREMONY = Object.freeze({
     const mineDraft = all.find(function (x) { return x && x.draft_id === draft; }) || null;
     const objOf = function (v) { return v && typeof v === "object" && !Array.isArray(v) ? v : null; };
     const recd = pre.state === "ok" && objOf(pre.value.editions) ? pre.value.editions : mineDraft && objOf(mineDraft.editions) ? mineDraft.editions : null;
+    out.push(P.noCase(cs, copy, recd)); // R80: not said of a draft the record holds an edition of
     const recPub = recd && objOf(recd.published) && Number(recd.published.edition) > 0 ? recd.published : null;
-    const caseFor = c.case_id || (objOf(stepWith("pinned")) ? String(stepWith("pinned").case || "") : "");
+    // R80: the case the record says the preparation belongs to (`editions.case`, case-authoring R83), else the copy's, else the pre-flight's pinned step
+    const recCase = recd && typeof recd.case === "string" ? recd.case : "";
+    const caseFor = c.case_id || recCase || (objOf(stepWith("pinned")) ? String(stepWith("pinned").case || "") : "");
     const waitPre = !recd && pre.state === "loading"; // the record is asked for the edition once the pre-flight has said what it holds
     const pubR = !recd && !waitPre && c.case_id ? P.later(cs, view, "published", "publishedcase", { query: { caseId: c.case_id } }) : null;
     const pubOk = pubR && pubR.state === "ok" && pubR.value && typeof pubR.value === "object" ? pubR.value : null;
@@ -132,7 +134,8 @@ export const CEREMONY = Object.freeze({
     // R71: an edition already public is named with its link (the address the record gives); the draft that is itself published offers
     // nothing to prepare
     if (pubLatest > 0) {
-      const addr = recPub && typeof recPub.address === "string" && /^\/app\/published\/[^\s"<>]+$/.test(recPub.address) ? recPub.address : "/app/published/" + encodeURIComponent(caseId + "/" + pubLatest);
+      // R80 (K4450): the address is written as the case page's route is (`hrefOf`: one encoded part), never the record's own `address`
+      const addr = "/app/published/" + encodeURIComponent((recCase || caseId) + "/" + pubLatest);
       out.push('<p role="status" data-published="' + pubLatest + '">' + cs.w("screen.ceremony.published.edition", { n: String(pubLatest) }) + "</p>"
         + '<a href="' + cs.esc(addr) + '" data-nav data-published-link>' + cs.w("screen.ceremony.publicpage") + "</a>");
       if (ownPublished) return out.join("");
@@ -254,7 +257,7 @@ export const CEREMONY = Object.freeze({
         }).join("") + '<p class="mk-note">' + cs.w("screen.ceremony.conf.self.note") + "</p>"
         + unconfirmed.map(function (sha, i) {
           const mineAcct = P.later(cs, view, "acct:" + sha, "captureaccounts", { query: { capture: sha } });
-          const actors = mineAcct.state === "ok" && Array.isArray(mineAcct.value.actors) ? mineAcct.value.actors : [];
+          const actors = mineAcct.state === "ok" && mineAcct.value && Array.isArray(mineAcct.value.actors) ? mineAcct.value.actors : [];
           const me = view.me || {};
           // only the member who captured it adds an account of the capture
           if (!actors.some(function (a) { return a && me.member && String(a.actor) === String(me.member); })) return "";

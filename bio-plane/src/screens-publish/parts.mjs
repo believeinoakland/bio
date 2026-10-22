@@ -278,9 +278,11 @@ export const PARTS = Object.freeze({
   titleOf2: function (cs, copy, fallback) {
     return copy && typeof copy.title === "string" && copy.title ? copy.title : fallback;
   },
-  noCase: function (cs, copy) {
+  noCase: function (cs, copy, editions) {
     const c = copy && copy.case ? copy.case : {};
-    return copy && !c.case_id ? '<p class="mk-sub" data-nocase>' + cs.w("review.body.nocase") + "</p>" : "";
+    // R80: a draft the record holds an edition of (prepared or published) is no draft that names no case
+    const known = editions && (editions.prepared || editions.published);
+    return copy && !c.case_id && !known ? '<p class="mk-sub" data-nocase>' + cs.w("review.body.nocase") + "</p>" : "";
   },
 
   /* C49 (DEC-394, DEC-395): the project's drafts as `casedrafts` lists them (oldest first), each with the review copy it answers: the one
@@ -338,6 +340,19 @@ export const PARTS = Object.freeze({
     const here = view.ui.draft ? view.ui.draft.draft_id : view.ui.draftId || "";
     if (!pick || pick === here || !(Array.isArray(r.drafts) && r.drafts.some(function (x) { return x && x.draft_id === pick; }))) { P.forget(view); return { stay: true }; }
     cs.go(screen, String(view.subject || "").split("/")[0] + "/" + pick);
+  },
+
+  /* R80 (C48/N6; case-authoring R83, review R19): what the record holds for a draft: "Published: edition n" with the address of that edition
+     (the case page's route, written as `hrefOf` writes it: one encoded part), else "Edition n is prepared". Nothing for a draft the record
+     says neither of; the case it belongs to is the record's own (`editions.case`) or the draft's. */
+  editionsLine: function (cs, view, draft) {
+    const ed = draft && draft.editions && typeof draft.editions === "object" ? draft.editions : null;
+    if (!ed) return "";
+    const id = typeof ed.case === "string" && ed.case ? ed.case : draft.case && draft.case.case_id ? draft.case.case_id : "";
+    const pub = ed.published && Number(ed.published.edition) > 0 ? Number(ed.published.edition) : 0;
+    if (pub && id) return '<p role="status" data-published="' + pub + '">' + cs.w("screen.ceremony.published.edition", { n: String(pub) }) + ' <a href="/app/published/'
+      + encodeURIComponent(id + "/" + pub) + '" data-nav data-published-link>' + cs.w("screen.ceremony.publicpage") + "</a></p>";
+    return !pub && Number(ed.prepared) > 0 ? '<p role="status" data-prepared="' + Number(ed.prepared) + '">' + cs.w("screen.ceremony.prepared", { edition: String(Number(ed.prepared)) }) + "</p>" : "";
   },
 
   /* C49 (R73): under the heading, the draft the page shows named by its scope and the day it was prepared, drawn where the project has two

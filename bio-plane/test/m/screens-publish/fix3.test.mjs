@@ -161,8 +161,8 @@ test("R77 R71 C50 a draft whose edition the record says is published draws it wi
   const first = COPY({ case: { case_id: C, edition: 1, identity: "The Coliseum lease", newCase: false } });
   const p = await open(CER, { plane: { reviewcopy: ok(first), publishpreflight: ok(PREFLIGHT({ editions: { prepared: null, published } })), publishedcase: refusedIn("NOT_PUBLISHED") } });
   assert.ok(drew(p, "screen.ceremony.published.edition", { n: "1" }));
-  const link = main(p).querySelector(`a[href="${published.address}"]`);
-  assert.ok(link, "the link is the address the record gives");
+  const link = main(p).querySelector(`a[href="/app/published/${encodeURIComponent(C + "/1")}"]`);
+  assert.ok(link && !main(p).querySelector(`a[href="${published.address}"]`), "the link is the case page's route as the shell opens it (K4450), never the record's bare-slash address");
   assert.ok(!ops(p).includes("publish") && !ops(p).includes("caseratify"), "no prepare for edition 1");
   const next = await open(CER, { plane: { publishpreflight: ok(PREFLIGHT({ editions: { prepared: null, published } })) } });
   assert.ok(drew(next, "screen.ceremony.published.edition", { n: "1" }) && ops(next).includes("publish"), "edition 2 is still offered as the new edition");

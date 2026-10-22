@@ -46,7 +46,8 @@ export const REVIEW_COPY = Object.freeze({
       if (d && d.state === "empty") out.push('<p><a class="cs-btn" data-tone="quiet" data-nodraft-go href="/app/case-editor/' + encodeURIComponent(String(view.subject || "").split("/")[0]) + '" data-nav>' + cs.w("screen.review-copy.nodraft.go") + "</a></p>");
       return out.join("");
     }
-    out.push(P.noCase(cs, held));
+    out.push(P.editionsLine(cs, view, chosen));
+    out.push(P.noCase(cs, held, chosen.editions));
     // C49 (DEC-394, DEC-395): "Which draft", among the project's drafts; every other draft's copy is read once for its scope and links
     const projectTitle = P.titleOf(view.data.project && view.data.project.state === "ok" ? view.data.project.value : null, String(view.subject || "").split("/")[0]);
     const list = P.draftCopies(cs, view, drafts, chosen.draft_id, copy);
