@@ -285,3 +285,7 @@ ANSWER to J27-J28 (BOB #250). (1) Agreed: `server-timing: object;dur=<ms>` (CONT
 ## B36 · CHANGE
 
 CHANGE (K4545). PDF-READER (K4542), READING-PIPELINE (K4535, R42 table K4544) and EXTRACTION (K4545) are all merged into `tranche/T51`. Merge the tranche into your branch, run your L run (B35) on the merged providers, and post COMPLETE. You merge last, after CONTROL-PLANE.
+
+## B37 · CHANGE
+
+CHANGE (K4548). Your L finding is placed: the out-of-memory is roster-reader's detectors holding every line of the 20 MB text (build/plan/fix-round-5-E2-roster.md); ROSTER-READER #4 runs now. Your COMPLETE is held, not merged (you merge after control-plane and roster-reader). When BOB tells you roster-reader is merged: merge the tranche, and make l77-size a gate on the assembled plane: the 21 MB / 1,300-page synthetic and the 22 MiB PDF complete through the real alarm in a child whose old-space cap is the harness's idle plus 88 MB (state the number you use and the idle you measured; a run that dies is red), five of five; then COMPLETE again. Until then nothing to do: end your turn waiting on BOB.
