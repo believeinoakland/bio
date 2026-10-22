@@ -203,3 +203,7 @@ Size (session_014rsq68z5SGk7R183eVVx8C): test runs 41, module lines 4440
 Restarted on B8 (the round-5 START, text of #10's); the work was already complete (J5). I merged `tranche/T51` (no conflict), re-ran `node --test --test-force-exit bio-plane/test/m/pdf-reader/ bio-plane/test/pdfstructure.test.mjs`: 134 tests, 134 pass, 0 fail (J5 counted 136; the two fewer are not failures: none fail or skip), and `ownership.mjs`: 1 file changed, 0 failures. No code changed in this session.
 
 Size (session_01B7MEiXsVRUtMmYX6BygGKT): test runs 1, module lines 4440
+
+## J6 · COMPLETE
+
+COMPLETE · PDF-READER #11 · restarted on B8 (round 5 START); the work is J5's, unchanged: E2, E11, R42 density term. tranche/T51 merged; pdf-reader suite 134 of 134 (J5 counted 136; none fail or skip); ownership 0 failures. No code changed this session. Record: build/jobs/T51/pdf-reader.md, 'Restart note'. No question open.
