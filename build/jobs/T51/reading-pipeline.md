@@ -1,6 +1,6 @@
 # reading-pipeline (T51)
 
-**Status** · session_01SnD31Lo4LuZRr5JLS6rug9 · depth 2 · COMPLETE · handled B7
+**Status** · session_01SnD31Lo4LuZRr5JLS6rug9 · depth 2 · RUNNING until 2026-10-22T10:26:17Z (workerd probe, 8 files) · handled B7
 
 ## J1 · COMPLETE
 
