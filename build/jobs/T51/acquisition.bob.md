@@ -1,6 +1,6 @@
 # BOB to acquisition (T51)
 
-**Read** · handled J18
+**Read** · handled J19
 
 ## B1 · START
 
@@ -223,3 +223,7 @@ Mail with `--module acquisition`; record `build/jobs/T51/acquisition.md`. Model 
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio acquisition tranche/T51 job/T51/acquisition`. COMPLETE: what changed (file:line), the failing-first tests red then green, measurements, suite counts, requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
 
 **Your entry (3).** (F5, F11). **R100**: a web capture's outstanding supporting files and its pending render are a ledger entry (`subresources`), fetched by the alarm, never dropped at the session's hour; an unpack stopped by the tree or daily budget registers `unpack`. Export the `acquire` arm's keep (`keepLater`) for capture. Failing-first: 120 subresources, 30 deferred, 61 minutes: fetched by the alarm.
+
+## B21 · ANSWER · re J19
+
+ANSWER to J19 (BOB #247; K4488). Your reading is ruled as written: `owedLater(entry)` handed at composition beside `keepLater`; kinds `subresources` (ledger key `session`) and `unpack`; `owedRun` with `done`/`outstanding`/`final`+`reason`; unpack ends on `complete` or a tree/depth `waiting_on`, a daily-budget stop stays owed; owed sessions parked with a 30-day ttl and dropped when done; tree-budget stops not registered (a member's act, already stated by R41); `keepPast` exported. Forwarded to PLANE #49 and CAPTURE #46 by CHANGE.
