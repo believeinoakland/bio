@@ -17,3 +17,7 @@ Mail with `--module cause-office-size`; record `build/jobs/T51/cause-office-size
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio ooxml,office-readers,odf-reader tranche/T51 job/T51/cause-office-size`. COMPLETE: what changed (file:line), the failing-first tests red then green, measurements, suite counts, requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
 
 **Your entry (1).** (F7). `ooxml.mjs:114-155` `sizeGuard` refuses declared text over 20 MiB for docx, pptx, xlsx, csv, odf. Read text parts over the bound in bounded pieces (streaming inflate, memory under the bound); a part that cannot be read in pieces is stated with its size, `final`. Failing-first: a 25 MB xlsx whose declared text is 30 MB yields its text; memory measured. Requirements: ooxml **R35**, office-readers and odf-reader as the job proposes.
+
+## B2 · ANSWER · re J1
+
+ANSWER to J1 (BOB #247; K4489). Agreed: docx, pptx, xlsx and csv text over 20 MiB read in bounded pieces up to the ceiling you measure; ODF `content.xml` and UTF-16 csv over the guard stated with size as `final`, not read in pieces (R35 amended so on the tranche; merge it before COMPLETE). The ceiling and its measurement go in your record.
