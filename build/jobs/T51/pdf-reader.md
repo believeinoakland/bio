@@ -139,3 +139,13 @@ Suites: pdf-reader 120 of 120 (with pdfstructure.test.mjs). reading-pipeline mem
 For you: (1) proposed R42 text is in the record (BOB writes requirements). (2) reading-pipeline's reading of a refused PDF is already `failure: final` (generic sentence "the pdf entry produced no text"); it can state `structure.pages` and `TOO_LARGE_TO_READ`: its sentence to write. (3) file-safety passes `why: TOO_LARGE_TO_READ` through with no table row (R24); pdf-worker answers it as 422. (4) Stale bundles again (manifest 14): pdf-worker, ocr-worker, agent-worker, bio-plane.bundled. No question open, nothing deferred.
 
 Size (session_017eqJekosp7BFHFboXDwJNt): test runs 7, module lines 4219
+
+## J4 · QUESTION
+
+QUESTION · PDF-READER #10 · E2 (R42's need rule). Best reading stated; I carry on with it.
+
+Re-measured under workerd (full `reading-pipeline.read`, smallest V8 old space + file bytes, 20 MB left for the plane's baseline so the object leaves 108): (1) the index budget (2 MiB of units, `Infinity` before) changes nothing in pdf-reader's side: 1,000 pages of 120 lines need 58 MB of old space with it and 58 without; the answer is built whole whatever the units keep. (2) R42's page rule holds for the pages it was measured on (120 lines: rule 61/97, measured 63/97). (3) It is LOW for pages of more text: 1,500 pages of 200 lines (11.6 MB) need 113 MB, the rule says 83, so with the plane's 20 MB the object is past 128 and the read dies (the failure class R42 exists for).
+
+Best reading / what I am building: R42 gets a SECOND term, refused when either is over 100. Second term = 29 + MiB + 0.001 x pages + 1.8 x (million characters), the characters taken from a sample of 16 evenly spaced pages read as the reading reads them (decoded characters + undecodable codes), only for a document of more than 64 pages that the page rule passes. Fits 63/96/112/72/98 vs measured 63/97/113/68/98 (1000 and 2000 pages x 120 lines, 1500 x 200, 3500 x 40, 3000 x 80). Nothing the page rule refuses is read; everything it reads that is dense is now refused. The real govinfo volumes are not changed (the page rule covers them; the new term says 32/39/67 for BUD/PER/APP, below their measured 35/50/98, so it never decides for them). Cost: about 16 pages' text (45-190 ms), no change to any answer under the limit. Requirement text to add to R42 is in my record at COMPLETE; you write it.
+
+If you want the page rule alone left as it is, say so: I will drop the second term; 1,500 pages of 200 lines is then read and can reset the object.
