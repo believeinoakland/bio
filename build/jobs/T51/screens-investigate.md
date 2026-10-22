@@ -326,3 +326,17 @@ COMPLETE · screens-investigate · fix round 4, wave 2 (B24; B25–B29). C59/N3,
 **Tests/checks:** module 236 pass, 0 fail (was 229); impact set: control-plane 65 files 353/353, plane 11 files 87/87 (run before B27/B28 merged; the module re-run after); format 0, architecture 0, coverage 0, ownership 0, words 0. The local diagnosis bypass of `declared.mjs` was reverted before any commit.
 **Found in other modules:** affordances / the deployed plane (live lacks the events vocabularies), jurisdictions (no fiscal_year for Oakland), money (`moneyset` proposal `label` says "machine" for a member's proposal). `bio-plane/dist/bio-plane.bundled.mjs` is stale for BOB's regeneration.
 Size (session_013QPvAdjdJbxBNxtsjaoDUX): test runs 33, module lines 3,206
+
+## J26 · COMPLETE
+
+COMPLETE · screens-investigate #15 · fix round 6, wave 2 (B30): G20 (S11), my six pickers. No QUESTION open.
+
+**Cause (1).** `calculation.mjs:15`, `money.mjs:21`, `person.mjs:24`, `standard.mjs:33`, `proceeding.mjs:26`, `timeline.mjs:24` read `heldcaptures` with `limit: 200` and `docChoice` (`parts.mjs`) drew only that page; the answer's `truncated` and `next` were never read, so the 201st document was missing with no word. (`grouprules.mjs` is not in my module.) The `truncated` the files mention was for other lists, not the picker.
+**Why missed (2).** No requirement said a bound must reach the member and no test held more than a page. Gap fixed: `picker-more.test.mjs`.
+**Fix.** `PARTS.docsAll(cs, view, extra)` (`parts.mjs`): while the answer says `truncated` with a `next`, it reads the next page by that cursor (1000 rows, the screen's own filter in `extra`: the project on Timeline), at most two more reads (up to 2,200 documents), kept in `view.ui.later`. `docChoice` and `passagePick` use it; the title lookups at `person.mjs` (2), `standard.mjs`, `timeline.mjs`, `timeline-parts.mjs` read the merged rows. Past the bound (or a page that fails) the picker says how many it shows with the nearest held row `screen.people.more` ({n}). Row owed (the design): its text says "Search or filter to find the rest" but the picker's search narrows only the loaded rows; a row saying only "the first {n} documents are shown" fits.
+**Failing-first (3).** `picker-more.test.mjs`, per screen of the six: 250 documents held, the 250th offered (control: 150 read once); 5,000 held: at most three reads, the count said. Red before (12 of 12 fail: silent at 200), green after (13 of 13, with the timeline test that every page carries the project filter). (4) N.
+**Stored data (R-OLD):** none. **Census ops owned:** none.
+**Tests/checks.** Module 248/248 (was 235 + 13 new in the later run); users: control-plane t46-app, plane t47, t50: 23/23; impact set names control-plane 69/79 and plane 46/53 files, I ran the three that name my module. `checks/run.mjs`: format, architecture, coverage (6623/6623), channels, words all 0 failures (words count not risen); ownership 0 (7 files).
+**Requirement line proposed (BOB writes it):** R58: a "Which document" picker offers every document `heldcaptures` holds, reading on by its cursor; past the bound it keeps (three reads of up to 1,000) it says how many it shows. Amends R52.
+**Found in other modules:** screens-publish `docket.mjs:20`, screens-action `matter.mjs:156,177`, screens-daily `doors.mjs:17` have the same fixed page (S11, other owners).
+Size (session_01XJx9SjMm4WbibPm3bDFTGW): test runs 6, module lines 3,260
