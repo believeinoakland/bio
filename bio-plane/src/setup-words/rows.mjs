@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (18421 design words, 1108 protected; SHA-256
-   42da27697b83574acfe60389132045461da8286e51ae31e25c1391484c648b9d) followed by 7181 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   42da27697b83574acfe60389132045461da8286e51ae31e25c1391484c648b9d) followed by 7182 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -18438,7 +18438,6 @@ export const WORD_ROWS = Object.freeze([
   ["acquisition.checks.at_and_the_same_condition","{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472): a folder is not a document to capture and not a document to watch, and one sentence is true of both",null,null,false,"code"],
   ["acquisition.checks.at_and_the_same_condition_2","{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)",null,null,false,"code"],
   ["acquisition.checks.at_and_the_same_condition_3","{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)",null,null,false,"code"],
-  ["acquisition.checks.capture_not_kept","the document arrived in several parts, but Civicsmith could not keep it whole, so nothing was filed; capture it again",null,null,false,"code"],
   ["acquisition.index.a_locator_must_be_https","a locator must be https on a public host: no bare IP address, no localhost, no credentials in the address",null,null,false,"code"],
   ["acquisition.index.a_sweep_origin_acquire_names","a sweep-origin acquire names the in-scope prefixes it may reach (link-sweep R1's `sources`); this one named none, so nothing was fetched",null,null,false,"code"],
   ["acquisition.index.acquire_failed","the capture stopped on an error ({detail}); nothing is known to have been filed",null,null,false,"code"],
@@ -18522,6 +18521,7 @@ export const WORD_ROWS = Object.freeze([
   ["acquisition.unpack.the_store_handed_in","the store handed in carries no acquisition instance, so no archive's outcomes can be recorded; nothing was opened",null,null,false,"code"],
   ["acquisition.unpack.these_bytes_are_entry_index","these bytes are entry {index} ({v1}, the archive's own claim) of the archive {sha} held by your team's Civicsmith, cut out and verified by size and CRC-32 at {at}",null,null,false,"code"],
   ["acquisition.unpack.why_nothing_was_opened","{why}; nothing was opened",null,null,false,"code"],
+  ["act.readheld.does","Reads a document this record holds whole but has no reading of yet, or whose reading found nothing. The earlier reading stays in the history. Moves nothing.",null,null,false,"code"],
   ["action-clocks.count.amount_unit_after_anchor","{amount} {unit} after {anchor}",null,null,false,"code"],
   ["action-clocks.count.amount_unit_before_anchor","{amount} {unit} before {anchor}",null,null,false,"code"],
   ["action-clocks.count.and_between_candidates"," and ",null,null,false,"code"],
@@ -23992,6 +23992,7 @@ export const WORD_ROWS = Object.freeze([
   ["plan-work.index.the_plan_is_not_about","the plan is not about that matter. Nothing was written.",null,null,false,"code"],
   ["plan-work.index.this_answer_reads_the_provider","this answer reads the {provider} module, which this instance does not have; nothing is answered in its place.",null,null,false,"code"],
   ["plane.declared.ask","member-directed: a member's own question to the assistant under their own account; no object is before them",null,null,false,"code"],
+  ["plane.declared.owedwork","what the object still owes one document, or the counts of what it owes: the keeps, readings, scan pages, supporting files and archive entries left for its alarm, each owed or ended for a stated reason; writes nothing",null,null,false,"code"],
   ["plane.declared.readtranslate","draft: a machine translation of one passage of the group's own writing (a note, question, finding or notice) into the member's language, labeled machine work, the original one tap away; held nowhere and writes nothing (plane R50)",null,null,false,"code"],
   ["progressions.checks.not_a_disposition_detail","a disposition is deferred (set aside for now) or dismissed (declined); taking a question up is a different act and is not a disposition",null,null,false,"code"],
   ["progressions.declared.discharge","exception document, keyed by (progression, entity, stage)",null,null,false,"code"],

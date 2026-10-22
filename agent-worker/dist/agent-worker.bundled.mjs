@@ -7705,7 +7705,7 @@ var WORD_ROWS = Object.freeze([
   ["refusal.CALCULATION_UNREAD", "A calculation this case rests on could not be read, so the case can't be checked yet. Try again. Nothing was published.", "DEC-342: calculation read threw during publish check", null, false, "design"],
   ["refusal.CALC_RECOMPUTE_DIFFERS", "Recalculating gives a different answer than what is stored, so the calculation was not accepted. Nothing was written.", "DEC-342: accepting a calculation whose recompute disagrees", null, false, "design"],
   ["refusal.CALENDAR_UNCOVERED", "The count reaches a year the holiday list does not cover for that office, so the due date could not be worked out.", "DEC-342: deadline count passes the end of the holiday list", null, false, "design"],
-  ["refusal.CAPTURE_NOT_HELD", "Your team's Civicsmith holds no captured document like that, or you cannot see it, so it cannot be cited. Nothing was written.", "DEC-342: citing a capture the record lacks or hides", null, false, "design"],
+  ["refusal.CAPTURE_NOT_HELD", "Your team's Civicsmith holds no captured document like that, or you cannot see it. Nothing was written.", 'DEC-342: citing a capture the record lacks or hides; DEC-412: B471 capture (K4377): reworded without "so it cannot be cited" so it also fits filing a document in a project (captureseenin)', null, false, "design"],
   ["refusal.CAP_NOT_A_GRADE", "A step's cap must be one of the recognized grades, and this was not. Nothing was written.", "DEC-342: step cap given is not a known grade", null, false, "design"],
   ["refusal.CASE_ASSERTION_DIVERGED", "The completeness statement in the signed finding differs from the one in the case document your team signed. Make them agree. Nothing was published.", "DEC-342: finding completeness differs from case document", null, false, "design"],
   ["refusal.CASE_BELONGS_TO_ANOTHER_PROJECT", "This case belongs to a different project, and a case can't change projects between editions. Nothing was published.", "DEC-342: edition names a different project than the case's", null, false, "design"],
@@ -9371,7 +9371,7 @@ var WORD_ROWS = Object.freeze([
   ["screen.document.ocr.refused.summary", "When it cannot be read again", "DEC-375: B398 C21 (extraction pdfstructure): summary of the refusals under the OCR button", null, false, "design"],
   ["screen.document.ocr.refused.capable", "Reading again needs permission to contribute to this project. Ask a team administrator to give it to you. Nothing was read.", "DEC-375: B398 C21 (extraction pdfstructure): refusal shown under the OCR button", null, false, "design"],
   ["screen.document.ocr.refused.member", "This team's Civicsmith has no text-reading (OCR) tool installed, so nothing was read or changed. Ask the administrator who installed it.", "DEC-375: B398 C21 (extraction pdfstructure): refusal under the OCR button", null, false, "design"],
-  ["screen.document.ocr.refused.unread", "Civicsmith holds no reading of this copy that you can see, so there is nothing to replace. A copy is read when it is filed in a project you are part of.", "DEC-375: B398 C21 (extraction pdfstructure): refusal under the OCR button", null, false, "design"],
+  ["screen.document.ocr.refused.unread", "This copy has not been read yet, so there is no reading to replace. Once it has been read, you can ask for a fresh reading here.", "DEC-375: B398 C21 (extraction pdfstructure): refusal under the OCR button; DEC-412: B471 screens-inquiry (K4402): reworded, the cause is that the copy is unread", null, false, "design"],
   ["screen.document.attest.summary", "A page typed by a member", "DEC-375: B398 C22 (content transcriptionattest): summary of the block holding a typed page and the confirm control", null, false, "design"],
   ["screen.document.attest.row", "Page {page}, typed by {name}, {date}", "DEC-375: B398 C22 (content transcriptionattest): first line of the typed-page row; {name} is the member who typed it", null, false, "design"],
   ["screen.document.attest.status", "Not yet checked by a second member. What {name} typed is {name}'s own reading of the page, and counts for no more than {name}'s word until someone else checks it against the page.", "DEC-375: B398 C22 (content transcriptionattest): second line of the typed-page row; {name} the typist, repeated", null, false, "design"],
@@ -10858,8 +10858,8 @@ var WORD_ROWS = Object.freeze([
   ["screen.document.testify.how", "How you know", "DEC-400: B455: the label of the reason field when naming a subject from a passage (DEC-394 3d)", null, false, "design"],
   ["screen.request.nameoffice.head", "Name the office yourself", "DEC-402: the fold under the dead end", null, false, "design"],
   ["screen.request.nameoffice.note", "The office is saved for your team's next request, marked as named by a member until an administrator confirms it.", "DEC-402: what naming does", null, false, "design"],
-  ["screen.request.nameoffice.name", "The agency and office", "DEC-402: field", null, false, "design"],
-  ["screen.request.nameoffice.name.help", "As the agency names the office that answers records requests.", "DEC-402: help", null, false, "design"],
+  ["screen.request.nameoffice.name", "The agency", "DEC-402: field; DEC-412: B471 screens-action (K4409): the field was one line, now two (the agency, the office within it)", null, false, "design"],
+  ["screen.request.nameoffice.name.help", "The agency that holds the records, as it names itself.", "DEC-402: help; DEC-412: B471 screens-action: for the agency alone", null, false, "design"],
   ["screen.request.nameoffice.where", "Where requests go", "DEC-402: field", null, false, "design"],
   ["screen.request.nameoffice.where.help", "Its mailing address, email address or online portal, as the agency publishes it.", "DEC-402: help", null, false, "design"],
   ["screen.request.nameoffice.law", "The law it goes under", "DEC-402: field", null, false, "design"],
@@ -11035,6 +11035,55 @@ var WORD_ROWS = Object.freeze([
   ["screen.explore.shorter.evidenced", "Evidenced paths", "DEC-411: sub-heading, first", null, false, "design"],
   ["screen.explore.shorter.leads", "Leads", "DEC-411: sub-heading, after the evidenced paths", null, false, "design"],
   ["screen.explore.shorter.lead", "a lead, not evidence", "DEC-411: label on each lead", null, false, "design"],
+  ["refusal.SIGNATURES_RUN_RECENT", "Your team's Civicsmith checked for new signatures a few minutes ago, so it did not start another check just now. Try again in a quarter of an hour.", "DEC-412: B471 file-safety (K4371): the refusal when a check for signatures was made under fifteen minutes ago", null, false, "design"],
+  ["file-safety.index.signatures_refused_unnumbered", "The signature service refused the download. The scanner tries again daily; to fix it sooner, an administrator can check that your team's Civicsmith is allowed to reach the service.", "DEC-412: B471 file-safety (K4371): the reason line under the no-signatures line when the service refused and gave no status; the sibling of file-safety.index.signatures_refused without {status}", null, false, "design"],
+  ["file-safety.index.checking_for_new_signatures", "checking for new signatures", "DEC-412: B471 file-safety (K4371): act phrase that fills the administrators-only refusal when a member who is not an administrator asks for a check", null, false, "design"],
+  ["file-safety.index.no_scanner_so_no_run_started", "Your team's Civicsmith has no file scanner installed, so no check for signatures was started. Whoever installed it can add a scanner.", "DEC-412: B471 file-safety (K4371): detail of the check-for-signatures refusal when no scanner is installed", null, false, "design"],
+  ["file-safety.index.a_run_was_started_lately", "A check for new signatures was made a few minutes ago, so no new check was started. Try again in a quarter of an hour.", "DEC-412: B471 file-safety (K4371): detail of the check-for-signatures refusal when one ran under fifteen minutes ago", null, false, "design"],
+  ["file-safety.index.the_scanner_did_not_start", "The file scanner did not start a check, so nothing was changed. Try again in a few minutes.", "DEC-412: B471 file-safety (K4371): detail of the check-for-signatures refusal when the scanner did not answer", null, false, "design"],
+  ["refusal.CAPTURE_NOT_KEPT", "The document arrived in several parts, but your team's Civicsmith could not keep it whole, so nothing was filed. Capture it again.", "DEC-412: B471 acquisition (K4373): the refusal when a document that came in parts could not be kept whole (stand-in acquisition.checks.capture_not_kept)", null, false, "design"],
+  ["case-disclosures.index.late_proves", "The time stamp was asked for late: it shows the document existed by {at}, not when it was captured.", "DEC-412: B471 case-disclosures (K4365): beside a document whose time stamp was made late; {at} the instant the time stamp proves", null, false, "design"],
+  ["review.index.not_concluded_yet", "Not concluded yet", "DEC-412: B471 review (K4367): beside a finding whose conclusion section is empty", null, false, "design"],
+  ["refusal.CONFIRM_NOT_AN_OFFICE", "Only an office that a member named can be confirmed, and this subject is not an office. Nothing was changed.", "DEC-412: B471 entities (K4364): confirming a subject that is not an office", null, false, "design"],
+  ["refusal.NOT_NAMED_BY_A_MEMBER", "A member did not name this office, so there is nothing to confirm. Nothing was changed.", "DEC-412: B471 entities (K4364): confirming an office no member named, or one already confirmed", null, false, "design"],
+  ["entities.index.an_office_is_confirmed_by", "an office a member named is confirmed by its id", "DEC-412: B471 entities (K4407, J7): detail of the refusal when no office is named to confirm", null, false, "design"],
+  ["entities.index.confirming_an_office_a_member", "confirming an office a member named", "DEC-412: B471 entities (K4407, J7): act phrase that fills the administrators-only refusal", null, false, "design"],
+  ["entities.index.only_an_office_a_member", "Only an office that a member named can be confirmed, and this subject is a {kind}. Nothing was changed.", "DEC-412: B471 entities (K4407, J7): detail of the not-an-office refusal; {kind} what the subject is", null, false, "design"],
+  ["entities.index.this_office_was_not_named", "A member did not name this office, so there is nothing to confirm. Nothing was changed.", "DEC-412: B471 entities (K4407, J7): detail of the not-named-by-a-member refusal", null, false, "design"],
+  ["entities.index.where_requests_go_and_the", "Where requests go and the law they go under belong only to an office, and a {kind} has neither. Nothing was written.", "DEC-412: B471 entities (K4407, J7): refusal when an address or law is given for something that is not an office; {kind} what it is", null, false, "design"],
+  ["entities.index.where_requests_go_is_a", "Where requests go needs a kind and a value. The kind is one of {CONTACT_KINDS}. Nothing was written.", "DEC-412: B471 entities (K4407, J7): refusal when the address for requests is not given as a kind and a value; {CONTACT_KINDS} the kinds, comma-separated", null, false, "design"],
+  ["entities.index.the_law_requests_go_under", "The law requests go under has to be one your team's places name{v1}. Nothing was written.", "DEC-412: B471 entities (K4407, J7): refusal for a law the team's places do not name; {v1} is built by the code: a colon and the laws they name, or '; they name none'", null, false, "design"],
+  ["entities.declared.officeconfirm", "Confirms an office that a member named, so it no longer carries that mark, and records who confirmed it and when. No name, alias or note changes. Only an administrator can.", "DEC-412: B471 entities (K4407, J7): the declared op description, worded for members", null, false, "design"],
+  ["refusal.SEEN_IN_NOT_RECORDED", "Your team's Civicsmith could not write the record, so the document was not filed in the project. Try again; if it happens again, tell an administrator.", "DEC-412: B471 capture (K4377): captureseenin when the write failed (502)", null, false, "design"],
+  ["shell.keyfile.none", "No key file was chosen. Choose your key file, then try again.", "DEC-412: B471 cause-shell-3 (K4380): the key file box was empty when the member pressed on", null, false, "design"],
+  ["shell.keyfile.unreadable", "That file couldn't be read, so nothing was loaded. Choose your key file again.", "DEC-412: B471 cause-shell-3 (K4380): the chosen file could not be read", null, false, "design"],
+  ["shell.keyfile.empty", "That file is empty, so nothing was loaded. Choose your key file.", "DEC-412: B471 cause-shell-3 (K4380): the chosen file holds nothing", null, false, "design"],
+  ["act.origins.does", "Lists, oldest first, every system members have said this document came from, with who said so and when. It changes nothing.", "DEC-412: B471 affordances (K4381): origins", null, false, "design"],
+  ["act.inboxlist.does", "Lists the items handed in to your team's Inbox, newest first, a page at a time. It changes nothing.", "DEC-412: B471 affordances (K4381): inboxlist", null, false, "design"],
+  ["act.transcriptions.does", "Lists the text members have typed in for this document: each portion, who typed it and when. It changes nothing.", "DEC-412: B471 affordances (K4381): transcriptions", null, false, "design"],
+  ["act.progressions.does", "Lists the progressions your team has declared. It changes nothing.", "DEC-412: B471 affordances (K4381): progressions", null, false, "design"],
+  ["act.remindersfor.does", "Lists this action's reminders, each with its day, who set it and where it stands. It changes nothing.", "DEC-412: B471 affordances (K4381): remindersfor", null, false, "design"],
+  ["act.moneysets.does", "Lists the money trails that concern this project, newest first. It changes nothing.", "DEC-412: B471 affordances (K4381): moneysets", null, false, "design"],
+  ["act.captureseenin.does", "Files this held document in the project as well. It stays held under its own project.", "DEC-412: B471 affordances (K4381): captureseenin", null, false, "design"],
+  ["screen.ceremony.conf.row.missing.timestamp", "no trusted time stamp; an outside copy is kept", "DEC-412: B471 screens-publish (K4398): a document under Documents without a second confirmation that has the outside copy but no time stamp", null, false, "design"],
+  ["screen.ceremony.conf.row.missing.co_archive", "a trusted time stamp, but no outside copy", "DEC-412: B471 screens-publish (K4398): the same row for a document that has the time stamp but no outside copy", null, false, "design"],
+  ["screen.ceremony.conf.row.done", "a trusted time stamp and an outside copy are both in place", "DEC-412: B471 screens-publish (K4398): the same row for a document that now has both", null, false, "design"],
+  ["screen.ceremony.registering", "Making your signing key and registering it with your team. This can take a moment.", "DEC-412: B471 screens-publish (K4398): shown while the signing key is made and registered", null, false, "design"],
+  ["screen.home.questions.unknown", "Questions: not shown to you", "DEC-412: B471 screens-daily (K4399): on Home, a project's question count when the record shows you only that the project exists", null, false, "design"],
+  ["screen.projects.questions.unknown", "Questions: not shown to you", "DEC-412: B471 screens-daily (K4399): on Projects, a project's question count when the record shows you only that the project exists", null, false, "design"],
+  ["screen.capture.address.filedhere", "Filed here as well. It stays held under {project}.", "DEC-412: B471 screens-intake (K4404): a document held under another project and filed here too; {project} the project it is held under", null, false, "design"],
+  ["screen.capture.later.none", "You have not asked for any address to be captured later.", "DEC-412: B471 screens-intake (K4404): the list of requests for later, once asked for and empty", null, false, "design"],
+  ["screen.document.text.unread.next", "Until a copy is read, its words can't be found or cited. Check again soon; if it stays unread, ask a team administrator.", "DEC-412: B471 screens-intake (K4404): under Unread, the next step for an uploaded file that is not a picture", null, false, "design"],
+  ["act.scanmirror.label.security", "Check for new signatures now", "DEC-412: B471 screens-settings (K4408): the button on Security (scanmirror)", "Asks your team's file scanner to check for new signatures now. It answers at once, and the result shows when the check has finished. No document is moved.", false, "design"],
+  ["screen.security.mirror.started", "The scanner has been asked to check for new signatures. The result shows here once it has finished.", "DEC-412: B471 screens-settings (K4408): after scanmirror is pressed", null, false, "design"],
+  ["act.officeconfirm.label.places", "Confirm this office", "DEC-412: B471 screens-settings (K4408): the button beside an office a member named, on Places (officeconfirm)", "Confirms an office that a member named, so it no longer carries the mark Named by a member. Only an administrator can.", false, "design"],
+  ["screen.places.office.confirmed", "This office is confirmed.", "DEC-412: B471 screens-settings (K4408): after officeconfirm, also when it was already confirmed", null, false, "design"],
+  ["screen.account.key.proof.label", "Register this signing key as yours", "DEC-412: B471 screens-settings (K4408): the one statement the signing box shows when a key from a file you already have is registered", null, false, "design"],
+  ["screen.request.nameoffice.role", "The office within it", "DEC-412: B471 screens-action (K4409): field, the office within the agency (the role of the office entity)", null, false, "design"],
+  ["screen.request.nameoffice.role.help", "The office that answers records requests, as the agency names it.", "DEC-412: B471 screens-action (K4409): help", null, false, "design"],
+  ["screen.request.nameoffice.why", "Why you are naming this office", "DEC-412: B471 screens-action (K4409): the note's label on Name the office yourself", null, false, "design"],
+  ["screen.request.nameoffice.why.help", "Say how you know this office holds the records. It is kept with the office, under your name.", "DEC-412: B471 screens-action (K4409): the note's help", null, false, "design"],
+  ["screen.action.routes.none", "No route is known for this kind of action yet.", "DEC-412: B471 screens-action (K4409): the routes list of an action page when it is empty", null, false, "design"],
   ["refusal.GROUP_SLUG_MALFORMED", "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.", "setup, refusal by its code", null, false, "design"],
   ["refusal.GROUP_ALREADY_RECORDED", "Your team's Civicsmith has its team recorded already, and it is recorded once: the name travels inside every document the record has signed, so a second name would make those documents name a producer they were not written under. Nothing was changed.", "setup, refusal by its code", null, false, "design"],
   ["refusal.GROUP_IDENTITY_NOT_ADMIN", "Only one of the team's administrators can set the name it shows the public or the web address it claims. The person signed in here is not one of its active administrators. Nothing was changed.", "setup, refusal by its code", null, false, "design"],
@@ -17575,6 +17624,7 @@ var WORD_ROWS = Object.freeze([
   ["act.groupdomainset.does", "Proves your team controls this web address, so published cases can show it as yours.", null, null, false, "design"],
   ["act.profilesset.does", "Chooses the places whose rules apply (deadlines, records laws, holidays) and the team's languages. Deadlines and wizards draw on these.", null, null, false, "design"],
   ["act.officesseed.does", "Lists the public offices and seats for your places, so requests and people can be addressed by role.", null, null, false, "design"],
+  ["act.officeconfirm.does", "Confirms an office that a member named, so it no longer carries the mark Named by a member. Only an administrator can.", null, null, false, "design"],
   ["act.entitycreate.does", "Adds something the record does not hold yet, such as an office, an organization or a court case, with a note on where it comes from.", null, null, false, "design"],
   ["act.placewanted.does", "Names a place Civicsmith does not yet hold rules for. Administrators are told when an update brings it.", null, null, false, "design"],
   ["act.aikeepaway.does", "Keeps the team's material away from AI, for every use or the ones you choose. It binds every account, the team's, any project's and members' own. Members see your reason on Settings \u203A The assistant.", null, null, false, "design"],
@@ -17615,6 +17665,7 @@ var WORD_ROWS = Object.freeze([
   ["act.securitymap.does", "Shows how hard your team's Civicsmith was tried over the period you choose, against its usual. Counts only.", null, null, false, "design"],
   ["act.securitytooltest.does", "Sends a harmless test file or address to the tool and shows its answer, so you know it works before relying on it.", null, null, false, "design"],
   ["act.securitytoolremove.does", "Stops using this tool. Notes it already wrote stay on the files they concern.", null, null, false, "design"],
+  ["act.scanmirror.does", "Asks your team's file scanner to check for new signatures now. It answers at once, and the result shows when the check has finished. No document is moved.", null, null, false, "design"],
   ["act.expertisedeclare.does", "Says what you know professionally, such as accounting or law. An administrator confirms it; members can then ask you for checks.", null, null, false, "design"],
   ["act.setpassword.does", "Changes your password. Every other session signed in as you ends, so anyone using an old one must sign in again with the new password.", null, null, false, "design"],
   ["act.signrequest.does", "Tells the project's owners, in their queues, that this edition is prepared and ready to sign. It signs nothing.", null, null, false, "design"],
@@ -18385,9 +18436,9 @@ var WORD_ROWS = Object.freeze([
   ["acquisition.checks.at_and_the_same_condition", "{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472): a folder is not a document to capture and not a document to watch, and one sentence is true of both", null, null, false, "code"],
   ["acquisition.checks.at_and_the_same_condition_2", "{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)", null, null, false, "code"],
   ["acquisition.checks.at_and_the_same_condition_3", "{at}, and the SAME condition on a monitor tick (op=monitor, ungoverned span, D-472)", null, null, false, "code"],
-  ["acquisition.checks.capture_not_kept", "the document arrived in several parts, but Civicsmith could not keep it whole, so nothing was filed; capture it again", null, null, false, "code"],
   ["acquisition.index.a_locator_must_be_https", "a locator must be https on a public host: no bare IP address, no localhost, no credentials in the address", null, null, false, "code"],
   ["acquisition.index.a_sweep_origin_acquire_names", "a sweep-origin acquire names the in-scope prefixes it may reach (link-sweep R1's `sources`); this one named none, so nothing was fetched", null, null, false, "code"],
+  ["acquisition.index.acquire_failed", "the capture stopped on an error ({detail}); nothing is known to have been filed", null, null, false, "code"],
   ["acquisition.index.an_archive_sourced_capture_names", "an archive-sourced capture names the document address, not a replay locator", null, null, false, "code"],
   ["acquisition.index.archive_org_is_a_backup", "archive.org is a backup source and this document has not been unreachable long enough to justify one", null, null, false, "code"],
   ["acquisition.index.attestation_pending", "the timestamp and the co-archive were asked for after the document was kept, and had not answered when this capture was answered; their outcome is recorded when they do", null, null, false, "code"],
@@ -18405,6 +18456,7 @@ var WORD_ROWS = Object.freeze([
   ["acquisition.index.keep_store_refused", "the store would not take it ({detail})", null, null, false, "code"],
   ["acquisition.index.listed_whole_over_the_stored", "listed whole over the stored parts", null, null, false, "code"],
   ["acquisition.index.no_renderer_is_bound_to", "no renderer is bound to this instance (no RENDERER service binding and no BROWSER binding). Nothing was fetched.", null, null, false, "code"],
+  ["acquisition.index.render_did_not_return", "the page as a visitor saw it did not come back in time", null, null, false, "code"],
   ["acquisition.index.render_pending_files", "the page as a visitor saw it is still being made, and its supporting files are captured with it when you finish this capture", null, null, false, "code"],
   ["acquisition.index.render_pending_note", "this is the page as it was served; the page as a visitor saw it is still being made, and is filed as a second document when this capture is finished", null, null, false, "code"],
   ["acquisition.index.render_stringify_is_not_a", "render={stringify} is not a value this op reads. Send render: true for the page as a visitor saw it, or false (or nothing) for the served bytes.", null, null, false, "code"],
@@ -18467,15 +18519,7 @@ var WORD_ROWS = Object.freeze([
   ["acquisition.unpack.the_store_handed_in", "the store handed in carries no acquisition instance, so no archive's outcomes can be recorded; nothing was opened", null, null, false, "code"],
   ["acquisition.unpack.these_bytes_are_entry_index", "these bytes are entry {index} ({v1}, the archive's own claim) of the archive {sha} held by your team's Civicsmith, cut out and verified by size and CRC-32 at {at}", null, null, false, "code"],
   ["acquisition.unpack.why_nothing_was_opened", "{why}; nothing was opened", null, null, false, "code"],
-  ["act.captureseenin.does", "Files this held document in the project as well. It stays held under its own project.", null, null, false, "code"],
-  ["act.inboxlist.does", "Lists the knocks in the inbox, newest first, a page at a time. Changes nothing.", null, null, false, "code"],
-  ["act.moneysets.does", "Lists the money sets that concern this project, newest first. Changes nothing.", null, null, false, "code"],
-  ["act.officeconfirm.does", "An administrator confirms an office a member named.", null, null, false, "code"],
-  ["act.origins.does", "Lists, oldest first, every system members have declared this document came from, with who declared it and when. Changes nothing.", null, null, false, "code"],
-  ["act.progressions.does", "Lists the progression definitions. Changes nothing.", null, null, false, "code"],
-  ["act.remindersfor.does", "Lists this action's reminders, each with its day, who set it and its state. Changes nothing.", null, null, false, "code"],
-  ["act.scanmirror.does", "Asks the group's file scanner to check for new signatures now. It answers at once and moves no document.", null, null, false, "code"],
-  ["act.transcriptions.does", "Lists the typings a member has made of this document: each portion typed, who typed it and when. Changes nothing.", null, null, false, "code"],
+  ["act.readheld.does", "Reads a document this record holds whole but has no reading of yet, or whose reading found nothing. The earlier reading stays in the history. Moves nothing.", null, null, false, "code"],
   ["action-clocks.count.amount_unit_after_anchor", "{amount} {unit} after {anchor}", null, null, false, "code"],
   ["action-clocks.count.amount_unit_before_anchor", "{amount} {unit} before {anchor}", null, null, false, "code"],
   ["action-clocks.count.and_between_candidates", " and ", null, null, false, "code"],
@@ -19784,6 +19828,7 @@ var WORD_ROWS = Object.freeze([
   ["capture.index.argument_must_be_shape_stringify", "{argument} must be {shape}; {stringify} is not", null, null, false, "code"],
   ["capture.index.argument_must_be_shape_stringify_2", "{argument} must be {shape}; {stringify} is not", null, null, false, "code"],
   ["capture.index.at_most_per_item_max", "at most {PER_ITEM_MAX} documents in one act; the set was refused whole and nothing was written", null, null, false, "code"],
+  ["capture.index.bundle_ids_shape", "a list of at most {max} document ids", null, null, false, "code"],
   ["capture.index.contained_in_a_chrome_region", "contained in a chrome region and recurred on {n} distinct pages of {host}", null, null, false, "code"],
   ["capture.index.contained_in_a_chrome_region_2", "contained in a chrome region on one page of {host} only: whether it is the site's navigation or that page's own is undetermined until another page of the host carries it", null, null, false, "code"],
   ["capture.index.file_bytes_unreadable", "the file's bytes could not be read whole or held under their own digest, so nothing was written", null, null, false, "code"],
@@ -20247,7 +20292,6 @@ var WORD_ROWS = Object.freeze([
   ["case-disclosures.index.hunch_leg", "{target} leg {ord} on {leg_target}", null, null, false, "code"],
   ["case-disclosures.index.hunch_legs", "{count} basis leg(s) of this case's findings rest on a HUNCH ({legs}). ", null, null, false, "code"],
   ["case-disclosures.index.hunch_unread", "The basis of {unread} could not be read, so whether it rests on a hunch is not known. ", null, null, false, "code"],
-  ["case-disclosures.index.late_proves", "late: proves the bytes existed by {at}, not at capture", null, null, false, "code"],
   ["case-disclosures.index.length_document_s_a_member", "{length} document(s) a member supplied, which a load-bearing finding of this case relies on, cannot be cleaned of the details that could show who made them ({map}), and a member's document travels only as its cleaned copy. Capture each from where it was published, supply a plainer copy, or stop relying on it. Nothing was written.", null, null, false, "code"],
   ["case-disclosures.index.length_document_s_or_observation", "{length} document(s) or observation(s) a load-bearing finding of this case rests on are not held whole by your team's Civicsmith ({map}). Everything a case relies on travels with it in full (DEC-112 (4)): find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written.", null, null, false, "code"],
   ["case-disclosures.index.length_document_s_this_case", "{length} document(s) this case relies on could not be checked for the people and number plates marked in them ({map}), so what the published case would show of them is not known. Try again. Nothing was written.", null, null, false, "code"],
@@ -20493,6 +20537,7 @@ var WORD_ROWS = Object.freeze([
   ["case-tensions.index.this_call_carries_nobody", "this call carries nobody; the plane stamps who chose from the credential", null, null, false, "code"],
   ["case-tensions.index.v1_is_not_a_members", "{v1} is not a member's firsthand observation in this record, so it has no author to choose how it is attributed", null, null, false, "code"],
   ["case-tensions.index.who_is_a_machine_credential", "'{who}' is a machine credential, and how a member's words are attributed is that member's own choice", null, null, false, "code"],
+  ["citation.checks.bad_ground", "A new citation can join only a group its question already declares, and a case has no groups. Name one of the question's groups, or cite without one. Nothing was written.", null, null, false, "code"],
   ["citation.checks.only_a_member_rests_a_question", "Only a named member rests a question on another team's finding or takes it back, and this came from an automated or unnamed credential. Nothing was written.", null, null, false, "code"],
   ["citation.checks.the_edition_is_a_whole_number", "The edition is a whole number of one or more: the edition of the other team's case that your team accepted. Nothing was written.", null, null, false, "code"],
   ["citation.checks.the_import_and_finding_do_not_name", "The import and finding named here do not spell another team's finding. Name the import and the finding as the imported case shows them. Nothing was written.", null, null, false, "code"],
@@ -20515,6 +20560,7 @@ var WORD_ROWS = Object.freeze([
   ["citation.index.a_question_rests_on_material", "a question rests on material or on another question, and nothing else in the record can be a leg of its basis. These members of the selection are neither, and the whole call is refused rather than narrowed to the ones that are.", null, null, false, "code"],
   ["citation.index.a_reason_is_at_most", "a reason is at most {max} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes, so those would reshape the document rather than appear in it", null, null, false, "code"],
   ["citation.index.a_role_says_what_material", "a role says what material does for a QUESTION's answer, and this citing object is a case. A case's citation edge carries no role, so this one would be dropped rather than recorded \u2014 refused instead, because a field stated in one place and honoured nowhere is how the record and its projections drift apart.", null, null, false, "code"],
+  ["citation.index.bad_ground", "a new citation can join only a group its question already declares, and this one names {ground}; a case has no groups. Nothing was written.", null, null, false, "code"],
   ["citation.index.changes_basis_legs_added", "Changes: basis legs added for {listed}, each with role {role}. Grades: {graded} filled from the record's own resolutions to this question's subject; {ungraded} left undetermined and stated.{note}\n", null, null, false, "code"],
   ["citation.index.changes_basis_legs_on", "Changes: basis legs on {listed} moved to '{to}', each leg kept as it was. Reason: {why}.\n", null, null, false, "code"],
   ["citation.index.changes_cites_edges_added", "Changes: cites edges added to {listed}.{note}\n", null, null, false, "code"],
@@ -20549,6 +20595,8 @@ var WORD_ROWS = Object.freeze([
   ["citation.index.part_named_written_nowhere", ". The part of the document this call named was written NOWHERE, because no leg was written at all: making an existing citation more specific is a separate authored act on this record's own plan.", null, null, false, "code"],
   ["citation.index.projects_bundle_md_does_not_parse", "the project's own bundle.md does not parse under the restricted grammar", null, null, false, "code"],
   ["citation.index.projects_references_block_extend", "the project's references block is not in a shape this grammar can extend in place. Citing edits only that block and never rewrites the rest of the document.", null, null, false, "code"],
+  ["citation.index.repair_add_to_group", "Add it to the group {ground}", null, null, false, "code"],
+  ["citation.index.repair_remove_grouping", "Take the grouping off, so the answer reads as its weakest citation", null, null, false, "code"],
   ["citation.index.rl_is_not_a_role", "'{rl}' is not a role a basis leg can carry. The set is closed and is published by op=affordances beside the act: {roles}.", null, null, false, "code"],
   ["citation.index.session_cited_many_records", "### Session {when} | Cited {count} records | {who}\n", null, null, false, "code"],
   ["citation.index.session_cited_one_record", "### Session {when} | Cited 1 record | {who}\n", null, null, false, "code"],
@@ -21643,7 +21691,6 @@ var WORD_ROWS = Object.freeze([
   ["entities.declared.entityalias", "registry write, keyed by entity", null, null, false, "code"],
   ["entities.declared.entitybyalias", "read: the entities holding an alias's fold through a live alias, keyed by alias; writes nothing", null, null, false, "code"],
   ["entities.declared.entitycreate", "registry write, keyed by entity: registers a subject with the declarer's note on who or what it is and why it belongs in the registry, now required (entities R1, C-91.8; DEC-88: `reasoned`)", null, null, false, "code"],
-  ["entities.declared.officeconfirm", "office-directed: an administrator confirms an office a member named; clears the mark and records who confirmed it and when, and changes no name, alias or note (entities R64)", null, null, false, "code"],
   ["entities.declared.relationdeclare", "registry write, keyed by entity pair", null, null, false, "code"],
   ["entities.declared.resolutiondefect", "registry correction, keyed by a resolution: reports with a reason that a recogniser's resolution paired a reference with the wrong entity, and changes no resolution", null, null, false, "code"],
   ["entities.declared.resolutions", "read: a captured document's resolutions, the names it carries and the references no subject holds, keyed by capture sha", null, null, false, "code"],
@@ -21680,10 +21727,8 @@ var WORD_ROWS = Object.freeze([
   ["entities.index.an_entity_needs_a_note", "an entity needs a note in the declarer's own words saying who or what it is and why it is registered", null, null, false, "code"],
   ["entities.index.an_identifier_is_held_in", "an identifier is held in a scheme your team's active jurisdiction profiles name{v1}. Nothing was written.", null, null, false, "code"],
   ["entities.index.an_identifier_is_held_on", "an identifier is held on its cited source or a system's own row", null, null, false, "code"],
-  ["entities.index.an_office_is_confirmed_by", "an office a member named is confirmed by its entity id", null, null, false, "code"],
   ["entities.index.at_most_naming_in_captures", "at most {NAMING_IN_CAPTURES_MAX} captured documents are looked in at once; {length} were named. Nothing was read.", null, null, false, "code"],
   ["entities.index.bad_nothing_was_written", "{bad}. Nothing was written.", null, null, false, "code"],
-  ["entities.index.confirming_an_office_a_member", "confirming an office a member named", null, null, false, "code"],
   ["entities.index.correspondence_the_references_name_label", "correspondence -- the reference's name '{label}' matched an entity alias by name; plausible, never established, flagged for a member to confirm", null, null, false, "code"],
   ["entities.index.documents_are_counted_for_at", "documents are counted for at most {ONLY_BY_IDENTIFIER_IDS_MAX} entity ids at once; {length} were named. Nothing was read.", null, null, false, "code"],
   ["entities.index.explain_query_plan_sql", "EXPLAIN QUERY PLAN {sql}", null, null, false, "code"],
@@ -21694,7 +21739,6 @@ var WORD_ROWS = Object.freeze([
   ["entities.index.labels_are_read_for_entity", "labels are read for entity ids, a list of them", null, null, false, "code"],
   ["entities.index.no_captured_document_the_record", "no captured document the record holds and you can see has that digest, so nothing can be read from it. Nothing was written.", null, null, false, "code"],
   ["entities.index.no_resolution_of_that", "no resolution of that reference of that captured document to that entity is held", null, null, false, "code"],
-  ["entities.index.only_an_office_a_member", "only an office a member named is confirmed, and this subject is a {kind}. Nothing was changed.", null, null, false, "code"],
   ["entities.index.resolve_a_single_reference", "resolve a single reference by its raw kind:key, or omit ref to resolve all", null, null, false, "code"],
   ["entities.index.resolving_this_document_would_record", "; resolving this document would record nothing here, because a stronger identifier on this same reference resolves first", null, null, false, "code"],
   ["entities.index.scheme_identifier_the_reference_v1", "scheme identifier -- the reference {v1}'{value}' is {normal} in the {space} space ({form}), an identifier this entity holds in the scheme {scheme}{v2}", null, null, false, "code"],
@@ -21709,7 +21753,6 @@ var WORD_ROWS = Object.freeze([
   ["entities.index.the_field_has_the_shape", "the {field} has the shape of no form of the {v1} space{v2}{v3}. Nothing was written.", null, null, false, "code"],
   ["entities.index.the_identifier_matches_nothing", "the identifier matches nothing new; resolutions already made through it are kept", null, null, false, "code"],
   ["entities.index.the_identifiers_could_not_be", "the identifiers could not be read: {String}", null, null, false, "code"],
-  ["entities.index.the_law_requests_go_under", "the law requests go under is one your team's active jurisdiction profiles name{v1}. Nothing was written.", null, null, false, "code"],
   ["entities.index.the_name_lookup_is_over", "the name lookup is over a REGISTERED subject, named by its id (op=readingname&entity=ENT-...). It reads the registry's own aliases, which is the only thing that reaches a name a document abbreviates.", null, null, false, "code"],
   ["entities.index.the_name_matches_nothing_new", "the name matches nothing new and no longer finds this entity; resolutions already made through it are kept and marked as resting on a withdrawn name, so a member can re-resolve them", null, null, false, "code"],
   ["entities.index.the_number_number_as_forum", "the number {number} as {forum_label} writes it", null, null, false, "code"],
@@ -21738,11 +21781,8 @@ var WORD_ROWS = Object.freeze([
   ["entities.index.this_entity_holds_no_such_2", "this entity holds no such identifier, so there is nothing to withdraw", null, null, false, "code"],
   ["entities.index.this_is_the_first_list_floor", " THIS IS THE FIRST {cap} AND NOT ALL OF THEM: the answer was cut at the bound this op applied, so a count taken from this list is a floor and never a total.", null, null, false, "code"],
   ["entities.index.this_is_the_first_namingin_floor", ". THIS IS THE FIRST {cap} AND NOT ALL OF THEM, so a count taken from it is a floor.", null, null, false, "code"],
-  ["entities.index.this_office_was_not_named", "this office was not named by a member, so there is nothing to confirm. Nothing was changed.", null, null, false, "code"],
   ["entities.index.v1_has_the_shape_of", "{v1} has the shape of no form of the {label}{v2}", null, null, false, "code"],
   ["entities.index.v1_names_no_captured_document", "{v1} names no captured document this record holds that you can see", null, null, false, "code"],
-  ["entities.index.where_requests_go_and_the", "where requests go and the law they go under are held only by an office; a {kind} carries neither. Nothing was written.", null, null, false, "code"],
-  ["entities.index.where_requests_go_is_a", "where requests go is an address, an email address or an online portal, with its value: {kind, value}, the kind one of {CONTACT_KINDS}. Nothing was written.", null, null, false, "code"],
   ["escalation.checks.reading_what_the_government_answered", "Reading what the government answered is a member's judgment. An assistant may summarise the response; it may not evaluate it. Nothing was written.", null, null, false, "code"],
   ["escalation.checks.the_escalations_stage_moves_only", "The escalation's stage moves only while it is open. A suspended one is resumed first; an ended one never moves again. Nothing was written.", null, null, false, "code"],
   ["escalation.declared.declinetoescalate", "determination-directed: a member declines, with a reason, to escalate a live noncompliant determination, keyed by determination id; prose only, corrected forward, and a later opening supersedes it", null, null, false, "code"],
@@ -21919,6 +21959,7 @@ var WORD_ROWS = Object.freeze([
   ["explore.walk.scope_names_one", "a scope names one inquiry: the working inquiry whose hunch steps may be walked", null, null, false, "code"],
   ["explore.walk.sort_by_names", "sortBy names a quantity a step states", null, null, false, "code"],
   ["extraction.declared.pagetranscribe", "reading-directed: keyed by a capture; at a member's act, the AI reads the pages Civicsmith could not, on the account that pays and within its limits; the text is labeled the AI's reading and undetermined; moves no bundle", null, null, false, "code"],
+  ["extraction.declared.readheld", "reading-directed: keyed by a capture's digest; at a member's act, Civicsmith reads a document its record holds whole and holds no reading of, or holds a reading of that found nothing for want of the whole; the reading is machine-made and undetermined, the earlier one kept in the history; moves no bundle", null, null, false, "code"],
   ["extraction.drift.this_text_was_graded_under", "this text was graded under calibration {calibration_id} of {engine} {version} (fidelity {v1}, measured {at}). A probe on {at_2} measured that engine at {v2}, which is WEAKER \u2014 so what this transcription may support is now less than the record says. NOTHING HAS BEEN RE-GRADED: a grade moves by an authored act and never by a machine (DEC-4). This names the work; a member does it", null, null, false, "code"],
   ["extraction.extractrun.a_proposed_reading_earned_grade", "a proposed reading earned {grade}, which is stronger than the {v1} it may reach. A machine reading text reaches B at most; only a quote that is the capture's own text keeps the capture's own ceiling, and never more", null, null, false, "code"],
   ["extraction.extractrun.an_ai_step_names_what", "an ai() step names WHAT performed the derivation, and this proposal names nothing. The chain exists to carry that fact: a calibration is OF a function and a version, and neither can be recovered from the word 'ai'", null, null, false, "code"],
@@ -21934,6 +21975,7 @@ var WORD_ROWS = Object.freeze([
   ["extraction.index.no_text_provenance_recorded", "this reading carries no text provenance, which is not the same as its text not having been transcribed -- nobody recorded how it was produced", null, null, false, "code"],
   ["extraction.index.ocr_stringify_is_not_a", "ocr={stringify} is not a value this op reads. Send ocr=1 to re-read the document with the OCR member, or leave the parameter off for the ordinary read.", null, null, false, "code"],
   ["extraction.index.op_pagetranscribe_writes_this_captures", "op=pagetranscribe writes this capture's reading and spends the account that pays for it, and an agent credential cannot declare that as one of its writes. A member can ask for it (D-199).", null, null, false, "code"],
+  ["extraction.index.readheld_no_sha", "a read of a held document is about one captured document, named by its fingerprint", null, null, false, "code"],
   ["extraction.index.reread_candidates_frontier", "the content-axis frontier (op=frontier&level=content) lists the captures still below what your team's Civicsmith can read; this one is re-read now", null, null, false, "code"],
   ["extraction.index.the_ais_part_for_transcribing", "the AI's part for transcribing pages has not passed its test bar here (run-rules R19), so it is not switched on. Nothing was read, rendered, sent or written, and no account was looked at.", null, null, false, "code"],
   ["extraction.index.this_record_holds_no_reading", "this record holds no reading of that capture that you can see, so there is nothing for a re-read to replace. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.", null, null, false, "code"],
@@ -21947,17 +21989,19 @@ var WORD_ROWS = Object.freeze([
   ["file-safety.declared.securitytooladd", "setting: the group's security tools, an administrator's act; moves no bundle", null, null, false, "code"],
   ["file-safety.declared.securitytoolremove", "setting: the group's security tools, an administrator's act; moves no bundle", null, null, false, "code"],
   ["file-safety.declared.securitytooltest", "setting: the group's security tools, an administrator's act; moves no bundle", null, null, false, "code"],
-  ["file-safety.index.a_run_was_started_lately", "A check for signatures was made a few minutes ago. No run was started.", null, null, false, "code"],
+  ["file-safety.index.a_run_is_under_way", "A check for signatures is already under way. No run was started.", null, null, false, "code"],
   ["file-safety.index.a_safe_view_is_made", "A safe view is made of documents, presentations, spreadsheets and plain text only.", null, null, false, "code"],
-  ["file-safety.index.checking_for_new_signatures", "checking for new signatures", null, null, false, "code"],
   ["file-safety.index.file_scanners_r19_refuses_the", "file-scanner's R19 refuses the tool's description.", null, null, false, "code"],
-  ["file-safety.index.no_scanner_so_no_run_started", "Your team's Civicsmith has no file scanner installed. No run was started.", null, null, false, "code"],
   ["file-safety.index.no_tool_of_the_teams", "No tool of the team's has this id.", null, null, false, "code"],
   ["file-safety.index.reading_scanners_state", "reading the scanner's state", null, null, false, "code"],
   ["file-safety.index.reading_security_tools_offered", "reading the security tools offered", null, null, false, "code"],
   ["file-safety.index.reading_teams_security_tools", "reading the team's security tools", null, null, false, "code"],
-  ["file-safety.index.signatures_refused_unnumbered", "The signature service refused the download. The scanner tries again daily; to fix it sooner, an administrator can check that your team's Civicsmith is allowed to reach the service.", null, null, false, "code"],
-  ["file-safety.index.the_scanner_did_not_start", "The scanner did not start a run. Nothing was changed.", null, null, false, "code"],
+  ["file-safety.index.signatures_run_download", "A check for signatures is under way: it is downloading the signatures that changed.", null, null, false, "code"],
+  ["file-safety.index.signatures_run_seed", "A check for signatures is under way: it is preparing the signatures the file scanner already holds.", null, null, false, "code"],
+  ["file-safety.index.signatures_run_stage", "A check for signatures is under way: it is setting the new signatures aside to check them.", null, null, false, "code"],
+  ["file-safety.index.signatures_run_stopped", "The last check for signatures stopped before it finished. It will be resumed shortly.", null, null, false, "code"],
+  ["file-safety.index.signatures_run_under_way", "A check for signatures is under way.", null, null, false, "code"],
+  ["file-safety.index.signatures_run_verify", "A check for signatures is under way: it is checking that the new signatures are genuine.", null, null, false, "code"],
   ["file-safety.index.the_text_could_not_be", "The text could not be read.", null, null, false, "code"],
   ["file-safety.index.warned_must_be_exactly", "warned must be exactly {own_device: true, no_macros: true}. Nothing was served.", null, null, false, "code"],
   ["file-safety.index.your_teams_civicsmith_could_not", "Your team's Civicsmith could not read the files waiting for a safe view. Nothing was rendered, made or counted.", null, null, false, "code"],
@@ -23151,6 +23195,8 @@ var WORD_ROWS = Object.freeze([
   ["jurisdictions.index.receipt_on_closed_day", "receipt on a closed day stays the actual day only where no profile states otherwise; here it is undetermined", null, null, false, "code"],
   ["jurisdictions.index.records_help_conflict", "the active profiles give different records-request help, so none is given: the page has no figure to show", null, null, false, "code"],
   ["jurisdictions.index.relation_is_one_of_amending", "relation is one of {AMENDING_RELATIONS}", null, null, false, "code"],
+  ["jurisdictions.index.response_is_the_rule_of_a_deadline", "response is the rule of a deadline", null, null, false, "code"],
+  ["jurisdictions.index.response_names_no_records_deadline", "response '{rule}' is no rule of a deadline that applies to records_request", null, null, false, "code"],
   ["jurisdictions.index.role_is_one_of_roster", "role is one of {ROSTER_ROLES}", null, null, false, "code"],
   ["jurisdictions.index.rule_is_one_of_computation", "rule is one of {COMPUTATION_RULES}", null, null, false, "code"],
   ["jurisdictions.index.rule_is_one_of_receipt", "rule is one of {RECEIPT_RULES}", null, null, false, "code"],
@@ -23183,6 +23229,7 @@ var WORD_ROWS = Object.freeze([
   ["jurisdictions.index.the_active_profiles_give_different_8", "the active profiles give different {what} for {replace}, so it is withheld: it is undetermined", null, null, false, "code"],
   ["jurisdictions.index.the_active_profiles_give_different_9", "the active profiles give different official translations of {name} in {l}, so none is given: the name is shown as it is", null, null, false, "code"],
   ["jurisdictions.index.the_active_profiles_give_name", "the active profiles give {name} different stages, so which stages it has is undetermined", null, null, false, "code"],
+  ["jurisdictions.index.the_active_profiles_give_name_different_windows", "the active profiles give {name} different first-request windows, so which one it has is undetermined", null, null, false, "code"],
   ["jurisdictions.index.the_active_profiles_give_what", "the active profiles give {what} ({replace}) different {v1}, so it is withheld: {says}", null, null, false, "code"],
   ["jurisdictions.index.the_active_profiles_list_different", "the active profiles list different closure days for {year}{whose}, so the year is withheld there: a business-day count reaching into it is undetermined", null, null, false, "code"],
   ["jurisdictions.index.the_active_profiles_map_the", "the active profiles map the MemberType '{t}'{v1} to different capacities, so it maps to none there: a seat's capacity is undetermined", null, null, false, "code"],
@@ -23943,6 +23990,7 @@ var WORD_ROWS = Object.freeze([
   ["plan-work.index.the_plan_is_not_about", "the plan is not about that matter. Nothing was written.", null, null, false, "code"],
   ["plan-work.index.this_answer_reads_the_provider", "this answer reads the {provider} module, which this instance does not have; nothing is answered in its place.", null, null, false, "code"],
   ["plane.declared.ask", "member-directed: a member's own question to the assistant under their own account; no object is before them", null, null, false, "code"],
+  ["plane.declared.owedwork", "what the object still owes one document, or the counts of what it owes: the keeps, readings, scan pages, supporting files and archive entries left for its alarm, each owed or ended for a stated reason; writes nothing", null, null, false, "code"],
   ["plane.declared.readtranslate", "draft: a machine translation of one passage of the group's own writing (a note, question, finding or notice) into the member's language, labeled machine work, the original one tap away; held nowhere and writes nothing (plane R50)", null, null, false, "code"],
   ["progressions.checks.not_a_disposition_detail", "a disposition is deferred (set aside for now) or dismissed (declined); taking a question up is a different act and is not a disposition", null, null, false, "code"],
   ["progressions.declared.discharge", "exception document, keyed by (progression, entity, stage)", null, null, false, "code"],
@@ -24764,9 +24812,8 @@ var WORD_ROWS = Object.freeze([
   ["reevaluation.index.v1_a_withdrawn_leg_supports", "{v1} A withdrawn leg supports nothing here: it adds nothing to strength, gates nothing and counts toward no bar. It is listed because the connection still informs a second look (DEC-70).", null, null, false, "code"],
   ["reevaluation.index.visible_to_chains", "the version chains here are the ones visible to you; a version filed in a project you were not invited to is not in them", null, null, false, "code"],
   ["reevaluation.index.work_products_unread", "the cases a project owns, or their ratified editions, could not be read, so a wp_retraction cause may be missing; that is not the same as none", null, null, false, "code"],
-  ["refusal.CONFIRM_NOT_AN_OFFICE", "Only an office a member named can be confirmed, and this subject is not an office. Nothing was changed.", null, null, false, "code"],
-  ["refusal.NOT_NAMED_BY_A_MEMBER", "This office was not named by a member, so there is nothing to confirm. Nothing was changed.", null, null, false, "code"],
-  ["refusal.SIGNATURES_RUN_RECENT", "Your team's Civicsmith checked for new signatures a few minutes ago, so it did not start another check just now. Try again in a quarter of an hour.", null, null, false, "code"],
+  ["refusal.MONEY_BAD_PERIOD", "That period is not one this team's money records can read.", null, null, false, "code"],
+  ["refusal.SIGNATURES_RUN_UNDER_WAY", "Your team's Civicsmith is already checking for new signatures, so it did not start another check. Look again in a few minutes.", null, null, false, "code"],
   ["retrieval-browse.browse.marks_another_shape", "the registered read of watches and flags answered another shape than its contract's", null, null, false, "code"],
   ["retrieval-browse.browse.marks_not_registered", "no module has registered the watches and flags, so watched and flagged are not read", null, null, false, "code"],
   ["retrieval-browse.browse.marks_not_registered_list", "no module has registered the watches and flags, so which items are watched or flagged is not read", null, null, false, "code"],
@@ -24846,7 +24893,6 @@ var WORD_ROWS = Object.freeze([
   ["review.index.no_case_of_owning_s", "no case of {owning}'s answers to {named}. A draft names an EXISTING case to be its next edition, and a case this project did not publish is answered exactly as one that does not exist.", null, null, false, "code"],
   ["review.index.no_document_of_cid_edition", "no document of {cid} edition {v1} has that approval digest (its sha without the approvals block); an approval names the document it approves. Nothing was recorded.", null, null, false, "code"],
   ["review.index.no_review_copy_answers_to", "no review copy answers to this request. A review copy is read through the grant that was issued for it, or by a member with standing in the project that produced it; a grant that was withdrawn, or whose draft has moved to another edition, answers exactly as one that was never issued.", null, null, false, "code"],
-  ["review.index.not_concluded_yet", "Not concluded yet", null, null, false, "code"],
   ["review.index.set_the_teams_approval_rule", "set the team's approval rule", null, null, false, "code"],
   ["review.index.the_read_secrets_fingerprint_is", "the read secret's fingerprint is set by the control plane and was absent.", null, null, false, "code"],
   ["review.index.the_review_copys_authoring_acts", "the review copy's authoring acts are draft, grant and revoke.", null, null, false, "code"],
@@ -31984,7 +32030,7 @@ var PDF_LINK_TYPES = [...LINK_TYPES, "undetermined"];
 function binaryString(u8) {
   if (!(u8 instanceof Uint8Array)) return "";
   let out = "";
-  for (let i = 0; i < u8.length; i += 8192) out += String.fromCharCode.apply(null, u8.subarray(i, i + 8192));
+  for (let i = 0; i < u8.length; i += 16384) out += String.fromCharCode.apply(null, u8.subarray(i, i + 16384));
   return out;
 }
 function isWhitespace(c) {
@@ -32047,9 +32093,14 @@ async function inflateWithTrailing(u8) {
 }
 function adler32(u8) {
   let a = 1, b = 0;
-  for (let i = 0; i < u8.length; i++) {
-    a = (a + u8[i]) % 65521;
-    b = (b + a) % 65521;
+  for (let i = 0; i < u8.length; ) {
+    const end2 = Math.min(u8.length, i + 5552);
+    for (; i < end2; i++) {
+      a += u8[i];
+      b += a;
+    }
+    a %= 65521;
+    b %= 65521;
   }
   return (b << 16 | a) >>> 0;
 }
@@ -32227,22 +32278,150 @@ function parseDict(buf, s, pos) {
     let p = after + 6;
     if (s.charCodeAt(p) === 13) p++;
     if (s.charCodeAt(p) === 10) p++;
-    return { value: { t: "stream", dict: map, start: p }, pos: p, streamPending: true };
+    return { value: { t: "stream", dict: map, start: p + (typeof buf === "number" ? buf : 0) }, pos: p, streamPending: true };
   }
   return { value: { t: "dict", map }, pos };
+}
+var OBJ_CACHE_COST = 12e5;
+var INNER_CACHE_BYTES = 16 * 1024 * 1024;
+var INNER_DECODE_MAX = 128 * 1024 * 1024;
+var INNER_CHECK_BYTES = 2 * 1024 * 1024;
+var LARGE_RAW_BYTES = 128 * 1024;
+var isJsSpaceByte = (c) => c >= 9 && c <= 13 || c === 32 || c === 160;
+var isWordByte = (c) => c >= 48 && c <= 57 || c >= 65 && c <= 90 || c >= 97 && c <= 122 || c === 95;
+function parseWindow(bytes, pos, first = 512) {
+  if (!Number.isFinite(pos) || pos < 0 || pos >= bytes.length) return null;
+  pos = Math.trunc(pos);
+  for (let size2 = Math.max(32, first); ; size2 *= 8) {
+    const hi = Math.min(bytes.length, pos + size2);
+    const s = binaryString(bytes.subarray(pos, hi));
+    const r = parseValueSafe(s, 0, pos);
+    const more = hi < bytes.length;
+    if (!r) {
+      if (more && skipWs(s, 0) + 16 > s.length) continue;
+      return null;
+    }
+    if (more && skipWs(s, r.pos) + 16 > s.length) continue;
+    return { value: r.value, len: r.pos };
+  }
+}
+function objectFacts(v) {
+  const map = v && v.t === "dict" ? v.map : v && v.t === "stream" ? v.dict : null;
+  return {
+    k: v && v.t === "dict" ? 1 : v && v.t === "stream" ? 2 : 0,
+    ty: map && map.Type && map.Type.t === "name" ? map.Type.v : null,
+    sd: !!(map && map.Filter && map.Filter.t === "name" && map.Filter.v === "Standard" && map.R != null)
+  };
+}
+var ObjectTable = class {
+  constructor(doc) {
+    this.doc = doc;
+    this.e = /* @__PURE__ */ new Map();
+    this.hot = /* @__PURE__ */ new Map();
+    this.pins = /* @__PURE__ */ new Map();
+    this.cost = 0;
+  }
+  get size() {
+    return this.e.size;
+  }
+  has(n) {
+    return this.e.has(n);
+  }
+  keys() {
+    return this.e.keys();
+  }
+  gen(n) {
+    const en = this.e.get(n);
+    return en ? en.g : void 0;
+  }
+  /** A definition: the later one replaces an earlier one's, keeping the number's place in the order. */
+  put(n, entry) {
+    this.e.set(n, entry);
+    this.pins.delete(n);
+    const h = this.hot.get(n);
+    if (h) {
+      this.cost -= h.c;
+      this.hot.delete(n);
+    }
+  }
+  /** The parsed value of object `n`, or undefined; parsed objects are reused while they are recent. */
+  get(n) {
+    const en = this.e.get(n);
+    if (!en) return void 0;
+    if (this.pins.has(n)) return this.pins.get(n);
+    const h = this.hot.get(n);
+    if (h) {
+      this.hot.delete(n);
+      this.hot.set(n, h);
+      return h.v;
+    }
+    const got = this.parse(en);
+    if (!got) return void 0;
+    const c = 1 + got.len * 3;
+    this.hot.set(n, { v: got.value, c });
+    this.cost += c;
+    for (const [k, old] of this.hot) {
+      if (this.cost <= OBJ_CACHE_COST || this.hot.size <= 1) break;
+      this.hot.delete(k);
+      this.cost -= old.c;
+    }
+    return got.value;
+  }
+  /** The parsed value of `n` without keeping it. */
+  peek(n) {
+    const en = this.e.get(n);
+    if (!en) return void 0;
+    if (this.pins.has(n)) return this.pins.get(n);
+    const h = this.hot.get(n);
+    if (h) return h.v;
+    const got = this.parse(en);
+    return got ? got.value : void 0;
+  }
+  /** Keep object `n`'s parsed value for good: a caller that compares the identity of what it resolved asks for this. */
+  pin(n) {
+    const v = this.get(n);
+    if (v === void 0) return;
+    const h = this.hot.get(n);
+    if (h) {
+      this.cost -= h.c;
+      this.hot.delete(n);
+    }
+    this.pins.set(n, v);
+  }
+  parse(en) {
+    const src = en.stm < 0 ? this.doc._b : this.doc._innerBytes(en.stm);
+    return src ? parseWindow(src, en.p, en.w) : null;
+  }
+  /** Object numbers, in order, whose winning definition has the given facts. */
+  nums(test) {
+    const out = [];
+    for (const [n, en] of this.e) if (test(en)) out.push(n);
+    return out;
+  }
+};
+function fingerprint(a) {
+  let h1 = 2166136261, h2 = 16777619;
+  for (let i = 0; i < a.length; i++) {
+    h1 = Math.imul(h1 ^ a[i], 16777619);
+    h2 = Math.imul(h2 ^ a[i], 2246822507) + 2654435769 | 0;
+  }
+  return `${a.length}:${(h1 >>> 0).toString(16)}:${(h2 >>> 0).toString(16)}`;
 }
 var PdfDoc = class {
   constructor(bytes) {
     this.bytes = bytes;
-    this.s = binaryString(bytes);
-    this._objs = /* @__PURE__ */ new Map();
-    this._gens = /* @__PURE__ */ new Map();
+    this._b = bytes instanceof Uint8Array ? bytes : new Uint8Array(0);
+    this._objs = new ObjectTable(this);
+    this._inners = /* @__PURE__ */ new Map();
+    this._innerBytesHeld = 0;
+    this._sticky = /* @__PURE__ */ new Map();
+    this._innerLen = /* @__PURE__ */ new Map();
     this.pageIndexByObj = /* @__PURE__ */ new Map();
     this._pageOrder = [];
     this.pageCount = 0;
     this.root = null;
     this.notes = [];
-    this._trailingNoted = /* @__PURE__ */ new WeakSet();
+    this._trailingNoted = /* @__PURE__ */ new Set();
   }
   /** The resolved dict of the page at 0-based `pageIdx` in page order, or null
    *  (R31). */
@@ -32254,19 +32433,30 @@ var PdfDoc = class {
     this.notes.push(msg);
   }
   /** Scan every top-level `N G obj` in the file. Later definitions win, which
-   *  matches incremental-update semantics without parsing any xref. */
+   *  matches incremental-update semantics without parsing any xref. The first
+   *  reader scanned the file as a string with `/(\d+)\s+(\d+)\s+obj\b/g`; this
+   *  finds the same matches in the same order from the bytes (`\s` as
+   *  JavaScript means it: the PDF whitespace bytes, and 0x0B and 0xA0). */
   scanTopLevel() {
-    const s = this.s;
-    const re = /(\d+)\s+(\d+)\s+obj\b/g;
-    let m;
-    while (m = re.exec(s)) {
-      const num = parseInt(m[1], 10);
-      const bodyStart = m.index + m[0].length;
-      const r = parseValueSafe(s, bodyStart);
-      if (r) {
-        this._objs.set(num, r.value);
-        this._gens.set(num, parseInt(m[2], 10));
-      }
+    const b = this._b;
+    for (let j = b.indexOf(106); j !== -1; j = b.indexOf(106, j + 1)) {
+      if (j < 2 || b[j - 1] !== 98 || b[j - 2] !== 111 || isWordByte(b[j + 1])) continue;
+      let p = j - 3;
+      if (!(p >= 0 && isJsSpaceByte(b[p]))) continue;
+      while (p >= 0 && isJsSpaceByte(b[p])) p--;
+      const genEnd = p + 1;
+      while (p >= 0 && b[p] >= 48 && b[p] <= 57) p--;
+      const genStart = p + 1;
+      if (genStart === genEnd || !(p >= 0 && isJsSpaceByte(b[p]))) continue;
+      while (p >= 0 && isJsSpaceByte(b[p])) p--;
+      const numEnd = p + 1;
+      while (p >= 0 && b[p] >= 48 && b[p] <= 57) p--;
+      const numStart = p + 1;
+      if (numStart === numEnd) continue;
+      const num = parseInt(binaryString(b.subarray(numStart, numEnd)), 10);
+      const bodyStart = j + 1;
+      const r = parseWindow(b, bodyStart);
+      if (r) this._objs.put(num, { p: bodyStart, w: r.len + 64, stm: -1, g: parseInt(binaryString(b.subarray(genStart, genEnd)), 10), ...objectFacts(r.value) });
     }
   }
   resolve(v, seen = 0) {
@@ -32296,7 +32486,7 @@ var PdfDoc = class {
     const len = this.resolve(streamObj.dict.Length);
     if (typeof len === "number" && len >= 0 && start + len <= this.bytes.length) {
       end2 = start + len;
-      const tail = this.s.indexOf("endstream", end2 - 2);
+      const tail = firstAscii(this.bytes, "endstream", Math.max(0, end2 - 2));
       if (tail === -1 || tail > end2 + 4) end2 = this._scanEndstream(start);
     } else {
       end2 = this._scanEndstream(start);
@@ -32305,11 +32495,11 @@ var PdfDoc = class {
     return this.bytes.subarray(start, end2);
   }
   _scanEndstream(start) {
-    const idx = this.s.indexOf("endstream", start);
+    const idx = firstAscii(this.bytes, "endstream", start);
     if (idx === -1) return null;
     let e = idx;
-    if (this.s.charCodeAt(e - 1) === 10) e--;
-    if (this.s.charCodeAt(e - 1) === 13) e--;
+    if (this.bytes[e - 1] === 10) e--;
+    if (this.bytes[e - 1] === 13) e--;
     return e;
   }
   /** Decompress a stream's bytes if its filter chain is (Flate). Answers a
@@ -32331,13 +32521,21 @@ var PdfDoc = class {
     const names = filter == null ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f4) => f4 && f4.t === "name" ? f4.v : null) : [null];
     if (names.length === 0) return raw;
     if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null;
+    if (raw.length >= LARGE_RAW_BYTES) {
+      const exact = inflateChecked(raw, INNER_DECODE_MAX);
+      if (exact) return this._unpredicted(streamObj, exact);
+    }
     const inflated = await inflate(raw);
     if (!inflated) return null;
     let data = inflated.data;
-    if (inflated.trailing > 0 && !this._trailingNoted.has(streamObj)) {
-      this._trailingNoted.add(streamObj);
+    if (inflated.trailing > 0 && !this._trailingNoted.has(streamObj.start)) {
+      this._trailingNoted.add(streamObj.start);
       this.note(`flate_trailing_bytes:${inflated.trailing}`);
     }
+    return this._unpredicted(streamObj, data);
+  }
+  /** Optional PNG predictor via /DecodeParms. */
+  _unpredicted(streamObj, data) {
     let parms = this.resolve(streamObj.dict.DecodeParms) || this.resolve(streamObj.dict.DP);
     if (parms && parms.t === "arr") parms = this.resolve(parms.items[parms.items.length - 1]);
     if (parms && parms.t === "dict") {
@@ -32354,37 +32552,109 @@ var PdfDoc = class {
     }
     return data;
   }
-  /** Parse every /ObjStm and fold its contained objects into the map, so an
+  /** `streamDecoded`, for a Flate or unfiltered stream the platform decodes without recovery, in one step and without
+   *  notes: what R41's second reading of an object stream uses. Null for any other, which `loadObjectStreams` then keeps
+   *  as first decoded. */
+  _decodedSync(streamObj, expect) {
+    try {
+      const raw = this.streamRawBytes(streamObj);
+      if (!raw) return null;
+      const filter = this.resolve(streamObj.dict.Filter);
+      const names = filter == null ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f4) => f4 && f4.t === "name" ? f4.v : null) : [null];
+      if (names.length === 0) return raw;
+      if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null;
+      const data = inflateChecked(raw, INNER_DECODE_MAX, expect);
+      return data ? this._unpredicted(streamObj, data) : null;
+    } catch {
+      return null;
+    }
+  }
+  /** Object stream `stm`'s decoded bytes, read again when it is not one of the few held; null when it cannot be. */
+  _innerBytes(stm) {
+    const held2 = this._inners.get(stm);
+    if (held2) {
+      this._inners.delete(stm);
+      this._inners.set(stm, held2);
+      return held2;
+    }
+    let data = this._sticky.get(stm);
+    if (!data) {
+      const st = this._objs.get(stm);
+      data = st && st.t === "stream" ? this._decodedSync(st, this._innerLen.get(stm)) : null;
+    }
+    if (!data) return null;
+    for (const [k, old] of this._inners) {
+      if (this._innerBytesHeld + data.length <= INNER_CACHE_BYTES || !this._inners.size) break;
+      this._inners.delete(k);
+      this._innerBytesHeld -= old.length;
+    }
+    this._inners.set(stm, data);
+    this._innerBytesHeld += data.length;
+    return data;
+  }
+  /** Parse every /ObjStm and fold its contained objects into the table, so an
    *  xref-stream PDF that keeps its page/annot dicts compressed is not empty.
    *  Objects already defined at top level are NOT overwritten (top-level and
    *  compressed definitions of one number should not coexist; if they do, the
-   *  uncompressed one is the safer read). */
+   *  uncompressed one is the safer read). Each is parsed once here, to know it
+   *  parses and what it is, and read again from the decoded stream when asked for (R41). */
   async loadObjectStreams() {
-    const streams = [];
-    for (const v of this._objs.values()) {
-      if (v && v.t === "stream") {
-        const type = v.dict.Type;
-        if (type && type.t === "name" && type.v === "ObjStm") streams.push(v);
+    const streams = this._objs.nums((en) => en.k === 2 && en.ty === "ObjStm");
+    for (const stm of streams) {
+      const st = this._objs.get(stm);
+      if (!st || st.t !== "stream") continue;
+      let proof = null;
+      {
+        let data = this._decodedSync(st);
+        const checked = data !== null;
+        if (!checked) data = await this.streamDecoded(st);
+        if (!data) {
+          this.note("objstm_undecodable");
+          continue;
+        }
+        const n = numberVal(this.resolve(st.dict.N));
+        const first = numberVal(this.resolve(st.dict.First));
+        if (n == null || first == null) continue;
+        const header = binaryString(data.subarray(0, first)).trim().split(/\s+/).map(Number);
+        const offs = [];
+        for (let i = 0; i < n; i++) if (Number.isFinite(header[i * 2 + 1])) offs.push(first + header[i * 2 + 1]);
+        offs.sort((a, b) => a - b);
+        const nextAbove = (at8) => {
+          let lo = 0, hi = offs.length;
+          while (lo < hi) {
+            const m = lo + hi >> 1;
+            if (offs[m] <= at8) lo = m + 1;
+            else hi = m;
+          }
+          return lo < offs.length ? offs[lo] : data.length;
+        };
+        let added = 0;
+        for (let i = 0; i < n; i++) {
+          const objNum = header[i * 2];
+          const off = header[i * 2 + 1];
+          if (!Number.isFinite(objNum) || !Number.isFinite(off)) continue;
+          if (this._objs.has(objNum)) continue;
+          const at8 = first + off;
+          const r = parseWindow(data, at8, nextAbove(at8) - at8 + 16);
+          if (r) {
+            this._objs.put(objNum, { p: Math.trunc(at8), w: r.len + 64, stm, g: 0, ...objectFacts(r.value) });
+            added++;
+          }
+        }
+        if (added) {
+          this._innerLen.set(stm, data.length);
+          if (!checked) {
+            if (data.length <= INNER_CHECK_BYTES) proof = { len: data.length, fp: fingerprint(data) };
+            else this._sticky.set(stm, data);
+          }
+        }
       }
-    }
-    for (const st of streams) {
-      const data = await this.streamDecoded(st);
-      if (!data) {
-        this.note("objstm_undecodable");
-        continue;
-      }
-      const inner = binaryString(data);
-      const n = numberVal(this.resolve(st.dict.N));
-      const first = numberVal(this.resolve(st.dict.First));
-      if (n == null || first == null) continue;
-      const header = inner.slice(0, first).trim().split(/\s+/).map(Number);
-      for (let i = 0; i < n; i++) {
-        const objNum = header[i * 2];
-        const off = header[i * 2 + 1];
-        if (!Number.isFinite(objNum) || !Number.isFinite(off)) continue;
-        if (this._objs.has(objNum)) continue;
-        const r = parseValueSafe(inner, first + off);
-        if (r) this._objs.set(objNum, r.value);
+      if (proof) {
+        const again = this._decodedSync(st, proof.len);
+        if (!again || again.length !== proof.len || fingerprint(again) !== proof.fp) {
+          const first = await this.streamDecoded(st);
+          if (first) this._sticky.set(stm, first);
+        }
       }
     }
   }
@@ -32392,12 +32662,10 @@ var PdfDoc = class {
    *  object-number order if the tree cannot be walked (leniency). */
   buildPageIndex() {
     let root = null;
-    for (const v of this._objs.values()) {
-      const map = v && v.t === "dict" ? v.map : null;
-      if (map && map.Type && map.Type.t === "name" && map.Type.v === "Catalog") {
-        root = map;
-        break;
-      }
+    const cat = this._objs.nums((en) => en.k === 1 && en.ty === "Catalog")[0];
+    if (cat !== void 0) {
+      this._objs.pin(cat);
+      root = this._objs.get(cat).map;
     }
     this.root = root;
     const walkRef = (num, seen) => {
@@ -32422,11 +32690,7 @@ var PdfDoc = class {
       walkRef(root.Pages.n, /* @__PURE__ */ new Set([root.Pages.n]));
     }
     if (this.pageIndexByObj.size === 0) {
-      const pages = [];
-      for (const [num, v] of this._objs) {
-        const map = v && (v.t === "dict" ? v.map : v.t === "stream" ? v.dict : null);
-        if (map && map.Type && map.Type.t === "name" && map.Type.v === "Page") pages.push(num);
-      }
+      const pages = this._objs.nums((en) => en.ty === "Page" && en.k > 0);
       pages.sort((a, b) => a - b);
       pages.forEach((num, i) => this.pageIndexByObj.set(num, i));
       this.pageCount = pages.length;
@@ -32455,13 +32719,10 @@ var PdfDoc = class {
   isEncrypted() {
     if (this._encrypted !== void 0) return this._encrypted;
     let enc = false;
-    for (const v of this._objs.values()) {
+    for (const num of this._objs.nums((en) => en.sd)) {
+      const v = this._objs.peek(num);
       const map = v && (v.t === "dict" ? v.map : v.t === "stream" ? v.dict : null);
-      if (!map) continue;
-      const filter = map.Filter;
-      const isStandard = filter && filter.t === "name" && filter.v === "Standard";
-      const hasRevision = map.R != null && typeof this.resolve(map.R) === "number";
-      if (isStandard && hasRevision) {
+      if (map && typeof this.resolve(map.R) === "number") {
         enc = true;
         break;
       }
@@ -32497,17 +32758,17 @@ var PdfDoc = class {
    *  from this one list, so the two cannot disagree about which is the last. */
   _trailers() {
     const cands = [];
-    const re = /\btrailer\b/g;
-    let m;
-    while (m = re.exec(this.s)) {
-      const r = parseValueSafe(this.s, m.index + 7);
-      if (r && r.value && r.value.t === "dict") cands.push([m.index, r.value.map]);
+    const b = this._b;
+    for (let t = firstAscii(b, "trailer", 0); t !== -1; t = firstAscii(b, "trailer", t + 1)) {
+      if (isWordByte(b[t - 1]) || isWordByte(b[t + 7])) continue;
+      const r = parseWindow(b, t + 7);
+      if (r && r.value && r.value.t === "dict") cands.push([t, r.value.map]);
     }
-    for (const v of this._objs.values()) {
-      const type = v && v.t === "stream" ? v.dict.Type : null;
-      if (type && type.t === "name" && type.v === "XRef") cands.push([v.start, v.dict]);
+    for (const num of this._objs.nums((en) => en.k === 2 && en.ty === "XRef")) {
+      const v = this._objs.peek(num);
+      if (v && v.t === "stream") cands.push([v.start, v.dict]);
     }
-    return cands.sort((a, b) => a[0] - b[0]).map((c) => c[1]);
+    return cands.sort((a, b2) => a[0] - b2[0]).map((c) => c[1]);
   }
   /** R37: the latest revision as a rewrite reads it — the last trailer, every
    *  indirect object reachable from it by any chain of references (each once,
@@ -32538,7 +32799,7 @@ var PdfDoc = class {
         if (found2.has(n) || missing2.has(n)) continue;
         const value = this.resolve({ t: "ref", n, g });
         if (value === null) missing2.set(n, { num: n, gen: g });
-        else found2.set(n, { num: n, gen: this._gens.get(n) ?? 0, value });
+        else found2.set(n, { num: n, gen: this._objs.gen(n) ?? 0, value });
         refsIn(this._objs.get(n));
       }
       const asc = (m) => [...m.values()].sort((a, b) => a.num - b.num);
@@ -32551,9 +32812,9 @@ var PdfDoc = class {
 function numberVal(v) {
   return typeof v === "number" ? v : null;
 }
-function parseValueSafe(s, pos) {
+function parseValueSafe(s, pos, base = 0) {
   try {
-    return parseValue(null, s, pos);
+    return parseValue(base, s, pos);
   } catch {
     return null;
   }
@@ -32849,9 +33110,19 @@ function textShowBytes(toks) {
 }
 function readLiteralBytes(s, pos) {
   pos++;
+  let q = pos;
+  while (q < s.length) {
+    const c = s.charCodeAt(q);
+    if (c === 41 || c === 40 || c === 92 || c === 13) break;
+    q++;
+  }
+  if (q < s.length && s.charCodeAt(q) === 41) {
+    const out = new Uint8Array(q - pos);
+    for (let i = 0; i < out.length; i++) out[i] = s.charCodeAt(pos + i);
+    return { bytes: out, pos: q + 1 };
+  }
   const bytes = [];
   let depth = 1;
-  const simple = { 110: 10, 114: 13, 116: 9, 98: 8, 102: 12, 40: 40, 41: 41, 92: 92 };
   while (pos < s.length) {
     const c = s.charCodeAt(pos);
     if (c === 92) {
@@ -32860,32 +33131,70 @@ function readLiteralBytes(s, pos) {
         break;
       }
       const nc = s.charCodeAt(pos + 1);
-      if (nc in simple) {
-        bytes.push(simple[nc]);
-        pos += 2;
-        continue;
-      }
       if (nc >= 48 && nc <= 55) {
-        let oct = "", p = pos + 1;
-        while (p < s.length && oct.length < 3 && s.charCodeAt(p) >= 48 && s.charCodeAt(p) <= 55) {
-          oct += s[p];
-          p++;
+        let v = nc - 48, p = pos + 2;
+        for (let n = 1; n < 3 && p < s.length; n++, p++) {
+          const d = s.charCodeAt(p);
+          if (d < 48 || d > 55) break;
+          v = v * 8 + d - 48;
         }
-        bytes.push(parseInt(oct, 8) & 255);
+        bytes.push(v & 255);
         pos = p;
         continue;
       }
-      if (nc === 10) {
-        pos += 2;
-        continue;
+      switch (nc) {
+        case 110:
+          bytes.push(10);
+          pos += 2;
+          continue;
+        // n
+        case 114:
+          bytes.push(13);
+          pos += 2;
+          continue;
+        // r
+        case 116:
+          bytes.push(9);
+          pos += 2;
+          continue;
+        // t
+        case 98:
+          bytes.push(8);
+          pos += 2;
+          continue;
+        // b
+        case 102:
+          bytes.push(12);
+          pos += 2;
+          continue;
+        // f
+        case 40:
+          bytes.push(40);
+          pos += 2;
+          continue;
+        // (
+        case 41:
+          bytes.push(41);
+          pos += 2;
+          continue;
+        // )
+        case 92:
+          bytes.push(92);
+          pos += 2;
+          continue;
+        // \
+        case 10:
+          pos += 2;
+          continue;
+        // line continuation
+        case 13:
+          pos += s.charCodeAt(pos + 2) === 10 ? 3 : 2;
+          continue;
+        default:
+          bytes.push(nc);
+          pos += 2;
+          continue;
       }
-      if (nc === 13) {
-        pos += s.charCodeAt(pos + 2) === 10 ? 3 : 2;
-        continue;
-      }
-      bytes.push(nc);
-      pos += 2;
-      continue;
     }
     if (c === 13) {
       bytes.push(10);
@@ -33195,6 +33504,36 @@ var baselineOf = (tlm, ctm) => tlm[4] * ctm[1] + tlm[5] * ctm[3] + ctm[5];
 var BASELINE_EPS = 1e-6;
 var WORD_GAP_EM = 0.25;
 var TJ_WORD_GAP_EM = 0.1;
+var FontCache = class {
+  constructor(max = 25e3) {
+    this.max = max;
+    this.map = /* @__PURE__ */ new Map();
+    this.cost = 0;
+  }
+  has(k) {
+    return this.map.has(k);
+  }
+  get(k) {
+    const e = this.map.get(k);
+    if (!e) return void 0;
+    this.map.delete(k);
+    this.map.set(k, e);
+    return e.f;
+  }
+  set(k, f4) {
+    const old = this.map.get(k);
+    if (old) this.cost -= old.c;
+    const c = 64 + (f4 && f4.toUni ? f4.toUni.size : 0);
+    this.map.delete(k);
+    this.map.set(k, { f: f4, c });
+    this.cost += c;
+    for (const [key, e] of this.map) {
+      if (this.cost <= this.max || this.map.size <= 1) break;
+      this.map.delete(key);
+      this.cost -= e.c;
+    }
+  }
+};
 async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const resources = pageResources(doc, pageMap);
   const fontDict = resources ? doc.dictOf(resources.Font) : null;
@@ -33205,6 +33544,20 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
   const undecodedCenters = [];
   let unpositioned = 0;
   const undetermined2 = content.unread.map((reason2) => ({ page: pageIdx, reason: reason2, font: null, codes: "", count: 0 }));
+  const markers = /* @__PURE__ */ new Map();
+  const mark = (reason2, font, codes, count) => {
+    let byReason = markers.get(font);
+    if (!byReason) markers.set(font, byReason = /* @__PURE__ */ new Map());
+    let byCodes = byReason.get(reason2);
+    if (!byCodes) byReason.set(reason2, byCodes = /* @__PURE__ */ new Map());
+    const key = count === 1 ? codes : `${codes}\0${count}`;
+    let m = byCodes.get(key);
+    if (!m) {
+      m = Object.freeze({ page: pageIdx, reason: reason2, font, codes, count });
+      byCodes.set(key, m);
+    }
+    undetermined2.push(m);
+  };
   let curFont = null;
   let curFontName = null;
   const stack = [];
@@ -33226,13 +33579,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       penKnown = false;
       inkValid = false;
       unpositioned += bytes.length;
-      undetermined2.push({
-        page: pageIdx,
-        reason: curFontName ? "font_not_in_resources" : "no_current_font",
-        font: curFontName ?? null,
-        codes: bytesToHex(bytes),
-        count: bytes.length
-      });
+      mark(curFontName ? "font_not_in_resources" : "no_current_font", curFontName ?? null, bytesToHex(bytes), bytes.length);
       return;
     }
     if (!curFont.toUni) {
@@ -33243,13 +33590,12 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
         else unpositioned += Math.ceil(bytes.length / (curFont.width || 1));
       }
       endRun();
-      undetermined2.push({
-        page: pageIdx,
-        reason: curFont.isType0 ? "cid_font_no_tounicode" : "no_tounicode",
-        font: curFont.baseFont ?? curFontName ?? null,
-        codes: bytesToHex(bytes),
-        count: Math.ceil(bytes.length / (curFont.width || 1))
-      });
+      mark(
+        curFont.isType0 ? "cid_font_no_tounicode" : "no_tounicode",
+        curFont.baseFont ?? curFontName ?? null,
+        bytesToHex(bytes),
+        Math.ceil(bytes.length / (curFont.width || 1))
+      );
       return;
     }
     const { codes, leftover } = bytesToCodes(bytes, curFont.width);
@@ -33261,13 +33607,12 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       const u = curFont.toUni.get(code);
       if (u == null) {
         if (box) undecodedCenters.push(box.c);
-        undetermined2.push({
-          page: pageIdx,
-          reason: "unmapped_code",
-          font: curFont.baseFont ?? curFontName ?? null,
-          codes: code.toString(16).padStart((curFont.width || 1) * 2, "0"),
-          count: 1
-        });
+        mark(
+          "unmapped_code",
+          curFont.baseFont ?? curFontName ?? null,
+          code.toString(16).padStart((curFont.width || 1) * 2, "0"),
+          1
+        );
       } else {
         if (softAt === pieces.length && /^\s/.test(u)) {
           pieces.pop();
@@ -33282,13 +33627,12 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
     if (leftover) {
       penKnown = false;
       inkValid = false;
-      undetermined2.push({
-        page: pageIdx,
-        reason: "code_width_misaligned",
-        font: curFont.baseFont ?? curFontName ?? null,
-        codes: bytesToHex(bytes.slice(bytes.length - leftover)),
-        count: leftover
-      });
+      mark(
+        "code_width_misaligned",
+        curFont.baseFont ?? curFontName ?? null,
+        bytesToHex(bytes.slice(bytes.length - leftover)),
+        leftover
+      );
     }
   };
   const lastOfType = (type) => {
@@ -33690,7 +34034,8 @@ function anchorOf(placed, source) {
     tier: 1
   };
 }
-async function extractText(doc, placedByPage = /* @__PURE__ */ new Map(), linkPages = /* @__PURE__ */ new Set()) {
+async function extractText(doc, onPlaced = () => {
+}, linkPages = /* @__PURE__ */ new Set()) {
   const producer = readProducer(doc);
   if (doc.isEncrypted()) {
     doc.note("encrypted");
@@ -33703,7 +34048,7 @@ async function extractText(doc, placedByPage = /* @__PURE__ */ new Map(), linkPa
       producer
     };
   }
-  const fontCache = /* @__PURE__ */ new Map();
+  const fontCache = new FontCache();
   const pages = [];
   const allUndetermined = [];
   for (let idx = 0; idx < doc.pageCount; idx++) {
@@ -33722,10 +34067,11 @@ async function extractText(doc, placedByPage = /* @__PURE__ */ new Map(), linkPa
       res = { text: "", undetermined: [{ page: idx, reason: "text_extraction_error", font: null, codes: "", count: 0 }] };
     }
     pages.push({ page: idx, text: res.text, undetermined: res.undetermined });
-    if (res.placed && linkPages.has(idx)) placedByPage.set(idx, res.placed);
+    if (res.placed && linkPages.has(idx)) onPlaced(idx, res.placed);
     for (const u of res.undetermined) allUndetermined.push(u);
   }
-  const document = pages.map((p) => p.text).filter((t) => t.length).join("\n");
+  let document = "";
+  for (const p of pages) if (p.text.length) document = document.length ? document + "\n" + p.text : p.text;
   return {
     document,
     pages,
@@ -34053,7 +34399,7 @@ function extractActive(doc) {
     const page = pageOf.has(num) ? pageOf.get(num) : null;
     walkActive(
       doc,
-      doc._objs.get(num),
+      doc._objs.peek(num),
       efNodes,
       0,
       (kind, key, detail) => items.push({ kind, where: { object: num, page, key }, detail })
@@ -34066,9 +34412,17 @@ function extractActive(doc) {
 }
 function embeddedTreeNodes(doc) {
   const nodes = /* @__PURE__ */ new Set();
-  const names = doc.root ? doc.dictOf(doc.root.Names) : null;
+  const pinned = (v) => {
+    for (let hops = 0; v && v.t === "ref" && hops < 64; hops++) {
+      doc._objs.pin(v.n);
+      v = doc._objs.get(v.n);
+    }
+    return v && v.t !== "ref" ? v : null;
+  };
+  const namesNode = doc.root ? pinned(doc.root.Names) : null;
+  const names = namesNode ? namesNode.t === "dict" ? namesNode.map : namesNode.t === "stream" ? namesNode.dict : null : null;
   const visit = (v, depth) => {
-    const node = doc.resolve(v);
+    const node = pinned(v);
     if (!node || node.t !== "dict" || depth > 64 || nodes.has(node.map)) return;
     nodes.add(node.map);
     const kids = doc.resolve(node.map.Kids);
@@ -34257,6 +34611,241 @@ function extractMetadata(doc) {
     return null;
   }
 }
+var LEN_BASE = [3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 15, 17, 19, 23, 27, 31, 35, 43, 51, 59, 67, 83, 99, 115, 131, 163, 195, 227, 258];
+var LEN_EXTRA = [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 0];
+var DIST_BASE = [
+  1,
+  2,
+  3,
+  4,
+  5,
+  7,
+  9,
+  13,
+  17,
+  25,
+  33,
+  49,
+  65,
+  97,
+  129,
+  193,
+  257,
+  385,
+  513,
+  769,
+  1025,
+  1537,
+  2049,
+  3073,
+  4097,
+  6145,
+  8193,
+  12289,
+  16385,
+  24577
+];
+var DIST_EXTRA = [0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13];
+var CODE_LENGTH_ORDER = [16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
+function huffman(lengths) {
+  const count = new Int32Array(16);
+  for (const l of lengths) count[l]++;
+  let left2 = 1;
+  for (let len = 1; len <= 15; len++) {
+    left2 = left2 * 2 - count[len];
+    if (left2 < 0) return null;
+  }
+  const offs = new Int32Array(16);
+  for (let len = 1; len < 15; len++) offs[len + 1] = offs[len] + count[len];
+  const symbol = new Int32Array(lengths.length);
+  lengths.forEach((l, s) => {
+    if (l) symbol[offs[l]++] = s;
+  });
+  return { count, symbol };
+}
+var FIXED_TABLES = null;
+function fixedTables() {
+  if (!FIXED_TABLES) {
+    const l = new Array(288).fill(8);
+    for (let i = 144; i < 256; i++) l[i] = 9;
+    for (let i = 256; i < 280; i++) l[i] = 7;
+    FIXED_TABLES = { lit: huffman(l), dist: huffman(new Array(30).fill(5)) };
+  }
+  return FIXED_TABLES;
+}
+function inflateSync(src, max, expect, count = false) {
+  const zlibHead = src.length >= 2 && (src[0] & 15) === 8 && (src[0] << 8 | src[1]) % 31 === 0;
+  let pos = zlibHead ? 2 : 0, bitBuf = 0, bitCnt = 0;
+  const M = count ? 65535 : -1;
+  let out = new Uint8Array(count ? 65536 : Math.min(max, Number.isInteger(expect) && expect >= 0 ? expect : Math.max(1024, src.length * 4))), o = 0;
+  const STOP = { stop: true };
+  const bits = (n) => {
+    while (bitCnt < n) {
+      if (pos >= src.length) throw new Error("eof");
+      bitBuf |= src[pos++] << bitCnt;
+      bitCnt += 8;
+    }
+    const v = bitBuf & (1 << n) - 1;
+    bitBuf >>>= n;
+    bitCnt -= n;
+    return v;
+  };
+  const decode = (h) => {
+    let code = 0, first = 0, index = 0;
+    for (let len = 1; len <= 15; len++) {
+      code |= bits(1);
+      const c = h.count[len];
+      if (code - c < first) return h.symbol[index + (code - first)];
+      index += c;
+      first = first + c << 1;
+      code <<= 1;
+    }
+    throw new Error("bad code");
+  };
+  const room = (n) => {
+    if (count) {
+      if (o + n > max) throw STOP;
+      return;
+    }
+    if (o + n <= out.length) return;
+    if (o + n > max) {
+      if (o < max) {
+      }
+      throw STOP;
+    }
+    let size2 = out.length;
+    while (size2 < o + n) size2 *= 2;
+    const bigger = new Uint8Array(Math.min(size2, max));
+    bigger.set(out.subarray(0, o));
+    out = bigger;
+  };
+  try {
+    for (let last = 0; !last; ) {
+      last = bits(1);
+      const type = bits(2);
+      if (type === 0) {
+        bitBuf = 0;
+        bitCnt = 0;
+        if (pos + 4 > src.length) throw new Error("eof");
+        const len = src[pos] | src[pos + 1] << 8;
+        if ((len ^ 65535) !== (src[pos + 2] | src[pos + 3] << 8)) throw new Error("stored length");
+        pos += 4;
+        if (pos + len > src.length) throw new Error("eof");
+        const take = Math.min(len, max - o);
+        room(take);
+        if (count) for (let i = 0; i < take; i++) out[o + i & M] = src[pos + i];
+        else out.set(src.subarray(pos, pos + take), o);
+        o += take;
+        pos += len;
+        if (take < len) throw STOP;
+        continue;
+      }
+      if (type === 3) throw new Error("block type");
+      let lit, dist;
+      if (type === 1) ({ lit, dist } = fixedTables());
+      else {
+        const nlen = bits(5) + 257, ndist = bits(5) + 1, ncode = bits(4) + 4;
+        if (nlen > 286 || ndist > 30) throw new Error("counts");
+        const cl = new Array(19).fill(0);
+        for (let i = 0; i < ncode; i++) cl[CODE_LENGTH_ORDER[i]] = bits(3);
+        const clh = huffman(cl);
+        if (!clh) throw new Error("code lengths");
+        const lens = [];
+        while (lens.length < nlen + ndist) {
+          const sym = decode(clh);
+          if (sym < 16) lens.push(sym);
+          else {
+            let rep, val = 0;
+            if (sym === 16) {
+              if (!lens.length) throw new Error("repeat");
+              val = lens[lens.length - 1];
+              rep = 3 + bits(2);
+            } else if (sym === 17) rep = 3 + bits(3);
+            else rep = 11 + bits(7);
+            if (lens.length + rep > nlen + ndist) throw new Error("repeat");
+            for (let i = 0; i < rep; i++) lens.push(val);
+          }
+        }
+        if (lens[256] === 0) throw new Error("no end of block");
+        lit = huffman(lens.slice(0, nlen));
+        dist = huffman(lens.slice(nlen));
+        if (!lit || !dist) throw new Error("tables");
+      }
+      for (; ; ) {
+        const sym = decode(lit);
+        if (sym < 256) {
+          room(1);
+          out[o++ & M] = sym;
+          continue;
+        }
+        if (sym === 256) break;
+        const li = sym - 257;
+        if (li >= 29) throw new Error("length symbol");
+        const len = LEN_BASE[li] + bits(LEN_EXTRA[li]);
+        const ds = decode(dist);
+        if (ds >= 30) throw new Error("distance symbol");
+        const d = DIST_BASE[ds] + bits(DIST_EXTRA[ds]);
+        if (d > o) throw new Error("distance");
+        const take = Math.min(len, max - o);
+        room(take);
+        for (let i = 0; i < take; i++, o++) out[o & M] = out[o - d & M];
+        if (take < len) throw STOP;
+      }
+    }
+  } catch (e) {
+    if (e === STOP) return { data: count ? null : out.subarray(0, o), len: o, full: false, end: pos };
+    return null;
+  }
+  return { data: count ? null : out.subarray(0, o), len: o, full: true, end: pos };
+}
+function inflateChecked(src, max, expect) {
+  if (!(src.length >= 6 && (src[0] & 15) === 8 && (src[0] << 8 | src[1]) % 31 === 0 && !(src[1] & 32))) return null;
+  let len = expect;
+  if (!Number.isInteger(len) || len < 0) {
+    const c = inflateSync(src, max, void 0, true);
+    if (!c || !c.full) return null;
+    len = c.len;
+  }
+  const r = inflateSync(src, max, len);
+  if (!r || !r.full || r.data.length !== len || r.end + 4 !== src.length) return null;
+  const want = (src[r.end] << 24 | src[r.end + 1] << 16 | src[r.end + 2] << 8 | src[r.end + 3]) >>> 0;
+  return adler32(r.data) === want ? r.data : null;
+}
+var OBJ_WINDOW_MAX = 4 * 1024 * 1024;
+var STREAM_MAX = 8 * 1024 * 1024;
+var XMP_MAX = 2 * 1024 * 1024;
+function firstAscii(b, needle, from = 0) {
+  const c0 = needle.charCodeAt(0);
+  for (let i = b.indexOf(c0, from); i !== -1; i = b.indexOf(c0, i + 1)) {
+    let k = 1;
+    while (k < needle.length && b[i + k] === needle.charCodeAt(k)) k++;
+    if (k === needle.length) return i;
+  }
+  return -1;
+}
+var READ_BASE_MB = 25;
+var READ_PAGE_MB = 0.031;
+var READ_BARE_PAGE_MB = 6e-3;
+var READ_LIMIT_MB = 100;
+var READ_SAMPLE_PAGES = 16;
+var readingNeedMB = (pages, bytes, textShare) => READ_BASE_MB + bytes / 1048576 + pages * (READ_BARE_PAGE_MB + (READ_PAGE_MB - READ_BARE_PAGE_MB) * textShare);
+async function sampledTextShare(doc) {
+  const n = doc.pageCount, k = Math.min(READ_SAMPLE_PAGES, n);
+  const notes = doc.notes.length, noted = new Set(doc._trailingNoted);
+  let showing = 0;
+  for (let i = 0; i < k; i++) {
+    let shows;
+    try {
+      shows = await pageShowsText(doc, doc.pageDict(k === 1 ? 0 : Math.round(i * (n - 1) / (k - 1))));
+    } catch {
+      shows = null;
+    }
+    if (shows !== false) showing++;
+  }
+  doc.notes.length = notes;
+  doc._trailingNoted = noted;
+  return k ? showing / k : 0;
+}
 async function loadPdf(bytes) {
   const doc = new PdfDoc(bytes);
   doc.scanTopLevel();
@@ -34274,6 +34863,26 @@ async function extractPdfStructure(bytes) {
     return { ok: false, container: "pdf", reason: "NOT_A_PDF" };
   }
   const doc = await loadPdf(bytes);
+  let textShare = 1;
+  let needMB = readingNeedMB(doc.pageCount, bytes.length, textShare);
+  if (needMB > READ_LIMIT_MB) {
+    textShare = doc.isEncrypted() ? 0 : await sampledTextShare(doc);
+    needMB = readingNeedMB(doc.pageCount, bytes.length, textShare);
+  }
+  if (needMB > READ_LIMIT_MB) {
+    return {
+      ok: false,
+      container: "pdf",
+      reason: "TOO_LARGE_TO_READ",
+      failure: "final",
+      version: sig[1],
+      pages: doc.pageCount,
+      bytes: bytes.length,
+      need_mb: Math.round(needMB),
+      limit_mb: READ_LIMIT_MB,
+      text_share: textShare
+    };
+  }
   const links = [];
   for (let pageIdx = 0; pageIdx < doc.pageCount; pageIdx++) {
     const page = doc.pageDict(pageIdx);
@@ -34321,10 +34930,16 @@ async function extractPdfStructure(bytes) {
   for (const rec of await documentEmbeddedFiles(doc)) links.push(rec);
   const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
   for (const l of links) counts[l.partition]++;
-  const placedByPage = /* @__PURE__ */ new Map();
-  const linkPages = new Set(links.map((l) => l.source && l.source.page));
-  const text2 = await extractText(doc, placedByPage, linkPages);
-  for (const l of links) l.anchor = anchorOf(l.source ? placedByPage.get(l.source.page) : null, l.source);
+  const linksOf = /* @__PURE__ */ new Map();
+  for (const l of links) {
+    if (!l.source) continue;
+    if (!linksOf.has(l.source.page)) linksOf.set(l.source.page, []);
+    linksOf.get(l.source.page).push(l);
+  }
+  const text2 = await extractText(doc, (idx, placed) => {
+    for (const l of linksOf.get(idx)) l.anchor = anchorOf(placed, l.source);
+  }, new Set(linksOf.keys()));
+  for (const l of links) if (!("anchor" in l)) l.anchor = anchorOf(null, l.source);
   const imgs = await extractImages(doc);
   if (imgs.images) markImageContent(doc, text2, imgs.images);
   if (imgs.images) markImagesUnread(doc, text2, imgs.images);
@@ -34404,10 +35019,13 @@ __export(ooxml_exports, {
   ODF_MIMETYPE_MAX_BYTES: () => ODF_MIMETYPE_MAX_BYTES,
   ODF_MIMETYPE_PART: () => ODF_MIMETYPE_PART,
   OOXML_FLAVOURS: () => OOXML_FLAVOURS,
+  STREAMED_TEXT_BOUND_BYTES: () => STREAMED_TEXT_BOUND_BYTES,
   VBA_AUTORUN_NAMES: () => VBA_AUTORUN_NAMES,
   VBA_SUSPICIOUS_KEYWORDS: () => VBA_SUSPICIOUS_KEYWORDS,
   containerImages: () => containerImages,
   crc32: () => crc32,
+  cutAfterTag: () => cutAfterTag,
+  cutBefore: () => cutBefore,
   declaredTextBytes: () => declaredTextBytes,
   discriminate: () => discriminate,
   hasZipMagic: () => hasZipMagic,
@@ -34419,13 +35037,16 @@ __export(ooxml_exports, {
   parseCoreProperties: () => parseCoreProperties,
   parseRels: () => parseRels,
   partContentType: () => partContentType,
+  pieceWhy: () => pieceWhy,
   readContainer: () => readContainer,
   readCoreProperties: () => readCoreProperties,
   readPart: () => readPart,
+  readPartPieces: () => readPartPieces,
   readVbaProject: () => readVbaProject,
   relsPartFor: () => relsPartFor,
   sizeGuard: () => sizeGuard,
   streamMember: () => streamMember,
+  textPlan: () => textPlan,
   walkRels: () => walkRels,
   withContainerImages: () => withContainerImages
 });
@@ -34477,6 +35098,48 @@ function sizeGuard(declaredBytes, bound = MEASURED_OOXML_TEXT_BOUND_BYTES) {
     metric: "declared_uncompressed_text_part_bytes"
     // summed from the central directory, before inflation
   };
+}
+var STREAMED_TEXT_BOUND_BYTES = 32 * 1024 * 1024;
+var TEXT_PIECE_CHARS = 1 << 20;
+var TEXT_PIECE_MAX_CHARS = 8 << 20;
+var INFLATE_WINDOW = 1 << 20;
+function textPlan(declaredBytes) {
+  const number = typeof declaredBytes === "number";
+  if (number && declaredBytes <= MEASURED_OOXML_TEXT_BOUND_BYTES) return { read: "whole" };
+  if (number && declaredBytes <= STREAMED_TEXT_BOUND_BYTES) {
+    return { read: "pieces", piecewise: {
+      declared: declaredBytes,
+      bound: MEASURED_OOXML_TEXT_BOUND_BYTES,
+      boundName: "MEASURED_OOXML_TEXT_BOUND_BYTES",
+      metric: "declared_uncompressed_text_part_bytes"
+    } };
+  }
+  return { read: "none", guard: {
+    ok: false,
+    text: "undetermined",
+    why: "over_size_bound",
+    size: declaredBytes,
+    bound: STREAMED_TEXT_BOUND_BYTES,
+    boundName: "STREAMED_TEXT_BOUND_BYTES",
+    metric: "declared_uncompressed_text_part_bytes",
+    final: true
+  } };
+}
+var cutAfterTag = (buf) => buf.lastIndexOf(">") + 1;
+function cutBefore(re) {
+  return (buf) => {
+    re.lastIndex = 0;
+    let at8 = 0, m;
+    while ((m = re.exec(buf)) !== null) {
+      if (m.index > 0) at8 = m.index;
+      if (m[0].length === 0) re.lastIndex++;
+    }
+    return at8;
+  };
+}
+function pieceWhy(read2) {
+  if (read2?.why !== "piece_unbounded") return { why: read2?.why };
+  return { why: "over_size_bound", detail: "piece_unbounded", size: read2.size, final: true };
 }
 var ARCHIVE_ENTRIES_MAX = 1e4;
 var ARCHIVE_TOTAL_MAX = 268435456;
@@ -34691,9 +35354,7 @@ async function inflateRaw(u8, limit) {
     return null;
   }
 }
-async function readPart(bytes, container, name) {
-  const b = toBytes(bytes);
-  const want = normalizePartName(name);
+function locatePart(b, container, want) {
   const entry = findEntry(container, want);
   if (!entry) return { ok: false, why: "part_absent", name: want };
   const declared = entry.uncompressedSize;
@@ -34711,19 +35372,27 @@ async function readPart(bytes, container, name) {
   const dataStart = lh + 30 + nameLen + extraLen;
   const dataEnd = dataStart + entry.compressedSize;
   if (dataEnd > b.length) return { ok: false, why: "member_truncated", name: want };
-  const raw = b.subarray(dataStart, dataEnd);
+  if (entry.method !== 0 && entry.method !== 8) {
+    return { ok: false, why: "unsupported_compression_method", method: entry.method, name: want };
+  }
+  return { ok: true, entry, raw: b.subarray(dataStart, dataEnd) };
+}
+async function readPart(bytes, container, name) {
+  const b = toBytes(bytes);
+  const want = normalizePartName(name);
+  const found2 = locatePart(b, container, want);
+  if (!found2.ok) return found2;
+  const { entry, raw } = found2;
   let out;
   if (entry.method === 0) {
     out = raw.slice();
-  } else if (entry.method === 8) {
+  } else {
     const got = await inflateRaw(raw, entry.uncompressedSize);
     if (got === null) return { ok: false, why: "inflate_failed", name: want };
     if (got.over !== void 0) {
       return { ok: false, why: "size_mismatch", name: want, expected: entry.uncompressedSize, got: got.over };
     }
     out = got.bytes;
-  } else {
-    return { ok: false, why: "unsupported_compression_method", method: entry.method, name: want };
   }
   if (out.length !== entry.uncompressedSize) {
     return { ok: false, why: "size_mismatch", name: want, expected: entry.uncompressedSize, got: out.length };
@@ -34732,6 +35401,90 @@ async function readPart(bytes, container, name) {
     return { ok: false, why: "crc_mismatch", name: want };
   }
   return { ok: true, bytes: out };
+}
+async function readPartPieces(bytes, container, name, cut2, onPiece) {
+  const b = toBytes(bytes);
+  const want = normalizePartName(name);
+  const found2 = locatePart(b, container, want);
+  if (!found2.ok) return found2;
+  const { entry, raw } = found2;
+  const declared = entry.uncompressedSize;
+  const decoder = new TextDecoder("utf-8", { fatal: false });
+  let crc = 4294967295, size2 = 0, buf = "";
+  let failure = null;
+  const take = (chunk) => {
+    size2 += chunk.length;
+    if (size2 > declared) {
+      failure = { ok: false, why: "size_mismatch", name: want, expected: declared, got: size2 };
+      return false;
+    }
+    crc = crcUpdate(crc, chunk);
+    buf += decoder.decode(chunk, { stream: true });
+    while (buf.length >= TEXT_PIECE_CHARS) {
+      const at8 = cut2(buf);
+      if (!(at8 > 0)) {
+        if (buf.length > TEXT_PIECE_MAX_CHARS) {
+          failure = { ok: false, why: "piece_unbounded", name: want, size: declared, final: true };
+          return false;
+        }
+        break;
+      }
+      const piece = buf.slice(0, at8);
+      buf = buf.slice(at8);
+      if (!give(piece)) return false;
+    }
+    return true;
+  };
+  const give = (piece) => {
+    try {
+      onPiece(piece);
+      return true;
+    } catch {
+      failure = { ok: false, why: "reader_failed", name: want };
+      return false;
+    }
+  };
+  try {
+    if (entry.method === 0) {
+      for (let at8 = 0; at8 < raw.length; at8 += INFLATE_WINDOW) {
+        if (!take(raw.subarray(at8, at8 + INFLATE_WINDOW))) break;
+      }
+    } else {
+      let at8 = 0;
+      const source = new ReadableStream({
+        pull(controller) {
+          if (at8 >= raw.length) {
+            controller.close();
+            return;
+          }
+          controller.enqueue(raw.subarray(at8, at8 + INFLATE_WINDOW));
+          at8 += INFLATE_WINDOW;
+        }
+      });
+      const reader = source.pipeThrough(new DecompressionStream("deflate-raw")).getReader();
+      try {
+        for (; ; ) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (!take(value)) {
+            reader.cancel().catch(() => {
+            });
+            break;
+          }
+        }
+      } catch {
+        return failure ?? { ok: false, why: "inflate_failed", name: want };
+      }
+    }
+    if (failure) return failure;
+    buf += decoder.decode();
+    if (buf.length && !give(buf)) return failure;
+  } catch {
+    return failure ?? { ok: false, why: "reader_failed", name: want };
+  }
+  if (size2 !== declared) return { ok: false, why: "size_mismatch", name: want, expected: declared, got: size2 };
+  if ((crc ^ 4294967295) >>> 0 !== entry.crc32) return { ok: false, why: "crc_mismatch", name: want };
+  return { ok: true, size: size2 };
 }
 function decodeXmlEntities(s) {
   return s.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (m, e) => {
@@ -35382,7 +36135,7 @@ var shaKOf = () => shaK ?? (shaK = new Uint32Array([
   3329325298
 ]));
 function sha256Js() {
-  const K3 = shaKOf();
+  const K4 = shaKOf();
   const H = new Uint32Array([1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225]);
   const W2 = new Uint32Array(64);
   const block = new Uint8Array(64);
@@ -35396,7 +36149,7 @@ function sha256Js() {
     }
     let [a, b, c, d, e, f4, g, h] = H;
     for (let t = 0; t < 64; t++) {
-      const t1 = h + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + (e & f4 ^ ~e & g) + K3[t] + W2[t] | 0;
+      const t1 = h + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + (e & f4 ^ ~e & g) + K4[t] + W2[t] | 0;
       const t2 = (rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) + (a & b ^ a & c ^ b & c) | 0;
       h = g;
       g = f4;
@@ -36282,18 +37035,36 @@ async function xlsxParts(bytes) {
   const sheetParts = new Set(sheets.map((s) => s.part).filter(Boolean));
   const isTextPart = (n) => sheetParts.has(n) || n === SHARED_STRINGS_PART;
   const declared = declaredTextBytes(container, isTextPart);
-  const guardR = sizeGuard(declared.total);
-  const guard = guardR.ok ? null : guardR;
+  const plan = textPlan(declared.total);
+  const guard = plan.read === "none" ? plan.guard : null;
+  const piecewise = plan.read === "pieces" ? plan.piecewise : null;
   let sharedStrings = null;
-  if (!guard) {
+  if (plan.read !== "none") {
     if (container.byName.has(SHARED_STRINGS_PART)) {
-      const ss = await readPart(b, container, SHARED_STRINGS_PART);
-      if (ss.ok) sharedStrings = elements(UTF82.decode(ss.bytes), "si").map((si) => textRuns(si.inner));
-      else undetermined2.push({ part: SHARED_STRINGS_PART, why: ss.why });
+      if (plan.read === "whole") {
+        const ss = await readPart(b, container, SHARED_STRINGS_PART);
+        if (ss.ok) sharedStrings = elements(UTF82.decode(ss.bytes), "si").map((si) => textRuns(si.inner));
+        else undetermined2.push({ part: SHARED_STRINGS_PART, why: ss.why });
+      } else {
+        const strings = [];
+        const ss = await readPartPieces(b, container, SHARED_STRINGS_PART, SI_CUT, (piece) => {
+          for (const si of elements(piece, "si")) strings.push(textRuns(si.inner));
+        });
+        if (ss.ok) sharedStrings = strings;
+        else undetermined2.push({ part: SHARED_STRINGS_PART, ...pieceWhy(ss) });
+      }
     }
     for (const sheet of sheets) {
       if (!sheet.part) {
         undetermined2.push({ part: `(sheet ${sheet.name})`, why: sheet.why });
+        continue;
+      }
+      if (plan.read === "pieces") {
+        if (container.byName.has(sheet.part) || container.entries.some((e) => normalizePartName(e.name) === sheet.part)) sheet.pieces = true;
+        else {
+          sheet.why = "part_absent";
+          undetermined2.push({ part: sheet.part, why: "part_absent" });
+        }
         continue;
       }
       const read2 = await readPart(b, container, sheet.part);
@@ -36326,44 +37097,71 @@ async function xlsxParts(bytes) {
     active,
     declared,
     guard,
+    piecewise,
     undetermined: undetermined2
   };
 }
-function walkSheetXml(xml) {
-  const rows = elements(xml, "row").map((row3) => ({
-    r: row3.attrs.r != null ? parseInt(row3.attrs.r, 10) : null,
-    hidden: row3.attrs.hidden === "1" || row3.attrs.hidden === "true",
-    cells: elements(row3.inner, "c").map((c) => {
-      const f4 = elements(c.inner, "f");
-      const v = elements(c.inner, "v");
-      const is = elements(c.inner, "is");
-      return {
-        cell: c.attrs.r ?? null,
-        t: c.attrs.t ?? null,
-        f: f4.length ? decodeXmlEntities2(f4[0].inner) : null,
-        v: v.length ? decodeXmlEntities2(v[0].inner) : null,
-        is: is.length ? textRuns(is[0].inner) : null
-      };
-    })
-  }));
-  const hiddenRows = rows.filter((r) => r.hidden && r.r != null).map((r) => r.r);
-  const hiddenCols = elements(xml, "col").filter((c) => c.attrs.hidden === "1" || c.attrs.hidden === "true").map((c) => ({ min: parseInt(c.attrs.min, 10), max: parseInt(c.attrs.max, 10) }));
-  const hyperlinks = elements(xml, "hyperlink").map((h) => ({
-    cell: h.attrs.ref ?? null,
-    relId: h.attrs.id ?? null,
-    location: h.attrs.location ?? null,
-    display: h.attrs.display ?? null
-  }));
+var SHEET_CUT = cutBefore(/<(?:[\w.-]+:)?(?:row|hyperlink)\b/g);
+var SI_CUT = cutBefore(/<(?:[\w.-]+:)?si\b/g);
+function sheetWalker(onRow) {
+  const hiddenRows = [];
+  const hiddenCols = [];
+  const hyperlinks = [];
   let usedRows = 0, usedCols = 0;
-  for (const row3 of rows) {
-    if (!row3.cells.length) continue;
-    if (Number.isInteger(row3.r) && row3.r > usedRows) usedRows = row3.r;
-    for (const c of row3.cells) {
-      const col = a1Col(c.cell);
-      if (col != null && col > usedCols) usedCols = col;
-    }
+  return {
+    feed(xml) {
+      for (const el of elements(xml, "row")) {
+        const row3 = {
+          r: el.attrs.r != null ? parseInt(el.attrs.r, 10) : null,
+          hidden: el.attrs.hidden === "1" || el.attrs.hidden === "true",
+          cells: elements(el.inner, "c").map((c) => {
+            const f4 = elements(c.inner, "f");
+            const v = elements(c.inner, "v");
+            const is = elements(c.inner, "is");
+            return {
+              cell: c.attrs.r ?? null,
+              t: c.attrs.t ?? null,
+              f: f4.length ? decodeXmlEntities2(f4[0].inner) : null,
+              v: v.length ? decodeXmlEntities2(v[0].inner) : null,
+              is: is.length ? textRuns(is[0].inner) : null
+            };
+          })
+        };
+        if (row3.hidden && row3.r != null) hiddenRows.push(row3.r);
+        if (row3.cells.length) {
+          if (Number.isInteger(row3.r) && row3.r > usedRows) usedRows = row3.r;
+          for (const c of row3.cells) {
+            const col = a1Col(c.cell);
+            if (col != null && col > usedCols) usedCols = col;
+          }
+        }
+        onRow(row3);
+      }
+      for (const c of elements(xml, "col")) {
+        if (c.attrs.hidden === "1" || c.attrs.hidden === "true") {
+          hiddenCols.push({ min: parseInt(c.attrs.min, 10), max: parseInt(c.attrs.max, 10) });
+        }
+      }
+      for (const h of elements(xml, "hyperlink")) {
+        hyperlinks.push({
+          cell: h.attrs.ref ?? null,
+          relId: h.attrs.id ?? null,
+          location: h.attrs.location ?? null,
+          display: h.attrs.display ?? null
+        });
+      }
+    },
+    done: () => ({ hiddenRows, hiddenCols, hyperlinks, usedRows, usedCols })
+  };
+}
+async function walkSheetPart(parts, sheet, onRow) {
+  const w = sheetWalker(onRow);
+  if (sheet.xml != null) {
+    w.feed(sheet.xml);
+    return w.done();
   }
-  return { rows, hiddenRows, hiddenCols, hyperlinks, usedRows, usedCols };
+  const read2 = await readPartPieces(parts.bytes, parts.container, sheet.part, SHEET_CUT, (piece) => w.feed(piece));
+  return read2.ok ? w.done() : { failed: pieceWhy(read2) };
 }
 function cellValue(c, sharedStrings) {
   if (c.t === "s") {
@@ -36423,8 +37221,29 @@ async function xlsxStructure(parts) {
     if (sheet.rels) {
       for (const r of sheet.rels.relationships) if (r.id) relTargets.set(r.id, r);
     }
-    if (sheet.xml == null) {
-      const why = guard == null ? sheet.why ?? "sheet_unreadable" : "over_size_bound";
+    const formulas = [];
+    let walked = null, failedWhy = null;
+    if (sheet.xml != null || sheet.pieces) {
+      walked = await walkSheetPart(parts, sheet, (row3) => {
+        for (const c of row3.cells) {
+          if (c.f == null) continue;
+          formulas.push({
+            kind: "formula",
+            source: c.cell ? sheetCellRef(sheet.name, c.cell) : null,
+            formula: c.f,
+            value: c.v
+            // the cached result, null when the file carries none — stated, not invented
+          });
+        }
+      });
+      if (walked.failed) {
+        failedWhy = walked.failed.why;
+        evUndetermined.push({ part: sheet.part, ...walked.failed });
+        walked = null;
+      }
+    }
+    if (walked == null) {
+      const why = failedWhy ?? (guard == null ? sheet.why ?? "sheet_unreadable" : "over_size_bound");
       for (const [, r] of relTargets) {
         if (!r.external) continue;
         const partition = classifyUrl(r.target);
@@ -36438,7 +37257,6 @@ async function xlsxStructure(parts) {
       }
       continue;
     }
-    const walked = walkSheetXml(sheet.xml);
     const usedRels = /* @__PURE__ */ new Set();
     for (const h of walked.hyperlinks) {
       const source = h.cell ? sheetCellRef(sheet.name, h.cell) : null;
@@ -36499,18 +37317,7 @@ async function xlsxStructure(parts) {
         source: null
       });
     }
-    for (const row3 of walked.rows) {
-      for (const c of row3.cells) {
-        if (c.f == null) continue;
-        evItems.push({
-          kind: "formula",
-          source: c.cell ? sheetCellRef(sheet.name, c.cell) : null,
-          formula: c.f,
-          value: c.v
-          // the cached result, null when the file carries none — stated, not invented
-        });
-      }
-    }
+    for (const f4 of formulas) evItems.push(f4);
     if (walked.hiddenRows.length) {
       evItems.push({
         kind: "hidden-rows",
@@ -36559,6 +37366,7 @@ async function xlsxStructure(parts) {
     notes.push("text_parts_over_bound");
     evUndetermined.push({ part: "(text parts: worksheets + sharedStrings)", why: "over_size_bound", guard });
   }
+  if (parts.piecewise) notes.push("text_read_in_pieces");
   for (const dn of definedNames) {
     const fragment = `#${dn.ref}`;
     links.push({
@@ -36630,11 +37438,11 @@ async function xlsxStructure(parts) {
     notes
   };
 }
-function xlsxText(parts) {
+async function xlsxText(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "xlsx", reason: parts?.why ?? "PARTS_ABSENT" };
   }
-  const { sheets, sharedStrings, guard } = parts;
+  const { sheets, sharedStrings, guard, piecewise } = parts;
   if (guard) {
     return {
       ok: true,
@@ -36649,34 +37457,37 @@ function xlsxText(parts) {
   const outSheets = [];
   const allUndetermined = [];
   let cellCount = 0, formulaCount = 0;
+  const unreadable = (sheet, why, extra = {}) => {
+    const marker = { sheet: sheet.index, cell: null, reason: why, ...extra };
+    outSheets.push({
+      sheet: sheet.index,
+      name: sheet.name,
+      hidden: sheet.hidden,
+      rows: XLSX_GRID_ROWS,
+      cols: XLSX_GRID_COLS,
+      usedRows: null,
+      usedCols: null,
+      range: null,
+      text: "",
+      cells: null,
+      undetermined: [marker]
+    });
+    allUndetermined.push(marker);
+  };
   for (const sheet of sheets) {
-    if (sheet.xml == null) {
-      const marker = { sheet: sheet.index, cell: null, reason: sheet.why ?? "sheet_unreadable" };
-      outSheets.push({
-        sheet: sheet.index,
-        name: sheet.name,
-        hidden: sheet.hidden,
-        rows: XLSX_GRID_ROWS,
-        cols: XLSX_GRID_COLS,
-        usedRows: null,
-        usedCols: null,
-        range: null,
-        text: "",
-        cells: null,
-        undetermined: [marker]
-      });
-      allUndetermined.push(marker);
+    if (sheet.xml == null && !sheet.pieces) {
+      unreadable(sheet, sheet.why ?? "sheet_unreadable");
       continue;
     }
-    const walked = walkSheetXml(sheet.xml);
     const undetermined2 = [];
     const lines = [];
-    const typed = [];
-    for (const row3 of walked.rows) {
+    const typed = piecewise ? null : [];
+    let sheetCells = 0, sheetFormulas = 0;
+    const walked = await walkSheetPart(parts, sheet, (row3) => {
       const vals = [];
       for (const c of row3.cells) {
-        if (c.f != null) formulaCount++;
-        if (c.v != null || c.f != null || c.t === "inlineStr" && c.is != null) {
+        if (c.f != null) sheetFormulas++;
+        if (typed && (c.v != null || c.f != null || c.t === "inlineStr" && c.is != null)) {
           const tc = typedCell(c, sheet.name, sharedStrings);
           typed.push({ ref: c.cell, cell: tc.cell });
           if (tc.why === "cell_type_unknown") undetermined2.push({ sheet: sheet.index, cell: c.cell, reason: tc.why });
@@ -36687,11 +37498,18 @@ function xlsxText(parts) {
           continue;
         }
         if (r.value == null || r.value === "") continue;
-        cellCount++;
+        sheetCells++;
         vals.push(r.value);
       }
       if (vals.length) lines.push(vals.join("	"));
+    });
+    if (walked.failed) {
+      const { why, ...rest } = walked.failed;
+      unreadable(sheet, why, rest);
+      continue;
     }
+    cellCount += sheetCells;
+    formulaCount += sheetFormulas;
     const text2 = lines.join("\n");
     outSheets.push({
       sheet: sheet.index,
@@ -36704,7 +37522,7 @@ function xlsxText(parts) {
       /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
       range: usedSheetRange(sheet.name, walked.usedRows, walked.usedCols),
       text: text2,
-      cells: rowColumnOrder(typed).map((x) => x.cell),
+      cells: typed ? rowColumnOrder(typed).map((x) => x.cell) : null,
       undetermined: undetermined2
     });
     for (const u of undetermined2) allUndetermined.push(u);
@@ -36724,7 +37542,9 @@ function xlsxText(parts) {
       cells: cellCount,
       formulas: formulaCount,
       undetermined: allUndetermined.length
-    }
+    },
+    /* R35: said when the text was read in pieces, the figures it was judged by. */
+    ...piecewise ? { piecewise } : {}
   };
 }
 var xlsxEntry = {
@@ -36755,7 +37575,7 @@ var xlsxEntry = {
   },
   text: async (partsOrBytes) => {
     const parts = isBytes(partsOrBytes) ? await xlsxParts(partsOrBytes) : partsOrBytes;
-    return withContainerImages(withActive(withMetadata(xlsxText(parts), parts), parts), parts, "xl/media/");
+    return withContainerImages(withActive(withMetadata(await xlsxText(parts), parts), parts), parts, "xl/media/");
   }
 };
 
@@ -36838,6 +37658,11 @@ function mceSkipper() {
   };
 }
 function walkDocumentBody(xml) {
+  const w = createBodyWalk();
+  w.feed(xml);
+  return w.result();
+}
+function createBodyWalk({ paragraphText = true } = {}) {
   const paragraphs = [];
   const hyperlinks = [];
   const bookmarks = /* @__PURE__ */ new Map();
@@ -36863,110 +37688,115 @@ function walkDocumentBody(xml) {
   };
   const appendVisible = (s) => {
     if (!inPara || !s) return;
-    paragraphs[para].text += s;
+    if (paragraphText) paragraphs[para].text += s;
     for (const c of insStack) c.text += s;
   };
   const skipped = mceSkipper();
-  TOKEN_RE.lastIndex = 0;
-  let m, prev = 0;
-  while ((m = TOKEN_RE.exec(xml)) !== null) {
-    if (textTarget && m.index > prev) {
-      const data = decodeEntities(xml.slice(prev, m.index));
-      if (textTarget === "t") appendVisible(data);
-      else if (textTarget === "delText" && delStack.length) delStack[delStack.length - 1].text += data;
-    }
-    prev = TOKEN_RE.lastIndex;
-    if (m[1] === void 0) continue;
-    const name = localOf(m[1]);
-    const selfClosed = m[3] === "/";
-    const closing = m[0][1] === "/";
-    if (skipped(name, closing, selfClosed)) {
-      if (!closing && m[2] && m[2].includes("=")) noteRid(attrsOf(m[2]));
-      continue;
-    }
-    if (closing) {
-      if (name === "t" || name === "delText") textTarget = null;
-      else if (name === "p") {
-        if (outer.length) ({ para, run } = outer.pop());
-        else inPara = false;
-      } else if (name === "hyperlink") {
-        const h = hyperStack.pop();
-        if (h) hyperlinks.push(h);
-      } else if (name === "ins") {
-        const c = insStack.pop();
-        if (c) changes.push(c);
-      } else if (name === "del") {
-        const c = delStack.pop();
-        if (c) changes.push(c);
+  let carry = "";
+  const feed = (piece) => {
+    const xml = carry + piece;
+    TOKEN_RE.lastIndex = 0;
+    let m, prev = 0;
+    while ((m = TOKEN_RE.exec(xml)) !== null) {
+      if (textTarget && m.index > prev) {
+        const data = decodeEntities(xml.slice(prev, m.index));
+        if (textTarget === "t") appendVisible(data);
+        else if (textTarget === "delText" && delStack.length) delStack[delStack.length - 1].text += data;
       }
-      continue;
-    }
-    const attrs = m[2] && m[2].includes("=") ? attrsOf(m[2]) : {};
-    switch (name) {
-      case "p":
-        if (!selfClosed) {
-          if (inPara) outer.push({ para, run });
-          para = ++last;
-          run = -1;
-          inPara = true;
-          paragraphs.push({ para, text: "" });
-        } else {
-          paragraphs.push({ para: ++last, text: "" });
-          if (!inPara) {
-            para = last;
+      prev = TOKEN_RE.lastIndex;
+      if (m[1] === void 0) continue;
+      const name = localOf(m[1]);
+      const selfClosed = m[3] === "/";
+      const closing = m[0][1] === "/";
+      if (skipped(name, closing, selfClosed)) {
+        if (!closing && m[2] && m[2].includes("=")) noteRid(attrsOf(m[2]));
+        continue;
+      }
+      if (closing) {
+        if (name === "t" || name === "delText") textTarget = null;
+        else if (name === "p") {
+          if (outer.length) ({ para, run } = outer.pop());
+          else inPara = false;
+        } else if (name === "hyperlink") {
+          const h = hyperStack.pop();
+          if (h) hyperlinks.push(h);
+        } else if (name === "ins") {
+          const c = insStack.pop();
+          if (c) changes.push(c);
+        } else if (name === "del") {
+          const c = delStack.pop();
+          if (c) changes.push(c);
+        }
+        continue;
+      }
+      const attrs = m[2] && m[2].includes("=") ? attrsOf(m[2]) : {};
+      switch (name) {
+        case "p":
+          if (!selfClosed) {
+            if (inPara) outer.push({ para, run });
+            para = ++last;
             run = -1;
+            inPara = true;
+            paragraphs.push({ para, text: "" });
+          } else {
+            paragraphs.push({ para: ++last, text: "" });
+            if (!inPara) {
+              para = last;
+              run = -1;
+            }
           }
-        }
-        break;
-      case "r":
-        if (inPara && !selfClosed) {
-          run++;
-          for (const c of hyperStack) if (c.run == null) c.run = run;
-          for (const c of insStack) if (c.run == null) c.run = run;
-          for (const c of delStack) if (c.run == null) c.run = run;
-        }
-        break;
-      case "t":
-        if (!selfClosed) textTarget = "t";
-        break;
-      case "delText":
-        if (!selfClosed) textTarget = "delText";
-        break;
-      case "tab":
-        appendVisible("	");
-        break;
-      case "br":
-      case "cr":
-        appendVisible("\n");
-        break;
-      case "hyperlink":
-        noteRid(attrs);
-        if (!selfClosed && inPara)
-          hyperStack.push({ rid: attrs.id ?? null, anchor: attrs.anchor ?? null, para, run: null });
-        else if (selfClosed && inPara)
-          hyperlinks.push({ rid: attrs.id ?? null, anchor: attrs.anchor ?? null, para, run: null });
-        break;
-      case "ins":
-        if (!selfClosed && inPara)
-          insStack.push({ change: "insertion", author: attrs.author ?? null, date: attrs.date ?? null, text: "", para, run: null });
-        break;
-      case "del":
-        if (!selfClosed && inPara)
-          delStack.push({ change: "deletion", author: attrs.author ?? null, date: attrs.date ?? null, text: "", para, run: null });
-        break;
-      case "bookmarkStart":
-        if (attrs.name != null && !bookmarks.has(attrs.name))
-          bookmarks.set(attrs.name, para >= 0 ? para : 0);
-        break;
-      case "commentReference":
-        if (attrs.id != null && !commentRefs.has(attrs.id))
-          commentRefs.set(attrs.id, { para, run: run >= 0 ? run : null });
-        break;
-      default:
-        noteRid(attrs);
+          break;
+        case "r":
+          if (inPara && !selfClosed) {
+            run++;
+            for (const c of hyperStack) if (c.run == null) c.run = run;
+            for (const c of insStack) if (c.run == null) c.run = run;
+            for (const c of delStack) if (c.run == null) c.run = run;
+          }
+          break;
+        case "t":
+          if (!selfClosed) textTarget = "t";
+          break;
+        case "delText":
+          if (!selfClosed) textTarget = "delText";
+          break;
+        case "tab":
+          appendVisible("	");
+          break;
+        case "br":
+        case "cr":
+          appendVisible("\n");
+          break;
+        case "hyperlink":
+          noteRid(attrs);
+          if (!selfClosed && inPara)
+            hyperStack.push({ rid: attrs.id ?? null, anchor: attrs.anchor ?? null, para, run: null });
+          else if (selfClosed && inPara)
+            hyperlinks.push({ rid: attrs.id ?? null, anchor: attrs.anchor ?? null, para, run: null });
+          break;
+        case "ins":
+          if (!selfClosed && inPara)
+            insStack.push({ change: "insertion", author: attrs.author ?? null, date: attrs.date ?? null, text: "", para, run: null });
+          break;
+        case "del":
+          if (!selfClosed && inPara)
+            delStack.push({ change: "deletion", author: attrs.author ?? null, date: attrs.date ?? null, text: "", para, run: null });
+          break;
+        case "bookmarkStart":
+          if (attrs.name != null && !bookmarks.has(attrs.name))
+            bookmarks.set(attrs.name, para >= 0 ? para : 0);
+          break;
+        case "commentReference":
+          if (attrs.id != null && !commentRefs.has(attrs.id))
+            commentRefs.set(attrs.id, { para, run: run >= 0 ? run : null });
+          break;
+        default:
+          noteRid(attrs);
+      }
     }
-  }
-  return { paragraphs, hyperlinks, bookmarks, changes, commentRefs, ridUsage };
+    carry = xml.slice(prev);
+  };
+  return { feed, result: () => ({ paragraphs, hyperlinks, bookmarks, changes, commentRefs, ridUsage }) };
 }
 function parseComments(xml) {
   if (typeof xml !== "string" || !/<(?:[\w.-]+:)?comments\b/.test(xml)) {
@@ -37053,15 +37883,23 @@ async function docxParts(bytes) {
     const e = container.byName.get(partName);
     if (e) declaredTextBytes2 += e.uncompressedSize;
   }
-  const guardR = sizeGuard(declaredTextBytes2);
-  const guard = guardR.ok ? null : guardR;
+  const plan = textPlan(declaredTextBytes2);
+  const guard = plan.read === "none" ? plan.guard : null;
+  const piecewise = plan.read === "pieces" ? plan.piecewise : null;
   let documentXml = null;
   let commentsXml = null;
-  if (!guard) {
-    const main = await readPart(b, container, mainPart);
-    if (main.ok) documentXml = UTF83.decode(main.bytes);
-    else undetermined2.push({ part: mainPart, why: main.why });
-    if (container.byName.has(COMMENTS_PART)) {
+  if (plan.read !== "none") {
+    if (plan.read === "whole") {
+      const main = await readPart(b, container, mainPart);
+      if (main.ok) documentXml = UTF83.decode(main.bytes);
+      else undetermined2.push({ part: mainPart, why: main.why });
+    } else if (!container.byName.has(mainPart)) {
+      undetermined2.push({ part: mainPart, why: "part_absent" });
+    }
+    const comments = container.byName.get(COMMENTS_PART);
+    if (comments && comments.uncompressedSize > MEASURED_OOXML_TEXT_BOUND_BYTES) {
+      undetermined2.push({ part: COMMENTS_PART, why: "over_size_bound", size: comments.uncompressedSize, final: true });
+    } else if (comments) {
       const com = await readPart(b, container, COMMENTS_PART);
       if (com.ok) commentsXml = UTF83.decode(com.bytes);
       else undetermined2.push({ part: COMMENTS_PART, why: com.why });
@@ -37088,10 +37926,17 @@ async function docxParts(bytes) {
     core,
     active,
     guard,
+    piecewise,
+    stream: plan.read === "pieces",
     undetermined: undetermined2
   };
 }
 function walkDocumentTables(xml) {
+  const w = createTablesWalk();
+  w.feed(xml);
+  return w.result();
+}
+function createTablesWalk() {
   const done = [];
   const stack = [];
   let next = 0;
@@ -37123,70 +37968,79 @@ function walkDocumentTables(xml) {
       cells: t.cells
     };
   };
-  TOKEN_RE.lastIndex = 0;
-  let m;
-  while ((m = TOKEN_RE.exec(xml)) !== null) {
-    if (m[1] === void 0) continue;
-    const name = localOf(m[1]);
-    const closing = m[0][1] === "/";
-    const selfClosed = m[3] === "/";
-    if (skipped(name, closing, selfClosed)) continue;
-    const top2 = stack.length ? stack[stack.length - 1] : null;
-    if (closing) {
-      if (name === "tbl" && stack.length) finish(stack.pop(), top2.rows);
-      else if (name === "tr" && top2) {
+  let carry = "";
+  const feed = (piece) => {
+    const xml = carry + piece;
+    TOKEN_RE.lastIndex = 0;
+    let m, prev = 0;
+    while ((m = TOKEN_RE.exec(xml)) !== null) {
+      prev = TOKEN_RE.lastIndex;
+      if (m[1] === void 0) continue;
+      const name = localOf(m[1]);
+      const closing = m[0][1] === "/";
+      const selfClosed = m[3] === "/";
+      if (skipped(name, closing, selfClosed)) continue;
+      const top2 = stack.length ? stack[stack.length - 1] : null;
+      if (closing) {
+        if (name === "tbl" && stack.length) finish(stack.pop(), top2.rows);
+        else if (name === "tr" && top2) {
+          closeCell(top2);
+          if (top2.tc > top2.maxTc) top2.maxTc = top2.tc;
+        } else if (name === "tc" && top2) closeCell(top2);
+        continue;
+      }
+      if (name === "p") {
+        para++;
+        if (top2?.cell) top2.cell.paras.push(para);
+        continue;
+      }
+      if (name === "tbl" && !selfClosed) {
+        stack.push({
+          table: next++,
+          rows: 0,
+          gridCols: 0,
+          tc: 0,
+          maxTc: 0,
+          cells: [],
+          cell: null,
+          nextCol: 1,
+          rowCells: [],
+          vOwner: /* @__PURE__ */ new Map()
+        });
+      } else if (name === "tbl") done[next] = { table: next++, rows: 0, cols: null, cells: [] };
+      else if (!top2) continue;
+      else if (name === "gridCol") top2.gridCols++;
+      else if (name === "tr") {
         closeCell(top2);
-        if (top2.tc > top2.maxTc) top2.maxTc = top2.tc;
-      } else if (name === "tc" && top2) closeCell(top2);
-      continue;
+        top2.rows++;
+        top2.tc = 0;
+        top2.nextCol = 1;
+        top2.rowCells = [];
+      } else if (name === "gridBefore") {
+        const n = parseInt(attrsOf(m[2]).val, 10);
+        if (top2.tc === 0 && Number.isInteger(n) && n > 0) top2.nextCol = 1 + n;
+      } else if (name === "tc") {
+        closeCell(top2);
+        top2.tc++;
+        top2.cell = { row: top2.rows, col: top2.nextCol, span: 1, vMerge: null, hMerge: null, paras: [] };
+        if (selfClosed) closeCell(top2);
+      } else if (!top2.cell) continue;
+      else if (name === "gridSpan") {
+        const n = parseInt(attrsOf(m[2]).val, 10);
+        if (Number.isInteger(n) && n > 1) top2.cell.span = n;
+      } else if (name === "vMerge") top2.cell.vMerge = merge2(attrsOf(m[2]).val ?? "continue");
+      else if (name === "hMerge") top2.cell.hMerge = merge2(attrsOf(m[2]).val ?? "continue");
     }
-    if (name === "p") {
-      para++;
-      if (top2?.cell) top2.cell.paras.push(para);
-      continue;
+    carry = xml.slice(prev);
+  };
+  const result = () => {
+    while (stack.length) {
+      const t = stack.pop();
+      finish(t, t.rows || null);
     }
-    if (name === "tbl" && !selfClosed) {
-      stack.push({
-        table: next++,
-        rows: 0,
-        gridCols: 0,
-        tc: 0,
-        maxTc: 0,
-        cells: [],
-        cell: null,
-        nextCol: 1,
-        rowCells: [],
-        vOwner: /* @__PURE__ */ new Map()
-      });
-    } else if (name === "tbl") done[next] = { table: next++, rows: 0, cols: null, cells: [] };
-    else if (!top2) continue;
-    else if (name === "gridCol") top2.gridCols++;
-    else if (name === "tr") {
-      closeCell(top2);
-      top2.rows++;
-      top2.tc = 0;
-      top2.nextCol = 1;
-      top2.rowCells = [];
-    } else if (name === "gridBefore") {
-      const n = parseInt(attrsOf(m[2]).val, 10);
-      if (top2.tc === 0 && Number.isInteger(n) && n > 0) top2.nextCol = 1 + n;
-    } else if (name === "tc") {
-      closeCell(top2);
-      top2.tc++;
-      top2.cell = { row: top2.rows, col: top2.nextCol, span: 1, vMerge: null, hMerge: null, paras: [] };
-      if (selfClosed) closeCell(top2);
-    } else if (!top2.cell) continue;
-    else if (name === "gridSpan") {
-      const n = parseInt(attrsOf(m[2]).val, 10);
-      if (Number.isInteger(n) && n > 1) top2.cell.span = n;
-    } else if (name === "vMerge") top2.cell.vMerge = merge2(attrsOf(m[2]).val ?? "continue");
-    else if (name === "hMerge") top2.cell.hMerge = merge2(attrsOf(m[2]).val ?? "continue");
-  }
-  while (stack.length) {
-    const t = stack.pop();
-    finish(t, t.rows || null);
-  }
-  return done;
+    return done;
+  };
+  return { feed, result };
 }
 function docxRenumbering(xml) {
   if (typeof xml !== "string") return null;
@@ -37261,10 +38115,18 @@ async function docxStructure(parts) {
   }
   const notes = [];
   const links = [];
-  const walk = parts.documentXml ? walkDocumentBody(parts.documentXml) : null;
+  let walk = parts.documentXml ? walkDocumentBody(parts.documentXml) : null;
+  let pieceFailure = null;
+  if (!walk && parts.stream) {
+    const w = createBodyWalk({ paragraphText: false });
+    const read2 = await readPartPieces(parts.bytes, parts.container, parts.mainPart, cutAfterTag, (piece) => w.feed(piece));
+    if (read2.ok) walk = w.result();
+    else pieceFailure = read2;
+  }
   if (!walk) {
     notes.push(parts.guard ? localize("office-readers.docx.word_document_xml_not_read_over_the_size_bound", "word/document.xml not read: over the size bound (stated in evidentiary.undetermined and by text())") : localize("office-readers.docx.word_document_xml_unreadable_element_references", "word/document.xml unreadable: element references unavailable (stated)"));
   }
+  if (parts.piecewise) notes.push("text_read_in_pieces");
   const docRelsPart = relsPartFor(parts.mainPart);
   for (const rel of parts.rels.outbound) {
     if (rel.part === docRelsPart && walk) {
@@ -37345,6 +38207,9 @@ async function docxStructure(parts) {
   }
   const evUndetermined = [...parts.undetermined];
   if (parts.guard) evUndetermined.push({ part: parts.mainPart, why: "over_size_bound", guard: parts.guard });
+  if (pieceFailure) {
+    evUndetermined.push({ part: parts.mainPart, ...pieceWhy(pieceFailure) });
+  }
   if (parts.commentsXml != null) {
     const parsed = parseComments(parts.commentsXml);
     if (!parsed.ok) evUndetermined.push({ part: COMMENTS_PART, why: parsed.why });
@@ -37428,27 +38293,48 @@ async function docxText(parts) {
       counts: { chars: 0, undetermined: 1 }
     };
   }
-  if (parts.documentXml == null) {
-    const stated = parts.undetermined.find((u) => u.part === parts.mainPart);
-    return {
-      ok: true,
-      container: "docx",
-      document: null,
-      paragraphs: [],
-      tables: null,
-      undetermined: [{ reason: "main_part_unreadable", part: parts.mainPart, why: stated?.why ?? "unreadable" }],
-      counts: { chars: 0, undetermined: 1 }
-    };
+  let walk, tablesDone;
+  if (parts.documentXml != null) {
+    walk = walkDocumentBody(parts.documentXml);
+    tablesDone = walkDocumentTables(parts.documentXml);
+  } else {
+    let read2 = null;
+    if (parts.stream) {
+      const body = createBodyWalk(), tables2 = createTablesWalk();
+      read2 = await readPartPieces(parts.bytes, parts.container, parts.mainPart, cutAfterTag, (piece) => {
+        body.feed(piece);
+        tables2.feed(piece);
+      });
+      if (read2.ok) {
+        walk = body.result();
+        tablesDone = tables2.result();
+      }
+    }
+    if (!walk) {
+      const stated = parts.undetermined.find((u) => u.part === parts.mainPart);
+      return {
+        ok: true,
+        container: "docx",
+        document: null,
+        paragraphs: [],
+        tables: null,
+        undetermined: [{
+          reason: "main_part_unreadable",
+          part: parts.mainPart,
+          ...read2 ? pieceWhy(read2) : { why: stated?.why ?? "unreadable" }
+        }],
+        counts: { chars: 0, undetermined: 1 }
+      };
+    }
   }
-  const walk = walkDocumentBody(parts.documentXml);
   const paragraphs = walk.paragraphs.map((p) => ({ para: p.para, ref: `\xB6${p.para + 1}`, text: p.text }));
   const document = paragraphs.map((p) => p.text).filter((t) => t.length).join("\n");
-  const tables = walkDocumentTables(parts.documentXml).filter(Boolean).map((t) => ({
+  const tables = tablesDone.filter(Boolean).map((t) => ({
     table: t.table,
     ref: docTableRef(t.table).ref,
     rows: t.rows,
     cols: t.cols,
-    cells: tableCells(t, walk.paragraphs)
+    cells: parts.stream ? null : tableCells(t, walk.paragraphs)
   }));
   return {
     ok: true,
@@ -37457,7 +38343,8 @@ async function docxText(parts) {
     paragraphs,
     tables,
     undetermined: [],
-    counts: { chars: document.length, undetermined: 0 }
+    counts: { chars: document.length, undetermined: 0 },
+    ...parts.piecewise ? { piecewise: parts.piecewise } : {}
   };
 }
 function coreMetadata(parts, withTitle = false) {
@@ -37785,8 +38672,9 @@ async function pptxParts(bytes) {
     const e = container.byName.get(n);
     if (e) declaredTextBytes2 += e.uncompressedSize;
   }
-  const guardR = sizeGuard(declaredTextBytes2);
-  const guard = guardR.ok ? null : guardR;
+  const plan = textPlan(declaredTextBytes2);
+  const guard = plan.read === "none" ? plan.guard : null;
+  const piecewise = plan.read === "pieces" ? plan.piecewise : null;
   const rels = await walkRels(b, container);
   let presentationXml = null;
   const main = await readPart(b, container, mainPart);
@@ -37821,21 +38709,27 @@ async function pptxParts(bytes) {
   }
   const slideXml = /* @__PURE__ */ new Map();
   const notesXml = /* @__PURE__ */ new Map();
-  if (!guard) {
-    for (const n of slideParts) {
-      const r = await readPart(b, container, n);
-      if (r.ok) {
-        const xml = UTF84.decode(r.bytes);
-        slideXml.set(n, xml);
-        const root = xml.match(SLD_ROOT_RE);
-        if (root && declaresNotShown(showAttrOf(root[1]))) hiddenParts.add(n);
-      } else undetermined2.push({ part: n, why: r.why });
+  const readHere = async (n, into, root) => {
+    const e = container.byName.get(n);
+    if (plan.read === "pieces" && e && e.uncompressedSize > MEASURED_OOXML_TEXT_BOUND_BYTES) {
+      undetermined2.push({ part: n, why: "over_size_bound", size: e.uncompressedSize, final: true });
+      return;
     }
-    for (const n of notesParts) {
-      const r = await readPart(b, container, n);
-      if (r.ok) notesXml.set(n, UTF84.decode(r.bytes));
-      else undetermined2.push({ part: n, why: r.why });
+    const r = await readPart(b, container, n);
+    if (!r.ok) {
+      undetermined2.push({ part: n, why: r.why });
+      return;
     }
+    const xml = UTF84.decode(r.bytes);
+    if (plan.read === "whole") into.set(n, xml);
+    if (root) {
+      const m = xml.match(SLD_ROOT_RE);
+      if (m && declaresNotShown(showAttrOf(m[1]))) hiddenParts.add(n);
+    }
+  };
+  if (plan.read !== "none") {
+    for (const n of slideParts) await readHere(n, slideXml, true);
+    if (plan.read === "whole") for (const n of notesParts) await readHere(n, notesXml, false);
   }
   const notesOf = /* @__PURE__ */ new Map();
   for (const bp of rels.byPart) {
@@ -37875,6 +38769,8 @@ async function pptxParts(bytes) {
     core,
     active,
     guard,
+    piecewise,
+    stream: plan.read === "pieces",
     undetermined: undetermined2
   };
 }
@@ -37914,6 +38810,19 @@ function pptxRenumbering(parts) {
   return { slides };
 }
 var GUARDED_PARTS = "ppt/slides/* + ppt/notesSlides/*";
+async function partXml(parts, part, held2) {
+  const xml = held2.get(part);
+  if (xml != null) return { xml };
+  const stated = parts.undetermined.find((u) => u.part === part);
+  if (stated) return { why: stated.why, ...stated.final ? { size: stated.size, final: true } : {} };
+  if (!parts.stream) return { why: "unreadable" };
+  const e = parts.container.byName.get(part);
+  if (e && e.uncompressedSize > MEASURED_OOXML_TEXT_BOUND_BYTES) {
+    return { why: "over_size_bound", size: e.uncompressedSize, final: true };
+  }
+  const r = await readPart(parts.bytes, parts.container, part);
+  return r.ok ? { xml: UTF84.decode(r.bytes) } : { why: r.why };
+}
 async function pptxStructure(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "pptx", reason: parts?.why ?? "PARTS_ABSENT" };
@@ -37930,9 +38839,20 @@ async function pptxStructure(parts) {
     notes.push("slide/notes parts not read: over the size bound (stated in evidentiary.undetermined and by text())");
   }
   const walks = /* @__PURE__ */ new Map();
+  const unreadNow = (part, got) => {
+    if (parts.stream && !parts.undetermined.some((u) => u.part === part) && !evUndeterminedNow.some((u) => u.part === part)) {
+      evUndeterminedNow.push({ part, why: got.why, ...got.final ? { size: got.size, final: true } : {} });
+    }
+  };
+  const evUndeterminedNow = [];
   for (const { part } of deck) {
-    const xml = parts.slideXml.get(part);
-    if (xml != null) walks.set(part, walkSlide(xml));
+    const got = await partXml(parts, part, parts.slideXml);
+    if (got.xml == null) {
+      unreadNow(part, got);
+      continue;
+    }
+    const w = walkSlide(got.xml);
+    walks.set(part, { hlinks: w.hlinks, ridUsage: w.ridUsage });
   }
   const relsPartToSlide = /* @__PURE__ */ new Map();
   for (const { part } of deck) relsPartToSlide.set(relsPartFor(part), part);
@@ -38030,8 +38950,9 @@ async function pptxStructure(parts) {
   const counts = { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 };
   for (const l of links) counts[l.partition]++;
   const items = [];
-  const evUndetermined = [...parts.undetermined];
+  const evUndetermined = [...parts.undetermined, ...evUndeterminedNow];
   if (parts.guard) evUndetermined.push({ part: GUARDED_PARTS, why: "over_size_bound", guard: parts.guard });
+  if (parts.piecewise) notes.push("text_read_in_pieces");
   for (const { part, slide } of deck) {
     if (!parts.hiddenParts.has(part)) continue;
     items.push({
@@ -38046,23 +38967,31 @@ async function pptxStructure(parts) {
     const notesPart = parts.notesOf.get(part) ?? null;
     if (!notesPart) continue;
     mappedNotes.add(notesPart);
-    const xml = parts.notesXml.get(notesPart);
-    if (xml == null) {
+    const got = await partXml(parts, notesPart, parts.notesXml);
+    if (got.xml == null) {
       if (!parts.guard && !parts.container.byName.has(notesPart))
         evUndetermined.push({ part: notesPart, why: "part_absent" });
+      else if (!parts.guard && parts.stream && !evUndetermined.some((u) => u.part === notesPart))
+        evUndetermined.push({ part: notesPart, why: got.why, ...got.final ? { size: got.size, final: true } : {} });
       continue;
     }
     items.push({
       kind: "speaker-notes",
       slide,
       part: notesPart,
-      text: walkSlide(xml).text,
+      text: walkSlide(got.xml).text,
       source: slide != null ? slideShapeRef(slide) : null
     });
   }
   for (const np of parts.notesParts) {
-    if (mappedNotes.has(np) || !parts.notesXml.has(np)) continue;
-    items.push({ kind: "speaker-notes", slide: null, part: np, text: walkSlide(parts.notesXml.get(np)).text, source: null });
+    if (mappedNotes.has(np) || parts.guard) continue;
+    const got = await partXml(parts, np, parts.notesXml);
+    if (got.xml == null) {
+      if (parts.stream && !evUndetermined.some((u) => u.part === np))
+        evUndetermined.push({ part: np, why: got.why, ...got.final ? { size: got.size, final: true } : {} });
+      continue;
+    }
+    items.push({ kind: "speaker-notes", slide: null, part: np, text: walkSlide(got.xml).text, source: null });
   }
   if (parts.core) {
     items.push({
@@ -38121,12 +39050,16 @@ async function pptxText(parts) {
   const undetermined2 = [];
   for (const { part, slide } of deck) {
     const hidden = parts.hiddenParts.has(part);
-    const xml = parts.slideXml.get(part);
-    if (xml == null) {
-      const stated = parts.undetermined.find((u) => u.part === part);
-      undetermined2.push({ reason: "slide_unreadable", part, why: stated?.why ?? "unreadable" });
+    const got = await partXml(parts, part, parts.slideXml);
+    if (got.xml == null) {
+      undetermined2.push({
+        reason: "slide_unreadable",
+        part,
+        why: got.why,
+        ...got.final ? { size: got.size, final: true } : {}
+      });
     } else {
-      const walked = walkSlide(xml);
+      const walked = walkSlide(got.xml);
       slides.push({
         slide,
         ref: slide != null ? `slide ${slide}` : null,
@@ -38138,18 +39071,33 @@ async function pptxText(parts) {
     }
     const notesPart = parts.notesOf.get(part) ?? null;
     if (!notesPart) continue;
-    const nxml = parts.notesXml.get(notesPart);
-    if (nxml == null) {
-      const stated = parts.undetermined.find((u) => u.part === notesPart);
-      undetermined2.push({ reason: "notes_unreadable", part: notesPart, why: stated?.why ?? "unreadable" });
+    const ngot = await partXml(parts, notesPart, parts.notesXml);
+    if (ngot.xml == null) {
+      undetermined2.push({
+        reason: "notes_unreadable",
+        part: notesPart,
+        why: ngot.why,
+        ...ngot.final ? { size: ngot.size, final: true } : {}
+      });
     } else {
-      speakerNotes.push({ slide, ref: slide != null ? `slide ${slide} (notes)` : null, part: notesPart, hidden, text: walkSlide(nxml).text });
+      speakerNotes.push({ slide, ref: slide != null ? `slide ${slide} (notes)` : null, part: notesPart, hidden, text: walkSlide(ngot.xml).text });
     }
   }
   const mapped = /* @__PURE__ */ new Set([...parts.notesOf.values()]);
   for (const np of parts.notesParts) {
-    if (mapped.has(np) || !parts.notesXml.has(np)) continue;
-    speakerNotes.push({ slide: null, ref: null, part: np, hidden: null, text: walkSlide(parts.notesXml.get(np)).text });
+    if (mapped.has(np)) continue;
+    const got = await partXml(parts, np, parts.notesXml);
+    if (got.xml == null) {
+      if (parts.stream && !parts.undetermined.some((u) => u.part === np))
+        undetermined2.push({
+          reason: "notes_unreadable",
+          part: np,
+          why: got.why,
+          ...got.final ? { size: got.size, final: true } : {}
+        });
+      continue;
+    }
+    speakerNotes.push({ slide: null, ref: null, part: np, hidden: null, text: walkSlide(got.xml).text });
   }
   const document = slides.map((s) => s.text).filter((t) => t.length).join("\n");
   const notesChars = speakerNotes.reduce((n, s) => n + s.text.length, 0);
@@ -38161,7 +39109,8 @@ async function pptxText(parts) {
     speakerNotes,
     deckLength: deckLengthOf(parts),
     undetermined: undetermined2,
-    counts: { chars: document.length, notesChars, undetermined: undetermined2.length }
+    counts: { chars: document.length, notesChars, undetermined: undetermined2.length },
+    ...parts.piecewise ? { piecewise: parts.piecewise } : {}
   };
 }
 var pptxEntry = {
@@ -38524,7 +39473,7 @@ async function odfPartsUnguarded(row3, bytes) {
   const undetermined2 = [];
   const declared = declaredTextBytes(container, (n) => n === CONTENT_PART);
   const guardR = sizeGuard(declared.total);
-  const guard = guardR.ok ? null : guardR;
+  const guard = guardR.ok ? null : { ...guardR, final: true };
   let contentXml = null;
   if (!guard) {
     const read2 = await readPart(b, container, CONTENT_PART);
@@ -39828,6 +40777,8 @@ var CSV_CONTENT_TYPE = "text/csv";
 var CSV_CONTENT_TYPE_SYNONYMS = ["application/csv", "text/comma-separated-values"];
 var CSV_SHEET_NAME = "csv";
 var MEASURED_CSV_TEXT_BOUND_BYTES = MEASURED_OOXML_TEXT_BOUND_BYTES;
+var CSV_WINDOW_BYTES = 1 << 20;
+var CSV_STREAMED_UNDETERMINED_MAX = 1e4;
 var SIGNATURE_WINDOW_BYTES = 1 << 20;
 var SIGNATURE_LINES = 50;
 var DELIMITERS = [
@@ -39970,50 +40921,82 @@ function delimiterSignature(text2) {
 }
 function walkRecords(text2, delimiter) {
   const records = [];
+  const w = createRecordWalk(delimiter, (record2) => records.push(record2));
+  w.feed(text2);
+  w.end();
+  return records;
+}
+function createRecordWalk(delimiter, onRecord) {
   let row3 = [], field = "", inQuotes = false, started = false;
+  let quoteOpen = false;
+  let skipLF = false;
   const endField = () => {
     row3.push(field);
     field = "";
   };
   const endRecord = () => {
     endField();
-    records.push(row3);
+    onRecord(row3);
     row3 = [];
     started = false;
   };
-  for (let i = 0; i < text2.length; i++) {
-    const c = text2[i];
-    started = true;
-    if (inQuotes) {
-      if (c === '"') {
-        if (text2[i + 1] === '"') {
+  return {
+    feed(text2) {
+      let i = 0;
+      if (quoteOpen) {
+        if (text2.length === 0) return;
+        quoteOpen = false;
+        if (text2[0] === '"') {
           field += '"';
-          i++;
+          i = 1;
         } else inQuotes = false;
-      } else field += c;
-      continue;
+      } else if (skipLF) {
+        if (text2.length === 0) return;
+        skipLF = false;
+        if (text2[0] === "\n") i = 1;
+      }
+      for (; i < text2.length; i++) {
+        const c = text2[i];
+        started = true;
+        if (inQuotes) {
+          if (c === '"') {
+            if (i + 1 >= text2.length) quoteOpen = true;
+            else if (text2[i + 1] === '"') {
+              field += '"';
+              i++;
+            } else inQuotes = false;
+          } else field += c;
+          continue;
+        }
+        if (c === '"') {
+          inQuotes = true;
+          continue;
+        }
+        if (delimiter && c === delimiter) {
+          endField();
+          continue;
+        }
+        if (c === "\r") {
+          if (i + 1 >= text2.length) skipLF = true;
+          else if (text2[i + 1] === "\n") i++;
+          endRecord();
+          continue;
+        }
+        if (c === "\n") {
+          endRecord();
+          continue;
+        }
+        field += c;
+      }
+    },
+    end() {
+      if (quoteOpen) {
+        quoteOpen = false;
+        inQuotes = false;
+      }
+      if (started || field !== "" || row3.length) endRecord();
     }
-    if (c === '"') {
-      inQuotes = true;
-      continue;
-    }
-    if (delimiter && c === delimiter) {
-      endField();
-      continue;
-    }
-    if (c === "\r") {
-      if (text2[i + 1] === "\n") i++;
-      endRecord();
-      continue;
-    }
-    if (c === "\n") {
-      endRecord();
-      continue;
-    }
-    field += c;
-  }
-  if (started || field !== "" || row3.length) endRecord();
-  return records;
+  };
 }
 var BYTE_TRANSPORT = new TextDecoder("latin1");
 function csvSignatures(bytes) {
@@ -40036,19 +41019,31 @@ async function csvParts(bytes) {
   const sig = csvSignatures(bytes);
   if (!sig.ok) return sig;
   const { b, enc, body, delim } = sig;
-  const guard = body.length > MEASURED_CSV_TEXT_BOUND_BYTES ? {
-    ok: false,
-    text: "undetermined",
-    why: "over_size_bound",
-    size: body.length,
-    bound: MEASURED_CSV_TEXT_BOUND_BYTES,
-    boundName: "MEASURED_CSV_TEXT_BOUND_BYTES",
-    metric: "body_bytes"
-  } : null;
+  const plan = textPlan(body.length);
+  const utf16 = enc.encoding === "utf-16le" || enc.encoding === "utf-16be";
+  const bodyMetric = { metric: "body_bytes" };
+  let guard = null, piecewise = null;
+  if (plan.read === "none") guard = { ...plan.guard, ...bodyMetric };
+  else if (plan.read === "pieces" && utf16) {
+    guard = {
+      ok: false,
+      text: "undetermined",
+      why: "over_size_bound",
+      size: body.length,
+      bound: MEASURED_CSV_TEXT_BOUND_BYTES,
+      boundName: "MEASURED_CSV_TEXT_BOUND_BYTES",
+      ...bodyMetric,
+      final: true,
+      encoding: enc.encoding
+    };
+  } else if (plan.read === "pieces") {
+    piecewise = { ...plan.piecewise, boundName: "MEASURED_CSV_TEXT_BOUND_BYTES", ...bodyMetric };
+  }
+  const stream = piecewise != null;
   let records = null, transport = false, invalidUtf16 = false;
-  if (!guard) {
+  if (!guard && !stream) {
     let text2;
-    if (enc.encoding === "utf-16le" || enc.encoding === "utf-16be") {
+    if (utf16) {
       try {
         text2 = new TextDecoder(enc.encoding, { fatal: true, ignoreBOM: true }).decode(body);
       } catch {
@@ -40070,8 +41065,11 @@ async function csvParts(bytes) {
     delimiter: delim,
     guard,
     records,
-    transport,
-    invalidUtf16
+    transport: transport || stream,
+    invalidUtf16,
+    stream,
+    body,
+    piecewise
   };
 }
 function dialectOf(parts) {
@@ -40095,6 +41093,7 @@ function csvStructure(parts) {
     word("csv.notes.url_cell_text")
   ];
   if (parts.guard) notes.push("text_body_over_bound");
+  if (parts.piecewise) notes.push("text_read_in_pieces");
   return {
     ok: true,
     container: "csv",
@@ -40170,7 +41169,8 @@ function csvText(parts) {
   }
   const undetermined2 = [];
   const lines = [];
-  const cells = [];
+  const cells = parts.stream ? null : [];
+  let undeterminedMore = 0;
   const typedCell2 = (row3, col, value) => ({
     source: csvCellRef(row3, col),
     value,
@@ -40180,19 +41180,18 @@ function csvText(parts) {
     formula: null
   });
   let cellCount = 0, usedRows = 0, usedCols = 0;
-  parts.records.forEach((record2, r0) => {
-    const row3 = r0 + 1;
+  let r0 = 0;
+  const addRecord = (record2) => {
+    const row3 = ++r0;
     const vals = [];
     record2.forEach((raw, c0) => {
       const col = c0 + 1;
       const read2 = fieldValue(raw, parts);
       if (read2.why) {
-        undetermined2.push({
-          sheet: 0,
-          cell: `${columnLetters(col)}${row3}`,
-          reason: read2.why
-        });
-        cells.push(typedCell2(row3, col, null));
+        if (undetermined2.length < (parts.stream ? CSV_STREAMED_UNDETERMINED_MAX : Infinity)) {
+          undetermined2.push({ sheet: 0, cell: `${columnLetters(col)}${row3}`, reason: read2.why });
+        } else undeterminedMore++;
+        if (cells) cells.push(typedCell2(row3, col, null));
         if (row3 > usedRows) usedRows = row3;
         if (col > usedCols) usedCols = col;
         return;
@@ -40200,13 +41199,23 @@ function csvText(parts) {
       const field = read2.value;
       if (field === "") return;
       cellCount++;
-      cells.push(typedCell2(row3, col, field));
+      if (cells) cells.push(typedCell2(row3, col, field));
       if (row3 > usedRows) usedRows = row3;
       if (col > usedCols) usedCols = col;
       vals.push(field);
     });
     if (vals.length) lines.push(vals.join("	"));
-  });
+  };
+  if (parts.stream) {
+    const walk = createRecordWalk(parts.delimiter.delimiter, addRecord);
+    for (let at8 = 0; at8 < parts.body.length; at8 += CSV_WINDOW_BYTES) {
+      walk.feed(BYTE_TRANSPORT.decode(parts.body.subarray(at8, at8 + CSV_WINDOW_BYTES)));
+    }
+    walk.end();
+  } else parts.records.forEach(addRecord);
+  if (undeterminedMore) {
+    undetermined2.push({ sheet: 0, cell: null, reason: "more_cells_undetermined", count: undeterminedMore });
+  }
   const text2 = lines.join("\n");
   const sheet = {
     sheet: 0,
@@ -40235,7 +41244,8 @@ function csvText(parts) {
       cells: cellCount,
       formulas: 0,
       undetermined: undetermined2.length
-    }
+    },
+    ...parts.piecewise ? { piecewise: parts.piecewise } : {}
   };
 }
 function csvCellRef(row3, col) {
@@ -43735,7 +44745,9 @@ var RecordCore = class _RecordCore {
   /* ---- the evidence store (R38) ---- */
   /** R38: the instance's evidence bucket, addressed by digest; the object key of a digest is fixed
    *  here (the prefix R39's `evidencePrefix` gives, then the digest). `put` hands the bucket the digest, so it verifies the bytes.
-   *  Null when no bucket is bound. */
+   *  R88 (fix round 4, P10 (c); K4447): `get(digest, {range: {offset, length}})` asks the bucket for those bytes alone (R2's
+   *  `range` option), so a look at the head of a large object transfers the head and not the object; with no range the bucket
+   *  is asked as before and answers the whole. Null when no bucket is bound. */
   evidenceStore() {
     const bucket = this.#evidence;
     if (!bucket) return null;
@@ -43743,7 +44755,10 @@ var RecordCore = class _RecordCore {
     const key = (digest) => `${prefix ?? ""}${String(digest)}`;
     const store = {
       head: (digest) => bucket.head(key(digest)),
-      get: (digest) => bucket.get(key(digest)),
+      get: (digest, options) => {
+        const range = rangeOf(options);
+        return range ? bucket.get(key(digest), { range }) : bucket.get(key(digest));
+      },
       put: (digest, bytes) => bucket.put(key(digest), bytes, { sha256: String(digest) })
     };
     if (typeof bucket.createMultipartUpload === "function")
@@ -43752,6 +44767,13 @@ var RecordCore = class _RecordCore {
   }
 };
 var DIGEST = /^[0-9a-f]{64}$/;
+function rangeOf(options) {
+  if (options === void 0 || options === null || options.range === void 0) return null;
+  const r = options.range;
+  if (!r || typeof r !== "object" || !Number.isSafeInteger(r.offset) || r.offset < 0 || !Number.isSafeInteger(r.length) || r.length < 1)
+    throw new TypeError("get: a range is {offset, length}, whole numbers, the offset from 0 and the length at least 1 (R88)");
+  return { offset: r.offset, length: r.length };
+}
 async function putFromParts(bucket, key, digest, partDigests) {
   if (typeof digest !== "string" || !DIGEST.test(digest) || !Array.isArray(partDigests) || partDigests.length === 0 || !partDigests.every((d) => typeof d === "string" && DIGEST.test(d)))
     return rowRefusal("EVIDENCE_PARTS_MALFORMED", localize("record-core.index.a_whole_document_is_named", "A whole document is named by its fingerprint and the fingerprints of its parts, in order, and at least one part. Nothing was kept."));
@@ -48907,6 +49929,7 @@ var oakland_alameda_default = {
         status: "researched",
         basis: "2026-10-11 actions-law"
       },
+      response: "records_response",
       basis: "D-149"
     },
     /* The City's own records law, whose Immediate Disclosure Request is OMC 2.20.230 (time-law §2). */
@@ -48927,6 +49950,7 @@ var oakland_alameda_default = {
         status: "researched",
         basis: "2026-10-11 actions-law"
       },
+      response: "immediate_disclosure",
       basis: "2026-10-05 time-law"
     },
     /* R95 (T51, C64): read live 2026-10-21 on the official text, the United States Code (2024 Edition) as govinfo.gov prints
@@ -48951,6 +49975,7 @@ var oakland_alameda_default = {
         status: "researched",
         basis: "2026-10-21 foia-text"
       },
+      response: "foia_response",
       basis: "2026-10-21 foia-text"
     }
   ],
@@ -49346,6 +50371,7 @@ var oakland_alameda_default = {
     /* "within 20 days (excepting Saturdays, Sundays, and legal public holidays) after the receipt". */
     {
       rule: "foia_response",
+      label: "answer to a first request",
       applies_to: "records_request",
       units: "days",
       amount: 20,
@@ -49399,6 +50425,7 @@ var oakland_alameda_default = {
     },
     {
       rule: "foia_appeal_response",
+      label: "decision on an appeal",
       applies_to: "records_request",
       units: "days",
       amount: 20,
@@ -49552,6 +50579,30 @@ var oakland_alameda_default = {
       citation: "Cal. Code Civ. Proc. \xA7 12; Cal. Gov. Code \xA7 6800",
       status: "researched",
       basis: "2026-10-05 time-law"
+    }
+  ],
+  /* R49: the City of Oakland's fiscal year runs July 1 to June 30 and is named by its first year, written "FY 2025-26"
+     (oaklandca.gov, Fiscal Year 2025-2027 Budget, "New fiscal year 2025-2026 begins on July 1"; the two-year cycle "July 1,
+     2025 through June 30, 2027"; read 2026-10-22). Alameda County's runs July 1 to June 30 and is written "FY 2025-26"
+     (the county's budget press release: "The new budget goes into effect from July 1, 2024, to June 30, 2025"; the Board
+     letter "Fiscal Year (FY) 2025-26 Final Budget"; budget.alamedacountyca.gov; read 2026-10-22). The State Controller's
+     Office keeps no entry: no page of its own was read. */
+  fiscal_year: [
+    ...["Finance Department", "Oakland City Council", "Office Of The City Auditor"].map((body) => ({
+      body,
+      start: "07-01",
+      named_by: "start",
+      label: "FY{start}-{end2}",
+      status: "researched",
+      basis: "2026-10-22 oaklandca.gov-fy2025-27-budget"
+    })),
+    {
+      body: "Alameda County Civil Grand Jury",
+      start: "07-01",
+      named_by: "start",
+      label: "FY{start}-{end2}",
+      status: "researched",
+      basis: "2026-10-22 acgov.org-budget-press-release, 2026-10-22 budget.alamedacountyca.gov-fy2025-26-board-letter"
     }
   ],
   /* Legistar's PersonId, BodyId and OfficeRecordId, the register that issues them (legistar-events §1, §7; B1b.4, N569,
@@ -50567,6 +51618,7 @@ var test_port_ellery_default = {
         { stage: "appeal_decision", label: "decision on internal review", citation: "Test Stat. \xA7 1.131" }
       ],
       requesters: { text: "any resident of the state, or a body corporate registered in it", citation: "Test Stat. \xA7 1.102", status: "researched", basis: "TEST" },
+      response: "records_answer",
       basis: "TEST"
     },
     { level: "city", name: "Port Ellery Open Government Bylaw", citation: "P.E.B.L. \xA7 4", basis: "TEST" },
@@ -50811,6 +51863,7 @@ var test_port_ellery_default = {
     /* the pre-T33 form, `days: n`, read as units: days, amount: n */
     {
       rule: "records_answer",
+      label: "answer to a records application",
       applies_to: "records_request",
       days: 5,
       count: "business",
@@ -52073,10 +53126,11 @@ function validateInto(p, errors) {
     basis(at8, t);
   });
   const lawNames = /* @__PURE__ */ new Set();
+  const lawResponses = [];
   if (own4(p, "records_laws")) list3("records_laws", p.records_laws).forEach((l, i) => {
     const at8 = `records_laws[${i}]`;
     if (!entry(at8, l)) return;
-    fields(at8, l, ["level", "name", "citation", "stages", "requesters", "basis"]);
+    fields(at8, l, ["level", "name", "citation", "stages", "requesters", "response", "basis"]);
     if (!LAW_LEVELS.includes(l.level)) err(`${at8}.level`, "LEVEL_UNKNOWN", localize("jurisdictions.index.level_is_one_of_law", "level is one of {LAW_LEVELS}", { LAW_LEVELS: String(LAW_LEVELS.join(", ")) }));
     str(`${at8}.name`, l.name, "name");
     str(`${at8}.citation`, l.citation, "citation");
@@ -52106,6 +53160,10 @@ function validateInto(p, errors) {
         str(`${ra}.citation`, r.citation, "citation");
         statusBasis(ra, r);
       }
+    }
+    if (own4(l, "response")) {
+      if (!isStr(l.response)) err(`${at8}.response`, "VALUE_INVALID", localize("jurisdictions.index.response_is_the_rule_of_a_deadline", "response is the rule of a deadline"));
+      else lawResponses.push({ at: `${at8}.response`, rule: l.response });
     }
     if (isStr(l.name)) lawNames.add(l.name);
     basis(at8, l);
@@ -52444,9 +53502,11 @@ function validateInto(p, errors) {
       "defends",
       "citation",
       "status",
+      "label",
       "basis"
     ]);
     str(`${at8}.rule`, d.rule, "rule");
+    if (own4(d, "label")) str(`${at8}.label`, d.label, "label");
     if (d.applies_to !== "claim" && !kinds.has(d.applies_to))
       err(`${at8}.applies_to`, "DEADLINE_KIND_UNKNOWN", localize("jurisdictions.index.string_is_neither_claim_nor", "'{String}' is neither claim nor a kind of this profile", { String: String(String(d.applies_to)) }));
     const legacy = own4(d, "days") && !own4(d, "units") && !own4(d, "amount");
@@ -52520,6 +53580,10 @@ function validateInto(p, errors) {
     str(`${at8}.citation`, d.citation, "citation");
     statusBasis(at8, d);
   });
+  for (const r of lawResponses) {
+    const hit = Array.isArray(p.deadlines) ? p.deadlines.find((d) => isObj3(d) && d.rule === r.rule && d.applies_to === "records_request") : null;
+    if (!hit) err(r.at, "VALUE_INVALID", localize("jurisdictions.index.response_names_no_records_deadline", "response '{rule}' is no rule of a deadline that applies to records_request", { rule: String(r.rule).slice(0, 80) }));
+  }
   if (own4(p, "legal_organisations")) list3("legal_organisations", p.legal_organisations).forEach((o, i) => {
     const at8 = `legal_organisations[${i}]`;
     if (!entry(at8, o)) return;
@@ -53286,9 +54350,9 @@ function merge(profiles) {
   }
   if (has("records_laws")) {
     const v = [];
-    const byName = { stages: /* @__PURE__ */ new Map(), requesters: /* @__PURE__ */ new Map() };
+    const byName = { stages: /* @__PURE__ */ new Map(), requesters: /* @__PURE__ */ new Map(), response: /* @__PURE__ */ new Map() };
     for (const p of profiles) for (const l of p.records_laws || []) {
-      const { stages, requesters, ...rest } = l;
+      const { stages, requesters, response, ...rest } = l;
       union(v, [rest], p.id);
       for (const f4 of Object.keys(byName)) if (own4(l, f4)) {
         if (!byName[f4].has(l.name)) byName[f4].set(l.name, []);
@@ -53297,7 +54361,7 @@ function merge(profiles) {
     }
     for (const [f4, m] of Object.entries(byName)) for (const [name, given] of m) {
       if (!agree(given)) {
-        conflict(`records_laws[${name}].${f4}`, given, f4 === "stages" ? localize("jurisdictions.index.the_active_profiles_give_name", "the active profiles give {name} different stages, so which stages it has is undetermined", { name: String(name) }) : localize("jurisdictions.index.the_active_profiles_say_differently", "the active profiles say differently who may request under {name}, so it is undetermined", { name: String(name) }));
+        conflict(`records_laws[${name}].${f4}`, given, f4 === "stages" ? localize("jurisdictions.index.the_active_profiles_give_name", "the active profiles give {name} different stages, so which stages it has is undetermined", { name: String(name) }) : f4 === "response" ? localize("jurisdictions.index.the_active_profiles_give_name_different_windows", "the active profiles give {name} different first-request windows, so which one it has is undetermined", { name: String(name) }) : localize("jurisdictions.index.the_active_profiles_say_differently", "the active profiles say differently who may request under {name}, so it is undetermined", { name: String(name) }));
         continue;
       }
       for (const l of v) if (l.name === name) l[f4] = f4 === "requesters" ? keep(given) : clone(given[0].value);
@@ -53678,7 +54742,8 @@ var DEADLINE_ONE_VALUE = [
   "owed_by",
   "consequence",
   "defends",
-  "status"
+  "status",
+  "label"
 ];
 function normalDeadline(d) {
   if (!own4(d, "days") || own4(d, "units")) return d;
@@ -56738,6 +57803,24 @@ function joinItemised(items, textOf3, sourceOf2) {
   }
   return { text: text2, segments };
 }
+function segmentsOver(document, items, textOf3, sourceOf2) {
+  const segments = [];
+  let pos = 0;
+  for (let i = 0; i < items.length; i++) {
+    const t = textOf3(items[i]);
+    if (!t || !t.length) continue;
+    if (pos) {
+      if (document.charCodeAt(pos) !== 10) return null;
+      pos++;
+    }
+    if (!document.startsWith(t, pos)) return null;
+    const start = pos;
+    pos += t.length;
+    const source = sourceOf2(items[i], i);
+    if (source) segments.push({ start, end: pos, source });
+  }
+  return pos === document.length ? segments : null;
+}
 function flattenText(supplied) {
   if (typeof supplied === "string")
     return {
@@ -56766,15 +57849,17 @@ function flattenText(supplied) {
     const pages = Array.isArray(supplied.pages) ? supplied.pages : null;
     const paras = Array.isArray(supplied.paragraphs) ? supplied.paragraphs : null;
     if (pages && pages.length) {
-      const j = joinItemised(
+      const found2 = segmentsOver(
+        text2,
         pages,
         (p) => p && typeof p.text === "string" ? p.text : "",
         (p) => p && Number.isInteger(p.page) ? pdfPageSource(p.page) : null
       );
-      if (j.text === text2) segments = j.segments;
+      if (found2) segments = found2;
       else position_why = localize("docprofile.readtext.this_producers_document_text_is_not_its_pages", "this producer's document text is not its pages joined, so the page a reference was read on cannot be established from it and is not guessed");
     } else if (paras && paras.length) {
-      const j = joinItemised(
+      const found2 = segmentsOver(
+        text2,
         paras,
         (p) => p && typeof p.text === "string" ? p.text : "",
         (p, i) => docParaSource(
@@ -56782,7 +57867,7 @@ function flattenText(supplied) {
           p && p.ref
         )
       );
-      if (j.text === text2) segments = j.segments;
+      if (found2) segments = found2;
       else position_why = localize("docprofile.readtext.this_producers_document_text_is_not_its_paragraphs", "this producer's document text is not its paragraphs joined, so the paragraph a reference was read in cannot be established from it and is not guessed");
     } else {
       position_why = localize("docprofile.readtext.this_producer_emitted_document_text", "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said");
@@ -56859,7 +57944,8 @@ function readText(supplied, ctx = {}) {
       why: localize("docprofile.readtext.the_tier_that_produced_this", "the tier that produced this text could not decode most of it ({undetermined} undetermined against {chars} decoded{named}); a reading over the fragment would silently misrepresent the document", { undetermined: String(flat.undetermined), chars: String(flat.chars), named: String(named) })
     };
   }
-  const dctx = { ...ctx, text: flat.text };
+  const pages = supplied && typeof supplied === "object" && Array.isArray(supplied.pages) ? supplied.pages : [];
+  const dctx = { ...ctx, text: flat.text, pages };
   const stack = identify(dctx);
   const doctype = doctypeFor({ ...dctx, handler: stack.handler, kind: stack.kind });
   let parsed = null, parse_error = null;
@@ -57889,7 +58975,7 @@ var CAPTURE_KEEP_CHECKS = Object.freeze({
   CAPTURE_NOT_KEPT: Object.freeze({
     check: "C-154.1",
     where: at6("is-capture-kept"),
-    translation: localize("acquisition.checks.capture_not_kept", "the document arrived in several parts, but Civicsmith could not keep it whole, so nothing was filed; capture it again")
+    translation: word("refusal.CAPTURE_NOT_KEPT")
   })
 });
 var ACQUISITION_CHECKS = Object.freeze({
@@ -58082,6 +59168,7 @@ var ODF_DIGEST_MAX = 8 * 1024 * 1024;
 var CREDENTIAL_KINDS = Object.freeze(["login", "user-agent", "other"]);
 var CAPTURE_MAX = 256 * 1024 * 1024;
 var MULTIPART_KEEP_MAX = 32 * 1024 * 1024;
+var OWED_SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1e3;
 var LATE = Symbol("late");
 var EMPTY_SHA256 = createSha256().hex();
 
@@ -58273,7 +59360,145 @@ function membershipBeside(structure, view) {
 // ../bio-plane/src/reading-pipeline/readingprov.mjs
 var PROVENANCE_SCHEME = "reading-provenance/1";
 var TIER_MEMBERS = Object.freeze({ 1: "plane", 2: "pdf-worker", 3: "ocr-worker" });
+var K3 = new Uint32Array([
+  1116352408,
+  1899447441,
+  3049323471,
+  3921009573,
+  961987163,
+  1508970993,
+  2453635748,
+  2870763221,
+  3624381080,
+  310598401,
+  607225278,
+  1426881987,
+  1925078388,
+  2162078206,
+  2614888103,
+  3248222580,
+  3835390401,
+  4022224774,
+  264347078,
+  604807628,
+  770255983,
+  1249150122,
+  1555081692,
+  1996064986,
+  2554220882,
+  2821834349,
+  2952996808,
+  3210313671,
+  3336571891,
+  3584528711,
+  113926993,
+  338241895,
+  666307205,
+  773529912,
+  1294757372,
+  1396182291,
+  1695183700,
+  1986661051,
+  2177026350,
+  2456956037,
+  2730485921,
+  2820302411,
+  3259730800,
+  3345764771,
+  3516065817,
+  3600352804,
+  4094571909,
+  275423344,
+  430227734,
+  506948616,
+  659060556,
+  883997877,
+  958139571,
+  1322822218,
+  1537002063,
+  1747873779,
+  1955562222,
+  2024104815,
+  2227730452,
+  2361852424,
+  2428436474,
+  2756734187,
+  3204031479,
+  3329325298
+]);
+function sha256Stream2(chunks) {
+  const h = new Uint32Array([1779033703, 3144134277, 1013904242, 2773480762, 1359893119, 2600822924, 528734635, 1541459225]);
+  const w = new Uint32Array(64), block = new Uint8Array(64);
+  let fill2 = 0, total = 0;
+  const rotr = (x, n) => x >>> n | x << 32 - n;
+  const compress = (b) => {
+    for (let i = 0; i < 16; i++) w[i] = b[4 * i] << 24 | b[4 * i + 1] << 16 | b[4 * i + 2] << 8 | b[4 * i + 3];
+    for (let i = 16; i < 64; i++) {
+      const s0 = rotr(w[i - 15], 7) ^ rotr(w[i - 15], 18) ^ w[i - 15] >>> 3;
+      const s1 = rotr(w[i - 2], 17) ^ rotr(w[i - 2], 19) ^ w[i - 2] >>> 10;
+      w[i] = w[i - 16] + s0 + w[i - 7] + s1 | 0;
+    }
+    let [a, b2, c, d, e, f4, g, hh] = h;
+    for (let i = 0; i < 64; i++) {
+      const t1 = hh + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + (e & f4 ^ ~e & g) + K3[i] + w[i] | 0;
+      const t2 = (rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22)) + (a & b2 ^ a & c ^ b2 & c) | 0;
+      hh = g;
+      g = f4;
+      f4 = e;
+      e = d + t1 | 0;
+      d = c;
+      c = b2;
+      b2 = a;
+      a = t1 + t2 | 0;
+    }
+    h[0] += a;
+    h[1] += b2;
+    h[2] += c;
+    h[3] += d;
+    h[4] += e;
+    h[5] += f4;
+    h[6] += g;
+    h[7] += hh;
+  };
+  const feed = (bytes) => {
+    total += bytes.length;
+    let i = 0;
+    if (fill2) {
+      while (i < bytes.length && fill2 < 64) block[fill2++] = bytes[i++];
+      if (fill2 === 64) {
+        compress(block);
+        fill2 = 0;
+      }
+    }
+    for (; i + 64 <= bytes.length; i += 64) compress(bytes.subarray(i, i + 64));
+    while (i < bytes.length) block[fill2++] = bytes[i++];
+  };
+  for (const c of chunks) feed(c);
+  block[fill2++] = 128;
+  if (fill2 > 56) {
+    block.fill(0, fill2);
+    compress(block);
+    fill2 = 0;
+  }
+  block.fill(0, fill2);
+  const bits = total * 8;
+  new DataView(block.buffer).setUint32(56, Math.floor(bits / 2 ** 32));
+  new DataView(block.buffer).setUint32(60, bits >>> 0);
+  compress(block);
+  return [...h].map((x) => (x >>> 0).toString(16).padStart(8, "0")).join("");
+}
+var SLICE = 256 * 1024;
+function* utf8Slices(s) {
+  const enc = new TextEncoder();
+  for (let at8 = 0; at8 < s.length; ) {
+    let end2 = Math.min(s.length, at8 + SLICE);
+    if (end2 < s.length && (s.charCodeAt(end2 - 1) & 64512) === 55296) end2++;
+    yield enc.encode(s.slice(at8, end2));
+    at8 = end2;
+  }
+}
 async function sha256Hex6(s) {
+  if (s.length > 4 * 1024 * 1024) return sha256Stream2(utf8Slices(s));
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
@@ -58320,7 +59545,8 @@ async function readingProvenance({
   tier = null,
   container = null,
   planeVersion = null,
-  member: offLadder = null
+  member: offLadder = null,
+  textFrom = null
 } = {}) {
   const out = {
     scheme: PROVENANCE_SCHEME,
@@ -58339,7 +59565,7 @@ async function readingProvenance({
     return out;
   }
   const flat = flattenText(text2);
-  out.text_from = flat.source;
+  out.text_from = textFrom && flat.source === "pages" ? textFrom : flat.source;
   out.text_chars = flat.text.length;
   out.text_sha256 = flat.text.length ? await sha256Hex6(flat.text) : null;
   if (!flat.text.length) out.why = word("reading-pipeline.why.text_document_yielded");
@@ -58532,6 +59758,9 @@ var ACQUIRE_TEXT_UNITS_BUDGET = 512 * 1024;
 var ACQUIRE_TEXT_UNIT_ENVELOPE = 128;
 var CAPTURE_TEXT_UNIT_CAP = 128 * 1024;
 var MULTIPART_READ_MAX = 20 * 1024 * 1024;
+var WHOLE_READ_MAX = 24 * 1024 * 1024;
+var FAILURE_TRANSIENT = "transient";
+var FAILURE_FINAL = "final";
 function decodeView(text2) {
   const marks = text2 && Array.isArray(text2.undetermined) ? text2.undetermined : null;
   if (!marks || !marks.some((m) => m && m.reason === "image_unread")) return text2;
@@ -58545,11 +59774,33 @@ function decodeView(text2) {
     ...c && typeof c.undetermined === "number" ? { counts: { ...c, undetermined: c.undetermined - (marks.length - undetermined2.length) } } : {}
   };
 }
+function pagesJoinLength(text2) {
+  const pages = text2 && Array.isArray(text2.pages) ? text2.pages : null;
+  if (!pages || !pages.length || typeof text2.document !== "string") return false;
+  let n = 0, held2 = 0;
+  for (const p of pages) {
+    const t = p && typeof p.text === "string" ? p.text : "";
+    if (t.length) {
+      n += t.length;
+      held2++;
+    }
+  }
+  return held2 > 0 && n + held2 - 1 === text2.document.length;
+}
+function glyphsOfDocument(text2) {
+  if (!text2 || typeof text2.document !== "string") return null;
+  return pagesJoinLength(text2) ? text2.pages.reduce((n, p) => n + (p && typeof p.text === "string" ? glyphCount(p.text) : 0), 0) : glyphCount(text2.document);
+}
+function withoutJoinedDocument(text2) {
+  if (!pagesJoinLength(text2)) return text2;
+  const { document, ...rest } = text2;
+  return rest;
+}
 function needsTier2(text0) {
   const text2 = decodeView(text0);
   const c = text2 && text2.counts;
   if (!c || typeof c.chars !== "number" || typeof c.undetermined !== "number") return false;
-  const glyphs = typeof text2.document === "string" ? glyphCount(text2.document) : c.chars;
+  const glyphs = typeof text2.document === "string" ? glyphsOfDocument(text2) : c.chars;
   if (!(c.undetermined > glyphs)) return false;
   const marks = Array.isArray(text2.undetermined) ? text2.undetermined : [];
   if (marks.length && marks.every((m) => m && (m.reason === "no_text_layer" || m.reason === "image_content_unread" || m.reason === "image_content_undetermined"))) return false;
@@ -58568,6 +59819,7 @@ async function tier2Escalate(env, { sha, storeName, text: text2 }) {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ capture_sha: sha, store: storeName })
     });
+    if (r.status >= 500) out.transient = true;
     const t2 = await r.json();
     if (!(r.ok && t2 && t2.ok && t2.text)) {
       out.outcome = "no_improvement";
@@ -58588,6 +59840,7 @@ async function tier2Escalate(env, { sha, storeName, text: text2 }) {
     }
   } catch {
     out.outcome = "unavailable";
+    out.transient = true;
   }
   return out;
 }
@@ -58762,7 +60015,7 @@ function tier3Note(m, memberNote, layerPages) {
 }
 var OCR_INVOCATIONS_PER_REQUEST = 24;
 var OCR_SAME_PROVENANCE = ["engine", "version", "cap", "measured_by", "confidence_floor"];
-async function askMemberPerPage(env, { sha, storeName, wantPages }) {
+async function askMemberPerPage(env, { sha, storeName, wantPages, invocations = OCR_INVOCATIONS_PER_REQUEST }) {
   const call = (pages2) => env.OCR_WORKER.fetch("https://ocr-worker/transcribe", {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -58774,10 +60027,10 @@ async function askMemberPerPage(env, { sha, storeName, wantPages }) {
   const wanted = new Set(wantPages);
   const deferred = (first && Array.isArray(first.deferred) ? first.deferred : []).filter((p) => Number.isInteger(p) && wanted.has(p));
   const answers = [{ asked: null, body: first }];
-  const loop = { invocations: 1, asked: 0, notAsked: [], threw: null, strays: [], mismatched: [], refused: [] };
+  const loop = { invocations: 1, asked: 0, notAsked: [], threw: null, strays: [], mismatched: [], refused: [], down: [] };
   for (let i = 0; i < deferred.length; i++) {
     const page = deferred[i];
-    if (loop.invocations >= OCR_INVOCATIONS_PER_REQUEST) {
+    if (loop.invocations >= invocations) {
       loop.notAsked = deferred.slice(i);
       break;
     }
@@ -58785,6 +60038,7 @@ async function askMemberPerPage(env, { sha, storeName, wantPages }) {
     loop.asked++;
     try {
       const rp = await call([page]);
+      if (rp.status >= 500) loop.down.push(page);
       const body = rp.ok ? await rp.json() : { ok: false, reason: `HTTP_${rp.status}` };
       answers.push({ asked: page, body });
     } catch {
@@ -58966,10 +60220,11 @@ async function tier3Extend(env, {
   tier2PerPage,
   fmt,
   seed = null,
-  liveCalibration = null
+  liveCalibration = null,
+  invocations = OCR_INVOCATIONS_PER_REQUEST
 }) {
   let chain, chainSet = false, ocrNote = null, filled = [], engine = null, unanswered = [], loop = null;
-  let seeded = [];
+  let seeded = [], transient = false, owed = [];
   const wanted = !!(i2text && needsTier3(i2text));
   if (wanted) {
     const wantPages = tier3Pages(i2text);
@@ -59030,10 +60285,14 @@ async function tier3Extend(env, {
     } else if (env && env.OCR_WORKER) {
       let failure = null;
       try {
-        const asked3 = await askMemberPerPage(env, { sha, storeName, wantPages: askPages });
+        const asked3 = await askMemberPerPage(env, { sha, storeName, wantPages: askPages, invocations });
         loop = asked3.loop || null;
         if (!(asked3.status >= 200 && asked3.status < 300)) {
           failure = word("reading-pipeline.ocr_member_answered", { status: String(asked3.status) });
+          if (asked3.status >= 500) {
+            transient = true;
+            owed = askPages;
+          }
         } else {
           const ocrAnswer = asked3.answer;
           let calRef = null;
@@ -59059,7 +60318,11 @@ async function tier3Extend(env, {
         }
       } catch {
         failure = word("reading-pipeline.ocr_member_reached");
+        transient = true;
+        owed = askPages;
       }
+      if (loop) owed = [...owed, ...loop.notAsked, ...loop.threw ? loop.threw.rest : [], ...loop.down];
+      if (loop && (loop.threw || loop.down.length)) transient = true;
       if (failure !== null) {
         ocrNote = failure;
         if (keepSeeded().ok && seeded.length) ocrNote = `${ocrNote}; ${keptSaid()}`;
@@ -59072,7 +60335,21 @@ async function tier3Extend(env, {
     }
   }
   const stillWanting = wanted && (!(filled.length + seeded.length) || unanswered.length > 0);
-  return { i2text, wiredTier, chain, chainSet, ocrNote, filled, seeded, engine, stillWanting };
+  const gone = /* @__PURE__ */ new Set([...filled, ...seeded]);
+  const pagesLeft = [...new Set(owed)].filter((p) => !gone.has(p)).sort((a, b) => a - b);
+  return {
+    i2text,
+    wiredTier,
+    chain,
+    chainSet,
+    ocrNote,
+    filled,
+    seeded,
+    engine,
+    stillWanting,
+    transient,
+    ...pagesLeft.length ? { left: { cursor: pagesLeft[0], pages: pagesLeft } } : {}
+  };
 }
 var TRANSCRIBE_USE = "transcribe";
 var AI_TRANSCRIPTION_SOURCE = "unmeasured: the AI's reading of a page that is only a picture is undetermined until its accuracy is measured (text-chain R104; BIO_Investigation_v0_1.md \xA76)";
@@ -59223,11 +60500,24 @@ function allUnitsOf(i2text) {
     (u, i) => ({ slide: Number.isInteger(u.slide) ? u.slide : i, shape: null })
   ) : Array.isArray(i2text.sheets) ? arm(i2text.sheets, "sheet-range", sheetRangeOf).filter((u) => u.extent.sheet !== null) : null;
 }
-function textUnitsFor(i2text) {
+function utf8Length(s) {
+  let n = 0;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    if (c < 128) n += 1;
+    else if (c < 2048) n += 2;
+    else if (c >= 55296 && c <= 56319 && i + 1 < s.length && (s.charCodeAt(i + 1) & 64512) === 56320) {
+      n += 4;
+      i++;
+    } else n += 3;
+  }
+  return n;
+}
+function textUnitsFor(i2text, { budget: wireBudget = ACQUIRE_TEXT_UNITS_BUDGET } = {}) {
   let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null;
   if (i2text) {
     const units = allUnitsOf(i2text);
-    let budget = ACQUIRE_TEXT_UNITS_BUDGET, dropped = 0;
+    let budget = wireBudget, dropped = 0;
     const kept2 = [], runs = [];
     let run = null;
     const skip = (u) => {
@@ -59243,7 +60533,7 @@ function textUnitsFor(i2text) {
     for (const u of units || []) {
       const cut2 = u.text.length > CAPTURE_TEXT_UNIT_CAP;
       const text2 = cut2 ? u.text.slice(0, CAPTURE_TEXT_UNIT_CAP) : u.text;
-      const size2 = new TextEncoder().encode(text2).length + ACQUIRE_TEXT_UNIT_ENVELOPE;
+      const size2 = text2.length + ACQUIRE_TEXT_UNIT_ENVELOPE > budget ? Infinity : utf8Length(text2) + ACQUIRE_TEXT_UNIT_ENVELOPE;
       if (size2 > budget) {
         dropped++;
         skip(u);
@@ -59259,9 +60549,19 @@ function textUnitsFor(i2text) {
   }
   return { textUnits, textUnitsOverBound, textUnitsSkipped };
 }
-var wordsIn = (s) => typeof s === "string" ? s.split(/\s+/).filter((w) => glyphCount(w) > 0).length : 0;
-function textWordsFor(i2text) {
-  const kept2 = textUnitsFor(i2text).textUnits;
+var SPACE = /\s/;
+function wordsIn(s) {
+  if (typeof s !== "string") return 0;
+  let n = 0, inWord = false;
+  for (let i = 0; i < s.length; i++) {
+    const w = !SPACE.test(s[i]);
+    if (w && !inWord) n++;
+    inWord = w;
+  }
+  return n;
+}
+function textWordsFor(i2text, keptUnits = void 0, { budget } = {}) {
+  const kept2 = keptUnits !== void 0 ? keptUnits : textUnitsFor(i2text, { budget }).textUnits;
   if (!kept2) return null;
   const all = allUnitsOf(i2text) || [];
   const unread = (Array.isArray(i2text.pages) ? i2text.pages : []).reduce((n, p) => n + (p && Number.isInteger(p.unread_words) && p.unread_words > 0 ? p.unread_words : 0), 0);
@@ -59444,6 +60744,22 @@ var isFurnitureBlock = (name, attrs, markup, after) => {
   return !p.long && p.text !== "" && NOTICE_TEXT.some((re) => re.test(p.text));
 };
 var moreFurniture = (name, attrs, markup, after) => isFurnitureByAttribute(name, attrs) || isFurnitureBlock(name, attrs, markup, after);
+var NAME_WORDS = /* @__PURE__ */ new Set(["footer", "contact", "search", "breadcrumb", "breadcrumbs", "share", "social", "sidebar", "related", "explore", "promo", "promos", "gallery", "carousel"]);
+var nameWords = (t) => t.replace(/([a-z0-9])([A-Z])/g, "$1 $2").toLowerCase().split(/[\s_-]+/).filter(Boolean);
+var isNamedFurniture = (attrs) => classTokens(attrs).some((t) => nameWords(t).some((w) => NAME_WORDS.has(w)));
+var NON_PROSE = /<(a|h[1-6]|label|button|select|option|textarea|script|style)\b(?:"[^"]*"|'[^']*'|[^'">])*>[\s\S]*?<\/\1\s*>/gi;
+var SENTENCE = /(?:[\p{L}\p{N}'’-]+\s+){2,}[\p{L}\p{N}'’-]+[.!?](?=\s|$)/u;
+var holdsProse = (inner) => SENTENCE.test(decodeReferences(inner.replace(NON_PROSE, " ").replace(/<\/?[A-Za-z][^\s>/]*(?:"[^"]*"|'[^']*'|[^'">])*>/g, " ")).replace(/\s+/g, " "));
+var hasRegion = (markup) => contentsOf(markup, "main") !== null || contentsOf(markup, "article") !== null || new RegExp(`<[A-Za-z][A-Za-z0-9:-]*(?:"[^"]*"|'[^']*'|[^'">])*?\\srole\\s*=\\s*["']?main\\b`, "i").test(markup);
+var namedFurniture = (markup) => {
+  if (!hasRegion(markup)) return () => false;
+  return (name, attrs, whole, after) => {
+    const n = name.toLowerCase();
+    if (NEVER_BY_ATTRIBUTE.has(n) || roleOf(attrs) === "main" || VOID_TAG.has(n) || attrs.endsWith("/") || !isNamedFurniture(attrs)) return false;
+    const e = endOfElement(whole, n, after);
+    return e !== null && !holdsProse(whole.slice(after, e.inner));
+  };
+};
 var SKIP_LINK = new RegExp(`<a\\b(${TAG_ATTRS})>([\\s\\S]*?)</a\\s*>`, "gi");
 var dropSkipLinks = (markup) => markup.replace(SKIP_LINK, (whole, attrs, inner) => {
   const href = attrOf(attrs, "href");
@@ -59453,9 +60769,10 @@ var dropSkipLinks = (markup) => markup.replace(SKIP_LINK, (whole, attrs, inner) 
 var TEMPLATE_TOKEN = /\{[0-9]+\}|\{[A-Za-z_][A-Za-z0-9_]*\}|##LOC\[[^\]]*\]##/g;
 function visibleTextOfHtml(html) {
   const live = dropElements(html.replace(/<!--[\s\S]*?(?:-->|$)/g, " ").replace(/<(script|style|template|head)\b(?:"[^"]*"|'[^']*'|[^'">])*>[\s\S]*?(?:<\/\1\s*>|$)/gi, " ").replace(/<!\[CDATA\[[\s\S]*?(?:\]\]>|$)/g, " ").replace(/<![^>]*>|<\?[^>]*>/g, " "), isNavigation);
+  const named = namedFurniture(live);
   const region = dropElements(
     contentsOf(live, "main") ?? contentsOf(live, "article") ?? dropElements(live, isFurniture),
-    moreFurniture
+    (name, attrs, whole, after) => moreFurniture(name, attrs, whole, after) || named(name, attrs, whole, after)
   );
   const dropped = dropSkipLinks(region).replace(/\s+/g, " ");
   const bare = dropped.replace(new RegExp(`</?(?:${BLOCK_TAG})\\b(?:"[^"]*"|'[^']*'|[^'">])*>`, "gi"), "\n\n").replace(/<br\b(?:"[^"]*"|'[^']*'|[^'">])*>/gi, "\n").replace(/<\/?[A-Za-z][^\s>/]*(?:"[^"]*"|'[^']*'|[^'">])*>/g, "");
@@ -59469,12 +60786,14 @@ function paragraphsOfText(text2, html) {
   const paragraphs = (lines.length >= 2 ? lines : runs.map((p) => (html ? p.replace(/[ \t\f\v\u00a0 \r\n]+/g, " ") : p).trim()).filter((p) => p.length)).map((p, para) => ({ para, text: p }));
   return { paragraphs };
 }
-function textUnitsOfText(text2, { html = false } = {}) {
+function textUnitsOfText(text2, { html = false, budget } = {}) {
   if (typeof text2 !== "string" || !text2) return { textUnits: null, textUnitsOverBound: 0, textUnitsSkipped: null };
-  return textUnitsFor(paragraphsOfText(text2, html));
+  return textUnitsFor(paragraphsOfText(text2, html), { budget });
 }
-function textWordsOfText(text2, { html = false } = {}) {
-  return typeof text2 === "string" && text2 ? textWordsFor(paragraphsOfText(text2, html)) : null;
+function textWordsOfText(text2, { html = false, budget } = {}) {
+  if (typeof text2 !== "string" || !text2) return null;
+  const paras = paragraphsOfText(text2, html);
+  return textWordsFor(paras, textUnitsFor(paras, { budget }).textUnits);
 }
 var TITLE_MAX_CHARS = 200;
 function cleanTitle(s) {
@@ -59522,7 +60841,7 @@ function textCountsOf(text2) {
   const n = (v) => Number.isInteger(v) && v >= 0 ? v : null;
   return {
     text_chars: n(c && c.chars),
-    text_glyphs: typeof text2.document === "string" ? glyphCount(text2.document) : null,
+    text_glyphs: typeof text2.document === "string" ? glyphsOfDocument(text2) : null,
     text_undetermined: n(c && c.undetermined)
   };
 }
@@ -59694,6 +61013,12 @@ var failed = (doc, docType, basis, extra = {}) => ({
   basis,
   ...extra
 });
+function refusalOf(a) {
+  if (!a || a.ok !== false || a.failure !== FAILURE_FINAL || typeof a.reason !== "string" || !a.reason) return null;
+  const out = { reason: a.reason };
+  for (const k of ["pages", "bytes", "need_mb", "limit_mb"]) if (Number.isFinite(a[k])) out[k] = a[k];
+  return out;
+}
 async function read(document, {
   evidence = null,
   env = {},
@@ -59701,15 +61026,37 @@ async function read(document, {
   view,
   planeVersion = null,
   liveCalibration = null,
-  transcription = null
+  transcription = null,
+  unitsBudget,
+  ocrInvocations,
+  owe = null
 } = {}) {
   try {
-    return await readInner(document, { evidence, env, storeName, view, planeVersion, liveCalibration, transcription });
+    return await readInner(document, {
+      evidence,
+      env,
+      storeName,
+      view,
+      planeVersion,
+      liveCalibration,
+      transcription,
+      unitsBudget,
+      ocrInvocations,
+      owe
+    });
   } catch (e) {
-    const reading = failed(document, null, localize("reading-pipeline.index.reading_not_composed", "the reading could not be composed ({detail}), so nothing is claimed about this document's text; it is a failed reading, never an emptied document", { detail: String(String(e && e.message || e).slice(0, 200)) }));
+    const reading = failed(document, null, localize("reading-pipeline.index.reading_not_composed", "the reading could not be composed ({detail}), so nothing is claimed about this document's text; it is a failed reading, never an emptied document", { detail: String(String(e && e.message || e).slice(0, 200)) }), { failure: FAILURE_TRANSIENT });
     reading.metadata = null;
     reading.provenance = await readingProvenance({ text: null, planeVersion });
     return { reading };
+  }
+}
+async function sizeHeld(evidence, digest) {
+  try {
+    const h = typeof evidence.head === "function" ? await evidence.head(digest) : null;
+    return h && Number.isFinite(h.size) ? h.size : null;
+  } catch {
+    return null;
   }
 }
 async function bytesOf(evidence, doc) {
@@ -59717,23 +61064,52 @@ async function bytesOf(evidence, doc) {
     const o = await evidence.get(digest);
     return o ? new Uint8Array(await o.arrayBuffer()) : null;
   };
-  if (!Array.isArray(doc.parts)) return { bytes: await whole(doc.capture.sha256) };
-  const held2 = typeof (doc.capture && doc.capture.sha256) === "string" ? await whole(doc.capture.sha256).catch(() => null) : null;
-  if (held2) return { bytes: held2 };
-  const total = doc.parts.reduce((n, p) => n + (Number.isFinite(p && p.bytes) ? p.bytes : 0), 0);
+  const parts = Array.isArray(doc.parts) ? doc.parts : null;
+  const wholeSha = typeof (doc.capture && doc.capture.sha256) === "string" ? doc.capture.sha256 : null;
+  const total = parts ? parts.reduce((n, p) => n + (Number.isFinite(p && p.bytes) ? p.bytes : 0), 0) : Number.isFinite(doc.capture && doc.capture.bytes) ? doc.capture.bytes : null;
+  const tooBig = (size2) => ({
+    bytes: null,
+    failure: FAILURE_FINAL,
+    why: word("reading-pipeline.why.capture_bytes_parts", {
+      total: String(size2),
+      parts: String(parts ? parts.length : 1),
+      multipart_read_max: String(WHOLE_READ_MAX)
+    })
+  });
+  if (total !== null && total > WHOLE_READ_MAX) return tooBig(total);
+  const held2 = wholeSha && total === null ? await sizeHeld(evidence, wholeSha) : null;
+  if (held2 !== null && held2 > WHOLE_READ_MAX) return tooBig(held2);
+  if (!parts) return { bytes: await whole(doc.capture.sha256) };
+  const got = wholeSha ? await whole(wholeSha).catch(() => null) : null;
+  if (got) return { bytes: got };
   if (total > MULTIPART_READ_MAX)
-    return { bytes: null, why: word("reading-pipeline.why.capture_bytes_parts", { total: String(total), parts: String(doc.parts.length), multipart_read_max: String(MULTIPART_READ_MAX) }) };
+    return {
+      bytes: null,
+      failure: FAILURE_TRANSIENT,
+      why: word("reading-pipeline.why.capture_bytes_parts", { total: String(total), parts: String(parts.length), multipart_read_max: String(MULTIPART_READ_MAX) })
+    };
   const out = new Uint8Array(total);
   let at8 = 0;
-  for (const p of doc.parts) {
+  for (const p of parts) {
     const b = p && typeof p.sha256 === "string" ? await whole(p.sha256) : null;
-    if (!b) return { bytes: null, why: word("reading-pipeline.why.part_held_evidence", { index_of: String(doc.parts.indexOf(p) + 1), parts: String(doc.parts.length) }) };
+    if (!b) return { bytes: null, failure: FAILURE_TRANSIENT, why: word("reading-pipeline.why.part_held_evidence", { index_of: String(parts.indexOf(p) + 1), parts: String(parts.length) }) };
     out.set(b.subarray(0, Math.max(0, total - at8)), at8);
     at8 += b.length;
   }
-  return { bytes: at8 === total ? out : null, why: at8 === total ? null : word("reading-pipeline.why.parts_held_add") };
+  return at8 === total ? { bytes: out } : { bytes: null, failure: FAILURE_TRANSIENT, why: word("reading-pipeline.why.parts_held_add") };
 }
-async function readInner(doc, { evidence, env, storeName, view, planeVersion, liveCalibration, transcription }) {
+async function readInner(doc, {
+  evidence,
+  env,
+  storeName,
+  view,
+  planeVersion,
+  liveCalibration,
+  transcription,
+  unitsBudget,
+  ocrInvocations,
+  owe
+}) {
   const retrieved = doc && typeof doc.retrieved === "string" ? doc.retrieved : null;
   const sha = doc && doc.capture && typeof doc.capture.sha256 === "string" ? doc.capture.sha256 : null;
   const ct = doc && doc.capture && typeof doc.capture.content_type === "string" ? doc.capture.content_type : "";
@@ -59750,25 +61126,31 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     reading2.provenance = await readingProvenance({ text: null, chain: null, tier: null, container: null, planeVersion, member: null });
     return { reading: reading2 };
   };
-  if (!sha) return early(failed(doc, null, localize("reading-pipeline.index.no_capture_digest", "the document names no capture digest, so there are no bytes to read")));
-  if (!evidence) return early(failed(doc, null, word("reading-pipeline.no_evidence_store")));
-  const got = await bytesOf(evidence, doc).catch(() => ({ bytes: null, why: word("acquisition.why.evidence_store_read") }));
-  const bytes = got.bytes;
+  if (!sha) return early(failed(doc, null, localize("reading-pipeline.index.no_capture_digest", "the document names no capture digest, so there are no bytes to read"), { failure: FAILURE_FINAL }));
+  if (!evidence) return early(failed(doc, null, word("reading-pipeline.no_evidence_store"), { failure: FAILURE_TRANSIENT }));
+  const got = await bytesOf(evidence, doc).catch(() => ({ bytes: null, failure: FAILURE_TRANSIENT, why: word("acquisition.why.evidence_store_read") }));
+  let bytes = got.bytes;
+  got.bytes = null;
   const textRead = !multipart && profile.profiled_from_text === true && bytes;
   const text2 = textRead ? new TextDecoder("utf-8", { fatal: false }).decode(bytes) : "";
   const profCtx = { headers, locator, content_type: ct || null, text: text2, origin: CAPTURE_ORIGIN };
   const stackId = identify(profCtx);
   const docType = doctypeFor({ ...profCtx, handler: stackId.handler, kind: stackId.kind, ...vw });
   if (!bytes)
-    return early(failed(doc, docType, got.why || localize("reading-pipeline.index.bytes_not_held", "the capture's bytes are not held in the evidence store, so nothing was read")));
+    return early(failed(
+      doc,
+      docType,
+      got.why || localize("reading-pipeline.index.bytes_not_held", "the capture's bytes are not held in the evidence store, so nothing was read"),
+      { failure: got.failure || FAILURE_TRANSIENT }
+    ));
   const entry = fmt && fmt !== "undetermined" ? getFormat(fmt) : null;
   const wireable = !!(entry && (typeof entry.text === "function" || typeof entry.structure === "function"));
   let reading, classifiedText = null, member = null;
-  let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null, readDialect, emitted = null;
+  let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null, readDialect, emitted = null, heldCounts = null, joinedDropped = false;
   if (!wireable && textRead) {
     classifiedText = text2;
     member = "plane";
-    ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsOfText(text2, { html: fmt === "html" }));
+    ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsOfText(text2, { html: fmt === "html", budget: unitsBudget }));
     const title = fmt === "html" ? titleOfHtml(text2) : null;
     if (typeof docType.type.parse === "function") {
       try {
@@ -59798,7 +61180,9 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
           entities: [],
           facts: {},
           at: retrieved,
-          basis: word("reading-pipeline.why.reader_parse_document", { key: String(docType.type.key), entry: String(String(e && e.message || e)) })
+          basis: word("reading-pipeline.why.reader_parse_document", { key: String(docType.type.key), entry: String(String(e && e.message || e)) }),
+          failure: FAILURE_FINAL
+          /* R37: the content type's reader threw over this text; it throws again */
         };
       }
     } else {
@@ -59823,21 +61207,25 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       const container = fmt && fmt !== "undetermined" ? fmt : "text";
       reading.text_source = layerChainFor(null, { tier: null, container });
       reading.text_container = container;
-      Object.assign(reading, textWordsOfText(text2, { html: fmt === "html" }));
+      Object.assign(reading, textWordsOfText(text2, { html: fmt === "html", budget: unitsBudget }));
     }
   } else if (wireable) {
     let i2text = null, wiredTier = null, pageCount = null, pageBoxes = null, pdfPaints = null, wired = null;
     let chain = null, ocrNote = null, tier2note = null, tier2PerPage = null, t3Wanting = false, aiRead = null, structMeta = null;
+    let memberDown = false, ocrLeft = null, refusal8 = null;
     try {
       if (typeof entry.text === "function") {
         const parts = typeof entry.parts === "function" ? await entry.parts(bytes) : bytes;
         const tt = await entry.text(parts);
+        bytes = null;
         if (tt && tt.ok !== false) {
           i2text = tt;
           wiredTier = 1;
-        }
+        } else refusal8 = refusalOf(tt);
       } else {
         const st = await entry.structure(bytes);
+        bytes = null;
+        if (!(st && st.ok)) refusal8 = refusalOf(st);
         if (st && st.ok) {
           i2text = st.text || null;
           wiredTier = 1;
@@ -59849,6 +61237,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
             why: typeof st.imagesWhy === "string" ? st.imagesWhy : null
           };
           const t2 = await tier2Escalate(env, { sha, storeName, text: i2text });
+          if (t2.transient) memberDown = true;
           if (t2.outcome === "refused") tier2note = t2.note;
           else if (t2.outcome !== "merged") tier2note = tier2FailureNote(t2.outcome);
           else {
@@ -59866,9 +61255,20 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
           }
         }
       }
-      const t3 = await tier3Extend(env, { sha, storeName, i2text, wiredTier, tier2PerPage, fmt, liveCalibration });
+      const t3 = await tier3Extend(env, {
+        sha,
+        storeName,
+        i2text,
+        wiredTier,
+        tier2PerPage,
+        fmt,
+        liveCalibration,
+        ...Number.isInteger(ocrInvocations) && ocrInvocations > 0 ? { invocations: ocrInvocations } : {}
+      });
       i2text = t3.i2text;
       wiredTier = t3.wiredTier;
+      if (t3.transient) memberDown = true;
+      ocrLeft = t3.left || null;
       if (t3.chainSet) chain = t3.chain;
       if (t3.ocrNote != null) ocrNote = t3.ocrNote;
       t3Wanting = t3.stillWanting;
@@ -59895,9 +61295,15 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
           readDialect = void 0;
         }
       }
+      heldCounts = textCountsOf(i2text);
+      {
+        const lean = withoutJoinedDocument(i2text);
+        if (lean !== i2text) joinedDropped = true;
+        i2text = lean;
+      }
       emitted = i2text;
       const extent = containerExtentOf(i2text, { pdfPaints, fmt });
-      ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsFor(i2text));
+      ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsFor(i2text, { budget: unitsBudget }));
       if (i2text) {
         wired = readText(decodeView(i2text), {
           headers,
@@ -59922,27 +61328,40 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
           };
         }
       }
-      reading = wired ? readingFromWire({ wired, docType, chain, wiredTier, fmt, retrieved, tier2note, ocrNote, tier3Candidate: t3Wanting }) : { ...failed(doc, docType, [tier2note, ocrNote, localize("reading-pipeline.index.entry_no_text", "the {fmt} entry produced no text from these bytes", { fmt: String(fmt) })].filter(Boolean).join(" \u2014 ")) };
-      if (textUnits) Object.assign(reading, textWordsFor(i2text));
+      reading = wired ? readingFromWire({ wired, docType, chain, wiredTier, fmt, retrieved, tier2note, ocrNote, tier3Candidate: t3Wanting }) : { ...failed(doc, docType, [tier2note, ocrNote, localize("reading-pipeline.index.entry_no_text", "the {fmt} entry produced no text from these bytes", { fmt: String(fmt) })].filter(Boolean).join(" \u2014 "), { failure: memberDown ? FAILURE_TRANSIENT : FAILURE_FINAL }) };
+      if (textUnits) Object.assign(reading, textWordsFor(i2text, textUnits));
+      if (!wired || !wired.determined) reading.failure = memberDown ? FAILURE_TRANSIENT : FAILURE_FINAL;
+      if (refusal8 && !wired) Object.assign(reading, refusal8);
+      if (ocrLeft) {
+        reading.ocr_left = { cursor: ocrLeft.cursor, pages: ocrLeft.pages.length };
+        if (typeof owe === "function") {
+          try {
+            await owe({ kind: "ocr", sha, cursor: ocrLeft.cursor, pages_left: ocrLeft.pages.length });
+          } catch {
+          }
+        }
+      }
       if (wired && wired.determined) reading.title = titleOfMetadata(i2text && i2text.metadata) ?? titleOfMetadata(structMeta);
       if (aiRead) reading.ai_transcription = aiRead;
       reading.page_count = Number.isInteger(pageCount) && pageCount > 0 ? pageCount : null;
       reading.page_boxes = pageBoxes;
       reading.container_extent = extent;
     } catch (e) {
-      reading = failed(doc, docType, localize("reading-pipeline.index.entry_not_read_bytes", "the {fmt} entry could not read these bytes ({detail}), so nothing is claimed about its text", { fmt: String(fmt), detail: String(String(e && e.message || e).slice(0, 200)) }), { page_count: null, page_boxes: null, container_extent: null });
+      reading = failed(doc, docType, localize("reading-pipeline.index.entry_not_read_bytes", "the {fmt} entry could not read these bytes ({detail}), so nothing is claimed about its text", { fmt: String(fmt), detail: String(String(e && e.message || e).slice(0, 200)) }), { failure: FAILURE_TRANSIENT, page_count: null, page_boxes: null, container_extent: null });
       textUnits = null;
       textUnitsOverBound = 0;
       textUnitsSkipped = null;
       classifiedText = null;
       emitted = null;
+      heldCounts = null;
+      joinedDropped = false;
     }
   } else {
     reading = failed(
       doc,
       docType,
       localize("reading-pipeline.index.document_not_read_text", "the document was not read as text ({why}), so no reading was attempted", { why: multipart ? localize("reading-pipeline.index.multipart", "multipart") : localize("reading-pipeline.index.non_textual_large", "non-textual or too large") }),
-      { page_count: null, page_boxes: null, container_extent: null }
+      { failure: FAILURE_FINAL, page_count: null, page_boxes: null, container_extent: null }
     );
   }
   reading.provenance = await readingProvenance({
@@ -59951,10 +61370,11 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     tier: Number.isInteger(reading.text_tier) ? reading.text_tier : null,
     container: typeof reading.text_container === "string" ? reading.text_container : null,
     planeVersion,
-    member
+    member,
+    ...joinedDropped ? { textFrom: "document" } : {}
   });
   {
-    const n = textCountsOf(classifiedText);
+    const n = heldCounts || textCountsOf(classifiedText);
     if (n) Object.assign(reading, n);
   }
   Object.assign(reading, emittedFieldsOf(emitted));
@@ -60002,7 +61422,10 @@ var ADDITIVE_COLUMNS = [
   ["readings", "origin", "TEXT"],
   ["readings", "asserted_by", "TEXT"],
   ["readings", "asserted_standing", "TEXT"],
-  ["readings", "justification", "TEXT"]
+  ["readings", "justification", "TEXT"],
+  /* R82 (F12): the candidates a migration could not read yet, and the once-only scan again for a migration that finished before. */
+  ["reading_migrations", "retry", "TEXT"],
+  ["reading_migrations", "rescan", "INTEGER"]
 ];
 function normAlias(s) {
   return String(s ?? "").trim().replace(/\s+/g, " ").toLowerCase().slice(0, 200);
@@ -60256,6 +61679,8 @@ var MIGRATIONS = Object.freeze({
     noLayer: "the reading carries no pptx text layer to mark, so nothing it holds was read from the slides"
   })
 });
+var failedTransiently = (r) => !!r && r.found === false && r.failure === "transient" && !(Array.isArray(r.entities) && r.entities.length);
+var PLANE_AUTHOR = "plane:pending-work";
 var Extraction = class _Extraction {
   #sql;
   #storage;
@@ -60480,7 +61905,7 @@ var Extraction = class _Extraction {
   /* ---- reading (R1, R18) ---- */
   /** R1, R18: reads a stored capture (`reading-pipeline.read`, its R24) with this object's evidence store, bindings and the
    *  instance's jurisdiction view (R18), and records the digest of the reading it composed (R21). */
-  async read(document, { storeName = "bio", env = null } = {}) {
+  async read(document, { storeName = "bio", env = null, budget = void 0 } = {}) {
     const e = env || this.env || {};
     const out = await read(document, {
       evidence: this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null,
@@ -60488,7 +61913,8 @@ var Extraction = class _Extraction {
       storeName,
       view: this.view(),
       planeVersion: e.VERSION || null,
-      liveCalibration: (q) => this.#liveCalibration(q)
+      liveCalibration: (q) => this.#liveCalibration(q),
+      ...budget === void 0 ? {} : { unitsBudget: budget }
     });
     this.recordComposed(out.reading, document && document.capture && document.capture.sha256);
     return out;
@@ -60527,20 +61953,42 @@ var Extraction = class _Extraction {
   }
   /* ---- reading a held home (R80) ---- */
   /** R80 (T51 fix round 3, C5; K4356, K4358; amends R20, R27; provenance R4; control-plane R117): an in-process act the
-   *  door calls, not an op. A home the register names (`provenance.homeOf`) that has no `readings` row is read once the
-   *  evidence store holds the object under the digest, whole: the stored document is read as R1 and `read` do, and the
-   *  reading written for that bundle by R19's writer, in one transaction with the history and the index, as a composed
-   *  reading of this instance. Otherwise nothing is written and the answer is `{ok: true, read: false, why}`, `why` a
-   *  stable code: `NO_HOME` (the register names none, or the digest is no digest), `READING_HELD` (a reading, a failed
-   *  one too, is already held) or `NO_WHOLE_OBJECT` (the store holds no object under the digest). It writes no bundle, no
-   *  register row and no promotion, and replaces no reading: a reading that lands while the bytes are read stands (the
-   *  row is looked at again inside the write). A reading that finds nothing is a failed reading, recorded (R45). */
-  async readHeld({ sha = null, storeName = "bio", env = null } = {}) {
+   *  door calls, and (fix round 4, N5; K4429) `op=readheld`. A home the register names (`provenance.homeOf`) that has no
+   *  `readings` row is read once the evidence store holds the object under the digest, whole: the stored document is read
+   *  as R1 and `read` do, and the reading written for that bundle by R19's writer, in one transaction with the history and
+   *  the index, as a composed reading of this instance. Otherwise nothing is written and the answer is
+   *  `{ok: true, read: false, why}`, `why` a stable code: `NO_HOME` (neither the register nor a reading held for the digest names a home bundle, the digest is no digest, or
+   *  `viewer` is given and may not see the home bundle: an absent record), `READING_HELD` (a reading is already held) or
+   *  `NO_WHOLE_OBJECT` (the store holds no object under the digest). It writes no bundle, no register row and no
+   *  promotion, and replaces no reading but two kinds (fix round 4, C5b; K4429; fix round 4b, F4; K4487; R82): a failed
+   *  reading that failed for want of the whole bytes (`#wantedTheWhole`: a capture of several parts the reader could not
+   *  assemble), and a failed reading that carries `failure: "transient"` (reading-pipeline R37: the store, a member or an
+   *  entry failed, not the document), are replaced, in the same transaction, when the stored reading is still the one
+   *  examined. A reading with text, a failed reading marked `final` and one with no mark are never replaced, so a second
+   *  call changes nothing. `viewer` is the door's stamp for the member's op; a caller that gives none (the door's own call
+   *  after a capture) is not a viewer and is not gated. A reading that finds nothing is a failed reading, recorded (R45).
+   *  (R82, F8) Every unit the text holds is offered to the index, which keeps its own bound (R22); only the acquire answer
+   *  carries the wire's budget. The answer carries `owed: true` when work remains for the digest: the reading just written
+   *  failed transiently, or pages of a scan are still unread and an OCR member is bound to read them. (R82, F9) With
+   *  `kind: "ocr"` the stored reading's unread pages are asked of the OCR member, those the stored units do not hold, and the
+   *  re-read is written as a composed reading; a member that is down leaves the entry owed, pages it declines end it. */
+  async readHeld({ sha = null, storeName = "bio", env = null, viewer = void 0, kind = null } = {}) {
     const digest = typeof sha === "string" ? sha.trim().toLowerCase() : "";
-    const home = /^[0-9a-f]{64}$/.test(digest) && this.#provenance && typeof this.#provenance.homeOf === "function" ? this.#provenance.homeOf(digest) : null;
-    const left2 = (why) => ({ ok: true, read: false, why });
+    let home = /^[0-9a-f]{64}$/.test(digest) && this.#provenance && typeof this.#provenance.homeOf === "function" ? this.#provenance.homeOf(digest) : null;
+    if ((!home || typeof home.bundleId !== "string" || !home.bundleId) && /^[0-9a-f]{64}$/.test(digest)) {
+      const mine = this.#one(`SELECT bundle_id FROM readings WHERE capture_sha=?`, digest);
+      home = mine && typeof mine.bundle_id === "string" && mine.bundle_id ? { bundleId: mine.bundle_id } : null;
+    }
+    if ((!home || typeof home.bundleId !== "string" || !home.bundleId) && /^[0-9a-f]{64}$/.test(digest))
+      home = this.#homeOfParts(digest);
+    const left2 = (why, more = {}) => ({ ok: true, read: false, why, ...more });
     if (!home || typeof home.bundleId !== "string" || !home.bundleId) return left2("NO_HOME");
-    if (this.#one(`SELECT 1 AS x FROM readings WHERE capture_sha=?`, digest)) return left2("READING_HELD");
+    if (viewer !== void 0 && !this.#sees(home.bundleId, viewer)) return left2("NO_HOME");
+    const document = this.#storedDocument(home.bundleId, digest) || { capture: { sha256: digest } };
+    const held2 = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
+    const heldReading = held2 ? safeJson(held2.reading) : null;
+    const ocr = kind === "ocr";
+    if (held2 && !ocr && !this.#wantedTheWhole(heldReading, document) && !failedTransiently(heldReading)) return left2("READING_HELD");
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     let whole = null;
     try {
@@ -60549,11 +61997,14 @@ var Extraction = class _Extraction {
       whole = null;
     }
     if (!whole) return left2("NO_WHOLE_OBJECT");
-    const document = this.#storedDocument(home.bundleId, digest) || { capture: { sha256: digest } };
-    const out = await this.read(document, { storeName, env });
+    const e = env || this.env || {};
+    if (ocr) return this.#continueOcr({ digest, heldReading, bundleId: home.bundleId, storeName, env: e, left: left2 });
+    const out = await this.read(document, { storeName, env, budget: Infinity });
     const prof = document.profile && typeof document.profile === "object" ? document.profile : null;
     const wrote = this.core.transact(() => {
-      if (this.#one(`SELECT 1 AS x FROM readings WHERE capture_sha=?`, digest)) return null;
+      const now = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
+      if (now && (!held2 || now.reading !== held2.reading)) return null;
+      if (!now && held2) return null;
       return this.writeReading({
         bundleId: home.bundleId,
         captureSha: digest,
@@ -60567,7 +62018,76 @@ var Extraction = class _Extraction {
     });
     if (!wrote) return left2("READING_HELD");
     await wrote.afterRead;
-    return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true };
+    const owed = failedTransiently(out.reading) || out.reading.tier3_candidate === true && !!e.OCR_WORKER;
+    return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true, ...owed ? { owed: true } : {} };
+  }
+  /** R82 (F9): one pass of the OCR member over the pages a stored scan's reading still leaves unread (R35's seeding is the
+   *  cursor), written as a composed re-read. `owed` says whether the digest still has work: pages left after a pass that read
+   *  some, or a pass that read none because the member was down or answered an error. Pages the member declines in a 200
+   *  answer are the document's own, so that ends the entry (`why: "OCR_NO_PROGRESS"`). */
+  async #continueOcr({ digest, heldReading, bundleId, storeName, env, left: left2 }) {
+    if (!heldReading || heldReading.tier3_candidate !== true) return left2(heldReading ? "NO_PAGES_LEFT" : "NO_READING");
+    if (!env.OCR_WORKER) return left2("NO_OCR_MEMBER");
+    const watch = { down: false };
+    const traced = { ...env, OCR_WORKER: { fetch: async (...a) => {
+      try {
+        const r = await env.OCR_WORKER.fetch(...a);
+        if (!r.ok) watch.down = true;
+        return r;
+      } catch (err) {
+        watch.down = true;
+        throw err;
+      }
+    } } };
+    const done = await this.pdfStructure({ sha: digest, ocr: "1", ungated: true, author: PLANE_AUTHOR, storeName, env: traced });
+    const re = done.status === 200 && done.body ? done.body.reextraction : null;
+    if (!re) return left2(done.status === 404 ? "NO_WHOLE_OBJECT" : "UNREADABLE");
+    if (!re.performed || !re.written) return left2("OCR_NO_PROGRESS", watch.down ? { owed: true } : {});
+    const now = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, digest);
+    const more = !!(now && (safeJson(now.reading) || {}).tier3_candidate === true);
+    return { ok: true, read: true, bundle_id: bundleId, found: true, ...more ? { owed: true } : {} };
+  }
+  /** R81: the home of a capture held in parts, or null. The bundle whose `data/provenance.json` states `capture.sha256` =
+   *  `whole` with parts, every part of which the register names as that bundle's own (`provenance.homeOf`), so a bundle
+   *  that merely mentions the digest is no home. */
+  #homeOfParts(whole) {
+    if (!this.#provenance || typeof this.#provenance.homeOf !== "function") return null;
+    let rows = [];
+    try {
+      rows = this.#rows(`SELECT f.bundle_id AS bundle_id FROM files f JOIN bundles b ON b.bundle_id = f.bundle_id
+                          WHERE f.path = 'data/provenance.json' AND instr(f.content, ?) > 0 ORDER BY f.bundle_id LIMIT 8`, whole);
+    } catch {
+      return null;
+    }
+    for (const r of rows) {
+      const parts = (this.#storedDocument(r.bundle_id, whole) || {}).parts;
+      if (!Array.isArray(parts) || !parts.length) continue;
+      if (parts.every((p) => p && typeof p.sha256 === "string" && (this.#provenance.homeOf(p.sha256) || {}).bundleId === r.bundle_id))
+        return { bundleId: r.bundle_id };
+    }
+    return null;
+  }
+  /** R80 (fix round 4, C5b): whether a stored reading is a failed one that failed for want of the whole bytes: it found
+   *  nothing, its document is a capture of several parts, and its basis is one of the three reasons
+   *  `reading-pipeline.bytesOf` gives when it could not assemble the parts (over the reader's size, a part not held, the
+   *  parts not adding up). A reading made from the whole bytes states none of them, so it is not read again. */
+  #wantedTheWhole(reading, document) {
+    if (!reading || reading.found !== false || typeof reading.basis !== "string") return false;
+    if (Array.isArray(reading.entities) && reading.entities.length) return false;
+    const parts = document && Array.isArray(document.parts) ? document.parts : null;
+    if (!parts) return false;
+    const total = parts.reduce((n, p) => n + (Number.isFinite(p && p.bytes) ? p.bytes : 0), 0);
+    const reasons = [
+      word("reading-pipeline.why.capture_bytes_parts", {
+        total: String(total),
+        parts: String(parts.length),
+        multipart_read_max: String(MULTIPART_READ_MAX)
+      }),
+      word("reading-pipeline.why.parts_held_add")
+    ];
+    for (let i = 1; i <= parts.length; i++)
+      reasons.push(word("reading-pipeline.why.part_held_evidence", { index_of: String(i), parts: String(parts.length) }));
+    return reasons.includes(reading.basis);
   }
   /* ---- writing (R19–R24) ---- */
   /** R20: promotion's projection. For each document in `data/provenance.json` with a capture digest and a reading
@@ -61389,8 +62909,11 @@ var Extraction = class _Extraction {
     let row3 = this.#one(`SELECT * FROM reading_migrations WHERE migration=?`, name);
     if (!row3) {
       const last = this.#one(`SELECT COALESCE(max(rowid), 0) AS n FROM reading_history`);
-      this.#sql.exec(`INSERT OR IGNORE INTO reading_migrations (migration, cutoff, after, done, examined, migrated, at)
-                      VALUES (?,?,?,0,0,0,?)`, name, last ? last.n : 0, "", stampInstant("second"));
+      this.#sql.exec(`INSERT OR IGNORE INTO reading_migrations (migration, cutoff, after, done, examined, migrated, at, rescan)
+                      VALUES (?,?,?,0,0,0,?,1)`, name, last ? last.n : 0, "", stampInstant("second"));
+      row3 = this.#one(`SELECT * FROM reading_migrations WHERE migration=?`, name);
+    } else if (row3.rescan == null) {
+      this.#sql.exec(`UPDATE reading_migrations SET after='', done=0, rescan=1 WHERE migration=?`, name);
       row3 = this.#one(`SELECT * FROM reading_migrations WHERE migration=?`, name);
     }
     return row3;
@@ -61436,47 +62959,71 @@ var Extraction = class _Extraction {
      examined and did. Writes only through R19. */
   async #migrate(m, limit) {
     const st = this.#migrationState(m.name);
+    const waiting = new Set(Array.isArray(safeJson(st.retry)) ? safeJson(st.retry) : []);
     const out = {
       ok: true,
       migration: m.name,
       cutoff: st.cutoff,
-      done: !!st.done,
+      done: !!st.done && !waiting.size,
       examined: 0,
       migrated: [],
       unmoved: 0,
       skipped: []
     };
-    if (st.done) return out;
+    if (st.done && !waiting.size) return out;
     const cap = Math.max(1, Math.min(Math.floor(Number(limit) || 50), 5e3));
-    const page = this.#rows(
-      `SELECT capture_sha, bundle_id, reading, origin, asserted_by, justification FROM readings
-        WHERE capture_sha > ? AND (capture_format = ?
-              OR (capture_format IS NULL AND json_extract(reading, '$.text_container') = ?))
-        ORDER BY capture_sha LIMIT ?`,
-      st.after || "",
-      m.format,
-      m.format,
-      cap + 1
-    );
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
-    for (const row3 of page.slice(0, cap)) {
+    const COLS = `capture_sha, bundle_id, reading, origin, asserted_by, justification`;
+    const settle = async (row3) => {
       const why = await this.#migrateOne(m, row3, st.cutoff, ev);
-      out.examined++;
-      if (why && why.migrated) out.migrated.push({ capture_sha: row3.capture_sha, moved: why.moved });
-      else if (why === "unmoved") out.unmoved++;
-      else if (why) out.skipped.push({ capture_sha: row3.capture_sha, why });
-      this.#sql.exec(
-        `UPDATE reading_migrations SET after=?, examined=examined+1, migrated=migrated+?, at=? WHERE migration=?`,
-        row3.capture_sha,
-        why && why.migrated ? 1 : 0,
-        stampInstant("second"),
-        m.name
+      if (why && why.migrated) {
+        waiting.delete(row3.capture_sha);
+        out.migrated.push({ capture_sha: row3.capture_sha, moved: why.moved });
+      } else if (why && why.waiting) {
+        waiting.add(row3.capture_sha);
+        out.skipped.push({ capture_sha: row3.capture_sha, why: why.waiting });
+      } else {
+        waiting.delete(row3.capture_sha);
+        if (why === "unmoved") out.unmoved++;
+        else if (why) out.skipped.push({ capture_sha: row3.capture_sha, why });
+      }
+      return why;
+    };
+    for (const sha of [...waiting].slice(0, cap)) {
+      const row3 = this.#one(`SELECT ${COLS} FROM readings WHERE capture_sha=?`, sha);
+      if (row3) await settle(row3);
+      else waiting.delete(sha);
+    }
+    let finished = !!st.done;
+    if (!st.done) {
+      const page = this.#rows(
+        `SELECT ${COLS} FROM readings
+          WHERE capture_sha > ? AND (capture_format = ?
+                OR (capture_format IS NULL AND json_extract(reading, '$.text_container') = ?))
+          ORDER BY capture_sha LIMIT ?`,
+        st.after || "",
+        m.format,
+        m.format,
+        cap + 1
       );
+      for (const row3 of page.slice(0, cap)) {
+        const why = await settle(row3);
+        out.examined++;
+        this.#sql.exec(
+          `UPDATE reading_migrations SET after=?, examined=examined+1, migrated=migrated+?, at=? WHERE migration=?`,
+          row3.capture_sha,
+          why && why.migrated ? 1 : 0,
+          stampInstant("second"),
+          m.name
+        );
+      }
+      if (page.length <= cap) {
+        this.#sql.exec(`UPDATE reading_migrations SET done=1, at=? WHERE migration=?`, stampInstant("second"), m.name);
+        finished = true;
+      }
     }
-    if (page.length <= cap) {
-      this.#sql.exec(`UPDATE reading_migrations SET done=1, at=? WHERE migration=?`, stampInstant("second"), m.name);
-      out.done = true;
-    }
+    this.#sql.exec(`UPDATE reading_migrations SET retry=? WHERE migration=?`, waiting.size ? JSON.stringify([...waiting].sort()) : null, m.name);
+    out.done = finished && !waiting.size;
     return out;
   }
   /* One candidate: "unmoved", a reason it was left as it is, or `{migrated, moved}`. */
@@ -61488,10 +63035,10 @@ var Extraction = class _Extraction {
     if (checkChain(reading.text_source) || !reading.text_source.some(m.isLayer)) return m.noLayer;
     const last = this.#one(`SELECT rowid AS n FROM reading_history WHERE capture_sha=? ORDER BY seq DESC LIMIT 1`, sha);
     if (last && Number(last.n) > Number(cutoff)) return m.after;
-    if (!ev) return localize("extraction.index.no_evidence_store_set_up", "your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again");
+    if (!ev) return { waiting: localize("extraction.index.no_evidence_store_set_up", "your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again") };
     const doc = this.#storedDocument(row3.bundle_id, sha) || { capture: { sha256: sha } };
     const got = await bytesOf(ev, doc).catch(() => ({ bytes: null }));
-    if (!got.bytes) return "the capture's bytes are not held in the evidence store";
+    if (!got.bytes) return { waiting: "the capture's bytes are not held in the evidence store" };
     const entry = getFormat(m.format);
     if (!entry || typeof entry.parts !== "function" || typeof entry.text !== "function")
       return `no ${m.format} entry is registered`;
@@ -61517,7 +63064,7 @@ var Extraction = class _Extraction {
         planeVersion: this.env.VERSION || null,
         member: null
       });
-    const u = textUnitsFor(text2);
+    const u = textUnitsFor(text2, { budget: Infinity });
     const composed = row3.origin === "composed" ? true : row3.origin === "asserted" ? false : this.#composedHere(reading);
     const wrote = this.core.transact(() => {
       const now = this.#one(`SELECT reading FROM readings WHERE capture_sha=?`, sha);
@@ -61554,10 +63101,10 @@ var Extraction = class _Extraction {
   /** What a re-read needs of the stored reading (D-15: a capture whose bundle the viewer may not see answers as
    *  one never read): the reading, the locator the acquire read under (from the bundle's own provenance document,
    *  record-core's `readFile`), and the capture's whole per-page units (D-616: a truncated unit is not the page). */
-  reextractBasis({ captureSha = null, viewer = null } = {}) {
+  reextractBasis({ captureSha = null, viewer = null, ungated = false } = {}) {
     const sha = typeof captureSha === "string" ? captureSha.trim().toLowerCase() : "";
     const row3 = sha ? this.#one(`SELECT bundle_id, reading FROM readings WHERE capture_sha=?`, sha) : null;
-    if (!row3 || !this.#sees(row3.bundle_id, viewer)) return { held: false };
+    if (!row3 || !(ungated || this.#sees(row3.bundle_id, viewer))) return { held: false };
     const doc = this.#storedDocument(row3.bundle_id, sha);
     const units = [];
     for (const u of this.#rows(
@@ -61588,7 +63135,8 @@ var Extraction = class _Extraction {
     viewer = null,
     author = null,
     storeName = "bio",
-    env = null
+    env = null,
+    ungated = false
   } = {}) {
     const e = env || this.env || {};
     const op = "pdfstructure";
@@ -61631,7 +63179,7 @@ var Extraction = class _Extraction {
           sha256: sha,
           detail: localize("extraction.index.no_ocr_member_is_bound", "no OCR member is bound to this instance (the OCR_WORKER service binding is absent), so there is no tier 3 to reach. Nothing was read, called or written. An instance that installs the member later can re-read this capture then (D-115, D-319).")
         } };
-      reBasis = this.reextractBasis({ captureSha: sha, viewer });
+      reBasis = this.reextractBasis({ captureSha: sha, viewer, ungated });
       if (!reBasis.held)
         return { status: 409, body: {
           ok: false,
@@ -61752,7 +63300,7 @@ var Extraction = class _Extraction {
           pages: t3.filled,
           via: "op=pdfstructure&ocr=1"
         };
-        const w = await this.#writeReread({ basis: reBasis, sha, reading, text: t3.i2text, author, viewer });
+        const w = await this.#writeReread({ basis: reBasis, sha, reading, text: t3.i2text, author, viewer, ungated });
         structure.text = t3.i2text;
         structure.tier = t3.wiredTier;
         if (t3.ocrNote) structure.notes = [...structure.notes, t3.ocrNote];
@@ -61797,11 +63345,11 @@ var Extraction = class _Extraction {
    *  recorded as composed here (R21), with R69's after-read outcome and what the listeners and index reported. Answers
    *  `{ok: true, staled, observed, compared, afterRead, indexed}`, `{ok: false}` when the capture left the caller's
    *  sight, or `{ok: false, rolledBack: true}` when the write was refused while it ran and nothing of it was kept. */
-  async #writeReread({ basis, sha, reading, text: text2, author, viewer }) {
-    const u = textUnitsFor(text2);
+  async #writeReread({ basis, sha, reading, text: text2, author, viewer, ungated = false }) {
+    const u = textUnitsFor(text2, { budget: Infinity });
     let w = { ok: false };
     try {
-      const out = this.#sees(basis.bundleId, viewer) ? this.writeReading({
+      const out = ungated || this.#sees(basis.bundleId, viewer) ? this.writeReading({
         bundleId: basis.bundleId,
         captureSha: sha,
         reading,
@@ -62224,6 +63772,15 @@ var DECLARED_OPS7 = Object.freeze({
     weight: "undetermined",
     description: localize("extraction.declared.pagetranscribe", "reading-directed: keyed by a capture; at a member's act, the AI reads the pages Civicsmith could not, on the account that pays and within its limits; the text is labeled the AI's reading and undetermined; moves no bundle"),
     fields: { accepts: ["sha256", "project"], requires: ["sha256"] }
+  },
+  readheld: {
+    classes: ["admin", "member"],
+    machineClasses: [],
+    mutating: true,
+    needs: null,
+    weight: "undetermined",
+    description: localize("extraction.declared.readheld", "reading-directed: keyed by a capture's digest; at a member's act, Civicsmith reads a document its record holds whole and holds no reading of, or holds a reading of that found nothing for want of the whole; the reading is machine-made and undetermined, the earlier one kept in the history; moves no bundle"),
+    fields: { accepts: ["sha"], requires: ["sha"] }
   },
   pdfstructure: {
     classes: ["admin", "member", "probe"],

@@ -508,6 +508,7 @@ var oakland_alameda_default = {
         status: "researched",
         basis: "2026-10-11 actions-law"
       },
+      response: "records_response",
       basis: "D-149"
     },
     /* The City's own records law, whose Immediate Disclosure Request is OMC 2.20.230 (time-law §2). */
@@ -528,6 +529,7 @@ var oakland_alameda_default = {
         status: "researched",
         basis: "2026-10-11 actions-law"
       },
+      response: "immediate_disclosure",
       basis: "2026-10-05 time-law"
     },
     /* R95 (T51, C64): read live 2026-10-21 on the official text, the United States Code (2024 Edition) as govinfo.gov prints
@@ -552,6 +554,7 @@ var oakland_alameda_default = {
         status: "researched",
         basis: "2026-10-21 foia-text"
       },
+      response: "foia_response",
       basis: "2026-10-21 foia-text"
     }
   ],
@@ -947,6 +950,7 @@ var oakland_alameda_default = {
     /* "within 20 days (excepting Saturdays, Sundays, and legal public holidays) after the receipt". */
     {
       rule: "foia_response",
+      label: "answer to a first request",
       applies_to: "records_request",
       units: "days",
       amount: 20,
@@ -1000,6 +1004,7 @@ var oakland_alameda_default = {
     },
     {
       rule: "foia_appeal_response",
+      label: "decision on an appeal",
       applies_to: "records_request",
       units: "days",
       amount: 20,
@@ -1153,6 +1158,30 @@ var oakland_alameda_default = {
       citation: "Cal. Code Civ. Proc. \xA7 12; Cal. Gov. Code \xA7 6800",
       status: "researched",
       basis: "2026-10-05 time-law"
+    }
+  ],
+  /* R49: the City of Oakland's fiscal year runs July 1 to June 30 and is named by its first year, written "FY 2025-26"
+     (oaklandca.gov, Fiscal Year 2025-2027 Budget, "New fiscal year 2025-2026 begins on July 1"; the two-year cycle "July 1,
+     2025 through June 30, 2027"; read 2026-10-22). Alameda County's runs July 1 to June 30 and is written "FY 2025-26"
+     (the county's budget press release: "The new budget goes into effect from July 1, 2024, to June 30, 2025"; the Board
+     letter "Fiscal Year (FY) 2025-26 Final Budget"; budget.alamedacountyca.gov; read 2026-10-22). The State Controller's
+     Office keeps no entry: no page of its own was read. */
+  fiscal_year: [
+    ...["Finance Department", "Oakland City Council", "Office Of The City Auditor"].map((body) => ({
+      body,
+      start: "07-01",
+      named_by: "start",
+      label: "FY{start}-{end2}",
+      status: "researched",
+      basis: "2026-10-22 oaklandca.gov-fy2025-27-budget"
+    })),
+    {
+      body: "Alameda County Civil Grand Jury",
+      start: "07-01",
+      named_by: "start",
+      label: "FY{start}-{end2}",
+      status: "researched",
+      basis: "2026-10-22 acgov.org-budget-press-release, 2026-10-22 budget.alamedacountyca.gov-fy2025-26-board-letter"
     }
   ],
   /* Legistar's PersonId, BodyId and OfficeRecordId, the register that issues them (legistar-events §1, §7; B1b.4, N569,
@@ -2168,6 +2197,7 @@ var test_port_ellery_default = {
         { stage: "appeal_decision", label: "decision on internal review", citation: "Test Stat. \xA7 1.131" }
       ],
       requesters: { text: "any resident of the state, or a body corporate registered in it", citation: "Test Stat. \xA7 1.102", status: "researched", basis: "TEST" },
+      response: "records_answer",
       basis: "TEST"
     },
     { level: "city", name: "Port Ellery Open Government Bylaw", citation: "P.E.B.L. \xA7 4", basis: "TEST" },
@@ -2412,6 +2442,7 @@ var test_port_ellery_default = {
     /* the pre-T33 form, `days: n`, read as units: days, amount: n */
     {
       rule: "records_answer",
+      label: "answer to a records application",
       applies_to: "records_request",
       days: 5,
       count: "business",

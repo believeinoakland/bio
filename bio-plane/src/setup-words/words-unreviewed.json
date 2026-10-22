@@ -64,417 +64,410 @@
       "line": 156
     },
     {
-      "id": "acquisition.checks.capture_not_kept",
-      "en": "the document arrived in several parts, but Civicsmith could not keep it whole, so nothing was filed; capture it again",
-      "module": "acquisition",
-      "file": "bio-plane/src/acquisition/checks.mjs",
-      "line": 365
-    },
-    {
       "id": "acquisition.index.a_locator_must_be_https",
       "en": "a locator must be https on a public host: no bare IP address, no localhost, no credentials in the address",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 931
+      "line": 967
     },
     {
       "id": "acquisition.index.a_sweep_origin_acquire_names",
       "en": "a sweep-origin acquire names the in-scope prefixes it may reach (link-sweep R1's `sources`); this one named none, so nothing was fetched",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 877
+      "line": 913
     },
     {
       "id": "acquisition.index.acquire_failed",
       "en": "the capture stopped on an error ({detail}); nothing is known to have been filed",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 785
+      "line": 821
     },
     {
       "id": "acquisition.index.an_archive_sourced_capture_names",
       "en": "an archive-sourced capture names the document address, not a replay locator",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 845
+      "line": 881
     },
     {
       "id": "acquisition.index.archive_org_is_a_backup",
       "en": "archive.org is a backup source and this document has not been unreachable long enough to justify one",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 451
+      "line": 487
     },
     {
       "id": "acquisition.index.attestation_pending",
       "en": "the timestamp and the co-archive were asked for after the document was kept, and had not answered when this capture was answered; their outcome is recorded when they do",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1480
+      "line": 1520
     },
     {
       "id": "acquisition.index.bio_plane_acquire_hashed_at_receipt",
       "en": "bio-plane acquire, https fetch, hashed at receipt",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1321
+      "line": 1357
     },
     {
       "id": "acquisition.index.bio_plane_acquire_https_fetch",
       "en": "bio-plane acquire, https fetch, streamed in {length} parts, hashed at receipt",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1515
+      "line": 1555
     },
     {
       "id": "acquisition.index.browser_is_bound_to_something",
       "en": "BROWSER is bound to something this plane cannot speak to: it is not a Fetcher, so there is no endpoint to open a devtools session on. Nothing was fetched.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 966
+      "line": 1002
     },
     {
       "id": "acquisition.index.capture_not_kept",
       "en": "the document arrived in {parts} parts, but your team's Civicsmith could not keep it whole under its own fingerprint ({why}), so nothing was filed; capture it again",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 411
+      "line": 447
     },
     {
       "id": "acquisition.index.first_party_https_fetch_of_the",
       "en": "first-party https fetch of the shell, hashed at receipt; the rendered document hashed at receipt from the renderer; render.* records the environment",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1509
+      "line": 1549
     },
     {
       "id": "acquisition.index.first_party_https_fetch_transport",
       "en": "first-party https fetch, hashed at receipt, transport record on this document",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1510
+      "line": 1550
     },
     {
       "id": "acquisition.index.google_answered_status_at_the",
       "en": "Google answered {status} at the OpenDocument export address {exportAddress}, which your team's Civicsmith composed from the {kind} id in {address}. Nothing was captured, and the application page at the document's own address was NOT captured in its place — a fallback to the shell would record a success holding no document. A 404 usually means the id is wrong; a 403 usually means the file is not shared with anyone who has the link.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1109
+      "line": 1145
     },
     {
       "id": "acquisition.index.hostnameof_is_one_of_your",
       "en": "{hostnameOf} is one of your team's own hosts; nothing was fetched or filed",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 769
+      "line": 805
     },
     {
       "id": "acquisition.index.keep_part_differs",
       "en": "part {n} of {parts} is not what was stored",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 387
+      "line": 423
     },
     {
       "id": "acquisition.index.keep_part_missing",
       "en": "part {n} of {parts} was not there when it was read back",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 383
+      "line": 419
     },
     {
       "id": "acquisition.index.keep_parts_do_not_add_up",
       "en": "the parts do not add up to the document that arrived",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 391
+      "line": 427
     },
     {
       "id": "acquisition.index.keep_store_refused",
       "en": "the store would not take it ({detail})",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 395
+      "line": 431
     },
     {
       "id": "acquisition.index.listed_whole_over_the_stored",
       "en": "listed whole over the stored parts",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1726
+      "line": 1756
     },
     {
       "id": "acquisition.index.no_renderer_is_bound_to",
       "en": "no renderer is bound to this instance (no RENDERER service binding and no BROWSER binding). Nothing was fetched.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 967
+      "line": 1003
     },
     {
       "id": "acquisition.index.render_did_not_return",
       "en": "the page as a visitor saw it did not come back in time",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1299
+      "line": 1335
     },
     {
       "id": "acquisition.index.render_pending_files",
       "en": "the page as a visitor saw it is still being made, and its supporting files are captured with it when you finish this capture",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1413
+      "line": 1449
     },
     {
       "id": "acquisition.index.render_pending_note",
       "en": "this is the page as it was served; the page as a visitor saw it is still being made, and is filed as a second document when this capture is finished",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1435
+      "line": 1475
     },
     {
       "id": "acquisition.index.render_stringify_is_not_a",
       "en": "render={stringify} is not a value this op reads. Send render: true for the page as a visitor saw it, or false (or nothing) for the served bytes.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 954
+      "line": 990
     },
     {
       "id": "acquisition.index.render_true_cannot_be_combined",
       "en": "render: true cannot be combined with {conflict}.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 960
+      "line": 996
     },
     {
       "id": "acquisition.index.running_renders_are_running_in",
       "en": "{running} renders are running in your team's Civicsmith, which runs at most {cap} at once; this render is waiting and nothing was fetched.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 989
+      "line": 1025
     },
     {
       "id": "acquisition.index.subresource_capture_reads_the_primary",
       "en": "subresource capture reads the primary back into memory to parse it, so it is bounded to {SUB_PARSE_MAX} bytes; this document is {total}",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1763
+      "line": 1793
     },
     {
       "id": "acquisition.index.the_archive_fallback_is_a",
       "en": "the archive fallback is a monitoring path: it runs under an operator or daemon credential, never a member's. Capture the document directly, or ask an administrator to run the fallback.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 841
+      "line": 877
     },
     {
       "id": "acquisition.index.the_archive_has_no_endpoint",
       "en": "the archive has no endpoint for this address",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 557
+      "line": 593
     },
     {
       "id": "acquisition.index.the_archive_is_rate_limiting",
       "en": "the archive is rate-limiting us; the governor will hold this host",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 569
+      "line": 605
     },
     {
       "id": "acquisition.index.the_archives_what_answered_status",
       "en": "the archive's {what} answered {status}",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 570
+      "line": 606
     },
     {
       "id": "acquisition.index.the_body_broke_off_credential",
       "en": "the body broke off while it was read; its error is not carried because a supplied credential rode it",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1185
+      "line": 1221
     },
     {
       "id": "acquisition.index.the_body_broke_off_while",
       "en": "the body broke off while it was read ({String})",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1186
+      "line": 1222
     },
     {
       "id": "acquisition.index.the_daemon_class_reaches_op",
       "en": "the daemon class reaches op=acquire through the archive fallback (via: \"archive.org\") and through the capture-request drain (via: \"capture-request\"). Direct acquisition is a member's or an operator's act, and the unattended credential is scoped to the verbs the unattended paths need.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 817
+      "line": 853
     },
     {
       "id": "acquisition.index.the_document_address_must_be",
       "en": "the document address must be https on a public host",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 666
+      "line": 702
     },
     {
       "id": "acquisition.index.the_document_exceeds_what_this",
       "en": "the document exceeds what this surface will capture even in parts",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1219
+      "line": 1255
     },
     {
       "id": "acquisition.index.the_fetch_did_not_complete",
       "en": "the fetch did not complete; its error is not carried because a supplied credential rode it",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1087
+      "line": 1123
     },
     {
       "id": "acquisition.index.the_governor_is_holding_requests",
       "en": "the governor is holding requests to {hostOf} ({reason})",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 565
+      "line": 601
     },
     {
       "id": "acquisition.index.the_incremental_hash_and_the",
       "en": "the incremental hash and the block hash of the same bytes differ",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1239
+      "line": 1275
     },
     {
       "id": "acquisition.index.the_memento_exceeds_what_this",
       "en": "the memento exceeds what this surface will capture even in parts",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 677
+      "line": 713
     },
     {
       "id": "acquisition.index.the_mementos_body_broke_off",
       "en": "the memento's body broke off while it was read ({detail})",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 515
+      "line": 551
     },
     {
       "id": "acquisition.index.the_opendocument_export_address_answered",
       "en": "the OpenDocument export address answered with `{ect}`, which is the Google Drive APPLICATION — a client-rendered shell whose bytes carry no document (framework Part I §6's UNWATCHABLE case, D-64/D-55). It is refused by name and it is not parsed: the shell is never filed as the document. Google serves it here when the file is not shared with anyone who has the link.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1119
+      "line": 1155
     },
     {
       "id": "acquisition.index.the_opendocument_export_address_served",
       "en": "the OpenDocument export address served bytes that are HTML — {signals} — while declaring `{v1}`. That is the Google Drive APPLICATION, not the document, and the declared type did not say so. Detection here is bytes-first and certain, which is the whole reason this arm exists beside the one that reads the header. Nothing was filed, and the shell is never filed as the document.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1212
+      "line": 1248
     },
     {
       "id": "acquisition.index.the_per_host_governor_is",
       "en": "the per-host governor is holding requests to {rHost} ({v1}).",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 978
+      "line": 1014
     },
     {
       "id": "acquisition.index.the_per_host_governor_is_2",
       "en": "the per-host governor is holding requests to this host ({reason}); retry in about {ceil}s",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1050
+      "line": 1086
     },
     {
       "id": "acquisition.index.the_primary_capture_did_not",
       "en": "the primary capture did not read back",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1769
+      "line": 1799
     },
     {
       "id": "acquisition.index.the_render_allowance_could_not",
       "en": "the render allowance could not be read, so the render is deferred rather than run unmetered.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 995
+      "line": 1031
     },
     {
       "id": "acquisition.index.the_rendered_document_is_length",
       "en": "the rendered document is {length} bytes, over this surface's {MAX}.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1309
+      "line": 1345
     },
     {
       "id": "acquisition.index.the_served_bytes_are_v1",
       "en": "the served bytes are {v1}, not an HTML page; nothing was filed.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1278
+      "line": 1314
     },
     {
       "id": "acquisition.index.the_whole_page_qualifier",
       "en": "; {reading}, so they are not asserted to be the whole page",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1506
+      "line": 1546
     },
     {
       "id": "acquisition.index.these_bytes_are_the_document",
       "en": "these bytes are the document a {v1} render produced from {locator} at {retrieved}; the shell it was rendered from was served for {locator_2} and is held beside it (render.of){v2}",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1506
+      "line": 1546
     },
     {
       "id": "acquisition.index.these_bytes_were_served_for",
       "en": "these bytes were served for {locator} at {retrieved}",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1507
+      "line": 1547
     },
     {
       "id": "acquisition.index.this_request_carried_map_the",
       "en": "this request carried {map}. The export address, the export format and the producer are DERIVED by your team's Civicsmith from the file id and the kind in the address, at the moment it performs the fetch, and are never read from a request. A provenance hop a caller can hand us is a provenance hop a caller can invent (D-112), and the whole value of a disclosed chain is that the disclosure is ours. Send the Drive link alone.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 899
+      "line": 935
     },
     {
       "id": "acquisition.index.todays_render_allowance_allowance_ms",
       "en": "today's render allowance ({allowance_ms} ms, day {day}) is committed ({spent_ms} ms spent, {reserved_ms} ms reserved by renders in flight), and this render reserves {reserve_ms} ms; it is recorded as deferred ({deferred} today).",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 994
+      "line": 1030
     },
     {
       "id": "acquisition.index.too_large_to_be_a",
       "en": "too large to be a single page",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1278
+      "line": 1314
     },
     {
       "id": "acquisition.index.url_redirected_status_to_v1",
       "en": "{url} redirected ({status}) to {v1}, which is outside the sweep's scope; the redirect was not followed, nothing at its target was fetched, and nothing was filed",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1074
+      "line": 1110
     },
     {
       "id": "acquisition.index.work_calls_compute_calls_over",
       "en": "{work_calls} compute calls over {work_bytes} bytes; {fetched} fetched, {discovered} discovered",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 1841
+      "line": 1874
     },
     {
       "id": "acquisition.index.your_teams_civicsmith_fetches_a",
       "en": "your team's Civicsmith fetches a requested document only from inside its own drain, and a request cannot reach that arm from outside. The AI does not capture: it REQUESTS, and the daemon captures with provenance preserved (DEC-47's structural gate, DEC-60). Write a request and let the drain make it.",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/index.mjs",
-      "line": 810
+      "line": 846
     },
     {
       "id": "acquisition.keyed.a_citation_lookup_is_a",
@@ -593,7 +586,7 @@
       "en": "no acquisition instance holds this storage's archive records",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/unpack.mjs",
-      "line": 829
+      "line": 843
     },
     {
       "id": "acquisition.unpack.no_acquisition_receipt_or",
@@ -607,7 +600,7 @@
       "en": "no archive your team holds and you may see answers to that digest",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/unpack.mjs",
-      "line": 831
+      "line": 845
     },
     {
       "id": "acquisition.unpack.set_whether_your_team_s",
@@ -621,7 +614,7 @@
       "en": "the archive's capture {sha}; its central directory and the entry's local header agree on this entry",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/unpack.mjs",
-      "line": 731
+      "line": 745
     },
     {
       "id": "acquisition.unpack.the_setting_is_true",
@@ -642,7 +635,7 @@
       "en": "these bytes are entry {index} ({v1}, the archive's own claim) of the archive {sha} held by your team's Civicsmith, cut out and verified by size and CRC-32 at {at}",
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/unpack.mjs",
-      "line": 730
+      "line": 744
     },
     {
       "id": "acquisition.unpack.why_nothing_was_opened",
@@ -650,6 +643,13 @@
       "module": "acquisition",
       "file": "bio-plane/src/acquisition/unpack.mjs",
       "line": 544
+    },
+    {
+      "id": "act.readheld.does",
+      "en": "Reads a document this record holds whole but has no reading of yet, or whose reading found nothing. The earlier reading stays in the history. Moves nothing.",
+      "module": "affordances",
+      "file": "bio-plane/src/affordances/act-help.mjs",
+      "line": 133
     },
     {
       "id": "action-clocks.count.amount_unit_after_anchor",
@@ -9672,84 +9672,84 @@
       "en": "substrate: the fetch layer (M2')",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3214
+      "line": 3223
     },
     {
       "id": "capture.declared.archivelist",
       "en": "read: a held archive's entries, each one's state and, when not filed, its refusal by name; writes nothing",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3190
+      "line": 3199
     },
     {
       "id": "capture.declared.captureaccount",
       "en": "self-attested-capture-directed: the capturing member appends a signed account of when and how they captured it, keyed by capture sha; refused to anyone else; reached where the case marks the capture self-attested",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3225
+      "line": 3234
     },
     {
       "id": "capture.declared.captureaccounts",
       "en": "read: one capture's signed accounts from its capturing member, keyed by capture sha; writes nothing",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3209
+      "line": 3218
     },
     {
       "id": "capture.declared.capturegrade",
       "en": "read: one capture's grade, keyed by capture sha (`capture` R95); writes nothing",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3205
+      "line": 3214
     },
     {
       "id": "capture.declared.captureseenin",
       "en": "member-directed: a member records once that she filed a held document in a project; a repeat changes nothing, and no reason is asked (capture R101)",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3220
+      "line": 3229
     },
     {
       "id": "capture.declared.gradenote",
       "en": "read: one capture's grade note, the words op=acquire's answer carries, keyed by capture sha, null for a capture the viewer may not see; writes nothing",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3188
+      "line": 3197
     },
     {
       "id": "capture.declared.heldat",
       "en": "read: whether an address is held and where its capture stands (`capture` R96); its one write is the governor's bookkeeping, and no record",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3202
+      "line": 3211
     },
     {
       "id": "capture.declared.heldcaptures",
       "en": "read: the collected documents not set aside, awaiting a member's decision, as the viewer may see them; writes nothing",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3192
+      "line": 3201
     },
     {
       "id": "capture.declared.heldrestore",
       "en": "held-directed: a member restores documents set aside, with one reason, keyed by their ids, reached from the held list; the set-aside stays in the record",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3198
+      "line": 3207
     },
     {
       "id": "capture.declared.heldsetaside",
       "en": "held-directed: a member sets one or more held documents aside with one reason, keyed by their ids, reached from the held list; the set is refused whole or recorded whole, and nothing is deleted",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3194
+      "line": 3203
     },
     {
       "id": "capture.declared.reattest",
       "en": "self-attested-capture-directed: asks a timestamp authority, and for a public locator a fresh co-archive, over a capture held without co-attestation, keyed by capture sha; appends a late attestation stating it proves the bytes existed by now, not at capture; reached from a case's pre-flight",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3196
+      "line": 3205
     },
     {
       "id": "capture.grammar.field_v1_is_not_one",
@@ -9798,231 +9798,231 @@
       "en": "{argument} must be {shape}; {stringify} is not",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1167
+      "line": 1176
     },
     {
       "id": "capture.index.at_most_per_item_max",
       "en": "at most {PER_ITEM_MAX} documents in one act; the set was refused whole and nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1980
+      "line": 1989
     },
     {
       "id": "capture.index.bundle_ids_shape",
       "en": "a list of at most {max} document ids",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1461
+      "line": 1470
     },
     {
       "id": "capture.index.contained_in_a_chrome_region",
       "en": "contained in a chrome region and recurred on {n} distinct pages of {host}",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2486
+      "line": 2495
     },
     {
       "id": "capture.index.contained_in_a_chrome_region_2",
       "en": "contained in a chrome region on one page of {host} only: whether it is the site's navigation or that page's own is undetermined until another page of the host carries it",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2487
+      "line": 2496
     },
     {
       "id": "capture.index.file_bytes_unreadable",
       "en": "the file's bytes could not be read whole or held under their own digest, so nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 709
+      "line": 710
     },
     {
       "id": "capture.index.file_no_bytes",
       "en": "the file has no bytes; nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 711
+      "line": 712
     },
     {
       "id": "capture.index.file_too_large",
       "en": "the file exceeds what this surface will capture even in parts; nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 699
+      "line": 700
     },
     {
       "id": "capture.index.held_acts_unreadable",
       "en": "the set-asides recorded with this question could not be read",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2098
+      "line": 2107
     },
     {
       "id": "capture.index.heldat_baseline_no_digest",
       "en": "the bytes the site gives differ from this copy's, but this copy recorded no determined digest of its substance, so whether the page itself has changed cannot be told",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1300
+      "line": 1309
     },
     {
       "id": "capture.index.heldat_capture_unknown",
       "en": "the record cannot say how this copy was captured, so a plain look at the site is not compared with it",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1245
+      "line": 1254
     },
     {
       "id": "capture.index.heldat_changed_document",
       "en": "the site now gives a different document from this copy",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1267
+      "line": 1276
     },
     {
       "id": "capture.index.heldat_changed_substance",
       "en": "the substance of what the site now gives differs from this copy's",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1315
+      "line": 1324
     },
     {
       "id": "capture.index.heldat_export",
       "en": "this copy was not fetched from its own address (an export of it was), so a plain look at the site cannot be compared with it",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1246
+      "line": 1255
     },
     {
       "id": "capture.index.heldat_host_paced",
       "en": "the host is being given time between requests, so the source was not looked at",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1262
+      "line": 1271
     },
     {
       "id": "capture.index.heldat_member_act",
       "en": "looking at the source is a signed-in member's act, whose stamp names them; nothing was fetched",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1221
+      "line": 1230
     },
     {
       "id": "capture.index.heldat_no_address",
       "en": "this copy has no address to look at",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1241
+      "line": 1250
     },
     {
       "id": "capture.index.heldat_no_copy_seen",
       "en": "the record holds no copy of this that you may see, so there is nothing to compare",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1232
+      "line": 1241
     },
     {
       "id": "capture.index.heldat_no_public_address",
       "en": "this copy has no public address to look at",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1248
+      "line": 1257
     },
     {
       "id": "capture.index.heldat_not_plain_fetch",
       "en": "this copy did not come from a plain fetch of the address (it was uploaded, handed over or read from an archive), so a plain look at the site cannot be compared with it",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1243
+      "line": 1252
     },
     {
       "id": "capture.index.heldat_not_whole",
       "en": "the document did not arrive whole, so the source was not looked at",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1289
+      "line": 1298
     },
     {
       "id": "capture.index.heldat_other_handler",
       "en": "the bytes the site gives differ from this copy's and are read as another kind of page than this copy was, so whether the page itself has changed cannot be told",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1310
+      "line": 1319
     },
     {
       "id": "capture.index.heldat_record_unreadable",
       "en": "the record could not be read, so whether it holds this, and whether the source has changed, is not known",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1228
+      "line": 1237
     },
     {
       "id": "capture.index.heldat_rendered",
       "en": "this copy is a rendered capture, which a plain look at the site cannot be compared with",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1244
+      "line": 1253
     },
     {
       "id": "capture.index.heldat_request_incomplete",
       "en": "the request for the address did not complete, so the source was not looked at",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1259
+      "line": 1268
     },
     {
       "id": "capture.index.heldat_same_document",
       "en": "the site still gives the same document as this copy",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1267
+      "line": 1276
     },
     {
       "id": "capture.index.heldat_same_substance",
       "en": "the site gives different bytes from this copy, but their substance is the same: only what the page rebuilds on every visit differs",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1314
+      "line": 1323
     },
     {
       "id": "capture.index.heldat_served_no_digest",
       "en": "the bytes the site gives differ from this copy's and earn no determined digest of their substance, so whether the page itself has changed cannot be told",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1312
+      "line": 1321
     },
     {
       "id": "capture.index.heldat_served_too_large",
       "en": "the bytes the site gives differ from this copy's, and are larger than this surface takes a digest of the substance within, so whether the page itself has changed cannot be told",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1301
+      "line": 1310
     },
     {
       "id": "capture.index.heldat_too_large",
       "en": "the document at the address is larger than this surface compares, so it was not looked at whole",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1285
+      "line": 1294
     },
     {
       "id": "capture.index.kind_must_be_one_of",
       "en": "kind must be one of: {TASK_KINDS}",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2896
+      "line": 2905
     },
     {
       "id": "capture.index.names_no_document",
       "en": "name at least one document; nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1977
+      "line": 1986
     },
     {
       "id": "capture.index.not_set_aside",
       "en": "these documents are not set aside; nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2058
+      "line": 2067
     },
     {
       "id": "capture.index.op_op_needs_argument_in",
@@ -10043,105 +10043,105 @@
       "en": "outcome must be one of: {SOURCE_OUTCOMES}",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 3025
+      "line": 3034
     },
     {
       "id": "capture.index.reattest_needs_sha",
       "en": "reattest takes the sha256 of a capture the record holds",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 995
+      "line": 1004
     },
     {
       "id": "capture.index.receipt_not_written",
       "en": "the acquisition receipt could not be written, so nothing was filed",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 738
+      "line": 747
     },
     {
       "id": "capture.index.refusal_member_brings_file",
       "en": "a file is brought into the record by a signed-in member, whose stamp names them; nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 647
+      "line": 648
     },
     {
       "id": "capture.index.reuse_posthoc_unverified",
       "en": "a later direct capture of this host fetched different bytes for this address; this earlier capture reused the old ones, which are now unverified against the source",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2722
+      "line": 2731
     },
     {
       "id": "capture.index.say_so_the_file_cannot",
       "en": "{say}, so the file cannot be held under its own digest; nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 665
+      "line": 666
     },
     {
       "id": "capture.index.seenin_member_act",
       "en": "filing a document where it is seen is a signed-in member's act, whose stamp names them; nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 891
+      "line": 900
     },
     {
       "id": "capture.index.seenin_not_held",
       "en": "the record holds no such document that you may see; nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 905
+      "line": 914
     },
     {
       "id": "capture.index.seenin_not_recorded",
       "en": "the record could not be written, so nothing was filed",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 916
+      "line": 925
     },
     {
       "id": "capture.index.sha_identifies_event",
       "en": "a capture sha256 identifies the event; a record does not exist yet at capture time",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 2898
+      "line": 2907
     },
     {
       "id": "capture.index.signature_not_verified",
       "en": "the signature does not verify over this account's statement against a key of yours that attests, so nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 957
+      "line": 966
     },
     {
       "id": "capture.index.the_record_holds_this_copy",
       "en": "the record holds this copy as retrieved at {asOf} and has no later look at the source; a copy's age is not a look, so whether the site has changed since is not known from the record alone",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1239
+      "line": 1248
     },
     {
       "id": "capture.index.the_site_answered_status_so",
       "en": "the site answered {status}, so it did not give the document to compare",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 1272
+      "line": 1281
     },
     {
       "id": "capture.index.upload_no_bytes",
       "en": "the upload carried no bytes; nothing was written",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 668
+      "line": 669
     },
     {
       "id": "capture.index.upload_receipt_evidence",
       "en": "the upload's receipt: its digest, taken as the bytes arrived, and its instant",
       "module": "capture",
       "file": "bio-plane/src/capture/index.mjs",
-      "line": 808
+      "line": 817
     },
     {
       "id": "capture.index.vouched_basis",
@@ -10197,14 +10197,14 @@
       "en": "read: the publication ceremony's dry run — op=publish's first refusal, every other refusal reachable, and whether the case is ready, over the same arguments, rolled back; writes nothing",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 2159
+      "line": 2172
     },
     {
       "id": "case-authoring.declared.publishtensions",
       "en": "read: the contradictions a case must disclose before it is published, each side the publisher cannot see highlighted and withheld; writes nothing",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 2162
+      "line": 2175
     },
     {
       "id": "case-authoring.document.a_conclusion_belongs_to_a",
@@ -10463,511 +10463,511 @@
       "en": "a case is a PRODUCTION OF A PROJECT (DEC-72): pass project=<project id>. The project is what supplies the standard of evidence this case is held to, read from that project alone at this moment — so a publication naming no project is one whose bar nobody declared, and an absent publisher is not a publisher of none.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1321
+      "line": 1323
     },
     {
       "id": "case-authoring.index.a_case_rests_on_at",
       "en": "a case rests on at least one LOAD-BEARING finding (DEC-72). Every member here is supporting, so the case asserts nothing conclusively — while its completeness assertion claims coverage of a question no member answers. Designate the finding the case actually rests on, or do not publish this as a case yet.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1443
+      "line": 1445
     },
     {
       "id": "case-authoring.index.a_declared_position_with_no",
       "en": "a declared position with no reasoning behind it is the checkbox this gate exists to refuse. Say why — including why the team chose not to give notice — and a reader weighs it exactly as they weigh any other declared bias.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 667
+      "line": 669
     },
     {
       "id": "case-authoring.index.a_finding_already_in_a_published_case",
       "en": "A finding already in a published case is REOPENED first (op=reopen) and concluded again, which is what makes the next edition a separate document carrying its own conclusion, its own falsifier and its own freshly authored completeness (DEC-12, DEC-72).",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1382
+      "line": 1384
     },
     {
       "id": "case-authoring.index.a_finding_is_an_inquiry",
       "en": "a FINDING is an inquiry that reached a conclusion; nothing else is publishable as a member of a case.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1352
+      "line": 1354
     },
     {
       "id": "case-authoring.index.a_new_case",
       "en": "a new case",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 880
+      "line": 882
     },
     {
       "id": "case-authoring.index.a_published_case_carries_the",
       "en": "a published case carries the bias it was produced under, as a fact the reader weighs. Acknowledge it here, in the ceremony, fresh for this edition — a pre-flight checkbox would be the checkbox this gate exists to refuse (DEC-46). This is a DISCLOSURE and never a bar: declaring a bias does not stop a case being published, and nothing here reads WHICH bias you name (DEC-20). The only bias that disqualifies is an uncleared HUNCH, and that is refused by name before any signature exists.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 677
+      "line": 679
     },
     {
       "id": "case-authoring.index.a_published_case_is_a_container",
       "en": "a published case is a CONTAINER over ONE OR MORE FINDINGS, scoped to the question that brought them together: pass targets=[<inquiry id>, ...]. One finding is legal and is the degenerate case (DEC-44); what is not legal is publishing nothing.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 638
+      "line": 640
     },
     {
       "id": "case-authoring.index.a_published_case_states_its",
       "en": "a published case states its own SCOPE — what brought these findings together and what question the case as a whole answers. It is authored by the team and never derived from the findings' titles: a scope your team's Civicsmith wrote is not a scope the team made (DEC-44). Completeness says what the case left OUT; scope says what it is ABOUT.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 674
+      "line": 676
     },
     {
       "id": "case-authoring.index.a_published_case_states_what",
       "en": "a published case states what it does NOT cover. A case silent about its own limits is claiming to cover everything, which is the overclaim this record exists to refuse.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 660
+      "line": 662
     },
     {
       "id": "case-authoring.index.case_thecase_is_claimedproject_s",
       "en": "case {theCase} is {claimedProject}'s production, and a case does not change hands between editions (DEC-72). The bar a case is held to is read from its publishing project at the moment of publication, so letting edition 2 name a different project would change this case's standard of evidence with nobody authoring the change. Publish the new edition as {claimedProject_2}, or publish this material as a new case.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 916
+      "line": 918
     },
     {
       "id": "case-authoring.index.count_other_projects_this_viewer_can_see",
       "en": "{count} other project(s) this viewer can see HAVE concluded it ({projects}) — information, never this project's stance (§7.1 item 8). ",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1379
+      "line": 1381
     },
     {
       "id": "case-authoring.index.declare_the_teams_position_on",
       "en": "declare the team's position on putting this case to its subject. The gate is that the position is DECLARED — never that contact happened, and never that the answer was favourable (DEC-13). Deciding not to give notice is a legitimate position and is declared like any other.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 664
+      "line": 666
     },
     {
       "id": "case-authoring.index.draft_draftnamed_is_prepared_for",
       "en": "draft {draftNamed} is prepared for {caseIdentitySentence}, and this act publishes {v1}. Naming it would bind its readings to a case they were not given for. Publish the case the draft names {v2}, or name the draft of this one.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 880
+      "line": 882
     },
     {
       "id": "case-authoring.index.draft_draftnamed_was_already_named",
       "en": "draft {draftNamed} was already named as the draft of edition {edition} of {case_id}, and its readings bound to that case at that act. One draft produces one case: binding its readings to a second would list the same readers under two productions.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 889
+      "line": 891
     },
     {
       "id": "case-authoring.index.edition_edition_of_thecase_is",
       "en": "edition {edition} of {theCase} is signed and waiting to be published{v1}. The next edition is prepared once it is published, stopped at its time, or cancelled (op=publishatcancel). Nothing was prepared.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 836
+      "line": 838
     },
     {
       "id": "case-authoring.index.edition_of_caseid_must_say_what_changed",
       "en": "edition {edition} of {caseId} must say what changed in it since the edition before, and why (whatChanged: {text}): a reader of a later edition is owed the difference in the team's own words, not left to compare two documents (DEC-101). A first edition carries none. Nothing was written.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1295
+      "line": 1297
     },
     {
       "id": "case-authoring.index.edition_predicted_of_thecase",
       "en": "edition {predicted} of {theCase}",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 880
+      "line": 882
     },
     {
       "id": "case-authoring.index.excluded_i_carries_no_reason",
       "en": "excluded[{i}] carries no reason. WHAT was left out and WHY are two statements and one does not stand in for the other.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 693
+      "line": 695
     },
     {
       "id": "case-authoring.index.excluded_i_is_not_an",
       "en": "excluded[{i}] is not an object",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 682
+      "line": 684
     },
     {
       "id": "case-authoring.index.excluded_i_names_neither_a",
       "en": "excluded[{i}] names neither a target nor a description. Every exclusion row carries a target id OR prose, never neither — otherwise the row asserts nothing and the index cannot answer \"which published cases excluded this document\".",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 690
+      "line": 692
     },
     {
       "id": "case-authoring.index.field_is_a_list_of",
       "en": "{field} is a list of {calc, words?}: each names a calculation (or a workbook's capture) by its id, and its words, when given, are at most {COMPLETENESS_MAX} characters with no quote, backslash or line break",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 462
+      "line": 464
     },
     {
       "id": "case-authoring.index.id_carries_no_authored_designation",
       "en": "{id} carries no authored designation. Every member of a case is declared load_bearing or supporting BY THE PUBLISHER (DEC-72): a load-bearing finding is one the case rests on and must meet the project's standard of evidence, and a supporting one travels with the case without being presented as carrying it. There is no default, because a member designated by omission was designated by nobody.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1432
+      "line": 1434
     },
     {
       "id": "case-authoring.index.id_is_designated_r_which",
       "en": "{id} is designated '{r}', which is not one of: {MEMBER_ROLES}. The two terms are the record's own and are spelled as the schema spells them.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1435
+      "line": 1437
     },
     {
       "id": "case-authoring.index.its_arguments",
       "en": "its arguments",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 215
+      "line": 216
     },
     {
       "id": "case-authoring.index.listed_a_load_bearing_finding_rests",
       "en": "{listed}: a load-bearing finding rests on a calculation that gives a different result when your team's Civicsmith recomputes it, or on an input typed with no source, and this act does not disclose it. List each in calculationsDisclosed, with your own words if you choose, and the published case states it. A disclosed one never blocks (DEC-76 item 4). Nothing was written.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 520
+      "line": 522
     },
     {
       "id": "case-authoring.index.m_appears_twice_in_this",
       "en": "{m} appears twice in this case. A finding is in a case once — listing it twice would give the container two copies of one document and the ordinal no meaning.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 644
+      "line": 646
     },
     {
       "id": "case-authoring.index.map_a_counsel_matter_is",
       "en": "{map}: a counsel matter is never published, and this case would rest on one. Nothing was prepared.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1412
+      "line": 1414
     },
     {
       "id": "case-authoring.index.map_a_published_case_carries",
       "en": "{map} A published case carries a standard that is not free to read only as the passages a finding relies on, and a finding that rests only on benchmarks says \"slower than\" or \"below\", never \"violated\" or \"nonconforming\" (K1723, K1739). Change the case and prepare it again. Nothing was prepared.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1163
+      "line": 1165
     },
     {
       "id": "case-authoring.index.missing_the_team_requires_their",
       "en": "{missing}: the team requires their approval of this version of the case before it is signed, and it is not given. Ask them to approve it, then prepare it again so the document carries the approvals. Nothing was written.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1650
+      "line": 1652
     },
     {
       "id": "case-authoring.index.name_is_at_most_completeness",
       "en": "{name} is at most {COMPLETENESS_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 704
+      "line": 706
     },
     {
       "id": "case-authoring.index.no_answer",
       "en": "no answer",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1755
+      "line": 1759
     },
     {
       "id": "case-authoring.index.no_draft_of_caseid_statement",
       "en": "no draft of {caseId}'s statement of what changed answers to {named} (op=whatchangeddrafts&case={caseId} lists them). Name one of them, or write the statement in your own words (whatChanged: {text}) and publish again. Nothing was written.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1306
+      "line": 1308
     },
     {
       "id": "case-authoring.index.no_draft_of_proj_that",
       "en": "no draft of {proj} that you can read answers to {draftNamed}. A draft you cannot read is answered exactly as one that does not exist. Name the draft this case was prepared in, or publish without draft= and its readings are stated as undetermined.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 872
+      "line": 874
     },
     {
       "id": "case-authoring.index.no_published_case_answers_to",
       "en": "no published case answers to {theCase}. A case identity is minted by this act and carried in the signed bytes; it is never taken from a caller, because an identity a caller can hand us is one a caller can invent.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 821
+      "line": 823
     },
     {
       "id": "case-authoring.index.not_reached_op_publish_refuses_before",
       "en": "not reached: op=publish refuses before the case and its pins are known",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 308
+      "line": 310
     },
     {
       "id": "case-authoring.index.not_reached_op_publish_refuses_first",
       "en": "not reached: op=publish refuses first ({reason})",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1755
+      "line": 1759
     },
     {
       "id": "case-authoring.index.notallowed_a_case_carries_no",
       "en": "{notAllowed}: a case carries no field of that name. What a publisher authors is exactly the four statements (statement, subjectJustification, excluded with its reasons, whatChanged), the scope, the bias acknowledgement and the account, each sentence of which rests on what it cites (D57, D63). A story, context or human-interest passage has no place in a case. Nothing was written.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 713
+      "line": 715
     },
     {
       "id": "case-authoring.index.on_date_at_time",
       "en": " on {date} at {time}",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 836
+      "line": 838
     },
     {
       "id": "case-authoring.index.only_a_concluded_finding_may_be",
       "en": "only a CONCLUDED finding may be a case member: a material set cannot be asserted over a question with no conclusion, and `concluded` is asked of the PUBLISHING PROJECT'S relationship with it (INVESTIGATIVE-SESSION.md §7.1 item 4). ",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1370
+      "line": 1372
     },
     {
       "id": "case-authoring.index.op_caseratify_over_op_publish_document",
       "en": "op=caseratify over op=publish's document (case {caseId}, edition {edition})",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1846
+      "line": 1850
     },
     {
       "id": "case-authoring.index.op_publish_first",
       "en": "op=publish first",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1847
+      "line": 1851
     },
     {
       "id": "case-authoring.index.pass_excluded_an_empty_list",
       "en": "pass excluded[]. An EMPTY list is a claim — this case left nothing material out — and is legal; an ABSENT field is silence, and silence about what a case excludes is what the completeness assertion exists to refuse.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 670
+      "line": 672
     },
     {
       "id": "case-authoring.index.proj_concluded_this_question_and_withdrew",
       "en": "{proj} concluded this question and WITHDREW that conclusion, so it stands on none today (op=withdrawconclusion; §7.1 item 7 — the withdrawal is history, never the stance). Conclude it again for this project (op=conclude&project={proj}). ",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1374
+      "line": 1376
     },
     {
       "id": "case-authoring.index.proj_has_not_concluded_this_question",
       "en": "{proj} has not concluded this question. A conclusion belongs to the project's relationship with the inquiry (§7.1): another team's conclusion, and a conclusion written in the question's own bytes with no project, are both readable here and neither is this project's. Conclude it for this project (op=conclude&project={proj}&version=<reading>). ",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1377
+      "line": 1379
     },
     {
       "id": "case-authoring.index.proj_is_a_object_type",
       "en": "{proj} is a {object_type}, and only a PROJECT has a standard of evidence to hold a case to (DEC-72). Publication is wielded at the top of a project's roster.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1330
+      "line": 1332
     },
     {
       "id": "case-authoring.index.proj_latest_entry_names_an_act",
       "en": "{proj}'s latest entry about this question names an act your team's Civicsmith does not know, so what it stands on is UNDETERMINED rather than concluded, and it is not guessed at. ",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1376
+      "line": 1378
     },
     {
       "id": "case-authoring.index.project_holding_members",
       "en": "{project} (holding {members})",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1413
+      "line": 1415
     },
     {
       "id": "case-authoring.index.project_the_publishing_project",
       "en": "{project} (the publishing project)",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1412
+      "line": 1414
     },
     {
       "id": "case-authoring.index.publishing_discloses_each_of_these",
       "en": "publishing discloses each of these, and is never blocked by a conflict (DEC-76 item 4): list each in tensionsDisclosed at op=publish, with your own words if you choose. A highlighted one rests on a side in conflict with a record you cannot see; the published case will not name that record or who holds it.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1505
+      "line": 1507
     },
     {
       "id": "case-authoring.index.publishing_is_proj_s_own",
       "en": "publishing is {proj}'s own production and is wielded by an OWNER of it (DEC-72). An administrator sees every project and directs none of them, and a participant who is not an owner contributes to the work without putting the project's name on it.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1335
+      "line": 1337
     },
     {
       "id": "case-authoring.index.publishing_puts_the_teams_name",
       "en": "publishing puts the team's name on a case. A machine credential may prepare one and may never author the completeness assertion or the position on putting it to its subject, both of which are declared bias. Sign in as a member.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 621
+      "line": 623
     },
     {
       "id": "case-authoring.index.ratification_pre_flight_gave_no_answer",
       "en": "ratification's pre-flight gave no answer",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1724
+      "line": 1728
     },
     {
       "id": "case-authoring.index.ratification_pre_flight_reads_the_document",
       "en": "ratification's pre-flight reads the document op=publish would store, and op=publish refuses first",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1551
+      "line": 1553
     },
     {
       "id": "case-authoring.index.review_the_case_document_and_ratify_it",
       "en": "review the CASE DOCUMENT (op=casedocument&case={caseId}&edition={edition}) and ratify it (op=caseratify): it carries the case's scope, its completeness assertion, its bias acknowledgement, its standard of evidence, the whole roster PINNED AT THE VERSION HASHES each finding has now, and each member's own edition and frozen strength as this case reads it — and your signature over it is what commits them. Nothing was written on any finding (BIO_Publication_v0_1.md §3 rule 12). ",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1238
+      "line": 1240
     },
     {
       "id": "case-authoring.index.roles_is_a_map_from_finding_id",
       "en": "roles is a map from finding id to designation — {\"INQ-…\": \"load_bearing\"} — one entry per member of this case. It is not a list: a list would be positional against the roster, and a partition that can silently reorder is not one anybody authored.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1426
+      "line": 1428
     },
     {
       "id": "case-authoring.index.signing_publishes_this_case_edition",
       "en": "Signing publishes this case edition, and each finding in it at the version pinned here. A published edition is never withdrawn or edited: it is corrected only by a later edition.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1764
+      "line": 1768
     },
     {
       "id": "case-authoring.index.state_no_grade",
       "en": "{state} (no grade)",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1469
+      "line": 1471
     },
     {
       "id": "case-authoring.index.target_is_load_bearing_in",
       "en": "{target} is LOAD-BEARING in this case and reaches {axis} {v1}, against {proj}'s declared standard of '{want}'. A case rests on its load-bearing findings, so those are what the project's bar is asked of. A finding below the bar may still travel with this case — designate it SUPPORTING and it is published, marked as not carrying the case (DEC-72). That is the honest move and never severing the citation.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1469
+      "line": 1471
     },
     {
       "id": "case-authoring.index.the_approvals_the_teams_rule",
       "en": "the approvals the team's rule requires could not be read, so whether every one is given is not known. Signing is refused until they can be. Nothing was written.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1647
+      "line": 1649
     },
     {
       "id": "case-authoring.index.the_bias_acknowledgement_is_byte",
       "en": "the bias acknowledgement is byte-identical to edition {edition}'s. An acknowledgement of the bias a case was produced under is AUTHORED at the moment of export and never carried forward (DEC-46): reprinting the last edition's sentence is evidence nobody looked. The lens itself may well be unchanged — what must be fresh is what it means for THIS edition's findings. Say that, as of this edition. Declaring a bias never blocks publication (DEC-20).",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 963
+      "line": 965
     },
     {
       "id": "case-authoring.index.the_case_documents_searched_section",
       "en": "the case document's searched section could not be computed: {why}. A case document publishes what was looked for beside what it claims to cover (D-196); it does not publish the claim with the record of the looking left blank.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1041
+      "line": 1043
     },
     {
       "id": "case-authoring.index.the_team_requires_no_approval",
       "en": "The team requires no approval before a case is signed.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1828
+      "line": 1832
     },
     {
       "id": "case-authoring.index.then_ratify_each_of_these_findings",
       "en": "Then ratify EACH of these {count} findings (op=ratify): every finding is signed on its own bytes because the finding is the unit of truth, and this case edition becomes servable as a container when the last of them lands.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1242
+      "line": 1244
     },
     {
       "id": "case-authoring.index.then_ratify_the_finding_itself",
       "en": "Then ratify the finding itself (op=ratify): it is signed on its own bytes because the finding is the unit of truth.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1241
+      "line": 1243
     },
     {
       "id": "case-authoring.index.these_findings_already_serve_length",
       "en": "these findings already serve {length} published cases ({sort}), and this act did not say which case it is publishing. A finding can serve many cases (DEC-72 clause 6), so membership no longer says which case this is: name the case to publish a further edition of it, or say so and a new case is minted. The record will not choose for you.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 813
+      "line": 815
     },
     {
       "id": "case-authoring.index.this_act_both_names_case",
       "en": "this act both NAMES case {str} and asks for a new case to be minted. Those are opposite instructions and the record will not choose between them: name the case to publish a further edition of it, or ask for a new one, not both.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 808
+      "line": 810
     },
     {
       "id": "case-authoring.index.this_act_was_asked_without",
       "en": "this act was asked without the calculations its findings rest on having been recomputed and read, so whether one differs or rests on an unbound input is not known here. Publish through op=publish, which recomputes them first. Nothing was written.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 480
+      "line": 482
     },
     {
       "id": "case-authoring.index.this_finding_is_already_a",
       "en": "this finding is already a member of a published case at the version it stands at now, and that edition already records the conclusion this act would record (the publishing project's relationship, its reading and its claim — INVESTIGATIVE-SESSION.md §7.1 item 9), so there is nothing here a new edition would say differently. An EDITION IS A SEPARATE DOCUMENT (DEC-12): it carries its own conclusion, its own falsifier and its own freshly authored completeness, and minting one that says what an edition already says would make the edition number a count of publish calls rather than a record of what changed. Two routes lead to a new edition, and each leaves a reader able to see what moved: the project withdraws its conclusion and concludes again (op=withdrawconclusion, then op=conclude&project=), or the finding is reopened (op=reopen), worked, concluded again and published — the route DEC-12 built.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 856
+      "line": 858
     },
     {
       "id": "case-authoring.index.this_inquiry_has_no_readable_bundle",
       "en": "this inquiry has no readable bundle.md, so its state cannot be moved",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1356
+      "line": 1358
     },
     {
       "id": "case-authoring.index.this_question_is_state",
       "en": "This question is {state}, and a case cannot be asserted over one the team has set down or carried forward. Reopen it (op=reopen) or work the children a division produced (DEC-28); a conclusion a project wrote while the question was open does not survive the question leaving the states a case can rest on. ",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1372
+      "line": 1374
     },
     {
       "id": "case-authoring.index.v1_is_byte_identical_to",
       "en": "{v1} is byte-identical to edition {edition}'s. A completeness claim carried forward unchanged is a checkbox, and C-21.1 exists to refuse it: every edition is a separate document and states its own limits in its own words, as of its own date. If nothing about the limits changed, say THAT, as of this edition.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 959
+      "line": 961
     },
     {
       "id": "case-authoring.index.what_changed_in_this_edition",
       "en": "what changed in this edition is at most {WHAT_CHANGED_MAX} characters, and this statement is {length}. Say it shorter. Nothing was written.",
       "module": "case-authoring",
       "file": "bio-plane/src/case-authoring/index.mjs",
-      "line": 1300
+      "line": 1302
     },
     {
       "id": "case-authoring.searched.a_searched_section_requires_a",
@@ -12976,343 +12976,343 @@
       "en": "a refusal",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 1221
+      "line": 1222
     },
     {
       "id": "case-disclosures.index.account_not_checked",
       "en": "the account could not be checked against what it cites ({why}), so whether each of its {length} sentence(s) stands is not known. Try again. Nothing was written.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 1220
+      "line": 1221
     },
     {
       "id": "case-disclosures.index.candidates_not_unresolved_conflict",
       "en": "{candidates} is not an unresolved conflict on this case's findings at the bytes this act pins: it may have been resolved since, or it names nothing this case rests on. Read the list again (op=publishtensions). Nothing was published.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 277
+      "line": 278
     },
     {
       "id": "case-disclosures.index.capture_lacking",
       "en": "{capture} under {members}, lacking {missing}",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 414
+      "line": 415
     },
     {
       "id": "case-disclosures.index.check_answered",
       "en": "the check answered {reason}",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 1221
+      "line": 1222
     },
     {
       "id": "case-disclosures.index.check_answered_nothing",
       "en": "the check answered nothing it states",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 1222
+      "line": 1223
     },
     {
       "id": "case-disclosures.index.each_signer_attests",
       "en": "Each signer attests before the case is signed, or declares the tie first (op=membertie). Nothing was written.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 1059
+      "line": 1060
     },
     {
       "id": "case-disclosures.index.finding_why",
       "en": "{finding} ({why})",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 1152
+      "line": 1153
     },
     {
       "id": "case-disclosures.index.flags_not_open",
       "en": "{flags} is not an open flag on work this case rests on: it may have been cleared since. Read the list again (op=publishpreflight). Nothing was published.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 738
+      "line": 739
     },
     {
       "id": "case-disclosures.index.hunch_leg",
       "en": "{target} leg {ord} on {leg_target}",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 246
+      "line": 247
     },
     {
       "id": "case-disclosures.index.hunch_legs",
       "en": "{count} basis leg(s) of this case's findings rest on a HUNCH ({legs}). ",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 246
+      "line": 247
     },
     {
       "id": "case-disclosures.index.hunch_unread",
       "en": "The basis of {unread} could not be read, so whether it rests on a hunch is not known. ",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 247
+      "line": 248
     },
     {
       "id": "case-disclosures.index.length_document_s_a_member",
       "en": "{length} document(s) a member supplied, which a load-bearing finding of this case relies on, cannot be cleaned of the details that could show who made them ({map}), and a member's document travels only as its cleaned copy. Capture each from where it was published, supply a plainer copy, or stop relying on it. Nothing was written.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 563
+      "line": 564
     },
     {
       "id": "case-disclosures.index.length_document_s_or_observation",
       "en": "{length} document(s) or observation(s) a load-bearing finding of this case rests on are not held whole by your team's Civicsmith ({map}). Everything a case relies on travels with it in full (DEC-112 (4)): find a presentable copy, stop relying on the material, or make the finding supporting. Nothing was written.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 518
+      "line": 519
     },
     {
       "id": "case-disclosures.index.length_document_s_this_case",
       "en": "{length} document(s) this case relies on could not be checked for the people and number plates marked in them ({map}), so what the published case would show of them is not known. Try again. Nothing was written.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 526
+      "line": 527
     },
     {
       "id": "case-disclosures.index.length_document_s_this_case_2",
       "en": "{length} document(s) this case relies on could not be checked for the details a member's file can carry ({map}), so what the published case would show of them is not known. Try again. Nothing was written.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 548
+      "line": 549
     },
     {
       "id": "case-disclosures.index.length_leg_s_of_this",
       "en": "{length} leg(s) of this case's findings rest on another team's finding with no acceptance of that edition in force ({map}). Accept that edition again (op=importaccept), or take the leg out. Nothing was written.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 701
+      "line": 702
     },
     {
       "id": "case-disclosures.index.length_load_bearing_grade_earned",
       "en": "{length} load-bearing Grade {EARNED_CAPTURE_CEILING} document(s) hold no trusted timestamp and co-archive ({map}). Retry them (op=reattest), or list each in selfAttested with your reason to publish it as self-attested only (DEC-81 item 3). The case is never refused because a document is not co-attested. Nothing was written.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 414
+      "line": 415
     },
     {
       "id": "case-disclosures.index.length_open_flag_s_on",
       "en": "{length} open flag(s) on another team's work this case rests on are not disclosed ({map}). A case is published with its open flags disclosed, never refused because one is open (DEC-96 item 4): list each in flagsDisclosed, or clear it first. Nothing was published.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 732
+      "line": 733
     },
     {
       "id": "case-disclosures.index.length_photo_s_a_load",
       "en": "{length} photo(s) a load-bearing finding of this case relies on cannot be covered in their format ({map}), and a photo travels only as its covered copy, so the case can neither carry them whole nor leave them out. Capture each again as an ordinary photo, or stop relying on it. Nothing was written.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 540
+      "line": 541
     },
     {
       "id": "case-disclosures.index.length_photo_s_this_case",
       "en": "{length} photo(s) this case relies on have not been checked for people and number plates to obscure ({map}). Mark each, or mark it as having nothing to obscure, before signing. Nothing was written.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 533
+      "line": 534
     },
     {
       "id": "case-disclosures.index.length_unresolved_conflict_s_on",
       "en": "{length} unresolved conflict(s) on what this case rests on are not disclosed ({map}). A case is published with its conflicts disclosed, never refused because one exists (DEC-76 item 4): list each in tensionsDisclosed, or resolve it first. Nothing was published.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 268
+      "line": 269
     },
     {
       "id": "case-disclosures.index.machine_flagged_sentences",
       "en": "the machine flagged {say} as not supported by what it cites, and it stands as flagged. Tie it to evidence, or take it out. Nothing was written.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 1271
+      "line": 1272
     },
     {
       "id": "case-disclosures.index.map_a_basis_stands_only",
       "en": "{map}. A basis stands only on what the record holds. Read the list again. Nothing was written.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 933
+      "line": 934
     },
     {
       "id": "case-disclosures.index.map_gives_no_reason_publishing",
       "en": "{map} gives no reason. Publishing a document as self-attested only is an attributed act with a stated reason (DEC-81 item 3 (b)). Nothing was written.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 421
+      "line": 422
     },
     {
       "id": "case-disclosures.index.map_needs_no_acknowledgement_map",
       "en": "{map} needs no acknowledgement: {map_2}. Remove it from selfAttested. Nothing was written.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 429
+      "line": 430
     },
     {
       "id": "case-disclosures.index.missing_co_archive",
       "en": "the co-archive",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 414
+      "line": 415
     },
     {
       "id": "case-disclosures.index.missing_timestamp",
       "en": "the trusted timestamp",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 414
+      "line": 415
     },
     {
       "id": "case-disclosures.index.others_not_attested",
       "en": "{count} other signer(s) have not attested. ",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 1058
+      "line": 1059
     },
     {
       "id": "case-disclosures.index.peoplebases_ord_words_carries_a",
       "en": "peopleBases[{ord}].words carries a person's address or phone number as the record holds it, and a case never publishes either (K1493). Say why the person is named without it.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 912
+      "line": 913
     },
     {
       "id": "case-disclosures.index.person_named_in_v1",
       "en": "{person}, named in {v1}",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 928
+      "line": 929
     },
     {
       "id": "case-disclosures.index.persons_no_recorded_basis",
       "en": "{length} person(s) this case names have no recorded basis ({map}). Every person a case names is named on a basis the record holds (Design Requirement 6): list each in peopleBases with its basis and reference. Nothing was written.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 928
+      "line": 929
     },
     {
       "id": "case-disclosures.index.record_not_read_whole_conflicts",
       "en": "the record could not be read whole for conflicts on {map}, so what this case must disclose is not known. Nothing was published.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 1152
+      "line": 1153
     },
     {
       "id": "case-disclosures.index.sentence_bias_not_printed",
       "en": "{say} is framed by a bias statement this case's lens does not print. Nothing was written.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 1247
+      "line": 1248
     },
     {
       "id": "case-disclosures.index.sentence_cites_nothing",
       "en": "{say} cites nothing and is not marked as following a printed bias statement. Cite what it rests on, or take it out. Nothing was written.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 1232
+      "line": 1233
     },
     {
       "id": "case-disclosures.index.sentence_claim_not_bias",
       "en": "{say} is marked as following a bias statement and states a fact. Lying is not bias. Nothing was written.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 1252
+      "line": 1253
     },
     {
       "id": "case-disclosures.index.sentence_contradicts_record",
       "en": "{say} says other than the record holds, and cannot be tied to evidence. Nothing was written.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 1242
+      "line": 1243
     },
     {
       "id": "case-disclosures.index.sentence_fact_not_cited",
       "en": "{say} states a figure, date, name or quotation that what it cites does not hold. Nothing was written.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 1237
+      "line": 1238
     },
     {
       "id": "case-disclosures.index.sentence_quoted",
       "en": "sentence {ord} (\"{text}\")",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 1227
+      "line": 1228
     },
     {
       "id": "case-disclosures.index.target_why",
       "en": "{target} ({why})",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 247
+      "line": 248
     },
     {
       "id": "case-disclosures.index.the_case",
       "en": "the case",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 928
+      "line": 929
     },
     {
       "id": "case-disclosures.index.the_flags_on_another_teams",
       "en": "the flags on another team's work this case rests on could not be read whole ({map}), so what this case must disclose is not known. Try again. Nothing was published.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 725
+      "line": 726
     },
     {
       "id": "case-disclosures.index.the_publication_copy_of_length",
       "en": "the publication copy of {length} document(s) a member supplied, which a load-bearing finding of this case relies on, is still being made ({map}). A member's document travels only as its cleaned copy. Try again in a few minutes. Nothing was written.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 555
+      "line": 556
     },
     {
       "id": "case-disclosures.index.this_cases_findings",
       "en": "this case's findings",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 1152
+      "line": 1153
     },
     {
       "id": "case-disclosures.index.v1_a_hunch_is_temporary",
       "en": "{v1}A hunch is temporary declared bias, and it is the one bias that must be cleared before publication (DEC-20): the case must still hold with the hunch removed. Give each leg a grade the record earns, or take the hunch out of the basis, and publish again. Nothing was written.",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 246
+      "line": 247
     },
     {
       "id": "case-disclosures.index.you_not_attested_tie",
       "en": "You have not attested that you hold no undeclared tie to anyone or anything this case names. ",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/index.mjs",
-      "line": 1057
+      "line": 1058
     },
     {
       "id": "case-disclosures.materials.copy_state_read_answered_copy",
       "en": "the copy's state read answered copy with no SHA-256",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/materials.mjs",
-      "line": 223
+      "line": 231
     },
     {
       "id": "case-disclosures.materials.copy_state_read_answered_copy_obscured",
       "en": "the copy's state read answered copy with no obscured object R22 states for it",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/materials.mjs",
-      "line": 227
+      "line": 235
     },
     {
       "id": "case-disclosures.materials.marks_read_answered_copy",
       "en": "the marks read answered a copy with no obscured object R22 states for it",
       "module": "case-disclosures",
       "file": "bio-plane/src/case-disclosures/materials.mjs",
-      "line": 186
+      "line": 194
     },
     {
       "id": "case-disclosures.people.capture_cited",
@@ -19192,105 +19192,105 @@
       "en": "writes an export manifest of what is already there",
       "module": "corpus-export",
       "file": "bio-plane/src/corpus-export/index.mjs",
-      "line": 455
+      "line": 484
     },
     {
       "id": "corpus-export.index.a_rendering_is_one_of",
       "en": "a rendering is one of {FORMATS}; nothing was rendered or logged",
       "module": "corpus-export",
       "file": "bio-plane/src/corpus-export/index.mjs",
-      "line": 166
+      "line": 181
     },
     {
       "id": "corpus-export.index.canonical_page_of_rows",
       "en": "a canonical page of rows",
       "module": "corpus-export",
       "file": "bio-plane/src/corpus-export/index.mjs",
-      "line": 392
+      "line": 421
     },
     {
       "id": "corpus-export.index.declared_table_carried_or_named",
       "en": "every declared table carried or named",
       "module": "corpus-export",
       "file": "bio-plane/src/corpus-export/index.mjs",
-      "line": 410
+      "line": 439
     },
     {
       "id": "corpus-export.index.declared_tables_list",
       "en": "the declared tables, a list",
       "module": "corpus-export",
       "file": "bio-plane/src/corpus-export/index.mjs",
-      "line": 352
+      "line": 381
     },
     {
       "id": "corpus-export.index.describe_with_length_snapshot_s",
       "en": "{describe}, with {length} snapshot(s) filed",
       "module": "corpus-export",
       "file": "bio-plane/src/corpus-export/index.mjs",
-      "line": 308
+      "line": 323
     },
     {
       "id": "corpus-export.index.manifest_object_listing_records",
       "en": "an export's manifest: an object listing its records",
       "module": "corpus-export",
       "file": "bio-plane/src/corpus-export/index.mjs",
-      "line": 242
+      "line": 257
     },
     {
       "id": "corpus-export.index.never_table_no_row",
       "en": "no row of a table declared export never",
       "module": "corpus-export",
       "file": "bio-plane/src/corpus-export/index.mjs",
-      "line": 369
+      "line": 398
     },
     {
       "id": "corpus-export.index.page_named_by_index",
       "en": "a page is named by its index, a whole number, and its after",
       "module": "corpus-export",
       "file": "bio-plane/src/corpus-export/index.mjs",
-      "line": 151
+      "line": 166
     },
     {
       "id": "corpus-export.index.promotion_filed_under_key",
       "en": "a promotion filed under this key",
       "module": "corpus-export",
       "file": "bio-plane/src/corpus-export/index.mjs",
-      "line": 322
+      "line": 337
     },
     {
       "id": "corpus-export.index.snapshot_filed_under_key",
       "en": "a snapshot filed under this key",
       "module": "corpus-export",
       "file": "bio-plane/src/corpus-export/index.mjs",
-      "line": 315
+      "line": 330
     },
     {
       "id": "corpus-export.index.table_never_travels",
       "en": "export never: its rows never travel",
       "module": "corpus-export",
       "file": "bio-plane/src/corpus-export/index.mjs",
-      "line": 147
+      "line": 162
     },
     {
       "id": "corpus-export.index.table_not_declared",
       "en": "no declared table has that name",
       "module": "corpus-export",
       "file": "bio-plane/src/corpus-export/index.mjs",
-      "line": 142
+      "line": 157
     },
     {
       "id": "corpus-export.index.table_rebuilt_by_rule",
       "en": "derived-rebuildable: it travels as its rule",
       "module": "corpus-export",
       "file": "bio-plane/src/corpus-export/index.mjs",
-      "line": 146
+      "line": 161
     },
     {
       "id": "corpus-export.index.the_creation_base_creation_base",
       "en": "the creation base {CREATION_BASE}, with nothing filed under this key",
       "module": "corpus-export",
       "file": "bio-plane/src/corpus-export/index.mjs",
-      "line": 307
+      "line": 322
     },
     {
       "id": "corpus-export.tables.rebuilt_by_module_from_v1",
@@ -20991,77 +20991,77 @@
       "en": "no text was supplied, so no reading was attempted",
       "module": "docprofile",
       "file": "docprofile/readtext.mjs",
-      "line": 259
+      "line": 282
     },
     {
       "id": "docprofile.readtext.read_over_a_full_decode",
       "en": "read over a full decode ({chars} characters)",
       "module": "docprofile",
       "file": "docprofile/readtext.mjs",
-      "line": 326
+      "line": 353
     },
     {
       "id": "docprofile.readtext.read_over_a_partial_decode",
       "en": "read over a PARTIAL decode, stated: {undetermined} undetermined region(s)/code point(s){named} beside {chars} decoded characters",
       "module": "docprofile",
       "file": "docprofile/readtext.mjs",
-      "line": 325
+      "line": 352
     },
     {
       "id": "docprofile.readtext.the_key_content_type_declares",
       "en": "the {key} content type declares no reader",
       "module": "docprofile",
       "file": "docprofile/readtext.mjs",
-      "line": 310
+      "line": 337
     },
     {
       "id": "docprofile.readtext.the_text_arrived_as_a",
       "en": "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said",
       "module": "docprofile",
       "file": "docprofile/readtext.mjs",
-      "line": 144
+      "line": 167
     },
     {
       "id": "docprofile.readtext.the_text_of_this_document",
       "en": "the text of this document is undetermined ({undetermined} undecodable region(s){named}); a reading over text nobody decoded would be an invented one",
       "module": "docprofile",
       "file": "docprofile/readtext.mjs",
-      "line": 258
+      "line": 281
     },
     {
       "id": "docprofile.readtext.the_tier_that_produced_this",
       "en": "the tier that produced this text could not decode most of it ({undetermined} undetermined against {chars} decoded{named}); a reading over the fragment would silently misrepresent the document",
       "module": "docprofile",
       "file": "docprofile/readtext.mjs",
-      "line": 271
+      "line": 294
     },
     {
       "id": "docprofile.readtext.this_producer_emitted_document_text",
       "en": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
       "module": "docprofile",
       "file": "docprofile/readtext.mjs",
-      "line": 178
+      "line": 201
     },
     {
       "id": "docprofile.readtext.this_producers_document_text_is_not_its_pages",
       "en": "this producer's document text is not its pages joined, so the page a reference was read on cannot be established from it and is not guessed",
       "module": "docprofile",
       "file": "docprofile/readtext.mjs",
-      "line": 170
+      "line": 193
     },
     {
       "id": "docprofile.readtext.this_producers_document_text_is_not_its_paragraphs",
       "en": "this producer's document text is not its paragraphs joined, so the paragraph a reference was read in cannot be established from it and is not guessed",
       "module": "docprofile",
       "file": "docprofile/readtext.mjs",
-      "line": 176
+      "line": 199
     },
     {
       "id": "docprofile.readtext.this_producers_source_carry_no",
       "en": "this producer's {source} carry no part index, so where in the document a reference was read cannot be said",
       "module": "docprofile",
       "file": "docprofile/readtext.mjs",
-      "line": 193
+      "line": 216
     },
     {
       "id": "docprofile.registry.no_content_type_is_registered",
@@ -21138,7 +21138,7 @@
       "en": "{count} legislation file number line(s)",
       "module": "doctypes",
       "file": "doctypes/meeting-agenda.mjs",
-      "line": 139
+      "line": 142
     },
     {
       "id": "doctypes.meeting-agenda.no_body_line",
@@ -21173,14 +21173,14 @@
       "en": "names itself as an agenda on {count} lines, which is page furniture",
       "module": "doctypes",
       "file": "doctypes/meeting-agenda.mjs",
-      "line": 144
+      "line": 147
     },
     {
       "id": "doctypes.meeting-agenda.self_naming_once",
       "en": "names itself as an agenda once ({count}), which a reference also does",
       "module": "doctypes",
       "file": "doctypes/meeting-agenda.mjs",
-      "line": 145
+      "line": 148
     },
     {
       "id": "doctypes.meeting-agenda.unchanged",
@@ -21201,63 +21201,63 @@
       "en": "a meeting was added to the calendar",
       "module": "doctypes",
       "file": "doctypes/meeting-calendar.mjs",
-      "line": 262
+      "line": 264
     },
     {
       "id": "doctypes.meeting-calendar.all_unchanged",
       "en": "all {count} meetings on this calendar are unchanged",
       "module": "doctypes",
       "file": "doctypes/meeting-calendar.mjs",
-      "line": 286
+      "line": 288
     },
     {
       "id": "doctypes.meeting-calendar.due_unknown",
       "en": "this meeting has taken place and no minutes are offered yet; when they are due is not known, because {why}",
       "module": "doctypes",
       "file": "doctypes/meeting-calendar.mjs",
-      "line": 323
+      "line": 325
     },
     {
       "id": "doctypes.meeting-calendar.gone_in_range",
       "en": "a meeting dated inside the range this calendar shows is no longer listed",
       "module": "doctypes",
       "file": "doctypes/meeting-calendar.mjs",
-      "line": 222
+      "line": 224
     },
     {
       "id": "doctypes.meeting-calendar.gone_unknown_range",
       "en": "a meeting is no longer listed, and this calendar's date range could not be read, so whether it simply moved out of view is not established",
       "module": "doctypes",
       "file": "doctypes/meeting-calendar.mjs",
-      "line": 221
+      "line": 223
     },
     {
       "id": "doctypes.meeting-calendar.held_by",
       "en": "this meeting was held by that body",
       "module": "doctypes",
       "file": "doctypes/meeting-calendar.mjs",
-      "line": 306
+      "line": 308
     },
     {
       "id": "doctypes.meeting-calendar.is_agenda",
       "en": "this document is the agenda for that meeting",
       "module": "doctypes",
       "file": "doctypes/meeting-calendar.mjs",
-      "line": 300
+      "line": 302
     },
     {
       "id": "doctypes.meeting-calendar.is_minutes",
       "en": "this document records what happened at that meeting",
       "module": "doctypes",
       "file": "doctypes/meeting-calendar.mjs",
-      "line": 303
+      "line": 305
     },
     {
       "id": "doctypes.meeting-calendar.minutes_exist",
       "en": "minutes for this meeting exist, so the meeting was recorded",
       "module": "doctypes",
       "file": "doctypes/meeting-calendar.mjs",
-      "line": 316
+      "line": 318
     },
     {
       "id": "doctypes.meeting-calendar.no_practice",
@@ -21271,7 +21271,7 @@
       "en": "this meeting was held more than {amount} {unit} ago, longer than minutes usually take here (the jurisdiction's measured practice), and this calendar still offers no minutes",
       "module": "doctypes",
       "file": "doctypes/meeting-calendar.mjs",
-      "line": 325
+      "line": 327
     },
     {
       "id": "doctypes.meeting-calendar.period_not_counted_here",
@@ -21292,203 +21292,203 @@
       "en": "{kind} were published for a meeting that had none",
       "module": "doctypes",
       "file": "doctypes/meeting-calendar.mjs",
-      "line": 249
+      "line": 251
     },
     {
       "id": "doctypes.meeting-calendar.renamed",
       "en": "the body holding a meeting is named differently",
       "module": "doctypes",
       "file": "doctypes/meeting-calendar.mjs",
-      "line": 239
+      "line": 241
     },
     {
       "id": "doctypes.meeting-calendar.replaced",
       "en": "the {kind} document for this meeting is a different document than before",
       "module": "doctypes",
       "file": "doctypes/meeting-calendar.mjs",
-      "line": 255
+      "line": 257
     },
     {
       "id": "doctypes.meeting-calendar.scrolled",
       "en": "{count} no longer in the range shown, which is this calendar moving its window",
       "module": "doctypes",
       "file": "doctypes/meeting-calendar.mjs",
-      "line": 276
+      "line": 278
     },
     {
       "id": "doctypes.meeting-calendar.status_changed",
       "en": "a meeting's status changed from {was} to {now}",
       "module": "doctypes",
       "file": "doctypes/meeting-calendar.mjs",
-      "line": 231
+      "line": 233
     },
     {
       "id": "doctypes.meeting-calendar.taken_place",
       "en": "this meeting has taken place and no minutes are offered yet",
       "module": "doctypes",
       "file": "doctypes/meeting-calendar.mjs",
-      "line": 326
+      "line": 328
     },
     {
       "id": "doctypes.meeting-calendar.unchanged_of",
       "en": "{intact} of {total} meetings unchanged{parts}",
       "module": "doctypes",
       "file": "doctypes/meeting-calendar.mjs",
-      "line": 285
+      "line": 287
     },
     {
       "id": "doctypes.meeting-calendar.unread",
       "en": "the meetings on this calendar could not be read this time, so nothing is claimed about them either way",
       "module": "doctypes",
       "file": "doctypes/meeting-calendar.mjs",
-      "line": 195
+      "line": 197
     },
     {
       "id": "doctypes.meeting-calendar.upcoming",
       "en": "this meeting is upcoming and no agenda is offered yet",
       "module": "doctypes",
       "file": "doctypes/meeting-calendar.mjs",
-      "line": 331
+      "line": 333
     },
     {
       "id": "doctypes.meeting-calendar.withdrawn",
       "en": "{kind} that this calendar previously offered are no longer offered",
       "module": "doctypes",
       "file": "doctypes/meeting-calendar.mjs",
-      "line": 252
+      "line": 254
     },
     {
       "id": "doctypes.meeting-minutes.added",
       "en": "a matter was added to these minutes",
       "module": "doctypes",
       "file": "doctypes/meeting-minutes.mjs",
-      "line": 460
+      "line": 473
     },
     {
       "id": "doctypes.meeting-minutes.changes",
       "en": "{intact} of {total} matters unchanged; {gone} gone, {added} added, {altered} altered",
       "module": "doctypes",
       "file": "doctypes/meeting-minutes.mjs",
-      "line": 470
+      "line": 483
     },
     {
       "id": "doctypes.meeting-minutes.frame",
       "en": "a meeting that convened and adjourned at stated times",
       "module": "doctypes",
       "file": "doctypes/meeting-minutes.mjs",
-      "line": 181
+      "line": 191
     },
     {
       "id": "doctypes.meeting-minutes.item_changed",
       "en": "what these minutes say about this matter changed",
       "module": "doctypes",
       "file": "doctypes/meeting-minutes.mjs",
-      "line": 450
+      "line": 463
     },
     {
       "id": "doctypes.meeting-minutes.label",
       "en": "a set of meeting minutes",
       "module": "doctypes",
       "file": "doctypes/meeting-minutes.mjs",
-      "line": 145
+      "line": 146
     },
     {
       "id": "doctypes.meeting-minutes.motions",
       "en": "motions made, seconded and carried or failed",
       "module": "doctypes",
       "file": "doctypes/meeting-minutes.mjs",
-      "line": 175
+      "line": 186
     },
     {
       "id": "doctypes.meeting-minutes.no_body_line",
       "en": "no single line of this document names the body at the rate a running header does, so which body met is not stated here rather than guessed from one line",
       "module": "doctypes",
       "file": "doctypes/meeting-minutes.mjs",
-      "line": 293
+      "line": 303
     },
     {
       "id": "doctypes.meeting-minutes.no_body_profile",
       "en": "no active jurisdiction profile says how a body is named, so which body met is not read",
       "module": "doctypes",
       "file": "doctypes/meeting-minutes.mjs",
-      "line": 292
+      "line": 302
     },
     {
       "id": "doctypes.meeting-minutes.no_file_shape",
       "en": "no active jurisdiction profile gives the shape of its legislative record's file numbers, so no matter was read",
       "module": "doctypes",
       "file": "doctypes/meeting-minutes.mjs",
-      "line": 419
+      "line": 432
     },
     {
       "id": "doctypes.meeting-minutes.outcome_changed",
       "en": "what these minutes record the body as having done with this matter changed",
       "module": "doctypes",
       "file": "doctypes/meeting-minutes.mjs",
-      "line": 446
+      "line": 459
     },
     {
       "id": "doctypes.meeting-minutes.pulled",
       "en": "a matter these minutes recorded is no longer in them",
       "module": "doctypes",
       "file": "doctypes/meeting-minutes.mjs",
-      "line": 456
+      "line": 469
     },
     {
       "id": "doctypes.meeting-minutes.self_naming_furniture",
       "en": "names itself as minutes on {count} lines, which is page furniture",
       "module": "doctypes",
       "file": "doctypes/meeting-minutes.mjs",
-      "line": 171
+      "line": 182
     },
     {
       "id": "doctypes.meeting-minutes.self_naming_once",
       "en": "names itself as minutes once ({count}), which a reference also does",
       "module": "doctypes",
       "file": "doctypes/meeting-minutes.mjs",
-      "line": 172
+      "line": 183
     },
     {
       "id": "doctypes.meeting-minutes.tally_labels",
       "en": "{count} roll-call vote tally label(s)",
       "module": "doctypes",
       "file": "doctypes/meeting-minutes.mjs",
-      "line": 177
+      "line": 187
     },
     {
       "id": "doctypes.meeting-minutes.unchanged",
       "en": "all {count} matters in these minutes are unchanged",
       "module": "doctypes",
       "file": "doctypes/meeting-minutes.mjs",
-      "line": 471
+      "line": 484
     },
     {
       "id": "doctypes.meeting-minutes.unread",
       "en": "the matters in these minutes could not be read this time, so nothing is claimed about them either way",
       "module": "doctypes",
       "file": "doctypes/meeting-minutes.mjs",
-      "line": 431
+      "line": 444
     },
     {
       "id": "doctypes.policy-header.no_block",
       "en": "no line of this text opens with a policy series the active profiles name, and no header label they give is printed in it",
       "module": "doctypes",
       "file": "doctypes/policy-header.mjs",
-      "line": 254
+      "line": 281
     },
     {
       "id": "doctypes.policy-header.no_date_beside",
       "en": "its label is printed with no calendar date beside it or below it in the header",
       "module": "doctypes",
       "file": "doctypes/policy-header.mjs",
-      "line": 310
+      "line": 340
     },
     {
       "id": "doctypes.policy-header.no_label",
       "en": "no label the active jurisdiction profiles give for this field is printed in the header block",
       "module": "doctypes",
       "file": "doctypes/policy-header.mjs",
-      "line": 400
+      "line": 432
     },
     {
       "id": "doctypes.policy-header.no_series_or_labels",
@@ -21502,364 +21502,364 @@
       "en": "no line of this text opens with a policy series the active jurisdiction profiles name",
       "module": "doctypes",
       "file": "doctypes/policy-header.mjs",
-      "line": 399
+      "line": 431
     },
     {
       "id": "doctypes.policy-header.nothing_beside",
       "en": "its label is printed with nothing beside it",
       "module": "doctypes",
       "file": "doctypes/policy-header.mjs",
-      "line": 311
+      "line": 341
     },
     {
       "id": "doctypes.policy-header.number_form",
       "en": "\"{number}\" is printed as the number, and {series} does not read a number in that form",
       "module": "doctypes",
       "file": "doctypes/policy-header.mjs",
-      "line": 340
+      "line": 370
     },
     {
       "id": "doctypes.policy-header.placeholder_date",
       "en": "this date is not a whole calendar date as printed (a placeholder), so it is kept as written and not completed",
       "module": "doctypes",
       "file": "doctypes/policy-header.mjs",
-      "line": 293
+      "line": 323
     },
     {
       "id": "doctypes.policy.action_unbounded",
       "en": "an action does not end before the next party's numbering starts, so where it stops and the next party begins cannot be told",
       "module": "doctypes",
       "file": "doctypes/policy.mjs",
-      "line": 251
+      "line": 264
     },
     {
       "id": "doctypes.policy.changes",
       "en": "{count} change(s) between two readings of a policy at the same address",
       "module": "doctypes",
       "file": "doctypes/policy.mjs",
-      "line": 445
+      "line": 459
     },
     {
       "id": "doctypes.policy.header_changed",
       "en": "this policy's {field} as its header states it is not what it was at this address",
       "module": "doctypes",
       "file": "doctypes/policy.mjs",
-      "line": 404
+      "line": 418
     },
     {
       "id": "doctypes.policy.header_names",
       "en": "a header naming {type} {number}",
       "module": "doctypes",
       "file": "doctypes/policy.mjs",
-      "line": 382
+      "line": 396
     },
     {
       "id": "doctypes.policy.header_neither",
       "en": "neither reading gave a header, so nothing is said about the header",
       "module": "doctypes",
       "file": "doctypes/policy.mjs",
-      "line": 408
+      "line": 422
     },
     {
       "id": "doctypes.policy.header_one_side",
       "en": "only one of the readings gave a header, so nothing is said about the header",
       "module": "doctypes",
       "file": "doctypes/policy.mjs",
-      "line": 407
+      "line": 421
     },
     {
       "id": "doctypes.policy.label",
       "en": "a policy of a numbered series",
       "module": "doctypes",
       "file": "doctypes/policy.mjs",
-      "line": 361
+      "line": 374
     },
     {
       "id": "doctypes.policy.no_outline",
       "en": "no outline heading (I., A., 1.) opens a line of this policy after its header, so its text is not divided into sections",
       "module": "doctypes",
       "file": "doctypes/policy.mjs",
-      "line": 352
+      "line": 365
     },
     {
       "id": "doctypes.policy.no_party_numbering",
       "en": "a numbering that starts again at 1 has no party beside it or above it that can be told from the action before",
       "module": "doctypes",
       "file": "doctypes/policy.mjs",
-      "line": 249
+      "line": 262
     },
     {
       "id": "doctypes.policy.no_series_line",
       "en": "no line of this text opens with a policy series the active profiles name, beside the header labels they give",
       "module": "doctypes",
       "file": "doctypes/policy.mjs",
-      "line": 377
+      "line": 391
     },
     {
       "id": "doctypes.policy.no_series_number",
       "en": "the header names {type} but carries no number that series reads, so it is not read as one of its items",
       "module": "doctypes",
       "file": "doctypes/policy.mjs",
-      "line": 380
+      "line": 394
     },
     {
       "id": "doctypes.policy.no_series_supplied",
       "en": "the active jurisdiction profiles supply no policy series or no policy header labels, so no document is read as a policy",
       "module": "doctypes",
       "file": "doctypes/policy.mjs",
-      "line": 372
+      "line": 385
     },
     {
       "id": "doctypes.policy.not_divided",
       "en": "this policy's text was not divided into sections, so no section can be named for this passage",
       "module": "doctypes",
       "file": "doctypes/policy.mjs",
-      "line": 131
+      "line": 128
     },
     {
       "id": "doctypes.policy.section_added",
       "en": "section {number} is read now and was not read before",
       "module": "doctypes",
       "file": "doctypes/policy.mjs",
-      "line": 431
+      "line": 445
     },
     {
       "id": "doctypes.policy.section_changed",
       "en": "section {number}'s {moved} is not what it was at this address",
       "module": "doctypes",
       "file": "doctypes/policy.mjs",
-      "line": 428
+      "line": 442
     },
     {
       "id": "doctypes.policy.section_gone",
       "en": "section {number} was read before and is not read now",
       "module": "doctypes",
       "file": "doctypes/policy.mjs",
-      "line": 421
+      "line": 435
     },
     {
       "id": "doctypes.policy.sections_neither",
       "en": "neither reading gave sections, so nothing is said about sections: {why}",
       "module": "doctypes",
       "file": "doctypes/policy.mjs",
-      "line": 436
+      "line": 450
     },
     {
       "id": "doctypes.policy.sections_one_side",
       "en": "only one of the readings gave sections, so nothing is said about sections: {why}",
       "module": "doctypes",
       "file": "doctypes/policy.mjs",
-      "line": 435
+      "line": 449
     },
     {
       "id": "doctypes.policy.table_no_action",
       "en": "the table's header is printed but no numbered action under a party is read below it",
       "module": "doctypes",
       "file": "doctypes/policy.mjs",
-      "line": 281
+      "line": 294
     },
     {
       "id": "doctypes.policy.unchanged",
       "en": "this policy reads as it read: the same header and the same sections",
       "module": "doctypes",
       "file": "doctypes/policy.mjs",
-      "line": 446
+      "line": 460
     },
     {
       "id": "doctypes.policy.unplaced",
       "en": "no section read from this policy holds this passage (it stands before the first outline heading)",
       "module": "doctypes",
       "file": "doctypes/policy.mjs",
-      "line": 130
+      "line": 127
     },
     {
       "id": "doctypes.policy.unread",
       "en": "nothing could be read from this policy on one side or the other, so nothing is claimed about it either way",
       "module": "doctypes",
       "file": "doctypes/policy.mjs",
-      "line": 440
+      "line": 454
     },
     {
       "id": "doctypes.regulation.added",
       "en": "this instrument now names something it did not name before",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 401
+      "line": 419
     },
     {
       "id": "doctypes.regulation.changes",
       "en": "{count} change(s) to an instrument at the same address",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 409
+      "line": 427
     },
     {
       "id": "doctypes.regulation.code_headings",
       "en": "{count} section heading(s) of {label}",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 231
+      "line": 249
     },
     {
       "id": "doctypes.regulation.enacting",
       "en": "an enacting formula in the operative voice",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 215
+      "line": 234
     },
     {
       "id": "doctypes.regulation.form_changed",
       "en": "what was read at this address is not the same form of law it was",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 391
+      "line": 409
     },
     {
       "id": "doctypes.regulation.instrument_changed",
       "en": "this instrument's {field} is not what it was at this address",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 384
+      "line": 402
     },
     {
       "id": "doctypes.regulation.no_caption",
       "en": "no caption introduced by an enacting body was read, in the words the active jurisdiction profiles give for instruments and bodies, so the number is not stated",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 358
+      "line": 376
     },
     {
       "id": "doctypes.regulation.no_form",
       "en": "this text carries no enacting formula, no instrument caption under a body, and no section heading of a code the active jurisdiction profiles name, so it is read as neither an instrument nor a code section",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 349
+      "line": 367
     },
     {
       "id": "doctypes.regulation.one_side_unread",
       "en": "nothing was read from one of the readings, so nothing is said about its sections",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 373
+      "line": 391
     },
     {
       "id": "doctypes.regulation.proposed_no_number",
       "en": "this instrument's caption carries no number, which is what a proposed ordinance or resolution looks like before a body adopts it",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 357
+      "line": 375
     },
     {
       "id": "doctypes.regulation.pulled",
       "en": "an instrument or code section this one acted on is no longer named in it",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 398
+      "line": 416
     },
     {
       "id": "doctypes.regulation.recital_chain",
       "en": "a recital chain of {count} WHEREAS clause(s)",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 217
+      "line": 236
     },
     {
       "id": "doctypes.regulation.recitals",
       "en": "the recitals establishing this instrument's grounds changed in number",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 387
+      "line": 405
     },
     {
       "id": "doctypes.regulation.section_added",
       "en": "section {number} is read now and was not read before",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 172
+      "line": 188
     },
     {
       "id": "doctypes.regulation.section_changed",
       "en": "section {number}'s {moved} is not what it was at this address",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 167
+      "line": 183
     },
     {
       "id": "doctypes.regulation.section_gone",
       "en": "section {number} was read before and is not read now",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 156
+      "line": 172
     },
     {
       "id": "doctypes.regulation.sections_none_read",
       "en": "no section was read from either reading, so nothing is said about sections: {why}",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 145
+      "line": 161
     },
     {
       "id": "doctypes.regulation.unchanged",
       "en": "this instrument says what it said, and acts on the same things",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 410
+      "line": 428
     },
     {
       "id": "doctypes.regulation.unread_either",
       "en": "nothing could be read from this instrument this time, so nothing is claimed about it either way",
       "module": "doctypes",
       "file": "doctypes/regulation.mjs",
-      "line": 374
+      "line": 392
     },
     {
       "id": "doctypes.sections.neither_form",
       "en": "this text was read as neither an instrument nor a code section, so it is not divided into sections",
       "module": "doctypes",
       "file": "doctypes/sections.mjs",
-      "line": 228
+      "line": 247
     },
     {
       "id": "doctypes.sections.neither_form_no_codes",
       "en": "this text was read as neither an instrument nor a code section, so it is not divided into sections; and no active jurisdiction profile gives a section-number form for any code",
       "module": "doctypes",
       "file": "doctypes/sections.mjs",
-      "line": 229
+      "line": 248
     },
     {
       "id": "doctypes.sections.no_code_forms",
       "en": "no active jurisdiction profile gives a section-number form for any code, so no code section is read",
       "module": "doctypes",
       "file": "doctypes/sections.mjs",
-      "line": 224
+      "line": 243
     },
     {
       "id": "doctypes.sections.no_code_heading",
       "en": "no line of this text opens with a section number of a code the active jurisdiction profiles name, followed by a title, so it is not divided into sections",
       "module": "doctypes",
       "file": "doctypes/sections.mjs",
-      "line": 223
+      "line": 242
     },
     {
       "id": "doctypes.sections.not_divided",
       "en": "this text was not divided into sections, so no section can be named for this passage",
       "module": "doctypes",
       "file": "doctypes/sections.mjs",
-      "line": 251
+      "line": 270
     },
     {
       "id": "doctypes.sections.unplaced",
       "en": "no section read from this text holds this passage (it stands before the first heading)",
       "module": "doctypes",
       "file": "doctypes/sections.mjs",
-      "line": 250
+      "line": 269
     },
     {
       "id": "doctypes.staff-directory.added",
       "en": "the directory now lists an address it did not",
       "module": "doctypes",
       "file": "doctypes/staff-directory.mjs",
-      "line": 212
+      "line": 215
     },
     {
       "id": "doctypes.staff-directory.addresses",
@@ -21873,133 +21873,133 @@
       "en": "this entry's line in the directory now says something else",
       "module": "doctypes",
       "file": "doctypes/staff-directory.mjs",
-      "line": 215
+      "line": 218
     },
     {
       "id": "doctypes.staff-directory.changes",
       "en": "{count} change(s) to the directory's entries",
       "module": "doctypes",
       "file": "doctypes/staff-directory.mjs",
-      "line": 220
+      "line": 223
     },
     {
       "id": "doctypes.staff-directory.no_title",
       "en": "no line among the first five names this document as a directory, staff list, roster or contacts",
       "module": "doctypes",
       "file": "doctypes/staff-directory.mjs",
-      "line": 191
+      "line": 194
     },
     {
       "id": "doctypes.staff-directory.pulled",
       "en": "this address is no longer listed in the directory",
       "module": "doctypes",
       "file": "doctypes/staff-directory.mjs",
-      "line": 210
+      "line": 213
     },
     {
       "id": "doctypes.staff-directory.title_line",
       "en": "it names itself in its title line (\"{title}\")",
       "module": "doctypes",
       "file": "doctypes/staff-directory.mjs",
-      "line": 154
+      "line": 157
     },
     {
       "id": "doctypes.staff-directory.unchanged",
       "en": "the directory lists the same addresses, each saying what it said",
       "module": "doctypes",
       "file": "doctypes/staff-directory.mjs",
-      "line": 221
+      "line": 224
     },
     {
       "id": "doctypes.staff-directory.unread",
       "en": "no entry could be read from this directory this time, so nothing is claimed about it either way",
       "module": "doctypes",
       "file": "doctypes/staff-directory.mjs",
-      "line": 206
+      "line": 209
     },
     {
       "id": "doctypes.staff-report.added",
       "en": "this report now points at an instrument or code section it did not cite before",
       "module": "doctypes",
       "file": "doctypes/staff-report.mjs",
-      "line": 349
+      "line": 361
     },
     {
       "id": "doctypes.staff-report.changes",
       "en": "{count} change(s): {gone} citation(s) gone, {added} added",
       "module": "doctypes",
       "file": "doctypes/staff-report.mjs",
-      "line": 358
+      "line": 370
     },
     {
       "id": "doctypes.staff-report.changes_and_recommendation",
       "en": "{count} change(s): {gone} citation(s) gone, {added} added, and the recommendation moved",
       "module": "doctypes",
       "file": "doctypes/staff-report.mjs",
-      "line": 357
+      "line": 369
     },
     {
       "id": "doctypes.staff-report.field_changed",
       "en": "this report's {field} changed",
       "module": "doctypes",
       "file": "doctypes/staff-report.mjs",
-      "line": 341
+      "line": 353
     },
     {
       "id": "doctypes.staff-report.label",
       "en": "a staff report to a public body",
       "module": "doctypes",
       "file": "doctypes/staff-report.mjs",
-      "line": 178
+      "line": 191
     },
     {
       "id": "doctypes.staff-report.memo_header",
       "en": "a memorandum header of {labels} labels in {span} characters at the top",
       "module": "doctypes",
       "file": "doctypes/staff-report.mjs",
-      "line": 201
+      "line": 213
     },
     {
       "id": "doctypes.staff-report.pulled",
       "en": "an instrument or code section this report pointed at is no longer cited in it",
       "module": "doctypes",
       "file": "doctypes/staff-report.mjs",
-      "line": 346
+      "line": 358
     },
     {
       "id": "doctypes.staff-report.recommendation_changed",
       "en": "what this report recommends the body do is not what it recommended before",
       "module": "doctypes",
       "file": "doctypes/staff-report.mjs",
-      "line": 336
+      "line": 348
     },
     {
       "id": "doctypes.staff-report.template_sections",
       "en": "{count} report template section heading(s)",
       "module": "doctypes",
       "file": "doctypes/staff-report.mjs",
-      "line": 203
+      "line": 215
     },
     {
       "id": "doctypes.staff-report.titled",
       "en": "names itself as a report on a line of its own",
       "module": "doctypes",
       "file": "doctypes/staff-report.mjs",
-      "line": 208
+      "line": 221
     },
     {
       "id": "doctypes.staff-report.unchanged",
       "en": "this report says what it said, and points at the same instruments",
       "module": "doctypes",
       "file": "doctypes/staff-report.mjs",
-      "line": 359
+      "line": 371
     },
     {
       "id": "doctypes.staff-report.unread_either",
       "en": "nothing could be read from this report this time, so nothing is claimed about it either way",
       "module": "doctypes",
       "file": "doctypes/staff-report.mjs",
-      "line": 327
+      "line": 339
     },
     {
       "id": "doorbell.checks.changing_a_knocks_status_records",
@@ -24722,14 +24722,14 @@
       "en": "reading-directed: keyed by a capture; at a member's act, the AI reads the pages Civicsmith could not, on the account that pays and within its limits; the text is labeled the AI's reading and undetermined; moves no bundle",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1973
+      "line": 2061
     },
     {
       "id": "extraction.declared.readheld",
       "en": "reading-directed: keyed by a capture's digest; at a member's act, Civicsmith reads a document its record holds whole and holds no reading of, or holds a reading of that found nothing for want of the whole; the reading is machine-made and undetermined, the earlier one kept in the history; moves no bundle",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1975
+      "line": 2063
     },
     {
       "id": "extraction.drift.this_text_was_graded_under",
@@ -24785,322 +24785,322 @@
       "en": "a re-read replaces this capture's reading, its text units and the standing of content rows cited under the old one, which is a write to the record and asks the capability a promotion asks.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1454
+      "line": 1542
     },
     {
       "id": "extraction.index.a_transcription_replaces_this_captures",
       "en": "a transcription replaces this capture's reading, its text units and the standing of content rows cited under the old one, which is a write to the record and asks the capability a promotion asks.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1656
+      "line": 1744
     },
     {
       "id": "extraction.index.length_transcription_s_were_graded",
       "en": "{length} transcription(s) were graded under a measurement a later probe found WEAKER. NOTHING HAS BEEN RE-GRADED and nothing will be automatically: this names the work so a member can do it (DEC-4)",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1827
+      "line": 1915
     },
     {
       "id": "extraction.index.no_evidence_store_set_up",
       "en": "your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1363
+      "line": 1451
     },
     {
       "id": "extraction.index.no_ocr_member_is_bound",
       "en": "no OCR member is bound to this instance (the OCR_WORKER service binding is absent), so there is no tier 3 to reach. Nothing was read, called or written. An instance that installs the member later can re-read this capture then (D-115, D-319).",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1458
+      "line": 1546
     },
     {
       "id": "extraction.index.no_text_provenance_recorded",
       "en": "this reading carries no text provenance, which is not the same as its text not having been transcribed -- nobody recorded how it was produced",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1063
+      "line": 1126
     },
     {
       "id": "extraction.index.ocr_stringify_is_not_a",
       "en": "ocr={stringify} is not a value this op reads. Send ocr=1 to re-read the document with the OCR member, or leave the parameter off for the ordinary read.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1444
+      "line": 1532
     },
     {
       "id": "extraction.index.op_pagetranscribe_writes_this_captures",
       "en": "op=pagetranscribe writes this capture's reading and spends the account that pays for it, and an agent credential cannot declare that as one of its writes. A member can ask for it (D-199).",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1651
+      "line": 1739
     },
     {
       "id": "extraction.index.readheld_no_sha",
       "en": "a read of a held document is about one captured document, named by its fingerprint",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1959
+      "line": 2047
     },
     {
       "id": "extraction.index.reread_candidates_frontier",
       "en": "the content-axis frontier (op=frontier&level=content) lists the captures still below what your team's Civicsmith can read; this one is re-read now",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1569
+      "line": 1657
     },
     {
       "id": "extraction.index.the_ais_part_for_transcribing",
       "en": "the AI's part for transcribing pages has not passed its test bar here (run-rules R19), so it is not switched on. Nothing was read, rendered, sent or written, and no account was looked at.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1662
+      "line": 1750
     },
     {
       "id": "extraction.index.this_record_holds_no_reading",
       "en": "this record holds no reading of that capture that you can see, so there is nothing for a re-read to replace. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1463
+      "line": 1551
     },
     {
       "id": "extraction.index.this_record_holds_no_reading_2",
       "en": "this record holds no reading of that capture that you can see, so there are no pages for the AI to transcribe. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1667
+      "line": 1755
     },
     {
       "id": "file-safety.declared.deepercheck",
       "en": "file-directed: keyed by a capture's digest; asks the group's outside tools about this file; records no one",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1908
+      "line": 2033
     },
     {
       "id": "file-safety.declared.openoriginal",
       "en": "file-directed: keyed by a capture's digest, reached from the safe view's one click; answers the original's bytes to a member who may see it, a high-risk file only after a fresh clean deeper check (`override`); records no one",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1910
+      "line": 2035
     },
     {
       "id": "file-safety.declared.openwithwarning",
       "en": "file-directed: keyed by a capture's digest, reached from the warning before opening; answers a high-risk original after the member's two confirmations, never under a scan hold; records no one and keeps no confirmation",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1912
+      "line": 2037
     },
     {
       "id": "file-safety.declared.releasescanhold",
       "en": "file-directed: keyed by a capture's digest under a scan hold, reached from the held file; one member's reasoned act of two, never a machine's; moves no bundle",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1914
+      "line": 2039
     },
     {
       "id": "file-safety.declared.safeview",
       "en": "read: a file's safe view, a derived copy so labeled, with what opening the original would answer; writes nothing",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1916
+      "line": 2041
     },
     {
       "id": "file-safety.declared.scanmirror",
       "en": "setting: the group's file scanner, an administrator's act; asks it to check for new signatures now and answers at once; moves no bundle",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1918
+      "line": 2043
     },
     {
       "id": "file-safety.declared.securitytooladd",
       "en": "setting: the group's security tools, an administrator's act; moves no bundle",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1920
+      "line": 2045
     },
     {
       "id": "file-safety.declared.securitytoolremove",
       "en": "setting: the group's security tools, an administrator's act; moves no bundle",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1922
+      "line": 2047
     },
     {
       "id": "file-safety.declared.securitytooltest",
       "en": "setting: the group's security tools, an administrator's act; moves no bundle",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1924
+      "line": 2049
     },
     {
       "id": "file-safety.index.a_run_is_under_way",
       "en": "A check for signatures is already under way. No run was started.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1039
+      "line": 1158
     },
     {
       "id": "file-safety.index.a_safe_view_is_made",
       "en": "A safe view is made of documents, presentations, spreadsheets and plain text only.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 829
+      "line": 912
     },
     {
       "id": "file-safety.index.file_scanners_r19_refuses_the",
       "en": "file-scanner's R19 refuses the tool's description.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1244
+      "line": 1363
     },
     {
       "id": "file-safety.index.no_tool_of_the_teams",
       "en": "No tool of the team's has this id.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1308
+      "line": 1427
     },
     {
       "id": "file-safety.index.reading_scanners_state",
       "en": "reading the scanner's state",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1056
+      "line": 1175
     },
     {
       "id": "file-safety.index.reading_security_tools_offered",
       "en": "reading the security tools offered",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1197
+      "line": 1316
     },
     {
       "id": "file-safety.index.reading_teams_security_tools",
       "en": "reading the team's security tools",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1213
+      "line": 1332
     },
     {
       "id": "file-safety.index.signatures_run_download",
       "en": "A check for signatures is under way: it is downloading the signatures that changed.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1123
+      "line": 1242
     },
     {
       "id": "file-safety.index.signatures_run_seed",
       "en": "A check for signatures is under way: it is preparing the signatures the file scanner already holds.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1121
+      "line": 1240
     },
     {
       "id": "file-safety.index.signatures_run_stage",
       "en": "A check for signatures is under way: it is setting the new signatures aside to check them.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1125
+      "line": 1244
     },
     {
       "id": "file-safety.index.signatures_run_stopped",
       "en": "The last check for signatures stopped before it finished. It will be resumed shortly.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1118
+      "line": 1237
     },
     {
       "id": "file-safety.index.signatures_run_under_way",
       "en": "A check for signatures is under way.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1129
+      "line": 1248
     },
     {
       "id": "file-safety.index.signatures_run_verify",
       "en": "A check for signatures is under way: it is checking that the new signatures are genuine.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1127
+      "line": 1246
     },
     {
       "id": "file-safety.index.the_text_could_not_be",
       "en": "The text could not be read.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 835
+      "line": 918
     },
     {
       "id": "file-safety.index.warned_must_be_exactly",
       "en": "warned must be exactly {own_device: true, no_macros: true}. Nothing was served.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 761
+      "line": 838
     },
     {
       "id": "file-safety.index.your_teams_civicsmith_could_not",
       "en": "Your team's Civicsmith could not read the files waiting for a safe view. Nothing was rendered, made or counted.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 914
+      "line": 1018
     },
     {
       "id": "file-safety.index.your_teams_civicsmith_could_not_2",
       "en": "Your team's Civicsmith could not read the files waiting for a safe view after some were rendered. The rest wait for the next round.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 930
+      "line": 1034
     },
     {
       "id": "file-safety.index.your_teams_civicsmith_has_no",
       "en": "Your team's Civicsmith has no safe view installed. Nothing was rendered.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 846
+      "line": 929
     },
     {
       "id": "file-safety.index.your_teams_civicsmith_has_no_2",
       "en": "Your team's Civicsmith has no safe view installed. Nothing was rendered.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 900
+      "line": 1003
     },
     {
       "id": "file-safety.index.your_teams_civicsmith_has_no_3",
       "en": "Your team's Civicsmith has no file scanner installed. No note was written.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 952
+      "line": 1058
     },
     {
       "id": "file-safety.index.your_teams_civicsmith_has_no_4",
       "en": "Your team's Civicsmith has no file scanner installed, so no tool can be tested.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1320
+      "line": 1439
     },
     {
       "id": "file-safety.index.your_teams_civicsmith_has_no_5",
       "en": "Your team's Civicsmith has no file scanner installed, so no tool can be asked.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1626
+      "line": 1746
     },
     {
       "id": "file-safety.index.your_teams_civicsmith_has_no_6",
       "en": "Your team's Civicsmith has no file scanner installed, so no list was refreshed.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 1721
+      "line": 1841
     },
     {
       "id": "file-safety.index.your_teams_civicsmith_holds_no",
       "en": "Your team's Civicsmith holds no evidence store, so no bytes can be served.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/index.mjs",
-      "line": 770
+      "line": 847
     },
     {
       "id": "file-scanner.catalogue.any_https_endpoint_taking_a_json",
@@ -31659,112 +31659,112 @@
       "en": "setting: the group's declared stake in its own words, carried beside its public identity on what it sends or publishes from then; an administrator's act, every earlier value kept; moves no bundle",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3006
+      "line": 3011
     },
     {
       "id": "instance-setup.declared.disclosureshown",
       "en": "personal state, keyed by member: the assistant's disclosure shown to them, with its version",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3009
+      "line": 3014
     },
     {
       "id": "instance-setup.declared.groupdomainset",
       "en": "the group's claimed domain — the subject is the instance's identity, not a bundle",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3012
+      "line": 3017
     },
     {
       "id": "instance-setup.declared.grouplanguagesset",
       "en": "setting: the languages the group works in; an administrator's act, a later one replacing it; moves no bundle",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3015
+      "line": 3020
     },
     {
       "id": "instance-setup.declared.grouplogoset",
       "en": "setting: the group's logo, PNG or JPEG, or none; an administrator's act, a later one replacing it; moves no bundle",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3018
+      "line": 3023
     },
     {
       "id": "instance-setup.declared.groupnameset",
       "en": "the group's public display name — the subject is the instance's identity, not a bundle",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3021
+      "line": 3026
     },
     {
       "id": "instance-setup.declared.infolevelset",
       "en": "personal state, keyed by member: how quickly explanations open, promptly or after a longer pause; nothing is hidden",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3024
+      "line": 3029
     },
     {
       "id": "instance-setup.declared.memberlanguageset",
       "en": "personal state, keyed by member: the language the interface speaks to them",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3027
+      "line": 3032
     },
     {
       "id": "instance-setup.declared.officesseed",
       "en": "the instance's configuration: seeds the active profiles' offices and bodies as entities; an administrator's",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3030
+      "line": 3035
     },
     {
       "id": "instance-setup.declared.placewanted",
       "en": "the instance's configuration: the place the group wants its profile for; an administrator's",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3033
+      "line": 3038
     },
     {
       "id": "instance-setup.declared.profilesset",
       "en": "the instance's active jurisdiction profiles — the subject is the instance's configuration, not a bundle; refused PROFILES_NOT_ADMIN to a caller who is not an administrator",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3036
+      "line": 3041
     },
     {
       "id": "instance-setup.declared.runtime",
       "en": "read: what the instance was measured to cost and where its limits lie (the runtime's measurements, the CPU probe's trail, the subrequest ceiling)",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3039
+      "line": 3044
     },
     {
       "id": "instance-setup.declared.selftest",
       "en": "read: whether the deployment is healthy (its bindings, the store's stats and a storage round trip); it never returns a secret",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3042
+      "line": 3047
     },
     {
       "id": "instance-setup.declared.updatelater",
       "en": "release-directed: keyed by a verified release notice, reached from Settings › Updates and the administrators' queue; an administrator's choice, recorded with who and when; installs nothing (the installer installs, with Cloudflare's consent)",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3045
+      "line": 3050
     },
     {
       "id": "instance-setup.declared.updateskip",
       "en": "release-directed: keyed by a verified release notice, reached from Settings › Updates and the administrators' queue; an administrator's choice, recorded with who and when; installs nothing (the installer installs, with Cloudflare's consent)",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3048
+      "line": 3053
     },
     {
       "id": "instance-setup.declared.updatestart",
       "en": "release-directed: keyed by a verified release notice, reached from Settings › Updates and the administrators' queue; an administrator's choice, recorded with who and when; installs nothing (the installer installs, with Cloudflare's consent)",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3051
+      "line": 3056
     },
     {
       "id": "instance-setup.livefire.confined_to_the_scratch_namespace",
@@ -32191,7 +32191,7 @@
       "en": "this run RETURNED, so the ceiling is above its elapsed time. If a later run does not return, its last recorded step is the last one that fit and the ceiling lies just above that step's elapsed_ms.",
       "module": "instance-setup",
       "file": "bio-plane/src/setup.mjs",
-      "line": 3284
+      "line": 3289
     },
     {
       "id": "instance-setup.setup.this_store_has_recorded_its",
@@ -32541,35 +32541,35 @@
       "en": "{v1}cite it with a role (supports)",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/investigation.mjs",
-      "line": 194
+      "line": 200
     },
     {
       "id": "journey-check.investigation.v1_open_the_document_see",
       "en": "{v1}open the document, see its words, and Find-in a passage",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/investigation.mjs",
-      "line": 175
+      "line": 181
     },
     {
       "id": "journey-check.journeys.action_block_not_drawn_the_team_holds",
       "en": "Action block: not drawn, the team holds no action",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/journeys.mjs",
-      "line": 455
+      "line": 459
     },
     {
       "id": "journey-check.journeys.dashboard_id_opened_from_the_door",
       "en": "dashboard {id}: opened from the door on Home",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/journeys.mjs",
-      "line": 458
+      "line": 462
     },
     {
       "id": "journey-check.journeys.id_draws_admin_as_a",
       "en": "{id} draws admin as a name: {map}",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/journeys.mjs",
-      "line": 444
+      "line": 448
     },
     {
       "id": "journey-check.local.import_site_from_stringify_export",
@@ -32688,98 +32688,98 @@
       "en": "BODY {where} (HTTP {status}, {type}): {redact}\n",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/walker.mjs",
-      "line": 154
+      "line": 172
     },
     {
       "id": "journey-check.walker.host_pathname_is_outside_the",
       "en": "{host}{pathname} is outside the walk",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/walker.mjs",
-      "line": 205
+      "line": 223
     },
     {
       "id": "journey-check.walker.journey_check_arm_length_steps",
       "en": "journey-check ({arm}): {length} steps, {length_2} failures",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/walker.mjs",
-      "line": 231
+      "line": 249
     },
     {
       "id": "journey-check.walker.kind_journey_v1_detail",
       "en": "  {kind}: {journey} · {v1}: {detail}",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/walker.mjs",
-      "line": 233
+      "line": 251
     },
     {
       "id": "journey-check.walker.length_pairs_live_beside_design",
       "en": "{length} pairs, LIVE beside DESIGN, for BOB's comparison (R6):",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/walker.mjs",
-      "line": 235
+      "line": 253
     },
     {
       "id": "journey-check.walker.name_not_walked_the_assistant",
       "en": "{name}: not walked, the assistant does not work (K3717)",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/walker.mjs",
-      "line": 101
+      "line": 104
     },
     {
       "id": "journey-check.walker.pathname_draws_a_page_numbered_0",
       "en": "{pathname} draws a page numbered 0: …{at}…",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/walker.mjs",
-      "line": 198
+      "line": 216
     },
     {
       "id": "journey-check.walker.pathname_is_not_the_interface",
       "en": "{pathname} is not the interface page",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/walker.mjs",
-      "line": 161
+      "line": 179
     },
     {
       "id": "journey-check.walker.pathname_is_the_setup_page",
       "en": "{pathname} is the setup page",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/walker.mjs",
-      "line": 160
+      "line": 178
     },
     {
       "id": "journey-check.walker.pathname_uses_the_retired_word",
       "en": "{pathname} uses the retired word for a team: …{at}…",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/walker.mjs",
-      "line": 188
+      "line": 206
     },
     {
       "id": "journey-check.walker.step_label_failed_v1",
       "en": "step \"{label}\" failed: {v1}",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/walker.mjs",
-      "line": 244
+      "line": 262
     },
     {
       "id": "journey-check.walker.the_designs_rule_for_the_retired",
       "en": "the design's rule for the retired word could not be read: {v1}",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/walker.mjs",
-      "line": 190
+      "line": 208
     },
     {
       "id": "journey-check.walker.where_answered_how_at_code",
       "en": "{where} answered {how} at {at} ({code}, HTTP {status})",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/walker.mjs",
-      "line": 149
+      "line": 167
     },
     {
       "id": "journey-check.walker.where_answered_ok_false_code",
       "en": "{where} answered ok: false ({code}, HTTP {status})",
       "module": "journey-check",
       "file": "bio-plane/src/journey-check/walker.mjs",
-      "line": 148
+      "line": 166
     },
     {
       "id": "jurisdictions.index.a_different_profile_with_id",
@@ -34956,28 +34956,28 @@
       "en": "a status is a fact about OUR OWN machinery (D-491, BOB #32 item 3): this instance's renderer, render allowance or host pacing is what holds the render, which says nothing about the page. The served frame is never filed as the content, so while it waits and after it expires there is NO capture of what a visitor saw.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 842
+      "line": 843
     },
     {
       "id": "machinery-producers.index.a_sweeps_status_is_link",
       "en": "a sweep's status is link-sweep's (its R8, R11): derived on read from the sweep's own runs and backlog, read here and never restated. It goes to the members of the sweep's project who may see its record, and it leaves on the first read after it stops holding.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 961
+      "line": 962
     },
     {
       "id": "machinery-producers.index.a_working_on_notices_state",
       "en": "a working-on notice's state is network-notices' (its R12, R13, R22), read here and never restated. It is told to the project's owners and to nobody else, and it leaves on the first read after it stops holding.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1010
+      "line": 1011
     },
     {
       "id": "machinery-producers.index.both_principals_are_named_dec",
       "en": "BOTH PRINCIPALS ARE NAMED (DEC-27(b), DEC-55.4): the act is the daemon's, performed at the session's request, under the plane credential the run holds and paid for by the level of the Claude-account cascade the run named. Never a token value, and never a person's name on the act itself.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 647
+      "line": 648
     },
     {
       "id": "machinery-producers.index.cooloff_no_refusal_instant",
@@ -34991,98 +34991,98 @@
       "en": "eligibility is capture's rule (its R8), read as the next archive tick would read it (monitoring R47); the tick itself fires the fallback, and this item clears when the address answers again.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 724
+      "line": 725
     },
     {
       "id": "machinery-producers.index.failing_run_no_first_failure",
       "en": "the failing run carries no first-failure instant this producer can read",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 728
+      "line": 729
     },
     {
       "id": "machinery-producers.index.it_was_due_at_due",
       "en": "it was due at {due_at} and is checked every {round} hours; the check has not run since. Nothing about the source is claimed here.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 758
+      "line": 759
     },
     {
       "id": "machinery-producers.index.its_last_n_runs_each",
       "en": "its last {n} runs each filed nothing, and it is not held. Its seeds or its match may no longer find what it was set up to find.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 916
+      "line": 917
     },
     {
       "id": "machinery-producers.index.its_last_run_filed_n",
       "en": "its last run filed {n} against a median of {n_2} over its recent runs. Nothing else changed: the run's note says only that the number was unusual.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 905
+      "line": 906
     },
     {
       "id": "machinery-producers.index.machine_writer_is_named",
       "en": "the machine writer is NAMED, never anonymous: the control plane deletes any caller-supplied author and stamps token:<class> for a machine credential (REC-2, closing D-61), so this is the record's own trace of an unattended write and not an inference. It clears for every member when a person authors the document again.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 561
+      "line": 562
     },
     {
       "id": "machinery-producers.index.manifest_created_unreadable",
       "en": "the manifest entry carries a created stamp this producer cannot read as an instant",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 565
+      "line": 566
     },
     {
       "id": "machinery-producers.index.n_of_its_captures_are",
       "en": "{n} of its captures are still awaiting review, at or over its backlog limit of {n_2}. It runs again when members review or set aside enough of them.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 902
+      "line": 903
     },
     {
       "id": "machinery-producers.index.no_instance_key_was_bound",
       "en": "no instance key was bound when it fell due, so your team's Civicsmith could not sign the notice's activity level. The notice shows its last attested level with that level's date until an attestation is issued; an administrator binds the key.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1033
+      "line": 1034
     },
     {
       "id": "machinery-producers.index.no_interval_can_be_derived",
       "en": "no interval can be derived for it ({v1}), so no check is scheduled.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 759
+      "line": 760
     },
     {
       "id": "machinery-producers.index.on_its_last_run_these",
       "en": "on its last run these could not be fetched: {list}. The sweep's other pages were read; each one's reachability is on the basis.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 908
+      "line": 909
     },
     {
       "id": "machinery-producers.index.our_own_attempts_at",
       "en": "our own attempts at this address have failed enough times, for long enough, that the archive fallback may fetch a replay in its place. This is a fact about our attempts, not a finding about the publisher.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 720
+      "line": 721
     },
     {
       "id": "machinery-producers.index.request_completion_unreadable",
       "en": "the request row carries a completion stamp this producer cannot read as an instant",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 651
+      "line": 652
     },
     {
       "id": "machinery-producers.index.request_stamp_unreadable",
       "en": "the request row carries a request stamp this producer cannot read as an instant",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 846
+      "line": 847
     },
     {
       "id": "machinery-producers.index.session_created_unreadable",
@@ -35096,7 +35096,7 @@
       "en": "the sweep's status carries no instant this producer can read",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 965
+      "line": 966
     },
     {
       "id": "machinery-producers.index.the_ledger_is_scratch_and",
@@ -35110,7 +35110,7 @@
       "en": "the notice has been Dormant at its last monthly attestation, and a second Dormant month with no revision lapses it. A revision or a stop answers this; so does the lapse itself.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1043
+      "line": 1044
     },
     {
       "id": "machinery-producers.index.the_per_host_governor_is",
@@ -35124,7 +35124,7 @@
       "en": "the plan is monitoring's (its R16, R32); this item is our own machinery falling behind or unable to schedule, and it clears when the check runs or a cadence is set.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 763
+      "line": 764
     },
     {
       "id": "machinery-producers.index.the_primary_document_is_captured",
@@ -35138,35 +35138,35 @@
       "en": "the to-do is derived on read from the signed notice your team's Civicsmith already holds. It goes to every administrator and leaves every administrator's queue when one of them updates, puts it aside until a later day or skips it, or when your team is running that release or a newer one.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1154
+      "line": 1155
     },
     {
       "id": "machinery-producers.index.unscheduled_no_instant",
       "en": "an unscheduled address has no instant it fell due",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 767
+      "line": 768
     },
     {
       "id": "machinery-producers.index.words_the_request_expired_at",
       "en": "{words} The request expired at {expires} and was released; nothing was filed in the render's place, and no conclusion about the page can rest on it.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 833
+      "line": 834
     },
     {
       "id": "machinery-producers.index.words_the_request_is_held",
       "en": "{words} The request is held and asked again on every tick until {expires}; if it cannot be rendered by then it is recorded UNDETERMINED and released.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 834
+      "line": 835
     },
     {
       "id": "machinery-producers.index.your_teams_civicsmith_signed_the",
       "en": "your team's Civicsmith signed the closing into the notice's public record. An owner may still stop the notice with a handoff naming another team or an open lead. This stands for 30 days from the closing, or until an owner stops the notice.",
       "module": "machinery-producers",
       "file": "bio-plane/src/machinery-producers/index.mjs",
-      "line": 1059
+      "line": 1060
     },
     {
       "id": "member-roster.declared.adminendorse",
@@ -38260,210 +38260,210 @@
       "en": "content.xml byte-identical across Google exports of an unchanged document: 3/3 (the MEASUREMENTS ledger 2026-09-14 §4) and 18/18 over 3 census targets (M-123)",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 2264
+      "line": 2270
     },
     {
       "id": "odf-reader.odf.content_xml_could_not_be",
       "en": "content.xml could not be read whole ({why})",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 2393
+      "line": 2399
     },
     {
       "id": "odf-reader.odf.content_xml_is_not_valid",
       "en": "content.xml is not valid UTF-8, so it was not decoded lossily and no digest was taken",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 2400
+      "line": 2406
     },
     {
       "id": "odf-reader.odf.content_xml_is_not_valid_2",
       "en": "content.xml is not valid UTF-8, so the normalisation was not applied and no digest was taken",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 2407
+      "line": 2413
     },
     {
       "id": "odf-reader.odf.content_xml_is_over_the",
       "en": "content.xml is over the declared-uncompressed text bound ({v1}), so it was not inflated and no digest was taken",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 2391
+      "line": 2397
     },
     {
       "id": "odf-reader.odf.content_xml_not_read_its",
       "en": "content.xml not read: its repeats expand past {boundName} (stated in evidentiary.undetermined and by text())",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 1049
+      "line": 1055
     },
     {
       "id": "odf-reader.odf.content_xml_not_read_over",
       "en": "content.xml not read: over the size bound (stated in evidentiary.undetermined and by text())",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 1048
+      "line": 1054
     },
     {
       "id": "odf-reader.odf.content_xml_references_length_package",
       "en": "content.xml references {length} package member(s) whose bytes it does not hold ({refs}{v1}); a digest of content.xml cannot speak for them, so none is claimed",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 2404
+      "line": 2410
     },
     {
       "id": "odf-reader.odf.no_flavour_export_has_been",
       "en": "no .{flavour} export has been measured for content.xml stability, so no evidentiary digest is claimed",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 2386
+      "line": 2392
     },
     {
       "id": "odf-reader.odf.no_intra_link_odf_manifest",
       "en": "no intra link: {ODF_MANIFEST_PART} could not be read ({manifestWhy}), so embedded members were not looked for (stated in evidentiary.undetermined)",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 1027
+      "line": 1033
     },
     {
       "id": "odf-reader.odf.no_intra_link_odf_manifest_2",
       "en": "no intra link: {ODF_MANIFEST_PART} lists no embedded member",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 1029
+      "line": 1035
     },
     {
       "id": "odf-reader.odf.no_odp_export_has_been",
       "en": "no .odp export has been measured for content.xml stability on a census target: M-167 read 8 public government Slides decks (content.xml raw byte-identical on every readable pair, every deck referencing a package member) and M-123's census holds no Slides target, so no evidentiary digest is claimed for .odp",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 2268
+      "line": 2274
     },
     {
       "id": "odf-reader.odf.part_odf_mimetype_part_is",
       "en": "part: {ODF_MIMETYPE_PART} is the FIRST member, STORED, CRC-verified",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 614
+      "line": 616
     },
     {
       "id": "odf-reader.odf.the_bytes_are_not_an",
       "en": "the bytes are not an OpenDocument package detected with certainty, so no container digest was taken",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 2382
+      "line": 2388
     },
     {
       "id": "odf-reader.odf.the_packages_central_directory_could",
       "en": "the package's central directory could not be read ({why})",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 2388
+      "line": 2394
     },
     {
       "id": "odf-reader.odf.the_sha256_of_the_flavour",
       "en": "the sha256 of the .{flavour} package's content.xml member (inflated, length and CRC-32 verified){v1}, odf-evidentiary v{ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml, thumbnails and embedded font faces are discounted; measured: {v2}",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 2411
+      "line": 2417
     },
     {
       "id": "odf-reader.odf.this_package_carries_no_meta",
       "en": "this package carries no meta.xml, so NO core-properties item is emitted; the absence of the part is not evidence the document has no author",
       "module": "odf-reader",
       "file": "bio-plane/src/odf.mjs",
-      "line": 713
+      "line": 719
     },
     {
       "id": "office-readers.csv.declared_by_the_producer_in_the_bytes",
       "en": "declared by the producer in the bytes",
       "module": "office-readers",
       "file": "bio-plane/src/csv.mjs",
-      "line": 272
+      "line": 291
     },
     {
       "id": "office-readers.csv.every_multi_byte_sequence_in_the_signature_window",
       "en": "every multi-byte sequence in the signature window is valid utf-8",
       "module": "office-readers",
       "file": "bio-plane/src/csv.mjs",
-      "line": 283
+      "line": 302
     },
     {
       "id": "office-readers.csv.length_candidates_are_equally_consistent",
       "en": "{length} candidates are equally consistent over {length_2} lines: {map}",
       "module": "office-readers",
       "file": "bio-plane/src/csv.mjs",
-      "line": 339
+      "line": 358
     },
     {
       "id": "office-readers.csv.length_complete_line_s_in",
       "en": "{length} complete line(s) in the signature window; a delimiter needs at least 2 to be consistent with anything",
       "module": "office-readers",
       "file": "bio-plane/src/csv.mjs",
-      "line": 321
+      "line": 340
     },
     {
       "id": "office-readers.csv.likely_not_certain_a_declared_type_is_a_claim",
       "en": "likely, not certain: a declared type is a claim, and a csv has no magic bytes to check it against",
       "module": "office-readers",
       "file": "bio-plane/src/csv.mjs",
-      "line": 688
+      "line": 778
     },
     {
       "id": "office-readers.csv.likely_not_certain_validity_is_evidence",
       "en": "likely, not certain: validity is evidence, not the producer's declaration",
       "module": "office-readers",
       "file": "bio-plane/src/csv.mjs",
-      "line": 284
+      "line": 303
     },
     {
       "id": "office-readers.csv.name_occurs_v1_time_s",
       "en": "{name} occurs {v1} time(s) outside quotes on every one of the first {length} complete lines",
       "module": "office-readers",
       "file": "bio-plane/src/csv.mjs",
-      "line": 334
+      "line": 353
     },
     {
       "id": "office-readers.csv.no_candidate_map_occurs_a",
       "en": "no candidate ({map}) occurs a consistent, non-zero number of times over {length} lines",
       "module": "office-readers",
       "file": "bio-plane/src/csv.mjs",
-      "line": 343
+      "line": 362
     },
     {
       "id": "office-readers.csv.us_ascii_not_utf_8_every_8_bit_superset",
       "en": "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically",
       "module": "office-readers",
       "file": "bio-plane/src/csv.mjs",
-      "line": 278
+      "line": 297
     },
     {
       "id": "office-readers.docx.the_macro_enabled_flavour_variant",
       "en": "the macro-enabled flavour {variant}, read as {format} (R33)",
       "module": "office-readers",
       "file": "bio-plane/src/docx.mjs",
-      "line": 1048
+      "line": 1137
     },
     {
       "id": "office-readers.docx.word_document_xml_not_read_over_the_size_bound",
       "en": "word/document.xml not read: over the size bound (stated in evidentiary.undetermined and by text())",
       "module": "office-readers",
       "file": "bio-plane/src/docx.mjs",
-      "line": 727
+      "line": 791
     },
     {
       "id": "office-readers.docx.word_document_xml_unreadable_element_references",
       "en": "word/document.xml unreadable: element references unavailable (stated)",
       "module": "office-readers",
       "file": "bio-plane/src/docx.mjs",
-      "line": 728
+      "line": 792
     },
     {
       "id": "office-readers.formats-xlsx.parts_content_types_part_and",
       "en": "parts: {CONTENT_TYPES_PART} and {WORKBOOK_PART} present",
       "module": "office-readers",
       "file": "bio-plane/src/formats-xlsx.mjs",
-      "line": 1017
+      "line": 1115
     },
     {
       "id": "op-declarations.index.an_act_or_a_draft",
@@ -38940,6 +38940,13 @@
       "module": "plane",
       "file": "bio-plane/src/plane/declared.mjs",
       "line": 9
+    },
+    {
+      "id": "plane.declared.owedwork",
+      "en": "what the object still owes one document, or the counts of what it owes: the keeps, readings, scan pages, supporting files and archive entries left for its alarm, each owed or ended for a stated reason; writes nothing",
+      "module": "plane",
+      "file": "bio-plane/src/plane/declared.mjs",
+      "line": 17
     },
     {
       "id": "plane.declared.readtranslate",
@@ -39947,49 +39954,49 @@
       "en": "A member's firsthand observation. Their words are `{file}`, below its canonical header, exactly as written; nothing here paraphrases or summarises them.",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1728
+      "line": 1833
     },
     {
       "id": "provenance.index.capture_axis_authored",
       "en": "the capture axis measures the act of reading a document in, and a member's own words were not read in from anywhere, so it earns no letter here",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1805
+      "line": 1910
     },
     {
       "id": "provenance.index.capture_is_not_a_document",
       "en": "capture {capture} is not a document this record's register holds in {bundle}",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1273
+      "line": 1377
     },
     {
       "id": "provenance.index.deciding_who_issued_a_document",
       "en": "deciding who issued a document is a named member's act, and this call carries nobody",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1260
+      "line": 1364
     },
     {
       "id": "provenance.index.name_the_party_that_issued",
       "en": "name the party that issued the document, in at most 500 characters",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1283
+      "line": 1387
     },
     {
       "id": "provenance.index.say_how_you_know_or",
       "en": "say how you know, or what you tried, in at most 2000 characters",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1281
+      "line": 1385
     },
     {
       "id": "provenance.index.who_is_a_machine_credential",
       "en": "'{who}' is a machine credential. Who issued a document is a named member's attributed decision, never a machine's: a machine may propose an issuer and a member decides",
       "module": "provenance",
       "file": "bio-plane/src/provenance/index.mjs",
-      "line": 1258
+      "line": 1362
     },
     {
       "id": "public-read.casefile.a_finding_id_a_material",
@@ -42943,112 +42950,112 @@
       "en": "the AI declined{reason}",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 738
+      "line": 789
     },
     {
       "id": "reading-pipeline.index.ai_reading_label",
       "en": "the AI's reading",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 641
+      "line": 692
     },
     {
       "id": "reading-pipeline.index.bytes_not_held",
       "en": "the capture's bytes are not held in the evidence store, so nothing was read",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1444
+      "line": 1565
     },
     {
       "id": "reading-pipeline.index.decoded_glyphs",
       "en": "{glyphs} decoded glyph(s)",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 220
+      "line": 259
     },
     {
       "id": "reading-pipeline.index.document_not_read_text",
       "en": "the document was not read as text ({why}), so no reading was attempted",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1604
+      "line": 1752
     },
     {
       "id": "reading-pipeline.index.entry_no_text",
       "en": "the {fmt} entry produced no text from these bytes",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1586
+      "line": 1721
     },
     {
       "id": "reading-pipeline.index.entry_not_read_bytes",
       "en": "the {fmt} entry could not read these bytes ({detail}), so nothing is claimed about its text",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1600
+      "line": 1748
     },
     {
       "id": "reading-pipeline.index.multipart",
       "en": "multipart",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1604
+      "line": 1752
     },
     {
       "id": "reading-pipeline.index.no_capture_digest",
       "en": "the document names no capture digest, so there are no bytes to read",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1428
+      "line": 1548
     },
     {
       "id": "reading-pipeline.index.non_textual_large",
       "en": "non-textual or too large",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1604
+      "line": 1752
     },
     {
       "id": "reading-pipeline.index.pages_not_asked_request",
       "en": "{count} of them ({pages}) were not asked for in this request: the OCR member reads one page per call and one request may make at most {limit} such calls here (Cloudflare states a limit of 32 Worker invocations per request — their claim, not measured on this runtime); a re-read (op=pdfstructure&ocr=1) asks for them next",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 358
+      "line": 398
     },
     {
       "id": "reading-pipeline.index.placement_not_read",
       "en": "a placement the structure op reported could not be read as {shape}",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1299
+      "line": 1379
     },
     {
       "id": "reading-pipeline.index.read_one_undivided_string",
       "en": " — no reference carries where it was read: this document was read as one undivided string, which names no part of a container to point at",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1472
+      "line": 1594
     },
     {
       "id": "reading-pipeline.index.reading_not_composed",
       "en": "the reading could not be composed ({detail}), so nothing is claimed about this document's text; it is a failed reading, never an emptied document",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1377
+      "line": 1472
     },
     {
       "id": "reading-pipeline.index.reported_characters",
       "en": "{reported} character(s) its producer counted and no text this merge can read",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 219
+      "line": 258
     },
     {
       "id": "reading-pipeline.readingprov.which_no_reading_provenance_it",
       "en": "{which} no reading provenance (it was written before D-536, or by a caller that did not carry it), so whether the text changed, and which tier's, is UNDETERMINED — it is not inferred from the document-level tier or from the chain",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/readingprov.mjs",
-      "line": 217
+      "line": 281
     },
     {
       "id": "record-core.checks.a_part_of_your_teams",
@@ -44700,7 +44707,7 @@
       "en": "Your team's Civicsmith is already checking for new signatures, so it did not start another check. Look again in a few minutes.",
       "module": "file-safety",
       "file": "bio-plane/src/file-safety/checks.mjs",
-      "line": 100
+      "line": 98
     },
     {
       "id": "retrieval-browse.browse.marks_another_shape",
@@ -44812,14 +44819,14 @@
       "en": "an enumerated scope holds at most {FIND_IDS_MAX} ids",
       "module": "retrieval-browse",
       "file": "bio-plane/src/retrieval-browse/find.mjs",
-      "line": 101
+      "line": 103
     },
     {
       "id": "retrieval-browse.find.capture_not_held",
       "en": "this record holds no capture with that fingerprint that you may see",
       "module": "retrieval-browse",
       "file": "bio-plane/src/retrieval-browse/find.mjs",
-      "line": 91
+      "line": 93
     },
     {
       "id": "retrieval-browse.find.no_kind_called_map_the",
@@ -44833,7 +44840,7 @@
       "en": "this record holds no project by that id that you may see",
       "module": "retrieval-browse",
       "file": "bio-plane/src/retrieval-browse/find.mjs",
-      "line": 108
+      "line": 110
     },
     {
       "id": "retrieval-browse.find.scope_missing",
@@ -44924,35 +44931,35 @@
       "en": "read: what a scope holds of the kinds asked, each match with its words and extent, found by search; it records nothing; writes nothing",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1832
+      "line": 1844
     },
     {
       "id": "retrieval.declared.list",
       "en": "read: the bundles the viewer may see, in id order, each with its standing route; writes nothing",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1842
+      "line": 1854
     },
     {
       "id": "retrieval.declared.select",
       "en": "selection lifecycle, owned by the credential that made it",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1834
+      "line": 1846
     },
     {
       "id": "retrieval.declared.selectionrelease",
       "en": "selection lifecycle, owned by the credential that made it",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1836
+      "line": 1848
     },
     {
       "id": "retrieval.frontier.acquire_not_here",
       "en": "an acquisition attempt at an address nothing is held for is written at the DOCUMENT level on this build (op=frontier&level=document), not here",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/frontier.mjs",
-      "line": 457
+      "line": 476
     },
     {
       "id": "retrieval.frontier.internet_note",
@@ -44966,147 +44973,147 @@
       "en": "an investigative run's open-internet searches are folded run-log rows whose subject kind was never recorded; they are read per run through op=airunlog, which gates each on the run's context. This read does not include them, and says nothing about whether any exist",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/frontier.mjs",
-      "line": 455
+      "line": 474
     },
     {
       "id": "retrieval.frontier.there_is_no_level_level",
       "en": "there is no {level} level of the frontier. This is NOT an empty frontier: this reader does not read a level called {level_2}, which is a different fact from having looked and found nothing. The levels are document, content, meaning and internet (REC-93, REC-94, REC-95, REC-129)",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/frontier.mjs",
-      "line": 91
+      "line": 108
     },
     {
       "id": "retrieval.index.action_facts_once",
       "en": "the action facts are registered once",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 296
+      "line": 308
     },
     {
       "id": "retrieval.index.an_enumeration_this_large_is",
       "en": "an enumeration this large is refused rather than quietly turned into a query selection, because that would change what the operator's click meant. Select by query instead.",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1321
+      "line": 1333
     },
     {
       "id": "retrieval.index.content_reaches_layer",
       "en": "content: reaches the CONTENT layer -- the passages somebody has cited or marked citable: content:pdf-page by extent kind, content:stale for citations made under a transcription the record has replaced, content:machine by who minted it, content:ocr by the chain's last step, content:cap<C by the derivation cap, content:uncited for marked-but-unused passages",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1103
+      "line": 1115
     },
     {
       "id": "retrieval.index.content_searches_citations",
       "en": "content: does NOT search the text of the documents -- it searches what has been cited or marked citable in them, so an empty answer is a fact about citation and never about what a document says",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1104
+      "line": 1116
     },
     {
       "id": "retrieval.index.enumerated_needs_one_id",
       "en": "an enumerated selection needs at least one id",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1318
+      "line": 1330
     },
     {
       "id": "retrieval.index.field_compare_range",
       "en": "field:>value, field:<value, field:a..b compare and range",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1097
+      "line": 1109
     },
     {
       "id": "retrieval.index.field_registered_once",
       "en": "a field is registered once",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 405
+      "line": 417
     },
     {
       "id": "retrieval.index.meaning_arm_takes",
       "en": "a meaning arm takes a bare word (leg:cuts_against), a sub-field (leg:ground=*) or a comparison (resolves:>=B on the bare field, leg:grade>=B or content:cap<C on a named one)",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1109
+      "line": 1121
     },
     {
       "id": "retrieval.index.no_meaning_of_the_kind",
       "en": "no meaning of the kind {stringify} is held. The kinds that are: {map}",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 940
+      "line": 952
     },
     {
       "id": "retrieval.index.no_record_matches_all",
       "en": "no record matches all of these terms; this many match any of them",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 882
+      "line": 894
     },
     {
       "id": "retrieval.index.no_saved_query_of_yours",
       "en": "no saved query of yours answers to that",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1532
+      "line": 1544
     },
     {
       "id": "retrieval.index.no_scope_called_stringify_the",
       "en": "no scope called {stringify}; the scopes are {SCOPE_KEYS}",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 772
+      "line": 784
     },
     {
       "id": "retrieval.index.op_meaningrows_answers_at_meaning",
       "en": "op=meaningrows answers at MEANING grain and must be told which: rows={known}. Each reads a different table and answers a different question, so there is no default that would not be answering something you did not ask.",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 937
+      "line": 949
     },
     {
       "id": "retrieval.index.record_no_text_index_key",
       "en": "the record has no text index key",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1132
+      "line": 1144
     },
     {
       "id": "retrieval.index.selection_kind_query_enumerated",
       "en": "a selection is 'query' or 'enumerated'",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1313
+      "line": 1325
     },
     {
       "id": "retrieval.index.selection_not_read_not_held",
       "en": "the selection could not be read, so it is answered as one not held",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1411
+      "line": 1423
     },
     {
       "id": "retrieval.index.selection_owned_by_credential",
       "en": "a selection is owned by the credential that made it",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1309
+      "line": 1321
     },
     {
       "id": "retrieval.index.selection_readable_by_credential",
       "en": "a selection is readable only by the credential that made it",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1390
+      "line": 1402
     },
     {
       "id": "retrieval.index.this_action_changes_state_so",
       "en": "this action changes state, so it will not run against a set that moved since it was selected. Look at the selection again and re-select.",
       "module": "retrieval",
       "file": "bio-plane/src/retrieval/index.mjs",
-      "line": 1429
+      "line": 1441
     },
     {
       "id": "review.declared.casedraft",
@@ -49068,28 +49075,28 @@
       "en": "a litigation hold is in place, so the whole record cannot be cleared. Nothing was removed.",
       "module": "store-door",
       "file": "bio-plane/src/store-door/dispatch.mjs",
-      "line": 248
+      "line": 249
     },
     {
       "id": "store-door.dispatch.asking_the_assistant_to_draft",
       "en": "asking the assistant to draft the team's description",
       "module": "store-door",
       "file": "bio-plane/src/store-door/dispatch.mjs",
-      "line": 334
+      "line": 335
     },
     {
       "id": "store-door.dispatch.the_account_that_would_serve",
       "en": "the account that would serve this draft could not be read; nothing was used",
       "module": "store-door",
       "file": "bio-plane/src/store-door/dispatch.mjs",
-      "line": 309
+      "line": 310
     },
     {
       "id": "store-door.dispatch.this_bundle_is_or_may",
       "en": "this bundle is, or may be, material a litigation hold preserves. Nothing was removed.",
       "module": "store-door",
       "file": "bio-plane/src/store-door/dispatch.mjs",
-      "line": 249
+      "line": 250
     },
     {
       "id": "store-door.pull.material_handed_to_the_team",
@@ -49103,14 +49110,14 @@
       "en": "the knock was already brought in, and its record was not filed; nothing was written. {String}",
       "module": "store-door",
       "file": "bio-plane/src/store-door/pull.mjs",
-      "line": 121
+      "line": 133
     },
     {
       "id": "store-door.pull.the_promotion_did_not_complete",
       "en": "the promotion did not complete.",
       "module": "store-door",
       "file": "bio-plane/src/store-door/pull.mjs",
-      "line": 118
+      "line": 130
     },
     {
       "id": "strength.arithmetic.through",
@@ -49761,56 +49768,56 @@
       "en": "deciding who issued a document is a named member's judgement, and this caller is no member's session; nothing was written",
       "module": "tasks",
       "file": "bio-plane/src/tasks/index.mjs",
-      "line": 732
+      "line": 734
     },
     {
       "id": "tasks.decide.no_actor",
       "en": "a decision is recorded under the member who made it",
       "module": "tasks",
       "file": "bio-plane/src/tasks/index.mjs",
-      "line": 728
+      "line": 730
     },
     {
       "id": "tasks.decide.not_authority_task",
       "en": "only a task that asks who issued a captured document is decided; nothing was written",
       "module": "tasks",
       "file": "bio-plane/src/tasks/index.mjs",
-      "line": 739
+      "line": 741
     },
     {
       "id": "tasks.declared.checkrequest",
       "en": "check-directed: keyed by a held object and its addressees, reached from the object; writes tasks' rows and moves no bundle",
       "module": "tasks",
       "file": "bio-plane/src/tasks/index.mjs",
-      "line": 1287
+      "line": 1291
     },
     {
       "id": "tasks.declared.signrequest",
       "en": "case-directed: keyed by a prepared case edition; a member asks its project's owners to sign it, each given a To do; moves no bundle",
       "module": "tasks",
       "file": "bio-plane/src/tasks/index.mjs",
-      "line": 1291
+      "line": 1295
     },
     {
       "id": "tasks.declared.taskdecide",
       "en": "task act, assignee-fenced; records the member's decision on who issued a captured document, with its basis, and resolves the task in the same act",
       "module": "tasks",
       "file": "bio-plane/src/tasks/index.mjs",
-      "line": 1277
+      "line": 1281
     },
     {
       "id": "tasks.declared.taskforward",
       "en": "task act, assignee-fenced; travels with the task via op=tasks",
       "module": "tasks",
       "file": "bio-plane/src/tasks/index.mjs",
-      "line": 1280
+      "line": 1284
     },
     {
       "id": "tasks.declared.taskresolve",
       "en": "task act, assignee-fenced; travels with the task via op=tasks",
       "module": "tasks",
       "file": "bio-plane/src/tasks/index.mjs",
-      "line": 1283
+      "line": 1287
     },
     {
       "id": "text-chain.textchain.a_machine_reading_carries_its_anchor",
