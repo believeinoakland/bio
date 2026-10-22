@@ -206,3 +206,16 @@ What I need, in order:
 My seam tests are written first and stay red by name on this (the picker, the help for the federal law and the fold's law choice) until item 1 merges; everything else of the round is built and tested at the screens' interface now.
 
 **Also, to close J17's part 3:** I needed neither stand-in key. The no-template help is the existing `screen.start-send.text.help` ("from your team's template for this kind where it has one, else your own words"), and a federal request's reply medium `portal` is drawn by the vocabulary's own token as record data (as stage and outcome tokens are), so the city-worded rows are simply not drawn for a request under the federal law. No new key.
+
+## J19 · REPORT
+
+REPORT (SCREENS-ACTION #13, fix round 4, progress; pushed on job/T51/screens-action; tranche @ 003bae9390 merged). Not a COMPLETE.
+
+DONE at the screens' interface (module suite 242 of 242; each test seen red then green; tests in `bio-plane/test/m/screens-action/fix4-t51.test.mjs`, controls included):
+- C53-min: `plan.mjs` optiondispose: a reminder day with the date list left blank takes the option's first date (each picked option its own; one with no date takes none).
+- C64-more: `request.mjs` "Name the office yourself" is two fields (DEC-412: `screen.request.nameoffice.name`, `.role`, `.why`), label `agency, office` (or the agency alone), the answer's entity chosen as typed; `officeLine` (send-steps.mjs) draws an office once everywhere (request, action, start-send, actionnew, dash-action); naming the same office again chooses the first entry (`existed`).
+- C64-template: `communicationprepare` sends `period`, `form`, `cost_limit` only where the text names `{{period}}`, `{{form}}`, `{{cost_limit}}`; the request's text help says "from your team's template" only where `templatesforaction` offers one, else `screen.start-send.text.help`.
+- C64-law: the picker (request and action) lists `records_laws` with each law's own `response` window and its own level; `help-records/<action>` is for the law chosen (the place's `records_help` only when its `law` is that law; else the first-request sentence from the law's `response`, no city text); `howsend.3` and the "The city's portal" reply medium are not drawn for a request under the federal law; a clock entry that is a rule is worded by the profile's `label` (R97), never its code.
+- C65: `action` draws, for a sent filing, a reference to `start-send` worded `screen.start-send.template.heading` (B22 released it).
+STILL TO DO: (1) the R-SEAM tests with the real merged providers (entities, actions, jurisdictions, filings, filing-templates); the profile-facts part waits on J18 (instance-setup's `profiles()` view lacks `records_laws`, `records_help`, `name`); (2) C14: read-set tests per screen and the live numbers (smoke copy, read-only probe, ADMIN 1280: action 3.9 s settle with 21 reads, request/ACTN 4.0 s with 17, request/PROJ 2.3 s, actionnew 2.3 s, dash-action 4.8 s with 27 (5x `action`, 5x `filingsfor`), plan/PROJ 4.1 s with `plans` 2.6 s, start-send/ACTN 5.2 s, help-records 4.1 s); the only repeat my screens add is `groupidentity` on request/start-send (the team's name for "Sent with"; the shell exposes no accessor); (3) checks, the record, COMPLETE.
+Size (session_01BtTN7ZpRZCZwHDAGJpin6T): test runs 40, module lines 5050
