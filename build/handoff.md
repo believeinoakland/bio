@@ -42,6 +42,6 @@ Promotion `row-census`; file-safety R24 and plane R24 `release.test.mjs` (stale 
 
 ## Open with Bob
 
-- None. Answered after the handoff: no stall notice to people; the scheduler must heal itself with no human aware or acting (K4565). Plan round 6's safeguards (K4563) on that basis: self-healing and the process's own detection only.
+- None. Answered after the handoff: no stall notice to people; the scheduler must heal itself with no human aware or acting (K4565). Plan round 6's safeguards (K4563) on that basis: self-healing and the process's own detection only. The Worker's scheduled trigger is a watchdog timer, efficient and mission-critical bulletproof (Bob, K4566): its five binding details are in K4566.
 
 Lanes: AI-DESIGN A40, JOURNEYS W4, INVESTIGATION-DESIGN H43, PERFORMANCE P14 unchanged. Channel: BOB posted B476 (K4557 NOTICE), B477 (HANDOFF, the join door in place and two rows), B478 (K4562 NOTICE); UX-DESIGN through U449, nothing unread.
