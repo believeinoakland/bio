@@ -1,6 +1,6 @@
 # BOB to screens-publish (T51)
 
-**Read** · handled J24
+**Read** · handled J25
 
 ## B1 · START
 
@@ -405,3 +405,7 @@ Mail with `--module screens-publish`; record `build/jobs/T51/screens-publish.md`
 (3) **G12c-reviewcopy (owner).** The Ceremony sends `reviewcopy` per draft (x2): send one with `drafts=<ids>` (review's merged batch). Failing-first: one `reviewcopy` per load.
 
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-publish tranche/T51 job/T51/screens-publish`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B33 · ANSWER · re J25
+
+ANSWER (BOB #253, K4577) to J25. Option A (keep the wave-1 single `copy` read; ONE batch for all other drafts): BOB's choice, as you recommend; the failing-first asserts at most 2 `reviewcopy` reads per load whatever the number of drafts. Real shape from REVIEW #24 (COMPLETE): request `reviewcopy` with `drafts` = a body list or comma-separated in the query, at most 20 (over: `REVIEW_BATCH_TOO_LARGE`); answer `{ok: true, kind: "review-copies", count, copies: {<draft>: <exactly the single read's answer>}}` (key `copies`); a hidden or unknown draft answers `NO_REVIEW_COPY` byte-identical; `limit` applies to each. store-door does not fence `drafts` (draft ids, as the single read). CONTROL-PLANE #48 forwards `drafts` and stamps each copy as today. G11 step 0 noted: the door exists (Settings › Your team), so no question for Bob. G10: use DEC-418's rows `refusal.DOCUMENT_COPY_PENDING`, `DOCUMENT_NOT_CLEANABLE`, `PHOTO_UNCHECKED`, `PHOTO_NOT_COVERABLE` with fills `{document}`, `{photo}` (UX-DESIGN U452; on the table at the close).

@@ -1,6 +1,6 @@
 # BOB to bundler (T51)
 
-**Read** · handled J11
+**Read** · handled J12
 
 ## B1 · START
 
@@ -118,3 +118,7 @@ Mail with `--module bundler`; record `build/jobs/T51/bundler.md` (append a new s
 **Your entry (G1, provider; owner plane).** `bio-plane/scripts/deploy.mjs` is a raw script PUT (:237-250, :399-424) that never sets the cron schedule, and whether a plain script PUT keeps or clears schedules is unconfirmed. Fix: after every PUT, `PUT .../workers/scripts/<script>/schedules` with the crons of `bio-plane/wrangler.jsonc` (`triggers.crons`, `*/5 * * * *`), then read them back (GET) and REFUSE success on a failure or a mismatch, never a note; `--dry-run` prints the step and refuses the same way. Token scope is Workers Scripts Write (already used for the PUT). Failing-first (`test/m/bundler`, `stubfetch.mjs`): the PUT is followed by the schedules PUT; a read-back that lacks the cron, differs, or fails makes the deploy refuse; dry-run parity. Why missed: the tests verify bytes and limits only. Platform: the first add can take up to 15 min to propagate (the smoke waits). Plane's test, not yours, ties the cron to control-plane's signed literal.
 
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio bundler tranche/T51 job/T51/bundler`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B11 · ANSWER · re J12
+
+ANSWER (BOB #253): J12 read; you merge first. Your proposed R18, R34, R40 lines are written at the merge. Stay available until the layer closes.
