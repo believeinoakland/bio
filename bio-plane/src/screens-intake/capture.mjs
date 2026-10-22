@@ -188,6 +188,12 @@ function renderCapture(cs, view) {
   const pendingLine = (g) => g && g.readingPending ? `<p class="mk-note" role="status" data-reading="pending">${cs.w("screen.document.text.unread.next")}</p>` : "";
   /* the text a reading holds, as one line: the reading's count when it states one, else whether every page, or none, has text */
   const readDrawn = (r) => {
+    /* G14 (fix round 6; S1, S6): a reading's own completeness, as the Document draws it: never "full" while partial. Whole is as before; partial says so
+       (the counts, else the nearest held row, `screen.document.text.unread.next`, which says the rest follows); stated is the reason it was refused whole
+       (a refusal's words), else `none`. Owed: screen.document.reading.partial / .stated. */
+    const c = r.completeness;
+    if (c && c.state === "partial") return `<p class="mk-note" role="status" data-reading="partial">${cs.w("screen.document.text.label")}: ${r.wordsRead !== null && r.wordsTotal !== null ? cs.w("screen.document.text.read", { read: String(r.wordsRead), total: String(r.wordsTotal) }) : cs.w("screen.document.text.unread.next")}</p>`;
+    if (c && c.state === "stated") return `<p class="mk-note" role="status" data-reading="stated">${cs.w("screen.document.text.label")}: ${c.why ? view.parts.refusalHtml(cs, { code: String(c.why) }) : cs.w("screen.document.text.none")}</p>`;
     const state = r.wordsRead !== null && r.wordsTotal !== null ? cs.w("screen.document.text.read", { read: String(r.wordsRead), total: String(r.wordsTotal) })
       : cs.w(r.words ? "screen.document.text.full" : "screen.document.text.none");
     return `<p class="mk-note" role="status" data-reading="read">${cs.w("screen.document.text.label")}: ${state}</p>`;
@@ -249,11 +255,39 @@ function renderCapture(cs, view) {
     const routedTitle = U.forq && U.forq.state === "ok" && U.forq.value && U.forq.value.question ? U.forq.value.question : "";
     const routed = at.id && /^INQ-/.test(at.id) && !qs.some((h) => String(h.bundle_id) === at.id) ? [{ value: at.id, text: told(at.id, routedTitle || qWord) }] : [];
     const forq = /^INQ-/.test(at.id) ? cs.choice("ci-for", "capture.forquestion", routed.concat(qs.map((h) => ({ value: String(h.bundle_id), text: told(String(h.bundle_id), String(h.title || (String(h.bundle_id) === at.id && routedTitle) || qWord)) }))), { value: at.id })
-      + `<p class="mk-small muted">${cs.w("capture.forquestion.help")}</p>` : "";
-    /* G2 (fix round 6): a capture being fetched after the answer: what is happening, its size when stated and where it will be filed; the nearest held
-       rows stand in (K4269): screen.capture.address.working.head, size.mb and capture.filed.project; owed: screen.capture.fetch.pending, .fetch.why */
+      + `<p class="mk-small muted">${cs.w("capture.forquestion.help")}</p>`
+      /* G20 (fix round 6; S11): the chooser lists at most the 200 the read asked for; when the read says there are more, it says so (the nearest held row,
+         `screen.held.more`, stands in; owed: a row for questions) */
+      + (D.questions && D.questions.state === "ok" && D.questions.value && (D.questions.value.truncated === true || (typeof D.questions.value.next === "string" && D.questions.value.next)) ? said("screen.held.more", { count: String(qs.length) }) : "") : "";
+    /* G2 (fix round 6; DEC-418, U452): a capture being fetched after the answer: `screen.capture.fetch.pending` ({size}, {project}) and `.fetch.why`. Until the
+       design's rows reach the table (the close) the nearest held rows stand in (K4269): screen.capture.address.working.head, size.mb and capture.filed.project. */
     const mb = (n) => cs.w("size.mb", { n: (n / 1048576).toFixed(1) });
-    const fetchingLine = (b, f) => `<p class="mk-note" role="status" data-fetching><b>${cs.w("screen.capture.address.working.head")}</b>${b !== null ? " " + mb(b) : ""}${f && f.id ? " · " + cs.w("capture.filed.project", { project: f.title }) : ""}</p>`;
+    const keyed = (k, f, alt) => { const t = cs.w(k, f); return t === k ? alt() : t; };
+    const fetchingLine = (b, f, why) => {
+      const size = b !== null ? mb(b) : "", project = f && f.id ? f.title : "";
+      const head = keyed("screen.capture.fetch.pending", { size, project }, () => `<b>${cs.w("screen.capture.address.working.head")}</b>${size ? " " + size : ""}${project ? " \u00b7 " + cs.w("capture.filed.project", { project }) : ""}`);
+      const wh = why ? cs.w("screen.capture.fetch.why", { why: String(why) }) : "";
+      return `<p class="mk-note" role="status" data-fetching>${head}${wh && wh !== "screen.capture.fetch.why" ? " " + wh : ""}</p>`;
+    };
+    /* G2 (B31): a session whose owed fetch ended with a stated refusal lists it as `failed`; it is drawn from that reason at once, in the refusal's words */
+    const failedLine = (reason) => `<p class="cs-state" data-state="failed" role="alert" data-fetch-failed>${view.parts.refusalHtml(cs, { code: String(reason) }) || cs.w("refusal.FETCH_FAILED")}</p>`;
+    /* G2 (DEC-418): the finished line, `screen.capture.fetch.done` ({document}, {project}); until it is in the table the capture's own result and link stand in */
+    const fetchedLine = (g) => {
+      const link = made(g);
+      const t = cs.w("screen.capture.fetch.done", { document: { html: cs.ref("document", g.bundleId, g.title || g.bundleId, []) }, project: g.filed && g.filed.id ? g.filed.title : "" });
+      return t === "screen.capture.fetch.done" ? said("screen.capture.address.done", { title: bare(g.title) }) + link : `<p class="mk-note" role="status" data-fetched>${t}</p>`;
+    };
+    /* G19 (fix round 6; S10): the supporting files a capture kept and skipped, as the plane counts them (`supporting: {kept, skipped, reasons}`):
+       "N of M supporting files kept" and why. The design's row is owed (`screen.capture.supporting`, {kept}, {total}); the numbers and the plane's reasons
+       stand as data until it arrives. Nothing is drawn when none was skipped. */
+    const supportingLine = (g) => {
+      const x = g && g.supporting;
+      if (!x || !(x.skipped > 0)) return "";
+      const total = x.kept + x.skipped;
+      const reasons = (Array.isArray(x.reasons) ? x.reasons : []).map((r) => (r && typeof r === "object" ? r.detail || r.reason || r.code : r)).filter((r) => typeof r === "string" && r);
+      const t = keyed("screen.capture.supporting", { kept: String(x.kept), total: String(total) }, () => `<span class="mk-data">${x.kept} / ${total}</span>`);
+      return `<p class="mk-small" role="status" data-supporting>${t}${reasons.length ? " \u00b7 " + reasons.map((r) => cs.esc(r)).join(" \u00b7 ") : ""}</p>`;
+    };
     /* R31 (N1094; DEC-240 D3): the member's own unfinished captures, each titled from the held document that holds its
        primary, else the address; drawn only when one is answered (R17), a read that failed drawn failed */
     const O = D.open;
@@ -264,7 +298,8 @@ function renderCapture(cs, view) {
         const title = (row && row.title) || String(c.locator || "");
         /* G2: a session being fetched (acquisition `fetch_pending`) has nothing to finish; it is said, once (the press's own line says it when this visit began it) */
         if (c.fetch_pending && typeof c.fetch_pending === "object") {
-          return U.captured && U.captured.fetching && U.captured.fetching.session === c.session ? "" : fetchingLine(Number.isFinite(c.fetch_pending.declared_bytes) ? c.fetch_pending.declared_bytes : null, null);
+          if (c.failed) return failedLine(c.failed);
+          return U.captured && U.captured.fetching && U.captured.fetching.session === c.session ? "" : fetchingLine(Number.isFinite(c.fetch_pending.declared_bytes) ? c.fetch_pending.declared_bytes : null, null, c.fetch_pending.why);
         }
         return `<p class="mk-note" role="status">${cs.w("capture.unfinished", { title, n: c.outstanding, ago: { html: cs.date(c.started) } })} `
           + cs.act("acquire", { label: "capture.finish", data: { session: c.session, locator: String(c.locator || ""), title } }) + "</p>";
@@ -312,11 +347,12 @@ function renderCapture(cs, view) {
     /* R31 (fix round 5, E8; K4530): "Finish it" says what the continuation answered: the visitor copy still being made, its supporting files fetched
        with nothing new filed (each in the nearest held row's words, K4269), or the visitor copy filed (a new document, below) */
     const finishLine = (g) => `<p class="mk-note" role="status" data-finish="${g.finish}">${cs.w(g.finish === "pending" ? "acquisition.index.render_pending_note" : "acquisition.note.continuation_files_new")}</p>`;
-    const result = (got && got.fetching ? fetchingLine(got.fetching.bytes, got.filed) : got ? (got.finish === "pending" || got.finish === "files" ? finishLine(got) : got.archive
+    const result = (got && got.fetching ? fetchingLine(got.fetching.bytes, got.filed, got.fetching.why) : got ? (got.finish === "pending" || got.finish === "files" ? finishLine(got) : got.archive
         ? said("screen.capture.address.archive", { filed: got.filed })
           + (got.notPromoted ? said("screen.capture.address.notpromoted", { count: got.notPromoted }) : "")
-        : (got.finish === "done" ? `<p class="mk-note" role="status" data-finish="done">${cs.w("screen.capture.address.done", { title: bare(got.title) })}</p>`
-          : said(got.existed ? "screen.capture.address.existed" : "screen.capture.address.done", { title: bare(got.title) })) + made(got)
+        : (got.fetched ? fetchedLine(got)
+          : (got.finish === "done" ? `<p class="mk-note" role="status" data-finish="done">${cs.w("screen.capture.address.done", { title: bare(got.title) })}</p>`
+          : said(got.existed ? "screen.capture.address.existed" : "screen.capture.address.done", { title: bare(got.title) })) + made(got)) + supportingLine(got)
           /* a render still being made and an attestation not yet answered, in the plane's own notes; the capture is kept */
           + [got.renderNote, got.attestNote].filter(Boolean).map((n) => `<p class="mk-small muted" role="status">${cs.esc(n)}</p>`).join("") + pendingLine(got)) : "")
       + refusedPromotion("address");
@@ -533,7 +569,9 @@ async function doneAcquire(view, answer, cs) {
      as they stand, in the plane's own notes: the capture is kept either way */
   const rp = doc.render_pending && typeof doc.render_pending === "object" ? doc.render_pending : a.render_pending && typeof a.render_pending === "object" ? a.render_pending : null;
   const later = (Array.isArray(doc.attestation_attempts) ? doc.attestation_attempts : []).find((x) => x && x.pending === true && typeof x.note === "string" && x.note);
-  const pend = { renderNote: rp && typeof rp.note === "string" ? rp.note : "", attestNote: later ? later.note : "" };
+  /* G19 (fix round 6; S10): the plane's count of the supporting files kept and skipped */
+  const supporting = a.supporting && typeof a.supporting === "object" ? a.supporting : doc.supporting && typeof doc.supporting === "object" ? doc.supporting : null;
+  const pend = { ...(supporting ? { supporting } : {}), renderNote: rp && typeof rp.note === "string" ? rp.note : "", attestNote: later ? later.note : "" };
   cs.set("working", false);
   cs.set("promoteRefused", null);
   /* R31: a continuation (`continued`) files nothing new: its supporting files join the capture it resumed */
@@ -545,7 +583,7 @@ async function doneAcquire(view, answer, cs) {
     const f = await view.parts.filedFor(view, cs);
     const t = view.parts.titleOf(cs, { doc: {}, address });
     cs.set("captured", { title: t, address, bundleId: null, sha: "", filed: f && f.id ? f : null,
-                         fetching: { session: String(fp.session || ""), bytes: Number.isFinite(fp.declared_bytes) ? fp.declared_bytes : null } });
+                         fetching: { session: String(fp.session || ""), bytes: Number.isFinite(fp.declared_bytes) ? fp.declared_bytes : null, why: typeof fp.why === "string" ? fp.why : "" } });
     view.parts.watchFetch(cs, { session: String(fp.session || ""), address, title: t, filed: f && f.id ? f : null, finish: "" });
     return;
   }
@@ -596,7 +634,15 @@ function watchFetch(cs, o, n = 0, missed = 0) {
     const body = (x) => (x && typeof x.result === "object" && x.result ? x.result : x);
     const list = body(await k.call("opencaptures", { query: {} }));
     if (!list || list.ok === false || !Array.isArray(list.captures)) return again(missed);
-    if (list.captures.some((c) => c && c.session === o.session)) return again(0);
+    const mine = list.captures.find((c) => c && c.session === o.session);
+    /* B31: the owed fetch ended with a stated refusal and the session was kept with `failed`: said at once, in the refusal's words */
+    if (mine && mine.failed) {
+      k.set("ended", o.session);
+      k.set("captured", null);
+      k.set("promoteRefused", { tab: "address", html: v.parts.refusalHtml(k, { code: String(mine.failed) }) || k.w("refusal.FETCH_FAILED") });
+      return;
+    }
+    if (mine) return again(0);
     /* the copy the record shows at the address (`heldat`, no `check`) */
     const h = body(await k.call("heldat", { query: { address: o.address } }));
     const copy = h && h.ok !== false && h.held === true && h.copy && typeof h.copy.document === "string" ? h.copy : null;
@@ -609,7 +655,7 @@ function watchFetch(cs, o, n = 0, missed = 0) {
       return;
     }
     k.set("ended", o.session);
-    k.set("captured", { title: o.title, address: o.address, bundleId: copy.document, sha: String(copy.sha256 || ""), filed: o.filed, ...(o.finish ? { finish: o.finish } : {}) });
+    k.set("captured", { title: o.title, address: o.address, bundleId: copy.document, sha: String(copy.sha256 || ""), filed: o.filed, ...(o.finish ? { finish: o.finish } : { fetched: true }) });
   });
 }
 
@@ -690,11 +736,19 @@ async function filedFor(view, cs) {
 async function bundleFor(view, cs, address) {
   const got = view.ui && view.ui.captured;
   if (got && got.address === address && typeof got.bundleId === "string" && got.bundleId) return { bundleId: got.bundleId, title: got.title };
-  const a = await cs.call("heldcaptures", { query: { limit: 1000, state: "held_and_vouched" } });
-  const v = a && a.result && typeof a.result === "object" ? a.result : a;
-  const rows = v && Array.isArray(v.held) ? v.held : [];
-  const r = rows.find((x) => x && x.source && (x.source.address === address || x.source.locator === address));
-  return r && typeof r.bundle_id === "string" ? { bundleId: r.bundle_id, title: r.title || address } : null;
+  /* G20 (fix round 6; S11): every held and vouched document is looked at, a page of 1,000 at a time by the read's own `next`, never the first page alone
+     (at most 100 pages, 100,000 documents, a bound the read itself would have to exceed) */
+  let after = "";
+  for (let page = 0; page < 100; page++) {
+    const a = await cs.call("heldcaptures", { query: { limit: 1000, state: "held_and_vouched", ...(after ? { after } : {}) } });
+    const v = a && a.result && typeof a.result === "object" ? a.result : a;
+    const rows = v && Array.isArray(v.held) ? v.held : [];
+    const r = rows.find((x) => x && x.source && (x.source.address === address || x.source.locator === address));
+    if (r && typeof r.bundle_id === "string") return { bundleId: r.bundle_id, title: r.title || address };
+    if (!v || v.truncated !== true || typeof v.next !== "string" || !v.next) return null;
+    after = v.next;
+  }
+  return null;
 }
 
 /* R14, R16: "Watch this address": `monitorset` with `enabled: true` and the frequency chosen (a word of `MONITOR_FREQ`).
@@ -805,7 +859,9 @@ function readingOf(a, doc) {
   if (!r) return { read: false };
   const units = Array.isArray(a && a.text_units) ? a.text_units : Array.isArray(doc && doc.text_units) ? doc.text_units : Array.isArray(r.text_units) ? r.text_units : [];
   const n = (k) => (Number.isInteger(r[k]) && r[k] >= 0 ? r[k] : null);
-  return { read: true, words: units.filter((u) => u && String(u.text || "").trim()).length, wordsRead: n("words_read"), wordsTotal: n("words_total") };
+  const cmp = (a && a.completeness) || r.completeness;
+  return { read: true, words: units.filter((u) => u && String(u.text || "").trim()).length, wordsRead: n("words_read"), wordsTotal: n("words_total"),
+           ...(cmp && typeof cmp === "object" && ["whole", "partial", "stated"].includes(cmp.state) ? { completeness: { state: cmp.state, ...(typeof cmp.why === "string" ? { why: cmp.why } : {}) } } : {}) };
 }
 
 /* R3: what the member saw or heard (`testify`): the words, with where in them, and when as `observedAt`. */

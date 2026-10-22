@@ -196,3 +196,93 @@ test("R58 (G2 seam) capture's own declaration of acquire accepts `project` (capt
   const accepted = [...row.fields.accepts, ...row.fields.requires].flat();
   assert.ok(accepted.includes("project"), "acquire accepts project");
 });
+
+/* ---- B31: a session whose owed fetch ended in a stated refusal ---- */
+
+test("R58 (B31) an entry kept with `failed` draws the failure in the refusal's words at once, from the poll and from the list, without waiting for three asks", async () => {
+  const failedEntry = { session: SESSION, locator: ADDRESS, started: "2026-10-22T10:00:00Z", outstanding: 1, fetch_pending: { since: "2026-10-22T10:00:00Z", declared_bytes: BYTES, why: "LARGE_DECLARED" }, failed: "TOO_LARGE" };
+  const state = { listed: true, held: false };
+  const p = await open(`/app/capture/address/${PROJ}`, { acquire: PENDING, heldat: heldat(state),
+    opencaptures: () => ok({ ok: true, truncated: false, captures: state.listed ? [failedEntry] : [] }) });
+  await pressCapture(p);
+  await p.clock.tick(4000);
+  for (let i = 0; i < 8; i++) await p.settle(20);
+  assert.equal(fetching(p), 0, "no working line");
+  assert.ok(says(p, "refusal.TOO_LARGE"), "the stated reason, in the refusal's words");
+  assert.equal(p.byOp("heldat").filter((r) => !r.query.check).length, 0, "the record is not asked: the answer was stated");
+  const reloaded = await open("/app/capture/address", { opencaptures: ok({ ok: true, truncated: false, captures: [failedEntry] }) });
+  assert.ok(says(reloaded, "refusal.TOO_LARGE"), "the list says it too");
+  assert.equal(Array.from(main(reloaded).querySelectorAll('button[data-act="acquire"]')).filter((b) => b.getAttribute("data-session")).length, 0, "and offers no Finish it");
+});
+
+/* ---- G14: completeness; G19: supporting files ---- */
+
+const CAPTURED_OK = (more) => ok({ ok: true, existed: false, document: DOC, text_units: [{ text: "Payment vouchers are due" }], ...more });
+const reads = (p, k) => main(p).querySelectorAll(`[data-reading="${k}"]`).length;
+
+test("R57 (G14) a capture whose reading says it is partial never draws 'full'; stated draws its reason; whole is as before", async () => {
+  const partial = await open("/app/capture/file", { captureupload: ok({ ok: true, existed: false, capture: { sha256: SHA, bytes: 9 },
+    document: { file: `snapshots/upload-${SHA}`, locator: `upload:${SHA}`, capture: { method: "uploaded", sha256: SHA, encoding: "binary", bytes: 9 }, source: { kind: "uploader" } },
+    reading: { found: true, title: "T" }, text_units: [{ text: "Payment vouchers are due" }], completeness: { state: "partial" } }) });
+  const up = async (p) => { fill(p, { "ci-file": new File(["x"], "w.pdf", { type: "application/pdf" }), "ci-how-made": true, "ci-where": "City hall", "ci-what": "The packet." }); await press(p, "captureupload"); };
+  await up(partial);
+  assert.equal(reads(partial, "partial"), 1);
+  assert.equal(says(partial, "screen.document.text.full"), false, "never 'full' while partial");
+  const stated = await open("/app/capture/file", { captureupload: ok({ ok: true, existed: false, capture: { sha256: SHA, bytes: 9 },
+    document: { file: `snapshots/upload-${SHA}`, locator: `upload:${SHA}`, capture: { method: "uploaded", sha256: SHA, encoding: "binary", bytes: 9 }, source: { kind: "uploader" } },
+    reading: { found: false, failure: "final" }, text_units: [], completeness: { state: "stated", why: "TOO_LARGE" } }) });
+  await up(stated);
+  assert.equal(reads(stated, "stated"), 1);
+  assert.ok(says(stated, "refusal.TOO_LARGE"));
+  assert.equal(says(stated, "screen.document.text.full") || says(stated, "screen.document.text.none"), false);
+  const whole = await open("/app/capture/file", { captureupload: ok({ ok: true, existed: false, capture: { sha256: SHA, bytes: 9 },
+    document: { file: `snapshots/upload-${SHA}`, locator: `upload:${SHA}`, capture: { method: "uploaded", sha256: SHA, encoding: "binary", bytes: 9 }, source: { kind: "uploader" } },
+    reading: { found: true, title: "T" }, text_units: [{ text: "Payment vouchers are due" }], completeness: { state: "whole" } }) });
+  await up(whole);
+  assert.equal(reads(whole, "read"), 1, "control: whole draws the reading as it did");
+  assert.ok(says(whole, "screen.document.text.full"));
+});
+
+test("R2 (G19) a capture that skipped supporting files says how many of how many it kept and why; none skipped says nothing", async () => {
+  const sup = (x) => async () => { const p = await open("/app/capture/address", { acquire: CAPTURED_OK({ supporting: x }), heldat: ok(NOT_HELD) }); await pressCapture(p); return p; };
+  const p = await sup({ kept: 400, skipped: 50, reasons: [{ reason: "body_unavailable", detail: "over the cap of 400" }] })();
+  const line = main(p).querySelector("[data-supporting]");
+  assert.ok(line, "the line is drawn");
+  assert.ok(line.textContent.includes("400") && line.textContent.includes("450"), "N of M");
+  assert.ok(line.textContent.includes("over the cap of 400"), "and the plane's reason");
+  const none = await sup({ kept: 12, skipped: 0, reasons: [] })();
+  assert.equal(main(none).querySelectorAll("[data-supporting]").length, 0, "control: nothing skipped, nothing said");
+  const absent = await sup(undefined)();
+  assert.equal(main(absent).querySelectorAll("[data-supporting]").length, 0);
+});
+
+/* ---- G20: lists that stop say so; the already-held look covers every held document ---- */
+
+test("R7 (G20) the inbox says when the doorbell stopped at its limit; an untruncated list says nothing", async () => {
+  const K = { knock_id: "KNOCK-2026-10-03-9c1f0a2b", sha256: "1".repeat(64), bytes: 3, note: "n", received: "2026-10-03T10:00:00Z", status: "new" };
+  const cut = await open("/app/inbox", { inbox: ok({ inbox: [K], truncated: true, next: "c1" }) });
+  assert.ok(says(cut, "screen.held.more", { count: "1" }));
+  const whole = await open("/app/inbox", { inbox: ok({ inbox: [K], truncated: false, next: null }) });
+  assert.equal(says(whole, "screen.held.more", { count: "1" }), false);
+});
+
+test("R29 (G20) the question chooser says when the search stopped at its limit; and the already-held look reads every page by next", async () => {
+  const hit = (n) => ({ bundle_id: `INQ-2026-000${n}-q`, title: `Q${n}` });
+  const q = await open(`/app/capture/address/INQ-2026-0001-q`, { search: ok({ hits: [hit(1), hit(2)], truncated: true, next: "n1" }), image: ok({ "bundle.md": `---\ntitle: "Q1"\nproject: ${PROJ}\n---\n` }), projectquestions: ok({ items: [] }) });
+  assert.ok(says(q, "screen.held.more", { count: "2" }));
+  const whole = await open(`/app/capture/address/INQ-2026-0001-q`, { search: ok({ hits: [hit(1), hit(2)], truncated: false }), image: ok({ "bundle.md": `---\ntitle: "Q1"\nproject: ${PROJ}\n---\n` }), projectquestions: ok({ items: [] }) });
+  assert.equal(says(whole, "screen.held.more", { count: "2" }), false);
+  /* the document at an address is found on the second page of held documents */
+  const pages = (r) => r.query.after === "p2"
+    ? ok({ ok: true, held: [{ bundle_id: "INFO-2026-0777-late", title: "Late", source: { address: ADDRESS }, capture: { sha256: SHA } }], truncated: false, next: null })
+    : ok({ ok: true, held: [{ bundle_id: "INFO-2026-0001-first", title: "First", source: { address: "https://other.example/" }, capture: { sha256: "a".repeat(64) } }], truncated: true, next: "p2" });
+  const doc = { capture: { sha256: SHA, bytes: 900, encoding: "utf-8" }, file: "snapshots/a.htm", title: null };
+  const p = await open("/app/capture/address", { acquire: ok({ ok: true, existed: false, document: doc }), heldat: ok(NOT_HELD), heldcaptures: pages, monitorset: ok({ ok: true }) });
+  fill(p, { "ci-address": "https://one.example/now" });
+  await press(p, "acquire");
+  fill(p, { "ci-address": ADDRESS });
+  await press(p, "monitorset", { reason: "r" });
+  assert.equal(p.byOp("monitorset")[0].body.bundleId, "INFO-2026-0777-late", "found on the second page");
+  const looks = p.byOp("heldcaptures").filter((r) => r.query.state === "held_and_vouched" && r.query.limit === "1000" || r.query.after);
+  assert.ok(looks.some((r) => r.query.after === "p2"), "the second page is read by the first's next");
+});
