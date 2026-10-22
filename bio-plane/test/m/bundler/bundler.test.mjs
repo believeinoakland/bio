@@ -18,7 +18,7 @@ import {
   isContainer, isGuarded, containerDescriptor, imageReference, containerClasses, containerParts, classPackages,
   statementPackages, markerIsContainer, workerPart, WORKER_PART_PATH, BUCKET_ROLES,
   SOURCE_FIELD, containerSourceHash, containerImageStates, containerImageFindings, recordContainerDigest,
-  planeMember, wordKeysOf, bundleExports, bindingFindings, releaseBindingFindings,
+  planeMember, wordKeysOf, bundleExports, bindingFindings, releaseBindingFindings, asciiOutput,
 } from "../../../scripts/fleet-bundle.mjs";
 import { build as esbuildBuild } from "esbuild";
 import { parseJsonc } from "../../../scripts/jsonc.mjs";
@@ -183,7 +183,7 @@ test("R2: the same source gives the same bytes from any working directory and an
     symlinkSync(join(shared, "node_modules"), join(mb.abs, "node_modules"), "dir");
     const linked = (await buildMember(mb)).bytes;
     assert.ok(linked.equals(fromMember), "a symlinked install gives the same bytes as a real one");
-    assert.match(linked.toString("utf8"), /\/\/ node_modules\/fakedep\/index\.mjs/);
+    assert.match(linked.toString("utf8"), /V=40/, "the vendored code is bundled");
     assert.ok(!linked.toString("utf8").includes(shared) && !fromMember.toString("utf8").includes(a),
       "no absolute path reaches the bytes");
   } finally {
@@ -1133,10 +1133,10 @@ function wordsFixture(root, body, { dir = "w", extra = {} } = {}) {
 /** The keys of the rows a built bundle carries, read from its `WORD_ROWS` literal. */
 function keptKeys(bytes) {
   const text = bytes.toString("utf8");
-  const at = text.indexOf("WORD_ROWS = Object.freeze([");
+  const at = text.indexOf("WORD_ROWS=Object.freeze([");
   if (at < 0) return null;
-  const end = text.indexOf("\n]);", at);
-  return [...text.slice(at, end).matchAll(/^\s*\[("(?:[^"\\]|\\.)*"),/gm)].map((m) => JSON.parse(m[1]));
+  const end = text.indexOf("]])", at);
+  return [...text.slice(at, end + 2).matchAll(/\[("(?:[^"\\]|\\.)*"),/g)].map((m) => JSON.parse(m[1]));
 }
 
 test("R38: a member's bundle carries exactly the rows its inputs name at word, localize and hasWord calls, in the table's order, and its manifest records their count and digest", async () => {
@@ -1220,7 +1220,7 @@ test("R38: the plane's bundle is unchanged: the plane carries the whole table, r
   assert.equal(manifestFrom(plane, built).words, undefined, "the plane's manifest has no words field");
   /* the plane is built by the recipe alone (R2), as before R38: no plugin stands between it and the table */
   const recipe = await esbuildBuild({ ...optionsFor(plane), write: false, logLevel: "silent" });
-  assert.ok(Buffer.compare(built.bytes, Buffer.from(recipe.outputFiles[0].contents)) === 0, "byte-identical to the plain recipe's build");
+  assert.ok(Buffer.compare(built.bytes, asciiOutput(Buffer.from(recipe.outputFiles[0].contents))) === 0, "byte-identical to the plain recipe's build");
   assert.ok(built.bytes.toString("utf8").includes("WORDS_COMMIT"), "with the whole table in it");
   const root = tmp("r38e");
   try {
@@ -1232,7 +1232,7 @@ test("R38: the plane's bundle is unchanged: the plane carries the whole table, r
     const wholeBuilt = await buildMember({ ...whole, wholeWordTable: true });
     /* a build that is no fleet member's (a descriptor with no marker, as the standalone case checker's) is not trimmed */
     const { marker: _marker, ...adHoc } = whole;
-    const adHocBuilt = await buildMember(adHoc);
+    const adHocBuilt = await buildMember({ ...adHoc, bundle: { ...adHoc.bundle, ascii: true } });   /* the same recipe (R2), so the bytes compare */
     assert.equal(adHocBuilt.words, null);
     assert.ok(Buffer.compare(adHocBuilt.bytes, wholeBuilt.bytes) === 0, "built whole");
     assert.equal(wholeBuilt.words, null);

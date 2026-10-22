@@ -98,7 +98,7 @@ import { createHash } from "node:crypto";
 import { readFileSync, readdirSync, writeFileSync, mkdirSync, statSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join, resolve } from "node:path";
-import { parse as acornParse } from "../src/setup-words/vendor/acorn.mjs";   /* R38: the parser setup-words reads calls with */
+import { parse as acornParse, tokenizer as acornTokenizer, tokTypes as acornTypes } from "../src/setup-words/vendor/acorn.mjs";   /* R38: the parser setup-words reads calls with; R2: its tokenizer finds the characters to escape */
 /* THIS WALK IS GUARDED RATHER THAN NAMED. Found by the census in the old
    `hygiene.test.mjs` (deleted in T20): it went red on this file the first full
    run after it was written, before anyone read the diff, the sixth time that
@@ -802,6 +802,73 @@ export function fleetProvenance(members, { repoRoot = REPO_ROOT, log = console.l
     corpus: `${members.length} fleet member(s)`, log });
 }
 
+/* ---- A PURE-ASCII BUNDLE (bundler R2; T51 fix round 6, G39; diagnosis-R6-idle.md) ------------------------------------
+ *
+ * V8 holds a script's source one byte a character only when every character is ASCII; one character above U+00FF anywhere
+ * in it makes it hold the WHOLE text two bytes a character. The plane's bundle was 32.5 MB of source held as 65 MB, which
+ * is 36 MB of the 86 MB its Store idles at in workerd (measured in raw workerd by bisecting V8's old-space cap: 86 as built,
+ * 76 with comments stripped alone, 50 pure ASCII). esbuild already writes strings and identifiers ASCII (`charset`); what
+ * it leaves are its comments (`minifyWhitespace` strips them), the text of template literals (lowered to strings, which
+ * `charset` then escapes) and the non-ASCII characters of regex literals, which no esbuild option escapes. So the recipe is
+ * those three options and `asciiOutput`, a token-aware pass over the result: a string or regex literal's non-ASCII
+ * character becomes `\uXXXX` (`\u{X}` for an astral one in a `u`/`v` regex), which means the same in both; a licence
+ * banner (`legalComments: "eof"`, the default, kept) has its characters written as `\uXXXX` text; anything else, above all
+ * the raw text of a template literal that was not lowered (which would change a tagged template's `raw`), refuses the build
+ * `[NON_ASCII_REMAINS]` and is never edited.
+ *
+ * Which builds: a fleet member and the plane. The standalone case checker (`case-checker/build-program.mjs`, DEC-112) is the
+ * open, auditable program a person reads, so its descriptor, which is neither, keeps its form; `bundle.ascii` (a boolean)
+ * overrides the rule either way. The options are recorded in the manifest's `recipe.ascii` and `verifyStatic` checks them. */
+export const ASCII_RECIPE = Object.freeze({ charset: "ascii", legalComments: "eof", minifyWhitespace: true, templateLiterals: "lowered" });
+
+/** Does this member's bundle get the pure-ASCII recipe? */
+export const asciiOf = (member) =>
+  member && member.bundle && typeof member.bundle.ascii === "boolean" ? member.bundle.ascii : !!(member && (member.marker || member.wholeWordTable));
+
+const NON_ASCII = /[^\x00-\x7f]/gu;
+const HAS_NON_ASCII = /[^\x00-\x7f]/;
+const hex4 = (c) => `\\u${c.toString(16).padStart(4, "0")}`;
+/** The ASCII spelling of `text`'s characters: surrogate pairs as two `\uXXXX`, or as one `\u{X}` when `braced`. */
+function escapeChars(text, braced) {
+  return text.replace(NON_ASCII, (ch) => {
+    const cp = ch.codePointAt(0);
+    if (cp > 0xffff) return braced ? `\\u{${cp.toString(16)}}` : hex4(0xd800 + ((cp - 0x10000) >> 10)) + hex4(0xdc00 + ((cp - 0x10000) & 0x3ff));
+    return hex4(cp);
+  });
+}
+
+/** R2: the bytes with every character above 0x7F escaped as above; the same bytes when there is none. Throws
+ *  `REFUSED [NON_ASCII_REMAINS]` naming the line and the token when a character is anywhere else. */
+export function asciiOutput(bytes) {
+  let any = false;
+  for (let i = 0; i < bytes.length; i++) if (bytes[i] > 0x7f) { any = true; break; }
+  if (!any) return bytes;
+  const text = Buffer.from(bytes).toString("utf8");
+  const where = (pos) => `line ${text.slice(0, pos).split("\n").length}`;
+  const refuse = (pos, what) => { throw new Error(`REFUSED [NON_ASCII_REMAINS]: a character above U+007F is in ${what} at ${where(pos)}, which the ASCII pass will not edit (bundler R2)`); };
+  const edits = [];
+  const comment = (_block, _t, start, end) => {
+    const raw = text.slice(start, end);
+    if (HAS_NON_ASCII.test(raw)) edits.push([start, end, escapeChars(raw, false)]);
+  };
+  for (const tok of acornTokenizer(text, { ecmaVersion: "latest", sourceType: "module", allowHashBang: true, onComment: comment })) {
+    const raw = text.slice(tok.start, tok.end);
+    if (!HAS_NON_ASCII.test(raw)) continue;
+    if (tok.type === acornTypes.string) edits.push([tok.start, tok.end, escapeChars(raw, false)]);
+    else if (tok.type === acornTypes.regexp) {
+      const flags = tok.value && tok.value.flags ? tok.value.flags : "";
+      edits.push([tok.start, tok.end, escapeChars(raw, /[uv]/.test(flags))]);
+    } else refuse(tok.start, tok.type === acornTypes.template ? "the raw text of a template literal" : `a ${tok.type.label} token`);
+  }
+  edits.sort((a, b) => a[0] - b[0]);
+  let out = "", at = 0;
+  for (const [start, end, to] of edits) { out += text.slice(at, start) + to; at = end; }
+  out += text.slice(at);
+  const left = out.search(HAS_NON_ASCII);
+  if (left !== -1) refuse(left, "text outside every token");
+  return Buffer.from(out, "latin1");
+}
+
 /** The esbuild options for one member. Exported so the build step and the gate
  *  cannot disagree about the recipe — there is one expression of it. */
 export function optionsFor(member) {
@@ -816,6 +883,8 @@ export function optionsFor(member) {
     platform: RECIPE.platform,
     external: [...(b.external || DEFAULT_EXTERNAL)],
     metafile: true,
+    ...(asciiOf(member) ? { charset: ASCII_RECIPE.charset, legalComments: ASCII_RECIPE.legalComments,
+      minifyWhitespace: ASCII_RECIPE.minifyWhitespace, supported: { "template-literal": false } } : {}),
   };
 }
 
@@ -1032,7 +1101,7 @@ export const wordsManifest = (w) => !w ? {} : w.rows === "all" ? { words: "all",
 /** Build one member. `write: false` (the default) NEVER touches the tree. */
 export async function buildMember(member, { write = false, mutateEntry = null } = {}) {
   /* Silent: a failure arrives as the thrown error, never as stray stderr. */
-  const opts = { ...optionsFor(member), write, logLevel: "silent" };
+  const opts = { ...optionsFor(member), write: false, logLevel: "silent" };   /* esbuild never writes: R2's pass runs on the bytes first */
   /* R38: which word rows this member's bundle carries (null: the whole table, or none reachable). */
   let words = null;
   if (trimsWords(member)) {
@@ -1059,9 +1128,12 @@ export async function buildMember(member, { write = false, mutateEntry = null } 
     });
   }
   const res = await build(opts);
-  const bytes = write
-    ? readFileSync(join(member.abs, member.bundle.outfile))
-    : Buffer.from(res.outputFiles[0].contents);
+  let bytes = Buffer.from(res.outputFiles[0].contents);
+  if (asciiOf(member)) bytes = asciiOutput(bytes);
+  if (write) {
+    mkdirSync(join(member.abs, dirname(member.bundle.outfile)), { recursive: true });
+    writeFileSync(join(member.abs, member.bundle.outfile), bytes);
+  }
   const inputs = Object.entries(res.metafile.inputs)
     .map(([path, v]) => ({ path, bytes: v.bytes }))
     .sort((a, b) => a.path.localeCompare(b.path));
@@ -1095,6 +1167,7 @@ export function manifestFrom(member, built) {
       external: [...(member.bundle.external || DEFAULT_EXTERNAL)],
       absWorkingDir: "<member directory>",   /* pinned; never an absolute path, which would not travel */
       esbuild: ESBUILD_VERSION,
+      ascii: asciiOf(member) ? { ...ASCII_RECIPE } : false,   /* R2, G39 */
     },
     /* Paths are as ESBUILD names them, which — with `absWorkingDir` pinned — is
        member-relative and therefore identical in every checkout. THREE of
@@ -1324,6 +1397,7 @@ export function verifyStatic(member) {
     external: [...(member.bundle.external || DEFAULT_EXTERNAL)],
     absWorkingDir: "<member directory>",
     esbuild: ESBUILD_VERSION,
+    ascii: asciiOf(member) ? { ...ASCII_RECIPE } : false,
   };
   for (const k of Object.keys(want)) {
     const a = JSON.stringify(want[k]), b = JSON.stringify((manifest.recipe || {})[k]);
