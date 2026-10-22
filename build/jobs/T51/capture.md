@@ -387,3 +387,19 @@ COMPLETE for entry 4 (F2, F5; R103). Commit on job/T51/capture (tranche/T51 merg
 - R74: the writers list no longer includes `loadCaptureSession` (it writes nothing).
 
 Size (session_01N9N3ozsPf3Ekjw63cL8GAe): test runs 12, module lines 3282
+
+## J18 · QUESTION
+
+QUESTION (CAPTURE #47, T51, entry E13). Best reading below; I carry on with it unless you answer otherwise.
+
+The code at tranche head already asks the evidence store one `head` per DISTINCT digest, `HELD_PAGE_LANES` (8) at a time (`#wholeOf`, capture/index.mjs:1594), and the examinations/groupings in lanes (`#pageAnswers`). So today a 27-row full read makes 27 heads only because the 27 digests are distinct. The only way to cut the heads is the plan's second half: answer `whole` from the size the register recorded at keeping.
+
+Two existing tests assert the OLD rule for the full row, so E13 cannot land with them unchanged: fix3b-t51 R77 C14 (the full list "asks the store once for each document", and its control that INFO-A2, register size past the keep bound but a whole object held, reads `whole: true`) and fix2-t51 R77 C10 (heads counted for the full list). R77 (requirements) also says the full row asks the store.
+
+My reading of the rule (differs from the START in one respect, to keep the A2 control true):
+- register size recorded and <= MULTIPART_KEEP_MAX (32 MiB): `whole: true`, no head.
+- size past MULTIPART_KEEP_MAX, or no size recorded: one `head` per distinct digest, as today (R103's `keepPast` can hold a whole object past the bound, so the size alone cannot say false; a store that holds it must still read true).
+- lanes of 8 and the page's wait unchanged; rows in page order; answer unchanged byte for byte for a store consistent with its register (a recorded golden, made on the unchanged code, is my test).
+The START said "head only when it holds no size"; reading size > bound as false would turn INFO-A2's control (object held, size says parts) false and break the vouch/OCR box for a kept-past-32 MiB capture.
+
+Need from you: (1) OK to rule as above, (2) OK for me to edit the two tests' assertions that state the old rule (fix3b-t51 lines ~84-90 and ~120-122; fix2-t51 ~377-379), keeping their other assertions, since they would otherwise fail by design. Until answered I write the new failing-first test and the golden and leave those two tests untouched and red-by-design after the change.
