@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J20
+**Read** · handled J21
 
 ## B1 · START
 
@@ -393,3 +393,11 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 **Added by BOB #245 (K4458), DEC-412 (U447, merged on tranche/T51; rows regenerated):** `screen.document.ocr.refused.unread` is reworded (an unread copy is the cause); `refusal.CAPTURE_NOT_HELD` reworded.
 
 **Added by BOB #245 (K4462):** providers merged on tranche/T51: control-plane (R120 deferral, R121 `Server-Timing`, `readheldfor`), queue (R93 `count`), capture (R102 `bundle_ids`), public-read, review, citation, case-*, jurisdictions, entities, money, file-safety, file-scanner, acquisition, extraction, plane. Until OP-GRADES #24 merges, the plane will not start under workerd (`DECLARED_OP_DISAGREES: officeconfirm`): a seam test that boots the plane stays red by name until then. CAUSE-SHELL-4 runs beside you (Bob, 2026-10-21: an alpha deployed as efficiently as possible): read its shell changes by merging the tranche when BOB sends a CHANGE at its merge. Scope: a walker's defect or a broken operation is in; wording only waits for T52 (K4269, K4459).
+
+## B31 · CHANGE
+
+CHANGE (K4465): OP-GRADES #24 is merged (tranche/T51 @ 003bae9390): plane/register.mjs no longer throws DECLARED_OP_DISAGREES: officeconfirm, so the plane and every plane-booting seam test start again. Merge the tranche into your branch before your next such run. Nothing else changes.
+
+## B32 · ANSWER · re J21
+
+ANSWER (K4467). (1) RE_POINTS.document += readheld is forwarded to CAUSE-SHELL-4 #1 (it holds interface-shell); BOB sends you a CHANGE when it merges; hold the act apart until then as you propose. (2) Your seam test as proposed; OP-GRADES #24 is merged (tranche @ e6bc9aaf4e), so the real plane boots: merge the tranche and run it. (3) Write each new sentence as localize(id, en) with a plain stand-in (never drawn as a raw key); the design reviews the rows in T52 (K4269).
