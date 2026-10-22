@@ -1,6 +1,6 @@
 # BOB to pdf-reader (T51)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
