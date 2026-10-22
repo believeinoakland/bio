@@ -24,7 +24,7 @@ const searched = () => {
   } };
 };
 
-test("R56 (G16, S3): a search past its pages says it shows part and continues by each route's cursor; the counts stay the query's own and the documents the passages lie in are counted only once every passage is loaded", async () => {
+test("R100, R56 (G16, S3): a search past its pages says it shows part and continues by each route's cursor; the counts stay the query's own and the documents the passages lie in are counted only once every passage is loaded", async () => {
   const { reads, plane } = searched();
   const p = await open("/app/finder/sewer fund", plane);
   await settle();
@@ -53,7 +53,7 @@ test("R56 (G16, S3): a search past its pages says it shows part and continues by
   assert.equal(main(p).querySelectorAll('a[href^="/app/person/ENT-"]').length, 60, "all sixty subjects");
 });
 
-test("R56 (G16, S3) control: a search whose routes are whole draws no more act and states the passages' documents as before", async () => {
+test("R100, R56 (G16, S3) control: a search whose routes are whole draws no more act and states the passages' documents as before", async () => {
   const p = await open("/app/finder/sewer fund", { searchfields: SCOPES, search: ok({ ok: true, total: 2, offset: 0, hits: hits(0, 2) }),
     meaningrows: ok({ ok: true, total: 2, offset: 0, rows: rows(0, 2) }), subjectsnamed: ok({ ok: true, count: 1, subjects: subjects(0, 1), truncated: false, next: null }) });
   await settle();
@@ -66,7 +66,7 @@ const VOCAB = { full: "indexed in full", part: "indexed in part", none: "not ind
 const covered = (scope) => ({ searchfields: SCOPES, search: ok({ ok: true, total: 1, offset: 0, hits: hits(0, 1), scope, levels: { meaning: { state: "UNDETERMINED", why: "no read names it" } }, content_axis: { vocabulary: VOCAB } }),
   meaningrows: ok({ ok: true, total: 0, rows: [] }), subjectsnamed: ok({ ok: true, count: 0, subjects: [] }) });
 
-test("R56 (G16, S3): what the search covered names the documents only partly searchable and a tally that covers only its first captures", async () => {
+test("R100, R56 (G16, S3): what the search covered names the documents only partly searchable and a tally that covers only its first captures", async () => {
   const p = await open("/app/finder/sewer", covered(scopeWith({ captures_counted: 500, captures_truncated: true, captures_bound: 500, full: 400, part: 37, none: 40, notex: 23 })));
   await settle();
   const t = text(p);
@@ -80,7 +80,7 @@ test("R56 (G16, S3): what the search covered names the documents only partly sea
 const GOT = { found: true, built: true, never_looked: [], never_looked_count: 0, tally: { LOOKED_FOUND: 4, LOOKED_ABSENT: 1 }, note: "" };
 const frontierPlane = (content) => ({ frontier: (req) => ok(req.query.level === "content" ? content : GOT) });
 
-test("R77 (G16, S4): a content level looked at in part is said and blocks \"looked everywhere\"; with every level whole the sentence is drawn", async () => {
+test("R100, R77 (G16, S4): a content level looked at in part is said and blocks \"looked everywhere\"; with every level whole the sentence is drawn", async () => {
   const p = await open("/app/finder", frontierPlane({ ...GOT, tally: { LOOKED_FOUND: 3, partial: 2 } }));
   await press(p, "frontier", { reason: "looking" });
   await settle();
@@ -102,7 +102,7 @@ const FI = {
   projectquestions: ok({ ok: true, project: "PROJ-1", items: [{ inquiry: "INQ-1", title: "Is it repaired?" }], cursor: null }),
 };
 
-test("R5 (G16, S5): a find over 250 documents says it has searched 200 of them, continues from its cursor, adds the later results below the first, and says every kind that was cut", async () => {
+test("R101, R5 (G16, S5): a find over 250 documents says it has searched 200 of them, continues from its cursor, adds the later results below the first, and says every kind that was cut", async () => {
   let call = 0;
   const bodies = [];
   const p = await open("/app/find-in/PROJ-1", { ...FI, findin: (req) => { bodies.push(req.body); call++;
@@ -127,7 +127,7 @@ test("R5 (G16, S5): a find over 250 documents says it has searched 200 of them, 
   assert.ok(!text(whole).includes(word("find.browse.more")) && !main(whole).querySelector('button[data-cont]'), "control: a whole find states neither");
 });
 
-test("R5, R48 (G16, S5): a sheet match whose row of cells was cut says so", async () => {
+test("R101, R5, R48 (G16, S5): a sheet match whose row of cells was cut says so", async () => {
   const sheet = { kind: "money", words: "$4", capture_sha: "c1", title: "Budget", extent: {}, sheet: "Sheet1", row: 3, cells: [{ cell: "A3", value: "x" }], cells_truncated: true, recorded: [] };
   const p = await open("/app/find-in/PROJ-1", { ...FI, findin: ok({ ok: true, scope: { form: "project", project: "PROJ-1", captures: 1 }, kinds: [{ kind: "money", items: [sheet], count: 1, truncated: false, nothing: false, not_read: [] }], captures_read: 1, next: null }) });
   await press(p, "findin", { reason: "looking" });
@@ -139,7 +139,7 @@ test("R5, R48 (G16, S5): a sheet match whose row of cells was cut says so", asyn
   assert.ok(!text(whole).includes(word("find.browse.more")), "control: whole cells say nothing");
 });
 
-test("R5 (G20, S11): the question chooser of a find says when it stops at its bound; whole, it says nothing", async () => {
+test("R102, R5 (G20, S11): the question chooser of a find says when it stops at its bound; whole, it says nothing", async () => {
   const cut = await open("/app/find-in/PROJ-1", { ...FI, projectquestions: ok({ ok: true, project: "PROJ-1", items: [{ inquiry: "INQ-1", title: "Is it repaired?" }], cursor: "INQ-1" }), findin: ok({ ok: true, kinds: [] }) });
   await settle();
   assert.ok(text(cut).includes(word("screen.people.more", { n: "1" })));
@@ -158,7 +158,7 @@ const HOME = {
 };
 const HELD = (n, truncated) => ok({ ok: true, held: Array.from({ length: n }, (_, i) => ({ bundle_id: "INF-H" + i, title: "H" + i, actor: "other", source: null, capture: { sha256: "a".repeat(64) }, whole: true })), state: "held", truncated, next: truncated ? "INF-H9" : null, limit: n });
 
-test("R65 (G20, S11): the door to Held captures says when the picker read stopped at its bound, on Home and the Queue; whole, it says nothing", async () => {
+test("R102, R65 (G20, S11): the door to Held captures says when the picker read stopped at its bound, on Home and the Queue; whole, it says nothing", async () => {
   for (const path of ["/app", "/app/queue"]) {
     const cut = await open(path, { ...HOME, heldcaptures: HELD(500, true) });
     await settle();

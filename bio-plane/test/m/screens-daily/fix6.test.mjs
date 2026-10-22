@@ -27,7 +27,7 @@ const plane = (casedrafts) => ({
 });
 const lineOf = (n) => word("screen.home.area.edition", { n: "1", case: "Scope of CASE-" + n, date: dmy("2026-09-0" + n), until: dmy("2026-10-2" + n) });
 
-test("R87, R64 (G12c): Home with five projects that share a draft sends ONE casedrafts read for all of them, and draws each project's draft line as the five single reads drew it", async () => {
+test("R99, R87, R64 (G12c): Home with five projects that share a draft sends ONE casedrafts read for all of them, and draws each project's draft line as the five single reads drew it", async () => {
   const p = await open("/app", plane(batched(draftsOf)));
   await settle();
   const reads = p.byOp("casedrafts");
@@ -39,7 +39,7 @@ test("R87, R64 (G12c): Home with five projects that share a draft sends ONE case
   assert.deepEqual(p.byOp("reviewcopy").map((r) => r.query.draft).sort(), ["DRAFT-1", "DRAFT-2", "DRAFT-3", "DRAFT-4", "DRAFT-5"], "each draft's grant is still read once");
 });
 
-test("R87, R64 (G12c): a project the viewer may not see answers as the single read answers it: drawn failed in the Investigation block, the other four drawn as before", async () => {
+test("R99, R87, R64 (G12c): a project the viewer may not see answers as the single read answers it: drawn failed in the Investigation block, the other four drawn as before", async () => {
   const p = await open("/app", plane(batched((id) => (id === "PROJ-4" ? DEAD : draftsOf(id)))));
   await settle();
   assert.equal(p.byOp("casedrafts").length, 1);
@@ -50,7 +50,7 @@ test("R87, R64 (G12c): a project the viewer may not see answers as the single re
   assert.ok(!inv.includes(lineOf(4)) && !p.byOp("reviewcopy").some((r) => r.query.draft === "DRAFT-4"), "nothing is drawn or read for the hidden project");
 });
 
-test("R87, R64 (G12c): controls: no project sharing a draft sends no casedrafts read; the whole read failing is drawn failed once", async () => {
+test("R99, R87, R64 (G12c): controls: no project sharing a draft sends no casedrafts read; the whole read failing is drawn failed once", async () => {
   const none = await open("/app", { ...plane(batched(draftsOf)), projectlist: LIST(ROWS.map((r) => ({ ...r, shared_drafts: { count: 0, newest: null } }))) });
   await settle();
   assert.equal(none.byOp("casedrafts").length, 0, "no draft read when no row says one is shared");
