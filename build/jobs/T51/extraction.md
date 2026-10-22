@@ -1,6 +1,6 @@
 # extraction (T51)
 
-**Status** · session_01WXFSyuYPNQSifvTQ2HqNyW · depth 2 · WORKING · handled B22
+**Status** · session_01WXFSyuYPNQSifvTQ2HqNyW · depth 2 · RUNNING until 2026-10-22T16:02:37Z (the users' test files (26 files, node --test)) · handled B22
 
 ## J1 · REPORT
 
