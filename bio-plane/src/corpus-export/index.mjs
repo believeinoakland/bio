@@ -20,6 +20,7 @@
  * `register` and connections' `refs`. */
 
 import { recordOf } from "../record-core/index.mjs";
+import { provenanceOf } from "../provenance/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { eventsOf } from "../events/index.mjs";
 import { linesOf } from "../lines/index.mjs";
@@ -47,11 +48,12 @@ const HEX64 = /^[0-9a-f]{64}$/;
 const te = new TextEncoder();
 
 export class CorpusExport {
-  constructor({ storage, record, now = null, entities = null, events = null, lines = null, money = null } = {}) {
+  constructor({ storage, record, now = null, entities = null, events = null, lines = null, money = null, provenance = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     /* R10's owners: each an instance, or a function answering it on first use. */
     this.owners = { entities, events, lines, money };
+    this.dep = { provenance };
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
     this.purgeDeclaration = null;
   }
@@ -59,6 +61,8 @@ export class CorpusExport {
   migrate() { migrateCorpusExport(this.sql); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
+  /* provenance, an instance or a function answering it on first use (R13's `partsNamed`) */
+  #provenance() { const d = this.dep.provenance; return typeof d === "function" ? (this.dep.provenance = d()) : d; }
   #when() { const w = this.now(); return typeof w === "string" && w ? w : new Date().toISOString(); }
 
   /* ---- section 8: secure verified export ----
@@ -123,9 +127,20 @@ export class CorpusExport {
       bundles: out,
       tables,
       counts: { bundles: bundles.length, files: fileCount, tables: tables.length, rows: rowCount },
-      register: this.#rows(`SELECT bundle_id, path, capture_sha, bytes FROM register ORDER BY bundle_id`),
+      register: this.#register(),
       recorded: word("corpus-export.recorded.export_append_export"),
       verify: word("corpus-export.verify") };
+  }
+
+  /* R1, R13: the register. A capture held in parts has the row of its whole (provenance R72), an identity with no file of
+     its bundle: it travels marked `whole` and naming its parts in order (`provenance.partsNamed`), so an import verifies
+     it by the parts' concatenation. Every other row is as it was. */
+  #register() {
+    return this.#rows(`SELECT bundle_id, path, capture_sha, bytes, whole FROM register ORDER BY bundle_id`).map(({ whole, ...r }) => {
+      if (Number(whole) !== 1) return r;
+      const named = this.#provenance()?.partsNamed(r.bundle_id, r.capture_sha);
+      return { ...r, whole: 1, parts: named && named.state === "named" ? named.parts.map((p) => p.sha256) : null };
+    });
   }
 
   #declared() {
@@ -323,8 +338,22 @@ export function verifyCorpusExport(input) {
     }
     for (const r of Array.isArray(manifest.register) ? manifest.register : []) {
       counts.captures++;
-      part({ bundle: r ? r.bundle_id ?? null : null, path: r ? r.path ?? null : null, capture: r ? r.capture_sha ?? null : null },
-           r && r.capture_sha, r ? r.bytes : null, "CAPTURE_HASH_MISMATCH", "CAPTURE_SIZE_MISMATCH");
+      const where = { bundle: r ? r.bundle_id ?? null : null, path: r ? r.path ?? null : null, capture: r ? r.capture_sha ?? null : null };
+      /* R13: the row of a whole held in parts is an identity, verified by the concatenation of its parts' bytes unless the
+         concatenation itself was handed over (as it was before provenance R72). */
+      const pieces = r && Number(r.whole) === 1 && Array.isArray(r.parts) && r.parts.length && HEX64.test(lower(r.capture_sha))
+        && !derive(lower(r.capture_sha)) ? r.parts.map((p) => (typeof p === "string" ? held(lower(p)) : null)) : null;
+      if (!pieces) {
+        part(where, r && r.capture_sha, r ? r.bytes : null, "CAPTURE_HASH_MISMATCH", "CAPTURE_SIZE_MISMATCH");
+        continue;
+      }
+      if (pieces.some((b) => !b)) { failures.push({ reason: "BYTES_MISSING", ...where, expected: lower(r.capture_sha), found: null }); continue; }
+      const digest = createSha256();
+      let size = 0;
+      for (const b of pieces) { digest.update(b); size += b.length; }
+      const got = digest.hex();
+      if (got !== lower(r.capture_sha)) failures.push({ reason: "CAPTURE_HASH_MISMATCH", ...where, expected: lower(r.capture_sha), found: got });
+      else if (r.bytes != null && Number(r.bytes) !== size) failures.push({ reason: "CAPTURE_SIZE_MISMATCH", ...where, expected: r.bytes, found: size });
     }
     if (!Array.isArray(manifest.register))
       failures.push({ reason: "MANIFEST_MALFORMED", expected: "the register, a list", found: describe(manifest.register) });
@@ -472,7 +501,7 @@ export function corpusExportOf(host, deps) {
     /* R10's owners, each reached through its factory on this host on first use unless given. */
     const owners = { entities: d.entities ?? (() => entitiesOf(host, { record })), events: d.events ?? (() => eventsOf(host, { record })),
                      lines: d.lines ?? (() => linesOf(host, { record })), money: d.money ?? (() => moneyOf(host, { record })) };
-    c = new CorpusExport({ ...d, ...owners, storage, record });
+    c = new CorpusExport({ ...d, ...owners, provenance: d.provenance ?? (() => provenanceOf(host, { record })), storage, record });
     instances.set(host, c);
     c.migrate();
     c.purgeDeclaration = record.declarePurge("corpus-export", [], { exempt: [...CORPUS_EXPORT_EXEMPT] });
