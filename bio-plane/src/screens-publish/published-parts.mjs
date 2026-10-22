@@ -47,7 +47,9 @@ export const PUBLISHED_PARTS = Object.freeze({
     if (!d) return "";
     const name = typeof d.name === "string" ? d.name.trim() : "";
     const at = d.place && typeof d.place === "object" ? d.place : null;
-    const page = at && at.kind === "pdf-page" && Number.isInteger(at.page) && at.page >= 0 ? cs.w("screen.document.passage.where", { page: String(at.page + 1) }) : "";
+    // a PDF's page, or a web page's paragraph (`doc-para`, counted from zero in the captured file), as the signed extent states it
+    const page = at && at.kind === "pdf-page" && Number.isInteger(at.page) && at.page >= 0 ? cs.w("screen.document.passage.where", { page: String(at.page + 1) })
+      : at && at.kind === "doc-para" && Number.isInteger(at.para) && at.para >= 0 ? cs.w("screen.question.leg.paragraph", { n: String(at.para + 1) }) : "";
     return name || page ? '<span class="rec" data-document>' + cs.esc(name) + "</span>" + (page ? ' <span class="meta" data-place>' + page + "</span>" : "") : "";
   },
 
@@ -69,6 +71,13 @@ export const PUBLISHED_PARTS = Object.freeze({
   meets: function (view, f) {
     const P = view.parts, fl = P.floorOf(view);
     return !fl || ["capture", "connection"].every(function (a) { return !fl[a] || P.rank(P.gradeOf(f, a)) >= P.rank(fl[a]); });
+  },
+
+  /* R80 (C47): a finding's role and its two strengths, joined by the separator only between what is stated (no trailing dot) */
+  strengthLine: function (cs, view, stand, f) {
+    const P = view.parts;
+    const grades = [P.gradeMark(cs, "capture", P.gradeOf(f, "capture")), P.gradeMark(cs, "connection", P.gradeOf(f, "connection"))].filter(Boolean).join(" ");
+    return [stand.role === "load_bearing" ? cs.w("case-grammar.load_bearing") : "", grades].filter(Boolean).join(" · ");
   },
 
   /* R37: a leg of the signed bytes is served (its target a published finding of a case) or only named. */
@@ -104,8 +113,7 @@ export const PUBLISHED_PARTS = Object.freeze({
     const id = String(f.bundle_id || f.id || n);
     const name = cs.w("screen.published.finding", { n: String(n) });
     const head = '<span class="eyebrow">' + (o && o.link ? '<a href="' + P.hrefOf(caseId, edition, id) + '" data-nav data-finding-page>' + name + "</a>" : name) + "</span>";
-    const line = (stand.role === "load_bearing" ? cs.w("case-grammar.load_bearing") + " · " : "") + P.gradeMark(cs, "capture", P.gradeOf(f, "capture")) + " "
-      + P.gradeMark(cs, "connection", P.gradeOf(f, "connection"))
+    const line = P.strengthLine(cs, view, stand, f)
       + (meets ? " " + cs.w(meets === "yes" ? "screen.published.meets" : "screen.published.below", { capture: String(bar.capture || "–"), connection: String(bar.connection || "–") }) : "");
     // C47: what would change it, and the evidence entries each by its document's name and place, as the signed case states them
     const why = P.falsifierOf(view, f);

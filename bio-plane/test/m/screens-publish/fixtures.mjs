@@ -204,9 +204,9 @@ export const last = (p, op) => p.byOp(op).at(-1);
 /** Every text node drawn that reads as a word key: a key the page holds no word for is drawn as itself (interface-shell R5). */
 export const rawKeys = (root) => textNodes(root).map((t) => String(t.data).trim()).filter((t) => /^[a-z][\w-]*(\.[\w-]+){2,}$/.test(t));
 /** A file chosen in a file field (the stand-in's `files`). */
-export function choose(p, id, bytes) {
+export function choose(p, id, bytes, name = "f.pdf", type) {
   const el = p.doc.getElementById(id);
-  el.files = [{ name: "f.pdf", size: bytes.length, arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.length) }];
+  el.files = [{ name, ...(type ? { type } : {}), size: bytes.length, arrayBuffer: async () => bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.length) }];
 }
 
 /* ---------- T51-121: one finding's page, a reader's minimum, printing, the review copy as a file ---------- */
