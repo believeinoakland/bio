@@ -11,7 +11,9 @@ const MODS = ["screens-wizards"];
 let GUIDE = null;
 for (const m of MODS) { const x = await import(`../../../src/${m}/index.mjs`); if (x.GUIDE) GUIDE = x.GUIDE; }
 
-const SIX = ["groupidentity", "infolevel", "assistantstate", "accountreference", "subscriptionsignin", "groupkeystate"];
+/* the six, as the frame groups them: the team and the level, and the four that decide whether the assistant is reachable (R20) */
+const TEAM = ["groupidentity", "infolevel"], REACH_OPS = ["assistantstate", "accountreference", "subscriptionsignin", "groupkeystate"];
+const SIX = [...TEAM, ...REACH_OPS];
 const KEY = STORE_KEY + ":frame";
 /* a working screen with one read of its own (`heldcaptures`: not a frame read), registry id `held`, which the test answers when it likes */
 const held = { id: "held", words: [], reads: () => ({ h: { op: "heldcaptures", query: { limit: "5" } } }), acts: [],
