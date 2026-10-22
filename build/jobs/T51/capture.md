@@ -363,3 +363,27 @@ QUESTION (re B16; blocks only the last swap). Your CHANGE says to use acquisitio
 State: R103 is built and tested green with a local helper in `capture/index.mjs` (`keepLargeFromParts` and the await-then-`keepLater` block in `uploadCapture`) that does exactly what `keepPast` does (await `putFromParts` within boundMs - 5 s - elapsed, else `keepLater`, answer `keep_pending`): `r103-t51.test.mjs` 6 of 6; capture suite 253 of 253; the session half is done as your B17 rules (J15's reading); checks clean.
 
 Smallest thing I need: merge `job/T51/acquisition` into `tranche/T51` (mechanics §6 step on a finished provider) and tell me. Then I merge the tranche, replace the local helper by `keepPast(this, ev, {sha, parts, boundMs, elapsedMs, keepLater})` (about 25 lines out, 6 in), re-run the suites and checks, and post COMPLETE. If you would rather keep the local helper (one more copy of 20 lines, same behaviour), say so and I post COMPLETE now.
+
+## J17 · COMPLETE
+
+COMPLETE for entry 4 (F2, F5; R103). Commit on job/T51/capture (tranche/T51 merged, acquisition included).
+
+**Root cause (F2).** `capture/index.mjs` `uploadCapture` called `keepWhole`, which returns `kept: false` at once past `MULTIPART_KEEP_MAX`; the `keepLater` arm existed only in `acquire`. **F5, capture's part:** `saveCaptureSession` and `loadCaptureSession` deleted every row past its `expires`, so owed resume state died by the clock. **Why tests missed it:** R86's tests used files of 12 MB or less; R22's test pinned expiry as `found: false`, and R74's writer list counted `loadCaptureSession` only because it pruned.
+
+**Changed.** `uploadCapture` (args `boundMs`, `keepLater` added): past 32 MiB it calls acquisition's `keepPast(this, ev, {sha, parts, boundMs, elapsedMs, keepLater})` (one copy, K4164); the answer carries `keep_pending: true` when the plane took the keep, on all three success shapes (new, existed with document, second sighting). The upload is filed in its parts either way, never refused for the keep. Sessions: no pruning in save or load; `loadCaptureSession` answers `expired` beside `found`; `dropCaptureSession` alone removes a row; `liveCaptureSessions` unchanged (B17).
+
+**Failing-first** (`test/m/capture/r103-t51.test.mjs`, 6 tests; seen red before the code: 5 of 6 failed, whole not held, no keepLater, no `expired`; green after): 40 MiB five-part upload through the real record-core `putFromParts` on a multipart bucket: whole held under its digest, nothing owed; keep not ending in the bound: `keep_pending`, plane handed `{sha, parts}` in order, then the real `putFromParts` the alarm runs holds the whole; controls (refusing or throwing store, no store call, no hand-off, 20 MiB and one-part unchanged, second press shares one store call); session survives past its hour, `expired: true`, not live, dropped only by drop. Updated two pinned tests (services.test.mjs R22 and R74's writer list) as B17 rules. Seam: control-plane R123 and plane R77 own the whole door and alarm path; they read `keep_pending` from this answer.
+
+**Platform (L: Miniflare/workerd, R2 emulation, real record-core `putFromParts`; local workerd does not enforce the 128 MB limit, memory held is one 8 MiB part):** 40 MiB keep 1.4 s, 100 MiB 3.6 s, 256 MiB 9.2 s, whole held each time; inside the 25 s bound.
+
+**Tests and checks.** capture + cap13-reuse-pages + d57selflink: 253 of 253. Users: acquisition 217 of 217, control-plane 369 of 369, machinery-producers 35 of 35, queue 210 of 210 (before the merge); plane 296 of 297, the failure is plane R24's words test (a module I did not touch). format 0 failures; architecture 0; coverage capture 56 of 56; ownership 4 files, 0 failures; checks/run.mjs: capture clean, words 0 findings (I added no sentence).
+
+**Decisions of mine, for BOB to record.** R-OLD: sessions already pruned are lost, none repairs: new data only. acquisition must call `dropCaptureSession` when its owed work ends (B16 told it; its J21 does).
+
+**Proposed requirement lines (BOB writes them).**
+- R103 (met): as written; add: "`uploadCapture` takes optional `boundMs` and `keepLater`; the answer carries `keep_pending: true` when the keep was handed to the plane."
+- R22: "A session holds a walk's resume state, owed work, until dropped; the clock never removes it. Load answers `found: false` for an unknown session; for one past its expiry `found: true` and `expired: true` with its state; drop removes it."
+- R46: "`liveCaptureSessions(now)` answers every session whose expiry is after `now`" (unchanged), noting an expired session is held but not live.
+- R74: the writers list no longer includes `loadCaptureSession` (it writes nothing).
+
+Size (session_01N9N3ozsPf3Ekjw63cL8GAe): test runs 12, module lines 3282
