@@ -22,16 +22,16 @@ function formatWorld() {
   return f;                                         // INFO-4: no register document at all
 }
 
-test("R77 (K4337; DEC-394 (3a)): the full held row carries the register's format id as the register holds it, null where it holds none; the picker row carries none", async () => {
+test("R77 (K4337; DEC-394 (3a)): the full held row carries the register's format id as the register holds it, null where it holds none; the picker row names it too (fix round 6, G12a)", async () => {
   const { c } = formatWorld();
   const full = await c.heldCaptures({ viewer: "class:admin", now: NOW, });
   assert.deepEqual(full.held.map((r) => [r.bundle_id, r.format]).sort(), [["INFO-1", "pdf"], ["INFO-2", null], ["INFO-3", null], ["INFO-4", null]]);
-  /* control: the other fields of the full row are what they were, and the picker row names no format, however it is asked */
+  /* control: the other fields of the full row are what they were, and the picker row names the same format, however it is asked (fix round 6, G12a) */
   assert.ok(full.held.every((r) => "format" in r && r.capture && r.capture.sha256 && "whole" in r && "actor" in r));
   for (const state of [undefined, "held_and_vouched"]) {
     const picker = await c.heldCaptures({ viewer: "class:admin", now: NOW, fields: "picker", state });
     assert.equal(picker.held.length, 4);
-    assert.ok(picker.held.every((r) => !("format" in r)), String(state));
+    assert.deepEqual(picker.held.map((r) => [r.bundle_id, r.format]).sort(), full.held.map((r) => [r.bundle_id, r.format]).sort(), String(state));
   }
 });
 
@@ -43,7 +43,7 @@ test("R97 (K4334): heldcaptures declares `fields` and `state` among what it acce
   const ask = (query) => captureOps(c, new URL(`http://x/?op=heldcaptures&viewer=class:admin&${query}`), {}, c.env).heldcaptures();
   const picker = await ask("fields=picker&state=held_and_vouched");
   assert.equal(picker.held.length, 4);
-  assert.ok(picker.held.every((r) => !("format" in r) && r.standing === "collected"));
+  assert.ok(picker.held.every((r) => "format" in r && r.standing === "collected"));
   assert.ok((await ask("state=set_aside")).held.length === 0);
   for (const bad of ["fields=heavy", "state=everything"]) {
     const r = await ask(bad);

@@ -53,6 +53,7 @@ import { ARCHIVE_SERVICE } from "../tsa.mjs";
 export { acquireGradeNote, ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
 import { ACQUIRE_GRADE_NOTE } from "../acquisition/index.mjs";
 import { unpack, archiveList, memberOf, membersOf, openedAmong, acquisitionOf, openCaptures } from "../acquisition/index.mjs";
+import * as acquisitionApi from "../acquisition/index.mjs";
 import { recordOf, PER_ITEM_MAX } from "../record-core/index.mjs";
 import { governorOf } from "../host-governor/index.mjs";
 /* R86 (T41-8a): `UPLOAD_VIA`, the route an upload's receipt names, provenance's one spelling (its R63). */
@@ -180,6 +181,8 @@ const badCursor = () => ({ ok: false, reason: "BAD_CURSOR", detail: "`after` is 
    reads as one; `taskCursorPlace` answers null for anything else, and the read then starts at the head. */
 const TASK_CURSOR_TAG = "task-event";
 const taskCursorOf = (enqueued, captureSha, kind) => cursorOf([TASK_CURSOR_TAG, enqueued, captureSha, kind]);
+/* R104: a fetch's place in `fetchesDone`'s order, tagged so no other read's cursor reads as one. */
+const FETCH_CURSOR_TAG = "fetch-done";
 const taskCursorPlace = (after) => {
   const k = typeof after === "string" && after ? keyOf(after, 4) : null;
   return k && k[0] === TASK_CURSOR_TAG ? { enqueued: k[1], captureSha: k[2], kind: k[3] } : null;
@@ -219,6 +222,9 @@ export const HELD_FIELDS = Object.freeze(["full", "picker"]);
 export const HELD_FILES_IN_ROW = 50;
 /** R77 (fix round 4; P10): the most documents `bundle_ids` names in one read: the ones a screen draws, whose heavy fields it asks for. */
 export const HELD_IDS_MAX = 50;
+/** R105 (fix round 6; G2): the most of a source's body a `check` reads, in bytes: 8 MiB, the size past which `acquisition` hands a fetch to
+ *  the plane. A larger body is not read: the look says so (`large`) and decides nothing. */
+export const HELD_AT_CHECK_MAX = 8 * 1024 * 1024;
 /** R96: the most captures at one address `heldAt` counts; `truncated` says when more lie past. */
 export const HELD_AT_VERSIONS_MAX = 200;
 /* R91 (T49; N1080; M-T49-3): the one wait a page of held captures gives its documents' answers, in milliseconds: R78's
@@ -339,7 +345,7 @@ function registerFigures(c) {
 
 export class Capture {
   #sql; #storage; #listeners = new Map(); #readers = new Map(); #declared = false; #acquisition = null; #acquisitionHost = null;
-  #reputationReader = null; #fileScanner = null;
+  #reputationReader = null; #fileScanner = null; #hasWhole = null;
 
   constructor(storage, { record, env = {}, governor = null, provenance = null, attestation = null, credentials = null,
                          acquisition = null, acquisitionHost = null, ownHosts = [], reputation = null, fileScanner = null,
@@ -858,6 +864,45 @@ export class Capture {
     } catch { return { recorded: false }; }
   }
 
+  /** R104 (fix round 6; G2; K4562): that a large capture fetched in the background was filed, once for each capture session, in the table
+   *  `fetch_done`, for `notice-producers` to tell the opener (`fetchesDone`). `{recorded: false}`, writing nothing, for a session or
+   *  document that is not a non-blank string, an opener that is not a member's stamp (absent, blank, naming no member, or a machine
+   *  identity), a `project` that is neither a string nor null, or a session already recorded. `at` is a whole-second UTC instant,
+   *  this instance's clock when absent. Never throws. */
+  recordFetchDone(args) {
+    try {
+      const { session, document, opener, project = null, at = null } = args ?? {};
+      const text = (x) => typeof x === "string" && x.trim() !== "" && x.length <= 300;
+      if (!text(session) || !text(document)) return { recorded: false };
+      if (typeof opener !== "string" || !memberIdOf(opener).trim() || isMachineIdentity(opener)) return { recorded: false };
+      if (project !== null && typeof project !== "string") return { recorded: false };
+      return this.#tx(() => {
+        if (this.#one(`SELECT 1 AS x FROM fetch_done WHERE session = ?`, session)) return { recorded: false };
+        this.#sql.exec(`INSERT INTO fetch_done (session, document, opener, project, at) VALUES (?, ?, ?, ?, ?)`,
+                       session, document, opener, project || null, at && ISO_INSTANT.test(at) ? at : stampSecond(this.#instant()));
+        return { recorded: true };
+      });
+    } catch { return { recorded: false }; }
+  }
+
+  /** R104 (G2): the fetches recorded, oldest first by instant then session, at most `limit` (default 200, clamped 1…1000), each
+   *  `{session, document, opener, project, at, cursor}`; `after` the `cursor` of a row an earlier read answered (one that is not such a
+   *  cursor reads from the head), with `truncated` and `next`. In process, no viewer: `notice-producers` tells `opener` and no one
+   *  else. Writes nothing; never throws (a store that cannot be read answers no fetches). */
+  fetchesDone({ limit = null, after = null } = {}) {
+    const cap = limitOf(limit);
+    try {
+      const from = after ? keyOf(after, 3) : null;
+      const at = from && from[0] === FETCH_CURSOR_TAG ? from : null;
+      const found = this.#rows(`SELECT session, document, opener, project, at FROM fetch_done
+                                 WHERE ${at ? "(at > ? OR (at = ? AND session > ?))" : "1=1"} ORDER BY at, session LIMIT ?`,
+                               ...(at ? [at[1], at[1], at[2]] : []), cap + 1);
+      const page = found.slice(0, cap).map((r) => ({ session: r.session, document: r.document, opener: r.opener, project: r.project ?? null,
+                                                   at: r.at, cursor: cursorOf([FETCH_CURSOR_TAG, r.at, r.session]) }));
+      return { ok: true, fetches: page, limit: cap, truncated: found.length > cap, next: found.length > cap ? page[page.length - 1].cursor : null };
+    } catch { return { ok: true, fetches: [], limit: cap, truncated: false, next: null }; }
+  }
+
   /** R100 (T51 fix round 3; C9; Intake Doctrine section 8): that a member filed a held document in a project as a reference,
    *  once for each (capture digest, project), at the first instant, in the table `seen_in`. It makes no second home: the
    *  document keeps the one home `provenance` records (its R2), and `heldCaptures` (R77) lists it beside the project's own.
@@ -1274,6 +1319,14 @@ export class Capture {
       await drop(); await outcome("source_refused", res.status);
       return no(localize("capture.index.the_site_answered_status_so", "the site answered {status}, so it did not give the document to compare", { status: String(res.status) }));
     }
+    /* R105 (G2): a source that declares more than the bound is not read; neither is one that goes past it while being read */
+    const declared = Number(res.headers.get("content-length"));
+    const tooLarge = async () => {
+      await drop(); await outcome("success", res.status);
+      return { ok: true, ...base, changed: { ...undetermined(localize("capture.index.heldat_over_check_bound", "the document at the address is larger than this look reads, so whether it has changed was not looked at"), asOf, differs),
+                                             large: true, looked_at: looked } };
+    };
+    if (Number.isFinite(declared) && declared > HELD_AT_CHECK_MAX) return tooLarge();
     const h = createSha256(), reader = res.body.getReader();
     let total = 0;
     /* C26: the bytes are kept as they arrive, up to the bound a substance digest is taken within, to be judged by substance */
@@ -1284,8 +1337,7 @@ export class Capture {
         const { done, value } = await reader.read();
         if (done) break;
         total += value.length;
-        if (total > CAPTURE_MAX) { try { await reader.cancel(); } catch { /* gone */ } await outcome("success", res.status);
-          return no(localize("capture.index.heldat_too_large", "the document at the address is larger than this surface compares, so it was not looked at whole")); }
+        if (total > HELD_AT_CHECK_MAX) { try { await reader.cancel(); } catch { /* gone */ } return tooLarge(); }
         h.update(value);
         if (keeping && total <= PROFILE_TEXT_MAX) kept.push(value); else { keeping = false; kept.length = 0; }
       }
@@ -1518,14 +1570,14 @@ export class Capture {
        owed); with no evidence store it is undetermined, as before. */
     const store = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     const [wholes, answers] = shape === "picker" ? [new Map(), null] : await Promise.all([
-      this.#wholeOf(page.map((r) => facts.first.get(r.bundle_id)).filter((reg) => reg && Capture.#keptWholeBySize(reg) !== true).map((reg) => reg.capture_sha)),
+      this.#wholeOf(page.map((r) => facts.first.get(r.bundle_id)).filter((reg) => reg && Capture.#keptWholeBySize(reg, facts) !== true).map((reg) => reg.capture_sha)),
       this.#pageAnswers(page, { viewer, rowOf, vouched, facts })]);
     const wholeOf = shape === "picker"
       ? (id) => Capture.#wholeBySize(facts.first.get(id))
       : (id) => {
         const reg = facts.first.get(id);
         if (!reg?.capture_sha) return null;
-        return store && Capture.#keptWholeBySize(reg) === true ? true : wholes.get(reg.capture_sha) ?? null;
+        return store && Capture.#keptWholeBySize(reg, facts) === true ? true : wholes.get(reg.capture_sha) ?? null;
       };
     /* R77 (T51 fix round 3; C9): a document listed because it was seen in the asked project, not because it lives there. */
     const alsoHere = (r) => (project != null && project !== "" && (r.project || "") !== String(project) ? { also_here: { home: r.project || null } } : {});
@@ -1536,6 +1588,7 @@ export class Capture {
                                       collected_since: r.since,
                                       capture: facts.first.has(r.bundle_id) ? { sha256: facts.first.get(r.bundle_id).capture_sha } : null,
                                       actor: this.#captureFacts(facts.first.get(r.bundle_id) ?? null, facts).actor,
+                                      format: facts.first.has(r.bundle_id) ? facts.formats.get(facts.first.get(r.bundle_id).capture_sha) ?? null : null,
                                       whole: wholeOf(r.bundle_id),
                                       standing: r.standing === VOUCHED_STATE ? VOUCHED_STATE : "collected", ...alsoHere(r) }));
       return { ok: true, held: rows, state: list, sort: by, dir: way, limit: cap, truncated,
@@ -1591,7 +1644,8 @@ export class Capture {
   /* R77 (fix round 5; E13; K4530, B20): true when the register recorded a size that fits one part (`UPLOAD_PART`, `acquisition`
      R10's form), for such a capture is its own whole; null when it recorded none or a larger one, a capture held in parts, whose
      whole object may be owed (its `keep` row unrun) or held (`keepPast`, R103), so only the store can say. */
-  static #keptWholeBySize(reg) {
+  static #keptWholeBySize(reg, facts = null) {
+    if (reg && (reg.whole === true || (facts && facts.parts.has(reg.capture_sha)))) return null;
     const size = reg && (typeof reg.bytes === "number" || typeof reg.bytes === "bigint") ? Number(reg.bytes) : NaN;
     return Number.isSafeInteger(size) && size >= 0 && size <= UPLOAD_PART ? true : null;
   }
@@ -1693,18 +1747,42 @@ export class Capture {
      `picker` reads only the captures and their actors. Each read that fails reads as nothing known, which the row states as it always has. */
   #pageFacts(bundleIds, { aside = false, vouched = false, picker = false } = {}) {
     const facts = { captures: new Map(), first: new Map(), actor: new Map(), retrieved: new Map(), asks: new Map(),
-                    setAside: new Map(), history: new Map(), formats: new Map(), opened: new Set() };
+                    setAside: new Map(), history: new Map(), formats: new Map(), opened: new Set(), parts: new Set(), notArchives: new Set() };
     if (!bundleIds.length) return facts;
     const ids = JSON.stringify(bundleIds);
     const read = (q, ...a) => { try { return this.#rows(q, ...a); } catch { return []; } };
+    /* G6 (fix round 6): the capture a row stands for is the document's WHOLE, provenance R72's row (`whole` 1) first, then the
+       earliest registered, ties by digest; a store whose register has no `whole` column (a test's stand-in) orders as before. */
+    const wholeFirst = this.#registerHasWhole() ? "COALESCE(whole, 0) DESC, " : "";
     const regs = read(`SELECT bundle_id, capture_sha, bytes, rn FROM (
                          SELECT bundle_id, capture_sha, bytes, ROW_NUMBER() OVER (PARTITION BY bundle_id
-                                  ORDER BY julianday(registered), registered, capture_sha) AS rn
+                                  ORDER BY ${wholeFirst}julianday(registered), registered, capture_sha) AS rn
                            FROM register WHERE bundle_id IN (SELECT value FROM json_each(?))) ORDER BY bundle_id, capture_sha`, ids);
+    /* what each document's own register document says: the format each capture is profiled as, and for a capture held in parts
+       its whole (G6: a part is never the row's capture; a part is no archive, G12a) */
+    const wholeOfPart = new Map();
+    for (const r of read(`SELECT bundle_id, content FROM files WHERE path = 'data/provenance.json' AND bundle_id IN (SELECT value FROM json_each(?))`, ids)) {
+      let docs = null;
+      try { docs = typeof r.content === "string" ? JSON.parse(r.content).documents : null; } catch { docs = null; }
+      if (!Array.isArray(docs)) continue;
+      for (const d of docs) {
+        const sha = d && typeof d === "object" && d.capture ? d.capture.sha256 : null;
+        if (typeof sha !== "string") continue;
+        if (!facts.formats.has(sha))
+          facts.formats.set(sha, d.profile && d.profile.format && typeof d.profile.format.format === "string" ? d.profile.format.format : null);
+        if (Array.isArray(d.parts) && d.parts.length) {
+          const size = Number.isSafeInteger(d.capture.bytes) ? d.capture.bytes : d.parts.reduce((n, p) => n + (Number.isSafeInteger(p && p.bytes) ? p.bytes : NaN), 0);
+          for (const p of d.parts) if (p && typeof p.sha256 === "string" && p.sha256 !== sha) { facts.parts.add(p.sha256); wholeOfPart.set(p.sha256, { sha, bytes: Number.isSafeInteger(size) ? size : null }); }
+        }
+      }
+    }
     for (const r of regs) {
       if (!facts.captures.has(r.bundle_id)) facts.captures.set(r.bundle_id, []);
       facts.captures.get(r.bundle_id).push(r.capture_sha);
-      if (Number(r.rn) === 1) facts.first.set(r.bundle_id, { capture_sha: r.capture_sha, bytes: r.bytes });
+      if (Number(r.rn) === 1) {
+        const whole = wholeOfPart.get(r.capture_sha);
+        facts.first.set(r.bundle_id, whole ? { capture_sha: whole.sha, bytes: whole.bytes, whole: true } : { capture_sha: r.capture_sha, bytes: r.bytes });
+      }
     }
     const shas = JSON.stringify([...facts.first.values()].map((r) => r.capture_sha));
     for (const r of read(`SELECT capture_sha, actor FROM (SELECT capture_sha, actor, ROW_NUMBER() OVER (PARTITION BY capture_sha ORDER BY at, actor) AS rn
@@ -1729,18 +1807,22 @@ export class Capture {
       for (const r of read(`SELECT f.bundle_id AS bundle_id, f.content AS content FROM files f JOIN bundles b ON b.bundle_id = f.bundle_id
                              WHERE f.path = 'bundle.md' AND b.current_state = '${VOUCHED_STATE}' AND f.bundle_id IN (SELECT value FROM json_each(?))`, ids))
         facts.history.set(r.bundle_id, r.content);
-    for (const r of read(`SELECT bundle_id, content FROM files WHERE path = 'data/provenance.json' AND bundle_id IN (SELECT value FROM json_each(?))`, ids)) {
-      let docs = null;
-      try { docs = typeof r.content === "string" ? JSON.parse(r.content).documents : null; } catch { docs = null; }
-      if (!Array.isArray(docs)) continue;
-      for (const d of docs) {
-        const sha = d && typeof d === "object" && d.capture ? d.capture.sha256 : null;
-        if (typeof sha === "string" && !facts.formats.has(sha))
-          facts.formats.set(sha, d.profile && d.profile.format && typeof d.profile.format.format === "string" ? d.profile.format.format : null);
-      }
-    }
     facts.opened = openedAmong(this, regs.map((r) => r.capture_sha));
+    /* G12a (fix round 6): the digests acquisition holds as no archive (it remembers what it decided, so it is asked once), so
+       the archive grouping asks the store about none of them; acquisition not serving the read, none is known */
+    try {
+      const none = typeof acquisitionApi.notArchivesAmong === "function" ? acquisitionApi.notArchivesAmong(this, regs.map((r) => r.capture_sha)) : null;
+      if (none instanceof Set) facts.notArchives = none;
+    } catch { /* nothing known: every candidate is asked, as before */ }
     return facts;
+  }
+
+  /* G6: whether the register has provenance's `whole` column, read once. */
+  #registerHasWhole() {
+    if (this.#hasWhole === null) {
+      try { this.#hasWhole = this.#cols("register").includes("whole"); } catch { return false; }
+    }
+    return this.#hasWhole;
   }
 
   /* R77 (DEC-167 (8)): for each document of a window, the archives its captures were cut out of or found in
@@ -1813,7 +1895,8 @@ export class Capture {
       const shas = facts.captures.get(r.bundle_id) ?? [];
       /* C14: only a capture that may be an archive is asked of the archive's listing: one acquisition recorded opening, or one its
          own document profiles `zip` or does not profile (a document whose profile cannot be read is asked, as it always was). */
-      const maybe = shas.filter((x) => facts.opened.has(x) || !facts.formats.has(x) || facts.formats.get(x) === null || facts.formats.get(x) === "zip");
+      const maybe = shas.filter((x) => !facts.parts.has(x) && !facts.notArchives.has(x)
+        && (facts.opened.has(x) || !facts.formats.has(x) || facts.formats.get(x) === null || facts.formats.get(x) === "zip"));
       const progress = { sha: shas[0] ?? null };
       const [eligibility, group] = await Promise.all([
         examine(r.bundle_id),

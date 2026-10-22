@@ -199,8 +199,19 @@ export async function captureOp(op, req, url, env, store, h) {
                                                      cls: h.cls, member: h.member, sessMember: h.sessMember, storeName: h.storeName,
                                                      trace: h.trace });
     if (acquired.response) return acquired.response;
-    const read = await h.readAcquired(acquired.answer, at);
-    if (read.response) return read.response;
+    /* G4 (fix round 6; R73): a capture that is kept is never a failed act. A reading that throws or answers nothing is a deferral the
+       answer carries (`reading_pending`, the digest, a `diag` naming the failure, not drawn), logged once for the deploy to name; a
+       deferral the reader itself answers is relayed unchanged. */
+    let read;
+    try { read = await h.readAcquired(acquired.answer, at); }
+    catch (e) { read = { failed: e }; }
+    if (read && read.response) return read.response;
+    if (!read || !read.body || typeof read.body !== "object") {
+      const e = read && read.failed;
+      const diag = { name: String((e && e.name) || "Error").slice(0, 80), message: String((e && e.message) || "READING_NOT_ANSWERED").slice(0, 200) };
+      try { console.error(JSON.stringify({ capture: "acquire", reading: "deferred", ...diag })); } catch { /* a log that cannot be written */ }
+      return json({ ...acquired.answer, reading_pending: true, sha: acquired.answer.document.capture?.sha256 ?? null, diag, note: ACQUIRE_GRADE_NOTE }, 200);
+    }
     return json(Object.assign(read.body, { note: ACQUIRE_GRADE_NOTE }), 200);
   }
   return null;

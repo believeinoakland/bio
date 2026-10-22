@@ -151,7 +151,7 @@ test("R77 R88 (C14): the picker read returns the same rows with fewer fields (th
   assert.deepEqual(pick.held.map((r) => r.bundle_id), full.held.map((r) => r.bundle_id), "the same rows in the same order");
   assert.deepEqual(pick.held.map((r) => [r.title, r.capture ? r.capture.sha256 : null, r.standing]),
                    full.held.map((r) => [r.title, r.capture ? r.capture.sha256 : null, r.standing]));
-  assert.deepEqual(Object.keys(pick.held[0]).sort(), ["actor", "bundle_id", "capture", "collected_since", "project", "source", "standing", "title", "whole"], "fewer fields");
+  assert.deepEqual(Object.keys(pick.held[0]).sort(), ["actor", "bundle_id", "capture", "collected_since", "format", "project", "source", "standing", "title", "whole"], "fewer fields (fix round 6, G12a: the picker row names its format)");
   assert.deepEqual([w.asked.examined, w.asked.read], [0, 0], "the examination and the questions are not asked");
   assert.ok(k.n <= 6, `${k.n} reads`);
   assert.deepEqual([pick.state, pick.limit, pick.truncated, pick.next], [full.state, full.limit, full.truncated, full.next], "the page is the same");
