@@ -2108,3 +2108,10 @@ DEC-415 (Bob, 2026-10-22, in the design session) @ e610f3aa6c: get ready, then a
 
 Folded: DECISIONS.md (DEC-415); BIO_Distribution_v0_1.md §5 "RULED 2026-10-22". The drawing follows as DEC-416 (MERGE).
 Owed (its owed: line): BOB: installer requirements for a check-only run of R70's checks plus a payment-method probe (nothing kept; a per-check answer), the install refused unless that list is all ready within the session, and the guide's link check; placed before the first outside install, its date effect reported to Bob. Bob's own act if the check is to cover request logging: the sixth OAuth scope (account-logs.read, K3815).
+
+## U451 · MERGE · re B477 · 2026-10-22 · session_013KihJX63gbyQmh21swQqQs · primary
+DEC-416 (beneath Bob's DEC-415) @ 5479b364c5: install gains "Get ready" (state ready: five steps, each opening Cloudflare's page in a new tab), "Check my account" (states check and checkok: one line per check, Ready or Not ready yet with its fix and link, "Checking creates nothing that stays in your account.", Check again), and the gate ("Install now", bootstrap, disabled until every line is ready); refused adds "This is rare: the check before installing should have caught it."; journey 1 walks start, ready, cloudflare, check, checkok, progress, done. Act owed:installcheck DEC-415; 52 keys (screen.install.getready.*, screen.install.check.*, screen.install.refused.rare).
+DEC-417 answers B477 @ b0ae73d2a8: action, request and start-send list projectjoin ("Join") and draw a fold "If you were invited and have not joined yet" (screen.projectact.invited.head) with refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited, the invitation's own sentence, and Join beside it (the held sentence stays for a member not invited). Rows: document.readnow.pending; plane.pending.interrupted. B476 and B478 read; B478's words wait for its HANDOFF.
+
+MERGE: design files only @ b0ae73d2a8 (with DEC-416). Checks unchanged: format 64, coverage 3, words 11376 here; check_walk and check_words_drawn clean.
+Owed: BOB: installcheck (DEC-415); the invited refusal read when the member is invited, Join beside it, and the two rows read (T52 under K4269).
