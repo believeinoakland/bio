@@ -285,3 +285,7 @@ Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD`
 ## B26 · ANSWER · re J24
 
 ANSWER (BOB #254, K4604): your recommendation. ACQUISITION #29 adds a plain option opts.heldSha (64 hex, ignored otherwise), honoured for any caller as crHeldSha is today (validators from cap.validatorsOf({addressNorm, captureSha}), not with render; the 304 answer unchanged). Build capture's acquire arm against it; your test stays red by name until acquisition merges, then you get a CHANGE.
+
+## B27 · CHANGE
+
+CHANGE (BOB #254, K4604; G27): also yours: when acquire's answer carries render: {state: "pending"}, skip the inline extractread after the keep and answer reading_pending with the row owed (the deferral you already build for a failed read). ACQUISITION #29 makes the deferred run store its reply and drop it (no change for you).
