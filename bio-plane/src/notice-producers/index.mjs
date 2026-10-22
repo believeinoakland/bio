@@ -73,6 +73,7 @@ import { retrievalOf } from "../retrieval/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
 import { fileSafetyOf, findingKind } from "../file-safety/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
+import { captureOf } from "../capture/index.mjs";
 import { aiUseOf } from "../ai-use/index.mjs";
 import { stepsOf } from "../steps/index.mjs";
 import { questionExplorerOf } from "../question-explorer/index.mjs";
@@ -152,7 +153,12 @@ export const NOTICE_KINDS = Object.freeze({
   "review-comment-left-out": "FINDING",
   /* R24 (queue R57, T50; N1204) */
   "watched-changed": "FINDING",
+  /* R27 (G2, K4562): a large capture's background fetch was delivered */
+  "fetch-done": "FINDING",
 });
+/** R27: the window of `fetch_done` records read, by the record's age (as R14's), and the records one read follows. */
+export const FETCH_DONE_DAYS = 90;
+export const FETCH_DONE_MAX = 1000;
 /** R16, R17: the items one read answers from each of their sources (as R13's and R14's bounds); `facts` states the
  *  bound and `truncated` when a source answers more. */
 export const ACCOUNT_ITEMS_MAX = 200;
@@ -230,6 +236,7 @@ export class NoticeProducers {
   get #following() { return this.#dep("following", () => followingOf(this.#host)); }
   get #standards() { return this.#dep("standards", () => standardsOf(this.#host)); }
   get #fileSafety() { return this.#dep("fileSafety", () => fileSafetyOf(this.#host)); }
+  get #capture() { return this.#dep("capture", () => captureOf(this.#host)); }
   get #provenance() { return this.#dep("provenance", () => provenanceOf(this.#host)); }
   get #aiUse() { return this.#dep("aiUse", () => aiUseOf(this.#host)); }
   get #steps() { return this.#dep("steps", () => stepsOf(this.#host)); }
@@ -275,6 +282,7 @@ export class NoticeProducers {
       project_quiet: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
       review_left_out: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
       watched_changed: { bound: WATCHED_ITEMS_MAX, truncated: false },
+      fetch_done: { bound: FETCH_DONE_MAX, days: FETCH_DONE_DAYS, truncated: false },
       failed,
     };
     const run = (provider, fn) => {
@@ -307,6 +315,7 @@ export class NoticeProducers {
       run("investigation", () => ({ fact: "project_quiet", ...this.#quietPrompts(me, viewer, at) }));
       run("review", () => ({ fact: "review_left_out", ...this.#reviewLeftOut(me, viewer, at) }));
       run("retrieval", () => ({ fact: "watched_changed", ...this.#watchedChanged(me, viewer, at) }));
+      run("capture", () => ({ fact: "fetch_done", ...this.#fetchDone(me, viewer, at) }));
       return { items, facts };
     } catch {
       return { items: [], facts: { ...facts, failed: [...new Set([...failed, "notice-producers"])] } };
@@ -1368,6 +1377,51 @@ export class NoticeProducers {
         assignee: null, assignee_role: null,
         recipients: [me],
         options: this.#optionsOf([w.id]),
+      });
+    }
+    return { items, facts: { truncated } };
+  }
+
+  /* ================================================================== R27 · a large capture's fetch was delivered
+   * (capture's `fetch_done` record: {session, document, opener, project, at}, written when a background fetch is filed;
+   * G2, K4562: the member "is told when the download completes"). One FINDING per record, to its opener alone while that
+   * member is active, keyed by the session so queue mints it once and later cycles answer the same item. The read is the
+   * window's, as R14's: `since` 90 days, from the first page, following `cursor` to at most the bound. Its
+   * subject is the document, its home set the record's project; it names no other member and says nothing of the page. */
+  #fetchDone(me, viewer, now) {
+    if (!this.#active(me)) return { items: [], facts: {} };
+    const since = now - FETCH_DONE_DAYS * DAY_MS;
+    const done = [];
+    let after = null, read = 0, truncated = false;
+    for (;;) {
+      if (read >= FETCH_DONE_MAX) { truncated = true; break; }
+      const r = this.#capture.fetchesDone({ since, after, limit: Math.min(FILE_SAFETY_PAGE, FETCH_DONE_MAX - read), viewer });
+      if (!r || r.ok !== true || !Array.isArray(r.done)) throw failure("capture");
+      read += r.done.length;
+      done.push(...r.done);
+      if (r.truncated !== true || r.cursor === null || r.cursor === undefined || r.cursor === after) break;
+      after = r.cursor;
+    }
+    const items = [];
+    const seen = new Set();
+    for (const f of done) {
+      if (!f || !filled(f.session) || !filled(f.document) || bare(f.opener) !== me || seen.has(f.session)) continue;
+      seen.add(f.session);
+      const fills = { title: this.#titleOf(f.document, viewer) ?? f.document };
+      items.push({
+        id: `FINDING::fetch-done::${f.session}`, class: "FINDING", kind: "fetch-done",
+        label: NOTICED_LABEL, by: localize("notice-producers.group_civicsmith", "the team's Civicsmith"),
+        case: filled(f.project) ? this.#homesAt([f.project], viewer) : this.#homesOf([]),
+        subject: { kind: "document", id: f.document, session: f.session, project: f.project ?? null },
+        summary: localize("notice-producers.index.fetch_done_summary", "{title} has been fetched", fills),
+        detail: localize("notice-producers.index.fetch_done_detail", "The large page you asked for is fetched and filed. Open it to read it.", {}),
+        fills,
+        basis: { source: "capture.fetchesDone", session: f.session, document: f.document, project: f.project ?? null, at: f.at ?? null,
+                 detail: localize("notice-producers.index.a_fetch_done_record_is", "a fetch-done record is capture's: written once when a large capture's background fetch is filed; told once, to the member who asked, and to nobody else.") },
+        age: ageFrom(f.at, now, "no_fetch_instant"),
+        assignee: null, assignee_role: null,
+        recipients: [me],
+        options: this.#optionsOf([f.document]),
       });
     }
     return { items, facts: { truncated } };
