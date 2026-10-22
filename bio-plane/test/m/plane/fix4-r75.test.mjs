@@ -12,7 +12,7 @@ import { bucketStandIn } from "../case-carriage/fixture.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { captureOf } from "../../../src/capture/index.mjs";
 import { extractionOf } from "../../../src/extraction/index.mjs";
-import { pendingOf, PENDING_ATTEMPTS_MAX } from "../../../src/plane/pending.mjs";
+import { pendingOf, PENDING_RETRY_MAX_MS } from "../../../src/plane/pending.mjs";
 import { acquireTimingsOf, HOLD_MAX } from "../../../src/plane/acquire-timings.mjs";
 
 const MiB = 1024 * 1024;
@@ -71,7 +71,7 @@ test("R75 (C5c): the pending entry survives a restart of the object: a second co
   assert.deepEqual(rows(second), []);
 });
 
-test("R75 (C5c): a failure leaves the entry for the next alarm, backed off, up to the stated attempt count; past it the entry stays named and is not tried again; a registered keep is not registered twice", async () => {
+test("R75 R77 (C5c): a failure leaves the entry for the next alarm, backed off each time up to one hour and going on at that rate, never given up; a registered keep is not registered twice", async () => {
   const x = await pendingStore();
   const { digest, parts } = threeParts(x.bucket);
   const missing = [parts[0], sha("a part nobody stored"), parts[2]];
@@ -79,21 +79,22 @@ test("R75 (C5c): a failure leaves the entry for the next alarm, backed off, up t
   await captureOf(x.ctx).keepLater({ sha: digest, parts: missing });
   assert.equal(rows(x).length, 1, "one entry for one digest");
   let now = Date.now() + 1000, last = 0;
-  for (let n = 1; n <= PENDING_ATTEMPTS_MAX; n++) {
+  for (let n = 1; n <= 14; n++) {
     await x.s.onAlarm(now);
     const [r] = rows(x);
     assert.ok(r, "the entry stays while its work has not ended");
     assert.equal(r.attempts, n, `attempt ${n}`);
-    assert.ok(r.due_at > now && r.due_at - now >= last, "each retry is later than the one before");
+    assert.ok(r.due_at > now && r.due_at - now >= last, "each retry is no sooner than the one before");
+    assert.ok(r.due_at - now <= PENDING_RETRY_MAX_MS, "and none is later than one hour");
     last = r.due_at - now;
     now = r.due_at + 1;
   }
+  assert.equal(last, PENDING_RETRY_MAX_MS, "the backoff has reached one hour and stays there");
   assert.equal(x.bucket.state.completed, 0, "nothing was made whole from parts the store did not hold");
   const calls = x.bucket.calls.length;
-  await x.s.onAlarm(now + 3_600_000);
-  assert.equal(x.bucket.calls.length, calls, "past the attempt count it is not tried again");
-  assert.equal(rows(x)[0].attempts, PENDING_ATTEMPTS_MAX, "and it stays named");
-  assert.equal(pendingOf(x.ctx).consumer().wake(now + 3_600_000), null, "it wants no alarm");
+  await x.s.onAlarm(now);
+  assert.ok(x.bucket.calls.length > calls, "past fourteen tries it is tried again");
+  assert.notEqual(pendingOf(x.ctx).consumer().wake(now), null, "it wants an alarm");
 });
 
 test("R75 (control-plane R120): a deferred reading is registered by the store-internal route `pendingadd` and finished by the alarm; a reading whose home is not yet registered is tried again, one already held ends", async () => {
@@ -115,8 +116,8 @@ test("R75 (control-plane R120): a deferred reading is registered by the store-in
   assert.deepEqual(rows(x), []);
 });
 
-test("R75 (C5c): after a keep, a digest with no home yet ends there (the door reads it at promotion), and one already read ends; a failed read leaves the entry as a reading", async () => {
-  for (const [why, left] of [["NO_HOME", 0], ["READING_HELD", 0], ["NO_WHOLE_OBJECT", 1]]) {
+test("R75 R77 (C5c): after a keep, a digest with no home yet stays owed as a reading (nothing reads it at promotion but the alarm until the door does), one already read ends, and a failed read leaves the entry as a reading", async () => {
+  for (const [why, left] of [["NO_HOME", 1], ["READING_HELD", 0], ["NO_WHOLE_OBJECT", 1]]) {
     const x = await pendingStore({ answer: { ok: true, read: false, why } });
     const { digest, parts } = threeParts(x.bucket, [6 * MiB, 6 * MiB, 3 * MiB]);
     await captureOf(x.ctx).keepLater({ sha: digest, parts });

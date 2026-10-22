@@ -13,4 +13,8 @@ export const DECLARED_OPS = Object.freeze({
     description: localize("plane.declared.readtranslate", "draft: a machine translation of one passage of the group's own writing (a note, question, finding or notice) into the member's language, labeled machine work, the original one tap away; held nowhere and writes nothing (plane R50)"),
     stamps: ["viewer", "by"],
     fields: { accepts: ["subject", "language"], requires: ["subject"] } },
+  owedwork: { classes: ["admin", "member"], machineClasses: [], mutating: false, weight: "read",
+    description: localize("plane.declared.owedwork", "what the object still owes one document, or the counts of what it owes: the keeps, readings, scan pages, supporting files and archive entries left for its alarm, each owed or ended for a stated reason; writes nothing"),
+    stamps: ["viewer"],
+    fields: { accepts: ["sha"], requires: [] } },
 });
