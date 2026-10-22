@@ -64,7 +64,18 @@ export const DOCKET = Object.freeze({
       const day = e.published_at || e.ratified_at || e.signed_at;
       return { value: String(e.edition), text: P.plain(cs.w("screen.docket.edition.option", { n: String(e.edition), date: { html: day ? cs.date(day) : "" } })) };
     });
-    const caps = view.data.captures && view.data.captures.state === "ok" && view.data.captures.value && Array.isArray(view.data.captures.value.held) ? view.data.captures.value.held : [];
+    let caps = view.data.captures && view.data.captures.state === "ok" && view.data.captures.value && Array.isArray(view.data.captures.value.held) ? view.data.captures.value.held : [];
+    // G20 (fix round 6; S11): the picker reaches every held document: while a page says it is `truncated` the next is read from its `next`
+    // (`after`), up to 25 pages; past that, or on a page that cannot be read, the picker says how many it lists and no more is claimed
+    let capNote = "", page = view.data.captures && view.data.captures.state === "ok" ? view.data.captures.value : null;
+    for (let i = 0; page && page.truncated && page.next && i < 24; i++) {
+      const nr = P.later(cs, view, "caps:" + i, "heldcaptures", { query: { project: String(view.subject || "").split("/")[0], limit: "200", state: "held_and_vouched", after: String(page.next) } });
+      if (nr.state === "loading") { caps = []; capNote = cs.state(nr, function () { return ""; }); page = null; break; }
+      if (nr.state !== "ok" || !nr.value || !Array.isArray(nr.value.held)) { caps = []; capNote = cs.state(nr, function () { return ""; }); page = null; break; }
+      caps = caps.concat(nr.value.held);
+      page = nr.value;
+    }
+    if (page && page.truncated) capNote = '<p class="mk-note" data-captures-more>' + cs.w("screen.people.more", { n: String(caps.length) }) + "</p>"; // stand-in: the nearest held row; the row owed is `screen.docket.capture.more`
     const capOptions = caps.filter(function (r) { return r && r.capture && r.capture.sha256; }).map(function (r) {
       return { value: String(r.capture.sha256).replace(/^sha256:/, ""), text: P.plain(cs.w("screen.docket.capture.option", { title: r.title || "", date: { html: cs.date(String(r.since || r.src_retrieved || "")) } })) };
     });
@@ -72,6 +83,7 @@ export const DOCKET = Object.freeze({
       ["reaction", "screen.docket.kind.reaction"], ["outcome", "screen.docket.kind.outcome"]])
       + (edOptions.length ? cs.choice("dk-edition", "screen.docket.edition.label", edOptions, { value: edOptions[0].value, help: "screen.docket.edition.help" }) : "")
       + (capOptions.length ? cs.choice("dk-capture", "screen.docket.capture.label", capOptions, { value: capOptions[0].value, help: "screen.docket.capture.help" }) : "")
+      + capNote
       + '<p class="mk-small">' + cs.ref("capture", "", P.plain(cs.w("screen.docket.capture.add")), []) + "</p>"
       + cs.field("dk-from", "screen.docket.from.label", { rec: true, help: "screen.docket.from.help" })
       + cs.field("dk-summary", "screen.docket.summary.label", { area: true, rec: true })

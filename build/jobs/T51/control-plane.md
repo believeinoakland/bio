@@ -1,6 +1,6 @@
 # control-plane (T51)
 
-**Status** · session_01X5bP76qJ2j296J7FB51rWp · depth 2 · COMPLETE · handled B46
+**Status** · session_01X5bP76qJ2j296J7FB51rWp · depth 2 · COMPLETE · handled B47
 
 ## J1 · QUESTION
 
@@ -612,3 +612,18 @@ Size (session_01X5bP76qJ2j296J7FB51rWp): test runs 40, module lines 4,620
 ## J31 · COMPLETE
 
 B46: merged tranche. (1) G2 seam GREEN on the real plane fetch kind + owedFetch (fetch_pending <2 s, tick files it in the project, words in text_units, Queue notice, second capture <2 s; no-length 10.2 s). (2) door tests 17/17: readUploaded carries reading_pending, diag and pendSha; more registered on every door path. (3) r117-held alone x5: 9/9 each. G13 seam still RED and not the door's: the 12 MB text's first tick reads 4096 units then the reading row ends with no continuation (owedwork empty), ENDMARKER absent after 1100 s: extraction readHeld's answer did not carry more:true (index.mjs ~762-769) or plane pending.mjs ~106 settled it. Evidence in the record.
+
+## B47
+
+Merged `tranche/T51`. Each of the four reds failed alone before; one root cause for all, **by design of round 6's G2**: each acquires a file over 8 MiB (15.9, 16, 22 and 41.5 MB) by address and read `answer.document` (`TypeError: reading 'capture'`/`'locator'` at `t51-held-failed.test.mjs:101`, `t51-large-pdfs.test.mjs:86`, `t51-round5-press-seam.test.mjs:118`, `t51-round5-seam.test.mjs:175`). Since acquisition's park (`fetch_pending`, `LARGE_DECLARED`) such a capture is answered at once with no document, and the alarm's delivery (`deliverOwedRender`, index.mjs) files it and follows its reading. No member operation fails: each case now passes through the real plane to its old end state. Updated to the new contract:
+1. `t51-held-failed` R117 (C5b): the old-build starting state (a 22 MiB packet promoted with a reading that failed for want of the whole) is made by the member's upload of the same bytes (same digest and parts); the recapture by address answers `fetch_pending` even for held bytes, and the failed reading is replaced by the tick's delivery (polled up to 300 s): green, 36 s.
+2. `t51-large-pdfs` R120/R121: the 8.8 and 15.9 MB captures assert `fetch_pending` with the declared size; the 2.5 MB keeps the old path; the alarm reads all three. The 2 s bar is not asserted here (the 15.9 MB answer took 4.7 s while the object ran the tick of the 8.8 MB capture before it: one object, one thread; the 2 s case alone is `t51-round6-seam`); 15 s stays.
+3. `t51-round5-press-seam` R125 (b), (c): the first capture asserts `fetch_pending`, waits for the tick's filing and the words in `text_units`; the second capture is answered at once with no `readheldfor` in its timing and any promise backed by a ledger entry; (c) then finds the reading held (NO_HOME was a consequence of (b) never filing).
+4. `t51-round5-seam` E3 (41.5 MB): asserts `fetch_pending`, then the `final` statement with the size (G7) within 120 s.
+Suite: control-plane directory minus G13 (BOB's fixed seam): 437 tests, 437 pass.
+
+Size (session_01X5bP76qJ2j296J7FB51rWp): test runs 46, module lines 4,620
+
+## J32 · COMPLETE
+
+B47: the four reds had one root cause by round 6's design: each captures a file over 8 MiB by address and read answer.document, but G2 now parks it (fetch_pending, no document) and the alarm's delivery files it. No member operation fails. Updated to the new contract: t51-held-failed R117 (old state made by upload; recapture replaced via the tick), t51-large-pdfs R120/R121 (fetch_pending for 8.8/15.9 MB; 2 s bar left to t51-round6-seam, 4.7 s seen while the object ran the previous tick), t51-round5-press-seam R125 b/c (fetch_pending, then words), t51-round5-seam E3 (fetch_pending, then final statement with size). Control-plane directory minus G13: 437/437. Pushed b5dc0aa72f + record.

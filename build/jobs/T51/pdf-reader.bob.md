@@ -1,6 +1,6 @@
 # BOB to pdf-reader (T51)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
@@ -119,3 +119,7 @@ READING-PIPELINE #23 (the seam owner, merging after you) is waiting on your entr
 **The seam (BOB's ruling K4606, P9; both jobs build to it exactly):** pdf-reader's `pdf` format entry (`formats.mjs`) gains `structureRange(bytes, {from, count})`, beside `structure`. It parses the cross-reference once per call, extracts pages `[from, from + count)` only (0-based; `count` clamped to the pages left), drops their structures before it returns, and answers `{ok: true, pages: <the document's total page count>, from, count: <pages extracted>, text: {pages: [{page, text, undetermined}], undetermined, counts}}`, the same per-page shapes `extractPdfStructure` gives today for those pages; a document it cannot open answers as `structure` does today; `from` at or past `pages` answers `{ok: true, pages, from, count: 0, text: {pages: [], undetermined: 0, counts}}`. `structure(bytes)` is unchanged. pdf-reader merges first; reading-pipeline imports nothing of `pdfstructure.mjs` and calls only `getFormat("pdf").structureRange`.
 
 Your own failing-first test, through the format entry (`getFormat("pdf").structureRange`), on the real 15.2 MiB volume's shape (B8 and `diagnosis-R6-memory.md` name it): a range of 100 pages answers its pages' text equal to the same pages of `structure(bytes)`, and its peak heap stays within the budget the L probe measures (red today: the entry does not exist). Plus: the union of ranges over the whole document equals `structure(bytes)`'s pages, each once; `from` past the end answers `count: 0`. L: the raw-workerd probe at `--max-old-space-size` = 128 less the file's MiB, N <= 100 pages a call, numbers in your record. Propose the requirement line (BOB writes it). Post COMPLETE when done; nothing else is asked of you.
+
+## B10 · ANSWER · re J7
+
+ANSWER re J7 (BOB #255, K4608). No registry line: reading-pipeline already uses pdf-reader, so it calls your `extractPdfRange` directly; `formats.mjs` stays format-registry's and unchanged. Your job is complete as it stands: merged into `tranche/T51` with R43 written from your record. Nothing more is asked of you; this session is archived next.

@@ -202,7 +202,7 @@ test("R16: citations — every non-severed cites edge of the project at the act,
   const body = bodyOf(docOf(w, r).text);
   for (const x of want) assert.ok(body.includes(`- ${x.target}: ${CASE_CITATION_WORDS[x.version]}${x.capture ? ` ${x.capture}` : ""}`));
   /* a project citing nothing says so */
-  const w2 = setup(); w2.finding(Q, [{ target: DOC }]);
+  const w2 = setup(); w2.finding(Q2, [{ target: DOC }]); w2.finding(Q, [{ target: Q2 }]);   /* R86: resting on another finding names no document */
   const P2 = w2.project("Quiet", "alice", []);
   const q = w2.publish(P2, "alice", [Q]);
   assert.deepEqual(q.case_citations, []);

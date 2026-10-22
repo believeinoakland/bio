@@ -10,7 +10,7 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { extractPdfStructure } from "../../bio-plane/src/pdfstructure.mjs";
-import { makePdf, content, hex, runner } from "./make-pdf.mjs";
+import { makePdf, content, image, hex, runner } from "./make-pdf.mjs";
 
 const { Miniflare } = await (async () => {
   try { return await import("miniflare"); } catch { /* fall through */ }
@@ -217,17 +217,55 @@ console.log("\n--- R8: over the envelope ---");
   t("R8 exactly at the limit is not over it", (await (await post(mfExact, { capture_sha: SHA, store: "bio" })).json()).tier, 2);
   await mfExact.dispose();
 
-  /* The default, 16,777,216 bytes: the same document padded with a comment to one
-     byte over, and to exactly the limit. */
+  /* The default, 67,108,864 bytes (64 MiB, measured: test/envelope-memory.probe.mjs): the same document padded with a
+     comment to one byte over, and to exactly the limit. */
   const pad = (n) => { const u = new Uint8Array(n); u.set(DOC); u.fill(0x20, DOC.length); u[DOC.length] = 0x25; return u; };
-  for (const [label, n, tier] of [["one byte over the default", 16777217, 1], ["exactly the default", 16777216, 2]]) {
+  const DEFAULT = 64 * 1024 * 1024;
+  for (const [label, n, tier] of [["one byte over the default", DEFAULT + 1, 1], ["exactly the default", DEFAULT, 2],
+                                  ["the old 16 MiB default plus one", 16777217, 2]]) {
     const bytes = pad(n);
     const sha = hex(bytes);
     const { env } = spyEnv({ [`bio/captures/${sha}`]: bytes });
     const o = await (await nodeCall(env, { capture_sha: sha, store: "bio" })).json();
     t(`R8 ${label} (${n} B): tier ${tier}`, [o.tier, o.text.undetermined[0]?.limit ?? null],
-      [tier, tier === 1 ? 16777216 : null]);
+      [tier, tier === 1 ? DEFAULT : null]);
+    if (tier === 1)
+      t(`R8 ${label}: the decline names the size and the limit`, o.text.undetermined[0],
+        { page: null, reason: "over_envelope", font: null, codes: "", count: 0, bytes: n, limit: DEFAULT });
   }
+}
+
+console.log("\n--- R8: a 23 MB PDF in WinAnsi fonts with no /ToUnicode is read (G34) ---");
+{
+  /* The walker's two files (reportlab, 23.2 MB and 23 MB): twenty text pages in Helvetica, WinAnsiEncoding, no
+     /ToUnicode, and the bulk of the bytes one incompressible image. Tier 1 cannot decode such a font, so only tier 2 has
+     the words; they were over the old 16 MiB envelope, and ended "undetermined, no_tounicode". */
+  const pseudo = (n) => { const out = Buffer.alloc(n); let x = 2463534242; for (let i = 0; i < n; i++) { x ^= x << 13; x >>>= 0; x ^= x >>> 17; x ^= x << 5; x >>>= 0; out[i] = x & 0xff; } return out; };
+  const pageIds = Array.from({ length: 20 }, (_, i) => 4 + i);
+  const contentId = (i) => 24 + i;
+  const lines = (p) => Array.from({ length: 30 }, (_, l) => `BT /F1 11 Tf 40 ${760 - l * 12} Td (Page ${p + 1} line ${l + 1} budget appropriation fund amount for the record) Tj ET`).join("\n");
+  const WALKER = makePdf([
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    `<< /Type /Pages /Kids [${pageIds.map((i) => `${i} 0 R`).join(" ")}] /Count 20 >>`,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+    ...pageIds.map((_, i) => `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R >>${i === 0 ? " /XObject << /Im0 44 0 R >>" : ""} >> /Contents ${contentId(i)} 0 R >>`),
+    ...pageIds.map((_, i) => content(lines(i))),
+    image(4800, 4800, "/ColorSpace /DeviceGray /BitsPerComponent 8", pseudo(4800 * 4800)),
+  ]);
+  const sha = hex(WALKER);
+  const tier1 = await extractPdfStructure(WALKER);
+  t("R8 the walker's shape: the file is over the old 16 MiB envelope and under 24 MiB",
+    [WALKER.length > 16 * 1024 * 1024, WALKER.length < 24 * 1024 * 1024], [true, true]);
+  t("R8 the walker's shape: tier 1 alone cannot read its words (no_tounicode, no characters)",
+    [tier1.text.counts.chars, tier1.text.undetermined.length > 0, tier1.text.undetermined[0].reason], [0, true, "no_tounicode"]);
+  const mfWalker = newMf();
+  await (await mfWalker.getR2Bucket("CAPTURES")).put(`bio/captures/${sha}`, WALKER);
+  const [st, out] = await answer(await post(mfWalker, { capture_sha: sha, store: "bio" }));
+  t("R8 the walker's shape under workerd: 200, tier 2, with its words and nothing undetermined",
+    [st, out.tier, out.text.document.includes("Page 20 line 30 budget appropriation fund amount for the record"), out.text.pages.length, out.text.counts.undetermined],
+    [200, 2, true, 20, 0]);
+  t("R8 the walker's shape: no decline note", out.notes.includes("tier2_declined_over_envelope"), false);
+  await mfWalker.dispose();
 }
 
 console.log("\n--- R10: the tier-2 pass throws ---");

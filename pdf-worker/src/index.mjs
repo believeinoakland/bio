@@ -65,15 +65,16 @@ export const SURFACE = {
   version:   { method: "GET",  mutating: false },
 };
 
-/* The Tier-2 envelope. pdf.js pulls the WHOLE document into memory and expands
- * it several-fold, so a document over this size is declined rather than risking
- * the Worker memory ceiling — and it is declined HONESTLY: the text field comes
- * back `undetermined` (reason "over_envelope"), never silently truncated (I6).
- * PROVISIONAL: this is a conservative safety envelope, NOT a measured OOM
- * threshold. Every Tier-2-REQUIRED document CPDF-5 measured is ≤3.2 MB, so 16 MB
- * covers them ~5x over; the measured Worker-memory limit for pdf.js is CPDF-1's
- * gated follow-on and will refine this. Overridable via env for testing/tuning. */
-const DEFAULT_MAX_PDF_BYTES = 16 * 1024 * 1024;
+/* The Tier-2 envelope. pdf.js pulls the WHOLE document into memory, so a document over this size is declined rather
+ * than risking the Worker memory ceiling — and it is declined HONESTLY: the text field comes back `undetermined`
+ * (reason "over_envelope", with `bytes` and `limit`), never silently truncated (I6), so the caller can state the size
+ * as the reason. MEASURED (G34, T51; `test/envelope-memory.probe.mjs`, raw workerd with the V8 heap limited as the 128 MB
+ * isolate limits it): the smallest old space in which `POST /structure` reads at tier 2 is 20 MB for a 23.8 MiB text
+ * file in WinAnsi fonts and 64 MiB files of 5 and 300 pages, 21 / 30 / 39 MB for 23 MiB files of 400 / 1,000 / 1,600
+ * text-dense pages (the most pages tier 1's own refusal, pdf-reader R42, lets through at that size); heap plus the
+ * file's bytes is at most 84 MB for a 64 MiB file, under 128 MB with 44 MB left for the isolate itself. 64 MiB is the
+ * bound; tier 1 refuses what is larger than about 75 MiB before this check is reached. Overridable via env. */
+const DEFAULT_MAX_PDF_BYTES = 64 * 1024 * 1024;
 
 /* D-478 — THE NAMESPACES THIS MEMBER WILL READ FROM: EXACTLY `bio` OR `scratch`, AND NOTHING ELSE.
  *

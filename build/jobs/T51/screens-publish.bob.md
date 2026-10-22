@@ -1,6 +1,6 @@
 # BOB to screens-publish (T51)
 
-**Read** · handled J28
+**Read** · handled J29
 
 ## B1 · START
 
@@ -422,3 +422,12 @@ CHANGE (BOB #253): review's batch (`reviewcopy` `drafts` -> `copies`) is merged 
 ## B36 · CHANGE
 
 CHANGE (BOB #254, K4598, K4600): control-plane is merged into tranche/T51 (batch keys forwarded: reviewcopy drafts, casedrafts projects, inquirystrength ids). Merge tranche/T51 and run your door seam (drafts) through the real door; green: COMPLETE again. Ahead (not now): G29, CASE-AUTHORING #39 makes a case's casedocument carry one row per evidence document its findings rest on (screens-publish R13); when it merges you will get a CHANGE to check sitting() draws an evidence line for each.
+
+## B37 · CHANGE
+
+CHANGE (BOB #255, K4607): G29's screen half. CASE-AUTHORING #39 is merged into `tranche/T51`: `casedocument`'s `citations.rows` now carry one row per document the case's findings rest on (`only_capture`, the full capture sha in `capture`, pinned when the findings name one capture of several; `undetermined` with no sha when several; a document the project cites keeps its row). Merge `tranche/T51` into your branch first.
+
+Your work (owner of the drawing, R13; the four fields, failing-first):
+1. `sitting()` (`parts.mjs` ~:443-448) keeps a row only if `row.version` is 64 hex, but these rows carry the sha in `capture` and a classification word in `version`, so over a real document it draws and signs no evidence line. Read the row's sha where it really is; an `undetermined` row (no sha) is not signed and the Sign step says which documents could not be named (stand-in words, row owed).
+2. **Which sha the evidence statement signs** (`ratifyStatement(id, sha)` for each piece of evidence): the one `ratification` R4/R52 verifies for that id, nothing else. Read ratification R4 and R52 and its code for the evidence arm, decide from them, and prove it by a seam test: the real flow (cite, conclude, prepare, publish; the plan's G29 test) through the real `caseratify` (and `publishat`) over the real ratification module: every evidence signature verifies and commits; red today (no evidence line). If R4/R52 cannot verify a document's evidence statement by any sha the row can give, post a QUESTION at once naming what ratification would need; do not invent a mapping.
+Run your suite, impact users (ratification's and case-authoring's seam tests among them), checks; COMPLETE with requirement lines proposed.

@@ -4404,6 +4404,71 @@ export async function extractPdfStructure(bytes) {
   };
 }
 
+/* R43 (fix round 6, G26; K4606) — A RANGE OF PAGES, FOR A DOCUMENT TOO LARGE TO READ WHOLE.
+ *
+ * `extractPdfRange(bytes, {from, count})` opens the document once (R8's read, the cross-reference parsed once per call),
+ * builds the text of the pages [from, from + count) only (0-based, `count` clamped to the pages left, `from` and `count`
+ * whole numbers) with the same per-page reading `extractPdfStructure` makes, and returns before keeping any page's
+ * structures: the answer holds only those pages' text. It answers `{ok, container, pages (the document's total), from,
+ * count (pages built), text: {pages: [{page, text, undetermined}], undetermined, counts: {chars, undetermined}}}`; a
+ * `from` at or past the pages answers `count: 0` and no pages; bytes that are not a PDF answer as `extractPdfStructure`
+ * does. It never applies R42's refusal (a refusal exists for the whole document; a range is how the large one is read), an
+ * encrypted document answers its one `encrypted` marker and no pages (R9), and the font cache is kept for the call only.
+ * The images of the range's own pages give R26's and R34's markers as the whole reading gives them; the one difference is that
+ * the whole reading drops them everywhere when a page elsewhere cannot be walked, which a range cannot know. */
+export async function extractPdfRange(bytes, range) {
+  if (!(bytes instanceof Uint8Array)) return { ok: false, container: "pdf", reason: "NOT_BYTES" };
+  if (!/%PDF-\d+\.\d+/.test(binaryString(bytes.subarray(0, 1024)))) return { ok: false, container: "pdf", reason: "NOT_A_PDF" };
+  const doc = await loadPdf(bytes);
+  const total = doc.pageCount;
+  const from = Math.max(0, Math.floor(Number(range && range.from)) || 0);
+  const asked = range && range.count !== undefined ? Math.floor(Number(range.count)) : total;
+  const count = Math.max(0, Math.min(Number.isFinite(asked) ? asked : total, total - from));
+  const out = (pages, undetermined, chars) => ({
+    ok: true, container: "pdf", pages: total, from, count: pages.length,
+    text: { pages, undetermined, counts: { chars, undetermined: undetermined.length } },
+  });
+  if (count <= 0) return out([], [], 0);
+  if (doc.isEncrypted()) {
+    doc.note("encrypted");
+    const marker = { page: null, reason: "encrypted", font: null, codes: "", count: 0 };
+    return { ...out([], [marker], 0), count: 0 };
+  }
+  const fontCache = new FontCache();
+  const pages = [], undetermined = [];
+  let chars = 0;
+  for (let idx = from; idx < from + count; idx++) {
+    const pageMap = doc.pageDict(idx);
+    let res;
+    if (!pageMap) {
+      res = { text: "", undetermined: [{ page: idx, reason: "page_unreadable", font: null, codes: "", count: 0 }] };
+    } else {
+      try {
+        res = await extractPageText(doc, idx, pageMap, fontCache);
+      } catch {
+        doc.note("text_extraction_error");
+        res = { text: "", undetermined: [{ page: idx, reason: "text_extraction_error", font: null, codes: "", count: 0 }] };
+      }
+    }
+    pages.push({ page: idx, text: res.text, undetermined: res.undetermined });
+    for (const u of res.undetermined) undetermined.push(u);
+    if (res.text.length) chars += (chars ? 1 : 0) + res.text.length;
+  }
+  const result = out(pages, undetermined, chars);
+  /* R26 and R34 read the images each page paints; the walk is the range's own pages, so a page of the range that cannot be
+     walked says nothing for the range (as a page anywhere in the whole reading says nothing for it), and the markers
+     are those the whole reading puts on these pages. */
+  const painted = [];
+  let walked = true;
+  for (let idx = from; idx < from + count && walked; idx++) {
+    let got;
+    try { got = await pdfPageImages(doc, idx); } catch { got = null; }
+    if (!got || !got.images) walked = false; else for (const im of got.images) painted.push(im);
+  }
+  if (walked) { markImageContent(doc, result.text, painted); markImagesUnread(doc, result.text, painted); }
+  return result;
+}
+
 function destNameOf(doc, dest) {
   dest = doc.resolve(dest);
   return dest && (dest.t === "name" || dest.t === "str") ? dest.v : null;

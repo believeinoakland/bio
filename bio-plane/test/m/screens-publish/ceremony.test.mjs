@@ -245,3 +245,37 @@ test("R4 R30 a photo's facts: taken by and relied on, with the local day when `p
   const none = await open(PATH, { plane: { publishpreflight: ok(pre) } });
   assert.ok(drewIn(main(none).querySelector(`[data-photo="${PHOTO}"]`), "screen.ceremony.photo.facts", { by: "dev", findings: "FND-2026-0031" }), "control: a null day is the undated sentence");
 });
+
+test("R3 R50 (fix round 6, G10) a refusal's placeholder is filled from the refusal's own field: the real canned text names the document, no raw {document}", async () => {
+  const canned = word("document.refused.pending", { document: "{document}" }); // what case-disclosures' check answers as `translation`
+  assert.ok(canned.includes("{document}"), "the answer's text carries the placeholder");
+  const pre = PREFLIGHT({
+    first: { ok: false, code: "DOCUMENT_COPY_PENDING", reason: "DOCUMENT_COPY_PENDING", translation: canned, document: "INFO-2026-0134-x" },
+    blockers: [{ ok: false, code: "PHOTO_UNCHECKED", reason: "PHOTO_UNCHECKED", translation: word("photo.refused.unchecked", { photo: "{photo}" }), photo: "INFO-2026-0007" }],
+  });
+  const p = await open(PATH, { plane: { publishpreflight: ok(pre) } });
+  const lines = main(p).querySelector("[data-blockers]").querySelectorAll("li").map((l) => l.textContent);
+  assert.equal(lines.length, 2);
+  assert.ok(lines[0].includes("INFO-2026-0134-x"), "the document is named");
+  assert.ok(lines[1].includes("INFO-2026-0007"), "the photo is named");
+  assert.ok(!lines.some((l) => /[{}]/.test(l)), "no raw placeholder is drawn");
+  // control: a refusal that names no field draws no brace either
+  const q = await open(PATH, { plane: { publishpreflight: ok(PREFLIGHT({ first: { ok: false, code: "DOCUMENT_COPY_PENDING", translation: canned }, blockers: [] })) } });
+  assert.ok(!/[{}]/.test(main(q).querySelector("[data-blockers]").textContent), "control: a missing field leaves no brace");
+});
+
+test("R12 R15 (fix round 6, G11) a team with no time zone is offered no publishing time: no empty brackets, no second button, the held refusal says why; with a zone the Sign step is as before", async () => {
+  const none = PREFLIGHT();
+  none.steps[7] = { signer: "dev", open_requests: [], publish_at: { offered: false, zone: null, reason: "PUBLISH_AT_NO_ZONE" } };
+  const p = await prepared({ plane: { publishpreflight: ok(none) } });
+  assert.ok(drew(p, "refusal.PUBLISH_AT_NO_ZONE"), "the held refusal is said");
+  assert.ok(!/\(\s*\)/.test(text(p)), "no empty brackets");
+  assert.equal(p.doc.getElementById("ce-date"), null);
+  assert.equal(p.doc.getElementById("ce-time"), null);
+  assert.deepEqual(ops(p).filter((o) => o === "caseratify" || o === "publishat"), ["caseratify"], "only Sign and publish now");
+  const zoned = PREFLIGHT();
+  zoned.steps[7] = { signer: "dev", open_requests: [], publish_at: { offered: true, zone: "America/Los_Angeles" } };
+  const q = await prepared({ plane: { publishpreflight: ok(zoned) } });
+  assert.ok(drew(q, "screen.ceremony.when.help", { zone: "America/Los_Angeles" }) && q.doc.getElementById("ce-date"));
+  assert.ok(!drew(q, "refusal.PUBLISH_AT_NO_ZONE"));
+});
