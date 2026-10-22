@@ -1,6 +1,6 @@
 # tasks (T51)
 
-**Status** · session_01GozQuvJKa9gKZzheDC1C7d · depth 2 · WORKING · handled B5
+**Status** · session_01GozQuvJKa9gKZzheDC1C7d · depth 2 · WAITING ON BOB (J4) · handled B5
 
 ## J1 · COMPLETE
 
