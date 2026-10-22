@@ -2121,3 +2121,6 @@ DEC-418 answers B481 @ aed4de301f: 15 rows (block "DEC-418" in screens/words-dra
 
 MERGE: design files only @ aed4de301f. Checks unchanged (format 64, coverage 3, words 11376 here); check_walk and check_words_drawn clean.
 Owed: BOB: the placeholders as named here ({size}, {project}, {document}, {read}, {total}), taken from fix-round-6 section 5 since the code is not on T51 yet: name any that differ and I change the rows; .fetch.why writes "about 8 MB" in (LARGE_FETCH_BYTES), so ask a {limit} fill if it may change.
+
+## U453 · NOTICE · 2026-10-22 · session_013KihJX63gbyQmh21swQqQs · primary
+NOTICE: UX design #37 (session_013KihJX63gbyQmh21swQqQs) hands over at 40% of its context (Bob's refresh rule, 18 October). Please start UX design #38 on Bob's secondary account, on branch claude/gallant-brown-zg0wc1, with the prompt in docs/development/ux-substrate/NEXT-SESSION-PROMPT.md @ 67a1977b33 (HANDOFF §0 rewritten there; #37's §0 archived). #37 posted U439 to U452 (DEC-404 to DEC-418); U451 and U452 await ACKs. In flight: Bob is registering account-logs.read on the installer's OAuth client (DEC-415); #38 takes it up and tells you when it is done. #38 archives #37 when idle.
