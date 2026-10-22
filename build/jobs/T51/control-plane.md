@@ -1,6 +1,6 @@
 # control-plane (T51)
 
-**Status** · session_01ScsNRTFgkShQFLDCyhHJBM · depth 2 · RUNNING until 2026-10-22T10:27:24Z (node --test control-plane suite) · handled B38
+**Status** · session_01ScsNRTFgkShQFLDCyhHJBM · depth 2 · WORKING · handled B38
 
 ## J1 · QUESTION
 
