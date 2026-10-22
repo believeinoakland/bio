@@ -5,6 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok } from "../interface-shell/harness.mjs";
+import { hasWord } from "../../../src/setup-words/index.mjs";
 import { open, main, actsIn, says, word, D, SHA, DOCUMENT_MD } from "./fixtures.mjs";
 
 process.env.TZ = "UTC";
@@ -56,30 +57,34 @@ test("R96 R129 G8 a statement extraction states repairable (the old '(multipart)
   assert.equal(b.getAttribute("data-sha"), WHOLE, "it carries the whole's digest");
 });
 
-test("R96 G13 a text reading with more is drawn as being read with its progress, never as complete; its passages stay citable and the page says search and Cite cover what is read; no OCR, no Read it", async () => {
-  const words = Array.from({ length: 3 }, (_, i) => ({ seq: i + 1, extent: { kind: "line", line: i }, reference: "u" + i, truncated: false, text: "Line " + i + " of the long text." }));
-  const reading = (more) => ok({ ok: true, found: true, capture_sha: SHA, bundle_id: D, content_type: "text/plain", reader_found: true,
-    reading: { content_type: "text/plain", found: true, words_read: 400, words_total: 2000 }, text_units: words, bytes: 12000060, ...(more ? { more: true } : {}), words_read: 400, words_total: 2000 });
-  const p = await open(at, { plane: { reading: reading(true) } });
+/* DEC-418's rows are on the design's table and not yet in the words list: a key is drawn when the list holds it, else the nearest held row stands in. The keys are
+   held in variables, so this file names no key that the list lacks (the words check). */
+const OWED = { progress: "screen.document.reading.progress", stated: "screen.document.reading.stated", repairable: "screen.document.reading.repairable", door: "screen.document.reading.repairable.door" };
+const sized = (n) => word(n >= 1048576 ? "size.mb" : "size.kb", { n: n >= 1048576 ? (n / 1048576).toFixed(1) : String(Math.round(n / 1024)) });
+
+const lines = (n, from = 0) => Array.from({ length: n }, (_, i) => ({ seq: from + i + 1, extent: { kind: "line", line: from + i }, reference: "u" + (from + i), truncated: false, text: "Line " + (from + i) + " of the long text." }));
+const textAnswer = (o = {}) => ok({ ok: true, found: true, capture_sha: SHA, bundle_id: D, content_type: "text/plain", reader_found: true,
+  reading: { content_type: "text/plain", found: true }, text_units: lines(3), bytes: 12000060, ...o });
+
+test("R96 G13 a text reading with more is drawn as being read, as read_through of total (bytes of text), never as complete; its passages stay citable; no OCR, no Read it", async () => {
+  const p = await open(at, { plane: { reading: textAnswer({ more: true, read_through: 3145728, total: 12000060 }) } });
   const m = main(p);
   assert.equal(m.querySelector("[data-text-state]").getAttribute("data-text-state"), "reading", "being read, not full");
-  assert.ok(says(m, "state.loading"), "said as being read (the nearest held row stands in until the design's)");
-  assert.ok(says(m, "screen.document.text.read", { read: "400", total: "2000" }), "with its progress");
-  assert.ok(m.querySelector('[data-reading="more"]'), "and the coverage of what is read");
+  const progress = hasWord(OWED.progress) ? word(OWED.progress, { read: sized(3145728), total: sized(12000060) }) : word("state.loading") + " " + sized(3145728) + " / " + sized(12000060);
+  assert.ok(text(m.querySelector("[data-text-state]").parentElement).includes(progress), "with how far: " + progress);
+  assert.ok(m.querySelector('[data-reading="more"]'), "and said beside the passages");
   assert.ok(text(m).includes("Line 1 of the long text."), "what is read is shown");
   assert.ok(actsIn(m).includes("cite"), "and citable");
   assert.ok(!actsIn(m).includes("pdfstructure") && !actsIn(m).includes("readheld"));
   /* control: the same reading without `more` is complete and says nothing of being read */
-  const done = await open(at, { plane: { reading: reading(false) } });
-  assert.equal(done.doc.getElementById("cs-main").querySelector("[data-text-state]").getAttribute("data-text-state"), "full");
-  assert.ok(!done.doc.getElementById("cs-main").querySelector('[data-reading="more"]'));
+  const done = await open(at, { plane: { reading: textAnswer() } });
+  assert.equal(main(done).querySelector("[data-text-state]").getAttribute("data-text-state"), "full");
+  assert.ok(!main(done).querySelector('[data-reading="more"]'));
 });
 
 test("R96 G13 while more, the reading is asked again on the page clock (at most every 10 seconds) until it is whole; then it is not asked again", async () => {
-  let more = true, n = 0;
-  const reading = () => { n++; return ok({ ok: true, found: true, capture_sha: SHA, bundle_id: D, content_type: "text/plain", reader_found: true,
-    reading: { content_type: "text/plain", found: true }, text_units: [{ seq: 1, extent: { kind: "line", line: 0 }, reference: "u0", truncated: false, text: "A line." }],
-    bytes: 100, words_read: more ? 1 : 2, words_total: 2, ...(more ? { more: true } : {}) }); };
+  let more = true;
+  const reading = () => textAnswer({ text_units: lines(1), bytes: 100, ...(more ? { more: true, read_through: 50, total: 100 } : {}) });
   const p = await open(at, { plane: { reading } });
   const first = p.byOp("reading").length;
   await p.clock.tick(9000);
@@ -92,4 +97,31 @@ test("R96 G13 while more, the reading is asked again on the page clock (at most 
   const whole = p.byOp("reading").length;
   await p.clock.tick(60000);
   assert.equal(p.byOp("reading").length, whole, "a whole reading is not asked again");
+});
+
+test("R96 G13 a reading the plane pages (`next`) draws the first page of passages and says it is a first page; the more control reads op=reading with after=<next> and the next passages follow; at the end there is no control and nothing is said to be cut", async () => {
+  const pages = { "": textAnswer({ text_units: lines(4), next: 4, units_total: 6 }), 4: textAnswer({ text_units: lines(2, 4), next: null, units_total: 6 }) };
+  const p = await open(at, { plane: { reading: (r) => pages[r.query.after === undefined ? "" : r.query.after] } });
+  const m = main(p);
+  const said = () => main(p).querySelector('[data-reading="more"]');
+  assert.ok(said() && text(said()).includes(word("screen.document.passages.head") + ": 4 / 6"), "the first four of six, said");
+  assert.ok(text(m).includes("Line 3 of the long text.") && !text(m).includes("Line 4 of the long text."), "four passages are drawn");
+  assert.equal(p.byOp("reading").filter((r) => r.query.after !== undefined).length, 0, "the rest is not read until she asks");
+  const box = (pg) => pg.doc.getElementById("document-read-more") && pg.doc.getElementById("document-read-more").querySelectorAll("label").find((l) => l.textContent.includes(word("document.read.next"))).querySelector("input");
+  assert.ok(box(p), "the more control");
+  const b = box(p); b.checked = true; p.fire(b, "change");
+  await p.settle();
+  assert.deepEqual(p.byOp("reading").filter((r) => r.query.after !== undefined).map((r) => r.query.after), ["4"], "it asks op=reading after the cursor");
+  assert.ok(text(main(p)).includes("Line 5 of the long text."), "and the next passages follow");
+  assert.ok(!said() || !text(said()).includes(word("screen.document.passages.head") + ":"), "at the end nothing is said to be cut");
+  assert.ok(!p.doc.getElementById("document-read-more"), "and no more control");
+});
+
+test("R96 G6 G8 the design's rows (DEC-418) are drawn when the words list holds them: the statement with the file's size, the repairable sentence and its door; until then the plane's own words and 'Read it' stand in", async () => {
+  const st = await open(at, { images: five, plane: { reading: stated() } });
+  assert.ok(text(main(st)).includes(hasWord(OWED.stated) ? word(OWED.stated, { size: sizeWord() }) : BASIS));
+  const rep = await open(at, { images: five, plane: { reading: stated({ repairable: true }) } });
+  assert.ok(text(main(rep)).includes(hasWord(OWED.repairable) ? word(OWED.repairable) : BASIS));
+  const door = main(rep).querySelector('button[data-act="readheld"]');
+  assert.ok(text(door).includes(hasWord(OWED.door) ? word(OWED.door) : word("document.read.title")), "the door by the design's label, else 'Read it'");
 });

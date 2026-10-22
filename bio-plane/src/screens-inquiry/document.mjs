@@ -247,6 +247,28 @@ function render(cs, view) {
   /* R96 (C17; reading-pipeline R35): the reading counts its words, `words_read` of `words_total`; drawn only when it states both */
   const wordsOf = (k) => { const v = rv0 ? (rv0[k] !== undefined ? rv0[k] : rv0.reading && typeof rv0.reading === "object" ? rv0.reading[k] : undefined) : undefined; return Number.isInteger(v) && v >= 0 ? v : null; };
   const wRead = wordsOf("words_read"), wTotal = wordsOf("words_total");
+  /* G13 (R96; extraction R90): a text read in pieces states how far, `read_through` of `total` (bytes of text); the words of the first piece are not the capture's */
+  const numOf0 = (v) => (Number.isFinite(v) && v >= 0 ? v : null);
+  const readThrough = rv0 ? numOf0(rv0.read_through) : null, readTotal = rv0 ? numOf0(rv0.total) : null;
+  /* a size as the original-file card draws it (`size.*`) */
+  const sizeWord = (n) => (n < 1024 ? T("size.small") : n >= 1073741824 ? T("size.gb", { n: (n / 1073741824).toFixed(1) })
+    : n >= 1048576 ? T("size.mb", { n: (n / 1048576).toFixed(1) }) : T("size.kb", { n: String(Math.round(n / 1024)) }));
+  /* G13: `op=reading` pages the passages (at most 4,096 an answer): `next` is the cursor for the rest, `after` asks for it. The member asks for more
+     (`ui.readmore`, the number of pages wanted); each page is its own read, and what is drawn is never stated as the whole while `next` stands. */
+  const wantPages = Math.max(1, Number(ui.readmore) || 1);
+  let allUnits = rv0 && Array.isArray(rv0.text_units) ? rv0.text_units.slice() : [];
+  let cursor = rv0 && rv0.next !== undefined && rv0.next !== null && rv0.next !== "" ? rv0.next : null;
+  let pagesPending = false, pagesFailed = null;
+  for (let i = 1; i < wantPages && cursor !== null && sha; i++) {
+    const more = later("readafter:" + String(cursor), "reading", { sha256: sha, after: String(cursor) });
+    if (more.state === "loading") { pagesPending = true; break; }
+    if (more.state !== "ok" || !more.value) { pagesFailed = more; break; }
+    allUnits = allUnits.concat(Array.isArray(more.value.text_units) ? more.value.text_units : []);
+    cursor = more.value.next !== undefined && more.value.next !== null && more.value.next !== "" ? more.value.next : null;
+  }
+  const unitsCut = cursor !== null;
+  /* a row of the design (DEC-418) when the words list holds it, else the nearest held row stands in (the row owed is named in the job record) */
+  const heldWord = (key) => cs.w(key) !== key;
   /* R3, C25 (screens-intake R54; acquisition R98): ONE rule for a document's name, the one the capture screen follows: its own title (the reading's
      `title` once read, else the title the capture's document states), else its file name (an upload's own, or the name its source states, never
      the file part of an address unless the source states that very name), else its host and the day captured (`document.untitled.web`, never the
@@ -267,8 +289,10 @@ function render(cs, view) {
     + (textState ? `<div><span class="v"><span data-text-state="${textState}"${["full", "none", "stated", "repairable"].includes(textState) ? "" : ' tabindex="0"'} data-level="1" data-tip="${cs.esc(cs.w("screen.document.text.tip"))}">`
       /* G13: a text still being read says so; the row owed (`screen.document.reading.beingread`) is stood in for by the nearest held row, `state.loading` */
       + (textState === "partial" ? cs.w("screen.document.text.partial", { pages: pagesText(blind0.map((n) => n + 1)) }) : textState === "unread" ? cs.mark("gap", "undetermined") + " " + cs.w("screen.document.text.unread")
-        : textState === "reading" ? cs.w("state.loading") : "") + "</span>"
-      + (wRead !== null && wTotal !== null ? ` <span class="mk-small" data-words-read="1">${cs.w("screen.document.text.read", { read: String(wRead), total: String(wTotal) })}</span>` : "") + "</span></div>" : "")
+        : textState === "reading" ? (heldWord("screen.document.reading.progress") && readThrough !== null && readTotal !== null
+          ? cs.w("screen.document.reading.progress", { read: sizeWord(readThrough), total: sizeWord(readTotal) })
+          : cs.w("state.loading") + (readThrough !== null && readTotal !== null ? " " + sizeWord(readThrough) + " / " + sizeWord(readTotal) : "")) : "") + "</span>"
+      + (wRead !== null && wTotal !== null && textState !== "reading" ? ` <span class="mk-small" data-words-read="1">${cs.w("screen.document.text.read", { read: String(wRead), total: String(wTotal) })}</span>` : "") + "</span></div>" : "")
     + (sha ? `<div><span class="k">${cs.w("screen.document.fingerprint")}</span><span class="v"><span class="mk-tag" tabindex="0" data-level="1" data-tip="${cs.esc(cs.w("screen.document.fingerprint.means"))}">${cs.esc(sha.slice(0, 4) + "…" + sha.slice(-4))}</span></span></div>` : "")
     + (sha ? `<div><a class="cs-btn" data-tone="quiet" href="/app/open-file/${cs.esc(sha)}">${cs.w("screen.document.open")}</a></div>` : "") + "</div>");
   if (ui.gradenote) {
@@ -334,14 +358,26 @@ function render(cs, view) {
   const readingBody = () => secOf("document.read.title", reading, (r) => {
     /* K3387: the document's words are the reading's `text_units` (extraction R36's units, in seq order, withheld as
        the bundle is); a reading answers no other text, and with none the section says it holds nothing */
-    const list = (Array.isArray(r.text_units) ? r.text_units : []).filter((p) => p && String(p.text || "").trim());
-    /* G6, G8 (R96): a copy the reading states it did not read is drawn as that statement, in the plane's own words, beside the file's size (the card above);
-       never as "Nothing here". The sentence the design owes (`screen.document.reading.stated`, `.repairable`) is stood in for by the plane's own words. */
+    const list = allUnits.filter((p) => p && String(p.text || "").trim());
+    /* G6, G8 (R96; DEC-418): a copy the reading states it did not read is drawn as that statement, beside the file's size (the card above), never as
+       "Nothing here": by the design's `screen.document.reading.stated` (with the size) or `.reading.repairable` where the words list holds them, else the plane's
+       own words (the stand-in; the rows are owed to T52's list). */
     const basisWords = rdObj && typeof rdObj.basis === "string" ? rdObj.basis.trim() : "";
-    const statedHtml = textState === "stated" || textState === "repairable" ? `<p class="mk-note" data-reading="stated">${basisWords ? cs.esc(basisWords) : undetermined("")}</p>` : "";
-    /* G13 (R96): a text still being read says how far it has come, and that search and Cite cover what is read (rows owed `screen.document.reading.beingread`
-       and `.coverage`; `screen.document.text.read` and `state.loading` stand in) */
-    const moreNote = isMore ? `<p class="mk-small" data-reading="more">${wRead !== null && wTotal !== null ? cs.w("screen.document.text.read", { read: String(wRead), total: String(wTotal) }) : cs.w("state.loading")}</p>` : "";
+    const statedSaid = textState === "repairable" && heldWord("screen.document.reading.repairable") ? cs.w("screen.document.reading.repairable")
+      : textState === "stated" && heldWord("screen.document.reading.stated") && Number.isInteger(rv0 && rv0.bytes) ? cs.w("screen.document.reading.stated", { size: sizeWord(rv0.bytes) })
+      : basisWords ? cs.esc(basisWords) : undetermined("");
+    const statedHtml = textState === "stated" || textState === "repairable" ? `<p class="mk-note" data-reading="stated">${statedSaid}</p>` : "";
+    /* G13 (R96): a text still being read says how far it has come (R90), and what is drawn of it is never stated as the whole: the passages drawn so far
+       ("Passages: N of M", the nearest held words; the row owed is `screen.document.reading.firstn`), with the more act the page bar's own control (the
+       choice redraws the page and the next page is read: `op=reading` with `after`). Search and Cite cover what is read, which is what is drawn and stored. */
+    const progressSaid = isMore ? (heldWord("screen.document.reading.progress") && readThrough !== null && readTotal !== null
+      ? cs.w("screen.document.reading.progress", { read: sizeWord(readThrough), total: sizeWord(readTotal) })
+      : cs.w("state.loading") + (readThrough !== null && readTotal !== null ? " " + sizeWord(readThrough) + " / " + sizeWord(readTotal) : "")) : "";
+    const unitsTotal = rv0 && Number.isInteger(rv0.units_total) && rv0.units_total >= 0 ? rv0.units_total : null;
+    const cutSaid = unitsCut || pagesPending ? `${cs.w("screen.document.passages.head")}: ${allUnits.length}${unitsTotal !== null ? " / " + unitsTotal : ""}` : "";
+    const moreControl = unitsCut && !pagesPending ? cs.checks("document-read-more", "screen.document.passages.head", [{ value: String(wantPages + 1), key: "document.read.next", on: false }], { radio: true, redraw: "readmore" }) : "";
+    const moreNote = progressSaid || cutSaid || pagesFailed ? `<div class="mk-small" data-reading="more">${[progressSaid, cutSaid].filter(Boolean).map((t) => `<p>${t}</p>`).join("")}`
+      + (pagesPending ? cs.state({ state: "loading" }, () => "") : "") + (pagesFailed ? cs.state(pagesFailed, () => "") : "") + moreControl + "</div>" : "";
     if (!list.length) return originalCard + moreNote + (typed.length || isMore ? "" : statedHtml || `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`);
     /* nothing is preselected unless the capture was held for a question: then the first choice says to choose one, never a blank
        (R118); a cite with it unchosen is refused in place */
@@ -492,7 +528,7 @@ function render(cs, view) {
   /* G8 (fix round 6): "Read it" is also drawn for a statement extraction states `repairable` (an old "(multipart)" final whose bytes now detect), beside the statement */
   if ((textState === "unread" || textState === "repairable") && sha) {
     /* its label, `act.readheld.label.document` ("Read it now"), is a row the design owes (K4269); "Read it" (`document.read.title`) stands in */
-    const readNow = cs.act("readheld", { label: "document.read.title", data: { sha } });
+    const readNow = cs.act("readheld", { label: textState === "repairable" && heldWord("screen.document.reading.repairable.door") ? "screen.document.reading.repairable.door" : "document.read.title", data: { sha } });
     if (readNow) out.push(`<div class="mk-acts" data-readnow="1">${readNow}${own("readheld")}</div>`);
   }
   /* G6, G13: no OCR re-read after a statement that stands (`stated`), beside one "Read it" repairs, or while the text is still being read; the assistant's
@@ -752,9 +788,7 @@ function render(cs, view) {
     const named = stated || (rv.reading && typeof rv.reading.text_container === "string" ? rv.reading.text_container.trim() : "");
     const id0 = named || (/^text\/plain\b/.test(String(rv.content_type || "")) ? "text" : "");
     const kind = view.parts.kinds.includes(id0) ? id0 : "undetermined";
-    const n = rv.bytes;
-    const size = n < 1024 ? T("size.small") : n >= 1073741824 ? T("size.gb", { n: (n / 1073741824).toFixed(1) })
-      : n >= 1048576 ? T("size.mb", { n: (n / 1048576).toFixed(1) }) : T("size.kb", { n: String(Math.round(n / 1024)) });
+    const size = sizeWord(rv.bytes);
     return `<p class="mk-note" data-card="original">${W("document.read.original.card", { kind: T("document.kind." + kind), size })}</p>`;
   })();
   out[readingAt] = readingBody();
