@@ -33,7 +33,7 @@ test("R5 csv text: one sheet, null bound, row 1 is row 1, empty fields are measu
   assert.equal(t.dialect.delimiter, "comma");
   assert.equal(t.document, 'name\tnote\nSmith, J\tsaid "hi"\nx\nlast\trow');
   assert.deepEqual(t.sheets.map(({ cells, ...s }) => s), [{ sheet: 0, name: CSV_SHEET_NAME, hidden: false, rows: null, cols: null, usedRows: 5, usedCols: 2,
-    range: { kind: "sheet-range", ref: `${CSV_SHEET_NAME}!A1:B5`, sheet: CSV_SHEET_NAME, range: "A1:B5" }, text: t.document, undetermined: [] }]);
+    range: { kind: "sheet-range", ref: `${CSV_SHEET_NAME}!A1:B5`, sheet: CSV_SHEET_NAME, range: "A1:B5" }, text: t.document, lineRows: [1, 2, 3, 5], undetermined: [] }]);
   assert.deepEqual(t.undetermined, []);
   assert.equal(t.counts.cells, 7);
   // a line break inside quotes is literal; it does not end the record (past the signature's 50 lines)

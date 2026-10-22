@@ -1,6 +1,6 @@
 # screens-inquiry (T51)
 
-**Status** · session_01GorqF8RpPw9d9N8LqysoYx · depth 2 · COMPLETE · handled B34
+**Status** · session_01MBWDJZHWCDsQmLhwxXB6Fh · depth 2 · COMPLETE · handled B42
 
 ## J1 · REPORT
 
@@ -309,3 +309,63 @@ COMPLETE (SCREENS-INQUIRY #20, fix round 4, wave 2, re B30; B31, B32 read). tran
 
 QUESTIONS: J22 answered by B34 (stand-ins by the nearest held row stand; none open).
 Size (session_01GorqF8RpPw9d9N8LqysoYx): test runs 6, module lines 6452
+
+## J24 · QUESTION
+
+QUESTION · SCREENS-INQUIRY #21 · re B35 (START). Best readings below; I carry on with them and the tests that need an unmerged provider stay red by name.
+
+**G6 (the digest).** On the real plane (Miniflare, a 5-part, 41,942,040 B upload promoted by the screen's own `promoteDocument`, probe 2026-10-22) the document's `data/provenance.json` `documents[0].capture.sha256` is already the WHOLE (a05b3f74…); only `heldcaptures` row's `capture.sha256` is a part (1562e3a4…, capture's REGISTER_FIRST, capture's job). The page never reads the row's digest, so the walker's "Nothing here" + OCR act on 0136 comes from the page reading the stored `final` statement (`found:true`, `failure:"final"`, no words) as `textState "none"` (document.mjs:226, :468-473). I fix that (statement drawn with its size, no OCR act, nothing offered after a final). The old 0125-class page (`final` "(multipart)") is the same path. No digest change needed in the page; tell me if you know of a live record whose provenance document carries a part.
+
+**G8 (`repairable`).** I read it as a top-level boolean `repairable: true` on the `op=reading` answer (extraction R27's answer), set only for a held `final` "not read as text" reading whose bytes now detect. "Read it" (`readheld`, stand-in label `document.read.title`) is drawn for `repairable: true` and for an unread copy; not for a plain final.
+
+**G13 (`more`).** I read it as a top-level `more: true` on the `op=reading` answer while the text is incomplete, with progress `read_through` of `total` when the answer carries them, else `words_read` of `words_total` (already drawn). While `more` the page draws "being read" with that progress (stand-ins: `state.loading`, `screen.document.text.read`; rows owed `screen.document.reading.beingread`, `.coverage`) and never a complete reading; passages read stay citable, said so.
+
+**G12c (strength batch).** I read `inquirystrength?ids=A,B,C` (comma-joined, as capture's `bundle_ids`) as answering `{ok:true, results:{<id>: <that id's single answer, or its refusal as the single read gives it>}}`, one entry per asked id. The START to strength says "one result per id" without the shape: if strength's job chooses another, tell me or tell it.
+
+If extraction or strength choose differently, the seam tests (red by name) show it and I follow the merged shape.
+
+## J25 · QUESTION
+
+QUESTION · SCREENS-INQUIRY #21 · re B36 (ANSWER to J24; thanks, applied). Two small things I need before COMPLETE; I carry on with my reading below.
+
+Built per B36: while `more` the fact line and the passages say `read_through` of `total` as sizes (`screen.document.reading.progress` when the words list holds it, else `state.loading` and the two sizes); `op=reading` is paged: the first answer's passages are drawn and stated as "Passages: N / M" (stand-in: `screen.document.passages.head` and the two numbers), a "more" control (the page bar's own radio, stand-in label `document.read.next`) reads `op=reading` with `after=<next>` and appends the passages, none shown when `next` is null; `.reading.stated` (with `{size}`), `.reading.repairable` and its door `.reading.repairable.door` are drawn when held, else the plane's own words and "Read it". The DEC-418 rows are not in `words.json` or `rows.mjs` yet, so each is used when `cs.w` holds it and a stand-in stands until the close regenerates them.
+
+1. **M in "first N of M passages".** I read it as a top-level integer `units_total` on the `op=reading` answer (the capture's indexed passages so far); extraction's branch states no such field. Without it the line says "Passages: N" and no M. Please have extraction state `units_total` (or tell me the name it states).
+2. **`screen.document.reading.partial` and `.done`.** I do not know what they say, where the design draws them, or their placeholders (their texts are not in the tree), so I use neither. If you want them drawn (partial = the first page of passages of a text still being read? done = the text read whole?), tell me each one's place and fills; if not, I leave them to T52 and name them in COMPLETE.
+
+## J26 · QUESTION
+
+QUESTION · SCREENS-INQUIRY #21 · re B37 (CHANGE: G14, G17, G19) and B38 (applied: `.reading.partial` beside the progress while `more`, `.reading.done` once complete with `total` stated, `units_total` for "N of M"). I carry on with the readings below; neither provider has merged, so the seams stay red by name.
+
+1. **G14, `completeness`.** I read it as a top-level object on the `op=reading` answer: `completeness: {state, why?, skipped?}` with `state` `"whole"`, `"partial"` or `"stated"`; `why` the plane's own words for a stated reading (the size or memory reason); `skipped` the runs not indexed (an array of `{units}` or a count). The page then: `stated` draws `why` (else `reading.basis`) with the file's size, never "none", never "pages N have no text" (its unread pages are not drawn as pictures of text); `partial` with `more` is being read (progress), `partial` without `more` says that part of the text is not searchable or citable and what was skipped, never "full"; `whole` is read in full. No `completeness` at all: the page derives its state as today. Please have extraction state this shape, or tell me the real one.
+2. **G19, `supporting`.** I read it as `documents[0].supporting` of the capture's `data/provenance.json` (the register document the page already holds from `image`): `{kept, skipped, reasons}`, `kept` and `skipped` integers, `reasons` an array of the plane's words (strings) or of `{reason, detail, count}`; drawn as the sizes "kept / kept+skipped" and each reason's `detail` (else its string), only when `skipped` is above zero. If acquisition puts it elsewhere (the `reading`, `capture.supporting`), say where.
+
+## J27 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #21, fix round 6, re B35, B37, B39; B36, B38, B40 applied; J24-J26 answered). tranche/T51 merged. Pushed on job/T51/screens-inquiry. Two seam tests are red BY NAME (below): their providers (capture's picker `format`, extraction's `more`/`completeness`) are not merged.
+
+**Causes (R-FOUR).** All edits in `bio-plane/src/screens-inquiry/`.
+- **G6.** (1) Certain: `document.mjs` took a stored `final` statement (`found:true`, no words) as "none" (old :226), drew "Nothing here" (:316) and the OCR act (:468-473). The page's digest was already the WHOLE (probe on the real plane: provenance `documents[0].capture.sha256` is the whole; only capture's `heldcaptures` row was a part; BOB B36 agrees). Now: textState `stated` (:224-240), the statement and size (:362-381, the file card), no OCR/Read it after it (:528-545). (2) Missed: fixtures held readings with words only. (3) Red then green: `fr6-document` G6 (red: statement not drawn), `fr6-seam` G6 on the real plane (5-part 41,942,040 B upload promoted by the screen's own `promoteDocument`): red on the old code, green now. (4) N.
+- **G8.** (1) "Read it" only for `unread`. Now also for `repairable: true` (extraction R89), beside the statement; not for a plain final. Test `fr6-document` G8, red then green.
+- **G12a.** `project.mjs:50, 253` and `dashproject.mjs:37-38`: `fields: "picker"` (title, id, `format`, day). Test `fr6-project` (every read a picker read, both pages; kind from `format`), red then green; `fr6-seam` G12a: RED BY NAME until capture's picker `format` merges (all reads are picker already).
+- **G12c.** `common.mjs:189` `strengths()`; `project.mjs:311`, `dashproject.mjs:260`: one `inquirystrength` read with `ids` per 50. Tests: 5 questions 5 reads -> 1; 120 -> 3 (50/50/20); a refused or omitted id drawn failed alone. Seam over the real merged strength + store-door: GREEN.
+- **G13.** `document.mjs:226-260, 362-395`: `more` -> "reading" (`read_through` of `total` as sizes), `.reading.partial` beside it, the reading read again every 10 s, `.reading.done` when whole with `total`; `op=reading` paged (`next`, `after`): "Passages: N / M" (`units_total`) and a more control, never drawn as the whole. Tests red then green. `fr6-seam` G13 12 MB: RED BY NAME until extraction's `more` merges.
+- **G14.** `completeness` (`whole|partial|stated|none`): `stated` draws `why` (plane's words) and the size, no "pages N have no text", no OCR, no unread-page typing; `partial` is `cut`, never full. Red then green (`fr6-document`).
+- **G17.** links (paged by `after`, more control), names and connections (stated cut), themes (20 at a time, more control): each says when it stops. Red then green. No real-plane seam: `recordlinks` is store-internal; shapes read from capture/index.mjs:2283-2309.
+- **G19.** `capture.supporting` (acquisition R108): "kept / total" + each reason (detail else code ×count, `not_walked`). Red then green.
+Platform (4): N for all (screens only). Measurements: Project reads of strength 5 -> 1 (5 questions), 120 -> 3; documents reads full -> picker; PERFORMANCE re-times. Census ops owned: none.
+
+**Tests.** Module suite 508: 506 pass, 2 fail = the two red-by-name seams. Old tests changed because the requirement says otherwise: `fr3-project` (picker), `project.test`, `fr5-reads` (one strength read), dash-project and `fr2-project` fakes (batch), fixtures `batchStrength`. Users (impact: control-plane 68 files, plane 45, journey-check 1): all pass except two tranche-tip reds not mine: control-plane `r117-held` R117 (flaky at tranche tip, 1 of 2 runs failed in a clean worktree) and plane `release` R24 (`screen.objective.purpose`, stale rows.mjs). Checks: format 0, architecture 0, coverage 6623/6623, words 0 failures (words 18421, dev 268, unkeyed 1982 unchanged, missingkey 0), ownership 15 files 0 failures.
+
+**Rows owed / stand-ins (to UX-DESIGN).** Used when held, else stand-in: `screen.document.reading.progress` (stand-in `state.loading` + sizes), `.reading.partial` (none), `.reading.done` (`screen.document.text.full`), `.reading.stated` (plane's `why`/`basis`), `.reading.repairable` (same) and `.door` (`document.read.title`). New rows: first-N-of-M passages (`screen.document.passages.head` + numbers) and its more control (`document.read.next`); lists cut line (`screen.people.more`) and `shell.more`; supporting files line (numbers + reasons); `completeness` cut line (plane's `why`).
+
+**Proposed requirement lines.** R96: a stored statement (`failure final` or `completeness stated`) is drawn as that statement with the file's size, never "Nothing here", "none" or "pages N have no text", with no OCR re-read; `repairable` offers "Read it"; `more` is drawn as being read (`read_through` of `total`), asked again every 10 s, never full; `completeness partial` is never full; passages are drawn a page at a time (`next`, `after`) as "N / M" (`units_total`). R128 and R79: project and dashboard documents are picker reads. R1, R9, R79: the strength of the project's questions is one `inquirystrength` read with `ids` (50 at a time). R67, R68, R56: each list the plane cut says so, with a more control where it pages. R3: supporting files kept of total with reasons.
+
+**Found elsewhere.** The module is 6,599 lines (requirements' Size note expects a split past ~4,000: BOB's call). control-plane must forward `ids` (B41 item 4) for a whole-path run.
+
+Size (session_01MBWDJZHWCDsQmLhwxXB6Fh): test runs 34, module lines 6599
+
+## J28 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #21, re B42; B39, B41 read). tranche/T51 merged through extraction (e58cccc07e). All four `fr6-seam` tests are GREEN against the real merged providers: G6 (40 MB upload), G12c (five questions, one strength read), G12a (spreadsheet listed with its kind from the picker row), G13 (12 MB text drawn as being read). Module suite 508 of 508 pass, 0 fail. Checks: format 0, architecture 0, coverage 6632/6632, words 0 failures (counts unchanged, missingkey 0), ownership 15 files 0 failures. Nothing deferred or open; the J27 COMPLETE stands for everything else (causes, rows owed, proposed requirement lines). One remaining note: whole-path G12c through control-plane waits on its forwarding of `ids` only for the production door, the seam already passes.
+Size (session_01MBWDJZHWCDsQmLhwxXB6Fh): test runs 38, module lines 6599

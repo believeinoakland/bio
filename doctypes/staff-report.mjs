@@ -88,6 +88,8 @@ const RECOMMENDATION_HEADING = /^RECOMMENDATIONS?(?![A-Za-z0-9])/i;
    happens to open with one of these words is not a section. 64 characters admits
    `ACTION REQUESTED OF THE CITY COUNCIL` (36) with room and excludes prose. */
 const HEADING_MAX = 64;
+/* The one bound that stays on the recommendation (R39): what is kept when no heading follows it. */
+const RECOMMENDATION_MAX = 50000;
 
 const SIGNOFF = /\bRespectfully\s+submitted\b/i;
 const PREPARED = /\bPrepared\s+by\s*:/i;
@@ -255,24 +257,36 @@ export default {
     const secs = reportSections(raw, sections);
 
     /* THE RECOMMENDATION, which is the point of the document. Read from the
-       `RECOMMENDATION` heading forward to the next heading — bounded, so it can never
-       swallow the rest of the report — or from the `Staff Recommends That` sentence
-       where the house style has no heading. Null is first-class and means this reader
-       could not find one, never that the report recommends nothing. */
-    let recommendation = null;
+       `RECOMMENDATION` heading forward to the next heading, whole (G23, K4571): a
+       member is never told it recommends less than it does. One bound stays, for a
+       recommendation with no heading after it, which would swallow the rest of the
+       report: `RECOMMENDATION_MAX` characters are kept, the answer says
+       `recommendation_cut: true`, and `recommendation_length` is the full length to
+       the next heading or the end (raw characters, a line break counted as one).
+       Or from the `Staff Recommends That` sentence where the house style has no
+       heading. Null is first-class and means this reader could not find one, never
+       that the report recommends nothing. */
+    let recommendation = null, recommendationLength = null, recommendationCut = false;
     {
       const lines = lineTable(raw);
       for (let i = 0; i < lines.length; i++) {
         const h = lines.get(i);
         if (!RECOMMENDATION_HEADING.test(h) || h.length > HEADING_MAX || !sections.some((re) => re.test(h))) continue;
         const body = [];
-        for (let j = i + 1; j < lines.length && body.join(" ").length < 600; j++) {
+        let kept = 0, total = 0;
+        for (let j = i + 1; j < lines.length; j++) {
           const l = lines.get(j);
           if (!l) continue;
           if (l.length <= HEADING_MAX && !RECOMMENDATION_HEADING.test(l) && sections.some((re) => re.test(l))) break;
-          body.push(l);
+          total += l.length + 1;
+          if (kept < RECOMMENDATION_MAX) { body.push(l); kept += l.length + 1; }
         }
-        if (body.length) recommendation = flatten(body.join(" ")).slice(0, 600).trim();
+        if (body.length) {
+          const whole = flatten(body.join(" ")).trim();
+          recommendationLength = total - 1;
+          recommendationCut = whole.length > RECOMMENDATION_MAX;
+          recommendation = recommendationCut ? whole.slice(0, RECOMMENDATION_MAX).trim() : whole;
+        }
         break;
       }
       /* Where the house style has no heading: the sentence opened by the words the
@@ -321,6 +335,7 @@ export default {
       subject: f.subject || null,
       date: f.date || null,
       recommendation,
+      ...(recommendationCut ? { recommendation_cut: true, recommendation_length: recommendationLength } : {}),
       sections: secs.length,
       signed_off: SIGNOFF.test(raw) || PREPARED.test(raw),
       also_satisfies: alsoSatisfies(ctx, "staff_report"),

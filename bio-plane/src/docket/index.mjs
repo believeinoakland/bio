@@ -382,11 +382,10 @@ export class Docket {
     /* END DEC-49 REGION is-docket-filer */
     const k = this.#caseFor(caseId, str(viewer) || str(author));
     if (k.refusal) return k;
-    /* DEC-49 REGION is-docket-filer */
-    if (!this.#call(() => this.membership.isJoinedParticipant(k.c.project, member), false))
-      return { refusal: refuse("DOCKET_NOT_A_PARTICIPANT", "only a joined participant of the case's project files to its docket",
-                               { case: k.c.case }) };
-    /* END DEC-49 REGION is-docket-filer */
+    /* K4557, K231: one condition, one code: a member not yet joined (invited, or with no part) is refused with membership's
+       own PROJECT_ACT_NOT_A_PARTICIPANT, whose words say to join, relayed as it answers. */
+    const denied = this.membership.projectAuthority(k.c.project, String(author).trim(), "joined", "docketfile");
+    if (denied) return { refusal: denied };
     const counsel = this.#counselRefusal(k.c);
     if (counsel) return { refusal: counsel };
     return { c: k.c, member };
@@ -534,6 +533,10 @@ export class Docket {
     const c = r ? this.#case(r.case_id) : null;
     if (!r || !c || !c.project || this.#call(() => this.membership.sight(c.project, str(viewer) || str(author))) !== "full")
       return refuse("NO_SUCH_DOCKET_ENTRY", "no record entry you see answers by that id", { entry: id });
+    /* K4557: a mark is a weighty act of the project, so it is a joined member's: sight first, then this, then the entry's own
+       conditions. Membership's refusal is relayed as it answers (K231). */
+    const denied = this.membership.projectAuthority(c.project, String(author).trim(), "joined", "docketpressure");
+    if (denied) return denied;
     if (this.#marks(id).some((m) => m.kind === "pressure"))
       return refuse("DOCKET_PRESSURE_MARKED", "the entry is already marked", { entry: id });
     const note = p && typeof p === "object" && p.note !== undefined && p.note !== null && p.note !== "" ? p.note : null;
@@ -740,7 +743,10 @@ export class Docket {
       return refuse("DOCKET_KIND_UNKNOWN", `kind is one of ${ENTRY_KINDS.join(", ")}`, { kind: typeof kind === "string" ? kind : null });
       /* END DEC-49 REGION is-docket-form */
     }
-    const kr = this.#kindRefusal(c, kind, { shelf, edition, summary: kind === "outcome" ? null : summary, reason, holder, takesBack,
+    /* R4: the shelf is a function of the kind, so a caller that names none (the screens' prepare names a case, an entry and
+       its kind) is answered the kind's own shelf; one that names another is still refused DOCKET_WRONG_SHELF. */
+    const shelfOf = shelf === null || shelf === undefined || shelf === "" ? (kind === "reaction" ? "reactions" : "listed") : shelf;
+    const kr = this.#kindRefusal(c, kind, { shelf: shelfOf, edition, summary: kind === "outcome" ? null : summary, reason, holder, takesBack,
                                             candidate, grant }, rec, recFields);
     if (kr.refusal) return kr.refusal;
     const x = kr.out;
@@ -1327,6 +1333,10 @@ export function docketOps(m, url, body) {
 export const DECLARED_OPS = Object.freeze({
   docketfile: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("docket.declared.docketfile", "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle"),
     fields: { accepts: ["case","edition","kind","from","capture","contests","proposed","reason","answers","takesBack","outcome","summary"], requires: ["case","reason",["edition","takesBack"],["from","takesBack"],["capture","takesBack"],["kind","takesBack"],["proposed","takesBack"]] } },
+  docketpressure: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("docket.declared.docketpressure", "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle"),
+    fields: { accepts: ["entry","pressure"], requires: ["entry","pressure"] } },
+  docketprepare: { classes: ["admin","member"], machineClasses: [], mutating: false, weight: "read", description: localize("docket.declared.docketprepare", "read: a docket entry composed for the case's manager to sign, keyed by case, with its statement and digest; publishes nothing and writes nothing"),
+    fields: { accepts: ["case","kind","shelf","edition","entry","summary","reason","holder","takesBack","candidate","grant","order","capture"], requires: ["case","kind",["edition","entry","order"]] } },
   docketpost: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "attested", description: localize("docket.declared.docketpost", "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle"),
     fields: { accepts: ["digest","signature","acknowledged"], requires: ["digest","signature","acknowledged"] } },
 });

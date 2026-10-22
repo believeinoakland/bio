@@ -200,6 +200,70 @@ test("R70 C14: the picker is read once when the screen opens, by the cheap picke
   assert.equal(asked().length, 1, "still the one read");
 });
 
+/* ---- T51 fix round 6: G20 (K4571) ---- */
+
+/* the owner's paging, as capture R77 answers it: `limit` rows from the cursor `after`, `truncated` and `next` while more remain */
+const sha = (i) => i.toString(16).padStart(64, "0");
+const heldPaged = (total) => (q) => {
+  const from = q.after ? Number(q.after) : 0, n = Math.min(Number(q.limit) || 200, 1000);
+  const held = [];
+  for (let i = from; i < Math.min(total, from + n); i++) held.push({ bundle_id: "INFO-2026-" + String(i + 1).padStart(4, "0"), title: "Document " + (i + 1), capture: { sha256: sha(i + 1) } });
+  const more = from + n < total;
+  return env({ ok: true, held, state: q.state, limit: n, truncated: more, next: more ? String(from + n) : null });
+};
+const options = (o) => all(all(o.tree, (e) => e.attrs.id === "gr-doc")[0], (e) => e.tag === "option").map((x) => [x.attrs.value, textOf(x)]);
+
+test("R70 G20: with 250 documents held the picker reaches the 250th, reading on by the cursor, and a draft names it; control: 150 documents are read once and nothing is said of more", async () => {
+  const a = await open("grouprules", { me: MEMBER, table: grouprulesTable({ heldcaptures: heldPaged(250) }) });
+  a.redraw();
+  const docs = options(a);
+  assert.equal(docs.length, 250, "every document is offered, not the first 200");
+  assert.deepEqual(docs[249], [sha(250), "Document 250"]);
+  assert.ok(!a.text.includes(said("screen.people.more", { n: "200" })), "nothing left out, nothing said");
+  const asked = a.p.requests.filter((r) => r.op === "heldcaptures");
+  assert.equal(asked.length, 2, "the first page and the one the cursor names");
+  assert.ok(asked.every((r) => r.query.state === "held_and_vouched" && r.query.fields === "picker"));
+  assert.equal(asked[1].query.after, "200");
+  const r = await a.press("ruledraft", { values: { ...FORM, "gr-doc": sha(250) }, choose: PICK });
+  assert.equal(r.sent.find((x) => x.op === "ruledraft").body.source.captureSha, sha(250), "the 250th is drafted from");
+  const few = await open("grouprules", { me: MEMBER, table: grouprulesTable({ heldcaptures: heldPaged(150) }) });
+  few.redraw();
+  assert.equal(options(few).length, 150);
+  assert.equal(few.p.requests.filter((r) => r.op === "heldcaptures").length, 1, "a list that fits its page is read once");
+  assert.ok(!few.text.includes(said("screen.people.more", { n: "150" })));
+});
+
+test("R70 G20: past the bound it keeps (the first page and two more) the picker says how many it shows and a search narrows by title; control: the search reads nothing more", async () => {
+  const a = await open("grouprules", { me: MEMBER, table: grouprulesTable({ heldcaptures: heldPaged(2500) }) });
+  a.redraw();
+  assert.equal(options(a).length, 2200, "200, then 1000 and 1000 by the cursor");
+  has(a, "screen.people.more", { n: "2200" });
+  const before = a.p.requests.filter((r) => r.op === "heldcaptures").length;
+  assert.equal(before, 3);
+  const q = a.b.doc.getElementById("gr-doc-q");
+  assert.ok(q, "a search box narrows the choice");
+  q.value = "Document 2199";
+  a.b.fire(q, "input");
+  await a.b.clock.tick(1000); await a.b.settle();
+  a.redraw();
+  assert.deepEqual(options(a), [[sha(2199), "Document 2199"]]);
+  assert.equal(a.p.requests.filter((r) => r.op === "heldcaptures").length, before, "narrowing reads nothing more");
+  const q2 = a.b.doc.getElementById("gr-doc-q");
+  q2.value = "no such title";
+  a.b.fire(q2, "input");
+  await a.b.clock.tick(1000); await a.b.settle();
+  a.redraw();
+  has(a, "form.choose.search.none");
+});
+
+test("R70 G20: a page the cursor names that cannot be read leaves the first page offered and says it is the first rows shown, never a picker that looks whole", async () => {
+  const paged = heldPaged(250);
+  const a = await open("grouprules", { me: MEMBER, table: grouprulesTable({ heldcaptures: (q) => (q.after ? refuse("TOO_SLOW", 504) : paged(q)) }) });
+  a.redraw();
+  assert.equal(options(a).length, 200, "what was read stays offered");
+  has(a, "screen.people.more", { n: "200" });
+});
+
 test("R61 C87: Draft the rule with a required box empty sends nothing and names the box; filled, it sends (control)", async () => {
   const a = await open("grouprules", { me: MEMBER, table: grouprulesTable() });
   const named = (label) => said("shell.field.needed", { field: label });

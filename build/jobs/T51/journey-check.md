@@ -1,6 +1,6 @@
 # journey-check (T51)
 
-**Status** · session_013CXae57CSmbZXAkv1DtdMS · depth 2 · COMPLETE · handled B14
+**Status** · session_018cVQsZb9faqV2gGpjCfs1B · depth 2 · COMPLETE · handled B15
 
 ## Completion record (JOURNEY-CHECK #7)
 
@@ -211,3 +211,42 @@ Cause 1, the local arm's moved fixture: the fake account models container applic
 `journey.test.mjs` (the local arm), the eighth run: 23 pass, 0 fail. The module's other files: 83 tests, 81 pass, 1 fail: R17 (T52, K4269). format, words, architecture, coverage (30 of 30), ownership: 0 failures; impact: journey-check only. The local arm's stand-in workers answer only /version, as R1 (a) states; the plane reads the capture and the upload itself, so no reading stayed pending here (the pending excuse is proved by its walker test; the live re-walk proves a real PDF's reading). `live.test.mjs` not run (K4149). Record: `build/jobs/T51/journey-check.md`, with each cause's four fields and the red-then-green evidence.
 
 Size (session_013CXae57CSmbZXAkv1DtdMS): test runs 30, module lines 3450
+
+## Fix round 6 — G1 provider (JOURNEY-CHECK #12, session_018cVQsZb9faqV2gGpjCfs1B)
+
+**What changed**
+- `account.mjs`: `fakeAccount({ refuseSchedules })` (true, a RegExp on the script name, or a function) answers a refused `PUT .../schedules` as Cloudflare answers a refusal (403, code 10000); `GET .../schedules` reads back what was set; `GET/POST .../deployments` answered (an update reads the deployment it replaces; the fake never served an update before). New exports `WATCHDOG_CRON` (`*/5 * * * *`), `statedCrons(source)` (reads `bio-plane-crons/1 <cron>` from the bytes the account holds, as the installer will) and `planeScheduleProblem(account, slug)` (null, or why: no statement, not the watchdog's cron, nothing set, or a different one set). Sentences go through `localize` (words check: inline 0).
+- `run.mjs` (after `walkInstaller`): the local arm fails with kind `step`, `install: the plane's …`, when the installed plane holds no watchdog cron. Other checks unchanged.
+- Tests: new `plane-cron.test.mjs` (6 tests); `journey.test.mjs` one new walk-level test.
+
+**Tests: red, then green**
+- The assertion at the account's interface (3 tests, green): a plane that states the cron and holds it reports null and reads back; none set, wrong cron, extra cron, no/two statements, absent script each report a problem; a refused script is refused and stays unset. Red-before: before `planeScheduleProblem` existed there was no assertion; shown by the control tests failing on the problem text when the schedule is removed.
+- The seam (4 tests, **red by name, provider unmerged**): install sets the cron; update sets it again (schedules deleted between, so a PUT that clears them is covered); a refused schedule stops the install and the update each with one sentence and no `verify` ok; the local walk leaves the plane holding it. Today they fail with "the plane's bytes state no watchdog cron (bio-plane-crons/1: states none)": the built-in release carries no statement and the installer sets no schedule. They go green when installer-steps and control-plane have merged AND BOB has regenerated the plane bundle and the newgroup release so the embedded plane states the cron. No scratch copy with the installer change could be made: the installer verifies the embedded plane's sha, so a plane with the statement exists only after the regenerate.
+- Not decided by me: the refusal sentence's key (stand-in: only "a sentence of 4+ words, no code/structure" is asserted); row owed for installer-steps' wording.
+
+**Suite** (`node --test --test-force-exit bio-plane/test/m/journey-check/`, after `npm ci` in `bio-plane/src/journey-check`): 128 tests, 116 pass, 11 fail (full run, before the words fix), now by cause:
+- G1 seam, 4 (above), expected red.
+- `R20` local: red only because the local walk now carries the one G1 failure (its filter admits only the not-ready failures).
+- `R1 (a)` aggregate: the same single failure (222 steps, 1 failure).
+- Not mine, red on the unmodified `tranche/T51` too (checked in a scratch worktree): live arm `R9 · 2 · start a project`: `locator.check` timeout 30 s (the checkbox that lets her start projects is not found on the fake plane's invitation form): R12 ×2, R20 live ×2; and `R17` (words.json/setup-words say "group" for a team).
+Checks: format 0 failures in my files (one in `build/plan/next.md:38`, not mine); architecture 0; coverage 30 of 30; ownership 0; words 0 failures, count not raised. `impact.mjs`: journey-check only (17 test files, all in the run above).
+
+**Found in other modules**
+1. Live arm R9 step 2 (screens-settings/screens-entry, whoever draws the invitation's "start projects" box): `locator.check` times out on the fake plane; also on `tranche/T51`.
+2. R17: rows saying "group" for a team (setup-words / design).
+
+**Requirement lines proposed** (BOB writes `build/requirements/`): *R31 (T51 fix round 6, G1; K4565, K4566, K4570; amends R1 (a)) After an install and after an update, the plane's script in the walk's fake account holds exactly the cron its signed statement `bio-plane-crons/1 <cron>` states (`*/5 * * * *`); the account reads schedules back; a refused schedule stops the install and the update each in a sentence; the local walk fails by name when the installed plane holds none. Test: the install and update over the account; control: a refused schedule; a plane stating none.*
+
+Size (session_018cVQsZb9faqV2gGpjCfs1B): test runs 4, module lines 3496
+
+## J11 · COMPLETE
+
+G1 (journey-check part) applied; record section "Fix round 6 — G1 provider" in build/jobs/T51/journey-check.md.
+
+Changed: account.mjs (refuseSchedules option, GET schedules read-back, deployments answered so an update can run over the fake, WATCHDOG_CRON, statedCrons, planeScheduleProblem; sentences by localize); run.mjs (local arm fails `install: the plane's ...` when the installed plane holds no watchdog cron). Tests: new plane-cron.test.mjs (6), one in journey.test.mjs.
+
+Red then green: the assertion at the account's interface (3 tests) is green, with controls. The seam (install sets the cron; update sets it again with schedules cleared between; a refused schedule stops install and update each in a sentence; the local walk) is RED BY NAME, provider unmerged: "the plane's bytes state no watchdog cron (bio-plane-crons/1: states none)". It goes green only after installer-steps and control-plane merge AND you regenerate the plane bundle and the newgroup release (the installer checks the embedded plane's sha, so no scratch copy could show green). Tell me when merged and I merge tranche/T51 and re-run (CHANGE).
+
+Suite: 128 tests, 116 pass; the 4 seam tests above, plus R20-local and R1(a)-aggregate red only through that one failure. Red on unmodified tranche/T51 too (checked in a scratch worktree), not mine: live arm R9 step 2 "start a project" locator.check timeout (R12 x2, R20 live x2), and R17 (group for a team). Checks: format (my files) 0, architecture 0, coverage 30/30, ownership 0, words 0 and count not raised.
+
+Proposed requirement line R31 is in the record. Size (session_018cVQsZb9faqV2gGpjCfs1B): test runs 4, module lines 3496.

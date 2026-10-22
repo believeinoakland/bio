@@ -66,7 +66,9 @@ export const sha = async (x) => Buffer.from(await crypto.subtle.digest("SHA-256"
 export const VERSION = "9.9.9";
 export const LIMITS = Object.freeze({ subrequests: 10000 });
 export const LIMITS_STATEMENT = "bio-plane-limits/1 subrequests=10000";
-export const CAPABLE_SRC = "export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {}; export const PLANE_LIMITS_STATEMENT = \"" + LIMITS_STATEMENT + "\";";
+/* R39 (K4566): the plane's schedule, as control-plane signs it inside the bundle beside the limits. */
+export const CRONS_STATEMENT = "bio-plane-crons/1 */5 * * * *";
+export const CAPABLE_SRC = "export default { fetch(){ return Response.json({ storeVersion: 'x', memberVersions: {} }); } }; export class Store {}; export const PLANE_LIMITS_STATEMENT = \"" + LIMITS_STATEMENT + "\"; export const PLANE_CRONS_STATEMENT = \"" + CRONS_STATEMENT + "\";";
 export const MEMBER_SRC = "export default { fetch(){ return new Response('member'); } };";
 export const WASM = new Uint8Array([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]);
 

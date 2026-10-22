@@ -72,6 +72,40 @@ export const PARTS = Object.freeze({
     const n = Number(String(page || "").trim());
     return { captureSha: s, extent: Number.isInteger(n) && n > 0 ? { kind: "pdf-page", page: n - 1 } : { kind: "document" } };
   },
+  /** R52, G20 (K4571): the documents `heldcaptures` answers for a picker, read on past the page the screen first asks. The first page is the
+   *  screen's own read (`view.data.docs`); while it says `truncated` with a `next`, the following page is read by that cursor (1000 rows,
+   *  `extra` being the screen's own filter, e.g. `{project}`), twice at most, each kept in `view.ui.later` and drawn on arrival. Answers
+   *  `{ rows, more }`: every row read so far, and whether documents remain unread (the bound kept, or a page that did not answer). */
+  docsAll(cs, view, extra) {
+    const d = view.data && view.data.docs;
+    const first = d && d.state === "ok" && d.value && Array.isArray(d.value.held) ? d.value : null;
+    if (!first) return { rows: [], more: false };
+    const use = extra || view.ui.docsExtra || {};
+    view.ui.docsExtra = use;
+    const L = view.ui.later || (view.ui.later = {});
+    const rows = first.held.slice();
+    let cur = first, k = 1, waiting = false;
+    while (cur.truncated && typeof cur.next === "string" && cur.next && k < 3) {
+      const key = "docs:" + k;
+      const query = Object.assign({}, use, { state: "held_and_vouched", fields: "picker", limit: "1000", after: cur.next });
+      const q = JSON.stringify(query);
+      if (!L[key] || L[key].q !== q) {
+        L[key] = { q, state: "loading", value: null };
+        const settle = (x) => { L[key] = Object.assign({ q }, x); cs.set("later", L); };
+        cs.call("heldcaptures", { query }).then((a) => {
+          const r = a && typeof a === "object" && a.result !== undefined ? a.result : a;
+          const good = a && a.ok !== false && r && typeof r === "object" && r.ok !== false && Array.isArray(r.held);
+          settle(good ? { state: "ok", value: r } : { state: "failed", value: null });
+        }, () => settle({ state: "failed", value: null }));
+      }
+      const x = L[key];
+      if (x.state !== "ok") { waiting = x.state === "loading"; break; }
+      for (const r of x.value.held) rows.push(r);
+      cur = x.value;
+      k++;
+    }
+    return { rows, more: !waiting && !!cur.truncated };
+  },
   /** R34, R52, C95: "Which document": a choice among the documents `heldcaptures` answers (`view.data.docs`, the picker read, capture R77),
    *  by title and the date it was collected, each value the capture's digest (`capture.sha256`), never typed. The documents of `o.project`
    *  (the project the screen is about, when it has one) come first, the owner's order within each group; a search box (drawn when there
@@ -83,8 +117,8 @@ export const PARTS = Object.freeze({
     o = o || {};
     if (d && d.state === "failed") return cs.state("docs", view, () => "");
     const plain = (t) => String(t).replace(/&(amp|lt|gt|quot|#39);/g, (m, e) => ({ amp: "&", lt: "<", gt: ">", quot: "\"", "#39": "'" }[e]));
-    const held = d && d.state === "ok" && d.value && Array.isArray(d.value.held) ? d.value.held : [];
-    const rows = held.filter((r) => r && r.capture && typeof r.capture.sha256 === "string" && r.capture.sha256);
+    const all = this.docsAll(cs, view, o.query);
+    const rows = all.rows.filter((r) => r && r.capture && typeof r.capture.sha256 === "string" && r.capture.sha256);
     const here = typeof o.project === "string" ? o.project : "";
     const ordered = here ? rows.filter((r) => r.project === here).concat(rows.filter((r) => r.project !== here)) : rows;
     const titleOf = (r) => (typeof r.title === "string" && r.title ? r.title : plain(cs.w("screen.held.untitled")));
@@ -101,6 +135,7 @@ export const PARTS = Object.freeze({
       ? cs.field(id + "-q", "form.choose.search", { value: asked, typing: (cs2, view2, value) => { cs2.set("docq:" + id, String(value || "").trim()); } }) : "";
     if (d && d.state !== "loading" && !options.length) return search + labelled(cs.w("form.choose.search.none"));
     return search + cs.choice(id, o.label || "form.choose.document", options, o.drive ? { acts: {} } : {}) + `<p class="mk-small">${cs.w(o.help || "form.choose.document.help")}</p>`
+      + (all.more ? `<p class="mk-small" data-docs-more>${cs.w("screen.people.more", { n: String(all.rows.length) })}</p>` : "")
       + (o.passage === false ? "" : `<p class="mk-small">${cs.w("form.choose.passage")}</p>`);
   },
   /** R23, R34, C59: a choice with nothing to choose from (none held), drawn under its own label in a slot of its own, so the empty state is never taken for
@@ -127,8 +162,7 @@ export const PARTS = Object.freeze({
    *  why the words are not there (`retrieval.notread.not_extracted`, the design's own sentence for a capture nothing has read), never
    *  "Nothing here" and never "Could not read this". `later` is `PARTS.later`. With no document held, nothing (the document choice says so). */
   passagePick(cs, view, docId, wordsId, later) {
-    const d = view.data && view.data.docs;
-    const rows = d && d.state === "ok" && d.value && Array.isArray(d.value.held) ? d.value.held : [];
+    const rows = this.docsAll(cs, view).rows;
     const shown = view.ui && view.ui["docshown:" + docId];
     const shas = Array.isArray(shown) ? shown : rows.map((r) => r && r.capture && r.capture.sha256).filter((x) => typeof x === "string" && x);
     if (!shas.length) return "";

@@ -36,7 +36,7 @@ const answering = (held) => (c) => (c.route === "promote" ? ok({ ok: true, bundl
 
 test("R123 (promote, F1): a document promoted with no reading is read at once when it fits the bound: `readHeld` is asked for its digest, once, and the answer is the promotion's as it was (no `reading_pending`, nothing written down)", async () => {
   const w = world({ answer: answering(ok({ ok: true, read: true, bundle_id: "INFO-2026-0001-x", found: true })) });
-  const r = await promote(w, promoteBody([provDoc({ bytes: 9 * MB, type: "text/plain" })]));
+  const r = await promote(w, promoteBody([provDoc({ bytes: 3 * MB, type: "text/plain" })]));   /* fix round 6, G5: text follows by the ledger above 3 MiB (was 20 MiB) */
   assert.equal(r.status, 200, r.text);
   assert.equal(r.json.result.ok, true);
   assert.equal(r.json.result.reading_pending, undefined);
@@ -117,8 +117,8 @@ const partsOf = (n) => Array.from({ length: n }, (_, i) => ({ sha256: i.toString
 const uploading = (answer, extra = {}) => (c) => (c.route === "captureupload" ? ok(answer) : c.route === "pendingadd" ? ok({ ok: true })
   : c.route === "readheldfor" ? ok(extra.held ?? { ok: true, read: false, why: "NO_HOME" }) : c.route === "extractread" ? ok({ reading: { found: true }, text_units: [{ text: "x" }] }) : null);
 
-test("R123 (captureupload, F2): a 40 MB upload kept in five parts is not read inline (no whole to read from): its digest is written down, the answer says `reading_pending`, and the document is answered unread, ready to be filed", async () => {
-  const doc = provDoc({ bytes: 40 * MB, parts: partsOf(5) });
+test("R123 (captureupload, F2; fix round 5, E3): a 22 MiB upload kept in three parts is not read inline (the whole is read by the alarm): its digest is written down, the answer says `reading_pending`, and the document is answered unread, ready to be filed; a 40 MB upload, over the whole-read ceiling, is read inline as the statement it is", async () => {
+  const doc = provDoc({ bytes: 22 * MB, parts: partsOf(3) });
   const w = world({ answer: uploading(landed(doc)) });
   const r = await upload(w, "statement=s&name=n&type=text%2Fplain");
   assert.equal(r.status, 200, r.text);
@@ -127,6 +127,10 @@ test("R123 (captureupload, F2): a 40 MB upload kept in five parts is not read in
   assert.equal(r.json.result.document.capture.sha256, SHA, "the document is answered as it was");
   assert.equal(asked(w.env, "extractread").length, 0, "no inline read of what cannot be read inline");
   assert.deepEqual(asked(w.env, "pendingadd").map((c) => [c.params.kind, c.params.sha]), [["reading", SHA]]);
+  const stated = world({ answer: uploading(landed(provDoc({ bytes: 40 * MB, parts: partsOf(5) }))) });
+  const st = await upload(stated, "statement=s&name=n&type=text%2Fplain");
+  assert.equal(st.json.result.reading_pending, undefined, "a statement is made at once");
+  assert.equal(asked(stated.env, "extractread").length, 1);
   /* a 3 MB PDF upload follows by the alarm as a 3 MB PDF acquire does */
   const pdf = world({ answer: uploading(landed(provDoc({ pdf: true, bytes: 3 * MB }))) });
   const p = await upload(pdf);
@@ -149,7 +153,7 @@ test("R123 (captureupload): bytes the record already holds (`existed: true`) who
   const r = await upload(w);
   assert.equal(r.json.result.reading_pending, true);
   assert.equal(asked(w.env, "pendingadd").length, 1);
-  const big = world({ answer: uploading(landed(provDoc({ bytes: 40 * MB, parts: partsOf(5) }), true), { held: { ok: true, read: false, why: "NO_HOME" } }) });
+  const big = world({ answer: uploading(landed(provDoc({ bytes: 22 * MB, parts: partsOf(3) }), true), { held: { ok: true, read: false, why: "NO_HOME" } }) });
   const b = await upload(big, "statement=s&name=n&type=text%2Fplain");
   assert.equal(b.json.result.reading_pending, true);
   assert.equal(b.json.result.document.reading, undefined);

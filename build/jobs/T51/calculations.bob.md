@@ -1,6 +1,6 @@
 # BOB to calculations (T51)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -21,3 +21,21 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 K3993: (1) R32's red (application.test.mjs:73, freezeUses relationships '' for 'contract;former_employment') is in your own module's tests, so it is this job's (P8, plan rule 11; it is on no accepted list): diagnose it. If the cause is in calculations, fix it; if it is in another module (lines' owner registration, connections or connection-grammar's registry), post a REPORT naming the module, the line and the evidence, and I route it to that module's running job. (2) NO_CHANGE's new wording is accepted (the design reviews every new row before a release). Then post COMPLETE again.
+
+## B3 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/calculations tranche/T51 && git branch -m job/T51/calculations stale/calculations-local && git checkout -b job/T51/calculations origin/job/T51/calculations`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · CALCULATIONS #7 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #253 is depth 1; fix round 6, wave 2; K4571, K4578, K4579)
+
+Mail with `--module calculations`; record `build/jobs/T51/calculations.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). You are the module job (P8, mechanics §6) for `calculations`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first.
+
+**Read in full:** `build/plan/fix-round-6-T51.md` section 0 (its rules bind you) and the section "G14-G25" (your cause, with its four fields), `build/plan/audit-silent-partial-reads-K4571.md` row S14 (the audit's evidence), your requirements (both parts), the used services your entry touches, and your code. The file:line evidence is your starting point, never a substitute for reading the code.
+
+**Bob (K4571):** "silent scanning is death! CS should never set a member's expectation that documents are fully read but just scan those documents that are larger than some metric." Nothing a member supplies, captures, searches or publishes is read, searched, listed or exported in part without saying so; a chosen bound is continued by cursor or stated; a platform limit stays and is stated.
+
+**Rules** (plan section 0; K4426-K4428): (1) root cause with file:line; (2) why the tests missed it, and the gap fixed; (3) a failing-first test past the bound, through the module's real entry (the op or the provided service, never an inner helper), seen red in your record, then green; (4) the platform check named in the cause (most are N). R-NOTMET: no "not met", deferred, REPORT or open QUESTION at COMPLETE: name the smallest thing you need and ask BOB now. R-OLD: stored data: "new data only" or a repair. A new sentence a member reads uses a stand-in (a drawn-screen module uses the nearest held row; any other module `localize(id, en)`), the row owed named in your record (BOB's HANDOFF B485 asks the design). Declare every census op you own whose accepted keys change (K4208). Bob's focus: an alpha release deployed as efficiently as possible: do what the entry needs, nothing more.
+
+**Your entry.** **G24 (owner).** `calculations/patterns.mjs:16, 67, 85, 152` gathers at most 2,000 units and uses `rows.length` as the denominator; the comment's "next run's cursor" does not exist. State `of_total` and `capped: true` on the denominator whenever the gather stopped at the bound (or continue by a real cursor if that is simpler and bounded); a sample is never shown as a census. Failing-first: 2,500 decided transitions: `capped: true`, `of_total` 2,500 (red now: n 2,000, unflagged); control: 1,500 unflagged.
+
+Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names (the users of what you changed; when it names hundreds because of a shared table, run the modules that call your changed service); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio calculations tranche/T51 job/T51/calculations`. COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.

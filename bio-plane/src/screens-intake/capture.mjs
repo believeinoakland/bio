@@ -134,7 +134,10 @@ async function promoteDocument(cs, o) {
                  ...(parts ? parts.map((p) => ({ path: p.file, blobSha: p.sha256, sha256: p.sha256, bytes: p.bytes }))
                    : [{ path: doc.file, blobSha: sha, sha256: sha, bytes: doc.capture && doc.capture.bytes }]),
                  ...atts.map((t) => ({ path: t.file, blobSha: t.sha256, sha256: t.sha256, bytes: t.bytes }))];
-  const register = [...(parts ? parts.map((p) => ({ sha256: p.sha256, path: p.file, encoding: "binary", bytes: p.bytes }))
+  /* G6 (fix round 6; capture REGISTER_FIRST): a multipart upload's register names the whole first (the capture's own digest, with its total bytes),
+     then its parts, so the list row's `capture` is the whole and a part is never taken for the document */
+  const whole = parts && sha && !parts.some((p) => p.sha256 === sha) ? [{ sha256: sha, path: doc.file, encoding: "binary", bytes: doc.capture && doc.capture.bytes }] : [];
+  const register = [...whole, ...(parts ? parts.map((p) => ({ sha256: p.sha256, path: p.file, encoding: "binary", bytes: p.bytes }))
                       : [{ sha256: sha, path: doc.file, encoding: doc.capture && doc.capture.encoding, bytes: doc.capture && doc.capture.bytes }]),
                     ...atts.map((t) => ({ sha256: t.sha256, path: t.file, encoding: "binary", bytes: t.bytes }))];
   const hex = "0123456789abcdef";
@@ -185,6 +188,12 @@ function renderCapture(cs, view) {
   const pendingLine = (g) => g && g.readingPending ? `<p class="mk-note" role="status" data-reading="pending">${cs.w("screen.document.text.unread.next")}</p>` : "";
   /* the text a reading holds, as one line: the reading's count when it states one, else whether every page, or none, has text */
   const readDrawn = (r) => {
+    /* G14 (fix round 6; S1, S6): a reading's own completeness, as the Document draws it: never "full" while partial. Whole is as before; partial says so
+       (the counts, else the nearest held row, `screen.document.text.unread.next`, which says the rest follows); stated is the reason it was refused whole
+       (a refusal's words), else `none`. Owed: screen.document.reading.partial / .stated. */
+    const c = r.completeness;
+    if (c && c.state === "partial") return `<p class="mk-note" role="status" data-reading="partial">${cs.w("screen.document.text.label")}: ${r.wordsRead !== null && r.wordsTotal !== null ? cs.w("screen.document.text.read", { read: String(r.wordsRead), total: String(r.wordsTotal) }) : cs.w("screen.document.text.unread.next")}</p>`;
+    if (c && c.state === "stated") return `<p class="mk-note" role="status" data-reading="stated">${cs.w("screen.document.text.label")}: ${c.why ? view.parts.refusalHtml(cs, { code: String(c.why) }) : cs.w("screen.document.text.none")}</p>`;
     const state = r.wordsRead !== null && r.wordsTotal !== null ? cs.w("screen.document.text.read", { read: String(r.wordsRead), total: String(r.wordsTotal) })
       : cs.w(r.words ? "screen.document.text.full" : "screen.document.text.none");
     return `<p class="mk-note" role="status" data-reading="read">${cs.w("screen.document.text.label")}: ${state}</p>`;
@@ -246,15 +255,52 @@ function renderCapture(cs, view) {
     const routedTitle = U.forq && U.forq.state === "ok" && U.forq.value && U.forq.value.question ? U.forq.value.question : "";
     const routed = at.id && /^INQ-/.test(at.id) && !qs.some((h) => String(h.bundle_id) === at.id) ? [{ value: at.id, text: told(at.id, routedTitle || qWord) }] : [];
     const forq = /^INQ-/.test(at.id) ? cs.choice("ci-for", "capture.forquestion", routed.concat(qs.map((h) => ({ value: String(h.bundle_id), text: told(String(h.bundle_id), String(h.title || (String(h.bundle_id) === at.id && routedTitle) || qWord)) }))), { value: at.id })
-      + `<p class="mk-small muted">${cs.w("capture.forquestion.help")}</p>` : "";
+      + `<p class="mk-small muted">${cs.w("capture.forquestion.help")}</p>`
+      /* G20 (fix round 6; S11): the chooser lists at most the 200 the read asked for; when the read says there are more, it says so (the nearest held row,
+         `screen.held.more`, stands in; owed: a row for questions) */
+      + (D.questions && D.questions.state === "ok" && D.questions.value && (D.questions.value.truncated === true || (typeof D.questions.value.next === "string" && D.questions.value.next)) ? said("screen.held.more", { count: String(qs.length) }) : "") : "";
+    /* G2 (fix round 6; DEC-418, U452): a capture being fetched after the answer: `screen.capture.fetch.pending` ({size}, {project}) and `.fetch.why`. Until the
+       design's rows reach the table (the close) the nearest held rows stand in (K4269): screen.capture.address.working.head, size.mb and capture.filed.project. */
+    const mb = (n) => cs.w("size.mb", { n: (n / 1048576).toFixed(1) });
+    const keyed = (k, f, alt) => { const t = cs.w(k, f); return t === k ? alt() : t; };
+    const fetchingLine = (b, f, why) => {
+      const size = b !== null ? mb(b) : "", project = f && f.id ? f.title : "";
+      const head = keyed("screen.capture.fetch.pending", { size, project }, () => `<b>${cs.w("screen.capture.address.working.head")}</b>${size ? " " + size : ""}${project ? " \u00b7 " + cs.w("capture.filed.project", { project }) : ""}`);
+      const wh = why ? cs.w("screen.capture.fetch.why", { why: String(why) }) : "";
+      return `<p class="mk-note" role="status" data-fetching>${head}${wh && wh !== "screen.capture.fetch.why" ? " " + wh : ""}</p>`;
+    };
+    /* G2 (B31): a session whose owed fetch ended with a stated refusal lists it as `failed`; it is drawn from that reason at once, in the refusal's words */
+    const failedLine = (reason) => `<p class="cs-state" data-state="failed" role="alert" data-fetch-failed>${view.parts.refusalHtml(cs, { code: String(reason) }) || cs.w("refusal.FETCH_FAILED")}</p>`;
+    /* G2 (DEC-418): the finished line, `screen.capture.fetch.done` ({document}, {project}); until it is in the table the capture's own result and link stand in */
+    const fetchedLine = (g) => {
+      const link = made(g);
+      const t = cs.w("screen.capture.fetch.done", { document: { html: cs.ref("document", g.bundleId, g.title || g.bundleId, []) }, project: g.filed && g.filed.id ? g.filed.title : "" });
+      return t === "screen.capture.fetch.done" ? said("screen.capture.address.done", { title: bare(g.title) }) + link : `<p class="mk-note" role="status" data-fetched>${t}</p>`;
+    };
+    /* G19 (fix round 6; S10): the supporting files a capture kept and skipped, as the plane counts them (`supporting: {kept, skipped, reasons}`):
+       "N of M supporting files kept" and why. The design's row is owed (`screen.capture.supporting`, {kept}, {total}); the numbers and the plane's reasons
+       stand as data until it arrives. Nothing is drawn when none was skipped. */
+    const supportingLine = (g) => {
+      const x = g && g.supporting;
+      if (!x || !(x.skipped > 0)) return "";
+      const total = x.kept + x.skipped;
+      const reasons = (Array.isArray(x.reasons) ? x.reasons : []).map((r) => (r && typeof r === "object" ? r.detail || r.reason || r.code : r)).filter((r) => typeof r === "string" && r);
+      const t = keyed("screen.capture.supporting", { kept: String(x.kept), total: String(total) }, () => `<span class="mk-data">${x.kept} / ${total}</span>`);
+      return `<p class="mk-small" role="status" data-supporting>${t}${reasons.length ? " \u00b7 " + reasons.map((r) => cs.esc(r)).join(" \u00b7 ") : ""}</p>`;
+    };
     /* R31 (N1094; DEC-240 D3): the member's own unfinished captures, each titled from the held document that holds its
        primary, else the address; drawn only when one is answered (R17), a read that failed drawn failed */
     const O = D.open;
     const heldRows = D.held && D.held.state === "ok" && D.held.value && Array.isArray(D.held.value.held) ? D.held.value.held : [];
     const unfinished = !O || O.state === "empty" ? "" : O.state !== "ok" ? cs.state(O, () => "")
-      : (Array.isArray(O.value.captures) ? O.value.captures : []).map((c) => {
+      : (Array.isArray(O.value.captures) ? O.value.captures : []).filter((c) => !(c && U.ended && c.session === U.ended)).map((c) => {
         const row = heldRows.find((r) => r && r.capture && r.capture.sha256 === c.primary_sha);
         const title = (row && row.title) || String(c.locator || "");
+        /* G2: a session being fetched (acquisition `fetch_pending`) has nothing to finish; it is said, once (the press's own line says it when this visit began it) */
+        if (c.fetch_pending && typeof c.fetch_pending === "object") {
+          if (c.failed) return failedLine(c.failed);
+          return U.captured && U.captured.fetching && U.captured.fetching.session === c.session ? "" : fetchingLine(Number.isFinite(c.fetch_pending.declared_bytes) ? c.fetch_pending.declared_bytes : null, null, c.fetch_pending.why);
+        }
         return `<p class="mk-note" role="status">${cs.w("capture.unfinished", { title, n: c.outstanding, ago: { html: cs.date(c.started) } })} `
           + cs.act("acquire", { label: "capture.finish", data: { session: c.session, locator: String(c.locator || ""), title } }) + "</p>";
       }).join("");
@@ -301,11 +347,12 @@ function renderCapture(cs, view) {
     /* R31 (fix round 5, E8; K4530): "Finish it" says what the continuation answered: the visitor copy still being made, its supporting files fetched
        with nothing new filed (each in the nearest held row's words, K4269), or the visitor copy filed (a new document, below) */
     const finishLine = (g) => `<p class="mk-note" role="status" data-finish="${g.finish}">${cs.w(g.finish === "pending" ? "acquisition.index.render_pending_note" : "acquisition.note.continuation_files_new")}</p>`;
-    const result = (got ? (got.finish === "pending" || got.finish === "files" ? finishLine(got) : got.archive
+    const result = (got && got.fetching ? fetchingLine(got.fetching.bytes, got.filed, got.fetching.why) : got ? (got.finish === "pending" || got.finish === "files" ? finishLine(got) : got.archive
         ? said("screen.capture.address.archive", { filed: got.filed })
           + (got.notPromoted ? said("screen.capture.address.notpromoted", { count: got.notPromoted }) : "")
-        : (got.finish === "done" ? `<p class="mk-note" role="status" data-finish="done">${cs.w("screen.capture.address.done", { title: bare(got.title) })}</p>`
-          : said(got.existed ? "screen.capture.address.existed" : "screen.capture.address.done", { title: bare(got.title) })) + made(got)
+        : (got.fetched ? fetchedLine(got)
+          : (got.finish === "done" ? `<p class="mk-note" role="status" data-finish="done">${cs.w("screen.capture.address.done", { title: bare(got.title) })}</p>`
+          : said(got.existed ? "screen.capture.address.existed" : "screen.capture.address.done", { title: bare(got.title) })) + made(got)) + supportingLine(got)
           /* a render still being made and an attestation not yet answered, in the plane's own notes; the capture is kept */
           + [got.renderNote, got.attestNote].filter(Boolean).map((n) => `<p class="mk-small muted" role="status">${cs.esc(n)}</p>`).join("") + pendingLine(got)) : "")
       + refusedPromotion("address");
@@ -457,6 +504,8 @@ async function sendAcquire(view, el, cs) {
   const chosen = view.parts.forOf(view).id;
   const question = /^INQ-/.test(chosen) ? String(cs.value("ci-for") || chosen).trim() : "";
   const body = question ? { locator: address, for: question } : { locator: address };
+  /* G2 (fix round 6; K4562): a capture too large for the request is fetched afterwards and filed under the project the page names, so the project rides */
+  if (chosen) { const f = await view.parts.filedFor(view, cs); if (f && f.id) body.project = f.id; }
   /* R45: the page as a visitor saw it is asked for only when that is chosen; the site's own copy sends no `render` */
   const visitor = cs.value("ci-render-1") === true;
   if (visitor) body.render = true;
@@ -514,18 +563,38 @@ async function doneAcquire(view, answer, cs) {
   const title = finished && fin.title ? fin.title : view.parts.titleOf(cs, { reading: a.reading, doc, address });
   const sha = doc.capture && typeof doc.capture.sha256 === "string" ? doc.capture.sha256 : "";
   /* R57: the answer's own `reading_pending` (a reading that did not fit the door's bound), or the promotion's (the door reads after `promote`) */
-  const waiting = a.reading_pending === true;
+  /* G7 (fix round 6): "the reading follows" is drawn only when the answer carries no reading of its own */
+  const waiting = a.reading_pending === true && !view.parts.readingOf(a, doc).read;
   /* a render still being made (`render_pending`) and an attestation that had not answered (`attestation_attempts[].pending`) are said
      as they stand, in the plane's own notes: the capture is kept either way */
   const rp = doc.render_pending && typeof doc.render_pending === "object" ? doc.render_pending : a.render_pending && typeof a.render_pending === "object" ? a.render_pending : null;
   const later = (Array.isArray(doc.attestation_attempts) ? doc.attestation_attempts : []).find((x) => x && x.pending === true && typeof x.note === "string" && x.note);
-  const pend = { renderNote: rp && typeof rp.note === "string" ? rp.note : "", attestNote: later ? later.note : "" };
+  /* G19 (fix round 6; S10): the plane's count of the supporting files kept and skipped */
+  const supporting = a.supporting && typeof a.supporting === "object" ? a.supporting : doc.supporting && typeof doc.supporting === "object" ? doc.supporting : null;
+  const pend = { ...(supporting ? { supporting } : {}), renderNote: rp && typeof rp.note === "string" ? rp.note : "", attestNote: later ? later.note : "" };
   cs.set("working", false);
   cs.set("promoteRefused", null);
   /* R31: a continuation (`continued`) files nothing new: its supporting files join the capture it resumed */
   cs.set("finishing", null);
+  /* G2 (fix round 6; K4562; acquisition fetch_pending): a capture too large to wait for answers at once with no document: it is said what and why, `opencaptures`
+     is polled, and the finished line draws the document the delivery filed; nothing is promoted here (`promoteDocument` is never sent an empty document) */
+  const fp = a.fetch_pending && typeof a.fetch_pending === "object" ? a.fetch_pending : null;
+  if (fp && !a.document) {
+    const f = await view.parts.filedFor(view, cs);
+    const t = view.parts.titleOf(cs, { doc: {}, address });
+    cs.set("captured", { title: t, address, bundleId: null, sha: "", filed: f && f.id ? f : null,
+                         fetching: { session: String(fp.session || ""), bytes: Number.isFinite(fp.declared_bytes) ? fp.declared_bytes : null, why: typeof fp.why === "string" ? fp.why : "" } });
+    view.parts.watchFetch(cs, { session: String(fp.session || ""), address, title: t, filed: f && f.id ? f : null, finish: "" });
+    return;
+  }
   /* R31 (E8): what a continuation answered: the visitor copy still being made (`render.state`), or its supporting files fetched; either files no new document */
-  if (a.continued) { cs.set("captured", { title, address, bundleId: null, sha, ...pend, ...(finished ? { finish: a.render && a.render.state === "pending" ? "pending" : "files" } : {}) }); return; }
+  if (a.continued) {
+    const pending = finished && a.render && a.render.state === "pending";
+    cs.set("captured", { title, address, bundleId: null, sha, ...pend, ...(finished ? { finish: pending ? "pending" : "files" } : {}) });
+    /* G3 (fix round 6): "Finish it" answers at once; the visitor copy is filed afterwards, so the same poll draws the finished line */
+    if (pending) view.parts.watchFetch(cs, { session: fin.session, address, title, filed: null, finish: "done" });
+    return;
+  }
   if (Array.isArray(a.promoted)) {
     cs.set("captured", { archive: true, filed: a.promoted.length, notPromoted: Array.isArray(a.not_promoted) ? a.not_promoted.length : 0, title, address,
                          bundleId: typeof a.bundleId === "string" ? a.bundleId : null });
@@ -550,7 +619,44 @@ async function doneAcquire(view, answer, cs) {
   if (filed === null) { cs.set("promoteRefused", { tab: "address", html: "" }); return; }
   const made = await view.parts.promoteDocument(cs, { doc, title, locator: address, project: filed.id });
   if (made.refused !== undefined) { cs.set("promoteRefused", { tab: "address", html: await view.parts.refusedHtml(view, cs, made.refused) }); return; }
-  cs.set("captured", { title, address, bundleId: made.bundleId, filed, sha, ...pend, ...(finished ? { finish: "done" } : {}), ...(waiting || made.readingPending ? { readingPending: true } : {}) });
+  cs.set("captured", { title, address, bundleId: made.bundleId, filed, sha, ...pend, ...(finished ? { finish: "done" } : {}), ...(waiting || (made.readingPending && !view.parts.readingOf(a, doc).read) ? { readingPending: true } : {}) });
+}
+
+/* G2, G3 (fix round 6): the working line of a capture finished after the answer. `opencaptures` is asked again by `cs.later` (4 s, then 15 s) while the
+ * session is listed; once it has left the list the record is asked for the copy at the address (`heldat`, no `check`: nothing is fetched) and the finished line
+ * draws the document the delivery filed (`finish: "done"` for "Finish it", else the capture's own result); a copy not held on three asks in a row is
+ * `refusal.FETCH_FAILED` beside the act. The poll ends when the member leaves the screen (the shell cancels the timer) or starts another capture. */
+function watchFetch(cs, o, n = 0, missed = 0) {
+  cs.later(n < 10 ? 4000 : 15000, async (k, v) => {
+    const g = v && v.ui && v.ui.captured;
+    if (!g || !(g.fetching ? g.fetching.session === o.session : g.finish === "pending")) return;
+    const again = (m) => v.parts.watchFetch(k, o, n + 1, m);
+    const body = (x) => (x && typeof x.result === "object" && x.result ? x.result : x);
+    const list = body(await k.call("opencaptures", { query: {} }));
+    if (!list || list.ok === false || !Array.isArray(list.captures)) return again(missed);
+    const mine = list.captures.find((c) => c && c.session === o.session);
+    /* B31: the owed fetch ended with a stated refusal and the session was kept with `failed`: said at once, in the refusal's words */
+    if (mine && mine.failed) {
+      k.set("ended", o.session);
+      k.set("captured", null);
+      k.set("promoteRefused", { tab: "address", html: v.parts.refusalHtml(k, { code: String(mine.failed) }) || k.w("refusal.FETCH_FAILED") });
+      return;
+    }
+    if (mine) return again(0);
+    /* the copy the record shows at the address (`heldat`, no `check`) */
+    const h = body(await k.call("heldat", { query: { address: o.address } }));
+    const copy = h && h.ok !== false && h.held === true && h.copy && typeof h.copy.document === "string" ? h.copy : null;
+    if (!copy) {
+      if (missed + 1 < 3) return again(missed + 1);
+      /* the list the screen read before is stale: this session is over, whatever it says */
+      k.set("ended", o.session);
+      k.set("captured", null);
+      k.set("promoteRefused", { tab: "address", html: k.w("refusal.FETCH_FAILED") });
+      return;
+    }
+    k.set("ended", o.session);
+    k.set("captured", { title: o.title, address: o.address, bundleId: copy.document, sha: String(copy.sha256 || ""), filed: o.filed, ...(o.finish ? { finish: o.finish } : { fetched: true }) });
+  });
 }
 
 /* R49 (C9, C10): the document the viewer may see that holds these bytes, asked of the record by the capture's digest (`heldat`, no
@@ -630,11 +736,19 @@ async function filedFor(view, cs) {
 async function bundleFor(view, cs, address) {
   const got = view.ui && view.ui.captured;
   if (got && got.address === address && typeof got.bundleId === "string" && got.bundleId) return { bundleId: got.bundleId, title: got.title };
-  const a = await cs.call("heldcaptures", { query: { limit: 1000, state: "held_and_vouched" } });
-  const v = a && a.result && typeof a.result === "object" ? a.result : a;
-  const rows = v && Array.isArray(v.held) ? v.held : [];
-  const r = rows.find((x) => x && x.source && (x.source.address === address || x.source.locator === address));
-  return r && typeof r.bundle_id === "string" ? { bundleId: r.bundle_id, title: r.title || address } : null;
+  /* G20 (fix round 6; S11): every held and vouched document is looked at, a page of 1,000 at a time by the read's own `next`, never the first page alone
+     (at most 100 pages, 100,000 documents, a bound the read itself would have to exceed) */
+  let after = "";
+  for (let page = 0; page < 100; page++) {
+    const a = await cs.call("heldcaptures", { query: { limit: 1000, state: "held_and_vouched", ...(after ? { after } : {}) } });
+    const v = a && a.result && typeof a.result === "object" ? a.result : a;
+    const rows = v && Array.isArray(v.held) ? v.held : [];
+    const r = rows.find((x) => x && x.source && (x.source.address === address || x.source.locator === address));
+    if (r && typeof r.bundle_id === "string") return { bundleId: r.bundle_id, title: r.title || address };
+    if (!v || v.truncated !== true || typeof v.next !== "string" || !v.next) return null;
+    after = v.next;
+  }
+  return null;
 }
 
 /* R14, R16: "Watch this address": `monitorset` with `enabled: true` and the frequency chosen (a word of `MONITOR_FREQ`).
@@ -720,7 +834,7 @@ async function doneUpload(view, answer, cs) {
     if (copy) {
       const more = await view.parts.filedHeld(view, cs, copy, sha);
       if (more.refused) cs.set("promoteRefused", { tab: "file", html: more.refused });
-      cs.set("uploaded", { name, existed: true, bundleId: copy.document, title: name, sha, ...(a.reading_pending === true ? { readingPending: true } : {}), ...(more.alsoHere ? { filed: more.filed, alsoHere: more.alsoHere } : {}) });
+      cs.set("uploaded", { name, existed: true, bundleId: copy.document, title: name, sha, ...(a.reading_pending === true && !view.parts.readingOf(a, doc || {}).read ? { readingPending: true } : {}), ...(more.alsoHere ? { filed: more.filed, alsoHere: more.alsoHere } : {}) });
       return;
     }
     if (!doc) { cs.set("uploaded", { name, existed: true, bundleId: null }); return; }
@@ -734,7 +848,7 @@ async function doneUpload(view, answer, cs) {
   if (made.refused !== undefined) { cs.set("promoteRefused", { tab: "file", html: await view.parts.refusedHtml(view, cs, made.refused) }); return; }
   /* R2 (C17): a project-less upload's result line says whether it was read (a picture, which way to have it read) */
   const reading = { ...view.parts.readingOf(a, doc || {}), picture: /^image\//i.test(String(sent.type || "")) };
-  cs.set("uploaded", { name, existed: false, bundleId: made.bundleId, title, filed, sha, reading, ...(a.reading_pending === true || made.readingPending ? { readingPending: true } : {}) });
+  cs.set("uploaded", { name, existed: false, bundleId: made.bundleId, title, filed, sha, reading, ...((a.reading_pending === true || made.readingPending) && !reading.read ? { readingPending: true } : {}) });
 }
 
 /* R2 (C17; control-plane R100, R117): whether the upload was read, from the answer: its `reading` (the answer's or its document's) and the
@@ -745,7 +859,9 @@ function readingOf(a, doc) {
   if (!r) return { read: false };
   const units = Array.isArray(a && a.text_units) ? a.text_units : Array.isArray(doc && doc.text_units) ? doc.text_units : Array.isArray(r.text_units) ? r.text_units : [];
   const n = (k) => (Number.isInteger(r[k]) && r[k] >= 0 ? r[k] : null);
-  return { read: true, words: units.filter((u) => u && String(u.text || "").trim()).length, wordsRead: n("words_read"), wordsTotal: n("words_total") };
+  const cmp = (a && a.completeness) || r.completeness;
+  return { read: true, words: units.filter((u) => u && String(u.text || "").trim()).length, wordsRead: n("words_read"), wordsTotal: n("words_total"),
+           ...(cmp && typeof cmp === "object" && ["whole", "partial", "stated"].includes(cmp.state) ? { completeness: { state: cmp.state, ...(typeof cmp.why === "string" ? { why: cmp.why } : {}) } } : {}) };
 }
 
 /* R3: what the member saw or heard (`testify`): the words, with where in them, and when as `observedAt`. */
@@ -858,7 +974,7 @@ export const CAPTURE_SCREEN = Object.freeze({
   id: "capture",
   reads: captureReads,
   render: renderCapture,
-  parts: Object.freeze({ bundleFor, checkOutcome, copyOf, filedFor, filedHeld, forOf, homeOf, projectOf, promoteDocument, readingOf, refusalHtml, refusedHtml, repairedReading, titleOf }),
+  parts: Object.freeze({ bundleFor, checkOutcome, copyOf, filedFor, filedHeld, forOf, homeOf, projectOf, promoteDocument, readingOf, refusalHtml, refusedHtml, repairedReading, titleOf, watchFetch }),
   acts: Object.freeze([
     Object.freeze({ op: "acquire", label: "act.acquire.label.capture", send: sendAcquire, done: doneAcquire, failed: failedAcquire, rereads: Object.freeze(["open"]),
                     refusals: Object.freeze({ /* control-plane R105, R116 (K4326): a timed-out capture says what was kept: held, undetermined, or (nothing) the base words */

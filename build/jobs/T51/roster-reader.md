@@ -1,6 +1,6 @@
 # roster-reader (T51)
 
-**Status** · session_01PVypQMNUHxqcGtP1kD7qN2 · depth 2 · COMPLETE · handled B3
+**Status** · session_01JskisLomG4e5FjS7cp5cNH · depth 2 · COMPLETE · handled B4
 
 ## Completion (T51-172, B1 START)
 
@@ -83,3 +83,32 @@ Size (session_01PVypQMNUHxqcGtP1kD7qN2): test runs 3, module lines 965
 ## J4 · COMPLETE
 
 B3 done: test copies of product sentences compare with localize(id, en) or the exact localized value, not sentence text or a regex on it (the two testcopy findings, and the other copies of localized sentences in the module's tests). source.mjs's held-table no-date sentence is now localized so its test uses localize too. Module tests 22/22; words: testcopy 0, only the two REPORTed lists (J2) remain; format, architecture, coverage (12/12) pass; ownership passes. Outside this module: setup-words build.mjs --check exits 1 on jurisdictions.index.amount_is_amount_and_units (R18), not roster-reader's. Record: build/jobs/T51/roster-reader.md.
+
+## Completion (fix round 5, E2 reader half, B4 START)
+
+**Root cause (confirmed).** `lines.mjs` `linesOf` (the old :178) built `{text, offset}` for every line of the text, `t.trim().replace(/\s+/g, " ")` leaving a cons-string chain per line on node 26; `staff-roster.mjs` `readRows` (:121-137) and `org-chart.mjs` `readBoxes` (:47-70) kept all of them (and `staff_roster.detect`, `org_chart.detect` then read counts from them) over the whole 20 MB text, twice per docprofile pass. `datesIn` also copied the whole text (`flatten`).
+
+**Why the tests missed it.** Every detector test ran on a fixture text of a few KB; none ran a detector on the text of a large document, and no test ran under a heap limit. Gap closed: `test/big-text.test.mjs` (child `test/big-text-child.mjs`).
+
+**Failing first, red.** Before the change, the child (26.6 MB, 160,000 lines, no roster in it, both detectors, the text held) under `--max-old-space-size=80`: `FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory` (run 1 of 5, test red). After: five of five runs pass at 80 MB, about 8 s each; 40 MB fails only because the held text alone is about 27 MB.
+
+**What changed.**
+- `roster-reader/lines.mjs`: `eachLine(text, visit)` (one line at a time, each line flattened to one piece); `selfNamingLine` (one line's self-naming kinds, `selfNamingLines` uses it); `datesIn` counts over the text as it is (the date patterns take `\s+` where the flatten left one space), no copy; `linesOf` removed (no user).
+- `roster-reader/staff-roster.mjs` `readRows(raw, ctx, keep)`: with `keep` false (`detect`) it holds no line and no row, only the counts and the self-naming lines; `parse` keeps `keep` true, unchanged.
+- `roster-reader/org-chart.mjs` `readBoxes(raw, ctx, keep)`: with `keep` false it holds the numbers of the box-labelling lines, a histogram of word counts (for the median), and the self-naming lines; `parse` unchanged.
+
+**Answers unchanged.** `detect` and `parse` of both types, over every fixture under both views, serialised before and after: byte-identical (265,734 bytes). Control test: the committee roster still detects and parses over 30 rows; the Public Works chart still detects and gives over 3 units.
+
+**Ran.** `roster-reader/test/`: `ℹ tests 24 pass 24 fail 0` (including the new file's 2). `docprofile/test/`: `tests 45, pass 45`. The plane tests impact names (45 files): `tests 299, pass 298, fail 1`; the failure is `release.test.mjs` R24 (`screen.objective.purpose is held by the words list`), which fails identically on a clean checkout of `tranche/T51`: not this module's, not caused by this change. Checks: `run.mjs`: format, architecture, coverage (6614 of 6614), channels, words, all `0 failures`; `ownership.mjs`: `0 failures`.
+
+**Requirement lines proposed (BOB writes `build/requirements/`).**
+- R1 add: `detect` reads the text one line at a time and keeps only counts and its self-naming lines, so a text of any length costs memory only for the text itself: the 26 MB, 160,000-line text of a budget volume is refused in an 80 MB heap, the text held.
+- R3 add: the same for `org_chart`'s `detect`.
+
+**Deferred / found in other modules.** None deferred. In `plane` (not mine): `release.test.mjs` R24 as above, red on the base.
+
+Size (session_01JskisLomG4e5FjS7cp5cNH): test runs 9, module lines 1012
+
+## J5 · COMPLETE
+
+E2 reader half done. Root cause confirmed: linesOf/readRows/readBoxes held every line of the text (cons-string chains) in detect. detect of staff_roster and org_chart now stream one line at a time (lines.mjs eachLine, staff-roster.mjs readRows keep=false, org-chart.mjs readBoxes keep=false; datesIn no longer copies the text). Failing-first: test/big-text.test.mjs, child with a 26.6 MB, 160,000-line no-roster text held, --max-old-space-size=80: red (OOM) before, green five of five after (~8 s a run). Answers on all fixtures under both views byte-identical before/after; control roster and chart still read. Suites: roster-reader 24/24, docprofile 45/45, plane impact files 298/299 (the one red, release.test.mjs R24 'screen.objective.purpose is held by the words list', fails identically on clean tranche/T51, not this module). run.mjs and ownership: 0 failures. Proposed requirement lines (R1, R3) are in my record. Plane can now turn l77-size into a gate. Details: build/jobs/T51/roster-reader.md.

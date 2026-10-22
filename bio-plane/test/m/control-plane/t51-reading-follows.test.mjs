@@ -103,7 +103,7 @@ test("R123 F6 (inboxpull): a 3 MB text-layer PDF knocked at the doorbell and bro
   assert.ok(JSON.stringify(r.text_units).includes("board resolution"), "its text is the PDF's");
 });
 
-test("R123 F2 (captureupload): a 40 MB file uploaded in five parts, answered `reading_pending` and filed as the capture screen files it, is made whole by the alarm, and its reading is recorded final with its size (over reading-pipeline R37's whole ceiling)", { timeout: 600000 }, async () => {
+test("R123 F2 (captureupload; fix round 5, E3): a 40 MB file uploaded in five parts is over reading-pipeline R37's whole ceiling, so its reading is the statement of its size, made at the door (no whole is needed) and stored when the capture screen files it", { timeout: 600000 }, async () => {
   const auth = await founder();
   const line = new TextEncoder().encode(`The commission approved the long minutes ${Date.now()}\n`);
   const bytes = new Uint8Array(40 * MB);
@@ -112,19 +112,14 @@ test("R123 F2 (captureupload): a 40 MB file uploaded in five parts, answered `re
   const a = up.result;
   assert.equal(a.ok, true, JSON.stringify(up).slice(0, 400));
   assert.equal(a.document.capture.sha256, sha(bytes));
-  assert.equal(a.reading_pending, true, "no whole to read from at the door: the reading is owed");
-  assert.equal(a.document.reading, undefined);
+  assert.equal(a.reading_pending, undefined, "a statement needs no whole: nothing is owed");
+  assert.equal(a.document.reading.failure, "final");
+  assert.ok(JSON.stringify(a.document.reading).includes(String(40 * MB)), "the reading states the whole's size");
   const made = await CAPTURE_SCREEN.parts.promoteDocument(screenCall(auth), { doc: a.document, title: "minutes.txt", locator: a.document.locator, project: "" });
   assert.equal(made.refused, undefined, JSON.stringify(made).slice(0, 400));
-  // K4517: a 40 MB plain-text whole is over reading-pipeline's 24 MiB whole ceiling (R37, D5: a whole too large for the
-  // object is never loaded; it is recorded `final` with its size, never lost or retried in a loop). The alarm makes the
-  // whole and then records that final reading: the owed work ends stated, not dropped.
-  const end = Date.now() + 240000;
-  let r = await readingOf(auth, sha(bytes));
-  while (Date.now() < end && !JSON.stringify(r ?? {}).includes('"final"')) { await later(3000); r = await readingOf(auth, sha(bytes)); }
-  const seen = JSON.stringify(r ?? {});
-  assert.ok(seen.includes('"failure":"final"'), `a final reading after the alarm: ${seen.slice(0, 400)}`);
-  assert.ok(seen.includes(String(40 * MB)), `the reading states the whole's size: ${seen.slice(0, 400)}`);
+  const r = await readingOf(auth, sha(bytes));
+  assert.equal(r.found, true);
+  assert.ok(JSON.stringify(r).includes('"failure":"final"') && JSON.stringify(r).includes(String(40 * MB)), `the stored reading is the statement: ${JSON.stringify(r).slice(0, 300)}`);
 });
 
 test("R123 F1 (promote): a 3 MB PDF captured, left unfiled until the alarm has given up on it, and filed then is read within one more alarm", { timeout: 900000 }, async () => {

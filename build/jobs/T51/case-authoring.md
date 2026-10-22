@@ -1,6 +1,6 @@
 # case-authoring (T51)
 
-**Status** · session_01PS5Y7LHLvMrp9sBdyTmhiZ · depth 2 · COMPLETE · handled B19
+**Status** · session_01ArzPvzaCjrWtx5Dq9bDqeE · depth 2 · COMPLETE · handled B23
 
 ## Completion record (T51, B1 START)
 
@@ -313,3 +313,60 @@ Size (session_01PS5Y7LHLvMrp9sBdyTmhiZ): test runs 9, module lines 2947
 ## J18 · COMPLETE
 
 COMPLETE (B20, C48 R83 case). draftEditions and the pre-flight's editions state case (the case id of the unsigned preparation or latest published edition, else null): index.mjs draftEditions. Failing-first: reload.test.mjs walker's path (new-case draft, pre-flight first refusing, prepared, fresh instance, casedocument answers) red 10/10 on the reverted source, green after; control draft never prepared case null. Suite 226/226; review+screens-publish 320/322 pass (2 skipped), 0 fail; format, architecture, words, ownership 0 failures; coverage case-authoring 55/55. For BOB: J17's real-Store seam test imported plane (architecture refused it in my files), so I rewrote it on the module fixture (w.reload()); if you want the op-routing seam kept, it belongs in plane/test-support tests. R83's not-yet-met line is yours to clear. Record: build/jobs/T51/case-authoring.md. Merge order: me first, then review #23, then screens-publish.
+
+## Completion record (T51, B21 START: G9, `DOCUMENT_COPY_PENDING` for a member's own file; fix round 6; K4570, K4571, K4573)
+
+**Root cause (file:line, re-read).** `case-disclosures/index.mjs:486` asks the synchronous `case-carriage.documentCopy` (`case-carriage/index.mjs:1138`) inside `publishCase`'s transaction; it only reads the copy's state (and may enqueue, which a refusal rolls back: `record-core` `transact`). The only maker of a copy is the scheduler's `document-copy` tick (`copyBatch`, :1248), so a load-bearing member document without a copy is always `DOCUMENT_COPY_PENDING` (`case-disclosures/index.mjs:553-558`), even at 356 bytes, and nothing in the act makes it.
+
+**Changed (my files).**
+- `bio-plane/src/case-authoring/index.mjs`: new `publishAct(args)` (~:373): gathers the calculations (R56), runs `publishCase`, and on a first answer `DOCUMENT_COPY_PENDING` awaits `caseCarriage.copyNow({shas, maxBytes: COPY_NOW_MAX_BYTES})` for the digests the refusal names (`pending[].materials[].sha`), then runs `publishCase` once more over the same facts and answers that run. `publishCase` stays synchronous (R18). A copy not made (a larger document, `copyNow` absent, throwing or rejecting) leaves the first refusal as it was; the alarm path makes it. `COPY_NOW_MAX_BYTES` = 2 MiB (exported), `caseCarriage` getter (one instance per host), constructor dep `caseCarriage`. The `publishcase` op (`caseAuthoringOps`, ~:2219) calls `publishAct`. The pre-flight is unchanged (R34 writes nothing): it still lists the pending copy; the ceremony's "prepare" button sends `publish` (`screens-publish/ceremony.mjs:504`), so the copy is made there. No census op is new: `publish`'s `DECLARED_OPS` row (R81) is unchanged (`accepts`/`requires` unchanged).
+- `bio-plane/test/m/case-authoring/fixture.mjs`: `world({copying: true})` binds case-carriage to an evidence store and a bucket stand-in (made before any module that would create the instance without them), `w.cc`, and `w.copyNow` (a test's own `copyNow`, for the wiring tests); case-authoring is handed the same carriage.
+- `bio-plane/test/m/case-authoring/copy-now.test.mjs` (new, 6 tests).
+
+**Failing-first, red then green.**
+- The walker's case, `copy-now.test.mjs` "G9 R85 (the walker's case)": the real `publishcase` op (`caseAuthoringOps`) over the real case-carriage and case-disclosures; a 356-byte text, registered and received as an upload (`via: upload`, queued by case-carriage's receipt listener), cited load-bearing. **RED now, by name, for the right reason:** the answer is `DOCUMENT_COPY_PENDING` (nothing makes the copy), because `case-carriage.copyNow` is not yet merged on `tranche/T51` (merge 7, case-carriage's job). **GREEN** against a local, uncommitted, reverted shim of `copyNow` (enqueue the named documents within the bound, then `copyBatch`): the edition is prepared in the act and `documentCopy` reads `clean`. Per R-SEAM it stays red by name until case-carriage merges.
+- Wiring tests (a test's own `copyNow`; green now): `copyNow` asked once with exactly `{shas: [the digest], maxBytes: 2097152}`, then the second run's answer; a `copyNow` that does nothing, throws, rejects, or the real one with no store bound leaves the first refusal, asked once, nothing written (R18); not asked when the first run prepares, or refuses `DOCUMENT_NOT_CLEANABLE`; the pre-flight asks for no copy and writes nothing.
+- Control (real carriage, green now): a document stated 5 MiB still answers `DOCUMENT_COPY_PENDING`, stays queued, the alarm's `copyBatch` makes it, and the act then prepares. (The size the register row and the evidence store state is 5 MiB; the bytes held stay small because promotion refuses an inline text of that size. It holds as long as `copyNow` honours `maxBytes` by stated or head size.)
+
+**Why the tests missed it.** Documents tests drove `copyBatch` by hand; no test went prepare, scheduler, prepare through the door. Gap fixed: the seam test drives the op and the real carriage.
+
+**Platform.** N (case-carriage's own copy is a read of the object's evidence store and a doc-clean run on a file of at most 2 MiB; the act's wait is that one call). **Not established, for the re-walk:** that the live worker binds the bucket and evidence store (`copyWake`/`copyBatch` answer `DOCUMENT_COPY_NO_STORE` with neither; :1256, :1331).
+
+**Needed from case-carriage's `copyNow` (the contract I call):** it enqueues each named digest that is not queued (a refused `publishCase` rolls back `documentCopy`'s own enqueue), skips any whose stated or held size is over `maxBytes`, awaits their copies, and never rejects. I call it with `{shas, maxBytes}` only.
+
+**Requirement lines proposed (BOB writes `build/requirements/`).** New **R85** (fix round 6, G9; K4573; amends R18; `case-carriage` `copyNow`): *`op=publish` makes the publication copy of a small member document in the act. When `publishCase` refuses `DOCUMENT_COPY_PENDING` (`case-disclosures` R6), the act awaits `case-carriage.copyNow({shas, maxBytes})` for the documents the refusal names, `maxBytes` 2 MiB (`COPY_NOW_MAX_BYTES`), and runs `publishCase` once more over the same calculations; a copy not made (a larger document, a `copyNow` that does not answer, throws or rejects) leaves the first refusal, and the scheduler's alarm makes the copy. `publishCase` stays synchronous (R18); the pre-flight (R34) asks for no copy. Test: a 356-byte text upload cited load-bearing is prepared by one `publish` with no `DOCUMENT_COPY_PENDING`. Control: a 5 MiB document still answers it and is made by the alarm path.* Uses gains `case-carriage`: `copyNow` (already a `modules.json` edge).
+
+**Deferred.** None. **Found in other modules.** (1) `build/plan/next.md:38`: `checks/format.mjs` reports "N1265 names no P19 hard reason" (BOB's file; not mine). (2) The raw `{document}` in the sentence is screens-publish's (G10, as the START says).
+
+**Tests and checks.**
+- `node --test --test-force-exit "bio-plane/test/m/case-authoring/*.test.mjs"`: 234 tests, 233 pass, 1 fail: the walker's-case seam test, red by name (above).
+- Users (`node build/plan/impact.mjs origin/tranche/T51 HEAD`: 44 modules, because the file holds `DECLARED_OPS`; I ran the two direct users): `review` + `screens-publish`: 347 tests, 345 pass, 0 fail.
+- `checks/run.mjs`: format 1 failure (`build/plan/next.md:38`, not mine); architecture 0; coverage 6617 of 6617 (case-authoring 56 of 56); words 0 failures, count 18421 unchanged, none in my files; channels 0. `checks/ownership.mjs … case-authoring origin/tranche/T51 job/T51/case-authoring`: 4 files changed, 0 failures.
+
+**The smallest thing I need:** BOB's word that case-carriage's `copyNow` is merged on `tranche/T51`; I then merge it, re-run the seam test (expected green) and report.
+
+Size (session_01ArzPvzaCjrWtx5Dq9bDqeE): test runs 8, module lines 2989
+
+## J19 · COMPLETE
+
+COMPLETE (B21, G9). op=publish makes a small member document's copy in the act: publishAct (case-authoring index.mjs ~:373) awaits case-carriage.copyNow({shas, maxBytes: 2 MiB}) for the digests a DOCUMENT_COPY_PENDING refusal names, then runs publishCase once more; larger files keep the alarm path; the pre-flight is unchanged. Root cause: case-disclosures index.mjs:486 asks the synchronous documentCopy, and only the scheduler tick makes a copy.
+
+Failing-first (copy-now.test.mjs: the real publishcase op over the real case-carriage and case-disclosures, a 356-byte text upload): RED now by name (DOCUMENT_COPY_PENDING) because case-carriage.copyNow is not yet merged on tranche/T51; GREEN against a local, reverted shim of copyNow. Wiring tests and the 5 MiB control (still PENDING, the alarm's copyBatch makes it) are green.
+
+Suites: case-authoring 234 tests, 233 pass, 1 red (the seam test, by name); review + screens-publish 347 tests, 345 pass, 0 fail. Checks: architecture, coverage (56 of 56), words (count 18421 unchanged), ownership 0 failures; format has 1 failure in build/plan/next.md:38 (BOB's file). Proposed R85 is in my record.
+
+Smallest thing I need: tell me when case-carriage's copyNow is merged; I merge tranche/T51, re-run the seam test and report. The contract I call: copyNow enqueues each named digest not queued, skips any over maxBytes, awaits the copies, never rejects. Record: build/jobs/T51/case-authoring.md.
+
+## Completion record (T51, B23 CHANGE: case-carriage's `copyNow` merged; G9 again)
+
+Merged `tranche/T51` (748383ed5e) into the branch. The walker's-case seam test (`copy-now.test.mjs`, the real `publishcase` op over the real case-carriage and case-disclosures, 356-byte text upload) is **GREEN against the real `copyNow`**; the 5 MiB control and the wiring tests stay green. No source change.
+- `node --test --test-force-exit "bio-plane/test/m/case-authoring/*.test.mjs"`: 234 tests, 234 pass, 0 fail.
+- Users `review` + `screens-publish`: 355 tests, 353 pass, 0 fail.
+- `checks/run.mjs`: format 0, architecture 0, coverage 6623 of 6623, words 0 (count 18421 unchanged); ownership 4 files, 0 failures.
+- Still for the re-walk: that the live worker binds the bucket and evidence store.
+
+Size (session_01ArzPvzaCjrWtx5Dq9bDqeE): test runs 11, module lines 2989
+
+## J20 · COMPLETE
+
+COMPLETE (B23, G9 again). Merged tranche/T51 (copyNow, 748383ed5e). The walker's-case seam test (real publishcase op, real case-carriage and case-disclosures, 356-byte upload) is GREEN against the real copyNow; control and wiring tests green. case-authoring 234/234; review + screens-publish 355 tests, 0 fail. format, architecture, coverage, words, ownership 0 failures. No source change. Record updated.

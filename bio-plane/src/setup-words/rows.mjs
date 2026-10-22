@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (18421 design words, 1108 protected; SHA-256
-   42da27697b83574acfe60389132045461da8286e51ae31e25c1391484c648b9d) followed by 7182 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   42da27697b83574acfe60389132045461da8286e51ae31e25c1391484c648b9d) followed by 7184 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -18458,6 +18458,7 @@ export const WORD_ROWS = Object.freeze([
   ["acquisition.index.keep_store_refused","the store would not take it ({detail})",null,null,false,"code"],
   ["acquisition.index.listed_whole_over_the_stored","listed whole over the stored parts",null,null,false,"code"],
   ["acquisition.index.no_renderer_is_bound_to","no renderer is bound to this instance (no RENDERER service binding and no BROWSER binding). Nothing was fetched.",null,null,false,"code"],
+  ["acquisition.index.no_such_session","no capture session of that name is held: it was finished, closed or has expired; nothing was fetched",null,null,false,"code"],
   ["acquisition.index.render_did_not_return","the page as a visitor saw it did not come back in time",null,null,false,"code"],
   ["acquisition.index.render_pending_files","the page as a visitor saw it is still being made, and its supporting files are captured with it when you finish this capture",null,null,false,"code"],
   ["acquisition.index.render_pending_note","this is the page as it was served; the page as a visitor saw it is still being made, and is filed as a second document when this capture is finished",null,null,false,"code"],
@@ -23994,6 +23995,7 @@ export const WORD_ROWS = Object.freeze([
   ["plane.declared.ask","member-directed: a member's own question to the assistant under their own account; no object is before them",null,null,false,"code"],
   ["plane.declared.owedwork","what the object still owes one document, or the counts of what it owes: the keeps, readings, scan pages, supporting files and archive entries left for its alarm, each owed or ended for a stated reason; writes nothing",null,null,false,"code"],
   ["plane.declared.readtranslate","draft: a machine translation of one passage of the group's own writing (a note, question, finding or notice) into the member's language, labeled machine work, the original one tap away; held nowhere and writes nothing (plane R50)",null,null,false,"code"],
+  ["plane.pending.interrupted","the reading did not finish; the object stopped",null,null,false,"code"],
   ["progressions.checks.not_a_disposition_detail","a disposition is deferred (set aside for now) or dismissed (declined); taking a question up is a different act and is not a disposition",null,null,false,"code"],
   ["progressions.declared.discharge","exception document, keyed by (progression, entity, stage)",null,null,false,"code"],
   ["progressions.declared.progressiondefine","progression definition, keyed by progression key",null,null,false,"code"],

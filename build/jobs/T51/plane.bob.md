@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J28
+**Read** · handled J33
 
 ## B1 · START
 
@@ -281,3 +281,47 @@ CHANGE (BOB #250, from CONTROL-PLANE #47's J25; fix round 5 E10 (i)). The in-obj
 ## B35 · ANSWER · re J27
 
 ANSWER to J27-J28 (BOB #250). (1) Agreed: `server-timing: object;dur=<ms>` (CONTROL-PLANE #47 was told the same at its J25 and writes `in-<route>` beside `do-<route>`). (2) Wait for the three merges: reading-pipeline is merged (K4535); I post a CHANGE when pdf-reader and extraction are; then merge tranche/T51, run the L files and post COMPLETE. Set WAITING ON BOB (J27).
+
+## B36 · CHANGE
+
+CHANGE (K4545). PDF-READER (K4542), READING-PIPELINE (K4535, R42 table K4544) and EXTRACTION (K4545) are all merged into `tranche/T51`. Merge the tranche into your branch, run your L run (B35) on the merged providers, and post COMPLETE. You merge last, after CONTROL-PLANE.
+
+## B37 · CHANGE
+
+CHANGE (K4548). Your L finding is placed: the out-of-memory is roster-reader's detectors holding every line of the 20 MB text (build/plan/fix-round-5-E2-roster.md); ROSTER-READER #4 runs now. Your COMPLETE is held, not merged (you merge after control-plane and roster-reader). When BOB tells you roster-reader is merged: merge the tranche, and make l77-size a gate on the assembled plane: the 21 MB / 1,300-page synthetic and the 22 MiB PDF complete through the real alarm in a child whose old-space cap is the harness's idle plus 88 MB (state the number you use and the idle you measured; a run that dies is red), five of five; then COMPLETE again. Until then nothing to do: end your turn waiting on BOB.
+
+## B38 · CHANGE
+
+CHANGE (K4549). CONTROL-PLANE is merged into tranche/T51. Its finding is yours (plane R77, beside E2 (d)): frequent requests starve the alarm. In control-plane's t51-round5-seam E6 case (60-page scan, the ocr entry due at once), polling op=reading every 4 s left the entry unworked for 300 s (2 of 3 passes), polling every 20-30 s finished in under a minute. Find why (first suspects: a request path that calls setAlarm and pushes a due alarm later, or the tick deferring while requests are in flight), fix it so that traffic never postpones a due entry, and prove it with a failing-first test: an entry due now, requests every 4 s, the entry runs within one tick of its due time. You can do this now, before roster-reader merges; merge the tranche first. control-plane's t51-hops E10 (i) should go green with your server-timing header: run it. Then the l77-size gate of B37 once BOB says roster-reader is merged.
+
+## B39 · CHANGE
+
+CHANGE (K4551). ROSTER-READER is merged into tranche/T51 (detectors stream one line at a time; big-text.test.mjs). Your J30 accepted. Now B37: merge the tranche, make l77-size a gate on the assembled plane (21 MB / 1,300-page synthetic and 22 MiB PDF complete through the real alarm in a child capped at the harness's measured idle plus 88 MB; state both numbers), five of five, then COMPLETE with your requirement lines (R77 amended, R78).
+
+## B40 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/plane tranche/T51 && git branch -m job/T51/plane stale/plane-local && git checkout -b job/T51/plane origin/job/T51/plane`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · PLANE #51 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #252 is depth 1; fix round 6, job 18 of 20; K4570, K4571)
+
+Mail with `--module plane`; record `build/jobs/T51/plane.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). You are the module job (P8, mechanics §6) for `plane`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first.
+
+**Read in full:** `build/plan/fix-round-6-T51.md` (section 0's rules bind you; section 2 gives each cause you own or provide with its four fields; section 3 the merge order), `build/plan/diagnosis-R6-watchdog.md` (whole), `build/plan/diagnosis-F5-ledger-live.md`, `build/plan/diagnosis-R6-capture.md` (A, cross-cutting), `build/plan/walk-T51-rewalk5/A.md`, your requirements (both parts), the used services your entries touch, and your code. The plan's file:line evidence is your starting point, never a substitute for reading the code.
+
+**Rules** (plan section 0; K4426-K4428): (1) root cause stated with file:line, else a diagnosis posted as a QUESTION before any fix; (2) why the tests missed it, and the test-gap fix; (3) a failing-first test on the walker's case (quoted below), through the real entry path (press the act or call the op, never the done function), seen red in your record, then green; (4) where the platform matters (the object's 128 MB, the CPU limit, `waitUntil` cut ~30 s after the response, the door's 25 s, the clock frozen during synchronous work), a local workerd check with real sizes, numbers in your record; no deploy. R-SEAM: the seam owner's test runs the whole path with the real merged providers and inputs made by the member's own acts, never a hand-written answer shape; a seam test whose provider is unmerged is written first and stays red by name (merge `tranche/T51` again when BOB says it merged). R-STOP: a "reading follows" test asserts the words are in `text_units`. R-CLOCK: no test asserts a compute time from the object's clock. R-NOTMET: no "not met", deferred, REPORT or open QUESTION at COMPLETE: name the smallest thing you need and ask BOB now. R-OLD: stored-data fixes say "new data only" or carry a repair. Wording waits for T52 (K4269): a new sentence uses the nearest held row as stand-in (a drawn-screen module never adds `localize`), the row owed named in your record. Declare every census op you own (K4208). Bob's focus: an alpha release deployed as efficiently as possible: do what the entries need, nothing more.
+
+**Your entries (G1 owner and seam; G2, G13 providers; G12e).** SCHEDULER #39's B3/B4 (heartbeat, `health()`, `watch(at)`) must be merged; until then your seam tests stay red by name.
+- **G1 the watchdog (K4566, K4570).** No cron exists: the Worker exports only `fetch` (index.mjs:4,18-19, "No other export"), `wrangler.jsonc` has no `triggers`. Add `triggers.crons: ["*/5 * * * *"]`; export `scheduled(controller, env, ctx)`: for each of `bio` and `scratch`, a fresh stub, `stub.watchdog(controller.scheduledTime)` raced against a 10 s timer, the whole handler in try/catch, one structured `console.error` on failure, both objects tried, then THROW so Cron Events record a failed run; no `waitUntil` work, no R2/KV. `Store.watchdog(at)` (store.mjs near :705-708) delegates to scheduler `watch(at)`. `owedwork` (pending.mjs:288-300) gains `last_run`, `alarm_at`, `stale`, `oldest_overdue` (one MIN query), `watchdog_seen`, answered to the admin class only, read-only, never re-arms (declared.mjs:16). Update the "No other export" header. Failing-first (Miniflare, `l75-entry.mjs` pattern; each seen red): `scheduled` over a persisted store with owed rows and no alarm: alarm set, row runs; a seeded past alarm (verify first that Miniflare keeps it unrun) and an alarm killed more than 7 times: re-armed; a second boot (deploy restart); the object busy with an owed `hang` read: returns within the bound, records busy, re-arms nothing wrongly; a double fire; a fire 20 min late; STORE that throws, hangs or answers broken: bounded, the second object tried, final throw, no unhandled rejection; `wrangler.jsonc` holds exactly one cron equal to control-plane's literal `bio-plane-crons/1`. One test in `plane.test.mjs` that encodes "only pulled earlier" is BOB's to fix (test only).
+- **G2 provider.** `PENDING_KINDS` (pending.mjs:44) gains `fetch`, keyed by session like `subresources` (:222-226), HEAVY (:49), its owner (:143-190) calls acquisition's `owedFetch` with `deps.deliver`. Failing-first: the row runs through a tick and delivers; an interrupted run is counted as for readings.
+- **G13 provider.** The `reading` row continues by cursor (`more:true`, :101-105): one heavy piece per tick, interrupted-run accounting kept.
+- **G12e.** `in-<route>` (store.mjs:48, `Date.now()`) is blind to synchronous work (cpu.mjs:20-24; live 12 MB text `do-extractread` 19.4 s, `in-extractread` 1.3 s). No clock counts compute: reword R78 to "I/O time" and state that compute is `do-` minus `in-` minus the ~115-160 ms hop.
+
+Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio plane tranche/T51 job/T51/plane`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B41 · CHANGE
+
+CHANGE (K4574): SCHEDULER #39 is merged into tranche/T51: scheduler R4, R11 extended and R28 (heal, heartbeat sched_beat, health) and R29 (watch) written. Merge tranche/T51 into your branch before your G1 work: your watchdog RPC calls schedulerOf(ctx, env).watch(controller.scheduledTime); owedwork reads .health() (admin class only). Tighten scheduler's invariants test expectation is not yours: instead make your plane test assert wrangler.jsonc holds exactly one cron equal to control-plane's literal; scheduler's own test allows at most one.
+
+## B42 · CHANGE
+
+CHANGE (BOB #253; your J32 COMPLETE read). Re-opened for two items found by EXTRACTION #34 (J19): (1) one line beside `capture.owedLater` (store.mjs ~421): `extractionOf(ctx).registerOwe((a) => pending.owedLater(a))` (extraction R89: without it G8's repair and the restart of partial texts owe nothing); extraction merges after reading-pipeline, so guard it by feature until then. (2) the plane seam tests extraction wrote and cannot keep (architecture): `round6-plane.test.mjs` in extraction's commits d5bd1f2edc..d319b550dc (G4, G8, G13 through the real Store, ledger and alarm): take them into your tests as yours; red by name until extraction merges. Also: acquisition is merged (tranche/T51): re-run your G2 `fetch` seam against the real `owedFetch` now. Merge tranche/T51.

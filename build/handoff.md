@@ -1,48 +1,51 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #250 (`session_01G6Txo7f9iCv4SnYdk5Zypv`, depth 1, parent ROOT #8 `session_01R3hvN64bYHG3vPQmYmaeLR`, secondary account), 2026-10-22 ~09:45 UTC, at about 40 % of its window, at a clean point (every job entry answered, every merge committed). **T51 is OPEN** on `tranche/T51`; **fix round 5 is running** (5 jobs live). Read `build/rulings-active.md` whole, then **K4529 to the last line** of `build/rulings.md` whole, then `build/plan/fix-round-5-T51.md` whole (sections 2b and 2c are this session's) and `build/plan/fix-round-5-step0.md` whole.
+**Status** · Replaced whole at each handoff. Written by BOB #253 (`session_01UWQTVt51zWXJ27dRpghMUf`, depth 1, parent ROOT #8 `session_01R3hvN64bYHG3vPQmYmaeLR`, secondary account), 2026-10-22 ~17:00 UTC, at about 53 % of its window (Bob asked "Is it time to refresh?"), at a clean point: every merge pushed, every job entry read and answered. **T51 is OPEN** on `tranche/T51`; fix round 6 runs (first wave nearly merged, wave 2 nearly merged). Read `build/rulings-active.md` whole, then **K4577 to the last line** of `build/rulings.md` whole, then `build/plan/fix-round-6-T51.md` (its section "G14-G25" is new) whole. `audit-silent-partial-reads-K4571.md` is the evidence behind G14-G25: read a row only when a job cites it.
 
 ## Bob's direction today (in force)
 
-- "the focus is on getting an alpha-level release deployed as efficiently as possible" (Bob, 2026-10-21; K4459, K4460). Weekly meter 53 % (K4516).
+- Alpha release deployed as efficiently as possible (K4459, K4460). Weekly meter 53 % (K4516).
+- K4565/K4566: the scheduler heals itself unseen; the Worker's cron is a watchdog.
+- K4571: never a silent partial read; the audit's 14 rows are G14-G25 of this round (K4578).
+- **K4581 (Bob, this session):** AI-DESIGN's A41 "is not for the alpha release. It's beta." Not read into T51; taken up at beta planning.
 
-## What happened this session (K4529-K4539)
+## State of fix round 6 (merges K4580-K4589; STARTs `starts-T51-F6/`, wave 2 `starts-T51-F6b/`)
 
-- Fix round 5 reviewed (K4530: E2's acquire half, E12, E13 added from PERFORMANCE read whole); three stale tests fixed by BOB (R117, R129 N5, R100). Step 0 read live (K4532): **the alarm's ledger is wedged since 05:57Z** behind INFO-2026-0111's reading row (E2 (d) confirmed); E14 added (Timeline lacked the events vocabularies); E9 put to Bob.
-- 13 jobs started (K4531, K4532). **Merged:** publication, reading-pipeline (session kept open), affordances, screens-publish, acquisition, interface-shell, screens-intake, doorbell (K4534-K4539). Three more stale tests fixed by BOB (K4537); screens-intake `uses` gains test-support (K4538). N1264 (E10 (ii), the session fold) to next.md on a measurement (K4533).
+**Merged (26):** installer-steps, bundler, strength, case-carriage, review, store-door, acquisition, csv-reader, journey-check, case-authoring, calculations, odf-reader, doctypes, observation-log, office-readers, following, capture, interface-shell, notice-producers, corpus-export, machinery-producers, screens-investigate, plane, screens-intake, reading-pipeline. All archived, rows written.
 
-## Running jobs (mail check; doorbell routine into each, K3686)
+**Running (6), with what each waits on:**
+- **EXTRACTION #34** (G4, G6, G8, G13, G14 owner): CHANGE B27 at 16:58: reading-pipeline merged; conform to its real names, run `round6-pieces` and the G14 seams, workerd L numbers, then COMPLETE. Its merge clears `r80.test.mjs:60`, plane `fix4-seam` R75 R4 and plane `round6-extraction` R87/R89/R90 (accepted red by name until then).
+- **CONTROL-PLANE #48** (G2, G5, G7, G14, G18 seam owner): B43-B45 done (J28-J30; `r117-held` root-caused and fixed on its branch: a wall-clock test). Its G2 seam needed plane's `fetch` kind: **plane is now merged**, so CHANGE it to merge the tranche and re-run the G2 seam (and G13 after extraction), then COMPLETE.
+- **SCREENS-INQUIRY #21** (COMPLETE J27, not merged): `fr6-seam` G12a (capture merged: should be green) and G13 (waits on extraction). CHANGE B41 sent; merge after extraction. Its module is 6,599 lines: measure its reading set at its next START (K4586).
+- **SCREENS-PUBLISH #18** (COMPLETE J28, not merged): waits on control-plane's merge for its door seam (`drafts`); CHANGE it then.
+- **SCREENS-DAILY #19** (REPORT J22): waits on control-plane's merge (`projects` forwarding) for `casedrafts-seam`; CHANGE it then.
+- **SCREENS-ACTION #15** and **SCREENS-SETTINGS #17** (wave 2, G20 pickers): started 16:17 and 16:40.
 
-| job | session | state | waits on |
-|---|---|---|---|
-| PDF-READER #10 | `session_014rsq68z5SGk7R183eVVx8C` | WORKING | its own work: object table < 110 MB, R42's second term (B7, J4 ruled), E11 |
-| CAPTURE #47 | `session_01VM4D7r3cUFZacyS8LqnGx2` | merging acquisition (B21) | E13 done; E5 call to `textTypeOf`, then COMPLETE |
-| EXTRACTION #33 | `session_018SGhEZ3jJD7Da7xorwia8V` | WAITING (J15) | pdf-reader's merge for `c5b-memory` (B17); `defer=1` arm (B18); E1 repair (B19) |
-| CONTROL-PLANE #47 | `session_01ScsNRTFgkShQFLDCyhHJBM` | RUNNING its seam test | B35 (J25 answers), B36 (E8 composition test from acquisition's 68845de064), B37 (acquisition merged) |
-| PLANE #50 | `session_01AipmqTnUkdaqEHwuH2y95j` | WAITING (J27) | pdf-reader **and** extraction merged (reading-pipeline is), then its L run and COMPLETE (B35) |
-| READING-PIPELINE #21 | `session_01SnD31Lo4LuZRr5JLS6rug9` | merged, kept | a CHANGE when pdf-reader merges: R42 re-measure table |
+**Merge order left:** extraction, control-plane, then screens-inquiry, screens-publish, screens-daily, screens-action, screens-settings (seams green first).
 
 ## Do next, in order
 
-1. **Take over** (§5.1): archive BOB #250 once idle (row `BOB-final`, T51); delete its backstop `trig_01UopnBe8PUaHRFYoz4yvTkG` and WATCH #250 `trig_01Sa8cRbK5RQL4HLLS2qDrxA`; arm yours (a layer runs: backstop too); `node_modules` (K4113); `/home/user/cp-close` at civicos-process `prep/T51-close-v2` (`git worktree add`; use its `tools/mail.mjs`, which has `jobbranch`).
-2. **On pdf-reader's merge:** CHANGE to EXTRACTION, READING-PIPELINE (R42 table) and, once extraction is merged too, PLANE. Merge order per plan §3: plane last, control-plane before it.
-3. **E9** starts only on Bob's answer (open below): A → a job on screens-action hiding "Keep as a template" from those `filing-templates` refuses (`cs.can("templatesave")` is a class test today); B → filing-templates' rule changes; C → a requirement change (Bob's words) on filings and filing-templates. Record his words (K1762), post to lanes (K3082).
-4. After every job: regenerate (manifest order), verify, checks, the whole suite in two halves, K4426's check per cause (a table like `k4426-check-T51.md`), **one redeploy** (K4296's route: `deploy-test/biosmoke8/dry-run`, then `deploy`), the targeted re-walk (plan §7 (3), brief like `walk-T51-rewalk4/BRIEF.md`; also Timeline (E14) and PERFORMANCE re-timing with `in-<route>` and `read_split`), one final pass. The live ledger (E2) must drain after the deploy: read `owedwork` first.
-5. **T51's close** (§5.7): U448 then U449 merged into `main` first, `main` merged in, every module's tests, the close PR; the process PR from `prep/T51-close-v2`. Close audit: journey-check's older `not yet met: T51` marks (R20, R21, R23-R26, R28), case-disclosures R33, corpus-export R11, R12.
+1. **Take over** (§5.1): archive BOB #253 once idle (row `BOB-final`, T51); delete its backstop `trig_01WsgKtdo8LsZ79s8ai6dR8P` and WATCH #253 `trig_01C3CcFCpYDHN8rJ6kBdE9NR`; arm yours; `node_modules` (K4113); `/home/user/cp-close` at civicos-process `prep/T51-close-v2` (`git worktree add --detach`; its `tools/mail.mjs` has `jobbranch`).
+2. **Check plane's own suite on the merged tranche** (`node --test --test-force-exit bio-plane/test/m/plane/ bio-plane/test/system/migrate-released.test.mjs`): BOB #253's run (under a second suite): 343 of 349, 5 red: R24 (accepted), `round6-extraction` R87, R89 (and R90) by name, and **R79 L "a restart over the same storage ... then a fire" (36 s)**, not expected: run that file alone five times; if it fails alone it is plane's (the watchdog's restart case, G1) and goes back to a plane job before the deploy.
+3. **CHANGE CONTROL-PLANE** (plane merged); then merge in the order above as each completes.
+4. **Requirement lines owed** (one worker, sonnet medium, as K4580's): reading-pipeline R39-R41, R32; plane R78-R83; corpus-export R14, R15, R10; machinery-producers R2; screens-investigate R58, R52; notice-producers R27; screens-intake (record); capture R73, R77, R104, R105; interface-shell R122-R125, R86, R123, R7, R24; observation-log R7; office-readers R11; following R2, R12, R14; then each remaining job's at its merge. A new id named by another module's test passes coverage wrongly (K874): check each new id is named by its own test (calculations R43 was, by BOB's rename).
+5. **The round end** (plan §7): DEC-419 (U455 @ c7f61f61cb) and DEC-418 (U452 @ aed4de301f) are design files whose rows the jobs' stand-ins need: merge the design commit into the tranche (design files only) before regenerating; regenerate in the manifest's order (member-roster, setup-words, `program.mjs`, court-data, wizard-scripts, bundles, newgroup) so the built-in release carries control-plane's `bio-plane-crons/1` literal; then the whole suite. **Accepted reds by name:** promotion `row-census`; file-safety R24, plane R24 (U448 at the close); journey-check R17 (T52); installer `newgroup/test` 14 (R8, R11, R20, R44, R55, R61, R71, `wizard.test.mjs`, `realsize` R33 x6) and journey-check's watchdog seams until the regenerated release; agent-worker R45 (stale bundle); load-only: acquisition `stage-times` R95, screens-intake `t51-fix5` R31, screens-investigate `fix4-seam` C8. Then K4426's check per cause (G1-G25), **one redeploy**, the targeted re-walk (plan §7 (3)), the final pass.
+6. After the re-walk's measurements: bring Bob the two speed questions with options (a combined read; where the objects live), plan §2 G12 end. Not before.
+7. **T51's close** (§5.7): U448-U455 design commits merged into `main` first (K1177), `main` merged in, every module's tests, the close PR; the process PR from `prep/T51-close-v2`.
 
-## Accepted reds, by name, until the act named
+## Lesson (this session)
 
-Promotion `row-census`; file-safety R24 and plane R24 `release.test.mjs` (stale design rows: U448's merge at the close); journey-check R17 (T52); extraction `c5b-memory` and doc-clean `measure` R4 until pdf-reader and extraction merge.
+`mail post`, `mail done` and `mail addjob` commit and push the tranche branch: a merge not yet tested is pushed with them. Merge, test, push, then mail. A local `git reset --hard` is refused by auto mode as irreversible: do not merge before the test can run.
 
 ## Acts on main or sessions (reviewed acts, §5.8)
 
-- `main` moves only by T51's close PR (§5.7 (3)), the design MERGEs U448 and U449 first (§5.7 (1), K1177); no refusal recorded. The process repository's `main` by PR at the close (K4275).
+- `main` moves only by T51's close PR (§5.7 (3)), the design MERGEs first (§5.7 (1), K1177); no refusal recorded. The process repository's `main` by PR at the close (K4275).
 - Job branches only by `mail jobbranch` (K4385); never a force-push (K3977, K4384).
-- Deploys to biosmoke8 by push to `deploy-test/biosmoke8/{dry-run,deploy}` (K4296's approval covers the T51 build; not refused at K4423 or K4520); none until round 5's K4426 points are checked (K4426, K4428).
-- Sessions: archive each job at its merge (reading-pipeline after its R42 table); lanes' sessions are not BOB's to archive.
+- Deploys to biosmoke8 by push to `deploy-test/biosmoke8/{dry-run,deploy}` (K4296; not refused at K4423, K4520, K4556); none until round 6's K4426 points are checked.
+- Sessions: archive each job at its merge; lanes' sessions are not BOB's to archive. UX design #38 `session_01DvXHQqV1arHFoxUeFp1nmG` (started by BOB #253, K4577) archives #37.
 
 ## Open with Bob
 
-- **Who may keep a filing as the team's template** (E9; asked 2026-10-22 ~08:55): a member invited to a project but not yet joined prepared, approved and sent a records request, then was refused "Keep as a template". Options: **A (recommended)** joined members only, the button hidden from others; B anyone who made and sent the request; C nothing weighty (sending a filing included) until the invitation is accepted. No answer yet.
+- None.
 
-Lanes: AI-DESIGN A40, JOURNEYS W4, INVESTIGATION-DESIGN H43, PERFORMANCE P14 unchanged. Channel: UX-DESIGN through U449, nothing unread either way.
+Lanes: AI-DESIGN A41 (beta, K4581), JOURNEYS W4, INVESTIGATION-DESIGN H43, PERFORMANCE P14. UX-DESIGN through U455, read; B485-B487 ours.

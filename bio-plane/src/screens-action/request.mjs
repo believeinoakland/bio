@@ -6,7 +6,7 @@
    office known to hold such records the screen says so and points an administrator to where one is added (R20); on every
    preparation it draws the matter's stake (R21).
    Every function here is self-contained (interface-shell R21 (1)). */
-import { draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, readOnly, officeLine, recordsLawsOf, chosenLawOf, templateOffered, PREPARE, APPROVE, RECORD_SENT } from "./send-steps.mjs";
+import { draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, readOnly, officeLine, joinFirst, recordsLawsOf, chosenLawOf, templateOffered, PREPARE, APPROVE, RECORD_SENT } from "./send-steps.mjs";
 
 export const request = Object.freeze({
   id: "request",
@@ -36,6 +36,8 @@ export const request = Object.freeze({
       r.identity = { op: "groupidentity", empty: function () { return false; } };
       // C64-template: whether the kind holds a template decides what the text help says
       r.templates = { op: "templatesforaction", query: { action: s }, empty: function () { return false; } };
+      // E9 (K4557): her own place in the action's project (`participation`): an invited member is told at the start, not refused at the end
+      r.standing = { op: "projectlist", query: {}, empty: function () { return false; } };
     } else if (s) {
       // R39: `addresseesuggest` resolves an entity or an action's records, never a project: the member says which name the records
       // concern first, from the names the record follows, and the offices are asked after she picks (the act below)
@@ -47,7 +49,7 @@ export const request = Object.freeze({
   },
 
   parts: {
-    draftsOf: draftsOf, stepOf: stepOf, sendSteps: sendSteps, draftOf: draftOf, readFiling: readFiling, stakeLines: stakeLines, readOnly: readOnly, officeLine: officeLine,
+    draftsOf: draftsOf, stepOf: stepOf, sendSteps: sendSteps, draftOf: draftOf, readFiling: readFiling, stakeLines: stakeLines, readOnly: readOnly, officeLine: officeLine, joinFirst: joinFirst,
     chosenLawOf: chosenLawOf, templateOffered: templateOffered,
     isRequest: function () { return true; },
     // R20, R39: the offices known: those the member's last "Choose the office" answered, for the name she picked; none are known

@@ -129,7 +129,8 @@ test("R11 xlsx text: tab-joined rows, newline-joined across rows and sheets; the
   });
   const t = await xlsxEntry.text(b);
   assert.equal(t.document, "zero\t3.5\tTRUE\ninline\t#DIV/0!\nzero!\nhidden text");
-  assert.deepEqual(t.sheets.map(({ text, cells, ...s }) => s), [
+  assert.deepEqual(t.sheets.map((s) => s.lineRows), [[1, 2, 3], [2], []]);
+  assert.deepEqual(t.sheets.map(({ text, cells, lineRows, ...s }) => s), [
     { sheet: 0, name: "One", hidden: false, rows: 1048576, cols: 16384, usedRows: 3, usedCols: 4, range: { kind: "sheet-range", ref: "One!A1:D3", sheet: "One", range: "A1:D3" }, undetermined: [{ sheet: 0, cell: "A2", reason: "shared_string_index_out_of_range" }] },
     { sheet: 1, name: "Two", hidden: "hidden", rows: 1048576, cols: 16384, usedRows: 2, usedCols: 2, range: { kind: "sheet-range", ref: "Two!A1:B2", sheet: "Two", range: "A1:B2" }, undetermined: [] },
     { sheet: 2, name: "Empty", hidden: false, rows: 1048576, cols: 16384, usedRows: 0, usedCols: 0, range: null, undetermined: [] },

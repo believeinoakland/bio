@@ -1,6 +1,6 @@
 # extraction (T51)
 
-**Status** · session_019RcTbWsRRhrZ7k5jcyP7gC · depth 2 · COMPLETE · handled B15
+**Status** · session_01WXFSyuYPNQSifvTQ2HqNyW · depth 2 · COMPLETE · handled B27
 
 ## J1 · REPORT
 
@@ -262,3 +262,129 @@ CHANGE B15 done. Merged tranche/T51 (502edbc26f); `read` (extraction/index.mjs:6
 On `owe`: not passed from `read`, and not needed. `readHeld` answers `owed: true` itself whenever the reading written has `tier3_candidate` and an OCR member is bound (or failed transiently), and `kind: "ocr"` passes keep it owed while pages remain; the plane's ledger entry for that digest is kept by that answer. The `owe` hook is for callers with no answer to give (the acquire path), which is the door's and reading-pipeline's seam, not `readHeld`'s.
 
 Size (session_019RcTbWsRRhrZ7k5jcyP7gC): test runs 27, module lines 3497
+
+## J15 · QUESTION
+
+QUESTION (E2, `c5b-memory`): I need pdf-reader's merge before the 100 MB gate can be green.
+
+What is done: `readHeld` now reads with the index's bound (`extraction/index.mjs:699`, `budget: CAPTURE_TEXT_CAPTURE_BOUND`), and `c5b-memory.test.mjs` now fails above 100 MB (GATE_MB).
+
+Measured here (node, same 21 MB / 1,300-page file; heap + array buffers above idle, sampled every 5 ms):
+- `readHeld` with `Infinity` (the old code): 126 MB.
+- With the index bound (the fix): 112, 124, 129, 130 MB in four runs and 99 MB in one, so it is not stable under 100.
+- `pdfstructure.extractPdfStructure` alone on the same bytes: 96 MB. That is pdf-reader's object table, which sits on this branch unchanged (fix round 5 has not merged pdf-reader yet).
+
+So the budget costs only the units' share (about 13-28 MB, inside the noise); the rest is the parse. The test cannot go green under 100 MB from this module.
+
+What I need: the pdf-reader merge (plan E2 (c): the object table bounded). Tell me when `tranche/T51` carries it and I will merge it, run `c5b-memory` alone five times and record the numbers. Until then I complete everything else and name this test red, by name, in my record and COMPLETE (R-NOTMET asks me to ask now rather than defer). If you would rather close this job first, say so and I will post COMPLETE with that one test named red.
+
+## J16 · QUESTION
+
+QUESTION (E2, `c5b-memory` still red after B20; I need a ruling).
+
+Merged `tranche/T51` (pdf-reader, reading-pipeline in). `c5b-memory` alone, five runs, gate 100 MB, peak above idle: 120, 116, 111, 111, 116 MB. All five fail. (Before the pdf-reader merge: 112-130.)
+
+Where it sits (node, `--expose-gc`, heap + array buffers, same 21 MB / 1,300-page file):
+- `extractPdfStructure` alone on a copy of the bytes: 94-98 MB (this includes the 21 MB copy).
+- `readHeld` on a single-part home, peak reached inside `read` (before any write): 122-127 MB. The three-part test home: 111-120 MB.
+- So about 15-30 MB is added between the entry's parse and the finished `read`: reading-pipeline's work over the I2 text (units, word and glyph counts, the joined document, `readText`), not extraction's. My part is already at the index bound (`budget: 2 MiB`, extraction/index.mjs:699), and the write after `read` adds nothing to the peak.
+
+I cannot get under 100 MB from extraction. Smallest thing I need, one of:
+(a) READING-PIPELINE shaves the 15-30 MB (a further job on its `readInner`), then I re-run five times; or
+(b) you rule the gate at a number the file can meet with margin (the object is 128 MB; today's peaks are 111-127), and I set it and run five times.
+
+Everything else in my entries is done and pushed (E1 repair, E3, E2's budget, `defer=1` B18); I will post COMPLETE as soon as `c5b-memory` is green on five runs.
+
+## J17 · COMPLETE
+
+COMPLETE · EXTRACTION #33 · fix round 5 (E1 repair, E2 units, E3; B18 `defer`, B19, B21). Pushed on job/T51/extraction.
+
+**What changed (`bio-plane/src/extraction/index.mjs`).**
+- `readHeld`: E3 `#sizeOf` + over-ceiling skip of the whole check (statement written, `read: true`, from parts' sizes); E1 `#nowDetected` (range get of the first KiB, `detectFormat`; a declared-text UTF-8 head also qualifies) and `notReadAsText` (the "not read as text" sentence, in both causes, read through `localize` with reading-pipeline's own ids): a held `final` reading of that sentence is read again once with the detected format as `profile.format`; a reading that is still that sentence is not written; a document with no profile format is detected the same way at its first read; E2 `budget: CAPTURE_TEXT_CAPTURE_BOUND` (was `Infinity`); B18 `defer` option / `defer=1` query (`READING_PENDING` after every gate, nothing read), `defer` added to the `readheld` declaration's accepts.
+- R-OLD: new data only; older records are repaired by the press (E1), no sweep.
+
+**Root causes.** As the plan states (readHeld NO_WHOLE_OBJECT before any read; reading-pipeline `bytesOf` states an over-ceiling capture from sizes; final "not read as text" never replaced). Tests missed them: R80's tests built only small homes and a "no reading" state (no home over the ceiling, none with a final reading); fixed by `round5.test.mjs`.
+
+**Failing-first (`round5.test.mjs`, 11 tests; seen red on the old code, 4 of 9 then, green now).** R84 five-part 41.5 MB home with no whole: statement written, `read: true` (red: NO_WHOLE_OBJECT); a transient reading of a 30 MiB capture replaced by the final one; controls: 22 MiB needs its whole, an outsider gets NO_HOME. R83 600-page text: `words_read < words_total`, index within 2 MiB (red on `Infinity`); control: a short text equal. R85 final "(multipart)" reading replaced once, words in `text_units`, `format` pdf, history keeps the old, a second press changes nothing; controls: undetectable bytes, an over-ceiling final reading. R86 (B18): `defer=1` visible home READING_PENDING and nothing written, hidden home the same refusal as without, a held reading READING_HELD. Not seen red: R86 (written after the code).
+
+**`c5b-memory` (B21).** Gate retired to the object's limit: child `--max-old-space-size=88`, `readHeld` of the 21 MB / 1,300-page file, single-part home and three-part home promoted with the failed reading, must complete with the words in `text_units`; the sampled peak is printed only. Five runs of both: green all five (sampled peaks 60-83 MB). **Red-first not shown, and why:** the same child with `budget: Infinity` also passes at 88; I bracketed it: both variants die at 72 and below and both pass at 78 and above, so the units budget does not move the heap's feasibility (the units are references into text the pipeline holds anyway; the sampled peaks 126 → 112-130 MB earlier were inside noise). The budget stays because it is the plan's fix and R83's test proves it bounds what is offered, but it is not what brings `readHeld` under the object's line; the gate would catch a regression in the parse or the pipeline, not in the budget.
+
+**Suites and checks.** `node --test --test-force-exit bio-plane/test/m/extraction/`: 247 tests, 247 pass. Users: control-plane `r117-held`, `t51-held-failed`, `r123-reading` 18/18; plane `fix4-*`, `fix3-r74`, `l75` 28/28 (before B18; B18 adds an optional flag). `impact.mjs` names 107 modules because `index.mjs` holds `DECLARED_OPS`. `checks/run.mjs`: format 0, architecture 0, coverage 6610 of 6610, channels 0, words 0 failures (no missingkey); ownership 0 failures; `setup-words build.mjs --check`: only the expected stale-rows note.
+
+**Requirement lines I propose (BOB writes them).**
+- R83 (fix round 5, E2; amends R82): `readHeld` offers the index the units it keeps: the units budget is the index's bound (R22: 2 MiB), not unlimited; `words_read` counts the units offered, so it falls below `words_total` for a text past the bound. Test: a 600-page text; control: a short text reads whole.
+- R84 (E3; amends R80): a home whose capture, by its own document's sizes, is over reading-pipeline's whole ceiling (`WHOLE_READ_MAX`) is read with no whole held: the final statement is written and the answer is `read: true`; a capture at or under the ceiling still needs its whole. A transient reading of such a capture is replaced by the final one.
+- R85 (E1; amends R80; new data only): a `final` reading that says the document was not read as text (either cause) is read once more when the first KiB of the held whole detects a format (or is UTF-8 without NUL under a declared text type), the detected format replacing the profile's for that read; a reading with text, or one still not read as text, is never written over it.
+- R86 (B18; amends R80): `readHeld` and `op=readheld` take `defer=1`: after every gate (sight, NO_HOME, READING_HELD, NO_WHOLE_OBJECT) they answer `{ok: true, read: false, why: "READING_PENDING"}` and read nothing. R82's "offers every unit" is superseded by R83.
+
+**Other modules.** control-plane's R123 unit tests that script `NO_WHOLE_OBJECT` for a case over the ceiling are theirs to correct. Nothing stale generated by me. Wording owed: none (no new member-read sentence).
+
+Size (session_018SGhEZ3jJD7Da7xorwia8V): test runs 24, module lines 3551
+
+## J18 · QUESTION
+
+QUESTION (EXTRACTION #34, round 6; G13 and its seams). I carry on with G4, G6, G8 and G13's extraction half on my best reading below; I need your answer to 1 and 2 before G13 can go green.
+
+1. **The cursor I code against (reading-pipeline #22's provider).** `reading-pipeline.read(document, {.., unitsBudget, cursor})`: no `cursor` is the first piece (today's read); the answer carries `more` (boolean), `cursor` (opaque string for the next call; refused with a reason, not a reading, when the held bytes no longer match it), `read_through` and `total` (same unit, bytes of text), and each unit's `seq` and extent are global to the capture (a later piece continues the numbering, so extents never repeat across pieces). A piece is what `unitsBudget` allows. Please confirm this shape to reading-pipeline, or give me the real one; I write segments, state and continuation now and wire to the real names when it merges (red by name until then).
+2. **`op=reading` `text_units` is capped at 4,096 (R36, R76).** A 12 MB text read a line per unit has about 120,000 units, so "ENDMARKER is in `text_units`" cannot hold under that cap whatever I store. My reading of Bob's K4571 ("read whole, never silently partial"): the whole text is stored and searchable and citable (`capture_text`), `op=reading` states `more`, `read_through`, `total`, and its `text_units` stays the first 4,096 in seq order (stated as "the first N of M", never as the whole). If you want ENDMARKER literally in `text_units`, reading-pipeline's grain for a large text must be coarser (about 3 KB a unit for 12 MB) or R76's cap must page; that is your ruling.
+3. **Seams I rely on, no edit asked of anyone:** G8's repair rows are owed through `captureOf(ctx).owedLater` (plane sets it, store.mjs:421), and G13's continuation is `readHeld` answering `owed: true`, which plane's pending.mjs header says it continues at once, one heavy row per tick.
+4. **For control-plane's job (G4 changes what `acquireReadingOp` returns):** a failed or silent `extractread` after a kept acquire now returns `{body}` with `reading_pending: true` and `diag`, never `{response}` (502). control-plane's `readUploaded` (index.mjs:2625-2627) builds its answer from `read.body.document` only and would drop `reading_pending` and not owe the row for an upload: it must carry the flag and call `pendSha`. `op=acquire` is unaffected (its `pendReading` reads the flag off the answer).
+
+## J19 · REPORT
+
+REPORT · EXTRACTION #34 · fix round 6 (B22, B23-B25). All four entries and G14/G15 are built and pushed on job/T51/extraction; what waits is named below. Not COMPLETE: the provider (reading-pipeline R40) is unmerged, so two tests are red by name and the platform L numbers are not taken.
+
+**Done (bio-plane/src/extraction/):** G4 ops.mjs acquireReadingOp: a read after a kept acquire that comes back as no answer returns the acquire answer with reading_pending:true and diag {name,message,status,correlation?} and one console.error (event extraction.acquire_read_unanswered), never 502; a store refusal is still relayed. G6 index.mjs readHeld: a part digest resolves to its whole (#wholeOfPart); a digest no stored document names is given the size ev.head states, else NO_DOCUMENT; op=reading of a part answers the whole's reading. G8: registerOwe + migrateRepairs + table reading_repairs + repairable on op=reading. G13: pieces (readHeld continues by the stored cursor, units appended per piece, state columns more/cursor/read_through/total/words_read, answers {more:true,detail} for the ledger), restart of any reading whose index is over its bound, start-up repair of old ones. B23: op=reading takes after, answers next; B25 units_total; B24 G14: completeness {state whole|partial|stated|none, counts, skipped, failure, why}, unreadOf counts skipped as unread, every format owed in pieces (a format the reader refuses with NOT_PIECEWISE ends as stated partial). G15: row-block units index block by block. reading declared in DECLARED_OPS (accepts sha256, after).
+
+**Failing-first, red then green:** relays.test.mjs (R87) and round6.test.mjs (R88-R91) were run against the old code and failed there; green now. Extraction suite: 276 pass, 2 fail: round6-pieces.test.mjs "12,000,060 B text" and its 4,000-line control, red by name until reading-pipeline R40 merges. With R40's files overlaid in a scratch copy both pass (30 ticks, ENDMARKER indexed, whole, paged).
+
+**Step 0 of G4 (cause still unknown):** not reproduced. In-process (real Store, render 400 ms vs 50 ms wait, extractread rejected once) and under workerd/Miniflare through the plane's own door (render 12 s past the 10 s wait, three presses): every press 200, extractread answered, no 502. The cause is only visible on the deploy: the log line and diag name it.
+
+**Needs from others:**
+1. PLANE: one line beside capture.owedLater (store.mjs:421): extractionOf(ctx).registerOwe((a) => pending.owedLater(a)). Without it G8's repair and the restart of partial texts owe nothing. (I told you in J18 the rows go through captureOf(ctx).owedLater; extraction cannot reach that instance safely, so it is a registration like R72's.)
+2. READING-PIPELINE R40 to merge; its answer shape (pieces:{cursor,maxUnits} -> piece:{more,cursor,chars_through,chars_total,words}, refused:{code}) is what I built to. For G14 on other formats it needs pieces for DOCX/HTML/PDF text; until then those end as stated partial (NOT_PIECEWISE). The 6,000-paragraph DOCX, 300-page PDF and 24 MiB+ PDF cases of G14's seam need that provider and then run here as red by name.
+3. After the merge I run the workerd probe (bio-plane/test/m/extraction/round6-l.probe.mjs) for 12 MiB and 24 MiB and record the numbers.
+4. CONTROL-PLANE (told by you): readUploaded must carry reading_pending/diag and call pendSha.
+5. The plane's seam tests that import the plane cannot live in extraction's tests (architecture); the two I wrote (G4 and G8 and G13 through the real Store, ledger and alarm) are in commit d5bd1f2edc..d319b550dc as round6-plane.test.mjs; they passed there and are available to whoever owns the plane seam.
+
+**Contract changes to tests:** r80.test.mjs homes now store their provenance document; read.test.mjs and relays.test.mjs encode R87 (a silence after a kept acquire is deferred, not 502); the old rule "pages skipped over the bound are not unread" is replaced (G14).
+
+**Checks:** node checks/run.mjs: format, architecture, coverage, channels, words all 0 failures; ownership 0. Users: 26 files that use readingFor/unitsOf/readHeld/acquireReadingOp outside extraction: 176 of 177 pass; the one (plane fix4-seam) failed on a home with no stored document and passes since the size rule; it is green now.
+
+**Words:** no new sentence; diag.message falls back to the code STORE_REPLY_NOT_AN_ANSWER. Stand-in rows owed: none.
+
+**Requirement lines I propose:** in my scratch file req-lines.md; summary: R87 (G4), R88 (G6), R89 (G8: registerOwe, migrateRepairs, reading_repairs, repairable), R90 (G13: pieces, per-piece bound amending R22, state partial while more amending R36), R91 (G14: completeness, units_total, skipped counted unread amending R27), R76 amended (after/next), R79 amended (reading declared). Full text follows.
+
+- **R87** (fix round 6, G4; K4428; amends R1, R64) **A kept capture is never failed by the reading that follows it.** `acquireReadingOp`, handed the acquire answer of a capture that is kept, answers `{body}`, the acquire answer with `reading_pending: true` and `diag` `{name, message, status, correlation?}` (the failed call's error name and message, the reply's status, the store's own correlation id when it gave one; not drawn), and writes one `console.error` line `{event: "extraction.acquire_read_unanswered", sha, name, message, status}`, whenever the store's call comes back as no answer: the stub threw, the reply was no envelope, or it answered with no result. The store's own refusal (`ok: false` below 500) is still relayed with its status, code and sentence (R64). Test: `relays.test.mjs` (each silence, each helper the door hands; the correlation id; the control that an answer and a refusal are as before).
+- **R88** (G6; amends R27, R80) **A part's digest is no document.** `readHeld({sha})` of a digest that a document of its home bundle's own provenance document names as one of its parts is `readHeld` of that document's digest (its reading is written for the whole; nothing is written under the part). A digest that no stored document of its home names answers `{ok: true, read: false, why: "NO_DOCUMENT"}` and writes nothing, so the reader is never handed a document that is a digest alone. `readingFor` (`op=reading`) of a part's digest that holds no reading, or a failed one, answers the whole's reading (its `capture_sha` the whole's), withheld as the whole's is. Test: `round6.test.mjs`; controls: a whole's own failed reading answers as itself, a bare digest is `NO_DOCUMENT`, a hidden bundle answers as an absent record.
+- **R89** (G8; R-OLD, a repair; amends R85) **An old "not read as text" reading is owed with no press, and states it may be repaired.** The composition hands this module the ledger's registration once, `registerOwe(fn)` (as it hands capture its `owedLater`; a second is `LISTENER_DECLARED`). `migrateRepairs` (run at start on an object, and when the registration arrives) owes `fn({kind: "reading", sha})` once for each stored reading that says the document was not read as text and that no read has tried under this release; a ledger that refuses stops it where it was. `readHeld` of such a reading whose held bytes detect nothing writes `reading_repairs` (the digest, its bundle, the release, `undetected`), after which `readingFor` states no `repairable`; until then `readingFor` answers `repairable: true` for it, and answers no such key for any other reading. `reading_repairs` is a table of this module, keyed to its bundle (R49). Test: `round6.test.mjs`; controls: only that reading is owed; once; a later release tries again.
+- **R90** (G13; K4571; amends R22, R36, R76, R82, R83) **A large text is read whole, in pieces, by the ledger, and is never stated complete while more follows.** `readHeld`'s read hands reading-pipeline `pieces: {cursor}` (its R40); the index state of a capture read in pieces (`capture_text_state`: `more`, `cursor`, `read_through`, `total`, `words_read`) holds how far it has been read. `readHeld` of a reading whose state has `more` reads the next piece from the stored cursor, adds its units to the capture's (the bound of R22, 2 MiB and 4,096 units, applying to each piece, never to the capture), moves the state to the cursor the piece answers, and answers `{ok: true, read: true, more: true, detail: {read_through, total}}` while more follows (the ledger goes on at once, plane R77), `{ok: true, read: true}` for the last piece, `{ok: true, read: false, final: true, why}` when the reader refuses the cursor (the entry ends, stated); with `defer=1` it reads nothing (`READING_PENDING`). A piece that lands after the state moved is not added. The reading itself is not rewritten by a piece: `readingFor` answers `more`, `read_through` and `total` for a text read in pieces (`more: false` at the end; absent for every other reading), and its `words_read` as the pieces have read it. The index state of a text read in pieces is `partial` while `more`. A text reading written without pieces (the acquire wire, a promotion) whose units the index holds only in part (`text_container` `text` or `html`) is marked to be read again from its start in pieces, and owed through `registerOwe` once the write commits; `migrateRepairs` owes the same for stored texts of that kind and for texts mid-way, once (R-OLD). A reading that is not a text, or a state it could not read in pieces, is stated as it is, once. Test: `round6.test.mjs` (a scripted provider: the pieces, the bound per piece, the over-bound piece named, the refused cursor, the race, `defer`, the old store's columns), `round6-pieces.test.mjs` (the 12,000,060 B text with the real reader; red by name until reading-pipeline R40 merges).
+- **R76 amended** (K4577) `op=reading` answers at most 4,096 `text_units` and takes `after`, a unit's `seq`: it answers the units after it, and `next`, the `seq` to ask after the page, null at the end (absent with the units for a viewer refused the bundle). A malformed `after` asks from the start. `unitsOf(captureSha, {after})` answers the same page and `next` when more follows (R36).
+- **R79 amended** `reading` is declared (`DECLARED_OPS`): admin, member, probe; a read; accepts `sha256`, `after`; requires `sha256`.
+- **R91** (G14; K4578, K4579; amends R27, R36) op=reading states completeness {state: whole|partial|stated|none, counts, skipped, failure, why} and units_total (the units indexed so far), withheld with the bundle; whole only when nothing is over a bound, skipped or unaddressable and nothing more follows; stated for a reading refused whole (failure final, why); the pages a skipped run covers are unread (unread_pages). A reading of any format whose index is over its bound is read again in pieces through the ledger; a format the reader answers NOT_PIECEWISE ends as stated partial, once.
+
+Size (session_01WXFSyuYPNQSifvTQ2HqNyW): test runs 40, module lines 3857
+
+## J20 · COMPLETE
+
+COMPLETE · EXTRACTION #34 · fix round 6 (B22; B23-B27). Pushed on job/T51/extraction at 50779b5ff9, tranche/T51 merged (reading-pipeline R39/R40/R41, plane registerOwe, capture, acquisition in).
+
+**Conformed to the merged names (B27):** Extraction.read passes `cursor` (null, or the string a piece answered) and `maxUnits` (4,096); the piece's `more`, `cursor`, `read_through`, `total` are top-level and `piece.words` counts; a later piece is units alone; NOT_PIECEWISE / CURSOR_MISMATCH read from `refused`. index.mjs: pieceOf, #continueText, Extraction.read.
+
+**What changed, as J19 (G4 ops.mjs acquireReadingOp; G6 readHeld/#wholeOfPart/readingFor; G8 registerOwe, migrateRepairs, reading_repairs, repairable; G13 pieces, state columns, restart; B23 op=reading after/next; B25 units_total; G14 completeness, skipped counted unread (#unreadOf), every format owed in pieces; G15 row-block units; `reading` declared).** Since J19: a home with no stored document is given the size ev.head states (else NO_DOCUMENT), per B23; the migration's no-document case likewise.
+
+**Failing-first (red then green):** R87 relays.test.mjs, R88-R91 round6.test.mjs (run against the old code, red). With the merged provider: round6-pieces.test.mjs green: the 12,000,060 B text (31 ticks, ENDMARKER indexed, whole, words read = words total); the 4,000-line control complete in one tick; G14 seams: a 6,000-paragraph .docx read in pieces (tail found by search and by paging op=reading, units_total 6,000); a 300-page dense PDF (9 KB a page) read to the last page in pieces, each within the bound; a 41.5 MB capture over the ceiling states `completeness.state stated` with its size (round5 R84). round5's R83 test now follows R90 (first tick `more`, later ticks complete it).
+
+**Platform L (round6-l.probe.mjs: real Durable Object SQLite and text index, R2, the merged reader, under Miniflare/workerd; the harness's own file-building spike let go before the ticks):** 12 MiB text: read to ENDMARKER in 31 ticks, wall per tick max 2.9 s (the first, the reading with its totals), mean 0.4 s. 24 MiB text (the ceiling): 62 ticks, max 4.9 s, mean 0.46 s. workerd's whole-process resident set (no heap cap; V8 does not collect without pressure, so an upper bound): idle 118 MB, with the file held 168 / 196 MB, peak over the ticks +194 / +263 MB over the held file. The isolate's own heap is not reported by process.memoryUsage in workerd. The binding measure is reading-pipeline's bisected one for the read of a piece (its J-record: first piece of 12 MiB completes from 39 MB old space, heap + bytes ~51 of 128); extraction adds at most 4,096 row inserts and their text-index entries per tick, and holds no more than one piece's units. A capped run of the whole tick (--max-old-space-size) is not possible through Miniflare; say if you want it taken with raw workerd.
+
+**G4 step 0:** not reproduced, in-process and under workerd through the plane's own door (render 12 s past the 10 s wait, three presses: every press 200, extractread answered). The cause is the deploy's to name: `diag` and the log line `extraction.acquire_read_unanswered`.
+
+**Suites and checks:** extraction directory 282 tests, 282 pass (c5b-memory included). node checks/run.mjs: format, architecture, coverage (6,632 of 6,632), channels, words 0 failures; ownership 0 failures. Users (26 files using readingFor/unitsOf/readHeld/acquireReadingOp): all passed on my branch before the merge but plane fix4-seam, which passes now. After the merge two of plane/control-plane's tests fail and are not mine to change: (1) plane/round6-extraction.test.mjs "R89 (G8) seam" calls `ex.registerOwe(...)` itself, but the plane now registers it at construction (store.mjs:427), so the second call is LISTENER_DECLARED and the repair had already run before the test's rows existed; it needs the old reading written before the Store is constructed (or to read the ledger after a restart over the same storage). (2) control-plane r117-held "R117 (acquire)" and "(through the door, the real plane)": 18-24 s runs, the plan §4 flaky-under-load one; it does not touch extraction (a stubbed door).
+
+**Requirement lines:** as J19 (R87 G4, R88 G6, R89 G8, R90 G13 amending R22/R36/R82/R83, R91 G14, R76 amended after/next, R79 reading declared), unchanged except: R90 names the cursor as the string the reader answers (not an object), and states that R83 is superseded for every format: a first tick offers the index what it keeps and says `more`; the ledger's ticks read the rest.
+
+**Words:** no new sentence; the diag fallback message is the code STORE_REPLY_NOT_AN_ANSWER. Rows owed: none.
+
+**Others:** control-plane's readUploaded must carry reading_pending/diag and pendSha (told by you); screens-inquiry draws completeness/units_total/repairable/`after`+`next`.
+
+Size (session_01WXFSyuYPNQSifvTQ2HqNyW): test runs 52, module lines 3854

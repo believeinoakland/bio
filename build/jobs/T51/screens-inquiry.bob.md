@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J23
+**Read** · handled J28
 
 ## B1 · START
 
@@ -409,3 +409,79 @@ CHANGE (K4472): CAUSE-SHELL-4 #1 is merged (tranche/T51 @ 5539bd4c3d). Merge the
 ## B34 · ANSWER · re J22
 
 ANSWER (K4473). You are right: K4467 (3)'s localize was wrong for a drawn-screen module. Your stand-ins by the nearest held row stand; the rows owed (1-4) and the reason asked before 'Read it now' are in later-ux for T52. (5) as you do. (b), (c), (d) noted; nothing more for you.
+
+## B35 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/screens-inquiry tranche/T51 && git branch -m job/T51/screens-inquiry stale/screens-inquiry-local && git checkout -b job/T51/screens-inquiry origin/job/T51/screens-inquiry`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · SCREENS-INQUIRY #21 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #252 is depth 1; fix round 6, job 15 of 20; K4570, K4571)
+
+Mail with `--module screens-inquiry`; record `build/jobs/T51/screens-inquiry.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). You are the module job (P8, mechanics §6) for `screens-inquiry`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first.
+
+**Read in full:** `build/plan/fix-round-6-T51.md` (section 0's rules bind you; section 2 gives each cause you own or provide with its four fields; section 3 the merge order), `build/plan/diagnosis-R6-screens.md` (section 2), `build/plan/diagnosis-R6-speed.md` (items 1, 4), `build/plan/diagnosis-R6-capture.md` (E), `build/plan/walk-T51-rewalk5/A.md`, your requirements (both parts), the used services your entries touch, and your code. The plan's file:line evidence is your starting point, never a substitute for reading the code.
+
+**Rules** (plan section 0; K4426-K4428): (1) root cause stated with file:line, else a diagnosis posted as a QUESTION before any fix; (2) why the tests missed it, and the test-gap fix; (3) a failing-first test on the walker's case (quoted below), through the real entry path (press the act or call the op, never the done function), seen red in your record, then green; (4) where the platform matters (the object's 128 MB, the CPU limit, `waitUntil` cut ~30 s after the response, the door's 25 s, the clock frozen during synchronous work), a local workerd check with real sizes, numbers in your record; no deploy. R-SEAM: the seam owner's test runs the whole path with the real merged providers and inputs made by the member's own acts, never a hand-written answer shape; a seam test whose provider is unmerged is written first and stays red by name (merge `tranche/T51` again when BOB says it merged). R-STOP: a "reading follows" test asserts the words are in `text_units`. R-CLOCK: no test asserts a compute time from the object's clock. R-NOTMET: no "not met", deferred, REPORT or open QUESTION at COMPLETE: name the smallest thing you need and ask BOB now. R-OLD: stored-data fixes say "new data only" or carry a repair. Wording waits for T52 (K4269): a new sentence uses the nearest held row as stand-in (a drawn-screen module never adds `localize`), the row owed named in your record. Declare every census op you own (K4208). Bob's focus: an alpha release deployed as efficiently as possible: do what the entries need, nothing more.
+
+**Your entries.** (1) **G6 owner (S).** Walker A: "The document page still draws 'Nothing here' + the generic 'Read this document again with OCR'"; "the screen draws no 'Read it' for them (a `final` reading shows 'Nothing here' ...)". The page takes its digest from `regDocs[0].capture.sha256` (document.mjs:135-138), a part for a multipart capture (merged capture and extraction now give the whole), and treats `found:false` as a reading, so `textState` is "none" (:226) and the OCR act is drawn (:468-473). Fix: take the whole digest; `found:false` is "unread" or "stated", never "none"; draw a `final` statement with its size; offer no OCR act after it. Failing-first through the document screen's real reads (R-SEAM): a 5-part capture whose reading is stored under the whole draws the statement with its size and no OCR act. Missed: fixtures register single-part documents.
+(2) **G8 fallback.** "Read it" (`readheld`) is drawn for a reading extraction states `repairable` (the old multipart final), not only for "unread" (:463). Test: drawn for repairable, not for a plain final.
+(3) **G12a owner (S).** Walker A: "the project's Held ... 5.7-6.3 s". Project documents (project.mjs:49, 256: title, id, `format`/`content_type`, collected day) read `fields=picker` (capture's picker row now carries `format`). Failing-first: the Project read set has no full-row `heldcaptures`.
+(4) **G12c-strength owner (S).** One `inquirystrength` per question (project.mjs:313): send one with `ids` (strength's merged batch). Failing-first: a Project with 5 questions issues one strength read.
+(5) **G13 screen.** A text reading with `more` draws "being read" with progress until done, never complete while `more`; search and Cite cover what is read, said so (stand-in rows).
+
+Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-inquiry tranche/T51 job/T51/screens-inquiry`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B36 · ANSWER · re J24
+
+ANSWER (BOB #253, K4577) to J24.
+G6: your finding stands (the page reads provenance's whole; the fix is the `final` statement drawn with its size, no OCR act after a final). CAPTURE #48 also makes the row's capture the whole.
+G8: `repairable: true` top-level on op=reading, as you read it.
+G13: op=reading carries top-level `more`, `read_through` and `total` (bytes of text), and now PAGES: it takes `after` (a unit `seq`) and answers `next` (null at the end); `text_units` stays at most 4,096 per answer. So: while `more`, draw "being read" with `read_through` of `total`; the page draws the first page of units and states it (the first N of M passages) with a more act that asks op=reading `after=<next>`, never a page drawn as the whole; passages read stay searchable and citable.
+G12c: strength's real shape (STRENGTH #21, COMPLETE): `inquirystrength` with `ids` (a body list or comma-separated in the query, at most 50) answers `{ok: true, results: {<id>: <that id's single answer>}}`, keys in the order asked; a hidden id is its own `NO_SUCH_BUNDLE` result, never omitted. Your reading is right.
+Words: use DEC-418's keys (UX-DESIGN U452; on the table at the close): `screen.document.reading.progress` ("Being read: {read} of {total} so far"), `.reading.partial`, `.reading.done`, `.reading.stated` (`{size}`), `.reading.repairable` and its door `.reading.repairable.door` ("Read it"), instead of your stand-ins; a "first N of M passages" line and its more act are new rows: stand-ins, named in COMPLETE.
+
+## B37 · CHANGE
+
+CHANGE (BOB #253, K4578): fix round 6 gains causes from the K4571 audit. Merge tranche/T51 into your branch, then read `build/plan/fix-round-6-T51.md` section "G14-G25" whole (it is short) and apply the causes named below as part of this job, with the four fields (R-FOUR), failing-first past the bound, stand-in words named in COMPLETE (the rows go to UX-DESIGN). Bob (K4571): never a silent partial read; a bound that must stay is stated to the member.
+Yours: **G14 (screen)**: the Document page draws op=reading's `completeness`: being read (progress), read in full, or stated with its reason and size (a refused-whole reading, a PDF over 16 MiB: the size reason, never "pages N have no text" and never "none"), never "full" while partial. **G17 (owner)**: the lists at document.mjs:797 (links 200), :851 (names 500), :852 (connections 200), :953 (themes 20) draw "showing N of M" from the answer's total or `truncated`, with a more act where the read pages. **G19 (screen, Document half)**: the capture facts' `supporting: {kept, skipped, reasons}` (ACQUISITION #28 provides) drawn as "N of M supporting files kept" with the reason.
+
+## B38 · ANSWER · re J25
+
+ANSWER (BOB #253, K4579) to J25. (1) EXTRACTION #34 is told to state top-level `units_total` on op=reading (the capture's indexed units so far); draw "N of M" from it, and "N" alone while it is absent. (2) DEC-418 (U452): `screen.document.reading.partial` = "Until the whole file is read, searching and citing cover only what has been read so far." drawn beside the progress line while `more`; `screen.document.reading.done` = "Read in full. Every line of this file can now be searched and cited." drawn once a reading read in pieces is complete (`more` false and `total` stated); no fills in either. Use them with your stand-in fallback until the close regenerates the rows.
+
+## B39 · CHANGE
+
+CHANGE (BOB #253): strength's `inquirystrength` batch (`ids` -> `{ok, results}`) and store-door's fence for `ids` are merged into tranche/T51 (748383ed5e). Merge tranche/T51 into your branch before your G12c seam test; control-plane's forwarding of `ids` is not merged yet (its CHANGE B41 item 4), so a whole-path test through the control plane stays red by name until it is.
+
+## B40 · ANSWER · re J26
+
+ANSWER (BOB #253) to J26, the real shapes. (1) EXTRACTION #34 R91: op=reading carries top-level `completeness: {state: "whole"|"partial"|"stated"|"none", counts, skipped, failure, why}` and `units_total`; `why` is the plane's reason for a stated reading; `skipped` the runs not indexed; a format the reader cannot read in pieces ends `stated` partial (`why` NOT_PIECEWISE). Draw as you describe; "none" draws as today. (2) ACQUISITION #28 R108 (merged): `supporting: {kept, skipped, total, reasons: [{reason, count, limit?, detail?}], not_walked?}` in the document's `capture` facts (provenance `documents[0].capture.supporting`) and in the acquire answer; `reason` codes (`CAP_REACHED`, `BUDGET_EXHAUSTED`, `TOO_LARGE`, `DEFERRED`, `BODY_NOT_KEPT`), `limit` the bound, `detail` the renderer's words; `not_walked` a code. Draw "kept of total" and each reason when `skipped` > 0 or `not_walked` is set; the codes are worded by your stand-ins. Merge tranche/T51 (acquisition is merged).
+
+## B41 · CHANGE
+
+CHANGE (BOB #253): capture is merged into tranche/T51 (b3b6b6cf16: the picker row's `format`). Merge tranche/T51 and run `fr6-seam` G12a; G13 stays red by name until extraction merges (I CHANGE you then).
+
+## B42 · CHANGE
+
+CHANGE (BOB #254, K4591): extraction is merged into tranche/T51 (e58cccc07e: completeness, units_total, repairable, op=reading after/next). Merge tranche/T51, run your fr6-seam G12a and G13 against the real providers; green, COMPLETE again and you merge after control-plane.
+
+## B43 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/screens-inquiry tranche/T51 && git branch -m job/T51/screens-inquiry stale/screens-inquiry-local && git checkout -b job/T51/screens-inquiry origin/job/T51/screens-inquiry`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · SCREENS-INQUIRY #22 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #254 is depth 1; fix round 6, wave 3; K4426, K4597, K4598) · reading set per mechanics §6 step 2 (your other tests are run, not read)
+
+Mail with `--module screens-inquiry`; record `build/jobs/T51/screens-inquiry.md` (append a new section; earlier sections are history). Model claude-haiku-5-5, low effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). You are the module job (P8, mechanics §6) for `screens-inquiry`: your diff touches only that module's paths, tests and your record (a test file; no product code). Merge `tranche/T51` first.
+
+**Read in full:** `build/plan/fix-round-6-T51.md` section 0 (its rules bind you) and the section "G26-G28" / "G29-G33" that holds your entry (your cause, with its four fields), `build/plan/diagnosis-R6-unplaced.md` (the diagnosis of your cause), your requirements (both parts), the used services your entry touches, and your code. The file:line evidence is your starting point, never a substitute for reading the code.
+
+**Bob (K4426):** "We need to be rigorous about truely understanding the issues we're experiencing, understanding (and fixing) why they weren't caught in the fixtures, and be confident that we do understand, can properly tes, and have really fixed every issue before we do another deployment." Each defect has (1) its root cause with evidence, (2) why the tests missed it and that gap fixed, (3) a test on the walker's exact case through its real entry path, seen failing then passing, (4) a check at the live platform's real shape where it depends on it. **Bob's focus: an alpha release as quickly and efficiently as possible: do what the entry needs, nothing more.**
+
+**Rules** (plan section 0; K4426-K4428): (1) root cause with file:line; (2) why the tests missed it, and the gap fixed; (3) a failing-first test past the bound, through the module's real entry (the op or the provided service, never an inner helper), seen red in your record, then green; (4) the platform check named in the cause (most are N). R-NOTMET: no "not met", deferred, REPORT or open QUESTION at COMPLETE: name the smallest thing you need and ask BOB now. R-OLD: stored data: "new data only" or a repair. A new sentence a member reads uses a stand-in (a drawn-screen module uses the nearest held row; any other module `localize(id, en)`), the row owed named in your record (BOB's HANDOFF B485 asks the design). Declare every census op you own whose accepted keys change (K4208).
+
+**Your entry (A-23 (test only)).** Test only: one assertion in `fr28-document-acts.test.mjs`, no product code. Read `build/plan/diagnosis-R6-unplaced.md` whole. The cause, copied from `build/plan/fix-round-6-T51.md`:
+
+**A-23** (the 409): the op is right and the screen never offers it: screens-inquiry adds one assertion (an unread page draws `readheld`, never `pdfstructure`), with G26's job or the completion round. **A-21**: the dead alarm (scheduler, merged), proven by the E3 harness's spent-alarm case and live.
+
+Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names (the users of what you changed; when it names hundreds because of a shared table, run the modules that call your changed service); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-inquiry tranche/T51 job/T51/screens-inquiry`. COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+**The platform check (L) for a memory or broken-stub case:** no shared harness exists yet; use the raw workerd pattern in `build/plan/diagnosis-R6-memory.md` section "Platform check" (raw workerd, `v8Flags = ["--max-old-space-size=N"]`, `plane/register.mjs` imported, N = 128 less the file's bytes), committed in your own tests as a `.probe.mjs`, its numbers in your record.

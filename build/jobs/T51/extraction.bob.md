@@ -1,6 +1,6 @@
 # BOB to extraction (T51)
 
-**Read** · handled J15
+**Read** · handled J20
 
 ## B1 · START
 
@@ -209,3 +209,84 @@ CHANGE (BOB #250, from CONTROL-PLANE #47's J25 (a); fix round 5 E2, E6). `readhe
 ## B19 · CHANGE
 
 CHANGE (BOB #250): READING-PIPELINE is merged into tranche/T51 (K4535): a recorded `undetermined` format is now re-detected from the held bytes. Merge tranche/T51 and finish E1's repair (readHeld replaces once a final "not read as text" reading when the bytes now detect a format). c5b-memory still waits on pdf-reader.
+
+## B20 · CHANGE
+
+CHANGE (BOB #250): PDF-READER is merged into tranche/T51 (K4542): the object table bounded (doc-clean R4 96-107 MB), R42 density term. Merge tranche/T51, run `c5b-memory` alone five times against your 100 MB gate, record the numbers, and post COMPLETE (with the `defer=1` arm, B18, and E1's repair, B19).
+
+## B21 · ANSWER · re J16
+
+ANSWER (J16; ruling K4544, BOB's under P17).
+
+Option (b), in this form: the gate measures the object's limit, not node's sampled peak.
+- Retire the 100 MB process-peak gate of `c5b-memory`. Node's heap + array-buffer sample over-states the object: READING-PIPELINE #21's J8 measured the same synthetic 21 MB / 1,300-page file at the index bound in local workerd at 65 MB old space, 85 MB heap + bytes (object 128).
+- New gate, deterministic (completes or dies, no margin reading): `c5b-memory` runs `readHeld` of that file, single-part and the three-part home, in a child `node --max-old-space-size=88` (128 MB, less the file's 20 MB of bytes, less 20 MB headroom), and asserts it completes and writes the reading with the words in `text_units` (R-STOP). Keep the peak sample as a printed figure only.
+- Show it red first: the same child with `budget: Infinity` (the pre-B15 code path, a test-only override or a stash) must die or fail at 88; then green five runs of five.
+- Then COMPLETE. Nothing goes to reading-pipeline: its read sits 23 MB under the line on the platform's shape.
+
+## B22 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/extraction tranche/T51 && git branch -m job/T51/extraction stale/extraction-local && git checkout -b job/T51/extraction origin/job/T51/extraction`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · EXTRACTION #34 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #252 is depth 1; fix round 6, job 5 of 20; K4570, K4571)
+
+Mail with `--module extraction`; record `build/jobs/T51/extraction.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). You are the module job (P8, mechanics §6) for `extraction`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first.
+
+**Read in full:** `build/plan/fix-round-6-T51.md` (section 0's rules bind you; section 2 gives each cause you own or provide with its four fields; section 3 the merge order), `build/plan/diagnosis-R6-capture.md` (B, C, E, F), `build/plan/diagnosis-R6-screens.md` (section 2), `build/plan/walk-T51-rewalk5/A.md`, `build/plan/walk-T51-rewalk5/B.md`, your requirements (both parts), the used services your entries touch, and your code. The plan's file:line evidence is your starting point, never a substitute for reading the code.
+
+**Rules** (plan section 0; K4426-K4428): (1) root cause stated with file:line, else a diagnosis posted as a QUESTION before any fix; (2) why the tests missed it, and the test-gap fix; (3) a failing-first test on the walker's case (quoted below), through the real entry path (press the act or call the op, never the done function), seen red in your record, then green; (4) where the platform matters (the object's 128 MB, the CPU limit, `waitUntil` cut ~30 s after the response, the door's 25 s, the clock frozen during synchronous work), a local workerd check with real sizes, numbers in your record; no deploy. R-SEAM: the seam owner's test runs the whole path with the real merged providers and inputs made by the member's own acts, never a hand-written answer shape; a seam test whose provider is unmerged is written first and stays red by name (merge `tranche/T51` again when BOB says it merged). R-STOP: a "reading follows" test asserts the words are in `text_units`. R-CLOCK: no test asserts a compute time from the object's clock. R-NOTMET: no "not met", deferred, REPORT or open QUESTION at COMPLETE: name the smallest thing you need and ask BOB now. R-OLD: stored-data fixes say "new data only" or carry a repair. Wording waits for T52 (K4269): a new sentence uses the nearest held row as stand-in (a drawn-screen module never adds `localize`), the row owed named in your record. Declare every census op you own (K4208). Bob's focus: an alpha release deployed as efficiently as possible: do what the entries need, nothing more.
+
+**Your entries.** (1) **G4 owner (unknown cause; S control-plane).** Walker A: "first press: `acquire` answered **502** at 12.7 s ... although the capture was kept". `acquireReadingOp` (ops.mjs:28-31, 110-115, reached via `capture/ops.mjs:163,196-204`, `plane/door.mjs:95-103`) has no guard: an unanswered call becomes `storeSilent("acquire")` (answer-envelope:286-309), a 502 for the whole act; only with a deferred render in flight (3 of 12 live acquires; `do-extractread;dur=0`, no `in-extractread`, no `correlation`). Fix, whatever the cause: a failed or silent read after a kept acquire answers `reading_pending:true` with the digest and owes the row (as `followEntries`, control-plane:2564-2579), never 502; the failed call's error name and message travel in a `diag` field (not drawn) and one `console.error`, so the deploy names the cause (K4428). Step 0: try to reproduce with a scripted renderer slower than a 50 ms wait and an `extractread` that rejects once; candidate: the background `run` (acquisition:1374-1385) outliving its request. Failing-first: expect 200, the document, `reading_pending`, an owed row, `diag`; red now (502).
+(2) **G6 provider.** `readHeld` accepts a part digest (index.mjs:661-679) and finds no document (`#storedDocument` :1542-1550). Fix: resolve a part digest to its document (`#homeOfParts`), else refuse; write nothing for a bare part; `op=reading` of a part digest answers its whole's reading. Failing-first: `readHeld({sha: part})` writes nothing; `op=reading` of a part returns the whole's statement.
+(3) **G8 owner (old "(multipart)" records).** Walker A: "30 min later both readings are still `final` 'the document was not read as text (multipart)...', 0 units ... Not repaired". No row exists for a record the old press never touched. Fix (R-OLD, a repair): a start-up migration (precedent `reading_migrations`, :67) owes a `reading` row for each held `notReadAsText` final (`#nowDetected` :760-774); the reading states `repairable`. Failing-first: a store with a `final` multipart reading and detectable bytes: the migration registers the row; the tick reads it.
+(4) **G13 owner (S control-plane; Bob K4571: a large text is read whole in the background).** Walker A: "117,316 further units ... 'ENDMARKER' is NOT in the text". The index keeps 2 MiB / 4,096 units per capture (:47-48, 1070; R22) and `readHeld` answers `READING_HELD` for any held reading (:690). Fix: index segments beyond the bound (R22 re-ruled: per segment), `readHeld` of a held reading with `more` reads the next piece through reading-pipeline's cursor and answers `more` and `read_through`/total; the reading is never complete while `more`; plane continues the row, one piece per tick. Failing-first (S, real plane): the 12 MB text uploaded and promoted: after N ticks `ENDMARKER` is in `text_units`, `more` false, a passage near the end citable; midway the search finds only what is read and the reading says "more". Platform L: memory and CPU per piece (12 MB, 24 MiB).
+
+Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio extraction tranche/T51 job/T51/extraction`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B23 · ANSWER · re J18
+
+ANSWER (BOB #253, K4577) to J18.
+1. The cursor shape you wrote is the contract; READING-PIPELINE #22 is told to build `read` to it, or to tell me where it differs (then I CHANGE you).
+2. op=reading pages: `text_units` keeps its 4,096 cap per answer, and op=reading takes `after` (a unit `seq`) and answers `next` (the seq to ask next, null at the end) beside `more`, `read_through` and `total`, so every unit of the capture is reachable through op=reading, never only the first 4,096. The whole text is stored, searchable and citable (`capture_text`). The walker's check becomes: ENDMARKER found by search, cited, and reached by paging op=reading. SCREENS-INQUIRY #21 draws the first page and states it ("the first N of M passages", with a more act). Write R76's amendment in your record.
+3. Seams as you name them: confirmed.
+4. control-plane's `readUploaded`: CONTROL-PLANE #48 is told (carry `reading_pending`, `diag`, call `pendSha`).
+Also READING-PIPELINE #22's R39 (its J9): `read` now refuses a bare digest stub with exactly `{refused: {code: "BARE_DIGEST", why}}` and no `reading` key. Your G6 work must (a) never hand `read` a stub: for a whole build the document with at least `capture.bytes` (`ev.head`, or the register's `total`), also at index.mjs:1506; (b) treat `out.refused` as write nothing (`left("BARE_DIGEST")`), never reaching `writeReading`; (c) change `r80.test.mjs:60` and any test that reads a whole through a stub. Merge `job/T51/reading-pipeline` when it merges (I CHANGE you).
+
+## B24 · CHANGE
+
+CHANGE (BOB #253, K4578): fix round 6 gains causes from the K4571 audit. Merge tranche/T51 into your branch, then read `build/plan/fix-round-6-T51.md` section "G14-G25" whole (it is short) and apply the causes named below as part of this job, with the four fields (R-FOUR), failing-first past the bound, stand-in words named in COMPLETE (the rows go to UX-DESIGN). Bob (K4571): never a silent partial read; a bound that must stay is stated to the member.
+Yours: **G14 (owner, seam)**: G13's segments and cursor for every format (DOCX, HTML, PDF text, not only plain text); op=reading carries a `completeness` fact (`state` whole/partial/stated, the skipped runs, `failure`/`why`) beside `more`, `read_through`, `total` and its paging (K4577); `readingFor` keeps `state`, `counts`, `skipped`; `unreadOf` counts skipped units as unread. **G15 (provider)**: index the row-range units reading-pipeline now makes for a sheet. Your seam test adds G14's cases (a 6,000-paragraph DOCX, a 300-page dense PDF, a 24 MiB+ PDF stated).
+
+## B25 · CHANGE
+
+CHANGE (BOB #253, K4579): op=reading also states top-level `units_total`, the capture's indexed units so far (SCREENS-INQUIRY #21 draws "the first N of M passages" from it). No merge needed for this.
+
+## B26 · ANSWER · re J19
+
+ANSWER (BOB #253) to J19. PLANE #51 is told to add the `registerOwe` line and to take `round6-plane.test.mjs` into its tests. READING-PIPELINE #22 has G14 (pieces for every format); your G14 seam cases stay red by name until it merges, then I CHANGE you. Acquisition is merged; reading-pipeline is next on your path.
+
+## B27 · CHANGE
+
+CHANGE (BOB #253): reading-pipeline is merged into tranche/T51 (R39 bare stub refused; R40 `read(document, {cursor, unitsBudget, maxUnits})` -> `more`, `cursor`, `read_through`, `total`, `piece {units, words, units_total}` for every format; `CURSOR_MISMATCH`, `NOT_PIECEWISE`; R41 sheets by `lineRows`). Also merged: capture, plane (its `registerOwe` wiring and your seams as `round6-extraction.test.mjs`), acquisition. Merge tranche/T51, conform to the real names (your J19 named `pieces:{cursor,maxUnits}` -> `piece:{...,chars_through,chars_total}`: the merged ones are above), run `round6-pieces` and the G14 seam cases, take the workerd L numbers, and record COMPLETE.
+
+## B28 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/extraction tranche/T51 && git branch -m job/T51/extraction stale/extraction-local && git checkout -b job/T51/extraction origin/job/T51/extraction`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · EXTRACTION #35 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #254 is depth 1; fix round 6, wave 3; K4426, K4597, K4598) · reading set per mechanics §6 step 2 (your other tests are run, not read)
+
+Mail with `--module extraction`; record `build/jobs/T51/extraction.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). You are the module job (P8, mechanics §6) for `extraction`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first.
+
+**Read in full:** `build/plan/fix-round-6-T51.md` section 0 (its rules bind you) and the section "G26-G28" / "G29-G33" that holds your entry (your cause, with its four fields), `build/plan/diagnosis-R6-unplaced.md` (the diagnosis of your cause), your requirements (both parts), the used services your entry touches, and your code. The file:line evidence is your starting point, never a substitute for reading the code.
+
+**Bob (K4426):** "We need to be rigorous about truely understanding the issues we're experiencing, understanding (and fixing) why they weren't caught in the fixtures, and be confident that we do understand, can properly tes, and have really fixed every issue before we do another deployment." Each defect has (1) its root cause with evidence, (2) why the tests missed it and that gap fixed, (3) a test on the walker's exact case through its real entry path, seen failing then passing, (4) a check at the live platform's real shape where it depends on it. **Bob's focus: an alpha release as quickly and efficiently as possible: do what the entry needs, nothing more.**
+
+**Rules** (plan section 0; K4426-K4428): (1) root cause with file:line; (2) why the tests missed it, and the gap fixed; (3) a failing-first test past the bound, through the module's real entry (the op or the provided service, never an inner helper), seen red in your record, then green; (4) the platform check named in the cause (most are N). R-NOTMET: no "not met", deferred, REPORT or open QUESTION at COMPLETE: name the smallest thing you need and ask BOB now. R-OLD: stored data: "new data only" or a repair. A new sentence a member reads uses a stand-in (a drawn-screen module uses the nearest held row; any other module `localize(id, en)`), the row owed named in your record (BOB's HANDOFF B485 asks the design). Declare every census op you own whose accepted keys change (K4208).
+
+**Your entry (G33).** You are the **owner**: a start-up migration (precedent `reading_migrations`, :67) that supersedes a reading keyed by a part digest with the whole's sized statement. R-OLD: this is the repair. Read `build/plan/diagnosis-R6-unplaced.md` whole. The cause, copied from `build/plan/fix-round-6-T51.md`:
+
+**G33 · 0115's part-keyed statement stays (A-18 (a)).** Owner **extraction**. (1) Certain: the old `final` reading on part 4 remains and counts as a second capture in `#caseCitations` (`case-authoring/index.mjs:1960-1963`). **Fix (R-OLD, a repair):** a start-up migration supersedes a reading keyed by a part digest with the whole's sized statement. (2) Missed: old state seeded only as an answer. (3) Failing-first: a 5-part document with a `final` on part 4: after the repair and a tick, the whole holds the sized statement, the part row is gone, the document reads `only_capture`. (4) N; **P** read-only 0115's provenance first. (A-18 (b), the clock half, is G7, merged with control-plane.)
+
+Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names (the users of what you changed; when it names hundreds because of a shared table, run the modules that call your changed service); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio extraction tranche/T51 job/T51/extraction`. COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+**The platform check (L) for a memory or broken-stub case:** no shared harness exists yet; use the raw workerd pattern in `build/plan/diagnosis-R6-memory.md` section "Platform check" (raw workerd, `v8Flags = ["--max-old-space-size=N"]`, `plane/register.mjs` imported, N = 128 less the file's bytes), committed in your own tests as a `.probe.mjs`, its numbers in your record.

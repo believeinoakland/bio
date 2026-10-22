@@ -1,6 +1,6 @@
 # filings (T51)
 
-**Status** · session_01BpfWkadwTvmZqGLPzN8bte · depth 2 · COMPLETE · handled B10
+**Status** · session_01R4VFKTh7hnaT7V78r8QJnL · depth 2 · COMPLETE · handled B11
 
 ## J1 · QUESTION
 
@@ -99,3 +99,28 @@ Fix round 2 (B10) applied on `job/T51/filings`, pushed; tranche/T51 merged in fi
 Deferred: none. Found in other modules: none new.
 
 Size (session_01BpfWkadwTvmZqGLPzN8bte): test runs 6, module lines 3763
+
+## J9 · COMPLETE · re B11
+
+K4557 (E9) applied on `job/T51/filings`, pushed.
+
+**Root cause.** The eight acts asked sight only, never position: `filingPrepare` (`filings/index.mjs` ~770), `communicationPrepare` (~914), `filingApprove`, `filingRecordSent`, `filingSecondApprove`, `jointSignatory`, `counselPacket` (~2459), `holdNoticePrepare`. walker (invited, `joined_at` null) passed sight, so prepared, approved and sent. **Why tests missed it:** every earlier test acted as the administrator, a joined member (bo, cy), the owner, or an outsider with no sight; none acted as an invited member. Gap closed by `join.test.mjs`.
+
+**Change.** One private helper `#joinedBar(project, identity, act)` = `membership.projectAuthority(project, identity, "joined", act)`, relayed as it came (`PROJECT_ACT_NOT_A_PARTICIPANT`), called after the sight check and before any write at each of the eight. Project: the action's own, else the one the draft's basis records (`#draftProject`); for a draft about to be prepared (`#prepProject`) the determination the preparer can read, so a preparer who cannot see it prepares a draft naming no project (untouched, as the existing outsider tests require). `holdNoticePrepare`: place's project else its target's, asked after `holdsOf` (its sight). No project, machine credential, absent identity: not asked. `templatesave` unchanged (filing-templates' check stands, census "keep"). `jointsignatory` now declared in `DECLARED_OPS` (K4208), new fallback row id `filings.declared.jointsignatory` (same sentence as op-grades' hand row, as `filingsecondapprove`'s).
+
+**Failing-first.** `join.test.mjs` (6 tests, titles name R69 and the requirements touched): run before the change, 6 of 6 red (walker prepared FIL-2026-0001, approved, packet made); after, 6 of 6 green, including the walk after `projectjoin` (prepare, approve, record sending, `templatesave`), and controls: joined member, owner, administrator not joined refused (project discoverable, so the administrator has sight), project-less filing untouched, machine unchanged. Plus `declared-ops.test.mjs` for `jointsignatory`.
+
+**Proposed requirement lines (BOB writes).**
+- **R69** (T51; K4557, K4558; E9; `membership` R54, `projectAuthority`) A project's weighty filing acts need a joined member. After its sight check and before any write, `filingPrepare` (R1), `communicationPrepare` (R23), `filingApprove` (R6), `filingRecordSent` (R7), `filingSecondApprove` (R42), `jointSignatory` (R36), `counselPacket` (R8) and `holdNoticePrepare` (R47) ask `membership.projectAuthority(project, identity, "joined", act)` of the stamped preparer or author and answer its refusal `PROJECT_ACT_NOT_A_PARTICIPANT` as it gives it. The project is the action's own, else the one the filing's basis records (for a draft being prepared, the determination the preparer may read; a preparer who may not see it prepares a draft that names none); for `holdNoticePrepare`, the place's, else its target's. A filing with no project, a machine credential and an absent identity are not asked. Nothing is written. Test: an invited member is refused each act and nothing is written; after `projectjoin` the same member does each. Control: a joined member, the owner and a filing with no project are unchanged; an administrator not joined is refused.
+- R1 and R23 order: the refusal comes after `NO_SUCH_ACTION`, before `ACTION_CLOSED`. R8: after `NO_SUCH_ACTION`. R6, R7, R36, R42: after `NO_SUCH_FILING`. R68's op list gains `jointsignatory` (requires filing, organisation, body_sha, account).
+- Uses: nothing new (`membership` already used).
+
+**Tests and checks.** `node --test bio-plane/test/m/filings/`: tests 164, pass 164, fail 0 (baseline 157). Impact (`impact.mjs origin/tranche/T51 HEAD`, 656 files in 35 modules, excluding pdf-worker): tests 5706, pass 5697, fail 9; the 9 (control-plane `r117-held`, journey-check `pseudo` x7, plane `release`) fail identically with my change removed: inherited, none filings'. `checks/run.mjs`: format, architecture, coverage (6616 of 6616), channels, words: 0 failures. ownership filings: 0 failures. New word row: none beyond the fallback id above.
+
+Deferred: none. Found in other modules: none new.
+
+Size (session_01R4VFKTh7hnaT7V78r8QJnL): test runs 9, module lines 3822
+
+## J10 · COMPLETE
+
+K4557 applied; see record J9. Filings 164/164, impact 5697/5706 (9 inherited, same without my change), checks 0 failures. Proposed R69 in J9.

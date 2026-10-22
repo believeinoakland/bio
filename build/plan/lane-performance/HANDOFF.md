@@ -160,3 +160,45 @@ The acts (C12) and key registration, as above; the member's side and 390 px; the
 
 ## P14 · what is still not measured
 C12's acts on a seeded project (the shell's own act, one POST, is 0.35-0.43 s; a read act 0.6 s; the case-editor and review acts need a project with a draft: waiting on a seeded `PERF` project, which the lane will create); the rest of the registry screens (they share the frame, so they cost at least the frame's reads: 1.2-2.3 s on the lightest); the plane bundle (30.4 of 32 MiB) and the fleet workers.
+
+## P15 · in-app navigation against full loads, the price of a hop, and what (a) one combined read and (b) the objects' location would each give (BOB #254, K4596; fix-round-6-T51.md §2 G12)
+**Method.** biosmoke8 as it stands (`/version` 0.86.0), `tools/nav.mjs` (new, reads only; nothing written, so no `PERF` project was needed: it uses the existing walk project's Project, Question, Document and Timeline, read-only). Per role (administrator, member), 1280 px: sign in, load Home once, then move Project → Question → Document → Timeline → Held → Home **inside the page** (a link where the page has one for the address, else the shell's own route change, which is what a link does), twice round; then the same six screens as **full loads**, twice. Per move: time to the last API read, requests, waves (starts within 150 ms), hops (the `do-<route>` entries of Server-Timing), critical-path hops (per wave, the most hops any one request made, summed), the price of a hop (`do-<route>` minus `in-<route>`), `in-` time summed. Two passes per role, four samples per screen; samples where the page did not get past `whoami` (8 of 48: the P13 stall) are left out of the medians and counted in P13. Another walker was on the copy throughout, so the ranges are wide; medians are shown, files in the scratchpad of the lane.
+
+**Findings, measured.**
+1. **In-app navigation loads no HTML, no shell files and none of the per-session frame reads** (`whoami`, `interfacewords`, `groupkeystate`, `assistantstate`, `infolevel`, `subscriptionsignin`, `accountreference`): 0 HTML and 0 shell files in every one of the 48 moves (a full load: 1 HTML and 5-6 shell files, 30-37 reads). It still re-reads, on each move, the screen's own reads plus part of the frame: `queue`, `groupidentity`, `bootstrap`, `wizardsat`, `publishedlist`, `memberlist`, `heldcaptures`, `casedrafts` x5 (Home), `inquirystrength` x2 (Project), `image` x2-3 (Question, Document).
+2. **The price of a hop** is **121-135 ms** on every light read (administrator and member, Project, Question, Document, Held in-app), the same figure as P11; on Home, Timeline and under another walker's load it reads 170-290 ms, because the read itself is heavy (the object's clock does not count compute, G12e) or contended, not because the hop is dearer. `in-<route>` is 0 on 30 of 36 screens (the work is not I/O); it is 0.4-0.5 s on Document and 1.4 s on Home (the `queue` and `heldcaptures` reads).
+3. **Waves and hops.** In-app: 2-4 waves and 4-10 hops on the critical path (Held 2 waves / 4 hops; Project 2 / 6; Document 2 / 6; Timeline 3 / 7; Home 3 / 8; Question 4 / 10). Full load: 3-5 waves and 9-15 hops (Project 12, Question 15, Home 12).
+
+| Screen (administrator, medians) | in-app now (range) | full load now (range) | reads in-app / full | waves | critical hops (in-app / full) |
+|---|---|---|---|---|---|
+| Home | 2.0 s (1.0-2.0) | 3.7 s (3.4-4.2) | 24 / 31 | 3 / 4 | 8 / 12 |
+| Project | 1.3 s (1.1-2.1) | 2.5 s (1.8-2.9) | 22 / 30 | 2 / 3 | 6 / 12 |
+| Question | 2.1 s (1.7-2.2) | 3.8 s (2.3-4.3) | 27 / 37 | 4 / 5 | 10 / 15 |
+| Document | 1.5 s (0.9-2.2) | 2.7 s (2.1-4.6) | 21 / 31 | 2 / 3 | 6 / 9 |
+| Timeline | 1.0 s (0.9-1.2) | 2.0 s (1.9-4.0) | 8 / 18 | 3 / 3 | 7 / 10 |
+| Held | 0.6 s (0.6-0.7) | 2.0 s (1.7-3.7) | 4 / 15 | 2 / 3 | 4 / 9 |
+
+The member's figures are lower in-app (Question 0.8 s, Document 0.7 s, Held 0.7 s, Project 1.5 s, Timeline 0.9 s, Home 2.1 s) and about the same on a full load (1.8-3.9 s): the member has fewer reads (no administration areas).
+
+**Reading against the bar (2 s).** In-app already meets it on Held, Timeline, Project, Document and, for the member, Question; Home (2.0 s) and Question (2.1 s) sit on the line. A full load misses it on every screen except Held/Timeline in their best samples. Since a member moves between screens far more often than she loads one, the in-app column is the one she feels; the full load is the first screen after sign-in or a link from outside.
+
+**Estimates (a) and (b), from these numbers. They are model figures, not measurements; the assumptions are stated so BOB and Bob can discount them.**
+- **(b) The objects near the team.** Assumption: a hop costs 30 ms instead of the measured 121-135 ms (same region; I cannot measure it from outside: nothing here can place a throwaway object). Gain = critical-path hops x 100 ms. Not touched: compute, the HTML, the shell's own work.
+- **(a) One combined read.** Assumption: all the screen's reads leave the browser in one request and run inside one object call (the `frame` answer, or a multi-read op), the session folded into it: in-app = 2 hops (0.26 s) + the object's I/O time (`in-`, measured) + 0.3 s of the object running about 20 reads one after another + 0.15 s to draw; a full load adds the HTML (0.3 s) and `whoami` (one hop, 0.13 s). (a)+(b) does the same at 30 ms per hop.
+
+| Screen | in-app now | full now | (b) only: in-app / full | (a) only: in-app / full | (a)+(b): in-app / full |
+|---|---|---|---|---|---|
+| Home | 2.0 s | 3.7 s | 1.2 / 2.5 s | 2.2 / 2.6 s | 2.0 / 2.3 s |
+| Project | 1.3 s | 2.5 s | 0.7 / 1.3 s | 0.7 / 1.1 s | 0.5 / 0.8 s |
+| Question | 2.1 s | 3.8 s | 1.1 / 2.3 s | 0.7 / 1.1 s | 0.5 / 0.8 s |
+| Document | 1.5 s | 2.7 s | 0.9 / 1.8 s | 1.1 / 1.5 s | 0.9 / 1.2 s |
+| Timeline | 1.0 s | 2.0 s | 0.3 / 1.0 s | 0.7 / 1.1 s | 0.5 / 0.8 s |
+| Held | 0.6 s | 2.0 s | 0.3 / 1.1 s | 0.7 / 1.1 s | 0.5 / 0.8 s |
+
+**What the estimates say.**
+- **(b)** helps every screen in proportion to its hops: it takes in-app Home from 2.0 to about 1.2 s and every screen but Question under 1.3 s, and full loads of Project, Document, Timeline, Held to 1.0-1.8 s; but Home (full) stays at 2.5 s and Question (full) at 2.3 s, because their critical path is 12-15 hops and their reads are heavy.
+- **(a)** is the only change that takes Question and Project (the 27-37-read screens) to 0.7-1.1 s, and costs nothing at placement; it does not help Home, whose time is the object's own work (1.4 s `in-`, `queue` 331 ms and the heavy `heldcaptures`: G12a), and it makes Held and Timeline slightly worse in-app (0.6 → 0.7 s) because their few reads gain nothing from combining.
+- **(a)+(b)** gives every screen except Home under 1.2 s, in-app and full. Home needs G12a (the heavy rows) and G12c (`casedrafts` x5) on top; with those, Home's `in-` time goes from 1.4 s to about 0.3 s and Home reaches about 1.0 s in-app, 1.3 s full (my estimate).
+- **If Bob does neither**, the in-app column is already near the bar for most screens; the full-load column cannot go under about 2 s on today's hops (HTML 0.3 s + `whoami` 0.2 s + two waves at 0.65 s + marks 0.3 s, as G12 says), and Question, Home and Project full loads stay at 2.5-3.8 s.
+- **How to decide with a measurement instead of a model, cheaply:** (b) one throwaway object created with a location hint on a scratch Worker, timed from here (its hop price replaces my 30 ms); (a) one prototype multi-read op for the Project screen's 22 reads on a scratch copy, timed from here (replaces my 0.3 s and 0.15 s). Both need a deploy, which the lane does not do and BOB has not allowed; I name them so the choice is not made on my figures alone.
+- **Caveats.** Medians of four samples with a walker active; 8 of 48 samples stalled (P13) and are excluded; the member and administrator differ in read counts; the models treat the object as running reads one after another, which may be pessimistic for (a) if the object can overlap its I/O.

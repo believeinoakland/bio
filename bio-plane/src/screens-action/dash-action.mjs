@@ -7,7 +7,7 @@
    after it and the action is not resolved; our move when a prepared or approved text awaits approval or sending; an action
    that is neither says neither, and "overdue" is never drawn before a member determines it. It holds no member-facing English
    (R19). Every function here is self-contained (interface-shell R21 (1)). */
-import { readOnly, kindWord, draftsOf, stepOf, later, officeLine } from "./send-steps.mjs";
+import { readOnly, kindWord, draftsOf, stepOf, later, officeLine, joinFirst } from "./send-steps.mjs";
 
 export const dashAction = Object.freeze({
   id: "dash-action",
@@ -21,11 +21,13 @@ export const dashAction = Object.freeze({
       // R30: the plan checkpoints whose day has come and that no member has judged (`action-plans` R17)
       checkpoints: { op: "checkpointsdue", query: { limit: "500" }, empty: function () { return false; } },
       vocab: { op: "affordances", query: {}, empty: function () { return false; } },
+      // E9 (K4557): her own place in each action's project: an invited member is not offered the approval
+      standing: { op: "projectlist", query: {}, empty: function () { return false; } },
     };
   },
 
   parts: {
-    readOnly: readOnly, kindWord: kindWord, draftsOf: draftsOf, stepOf: stepOf, later: later, officeLine: officeLine,
+    readOnly: readOnly, kindWord: kindWord, draftsOf: draftsOf, stepOf: stepOf, later: later, officeLine: officeLine, joinFirst: joinFirst,
     // R30: an action that is not resolved or abandoned is open
     isOpen: function (state) { return state !== "resolved" && state !== "abandoned"; },
     // R30: whose move it is, from facts the action states: "theirs", "ours" or ""
@@ -90,6 +92,8 @@ export const dashAction = Object.freeze({
       const mine = q.filter(function (it) { return it && KINDS.includes(it.kind); });
       const approve = ready.filter(function (x) { return x.step === "approve"; }).map(function (x) {
         const d = P.draftsOf(x.f.value).open;
+        // E9 (K4557): the action of a project she is invited to and has not joined is opened (where she is told and can accept), not approved here
+        if (P.joinFirst(cs, view, x.v.project)) return cs.row("", cs.esc(x.v.title || x.row.id) + '<span class="meta"><a class="cs-ref" href="/app/action/' + encodeURIComponent(x.row.id) + '" data-nav>' + cs.w("screen.start-send.openaction") + "</a></span>", "", "");
         return cs.row("", cs.esc(x.v.title || x.row.id) + '<span class="meta">' + cs.act("filingapprove", { label: "act.filingapprove.label.dash-action", data: { filing: d ? d.filing : "" } }) + "</span>", "", "");
       });
       const queueRows = mine.map(function (it, i) {

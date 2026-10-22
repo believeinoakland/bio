@@ -1,6 +1,6 @@
 # BOB to screens-daily (T51)
 
-**Read** · handled J20
+**Read** · handled J22
 
 ## B1 · START
 
@@ -319,3 +319,36 @@ ANSWER (K4470). (1) build/modules.json screens-daily.uses now adds screens-intak
 ## B30 · CHANGE
 
 CHANGE (K4472): CAUSE-SHELL-4 #1 is merged (tranche/T51 @ 5539bd4c3d). Merge the tranche. R122: a screen's {op:'bootstrap'} read is answered from the page's one answer, so update home.test.mjs:52 (R17), which asserts two bootstrap requests; it is one now. The frame's queue read is count:true (background); the harness's FRAME.queue answers count and list (queueOf(items)): a suite that scripted plane.queue for the frame's number uses queueOf. The shell does not share groupidentity: Home keeps its own, named as the one known repeat (K4470). Then assert one bootstrap and one list read, and COMPLETE.
+
+## B31 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/screens-daily tranche/T51 && git branch -m job/T51/screens-daily stale/screens-daily-local && git checkout -b job/T51/screens-daily origin/job/T51/screens-daily`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · SCREENS-DAILY #19 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #252 is depth 1; fix round 6, job 14 of 20; K4570, K4571)
+
+Mail with `--module screens-daily`; record `build/jobs/T51/screens-daily.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). You are the module job (P8, mechanics §6) for `screens-daily`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first.
+
+**Read in full:** `build/plan/fix-round-6-T51.md` (section 0's rules bind you; section 2 gives each cause you own or provide with its four fields; section 3 the merge order), `build/plan/diagnosis-R6-speed.md` (item 4), `build/plan/walk-T51-rewalk5/A.md`, your requirements (both parts), the used services your entries touch, and your code. The plan's file:line evidence is your starting point, never a substitute for reading the code.
+
+**Rules** (plan section 0; K4426-K4428): (1) root cause stated with file:line, else a diagnosis posted as a QUESTION before any fix; (2) why the tests missed it, and the test-gap fix; (3) a failing-first test on the walker's case (quoted below), through the real entry path (press the act or call the op, never the done function), seen red in your record, then green; (4) where the platform matters (the object's 128 MB, the CPU limit, `waitUntil` cut ~30 s after the response, the door's 25 s, the clock frozen during synchronous work), a local workerd check with real sizes, numbers in your record; no deploy. R-SEAM: the seam owner's test runs the whole path with the real merged providers and inputs made by the member's own acts, never a hand-written answer shape; a seam test whose provider is unmerged is written first and stays red by name (merge `tranche/T51` again when BOB says it merged). R-STOP: a "reading follows" test asserts the words are in `text_units`. R-CLOCK: no test asserts a compute time from the object's clock. R-NOTMET: no "not met", deferred, REPORT or open QUESTION at COMPLETE: name the smallest thing you need and ask BOB now. R-OLD: stored-data fixes say "new data only" or carry a repair. Wording waits for T52 (K4269): a new sentence uses the nearest held row as stand-in (a drawn-screen module never adds `localize`), the row owed named in your record. Declare every census op you own (K4208). Bob's focus: an alpha release deployed as efficiently as possible: do what the entries need, nothing more.
+
+**Your entry (G12c-casedrafts, owner).** Walker A: "admin Home 30 requests ... repeats only `casedrafts` x5 (one per project row)". `home-readings.mjs:58-63` sends `casedrafts` per project after `projectlist` (2145 ms), the last two ending at 3.9-4.3 s. Fix: send one `casedrafts` with `projects=<ids>` (review's merged batch) for all project rows and read the answer per project; the `shared_drafts.count` filter stays. Failing-first: Home's read set has one `casedrafts`; the same drafts are drawn per project; one project hidden from the viewer draws as today. Why missed: the shell's tests count no requests. Expected: Home -1.5 to -2 s tail. Does not touch the frame reads (interface-shell's).
+
+Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-daily tranche/T51 job/T51/screens-daily`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B32 · ANSWER · re J21
+
+ANSWER (BOB #253, K4577) to J21: REVIEW #24 is COMPLETE; the real shape differs from your reading. Request: `casedrafts` with `projects` = a body list, or comma-separated in the query (`projects=a,b,c`), at most 50 (over: `REVIEW_BATCH_TOO_LARGE`, whole). Answer: `{ok: true, kind: "review-drafts-batch", count, lists: {<project>: <exactly the single read's answer>}}` (key `lists`, not `projects`); a hidden or unknown project is `NO_REVIEW_COPY`, byte-identical to the single read. STORE-DOOR #16: a list holding an id the viewer sees only at existence answers that id's single-read answer for the whole call (the lowest such id); Home's ids come from `projectlist`, so this does not arise in practice. CONTROL-PLANE #48 forwards `projects` and treats the batch answer as a read. Conform to `lists`; your seam test goes green once review, store-door and control-plane are merged (orders 9, 11, 17; I CHANGE you).
+
+## B33 · CHANGE
+
+CHANGE (BOB #253, K4578): fix round 6 gains causes from the K4571 audit. Merge tranche/T51 into your branch, then read `build/plan/fix-round-6-T51.md` section "G14-G25" whole (it is short) and apply the causes named below as part of this job, with the four fields (R-FOUR), failing-first past the bound, stand-in words named in COMPLETE (the rows go to UX-DESIGN). Bob (K4571): never a silent partial read; a bound that must stay is stated to the member.
+Yours: **G16 (owner)**: Search (`finder-states.mjs:97-160`): a more act by each op's cursor, the document count from the query's own count (not the drawn rows), one line from the axis tally naming documents unread or partly searchable; "looked everywhere" (:211-301) draws `partial` and it blocks "everywhere"; find-in (`find-in.mjs:199-221`) continues on `next` ("searched N of M documents", a continue act), `truncated` for every kind, `cells_truncated` and the alias pages drawn. An op with no cursor: QUESTION naming it at once (its provider joins wave 2). **G20**: `doors.mjs:17` (500) and the find-in question choosers (`find-in.mjs:25, 116`) page by `next` or say "showing N of M".
+
+## B34 · CHANGE
+
+CHANGE (BOB #253): review's batch (`casedrafts` `projects` -> `lists`) and store-door's fence are merged into tranche/T51 (748383ed5e). Merge tranche/T51 into your branch; your seam test still waits on control-plane's forwarding of `projects` (red by name until CONTROL-PLANE #48 merges; I CHANGE you then).
+
+## B35 · CHANGE
+
+CHANGE (BOB #254, K4598): control-plane is merged into tranche/T51 (casedrafts projects forwarded). Merge tranche/T51, run casedrafts-seam through the real door; green: COMPLETE again (answers your J22).

@@ -47,6 +47,9 @@ export const DOCKET_CHECKS = Object.freeze({
     check: "C-129.1", where: FILER,
     translation: word("refusal.MACHINE_CANNOT_FILE_DOCKET"),
   },
+  /* K4557, K231: no longer answered: `docketFile` answers membership's PROJECT_ACT_NOT_A_PARTICIPANT, the one code for a member
+     not yet joined. The row stays, its number and words as stamped, until BOB's requirements retire it (C-129.2 keeps its place
+     in the family's numbering). */
   DOCKET_NOT_A_PARTICIPANT: {
     check: "C-129.2", where: FILER,
     translation: word("refusal.DOCKET_NOT_A_PARTICIPANT"),

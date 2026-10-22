@@ -14,6 +14,7 @@ export function makeClock(now = () => Date.now()) {
   const t0 = now();
   const phases = new Map();   /* name -> {start, end|null} */
   const calls = new Map();    /* route -> total ms */
+  const inside = new Map();   /* route -> total ms the object states it spent itself (fix round 5, E10 (i)) */
   const since = (t) => Math.max(0, Math.round(t - t0));
   return {
     begin(name) { if (!phases.has(name)) phases.set(name, { start: now(), end: null }); },
@@ -21,6 +22,8 @@ export function makeClock(now = () => Date.now()) {
     /** Milliseconds since the door took the request. */
     elapsed() { return Math.max(0, now() - t0); },
     call(route, ms) { calls.set(route, (calls.get(route) ?? 0) + Math.max(0, ms)); },
+    /** E10 (i): the time the object states for a call, so `do-<route>` less `in-<route>` is the transport. */
+    within(route, ms) { if (Number.isFinite(ms)) inside.set(route, (inside.get(route) ?? 0) + Math.max(0, ms)); },
     /** `{acquire, reading, promote}`, each `{started_ms, elapsed_ms}` (and `running: true` while it had not ended) or `null` when not reached. */
     door() {
       const at = now();
@@ -39,6 +42,7 @@ export function makeClock(now = () => Date.now()) {
       for (const [route, ms] of calls) {
         if (out.length >= METRIC_MAX) break;
         if (TOKEN.test(route)) out.push(`do-${route};dur=${Math.round(ms)}`);
+        if (inside.has(route) && TOKEN.test(route) && out.length < METRIC_MAX) out.push(`in-${route};dur=${Math.round(inside.get(route))}`);
       }
       return out.join(", ");
     },
@@ -49,6 +53,15 @@ const routeOf = (input) => {
   try { return new URL(typeof input === "string" ? input : input instanceof URL ? input.href : input.url).pathname.replace(/^\/+/, "").split("/")[0]; }
   catch { return ""; }
 };
+
+/* E10 (i): the object states its own time in an answer's `server-timing: object;dur=<ms>`; null when it states none */
+function objectTime(res) {
+  try {
+    const h = res && res.headers && typeof res.headers.get === "function" ? res.headers.get("server-timing") : null;
+    const m = h ? /(?:^|,)\s*object;[^,]*?dur=(\d+(?:\.\d+)?)/i.exec(h) : null;
+    return m ? Number(m[1]) : null;
+  } catch { return null; }
+}
 
 /* a stub whose `fetch` is clocked; every other property is the stub's own, and a function keeps the stub as its `this` */
 function clockedStub(stub, clock) {
@@ -62,7 +75,12 @@ function clockedStub(stub, clock) {
         const phase = Object.hasOwn(PHASE_OF_ROUTE, route) ? PHASE_OF_ROUTE[route] : null;
         const t = Date.now();
         if (phase) clock.begin(phase);
-        try { return await v.call(target, input, init); }
+        try {
+          const res = await v.call(target, input, init);
+          const stated = objectTime(res);
+          if (stated !== null) clock.within(route, stated);
+          return res;
+        }
         finally { clock.call(route, Date.now() - t); if (phase) clock.end(phase); }
       };
     },

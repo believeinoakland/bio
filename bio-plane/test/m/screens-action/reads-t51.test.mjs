@@ -10,22 +10,22 @@ import { open, ROUTES, DATA_PLANE, PROJECT, ACTION_ID } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-action/index.mjs";
 
 const PATHS = { ...ROUTES, "request on a project": `/app/request/${PROJECT}`, "plan on a project": `/app/plan/${PROJECT}`, "start-send on an action": `/app/start-send/${ACTION_ID}` };
-/* the ops each load asks for beyond the shell's own, each exactly once */
+/* the ops each load asks for beyond the shell's own, each exactly once (E9, K4557: `projectlist` on the screens that offer the send steps, her place in the action's project) */
 const OWN = {
   plan: ["determinations", "list", "memberlist", "plan", "projectquestions"],
   "start-send": ["affordances", "list", "memberlist", "optionstartpreview", "plan"],
-  request: ["action", "filingsfor", "list", "memberlist", "profiles", "stakeatpreparation", "templatesforaction"],
-  action: ["action", "affordances", "filingsfor", "heldcaptures", "list", "memberlist", "pressurefor", "procedureguides", "profiles", "remindersfor", "templatesforaction"],
+  request: ["action", "filingsfor", "list", "memberlist", "profiles", "projectlist", "stakeatpreparation", "templatesforaction"],
+  action: ["action", "affordances", "filingsfor", "heldcaptures", "list", "memberlist", "pressurefor", "procedureguides", "profiles", "projectlist", "remindersfor", "templatesforaction"],
   matter: ["consequencesof", "determination", "escalation", "escalationstatus", "list"],
   "help-records": ["profiles"],
   actionnew: ["affordances", "list", "projectquestions"],
   hold: ["action", "holdsdue", "list", "memberlist", "projectlist"],
   holdnotice: ["list"],
   counsel: ["action", "list"],
-  "dash-action": ["action", "actions", "affordances", "checkpointsdue", "filingsfor", "list", "profiles"],
+  "dash-action": ["action", "actions", "affordances", "checkpointsdue", "filingsfor", "list", "profiles", "projectlist"],
   "request on a project": ["list", "peopledirectory", "profiles"],
   "plan on a project": ["list", "plans"],
-  "start-send on an action": ["action", "affordances", "filingsfor", "list", "memberlist", "stakeatpreparation"],
+  "start-send on an action": ["action", "affordances", "filingsfor", "list", "memberlist", "projectlist", "stakeatpreparation"],
 };
 
 for (const [id, path] of Object.entries(PATHS)) {
