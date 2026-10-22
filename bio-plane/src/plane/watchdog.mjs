@@ -23,7 +23,7 @@ async function ask(env, object, at, bound) {
     const call = Promise.resolve().then(() => stub.watchdog(at));
     call.catch(() => {});   /* a call that outlasts the bound may reject later: that is caught here, never unhandled */
     const said = await Promise.race([call, new Promise((resolve) => { timer = setTimeout(() => resolve(BUSY), bound); })]);
-    if (said === BUSY) return { object, why: "busy", message: `no answer in ${bound} ms` };
+    if (said === BUSY) return { object, why: "busy", message: `timeout=${bound}` };
     if (!said || typeof said !== "object") return { object, why: "broken", message: `answered ${typeof said}` };
     return null;
   } catch (e) {
