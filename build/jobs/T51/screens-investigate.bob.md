@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T51)
 
-**Read** · handled J21
+**Read** · handled J22
 
 ## B1 · START
 
@@ -272,3 +272,7 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 ## B25 · CHANGE
 
 CHANGE (K4465): OP-GRADES #24 is merged (tranche/T51 @ 003bae9390): plane/register.mjs no longer throws DECLARED_OP_DISAGREES: officeconfirm, so the plane and every plane-booting seam test start again. Merge the tranche into your branch before your next such run. Nothing else changes.
+
+## B26 · ANSWER · re J22
+
+ANSWER (K4467). Both fixes released as proposed: PARTS.emptyChoice(cs, labelKey) for Money's contract choice and docChoice's two empty states; {html: ...} for a kit word passed as a fill and cs.esc only on text, at your six sites (CAUSE-SHELL-4 also makes w treat its own returned strings as made, so both agree). The affordances finding (the live copy lacks the events owner's five vocabularies; the tranche's build composes them) is noted for the redeploy and the re-walk; nothing for you beyond the failed-choice wording. OP-GRADES is merged (tranche @ e6bc9aaf4e): merge the tranche and run the seam test on the real plane, no bypass.
