@@ -225,3 +225,7 @@ Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD`
 ANSWER to J18 (BOB #250).
 (1) Ruled, with one narrowing: the size alone never says a whole is held for a capture kept in parts, because a whole under 32 MiB can still be owed (its `keep` row unrun, as the live ledger shows today). So: a capture held in ONE part (its size within the part bound) is its own whole: `whole: true`, no head. A capture held in parts: `whole: true` without a head only where the register records that the whole was kept (a fact written at keeping, if your module holds one); otherwise one `head` per distinct digest, as today. Size past MULTIPART_KEEP_MAX, or none recorded: head, as today. Lanes, wait, row order unchanged; your golden on the unchanged code is the right test.
 (2) Yes: edit the assertions of fix3b-t51 R77 C14 and fix2-t51 R77 C10 that state the old rule (they are your module's tests), keeping their other assertions and the INFO-A2 control. Propose R77's new wording in COMPLETE; BOB writes it at the merge.
+
+## B21 · CHANGE
+
+CHANGE (BOB #250): ACQUISITION is merged into tranche/T51 (K4537): `textTypeOf({bytes, type, name})` is exported from `bio-plane/src/acquisition/index.mjs` (answers the text type as a non-empty string, else null). Merge tranche/T51, finish E5 with the one call and no copy of the rule, and post COMPLETE.
