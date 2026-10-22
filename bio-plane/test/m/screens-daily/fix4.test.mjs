@@ -37,7 +37,7 @@ const planeOf = (per) => ({
     return ok({ total: 1, hits: ids.filter((i) => i === "INF-3").map((i) => ({ bundle_id: i, title: "Council minutes 2024" })) }); },
 });
 
-test("R89 (C22, round 4): the member presses 'See where nobody looked' and every place of the live mix is named, no two different places by the same words, none by an id, a digest or the bare kind of thing", async () => {
+test("R89 R96 (C22, round 4): the member presses 'See where nobody looked' and every place of the live mix is named, no two different places by the same words, none by an id, a digest or the bare kind of thing", async () => {
   const p = await open("/app/finder", planeOf(MIX));
   await press(p, "frontier", { reason: "looking" });
   await settle();
@@ -78,7 +78,7 @@ const BASE = {
   memberlist: ok({ members: [] }), heldcaptures: ok({ ok: true, held: [], state: "held", truncated: false, next: null }), inbox: ok({ inbox: [] }),
 };
 
-test("R87 (C14, this screen): a roster row that answers `participation` (null for an administrator who is no participant) is taken at its word: Home and Projects make no `projectparticipants` read for it; a row that answers none is read once", async () => {
+test("R87 R98 (C14, this screen): a roster row that answers `participation` (null for an administrator who is no participant) is taken at its word: Home and Projects make no `projectparticipants` read for it; a row that answers none is read once", async () => {
   const rows = [ROW("PROJ-1", "The Coliseum lease", { participation: null }), ROW("PROJ-2", "Pothole repairs", { participation: "joined" }), ROW("PROJ-3", "Odd", { participation: null })];
   for (const path of ["/app", "/app/projects"]) {
     const p = await open(path, { ...BASE, projectlist: LIST(rows), themeread: ok({ themes: [] }), projectparticipants: ok({ ok: true, participants: [] }) });
@@ -99,7 +99,7 @@ const FORM = "https://www.irs.gov/pub/irs-pdf/f1040es.pdf";
 const vouchRows = (p) => main(p).querySelectorAll('button[data-act="release"]').map((b) => { let r = b; while (r && !(r.className || "").includes("cs-row")) r = r.parentNode; return r; });
 
 for (const [where, path] of [["queue", "/app/queue"], ["home", "/app"]]) {
-  test(`R17 (C25; ${where}): a vouch to-do for one capture is the document named by its title, a reference to it, never the address it came from or "photo"; control: several captures at one place and a capture with no title keep the sentences`, async () => {
+  test(`R17 R97 (C25; ${where}): a vouch to-do for one capture is the document named by its title, a reference to it, never the address it came from or "photo"; control: several captures at one place and a capture with no title keep the sentences`, async () => {
     const plane = (rows) => ({ ...BASE, whoami: ok({ ...MEMBER, capabilities: ["contribute", "create_projects"] }), projectlist: LIST([ROW("PROJ-1", "Tax help")]),
       heldcaptures: HELD(...rows), lookedsince: ok({ since: "2026-10-01T00:00:00Z" }) });
     const p = await open(path, plane([PICK("INF-1", FORM, "2026 Form 1040-ES")]), { screens: withScreens("document") });
@@ -124,7 +124,7 @@ for (const [where, path] of [["queue", "/app/queue"], ["home", "/app"]]) {
 const AUTH = (o = {}) => ({ id: "TSK-9", class: "OBLIGATION", kind: "authority-undetermined", assignee: "mai", summary: FORM, case: { ungrouped: true, ancestors: [] },
   subject: { kind: "bundle", id: "INF-9", title: null }, age: { since: "2026-10-04T10:00:00Z" }, options: [], disposition: { instead: "taskdecide" }, ...o });
 for (const [where, path] of [["queue", "/app/queue"], ["home", "/app"]]) {
-  test(`R49 (C25; ${where}): an item with a title is named by it; one with none and an address as its words is named by the host and the day (the one rule), never the file part of the address; control: no address, the untitled word`, async () => {
+  test(`R49 R97 (C25; ${where}): an item with a title is named by it; one with none and an address as its words is named by the host and the day (the one rule), never the file part of the address; control: no address, the untitled word`, async () => {
     const plane = (it) => ({ ...BASE, whoami: ok({ ...MEMBER, capabilities: ["contribute", "create_projects"] }), projectlist: LIST([ROW("PROJ-1", "Tax help")]), queue: ok({ items: [it], item_count: 1 }) });
     const refs = (p) => main(p).querySelectorAll("a.cs-ref").filter((a) => /document\/INF-9/.test(a.getAttribute("href") || "")).map((a) => a.textContent);
     const has = async (it) => { const p = await open(path, plane(it), { screens: withScreens("document") }); await settle(80); return refs(p); };
