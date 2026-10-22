@@ -502,3 +502,7 @@ COMPLETE (PLANE #51, B40, B41). Pushed. G1 watchdog (scheduled, Store.watchdog, 
 **Suites.** plane 348 tests, 344 pass, 4 fail: R24 (accepted) and the three named seams above. checks: format 0, architecture 0, coverage 6623/6623, words 0, ownership 0. Requirement line proposed: R83: the composition hands extraction the ledger's `owedLater` once at construction (`registerOwe`, extraction R89).
 
 Size (session_01QYWrrveKMJXkZ2R9tC3co1): test runs 4, module lines 3,107
+
+## J33 · COMPLETE
+
+COMPLETE (PLANE #51, B42). Pushed. (1) registerOwe handed to extraction at construction, guarded (R83, test red without). (2) extraction's G4/G8/G13 seam tests taken over as round6-extraction.test.mjs: R87, R89, R90 red by name until extraction and reading-pipeline merge. (3) G2 seam against the real owedFetch green (real acquire parks a 9 MiB source, 0 bytes pulled; tick runs real owedFetch with deliver). Plane 348 tests, 344 pass, 4 fail = R24 (accepted) + the 3 named seams. checks 0, ownership 0. Correction to J32: module lines are 3107, not 3300. Size (session_01QYWrrveKMJXkZ2R9tC3co1): test runs 4, module lines 3107
