@@ -1,6 +1,6 @@
 # extraction (T51)
 
-**Status** · session_018SGhEZ3jJD7Da7xorwia8V · depth 2 · WAITING ON BOB (J16) · handled B21
+**Status** · session_018SGhEZ3jJD7Da7xorwia8V · depth 2 · COMPLETE · handled B21
 
 ## J1 · REPORT
 
