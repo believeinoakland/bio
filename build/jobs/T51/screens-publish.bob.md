@@ -355,3 +355,7 @@ ANSWER (K4467). (1) C49: your fix is released as proposed (the head line naming 
 ## B26 · CHANGE
 
 CHANGE (K4469): CASE-AUTHORING #37 is merged (tranche/T51 @ 4c78d269bb): draftEditions and the pre-flight state editions.case. Merge the tranche; C48's seam test can now run on the real case-authoring (review's R19 pass-through follows with REVIEW #23; BOB sends a CHANGE).
+
+## B27 · CHANGE
+
+CHANGE (K4471): REVIEW #23 is merged too (tranche/T51 @ 3627650106): casedrafts' editions now carry case from the real draftEditions. Both C48 providers are in: merge the tranche and run seam4's two C48 tests on the real modules; they should turn green.
