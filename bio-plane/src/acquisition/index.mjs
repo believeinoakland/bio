@@ -881,7 +881,7 @@ export async function acquire(cap, body0, opts = {}) {
 async function acquireRun(cap, body0, opts, t) {
   const { cls = null, member = false, sessMember = null, storeName = "bio", captureRequest = null, ownHosts = null,
           reputation: reputationTool = undefined, fileScanner = null, renderWaitMs = undefined,
-          renderResume = null } = opts || {};
+          renderResume = null, heldSha: givenHeldSha = null } = opts || {};
   const body = body0 && typeof body0 === "object" ? { ...body0 } : {};
   const answer = (status, b) => ({ status, body: b });
   const op = "acquire";
@@ -975,6 +975,9 @@ async function acquireRun(cap, body0, opts, t) {
     if (cr && typeof cr === "object" && CREDENTIAL_KINDS.includes(cr.kind) && typeof cr.secret === "string" && cr.secret !== "")
       crCredential = cr;
   }
+  /* R22 (fix round 6, G32): the held capture's digest, handed in by an in-process caller (never read from a body), makes a member's fetch of
+     an address the record already holds conditional too: the source that says nothing changed is not read. Anything but 64 hex is ignored. */
+  if (!crHeldSha && typeof givenHeldSha === "string" && /^[0-9a-f]{64}$/.test(givenHeldSha)) crHeldSha = givenHeldSha;
   /* R4, CAP-8 — THE GOOGLE DRIVE HOST STACK (Bob, 2026-09-14: keep the link, export an OpenDocument version). The
      recognition, the composition and the fetch all happen inside the ONE call that files the bytes. */
   let driveCapture = null, driveHopRecorded = null;
@@ -1453,11 +1456,15 @@ async function acquireRun(cap, body0, opts, t) {
       const got = await timed(t, "render", () => within(run, captureRequest ? Infinity : (renderWaitMs ?? RENDER_WAIT_MS)));
       if (got.done) answerR = got.value;
       else if (opts.renderFinal) answerR = { ok: false, error: localize("acquisition.index.render_did_not_return", "the page as a visitor saw it did not come back in time") };   // R99: a render begun afresh is final
-      else renderDeferred = { run, pageUrl };
+      else renderDeferred = { run: run.then((a) => keepReply(ev, a)), pageUrl };   // R5 (G27): the reply is kept in the record when it returns, not held
     }
     if (!renderDeferred) {
     stageBegin(t, "render");
     const asked = { ...RENDER_DEFAULTS, locale: renderLocale(pv.view) };
+    /* R5 (G27): a render that returned after its request had ended was kept in the record at once (`keepReply`); its page is read back, its
+       bodies are the digests it recorded, and it is filed as a render waited for is. */
+    const kept = answerR && answerR.kept === true ? answerR : null;
+    if (kept) answerR = await replyOfKept(ev, kept);
     rb = renderBlock(answerR, { pageUrl, shellSha: sha, asked, at: retrieved });
     if (rb.ok) rbytes = new TextEncoder().encode(answerR.html);
     if (!rb.ok || rbytes.length > MAX)
@@ -1465,12 +1472,12 @@ async function acquireRun(cap, body0, opts, t) {
         detail: rb.ok ? localize("acquisition.index.the_rendered_document_is_length", "the rendered document is {length} bytes, over this surface's {MAX}.", { length: String(rbytes.length), MAX: String(MAX) }) : rb.problem });
     /* END DEC-49 REGION is-render-result */
     /* D-529: every subresource the render LOADED is hashed BY THE PLANE over bytes it KEEPS. */
-    const renderDigests = await keepRenderBodies(answerR, { sha256: sha256Hex,
+    const renderDigests = kept ? kept.digests : await keepRenderBodies(answerR, { sha256: sha256Hex,
       put: async (s, b) => { if (!(await ev.head(s))) await ev.put(s, b); } });
     rb = renderBlock(answerR, { pageUrl, shellSha: sha, asked, at: retrieved, digests: renderDigests });
-    const rsha = await sha256Hex(rbytes);
-    const renderedExisted = !!(await ev.head(rsha));
-    if (!renderedExisted) await ev.put(rsha, rbytes);
+    const rsha = kept ? kept.rsha : await sha256Hex(rbytes);
+    const renderedExisted = kept ? kept.existed : !!(await ev.head(rsha));
+    if (!renderedExisted && !kept) await ev.put(rsha, rbytes);
     renderedBytes = rbytes;
     stageEnd(t);
     shellRecorded = { file: `snapshots/${name}.shell.html`, sha256: sha, bytes: total,
@@ -1754,6 +1761,39 @@ async function acquireRun(cap, body0, opts, t) {
     reputation,
     store: storeName, tokenClass: cls, note: ACQUIRE_GRADE_NOTE,
   });
+}
+
+/** R5, R12 (fix round 6, G27): A RENDER THAT RETURNS AFTER ITS REQUEST HAS ENDED IS KEPT IN THE RECORD, NOT IN MEMORY. The renderer's reply is the
+ *  page and every body the page loaded (up to `SUBRESOURCE_BUDGET`, 64 MiB, sent as base64 text): held by the pending render until the member's
+ *  "Finish it" or the alarm takes it, an hour at most, it was the whole of the object's 128 MB. When the run returns, its page and each body are
+ *  put in the evidence store as the filing would put them (content-addressed, named by no document until one is filed), and what is held in their
+ *  place is `{kept: true, rsha, existed, digests, reply}`: the reply without its page or bodies, the page's digest, whether the record held the
+ *  page already, and the bodies' digests. `replyOfKept` reads the page back when the render is filed. A failed or empty render is small and is
+ *  passed on as it came; a record that will not take a piece leaves the reply as it came too, held as before, so no render is lost. Never throws. */
+async function keepReply(ev, a) {
+  try {
+    if (!a || a.ok !== true || typeof a.html !== "string" || a.html.length === 0) return a;
+    let refused = false;
+    const put = async (s, b) => { try { if (!(await ev.head(s))) await ev.put(s, b); } catch (e) { refused = true; throw e; } };
+    const digests = await keepRenderBodies(a, { sha256: sha256Hex, put });
+    const page = new TextEncoder().encode(a.html);
+    if (refused || page.length > CAPTURE_MAX) return a;
+    const rsha = await sha256Hex(page);
+    const existed = !!(await ev.head(rsha));
+    if (!existed) await ev.put(rsha, page);
+    const { html, requests, ...rest } = a;
+    const bare = Array.isArray(requests) ? requests.map((r) => { if (!r || typeof r !== "object") return r; const { body_base64, body_text, ...meta } = r; return meta; }) : requests;
+    return { kept: true, rsha, existed, digests, reply: { ...rest, ...(bare === undefined ? {} : { requests: bare }) } };
+  } catch { return a; }
+}
+/** R5 (G27): the renderer's reply of a render `keepReply` kept, its page read back from the record; a page that cannot be read back is a failed
+ *  render, in words. Never throws. */
+async function replyOfKept(ev, kept) {
+  try {
+    const o = await ev.get(kept.rsha);
+    if (o) return { ...kept.reply, html: new TextDecoder("utf-8").decode(new Uint8Array(await o.arrayBuffer())) };
+  } catch { /* said below */ }
+  return { ok: false, error: localize("acquisition.index.render_page_not_read_back", "the page as a visitor saw it was made but could not be read back from the record") };
 }
 
 /* R44 (N714, N710; K1929 (2), K1939 (DEC-168 S12, S13), K1946 T2; T37, N774, K2155): THE ADDRESS'S REPUTATION, ASKED
@@ -2098,7 +2138,15 @@ async function finishRender(cap, { session, opts, t, inRequest = false }) {
   let resume = null, lost = !held;
   if (held) {
     const got = await timed(t, "render", () => within(held.run, stale ? 0 : (renderWaitMs ?? RENDER_WAIT_MS)));
-    if (got.done) resume = { answer: got.value };
+    if (got.done) {
+      resume = { answer: got.value };
+      /* G27: a render kept in the record whose page the record no longer holds (another store's, or purged) is lost like one the object lost */
+      if (got.value && got.value.kept === true) {
+        let there = false;
+        try { const ev = cap.core && typeof cap.core.evidenceStore === "function" ? cap.core.evidenceStore() : null; there = !!(ev && await ev.head(got.value.rsha)); } catch { there = false; }
+        if (!there) { resume = null; lost = true; PENDING_RENDERS.delete(session.session); }
+      }
+    }
     else if (!stale) return pendingAnswer();
     else { lost = true; PENDING_RENDERS.delete(session.session); }
   }
