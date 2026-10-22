@@ -30,6 +30,8 @@
  *
  * T51 fix round 6 (the third re-walk's G2, G3, G12a): a member's large or slow web capture is parked and owed to the plane's alarm, not read in the
  * request (`owedFetch`, R105); "Finish it" renders nowhere in the request (R106); a capture decided to be no archive is not decided again (R107).
+ * Fix round 6 (G27, G32): a render that returns after its request has ended is kept in the evidence store at once and its reply dropped (`keepReply`, R5);
+ * a caller in process hands the held capture's digest as `opts.heldSha` and the fetch is conditional for a member too (R22).
  *
  * Every refusal is an answer `{status, body}`, never a throw. The comments carried from the legacy handler keep the
  * reasoning beside the code it explains. */
