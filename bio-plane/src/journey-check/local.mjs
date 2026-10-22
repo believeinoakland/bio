@@ -170,7 +170,9 @@ export async function localWorld({ model = true, segments = true } = {}) {
   async function route(context, onForeign) {
     await context.route("**/*", async (r) => {
       const req = r.request();
-      const init = { method: req.method(), headers: req.headers() };
+      /* no compression is asked: workerd compresses when asked and hands the bytes back as they are, which the browser and the walker cannot read */
+      const { "accept-encoding": _ignored, ...asked } = req.headers();
+      const init = { method: req.method(), headers: asked };
       const body = req.postDataBuffer();
       if (body && !["GET", "HEAD"].includes(req.method())) init.body = body;
       let res;
