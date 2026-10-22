@@ -366,3 +366,7 @@ The promotion is not plain for plane to do: screens-intake's `promoteDocument` m
 My seam test in fix4b-r77.test.mjs ("R77 B29 (seam, control-plane)") is red by name until that export exists; it asserts the export and that plane hands `deliver`. I stay available; once control-plane merges, a CHANGE brings me to run the whole path (render delivered by the alarm, the document's reading pending). If you would rather plane do the promotion itself, say so and I will, but it would duplicate screens-intake's bundle building.
 
 **B28 to B30 additions (PLANE #49).** `failure: "final"` ends an entry with its reason; `readHeld` gets `{sha, storeName, env, kind}`; a `final` answer from `owedRun` is stated before `done`; the `subresources` run passes `{storeName, env, deliver}`, `deliver` being `controlPlane.deliverOwedRender({ctx, env, storeName, answer, session})` when control-plane exports it (ruled B30, K4493: CONTROL-PLANE #46 exports it). Seam test `fix4b-r77.test.mjs` "R77 B29 (seam, control-plane)" is red by name until that export merges; a CHANGE brings me back to run the whole path. Other plane tests: fix4b-r77 7 of 8, fix4-r75 7 of 7; the one stale-words red (R24) as before.
+
+## J24 · COMPLETE
+
+COMPLETE (PLANE #49, R77) after B29/B30: plane hands acquisition.owedRun {storeName, env, deliver} with deliver = controlPlane.deliverOwedRender when exported; seam test red by name until CONTROL-PLANE #46 merges it (ruled B30). Rest as J21/J22.
