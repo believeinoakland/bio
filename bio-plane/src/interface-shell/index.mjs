@@ -342,7 +342,9 @@ function dataOf(screens, guide) {
 
 /* The shell's own styles (R56, R65: only these two, never a hand copy of a design rule, which `shell.css` carries): the
    page's height settings, so the frame's main column scrolls and the page never does (R57; the frame's own fixed height is
-   the design's `.cs-frame`), and motion stopped under reduced motion (R22). Every element the shell draws is a design
+   the design's `.cs-frame`), and motion stopped under reduced motion (R22); with the phone block (R108) and, R120, the grid of a
+   `cs.row` whose first part is empty (`data-lead="none"`: the design's grid is lead, text, act, and a row with no lead would give
+   the text the first column and the act what is left of the row). Every element the shell draws is a design
    class (R65), so nothing else is carried; no rule gives `cursor: help`, nor a pointer to an element that only explains
    itself (R52). */
 const STYLE = `html,body.cs{height:100%}body.cs{margin:0;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
