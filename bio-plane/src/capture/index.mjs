@@ -43,8 +43,8 @@ import { CAPTURE_CHECKS } from "./checks.mjs";
 import { say } from "./words.mjs";
 import { INFORMATION_GRAMMAR } from "./grammar.mjs";
 import { evidenceAbsent } from "./ops.mjs";
-import { acquire, archiveLookup, profileOf, profilesAsText, profileView, governedFetch, governedCall, INSTALLATION_CHECKS,
-         firstHopWho, CAPTURE_MAX, keepWhole, keepPast, servedSubstance, PROFILE_TEXT_MAX, MULTIPART_KEEP_MAX } from "../acquisition/index.mjs";
+import { acquire, archiveLookup, profileOf, profileView, governedFetch, governedCall, INSTALLATION_CHECKS,
+         firstHopWho, CAPTURE_MAX, keepWhole, keepPast, servedSubstance, PROFILE_TEXT_MAX, MULTIPART_KEEP_MAX, textTypeOf } from "../acquisition/index.mjs";
 import { verifySshsig, NS_RATIFY, captureAccountStatement } from "../sshsig.mjs";
 /* R69 (N530, K1336): the account statement is spelled once, by `signatures` (its R41); re-exported so the names this
    module's users import (`affordances`' tests among them) still resolve, with no spelling of capture's own. */
@@ -105,8 +105,6 @@ export const SEEN_IN_PROJECT_MAX = 200;
 export const UPLOAD_STATEMENT_MAX = 2000;
 export const UPLOAD_NAME_MAX = 300;
 export const UPLOAD_TYPE_MAX = 255;
-/* R93: the text type a text extension in an upload's name stands for, when the member declared no type. */
-const UPLOAD_NAME_TYPES = { txt: "text/plain", md: "text/markdown", csv: "text/csv" };
 /** R86: the one sentence `UPLOAD_WITHIN_FAILED` answers, whatever `within` threw or answered (N409's pattern). */
 export const UPLOAD_WITHIN_FAILED_DETAIL =
   "the act run with the upload did not complete, so the upload was rolled back and nothing was written";
@@ -751,19 +749,15 @@ export class Capture {
       const r = this.#tx(writeReceipt);
       return r ? { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r), ...pending } : notWritten;
     }
-    /* R92: a text type over bytes that are text (valid UTF-8, no NUL) is the profile's declared content type, so the bytes
-       are read as text; any other type, or a text type over bytes that are not text, profiles the bytes as R86 does without
-       it. Either way the type is recorded as the uploader's declaration, never a measured header. */
-    /* R93: with no `type`, a text extension in the name (.txt, .md, .csv) reads the bytes as that text type, under the
-       same test; the name is not a declaration, so no source_content_type or declared_by is recorded for it. */
-    const named = typeof type !== "string" || type === "" ? /\.(txt|md|csv)$/i.exec(typeof name === "string" ? name : "") : null;
-    const readAs = named ? UPLOAD_NAME_TYPES[named[1].toLowerCase()] : type;
+    /* R92, R93: the one rule, `acquisition`'s `textTypeOf` (E5): a declared text type, or with none a `.txt`, `.md` or `.csv` name,
+       reads the bytes as text when they are text (valid UTF-8, no NUL), within one part. Either way a declared type is recorded as
+       the uploader's declaration below, never a measured header; a name is not a declaration. */
     let ct = null;
-    if (typeof readAs === "string" && readAs !== "" && profilesAsText(readAs, total, multipart)) {
+    if (!multipart) {
       try {
         const obj = await ev.get(sha);
         const raw = obj ? new Uint8Array(await obj.arrayBuffer()) : null;
-        if (raw && raw.length === total && !raw.includes(0)) { new TextDecoder("utf-8", { fatal: true }).decode(raw); ct = readAs; }
+        if (raw && raw.length === total) ct = textTypeOf({ bytes: raw, type, name });
       } catch { ct = null; }
     }
     const profile = await profileOf({ ev, sha, ct, total, multipart, headers: {}, locator: address, view: profileView(this.core),
