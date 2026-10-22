@@ -376,3 +376,22 @@ Checks: `checks/run.mjs`: format, architecture, coverage (6632 of 6632), channel
 **Requirement lines I propose (BOB writes `build/requirements/`).** Amend R70: "(T51 fix round 6; G20, K4571) The picker never stops silently at its first page: while `heldcaptures` answers `truncated` with a `next`, the following page is read by that cursor (1000 rows, at most twice more); past that bound, or when a later page cannot be read, the form says how many documents it shows (`screen.people.more`) and a search by title (`form.choose.search`) narrows the choice. Test: 250 held documents reach the 250th; 2,500 say 2,200 are shown; control: 150 are read once and nothing is said."
 
 Size (session_01GPSmcx32NL7CpoTyeWoeYn): test runs 14, module lines 5338
+
+## J28 · QUESTION
+
+QUESTION (G42, words). START says the gauge's new sentences are `localize(id, en)` stand-ins added to `WORDS` and `keys.mjs`. Two held rules forbid that in this module: setup-words R13 ("a drawn-screen module (`screens-*`) reads through `word` only", K3930 (3)) and civicos-process `checks/words.mjs` (the `marker` arm fails a `localize` call in a drawn module; `DRAWN_MODULES` matches `screens-*`); screens-inquiry's fix round 4 removed its stand-ins for the same reason (48074ae70e). `docs/development/ux-substrate/screens/words.json` holds no row for the gauge.
+
+My best reading, which I am building on: the gauge reads every sentence by key through `cs.w`, the keys listed in `keys.mjs` and in `WORDS.group`, no English in this module. The rows themselves must come from you (a code-origin row from a `localize` call in a module the check allows, or UX-DESIGN's rows in `words.json`), with these ids and this English (one key per sentence; fills in braces):
+
+- `screen.group.storage.head` — How full your team's record is
+- `screen.group.storage.size` — Your team's record holds {used} GB of the {limit} GB one record can hold ({percent}%).
+- `screen.group.storage.unstated` — The size of your team's record is not stated.
+- `screen.group.storage.warn1` — Your team's record has passed 70% of what one record can hold. Decide what to do before it fills.
+- `screen.group.storage.warn2` — Your team's record has passed 90% of what one record can hold. At the limit, writes will fail: nothing more can be saved until room is made.
+- `screen.group.storage.factors.lead` — How large your record can realistically grow depends on four things.
+- `screen.group.storage.factors.plan` — The Cloudflare plan your team has and is willing to pay for.
+- `screen.group.storage.factors.pare` — How far you pare the record, by what your investigations and queries touch.
+- `screen.group.storage.factors.latency` — How much delay you accept when a search has to run in the background instead of at once.
+- `screen.group.storage.factors.limits` — The limits of the platform itself.
+
+Until the rows are on the tranche my gauge tests are red by name (`UNKNOWN_WORD`), as the seam is red until CONTROL-PLANE #50 merges. I verify locally with the rows added to an uncommitted copy of `rows.mjs`, which I do not commit (mechanics §14). If you would rather I use a different mechanism, or other English, tell me and I follow.
