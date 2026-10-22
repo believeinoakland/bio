@@ -365,3 +365,15 @@ Suites: new test 4/4; reading-pipeline less pdf-pieces 220 tests, 219 pass, 1 fa
 THE ONE FAILURE, not from this change: memory.test.mjs (R36) BUDGET-2024-APP "did not complete in a 87 MB heap (SIGABRT)", a whole read without cursor. It fails identically with my change stashed, on tranche/T51 as merged (J15 recorded 220/220 on an earlier tip); the other three volumes pass. I did not touch that path. Smallest thing I need: BOB to say whether that failure is known on tranche/T51 or this module should diagnose it; I stand ready on a CHANGE.
 Requirement line proposed (BOB writes it), R35: "(fix round 6, G40; K4622) A reading read in pieces counts each word of the text once: `piece.words` is the words a piece's units hold of the text, a header a sheet's later block repeats (R41) and the tail of a word a hard cut splits being no words; the pieces' words add up to `words_total`, never past it, and exactly to it when the whole text was read. Test: a 1 MB CSV, a 9,000-row sheet with and without `lineRows` and a text with one word over the cap, each read whole in pieces, answer a sum equal to `words_total`."
 Size (session_019VpajmgG3BFzWYz8moVQRC): test runs 12, module lines 2223
+
+## J18 · COMPLETE
+
+COMPLETE G40, both halves (READING-PIPELINE #25; answers B19). Supersedes J17's open item.
+
+1. R43 (B19): `ReadHooks.wants(captureClass)` added in `hooks.mjs`, true exactly when a registered hook's classes include the class, false for null, a non-string, an empty string, or a class no hook holds; it runs and changes nothing. Test `hooks.test.mjs` "R43: ..." red first (`h.wants is not a function`), then green: events-style registration (`minutes`, `agenda` true; `generic`, null, undefined, 42, an array, "" false), empty registry false, a refused registration holds no class, nothing ran, `readHooksOf` registry too. Merged `tranche/T51` first (R43's wording is there).
+2. R35 (J16, J17): unchanged from J17: pieces' words sum to `words_total`, never past it (index.mjs `ownWords`/`wordsOfUnit`; words-pieces.test.mjs red then green).
+
+The failure J17 reported (memory.test.mjs BUDGET-2024-APP, 87 MB heap) did not recur after merging the tranche tip: the whole module suite is 221 of 221 (less pdf-pieces, which passed alone before this merge; I did not re-run it, nothing it reads changed). I never found its cause; it passed on the earlier tip and failed identically on a stashed tree in my container, so treat it as environment-sensitive, not mine.
+Checks: format, architecture, channels 0 failures; coverage 6673 of 6673; words 18524, inline 0, plain 0, testcopy 0 (unchanged); ownership 5 files, 0 failures. Pushed.
+Requirement lines proposed: R35 as in J17; R43 stands as written. K4208: no census op changes. No new sentence.
+Size (session_019VpajmgG3BFzWYz8moVQRC): test runs 16, module lines 2230
