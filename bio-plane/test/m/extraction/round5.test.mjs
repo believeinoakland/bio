@@ -4,6 +4,7 @@
    hand; each test names the requirement ids it checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { localize } from "../../../src/setup-words/index.mjs";
 import { fresh, bundle, bucket, withEntry, i2, doc, sha } from "./fixture.mjs";
 import { CAPTURE_TEXT_CAPTURE_BOUND, extractionOps } from "../../../src/extraction/index.mjs";
 import { WHOLE_READ_MAX } from "../../../src/reading-pipeline/index.mjs";
@@ -129,20 +130,22 @@ test("R83 (control): a text within the index's bound is offered whole: words_rea
   assert.deepEqual([reading.words_read, reading.words_total], [5, 5]);
 });
 
-/* The walker's 10 MB upload: two parts, the whole kept, and a profile that found no format (an upload declares none), so the
-   real chain states "not read as text (multipart)", `final`. */
+/* The walker's 10 MB upload, as it was stored before reading-pipeline detected a format from the held bytes: two parts, the whole
+   kept, `final` "not read as text (multipart)". Old data, so written as the old chain wrote it (R-OLD), its sentence read through
+   the same word the chain used. */
 async function multipartNotRead() {
   const made = await homeOfParts({ total: 10_300_000, n: 2, whole: true, fmt: "undetermined" });
-  const out = await made.w.x.read(made.document, { storeName: "bio" });
-  promote(made.w, made.document, out.reading, out.text_units);
-  return { ...made, out };
+  const reading = { found: false, entities: [], failure: "final", content_type: null, text_source: null,
+    basis: localize("reading-pipeline.index.document_not_read_text", "the document was not read as text ({why}), so no reading was attempted",
+      { why: localize("reading-pipeline.index.multipart", "multipart") }) };
+  promote(made.w, made.document, reading, null);
+  return { ...made, out: { reading } };
 }
 
 test("R85 (E1): a final 'not read as text (multipart)' reading is replaced once the held bytes detect a format: `readHeld` gives it its text", async () => {
   const { w, d, out } = await multipartNotRead();
   assert.equal(out.reading.found, false);
   assert.equal(out.reading.failure, "final");
-  assert.match(out.reading.basis, /multipart/);
   assert.deepEqual(w.x.readingFor(d, "class:admin").text_units, []);
   const r = await withEntry(pdfEntry(i2([{ page: 0, text: "alpha beta gamma delta" }])), () => w.x.readHeld({ sha: d }));
   assert.deepEqual([r.ok, r.read], [true, true], JSON.stringify(r));
