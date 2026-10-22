@@ -203,6 +203,7 @@ Every job: medium effort; its suites then `build/plan/impact.mjs tranche/T51 HEA
 | review (#23) | haiku | 2 | 13 | review | C48: `editions.case` passed, R19 (K4467) |
 | instance-setup (#27) | sonnet | 2 | 14 | instance-setup | C64-law: `profiles().view` carries `records_laws`, `records_help`, `name`, R12 (K4468) |
 | doctypes (#9) | sonnet | 2 | 15 | doctypes | C5a/C5b/P8: a recognised policy or regulation parsed within bounds, R38 (K4476) |
+| jurisdictions (#17) | sonnet | 2 | 16 | jurisdictions | C8: the first profile's `fiscal_year` (R49), sourced (K4477) |
 
 **Wave 0** (priority; BOB merges in the table's order, runs the whole suite and the seam tests, and reads the two step-0 reports before releasing fixes): pdfstructure > host-governor > acquisition > extraction > plane > control-plane. **Wave 1** (16 providers, independent; merge as the table). **Wave 2** (7) starts when wave 1 is merged; it does not wait on the design's word rows (K4269): a missing row is drawn by its stand-in, and section 5.4's check lists every key still drawn raw before the deploy. A half a job finds in a module it does not hold goes to BOB as a QUESTION answered before the next wave opens (round 3's reserve).
 
