@@ -313,3 +313,15 @@ Size (session_01PBzWna63QzDA6ZtwyhmSwV): test runs 24, module lines 2822
 ## J19 · COMPLETE
 
 COMPLETE (PLANE #48; B20-B25): C5c (keeps_pending, pending-work alarm, cap.keepLater, pendingadd), C5a (stage record in storage, restarted:true), B22 (owners.mjs), B23 (deferReading -> reading_pending; fix3-r74 asks readheldfor), B24 (fixture transactionSync rolls back). Four fields per cause in build/jobs/T51/plane.md. Suite 297, pass 295; reds: fix3-r74 readheldfor (needs CONTROL-PLANE #45's arm, merges after me; green with its branch merged) and R24 (design's, accepted). fix4-seam 2/2 green with real acquisition; L on workerd: 40 MiB keep finished by the alarm in 1533 ms. migrate-released 1/1. format/architecture/ownership 0. Requirement lines: R9 says 'stage keys' but it is a table (acquire_stages); propose R76: gatedOp takes deferReading(document); true skips the read step and answers reading_pending:true with no reading (tests named R75 until written); acquiretimings adds restarted:true beside stageTimes.
+
+## J20 · QUESTION
+
+QUESTION (R77, the ledger's hand-offs to the other jobs; best reading below, I carry on with it)
+
+Plane's ledger is built and green; the lower modules reach it only through hooks plane hands them, and your START does not name the owners' side. I built these, so the six other jobs (acquisition, capture, extraction, cause-reading-4, control-plane, store-door) must match; please confirm or correct, and relay:
+
+1. Registration: `captureOf(ctx).owe({kind, sha, parts?, detail?})` beside `keepLater({sha, parts})` (same hook, async, never throws, re-arms an entry already held). `kind` is keep | reading | ocr | subresources | unpack; `detail` is a plain object the owner chooses (an ocr cursor `{next_page, pages_left}`, a web session's key). The door's `pendingadd?kind=&sha=` accepts every kind but keep. Acquisition reads it as it reads keepLater (`cap.owe`).
+2. Reading and ocr entries: plane calls `extraction.readHeld({sha, storeName, env, owed: {kind, detail}})`. extraction answers `{ok:true, read:true}` or `{ok:true, done:true}` (ended); `{ok:true, more:true, detail}` (a stage done, the rest follows at once, detail is the new cursor); `{final:true, why}` (ended for the document's own reason, kept on the row and shown on the page by `owedwork`); `NO_HOME`, a store error or anything else is tried again (backoff to one hour, never given up).
+3. subresources and unpack entries: plane calls `acquisitionOf(ctx).finishOwed({kind, sha, detail, storeName, env, at})`, answering the same shapes. Until acquisition exports it the entry stays owed (`last_why: NO_OWNER`), never dropped.
+4. `owedwork` (declared; classes admin and member; read): `?sha=` lists that digest's entries `{sha, kind, state: owed|final, attempts, next_try, why, detail}`; without `sha` it answers counts by kind and state, no digest.
+Old ledger rows (one row per digest, exhausted) are carried over and re-armed at migration; rows the old code already deleted at 'NO_HOME after a keep' are gone (no source to rebuild them from): new data only for those.
