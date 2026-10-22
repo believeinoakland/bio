@@ -21,7 +21,7 @@ export const TIMELINE_PARTS = Object.freeze({
       const words = { always: "always", usually: "usually", sometimes: "sometimes", unless_exception: "unless", never: "never" };
       const labelOf = (st, i) => `${i + 1} · ${cs.esc(st.label || st.stage_key)}`;
       const titleOf = (sha) => {
-        const rows = view.data.docs && view.data.docs.state === "ok" && view.data.docs.value && Array.isArray(view.data.docs.value.held) ? view.data.docs.value.held : [];
+        const rows = P.docsAll(cs, view, { project }).rows;
         const r = rows.find((x) => x && x.capture && x.capture.sha256 === sha);
         return (r && r.title) || "";
       };
@@ -63,8 +63,8 @@ export const TIMELINE_PARTS = Object.freeze({
         + P.actSec(cs.sec("progression.steps", cs.sheet(stages.map(stepRow).join("")), { help: S + "tip.steps" }), "instance")
         + cs.sec("progression.chain", chain, { help: S + "tip.sure" })
         + (findings.length ? cs.sec("progression.findings", cs.sheet(findings.map(findingRow).join("")), { help: S + "tip.findings" }) : "")
-        + fold("progression.thread", cs.choice("pm-thread-stage", "progression.steps", stageOpts, {}) + P.docChoice(cs, view, "pm-thread-doc", { project }) + cs.act("thread", { label: "progression.thread" }))
-        + fold("progression.discharge", cs.choice("pm-dis-stage", "progression.steps", stageOpts, {}) + P.docChoice(cs, view, "pm-dis-doc", { project })
+        + fold("progression.thread", cs.choice("pm-thread-stage", "progression.steps", stageOpts, {}) + P.docChoice(cs, view, "pm-thread-doc", { project, query: { project } }) + cs.act("thread", { label: "progression.thread" }))
+        + fold("progression.discharge", cs.choice("pm-dis-stage", "progression.steps", stageOpts, {}) + P.docChoice(cs, view, "pm-dis-doc", { project, query: { project } })
           + cs.field("pm-dis-reason", "entity.relation.why", { area: true, rec: true }) + cs.field("pm-dis-cite", "entity.relation.cite", { help: "entity.relation.cite.help" })
           + cs.act("discharge", { label: "progression.discharge" }))
         + (findingOpts.length ? fold("progression.setaside", cs.choice("pm-aside-finding", "progression.findings", findingOpts, {})
