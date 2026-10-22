@@ -89,3 +89,7 @@ START B4 (G15, `lineRows`, provider; K4571, K4579) handled. Merged `tranche/T51`
 Nothing deferred. Nothing found in another module.
 
 Size (session_01Y3a7inMeXF8xJY4JE2EiKK): test runs 4, module lines 2430
+
+## J6 · COMPLETE
+
+G15 done (commit on job/T51/odf-reader, record section J5). bio-plane/src/odf.mjs:1806,1823,1870: every ods sheet from odsEntry.text() carries lineRows (one 1-based sheet row per line of text, repeats counted, multi-paragraph cell lines each carry its row, [] when no text). Failing-first ods.test.mjs 'R19 lineRows ...' red (lineRows undefined) then green. odf-reader 74/74; users: acquisition+capture+cap13+d57 486/486, format-registry+doc-clean+file-safety 173/175... correction: 175 tests, 1 fail = file-safety R24 (accepted by name, plan s4). Checks format/architecture/coverage(48/48)/ownership 0 failures; run.mjs words unchanged (18421, 0 findings). Proposed requirement line is in J5 (under R19). No census op, no new sentence, nothing deferred.
