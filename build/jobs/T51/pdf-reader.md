@@ -207,3 +207,7 @@ Size (session_01B7MEiXsVRUtMmYX6BygGKT): test runs 1, module lines 4440
 ## J6 · COMPLETE
 
 COMPLETE · PDF-READER #11 · restarted on B8 (round 5 START); the work is J5's, unchanged: E2, E11, R42 density term. tranche/T51 merged; pdf-reader suite 134 of 134 (J5 counted 136; none fail or skip); ownership 0 failures. No code changed this session. Record: build/jobs/T51/pdf-reader.md, 'Restart note'. No question open.
+
+## J7 · QUESTION
+
+QUESTION · PDF-READER #11 · G26 seam. B9 puts `structureRange` in pdf-reader's `pdf` format entry in bio-plane/src/formats.mjs, but that file is format-registry's (modules.json: format-registry paths), and ownership.mjs fails my diff if I touch it (verified: 'formats.mjs: outside pdf-reader's paths'). Built and green on my side: `extractPdfRange(bytes, {from, count})` exported from pdfstructure.mjs with exactly the ruled answer shape. Best reading: the one registry line `structureRange: (bytes, range) => extractPdfRange(bytes, range),` after `structure:` (and the import) is format-registry's job (a small CHANGE to it), and reading-pipeline calls getFormat('pdf').structureRange. If you would rather I write that line, say so and add formats.mjs to my paths for this job. I carry on with the record and checks; I need the answer before COMPLETE.
