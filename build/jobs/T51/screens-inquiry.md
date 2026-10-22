@@ -400,3 +400,23 @@ COMPLETE (SCREENS-INQUIRY #22, re START B43). Entry A-23 (test only) is done. No
 **Deferred:** none. **Open QUESTION:** none.
 
 Size (session_01DitFG3JNMsgKzedjcc5NW1): test runs 8, module lines 6599
+
+## J30 · COMPLETE
+
+COMPLETE (SCREENS-INQUIRY #23, re START B44, G38 screen half). tranche/T51 merged. No product requirement is not met; nothing deferred, no open QUESTION.
+
+**Root cause (1).** `op=reading` is now paged by bytes as well as units, but four reads used only the first page of `text_units`: `document.mjs` moveOffer (was :640, "does the newer copy have a text"), the cited words of each leg in "Your citations, leg by leg" (was :671), the contradiction flag's passage pickers (was :977/:982/:987) and the flag act's index lookup (was :1594/:1601); and, found by the search the START asked for, `question.mjs` wordsOf (was :242, the words a leg cites on the question page). A unit past page 1 was never drawn as cited, never offered to flag, and a newer copy whose text began on page 2 was said to have no chain.
+
+**What changed.** `common.mjs` new part `readPages(read, key, sha, first, done, limit)` (follows `next`; page keys carry the first page's totals so a page cached while a text was still being read is re-read when the reading grows; a cursor that repeats ends the walk). `document.mjs`: `readOf`, moveOffer, cited words per leg (a failed page is said), flag pickers (pages read only when the fold can be drawn, state line while loading/failed), the flag act reads the same pages from the page's memory so indexes agree, and the shown passages' own paging now uses the same helper. `question.mjs` wordsOf. Census ops owned: none; no accepted keys changed.
+
+**Why tests missed it (2).** Every `reading` fixture answered one page; no test had a unit past the first. Gap fixed: `fr6-pages.test.mjs` (5 tests, pages shaped as the real op answers) and a real-plane seam in `fr6-seam.test.mjs`.
+
+**Failing-first (3).** On the unfixed screen: `fr6-pages` G38 cited-words (document) RED, flag pickers RED (3 options not 7), move offer RED (only keepversion); question-page cited words RED (verified by stashing question.mjs alone); growing-reading test RED when the totals are left out of the page key. Real plane (Miniflare, 10,000-line text filed by the screen's own promotion, question opened by her press, cited on the last line through the real `cite`): RED on old code (the words never drawn), GREEN now, each page read once. Controls green: a unit on page 1 / a one-page reading makes one read; a unit the reading lacks ends at the last page with no words invented; no other document means no fold and no extra page read.
+
+**Suites/checks.** screens-inquiry 514 of 514 pass (509 + 5). Users per impact.mjs: control-plane 399/399, journey-check 1/1, plane 331/332: the one red is plane `release` R24 (`screen.objective.purpose`, stale rows.mjs), the tranche-tip red J27 already named, not mine. checks/run.mjs: format, architecture, coverage (6668/6668), channels, words all 0 failures; words counts unchanged (18421, dev 268, unkeyed 1982, inline 0). ownership 0 failures.
+
+**Platform (4).** N for this half (screens only); live proof is BOB's re-walk (0111's Document screen). **Rows owed:** none new (no new sentence; a failed page uses `state.failed`, a pending one `state.loading`).
+
+**Proposed requirement lines.** R3 add: "(G38, fix round 6) The reads that use a reading's units (the words a leg cites, R69; the passages a contradiction flag is set beside, R127; whether a newer copy has a text to move citations to, R124) follow `next` of `op=reading` until each has what it needs and never stop at the first page; a page that cannot be read is said, never taken for the unit's absence; a page kept while the reading was being read is read again once its totals change. Test: a reading of three pages whose cited unit and flagged unit sit on page 3 draws the words as cited and offers the passage to flag, each page read once. Control: a one-page reading makes one read." R2/R34 add: "the words a leg cites are found on any page of the cited document's reading."
+
+Size (session_01M1fv1GBHS7ibQw58BKZSWn): test runs 9, module lines 6648
