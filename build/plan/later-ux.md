@@ -68,3 +68,9 @@
 - Money · `refusal.MONEY_BAD_PERIOD` has no design row (money's stand-in "That period is not one this team's money records can read."); the screen draws the nearest held refusal and the plane's reason · SCREENS-INVESTIGATE J24 · 2026-10-22
 - Capture result · the reading follows (row `screen.capture.reading.pending`; stand-in `screen.document.text.unread.next`) · fix round 4b R57 · 2026-10-22
 - Attestation · `attestation.register_row_names` still says a capture held in parts is named by its parts' digests, not the whole's; since provenance R72 the whole is registered (stale wording) · F3 verification (K4508) · 2026-10-22
+- Settings > Security · "Check it now" says nothing of what it checks · A S-01 · fix round 4 §6 · 2026-10-21
+- Queue and doorbell · the generic reason "An item that needs you to read, check or decide..." is the same for every item · A S-33 (C71) · fix round 4 §6 · 2026-10-21
+- Document · "Pages 1 are pictures of text" for a page that also has typed words · A FC-14 · fix round 4 §6 · 2026-10-21
+- Document · "Cite in which question" holds every team question with no empty choice · B C95 · fix round 4 §6 · 2026-10-21
+- Request, send, reply · "the city" for a federal office · B C64 · fix round 4 §6 · 2026-10-21
+- Case ceremony · rows not yet written drawn as keys (rows since written; re-check at the re-walk) · B CA28, CA34 · fix round 4 §6 · 2026-10-21
