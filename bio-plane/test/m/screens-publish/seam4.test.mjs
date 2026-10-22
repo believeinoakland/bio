@@ -207,13 +207,13 @@ test("R13 R70 R77 C48 E4 a ceremony reloaded after 'Edition 1 is prepared' count
   assert.equal(pinned.length, 1, "the real prepared document pins the finding");
   const asked = [];
   const again = await open(CER2(P), { boot: { idb: await keptKey() }, plane: planeFor(plane, asked) });
-  assert.ok(drew(again, "screen.ceremony.signs.count.findings", { n: "2", findings: "1" }), "the edition and its one finding, after the reload");
+  assert.ok(drew(again, "screen.ceremony.signs.count", { n: "3", findings: "1", evidence: "1" }), "the edition, its one finding and the document it rests on, after the reload");
   assert.equal(again.root().querySelector("[data-roster-unread]"), null, "nothing is unreadable");
-  assert.deepEqual(main(again).querySelectorAll("[data-statement]").map((li) => li.getAttribute("data-statement")), ["case", "finding"]);
+  assert.deepEqual(main(again).querySelectorAll("[data-statement]").map((li) => li.getAttribute("data-statement")), ["case", "finding", "evidence"]);
   await press(again, "caseratify");
   await answerSign(again, true, "caseratify");
   const sent = last(again, "caseratify").body;
-  assert.deepEqual(sent.members.map((m) => [m.id, m.sha]), [[Q, pinned[0].version_sha]], "the finding is signed with the edition, with the sha the document pins");
+  assert.deepEqual(sent.members.map((m) => [m.id, m.sha]), [[Q, pinned[0].version_sha], [DOC, w.record.head(DOC).bundleSha]], "the finding is signed with the edition, with the sha the document pins, and the document at its head");
   assert.equal(sent.members[0].signature.length > 0, true);
 });
 
@@ -223,7 +223,7 @@ test("R13 R70 E4 control: the same flow with no reload counts and signs the same
   const same = await open(CER2(P), { boot: { idb: await keptKey() }, plane: planeFor(plane, asked) });
   tick(same, "ce-tie", "yes");
   await press(same, "publish", { reason: "because" });
-  assert.ok(drew(same, "screen.ceremony.signs.count.findings", { n: "2", findings: "1" }));
+  assert.ok(drew(same, "screen.ceremony.signs.count", { n: "3", findings: "1", evidence: "1" }));
   await press(same, "caseratify");
   await answerSign(same, true, "caseratify");
   const a = last(same, "caseratify").body;
