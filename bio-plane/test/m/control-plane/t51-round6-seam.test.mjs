@@ -189,7 +189,16 @@ test("R123, R125 (G13): the 12 MB text is read WHOLE by the ledger's ticks: `END
   let owedMidway = null;
   const done = await until(async () => {
     const x = await readingOf(auth, digest);
-    if (x && x.found && unitsText(x).includes("ENDMARKER")) return x;
+    /* op=reading answers at most 4,096 units a page (extraction R76: `after`/`next`): the whole is every page, read through the door */
+    if (x && x.found) {
+      let page = x, all = [...(x.text_units || [])];
+      for (let n = 0; page && page.next != null && n < 100; n++) {
+        page = (await get(auth, { op: "reading", sha256: digest, after: page.next })).result;
+        all = all.concat((page && page.text_units) || []);
+      }
+      const whole = { ...x, text_units: all };
+      if (unitsText(whole).includes("ENDMARKER")) return whole;
+    }
     if (x && x.found && owedMidway === null) owedMidway = JSON.stringify(await owedOf(auth, digest));
     return null;
   }, 1100000, 5000);
