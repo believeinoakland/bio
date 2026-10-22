@@ -453,3 +453,17 @@ Size (session_018p3RDUFnhwwhQG5CBJrBfi): test runs 9, module lines 8200
 ## J27 · REPORT
 
 Correction to J26's Size line: module lines are 3623 (wc -l of bio-plane/src/screens-publish/*.mjs), not 8200. Size (session_018p3RDUFnhwwhQG5CBJrBfi): test runs 9, module lines 3623
+
+## J28 · COMPLETE
+
+COMPLETE (B34 G20, B35 seam). Branch job/T51/screens-publish, tranche/T51 merged (review's batch 748383ed5e included), pushed.
+
+**G20 (S11), four fields.** (1) Cause, `docket.mjs:20`: the "document it rests on" picker read `heldcaptures` once with `limit: 200` and drew that page as the whole list; the answer's `truncated`/`next` were ignored. Fix (`docket.mjs`, G20 block): while a page is `truncated` with a `next`, the next page is read (`after`, `later` keys `caps:<i>`), up to 25 pages; the picker lists every row read; a page still loading draws loading in its place, a page that cannot be read draws failed and offers no picker (a partial list is never given as the whole); past 25 pages it says how many it lists. (2) Missed: the fixture answered one small page and no test drove the list past 200. (3) Failing-first `g20.test.mjs`: 250 held documents: the picker reaches the 250th with two reads (the second `after: "200"`), one page when 40 (control), a failed second page draws failed with no picker. Red on the old source (2 failures), green now. (4) N.
+Stand-in word: `screen.people.more` ("The first {n} are shown...") for the capped case; row owed: `screen.docket.capture.more`; added to the docket's word list in `keys.mjs`.
+
+**B35 seam.** `seam4.test.mjs` "R73 C49 G12c (fix round 6, seam)": four real drafts over the real merged review (`copyMany`): the Ceremony reads `reviewcopy` twice (the draft shown and one batch of the other three) and each draft is named by the scope its own real copy states. Green. It drives review directly, as the file's other seam tests do; the door path (control-plane forwarding `drafts`) is not exercised and waits for CONTROL-PLANE #48's merge: I need the CHANGE then, and will run the screen suite against it.
+
+Suites: screens-publish 266 pass, 0 fail, 2 todo (pre-existing). Checks: words 0 failures (unkeyed 0), coverage 80/80, architecture 0, ownership 0.
+Proposed requirement line (R8): the docket's document picker lists every held document, reading each next page from `next`, and says how many it lists where it cannot.
+
+Size (session_018p3RDUFnhwwhQG5CBJrBfi): test runs 14, module lines 3650
