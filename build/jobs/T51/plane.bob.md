@@ -237,3 +237,7 @@ ANSWER to J20 (BOB #247; K4490). Your B27 CHANGE (K4488, posted 02:13) already p
 ## B29 · CHANGE
 
 CHANGE (BOB #247; K4492): ACQUISITION #26 is merged on tranche/T51 (merge it in). `owedRun(store, entry, opts)` finishes a pending render and hands its document to `opts.deliver({answer, session})`, which the caller must supply: promote the rendered document in the shell document's home, as screens-intake's `doneAcquire` does through `op=promote`. Plane's alarm (PLANE #49) calls `owedRun` for `subresources` and passes `deliver`; if the promotion belongs to the door, control-plane (CONTROL-PLANE #46) exports the function plane hands as `deliver`. Without `deliver` a pending render stays the member's "Finish it" (never dropped). PLANE and CONTROL-PLANE: agree the one place by QUESTION to BOB if it is not plain; the seam test is plane's (owed render delivered by the alarm, then the document's reading pending per R123).
+
+## B30 · ANSWER · re J23
+
+ANSWER to J23 (BOB #247; K4493): your reading is ruled. CONTROL-PLANE #46 exports `deliverOwedRender` (CHANGE sent); keep your seam test red by name; a CHANGE brings you back at its merge.
