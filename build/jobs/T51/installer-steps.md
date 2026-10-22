@@ -200,3 +200,16 @@ FR-38 (R38, K4176 (1) steps half) applied; pushed on `job/T51/installer-steps`, 
 - Coverage: 36 of 38 live ids named by a test; R26 and R31 uncovered by design.
 
 Size (session_01TxbyRGeKMTnkx1teB7ykax): test runs 14, module lines 2017
+
+## J13 · QUESTION
+
+G1 (installer-steps provider) is built and green in my suites (steps: 101 pass, 0 fail; 2 skipped R26/R31 by design); one consequence lands on `installer`, which I may not edit, and I need your answer to the three points below before COMPLETE (R-NOTMET).
+
+**What changed.** `uploadInstall` and `uploadUpdate` (steps/uploads.mjs) now read the plane's cron from the signed bundle's statement `bio-plane-crons/1 <five fields>` (streamed from `release.blob`, before anything is uploaded; reader `planeCrons`/`planeCronsOfStream` beside `planeLimits`) and PUT the plane's schedules after the script upload. A refusal throws Cloudflare's message (the installer's existing stop sentences carry it); a bundle with no statement, two different ones or an unreadable one throws `installer.fleet.why.program` (stand-in; row owed `installer-steps.plane.crons`) and uploads nothing. `newgroup/src/index.mjs` needs no edit.
+
+**Consequence for `installer` (impact run, tranche/T51 vs HEAD).** `newgroup/test` fails 61 of 107 (baseline on tranche/T51: 0 fail) because every plane source in `newgroup/test/fixture.mjs` (`CAPABLE_SRC` :152, `PRE116_SRC` :153, `UNSTATED_SRC` :155) and `wizard.test.mjs`:254 (`curSrc`) states limits but no schedule, so the install and update now stop by design. I proved this: with one `bio-plane-crons/1 */5 * * * *` string appended to those four sources (working tree only, reverted) it falls to 8 failures, and those 8 (R8 `rel`, R11 `fleet`, R20, R44, R55 newer-than-built-in, R61, R71, and wizard.test.mjs as a file) all use the installer's built-in release (`newgroup/test/release-text.mjs` `RELEASE_SOURCE`, the plane bytes it carries), which has no statement until control-plane emits it and the bundles are regenerated.
+
+**Questions (my best reading in each).**
+1. Please CHANGE the `installer` job (or tell me to) to add the statement to its four fixture sources; the built-in release then follows your regeneration after control-plane's literal merges, and those 8 stay red by name until then. I have not touched installer's files.
+2. A release published before this one states no schedule, so this installer will no longer install or update to it ("a bundle without the statement stops", your START). Best reading: intended (the watchdog is not optional), and the release choice already passes over a release that states no limits; whether the choice (`installer`'s `selectRelease`) should pass over one that states no schedule, with a word row, as it does for limits, instead of stopping the act at the upload, is `installer`'s and yours.
+3. A copy whose plane is already as the release wants it (`planeInSync` true, index.mjs:802) makes neither upload, so its schedule is set by the next release's upload or by bundler's `deploy.mjs` (G1 bundler half), not by that run. I did not add a schedules read to `planeInSync` (it would also need a GET in every fake account, installer's included). Best reading: acceptable for the alpha; say if you want the in-sync path to read the schedules and fall through to the update.
