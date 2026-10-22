@@ -16,7 +16,7 @@ Requirement lines proposed: R96 (C22/R89 reading): a reference place is named "k
 Words: stand-ins named in J19 (a reference's kind word; an entity's name) go to later-ux for T52 (K4470); "document.untitled.web" says "page" for a PDF (wording, T52).
 QUESTIONs: J18 and J19 answered (K4464, K4470); none open.
 Suite 280 of 280. format 0; architecture 0; coverage 93 of 93; words 0; ownership 0 (15 files). Users run and green: screens-wizards, screens-inquiry document, journey-check pseudo, answer-envelope, interface-shell declared/t50, action-clocks t51, control-plane t46/t47-e2e, plane t47/t50.
-Size (session_01JsooZ1JgrA8La1XdV3PXuV): test runs 30, module lines 4222
+Size (session_01JsooZ1JgrA8La1XdV3PXuV): test runs 30, module lines 4152
 
 ## Completion (SCREENS-DAILY #17, B26: fix round 3, wave 2)
 
