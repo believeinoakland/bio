@@ -36769,8 +36769,22 @@ async function readVbaProject(bytes, container, partName) {
   }
 }
 
-// ../bio-plane/src/formats-xlsx.mjs
-var UTF82 = new TextDecoder("utf-8", { fatal: false });
+// ../bio-plane/src/csv-reader/index.mjs
+function sheetCellRef(sheet, cell) {
+  return { kind: "sheet-cell", ref: `${sheet}!${cell}`, sheet, cell };
+}
+function sheetRangeRef(sheet, range) {
+  return { kind: "sheet-range", ref: `${sheet}!${range}`, sheet, range };
+}
+function columnLetters(n) {
+  let out = "";
+  for (let c = n; c > 0; c = Math.floor((c - 1) / 26)) out = String.fromCharCode(65 + (c - 1) % 26) + out;
+  return out;
+}
+function usedSheetRange(name, usedRows, usedCols) {
+  if (!(Number.isInteger(usedRows) && usedRows > 0 && Number.isInteger(usedCols) && usedCols > 0)) return null;
+  return sheetRangeRef(name, `A1:${columnLetters(usedCols)}${usedRows}`);
+}
 function toBytes2(x) {
   if (x instanceof Uint8Array) return x;
   if (ArrayBuffer.isView(x)) return new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
@@ -36781,6 +36795,541 @@ function toBytes2(x) {
   }
 }
 var isBytes = (x) => x instanceof ArrayBuffer || ArrayBuffer.isView(x);
+var CSV_CONTENT_TYPE = "text/csv";
+var CSV_CONTENT_TYPE_SYNONYMS = ["application/csv", "text/comma-separated-values"];
+var CSV_SHEET_NAME = "csv";
+var MEASURED_CSV_TEXT_BOUND_BYTES = MEASURED_OOXML_TEXT_BOUND_BYTES;
+var CSV_WINDOW_BYTES = 1 << 20;
+var CSV_STREAMED_UNDETERMINED_MAX = 1e4;
+var SIGNATURE_WINDOW_BYTES = 1 << 20;
+var SIGNATURE_LINES = 50;
+var DELIMITERS = [
+  { ch: ",", name: "comma" },
+  { ch: ";", name: "semicolon" },
+  { ch: "	", name: "tab" },
+  { ch: "|", name: "pipe" }
+];
+function readBom(b) {
+  if (b.length >= 3 && b[0] === 239 && b[1] === 187 && b[2] === 191)
+    return { encoding: "utf-8", bomBytes: 3, signal: "BOM: EF BB BF" };
+  if (b.length >= 4 && b[0] === 255 && b[1] === 254 && b[2] === 0 && b[3] === 0)
+    return null;
+  if (b.length >= 2 && b[0] === 255 && b[1] === 254)
+    return { encoding: "utf-16le", bomBytes: 2, signal: "BOM: FF FE" };
+  if (b.length >= 2 && b[0] === 254 && b[1] === 255)
+    return { encoding: "utf-16be", bomBytes: 2, signal: "BOM: FE FF" };
+  return null;
+}
+function hasHighBytes(b) {
+  for (let i = 0; i < b.length; i++) if (b[i] >= 128) return true;
+  return false;
+}
+function isValidUtf8(b) {
+  try {
+    new TextDecoder("utf-8", { fatal: true }).decode(b, { stream: true });
+    return true;
+  } catch {
+    return false;
+  }
+}
+function encodingSignature(bytes) {
+  const bom = readBom(bytes);
+  if (bom) {
+    return {
+      encoding: bom.encoding,
+      confidence: "certain",
+      bomBytes: bom.bomBytes,
+      signals: [bom.signal, localize("office-readers.csv.declared_by_the_producer_in_the_bytes", "declared by the producer in the bytes")],
+      undetermined: null
+    };
+  }
+  const window = bytes.subarray(0, SIGNATURE_WINDOW_BYTES);
+  if (!hasHighBytes(window)) {
+    return {
+      encoding: "us-ascii",
+      confidence: "certain",
+      bomBytes: 0,
+      signals: [
+        `no byte >= 0x80 in the first ${window.length} bytes`,
+        localize("office-readers.csv.us_ascii_not_utf_8_every_8_bit_superset", "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically")
+      ],
+      undetermined: null
+    };
+  }
+  if (isValidUtf8(window)) {
+    return {
+      encoding: "utf-8",
+      confidence: "likely",
+      bomBytes: 0,
+      signals: [
+        "no BOM",
+        localize("office-readers.csv.every_multi_byte_sequence_in_the_signature_window", "every multi-byte sequence in the signature window is valid utf-8"),
+        localize("office-readers.csv.likely_not_certain_validity_is_evidence", "likely, not certain: validity is evidence, not the producer's declaration")
+      ],
+      undetermined: null
+    };
+  }
+  return {
+    encoding: null,
+    confidence: "none",
+    bomBytes: 0,
+    signals: ["no BOM", "a byte >= 0x80 that is not part of a valid utf-8 sequence"],
+    undetermined: "encoding_undetermined"
+  };
+}
+function countOutsideQuotes(line, ch) {
+  let n = 0, inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') inQuotes = !inQuotes;
+    else if (!inQuotes && c === ch) n++;
+  }
+  return n;
+}
+function delimiterSignature(text2) {
+  const raw = text2.split("\n");
+  const complete = raw.slice(0, -1).map((l) => l.endsWith("\r") ? l.slice(0, -1) : l);
+  const lines = complete.filter((l) => l !== "").slice(0, SIGNATURE_LINES);
+  if (lines.length < 2) {
+    return {
+      delimiter: null,
+      name: null,
+      confidence: "none",
+      lines: lines.length,
+      signals: [localize("office-readers.csv.length_complete_line_s_in", "{length} complete line(s) in the signature window; a delimiter needs at least 2 to be consistent with anything", { length: String(lines.length) })],
+      undetermined: "delimiter_undetermined_too_few_lines",
+      tied: []
+    };
+  }
+  const consistent = [];
+  const counted = {};
+  for (const d of DELIMITERS) {
+    const per = lines.map((l) => countOutsideQuotes(l, d.ch));
+    counted[d.name] = per[0];
+    if (per[0] >= 1 && per.every((n) => n === per[0])) consistent.push(d);
+  }
+  if (consistent.length === 1) {
+    const d = consistent[0];
+    return {
+      delimiter: d.ch,
+      name: d.name,
+      confidence: "certain",
+      lines: lines.length,
+      signals: [localize("office-readers.csv.name_occurs_v1_time_s", "{name} occurs {v1} time(s) outside quotes on every one of the first {length} complete lines", { name: String(d.name), v1: String(counted[d.name]), length: String(lines.length) })],
+      undetermined: null,
+      tied: []
+    };
+  }
+  if (consistent.length > 1) {
+    return {
+      delimiter: null,
+      name: null,
+      confidence: "none",
+      lines: lines.length,
+      signals: [localize("office-readers.csv.length_candidates_are_equally_consistent", "{length} candidates are equally consistent over {length_2} lines: {map}", { length: String(consistent.length), length_2: String(lines.length), map: String(consistent.map((d) => `${d.name} (${counted[d.name]}/line)`).join(", ")) })],
+      undetermined: "delimiter_undetermined_tied",
+      tied: consistent.map((d) => d.name)
+    };
+  }
+  return {
+    delimiter: null,
+    name: null,
+    confidence: "none",
+    lines: lines.length,
+    signals: [localize("office-readers.csv.no_candidate_map_occurs_a", "no candidate ({map}) occurs a consistent, non-zero number of times over {length} lines", { map: String(DELIMITERS.map((d) => d.name).join(", ")), length: String(lines.length) })],
+    undetermined: "delimiter_undetermined_none_consistent",
+    tied: []
+  };
+}
+function walkRecords(text2, delimiter) {
+  const records = [];
+  const w = createRecordWalk(delimiter, (record2) => records.push(record2));
+  w.feed(text2);
+  w.end();
+  return records;
+}
+function createRecordWalk(delimiter, onRecord) {
+  let row3 = [], field = "", inQuotes = false, started = false;
+  let quoteOpen = false;
+  let skipLF = false;
+  const endField = () => {
+    row3.push(field);
+    field = "";
+  };
+  const endRecord = () => {
+    endField();
+    onRecord(row3);
+    row3 = [];
+    started = false;
+  };
+  return {
+    feed(text2) {
+      let i = 0;
+      if (quoteOpen) {
+        if (text2.length === 0) return;
+        quoteOpen = false;
+        if (text2[0] === '"') {
+          field += '"';
+          i = 1;
+        } else inQuotes = false;
+      } else if (skipLF) {
+        if (text2.length === 0) return;
+        skipLF = false;
+        if (text2[0] === "\n") i = 1;
+      }
+      for (; i < text2.length; i++) {
+        const c = text2[i];
+        started = true;
+        if (inQuotes) {
+          if (c === '"') {
+            if (i + 1 >= text2.length) quoteOpen = true;
+            else if (text2[i + 1] === '"') {
+              field += '"';
+              i++;
+            } else inQuotes = false;
+          } else field += c;
+          continue;
+        }
+        if (c === '"') {
+          inQuotes = true;
+          continue;
+        }
+        if (delimiter && c === delimiter) {
+          endField();
+          continue;
+        }
+        if (c === "\r") {
+          if (i + 1 >= text2.length) skipLF = true;
+          else if (text2[i + 1] === "\n") i++;
+          endRecord();
+          continue;
+        }
+        if (c === "\n") {
+          endRecord();
+          continue;
+        }
+        field += c;
+      }
+    },
+    end() {
+      if (quoteOpen) {
+        quoteOpen = false;
+        inQuotes = false;
+      }
+      if (started || field !== "" || row3.length) endRecord();
+    }
+  };
+}
+var BYTE_TRANSPORT = new TextDecoder("latin1");
+function csvSignatures(bytes) {
+  const b = toBytes2(bytes);
+  if (!b.length) {
+    return { ok: false, why: "empty_body" };
+  }
+  const enc = encodingSignature(b);
+  const body = b.subarray(enc.bomBytes);
+  const head = body.subarray(0, SIGNATURE_WINDOW_BYTES);
+  let headText;
+  try {
+    headText = enc.encoding ? new TextDecoder(enc.encoding, { fatal: false }).decode(head) : BYTE_TRANSPORT.decode(head);
+  } catch {
+    return { ok: false, why: `decoder_unavailable:${enc.encoding}`, encoding: enc };
+  }
+  return { ok: true, b, enc, body, delim: delimiterSignature(headText) };
+}
+async function csvParts(bytes) {
+  const sig = csvSignatures(bytes);
+  if (!sig.ok) return sig;
+  const { b, enc, body, delim } = sig;
+  const plan = textPlan(body.length);
+  const utf16 = enc.encoding === "utf-16le" || enc.encoding === "utf-16be";
+  const bodyMetric = { metric: "body_bytes" };
+  let guard = null, piecewise = null;
+  if (plan.read === "none") guard = { ...plan.guard, ...bodyMetric };
+  else if (plan.read === "pieces" && utf16) {
+    guard = {
+      ok: false,
+      text: "undetermined",
+      why: "over_size_bound",
+      size: body.length,
+      bound: MEASURED_CSV_TEXT_BOUND_BYTES,
+      boundName: "MEASURED_CSV_TEXT_BOUND_BYTES",
+      ...bodyMetric,
+      final: true,
+      encoding: enc.encoding
+    };
+  } else if (plan.read === "pieces") {
+    piecewise = { ...plan.piecewise, boundName: "MEASURED_CSV_TEXT_BOUND_BYTES", ...bodyMetric };
+  }
+  const stream = piecewise != null;
+  let records = null, transport = false, invalidUtf16 = false;
+  if (!guard && !stream) {
+    let text2;
+    if (utf16) {
+      try {
+        text2 = new TextDecoder(enc.encoding, { fatal: true, ignoreBOM: true }).decode(body);
+      } catch {
+        text2 = new TextDecoder(enc.encoding, { fatal: false, ignoreBOM: true }).decode(body);
+        invalidUtf16 = true;
+      }
+    } else {
+      text2 = BYTE_TRANSPORT.decode(body);
+      transport = true;
+    }
+    records = walkRecords(text2, delim.delimiter);
+  }
+  return {
+    ok: true,
+    format: "csv",
+    bytes: b,
+    bodyBytes: body.length,
+    encoding: enc,
+    delimiter: delim,
+    guard,
+    records,
+    transport: transport || stream,
+    invalidUtf16,
+    stream,
+    body,
+    piecewise
+  };
+}
+function dialectOf(parts) {
+  return {
+    encoding: parts.encoding.encoding,
+    encodingConfidence: parts.encoding.confidence,
+    encodingSignals: parts.encoding.signals,
+    delimiter: parts.delimiter.name,
+    delimiterConfidence: parts.delimiter.confidence,
+    delimiterSignals: parts.delimiter.signals,
+    undetermined: [parts.encoding.undetermined, parts.delimiter.undetermined].filter(Boolean)
+  };
+}
+function csvStructure(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "csv", reason: parts ? parts.why : "PARTS_ABSENT" };
+  }
+  const dialect = dialectOf(parts);
+  const notes = [
+    word("csv.notes.csv_format_declares"),
+    word("csv.notes.url_cell_text")
+  ];
+  if (parts.guard) notes.push("text_body_over_bound");
+  if (parts.piecewise) notes.push("text_read_in_pieces");
+  return {
+    ok: true,
+    container: "csv",
+    sheets: [{ sheet: 0, name: CSV_SHEET_NAME, sheetId: null, state: "visible", hidden: false }],
+    links: [],
+    counts: { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 },
+    /* The IC-2 envelope in the shape the office entries accepted. A CSV
+       carries none of DEC-5's extras — no formula beside a value, no tracked
+       change, no comment, no hidden row, no core properties — because the
+       format has no place for any of them. `kinds: []` is exhaustive by the
+       FORMAT's definition, which the note records. */
+    evidentiary: {
+      container: "csv",
+      kinds: [],
+      items: [],
+      undetermined: parts.guard ? [{ part: "(body)", why: "over_size_bound", guard: parts.guard }] : [],
+      counts: {}
+    },
+    dialect,
+    /* R32: a csv can carry nothing that acts when opened — the format's zero. */
+    active: [],
+    notes
+  };
+}
+function asciiClean(s) {
+  for (let i = 0; i < s.length; i++) if (s.charCodeAt(i) >= 128) return false;
+  return true;
+}
+var UTF8_FATAL = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
+function fieldValue(field, parts) {
+  if (!parts.transport) {
+    return parts.invalidUtf16 && field.includes("\uFFFD") ? { why: "invalid_utf16" } : { value: field };
+  }
+  if (asciiClean(field)) return { value: field };
+  const encoding = parts.encoding.encoding;
+  if (encoding == null) return { why: "encoding_undetermined" };
+  if (encoding === "utf-8") {
+    const bytes = new Uint8Array(field.length);
+    for (let i = 0; i < field.length; i++) bytes[i] = field.charCodeAt(i);
+    try {
+      return { value: UTF8_FATAL.decode(bytes) };
+    } catch {
+      return { why: "invalid_utf8" };
+    }
+  }
+  return { why: "not_us_ascii" };
+}
+function csvText(parts) {
+  if (!parts || !parts.ok) {
+    return { ok: false, container: "csv", reason: parts?.why ?? "PARTS_ABSENT" };
+  }
+  const dialect = dialectOf(parts);
+  const base = {
+    ok: true,
+    container: "csv",
+    /* Exhaustive and EMPTY, not null: the format has no media container to
+       have looked in, so this is a zero of the format and not of a walk. */
+    images: [],
+    /* R31: the format carries no metadata part, so none is stated. */
+    metadata: null,
+    /* R32: nothing in a csv can act when it is opened — the format's zero. */
+    active: [],
+    dialect
+  };
+  if (parts.guard) {
+    return {
+      ...base,
+      document: null,
+      sheets: [],
+      undetermined: [parts.guard],
+      counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
+    };
+  }
+  const undetermined2 = [];
+  const lines = [];
+  const cells = parts.stream ? null : [];
+  let undeterminedMore = 0;
+  const typedCell2 = (row3, col, value) => ({
+    source: csvCellRef(row3, col),
+    value,
+    type: "text",
+    declared: null,
+    cached: null,
+    formula: null
+  });
+  let cellCount = 0, usedRows = 0, usedCols = 0;
+  let r0 = 0;
+  const addRecord = (record2) => {
+    const row3 = ++r0;
+    const vals = [];
+    record2.forEach((raw, c0) => {
+      const col = c0 + 1;
+      const read2 = fieldValue(raw, parts);
+      if (read2.why) {
+        if (undetermined2.length < (parts.stream ? CSV_STREAMED_UNDETERMINED_MAX : Infinity)) {
+          undetermined2.push({ sheet: 0, cell: `${columnLetters(col)}${row3}`, reason: read2.why });
+        } else undeterminedMore++;
+        if (cells) cells.push(typedCell2(row3, col, null));
+        if (row3 > usedRows) usedRows = row3;
+        if (col > usedCols) usedCols = col;
+        return;
+      }
+      const field = read2.value;
+      if (field === "") return;
+      cellCount++;
+      if (cells) cells.push(typedCell2(row3, col, field));
+      if (row3 > usedRows) usedRows = row3;
+      if (col > usedCols) usedCols = col;
+      vals.push(field);
+    });
+    if (vals.length) lines.push(vals.join("	"));
+  };
+  if (parts.stream) {
+    const walk = createRecordWalk(parts.delimiter.delimiter, addRecord);
+    for (let at8 = 0; at8 < parts.body.length; at8 += CSV_WINDOW_BYTES) {
+      walk.feed(BYTE_TRANSPORT.decode(parts.body.subarray(at8, at8 + CSV_WINDOW_BYTES)));
+    }
+    walk.end();
+  } else parts.records.forEach(addRecord);
+  if (undeterminedMore) {
+    undetermined2.push({ sheet: 0, cell: null, reason: "more_cells_undetermined", count: undeterminedMore });
+  }
+  const text2 = lines.join("\n");
+  const sheet = {
+    sheet: 0,
+    name: CSV_SHEET_NAME,
+    hidden: false,
+    /* THE BOUND IS NULL — `.ods`'s reason exactly: RFC 4180 fixes no maximum
+       number of rows or columns, so a CSV has no capacity to state, and
+       borrowing OOXML's grid would be this reader inventing a bound the
+       format never fixed. The USED range is measured and emitted beside it. */
+    rows: null,
+    cols: null,
+    usedRows,
+    usedCols,
+    range: usedSheetRange(CSV_SHEET_NAME, usedRows, usedCols),
+    text: text2,
+    cells,
+    undetermined: undetermined2
+  };
+  return {
+    ...base,
+    document: text2,
+    sheets: [sheet],
+    undetermined: undetermined2,
+    counts: {
+      chars: text2.length,
+      cells: cellCount,
+      formulas: 0,
+      undetermined: undetermined2.length
+    },
+    ...parts.piecewise ? { piecewise: parts.piecewise } : {}
+  };
+}
+function csvCellRef(row3, col) {
+  return sheetCellRef(CSV_SHEET_NAME, `${columnLetters(col)}${row3}`);
+}
+var csvEntry = {
+  format: "csv",
+  detect(bytes, contentType) {
+    if (bytes != null) return null;
+    if (typeof contentType !== "string") return null;
+    const ct = contentType.trim().toLowerCase();
+    if (ct === CSV_CONTENT_TYPE) {
+      return { format: "csv", confidence: "likely", signals: [
+        `content type "${contentType}"`,
+        localize("office-readers.csv.likely_not_certain_a_declared_type_is_a_claim", "likely, not certain: a declared type is a claim, and a csv has no magic bytes to check it against"),
+        "measured: 166 of 166 .csv keys in s3://cao-94612 were served this type exactly (M-144)"
+      ] };
+    }
+    if (CSV_CONTENT_TYPE_SYNONYMS.includes(ct)) {
+      return { format: "csv", confidence: "likely", signals: [
+        `content type "${contentType}"`,
+        `an older spelling of ${CSV_CONTENT_TYPE}; UNMEASURED in s3://cao-94612, where all 166 keys declared ${CSV_CONTENT_TYPE}`
+      ] };
+    }
+    return null;
+  },
+  parts: (bytes) => csvParts(bytes),
+  /* REC-218 — the registry's OPTIONAL `dialect` slot: the decoding choice this
+     entry makes over these bytes, from the signatures alone (no record walk),
+     in `dialectOf`'s shape. The acquire wire asks it for a body it read AS TEXT
+     at intake, where `text()` never runs; null when the body has no signature
+     to take (empty, or a decoder the runtime lacks — the same refusals
+     `parts()` states). */
+  dialect: (bytes) => {
+    const sig = csvSignatures(bytes);
+    return sig.ok ? dialectOf({ encoding: sig.enc, delimiter: sig.delim }) : null;
+  },
+  /* Accept either parts() output or raw bytes, exactly as the office entries
+     do, so detect->structure works uniformly at the registry seam while a
+     caller that already paid for parts() does not pay twice. */
+  structure: async (partsOrBytes) => {
+    const parts = isBytes(partsOrBytes) ? await csvParts(partsOrBytes) : partsOrBytes;
+    return csvStructure(parts);
+  },
+  text: async (partsOrBytes) => {
+    const parts = isBytes(partsOrBytes) ? await csvParts(partsOrBytes) : partsOrBytes;
+    return csvText(parts);
+  }
+};
+
+// ../bio-plane/src/formats-xlsx.mjs
+var UTF82 = new TextDecoder("utf-8", { fatal: false });
+function toBytes3(x) {
+  if (x instanceof Uint8Array) return x;
+  if (ArrayBuffer.isView(x)) return new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
+  try {
+    return new Uint8Array(x ?? 0);
+  } catch {
+    return new Uint8Array(0);
+  }
+}
+var isBytes2 = (x) => x instanceof ArrayBuffer || ArrayBuffer.isView(x);
 var XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 var XLSX_TWIN_CONTENT_TYPES = /* @__PURE__ */ new Map([
   ["application/vnd.ms-excel.sheet.macroEnabled.12", "xlsm"],
@@ -36837,21 +37386,6 @@ async function sha256Hex2(u8) {
   let out = "";
   for (let i = 0; i < b.length; i++) out += HEX2[b[i] >> 4] + HEX2[b[i] & 15];
   return out;
-}
-function sheetCellRef(sheet, cell) {
-  return { kind: "sheet-cell", ref: `${sheet}!${cell}`, sheet, cell };
-}
-function sheetRangeRef(sheet, range) {
-  return { kind: "sheet-range", ref: `${sheet}!${range}`, sheet, range };
-}
-function columnLetters(n) {
-  let out = "";
-  for (let c = n; c > 0; c = Math.floor((c - 1) / 26)) out = String.fromCharCode(65 + (c - 1) % 26) + out;
-  return out;
-}
-function usedSheetRange(name, usedRows, usedCols) {
-  if (!(Number.isInteger(usedRows) && usedRows > 0 && Number.isInteger(usedCols) && usedCols > 0)) return null;
-  return sheetRangeRef(name, `A1:${columnLetters(usedCols)}${usedRows}`);
 }
 var isCorner = (c) => c != null && Number.isInteger(c.col) && c.col > 0 && Number.isInteger(c.row) && c.row > 0;
 function a1Corner(s) {
@@ -36967,7 +37501,7 @@ function resolveTarget(fromPart, target) {
   return base.join("/");
 }
 async function xlsxParts(bytes) {
-  const b = toBytes2(bytes);
+  const b = toBytes3(bytes);
   const undetermined2 = [];
   const disc = await discriminate(b);
   if (!disc.ok) return { ok: false, why: disc.why, signals: disc.signals };
@@ -37570,18 +38104,18 @@ var xlsxEntry = {
      detect→structure works uniformly at the registry seam while a caller that
      already paid for parts() does not pay twice. */
   structure: async (partsOrBytes) => {
-    const parts = isBytes(partsOrBytes) ? await xlsxParts(partsOrBytes) : partsOrBytes;
+    const parts = isBytes2(partsOrBytes) ? await xlsxParts(partsOrBytes) : partsOrBytes;
     return withActive(await xlsxStructure(parts), parts);
   },
   text: async (partsOrBytes) => {
-    const parts = isBytes(partsOrBytes) ? await xlsxParts(partsOrBytes) : partsOrBytes;
+    const parts = isBytes2(partsOrBytes) ? await xlsxParts(partsOrBytes) : partsOrBytes;
     return withContainerImages(withActive(withMetadata(await xlsxText(parts), parts), parts), parts, "xl/media/");
   }
 };
 
 // ../bio-plane/src/docx.mjs
 var UTF83 = new TextDecoder("utf-8", { fatal: false });
-function toBytes3(x) {
+function toBytes4(x) {
   if (x instanceof Uint8Array) return x;
   if (ArrayBuffer.isView(x)) return new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
   try {
@@ -37590,7 +38124,7 @@ function toBytes3(x) {
     return new Uint8Array(0);
   }
 }
-var isBytes2 = (x) => x instanceof ArrayBuffer || ArrayBuffer.isView(x);
+var isBytes3 = (x) => x instanceof ArrayBuffer || ArrayBuffer.isView(x);
 var DOCX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 var DOCX_TWIN_CONTENT_TYPES = /* @__PURE__ */ new Map([
   ["application/vnd.ms-word.document.macroEnabled.12", "docm"],
@@ -37864,7 +38398,7 @@ function resolveRelTarget(relsPart, target) {
   return out.join("/");
 }
 async function docxParts(bytes) {
-  const b = toBytes3(bytes);
+  const b = toBytes4(bytes);
   const d = await discriminate(b);
   if (!d.ok) return { ok: false, why: d.why, signals: d.signals };
   if (d.format !== "docx") {
@@ -38475,18 +39009,18 @@ var docxEntry = {
   },
   parts: (bytes) => docxParts(bytes),
   structure: async (partsOrBytes) => {
-    const parts = isBytes2(partsOrBytes) ? await docxParts(partsOrBytes) : partsOrBytes;
+    const parts = isBytes3(partsOrBytes) ? await docxParts(partsOrBytes) : partsOrBytes;
     return withActive(await docxStructure(parts), parts);
   },
   text: async (partsOrBytes) => {
-    const parts = isBytes2(partsOrBytes) ? await docxParts(partsOrBytes) : partsOrBytes;
+    const parts = isBytes3(partsOrBytes) ? await docxParts(partsOrBytes) : partsOrBytes;
     return withContainerImages(withActive(withMetadata(await docxText(parts), parts, true), parts), parts, "word/media/");
   }
 };
 
 // ../bio-plane/src/pptx.mjs
 var UTF84 = new TextDecoder("utf-8", { fatal: false });
-function toBytes4(x) {
+function toBytes5(x) {
   if (x instanceof Uint8Array) return x;
   if (ArrayBuffer.isView(x)) return new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
   try {
@@ -38495,7 +39029,7 @@ function toBytes4(x) {
     return new Uint8Array(0);
   }
 }
-var isBytes3 = (x) => x instanceof ArrayBuffer || ArrayBuffer.isView(x);
+var isBytes4 = (x) => x instanceof ArrayBuffer || ArrayBuffer.isView(x);
 var PPTX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
 var PPTX_TWIN_CONTENT_TYPES = /* @__PURE__ */ new Map([
   ["application/vnd.ms-powerpoint.presentation.macroEnabled.12", "pptm"],
@@ -38646,7 +39180,7 @@ function resolveRelTarget2(relsPart, target) {
   return out.join("/");
 }
 async function pptxParts(bytes) {
-  const b = toBytes4(bytes);
+  const b = toBytes5(bytes);
   const d = await discriminate(b);
   if (!d.ok) return { ok: false, why: d.why, signals: d.signals };
   if (d.format !== "pptx") {
@@ -39138,11 +39672,11 @@ var pptxEntry = {
   },
   parts: (bytes) => pptxParts(bytes),
   structure: async (partsOrBytes) => {
-    const parts = isBytes3(partsOrBytes) ? await pptxParts(partsOrBytes) : partsOrBytes;
+    const parts = isBytes4(partsOrBytes) ? await pptxParts(partsOrBytes) : partsOrBytes;
     return withActive(await pptxStructure(parts), parts);
   },
   text: async (partsOrBytes) => {
-    const parts = isBytes3(partsOrBytes) ? await pptxParts(partsOrBytes) : partsOrBytes;
+    const parts = isBytes4(partsOrBytes) ? await pptxParts(partsOrBytes) : partsOrBytes;
     return withContainerImages(withActive(withMetadata(await pptxText(parts), parts, true), parts), parts, "ppt/media/");
   }
 };
@@ -40761,540 +41295,6 @@ var ODF_EVIDENTIARY_NORMALISE = Object.freeze({
     apply: odtNormalisedContentXml
   }
 });
-
-// ../bio-plane/src/csv.mjs
-function toBytes5(x) {
-  if (x instanceof Uint8Array) return x;
-  if (ArrayBuffer.isView(x)) return new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
-  try {
-    return new Uint8Array(x ?? 0);
-  } catch {
-    return new Uint8Array(0);
-  }
-}
-var isBytes4 = (x) => x instanceof ArrayBuffer || ArrayBuffer.isView(x);
-var CSV_CONTENT_TYPE = "text/csv";
-var CSV_CONTENT_TYPE_SYNONYMS = ["application/csv", "text/comma-separated-values"];
-var CSV_SHEET_NAME = "csv";
-var MEASURED_CSV_TEXT_BOUND_BYTES = MEASURED_OOXML_TEXT_BOUND_BYTES;
-var CSV_WINDOW_BYTES = 1 << 20;
-var CSV_STREAMED_UNDETERMINED_MAX = 1e4;
-var SIGNATURE_WINDOW_BYTES = 1 << 20;
-var SIGNATURE_LINES = 50;
-var DELIMITERS = [
-  { ch: ",", name: "comma" },
-  { ch: ";", name: "semicolon" },
-  { ch: "	", name: "tab" },
-  { ch: "|", name: "pipe" }
-];
-function readBom(b) {
-  if (b.length >= 3 && b[0] === 239 && b[1] === 187 && b[2] === 191)
-    return { encoding: "utf-8", bomBytes: 3, signal: "BOM: EF BB BF" };
-  if (b.length >= 4 && b[0] === 255 && b[1] === 254 && b[2] === 0 && b[3] === 0)
-    return null;
-  if (b.length >= 2 && b[0] === 255 && b[1] === 254)
-    return { encoding: "utf-16le", bomBytes: 2, signal: "BOM: FF FE" };
-  if (b.length >= 2 && b[0] === 254 && b[1] === 255)
-    return { encoding: "utf-16be", bomBytes: 2, signal: "BOM: FE FF" };
-  return null;
-}
-function hasHighBytes(b) {
-  for (let i = 0; i < b.length; i++) if (b[i] >= 128) return true;
-  return false;
-}
-function isValidUtf8(b) {
-  try {
-    new TextDecoder("utf-8", { fatal: true }).decode(b, { stream: true });
-    return true;
-  } catch {
-    return false;
-  }
-}
-function encodingSignature(bytes) {
-  const bom = readBom(bytes);
-  if (bom) {
-    return {
-      encoding: bom.encoding,
-      confidence: "certain",
-      bomBytes: bom.bomBytes,
-      signals: [bom.signal, localize("office-readers.csv.declared_by_the_producer_in_the_bytes", "declared by the producer in the bytes")],
-      undetermined: null
-    };
-  }
-  const window = bytes.subarray(0, SIGNATURE_WINDOW_BYTES);
-  if (!hasHighBytes(window)) {
-    return {
-      encoding: "us-ascii",
-      confidence: "certain",
-      bomBytes: 0,
-      signals: [
-        `no byte >= 0x80 in the first ${window.length} bytes`,
-        localize("office-readers.csv.us_ascii_not_utf_8_every_8_bit_superset", "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically")
-      ],
-      undetermined: null
-    };
-  }
-  if (isValidUtf8(window)) {
-    return {
-      encoding: "utf-8",
-      confidence: "likely",
-      bomBytes: 0,
-      signals: [
-        "no BOM",
-        localize("office-readers.csv.every_multi_byte_sequence_in_the_signature_window", "every multi-byte sequence in the signature window is valid utf-8"),
-        localize("office-readers.csv.likely_not_certain_validity_is_evidence", "likely, not certain: validity is evidence, not the producer's declaration")
-      ],
-      undetermined: null
-    };
-  }
-  return {
-    encoding: null,
-    confidence: "none",
-    bomBytes: 0,
-    signals: ["no BOM", "a byte >= 0x80 that is not part of a valid utf-8 sequence"],
-    undetermined: "encoding_undetermined"
-  };
-}
-function countOutsideQuotes(line, ch) {
-  let n = 0, inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const c = line[i];
-    if (c === '"') inQuotes = !inQuotes;
-    else if (!inQuotes && c === ch) n++;
-  }
-  return n;
-}
-function delimiterSignature(text2) {
-  const raw = text2.split("\n");
-  const complete = raw.slice(0, -1).map((l) => l.endsWith("\r") ? l.slice(0, -1) : l);
-  const lines = complete.filter((l) => l !== "").slice(0, SIGNATURE_LINES);
-  if (lines.length < 2) {
-    return {
-      delimiter: null,
-      name: null,
-      confidence: "none",
-      lines: lines.length,
-      signals: [localize("office-readers.csv.length_complete_line_s_in", "{length} complete line(s) in the signature window; a delimiter needs at least 2 to be consistent with anything", { length: String(lines.length) })],
-      undetermined: "delimiter_undetermined_too_few_lines",
-      tied: []
-    };
-  }
-  const consistent = [];
-  const counted = {};
-  for (const d of DELIMITERS) {
-    const per = lines.map((l) => countOutsideQuotes(l, d.ch));
-    counted[d.name] = per[0];
-    if (per[0] >= 1 && per.every((n) => n === per[0])) consistent.push(d);
-  }
-  if (consistent.length === 1) {
-    const d = consistent[0];
-    return {
-      delimiter: d.ch,
-      name: d.name,
-      confidence: "certain",
-      lines: lines.length,
-      signals: [localize("office-readers.csv.name_occurs_v1_time_s", "{name} occurs {v1} time(s) outside quotes on every one of the first {length} complete lines", { name: String(d.name), v1: String(counted[d.name]), length: String(lines.length) })],
-      undetermined: null,
-      tied: []
-    };
-  }
-  if (consistent.length > 1) {
-    return {
-      delimiter: null,
-      name: null,
-      confidence: "none",
-      lines: lines.length,
-      signals: [localize("office-readers.csv.length_candidates_are_equally_consistent", "{length} candidates are equally consistent over {length_2} lines: {map}", { length: String(consistent.length), length_2: String(lines.length), map: String(consistent.map((d) => `${d.name} (${counted[d.name]}/line)`).join(", ")) })],
-      undetermined: "delimiter_undetermined_tied",
-      tied: consistent.map((d) => d.name)
-    };
-  }
-  return {
-    delimiter: null,
-    name: null,
-    confidence: "none",
-    lines: lines.length,
-    signals: [localize("office-readers.csv.no_candidate_map_occurs_a", "no candidate ({map}) occurs a consistent, non-zero number of times over {length} lines", { map: String(DELIMITERS.map((d) => d.name).join(", ")), length: String(lines.length) })],
-    undetermined: "delimiter_undetermined_none_consistent",
-    tied: []
-  };
-}
-function walkRecords(text2, delimiter) {
-  const records = [];
-  const w = createRecordWalk(delimiter, (record2) => records.push(record2));
-  w.feed(text2);
-  w.end();
-  return records;
-}
-function createRecordWalk(delimiter, onRecord) {
-  let row3 = [], field = "", inQuotes = false, started = false;
-  let quoteOpen = false;
-  let skipLF = false;
-  const endField = () => {
-    row3.push(field);
-    field = "";
-  };
-  const endRecord = () => {
-    endField();
-    onRecord(row3);
-    row3 = [];
-    started = false;
-  };
-  return {
-    feed(text2) {
-      let i = 0;
-      if (quoteOpen) {
-        if (text2.length === 0) return;
-        quoteOpen = false;
-        if (text2[0] === '"') {
-          field += '"';
-          i = 1;
-        } else inQuotes = false;
-      } else if (skipLF) {
-        if (text2.length === 0) return;
-        skipLF = false;
-        if (text2[0] === "\n") i = 1;
-      }
-      for (; i < text2.length; i++) {
-        const c = text2[i];
-        started = true;
-        if (inQuotes) {
-          if (c === '"') {
-            if (i + 1 >= text2.length) quoteOpen = true;
-            else if (text2[i + 1] === '"') {
-              field += '"';
-              i++;
-            } else inQuotes = false;
-          } else field += c;
-          continue;
-        }
-        if (c === '"') {
-          inQuotes = true;
-          continue;
-        }
-        if (delimiter && c === delimiter) {
-          endField();
-          continue;
-        }
-        if (c === "\r") {
-          if (i + 1 >= text2.length) skipLF = true;
-          else if (text2[i + 1] === "\n") i++;
-          endRecord();
-          continue;
-        }
-        if (c === "\n") {
-          endRecord();
-          continue;
-        }
-        field += c;
-      }
-    },
-    end() {
-      if (quoteOpen) {
-        quoteOpen = false;
-        inQuotes = false;
-      }
-      if (started || field !== "" || row3.length) endRecord();
-    }
-  };
-}
-var BYTE_TRANSPORT = new TextDecoder("latin1");
-function csvSignatures(bytes) {
-  const b = toBytes5(bytes);
-  if (!b.length) {
-    return { ok: false, why: "empty_body" };
-  }
-  const enc = encodingSignature(b);
-  const body = b.subarray(enc.bomBytes);
-  const head = body.subarray(0, SIGNATURE_WINDOW_BYTES);
-  let headText;
-  try {
-    headText = enc.encoding ? new TextDecoder(enc.encoding, { fatal: false }).decode(head) : BYTE_TRANSPORT.decode(head);
-  } catch {
-    return { ok: false, why: `decoder_unavailable:${enc.encoding}`, encoding: enc };
-  }
-  return { ok: true, b, enc, body, delim: delimiterSignature(headText) };
-}
-async function csvParts(bytes) {
-  const sig = csvSignatures(bytes);
-  if (!sig.ok) return sig;
-  const { b, enc, body, delim } = sig;
-  const plan = textPlan(body.length);
-  const utf16 = enc.encoding === "utf-16le" || enc.encoding === "utf-16be";
-  const bodyMetric = { metric: "body_bytes" };
-  let guard = null, piecewise = null;
-  if (plan.read === "none") guard = { ...plan.guard, ...bodyMetric };
-  else if (plan.read === "pieces" && utf16) {
-    guard = {
-      ok: false,
-      text: "undetermined",
-      why: "over_size_bound",
-      size: body.length,
-      bound: MEASURED_CSV_TEXT_BOUND_BYTES,
-      boundName: "MEASURED_CSV_TEXT_BOUND_BYTES",
-      ...bodyMetric,
-      final: true,
-      encoding: enc.encoding
-    };
-  } else if (plan.read === "pieces") {
-    piecewise = { ...plan.piecewise, boundName: "MEASURED_CSV_TEXT_BOUND_BYTES", ...bodyMetric };
-  }
-  const stream = piecewise != null;
-  let records = null, transport = false, invalidUtf16 = false;
-  if (!guard && !stream) {
-    let text2;
-    if (utf16) {
-      try {
-        text2 = new TextDecoder(enc.encoding, { fatal: true, ignoreBOM: true }).decode(body);
-      } catch {
-        text2 = new TextDecoder(enc.encoding, { fatal: false, ignoreBOM: true }).decode(body);
-        invalidUtf16 = true;
-      }
-    } else {
-      text2 = BYTE_TRANSPORT.decode(body);
-      transport = true;
-    }
-    records = walkRecords(text2, delim.delimiter);
-  }
-  return {
-    ok: true,
-    format: "csv",
-    bytes: b,
-    bodyBytes: body.length,
-    encoding: enc,
-    delimiter: delim,
-    guard,
-    records,
-    transport: transport || stream,
-    invalidUtf16,
-    stream,
-    body,
-    piecewise
-  };
-}
-function dialectOf(parts) {
-  return {
-    encoding: parts.encoding.encoding,
-    encodingConfidence: parts.encoding.confidence,
-    encodingSignals: parts.encoding.signals,
-    delimiter: parts.delimiter.name,
-    delimiterConfidence: parts.delimiter.confidence,
-    delimiterSignals: parts.delimiter.signals,
-    undetermined: [parts.encoding.undetermined, parts.delimiter.undetermined].filter(Boolean)
-  };
-}
-function csvStructure(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "csv", reason: parts ? parts.why : "PARTS_ABSENT" };
-  }
-  const dialect = dialectOf(parts);
-  const notes = [
-    word("csv.notes.csv_format_declares"),
-    word("csv.notes.url_cell_text")
-  ];
-  if (parts.guard) notes.push("text_body_over_bound");
-  if (parts.piecewise) notes.push("text_read_in_pieces");
-  return {
-    ok: true,
-    container: "csv",
-    sheets: [{ sheet: 0, name: CSV_SHEET_NAME, sheetId: null, state: "visible", hidden: false }],
-    links: [],
-    counts: { anchor: 0, intra: 0, deferred: 0, refused: 0, undetermined: 0 },
-    /* The IC-2 envelope in the shape the office entries accepted. A CSV
-       carries none of DEC-5's extras — no formula beside a value, no tracked
-       change, no comment, no hidden row, no core properties — because the
-       format has no place for any of them. `kinds: []` is exhaustive by the
-       FORMAT's definition, which the note records. */
-    evidentiary: {
-      container: "csv",
-      kinds: [],
-      items: [],
-      undetermined: parts.guard ? [{ part: "(body)", why: "over_size_bound", guard: parts.guard }] : [],
-      counts: {}
-    },
-    dialect,
-    /* R32: a csv can carry nothing that acts when opened — the format's zero. */
-    active: [],
-    notes
-  };
-}
-function asciiClean(s) {
-  for (let i = 0; i < s.length; i++) if (s.charCodeAt(i) >= 128) return false;
-  return true;
-}
-var UTF8_FATAL = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
-function fieldValue(field, parts) {
-  if (!parts.transport) {
-    return parts.invalidUtf16 && field.includes("\uFFFD") ? { why: "invalid_utf16" } : { value: field };
-  }
-  if (asciiClean(field)) return { value: field };
-  const encoding = parts.encoding.encoding;
-  if (encoding == null) return { why: "encoding_undetermined" };
-  if (encoding === "utf-8") {
-    const bytes = new Uint8Array(field.length);
-    for (let i = 0; i < field.length; i++) bytes[i] = field.charCodeAt(i);
-    try {
-      return { value: UTF8_FATAL.decode(bytes) };
-    } catch {
-      return { why: "invalid_utf8" };
-    }
-  }
-  return { why: "not_us_ascii" };
-}
-function csvText(parts) {
-  if (!parts || !parts.ok) {
-    return { ok: false, container: "csv", reason: parts?.why ?? "PARTS_ABSENT" };
-  }
-  const dialect = dialectOf(parts);
-  const base = {
-    ok: true,
-    container: "csv",
-    /* Exhaustive and EMPTY, not null: the format has no media container to
-       have looked in, so this is a zero of the format and not of a walk. */
-    images: [],
-    /* R31: the format carries no metadata part, so none is stated. */
-    metadata: null,
-    /* R32: nothing in a csv can act when it is opened — the format's zero. */
-    active: [],
-    dialect
-  };
-  if (parts.guard) {
-    return {
-      ...base,
-      document: null,
-      sheets: [],
-      undetermined: [parts.guard],
-      counts: { chars: 0, cells: 0, formulas: 0, undetermined: 1 }
-    };
-  }
-  const undetermined2 = [];
-  const lines = [];
-  const cells = parts.stream ? null : [];
-  let undeterminedMore = 0;
-  const typedCell2 = (row3, col, value) => ({
-    source: csvCellRef(row3, col),
-    value,
-    type: "text",
-    declared: null,
-    cached: null,
-    formula: null
-  });
-  let cellCount = 0, usedRows = 0, usedCols = 0;
-  let r0 = 0;
-  const addRecord = (record2) => {
-    const row3 = ++r0;
-    const vals = [];
-    record2.forEach((raw, c0) => {
-      const col = c0 + 1;
-      const read2 = fieldValue(raw, parts);
-      if (read2.why) {
-        if (undetermined2.length < (parts.stream ? CSV_STREAMED_UNDETERMINED_MAX : Infinity)) {
-          undetermined2.push({ sheet: 0, cell: `${columnLetters(col)}${row3}`, reason: read2.why });
-        } else undeterminedMore++;
-        if (cells) cells.push(typedCell2(row3, col, null));
-        if (row3 > usedRows) usedRows = row3;
-        if (col > usedCols) usedCols = col;
-        return;
-      }
-      const field = read2.value;
-      if (field === "") return;
-      cellCount++;
-      if (cells) cells.push(typedCell2(row3, col, field));
-      if (row3 > usedRows) usedRows = row3;
-      if (col > usedCols) usedCols = col;
-      vals.push(field);
-    });
-    if (vals.length) lines.push(vals.join("	"));
-  };
-  if (parts.stream) {
-    const walk = createRecordWalk(parts.delimiter.delimiter, addRecord);
-    for (let at8 = 0; at8 < parts.body.length; at8 += CSV_WINDOW_BYTES) {
-      walk.feed(BYTE_TRANSPORT.decode(parts.body.subarray(at8, at8 + CSV_WINDOW_BYTES)));
-    }
-    walk.end();
-  } else parts.records.forEach(addRecord);
-  if (undeterminedMore) {
-    undetermined2.push({ sheet: 0, cell: null, reason: "more_cells_undetermined", count: undeterminedMore });
-  }
-  const text2 = lines.join("\n");
-  const sheet = {
-    sheet: 0,
-    name: CSV_SHEET_NAME,
-    hidden: false,
-    /* THE BOUND IS NULL — `.ods`'s reason exactly: RFC 4180 fixes no maximum
-       number of rows or columns, so a CSV has no capacity to state, and
-       borrowing OOXML's grid would be this reader inventing a bound the
-       format never fixed. The USED range is measured and emitted beside it. */
-    rows: null,
-    cols: null,
-    usedRows,
-    usedCols,
-    range: usedSheetRange(CSV_SHEET_NAME, usedRows, usedCols),
-    text: text2,
-    cells,
-    undetermined: undetermined2
-  };
-  return {
-    ...base,
-    document: text2,
-    sheets: [sheet],
-    undetermined: undetermined2,
-    counts: {
-      chars: text2.length,
-      cells: cellCount,
-      formulas: 0,
-      undetermined: undetermined2.length
-    },
-    ...parts.piecewise ? { piecewise: parts.piecewise } : {}
-  };
-}
-function csvCellRef(row3, col) {
-  return sheetCellRef(CSV_SHEET_NAME, `${columnLetters(col)}${row3}`);
-}
-var csvEntry = {
-  format: "csv",
-  detect(bytes, contentType) {
-    if (bytes != null) return null;
-    if (typeof contentType !== "string") return null;
-    const ct = contentType.trim().toLowerCase();
-    if (ct === CSV_CONTENT_TYPE) {
-      return { format: "csv", confidence: "likely", signals: [
-        `content type "${contentType}"`,
-        localize("office-readers.csv.likely_not_certain_a_declared_type_is_a_claim", "likely, not certain: a declared type is a claim, and a csv has no magic bytes to check it against"),
-        "measured: 166 of 166 .csv keys in s3://cao-94612 were served this type exactly (M-144)"
-      ] };
-    }
-    if (CSV_CONTENT_TYPE_SYNONYMS.includes(ct)) {
-      return { format: "csv", confidence: "likely", signals: [
-        `content type "${contentType}"`,
-        `an older spelling of ${CSV_CONTENT_TYPE}; UNMEASURED in s3://cao-94612, where all 166 keys declared ${CSV_CONTENT_TYPE}`
-      ] };
-    }
-    return null;
-  },
-  parts: (bytes) => csvParts(bytes),
-  /* REC-218 — the registry's OPTIONAL `dialect` slot: the decoding choice this
-     entry makes over these bytes, from the signatures alone (no record walk),
-     in `dialectOf`'s shape. The acquire wire asks it for a body it read AS TEXT
-     at intake, where `text()` never runs; null when the body has no signature
-     to take (empty, or a decoder the runtime lacks — the same refusals
-     `parts()` states). */
-  dialect: (bytes) => {
-    const sig = csvSignatures(bytes);
-    return sig.ok ? dialectOf({ encoding: sig.enc, delimiter: sig.delim }) : null;
-  },
-  /* Accept either parts() output or raw bytes, exactly as the office entries
-     do, so detect->structure works uniformly at the registry seam while a
-     caller that already paid for parts() does not pay twice. */
-  structure: async (partsOrBytes) => {
-    const parts = isBytes4(partsOrBytes) ? await csvParts(partsOrBytes) : partsOrBytes;
-    return csvStructure(parts);
-  },
-  text: async (partsOrBytes) => {
-    const parts = isBytes4(partsOrBytes) ? await csvParts(partsOrBytes) : partsOrBytes;
-    return csvText(parts);
-  }
-};
 
 // ../bio-plane/src/formats.mjs
 var REGISTRY = /* @__PURE__ */ new Map();
@@ -45446,6 +45446,7 @@ var MODULE_IDS = Object.freeze([
   "id-spaces",
   "subresources",
   "ooxml",
+  "csv-reader",
   "office-readers",
   "odf-reader",
   "pdf-reader",

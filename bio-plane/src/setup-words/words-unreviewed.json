@@ -38377,65 +38377,65 @@
     {
       "id": "office-readers.csv.declared_by_the_producer_in_the_bytes",
       "en": "declared by the producer in the bytes",
-      "module": "office-readers",
-      "file": "bio-plane/src/csv.mjs",
-      "line": 291
+      "module": "csv-reader",
+      "file": "bio-plane/src/csv-reader/index.mjs",
+      "line": 340
     },
     {
       "id": "office-readers.csv.every_multi_byte_sequence_in_the_signature_window",
       "en": "every multi-byte sequence in the signature window is valid utf-8",
-      "module": "office-readers",
-      "file": "bio-plane/src/csv.mjs",
-      "line": 302
+      "module": "csv-reader",
+      "file": "bio-plane/src/csv-reader/index.mjs",
+      "line": 351
     },
     {
       "id": "office-readers.csv.length_candidates_are_equally_consistent",
       "en": "{length} candidates are equally consistent over {length_2} lines: {map}",
-      "module": "office-readers",
-      "file": "bio-plane/src/csv.mjs",
-      "line": 358
+      "module": "csv-reader",
+      "file": "bio-plane/src/csv-reader/index.mjs",
+      "line": 407
     },
     {
       "id": "office-readers.csv.length_complete_line_s_in",
       "en": "{length} complete line(s) in the signature window; a delimiter needs at least 2 to be consistent with anything",
-      "module": "office-readers",
-      "file": "bio-plane/src/csv.mjs",
-      "line": 340
+      "module": "csv-reader",
+      "file": "bio-plane/src/csv-reader/index.mjs",
+      "line": 389
     },
     {
       "id": "office-readers.csv.likely_not_certain_a_declared_type_is_a_claim",
       "en": "likely, not certain: a declared type is a claim, and a csv has no magic bytes to check it against",
-      "module": "office-readers",
-      "file": "bio-plane/src/csv.mjs",
-      "line": 778
+      "module": "csv-reader",
+      "file": "bio-plane/src/csv-reader/index.mjs",
+      "line": 827
     },
     {
       "id": "office-readers.csv.likely_not_certain_validity_is_evidence",
       "en": "likely, not certain: validity is evidence, not the producer's declaration",
-      "module": "office-readers",
-      "file": "bio-plane/src/csv.mjs",
-      "line": 303
+      "module": "csv-reader",
+      "file": "bio-plane/src/csv-reader/index.mjs",
+      "line": 352
     },
     {
       "id": "office-readers.csv.name_occurs_v1_time_s",
       "en": "{name} occurs {v1} time(s) outside quotes on every one of the first {length} complete lines",
-      "module": "office-readers",
-      "file": "bio-plane/src/csv.mjs",
-      "line": 353
+      "module": "csv-reader",
+      "file": "bio-plane/src/csv-reader/index.mjs",
+      "line": 402
     },
     {
       "id": "office-readers.csv.no_candidate_map_occurs_a",
       "en": "no candidate ({map}) occurs a consistent, non-zero number of times over {length} lines",
-      "module": "office-readers",
-      "file": "bio-plane/src/csv.mjs",
-      "line": 362
+      "module": "csv-reader",
+      "file": "bio-plane/src/csv-reader/index.mjs",
+      "line": 411
     },
     {
       "id": "office-readers.csv.us_ascii_not_utf_8_every_8_bit_superset",
       "en": "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically",
-      "module": "office-readers",
-      "file": "bio-plane/src/csv.mjs",
-      "line": 297
+      "module": "csv-reader",
+      "file": "bio-plane/src/csv-reader/index.mjs",
+      "line": 346
     },
     {
       "id": "office-readers.docx.the_macro_enabled_flavour_variant",
@@ -38463,21 +38463,21 @@
       "en": "parts: {CONTENT_TYPES_PART} and {WORKBOOK_PART} present",
       "module": "office-readers",
       "file": "bio-plane/src/formats-xlsx.mjs",
-      "line": 1115
+      "line": 1078
     },
     {
       "id": "op-declarations.index.an_act_or_a_draft",
       "en": "An act, or a draft made for a member at their request, that the design has not yet explained; named back to the design stream (DEC-174 (3)).",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2698
+      "line": 2700
     },
     {
       "id": "op-declarations.index.an_alias_of_a_declared",
       "en": "An alias of a declared op (R21): its op's explanation serves it.",
       "module": "op-declarations",
       "file": "bio-plane/src/op-declarations/index.mjs",
-      "line": 2650
+      "line": 2652
     },
     {
       "id": "op-declarations.index.money_detectors_run_sweep",
