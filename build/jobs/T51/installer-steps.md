@@ -230,7 +230,7 @@ G1 provider (fix round 6; START B13, answered B14) applied and pushed on `job/T5
 
 **Deferred / in other modules.** The in-sync path (`planeInSync` true) makes no upload so sets no schedule (B14 accepted). Nothing else.
 
-Size (session_012UZ8UWTtyM4aTQWpqvLqwq): test runs 13, module lines 2141
+Size (session_012UZ8UWTtyM4aTQWpqvLqwq): test runs 13, module lines 2076
 
 ## J15 · COMPLETE
 
