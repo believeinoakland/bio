@@ -1,6 +1,6 @@
 # screens-investigate (T51)
 
-**Status** · session_013QPvAdjdJbxBNxtsjaoDUX · depth 2 · WAITING ON BOB (J24) · handled B28
+**Status** · session_013QPvAdjdJbxBNxtsjaoDUX · depth 2 · COMPLETE · handled B28
 
 ## J1 · QUESTION
 
