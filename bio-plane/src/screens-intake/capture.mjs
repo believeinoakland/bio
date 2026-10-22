@@ -169,13 +169,13 @@ function renderCapture(cs, view) {
   /* R24: the capture's result links the document it made; R22: "Cite a passage" opens `find-in` over it, with the question
      chosen when the capture was made for one. Nothing is linked for a refused promotion or an answer naming no bundle. */
   const plainText = (s) => String(s).replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+  /* R49 (C9): a document held under another project's home and filed here as well says so (`screen.capture.address.filedhere`, with the home's
+     name); a document filed under the page's project or question says where, as a new capture does. "" where nothing was filed. */
+  const filedLine = (g) => g && g.alsoHere && g.alsoHere.home ? cs.w("screen.capture.address.filedhere", { project: g.alsoHere.home })
+    : g && g.filed && g.filed.id ? (g.filed.question ? cs.w("capture.filed.question", { project: g.filed.title, question: g.filed.question }) : cs.w("capture.filed.project", { project: g.filed.title })) : "";
   const made = (g) => g && typeof g.bundleId === "string" && g.bundleId
     ? `<p class="mk-small">${cs.ref("document", g.bundleId, g.existed ? plainText(cs.w("screen.capture.address.existed.open")) : g.title || g.bundleId, [])}`
-      /* R49 (C9): a document held under another project's home and filed here as well says so (`screen.capture.address.filedhere`, a stand-in
-         key the design has no row for yet, drawn once the table holds it); until then it says where it is filed, as a new capture does */
-      + (g.alsoHere && g.alsoHere.home && cs.w("screen.capture.address.filedhere") !== "screen.capture.address.filedhere"
-          ? ` ${cs.w("screen.capture.address.filedhere", { project: g.alsoHere.home })}`
-          : g.filed && g.filed.id ? ` ${g.filed.question ? cs.w("capture.filed.question", { project: g.filed.title, question: g.filed.question }) : cs.w("capture.filed.project", { project: g.filed.title })}` : "")
+      + (filedLine(g) ? ` ${filedLine(g)}` : "")
       /* R35: "Cite a passage" opens `find-in` over the document by its capture's fingerprint, never its record id */
       + (/^INQ-/.test(at.id) && typeof g.sha === "string" && g.sha ? ` <a class="cs-btn" data-tone="quiet" href="/app/find-in/${encodeURIComponent(g.sha)}/${encodeURIComponent(at.id)}" data-nav data-level="1" data-tip="${cs.w("capture.cite.tip")}">${cs.w("capture.cite")}</a>` : "")
       + "</p>" : "";
@@ -184,7 +184,7 @@ function renderCapture(cs, view) {
   const readLine = (u) => {
     const r = u && u.reading;
     if (!r || !u.filed || u.filed.id) return "";
-    if (!r.read) return said(r.picture ? "capture.picture.unread" : "screen.document.text.unread");
+    if (!r.read) return r.picture ? said("capture.picture.unread") : said("screen.document.text.unread") + said("screen.document.text.unread.next");
     const state = r.wordsRead !== null && r.wordsTotal !== null ? cs.w("screen.document.text.read", { read: String(r.wordsRead), total: String(r.wordsTotal) })
       : cs.w(r.words ? "screen.document.text.full" : "screen.document.text.none");
     return `<p class="mk-note" role="status" data-reading="read">${cs.w("screen.document.text.label")}: ${state}</p>`;
@@ -271,10 +271,12 @@ function renderCapture(cs, view) {
       const held = cs.row(cs.icon("accepted"), `${cs.w("screen.capture.a64.already_in_the_record_as")} <span class="rec">${cs.esc(title)}</span>`
         + ([by, ...said_].filter(Boolean).length ? `<span class="meta">${[by, ...said_].filter(Boolean).join(" · ")}</span>` : ""), open);
       const leave = `<a class="cs-btn" data-tone="quiet" href="/app/capture/address${at.id ? "/" + encodeURIComponent(at.id) : ""}" data-nav data-level="1" data-tip="${cs.w("screen.capture.leaveit.help")}">${cs.w("screen.capture.leaveit")}</a>`;
-      a64 = A.state === "unchanged" ? cs.sheet(held)
+      /* R49 (C9): the copy filed in this project as well says so, where it stays held; a filing the plane refused is drawn in its words */
+      const filedNote = (A.alsoHere ? `<p class="mk-note" role="status">${filedLine(A)}</p>` : "") + (A.refused ? `<p class="cs-state" data-state="failed" role="alert">${A.refused}</p>` : "");
+      a64 = A.state === "unchanged" ? cs.sheet(held) + filedNote
         : cs.sheet(held + (A.state === "changed" ? cs.row(cs.icon("changed"), `<b>${cs.w("screen.capture.a64.the_site_has_changed_since")}</b><span class="meta">${cs.w("screen.capture.a64.your_team_holds_a_capture_from_14_septem", { date: { html: copy.retrieved ? cs.date(copy.retrieved) : "" } })}</span>`)
           + cs.row(cs.icon("clock"), `${cs.w("screen.capture.a64.capturing_it_again_keeps_the_new_copy_be")} ${cs.w("screen.capture.a64.whoever_cited_the_old_one_stays_on_it_un")}`) : ""))
-          + `<div class="mk-acts">${cs.act("acquire", { label: "screen.capture.a64.capture_the_new_copy", data: { again: "1" } })}${leave}</div>`;
+          + filedNote + `<div class="mk-acts">${cs.act("acquire", { label: "screen.capture.a64.capture_the_new_copy", data: { again: "1" } })}${leave}</div>`;
     }
     /* R45 (C19; DEC-375): keep the page as the site sent it or as a visitor saw it (`render: true`); the web-archive capture is
        refused to members, so it is told and offered nothing */
@@ -343,9 +345,8 @@ function renderCapture(cs, view) {
     const meId = view.me && view.me.member ? String(view.me.member) : "";
     const mineLater = R && R.state === "ok" && R.value && Array.isArray(R.value.requests) && meId
       ? R.value.requests.filter((r) => r && String(r.principal_plane || "").replace(/^member:/, "") === meId && ["requested", "draining", "captured", "refused"].includes(r.state)) : [];
-    /* N4: once the member has asked for the list, an empty one says so (`screen.capture.later.none`, a stand-in key until the design writes the
-       row; before it the shell's "Nothing here"); before the ask, and with none, nothing is drawn */
-    const noneLater = cs.w("screen.capture.later.none") !== "screen.capture.later.none" ? cs.w("screen.capture.later.none") : cs.w("state.empty");
+    /* N4: once the member has asked for the list, an empty one says so (`screen.capture.later.none`); before the ask, and with none, nothing is drawn */
+    const noneLater = cs.w("screen.capture.later.none");
     const laterSec = !mineLater.length && !U.laterAsked ? "" : cs.sec("screen.capture.later.head", `<p class="mk-small">${cs.w("screen.capture.later.about")}</p>`
       + (!mineLater.length ? `<p class="mk-small" data-state="none">${noneLater}</p>` : cs.sheet(mineLater.map((r) => {
         const st = r.state === "captured" ? "captured" : r.state === "refused" ? "turned" : "waiting";
@@ -448,7 +449,11 @@ async function sendAcquire(view, el, cs) {
   if (!r || r.ok === false || typeof r.held !== "boolean") { cs.set("a64", { failed: r && r.ok === false ? view.parts.refusalHtml(cs, r) : "" }); return null; }
   if (r.held === false) { cs.set("a64", null); begin(); return { body }; }
   const state = r.changed && (r.changed.state === "unchanged" || r.changed.state === "changed") ? r.changed.state : "undetermined";
-  cs.set("a64", { state, copy: r.copy && typeof r.copy === "object" ? r.copy : {} });
+  const copy = r.copy && typeof r.copy === "object" ? r.copy : {};
+  /* R49 (C9): no acquire is sent, so this is the whole of the press: the copy the team holds is filed in the page's project here, by the
+     step the done path uses. A site that has changed waits for the member's choice ("Capture the new copy" or "Leave it"): nothing is filed. */
+  const more = state === "changed" ? {} : await view.parts.filedHeld(view, cs, copy, String(copy.sha256 || ""));
+  cs.set("a64", { state, copy, ...(more.alsoHere ? { filed: more.filed, alsoHere: more.alsoHere } : {}), ...(more.refused ? { refused: more.refused } : {}) });
   return null;
 }
 
@@ -489,7 +494,7 @@ async function doneAcquire(view, answer, cs) {
     if (copy) {
       /* R49 (C9; capture R100, R101): a capture from a project's page whose document is held under another project's home is also filed
          in this project, as a reference, and the result says so; the document keeps its home and is linked, and shown once */
-      const more = await view.parts.alsoFiled(view, cs, copy, sha);
+      const more = await view.parts.filedHeld(view, cs, copy, sha);
       if (more.refused) cs.set("promoteRefused", { tab: "address", html: more.refused });
       cs.set("captured", { existed: true, title, address, bundleId: copy.document, sha, ...pend, ...(more.alsoHere ? { filed: more.filed, alsoHere: more.alsoHere } : {}) });
       return;
@@ -517,12 +522,15 @@ async function copyOf(cs, sha) {
   return h && h.ok !== false && h.held === true && h.copy && typeof h.copy.document === "string" ? h.copy : null;
 }
 
-/* R49 (C9; capture R100, R101): the subject project (R22) files a found document held under another project: `captureseenin` with the
- * capture's digest and that project, the member's own act (the plane stamps her). Nothing is sent with no subject project, for a question
- * that states none or could not be read, or when the document's home is the subject project (it is listed there already). Answers
- * `{}` (nothing filed), `{filed, alsoHere: {home}}` (`home` the home project's name, "" where it has none or the plane names none) or
- * `{refused}` (the plane's refusal in words, `refusalHtml`). */
-async function alsoFiled(view, cs, copy, sha) {
+/* R49 (C9; capture R100, R101): the one step that files a found document for this page, called from both paths that find one: the done
+ * path (`acquire` answered `existed: true`, then `heldat` by digest) and the pre-flight (R38: `heldat` with `check` found the address held,
+ * so no acquire is sent). The subject project (R22) files a found document held under another project: `captureseenin` with the capture's
+ * digest and that project, the member's own act (the plane stamps her). Nothing is sent with no subject project, for a question that
+ * states none or could not be read, for a digest that is not one, or when the document's home is the subject project (it is listed there
+ * already). Answers `{}` (nothing filed), `{filed, alsoHere: {home}}` (`home` the home project's name, "" where it has none or the plane
+ * names none) or `{refused}` (the plane's refusal in words, `refusalHtml`). */
+async function filedHeld(view, cs, copy, sha) {
+  if (typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha)) return {};
   const filed = await view.parts.filedFor(view, cs);
   if (!filed || !filed.id || copy.project === filed.id) return {};
   const asked = await cs.call("captureseenin", { body: { captureSha: sha, project: filed.id } });
@@ -664,7 +672,7 @@ async function doneUpload(view, answer, cs) {
   if (a.existed === true) {
     const copy = await view.parts.copyOf(cs, sha);
     if (copy) {
-      const more = await view.parts.alsoFiled(view, cs, copy, sha);
+      const more = await view.parts.filedHeld(view, cs, copy, sha);
       if (more.refused) cs.set("promoteRefused", { tab: "file", html: more.refused });
       cs.set("uploaded", { name, existed: true, bundleId: copy.document, title: name, sha, ...(more.alsoHere ? { filed: more.filed, alsoHere: more.alsoHere } : {}) });
       return;
@@ -804,7 +812,7 @@ export const CAPTURE_SCREEN = Object.freeze({
   id: "capture",
   reads: captureReads,
   render: renderCapture,
-  parts: Object.freeze({ alsoFiled, bundleFor, checkOutcome, copyOf, filedFor, forOf, homeOf, projectOf, promoteDocument, readingOf, refusalHtml, refusedHtml, titleOf }),
+  parts: Object.freeze({ bundleFor, checkOutcome, copyOf, filedFor, filedHeld, forOf, homeOf, projectOf, promoteDocument, readingOf, refusalHtml, refusedHtml, titleOf }),
   acts: Object.freeze([
     Object.freeze({ op: "acquire", label: "act.acquire.label.capture", send: sendAcquire, done: doneAcquire, failed: failedAcquire, rereads: Object.freeze(["open"]),
                     refusals: Object.freeze({ /* control-plane R105, R116 (K4326): a timed-out capture says what was kept: held, undetermined, or (nothing) the base words */

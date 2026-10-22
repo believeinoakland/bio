@@ -350,13 +350,17 @@ test("R28: a to-do names its subject by its title, a reference, and its act by t
   const items = [{ id: "TSK-8", class: "OBLIGATION", kind: "check-requested", case: PROJ("PROJ-1", "Pothole repairs"), summary: "https://example.org/permit.pdf",
     subject: { kind: "bundle", id: "INF-7", title: "Permit application" }, options: [], disposition: { instead: "taskresolve" } },
   { id: "TSK-9", class: "OBLIGATION", kind: "check-requested", case: PROJ("PROJ-1", "Pothole repairs"), summary: "https://example.org/other.pdf",
-    subject: { kind: "bundle", id: "INF-9" }, age: { since: "2026-10-03T00:00:00Z" }, options: [], disposition: { instead: "taskresolve" } }];
-  const p = await open("/app/queue", { queue: ok({ items, item_count: 2 }) }, { screens: withScreens("document") });
-  const [titled, bare] = main(p).querySelectorAll("section .cs-row");
+    subject: { kind: "bundle", id: "INF-9" }, age: { since: "2026-10-03T00:00:00Z" }, options: [], disposition: { instead: "taskresolve" } },
+  { id: "TSK-10", class: "OBLIGATION", kind: "check-requested", case: PROJ("PROJ-1", "Pothole repairs"), summary: "Check this one",
+    subject: { kind: "bundle", id: "INF-10" }, age: { since: "2026-10-03T00:00:00Z" }, options: [], disposition: { instead: "taskresolve" } }];
+  const p = await open("/app/queue", { queue: ok({ items, item_count: 3 }) }, { screens: withScreens("document") });
+  const [titled, bare, plain] = main(p).querySelectorAll("section .cs-row");
   assert.equal(titled.querySelector('a.cs-ref[href="/app/document/INF-7"]').textContent, "Permit application");
   assert.ok(titled.querySelector('button[data-act="taskresolve"]').textContent.startsWith(word("act.taskresolve.label.queue")));
   assert.doesNotMatch(text(p), /https?:/);
-  assert.equal(bare.querySelector("a.cs-ref").textContent, word("queue.source.untitled", { date: dmy("2026-10-03") }), "control: a subject with no title draws the untitled word");
+  // C25 (K4437): a subject with no title whose words are the address it came from is named by the one rule: its host and the day, never the file part.
+  assert.equal(bare.querySelector("a.cs-ref").textContent, word("document.untitled.web", { site: "example.org", date: dmy("2026-10-03") }), "no title: the host and the day");
+  assert.equal(plain.querySelector("a.cs-ref").textContent, word("queue.source.untitled", { date: dmy("2026-10-03") }), "control: a subject with no title and no address draws the untitled word");
 });
 
 test("R31: a reply owed by another side whose date has passed is \"no reply recorded\" in a row, never \"overdue\"", async () => {
@@ -415,7 +419,7 @@ const SORTED = [
   { id: "TSK-B", class: "OBLIGATION", kind: "check-requested", case: PROJ("PROJ-2", "The Coliseum lease"), age: { since: "2026-10-01T10:00:00Z" }, summary: "Bravo item", options: [], disposition: { instead: "taskresolve" } },
   { id: "F-C", class: "FINDING", kind: "tension", case: PROJ("PROJ-2", "The Coliseum lease"), age: { since: "2026-09-20T10:00:00Z" }, summary: "Charlie item", options: [], disposition: { available: true, op: "proposedispose", scope: "project", finding: "F-C", projects: ["PROJ-2"] } },
 ];
-const orderOf = (p) => main(p).querySelectorAll(".cs-row").map((r) => text(p, r)).map((t) => (t.includes("Alpha") ? "A" : t.includes("Bravo") ? "B" : t.includes("Charlie") ? "C" : t.includes(word("screen.dash-project.next.vouch.one", { place: "https://city.example/gate" })) ? "V" : "?")).filter((x) => x !== "?").join("");
+const orderOf = (p) => main(p).querySelectorAll(".cs-row").map((r) => text(p, r)).map((t) => (t.includes("Alpha") ? "A" : t.includes("Bravo") ? "B" : t.includes("Charlie") ? "C" : t.includes("Photo") ? "V" : "?")).filter((x) => x !== "?").join("");
 
 test("R2, C73: after a sort the line names the sort and no longer says the list is grouped by case; by case it still says grouped; the vouch to-dos follow the sort", async () => {
   const plane = { queue: ok({ items: SORTED, item_count: 3 }), heldcaptures: ok(HELD1) };

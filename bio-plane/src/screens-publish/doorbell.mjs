@@ -70,6 +70,9 @@ export const DOORBELL = Object.freeze({
         let bin = "";
         for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + 0x8000)));
         const body = { contentB64: btoa(bin) };
+        // R9 (C28; doorbell R11): the name and type the file states, so the Inbox row and detail show them
+        if (typeof f.name === "string" && f.name.trim()) body.fileName = f.name.trim();
+        if (typeof f.type === "string" && f.type.trim()) body.mediaType = f.type.trim();
         if (note) body.note = note;
         if (secret) body.knockerSecret = secret;
         else if (make) body.generateSecret = true;

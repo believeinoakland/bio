@@ -1,6 +1,6 @@
 # BOB to screens-investigate (T51)
 
-**Read** · handled J21
+**Read** · handled J24
 
 ## B1 · START
 
@@ -272,3 +272,19 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 ## B25 · CHANGE
 
 CHANGE (K4465): OP-GRADES #24 is merged (tranche/T51 @ 003bae9390): plane/register.mjs no longer throws DECLARED_OP_DISAGREES: officeconfirm, so the plane and every plane-booting seam test start again. Merge the tranche into your branch before your next such run. Nothing else changes.
+
+## B26 · ANSWER · re J22
+
+ANSWER (K4467). Both fixes released as proposed: PARTS.emptyChoice(cs, labelKey) for Money's contract choice and docChoice's two empty states; {html: ...} for a kit word passed as a fill and cs.esc only on text, at your six sites (CAUSE-SHELL-4 also makes w treat its own returned strings as made, so both agree). The affordances finding (the live copy lacks the events owner's five vocabularies; the tranche's build composes them) is noted for the redeploy and the re-walk; nothing for you beyond the failed-choice wording. OP-GRADES is merged (tranche @ e6bc9aaf4e): merge the tranche and run the seam test on the real plane, no bypass.
+
+## B27 · CHANGE
+
+CHANGE (K4472): CAUSE-SHELL-4 #1 is merged (tranche/T51 @ 5539bd4c3d). Merge the tranche before your next run. What it changes for you: RE_POINTS.document admits readheld (R117); a screen's {op:'bootstrap'} read is answered from the page's one answer (assert one); the frame's queue read is count:true, and the harness's FRAME.queue answers count and list (queueOf(items) for a suite that scripted the frame's number); the kit's w inserts a word it returned as a fill as it is (C59). Nothing else changes.
+
+## B28 · ANSWER · re J23
+
+ANSWER (K4473): yes. build/modules.json screens-investigate.uses now adds test-support (tranche @ e224b03646): merge the tranche, keep the sandbox import, run the architecture check clean, then COMPLETE.
+
+## B29 · ANSWER · re J24
+
+ANSWER (K4476): neither: the close needs the words check at zero, and the design row is T52's. Draw money's refusal by the nearest held refusal row (a held key, never a raw one), followed by the plane's own detail (the reason), as K4473 ruled for screens-inquiry; the row is in later-ux for T52. Then words 0 and COMPLETE.

@@ -29,21 +29,24 @@ const ELSEWHERE = {
     : { ok: true, project: r.query.project, items: [], cursor: null }),
 };
 
-test("R16 R1 C35 'Draw on a question from elsewhere': two questions of two projects with the same title are told apart, each option naming its project (`screen.document.cite.option`); one option per question id; control: a question no project of hers draws on is its title alone", async () => {
-  const p = await open(at, { plane: ELSEWHERE });
+test("R16 R1 C35 'Draw on a question from elsewhere': two questions of two projects with the same title are told apart, each option naming its project (`screen.document.cite.option`); one option per question id; control: a question whose title is its own, and one no project draws on, are the title alone", async () => {
+  /* fix round 4 (C14; R16, R1): a project is named where the project is known: a list row's `project`, else, for the questions that share a title, their own `image`'s;
+     no `projectquestions` is read for any project but this one's. The two same-titled questions' images state their projects. */
+  const images = { [QA]: { "bundle.md": `---\nid: ${QA}\nproject: ${P2}\n---\n` }, [QB]: { "bundle.md": `---\nid: ${QB}\nproject: ${P3}\n---\n` } };
+  const p = await open(at, { images, plane: ELSEWHERE });
   const opts = options(p, "project-draw-question");
   const text = (id) => (opts.find(([v]) => v === id) || [])[1];
   assert.deepEqual(opts.map(([v]) => v), [QA, QB, QC, QO], "one option per question id (QA is listed twice and drawn once), the project's own two left out");
   assert.equal(text(QA), word("screen.document.cite.option", { question: SAME, project: "Bridge repairs" }), "the first, in its project");
   assert.equal(text(QB), word("screen.document.cite.option", { question: SAME, project: "Culvert repairs" }), "the second of the same title, in its own");
   assert.notEqual(text(QA), text(QB), "told apart");
-  assert.equal(text(QC), word("screen.document.cite.option", { question: "A title only one has", project: "Culvert repairs" }), "a unique title names its project as well");
+  assert.equal(text(QC), "A title only one has", "control: a title that is its own needs no project to tell it apart");
   assert.equal(text(QO), "Nobody draws on this", "control: no project of hers draws on it, its title alone");
-  /* the reads: the projects she may see, then the questions of each that holds some (this project's own are not read again, nor an empty one's) */
-  assert.deepEqual(p.byOp("projectquestions").map((r) => r.query.project).filter((x) => x !== P).sort(), [P2, P3]);
-  assert.ok(p.byOp("projectquestions").filter((r) => r.query.project === P).length <= 1, "this project's questions are read once");
+  /* the reads: this project's questions once; no other project's; the image of each question that shares a title and no other */
+  assert.deepEqual(p.byOp("projectquestions").map((r) => r.query.project), [P], "no other project's questions are read");
+  assert.deepEqual(p.byOp("image").map((r) => r.query.id).filter((x) => x === QA || x === QB || x === QC || x === QO).sort(), [QA, QB], "an image only for the two that share a title");
   /* sending the choice of the second still sends its id and her note */
-  const d = await open(at, { plane: { ...ELSEWHERE, drawquestion: (r) => ok({ ok: true, cited: [r.query.inquiry], alreadyCited: [] }) } });
+  const d = await open(at, { images, plane: { ...ELSEWHERE, drawquestion: (r) => ok({ ok: true, cited: [r.query.inquiry], alreadyCited: [] }) } });
   fill(d, { "project-draw-question": QB, "project-draw-note": "the same crews" });
   await press(d, "drawquestion");
   assert.deepEqual([d.byOp("drawquestion")[0].query.project, d.byOp("drawquestion")[0].query.inquiry], [P, QB]);

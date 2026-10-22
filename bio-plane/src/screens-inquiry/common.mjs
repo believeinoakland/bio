@@ -159,5 +159,32 @@ export function progress(cs, entries, o) {
 /** R82 (CR-19; DEC-368): the format ids the registry names, each with its `document.kind.<id>` word; any other id draws `document.kind.undetermined`. */
 export const KIND_IDS = Object.freeze(["csv", "docx", "html", "jpeg", "odp", "ods", "odt", "pdf", "png", "pptx", "text", "undetermined", "xlsx", "zip"]);
 
+/** C36 (R2, R3, R24, R34): the words of the passage a leg cites, from a reading's text units. `want` is the leg's extent as the record states it
+ *  (`{page: "2"}`, `{kind: "doc-para", para: "2"}`: strings); a unit's extent is the extent grammar's (reading-pipeline R15), the fields it does not
+ *  narrow to null (`rect`, `run`), and a null field states nothing. A leg draws a unit's words when it names exactly the fields the unit states,
+ *  equal; a leg narrower (a rect) or wider (no page) than the unit is not the unit's words, and a leg that names nothing has none. */
+export function legWords(units, want) {
+  const stated = (e) => Object.entries(e).filter(([, v]) => v !== undefined && v !== null && v !== "").map(([k, v]) => [k, String(v)]);
+  const keys = Object.keys(want || {}).filter((k) => k !== "kind");
+  if (!keys.length || !Array.isArray(units)) return "";
+  const hit = units.find((u) => {
+    if (!u || !u.extent || typeof u.extent !== "object" || !String(u.text || "").trim()) return false;
+    const have = stated(u.extent);
+    return have.length > 0 && (want.kind === undefined || have.some(([k, v]) => k === "kind" && v === want.kind))
+      && have.filter(([k]) => k !== "kind").length === keys.length && have.every(([k, v]) => k === "kind" || want[k] === v);
+  });
+  return hit ? String(hit.text) : "";
+}
+
+/** C36: a leg's extent as the record states it, from its own `extent_*` fields (every one but the capture and how it was cited as) and an
+ *  `extent` object when it has one; the leg's fields win. */
+export function legExtent(x) {
+  const bag = {};
+  if (!x) return bag;
+  for (const [k, v] of Object.entries(x)) if (k.startsWith("extent_") && k !== "extent_capture" && k !== "extent_cited_as" && v !== undefined && v !== null && v !== "") bag[k.slice(7)] = String(v);
+  if (x.extent && typeof x.extent === "object") for (const [k, v] of Object.entries(x.extent)) if (v !== undefined && v !== null && v !== "" && bag[k] === undefined) bag[k] = String(v);
+  return bag;
+}
+
 /** The parts every screen of the module carries. */
-export const COMMON = Object.freeze({ front, later, plain, who, unavailable, ending, costLine, progress, kinds: KIND_IDS });
+export const COMMON = Object.freeze({ front, later, plain, who, unavailable, ending, costLine, progress, legWords, legExtent, kinds: KIND_IDS });

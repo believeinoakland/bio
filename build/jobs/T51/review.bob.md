@@ -1,6 +1,6 @@
 # BOB to review (T51)
 
-**Read** · handled J10
+**Read** · handled J12
 
 ## B1 · START
 
@@ -159,3 +159,19 @@ Requirement lines: none (propose a line in COMPLETE) (`build/plan/fix-round-4-re
 Read in full: the lines above, the code your causes name, the tests naming your ids, `build/layers.md`; other tests are run. A flaw in a module you do not hold goes to BOB (P9). One test per cause, written first, seen failing, with a control, naming its requirement id (K874). Words (K3810): by key or `localize`; tests assert the key; a missing row: stand-in key, one QUESTION. Declare every census op you own (K4208). No generated artifact edited (manifest §14).
 Run: your suite (`node --test --test-force-exit bio-plane/test/m/<module>/`), then `node build/plan/impact.mjs tranche/T51 HEAD`'s users; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (0 findings for your files; reds also on the tranche tip are named, not fixed); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio review tranche/T51 job/T51/review`.
 COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BOB's release), (2) test-gap fix merged, (3) the failing-first test for the walker's row, red then green with the evidence, (4) the platform check L/P/F/N and its numbers; then requirement ids met, suite counts, each QUESTION with BOB's answer (none open), and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: held modules' own code).
+
+## B14 · START
+
+START · REVIEW #23 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #246 is depth 1; fix round 4, C48; K4467)
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/review tranche/T51 && git branch -m job/T51/review stale/review-local && git checkout -b job/T51/review origin/job/T51/review`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+Mail with `--module review`; record `build/jobs/T51/review.md`. Model claude-haiku-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). Always `node --test --test-force-exit`. You are the module job (P8, mechanics §6) for `review`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first. Read in full (never scan; a document you cannot read whole: BLOCKED, cause `reading`, K3678) your requirements, the lines named below, and the code they name. Fix round 4 rules (`build/plan/fix-round-4-T51.md` §0): the failing-first test is seen red in your record, then green; no "not met" or deferred line at COMPLETE without naming the smallest thing you need; declare every census op you own. Wording waits for T52 (K4269): a new sentence is `localize(id, en)` with a plain stand-in, never a raw key. Bob's focus: an alpha release deployed as efficiently as possible: do what the cause needs, nothing more.
+
+Run: your suite, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio review tranche/T51 job/T51/review`. COMPLETE: what changed (file:line), the failing-first test red then green, the measurements, suite counts, the `Size` line.
+
+**Your entry: R19's new sentence (C48).** Each draft row's `editions` carries `case` exactly as `case-authoring` R83 states it (`null` where it cannot answer). Today `review/index.mjs:979-984` `#editions` copies only `prepared` and `published`. CASE-AUTHORING #37 adds `case` to `draftEditions` at the same time; BOB sends a CHANGE when it merges: merge the tranche then and run your test against the real one. Failing-first test: a draft prepared through the real case-authoring (its `fixture.mjs` `world()`), `casedrafts`' row states `editions.case` = the case id; control: a draft never prepared states `case: null`; `draftEditions` throwing states all three null. Write the test now (red by name until case-authoring merges), the one-line change, and COMPLETE once green on the merged case-authoring.
+
+## B15 · CHANGE · re J11
+
+CHANGE (K4469): CASE-AUTHORING #37 is merged (tranche/T51 @ a5415384fc): draftEditions states editions.case. Merge the tranche, and yes: wire the real case-authoring into the R19 tests (review uses case-authoring; its fixture world() is available), so the R19 case test runs against the real draftEditions, not the ca.editions double; keep the throw test on a double. Then COMPLETE with the Size line.

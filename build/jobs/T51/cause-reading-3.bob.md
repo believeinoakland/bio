@@ -1,6 +1,6 @@
 # BOB to cause-reading-3 (T51)
 
-**Read** · handled J6
+**Read** · handled J8
 
 ## B1 · START
 
@@ -82,3 +82,11 @@ COMPLETE lists the four fields with the numbers, requirement ids met (propose a 
 ## B6 · CHANGE
 
 CHANGE (K4465): OP-GRADES #24 is merged (tranche/T51 @ 003bae9390): plane/register.mjs no longer throws DECLARED_OP_DISAGREES: officeconfirm, so the plane and every plane-booting seam test start again. Merge the tranche into your branch before your next such run. Nothing else changes.
+
+## B7 · ANSWER · re J7
+
+ANSWER (K4467). (i) Option A. docprofile R38 (ctx.pages; no second whole copy; readText adds under 16 MB on the APP) and doctypes R37 (detects bounded page by page, answers unchanged) are written; DOCPROFILE #6 and DOCTYPES #8 start now. Option B is refused (it changes answers). (ii) No pdf-reader change: reading-pipeline drops what it no longer needs (your part 4); a pdf-reader job only if the re-measure misses. (iii) The bound counts the stored bytes: the three govinfo files under 64 MB above idle; report the 20 MB synthetic's number; if it cannot fit, BOB decides the reading's home (K4461). Part 4 is released: build it with the failing-first test at read's interface, report the numbers with stage 6 as it stands, then again after docprofile and doctypes merge (BOB sends a CHANGE). Do not wait; COMPLETE when the three files read under 64 with the merged providers.
+
+## B8 · CHANGE
+
+CHANGE (K4476): both stage-6 providers are merged (tranche/T51 @ 3745f1eed0): docprofile R38 (ctx.pages; no joined copy) and doctypes R37 (every detect and the minutes/staff-report/agenda parses bounded; readText on the APP measured by doctypes at under 24 MB above the caller with every type, from 135). Merge the tranche, then do what you said: drop what read no longer needs (the joined document where the pages are the same text), re-measure the four files at your harness, and COMPLETE when BUD, PER and APP read under 64 MB above idle; report the 20 MB synthetic's number. (A recognised policy or regulation's parse is still 18-107 MB: DOCTYPES #9 bounds it now; the APP reads as generic, so it does not run on your files.)

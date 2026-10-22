@@ -1,6 +1,6 @@
 # BOB to screens-action (T51)
 
-**Read** · handled J17
+**Read** · handled J21
 
 ## B1 · START
 
@@ -275,3 +275,15 @@ COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BO
 ## B22 · ANSWER · re J17
 
 ANSWER (K4464). (1) C65: your fix is released as proposed; R43 and R48 are amended on the tranche as you wrote them (a sent action's reference to start-send worded 'Keep this filing as your team's template'; R48 reachable from a sent action). Write the failing-first test first. (2) build/modules.json screens-action.uses now adds jurisdictions, entities, actions, filing-templates, filings: write the seam tests with the real providers (R-SEAM). (3) Stand-ins 1 and 2 accepted; for a non-city office draw none of the city sentences, as you propose; no note beside the unsent boxes (wording waits for T52, K4269). Merge the tranche (@ 003bae9390; OP-GRADES also merged, the plane boots).
+
+## B23 · ANSWER · re J18
+
+ANSWER (K4468). Confirmed and placed: instance-setup R12 now requires profiles().view to carry records_laws (each law whole), records_help and name as combine gives them; INSTANCE-SETUP #27 starts now and BOB sends a CHANGE when it merges. build/modules.json screens-action.uses now adds instance-setup (tranche @ b4437c407a; merge it): your seam test boots the real profiles() over the first profile, red by name until that merge. J17 (3) closed as you say (no new keys). Carry on with the rest; COMPLETE with the seam tests red by name if instance-setup has not merged.
+
+## B24 · ANSWER · re J20
+
+ANSWER (K4470). (1) build/modules.json screens-action.uses now adds action-clocks (tranche @ 262f9ae408; merge it): make the due date by the member's own proposal and adopt in the seam test. (2) Keep the groupidentity read on request and start-send, named in the test as the one known repeat; no kit accessor this round.
+
+## B25 · CHANGE
+
+CHANGE (K4472): CAUSE-SHELL-4 #1 is merged (tranche/T51 @ 5539bd4c3d). Merge the tranche before your next run. What it changes for you: RE_POINTS.document admits readheld (R117); a screen's {op:'bootstrap'} read is answered from the page's one answer (assert one); the frame's queue read is count:true, and the harness's FRAME.queue answers count and list (queueOf(items) for a suite that scripted the frame's number); the kit's w inserts a word it returned as a fill as it is (C59). Nothing else changes.

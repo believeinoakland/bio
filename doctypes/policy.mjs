@@ -19,7 +19,7 @@
 import { CONFIDENCE, CONTRACT, alsoSatisfies } from "../docprofile/doctypes/index.mjs";
 import { event, worstSignificance, isMeaningful, bySeverity } from "../site-profiles/index.mjs";
 import { readDefinitions, sha256Hex } from "./sections.mjs";
-import { readHeader, policySeries, headerLabels, HEADER_FIELDS } from "./policy-header.mjs";
+import { readHeader, headerAnchored, policySeries, headerLabels, HEADER_FIELDS } from "./policy-header.mjs";
 import { localize } from "../bio-plane/src/setup-words/index.mjs";
 
 /* ------------------------------------------------------------------------ lines */
@@ -370,8 +370,9 @@ export default {
     if (!series.length || !headerLabels(ctx).length)
       return { match: false, confidence: CONFIDENCE.NONE,
                why: localize("doctypes.policy.no_series_supplied", "the active jurisdiction profiles supply no policy series or no policy header labels, so no document is read as a policy") };
-    const h = readHeader(ctx, String(ctx.text || ""));
-    const hd = h.header;
+    /* R37: a header's type is read only from an anchor, so a text with none is refused without being cut into lines. */
+    const text = String(ctx.text || "");
+    const hd = headerAnchored(ctx, text) ? readHeader(ctx, text).header : null;
     if (!hd || !hd.type)
       return { match: false, confidence: CONFIDENCE.NONE,
                why: localize("doctypes.policy.no_series_line", "no line of this text opens with a policy series the active profiles name, beside the header labels they give") };
