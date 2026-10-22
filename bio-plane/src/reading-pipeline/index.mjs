@@ -810,6 +810,18 @@ function allUnitsOf(i2text) {
         .filter((u) => u.extent.sheet !== null)
     : null;
 }
+/* The UTF-8 length of a string, counted without encoding it (the wire charges every unit, and a book is thousands). */
+export function utf8Length(s) {
+  let n = 0;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    if (c < 0x80) n += 1;
+    else if (c < 0x800) n += 2;
+    else if (c >= 0xd800 && c <= 0xdbff && i + 1 < s.length && (s.charCodeAt(i + 1) & 0xfc00) === 0xdc00) { n += 4; i++; }
+    else n += 3;
+  }
+  return n;
+}
 export function textUnitsFor(i2text) {
   let textUnits = null, textUnitsOverBound = 0, textUnitsSkipped = null;
   if (i2text) {
@@ -825,7 +837,9 @@ export function textUnitsFor(i2text) {
     for (const u of (units || [])) {
       const cut = u.text.length > CAPTURE_TEXT_UNIT_CAP;
       const text = cut ? u.text.slice(0, CAPTURE_TEXT_UNIT_CAP) : u.text;
-      const size = new TextEncoder().encode(text).length + ACQUIRE_TEXT_UNIT_ENVELOPE;
+      /* A string's UTF-8 is never shorter than its length in UTF-16 units, so a unit that cannot fit even at one
+         byte a unit is left out without being measured. */
+      const size = text.length + ACQUIRE_TEXT_UNIT_ENVELOPE > budget ? Infinity : utf8Length(text) + ACQUIRE_TEXT_UNIT_ENVELOPE;
       if (size > budget) { dropped++; skip(u); continue; }
       budget -= size; kept.push(cut ? { ...u, text, truncated: true } : u); run = null;
     }
@@ -837,14 +851,24 @@ export function textUnitsFor(i2text) {
 }
 
 /* R35 (T51 fix round 2, C17): the words of a text, a word being a run of non-whitespace holding a glyph. */
-export const wordsIn = (s) => (typeof s === "string" ? s.split(/\s+/).filter((w) => glyphCount(w) > 0).length : 0);
+const SPACE = /\s/;
+export function wordsIn(s) {
+  if (typeof s !== "string") return 0;
+  let n = 0, inWord = false;
+  for (let i = 0; i < s.length; i++) {
+    const w = !SPACE.test(s[i]);
+    if (w && !inWord) n++;
+    inWord = w;
+  }
+  return n;
+}
 
 /* R35: `{words_total, words_read}` of a text that has text units, else null. `words_total` is the words of every unit the
    text has plus the words an OCR region below its floor held (carried as a count on the page, `unread_words`, never
    as text); `words_read` is the words of the units `textUnitsFor` keeps, a unit cut to its cap by the prefix it keeps. They
    are equal when the whole text was read. */
-export function textWordsFor(i2text) {
-  const kept = textUnitsFor(i2text).textUnits;
+export function textWordsFor(i2text, keptUnits = undefined) {
+  const kept = keptUnits !== undefined ? keptUnits : textUnitsFor(i2text).textUnits;
   if (!kept) return null;
   const all = allUnitsOf(i2text) || [];
   const unread = (Array.isArray(i2text.pages) ? i2text.pages : [])
@@ -1429,7 +1453,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   /* DEC-149 (T35-24): member-facing, so it names the group's Civicsmith, never "this instance". */
   if (!evidence) return early(failed(doc, null, word("reading-pipeline.no_evidence_store")));
   const got = await bytesOf(evidence, doc).catch(() => ({ bytes: null, why: word("acquisition.why.evidence_store_read") }));
-  const bytes = got.bytes;
+  let bytes = got.bytes;
+  got.bytes = null;
   const textRead = !multipart && profile.profiled_from_text === true && bytes;
   const text = textRead ? new TextDecoder("utf-8", { fatal: false }).decode(bytes) : "";
   /* N615 (K1683, K1773): every recogniser is handed the capture's origin, `"member"` only for bytes a member supplied by
@@ -1512,9 +1537,11 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       if (typeof entry.text === "function") {
         const parts = typeof entry.parts === "function" ? await entry.parts(bytes) : bytes;
         const tt = await entry.text(parts);
+        bytes = null;
         if (tt && tt.ok !== false) { i2text = tt; wiredTier = 1; }
       } else {
         const st = await entry.structure(bytes);
+        bytes = null;   /* the parse is done: the capture's bytes are held no longer (R2, the reading's memory) */
         if (st && st.ok) {
           i2text = st.text || null; wiredTier = 1;
           /* R34: a structure reader states the document's own metadata beside its text (pdf-reader R39: the /Info Title). */
@@ -1586,7 +1613,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         : { ...failed(doc, docType, [tier2note, ocrNote, localize("reading-pipeline.index.entry_no_text", "the {fmt} entry produced no text from these bytes", { fmt: String(fmt) })]
               .filter(Boolean).join(" — ")) };
       /* R35: a reading with text units counts its words. */
-      if (textUnits) Object.assign(reading, textWordsFor(i2text));
+      if (textUnits) Object.assign(reading, textWordsFor(i2text, textUnits));
       /* R34: a determined reading carries the title its entry's metadata states, else null; a failed one carries none. */
       if (wired && wired.determined) reading.title = titleOfMetadata(i2text && i2text.metadata) ?? titleOfMetadata(structMeta);
       /* R29: the pages the AI read, labeled as its reading. */
