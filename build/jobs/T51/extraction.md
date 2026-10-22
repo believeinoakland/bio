@@ -294,3 +294,29 @@ I cannot get under 100 MB from extraction. Smallest thing I need, one of:
 (b) you rule the gate at a number the file can meet with margin (the object is 128 MB; today's peaks are 111-127), and I set it and run five times.
 
 Everything else in my entries is done and pushed (E1 repair, E3, E2's budget, `defer=1` B18); I will post COMPLETE as soon as `c5b-memory` is green on five runs.
+
+## J17 · COMPLETE
+
+COMPLETE · EXTRACTION #33 · fix round 5 (E1 repair, E2 units, E3; B18 `defer`, B19, B21). Pushed on job/T51/extraction.
+
+**What changed (`bio-plane/src/extraction/index.mjs`).**
+- `readHeld`: E3 `#sizeOf` + over-ceiling skip of the whole check (statement written, `read: true`, from parts' sizes); E1 `#nowDetected` (range get of the first KiB, `detectFormat`; a declared-text UTF-8 head also qualifies) and `notReadAsText` (the "not read as text" sentence, in both causes, read through `localize` with reading-pipeline's own ids): a held `final` reading of that sentence is read again once with the detected format as `profile.format`; a reading that is still that sentence is not written; a document with no profile format is detected the same way at its first read; E2 `budget: CAPTURE_TEXT_CAPTURE_BOUND` (was `Infinity`); B18 `defer` option / `defer=1` query (`READING_PENDING` after every gate, nothing read), `defer` added to the `readheld` declaration's accepts.
+- R-OLD: new data only; older records are repaired by the press (E1), no sweep.
+
+**Root causes.** As the plan states (readHeld NO_WHOLE_OBJECT before any read; reading-pipeline `bytesOf` states an over-ceiling capture from sizes; final "not read as text" never replaced). Tests missed them: R80's tests built only small homes and a "no reading" state (no home over the ceiling, none with a final reading); fixed by `round5.test.mjs`.
+
+**Failing-first (`round5.test.mjs`, 11 tests; seen red on the old code, 4 of 9 then, green now).** R84 five-part 41.5 MB home with no whole: statement written, `read: true` (red: NO_WHOLE_OBJECT); a transient reading of a 30 MiB capture replaced by the final one; controls: 22 MiB needs its whole, an outsider gets NO_HOME. R83 600-page text: `words_read < words_total`, index within 2 MiB (red on `Infinity`); control: a short text equal. R85 final "(multipart)" reading replaced once, words in `text_units`, `format` pdf, history keeps the old, a second press changes nothing; controls: undetectable bytes, an over-ceiling final reading. R86 (B18): `defer=1` visible home READING_PENDING and nothing written, hidden home the same refusal as without, a held reading READING_HELD. Not seen red: R86 (written after the code).
+
+**`c5b-memory` (B21).** Gate retired to the object's limit: child `--max-old-space-size=88`, `readHeld` of the 21 MB / 1,300-page file, single-part home and three-part home promoted with the failed reading, must complete with the words in `text_units`; the sampled peak is printed only. Five runs of both: green all five (sampled peaks 60-83 MB). **Red-first not shown, and why:** the same child with `budget: Infinity` also passes at 88; I bracketed it: both variants die at 72 and below and both pass at 78 and above, so the units budget does not move the heap's feasibility (the units are references into text the pipeline holds anyway; the sampled peaks 126 → 112-130 MB earlier were inside noise). The budget stays because it is the plan's fix and R83's test proves it bounds what is offered, but it is not what brings `readHeld` under the object's line; the gate would catch a regression in the parse or the pipeline, not in the budget.
+
+**Suites and checks.** `node --test --test-force-exit bio-plane/test/m/extraction/`: 247 tests, 247 pass. Users: control-plane `r117-held`, `t51-held-failed`, `r123-reading` 18/18; plane `fix4-*`, `fix3-r74`, `l75` 28/28 (before B18; B18 adds an optional flag). `impact.mjs` names 107 modules because `index.mjs` holds `DECLARED_OPS`. `checks/run.mjs`: format 0, architecture 0, coverage 6610 of 6610, channels 0, words 0 failures (no missingkey); ownership 0 failures; `setup-words build.mjs --check`: only the expected stale-rows note.
+
+**Requirement lines I propose (BOB writes them).**
+- R83 (fix round 5, E2; amends R82): `readHeld` offers the index the units it keeps: the units budget is the index's bound (R22: 2 MiB), not unlimited; `words_read` counts the units offered, so it falls below `words_total` for a text past the bound. Test: a 600-page text; control: a short text reads whole.
+- R84 (E3; amends R80): a home whose capture, by its own document's sizes, is over reading-pipeline's whole ceiling (`WHOLE_READ_MAX`) is read with no whole held: the final statement is written and the answer is `read: true`; a capture at or under the ceiling still needs its whole. A transient reading of such a capture is replaced by the final one.
+- R85 (E1; amends R80; new data only): a `final` reading that says the document was not read as text (either cause) is read once more when the first KiB of the held whole detects a format (or is UTF-8 without NUL under a declared text type), the detected format replacing the profile's for that read; a reading with text, or one still not read as text, is never written over it.
+- R86 (B18; amends R80): `readHeld` and `op=readheld` take `defer=1`: after every gate (sight, NO_HOME, READING_HELD, NO_WHOLE_OBJECT) they answer `{ok: true, read: false, why: "READING_PENDING"}` and read nothing. R82's "offers every unit" is superseded by R83.
+
+**Other modules.** control-plane's R123 unit tests that script `NO_WHOLE_OBJECT` for a case over the ceiling are theirs to correct. Nothing stale generated by me. Wording owed: none (no new member-read sentence).
+
+Size (session_018SGhEZ3jJD7Da7xorwia8V): test runs 24, module lines 3551
