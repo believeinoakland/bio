@@ -54,3 +54,33 @@ Fix round 5, F5 (the spent alarm, K4561) done. Tranche/T51 merged first.
 **Needs from BOB:** nothing. Live repair per the diagnosis: the deploy replaces the object, `start()` re-arms, the existing rows run oldest first, one heavy row per tick; no SQL repair. Generated artifacts: `agent-worker` and `bio-plane/dist/bio-plane.bundled.mjs` bundle scheduler source through the plane; BOB regenerates them at the layer close (I changed no generated file).
 
 Size (session_01WuSBArtKWiDTrSYjdTtS8z): test runs 9, module lines 801
+
+## J4 · COMPLETE
+
+Fix round 5/6, B3 and B4 together (one COMPLETE; supersedes J3's, whose R4/R11 work stands). Tranche/T51 merged (B4's files read: rulings K4565, K4566, K4570, `diagnosis-R6-watchdog.md`).
+
+**What changed** (`bio-plane/src/scheduler/index.mjs`)
+- R4/R11 (J3): spent alarm (past > 60 s, outside a firing) re-armed afresh to `max(want, now)` by `start()` and `arm()`: `SPENT_ALARM_MS`, in `#reconcile`.
+- `heal(now)` (B3 a): the request paths' door. One `getAlarm()`; none or spent, it arms as `arm`; otherwise it asks no consumer anything. At most one look per 5 s per instance; inside a firing it does nothing. Answers the alarm or null.
+- Heartbeat (B3 b, B4 a): one storage value `sched_beat` = `{last_run, running_since, watchdog_seen}`. `onAlarm` sets `running_since` at its start, and at its end (in `finally`, however it ends) clears it and records `last_run` after the reconcile.
+- `health(now)` (B3 b): `{last_run, running_since, watchdog_seen, alarm_at, oldest_overdue, stale}`; `oldest_overdue` is the earliest wake already come (each owner answers its own wake: no row body read), `stale` = work owed for two cycles (5 min each) with no firing in them. Reads only.
+- `watch(at)` (B4 b): records `watchdog_seen` (never backwards, one put), reads alarm and heartbeat, re-arms outright (`max(want, now)`, R27 holds cleared) only when: (a) no alarm and no fresh `running_since` (within 5 min: `getAlarm()` is null during a run), (b) alarm spent, (c) work owed, no fresh run, `last_run` older than 2 cycles, and the alarm still ahead (one already due is about to run). With a live alarm and fresh `last_run` it asks no consumer anything. Runs no tick, reads no row. Answers `{alarm_at, last_run, running_since, rearmed, why}` (`why`: null, `no_alarm`, `spent`, `stale`).
+- R14 (B4 c): header comment `index.mjs:5-9` reworded (the one cron is the watchdog calling `watch`). `invariants.test.mjs:12-21` rewritten: the configuration declares at most one cron, and any is `*/5 * * * *`. **PLANE:** when you add the cron, tighten that test to exactly one (`crons.length === 1`). **Not mine:** `monitoring/index.mjs:94` ("NOT a cron") needs its comment reworded by monitoring's owner.
+
+**Tests** (`test/m/scheduler/spent.test.mjs`, 12 tests; fixture `pinNow`, and the heartbeat kept out of `kv`/`log` so R17/R18's "writes nothing else" tests stand unchanged). Failing-first, red then green: the three J3 cases (spent alarm at start; at arm; the more-than-7-kills shape) seen red on tranche/T51's code, green now; heal and health and watch are new methods, so every test of them is red (TypeError) before. Cases: dead alarm healed by the next request (null and spent), live alarm untouched with no consumer asked; stale true after two cycles with work owed and false when owed one cycle, nothing owed, or fresh `last_run`; watch on spent, null, future+fresh (nothing set, nothing asked), future+owed+stale, fresh vs stale `running_since`, a double and a late call (one effective set, `watchdog_seen` never back), `onAlarm` and ticks never called, a firing's `running_since` set before the first tick and cleared even when the firing throws.
+
+**Results**
+- scheduler suite: ℹ tests 148, ℹ pass 148, ℹ fail 0 (was 135).
+- users of `impact.mjs origin/tranche/T51 HEAD` (192 files; plane, control-plane, queue, tasks, instance-setup among them): ℹ tests 1364, ℹ pass 1363, ℹ fail 1: `plane/release.test.mjs` R24 (design words; red on tranche/T51 without my change). `r117-held` passed this run (it failed on the base too: flaky in this container).
+- format 0 failures; architecture (scheduler) 16 product files, 74 relative imports, 0 failures; coverage (scheduler) 27 of 27, 0 failures; ownership 10 files changed by scheduler, 0 failures; checks/run.mjs: format, architecture, coverage, channels, words all 0 failures.
+- No plane test needed amending.
+
+**Proposed requirement lines** (BOB writes `build/requirements/scheduler.md`; R-ids R28, R29 are free)
+- R4, append: "An alarm already past by more than a minute, when no firing is running, is spent, not armed (the platform stops running an alarm it killed too often and goes on reporting its time): `arm` sets it afresh to the later of the earliest wake and now. A live alarm is never pushed later."
+- R11, append: "At start the same rule holds, so every deploy and restart of the object restarts the owed work."
+- **R28** (K4563, K4565) "`heal(now)` is the request paths' door: with no alarm set or a spent one it arms as `arm` (R4); otherwise it asks no consumer anything; at most one look in five seconds per instance, none inside a firing. Every firing records its heartbeat, the storage value `sched_beat` `{last_run, running_since, watchdog_seen}`: `running_since` at its start, cleared when it ends however it ends, and `last_run` when it completes. `health(now)` reads and answers `{last_run, running_since, watchdog_seen, alarm_at, oldest_overdue, stale}`: `oldest_overdue` the earliest wake already come (null if none), `stale` true when work has been owed for two cycles (five minutes each, the constant the plane shares) with no completed firing in them. It re-arms nothing."
+- **R29** (K4566, K4570) "`watch(at)` is the watchdog's one call, made by the plane's Worker cron once a cycle. It records `watchdog_seen` (never backwards) and re-arms outright, to the later of the earliest wake and now, only when no alarm is set and no firing is in progress (`running_since` within a cycle), or the alarm is spent, or work is owed, no firing is in progress, `last_run` is older than two cycles and the alarm is still ahead. It runs no tick, reads no consumer's rows or any document, and is idempotent: a late or repeated call with a live alarm and fresh `last_run` sets nothing and asks no consumer anything. It answers `{alarm_at, last_run, running_since, rearmed, why}`." Interface for the plane's `watchdog(at)` RPC: `schedulerOf(ctx, env).watch(controller.scheduledTime)`; `owedwork` reads `.health()`.
+
+Nothing needed from BOB. Generated artifacts: the plane bundle and `agent-worker` carry scheduler source; BOB regenerates at the layer close (I changed none).
+
+Size (session_01WuSBArtKWiDTrSYjdTtS8z): test runs 17, module lines 859
