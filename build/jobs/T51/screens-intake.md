@@ -494,3 +494,7 @@ COMPLETE (B29 START, B30, B31, B32; fix round 6). G2: acquire carries project; a
 Merged `tranche/T51` (capture's `acquire` declares `project`). The stand-in in `page.mjs` that added `project` to the page's table is removed. screens-intake 292 of 292 (the R-SEAM test is green); screens-daily `c25-seam` 1 of 1 green. `r117-held` R117 still red alone (control-plane's, as before). Nothing else changed.
 
 Size (session_01RpngLERJbtZqcnEHi985DP): test runs 27, module lines 2601
+
+## J30 · COMPLETE
+
+COMPLETE (B34 applied). Merged tranche/T51 (capture declares project); removed my page.mjs stand-in. screens-intake 292/292 (the R-SEAM test is green); screens-daily c25-seam green. r117-held R117 still red alone (control-plane's). Size (session_01RpngLERJbtZqcnEHi985DP): test runs 27, module lines 2601
