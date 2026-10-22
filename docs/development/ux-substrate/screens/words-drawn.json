@@ -39035,6 +39035,288 @@
    "en": "Captures waiting for a vouch: {n}. They are not counted in your queue.",
    "protected": false,
    "note": "DEC-414: B474 screens-daily (C70): the vouch band's own number, drawn apart from the bell and sidebar count, which count queue items only"
+  },
+  {
+   "key": "screen.install.getready.first",
+   "en": "Get your Cloudflare account ready first",
+   "protected": false,
+   "note": "DEC-416: the button on the installer's first page and its needs list, opening the Get ready guide"
+  },
+  {
+   "key": "screen.install.getready.title",
+   "en": "Get your Cloudflare account ready",
+   "protected": false,
+   "note": "DEC-416: the Get ready guide's heading"
+  },
+  {
+   "key": "screen.install.getready.sub",
+   "en": "Five steps, each done on Cloudflare's own page. Each button below opens that exact page.",
+   "protected": false,
+   "note": "DEC-416: the guide's first line"
+  },
+  {
+   "key": "screen.install.getready.step1",
+   "en": "Open a Cloudflare account in your team's name, with an email your team shares, not one person's.",
+   "protected": false,
+   "note": "DEC-416: step 1"
+  },
+  {
+   "key": "screen.install.getready.step1.see",
+   "en": "You will see Cloudflare's sign-up form: an email, a password and a button to create the account.",
+   "protected": false,
+   "note": "DEC-416: step 1: what the founder will see"
+  },
+  {
+   "key": "screen.install.getready.step1.open",
+   "en": "Open Cloudflare sign-up",
+   "protected": false,
+   "note": "DEC-416: step 1's button (https://dash.cloudflare.com/sign-up)"
+  },
+  {
+   "key": "screen.install.getready.step2",
+   "en": "Verify the email: Cloudflare sends a message; open it and press its link.",
+   "protected": false,
+   "note": "DEC-416: step 2"
+  },
+  {
+   "key": "screen.install.getready.step2.see",
+   "en": "You will see a message from Cloudflare in your team's inbox, with a button to verify the address.",
+   "protected": false,
+   "note": "DEC-416: step 2: what the founder will see"
+  },
+  {
+   "key": "screen.install.getready.step2.open",
+   "en": "Open Cloudflare",
+   "protected": false,
+   "note": "DEC-416: step 2's button (https://dash.cloudflare.com/)"
+  },
+  {
+   "key": "screen.install.getready.step3",
+   "en": "Add a payment card. Cloudflare charges your team, never Civicsmith's makers.",
+   "protected": false,
+   "note": "DEC-416: step 3"
+  },
+  {
+   "key": "screen.install.getready.step3.see",
+   "en": "You will see Cloudflare's billing page, with a place to enter a card.",
+   "protected": false,
+   "note": "DEC-416: step 3: what the founder will see"
+  },
+  {
+   "key": "screen.install.getready.step3.open",
+   "en": "Open Cloudflare billing",
+   "protected": false,
+   "note": "DEC-416: step 3's button"
+  },
+  {
+   "key": "screen.install.getready.step4",
+   "en": "Switch to Workers Paid, $5 a month.",
+   "protected": false,
+   "note": "DEC-416: step 4"
+  },
+  {
+   "key": "screen.install.getready.step4.see",
+   "en": "You will see Cloudflare's plans page: choose Workers Paid and confirm.",
+   "protected": false,
+   "note": "DEC-416: step 4: what the founder will see"
+  },
+  {
+   "key": "screen.install.getready.step4.open",
+   "en": "Open Cloudflare plans",
+   "protected": false,
+   "note": "DEC-416: step 4's button"
+  },
+  {
+   "key": "screen.install.getready.step5",
+   "en": "Turn containers on.",
+   "protected": false,
+   "note": "DEC-416: step 5"
+  },
+  {
+   "key": "screen.install.getready.step5.see",
+   "en": "You will see Cloudflare's containers page, with a button to turn them on.",
+   "protected": false,
+   "note": "DEC-416: step 5: what the founder will see"
+  },
+  {
+   "key": "screen.install.getready.step5.open",
+   "en": "Open Cloudflare containers",
+   "protected": false,
+   "note": "DEC-416: step 5's button"
+  },
+  {
+   "key": "screen.install.getready.newtab",
+   "en": "Each button opens Cloudflare's own page in a new tab, and this page stays here.",
+   "protected": false,
+   "note": "DEC-416: under the five steps"
+  },
+  {
+   "key": "screen.install.getready.done",
+   "en": "When these are done, check your account",
+   "protected": false,
+   "note": "DEC-416: the guide's last button, leading to Cloudflare's permission step"
+  },
+  {
+   "key": "screen.install.check.title",
+   "en": "Check my account",
+   "protected": false,
+   "note": "DEC-416: the gate's heading and its button"
+  },
+  {
+   "key": "screen.install.check.sub",
+   "en": "Before anything is installed, the installer looks at your Cloudflare account and tells you what is ready and what is not.",
+   "protected": false,
+   "note": "DEC-416: the gate's first line"
+  },
+  {
+   "key": "screen.install.check.creates",
+   "en": "Checking creates nothing that stays in your account.",
+   "protected": false,
+   "note": "DEC-416: the check's promise (the probe is made and removed)"
+  },
+  {
+   "key": "screen.install.check.ready",
+   "en": "Ready",
+   "protected": false,
+   "note": "DEC-416: a checklist line that is ready"
+  },
+  {
+   "key": "screen.install.check.notready",
+   "en": "Not ready yet",
+   "protected": false,
+   "note": "DEC-416: a checklist line that is not ready"
+  },
+  {
+   "key": "screen.install.check.plan.name",
+   "en": "Workers Paid",
+   "protected": false,
+   "note": "DEC-416: the plan line"
+  },
+  {
+   "key": "screen.install.check.plan.ok",
+   "en": "Your account is on Workers Paid.",
+   "protected": false,
+   "note": "DEC-416: the plan line, ready"
+  },
+  {
+   "key": "screen.install.check.plan.fix",
+   "en": "Your account is on the free plan. Switch it to Workers Paid, $5 a month.",
+   "protected": false,
+   "note": "DEC-416: the plan line, not ready: its fix (button: Open Cloudflare plans)"
+  },
+  {
+   "key": "screen.install.check.containers.name",
+   "en": "Containers",
+   "protected": false,
+   "note": "DEC-416: the containers line"
+  },
+  {
+   "key": "screen.install.check.containers.ok",
+   "en": "Containers are on in your account.",
+   "protected": false,
+   "note": "DEC-416: the containers line, ready"
+  },
+  {
+   "key": "screen.install.check.containers.fix",
+   "en": "Containers are not on yet. Turn them on in your account.",
+   "protected": false,
+   "note": "DEC-416: the containers line, not ready: its fix (button: Open Cloudflare containers)"
+  },
+  {
+   "key": "screen.install.check.limits.name",
+   "en": "Room under your account's limits",
+   "protected": false,
+   "note": "DEC-416: the limits line"
+  },
+  {
+   "key": "screen.install.check.limits.ok",
+   "en": "Your account has room for your team's copy.",
+   "protected": false,
+   "note": "DEC-416: the limits line, ready"
+  },
+  {
+   "key": "screen.install.check.limits.fix",
+   "en": "Your account has reached its limit of {limit}, and your team's copy needs room for more. Remove one you no longer use, or ask Cloudflare to raise the limit.",
+   "protected": false,
+   "note": "DEC-416: the limits line, not ready: names the limit (button: Open your Workers)"
+  },
+  {
+   "key": "screen.install.check.limits.open",
+   "en": "Open your Workers",
+   "protected": false,
+   "note": "DEC-416: the limits line's button"
+  },
+  {
+   "key": "screen.install.check.name.name",
+   "en": "The short name",
+   "protected": false,
+   "note": "DEC-416: the short-name line"
+  },
+  {
+   "key": "screen.install.check.name.ok",
+   "en": "The short name {name} is free.",
+   "protected": false,
+   "note": "DEC-416: the short-name line, ready"
+  },
+  {
+   "key": "screen.install.check.name.fix",
+   "en": "The short name {name} is already taken in your account. Use a free one instead: {free}.",
+   "protected": false,
+   "note": "DEC-416: the short-name line, not ready: offers a free one"
+  },
+  {
+   "key": "screen.install.check.name.use",
+   "en": "Use {free}",
+   "protected": false,
+   "note": "DEC-416: the short-name line's button, taking the free one"
+  },
+  {
+   "key": "screen.install.check.card.name",
+   "en": "Payment card",
+   "protected": false,
+   "note": "DEC-416: the card line"
+  },
+  {
+   "key": "screen.install.check.card.ok",
+   "en": "A payment card is on file.",
+   "protected": false,
+   "note": "DEC-416: the card line, ready"
+  },
+  {
+   "key": "screen.install.check.card.fix",
+   "en": "No payment card is on file. Add one, so Cloudflare can charge your team.",
+   "protected": false,
+   "note": "DEC-416: the card line, not ready: its fix (button: Open Cloudflare billing)"
+  },
+  {
+   "key": "screen.install.check.again",
+   "en": "Check again",
+   "protected": false,
+   "note": "DEC-416: runs the check again"
+  },
+  {
+   "key": "screen.install.check.now",
+   "en": "Install now",
+   "protected": false,
+   "note": "DEC-416: the gate: enabled only when every line is ready"
+  },
+  {
+   "key": "screen.install.check.closed",
+   "en": "Install now opens when every line is ready.",
+   "protected": false,
+   "note": "DEC-416: the gate, shown disabled while any line is not ready"
+  },
+  {
+   "key": "screen.install.check.allready",
+   "en": "Every line is ready.",
+   "protected": false,
+   "note": "DEC-416: the gate, open"
+  },
+  {
+   "key": "screen.install.refused.rare",
+   "en": "This is rare: the check before installing should have caught it.",
+   "protected": false,
+   "note": "DEC-416: added to the install's own stop, the second line of defence"
   }
  ],
  "rewrite": {

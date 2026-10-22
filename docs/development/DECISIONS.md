@@ -6413,3 +6413,18 @@ decided: 2026-10-22 · Bob
 the design: as folded in `BIO_Distribution_v0_1.md` §5, "RULED 2026-10-22": "Get ready" (five plain steps, each opening the exact Cloudflare page; links checked on a schedule); "Check my account" after Cloudflare's permission page (every preflight check at once, plus the payment method by a throwaway probe; nothing kept; a checklist with each line's fix and link; re-runnable); the gate: "Install now" only when every line is ready; the install's own stops stay as a second line. Before any outside team installs.
 reasoning recorded in: this entry; `docs/architecture/BIO_Distribution_v0_1.md` §5.
 owed: BOB: requirements (installer: a check-only run of R70's checks plus a payment-method probe, creating nothing that stays, answering a per-check list; the install refused unless that list is all ready within the session; the guide's link check), placed before the first outside install, with its date effect reported to Bob; Bob: registering the sixth OAuth scope (account-logs.read, K3815) on the OAuth client, if the check is to cover request logging. Design: `install` drawn with "Get ready", "Check my account" and the gate (the next DEC).
+
+### DEC-416 · answered
+raised: 2026-10-22 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (Bob's DEC-415)
+for: design
+question: How are "Get ready", "Check my account" and the gate drawn on the installer?
+why it is Bob's: it is not (P17): drawing beneath his ruling.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-22 · the design session (P17)
+the design: `install` gains state `ready` ("Get ready", from "Get your Cloudflare account ready first" on start and on the needs list): five numbered steps, each a sentence, what the founder will see, and a button opening Cloudflare's own page in a new tab (an account in the team's name with a shared email; verify the email; a payment card; Workers Paid; containers on), then "When these are done, check your account" to Cloudflare's permission page; states `check` and `checkok` after it: "Check my account", "Checking creates nothing that stays in your account.", one line per check (Workers Paid, containers, room under the limits, the short name free, a payment card), each "Ready" or "Not ready yet" with its fix and a button to the page that fixes it, "Check again"; "Install now" (bootstrap) disabled with "Install now opens when every line is ready." until all are ready; `refused` adds "This is rare: the check before installing should have caught it." Journey 1 walks start, ready, cloudflare, check, checkok, progress, done. Act `owed:installcheck DEC-415`; 52 keys (`screen.install.getready.*`, `screen.install.check.*`, `screen.install.refused.rare`).
+reasoning recorded in: this entry; `screens/mock-screens.js`, `screens/mock-journeys.js`, `screens/mock-acts.js`, `screens/mock-kit.js`, `screens/registry.src.py`, `screens/words-drawn.src.py` (rows noted "DEC-416").
+owed: BOB: installcheck (DEC-415's requirements).
