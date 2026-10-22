@@ -15,12 +15,16 @@ import { DOCTYPES } from "../index.mjs";
 import { allMatches, flatten } from "../../docprofile/doctypes/index.mjs";
 import { readText, flattenText } from "../../docprofile/readtext.mjs";
 import { registerDoctype } from "../../docprofile/doctypes/registry.mjs";
-import { flatHas, flatCount, flatFirst, flatPrefix, mergedHits, eachLine, lineTable, flatWindows } from "../windows.mjs";
+import { flatHas, flatCount, flatFirst, flatPrefix, mergedHits, eachLine, lineTable, lineIndex, flatWindows } from "../windows.mjs";
+import { sha256Hex, textDigest } from "../sections.mjs";
 import { fixtureReadings, answerOf } from "./r37-readings.mjs";
+import { parsesOf } from "./r38-readings.mjs";
+import { KINDS } from "./r38-texts.mjs";
 import { CASES } from "./golden-cases.mjs";
 
 const here = (p) => fileURLToPath(new URL(p, import.meta.url));
 const CHILD = here("./r37-child.mjs");
+const CHILD38 = here("./r38-child.mjs");
 const CACHE = process.env.BIO_FIXTURE_CACHE || path.join(os.tmpdir(), "bio-test-fixtures");
 const GOVINFO = (n) => `https://www.govinfo.gov/content/pkg/${n}/pdf/${n}.pdf`;
 const BOUND_MB = 16;
@@ -108,9 +112,9 @@ test("R37 padding a fixture with a long text that says nothing leaves each type'
 
 /* ------------------------------------------------------------------------------------------- memory */
 
-function child(args, nodeArgs = []) {
+function child(args, nodeArgs = [], file = CHILD) {
   return new Promise((resolve) => {
-    const p = spawn(process.execPath, [...nodeArgs, CHILD, ...args], { stdio: ["ignore", "pipe", "pipe"] });
+    const p = spawn(process.execPath, [...nodeArgs, file, ...args], { stdio: ["ignore", "pipe", "pipe"] });
     let out = "", err = "";
     p.stdout.on("data", (d) => (out += d));
     p.stderr.on("data", (d) => (err += d));
@@ -132,12 +136,12 @@ async function fixture(name, sha) {
 }
 /* The heap the child holds before the work (what the caller holds), then the work under a cap of that plus the bound:
    a reading that needs more dies, and so does this test. */
-async function capped(baseMode, mode, args = []) {
-  const idle = await child([baseMode, ...args], ["--expose-gc"]);
+async function capped(baseMode, mode, args = [], file = CHILD) {
+  const idle = await child([baseMode, ...args], ["--expose-gc"], file);
   assert.equal(idle.code, 0, idle.err);
   const base = JSON.parse(idle.out.trim().split("\n").pop()).baseMB;
   const cap = Math.ceil(base) + BOUND_MB;
-  return child([mode, ...args], ["--expose-gc", `--max-old-space-size=${cap}`, "--max-semi-space-size=2"]);
+  return child([mode, ...args], ["--expose-gc", `--max-old-space-size=${cap}`, "--max-semi-space-size=2"], file);
 }
 
 test("R37 every type's detect, and the parse of those that read lines, over 14 million characters add under 16 MB", async () => {
@@ -190,3 +194,58 @@ test("R37 readText over BUDGET-2024-APP, every type registered, adds under 16 MB
   assert.equal(r.code, 0, `the reading needed more than ${BOUND_MB} MB above what the caller holds: ${r.err.slice(-400)}`);
   assert.deepEqual(JSON.parse(r.out.trim().split("\n").pop()), real.answer);
 });
+
+/* ----------------------------------------------------------------------------------------------------------- R38 */
+
+test("R38 the policy and the regulation type parse every fixture reading as they parsed it before their lines were held as offsets", () => {
+  const gold = JSON.parse(fs.readFileSync(here("./fixtures/r38-answers.json"), "utf8")).readings;
+  const readings = fixtureReadings();
+  assert.ok(readings.length >= 150);
+  for (const r of readings) assert.deepEqual(parsesOf(r), gold[r.id], r.id);
+  assert.equal(Object.keys(gold).length, readings.length);
+});
+
+/* The lines of a text, held as offsets, are the lines `split("\n")` gives, and the digest of a slice read a piece at a
+   time is the digest of the slice normalised whole, whatever the pieces. */
+test("R38 a text's lines held as offsets are the lines split gives, and a digest read in pieces is the whole slice's", () => {
+  const words = ["alpha", " ", "  ", "\n", "\r\n", "\n\n", "\t", "x", "\u{1F600}", "\u00e9", "\u00a0", "\ud800", "\udc00", "lorem ipsum"];
+  let seed = 11;
+  const rnd = (n) => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed % n; };
+  for (let round = 0; round < 300; round++) {
+    let text = "";
+    for (let i = 0, n = rnd(60); i < n; i++) text += words[rnd(words.length)];
+    const lines = text.split("\n");
+    const idx = lineIndex(text);
+    assert.equal(idx.length, lines.length);
+    let at = 0;
+    for (let i = 0; i < lines.length; i++) {
+      assert.deepEqual(idx.at(i), { start: at, end: at + lines[i].length, text: lines[i] });
+      for (let o = at; o <= at + lines[i].length; o++) assert.equal(idx.lineOf(o), i, `${JSON.stringify(text)} @${o}`);
+      at += lines[i].length + 1;
+    }
+    assert.equal(idx.lineOf(text.length + 1), -1);
+    const a = rnd(text.length + 1), b = a + rnd(text.length - a + 1);
+    const want = sha256Hex(text.slice(a, b).replace(/\s+/g, " ").trim());
+    for (const piece of [1, 2, 3, 5, 17, undefined]) assert.equal(textDigest(text, a, b, piece), want, `${JSON.stringify(text.slice(a, b))} piece ${piece}`);
+  }
+  for (const len of [0, 1, 55, 56, 63, 64, 65, 119, 120, 1000, 100_003]) {
+    const t = "x".repeat(len);
+    assert.equal(sha256Hex(t), createHash("sha256").update(t).digest("hex"), String(len));
+    assert.equal(textDigest(t, 0, len, 7), sha256Hex(t));
+  }
+});
+
+/* A text of 13.6 million characters that the type recognises: a fixture document with prose put inside it
+   (./r38-texts.mjs). The parse adds under 16 MB to what the caller holds, and its answer is the one the parse gave before
+   (fixtures/r38-answers.json). */
+for (const kind of KINDS) {
+  test(`R38 the parse of a ${kind} text of 13.6 million characters recognised as ${kind === "policy" ? "a policy" : "a regulation"} adds under 16 MB, and its answer is unchanged`, async () => {
+    const gold = JSON.parse(fs.readFileSync(here("./fixtures/r38-answers.json"), "utf8")).large[kind];
+    const r = await capped("base", "parse", [kind], CHILD38);
+    assert.equal(r.code, 0, `the parse needed more than ${BOUND_MB} MB above what the caller holds: ${r.err.slice(-400)}`);
+    const got = JSON.parse(r.out.trim().split("\n").pop());
+    assert.equal(got.ok, true);
+    assert.ok(got.chars >= 13_600_000);
+    assert.equal(got.digest, gold);
+  });
+}
