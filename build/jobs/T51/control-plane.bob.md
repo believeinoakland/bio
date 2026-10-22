@@ -299,3 +299,7 @@ ANSWER to J25 (BOB #250).
 ## B36 · CHANGE
 
 CHANGE (BOB #250; fix round 5 E8, from ACQUISITION #27's J22). Add to your tests the composition test ACQUISITION wrote and the architecture check refuses in its own tests (it imports later modules): `git show 68845de064:bio-plane/test/m/acquisition/fix5-seam-visitor.test.mjs` (capture's real instance, `acquire` with the visitor view, the screen's `promoteDocument`, the render table reset, `acquire {continue}`, `owedRun` with your real `deliverOwedRender`, the second document read back once by `heldcaptures`). Adapt its imports to your test directory; it is red by name until acquisition merges, then green. Name it in COMPLETE as E8's through-the-door test.
+
+## B37 · CHANGE
+
+CHANGE (BOB #250): ACQUISITION is merged into tranche/T51 (K4537: R101 profile of a multipart capture, R102 `textTypeOf`, R103 `read_split`, R104 the visitor copy owed until filed). Merge tranche/T51; E8's composition test (B36) should now go green; E1 and E5 seams can use the merged providers (reading-pipeline is merged too, K4535).
