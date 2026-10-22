@@ -119,11 +119,31 @@ export function userAgent(env, purpose = "acquire", delegated = null) {
 /* Whether a primary is read back as TEXT for the recognisers and FW-4's digests: single-part, bounded, and a textual
    declared type. One rule, read by acquire when it records a capture and by op=monitor when it compares one (D-60). */
 export const PROFILE_TEXT_MAX = 8 * 1024 * 1024;
+/* R17, R101: the bytes of a capture's head its format is judged from when the capture is held in parts: the first KiB of the first part. */
+export const FORMAT_HEAD = 1024;
 /* D-351: the bound on reading an OpenDocument capture back whole for its container digest. Chosen, not measured. */
 export const ODF_DIGEST_MAX = 8 * 1024 * 1024;
 export function profilesAsText(ct, total, multipart) {
   return !multipart && total <= PROFILE_TEXT_MAX
     && /^(?:text\/|application\/(?:xhtml\+xml|xml|json)|application\/[a-z0-9.+-]*\+xml)/i.test(ct || "");
+}
+
+/** R102 (fix round 5, E5): THE ONE RULE for reading a file a member brought in as text, shared by the upload and the knock's pull.
+ *  `textTypeOf({bytes, type, name})` answers the text content type the bytes are to be profiled and read as, else null: the
+ *  declared `type` when it is a text type (`profilesAsText`), or, when none is declared, the type a `.txt`, `.md` or `.csv` name
+ *  stands for; and only for bytes that are text, valid UTF-8 with no NUL, within what a profile reads as text (`PROFILE_TEXT_MAX`).
+ *  A declared type that is not text is never overridden by a name. Pure; never throws. */
+const NAME_TEXT_TYPES = Object.freeze({ txt: "text/plain", md: "text/markdown", csv: "text/csv" });
+export function textTypeOf({ bytes = null, type = null, name = null } = {}) {
+  try {
+    if (!(bytes instanceof Uint8Array) || bytes.length > PROFILE_TEXT_MAX) return null;
+    const named = typeof type !== "string" || type === "" ? /\.(txt|md|csv)$/i.exec(typeof name === "string" ? name : "") : null;
+    const readAs = named ? NAME_TEXT_TYPES[named[1].toLowerCase()] : type;
+    if (typeof readAs !== "string" || readAs === "" || !profilesAsText(readAs, bytes.length, false)) return null;
+    if (bytes.includes(0)) return null;
+    new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+    return readAs;
+  } catch { return null; }
 }
 
 /** R17's `digests`: THE ONE FUNCTION that decides whether a document's normalised digests can be trusted to assert
@@ -290,7 +310,7 @@ function scopedFetch(target, { headers, credential, env, purpose, follow = true 
 const clockNow = () => performance.now();
 function openTimings(given) {
   const t = given && typeof given === "object" && !Array.isArray(given) ? given : {};
-  t.start = clockNow(); t.end = null; t.stages = {}; t.running = null;
+  t.start = clockNow(); t.end = null; t.stages = {}; t.running = null; t.split = null;
   return t;
 }
 function stageBegin(t, name) { stageEnd(t); t.running = { name, since: clockNow() }; }
@@ -303,14 +323,23 @@ async function timed(t, name, work) {
   stageBegin(t, name);
   try { return await work(); } finally { stageEnd(t); }
 }
+/* R103 (fix round 5, E10): inside `read`, the milliseconds the source's download (`download`), the hash (`hash`) and the store's
+   writes (`store`) took; each is measured where it runs and never nests with another. */
+function splitOpen(t) { t.split = { download: 0, hash: 0, store: 0 }; }
+async function splitTimed(t, part, work) {
+  const since = clockNow();
+  try { return await work(); } finally { if (t.split) t.split[part] += clockNow() - since; }
+}
 /** R95: `{total_ms, stages: {<stage>: ms}}` of an `acquire`, read at any moment: whole milliseconds, every stage floored and
- *  the total ceiled, so the stages sum to no more than the whole; a stage still running names itself as `running`. */
+ *  the total ceiled, so the stages sum to no more than the whole; a stage still running names itself as `running`. R103: once the
+ *  body is being read, `read_split` states, within `read`, the milliseconds of `download`, `hash` and `store`. */
 export function stageTimes(t) {
   if (!t || typeof t !== "object" || !t.stages) return { total_ms: 0, stages: {} };
   const now = clockNow(), stages = {};
   for (const [k, v] of Object.entries(t.stages)) stages[k] = Math.floor(v);
   if (t.running) stages[t.running.name] = Math.floor((t.stages[t.running.name] || 0) + (now - t.running.since));
-  return { total_ms: Math.ceil((t.end ?? now) - t.start), stages, ...(t.running ? { running: t.running.name } : {}) };
+  const split = t.split ? { download: Math.floor(t.split.download), hash: Math.floor(t.split.hash), store: Math.floor(t.split.store) } : null;
+  return { total_ms: Math.ceil((t.end ?? now) - t.start), stages, ...(split ? { read_split: split } : {}), ...(t.running ? { running: t.running.name } : {}) };
 }
 
 /* R47: the longest `for` (a question's id) a member may name. */
@@ -1181,10 +1210,13 @@ async function acquireRun(cap, body0, opts, t) {
   let keptParts = [], keptSize = 0, firstHead = null;
   /* R10: a part is exactly 8 MiB (the last one the remainder), whatever sizes the stream's chunks arrive in. */
   const part = async (buf) => {
-    const psha = hex(await crypto.subtle.digest("SHA-256", buf));
-    const heldBefore = !!(await ev.head(psha));
-    if (!heldBefore) await ev.put(psha, buf);
-    if (!parts.length) firstHead = buf.slice(0, 64);   // R17's ZIP magic is read from it, so the first part is not read back
+    const psha = await splitTimed(t, "hash", async () => hex(await crypto.subtle.digest("SHA-256", buf)));
+    const heldBefore = await splitTimed(t, "store", async () => {
+      const had = !!(await ev.head(psha));
+      if (!had) await ev.put(psha, buf);
+      return had;
+    });
+    if (!parts.length) firstHead = buf.slice(0, FORMAT_HEAD);   // R17's format and ZIP magic are read from it, so the first part is not read back
     parts.push({ sha256: psha, bytes: buf.length });
     partHeldBefore.push(heldBefore);
     if (keptParts) { keptSize += buf.length; if (keptSize > MULTIPART_KEEP_MAX) keptParts = null; else keptParts.push(buf); }
@@ -1209,11 +1241,12 @@ async function acquireRun(cap, body0, opts, t) {
   const reader = res.body && res.body.getReader ? res.body.getReader() : null;
   if (!reader) return answer(502, { ok: false, reason: "NO_BODY", locator });
   stageBegin(t, "read");
+  splitOpen(t);
   for (;;) {
     /* R10: a body that breaks off mid-stream is a fetch that did not complete, answered by name, never a throw; the
        parts already stored are content-addressed and named by no document, as TOO_LARGE's are. */
     let chunk;
-    try { chunk = await reader.read(); }
+    try { chunk = await splitTimed(t, "download", () => reader.read()); }
     catch (e) {
       if (archiveMemento) return answer(502, archiveBroke(String(e && e.message || e)).payload);
       await noteOutcome("fetch_failed", null);
@@ -1225,7 +1258,7 @@ async function acquireRun(cap, body0, opts, t) {
     if (done) break;
     total += value.length;
     if (total > MAX) { oversize = true; break; }
-    whole.update(value);
+    await splitTimed(t, "hash", async () => whole.update(value));
     if (driveHead && driveHeadBytes < driveHead.length) {
       const take = Math.min(value.length, driveHead.length - driveHeadBytes);
       driveHead.set(value.subarray(0, take), driveHeadBytes);
@@ -1727,7 +1760,12 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
      ooxml's listing over the stored parts as a range source answering whole with neither an OPC content-type map nor an
      ODF `mimetype` in it, so an office or OpenDocument file is never profiled `zip`; a declared type never makes one. */
   if (!formatBytes && Array.isArray(parts) && parts.length) {
-    const z = await zipPastBound(ev, parts, firstPart);
+    /* R101 (fix round 5, E1): a capture held in parts is judged from the first KiB of its first part, as a single part is, so an
+       upload that declares no type (a PDF, an office file) is not `undetermined`; the head is the one the caller holds, else a
+       range read of the stored part (the head alone is transferred, never the part). */
+    const head = await headOf(ev, parts, firstPart);
+    if (head) profile.format = detectFormat(head, ct || null);
+    const z = await zipPastBound(ev, parts, head);
     if (z) profile.format = z;
     else if (profile.format && profile.format.format === "zip")
       profile.format = { format: "undetermined", confidence: "none",
@@ -1743,10 +1781,18 @@ export async function profileOf({ ev, sha, ct = null, total = 0, multipart = fal
 /** R17: whether bytes held in `parts` (`[{sha256, bytes}]`, in order) are a plain ZIP archive, read without holding them
  *  whole: the ZIP magic in the first part, then `ooxml.listArchive` over the parts as a range source. Answers the format
  *  registry's shape for `zip`, or null. Never throws. */
-async function zipPastBound(ev, parts, firstPart = null) {
+/** R101: the first `FORMAT_HEAD` bytes of the first of `parts` (`[{sha256, bytes}]`), the caller's `firstPart` when it holds them, else a
+ *  range read of the stored part; null when the part is not there or cannot be read. Never throws. */
+async function headOf(ev, parts, firstPart = null) {
+  if (firstPart instanceof Uint8Array && firstPart.length) return firstPart.subarray(0, FORMAT_HEAD);
   try {
-    let head = firstPart instanceof Uint8Array ? firstPart : null;
-    if (!head) { const first = await ev.get(parts[0].sha256); head = first ? new Uint8Array(await first.arrayBuffer()) : null; }
+    const first = await ev.get(parts[0].sha256, { range: { offset: 0, length: FORMAT_HEAD } });
+    const b = first ? new Uint8Array(await first.arrayBuffer()) : null;
+    return b && b.length ? b.subarray(0, FORMAT_HEAD) : null;
+  } catch { return null; }
+}
+async function zipPastBound(ev, parts, head = null) {
+  try {
     if (!head || !hasZipMagic(head.subarray(0, 4))) return null;
     const l = await listArchive(partsSource(ev, parts));
     if (!l.ok) return null;
@@ -1920,7 +1966,23 @@ async function finishRender(cap, { session, opts, t }) {
                                { ...opts, renderResume: resume, ...(lost ? { renderFinal: true, renderWaitMs: renderReserveMs(RENDER_DEFAULTS) + 2000 } : {}) }, t);
   if (out.status === 200 || (out.body && out.body.reason === "RENDER_FAILED")) {
     /* R100: the alarm's own run keeps the session until the rendered document is delivered (`owedRun`) */
-    if (!(opts && opts.keepSession)) { try { cap.dropCaptureSession({ session: session.session }); } catch { /* harmless */ } }
+    if (!(opts && opts.keepSession)) {
+      /* R104 (fix round 5, E8): a member's call that completes the render answers the document, and that answer is the only thing that
+         carries it to the record; when the caller never files it (the door's bound passed, the tab closed) the copy would be lost. With the
+         plane's ledger handed in, the session stays, owing the finished document, until `owedRun` has seen it filed or delivered it. */
+      const owing = out.status === 200 && out.body && out.body.document && oweOf(cap, opts);
+      let kept = false;
+      if (owing) {
+        try {
+          const state = { queue: [], ...(session.state && typeof session.state.opened_by === "string" ? { opened_by: session.state.opened_by } : {}),
+                          render_done: { sha256: out.body.document.capture.sha256, since: stampSecond(), document: out.body.document } };
+          const saved = cap.saveCaptureSession({ session: session.session, locator: session.locator, primarySha: session.primarySha,
+            primaryFile: session.primaryFile, base: session.base, state, ttlMs: OWED_SESSION_TTL_MS });
+          kept = !!(saved && saved.saved !== false);
+        } catch { kept = false; }
+      }
+      if (!kept) { try { cap.dropCaptureSession({ session: session.session }); } catch { /* harmless */ } }
+    }
     PENDING_RENDERS.delete(session.session);
   }
   return out;
@@ -1968,6 +2030,20 @@ export async function owedRun(cap, entry, opts = {}) {
     const t = openTimings(opts && opts.timings);
     const run = { ...(opts || {}), cls: null, member: false, sessMember: null };
     try {
+      /* R104: a visitor copy a member's call finished and answered. Filed (the register holds its digest) it is done; else it is delivered
+         as a finished render is, and the session goes once it is. */
+      if (ld.state && ld.state.render_done && typeof ld.state.render_done === "object") {
+        const done = ld.state.render_done;
+        let filed = false;
+        try { const h = await cap.provenance?.registerHolds?.({ sha: done.sha256 }); filed = !!(h && h.registered === true); } catch { filed = false; }
+        if (!filed) {
+          if (typeof opts.deliver !== "function") return { ok: true, done: false, outstanding: 1, reason: "DELIVERY_NOT_HANDED" };
+          const given = await opts.deliver({ answer: { ok: true, document: done.document }, session: entry.session });
+          if (!(given && given.ok === true)) return { ok: true, done: false, outstanding: 1, reason: "DELIVERY_REFUSED" };
+        }
+        try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ }
+        return { ok: true, done: true };
+      }
       if (ld.state && ld.state.render_pending) {
         if (typeof opts.deliver !== "function") return { ok: true, done: false, outstanding: 1, reason: "DELIVERY_NOT_HANDED" };
         const out = await finishRender(cap, { session: ld, opts: { ...run, keepSession: true }, t });
