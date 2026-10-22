@@ -1,6 +1,6 @@
 # plane (T51)
 
-**Status** · session_018hyuuzAysk4N5zXFHkNnwL · depth 2 · COMPLETE · handled B30
+**Status** · session_018hyuuzAysk4N5zXFHkNnwL · depth 2 · COMPLETE · handled B32
 
 ## Record (PLANE #41, T51-125)
 
@@ -370,3 +370,19 @@ My seam test in fix4b-r77.test.mjs ("R77 B29 (seam, control-plane)") is red by n
 ## J24 · COMPLETE
 
 COMPLETE (PLANE #49, R77) after B29/B30: plane hands acquisition.owedRun {storeName, env, deliver} with deliver = controlPlane.deliverOwedRender when exported; seam test red by name until CONTROL-PLANE #46 merges it (ruled B30). Rest as J21/J22.
+
+## Record: CHANGE B31, B32 (PLANE #49)
+
+**Red 1 (`adminendorse: registered after the first read (R81)`), root cause**: my `pending.mjs` imported `control-plane/index.mjs` at load (for `deliverOwedRender`), and control-plane reads the op tables as it loads, before `plane/register.mjs` registered them; `fixture.mjs` -> `register.mjs` -> `pending.mjs` order. A dynamic `import()` at the call cured the load but left the bundled plane's top-level await unsettled (`fleet-bundle.mjs` `measureStart` never answered: `t47` R43 and `t48` hung at 240 s, which also stalled the whole suite at 244 results). Fixed for good: `store.mjs` imports `deliverOwedRender` (after `register.mjs`) and hands it to `pendingOf(ctx, {deliver})`; `pending.mjs` imports nothing from control-plane. Red then green: `fix4-r75` 0 tests run -> 7 of 7; `t47` and `t48` timeout -> 9 and 13 of 13. B32's ten files (`disclosures`, `fix4-r75`, `fix4-seam`, `roster`, `t46`-`t51`, `release`) load and pass in the full run; `release` has one red, R24, below.
+**Red 2 (R123 F2, a 40 MB upload)**: not plane's. The ledger works: the keep ends, a `reading` entry follows in the same tick, `readHeld` writes the reading (the probe printed it). The reading is marked `failure: "final"`: "the capture is 41943040 bytes in 5 parts, over the 25165824 B a format entry is handed here, so it was not read". Owner: `reading-pipeline/index.mjs:1494` (`bytesOf`, `tooBig` at `WHOLE_READ_MAX` 24 MiB, R37), against `control-plane/t51-reading-follows.test.mjs:106-121` which expects text out of a 40 MB file. Plane's own 40 MB test (`fix4b-r77`, keep at 15 s, promoted at 90 s) is green.
+**B32 seam** (`fix4b-r77-owners.test.mjs`, 2 tests, green, through the real alarm with the real owners): (b) a 60-page scan, `ocr` entry by extraction's real `readHeld({sha, kind:"ocr"})`, 24 pages a pass until none is left, every page indexed; a member that stays down leaves work owed; (a) a pending render, acquisition's real `owedRun` and control-plane's real `deliverOwedRender`: the rendered document is promoted beside its shell, the session dropped, the entry ends. Ledger changes it forced: an `owed` answer that read no pages backs off (an `ocr` pass that read pages goes on at once); a `reading` that leaves scan pages owes an `ocr` entry besides; `subresources` uses acquisition's exported `owedRun`. The tests are red on the old ledger (it fails at import); I did not mutate the new ledger to show them red.
+**Suites**: plane suite 308 tests, 307 pass, 1 fail: R24 (`release.test.mjs`, `screen.objective.purpose` not in the words list: stale setup-words `rows.mjs`, red on the tranche before my change). `fix4b-r77` 8, `fix4b-r77-owners` 2, `fix4-r75` 7, `l75` 3: all green. `t51-reading-follows`: F1 and F6 green, F2 red (owner above). Checks: format 0, architecture 0, coverage plane 77 of 77, ownership 0, words 18421 unchanged.
+Size (session_018hyuuzAysk4N5zXFHkNnwL): test runs 30, module lines 360
+
+## J25 · REPORT
+
+REPORT (R123 F2, the 40 MB upload; owner is not plane). The ledger ends the keep in a reading: keep entry -> `reading` entry in the same tick -> `readHeld` writes the reading. The stored reading is `failure: "final"`, basis "the capture is 41943040 bytes in 5 parts, over the 25165824 B a format entry is handed here, so it was not read". Owner: reading-pipeline `index.mjs:1494` (`bytesOf` -> `tooBig` at `WHOLE_READ_MAX` = 24 MiB, R37/D5). The test `control-plane/t51-reading-follows.test.mjs:106-121` expects the text of a 40 MB plain-text file. Either D5's bounded-piece reading must reach plain text over 24 MiB (the plan said office, ODF and CSV), or the test's file must be one the ceiling allows (a PDF the 24 MiB ceiling accepts cannot also exceed the 32 MiB keep bound, so F2's keep path would then be tested with a final-stated reading only).
+
+## J26 · COMPLETE
+
+COMPLETE (PLANE #49) for B31 and B32. Red 1 root-caused (control-plane imported at load before register.mjs; a dynamic import then left the bundle's top-level await unsettled and hung t47 and t48) and fixed: store.mjs hands deliverOwedRender to the ledger, pending.mjs imports nothing from control-plane; fix4-r75 0 -> 7 of 7, t47 9, t48 13. Red 2 is not plane's: REPORT J26 names reading-pipeline index.mjs:1494. B32's real-owner seam tests (ocr by extraction's readHeld, a pending render by owedRun and deliverOwedRender) are green. Plane suite 308, 307 pass, 1 red (R24, stale setup-words rows, red on the tranche before my change). Record has the details and the Size line.
