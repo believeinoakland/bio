@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { standard, P, Q, V, SECRET } from "./fixture.mjs";
+import { caseAuthoringOf } from "../../../src/case-authoring/index.mjs";
 
 const draft = (w, extra = {}, author = "ann", project = P) => w.r.act({ act: "draft", author, project, statement: "S", ...extra });
 const grant = (w, d, n, author = "ann", until) => w.r.act({ act: "grant", author, draft: d.draftId, recipient: `R${n}`, secretSha: SECRET(n),
@@ -39,17 +40,16 @@ test("R19: a list whose case-authoring cannot answer states nulls for every draf
   assert.deepEqual(w.r.list({ project: P, viewer: V("ann") }).drafts[0].editions, { prepared: null, published: null, case: null });
 });
 
-test("R19 (C48): a draft prepared for a new case states that case id as editions.case, with no preparation it states case null (editions, case)", () => {
+test("R19 (C48): a draft prepared for a new case states that case id as editions.case, from the real draftEditions, with no preparation it states case null (editions, case)", () => {
   const w = standard();
   const prepared = draft(w, { newCase: true }), never = draft(w);
-  w.ca.editions = ({ draft: row }) => {
-    const id = row && typeof row === "object" ? row.draft_id : row;
-    return id === prepared.draftId ? { prepared: 1, published: null, case: "CASE-2026-0003" }
-         : { prepared: null, published: null, case: null };
-  };
+  /* the unsigned preparation publishCase writes for the draft (its case_documents row, publication R40) */
+  w.st.sql.exec(`INSERT INTO case_documents (case_id, edition, text, draft_id) VALUES (?, ?, ?, ?)`,
+                "CASE-2026-0003", 1, "prepared", prepared.draftId);
+  w.ca.editions = (args) => caseAuthoringOf(w.host, { record: w.record, membership: w.membership, storage: w.st }).draftEditions(args);
   const by = Object.fromEntries(w.r.list({ project: P, viewer: V("ann") }).drafts.map((d) => [d.draft_id, d.editions]));
-  assert.equal(by[prepared.draftId].case, "CASE-2026-0003", "the case the preparation belongs to");
-  assert.equal(by[never.draftId].case, null, "control: a draft never prepared");
+  assert.deepEqual(by[prepared.draftId], { prepared: 1, published: null, case: "CASE-2026-0003" });
+  assert.deepEqual(by[never.draftId], { prepared: null, published: null, case: null }, "control: a draft never prepared");
 });
 
 test("R43: sharedDraftsByProject answers, for each project asked, the count of the drafts the viewer may see that are shared under R8 and the newest grant's instant; a project the viewer may not see, or none, is {0, null}", () => {
