@@ -36,7 +36,7 @@ const answering = (held) => (c) => (c.route === "promote" ? ok({ ok: true, bundl
 
 test("R123 (promote, F1): a document promoted with no reading is read at once when it fits the bound: `readHeld` is asked for its digest, once, and the answer is the promotion's as it was (no `reading_pending`, nothing written down)", async () => {
   const w = world({ answer: answering(ok({ ok: true, read: true, bundle_id: "INFO-2026-0001-x", found: true })) });
-  const r = await promote(w, promoteBody([provDoc({ bytes: 9 * MB, type: "text/plain" })]));
+  const r = await promote(w, promoteBody([provDoc({ bytes: 3 * MB, type: "text/plain" })]));   /* fix round 6, G5: text follows by the ledger above 3 MiB (was 20 MiB) */
   assert.equal(r.status, 200, r.text);
   assert.equal(r.json.result.ok, true);
   assert.equal(r.json.result.reading_pending, undefined);
