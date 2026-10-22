@@ -644,3 +644,8 @@ session_01DitFG3JNMsgKzedjcc5NW1,job,screens-inquiry,5789996,138679,82,30626,,8,
 session_017vgaPSzbnT5yf4ULaFwgm1,job,screens-daily,31289121,712727,232,80956,,14,4240
 session_01X5bP76qJ2j296J7FB51rWp,job,control-plane,73127534,453614,415,131276,,46,4620
 session_01VCzBnHwCus2JPyJihrWGsD,job,case-authoring,8939925,161909,110,31059,,12,3012
+session_01B7MEiXsVRUtMmYX6BygGKT,job,pdf-reader,4973020,123658,76,23747,,9,4505
+session_01Y4v2DQazrd7Uhg2kPv1nLA,job,acquisition,18940674,270879,156,63337,,14,3973
+session_01Uu76H7JzhRxSdMcBjFLc6j,job,capture,20714098,232490,196,59000,,17,4345
+session_01XZXdT5nUD7u924MLb4BPh1,job,scheduler,5524360,129413,78,21408,,14,905
+session_01TvicQZEyi2UWLiFnXQfFaz,job,pdf-worker,6090950,118741,88,28676,,9,217
