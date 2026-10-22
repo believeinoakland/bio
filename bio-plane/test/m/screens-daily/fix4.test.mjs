@@ -134,3 +134,38 @@ for (const [where, path] of [["queue", "/app/queue"], ["home", "/app"]]) {
     assert.deepEqual(await has(AUTH({ summary: "Who issued this?" })), [word("queue.source.untitled", { date: dmy("2026-10-04") })], "control");
   });
 }
+
+/* ---------- R95 (C70): the Queue says what each number counts, over the real shell in Chromium ---------- */
+
+import { measure } from "./measure.mjs";
+const ITEMS = [...Array.from({ length: 72 }, (_, i) => ({ id: "TSK-" + i, class: "OBLIGATION", kind: "check", summary: "Check " + i, assignee: "mai", subject: { kind: "bundle", id: "INF-" + i }, options: [], disposition: { instead: "taskresolve" }, case: { ungrouped: true, ancestors: [] } })),
+  ...Array.from({ length: 7 }, (_, i) => ({ id: "FND-" + i, class: "FINDING", kind: "x", summary: "Noticed " + i, subject: { kind: "bundle", id: "INF-N" + i }, options: [], case: { ungrouped: true, ancestors: [] } }))];
+const GROUP = (actor, n) => Array.from({ length: n }, (_, i) => PICK("INF-H" + i, "https://city.example/p" + (i % 3), "Photo " + i, actor));
+const NEW3 = [1, 2, 3].map((id) => ({ id, status: "new" }));
+const PAGE = () => ({ badge: document.querySelector(".cs-rail a .count")?.textContent || "", mast: document.querySelector('.cs-mast [data-kind="todo"]')?.textContent || "",
+  main: document.getElementById("cs-main").innerText.replace(/\s+/g, " ") });
+const queueAt = (held, inbox) => measure({ path: "/app/queue", width: 1280, ready: "#cs-main .cs-row", measure: PAGE,
+  plane: { whoami: ok({ ...MEMBER }), queue: ok({ items: ITEMS, item_count: 79 }), heldcaptures: ok({ ok: true, held, state: "held", truncated: false, next: null }), inbox: ok({ inbox: inbox }), memberlist: ok({ members: [] }) } });
+
+test("R95 (C70): with 46 captures held and 79 items the bell and the sidebar read 79, and the page says what 79 counts and, apart, what 46 and the Inbox's 3 count", { timeout: 120000 }, async () => {
+  const m = await queueAt(GROUP("other", 46), NEW3);
+  assert.equal(m.badge, "79", "the sidebar");
+  assert.equal(m.mast, word("shell.todo", { n: "79" }), "the bell");
+  assert.ok(m.main.includes(word("screen.queue.count.many", { n: "79" })), "the page counts 79 items");
+  assert.ok(m.main.includes(word("shell.queue.waiting", { n: "79", todo: "72", noticed: "7", status: "0" })), "and says what they are");
+  const line = word("screen.home.waiting.counts", { held: "46", inbox: "3" });
+  assert.ok(m.main.includes(line), "and says what the 46 and the 3 count");
+  assert.ok(m.main.indexOf(line) < m.main.indexOf(word("screen.queue.count.many", { n: "79" })), "the sentence about the doors comes with the doors, above the list");
+  assert.ok(m.main.includes(word("act.release.label.queue")) && m.main.includes(word("screen.held.name")), "the door to Held captures is still there");
+});
+
+test("R95 (C70) control: with no held capture and no knock neither the sentence nor the door is drawn, the items' sentence is; a member's own vouch to-dos, drawn in the list, are counted in the page, the bell and the sidebar alike", { timeout: 120000 }, async () => {
+  const none = await queueAt([], []);
+  assert.equal(none.badge, "79");
+  assert.ok(!none.main.includes(word("screen.home.waiting.counts", { held: "0", inbox: "0" })) && !none.main.includes(word("screen.held.name")), "no door and no counts of doors");
+  assert.ok(none.main.includes(word("shell.queue.waiting", { n: "79", todo: "72", noticed: "7", status: "0" })));
+  const mine = await queueAt(GROUP("mai", 46), []);
+  assert.equal(mine.badge, "82", "three places to vouch for, each a to-do of hers, in the sidebar");
+  assert.equal(mine.mast, word("shell.todo", { n: "82" }), "and in the bell");
+  assert.ok(mine.main.includes(word("screen.queue.count.many", { n: "82" })) && mine.main.includes(word("shell.queue.waiting", { n: "82", todo: "75", noticed: "7", status: "0" })), "and on the page: the same 82");
+});

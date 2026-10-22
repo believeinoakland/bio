@@ -66,7 +66,7 @@ const INVITE = ["screen.members.invite.shown", "screen.members.invite.noemail"];
 const ROUTED_ACTS = (screen) => [...ACTS(screen, ["adminendorse", "projectowneradd", "expertiseconfirm", "taskforward"]), `act.owed_taskdecide.label.${screen}`, "act.owed_taskdecide.does"];
 
 // R65: the doors to Held captures and the Inbox, on Home and the queue; on Home, the line that says how many wait for a member to look.
-const DOORS_TO = (screen) => [`act.release.label.${screen}`, "screen.held.name", "screen.inbox.name", ...(screen === "home" ? ["screen.home.waiting.counts"] : [])];
+const DOORS_TO = (screen) => [`act.release.label.${screen}`, "screen.held.name", "screen.inbox.name", "screen.home.waiting.counts", ...(screen === "queue" ? ["shell.queue.waiting"] : [])];
 
 // R17 (B21): the to-dos to vouch for the photos she captured (the dashboard's sentence for one photo at a place, Home's having none) and the
 // statements the vouching asks; approving a letter reads only its act's words.
