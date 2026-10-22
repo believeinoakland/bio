@@ -191,10 +191,10 @@ function render(cs, view) {
 /* every act names its trail and fact; a hold-strip act receives the picked keys (`extra.picked`) */
 const acts = rereading([
   { op: "recordfact", label: "act.recordfact.label.money",
-    /* C8, R4 (money R29): a period money cannot read is `MONEY_BAD_PERIOD`, its own code: its sentence, then the reason the owner gives (the fiscal
+    /* C8, R4 (money R29): a period money cannot read is `MONEY_BAD_PERIOD`, its own code: the design's nearest held sentence for dates that cannot be recorded (K4476; the row of its own is T52's), then the reason the owner gives (the fiscal
        key and the body it was asked for), as record data */
     refusals: { MONEY_BAD_PERIOD: function (refusal, cs) {
-      return cs ? cs.w("refusal.MONEY_BAD_PERIOD") + (typeof refusal.detail === "string" && refusal.detail.trim() ? " " + cs.esc(refusal.detail.trim()) : "") : "";
+      return cs ? cs.w("refusal.BAD_VALIDITY") + (typeof refusal.detail === "string" && refusal.detail.trim() ? " " + cs.esc(refusal.detail.trim()) : "") : "";
     } },
     send(view, el, cs) {
       const amount = String(cs.value("mf-amount") || "").trim(), as_read = String(cs.value("mf-asread") || "").trim();
@@ -369,7 +369,7 @@ const MONEY_KEYS = [
   "screen.money.g.hunch", "screen.money.g.nosource",
 ];
 
-const words = ["screen.money.name", "screen.money.purpose", "refusal.MONEY_BAD_PERIOD",
+const words = ["screen.money.name", "screen.money.purpose", "refusal.BAD_VALIDITY",
   ...["recordfact", "createset", "include", "exclude", "reconcile", "committedagainstpaid", "authoritychain", "findin", "actioncreate", "createevent", "gradenote", "acquire", "checkrequest", "hypothesishold"]
     .flatMap((op) => ["act." + op + ".label.money", "act." + op + ".does"]),
   ...["figure", "from", "to-where-it-went", "when-it-moved", "stage", "period", "amount", "source", "in-this-trail"].flatMap((c) => ["column.money." + c + ".name", "column.money." + c + ".shows"]),

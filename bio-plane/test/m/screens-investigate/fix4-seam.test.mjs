@@ -84,7 +84,7 @@ test("R4 C8 (words) Money, the real plane: a fiscal year the team's profile cann
   assert.ok(typeof answer.detail === "string" && answer.detail.length > 10, "with its reason");
   const slot = main(p).querySelector('[data-gap="refused"]');
   assert.ok(slot, "the refusal is drawn beside the act");
-  assert.ok(slot.textContent.includes(word("refusal.MONEY_BAD_PERIOD")), "in money's own sentence");
+  assert.ok(slot.textContent.includes(word("refusal.BAD_VALIDITY")), "in the design's held sentence for dates that cannot be recorded");
   assert.ok(slot.textContent.includes(answer.detail), "and the reason the plane gives");
   assert.ok(!main(p).textContent.includes(word("refusal.BAD_PERIOD")), "never the sentence of a follow's days (following's code)");
 });
