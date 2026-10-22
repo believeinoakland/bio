@@ -160,3 +160,31 @@ Size (session_01PbhX4XrTyKrafF9MPnkqXP): test runs 3, module lines 3498
 Commit `31e0334725` (the three module files), merge `7c950f73fc`, pushed to `job/T51/doctypes`.
 
 Size (session_01KR42421Ri9anbvRDhf8oEd): test runs 8, module lines 3496
+
+## J9 · COMPLETE
+
+COMPLETE · doctypes R37 (fix round 4, K4467) · DOCTYPES #8
+
+**What changed.** New `doctypes/windows.mjs`: line walks (`eachLine`, `lineTable`, `countLines`) and windows of the flattened text (`flatWindows`, `scanFlatMany`, `flatHas/Count/First/Prefix`, `mergedHits`; 256K-character pieces cut at whitespace-run ends, 4096 padding, matches counted by first character). I read windows of `ctx.text` (offsets stay `ctx.locate`'s); `ctx.pages` is not needed.
+- `meeting-minutes.mjs` detect (five phrases in one windowed pass, masthead and roster by line count) and parse (`lineTable`, no `split`, no `flatten(raw)`, recurrence counted on demand).
+- `meeting-agenda.mjs` detect (line walks) and parse (`lineTable`).
+- `staff-report.mjs` detect and parse: `memoHeader` reads the first 4096 flattened characters plus one question about the rest; `reportSections`, title lines and recommendation by line; openers by `flatFirst`; sign-off tested on the text as it stands.
+- `regulation.mjs` detect and parse: `ownCaption` and caption/code counts via `mergedHits`, `countIn` for RECITAL/CODIFYING; `sections.mjs` `codeHeadingsIn` walks lines.
+- `policy.mjs` / `policy-header.mjs`: detect refuses without an anchor before any line list (`headerAnchored`); `readAt` reads the lines around an anchor, widened until the reading stays inside them.
+- `meeting-calendar.mjs` detect tests the text as it stands (the pattern holds no entity character); `staff-directory.mjs` detect: windowed date count, phone set, first five lines.
+
+**Failing-first.** `bounded.test.mjs` "R37 ... over 14 million characters add under 16 MB": RED on the tip's types (V8 out-of-memory under base+16 MB), GREEN now. "readText over BUDGET-2024-APP ... adds under 16 MB" (docprofile R38 merged, tranche @ 262f9ae408): runs and GREEN; answers equal the tip's.
+
+**Measurements** (BUDGET-2024-APP, 13,598,363 characters, MB above what the caller holds, heap capped at base+N): detect before -> after: minutes 135 -> <=4, staff_report 109 -> <=4, regulation 109 -> <=6, policy 18 -> <=4, agenda 9 -> <=4, calendar and directory <=4. parse before -> after: minutes 172 -> 6, staff_report 109 -> 6, agenda 13 -> <=4, regulation 109 -> 18, policy 107 -> 107. Whole `readText` before R38 merged: 135 -> <=24. Court and budget types (courtlistener_docket, cpuc_proceeding, ecourt_roa, financial_report, budget_book, budget_table): each <=4 MB; nothing to place (no QUESTION).
+
+**Answers unchanged.** `fixtures/r37-answers.json` (taken on the tip before the change by `make-r37-answers.mjs`): every type's detect and the registry's verdict with the winner's parse equal on all 164 fixture readings; `readText` on BUDGET-2025-BUD, -PER and -APP equal the tip's; padding tests (leading/trailing/within, cuts at 1, 251, 262,100, 262,143, ...) equal; primitives checked against whole-text passes with windows of 1-64 characters.
+
+**Deferred, with the smallest thing needed.** Parse of a *recognised* policy or regulation still splits its whole text into line lists (`sections.mjs` `linesOf`, `policy.mjs` `linesOf`, `readOutline`, `readResponsibilities`): policy parse 107 MB, regulation parse 18 MB on the APP text. The APP reads as `generic`, so neither runs. Needed: BOB's call that a recognised policy/instrument of that size is in scope; then a job that holds lines as offsets (as `lineTable` does).
+
+**Users.** `impact.mjs tranche/T51 HEAD`: 42 modules, 647 files; the 643 outside doctypes: tests 5690, pass 5676, fail 12. The same files fail on the tranche tip (re-run there: 11 fail plus agent-worker/requirements.test.mjs): R29/R24/R17/R61 in affordances, journey-check, plane, screens-daily, store-door and agent-worker, none touching doctypes. Generated artifacts: `bio-plane/dist/bio-plane.bundled.mjs` (carries the doctypes) is stale; BOB regenerates it.
+
+**Checks** (process repo): doctypes suite 51 pass, 0 fail, 0 skip; `checks/words.mjs ... doctypes` 0 (unkeyed 0, same as before); format 0 failures; architecture doctypes 41 files, 0 failures; coverage 37 of 37 ids named; ownership 0 failures; `checks/run.mjs` whole-repo failures are other modules' (case-authoring imports, 9 coverage ids elsewhere); `setup-words build.mjs --check`: stale rows only.
+
+Commits `0a64a728be` (the change), merge of the tranche `cc30fc2263`, pushed to `job/T51/doctypes`.
+
+Size (session_0148uDjHuj3piiQwEKdKFmzX): test runs 9, module lines 3788
