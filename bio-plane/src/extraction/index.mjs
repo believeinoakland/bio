@@ -394,7 +394,7 @@ const pieceOf = (out) => {
                total: p.chars_total ?? null, words: Number.isFinite(p.words) ? p.words : 0 } : null;
 };
 /* (fix round 6, G13; R90) a reading whose units came from a text (reading-pipeline R32, R33): the only kind read in pieces. */
-const textReading = (r) => !!r && (r.text_container === "text" || r.text_container === "html");
+const textReading = (r) => !!r && typeof r === "object";
 /* R82 (F9): the author the ledger's own continuation of a re-read is stamped with. */
 const PLANE_AUTHOR = "plane:pending-work";
 
@@ -784,6 +784,11 @@ export class Extraction {
        from its start as the first piece, which replaces what the wire left (the reading itself stands) */
     const restart = st.cursor == null;
     const out = await this.read(document, { storeName, env, budget: CAPTURE_TEXT_CAPTURE_BOUND, pieces: { cursor: restart ? null : safeJson(st.cursor) } });
+    if (out.refused && out.refused.code === "NOT_PIECEWISE") {
+      /* (G14) a format the reader cannot continue by a cursor: its index is stated as partial, with the runs it skipped named, once */
+      this.#sql.exec(`UPDATE capture_text_state SET more=0, cursor=NULL WHERE capture_sha=?`, digest);
+      return left("READING_HELD");
+    }
     if (out.refused) return { ok: true, read: false, final: true, why: String(out.refused.why || out.refused.code).slice(0, 160) };
     if (!out.piece) {
       /* not a text the reader reads in pieces (a PDF over the index's bound): its partial index is stated as it is, once */
@@ -1283,6 +1288,10 @@ export class Extraction {
     const page = withheld ? null : this.unitsOf(row.capture_sha, { after: Number.isInteger(after) ? after : null });
     const text_units = page ? page.units.map((u) => ({ extent: u.extent, reference: u.ref, text: u.text, truncated: u.truncated })) : undefined;
     const next = page ? (page.next ?? null) : undefined;
+    /* (G14; K4579) what the capture's text index holds of it, stated: never "full" for a text the bounds cut, never "none" for one
+       refused whole. `units_total` is the units indexed so far. */
+    const completeness = withheld ? undefined : this.#completenessOf(row.capture_sha, reading);
+    const unitsTotal = withheld ? undefined : this.#one(`SELECT count(*) c FROM capture_text WHERE capture_sha=?`, row.capture_sha).c;
     /* R77 (T51; K4103; amends R27): `bytes` is the stored size of the capture's original as the register holds it, absent
        when the register holds no row for it, and withheld with the bundle as `text_units` is (a bundle a viewer may not
        see names no size of its own). */
@@ -1320,9 +1329,25 @@ export class Extraction {
                 repair it by under this release, states it may be repaired (the member's press, "Read it", is offered for it). */
              ...(notReadAsText(reading) && !this.#repairTried(row.capture_sha) ? { repairable: true } : {}),
              ...(text_units ? { text_units, next } : {}),
+             ...(completeness ? { completeness, units_total: unitsTotal } : {}),
              ...(bytes === undefined ? {} : { bytes }),
              ...(format === undefined ? {} : { format }),
              ...(progress && !withheld ? progress : {}) };
+  }
+
+  /** (G14; R91) The reading's completeness: `state` `whole` (every unit offered is indexed, nothing more follows), `partial` (units left over
+   *  a bound, skipped or unaddressable, or more to read; the runs skipped named), `stated` (the document was not read, and the reading says
+   *  why: `failure`, `why`), or `none` (nothing offered). */
+  #completenessOf(sha, reading) {
+    const st = this.#one(`SELECT * FROM capture_text_state WHERE capture_sha=?`, sha);
+    const failedFinal = reading && reading.found === false && reading.failure === "final" && !(Array.isArray(reading.entities) && reading.entities.length);
+    if (!st) return failedFinal ? { state: "stated", failure: "final", why: reading.basis ?? null } : { state: "none" };
+    const skipped = this.#rows(`SELECT first_seq, last_seq, units, first_ref, last_ref, side FROM capture_text_skipped WHERE capture_sha=? ORDER BY first_seq`, sha)
+      .map((k) => ({ from: k.first_ref, to: k.last_ref, units: k.units, side: k.side, first_seq: k.first_seq, last_seq: k.last_seq }));
+    const counts = { offered: st.offered, written: st.written, over_bound: st.over_bound, unaddressable: st.unaddressable,
+                     truncated: st.truncated, skipped_named: st.skipped_named };
+    const state = failedFinal && !st.written ? "stated" : st.more || st.state === "partial" || st.truncated ? "partial" : st.state;
+    return { state, counts, skipped, ...(state === "stated" ? { failure: "final", why: reading.basis ?? null } : {}) };
   }
 
   /** R27 (T43; N862; DEC-190 (1), (2)): the pages a reading with pages could not make out, ascending: those holding no
@@ -1341,10 +1366,6 @@ export class Extraction {
     for (const u of this.#rows(`SELECT extent, text FROM capture_text WHERE capture_sha=? AND extent_kind='pdf-page'`, captureSha)) {
       const e = safeJson(u.extent);
       if (e && Number.isInteger(e.page) && glyphCount(u.text) > 0) read.add(e.page);
-    }
-    for (const k of this.#rows(`SELECT first_extent, last_extent FROM capture_text_skipped WHERE capture_sha=?`, captureSha)) {
-      const a = safeJson(k.first_extent), b = safeJson(k.last_extent);
-      if (a && b && Number.isInteger(a.page) && Number.isInteger(b.page)) for (let p = a.page; p <= b.page; p++) read.add(p);
     }
     const pages = Array.from({ length: n }, (_, p) => p).filter((p) => !read.has(p));
     const picture = PICTURE_FORMATS.includes(captureFormat) || PICTURE_FORMATS.includes(reading.text_container);

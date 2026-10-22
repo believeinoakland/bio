@@ -378,15 +378,25 @@ test("R90 (G13): a text promoted with its units over the acquire wire's bound is
   assert.equal(count(w, "reading_history", d), 1, "the reading stands: one is kept");
 });
 
-test("R90 (control): only a text is read again in pieces: a PDF whose index is over its bound stays as stated, a text given its piece state is not restarted, a text within the bound is not touched", async () => {
+test("R90 R91 (G13, G14): a reading of any format whose index is over its bound is read again in pieces; one the reader cannot continue by a cursor ends as stated partial, once; a piece state given or a reading within the bound is not touched", async () => {
   for (const container of ["pdf", "docx"]) {
     const { w, d, write } = await wirePartial({ container });
     const owed = [];
     w.x.registerOwe(async (e) => { owed.push(e); return { ok: true }; });
     write();
     await new Promise((r) => setTimeout(r, 10));
-    assert.deepEqual(owed, [], container);
-    assert.equal(w.one(`SELECT more FROM capture_text_state WHERE capture_sha=?`, d).more, 0);
+    assert.deepEqual(owed, [{ kind: "reading", sha: d }], container);
+    assert.equal(w.one(`SELECT more FROM capture_text_state WHERE capture_sha=?`, d).more, 1);
+    const was = w.x.read;
+    w.x.read = async () => ({ refused: { code: "NOT_PIECEWISE", why: "not a text" } });
+    const r = await w.x.readHeld({ sha: d, kind: "reading" });
+    assert.deepEqual([r.read, r.why], [false, "READING_HELD"], "the entry ends");
+    const got = w.x.readingFor(d, "class:admin");
+    assert.equal(got.completeness.state, "partial", "stated partial, never whole");
+    assert.equal(got.completeness.counts.over_bound, 4);
+    assert.equal("more" in got, false);
+    w.x.read = was;
+    assert.equal((await w.x.readHeld({ sha: d, kind: "reading" })).why, "READING_HELD", "once");
   }
   const { w, d, wireReading, units } = await wirePartial();
   const owed = [];
@@ -401,6 +411,43 @@ test("R90 (control): only a text is read again in pieces: a PDF whose index is o
   fit.w.x.writeReading({ bundleId: "INFO-1", captureSha: fit.d, reading: { found: true, entities: [], text_container: "text" }, textUnits: [{ extent: { kind: "doc-para", para: 0, run: null }, seq: 0, text: "short" }], composed: true });
   await new Promise((r) => setTimeout(r, 10));
   assert.deepEqual(fitOwed, []);
+});
+
+test("R91 (G14): op=reading states the capture's completeness and its units so far: whole, partial with the runs skipped, stated for a document refused whole, none; a hidden bundle states none of it", async () => {
+  const { w, d } = await pieces({ pieceUnits: [3, 3] });
+  await w.x.readHeld({ sha: d, kind: "reading" });
+  let got = w.x.readingFor(d, "class:admin");
+  assert.deepEqual([got.completeness.state, got.units_total], ["partial", 3], "being read: partial, three units so far");
+  await w.x.readHeld({ sha: d, kind: "reading" });
+  got = w.x.readingFor(d, "class:admin");
+  assert.deepEqual([got.completeness.state, got.units_total, got.completeness.counts.written, got.completeness.skipped], ["whole", 6, 6, []]);
+  const cut = await wirePartial();
+  cut.write();
+  const c = cut.w.x.readingFor(cut.d, "class:admin").completeness;
+  assert.deepEqual([c.state, c.counts.over_bound], ["partial", 4]);
+  const refused = await nParts({ n: 3 });
+  refused.w.x.writeReading({ bundleId: "INFO-1", captureSha: refused.d, composed: true,
+    reading: { found: false, entities: [], failure: "final", basis: "the capture is 41502904 bytes in 5 parts, over the 25165824 B a format entry is handed here, so it was not read" } });
+  const s = refused.w.x.readingFor(refused.d, "class:admin").completeness;
+  assert.deepEqual([s.state, s.failure, /41502904/.test(s.why)], ["stated", "final", true], "stated with its reason, never none or full");
+  const never = fresh();
+  assert.equal(never.x.readingFor(sha("x"), "class:admin").found, false);
+  w.s.sql.exec(`UPDATE bundles SET project='PROJ-9' WHERE bundle_id='INFO-1'`);
+  const hidden = w.x.readingFor(d, "member:outsider");
+  assert.equal("completeness" in hidden || "units_total" in hidden, false);
+});
+
+test("R91 (G14): the pages a skipped run covers are unread, not read: a PDF reading whose index skipped pages over its bound names them in unread_pages", async () => {
+  const w = fresh();
+  bundle(w.s, "B-1", { type: "information" });
+  const d = sha("a pdf over the bound");
+  const pg = (page) => ({ extent: { kind: "pdf-page", page }, seq: page, text: `page ${page} words` });
+  w.x.writeReading({ bundleId: "B-1", captureSha: d, composed: true,
+    reading: { found: false, entities: [], basis: "b", page_count: 5, text_source: null },
+    textUnits: [pg(0), pg(1)], textUnitsOverBound: 0,
+    textUnitsSkipped: [{ first: pg(3).extent, last: pg(4).extent, first_seq: 3, last_seq: 4, units: 2 }] });
+  const got = w.x.readingFor(d, "class:admin");
+  assert.deepEqual(got.unread_pages, [2, 3, 4], "page 2 holds no unit, pages 3 and 4 were skipped: all unread");
 });
 
 test("R90 R89 (G13, R-OLD): the start-up repair owes the ledger each text the index holds only in part and each text read in pieces with more to read, once, and marks the first to be read again from its start", async () => {
@@ -485,4 +532,18 @@ test("R90 (R-OLD): a store made before the piece state gains its columns at the 
   const got = w.x.readingFor(d, "class:admin");
   assert.equal("more" in got, false, "an old state says nothing of pieces");
   assert.equal(w.x.unitsOf(d).state, keep.state);
+});
+
+test("R22 (G15): a sheet read in row blocks is indexed block by block: units of one sheet with different row ranges are each kept, found by search, their addresses distinct; a repeated range is counted unaddressable", async () => {
+  const w = fresh();
+  bundle(w.s, "B-1", { type: "information" });
+  const d = sha("a long sheet");
+  const block = (from, to, extra = "") => ({ extent: { kind: "sheet-range", sheet: "Sheet1", range: `A${from}:C${to}` }, seq: from,
+    text: `name,place,amount\nrow ${from} council${extra}` });
+  const r = w.x.writeReading({ bundleId: "B-1", captureSha: d, composed: true, reading: { found: false, entities: [], basis: "b" },
+    textUnits: [block(1, 500), block(501, 1000), block(1001, 1500, " LASTROW"), block(501, 1000)] });
+  assert.deepEqual([r.indexed.written, r.indexed.unaddressable], [3, 1]);
+  const refs = w.rows(`SELECT ref FROM capture_text WHERE capture_sha=? ORDER BY seq`, d).map((x) => x.ref);
+  assert.equal(new Set(refs).size, 3);
+  assert.equal(w.rows(`SELECT rowid FROM capture_text_fts WHERE capture_text_fts MATCH 'LASTROW'`).length, 1);
 });
