@@ -15,7 +15,6 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { Miniflare } from "miniflare";
 import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
-import { doc as pdfDoc } from "../pdf-reader/pdf.mjs";
 
 const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));
 const MB = 1024 * 1024;
@@ -23,12 +22,27 @@ const ADM = "adm-follows-0123456789abcdef", PASSWORD = "the founder's long passw
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 const later = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/* a PDF of `megabytes` MB whose text layer says `words`: one page of text and a stream the page never names, filling the file out */
+/* a PDF of `megabytes` MB whose text layer says `words`: one page of text and a stream the page never names, filling the file out. The
+   reader is xref-free, so none is written; the font maps the codes 0x20-0x7E to themselves. */
 function pdfOf(words, megabytes) {
   const pad = new Uint8Array(Math.floor(megabytes * MB));
   let x = 0x9e3779b9;
   for (let i = 0; i < pad.length; i++) { x = (x * 1664525 + 1013904223) >>> 0; pad[i] = 0x41 + ((x >>> 24) % 26); }   /* letters: no "endstream" in it */
-  return pdfDoc([{ content: `BT /F1 12 Tf 72 700 Td (${words}) Tj ET` }], { objs: { 500: { data: pad } } });
+  const te = (t) => new TextEncoder().encode(t);
+  const stream = (n, dict, data) => [te(`${n} 0 obj\n<< ${dict} /Length ${data.length} >>\nstream\n`), data, te("\nendstream\nendobj\n")];
+  const plain = (n, body) => [te(`${n} 0 obj\n${body}\nendobj\n`)];
+  const toUni = "/CIDInit /ProcSet findresource begin 1 begincodespacerange <00> <FF> endcodespacerange 1 beginbfrange <20> <7E> <0020> endbfrange end";
+  const parts = [te("%PDF-1.7\n"),
+    ...plain(1, "<< /Type /Catalog /Pages 2 0 R >>"), ...plain(2, "<< /Type /Pages /Kids [100 0 R] /Count 1 >>"),
+    ...plain(10, `<< /Type /Font /Subtype /TrueType /BaseFont /Plain /FirstChar 32 /Widths [${Array(95).fill(500).join(" ")}] /ToUnicode 11 0 R >>`),
+    ...stream(11, "", te(toUni)),
+    ...plain(100, "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 600 800] /Resources << /Font << /F1 10 0 R >> >> /Contents 101 0 R >>"),
+    ...stream(101, "", te(`BT /F1 12 Tf 72 700 Td (${words}) Tj ET`)),
+    ...stream(500, "", pad), te("trailer\n<< /Root 1 0 R >>\n%%EOF\n")];
+  const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+  let at = 0;
+  for (const p of parts) { out.set(p, at); at += p.length; }
+  return out;
 }
 
 let served = {};
