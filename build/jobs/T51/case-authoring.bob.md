@@ -1,6 +1,6 @@
 # BOB to case-authoring (T51)
 
-**Read** · handled J19
+**Read** · handled J20
 
 ## B1 · START
 
@@ -210,3 +210,7 @@ Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD`
 ## B22 · ANSWER · re J19
 
 ANSWER (BOB #253): J19 read. case-carriage's copyNow merges just before you (merge order 7, 8); your CHANGE comes at that merge: merge the tranche, run the seam test, record COMPLETE again.
+
+## B23 · CHANGE
+
+CHANGE (BOB #253): case-carriage's `copyNow` is merged into tranche/T51 (748383ed5e). Merge tranche/T51 into your branch, run your seam test (`copy-now.test.mjs`) against the real one, and record COMPLETE again.

@@ -670,6 +670,13 @@ function asciiClean(s) {
   return true;
 }
 
+/** The number of `\n` in a string: the lines a record's text adds beyond its first. */
+function countLineBreaks(s) {
+  let n = 0;
+  for (let i = s.indexOf("\n"); i !== -1; i = s.indexOf("\n", i + 1)) n++;
+  return n;
+}
+
 const UTF8_FATAL = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 
 /** One field's text, or why it has none. `field` is as `csvParts` walked it:
@@ -721,6 +728,10 @@ function csvText(parts) {
 
   const undetermined = [];
   const lines = [];
+  /* One 1-based row number per line of the sheet's text (`lineRows`, G15, K4579): empty records add no line, and a
+     quoted line break makes one record several lines, so a line's index is not its row. Same length as the lines
+     of `text`, on the whole-file and the streamed path alike. */
+  const lineRows = [];
   /* R30: one typed cell per field holding a value — every csv field is
      `text`, the format declaring no type (`declared` null), and a field the
      encoding cannot read keeps its entry with a null value. A body read in
@@ -766,7 +777,12 @@ function csvText(parts) {
     /* TAB-joined, which is what `xlsxText` and `odf.mjs` emit for a sheet's
        row: one text stream shape across every spreadsheet container, so a
        consumer does not learn three. */
-    if (vals.length) lines.push(vals.join("\t"));
+    if (vals.length) {
+      const line = vals.join("\t");
+      lines.push(line);
+      /* a value with a line break in it (a quoted field) is several lines of the text, all of this record's row */
+      for (let n = 1 + countLineBreaks(line); n > 0; n--) lineRows.push(row);
+    }
   };
   if (parts.stream) {
     const walk = createRecordWalk(parts.delimiter.delimiter, addRecord);
@@ -788,7 +804,7 @@ function csvText(parts) {
        format never fixed. The USED range is measured and emitted beside it. */
     rows: null, cols: null, usedRows, usedCols,
     range: usedSheetRange(CSV_SHEET_NAME, usedRows, usedCols),
-    text, cells, undetermined,
+    text, lineRows, cells, undetermined,
   };
   return {
     ...base,
