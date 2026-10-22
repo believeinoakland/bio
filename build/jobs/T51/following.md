@@ -92,3 +92,7 @@ Size (session_01CGcpL8Q6GG6DotmRFDtXaz): test runs 6, module lines 2210
 **Suite and checks.** `node --test --test-force-exit bio-plane/test/m/following/`: 118 pass, 0 fail. Scheduler and notice-producers (the callers of `followTick`/`followDue`/`follows`): 278 pass, 0 fail. `build/plan/impact.mjs origin/tranche/T51 HEAD`: names 16 modules because `DECLARED_OPS` sits in the changed file (unchanged by this job); the callers were run. Process checks (`checks/run.mjs`): format 0, architecture 0, coverage 0 (6,623 of 6,623 ids named), channels 0, words 0 (inline 0, plain 0, testcopy 0). `checks/ownership.mjs following tranche/T51 job/T51/following`: 0 failures.
 
 Size (session_01RqXFza4HAdeS4MWPxQeGug): test runs 9, module lines 2281
+
+## J5 · COMPLETE
+
+G21 applied: a followed Legistar body is read whole across ticks by cursor (every page of events and matters; 200-fetch bound continued, not silent); follows() answers body_read {read,total,more,whole,phase}. Failing-first: 120 meetings + 1,500 matters over two pages (red: 200 fetch calls in all, 0 matters, page 2 never; green: whole in a few ticks) and a 250-item meeting. following 118 pass 0 fail; scheduler+notice-producers 278 pass; checks run: format/architecture/coverage/channels/words 0 failures; ownership 0. No REPORT, nothing deferred. Words owed (stand-in): 'read N of M meetings'. Requirement lines proposed in the record (R2, R12, R14). Size (session_01RqXFza4HAdeS4MWPxQeGug): test runs 9, module lines 2281.
