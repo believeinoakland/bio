@@ -598,7 +598,7 @@ export class Extraction {
     const out = await readDocument(document, {
       evidence: this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null,
       env: e, storeName, view: this.view(), planeVersion: e.VERSION || null,
-      liveCalibration: (q) => this.#liveCalibration(q), ...(budget === undefined ? {} : { budget }) });
+      liveCalibration: (q) => this.#liveCalibration(q), ...(budget === undefined ? {} : { unitsBudget: budget }) });
     this.recordComposed(out.reading, document && document.capture && document.capture.sha256);
     return out;
   }
