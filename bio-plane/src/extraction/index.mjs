@@ -374,8 +374,9 @@ const failedTransiently = (r) => !!r && r.found === false && r.failure === "tran
 /* (fix round 5, E1) reading-pipeline's sentence for a document it did not read as text, in either of its two causes. */
 const notReadAsText = (r) => !!r && r.found === false && r.failure === "final" && typeof r.basis === "string"
   && !(Array.isArray(r.entities) && r.entities.length)
-  && [word("reading-pipeline.index.multipart"), word("reading-pipeline.index.non_textual_large")]
-       .some((why) => r.basis === word("reading-pipeline.index.document_not_read_text", { why }));
+  && [localize("reading-pipeline.index.multipart", "multipart"),
+      localize("reading-pipeline.index.non_textual_large", "non-textual or too large")]
+       .some((why) => r.basis === localize("reading-pipeline.index.document_not_read_text", "the document was not read as text ({why}), so no reading was attempted", { why }));
 /* R82 (F9): the author the ledger's own continuation of a re-read is stamped with. */
 const PLANE_AUTHOR = "plane:pending-work";
 
