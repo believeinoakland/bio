@@ -1,6 +1,6 @@
 # office-readers (T51)
 
-**Status** · session_011kR2cnk3N8a4db55MmC9TW · depth 2 · WORKING · handled B6
+**Status** · session_011kR2cnk3N8a4db55MmC9TW · depth 2 · COMPLETE · handled B6
 
 ## Completion
 
