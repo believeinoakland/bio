@@ -110,7 +110,7 @@ function chain() {
     casedrafts: ok({ kind: "review-drafts", project: P, drafts: [{ draft_id: d.draftId, case: { case_id: null }, created_by: "alice", updated_by: "alice" }] }),
     reviewcopy: (req) => ok(req.body && req.body.secret ? r.copy({ secretSha: shaOf(req.body.secret), bySecret: true }) : r.copy({ draft: d.draftId, viewer: V("alice") })),
   };
-  return { P, d, plane };
+  return { P, d, plane, r, V };
 }
 
 test("R75 R61 C46 the case editor and the outside reader draw a question concluded by a project's adoption and one concluded by `conclude` in the conclusion's words, never 'Not concluded yet'; the cites list names the question by its title", async () => {
@@ -251,3 +251,23 @@ test("R13 R77 E4 control: a draft whose roster cannot be read (the document stat
   assert.equal(signDialog(again), null, "and no signing was asked of the key");
 });
 import { signDialog } from "./fixtures.mjs";
+
+test("R73 C49 G12c (fix round 6, seam) the ceremony of a project with four drafts reads the real review's batch once for the three others, each named by the scope its own copy states", async () => {
+  const { P, d, plane, r, V: view } = chain();
+  const made = [d];
+  for (const scope of ["Second scope", "Third scope", "Fourth scope"]) {
+    const x = r.act({ act: "draft", author: "alice", project: P, targets: [Q], scope });
+    assert.equal(x.ok, true, JSON.stringify(x).slice(0, 200));
+    made.push(x);
+  }
+  const ids = made.map((x) => x.draftId);
+  const p = await open(`/app/ceremony/${P}/${ids[3]}`, { plane: { ...plane,
+    casedrafts: ok({ kind: "review-drafts", project: P, drafts: ids.map((id, i) => ({ draft_id: id, case: { case_id: null }, created_by: "alice", updated_by: "alice", created_at: `2026-10-0${i + 1}T10:00:00Z` })) }),
+    reviewcopy: (req) => ok(req.query.drafts ? r.copyMany({ drafts: req.query.drafts, viewer: view("alice") }) : r.copy({ draft: req.query.draft, viewer: view("alice") })) } });
+  assert.equal(p.byOp("reviewcopy").length, 2, "the draft shown, and one batch for the rest");
+  const batch = p.byOp("reviewcopy").filter((q) => q.query.drafts);
+  assert.equal(batch.length, 1);
+  assert.deepEqual(batch[0].query.drafts.split(",").sort(), ids.slice(0, 3).sort());
+  const labels = p.doc.getElementById("drafts-ceremony").querySelectorAll("option").map((o) => o.textContent);
+  for (const scope of ["Second scope", "Third scope", "Fourth scope"]) assert.ok(labels.some((t) => t.includes(scope)), scope);
+});
