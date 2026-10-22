@@ -6398,3 +6398,18 @@ decided: 2026-10-22 · the design session (P17)
 the design: (1) Every control at 390 px keeps a 44 px target (the design's phone rule stands; the controls under 30 px on Home, Queue, Find and Projects are a defect of the shell's stylesheet, not a new rule); a link inside running text is exempt, with about 24 px by padding (DEC-412 (4), `visual-language/components.css`). (2) The submit is "Store this login" (`screen.capture.logins.store`, DEC-403); the agency and the office are two fields, "The agency" and "The office within it" (DEC-412 (3)). (3) Two numbers, each saying what it counts: the bell and the sidebar count queue items only; the vouch band draws its own number apart, "Captures waiting for a vouch: {n}. They are not counted in your queue." (`screen.queue.vouchband.apart`), matching K4429 (the band's rows are not queue items). (4) Rows: `act.readheld.label.document` "Read it now"; `screen.document.readnow.refused.NO_HOME`, `.NO_WHOLE_OBJECT`; `screen.document.cite.repair.says`; `screen.capture.reading.pending`.
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-414").
 owed: BOB: the shell's 44 px rule reaching the small controls (T52 under K4269); the six keys read in their modules.
+
+### DEC-415 · answered
+raised: 2026-10-22 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (Bob: "Is there a means by which we can simplify the Cloudflare signup and configuration process and confirm that the configuration is correct before trying to deploy CS for one of these outside teams?")
+for: Bob
+question: How does a non-technical founder get a Cloudflare account ready, and how is it confirmed before installing?
+why it is Bob's: a requirement on the installer and its experience (P17; K3447, K3456).
+provisional: the installer's first page lists what is needed; Cloudflare's permission page; the preflight (installer R70) checks plan, containers, limits and the name only once the install has started, and a missing card shows only when a bucket fails; each stop says what to fix; nothing guides signup.
+alternative: B, the guide only; C, A plus Cloudflare's partner programs (Civicsmith opening accounts for teams), against the sovereign model.
+recommendation: A, a "Get ready" guide and a "Check my account" button.
+reversal cost: low.
+response: "A, but the 'Check my account' button is a gate that must be passed in order for the install to proceed. This allows the installer to help the team prepare for the install rather than hav[e] it fail midway through."
+decided: 2026-10-22 · Bob
+the design: as folded in `BIO_Distribution_v0_1.md` §5, "RULED 2026-10-22": "Get ready" (five plain steps, each opening the exact Cloudflare page; links checked on a schedule); "Check my account" after Cloudflare's permission page (every preflight check at once, plus the payment method by a throwaway probe; nothing kept; a checklist with each line's fix and link; re-runnable); the gate: "Install now" only when every line is ready; the install's own stops stay as a second line. Before any outside team installs.
+reasoning recorded in: this entry; `docs/architecture/BIO_Distribution_v0_1.md` §5.
+owed: BOB: requirements (installer: a check-only run of R70's checks plus a payment-method probe, creating nothing that stays, answering a per-check list; the install refused unless that list is all ready within the session; the guide's link check), placed before the first outside install, with its date effect reported to Bob; Bob: registering the sixth OAuth scope (account-logs.read, K3815) on the OAuth client, if the check is to cover request logging. Design: `install` drawn with "Get ready", "Check my account" and the gate (the next DEC).
