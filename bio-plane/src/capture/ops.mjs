@@ -221,6 +221,11 @@ export async function captureOp(op, req, url, env, store, h) {
     /* G4 (fix round 6; R73): a capture that is kept is never a failed act. A reading that throws or answers nothing is a deferral the
        answer carries (`reading_pending`, the digest, a `diag` naming the failure, not drawn), logged once for the deploy to name; a
        deferral the reader itself answers is relayed unchanged. */
+    /* G27 (B27; K4604): while the acquire's render runs on in the object (`render.state` `pending`) the object's memory is the render's, so the
+       kept capture is not read inline: it is answered at once as a deferral by choice (`reading_pending`, no `diag`, nothing failed) and the
+       door owes the reading to the ledger as for any deferral. */
+    if (acquired.answer.render && acquired.answer.render.state === "pending")
+      return json({ ...acquired.answer, reading_pending: true, sha: acquired.answer.document.capture?.sha256 ?? null, note: ACQUIRE_GRADE_NOTE }, 200);
     const attempt = async (stub) => {
       try { return await h.readAcquired(acquired.answer, stub); }
       catch (e) { return { failed: e }; }

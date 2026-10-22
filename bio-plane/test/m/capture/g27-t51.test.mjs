@@ -102,3 +102,32 @@ test("R73 G27 (fix round 6): a readAcquired that itself throws is retried on a f
   const b = await (await quiet(() => captureOp("acquire", post(), new URL("https://p/?op=acquire"), env, store, h))).json();
   assert.deepEqual([b.document.reading, b.reading_pending, attempts, n], [{ read: true, units: 3 }, undefined, 2, 2]);
 });
+
+/* ---- B27 (K4604; G27): a deferred render in flight leaves the object's memory to it ---- */
+
+const keptWith = (render) => ({ ...kept, ...(render ? { render } : {}) });
+const doorWith = (answerBody) => {
+  const acquireStub = { fetch: async () => json({ ok: true, result: { status: 200, body: answerBody } }) };
+  let reads = 0, stores = 0;
+  const h = { json, storeSilent, doAnswer, storageAbsent: () => json({}, 503), cls: "member", member: true, sessMember: "member:ann", storeName: "bio",
+    readAcquired: async (answer) => { reads++; return { body: { ...answer, document: { ...answer.document, reading: { read: true } } } }; } };
+  return { reads: () => reads, stores: () => stores, run: () => captureOp("acquire", post(), new URL("https://p/?op=acquire"), env, () => { stores++; return acquireStub; }, h) };
+};
+
+test("R73 G27 (fix round 6, B27): an acquire whose answer says its render is pending is not read inline: the object is left to the render, and the kept capture is answered 200 with reading_pending, its digest and the render as the acquire gave it, no diag (a deferral by choice, not a failure)", async () => {
+  const d = doorWith(keptWith({ state: "pending", session: "rs_1" }));
+  const res = await d.run();
+  assert.equal(res.status, 200);
+  const b = await res.json();
+  assert.deepEqual([b.ok, b.reading_pending, b.sha, b.render, b.diag, b.document.capture.sha256], [true, true, H("ab"), { state: "pending", session: "rs_1" }, undefined, H("ab")]);
+  assert.deepEqual([d.reads(), d.stores()], [0, 1], "no read, and no second stub");
+  assert.equal(typeof b.note, "string", "the grade note is carried as for any acquire");
+});
+
+test("R73 G27 (fix round 6, B27, controls): an acquire with no render, or a render that is not pending (owed, waiting, deferred), is read inline as before", async () => {
+  for (const render of [null, { state: "owed", session: "rs_1" }, { state: "waiting", content: "undetermined" }, { state: "deferred", content: "undetermined" }]) {
+    const d = doorWith(keptWith(render));
+    const b = await (await d.run()).json();
+    assert.deepEqual([b.reading_pending, b.document.reading, d.reads()], [undefined, { read: true }, 1], JSON.stringify(render));
+  }
+});
