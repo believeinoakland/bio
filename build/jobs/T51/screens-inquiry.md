@@ -309,3 +309,17 @@ COMPLETE (SCREENS-INQUIRY #20, fix round 4, wave 2, re B30; B31, B32 read). tran
 
 QUESTIONS: J22 answered by B34 (stand-ins by the nearest held row stand; none open).
 Size (session_01GorqF8RpPw9d9N8LqysoYx): test runs 6, module lines 6452
+
+## J24 · QUESTION
+
+QUESTION · SCREENS-INQUIRY #21 · re B35 (START). Best readings below; I carry on with them and the tests that need an unmerged provider stay red by name.
+
+**G6 (the digest).** On the real plane (Miniflare, a 5-part, 41,942,040 B upload promoted by the screen's own `promoteDocument`, probe 2026-10-22) the document's `data/provenance.json` `documents[0].capture.sha256` is already the WHOLE (a05b3f74…); only `heldcaptures` row's `capture.sha256` is a part (1562e3a4…, capture's REGISTER_FIRST, capture's job). The page never reads the row's digest, so the walker's "Nothing here" + OCR act on 0136 comes from the page reading the stored `final` statement (`found:true`, `failure:"final"`, no words) as `textState "none"` (document.mjs:226, :468-473). I fix that (statement drawn with its size, no OCR act, nothing offered after a final). The old 0125-class page (`final` "(multipart)") is the same path. No digest change needed in the page; tell me if you know of a live record whose provenance document carries a part.
+
+**G8 (`repairable`).** I read it as a top-level boolean `repairable: true` on the `op=reading` answer (extraction R27's answer), set only for a held `final` "not read as text" reading whose bytes now detect. "Read it" (`readheld`, stand-in label `document.read.title`) is drawn for `repairable: true` and for an unread copy; not for a plain final.
+
+**G13 (`more`).** I read it as a top-level `more: true` on the `op=reading` answer while the text is incomplete, with progress `read_through` of `total` when the answer carries them, else `words_read` of `words_total` (already drawn). While `more` the page draws "being read" with that progress (stand-ins: `state.loading`, `screen.document.text.read`; rows owed `screen.document.reading.beingread`, `.coverage`) and never a complete reading; passages read stay citable, said so.
+
+**G12c (strength batch).** I read `inquirystrength?ids=A,B,C` (comma-joined, as capture's `bundle_ids`) as answering `{ok:true, results:{<id>: <that id's single answer, or its refusal as the single read gives it>}}`, one entry per asked id. The START to strength says "one result per id" without the shape: if strength's job chooses another, tell me or tell it.
+
+If extraction or strength choose differently, the seam tests (red by name) show it and I follow the merged shape.
