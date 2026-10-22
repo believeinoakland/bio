@@ -20,11 +20,11 @@ const namesBy = (op) => (answer, field) => answer?.ok === false && (NAMES[op][fi
 const sameVerdict = (x, y) => x?.ok === y?.ok && (x.code ?? null) === (y.code ?? null);
 const asAnn = (w, query = "") => (op, body) => reviewOps(w.r, new URL(`http://x/?author=ann&viewer=${encodeURIComponent(V("ann"))}${query}`), body)[op]();
 
-test("R42: DECLARED_OPS names the four ops a screen sends, each with the rows op-declarations and op-grades hold", () => {
-  assert.deepEqual(Object.keys(DECLARED_OPS).sort(), ["casedraft", "reviewcomment", "reviewgrant", "reviewrevoke"]);
+test("R42: DECLARED_OPS names the four ops a screen sends and the two reads it batches (G12c, batch.test.mjs), each with the rows op-declarations and op-grades hold", () => {
+  assert.deepEqual(Object.keys(DECLARED_OPS).sort(), ["casedraft", "casedrafts", "reviewcomment", "reviewcopy", "reviewgrant", "reviewrevoke"]);
   assert.deepEqual(DECLARED_OPS.casedraft.fields.accepts, ["draft", "project", ...REVIEW_DRAFT_FIELDS], "the fields a draft keeps, never a second list");
   for (const [op, row] of Object.entries(DECLARED_OPS)) {
-    assert.equal(row.mutating, true, op);
+    assert.equal(row.mutating, !["casedrafts", "reviewcopy"].includes(op), op);
     assert.equal(Object.isFrozen(row.fields.accepts) && Object.isFrozen(row.fields.requires), true, op);
     for (const stamp of ["author", "viewer", "bySecret", "secretSha"]) assert.ok(!row.fields.accepts.includes(stamp), `${op}: ${stamp} is the control plane's`);
   }
