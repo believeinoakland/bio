@@ -97,6 +97,8 @@ export const MARKS_LAPSED_MAX = 200;
 export const obscuredKey = (store, sha) => `${store}/obscured/${sha}`;
 /** R15: the most queued documents one `copyBatch` derives: its default and its bound. */
 export const DOCUMENT_COPY_BATCH_MAX = 10;
+/** R15 (T51; K4570 G9): the most `copyNow` reads of one document, 2 MiB; a larger one is the alarm's. */
+export const COPY_NOW_MAX_BYTES = 2 * 1024 * 1024;
 /** R15: how long after a failed read of the evidence store a queued document is tried again. */
 export const DOCUMENT_COPY_RETRY_MS = 300000;
 
@@ -1259,13 +1261,21 @@ export class CaseCarriage {
     const now = this.#nowMs();
     const due = this.#rows(`SELECT capture, queued, tried FROM document_copy_queue ORDER BY queued, capture`)
       .filter((q) => q.tried == null || !(Date.parse(q.tried) + DOCUMENT_COPY_RETRY_MS > now)).slice(0, n);
-    const out = { ok: true, copied: 0, clean: 0, public: 0, refused: 0, failed: 0 };
+    const { skipped, ...out } = await this.#copyRows(due, ev, Infinity);   // nothing is skipped without a bound
+    return { ...out, remaining: this.#queued() };
+  }
+
+  /* R15: the outcomes of `due`, each recorded as it is made: `{ok, copied, clean, public, refused, failed, skipped}`.
+     A document over `maxBytes` (its register count, or the store's size) is `skipped`, left queued and untouched. */
+  async #copyRows(due, ev, maxBytes) {
+    const out = { ok: true, copied: 0, clean: 0, public: 0, refused: 0, failed: 0, skipped: 0 };
     for (const q of due) {
       let r = null;
-      try { r = await this.#copyOne(q.capture, ev); } catch { r = null; }
+      try { r = await this.#copyOne(q.capture, ev, maxBytes); } catch { r = null; }
       try {
         const at = this.#when(null);
-        if (!r || r.failed) {
+        if (r && r.skipped) out.skipped++;
+        else if (!r || r.failed) {
           this.sql.exec(`UPDATE document_copy_queue SET tried=? WHERE capture=?`, at, q.capture);
           out.failed++;
         } else this.record.transact(() => {
@@ -1278,7 +1288,32 @@ export class CaseCarriage {
         });
       } catch { out.failed++; }
     }
-    return { ...out, remaining: this.#queued() };
+    return out;
+  }
+
+  /** R15 (T51; K4570 G9): the awaited, bounded `copyBatch` for named documents, for an act that must not answer
+   *  `pending` for a small file (`case-authoring`'s prepare). Of `shas` it takes those queued (R15, R16), each as
+   *  `copyBatch` makes it, except a document over `maxBytes` (default and bound COPY_NOW_MAX_BYTES), by its register
+   *  byte count or the store's size: that is answered `skipped`, not read, and stays queued for the alarm. It ignores
+   *  the retry delay (the act asked) and is serial with `copyBatch`. Answers `{ok: true, copied, clean, public, refused,
+   *  failed, skipped, remaining}`, or DOCUMENT_COPY_NO_STORE as `copyBatch` does. Never rejects; `documentCopy` stays
+   *  synchronous. */
+  copyNow(args) {
+    const { shas = [], maxBytes = COPY_NOW_MAX_BYTES } = args && typeof args === "object" ? args : {};
+    return this.#serially("\u0000copyBatch", () => this.#copyNow(shas, maxBytes)).catch(() =>
+      ({ ok: true, copied: 0, clean: 0, public: 0, refused: 0, failed: 0, skipped: 0, remaining: this.#queued() }));
+  }
+
+  async #copyNow(shas, maxBytes) {
+    let ev = null;
+    try { ev = this.record.evidenceStore(); } catch { ev = null; }
+    if (!ev || !this.bucket)
+      return refusal("DOCUMENT_COPY_NO_STORE", localize("case-carriage.index.no_evidence_store_is", "no evidence store is bound to read a member's document from and hold its copy in"));
+    const bound = Number.isFinite(maxBytes) && maxBytes > 0 ? Math.min(maxBytes, COPY_NOW_MAX_BYTES) : COPY_NOW_MAX_BYTES;
+    const named = new Set((Array.isArray(shas) ? shas : []).map(digestOf).filter((d) => HEX64.test(d)));
+    const due = this.#rows(`SELECT capture, queued, tried FROM document_copy_queue ORDER BY queued, capture`)
+      .filter((q) => named.has(q.capture));
+    return { ...(await this.#copyRows(due, ev, bound)), remaining: this.#queued() };
   }
 
   /* R15: the count of documents still queued (null when it cannot be read). */
@@ -1287,7 +1322,7 @@ export class CaseCarriage {
   }
 
   /* R15: one queued capture's outcome: `{photo}`, `{state, ...}` to record, or `{failed}` to try again later. */
-  async #copyOne(sha, ev) {
+  async #copyOne(sha, ev, maxBytes = Infinity) {
     if (this.#isPhoto(sha)) return { photo: true };
     const fetched = this.#fetched(sha);
     if (fetched === null) return { failed: true };
@@ -1295,15 +1330,18 @@ export class CaseCarriage {
     const tooLarge = (size) => ({ state: "refused", code: "DOCUMENT_TOO_LARGE",
       detail: localize("case-carriage.index.the_document_is_size_bytes", "the document is {size} bytes, over the {CLEAN_MAX_BYTES} a copy is made from", { size: String(size), CLEAN_MAX_BYTES: String(CLEAN_MAX_BYTES) }) });
     const stated = Math.max(-1, ...this.#homes(sha).map((h) => Number(h.bytes)).filter(Number.isFinite));
+    if (stated > maxBytes) return { skipped: true };   // `copyNow`'s bound: left queued, for the alarm
     if (stated > CLEAN_MAX_BYTES) return tooLarge(stated);
     let bytes = null;
     try {
       const h = await ev.head(sha);
+      if (h && Number.isFinite(h.size) && h.size > maxBytes) return { skipped: true };
       if (h && Number.isFinite(h.size) && h.size > CLEAN_MAX_BYTES) return tooLarge(h.size);
       const o = await ev.get(sha);
       if (o && typeof o.arrayBuffer === "function") bytes = new Uint8Array(await o.arrayBuffer());
     } catch { bytes = null; }
     if (!bytes || createSha256().update(bytes).hex() !== sha) return { failed: true };
+    if (bytes.length > maxBytes) return { skipped: true };
     if (bytes.length > CLEAN_MAX_BYTES) return tooLarge(bytes.length);
     const c = await this.clean(bytes);
     if (!c || typeof c !== "object") return { failed: true };
