@@ -146,3 +146,57 @@ test("R89 (G8) seam: an old 'not read as text' reading of a text held in two par
   assert.equal("repairable" in got, false);
   assert.deepEqual(pendingOf(x.ctx).list(), [], "the entry ended");
 });
+
+/* ---- G13: the walker's 12 MB text, through the real ledger and the real reader ---- */
+
+/* 120,000 lines of 100 bytes with their break, then ENDMARKER: 12,000,060 bytes, no blank line (reading-pipeline R40's own file). */
+const LINES = 120000;
+const lineOf = (i) => `line ${String(i).padStart(6, "0")} ` + "council-minutes ".repeat(5).padEnd(87, ".");
+const longLog = () => Array.from({ length: LINES }, (_, i) => lineOf(i)).concat(["ENDMARKER" + " ".repeat(51)]).join("\n");
+
+test("R90 (G13) seam: the 12,000,060 B text, promoted, is read to its last line by the ledger's alarm, a piece a tick: midway a search finds only what is read and the reading says it has more; at the end ENDMARKER is in the index, the state is whole and the entry has ended", { timeout: 600_000 }, async () => {
+  const bucket = multipartBucket();
+  const x = await store({ env: { CAPTURES: bucket } });
+  const ev = recordOf(x.ctx).evidenceStore();
+  const bytes = new TextEncoder().encode(longLog());
+  assert.equal(bytes.length, 12000060);
+  const d = sha(bytes);
+  await ev.put(d, bytes);
+  x.ctx.storage.sql.exec(`INSERT OR IGNORE INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version)
+    VALUES ('INFO-2026-0141', 'information', 'g', 't', 'collected', '2026-01-01', '2026-01-01', 'x', 1)`);
+  row("INFO-2026-0141", "snapshots/log.txt", bytes.length, d)(x);
+  const document = { file: "snapshots/log.txt", locator: "https://r.example/log.txt", retrieved: "2026-10-22T05:00:00Z",
+    profile: { profiled_from_text: true, format: { format: "undetermined", confidence: "none", signals: [] }, source_content_type: "text/plain", jurisdiction_view: null },
+    capture: { sha256: d, bytes: bytes.length, content_type: "text/plain", transport: { http_headers: [["content-type", "text/plain"]] } } };
+  x.ctx.storage.sql.exec(`INSERT INTO files (bundle_id, path, content, blob_sha, bytes, sha256) VALUES (?,?,?,?,?,?)`,
+    "INFO-2026-0141", "data/provenance.json", JSON.stringify({ documents: [document] }), null, 1, "x");
+  /* the door's deferral of a read that will not fit the request (control-plane R120, G5): owed to the ledger */
+  assert.equal((await x.fetch(`/pendingadd?kind=reading&sha=${d}&store=bio`, { method: "POST" })).status, 200);
+  const ex = extractionOf(x.ctx);
+  const fts = (term) => x.db.prepare(`SELECT rowid FROM capture_text_fts WHERE capture_text_fts MATCH ?`).all(term).length;
+  const owed = () => pendingOf(x.ctx).list().filter((r) => r.sha === d && r.kind === "reading");
+  assert.equal(owed().length, 1);
+  let ticks = 0, midway = null;
+  while (owed().length && owed()[0].state === "owed" && ticks < 80) {
+    await x.s.alarm();
+    ticks++;
+    if (ticks === 3) midway = { reading: ex.readingFor(d, "class:admin"), end: fts("ENDMARKER"), some: fts("council"), entry: owed()[0] };
+  }
+  assert.ok(ticks > 6 && ticks < 80, `read in ${ticks} ticks`);
+  assert.equal(midway.reading.more, true, "midway the reading says it has more");
+  assert.ok(midway.reading.read_through > 0 && midway.reading.read_through < midway.reading.total);
+  assert.equal(midway.end, 0, "midway a search finds only what is read: the last line is not found");
+  assert.ok(midway.some > 0);
+  assert.equal(midway.entry.state, "owed", "and the entry is still the ledger's");
+  assert.deepEqual(owed(), [], "at the end the entry has ended");
+  const got = ex.readingFor(d, "class:admin");
+  assert.deepEqual([got.more, got.read_through, got.total], [false, 12000060, 12000060]);
+  assert.equal(fts("ENDMARKER"), 1, "R-STOP: the last line is in the index");
+  const st = x.db.prepare(`SELECT state, offered, written, over_bound FROM capture_text_state WHERE capture_sha=?`).get(d);
+  assert.deepEqual({ ...st }, { state: "whole", offered: LINES + 1, written: LINES + 1, over_bound: 0 });
+  const last = x.db.prepare(`SELECT seq, text FROM capture_text WHERE capture_sha=? ORDER BY seq DESC LIMIT 1`).get(d);
+  assert.deepEqual({ ...last }, { seq: LINES, text: "ENDMARKER" });
+  const near = x.db.prepare(`SELECT ref FROM capture_text WHERE capture_sha=? AND seq=?`).get(d, LINES - 5);
+  assert.ok(near, "a passage near the end is in the index with its address");
+  assert.equal(got.reading.words_read, got.reading.words_total, "every word read");
+});
