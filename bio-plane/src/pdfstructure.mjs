@@ -51,6 +51,78 @@
 import { LINK_TYPES, linkWrapper } from "./subresources.mjs";
 import { word } from "./setup-words/index.mjs";
 
+/* E11 (fix round 5) — ASCII85Decode AND ASCIIHexDecode, BEFORE FlateDecode.
+ *
+ * reportlab, and many producers after it, write a content stream as `/Filter [/ASCII85Decode /FlateDecode]`: the bytes
+ * are deflate output written in printable characters, and a reader that decodes Flate alone calls every page of such a
+ * file `content_stream_undecodable`, a text page read as pictures of text. The two ASCII filters are exact (no
+ * interpretation, a byte for a byte), so they are applied as the chain states them, first. A stage that is not
+ * one of these, Flate, or the end of the chain (LZW, RunLength, CCITT, DCT, a name this reader does not know) is stated as
+ * undecodable, never guessed. A malformed ASCII stream is the same: null. */
+const ASCII_FILTERS = new Set(["ASCII85Decode", "A85", "ASCIIHexDecode", "AHx"]);
+
+/** The bytes an ASCII85Decode stream states (ISO 32000-1 §7.4.3): groups of five characters `!`..`u` for four bytes, `z`
+ *  for four zero bytes, white space ignored, an optional `<~` first and `~>` last, a final group of n characters (2 to 4)
+ *  for n-1 bytes. Null for any other character, a group that overflows 32 bits, or a lone final character. */
+function ascii85Decode(src) {
+  let i = 0;
+  while (i < src.length && isWhitespace(src[i])) i++;
+  if (src[i] === 0x3c && src[i + 1] === 0x7e) i += 2;
+  let zs = 0;
+  for (let k = src.indexOf(0x7a); k !== -1; k = src.indexOf(0x7a, k + 1)) zs++;
+  const out = new Uint8Array(Math.ceil(src.length * 4 / 5) + 3 * zs + 4); // a `z` is one character for four bytes
+  let o = 0, n = 0, acc = 0;
+  for (; i < src.length; i++) {
+    const c = src[i];
+    if (isWhitespace(c)) continue;
+    if (c === 0x7e) break; // "~>"
+    if (c === 0x7a && n === 0) { o += 4; continue; } // z, the four zero bytes
+    if (c < 0x21 || c > 0x75) return null;
+    acc = acc * 85 + (c - 0x21);
+    if (++n === 5) {
+      if (acc > 0xffffffff) return null;
+      out[o++] = acc >>> 24; out[o++] = (acc >>> 16) & 0xff; out[o++] = (acc >>> 8) & 0xff; out[o++] = acc & 0xff;
+      n = 0; acc = 0;
+    }
+  }
+  if (n === 1) return null;
+  if (n > 1) {
+    for (let k = n; k < 5; k++) acc = acc * 85 + 84;
+    if (acc > 0xffffffff) return null;
+    const four = [acc >>> 24, (acc >>> 16) & 0xff, (acc >>> 8) & 0xff, acc & 0xff];
+    for (let k = 0; k < n - 1; k++) out[o++] = four[k];
+  }
+  return out.slice(0, o);
+}
+
+/** The bytes an ASCIIHexDecode stream states (§7.4.2): hexadecimal digits, white space ignored, `>` the end, an odd last
+ *  digit read as followed by 0. Null for any other character. */
+function asciiHexDecode(src) {
+  const out = new Uint8Array((src.length >> 1) + 1);
+  let o = 0, hi = -1;
+  for (let i = 0; i < src.length; i++) {
+    const c = src[i];
+    if (isWhitespace(c)) continue;
+    if (c === 0x3e) break;
+    const d = c >= 0x30 && c <= 0x39 ? c - 0x30 : c >= 0x41 && c <= 0x46 ? c - 0x37 : c >= 0x61 && c <= 0x66 ? c - 0x57 : -1;
+    if (d < 0) return null;
+    if (hi < 0) hi = d; else { out[o++] = (hi << 4) | d; hi = -1; }
+  }
+  if (hi >= 0) out[o++] = hi << 4;
+  return out.slice(0, o);
+}
+
+/** `raw` with the leading ASCII filters of `names` undone, and the names that remain: `{ data, rest }`, or null for a
+ *  malformed ASCII stream. */
+function undoAscii(names, raw) {
+  let data = raw, i = 0;
+  for (; i < names.length && ASCII_FILTERS.has(names[i]); i++) {
+    data = names[i] === "ASCIIHexDecode" || names[i] === "AHx" ? asciiHexDecode(data) : ascii85Decode(data);
+    if (!data) return null;
+  }
+  return { data, rest: names.slice(i) };
+}
+
 /* Partition vocabulary, mirrored from subresources.mjs and extended by the one
  * first-class value a byte-level reader needs that a DOM reader does not:
  * `undetermined`. LINK_TYPES stays exactly the HTML set so the four that map
@@ -251,6 +323,20 @@ function skipWs(s, pos) {
   return pos;
 }
 
+/** R37 (E2): a name value is one frozen object per distinct name, shared by every place a document states it: a
+ *  document of 135,000 annotations says `/Annot` and `/Text` 135,000 times, and a parsed tree of 135,000 objects is
+ *  what a rewrite holds beside the file. The reader's values are never changed by a caller (doc-clean's own comment
+ *  says so); a name past the table's size is a fresh object, as before. */
+const NAME_VALUES = new Map();
+const NAME_VALUES_MAX = 4096;
+function nameValue(v) {
+  let n = NAME_VALUES.get(v);
+  if (n) return n;
+  n = Object.freeze({ t: "name", v });
+  if (NAME_VALUES.size < NAME_VALUES_MAX && v.length <= 64) NAME_VALUES.set(v, n);
+  return n;
+}
+
 function parseName(s, pos) {
   pos++; // skip /
   let out = "";
@@ -264,7 +350,7 @@ function parseName(s, pos) {
     out += s[pos];
     pos++;
   }
-  return { value: { t: "name", v: out }, pos };
+  return { value: nameValue(out), pos };
 }
 
 function parseNumber(s, pos) {
@@ -331,12 +417,19 @@ function parseArray(buf, s, pos) {
     items.push(r.value);
     pos = r.pos;
   }
-  return { value: { t: "arr", items }, pos };
+  /* `push` leaves room for seventeen: an array of four numbers held 150 bytes more than it needs (E2) */
+  return { value: { t: "arr", items: items.length < 16 ? items.slice() : items }, pos };
 }
+
+/** A dictionary's map: an object with no inherited key (a name like `constructor` or `__proto__` is an ordinary key),
+ *  made by a constructor and not by `Object.create(null)`, whose objects V8 keeps as dictionaries of their own (about
+ *  250 bytes for five keys) where these share their layout (E2). */
+function Dict() {}
+Dict.prototype = Object.create(null);
 
 function parseDict(buf, s, pos) {
   pos += 2; // skip <<
-  const map = Object.create(null);
+  const map = new Dict();
   while (true) {
     pos = skipWs(s, pos);
     if (pos >= s.length) break;
@@ -417,47 +510,87 @@ function parseWindow(bytes, pos, first = 512) {
   }
 }
 
-/** The facts an object's value gives the loads: dictionary (1), stream (2) or neither (0); its direct `/Type` name; and
- *  whether it could be the Standard security handler (a `/Filter /Standard` beside an `/R`). */
-function objectFacts(v) {
-  const map = v && v.t === "dict" ? v.map : v && v.t === "stream" ? v.dict : null;
-  return {
-    k: v && v.t === "dict" ? 1 : v && v.t === "stream" ? 2 : 0,
-    ty: map && map.Type && map.Type.t === "name" ? map.Type.v : null,
-    sd: !!(map && map.Filter && map.Filter.t === "name" && map.Filter.v === "Standard" && map.R != null),
-  };
-}
-
-/** Object number -> where its winning definition is, parsed on demand. An entry is `{ p, w, stm, g, k, ty, sd }`: `p` the
- *  offset in the file (`stm` -1) or in object stream `stm`'s decoded bytes, `w` the window its first parse needed. Map order is first-definition order, as
- *  the first reader's map had it. */
+/** Object number -> where its winning definition is, parsed on demand. An object is a row of typed arrays (E2: 135,000
+ *  small objects as records of seven fields were 16 MB before anything was parsed): `p` the offset in the file (`stm` -1)
+ *  or in object stream `stm`'s decoded bytes, `w` the window its first parse needed, `g` its generation, and the facts
+ *  the loads ask of every object: dictionary (1), stream (2) or neither (0), its direct `/Type` name, and whether it
+ *  could be the Standard security handler (a `/Filter /Standard` beside an `/R`). Rows are in first-definition order, as
+ *  the first reader's map had it; a number is found through an open-addressing table of row numbers. */
 class ObjectTable {
   constructor(doc) {
     this.doc = doc;
-    this.e = new Map();
     this.hot = new Map();   // recently parsed: num -> { v, c }
     this.pins = new Map();  // parsed and kept: num -> v (an object whose identity a caller compares)
     this.cost = 0;
+    this.n = 0;
+    this.num = new Float64Array(256);
+    this.p = new Uint32Array(256);
+    this.w = new Int32Array(256);
+    this.stm = new Float64Array(256);
+    this.g = new Float64Array(256);
+    this.fl = new Uint8Array(256);   // bits 0-1 the kind, bit 2 the Standard-handler candidate
+    this.ty = new Uint16Array(256);  // index into `types`; 0 none
+    this.types = [null];
+    this.typeIx = new Map();
+    this.slots = new Int32Array(512); // row + 1; 0 empty
   }
-  get size() { return this.e.size; }
-  has(n) { return this.e.has(n); }
-  keys() { return this.e.keys(); }
-  gen(n) { const en = this.e.get(n); return en ? en.g : undefined; }
-  /** A definition: the later one replaces an earlier one's, keeping the number's place in the order. */
-  put(n, entry) {
-    this.e.set(n, entry);
+  get size() { return this.n; }
+  static hash(n) { return Math.imul((n % 4294967296) | 0, 0x9e3779b1) >>> 0; }
+  row(n) {
+    const mask = this.slots.length - 1;
+    for (let i = ObjectTable.hash(n) & mask, s; (s = this.slots[i]); i = (i + 1) & mask) if (this.num[s - 1] === n) return s - 1;
+    return -1;
+  }
+  has(n) { return this.row(n) >= 0; }
+  *keys() { for (let i = 0; i < this.n; i++) yield this.num[i]; }
+  gen(n) { const r = this.row(n); return r < 0 ? undefined : this.g[r]; }
+  grow() {
+    const cap = this.num.length * 2;
+    for (const k of ["num", "p", "w", "stm", "g", "fl", "ty"]) { const a = new this[k].constructor(cap); a.set(this[k]); this[k] = a; }
+  }
+  rehash() {
+    this.slots = new Int32Array(this.slots.length * 2);
+    const mask = this.slots.length - 1;
+    for (let r = 0; r < this.n; r++) {
+      let i = ObjectTable.hash(this.num[r]) & mask;
+      while (this.slots[i]) i = (i + 1) & mask;
+      this.slots[i] = r + 1;
+    }
+  }
+  /** A definition of `n` whose value, parsed at `p` of the file (`stm` -1) or of object stream `stm`, is `v`: the later
+   *  one replaces an earlier one's, keeping the number's place in the order. */
+  put(n, p, w, stm, g, v) {
+    let r = this.row(n);
+    if (r < 0) {
+      if (this.n === this.num.length) this.grow();
+      if ((this.n + 1) * 2 > this.slots.length) this.rehash();
+      r = this.n++;
+      this.num[r] = n;
+      const mask = this.slots.length - 1;
+      let i = ObjectTable.hash(n) & mask;
+      while (this.slots[i]) i = (i + 1) & mask;
+      this.slots[i] = r + 1;
+    }
+    this.p[r] = p; this.w[r] = w; this.stm[r] = stm; this.g[r] = g;
+    const map = v && v.t === "dict" ? v.map : v && v.t === "stream" ? v.dict : null;
+    const ty = map && map.Type && map.Type.t === "name" ? map.Type.v : null;
+    let t = 0;
+    if (ty !== null) { t = this.typeIx.get(ty); if (t === undefined) { t = this.types.length; if (t > 0xffff) t = 0; else { this.types.push(ty); this.typeIx.set(ty, t); } } }
+    this.ty[r] = t;
+    const sd = map && map.Filter && map.Filter.t === "name" && map.Filter.v === "Standard" && map.R != null;
+    this.fl[r] = (v && v.t === "dict" ? 1 : v && v.t === "stream" ? 2 : 0) | (sd ? 4 : 0);
     this.pins.delete(n);
     const h = this.hot.get(n);
     if (h) { this.cost -= h.c; this.hot.delete(n); }
   }
   /** The parsed value of object `n`, or undefined; parsed objects are reused while they are recent. */
   get(n) {
-    const en = this.e.get(n);
-    if (!en) return undefined;
+    const r = this.row(n);
+    if (r < 0) return undefined;
     if (this.pins.has(n)) return this.pins.get(n);
     const h = this.hot.get(n);
     if (h) { this.hot.delete(n); this.hot.set(n, h); return h.v; }
-    const got = this.parse(en);
+    const got = this.parse(r);
     if (!got) return undefined;
     const c = 1 + got.len * 3;
     this.hot.set(n, { v: got.value, c });
@@ -470,12 +603,12 @@ class ObjectTable {
   }
   /** The parsed value of `n` without keeping it. */
   peek(n) {
-    const en = this.e.get(n);
-    if (!en) return undefined;
+    const r = this.row(n);
+    if (r < 0) return undefined;
     if (this.pins.has(n)) return this.pins.get(n);
     const h = this.hot.get(n);
     if (h) return h.v;
-    const got = this.parse(en);
+    const got = this.parse(r);
     return got ? got.value : undefined;
   }
   /** Keep object `n`'s parsed value for good: a caller that compares the identity of what it resolved asks for this. */
@@ -486,14 +619,28 @@ class ObjectTable {
     if (h) { this.cost -= h.c; this.hot.delete(n); }
     this.pins.set(n, v);
   }
-  parse(en) {
-    const src = en.stm < 0 ? this.doc._b : this.doc._innerBytes(en.stm);
-    return src ? parseWindow(src, en.p, en.w) : null;
+  parse(r) {
+    const stm = this.stm[r];
+    const src = stm < 0 ? this.doc._b : this.doc._innerBytes(stm);
+    return src ? parseWindow(src, this.p[r], this.w[r]) : null;
   }
-  /** Object numbers, in order, whose winning definition has the given facts. */
-  nums(test) {
+  /** Object numbers, in order, whose winning definition is of kind `kind` (1 dictionary, 2 stream, 3 either) and, when
+   *  given, has the `/Type` name `type`. */
+  nums(kind, type) {
     const out = [];
-    for (const [n, en] of this.e) if (test(en)) out.push(n);
+    const t = type === undefined ? -1 : this.typeIx.get(type);
+    if (t === undefined) return out;
+    for (let r = 0; r < this.n; r++) {
+      const k = this.fl[r] & 3;
+      if (!(kind === 3 ? k > 0 : k === kind) || (t >= 0 && this.ty[r] !== t)) continue;
+      out.push(this.num[r]);
+    }
+    return out;
+  }
+  /** Object numbers that could be the Standard security handler. */
+  standard() {
+    const out = [];
+    for (let r = 0; r < this.n; r++) if (this.fl[r] & 4) out.push(this.num[r]);
     return out;
   }
 }
@@ -565,7 +712,7 @@ export class PdfDoc {
       const num = parseInt(binaryString(b.subarray(numStart, numEnd)), 10);
       const bodyStart = j + 1;
       const r = parseWindow(b, bodyStart);
-      if (r) this._objs.put(num, { p: bodyStart, w: r.len + 64, stm: -1, g: parseInt(binaryString(b.subarray(genStart, genEnd)), 10), ...objectFacts(r.value) });
+      if (r) this._objs.put(num, bodyStart, r.len + 64, -1, parseInt(binaryString(b.subarray(genStart, genEnd)), 10), r.value);
     }
   }
 
@@ -634,7 +781,7 @@ export class PdfDoc {
   }
 
   async _streamDecoded(streamObj) {
-    const raw = this.streamRawBytes(streamObj);
+    let raw = this.streamRawBytes(streamObj);
     if (!raw) return null;
     const filter = this.resolve(streamObj.dict.Filter);
     /* A /Filter that is neither a name nor an array names no filter this can
@@ -643,7 +790,10 @@ export class PdfDoc {
       filter.t === "name" ? [filter.v] :
       filter.t === "arr" ? filter.items.map((f) => (f && f.t === "name" ? f.v : null)) : [null];
     if (names.length === 0) return raw; // unfiltered
-    if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null; // not our phase-1 job
+    const un = undoAscii(names, raw);
+    if (!un || !un.rest.every((n) => n === "FlateDecode" || n === "Fl")) return null; // not our phase-1 job
+    raw = un.data;
+    if (!un.rest.length) return this._unpredicted(streamObj, raw);
     if (raw.length >= LARGE_RAW_BYTES) {
       const exact = inflateChecked(raw, INNER_DECODE_MAX);
       if (exact) return this._unpredicted(streamObj, exact);
@@ -689,8 +839,10 @@ export class PdfDoc {
         filter.t === "name" ? [filter.v] :
         filter.t === "arr" ? filter.items.map((f) => (f && f.t === "name" ? f.v : null)) : [null];
       if (names.length === 0) return raw;
-      if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null;
-      const data = inflateChecked(raw, INNER_DECODE_MAX, expect);
+      const un = undoAscii(names, raw);
+      if (!un || !un.rest.every((n) => n === "FlateDecode" || n === "Fl")) return null;
+      if (!un.rest.length) return this._unpredicted(streamObj, un.data);
+      const data = inflateChecked(un.data, INNER_DECODE_MAX, expect);
       return data ? this._unpredicted(streamObj, data) : null;
     } catch {
       return null;
@@ -724,7 +876,7 @@ export class PdfDoc {
    *  uncompressed one is the safer read). Each is parsed once here, to know it
    *  parses and what it is, and read again from the decoded stream when asked for (R41). */
   async loadObjectStreams() {
-    const streams = this._objs.nums((en) => en.k === 2 && en.ty === "ObjStm");
+    const streams = this._objs.nums(2, "ObjStm");
     for (const stm of streams) {
       const st = this._objs.get(stm);
       if (!st || st.t !== "stream") continue;
@@ -755,7 +907,7 @@ export class PdfDoc {
           if (this._objs.has(objNum)) continue;
           const at = first + off;
           const r = parseWindow(data, at, nextAbove(at) - at + 16);
-          if (r) { this._objs.put(objNum, { p: Math.trunc(at), w: r.len + 64, stm, g: 0, ...objectFacts(r.value) }); added++; }
+          if (r) { this._objs.put(objNum, Math.trunc(at), r.len + 64, stm, 0, r.value); added++; }
         }
         if (added) {
           this._innerLen.set(stm, data.length);
@@ -784,7 +936,7 @@ export class PdfDoc {
    *  object-number order if the tree cannot be walked (leniency). */
   buildPageIndex() {
     let root = null;
-    const cat = this._objs.nums((en) => en.k === 1 && en.ty === "Catalog")[0];
+    const cat = this._objs.nums(1, "Catalog")[0];
     if (cat !== undefined) { this._objs.pin(cat); root = this._objs.get(cat).map; }
     this.root = root;
     const walkRef = (num, seen) => {
@@ -805,7 +957,7 @@ export class PdfDoc {
     }
     if (this.pageIndexByObj.size === 0) {
       // Fallback: every /Type /Page, by object number.
-      const pages = this._objs.nums((en) => en.ty === "Page" && en.k > 0);
+      const pages = this._objs.nums(3, "Page");
       pages.sort((a, b) => a - b);
       pages.forEach((num, i) => this.pageIndexByObj.set(num, i));
       this.pageCount = pages.length;
@@ -836,7 +988,7 @@ export class PdfDoc {
   isEncrypted() {
     if (this._encrypted !== undefined) return this._encrypted;
     let enc = false;
-    for (const num of this._objs.nums((en) => en.sd)) {
+    for (const num of this._objs.standard()) {
       const v = this._objs.peek(num);
       const map = v && (v.t === "dict" ? v.map : v.t === "stream" ? v.dict : null);
       // /V and /R live only on the encryption dict; a page's /Filter is a codec
@@ -884,7 +1036,7 @@ export class PdfDoc {
       const r = parseWindow(b, t + 7);
       if (r && r.value && r.value.t === "dict") cands.push([t, r.value.map]);
     }
-    for (const num of this._objs.nums((en) => en.k === 2 && en.ty === "XRef")) {
+    for (const num of this._objs.nums(2, "XRef")) {
       const v = this._objs.peek(num);
       if (v && v.t === "stream") cands.push([v.start, v.dict]);
     }
@@ -900,11 +1052,13 @@ export class PdfDoc {
    *  never throws. The walk is iterative, so a deep or cyclic file cannot
    *  exhaust the stack. */
   objects() {
+    ARENA = { buf: new ArrayBuffer(32768), off: 0 };
     try {
       const trailers = this._trailers();
       if (!trailers.length) return null;
       const trailer = trailers[trailers.length - 1];
-      const found = new Map(), missing = new Map(), queue = [];
+      const found = [], missing = new Map(), queue = [];
+      const done = new Uint8Array(this._objs.size); // by row: reached
       const refsIn = (v) => {
         for (const stack = [v]; stack.length;) {
           const x = stack.pop();
@@ -917,16 +1071,19 @@ export class PdfDoc {
       refsIn({ t: "dict", map: trailer });
       for (let i = 0; i < queue.length; i++) {
         const { n, g } = queue[i];
-        if (found.has(n) || missing.has(n)) continue;
+        const row = this._objs.row(n);
+        if (row >= 0 ? done[row] : missing.has(n)) continue;
         const value = this.resolve({ t: "ref", n, g });
-        if (value === null) missing.set(n, { num: n, gen: g });
-        else found.set(n, { num: n, gen: this._objs.gen(n) ?? 0, value });
+        if (value === null) { missing.set(n, { num: n, gen: g }); if (row >= 0) done[row] = 1; }
+        else { done[row] = 1; found.push({ num: n, gen: this._objs.gen(n) ?? 0, value }); }
         refsIn(this._objs.get(n)); // a cycle of bare references still names its members
       }
-      const asc = (m) => [...m.values()].sort((a, b) => a.num - b.num);
-      return { trailer, objects: asc(found), unresolved: asc(missing) };
+      queue.length = 0;
+      return { trailer, objects: found.sort((a, b) => a.num - b.num), unresolved: [...missing.values()].sort((a, b) => a.num - b.num) };
     } catch {
       return null;
+    } finally {
+      ARENA = null;
     }
   }
 }
@@ -1331,6 +1488,18 @@ function textShowBytes(toks) {
   return n;
 }
 
+/** E2: while `objects()` reads (the whole list is held, and 135,000 strings of 15 bytes as 135,000 typed arrays of their
+ *  own were 240 bytes each), a string's bytes are a view of a 32 KB chunk made for that call alone. A chunk is never
+ *  shared between calls, so no document's bytes are reachable from another's. */
+let ARENA = null;
+function newBytes(n) {
+  if (!ARENA || n > 512) return new Uint8Array(n);
+  if (ARENA.off + n > ARENA.buf.byteLength) ARENA = { buf: new ArrayBuffer(32768), off: 0 };
+  const u = new Uint8Array(ARENA.buf, ARENA.off, n);
+  ARENA.off += n;
+  return u;
+}
+
 /** Read a literal ( … ) string as its BYTES, per ISO 32000-1 §7.3.4.2: the
  *  escapes decoded, `\` before an end-of-line a continuation (CR LF is one
  *  end-of-line), an unknown escape the character after it, nested parens kept,
@@ -1349,7 +1518,7 @@ function readLiteralBytes(s, pos) {
     q++;
   }
   if (q < s.length && s.charCodeAt(q) === 0x29) {
-    const out = new Uint8Array(q - pos);
+    const out = newBytes(q - pos);
     for (let i = 0; i < out.length; i++) out[i] = s.charCodeAt(pos + i);
     return { bytes: out, pos: q + 1 };
   }
@@ -1388,7 +1557,9 @@ function readLiteralBytes(s, pos) {
     if (c === 0x29) { depth--; if (depth === 0) { pos++; break; } bytes.push(0x29); pos++; continue; }
     bytes.push(c); pos++;
   }
-  return { bytes: Uint8Array.from(bytes), pos };
+  const out = newBytes(bytes.length);
+  out.set(bytes);
+  return { bytes: out, pos };
 }
 
 /** Read a < … > hex string as its bytes: whitespace (and any other non-digit)
@@ -1403,7 +1574,7 @@ function readHexBytes(s, pos) {
   }
   pos++; // >
   if (hex.length % 2) hex += "0";
-  const bytes = new Uint8Array(hex.length / 2);
+  const bytes = newBytes(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
   return { bytes, pos };
 }
@@ -3857,10 +4028,11 @@ class XrefReader {
     const f = this.deref(st.dict.Filter);
     const names = f == null ? [] : f.t === "name" ? [f.v] :
       f.t === "arr" ? f.items.map((x) => { const d = this.deref(x); return d && d.t === "name" ? d.v : null; }) : [null];
-    if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null;
-    let data = raw, full = true;
+    const un = undoAscii(names, raw);
+    if (!un || !un.rest.every((n) => n === "FlateDecode" || n === "Fl")) return null;
+    let data = un.data, full = true;
     if (!names.length && raw.length > max) { data = raw.subarray(0, max); full = false; }
-    for (let i = 0; i < names.length; i++) {
+    for (let i = 0; i < un.rest.length; i++) {
       const r = inflateSync(data, max);
       if (!r) return null;
       data = r.data; full = full && r.full;
@@ -4023,6 +4195,50 @@ async function sampledTextShare(doc) {
   return k ? showing / k : 0;
 }
 
+/* R42, fix round 5 (E2) — THE SECOND TERM: A PAGE OF MORE TEXT THAN THE MEASURED ONE.
+ *
+ * Re-measured at the index path's budget (2 MiB of text units, `extraction`'s CAPTURE_TEXT_CAPTURE_BOUND) under workerd with
+ * the 20 MB the plane's own baseline takes: the budget changes nothing (the answer is built whole whatever the units keep:
+ * 1,000 pages of 120 lines read in 58 MB of old space with it and 58 without), and the page rule above holds for the pages it
+ * was measured on. For pages of more text it is low: 1,500 pages of 200 lines, 11.6 MB, need 113 MB (the rule 83), over the
+ * 108 the object leaves. The memory of those follows the characters, so a sample of the document's own pages is read the way
+ * the reading reads them (READ_SAMPLE_PAGES, evenly spaced, notes left as they were) and the second term is READ_BASE_DENSE_MB
+ * + the file's MiB + READ_PAGE_DENSE_MB a page + READ_MCHAR_MB a million characters (decoded, with the codes that cannot be
+ * decoded): measured 63 / 96 / 112 / 72 / 98 against 63 / 97 / 113 / 68 / 98 for 1,000 and 2,000 pages of 120 lines, 1,500
+ * of 200, 3,500 of 40 and 3,000 of 80. The reading is refused when either term is over READ_LIMIT_MB; neither lowers the
+ * other, so every document the page rule refused is refused still. It is looked at only for a document of more than
+ * READ_SAMPLE_FROM pages (a file under the byte ceiling cannot reach the limit below it) that the page rule passes, an
+ * encrypted document counts none, and a page the sample cannot read counts as the largest it did read. It is not exact:
+ * the govinfo volumes carry more per character than it says (BUDGET-2024-APP: 98 measured, 67 by this term, 82 by the page
+ * rule), which the page rule's measurement still covers. */
+const READ_BASE_DENSE_MB = 29;
+const READ_PAGE_DENSE_MB = 0.001;
+const READ_MCHAR_MB = 1.8;
+const READ_SAMPLE_FROM = 64;
+const denseNeedMB = (pages, bytes, mchars) => READ_BASE_DENSE_MB + bytes / 1048576 + pages * READ_PAGE_DENSE_MB + mchars * READ_MCHAR_MB;
+
+/** The million characters the document's pages show, from READ_SAMPLE_PAGES of them evenly spaced. */
+async function sampledMChars(doc) {
+  const n = doc.pageCount, k = Math.min(READ_SAMPLE_PAGES, n);
+  const notes = doc.notes.length, noted = new Set(doc._trailingNoted);
+  const fontCache = new FontCache();
+  let total = 0, most = 0, unread = 0;
+  for (let i = 0; i < k; i++) {
+    const pageMap = doc.pageDict(k === 1 ? 0 : Math.round(i * (n - 1) / (k - 1)));
+    let chars = null;
+    if (pageMap) {
+      try {
+        const got = await extractPageText(doc, i, pageMap, fontCache);
+        chars = got.text.length + got.undetermined.reduce((c, m) => c + (Number.isFinite(m.count) ? m.count : 0), 0);
+      } catch { chars = null; }
+    }
+    if (chars === null) { unread++; continue; }
+    total += chars; most = Math.max(most, chars);
+  }
+  doc.notes.length = notes; doc._trailingNoted = noted;
+  return k ? (total + unread * most) / k * n / 1e6 : 0;
+}
+
 /** R8's whole lenient read, the one way a document is opened here and in
  *  `pdf-worker`. The caller has checked the bytes. */
 async function loadPdf(bytes) {
@@ -4060,6 +4276,11 @@ export async function extractPdfStructure(bytes) {
   if (needMB > READ_LIMIT_MB) {
     textShare = doc.isEncrypted() ? 0 : await sampledTextShare(doc);
     needMB = readingNeedMB(doc.pageCount, bytes.length, textShare);
+  }
+  let mchars = null;
+  if (needMB <= READ_LIMIT_MB && doc.pageCount > READ_SAMPLE_FROM && !doc.isEncrypted()) {
+    mchars = await sampledMChars(doc);
+    needMB = Math.max(needMB, denseNeedMB(doc.pageCount, bytes.length, mchars));
   }
   if (needMB > READ_LIMIT_MB) {
     return {

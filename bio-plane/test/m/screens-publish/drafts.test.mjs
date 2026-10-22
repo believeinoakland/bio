@@ -138,7 +138,7 @@ test("R13 R71 the Sign step's count line with no evidence is screen.ceremony.sig
   assert.ok(!drew(never, "screen.ceremony.published.edition", { n: "1" }), "control: a draft never published draws no such line");
   /* the Sign step: the edition and one finding sign together, no evidence among them */
   const sign = async (plane) => { const q = await open(`${CER}/${DR}`, { plane }); tick(q, "ce-tie", "yes"); await press(q, "publish", { reason: "because" }); return q; };
-  const none = await sign({ casedocument: ok(DOCUMENT({ citations: [{ target: "FND-2026-0031", version: B1 }] })) });
+  const none = await sign({ casedocument: ok(DOCUMENT({ citations: { state: "signed", rows: [{ target: "FND-2026-0031", version: "no_bytes", capture: null }] } })) });
   assert.ok(drew(none, "screen.ceremony.signs.count.findings", { n: "2", findings: "1" }), "the edition and its one finding, no evidence counted");
   assert.ok(!drew(none, "screen.ceremony.signs.count", { n: "2", findings: "1", evidence: "0" }), "never '0 pieces of evidence'");
   const some = await sign({});
