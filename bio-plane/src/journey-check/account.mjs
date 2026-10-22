@@ -13,6 +13,7 @@
 
 import { readFileSync, existsSync, statSync } from "node:fs";
 import { join, dirname, normalize, sep } from "node:path";
+import { localize } from "../setup-words/index.mjs";
 import { fileURLToPath } from "node:url";
 
 /* The release a person's install fetches its members from: the repository's own committed `release/` (whose bytes the
@@ -56,13 +57,13 @@ export function statedCrons(source) {
    and the script holds exactly it. Run after an install and after an update. */
 export function planeScheduleProblem(account, slug) {
   const held = account.scripts.get(slug);
-  if (!held) return `the plane's script ${slug} is not in the account`;
+  if (!held) return localize("journey-check.account.the_plane_s_script_slug_is_not", "the plane's script {slug} is not in the account", { slug: String(slug) });
   const stated = statedCrons(held.source);
-  if (!stated.ok) return `the plane's bytes state no watchdog cron (${CRONS_TAG}: ${stated.why})`;
-  if (stated.crons.join("|") !== WATCHDOG_CRON) return `the plane states the cron "${stated.crons.join(" | ")}", not the watchdog's "${WATCHDOG_CRON}"`;
+  if (!stated.ok) return localize("journey-check.account.the_plane_s_bytes_state_no_watchdog", "the plane's bytes state no watchdog cron ({tag}: {why})", { tag: CRONS_TAG, why: String(stated.why) });
+  if (stated.crons.join("|") !== WATCHDOG_CRON) return localize("journey-check.account.the_plane_states_the_cron_not_the", "the plane states the cron \"{stated}\", not the watchdog's \"{watchdog}\"", { stated: stated.crons.join(" | "), watchdog: WATCHDOG_CRON });
   const got = account.schedules.get(slug);
-  if (!got) return `the plane's script ${slug} holds no cron: no schedules were set on it`;
-  if (got.join("|") !== stated.crons.join("|")) return `the plane's script ${slug} holds "${got.join(" | ")}", its statement says "${stated.crons.join(" | ")}"`;
+  if (!got) return localize("journey-check.account.the_plane_s_script_slug_holds_no", "the plane's script {slug} holds no cron: no schedules were set on it", { slug: String(slug) });
+  if (got.join("|") !== stated.crons.join("|")) return localize("journey-check.account.the_plane_s_script_slug_holds_got", "the plane's script {slug} holds \"{got}\", its statement says \"{stated}\"", { slug: String(slug), got: got.join(" | "), stated: stated.crons.join(" | ") });
   return null;
 }
 
@@ -222,7 +223,7 @@ export function fakeAccount({ name = "Journey test account", onScript = async ()
     if ((x = /^\/workers\/scripts\/([^/]+)\/schedules$/.exec(rest)) && m === "PUT") {
       if (!scripts.has(x[1])) return no("not found", 404, 10007);
       if (refused(x[1]))
-        return no("The cron triggers of this script could not be set.", 403, 10000);
+        return no(localize("journey-check.account.the_cron_triggers_of_this_script", "The cron triggers of this script could not be set."), 403, 10000);
       const body = await req.json();
       schedules.set(x[1], body.map((t) => t.cron));
       return ok({ schedules: body });
