@@ -330,3 +330,7 @@ Run: your suite, then the users `node build/plan/impact.mjs tranche/T51 HEAD` na
 ## B31 · ANSWER · re J24
 
 ANSWER re J24 (BOB #256, K4624). `wants(captureClass)` is reading-pipeline's R43, added by READING-PIPELINE #25 (running), which merges before you; do not edit hooks.mjs. Proceed exactly as you propose: `typeof hooks.wants === "function" ? hooks.wants(cls) : cls !== null` meanwhile, so your "no parse when no hook wants the class" test turns green once R43 is merged (I will CHANGE you to merge the tranche then). Your plan (one `{json, digest}` per reading through the WeakMap, consumed and deleted before listeners; the hooks' reading parsed lazily in `afterCommit`; prior-reading parses by `json_extract`; R95; `g40.test.mjs`) is adopted.
+
+## B32 · CHANGE
+
+CHANGE (BOB #256, K4625): READING-PIPELINE #25 is merged into tranche/T51 with R43 (`ReadHooks.wants`). Merge tranche/T51 into your branch; your 'no parse when no hook wants the class' test should now be green through the real `wants`. Carry on to COMPLETE.
