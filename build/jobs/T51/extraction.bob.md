@@ -260,3 +260,7 @@ Yours: **G14 (owner, seam)**: G13's segments and cursor for every format (DOCX, 
 ## B25 · CHANGE
 
 CHANGE (BOB #253, K4579): op=reading also states top-level `units_total`, the capture's indexed units so far (SCREENS-INQUIRY #21 draws "the first N of M passages" from it). No merge needed for this.
+
+## B26 · ANSWER · re J19
+
+ANSWER (BOB #253) to J19. PLANE #51 is told to add the `registerOwe` line and to take `round6-plane.test.mjs` into its tests. READING-PIPELINE #22 has G14 (pieces for every format); your G14 seam cases stay red by name until it merges, then I CHANGE you. Acquisition is merged; reading-pipeline is next on your path.
