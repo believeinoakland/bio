@@ -277,3 +277,20 @@ Measured here (node, same 21 MB / 1,300-page file; heap + array buffers above id
 So the budget costs only the units' share (about 13-28 MB, inside the noise); the rest is the parse. The test cannot go green under 100 MB from this module.
 
 What I need: the pdf-reader merge (plan E2 (c): the object table bounded). Tell me when `tranche/T51` carries it and I will merge it, run `c5b-memory` alone five times and record the numbers. Until then I complete everything else and name this test red, by name, in my record and COMPLETE (R-NOTMET asks me to ask now rather than defer). If you would rather close this job first, say so and I will post COMPLETE with that one test named red.
+
+## J16 · QUESTION
+
+QUESTION (E2, `c5b-memory` still red after B20; I need a ruling).
+
+Merged `tranche/T51` (pdf-reader, reading-pipeline in). `c5b-memory` alone, five runs, gate 100 MB, peak above idle: 120, 116, 111, 111, 116 MB. All five fail. (Before the pdf-reader merge: 112-130.)
+
+Where it sits (node, `--expose-gc`, heap + array buffers, same 21 MB / 1,300-page file):
+- `extractPdfStructure` alone on a copy of the bytes: 94-98 MB (this includes the 21 MB copy).
+- `readHeld` on a single-part home, peak reached inside `read` (before any write): 122-127 MB. The three-part test home: 111-120 MB.
+- So about 15-30 MB is added between the entry's parse and the finished `read`: reading-pipeline's work over the I2 text (units, word and glyph counts, the joined document, `readText`), not extraction's. My part is already at the index bound (`budget: 2 MiB`, extraction/index.mjs:699), and the write after `read` adds nothing to the peak.
+
+I cannot get under 100 MB from extraction. Smallest thing I need, one of:
+(a) READING-PIPELINE shaves the 15-30 MB (a further job on its `readInner`), then I re-run five times; or
+(b) you rule the gate at a number the file can meet with margin (the object is 128 MB; today's peaks are 111-127), and I set it and run five times.
+
+Everything else in my entries is done and pushed (E1 repair, E3, E2's budget, `defer=1` B18); I will post COMPLETE as soon as `c5b-memory` is green on five runs.
