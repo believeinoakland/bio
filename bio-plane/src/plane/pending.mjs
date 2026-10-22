@@ -10,7 +10,9 @@
                      answers `owed: true` while pages remain;
      `subresources`  a web capture's outstanding supporting files and pending render, keyed by the capture SESSION (acquisition
                      R100), run by `acquisition.owedRun(cap, {kind, session})`;
-     `unpack`        an archive stopped by a budget (acquisition R100), run as the unpack drain does, `op=unpack` as the daemon.
+     `unpack`        an archive stopped by a budget (acquisition R100), run as the unpack drain does, `op=unpack` as the daemon;
+     `fetch`         a large web capture handed to the alarm (fix round 6, G2; acquisition's `owedFetch`), keyed by the capture SESSION as
+                     `subresources` is, heavy: its body is read and its document filed by the alarm, never inside the member's request.
    An entry ends only when its work is done, or when its owner answers a FINAL reason (`final: true`, with its `why`), which the
    row then keeps, stated, for the document's page (op `owedwork`); never by a count or a clock. A failure, `NO_HOME` among them,
    leaves the entry for a later alarm, backed off from `PENDING_RETRY_MS` doubling to at most `PENDING_RETRY_MAX_MS` and going on
@@ -32,6 +34,7 @@
 import { recordOf } from "../record-core/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
 import { acquisitionOf, owedRun } from "../acquisition/index.mjs";
+import * as acquisitionModule from "../acquisition/index.mjs";   /* `owedFetch` is read from the namespace: an instance's own, else the module's */
 import { captureOf } from "../capture/index.mjs";
 import { schedulerOf } from "../scheduler/index.mjs";
 import { localize } from "../setup-words/index.mjs";
@@ -41,19 +44,21 @@ export const KEEPS_PENDING_DDL = `CREATE TABLE IF NOT EXISTS keeps_pending (
   attempts INTEGER NOT NULL DEFAULT 0, registered_at INTEGER NOT NULL, due_at INTEGER NOT NULL, last_try INTEGER, last_why TEXT,
   final_why TEXT, started_at INTEGER, interrupted INTEGER NOT NULL DEFAULT 0, last_ms INTEGER, last_mem INTEGER, PRIMARY KEY (sha, kind))`;
 export const PENDING_NAME = "pending-work";
-export const PENDING_KINDS = Object.freeze(["keep", "reading", "ocr", "subresources", "unpack"]);
+export const PENDING_KINDS = Object.freeze(["keep", "reading", "ocr", "subresources", "unpack", "fetch"]);
 export const PENDING_RETRY_MS = 15_000;
 export const PENDING_RETRY_MAX_MS = 3_600_000;
 export const PENDING_BATCH = 3;
 export const PENDING_INTERRUPTED_MAX = 3;
-const HEAVY = Object.freeze(["keep", "reading", "ocr"]);
+const HEAVY = Object.freeze(["keep", "reading", "ocr", "fetch"]);
+/* an entry of these kinds is keyed by its capture SESSION (acquisition R100), the others by a digest */
+const SESSION_KEYED = Object.freeze(["subresources", "fetch"]);
 
 const DIGEST = /^[0-9a-f]{64}$/;
 const HOLDERS = new WeakMap();
 const why = (e) => String(e && e.message || e).slice(0, 160);
 const interruptedWhy = () => localize("plane.pending.interrupted", "the reading did not finish; the object stopped");
 const memory = () => { try { const m = globalThis.process && typeof globalThis.process.memoryUsage === "function" ? globalThis.process.memoryUsage() : null; return m ? Math.round(m.rss || m.heapUsed || 0) : null; } catch { return null; } };
-const RANK = { keep: 0, reading: 1, ocr: 2, subresources: 3, unpack: 4 };
+const RANK = { keep: 0, reading: 1, ocr: 2, subresources: 3, unpack: 4, fetch: 5 };
 const json = (v, otherwise) => { try { const o = JSON.parse(v); return o && typeof o === "object" ? o : otherwise; } catch { return otherwise; } };
 
 /** The pending-work holder of a host (one per storage): `{migrate, keepLater, owe, add, list, summary, consumer}`. `deps`: `env`,
@@ -99,8 +104,13 @@ export function pendingOf(ctx, deps = {}) {
   const settle = (row, at, r) => {
     if (r && (r.final === true || r.failure === "final")) return stop(row, at, String(r.why || r.reason || r.code || "FINAL").slice(0, 160));
     if (r && r.ok === true && r.more === true) {
-      sql.exec(`UPDATE keeps_pending SET ${ended(row)}, detail=?, attempts=0, due_at=?, last_try=?, last_why=NULL WHERE sha=? AND kind=?`,
-               JSON.stringify(r.detail && typeof r.detail === "object" ? r.detail : json(row.detail, {})), at, at, row.sha, row.kind);
+      /* a piece ended and the rest follows by the cursor the owner answered (`detail`), one heavy piece for each tick. A piece that moved the
+         cursor is progress: the isolate lived through it, so the interruptions counted before it no longer stand against what follows (fix round 6, G13) */
+      const next = JSON.stringify(r.detail && typeof r.detail === "object" ? r.detail : json(row.detail, {}));
+      /* due one millisecond on: a pass that went on moves its due instant (B38), so the scheduler's hold against a spin (its R27) reads a changed
+         wake even where the tick began with a row found stopped, whose wake it read as "now" */
+      sql.exec(`UPDATE keeps_pending SET ${ended(row)}, detail=?, attempts=0, due_at=?, last_try=?, last_why=NULL${next !== row.detail ? ", interrupted=0" : ""} WHERE sha=? AND kind=?`,
+               next, at + 1, at, row.sha, row.kind);
       return "retried";
     }
     if (r && r.ok === true && r.owed === true) {
@@ -138,7 +148,8 @@ export function pendingOf(ctx, deps = {}) {
   };
   const call = async (fn) => { try { return await fn(); } catch (e) { return { ok: false, reason: why(e) }; } };
 
-  const readNow = (row, at) => call(() => extractionOf(ctx).readHeld({ sha: row.sha, kind: row.kind, storeName: store(), env }))
+  /* `detail` is what the owner's last answer left for it (a cursor over a text, `{}` at first), handed back as it was kept (R82) */
+  const readNow = (row, at) => call(() => extractionOf(ctx).readHeld({ sha: row.sha, kind: row.kind, detail: json(row.detail, {}), storeName: store(), env }))
     .then((r) => row.kind === "ocr" && r && r.ok === true && r.owed !== true && r.final !== true ? end(row) : settle(row, at, r));
   const owner = {
     reading: readNow,
@@ -158,13 +169,25 @@ export function pendingOf(ctx, deps = {}) {
     subresources: async (row, at) => {
       const acq = acquisitionOf(ctx);
       const run = acq && typeof acq.owedRun === "function" ? acq.owedRun.bind(acq) : owedRun;   /* acquisition's export; an instance's own is a test's */
-      /* a rendered document is promoted beside its shell by the door's own function (control-plane, B29); without it a pending render stays the member's "Finish it" */
       /* a rendered document is promoted beside its shell by the door's own function (control-plane, B29), handed in by the composition; without it a pending render stays the member's "Finish it" */
       const deliver = typeof deps.deliver === "function" ? (a) => deps.deliver({ ctx, env, storeName: store(), ...a }) : undefined;
       const r = await call(() => run(captureOf(ctx), { kind: "subresources", session: row.sha }, { storeName: store(), env, ...(deliver ? { deliver } : {}) }));
       if (r && r.final === true && r.reason) return stop(row, at, String(r.reason).slice(0, 160));
       if (r && r.ok === true && r.done === true) return end(row);
       return attempt(row, at, String(r && (r.reason || r.code || r.why) || (r && r.outstanding ? "OUTSTANDING" : "NOT_DONE")));
+    },
+    /* fix round 6, G2 (R81): a large capture's fetch, by acquisition's `owedFetch(cap, {kind: "fetch", session}, {storeName, env, deliver})`, its
+       finished document handed to the same `deliver` (control-plane's, which promotes it and owes its reading). The session's row is heavy. */
+    fetch: async (row, at) => {
+      const acq = acquisitionOf(ctx);
+      const run = acq && typeof acq.owedFetch === "function" ? acq.owedFetch.bind(acq) : acquisitionModule.owedFetch;
+      if (typeof run !== "function") return attempt(row, at, "NO_OWNER");
+      const deliver = typeof deps.deliver === "function" ? (a) => deps.deliver({ ctx, env, storeName: store(), ...a }) : undefined;
+      const r = await call(() => run(captureOf(ctx), { kind: "fetch", session: row.sha }, { storeName: store(), env, ...(deliver ? { deliver } : {}) }));
+      if (r && r.final === true) return stop(row, at, String(r.reason || r.why || r.code || "FINAL").slice(0, 160));
+      if (r && r.ok === true && r.done === true) return end(row);
+      if (r && r.ok === true && r.more === true) return settle(row, at, r);   /* the fetch goes on at the next tick, from where it stopped */
+      return attempt(row, at, String(r && (r.reason || r.code || r.why) || "NOT_DONE"));
     },
     /* the archive-unpack drain's call (plane/unpack.mjs): `op=unpack` as the daemon, through the door */
     unpack: async (row, at) => {
@@ -218,12 +241,13 @@ export function pendingOf(ctx, deps = {}) {
     },
     /** R77: owed work, whatever its kind. `parts` (a keep) and `detail` (a cursor, a session's key) are the owner's. */
     async owe({ kind, sha, session, parts, detail } = {}) {
-      /* the ledger's key is the digest, but a web capture's outstanding files are owed by its SESSION (acquisition R100) */
-      const key = kind === "subresources" ? session : sha;
+      /* the ledger's key is the digest, but a web capture's outstanding files, and its fetch, are owed by its SESSION (acquisition R100) */
+      const sessionKeyed = SESSION_KEYED.includes(kind);
+      const key = sessionKeyed ? session : sha;
       if (!PENDING_KINDS.includes(kind)) return { ok: false, reason: "PENDING_MALFORMED" };
-      if (kind === "subresources" ? (typeof key !== "string" || key === "" || key.length > 200) : (typeof key !== "string" || !DIGEST.test(key)))
+      if (sessionKeyed ? (typeof key !== "string" || key === "" || key.length > 200) : (typeof key !== "string" || !DIGEST.test(key)))
         return { ok: false, reason: "PENDING_MALFORMED" };
-      if (kind === "subresources" && sha !== undefined) detail = { ...(detail || {}), sha };
+      if (sessionKeyed && sha !== undefined) detail = { ...(detail || {}), sha };
       const p = parts === undefined ? [] : parts;
       if (!Array.isArray(p) || !p.every((x) => typeof x === "string" && DIGEST.test(x)) || (kind === "keep" && p.length === 0)
           || (detail !== undefined && (detail === null || typeof detail !== "object" || Array.isArray(detail))))
@@ -285,17 +309,31 @@ export function pendingOf(ctx, deps = {}) {
 }
 
 /** The store-internal route `pendingadd`: no caller's own, reached by the door with the stamps it sets. And the member's read
- *  `owedwork` (R77): the entries owed on one digest (`sha`), else the counts for each kind; the plane's own arm, declared. */
-export function pendingOps(holder, url) {
+ *  `owedwork` (R77): the entries owed on one digest (`sha`), else the counts for each kind; the plane's own arm, declared. An
+ *  administrator's answer also carries what the watchdog sees (R80): `last_run`, `alarm_at`, `stale`, `oldest_overdue` and
+ *  `watchdog_seen`, from `health` (the scheduler's, read-only: it re-arms nothing). Who asks is the door's `viewer` stamp, judged by
+ *  `administers(viewer)` (membership's rule, handed by the composition), never a `cls` the caller wrote: a member's screen never
+ *  shows a stall. */
+const WATCHDOG_FIELDS = Object.freeze(["last_run", "alarm_at", "stale", "oldest_overdue", "watchdog_seen"]);
+export function pendingOps(holder, url, { health, administers } = {}) {
+  const stalled = async (answer) => {
+    if (typeof health !== "function" || typeof administers !== "function" || answer.ok !== true) return answer;
+    let admin = false;
+    try { admin = administers(url.searchParams.get("viewer")) === true; } catch { admin = false; }
+    if (!admin) return answer;
+    let seen = null;
+    try { seen = await health(); } catch { /* the stall is not the read's to fail on */ }
+    return seen && typeof seen === "object" ? { ...answer, ...Object.fromEntries(WATCHDOG_FIELDS.map((k) => [k, seen[k] ?? null])) } : answer;
+  };
   return {
     pendingadd: () => holder.add({ kind: url.searchParams.get("kind"), sha: url.searchParams.get("sha") }),
     owedwork: () => {
       const sha = url.searchParams.get("sha");
-      if (sha === null) return { ok: true, owed: holder.summary() };
-      if (DIGEST.test(sha)) return { ok: true, sha, owed: holder.list({ sha }) };
-      /* a `subresources` row is keyed by its capture session (R77): the key is read when a row of that kind holds it */
-      const owed = holder.list({ sha }).filter((e) => e.kind === "subresources");
-      return owed.length ? { ok: true, sha, owed } : { ok: false, reason: "BAD_SHA" };
+      if (sha === null) return stalled({ ok: true, owed: holder.summary() });
+      if (DIGEST.test(sha)) return stalled({ ok: true, sha, owed: holder.list({ sha }) });
+      /* a `subresources` or `fetch` row is keyed by its capture session (R77, R81): the key is read when a row of those kinds holds it */
+      const owed = holder.list({ sha }).filter((e) => SESSION_KEYED.includes(e.kind));
+      return owed.length ? stalled({ ok: true, sha, owed }) : { ok: false, reason: "BAD_SHA" };
     },
   };
 }

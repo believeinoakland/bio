@@ -991,6 +991,11 @@ async function xlsxText(parts) {
     if (sheet.xml == null && !sheet.pieces) { unreadable(sheet, sheet.why ?? "sheet_unreadable"); continue; }
     const undetermined = [];
     const lines = [];
+    /* G15: the 1-based row of each line, beside `lines` (empty rows give no
+       line, so the line index is not the row). A row with no readable `r`
+       follows the row before it, as the format defines. */
+    const lineRows = [];
+    let lastRow = 0;
     /* R30's typed cells: a sheet read in pieces lists none (`cells` is null,
        as over the guard), because they are the one thing here that grows with
        the sheet in objects, not in text (R35). */
@@ -998,6 +1003,8 @@ async function xlsxText(parts) {
     let sheetCells = 0, sheetFormulas = 0;
     const walked = await walkSheetPart(parts, sheet, (row) => {
       const vals = [];
+      const rowNo = Number.isInteger(row.r) && row.r > 0 ? row.r : lastRow + 1;
+      lastRow = rowNo;
       for (const c of row.cells) {
         if (c.f != null) sheetFormulas++;
         /* R30: every cell holding a value or a formula, typed as declared. */
@@ -1015,7 +1022,7 @@ async function xlsxText(parts) {
         sheetCells++;
         vals.push(r.value);
       }
-      if (vals.length) lines.push(vals.join("\t"));
+      if (vals.length) { lines.push(vals.join("\t")); lineRows.push(rowNo); }
     });
     if (walked.failed) {
       const { why, ...rest } = walked.failed;
@@ -1035,7 +1042,7 @@ async function xlsxText(parts) {
       usedRows: walked.usedRows, usedCols: walked.usedCols,
       /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
       range: usedSheetRange(sheet.name, walked.usedRows, walked.usedCols),
-      text, cells: typed ? rowColumnOrder(typed).map((x) => x.cell) : null, undetermined });
+      text, lineRows, cells: typed ? rowColumnOrder(typed).map((x) => x.cell) : null, undetermined });
     for (const u of undetermined) allUndetermined.push(u);
   }
 

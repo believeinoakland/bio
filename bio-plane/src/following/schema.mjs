@@ -3,6 +3,7 @@
  * (R1's `unfollow`), and the per-meeting link is a chain whose last row governs. */
 
 export const FOLLOWING_SCHEMA = `
+-- G21 (K4571): body_cursor is a followed body's read in progress (JSON; where the next tick goes on), or its finished read's count.
 -- R1, R7, R9, R10, R20: ONE ROW PER FOLLOW. subject is JSON ({kind, ...}); home the bundle whose project the follow
 -- lives in and its captures land in (null: group-wide); gated JSON for R8 (null: public). A policy watch (R20) has
 -- author '' (none: the group's standing watch, K1727).
@@ -21,7 +22,8 @@ CREATE TABLE IF NOT EXISTS follows (
   ended_by    TEXT,
   last_read   TEXT,
   last_outcome TEXT,
-  ended_reason TEXT
+  ended_reason TEXT,
+  body_cursor TEXT
 );
 
 -- R22: a follow's end date, set at the follow, changed by followEnd or R25's answer; appended with who and when and
@@ -168,4 +170,6 @@ export function migrateFollowing(sql) {
   for (const s of bare.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
   /* R14, R22: a follows table made before T45 gains its ending's reason */
   if (![...sql.exec(`PRAGMA table_info(follows)`)].some((r) => r.name === "ended_reason")) sql.exec(`ALTER TABLE follows ADD COLUMN ended_reason TEXT`);
+  /* G21: a follows table made before the cursor gains it; a body read before it starts its next pass whole */
+  if (![...sql.exec(`PRAGMA table_info(follows)`)].some((r) => r.name === "body_cursor")) sql.exec(`ALTER TABLE follows ADD COLUMN body_cursor TEXT`);
 }

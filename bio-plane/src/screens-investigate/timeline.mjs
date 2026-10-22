@@ -84,7 +84,7 @@ function render(cs, view) {
      (events R53, C54), which are the project's own documents below, so no list of what was recorded is kept in the page. */
   const set = doc ? [...new Set(doc.refs.filter((r) => /^(ENT|EVT)-/.test(String(r.target || "")) && r.status !== "severed").map((r) => r.target))] : [];
   /* R33 (5): the capture digests of the project's documents (at most 200, newest first, events R53) join the set */
-  const docsRead = view.data.docs && view.data.docs.state === "ok" && view.data.docs.value && Array.isArray(view.data.docs.value.held) ? view.data.docs.value.held : [];
+  const docsRead = P.docsAll(cs, view, { project: id }).rows;
   const shas = docsRead.map((r) => r && r.capture && r.capture.sha256).filter(Boolean).slice(0, 200);
   const q = {};
   if (set.length) q.set = set.join(",");
@@ -145,7 +145,7 @@ function render(cs, view) {
   /* R49: the first expected flow is defined from the project's own timeline, not only from inside a flow's page */
   if (proj && proj.state === "ok") out.push(view.parts.defineFold(cs));
   out.push(cs.sec(S + "record.head",
-    P.docChoice(cs, view, "tl-doc", { project: id, passage: false, drive: true }) + P.passagePick(cs, view, "tl-doc", "tl-passage", P.later)
+    P.docChoice(cs, view, "tl-doc", { project: id, query: { project: id }, passage: false, drive: true }) + P.passagePick(cs, view, "tl-doc", "tl-passage", P.later)
     + kindChoice
     + cs.act("createevent", { label: "act.createevent.label.timeline", tone: "primary" })
     + evChoice("tl-event", S + "event") + cs.choice("tl-who", S + "who", view.parts.options(view, "people", (v) => v.rows, (r) => ({ value: r.entity, text: r.name || r.entity })), {})

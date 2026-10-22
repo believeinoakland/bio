@@ -27,7 +27,7 @@ test("R49 (C9) a capture from a question sends the question as `for`; a document
   const p = await open(`/app/capture/address/${Q}`, { plane: { ...CAPTURED, ...QPLANE, heldat: holder(SHA, "INFO-2026-0042-held"), acquire: ok({ ok: true, existed: true, document: DOC }) } });
   fill(p, { "ci-address": ADDRESS });
   await press(p, "acquire");
-  assert.deepEqual(p.byOp("acquire").map((r) => r.body), [{ locator: ADDRESS, for: Q }], "the plane records the capture as made for this question when `for` rides on acquire (acquisition R47)");
+  assert.deepEqual(p.byOp("acquire").map((r) => r.body), [{ locator: ADDRESS, for: Q, project: "PROJ-2026-0007" }], "the plane records the capture as made for this question when `for` rides on acquire (acquisition R47)");
   assert.equal(p.byOp("capturerequest").length, 0);
   assert.equal(p.byOp("allocid").length + p.byOp("promote").length, 0, "no document is written");
   assert.equal(anchors(p, "INFO-2026-0042-held").length >= 1, true, "the holder is linked");
