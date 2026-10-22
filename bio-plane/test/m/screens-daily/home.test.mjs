@@ -49,7 +49,9 @@ test("R17: Home reads the queue, projectlist, startfrom, lookedsince and groupid
   for (const op of ["memberlist", "profiles", "grouplanguages", "aiuseovertime"]) assert.equal(p.byOp(op).length, 0, `control: ${op} is an administrator's`);
   const a = await open("/app", ADMIN_PLANE);
   for (const op of ["memberlist", "profiles", "grouplanguages"]) assert.equal(a.byOp(op).length, 1, op);
-  assert.equal(a.byOp("bootstrap").length, p.byOp("bootstrap").length + 1, "bootstrap read for Administration, beside the shell's own");
+  assert.equal(a.byOp("bootstrap").length, 1, "R122: the Administration reading's bootstrap is answered from the page's one answer: one request");
+  assert.equal(p.byOp("bootstrap").length, 1, "and one for a member's page");
+  assert.equal(a.byOp("queue").filter((r) => r.query.count !== "true" && r.query.count !== "1").length, 1, "C14: one list read of the queue (the frame's own is the count)");
   assert.equal(a.byOp("aiuseovertime")[0].query.owner, "group");
 });
 
