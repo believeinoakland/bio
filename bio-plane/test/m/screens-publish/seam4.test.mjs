@@ -207,13 +207,13 @@ test("R13 R70 R77 C48 E4 a ceremony reloaded after 'Edition 1 is prepared' count
   assert.equal(pinned.length, 1, "the real prepared document pins the finding");
   const asked = [];
   const again = await open(CER2(P), { boot: { idb: await keptKey() }, plane: planeFor(plane, asked) });
-  assert.ok(drew(again, "screen.ceremony.signs.count.findings", { n: "2", findings: "1" }), "the edition and its one finding, after the reload");
+  assert.ok(drew(again, "screen.ceremony.signs.count", { n: "3", findings: "1", evidence: "1" }), "the edition, its one finding and the document it rests on, after the reload");
   assert.equal(again.root().querySelector("[data-roster-unread]"), null, "nothing is unreadable");
-  assert.deepEqual(main(again).querySelectorAll("[data-statement]").map((li) => li.getAttribute("data-statement")), ["case", "finding"]);
+  assert.deepEqual(main(again).querySelectorAll("[data-statement]").map((li) => li.getAttribute("data-statement")), ["case", "finding", "evidence"]);
   await press(again, "caseratify");
   await answerSign(again, true, "caseratify");
   const sent = last(again, "caseratify").body;
-  assert.deepEqual(sent.members.map((m) => [m.id, m.sha]), [[Q, pinned[0].version_sha]], "the finding is signed with the edition, with the sha the document pins");
+  assert.deepEqual(sent.members.map((m) => [m.id, m.sha]), [[Q, pinned[0].version_sha], [DOC, w.record.head(DOC).bundleSha]], "the finding is signed with the edition, with the sha the document pins, and the document at its head");
   assert.equal(sent.members[0].signature.length > 0, true);
 });
 
@@ -223,7 +223,7 @@ test("R13 R70 E4 control: the same flow with no reload counts and signs the same
   const same = await open(CER2(P), { boot: { idb: await keptKey() }, plane: planeFor(plane, asked) });
   tick(same, "ce-tie", "yes");
   await press(same, "publish", { reason: "because" });
-  assert.ok(drew(same, "screen.ceremony.signs.count.findings", { n: "2", findings: "1" }));
+  assert.ok(drew(same, "screen.ceremony.signs.count", { n: "3", findings: "1", evidence: "1" }));
   await press(same, "caseratify");
   await answerSign(same, true, "caseratify");
   const a = last(same, "caseratify").body;
@@ -270,4 +270,26 @@ test("R73 C49 G12c (fix round 6, seam) the ceremony of a project with four draft
   assert.deepEqual(batch[0].query.drafts.split(",").sort(), ids.slice(0, 3).sort());
   const labels = p.doc.getElementById("drafts-ceremony").querySelectorAll("option").map((o) => o.textContent);
   for (const scope of ["Second scope", "Third scope", "Fourth scope"]) assert.ok(labels.some((t) => t.includes(scope)), scope);
+});
+
+/* ---------- G29 (fix round 6; R13; K4607, K4609): the evidence a case rests on is signed with the edition, at the document's head ---------- */
+test("R13 G29 (seam) the real cite, conclude and prepare: the ceremony signs a line for the cited document at its head `bundle_sha` (what ratification verifies, R4/R52), beside the finding's; RED BY NAME until case-authoring's rows carry `bundle_sha` (K4609)", async () => {
+  const { w, P, plane } = prep();
+  const first = await open(CER2(P), { plane });
+  tick(first, "ce-tie", "yes");
+  await press(first, "publish", { reason: "because" });
+  const caseId = w.row(`SELECT case_id FROM case_documents`).case_id;
+  const rows = w.fm(w.row(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, caseId, 1).text).case_citations;
+  const head = w.record.head(DOC).bundleSha;
+  assert.match(head, /^[0-9a-f]{64}$/);
+  const row = rows.find((r) => r.target === DOC);
+  assert.ok(row, "the cited document is a row");
+  assert.equal(row.bundle_sha, head, "the row carries the document's head (case-authoring, K4609)");
+  const asked = [];
+  const again = await open(CER2(P), { boot: { idb: await keptKey() }, plane: planeFor(plane, asked) });
+  assert.deepEqual(main(again).querySelectorAll("[data-statement]").map((li) => li.getAttribute("data-statement")), ["case", "finding", "evidence"]);
+  await press(again, "caseratify");
+  await answerSign(again, true, "caseratify");
+  const sent = last(again, "caseratify").body;
+  assert.ok(sent.members.some((m) => m.id === DOC && m.sha === head), "the document is signed at its head, not at its capture");
 });

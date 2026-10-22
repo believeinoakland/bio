@@ -465,8 +465,10 @@ export const PARTS = Object.freeze({
       seen[f.target] = true;
       list.push({ kind: "finding", id: f.target, sha: f.bundleSha, text: "bio-ratify " + f.target + " " + f.bundleSha + "\n", namespace: "bio-ratify" });
     });
+    // G29 (fix round 6; K4609, `case-authoring` R86): a document the case rests on is signed at its head, the `bundle_sha` its row carries
+    // (ratification verifies `ratifyStatement(id, head)`, R4/R52); nothing is signed from `version` (a classification word) or `capture`
     (doc.citations && Array.isArray(doc.citations.rows) ? doc.citations.rows : []).forEach(function (c) {
-      const id = c && (c.target || c.bundle_id), sha = c && (c.version || c.bundle_sha);
+      const id = c && c.target, sha = c && c.bundle_sha;
       if (!id || typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha) || seen[id]) return;
       seen[id] = true;
       list.push({ kind: "evidence", id: id, sha: sha, text: "bio-ratify " + id + " " + sha + "\n", namespace: "bio-ratify" });
@@ -483,21 +485,20 @@ export const PARTS = Object.freeze({
     return listed < pinned || (listed === 0 && named > 0);
   },
 
-  /* C47 (fix round 2; public-read R39): how many documents the edition's document cites that are not published with the case: a
-     citation that is no finding of the edition and whose version is no full SHA-256 (what a sitting signs as evidence is published),
-     each counted once. */
-  notPublished: function (doc, prepared) {
-    const pinned = {}, seen = {};
+  /* C47, G29 (public-read R39; K4609): the documents the edition's document cites that cannot be signed with it, by target, each once: a
+     document row (`version` other than `no_bytes`, which is a finding's or question's edge) that carries no `bundle_sha`, such as an edition
+     prepared before rows carried it. A finding of the edition is never one. */
+  unsignable: function (doc, prepared) {
+    const pinned = {}, seen = {}, out = [];
     const roster = doc && Array.isArray(doc.findings) ? doc.findings : prepared && Array.isArray(prepared.findings) ? prepared.findings : [];
     roster.forEach(function (f) { if (f && f.target) pinned[f.target] = true; });
-    let n = 0;
     (doc && doc.citations && Array.isArray(doc.citations.rows) ? doc.citations.rows : []).forEach(function (c) {
-      const id = c && (c.target || c.bundle_id), sha = c && (c.version || c.bundle_sha);
-      if (!id || pinned[id] || seen[id]) return;
+      const id = c && c.target;
+      if (!id || pinned[id] || seen[id] || c.version === "no_bytes") return;
       seen[id] = true;
-      if (typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha)) n++;
+      if (!/^[0-9a-f]{64}$/.test(String(c.bundle_sha || ""))) out.push(id);
     });
-    return n;
+    return out;
   },
 
   /* The UTF-8 bytes of a statement the member's key signs (interface-shell R41's `{label, bytes, namespace}`). */

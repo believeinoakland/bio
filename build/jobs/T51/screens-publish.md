@@ -1,6 +1,6 @@
 # screens-publish (T51)
 
-**Status** · session_018p3RDUFnhwwhQG5CBJrBfi · depth 2 · COMPLETE · handled B36
+**Status** · session_018p3RDUFnhwwhQG5CBJrBfi · depth 2 · COMPLETE · handled B39
 
 ## J1 · QUESTION
 
@@ -471,3 +471,29 @@ Size (session_018p3RDUFnhwwhQG5CBJrBfi): test runs 14, module lines 3650
 ## J29 · COMPLETE
 
 COMPLETE (B36). tranche/T51 merged (control-plane's batch keys included), pushed. New `door-seam.test.mjs` "R73 C49 G12c (fix round 6, door seam)": the real Worker, its object and review under Miniflare; the member's acts make a project and four drafts (`casedraft`); the Ceremony's page reads go through the real door. It sends two `reviewcopy` (the draft shown, and one batch `drafts=<the other three>`), the door answers the batch, and each draft is named by the scope of its own real copy. Green. Suites: screens-publish 267 pass, 0 fail, 2 todo (pre-existing); words, coverage 80/80, architecture, ownership 0 failures. Nothing open. Ahead: G29 CHANGE when CASE-AUTHORING #39 merges. Size (session_018p3RDUFnhwwhQG5CBJrBfi): test runs 6, module lines 3635
+
+## J30 · QUESTION
+
+QUESTION (G29, B37 item 2; replaces nothing). The row cannot give the sha ratification verifies for a document.
+What ratification verifies: `caseratify`/`publishat` `members: [{id, sha, signature}]` are each checked as R4 checks a bundle (R52): `findingFactsRefusal` (`ratification/finding.mjs:64-67`) answers `RATIFY_STALE` unless `m.sha === facts.row.bundle_sha`, the BUNDLE's head (`record-core` `head(id).bundleSha`, the sha256 of its `bundle.md`), and the signature is over `ratifyStatement(id, m.sha)` (`index.mjs:1387`; held members again at `:1383-1390`). The sitting test signs `w.sha(id)`, that head, for each INFO document (`ratification/sitting.test.mjs:63-64`).
+What the row gives (`case-authoring/index.mjs` `#caseCitations` tail, `document.mjs:141-145`): `{target: INFO-..., version: only_capture|pinned|undetermined|no_capture|no_bytes, capture: <the CAPTURE's sha256> | null}`. A capture's sha is not the document bundle's head sha (a document holds captures; its `bundle.md` has its own sha), so signing `row.capture` gets `RATIFY_STALE` (and a row with `capture: null` has nothing to sign at all). No existing row field holds the head.
+What ratification/the row would need: each evidence row carries the document's head `bundle_sha` as of the prepare act (case-authoring R16/R86, written into `case_citations`, the stored document and `casedocument`'s `citations.rows` alike), and then `sitting()` signs `ratifyStatement(row.target, row.bundle_sha)`; a document that moves between prepare and signing is refused `RATIFY_STALE` naming it, which is the right answer for an edition whose bytes were frozen. Every row of a document, `undetermined` ones too, would have it (the head does not depend on how many captures it holds), so no document needs to be left unnamed.
+Alternative (not recommended): the screen reads each evidence document's head at the Sign step (`list`/`bundlehistory`, one more read per document, and a sha the case document never recorded).
+I do not invent a mapping. Until you decide I build what is independent of it: no evidence line is drawn or signed from `version`; the seam test (cite, conclude, prepare, publish, then `caseratify`/`publishat` over the real ratification, every evidence signature verifying) written red by name. Please answer (and CHANGE case-authoring if the row is to carry `bundle_sha`).
+
+## J31 · REPORT
+
+REPORT (G29, B37/B38). Pushed. `parts.mjs` `sitting()`: an evidence line is `ratifyStatement(row.target, row.bundle_sha)` for each row carrying a 64-hex `bundle_sha`; nothing is read from `version` or `capture`. New `unsignable()` (replaces `notPublished`): the document rows (`version` not `no_bytes`) with no head, each once; the Sign step names them (`[data-unsignable]` list) beside the held sentence `screen.published.rests.on.the.council.minutes[.one]` (stand-in, row owed: a sentence saying these documents cannot be signed with the edition). Tests: fix2 "R13 G29" (signs at the head, never the capture or class; two rows without a head named; control none named) green; fixtures' DOCUMENT rows now in the real shape. Seam test seam4 "R13 G29 (seam)" (real cite, conclude, prepare, then the ceremony's sitting must hold the document at `w.record.head(DOC).bundleSha`) is RED BY NAME: `row.bundle_sha` is undefined until CASE-AUTHORING #40 merges; I need your CHANGE then. Suite: 268 pass, 1 fail (that test), 2 todo; words, coverage 80/80, architecture, ownership 0 failures. Verification by the real ratification is its own sitting test (the head is the sha it checks, `finding.mjs:64`); this seam proves the screen signs that head. No COMPLETE until green.
+
+## J32 · COMPLETE
+
+COMPLETE (G29 screen half, B37-B39). Branch job/T51/screens-publish, tranche/T51 merged (case-authoring #40 included), pushed.
+
+**G29, four fields.** (1) Cause, `parts.mjs` `sitting()`: an evidence line was kept only if the citation row's `version` was 64 hex, but real rows carry a classification word in `version` and the capture's sha in `capture`; over a real document no evidence line was drawn or signed. Fix: a document row is signed as `ratifyStatement(row.target, row.bundle_sha)` for a row carrying a 64-hex `bundle_sha` (the head ratification verifies, R4/R52: `finding.mjs:64` `RATIFY_STALE` unless `sha === bundle_sha` of the head); nothing from `version` or `capture`. New `unsignable()` (replaces `notPublished`) lists the document rows (`version` not `no_bytes`) with no head, once each; the Sign step names them in a `[data-unsignable]` list under the held sentence `screen.published.rests.on.the.council.minutes[.one]` (stand-in; row owed: a sentence saying these documents cannot be signed with the edition). (2) Missed: `seam4` and the fixtures hand-wrote rows with `version` as a sha, a shape no plane answers. Gap fix: fixtures use the real row shape; the seam below prepares through the real case-authoring. (3) Failing-first: `seam4` "R13 G29 (seam)": the real cite, conclude, prepare; the ceremony's sitting holds the cited document at `w.record.head(DOC).bundleSha`: red (row had no `bundle_sha`) until case-authoring #40, green now. `fix2` "R13 G29": signs at the row's head never at capture or class, two rows without a head named, control none named. The two E4 seam tests (reload and no-reload) now count the document too (3 statements: edition, finding, evidence) and assert its member `[DOC, head]`. (4) N.
+Ratification's own verification of an evidence member at that head is its sitting test (R52); this job proves the screen signs the head and did not re-run a signature over the real ratification.
+
+Suites: screens-publish 269 pass, 0 fail, 2 todo (pre-existing); control-plane `t46-app` 6/6 (the module's only user). Checks: words 0 failures (unkeyed 0), coverage 80/80, architecture 0, ownership 0.
+Proposed requirement lines (R13): the sitting's evidence lines are the document rows of `casedocument`'s `citations.rows` that carry `bundle_sha`, each signed as `ratifyStatement(target, bundle_sha)`; a document row with none is named in the Sign step as not signable with the edition and no line is drawn or signed for it.
+Row owed to UX-DESIGN: the unsignable-documents sentence (stand-in `screen.published.rests.on.the.council.minutes`).
+
+Size (session_018p3RDUFnhwwhQG5CBJrBfi): test runs 9, module lines 3638

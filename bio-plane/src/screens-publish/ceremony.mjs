@@ -366,7 +366,7 @@ export const CEREMONY = Object.freeze({
             const gap = P.sittingGap(d, list, found.length);
             // C47: what the signature covers is counted; a document the case rests on that is not published with it is said, not
             // counted as nothing (public-read R39)
-            const evidence = list.filter(function (x) { return x.kind === "evidence"; }).length, named = P.notPublished(d, prepared);
+            const evidence = list.filter(function (x) { return x.kind === "evidence"; }).length, named = P.unsignable(d, prepared).length, nameList = P.unsignable(d, prepared);
             return '<details data-statements><summary>' + cs.w("screen.ceremony.signs.exactly") + "</summary><ul class=\"mk-list\">"
               + list.map(function (x) {
                 return '<li data-statement="' + x.kind + '"><span class="id">' + cs.esc(x.text.trim()) + "</span> · " + cs.w("screen.ceremony.signs." + x.kind, { id: x.id, edition: String(x.edition === undefined ? "" : x.edition), case: x.id }) + "</li>";
@@ -374,7 +374,9 @@ export const CEREMONY = Object.freeze({
                 findings: String(list.filter(function (x) { return x.kind === "finding"; }).length), evidence: String(evidence) })
                 : cs.w("screen.ceremony.signs.count.findings", { n: String(list.length), findings: String(list.filter(function (x) { return x.kind === "finding"; }).length) })) + "</p>"
               + (named === 1 ? '<p class="mk-note" data-unpublished="1">' + cs.w("screen.published.rests.on.the.council.minutes.one") + "</p>"
-                : named > 1 ? '<p class="mk-note" data-unpublished="' + named + '">' + cs.w("screen.published.rests.on.the.council.minutes", { count: String(named) }) + "</p>" : "");
+                : named > 1 ? '<p class="mk-note" data-unpublished="' + named + '">' + cs.w("screen.published.rests.on.the.council.minutes", { count: String(named) }) + "</p>" : "")
+              // G29: the documents that cannot be signed with the edition are named; the sentence is the nearest held row (row owed)
+              + (named ? '<ul class="mk-list" data-unsignable>' + nameList.map(function (t) { return '<li><span class="id">' + cs.esc(t) + "</span></li>"; }).join("") + "</ul>" : "");
           })
           // R72 (fix round 3, C51): with no signing key in this browser, the key file the member made earlier is chosen here and loaded for
           // the sitting (`cs.keyFile`); a device that holds a key is not asked for one
