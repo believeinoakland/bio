@@ -36,7 +36,7 @@ it never invents (D-112).
 - **R8** Over envelope: bytes larger than `MAX_PDF_BYTES` (env override, default 16,777,216) skip tier 2:
   `.text` becomes `{document:"", pages:[], undetermined:[{page:null, reason:"over_envelope", font:null,
   codes:"", count:0, bytes, limit}], counts:{chars:0, undetermined:1}}`, `.tier` is 1, and
-  `"tier2_declined_over_envelope"` is appended to `.notes`.
+  `"tier2_declined_over_envelope"` is appended to `.notes`. (fix round 6, G34; K4608) The default `MAX_PDF_BYTES` is 67,108,864 (64 MiB), measured: tier 2 reads a 64 MiB file of up to 300 text pages in 20 MB of old space and a 23 MiB file of 1,600 text pages in 39 MB under raw workerd, so heap plus bytes stays under 128 MB. Test: `one byte over the default`, `exactly the default`, `the old 16 MiB default plus one`, `the walker's shape`.
 - **R9** Tier 2, otherwise: `unpdf` extracts each page's text (pages kept separate). `.text.pages` is one
   `{page, text, undetermined}` per page; a page whose trimmed text is empty carries one
   `{page, reason:"no_text_layer", font:null, codes:"", count:0}` marker, in its own `undetermined` and in

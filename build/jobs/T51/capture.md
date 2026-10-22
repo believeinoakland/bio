@@ -1,6 +1,6 @@
 # capture (T51)
 
-**Status** · session_01DvJ1NBRub48BYu8NPSwTbT · depth 2 · COMPLETE · handled B24
+**Status** · session_01Uu76H7JzhRxSdMcBjFLc6j · depth 2 · COMPLETE · handled B27
 
 ## J1 · COMPLETE
 
@@ -500,3 +500,64 @@ Size (session_01DvJ1NBRub48BYu8NPSwTbT): test runs 12, module lines 4390
 ## J23 · COMPLETE
 
 COMPLETE (CAPTURE #48, B24): tranche/T51 merged; notArchivesAmong is a named import and the G12a test is green (mutation-checked); acquire declares and accepts `project` (test in declared-ops). Capture suite 267/267; format, architecture, coverage, words 0. One user failure, control-plane/t51-visitor-copy.test.mjs (E8), fails identically on tranche/T51 without my commits (control-plane). One old assertion in t49.test.mjs edited to the new rule (a decided non-archive is not asked again). Details in my record.
+
+## J24 · QUESTION
+
+QUESTION (G32; my best reading follows; I carry on with G27 meanwhile).
+
+Acquisition reads the held digest only from `opts.captureRequest.heldSha` (acquisition/index.mjs:972), the in-process drain's arm. That arm also takes the address, purpose, agent and credential from the row, deletes `body.render`, forbids parking (`mayPark` needs `!captureRequest`) and lets the daemon class through the R1 fence (:903). So capture's door `acquire` cannot hand it a member's request without changing all of that; I will not fake a captureRequest.
+
+Smallest thing I need: acquisition accepts a plain option `opts.heldSha` (64 hex, ignored otherwise), honoured for any caller exactly as `crHeldSha` is today (validators from `cap.validatorsOf({addressNorm, captureSha})`, not with render), the 304 answer unchanged. Then capture's `acquire` arm (index.mjs:3272, `heldAt` read of the address, the viewer-independent newest direct plain capture) passes `heldSha` and everything else stays.
+
+If you would rather keep acquisition untouched, the alternative inside capture alone is a conditional governed look of my own before calling `acquire` (a second request when the source changed; the 304 answer composed here), which duplicates acquisition's R22. I recommend the one-line option in acquisition.
+
+Until you answer I build the capture side against `opts.heldSha` and its test red by name; G27 is independent and is built now.
+
+## J25 · COMPLETE
+
+COMPLETE, CAPTURE #49, T51 fix round 6, wave 3: G27 (done) and G32 (capture side done; its through-the-door test is red by name until ACQUISITION #29's `opts.heldSha` merges, as B26 says; I then expect a CHANGE). Pushed on job/T51/capture. tranche/T51 merged first.
+
+## G27 · the door's read after a kept acquire (R73)
+1. Root cause: `captureOp` made one stub `at = store()` and used it for the acquire and for the read after it (`ops.mjs`, the old :196-206), so a read that came back unanswered after the object was reset was never made on a stub that could answer, and acquisition's `reading_pending` deferral (R87) was the only outcome. Cloudflare: do not reuse a stub after it throws; `retryable`/`overloaded` say what may be retried. The reader (`acquireReadingOp`, extraction) already turns a thrown call into `{body: {..., reading_pending: true, diag}}`, so the door sees a failed read as a body with `diag`, a thrown `readAcquired`, or an empty answer.
+2. Change (`bio-plane/src/capture/ops.mjs`, `captureOp` acquire arm, plus two helpers `readFailed` and `readOverloaded`): a failed read (thrown, empty or `reading_pending` with a `diag`) is made once more on a fresh stub (`store()`), unless overloaded (`.overloaded`, a `diag.overloaded`, or the platform's words "overloaded" in the message); a second failure is the existing deferral with the last attempt's `diag`; a deferral the reader chose itself (no `diag`) and the store's own refusal are not retried.
+3. Why the tests missed it: stubs that never fail on a second call, tiny replies, no memory limit in local workerd. Gap fixed: `g27-t51.test.mjs` drives the door's own entry (`captureOp("acquire")`) with stubs that fail as a reset object's does (a rejected fetch with `remote: true`; a reply that is no envelope), a reader written to extraction's `acquireReadingOp` contract (`reader.mjs`; capture cannot import extraction, the architecture check refuses it) and counts `store()` calls.
+4. Failing-first, seen red then green (the file, run before the change): 4 of 6 failed (first-read-throws-remote: got `reading_pending` + diag, wanted the document read; no-envelope reply: same; both-fail: `store()` count 1 not 2; a throwing `readAcquired`: not retried). After: 6 of 6. The controls that held before and after: overloaded is not retried (`store()` once, deferral answered), a read that answers is not retried, a deferral the door chose itself is relayed without a second read.
+5. Platform check (L): `g27-reset.probe.mjs` (committed, a probe, not a test), real workerd under Miniflare with a SQLite Durable Object that aborts itself (`ctx.abort`, the reset a memory limit causes) on its first `extractread`: `{"status":200,"read":{"read":true},"reading_pending":false,"stubs_made":2,"same_stub_after_reset_answers":true}`. So the retry on a fresh stub reads the document after a real object reset. Honest limit: local workerd enforces no memory limit (diagnosis-R6-G4.md), so the reset is made by `ctx.abort`, and the same stub also answers locally after it; the "broken stub" Cloudflare describes is not reproduced here. **P at the re-walk: dena, read `diag`** (a failure that persists after the retry still answers `reading_pending` with the second attempt's `diag`).
+6. Not done, not mine: the acquisition half of G27 (the renderer's reply not held resident while the request continues) is acquisition's. Found in extraction (P9), for BOB: `deferralDiag` (`extraction/ops.mjs`) keeps only `name`, `message`, `status`; adding the error's `overloaded` and `remote` booleans to `diag` would let me read the flag instead of the platform's words (I honour `diag.overloaded === true` already).
+
+## G32 · a held file is downloaded again (R106 proposed)
+1. Root cause: acquisition reads the held digest only from `opts.captureRequest.heldSha` (acquisition/index.mjs:972), the in-process drain's arm, so a member's or a bearer's `op=acquire` of a held address is never conditional (`crHeldSha`, :1137) and pulls the body again.
+2. Change: `ops.mjs` `acquireOp` forwards the caller's sight (`viewer`, from `captureOp`'s `h.viewer`; none handed sees nothing) in the query to the store; `index.mjs` the `acquire` route asks the new `Capture.heldCopyToCompare(body, viewer)` and, when it answers a digest, passes `opts.heldSha` to `acquire`. `heldCopyToCompare` (a read, never a fetch, never throws): the newest capture of `body.locator` the viewer may see (R96's compared copy), only when it came from a plain, direct fetch of that very address (receipt `via: direct`, plain address) and the register document says it was captured and not rendered; never for a body with `render`, `via`, `continue`, `file`, `subresources` or `address`, for an address that is no public https locator, or when the viewer sees no copy (an unseen copy is never named: the 304 answer carries the digest).
+3. Why the tests missed it: instant fixtures, no counter of the bytes pulled. Gap fixed: `g32-t51.test.mjs` pulls a 1 MiB document through a throttled stream with an ETag, counts the bytes pulled and the requests that carried `if-none-match`, and builds the register from the first real acquire's own document.
+4. Tests: (a) the arm hands the digest, under a member's session and under an admin bearer: green; (b) controls for each case above: green; (c) the second acquire pulls no body, answers `existed: true, unchanged: true, capture.sha256` of the held copy, under a member's session and under the admin bearer, the one second request carrying the ETag: **red by name** (`TypeError ... reading 'sha256'`: the answer is a full capture, the body was pulled again); with a throwaway local patch of acquisition (`opts.heldSha` read as `crHeldSha`, reverted, not committed) all four tests pass, so the test is red for that cause only; (d) a changed source (new ETag) is fetched and filed as before, and a held copy whose source sent no validator is fetched unconditionally. Platform check: L is this fixture's counted stream; **P**: one `curl -I` of the nps.gov file after the deploy (BOB's, read-only).
+5. "A member asking for a new copy still gets one": only when no validators were recorded or the source changed; an unchanged source with validators answers `unchanged`, as the drain's requests do (acquisition R22).
+
+## Requirement lines proposed (BOB writes `build/requirements/capture.md`)
+- R73 (amend): "(T51 fix round 6, G27) A read after a kept acquire that fails (the call threw, answered nothing, or the reader reported it unanswered with a `diag`) is made once more on a fresh stub of the object, never when the object is overloaded (the error's or `diag`'s `overloaded`, or the platform's words for it); a second failure is the deferral (`reading_pending`, `sha`, `diag` of the last attempt); a deferral the reader chose itself and the store's own refusal are not retried. Test: `g27-t51.test.mjs`."
+- R106 (new): "(fix round 6, G32; `acquisition` R22) A fetch of an address the record already holds from a plain fetch is conditional on that copy. `op=acquire` hands `acquisition` the digest (`opts.heldSha`) of the newest capture of `locator` the caller's viewer may see, when it came from a direct, plain fetch of that address, recorded as fetched and not rendered; a body asking for more than the plain document (`render`, `via`, `continue`, `file`, `subresources`, `address`), an address that is no public locator, a viewer who sees no copy, or a copy with no validators recorded fetches as before. `heldCopyToCompare(body, viewer)` answers the digest or null; a read, never throws. Test: `g32-t51.test.mjs`."
+- R73's Provides line for `op=acquire` may add: the query carries the caller's `viewer`.
+
+## Rulings of mine, for you to record (P17; none needs Bob)
+- Overloaded is read from `.overloaded` on a thrown error, `diag.overloaded`, or /overloaded/i in the message (extraction's `diag` carries no flag today).
+- The retry belongs to the door's read only; the acquire call itself is never retried (not idempotent).
+- Pass the viewer to the store as a query parameter, as `links` and the reads do, never in the body.
+
+## Tests and checks
+- `node --test --test-force-exit bio-plane/test/m/capture/ bio-plane/test/cap13-reuse-pages.test.mjs bio-plane/test/d57selflink.test.mjs`: 277 tests, 276 pass, 1 fail (g32 (c), red by name). `timings.test.mjs` stand-in gained `heldCopyToCompare` (the route now asks it).
+- Users (`impact.mjs` names 111 modules through the shared `DECLARED_OPS` table; I ran the 47 files of plane, control-plane, extraction and capture-requests that name `acquire`): 372 tests, 368 pass, 4 fail, the same four (E3 41.5 MB five-part, R117 C5b, R120/R121, R125 (b)) that fail identically on `tranche/T51` without my commits (checked in a worktree of the tranche: 5 fail there).
+- `checks/run.mjs`: format 0, architecture 0, coverage 0 (58 of 58 for capture), words 0 failures, `unkeyed` untouched (no new sentence a member reads). `checks/ownership.mjs /home/user/bio capture tranche/T51 job/T51/capture`: 0 failures.
+
+Size (session_01Uu76H7JzhRxSdMcBjFLc6j): test runs 14, module lines 4340
+
+## J26 · COMPLETE
+
+COMPLETE (CAPTURE #49, B27 CHANGE applied; J25 stands, this adds one item). Pushed on job/T51/capture; tranche/T51 merged (BOB #255's plan).
+
+**G27, B27: an acquire whose render is pending is not read inline.** `capture/ops.mjs` `captureOp`, acquire arm: when the acquire's answer carries `render.state === "pending"` (acquisition/index.mjs:1747, the kept shell with the render running on in the object) the inline `readAcquired` and its retry are skipped, and the kept capture is answered 200 with `reading_pending: true`, `sha` and the acquire's own `render` and note, with no `diag` and no log (a deferral by choice, as the door's `deferReading` answer is; the door owes the reading to the ledger from `reading_pending` as for any deferral). `owed`, `waiting`, `deferred` and no `render` are read inline as before.
+- Failing-first, seen red then green (`g27-t51.test.mjs`, two new tests): red before the change (the pending-render answer was read, `reads` 1 not 0, and carried no `reading_pending`); green after: `reads` 0 and `store()` once (no second stub), `reading_pending`, `sha`, `render` as given, `diag` undefined; control: `render` null, `owed`, `waiting`, `deferred` each read once and answered with the reading.
+- Requirement line proposed (extends the R73 line of J25): "(G27, B27) An acquire whose answer says its render is pending (`render.state` `pending`) is not read inline: it is answered at once as `reading_pending` with the digest and the render as given, no `diag`; any other render state is read as before. Test: `g27-t51.test.mjs`."
+- Platform: the probe of J25 is unchanged; the pending case needs no object (no read is made); acquisition's half (the deferred run's reply not held resident) is ACQUISITION #29's.
+
+Tests and checks after this change: capture + cap13 + d57: 279 tests, 278 pass, 1 fail (the G32 test, red by name until acquisition's `opts.heldSha` merges). Users (the 47 files of plane, control-plane, extraction, capture-requests naming `acquire`): 372 tests, 368 pass, the same 4 failures as before and on `tranche/T51` without my commits (E3 41.5 MB, R117 C5b, R120/R121, R125 (b)). `checks/run.mjs`: format, architecture, coverage (58 of 58 for capture), words 0 failures. `checks/ownership.mjs`: 8 files, 0 failures.
+
+Size (session_01Uu76H7JzhRxSdMcBjFLc6j): test runs 17, module lines 4345

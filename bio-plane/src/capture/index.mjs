@@ -543,6 +543,21 @@ export class Capture {
   /** R73: `acquisition`'s `acquire` (its R1–R23) with this module's store handed in; answers `{status, body}`. */
   acquire(body, opts) { return acquire(this, body, opts); }
 
+  /** R106 (fix round 6, G32; `acquisition` R22): the digest of the copy a plain fetch of `body.locator` may be made conditional on: the
+   *  newest capture of that address the viewer may see (R96's compared copy) when it came from a plain, direct fetch of that very
+   *  address, recorded as fetched and not rendered; else null, and the fetch runs as it always did. A body that asks for more than the
+   *  plain document (`render`, `via`, `continue`, `file`, `subresources`, an archive `address`) is never conditional, and neither is an
+   *  address that is no public locator or a viewer who sees no copy. A read, never a fetch; never throws. */
+  heldCopyToCompare(body, viewer = "") {
+    try {
+      if (!body || typeof body.locator !== "string" || !isPublicHttpsLocator(body.locator)) return null;
+      for (const k of ["render", "via", "continue", "file", "subresources", "address"]) if (body[k]) return null;
+      const found = this.#heldAtRead({ address: body.locator, sha256: null, viewer });
+      if (!found || found.receipt.via !== "direct" || !found.receipt.plain_address || found.kind !== "plain") return null;
+      return found.copy.sha256;
+    } catch { return null; }
+  }
+
   /** R73: `acquisition`'s `archiveLookup` (its R3), likewise. */
   archiveLookup(args) { return archiveLookup(this, args); }
 
@@ -3269,8 +3284,13 @@ export function captureOps(c, url, body, env, h = {}) {
     /* N388: the accounts answer by the caller's sight; an unstamped call sees nothing (REC-30's fail-closed posture). */
     captureaccounts: () => c.captureAccountsOf(q("capture") ?? (body && body.captureSha), { viewer: q("viewer") ?? "" }),
     /* K72 (11): the Worker's op forwards here with the control plane's stamps in the query. */
-    acquire: () => c.acquire(body || {}, { cls: q("cls"), member: q("member") === "1", sessMember: q("sessMember") || null,
-                                          storeName: q("store") || "bio", ...(h.timings ? { timings: h.timings } : {}) }),
+    /* R106 (fix round 6, G32): a fetch of an address the record already holds from a plain fetch is made conditional on that copy (the
+       digest handed to `acquisition` as `heldSha`), so an unchanged source is not downloaded again; the caller's sight decides which copy. */
+    acquire: () => {
+      const heldSha = c.heldCopyToCompare(body || {}, q("viewer") ?? "");
+      return c.acquire(body || {}, { cls: q("cls"), member: q("member") === "1", sessMember: q("sessMember") || null,
+                                    storeName: q("store") || "bio", ...(heldSha ? { heldSha } : {}), ...(h.timings ? { timings: h.timings } : {}) });
+    },
     archivelookup: () => c.archiveLookup({ address: (body && body.address) || q("address") }),
     /* R73 (T35; `acquisition` R38, R41): the archive, through this store; `by`, `cls` and the viewer are the control
        plane's stamps, never the body's, and the body names only the archive. */

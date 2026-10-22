@@ -1544,9 +1544,12 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     try { inst.spec.closed(kit(inst), inst.view); } catch { /* a screen's own leave-taking never stops the shell */ }
   }
   let ROUTING = 0;
-  async function route() {
+  /* R127 (G31): `keep` continues the load that is open (the session handed over a second time, `signedIn`): the route opens no new epoch, so the
+     frame's reads sent for the first hand-over are the reads the screen's identical ones share */
+  async function route(keep) {
     const n = ++ROUTING;
-    newEpoch(); LOADING = true;
+    if (keep !== true) newEpoch();
+    LOADING = true;
     closing(MAIN);
     closing(DOCKI);
     MAIN = null; DOCKI = null; ENTRY_PAGE = false; RING = null; KEEP_LATER = false;
@@ -1655,13 +1658,21 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const a = answer && typeof answer === "object" && answer.result && typeof answer.result === "object" ? answer.result : answer;
     if (!(a && typeof a.token === "string" && a.token)) return false;
     const e = typeof a.expires === "number" ? a.expires : Date.parse(a.expires) || 0;
-    S = { t: a.token, e, d: o.device === "own" ? "own" : "shared", w: typeof o.handle === "string" ? o.handle : "" };
-    writeRecord(S);
-    ME = null; LOCKED = false; ENTRY = { state: null, handle: null };
+    const next = { t: a.token, e, d: o.device === "own" ? "own" : "shared", w: typeof o.handle === "string" ? o.handle : "" };
+    /* R127 (G31, A-27): the session handed over again, as it is (`front` hands it over to stay and read `whoami`, then to open the page kept),
+       is the one session: its record is not written again and `whoami`, the words and the frame's reads are not sent again; only the page kept
+       is opened. A different token, handle or device, or a session whose `whoami` has not answered, is a new hand-over. */
+    const again = !!(S && ME && !LOCKED && S.t === next.t && S.e === next.e && S.d === next.d && S.w === next.w);
+    if (!again) {
+      S = next;
+      writeRecord(S);
+      ME = null; LOCKED = false; ENTRY = { state: null, handle: null };
+    }
     activity();
-    if (o.stay) { const got = await whoami(); draw(); return got === "ok"; }
+    /* a hand-over that stays is the first half of one sign-in load: its reads stay shared for the second (R123, R127) */
+    if (o.stay) { LOADING = true; const got = again ? "ok" : await whoami(); draw(); return got === "ok"; }
     win.history.replaceState({}, "", takeReturn());
-    await route();
+    await route(again);
     return !!ME;
   }
   /* R46: a screen that sent `signout` (or `signouteverywhere`) itself: the record cleared, `front` signed out */
