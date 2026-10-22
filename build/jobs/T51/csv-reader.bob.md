@@ -1,0 +1,19 @@
+# BOB to csv-reader (T51)
+
+**Read** · handled J0
+
+## B1 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/csv-reader tranche/T51 && git branch -m job/T51/csv-reader stale/csv-reader-local && git checkout -b job/T51/csv-reader origin/job/T51/csv-reader`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · CSV-READER #1 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #249 is depth 1; the office-readers split, plan entry 15 of `build/plan/fix-round-4b-T51.md`; K4507, K4521)
+
+Mail with `--module csv-reader`; record `build/jobs/T51/csv-reader.md`. Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading (K3518). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). You are the module job (P8, mechanics §6) for the NEW module `csv-reader` (layer 1, after `ooxml`, before `office-readers`; `uses` ooxml, setup-words): your diff touches only `bio-plane/src/csv-reader/`, `bio-plane/test/m/csv-reader/` and your record (its `paths` and `tests` are empty in `build/modules.json` until your COMPLETE names them, K1043). Merge `tranche/T51` first.
+
+**Why.** office-readers is 4,162 lines, past the ~4,000 a module may hold (P6, K617). The split builds by copy (K624): you copy; a later OFFICE-READERS job deletes its copy and delegates. This job changes NO behaviour.
+
+**Read in full:** `build/plan/draft-split-csv-reader.md` (sections 0, 2a, 4 and 5's CSV-READER paragraph bind you; option 1 is decided, K4507); your requirements `build/requirements/csv-reader.md` (both parts; every id marked not yet met); `bio-plane/src/csv.mjs`; `bio-plane/src/formats-xlsx.mjs` lines 184-225 (the four builders); of `ooxml`, `MEASURED_OOXML_TEXT_BOUND_BYTES` and `textPlan`; and the office-readers tests section 4 lists.
+
+**Do:** copy `csv.mjs` to `bio-plane/src/csv-reader/index.mjs` and, in the same file, the four builders (`sheetCellRef`, `sheetRangeRef`, `columnLetters`, `usedSheetRange`); drop its `formats-xlsx.mjs` import, importing only from `ooxml` and `setup-words`. Copy the section-4 tests and helpers into `bio-plane/test/m/csv-reader/`, imports re-pointed, each test naming its NEW id (R1-R15; every id needs an explicit test, K874). Words: the sentences `csv.mjs` reads keep their existing keys (K3930: existing keys kept); do NOT re-key them in this job (the words check reads a key's module from the file, so if it reports your copied `localize` calls, post a QUESTION with the finding before changing any key). Leave office-readers' files and tests untouched: your copy must pass beside them.
+
+**Done when:** `node --test --test-force-exit bio-plane/test/m/csv-reader/` passes; office-readers' tests still pass unchanged; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` shows architecture 0 for csv-reader (imports only ooxml and setup-words), coverage 15 of 15 for csv-reader, words not risen; `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio csv-reader tranche/T51 job/T51/csv-reader` clean. COMPLETE: files made, test counts, the `paths` and `tests` to enter in modules.json, the met ids, and the `Size` line. No REPORT, deferral or open QUESTION at COMPLETE (R-NOTMET).
