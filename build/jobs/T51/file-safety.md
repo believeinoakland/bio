@@ -320,3 +320,7 @@ COMPLETE: C84 (RC-R7: R46, R50) and K4435's WORD_KEYS red, in build/jobs/T51/fil
 **Deferred.** None.
 
 **Size (session_01Bx8AYz89obuQALgywrmCmP):** test runs 16, module lines 2642
+
+## J13 · COMPLETE
+
+COMPLETE (B14, entry 5, R51). Fail closed where bytes are served; scan and safe view wait for unheld bytes (hourly heads); grade never loads over 20 MiB (measured). Failing-first red on tranche code ('it was served'), green now. File-safety suite green except R24 (design's words-reads.json lacks refusal.SIGNATURES_RUN_RECENT, B13 applied); users 919 pass, 21 baseline fails; checks 0 failures. Details, proposed R51/R21/R39 lines and the choice to limit fail-closed to byte-serving services: record build/jobs/T51/file-safety.md.
