@@ -180,7 +180,7 @@ const acts = [
         const r = a && a.result !== undefined ? a.result : a;
         const refused = !a || a.ok === false || (r && (r.ok === false || typeof r.refused === "string"));
         view.data.directory = refused
-          ? { state: "failed", value: null, refusal: { code: String((r && (r.code || r.reason)) || (a && (a.code || a.reason)) || ""), words: cs.esc((r && r.translation) || (a && a.translation) || (r && (r.code || r.reason)) || cs.w("shell.noanswer")) } }
+          ? { state: "failed", value: null, refusal: { code: String((r && (r.code || r.reason)) || (a && (a.code || a.reason)) || ""), words: (r && r.translation) || (a && a.translation) || (r && (r.code || r.reason)) ? cs.esc((r && r.translation) || (a && a.translation) || (r && (r.code || r.reason))) : cs.w("shell.noanswer") } }
           : (!r || !Array.isArray(r.rows) || !r.rows.length ? { state: "empty", value: r, refusal: null } : { state: "ok", value: r, refusal: null });
         cs.set("searching", false);
       });

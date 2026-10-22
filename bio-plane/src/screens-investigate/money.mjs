@@ -18,7 +18,7 @@ function reads(view) {
   const S = "screen.money.";
   const id = String(view.subject || "").split("/")[0];
   return /^MSR-/.test(id)
-    ? { docs: { op: "heldcaptures", after: ["acquire"], query: { limit: "200", state: "held_and_vouched", fields: "picker" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length }, questions: { op: "list", query: { type: "inquiry", limit: "500" } }, contracts: { op: "peopledirectory", query: { show: "contracts", limit: "200" } }, trail: { op: "moneyset", query: { id }, subject: true, empty: (v) => !v || v.found === false }, vocab: { op: "affordances", query: {} } }
+    ? { docs: { op: "heldcaptures", after: ["acquire"], query: { limit: "200", state: "held_and_vouched", fields: "picker" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length }, questions: { op: "list", query: { type: "inquiry", limit: "500" } }, contracts: { op: "peopledirectory", query: { show: "contracts", limit: "200" } }, trail: { op: "moneyset", query: { id }, subject: true, empty: (v) => !v || v.found === false } }
     : { project: { op: "image", query: { id }, subject: true, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] },
       /* C8, R4: the project's trails (money R28), the owner's order (newest first) kept; the last of 500 is the owner's cut */
       trails: { op: "moneysets", query: { concerns: id, purpose: "trail", limit: "500" }, empty: (v) => !v || !Array.isArray(v.sets) || !v.sets.length } };
@@ -68,7 +68,12 @@ function render(cs, view) {
       .concat((t.value.exclusions || []).map((x) => ({ key: x.fact_id, state: "excluded", reason: x.reason, trail: null })))
       .concat((t.value.proposals || []).map((x) => ({ key: x.fact_id, state: "proposed", reason: x.label, by: x.by, trail: x.trail })))
     : [];
-  const fact = (e) => P.later(cs, view, "fact:" + e.key, "money", { query: { id: e.key } });
+  /* the figure is the `fact` of `money`'s answer (`{ok, found, fact}`), never the answer itself; an answer that holds none is a read that failed (C8) */
+  const fact = (e) => {
+    const L = P.later(cs, view, "fact:" + e.key, "money", { query: { id: e.key } });
+    const f = L.state === "ok" && L.value && typeof L.value === "object" && L.value.fact && typeof L.value.fact === "object" ? L.value.fact : null;
+    return L.state === "ok" && !f ? { state: "failed", value: null, refusal: { code: "", words: cs.w("shell.noanswer") } } : L.state === "ok" ? { ...L, value: f } : L;
+  };
   const party = (p) => (!p ? null : p.as_written || p.entity || p.fund || p.account || null);
   /* an item the source does not state: its mark, a control that opens the row's panel at that item */
   const gap = (e, what, why) => `<button type="button" class="cs-btn" data-tone="quiet" data-shell="row" data-table="money" data-id="${cs.esc(e.key)}" aria-label="${cs.esc(cs.w(S + "gap.open", { what: cs.w(S + "col." + what) }))}">${cs.mark("gap", "undetermined", { reason: why })}</button>`;
@@ -99,7 +104,7 @@ function render(cs, view) {
     const src = f.source && f.source.capture_sha ? P.refOf(cs, f.source.capture_sha, f.citation || cs.w(S + "source"), [f.as_read || ""], "capture") : "";
     const grade = f.grade && /^[A-D]$/.test(f.grade.reading || "") ? cs.grade("capture", f.grade.reading) : cs.mark("gap", "unrated");
     const inTrail = e.state === "included" ? cs.w(S + "included", { reason: e.reason || "" }) : e.state === "excluded" ? cs.w(S + "excluded", { reason: e.reason || "" })
-      : e.state === "proposed" ? cs.w(/^member:/.test(String(e.by || "")) ? S + "proposed.member" : S + "proposed") : cs.w(S + "notyet");
+      : e.state === "proposed" ? cs.w(/^(class|machine|agent):/.test(String(e.by || "")) ? S + "proposed" : S + "proposed.member") : cs.w(S + "notyet");
     return [cs.esc(cs.w(S + "kind." + String(f.kind || "other").replace(/ /g, "_"))),
       party(f.from) ? P.refOf(cs, (f.from && (f.from.entity || f.from.fund)) || "", party(f.from), []) : gap(e, "from", (tr.from && tr.from.says) || cs.w(S + "notstated")),
       party(f.to) ? P.refOf(cs, (f.to && (f.to.entity || f.to.fund)) || "", party(f.to), []) : gap(e, "to", (tr.to && tr.to.says) || cs.w(S + "notstated")),
@@ -137,10 +142,8 @@ function render(cs, view) {
   const shown = onlyGaps ? entries.filter((e) => { const L = fact(e); return L.state !== "ok" || gapsOf(e, L.value).length; }) : entries;
   const nGaps = entries.filter((e) => { const L = fact(e); return L.state === "ok" && gapsOf(e, L.value).length; }).length;
   /* R18: the connection graph, its centre the trail's set, as of today; a node opens Explore connections at it */
-  const vocab = view.data.vocab && view.data.vocab.state === "ok" ? view.data.vocab.value : null;
-  const groups = P.groupMap(vocab);
   const gq = P.later(cs, view, "graph", "exploregraph", { body: { centre: id, at: { value: P.today(cs), precision: "day", zone: "UTC" }, rings: 2 } });
-  out.push(cs.sec(S + "graph", cs.state(gq, (g) => P.graph(cs, g, { idonly: P.idonlyMap(P.unnamedIds(g) ? P.later(cs, view, "idonly", "entityidonly", { query: { ids: P.unnamedIds(g) } }) : null), groupOf: (k) => groups[k] || null, trail: [id], act: null, names: { [id]: set ? set.label || id : id }, words: { cited: S + "g.cited", declared: S + "g.declared", hunch: S + "g.hunch", nosource: S + "g.nosource", attached: "screen.explore.attached" } }))));
+  out.push(cs.sec(S + "graph", cs.state(gq, (g) => P.graph(cs, g, { idonly: P.idonlyMap(P.unnamedIds(g) ? P.later(cs, view, "idonly", "entityidonly", { query: { ids: P.unnamedIds(g) } }) : null), groupOf: ((groups) => (k) => groups[k] || null)(P.groupsFor(cs, view, g, P.later)), trail: [id], act: null, names: { [id]: set ? set.label || id : id }, words: { cited: S + "g.cited", declared: S + "g.declared", hunch: S + "g.hunch", nosource: S + "g.nosource", attached: "screen.explore.attached" } }))));
   out.push(cs.state("trail", view, () => `<div class="mk-tablebar"><a class="cs-btn" data-tone="quiet" data-nav href="/app/money/${encodeURIComponent(id)}${onlyGaps ? "" : "/undetermined"}" aria-pressed="${onlyGaps}">`
     + cs.w(onlyGaps ? S + "filter.all" : nGaps ? S + "filter.gaps" : S + "filter.gaps.none", { n: String(nGaps) }) + "</a></div>"
     + (shown.length ? cs.rows({ id: "money", pick: true, items: shown, key: (e) => e.key, name: (e) => e.key,
@@ -157,10 +160,11 @@ function render(cs, view) {
   /* R23, C57: the contract for "committed against paid" is chosen among the contracts the record follows (`peopledirectory`'s `contracts`),
      never typed: with none held the choice's empty state is drawn, and the act refuses in words */
   const cd = view.data.contracts;
-  const contractRows = cd && cd.state === "ok" && cd.value && Array.isArray(cd.value.rows) ? cd.value.rows.filter((r) => r && r.entity) : [];
-  const contractChoice = cd && cd.state !== "ok" ? cs.state("contracts", view, () => "")
+  const contractRows = cd && (cd.state === "ok" || cd.state === "empty") && cd.value && Array.isArray(cd.value.rows) ? cd.value.rows.filter((r) => r && r.entity) : [];
+  /* a read that has not answered or failed draws its own state; one that answered none (the shell calls it `empty`) is the choice's empty state, under its label */
+  const contractChoice = cd && (cd.state === "loading" || cd.state === "failed") ? cs.state("contracts", view, () => "")
     : contractRows.length ? cs.choice("mf-contract", S + "f.contract", contractRows.map((r) => ({ value: r.entity, text: r.name || "" })), {})
-      : `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`;
+      : P.emptyChoice(cs, "mf-contract", S + "f.contract");
   /* the forms the acts read: a figure from a passage; the contract for committed against paid; the member's own words */
   /* C95, R34: the project's cited question first and chosen, as the page was opened for it; none cited, none chosen */
   const pimg = view.ui && view.ui.later && view.ui.later.project;
@@ -187,6 +191,11 @@ function render(cs, view) {
 /* every act names its trail and fact; a hold-strip act receives the picked keys (`extra.picked`) */
 const acts = rereading([
   { op: "recordfact", label: "act.recordfact.label.money",
+    /* C8, R4 (money R29): a period money cannot read is `MONEY_BAD_PERIOD`, its own code: its sentence, then the reason the owner gives (the fiscal
+       key and the body it was asked for), as record data */
+    refusals: { MONEY_BAD_PERIOD: function (refusal, cs) {
+      return cs ? cs.w("refusal.MONEY_BAD_PERIOD") + (typeof refusal.detail === "string" && refusal.detail.trim() ? " " + cs.esc(refusal.detail.trim()) : "") : "";
+    } },
     send(view, el, cs) {
       const amount = String(cs.value("mf-amount") || "").trim(), as_read = String(cs.value("mf-asread") || "").trim();
       const src = view.parts.chosen(cs, "mf-doc", "mf-passage");
@@ -325,7 +334,7 @@ const acts = rereading([
       if (!inquiry || !statement) return { refuse: "screen.money.f.nohunch" };
       return { body: { inquiry, kind: "flow", statement, about: [String(el.dataset.fact || "")] } };
     } },
-], ["trail", "project", "trails", "contracts", "questions", "vocab"], []);
+], ["trail", "project", "trails", "contracts", "questions"], []);
 
 const MONEY_KEYS = [
   "screen.money.graph", "screen.money.graph.holds", "screen.money.notrail", "screen.money.label", "screen.money.label.help",
@@ -360,7 +369,7 @@ const MONEY_KEYS = [
   "screen.money.g.hunch", "screen.money.g.nosource",
 ];
 
-const words = ["screen.money.name", "screen.money.purpose",
+const words = ["screen.money.name", "screen.money.purpose", "refusal.MONEY_BAD_PERIOD",
   ...["recordfact", "createset", "include", "exclude", "reconcile", "committedagainstpaid", "authoritychain", "findin", "actioncreate", "createevent", "gradenote", "acquire", "checkrequest", "hypothesishold"]
     .flatMap((op) => ["act." + op + ".label.money", "act." + op + ".does"]),
   ...["figure", "from", "to-where-it-went", "when-it-moved", "stage", "period", "amount", "source", "in-this-trail"].flatMap((c) => ["column.money." + c + ".name", "column.money." + c + ".shows"]),
