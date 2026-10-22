@@ -237,4 +237,4 @@ Checks: format 0 failures in my files (one in `build/plan/next.md:38`, not mine)
 
 **Requirement lines proposed** (BOB writes `build/requirements/`): *R31 (T51 fix round 6, G1; K4565, K4566, K4570; amends R1 (a)) After an install and after an update, the plane's script in the walk's fake account holds exactly the cron its signed statement `bio-plane-crons/1 <cron>` states (`*/5 * * * *`); the account reads schedules back; a refused schedule stops the install and the update each in a sentence; the local walk fails by name when the installed plane holds none. Test: the install and update over the account; control: a refused schedule; a plane stating none.*
 
-Size (session_018cVQsZb9faqV2gGpjCfs1B): test runs 4, module lines 3363
+Size (session_018cVQsZb9faqV2gGpjCfs1B): test runs 4, module lines 3496
