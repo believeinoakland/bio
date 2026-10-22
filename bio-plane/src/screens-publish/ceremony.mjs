@@ -66,6 +66,7 @@ export const CEREMONY = Object.freeze({
     const dR = view.data.drafts;
     const all = dR && dR.state === "ok" && Array.isArray(dR.value.drafts) ? dR.value.drafts : [];
     const list = P.draftCopies(cs, view, all, draft, copyR);
+    out.push(P.draftHead(cs, view, "ceremony", list, draft, projectTitle));
     out.push(dR && dR.state !== "ok" && dR.state !== "empty" ? cs.state(dR, function () { return ""; })
       : P.draftChooser(cs, view, "ceremony", list, draft, projectTitle) + P.liveNote(cs, view, "ceremony", list));
     if (!copy) { out.push(cs.state(copyR, function () { return ""; })); return out.join(""); }

@@ -50,7 +50,7 @@ export const REVIEW_COPY = Object.freeze({
     // C49 (DEC-394, DEC-395): "Which draft", among the project's drafts; every other draft's copy is read once for its scope and links
     const projectTitle = P.titleOf(view.data.project && view.data.project.state === "ok" ? view.data.project.value : null, String(view.subject || "").split("/")[0]);
     const list = P.draftCopies(cs, view, drafts, chosen.draft_id, copy);
-    out.push(P.draftChooser(cs, view, "review-copy", list, chosen.draft_id, projectTitle));
+    out.push(P.draftHead(cs, view, "review-copy", list, chosen.draft_id, projectTitle), P.draftChooser(cs, view, "review-copy", list, chosen.draft_id, projectTitle));
 
     // The named readers: each a row with what they may read and until when, and "Stop sharing" (R2, R18).
     out.push(P.sec(cs, "screen.review-copy.readers", cs.state(copy, function (v) {

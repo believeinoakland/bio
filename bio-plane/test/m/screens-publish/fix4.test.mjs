@@ -43,3 +43,27 @@ for (const [screen, path, own] of [
     assert.ok(!c.casecheck || !c.queuelist, "the list of queue items is the Queue screen's alone");
   });
 }
+
+/* ---------- C49: the chosen draft heads the page on the editor, the review copy and the ceremony (R73) ---------- */
+import { COPY, C as CASE, word, day, fill, text } from "./fixtures.mjs";
+const OLD = "RVD-2026-0000";
+const TWO = { kind: "review-drafts", project: P, drafts: [
+  { draft_id: OLD, case: null, created_by: "dev", updated_by: "dev", created_at: "2026-09-18T10:00:00Z" },
+  { draft_id: DR, case: null, created_by: "dev", updated_by: "dev", created_at: "2026-10-12T10:00:00Z" }] };
+const copyOf = (req) => { const d = req.query.draft; return ok(COPY({ draft: d, case: { case_id: null }, title: "T-" + d, authored: { scope: d === OLD ? "A second scope" : "The newest scope" } })); };
+for (const screen of ["case-editor", "review-copy", "ceremony"]) {
+  test(`R73 C49 ${screen}: pressing the chooser for the earlier draft heads the page with that draft's scope and day, and its own title; the newest keeps its own (control)`, async () => {
+    const p = await open(`/app/${screen}/${P}`, { plane: { casedrafts: ok(TWO), reviewcopy: copyOf } });
+    const head = () => (main(p).querySelector("[data-draft-head]") || { textContent: "" }).textContent.replace(/\s+/g, " ").trim();
+    assert.ok(head().includes("The newest scope") && head().includes(day("2026-10-12")), "the newest at first");
+    fill(p, { [`drafts-${screen}`]: OLD });
+    await press(p, "casedrafts");
+    assert.ok(head().includes("A second scope") && head().includes(day("2026-09-18")), "the chosen draft's scope and day");
+    assert.ok(!head().includes("The newest scope"));
+    assert.equal(main(p).querySelector("h1").textContent.trim(), "T-" + OLD, "and its own heading");
+  });
+}
+test("R73 C49 control: a project with one draft draws no draft head", async () => {
+  const p = await open(`/app/case-editor/${P}`, { plane: { casedrafts: ok({ ...TWO, drafts: TWO.drafts.slice(1) }), reviewcopy: copyOf } });
+  assert.equal(main(p).querySelector("[data-draft-head]"), null);
+});

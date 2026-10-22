@@ -340,6 +340,13 @@ export const PARTS = Object.freeze({
     cs.go(screen, String(view.subject || "").split("/")[0] + "/" + pick);
   },
 
+  /* C49 (R73): under the heading, the draft the page shows named by its scope and the day it was prepared, drawn where the project has two
+     drafts or more and once that draft's own copy is read (a scope is never guessed). */
+  draftHead: function (cs, view, screen, list, chosenId, projectTitle) {
+    const e = list.length > 1 ? list.find(function (x) { return x.draft.draft_id === chosenId; }) : null;
+    return e && e.r.state === "ok" ? '<p class="mk-sub" data-draft-head>' + cs.esc(view.parts.draftLine(cs, view, screen, e, projectTitle)) + "</p>" : "";
+  },
+
   /* C49 (DEC-394, DEC-395): beneath the chooser, how many review links are live and how many sit on an earlier draft than the newest, as
      a way to the review copy, where each is stopped. Not drawn where none sits on an earlier draft (no count at zero, R20). */
   liveNote: function (cs, view, screen, list) {

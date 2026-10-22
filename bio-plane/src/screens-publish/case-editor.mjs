@@ -44,9 +44,13 @@ export const CASE_EDITOR = Object.freeze({
     // R28: a draft that names no case is titled by its project, never by the derivation prose its identity then holds.
     const named = !!(caseOf && caseOf.case_id && caseOf.identity);
     const edition = caseOf && caseOf.edition !== undefined && caseOf.edition !== null ? String(caseOf.edition) : "";
+    // C49: the copy of the chosen draft is read first, so a draft that names no case is headed by its own title (`review` R63), as the review
+    // copy and the ceremony head it, not by the project's
+    const chosenR = chosen ? P.later(cs, view, "copy", "reviewcopy", { query: { draft: chosen.draft_id } }) : null;
     out.push(cs.title(named ? caseOf.identity + (edition ? " · " + edition : "")
-      : chosen ? P.plain(cs.w("case.draft.untitled", { project: projectTitle })) : null, { thing: "case" }));
+      : chosen ? P.titleOf2(cs, chosenR && chosenR.state === "ok" ? chosenR.value : null, P.plain(cs.w("case.draft.untitled", { project: projectTitle }))) : null, { thing: "case" }));
     out.push('<span id="what-goes-in"></span>');
+    if (settled) out.push(P.draftHead(cs, view, "case-editor", P.draftCopies(cs, view, drafts, chosen ? chosen.draft_id : "", chosenR), chosen ? chosen.draft_id : "", projectTitle));
     if (!settled) return out.concat([cs.sec("screen.case-editor.drafts", cs.state("drafts", function () { return ""; }))]).join("");
 
     // R28: who prepared it is the member's handle, never the sign-in name when the handle is known.
@@ -58,7 +62,6 @@ export const CASE_EDITOR = Object.freeze({
     // The project's drafts: with a choice (two or more) "Which draft" among them, each named by its scope and the day it was prepared, the
     // newest marked, and how many review links are live (C49; DEC-394, DEC-395); with one, its own row opening its editor. With none, the
     // screen's one empty state, which names the first step (R20).
-    const chosenR = chosen ? P.later(cs, view, "copy", "reviewcopy", { query: { draft: chosen.draft_id } }) : null;
     const list = P.draftCopies(cs, view, drafts, chosen ? chosen.draft_id : "", chosenR);
     out.push(d.state === "empty" ? cs.state("drafts", function () { return ""; }, { empty: "screen.case-editor.nodrafts" }) : cs.sec("screen.case-editor.drafts", drafts.length > 1
       ? P.draftChooser(cs, view, "case-editor", list, chosen.draft_id, projectTitle) + P.liveNote(cs, view, "case-editor", list)
