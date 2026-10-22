@@ -3976,6 +3976,53 @@ export function pdfTitle(bytes) {
  *          "authored" determination and there must never be one — see the D-251
  *          block above.
  */
+/* R42 (fix round 4b, F10; K4498) — A DOCUMENT TOO LARGE TO READ IS REFUSED BEFORE ITS TEXT, NOT LOST TO A CRASH.
+ *
+ * The object that reads a document has 128 MB, and R41 bounded the working set of one page but not what the answer and
+ * the tables grow with: the pages. Bytes alone cannot say what a reading will need (a 12 MB file of text pages is 3,000
+ * pages and past the limit; a 20 MB file of a thousand scanned pages is not), and the pages are known only once the file
+ * is opened, so the check is here, after R8's read and before the first page's text. A reading that would take the
+ * object past READ_LIMIT_MB is answered `ok: false` with `failure: "final"` and the pages it has, and is never started:
+ * the alternative is the object reset at the same page every time, which a ledger then retries without end.
+ *
+ * THE RULE, in MB: an idle isolate (READ_BASE_MB), the file's own bytes held beside, and a share of the answer and the
+ * tables for each page, READ_PAGE_MB for a page that shows text and READ_BARE_PAGE_MB for one that does not. MEASURED
+ * (build/jobs/T51/pdf-reader.md), under workerd, as the smallest V8 old space in which `reading-pipeline`'s `read` of a
+ * file completes, plus the file's bytes. Text pages of 120 lines, 1,000 / 2,000 / 3,500 of them: 66 / 98 / 152 MB (the
+ * rule: 61 / 97 / 150). The govinfo volumes of 188 / 295 / 1,354 pages: 35 / 50 / 98 (the rule: 33 / 43 / 82). What it
+ * does not follow, stated: pages of more text than 120 lines cost more (1,500 pages of 200 lines: 114, the rule 83), and
+ * pages of less cost less (3,500 pages of 40 lines: 68, the rule 140). The limit leaves the plane's own baseline and
+ * that error inside the 128.
+ *
+ * WHICH PAGES SHOW TEXT is known only by looking, and a scanned packet of three thousand pages under 24 MiB (an image a
+ * page, no text) costs a small part of what the same pages of text do, so it is looked at only when the rule with every
+ * page counted as text is over the limit: a sample of READ_SAMPLE_PAGES pages, evenly spaced, is asked the one question
+ * OCR's renderer asks (`pageShowsText`), and a page that cannot be told counts as text. The share of the sample that
+ * shows text is the share of the pages that cost READ_PAGE_MB. An encrypted document builds no text (R9) and counts none. */
+const READ_BASE_MB = 25;
+const READ_PAGE_MB = 0.031;
+const READ_BARE_PAGE_MB = 0.006;
+const READ_LIMIT_MB = 100;
+const READ_SAMPLE_PAGES = 16;
+const readingNeedMB = (pages, bytes, textShare) =>
+  READ_BASE_MB + bytes / 1048576 + pages * (READ_BARE_PAGE_MB + (READ_PAGE_MB - READ_BARE_PAGE_MB) * textShare);
+
+/** The share of the document's pages that show text, from READ_SAMPLE_PAGES of them evenly spaced; a page that cannot be
+ *  told is counted as text. */
+async function sampledTextShare(doc) {
+  const n = doc.pageCount, k = Math.min(READ_SAMPLE_PAGES, n);
+  /* the sample decodes streams, which notes; the reading that follows must find the document as it was */
+  const notes = doc.notes.length, noted = new Set(doc._trailingNoted);
+  let showing = 0;
+  for (let i = 0; i < k; i++) {
+    let shows;
+    try { shows = await pageShowsText(doc, doc.pageDict(k === 1 ? 0 : Math.round(i * (n - 1) / (k - 1)))); } catch { shows = null; }
+    if (shows !== false) showing++;
+  }
+  doc.notes.length = notes; doc._trailingNoted = noted;
+  return k ? showing / k : 0;
+}
+
 /** R8's whole lenient read, the one way a document is opened here and in
  *  `pdf-worker`. The caller has checked the bytes. */
 async function loadPdf(bytes) {
@@ -4006,6 +4053,22 @@ export async function extractPdfStructure(bytes) {
   }
 
   const doc = await loadPdf(bytes);
+
+  /* R42: the pages are known now and no page's text has been built. */
+  let textShare = 1;
+  let needMB = readingNeedMB(doc.pageCount, bytes.length, textShare);
+  if (needMB > READ_LIMIT_MB) {
+    textShare = doc.isEncrypted() ? 0 : await sampledTextShare(doc);
+    needMB = readingNeedMB(doc.pageCount, bytes.length, textShare);
+  }
+  if (needMB > READ_LIMIT_MB) {
+    return {
+      ok: false, container: "pdf", reason: "TOO_LARGE_TO_READ", failure: "final", version: sig[1],
+      pages: doc.pageCount, bytes: bytes.length, need_mb: Math.round(needMB), limit_mb: READ_LIMIT_MB,
+      text_share: textShare,
+    };
+  }
+
   const links = [];
 
   for (let pageIdx = 0; pageIdx < doc.pageCount; pageIdx++) {
