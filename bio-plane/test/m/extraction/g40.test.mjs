@@ -116,3 +116,30 @@ test("R95 (G40 control): `events` still finds the dates of a dated reading: a ho
   assert.deepEqual(await out.afterRead, { ran: ["events"], failed: [] });
   assert.deepEqual(found, [["meeting_minutes", "object", ["meeting"]]]);
 });
+
+test("R95 (G40): a registry that says no hook wants the reading's class is handed no parse of a large reading, and one that says one does gets the object", async () => {
+  for (const wantsIt of [false, true]) {
+    const calls = [], asked = [];
+    const registry = { wants: (c) => { asked.push(c); return wantsIt; }, afterRead: async (a) => { calls.push(a); return { ran: wantsIt ? ["events"] : [], failed: [] }; } };
+    const { w, d } = await home(csv(1_048_576), { readHooks: registry });
+    const { c } = await counted(w, () => w.x.readHeld({ sha: d, kind: "reading", storeName: "bio", env: {} }));
+    await new Promise((r) => setTimeout(r, 20));
+    assert.deepEqual(asked, ["generic"], "the registry is asked about the reading's class");
+    assert.equal(c.parseInTx, 0);
+    assert.equal(c.parseAfter, wantsIt ? 1 : 0, wantsIt ? "a hook that wants the class is handed a parsed reading, after the commit" : "no hook wants it: nothing is parsed");
+    assert.equal(calls.length, 1, "afterRead is still called once, as before, and answers its outcome");
+    assert.equal(typeof calls[0].reading === "string", false, "the argument is never the JSON string");
+    assert.equal(calls[0].reading === null, !wantsIt, "no hook can run: no reading is made for it");
+    if (wantsIt) assert.equal(calls[0].reading.found, false);
+  }
+});
+
+test("R95 (G40): the real `ReadHooks` of reading-pipeline R43 with no hook for the class: a large reading is not parsed at all (red until reading-pipeline R43 is merged)", async () => {
+  const hooks = new ReadHooks();
+  hooks.onRead("events", () => {}, { captureClasses: ["meeting_minutes"] });
+  const { w, d } = await home(csv(1_048_576), { readHooks: hooks });
+  const { c } = await counted(w, () => w.x.readHeld({ sha: d, kind: "reading", storeName: "bio", env: {} }));
+  await new Promise((r) => setTimeout(r, 20));
+  assert.equal(typeof hooks.wants, "function", "R43: ReadHooks.wants(class)");
+  assert.deepEqual([c.parseInTx, c.parseAfter], [0, 0]);
+});
