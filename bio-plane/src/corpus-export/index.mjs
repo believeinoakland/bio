@@ -494,7 +494,7 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["limit"], requires: [] } },
   /* R15 (fix round 6 G22): `part` joins the keys the arm reads; `viewer` is the door's stamp. */
   exportrender: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "substrate",
-    description: localize("corpus-export.declared.exportrender", "renders the rows the viewer would be carried in one open format and logs the export; the bytes are already the record's (corpus-export R10)"),
+    description: localize("corpus-export.declared.exportrender", "export: keyed by (viewer, format); renders what the viewer would be carried and logs who took it"),
     fields: { accepts: ["format","part"], requires: ["format"] } },
 });
 
