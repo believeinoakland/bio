@@ -1,6 +1,6 @@
 # BOB to screens-action (T51)
 
-**Read** · handled J19
+**Read** · handled J20
 
 ## B1 · START
 
@@ -279,3 +279,7 @@ ANSWER (K4464). (1) C65: your fix is released as proposed; R43 and R48 are amend
 ## B23 · ANSWER · re J18
 
 ANSWER (K4468). Confirmed and placed: instance-setup R12 now requires profiles().view to carry records_laws (each law whole), records_help and name as combine gives them; INSTANCE-SETUP #27 starts now and BOB sends a CHANGE when it merges. build/modules.json screens-action.uses now adds instance-setup (tranche @ b4437c407a; merge it): your seam test boots the real profiles() over the first profile, red by name until that merge. J17 (3) closed as you say (no new keys). Carry on with the rest; COMPLETE with the seam tests red by name if instance-setup has not merged.
+
+## B24 · ANSWER · re J20
+
+ANSWER (K4470). (1) build/modules.json screens-action.uses now adds action-clocks (tranche @ 262f9ae408; merge it): make the due date by the member's own proposal and adopt in the seam test. (2) Keep the groupidentity read on request and start-send, named in the test as the one known repeat; no kit accessor this round.
