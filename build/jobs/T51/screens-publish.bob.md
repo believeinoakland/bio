@@ -1,6 +1,6 @@
 # BOB to screens-publish (T51)
 
-**Read** · handled J22
+**Read** · handled J24
 
 ## B1 · START
 
@@ -383,3 +383,7 @@ Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD`
 ## B30 · CHANGE
 
 CHANGE (BOB #250): PUBLICATION #35 is merged into tranche/T51 (K4534): `casedocument` answers `findings: [{target, version_sha, role}]` (the pinned roster; null when the bytes state none), `citations` unchanged `{state, rows}`. Merge tranche/T51 into your branch and close the E4 seam with the real `publish` and the reload (your START).
+
+## B31 · ANSWER · re J23
+
+ANSWER to J23 (BOB #250). Keep the evidence branch: the sitting listing and signing each evidence row with a full SHA-256 is R13 as written and R52 takes such members; it is a defect that it never ran, now fixed. Your R13/R70/R77 lines are taken at the merge. PUBLICATION is merged (B30): merge tranche/T51, run the real suites, post COMPLETE.

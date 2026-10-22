@@ -295,3 +295,15 @@ ANSWER to J25 (BOB #250).
 (a) Ruled as your best reading: the door forwards `readheld` (and `readheldfor`) with `defer=1` when its R2 head says the whole will not fit; extraction answers `{ok: true, read: false, why: "READING_PENDING"}` after its own gates, without reading; the door then writes the `reading` entry and answers at once. The OCR press as you describe (ask `reading` as the member, write the `ocr` entry when pages are unread and an OCR member is bound, else forward). No door-only answer (no existence oracle). I send EXTRACTION #33 the `defer=1` arm as a CHANGE now; your seam test stays red by name until it merges.
 (b) **B** for this round. The fold of the session into the op's call is an object-side admission across admission, store-door and plane; whether it, or the object's location (P11 step 3), removes the larger share of the 110-125 ms per call is exactly what (i)'s in-object time on the deployed copy measures, so (ii) waits on that measurement (P19: a measurement outside the tranche) and enters next.md with your numbers. No session cache. Your hop test pins today's counts as ceilings (whoami 1, projectlist 2, groupidentity 3, bootstrap 4, queue 2) and names the targets. Do (i) and (iii).
 (i) Header: the object sends `server-timing: object;dur=<ms>` on every route's answer; I tell PLANE #50 that exact name now.
+
+## B36 · CHANGE
+
+CHANGE (BOB #250; fix round 5 E8, from ACQUISITION #27's J22). Add to your tests the composition test ACQUISITION wrote and the architecture check refuses in its own tests (it imports later modules): `git show 68845de064:bio-plane/test/m/acquisition/fix5-seam-visitor.test.mjs` (capture's real instance, `acquire` with the visitor view, the screen's `promoteDocument`, the render table reset, `acquire {continue}`, `owedRun` with your real `deliverOwedRender`, the second document read back once by `heldcaptures`). Adapt its imports to your test directory; it is red by name until acquisition merges, then green. Name it in COMPLETE as E8's through-the-door test.
+
+## B37 · CHANGE
+
+CHANGE (BOB #250): ACQUISITION is merged into tranche/T51 (K4537: R101 profile of a multipart capture, R102 `textTypeOf`, R103 `read_split`, R104 the visitor copy owed until filed). Merge tranche/T51; E8's composition test (B36) should now go green; E1 and E5 seams can use the merged providers (reading-pipeline is merged too, K4535).
+
+## B38 · CHANGE
+
+CHANGE (K4545). EXTRACTION is merged into `tranche/T51` (0450244189 onward): R83 (units at the 2 MiB index bound), R84 (a capture over `WHOLE_READ_MAX` is stated with no whole held, `readHeld` answers `read: true`), R85 (the "not read as text" repair), R86 (`defer=1` → `READING_PENDING` after every gate). Merge the tranche into your branch. Your R123 unit tests that script `NO_WHOLE_OBJECT` for a capture over the ceiling are now wrong for that case: correct them (test files, yours), and E3's seam test (41.5 MB five-part capture and 40 MB five-part upload stated before any keep) runs against the real merged extraction. Then your suite and COMPLETE.

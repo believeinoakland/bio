@@ -1,6 +1,6 @@
 /* reading-pipeline R37 (F10), step 0: how large a whole PDF `read` holds within the object's 128 MB, measured under workerd.
  * A probe, not a test (no `.test.mjs`: it boots workerd and takes minutes): `node workerd-ceiling.probe.mjs <dir> <file>...`
- * where <dir> is a scratch directory and each <file> a name in <dir>/pdfs (write them with `bigpdf.mjs`'s synthPdf).
+ * (PROBE_BUDGET=<bytes> sets the units budget the read is given: the default is Infinity, the index bound is 2097152) where <dir> is a scratch directory and each <file> a name in <dir>/pdfs (write them with `bigpdf.mjs`'s synthPdf).
  * It bundles `read` (as the plane's object runs it) with esbuild, serves it from workerd with the document's bytes behind a
  * disk service (fetched into the isolate as an R2 get is), and for each file finds by bisection the smallest V8 old-space
  * (`--max-old-space-size`) in which the read completes. The bytes ride beside the heap as array buffers, so the object's
@@ -31,7 +31,7 @@ export default { async fetch(req, env) {
     profile: { profiled_from_text: false, format: { format: "pdf", confidence: "certain", signals: [] } },
     provenance_chain: [{ who: "t", asserts: "served", via: "direct", bound: false }],
     capture: { sha256: "a".repeat(64), bytes: 1, content_type: "application/pdf", transport: { http_headers: [] } } };
-  const made = await read(document, { evidence, env: {}, storeName: "bio", unitsBudget: Infinity });
+  const made = await read(document, { evidence, env: {}, storeName: "bio", unitsBudget: ${process.env.PROBE_BUDGET || "Infinity"} });
   return Response.json({ ok: true, found: made.reading.found, failure: made.reading.failure ?? null, pages: made.reading.page_count, units: (made.text_units || []).length });
 } };`);
 execFileSync(BIN + "esbuild", [join(dir, "worker.mjs"), "--bundle", "--format=esm", "--platform=neutral", "--main-fields=module,main",

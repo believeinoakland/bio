@@ -1,6 +1,6 @@
 # reading-pipeline (T51)
 
-**Status** · session_016qGyozq8Rczq8BoW6LAp4C · depth 2 · COMPLETE · handled B5
+**Status** · session_01SnD31Lo4LuZRr5JLS6rug9 · depth 2 · COMPLETE · handled B8
 
 ## J1 · COMPLETE
 
@@ -119,3 +119,66 @@ COMPLETE (B6, fix round 2, C5's reading half, K4323): the reader reads the whole
 - `format.mjs`: 0 failures; `architecture.mjs reading-pipeline`: 0 failures; `coverage.mjs reading-pipeline`: `35 of 35 live requirement ids named by a test; 0 failures`; `words.mjs reading-pipeline`: 0 failures; `ownership.mjs reading-pipeline tranche/T51`: `3 files changed ...; 0 failures`.
 
 Size (session_016qGyozq8Rczq8BoW6LAp4C): test runs 8, module lines 1860
+
+## J7 · COMPLETE · re B7
+
+COMPLETE (B7, fix round 5, E1; E2's half stated below with the one thing it needs). `tranche/T51` merged into the branch first. Pushed at the branch tip.
+
+**E1 root cause, confirmed in the code (file:line, `bio-plane/src/reading-pipeline/index.mjs`):** `readInner` took the format from the recorded profile alone (was :1537, `fmt = profile.format.format`). An upload held in parts is profiled from no byte, so that format is `undetermined`; `entry` was null, `wireable` false, and `textRead` required `!multipart`, so a multipart document always reached the last branch and was written `final` "not read as text (multipart)". Why the tests missed it: every multipart case in this module's tests carried a recorded `pdf`/`html` format or a stub entry, and none asserted words in `text_units` for an upload recorded `undetermined`.
+
+**Change.** `readInner` (:1546, :1566-1574): after the bytes are held, a recorded format that is `undetermined` or none is detected again with `detectFormat(bytes, profile.source_content_type || ct)` (the recorded profile is never trusted over bytes held; a single part recorded `undetermined` is re-detected too). New helpers at :1528-1533 (`TEXT_TYPE`, the same text types acquisition's `profilesAsText` judges, and `utf8TextOf`): a multipart document whose format is still `undetermined`, whose profile's `source_content_type` is a text type, and whose bytes are strict UTF-8 without a NUL, is read as text (R32's path, R1's reader, units, chain, words). `bytesOf` and the R37 ceiling are untouched: a 30 MB document is still stated `final` with its size before any byte is loaded.
+
+**Failing-first** (`test/m/reading-pipeline/undetermined.test.mjs`, new, 7 tests; each asserts the words are in `text_units`, R-STOP; run on the unchanged code: `tests 7, pass 3, fail 4`; the 4 red were the E1 cases, the 3 green were controls):
+- red→green: a 10 MB text-layer PDF in two parts, recorded `undetermined`: read through the pdf entry (40 pages, tier 1, units hold the PDF's words). The same with no recorded format at all. A 12 MB UTF-8 text file declared `text/plain` in two parts: read as text, its first unit holds the first sentence, `text_container` "text". A single-part PDF recorded `undetermined`: read, units equal the same PDF recorded `pdf`.
+- controls (green before and after): a 30 MB PDF recorded `undetermined` still states the ceiling, `failure: "final"`, basis equal to `word("reading-pipeline.why.capture_bytes_parts", ...)` with its size and 24 MiB; prose declared no type, and a NUL-bearing file declared `text/plain`, in parts, are still not read as text; two reads of the same upload are identical.
+After the change: `tests 7, pass 7, fail 0`.
+
+**Platform (rule 4), local workerd, `workerd-ceiling.probe.mjs`** (now takes `PROBE_BUDGET=<bytes>`, default unchanged; the units budget given to `read`; here the index bound 2,097,152). Smallest V8 old space in which `read` completes, plus the file's bytes (object limit 128):
+| file | pages | MB | old space | heap + bytes |
+|---|---|---|---|---|
+| BUDGET-2025-BUD | 188 | 2.4 | 33 | 35 |
+| BUDGET-2025-PER | 295 | 8.4 | 42 | 50 |
+| BUDGET-2024-APP | 1,354 | 15.2 | 83 | 98 |
+| synthetic text pages, 120 lines | 1,000 | 4.8 | 56 | 61 |
+| synthetic text pages, 120 lines | 2,000 | 9.6 | 88 | 98 |
+| synthetic, 21 MB | 1,300 | 20.1 | 65 | 85 |
+| synthetic, 22 MiB (E1's size, one object) | 300 | 22.0 | 37 | 59 |
+A 22 MiB upload held in parts adds the assembled copy beside its parts (about +22 MB), so about 81 MB at worst, under 128. No deploy.
+
+**E2 (R42 re-measured at the index bound): the table above is the baseline on the tranche's pdf-reader as of now (the rule's recorded figures 35/50/98 and 66/98 for the same files stand within 5 MB at the 2 MiB bound, so the index bound costs this module nothing it did not already cost). pdf-reader (merge 1) is still WORKING and has not merged, so the numbers after its object-table bound cannot exist yet.** The smallest thing I need: tell me by CHANGE when pdf-reader has merged into `tranche/T51`; I merge it, re-run the same seven files at `PROBE_BUDGET=2097152` and post the table. Nothing else of E2 is mine (`pdfstructure.mjs` R42's constants are pdf-reader's; `readHeld`'s budget is extraction's).
+
+**Requirement lines I propose, for BOB to write in `build/requirements/reading-pipeline.md`:**
+- append to R2: "(T51 fix round 5, E1; K4530) **Bytes over the recorded profile.** A capture whose recorded format is `undetermined`, or none, has its format detected again from the bytes the reader holds (`format-registry.detectFormat`, the declared type only where the bytes say nothing) before the format is chosen; a capture held in parts, profiled from no byte, is read through the entry that detection finds. Test: a 10 MB text-layer PDF in two parts recorded `undetermined` is read, its words in `text_units`; control: a 30 MB PDF still states R37's ceiling."
+- append to R32: "(T51 fix round 5, E1) A capture held in parts whose format stays `undetermined`, whose profile's `source_content_type` is a text type and whose bytes are UTF-8 without a NUL is read as text, as a single part is. Test: a 12 MB file declared `text/plain` in two parts has text units; controls: no declared type, or a NUL, is not read as text."
+- the R32 text "(R1: a textual type, a single part, within the profile's text bound)" now also covers this multipart case.
+
+**Tests and checks (all on the job branch tip):**
+- `node --test --test-force-exit test/m/reading-pipeline/*.test.mjs test/d606-perpage-ocr.test.mjs test/tier2-wire.test.mjs test/system/pdf-worker-binding.test.mjs`: `tests 193, pass 193, fail 0`; `test/tier-pagewise.probe.mjs` exit 0.
+- users: `test/m/extraction/` + `test/m/content/`: `tests 377, pass 376, fail 1`: the one is `c5b-memory` (E2's, extraction's job; red with the other suites running beside it, passes alone: `pass 1, fail 0`; the plan lists it as a margin-bound defect on the tranche tip, not caused by this change); `test/m/events/`: `tests 93, pass 93, fail 0`.
+- `checks/run.mjs`: format `176 modules, 176 requirements files; 0 failures`; architecture `4160 product files, 14216 relative imports; 0 failures`; coverage `6605 of 6605 live requirement ids named by a test; 0 failures`; channels 0 failures; words `0 failures` (reading-pipeline: `0 failures`, inline/plain/testcopy/missingkey 0).
+- `checks/ownership.mjs /home/user/bio reading-pipeline tranche/T51 job/T51/reading-pipeline`: `4 files changed by reading-pipeline ...; 0 failures`.
+
+**Found elsewhere / stale artifacts:** none in another module. `bio-plane/dist/bio-plane.bundled.mjs` (the plane bundles `read`) is stale until BOB rebuilds it at the layer close; not edited. No census op owned. R-OLD: this fixes new reads; an older stored "(multipart)" reading is repaired by extraction's `readHeld` replacing it once (extraction's entry in the plan), not here.
+
+Size (session_01SnD31Lo4LuZRr5JLS6rug9): test runs 11, module lines 2183
+
+## J8 · COMPLETE · re B8
+
+COMPLETE (B8, E2: R42 re-measured at the index bound with the merged reader). `tranche/T51` merged into the branch (pdf-reader's d071cdc9ec: object table bound, ASCII85/Hex, R42 density term `READ_BASE_DENSE_MB` 29 / `READ_PAGE_DENSE_MB` 0.001). E1 stands as posted in J7.
+
+Local workerd, `workerd-ceiling.probe.mjs` with `PROBE_BUDGET=2097152` (the index bound), smallest V8 old space in which `read` completes, plus the file's bytes (object limit 128), before the merge (J7) and after it:
+| file | pages | MB | old space before / after | heap + bytes before / after |
+|---|---|---|---|---|
+| BUDGET-2025-BUD | 188 | 2.4 | 33 / 33 | 35 / 35 |
+| BUDGET-2025-PER | 295 | 8.4 | 42 / 42 | 50 / 50 |
+| BUDGET-2024-APP | 1,354 | 15.2 | 83 / 83 | 98 / 98 |
+| text pages, 120 lines | 1,000 | 4.8 | 56 / 56 | 61 / 61 |
+| text pages, 120 lines | 2,000 | 9.6 | 88 / 88 | 98 / 98 |
+| synthetic 21 MB | 1,300 | 20.1 | 65 / 65 | 85 / 85 |
+| synthetic 22 MiB | 300 | 22.0 | 37 / 37 | 59 / 59 |
+| text pages, 120 lines | 3,500 | 17.6 | refused by R42 (`TOO_LARGE_TO_READ`), as before; the probe prints "does not complete" for a refusal |
+So the merged reader changes none of these seven figures: the index bound and the object-table bound cost this module's read nothing more, and R42's rule (needs 61 / 97 / 150 for 1,000 / 2,000 / 3,500 text pages; 33 / 43 / 82 for the govinfo volumes) still sits within 16 MB of the measured need (the largest gap: BUDGET-2024-APP, rule 82 against 98 measured, as pdf-reader's R42 text already states). Whether the rule's constants move for dense pages is pdf-reader's (its density term was measured on its own files); nothing here argues for a change.
+
+Tests after the merge: module + d606 + tier2-wire + pdf-worker-binding `tests 193, pass 193, fail 0`; `checks/ownership.mjs ... job/T51/reading-pipeline`: `0 failures`. No file changed in this entry other than the merge.
+
+Size (session_01SnD31Lo4LuZRr5JLS6rug9): test runs 12, module lines 2183

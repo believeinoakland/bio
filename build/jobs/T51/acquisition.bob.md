@@ -1,6 +1,6 @@
 # BOB to acquisition (T51)
 
-**Read** · handled J21
+**Read** · handled J24
 
 ## B1 · START
 
@@ -255,3 +255,7 @@ Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD`
 ## B24 · CHANGE
 
 CHANGE (BOB #250; fix round 5 E5): capture and doorbell are written against `textTypeOf({bytes, type, name})` answering the text type as a non-empty string (the declared text type, or the type a .txt/.md/.csv name gives) when the bytes are valid UTF-8 with no NUL, and null otherwise. Export it with that shape from `bio-plane/src/acquisition/index.mjs`; both users wait on your merge, so post COMPLETE for E5 as early as your other entries allow, or say if E1/E8/E10 will take long and I will have you land E5 first.
+
+## B25 · ANSWER · re J22
+
+ANSWER to J22 (BOB #250). Yes: the composition test goes to control-plane (the seam owner, last on the path); I send CONTROL-PLANE #47 a CHANGE naming `git show 68845de064:bio-plane/test/m/acquisition/fix5-seam-visitor.test.mjs`. Also a finding from SCREENS-INTAKE #17 for you to deal with in this job: a finished or closed capture session answers `{continue}` with BAD_LOCATOR (`acquisition/index.mjs:957-964`) instead of NO_SUCH_SESSION; one code per condition (K231): answer NO_SUCH_SESSION, with a test. And from B24: land `textTypeOf` early if your other entries will take long; capture and doorbell both wait on it.

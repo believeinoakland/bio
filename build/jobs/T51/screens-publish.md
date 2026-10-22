@@ -1,6 +1,6 @@
 # screens-publish (T51)
 
-**Status** · session_01YGqJwT6jawvaDY3pHEbrTm · depth 2 · COMPLETE · handled B28
+**Status** · session_01CbZX6kMXs3nBMuMvqC2NcN · depth 2 · COMPLETE · handled B31
 
 ## J1 · QUESTION
 
@@ -386,3 +386,42 @@ COMPLETE · SCREENS-PUBLISH #16 · T51 fix round 4, wave 2 (B23). Merged tranche
 **Found elsewhere (no action by me):** the two reds above. K4450's `publishedAddress` is server-side only; the screens write the same string, and the seam test compares the link with the route form.
 
 Size (session_01YGqJwT6jawvaDY3pHEbrTm): test runs 32, module lines 3566
+
+## J23 · REPORT
+
+REPORT · SCREENS-PUBLISH #17 · fix round 5, E4 / C48 built and pushed on job/T51/screens-publish (659d2b2c69); three seam tests are RED BY NAME until publication's `findings` field is on tranche/T51. Not COMPLETE: your CHANGE at publication's merge lets me run the real suites and post it.
+
+**What changed.**
+- `parts.mjs` `rosterOf` (new), `sitting`, `sittingGap` (new), `notPublished`: `casedocument` answers `citations` as `{state, rows}`; the sitting now reads the evidence from `citations.rows` and the findings from the document's own `findings` roster (`{target, version_sha, role}`, publication's new field), falling back to the `publish` answer's findings only when the answer states no roster. `sittingGap` is true when the sitting lists fewer findings than the document pins, or none while the draft names findings.
+- `ceremony.mjs` (reload branch, was :113-119): `prepared.findings` = the document's roster, no longer `rec.citations` read as an array. Fail closed: the Sign step draws `data-roster-unread` with `screen.ceremony.sign.nodoc` before the press, and both `caseratify` and `publishat` return `{refuse: "screen.ceremony.sign.nodoc"}` (no key asked, nothing sent) when `sittingGap`. Row owed (K4269): a sentence of its own for "this page could not read what the edition pins"; stand-in `screen.ceremony.sign.nodoc`.
+- Test doubles replaced (R-SEAM): `fixtures.mjs` `DOCUMENT` now has the real shapes (`citations: {state, rows}`, `findings`); the four tests that hand-wrote `citations` as an array (`drafts.test.mjs`, `fix2.test.mjs` x2, `fix4.test.mjs`) use `{state, rows}`.
+
+**Failing-first** (`seam4.test.mjs`, the real case-authoring world and the real `publishCase`/`caseDocument`, inputs made by the member's own acts: conclude, "Confirm, and prepare Edition 1", reload = a fresh page over the same world, key file kept, "Sign and publish now"):
+- "R13 R70 R77 C48 E4 a ceremony reloaded ..." RED on the old source (with `findings` stood in on publication locally): "the edition and its one finding, after the reload" fails (the walker's "signs all 1 ... 0 findings"); GREEN on the new source: count 2/1, statements case + finding, `caseratify` carries `members` = the finding with the sha the document pins.
+- control "the same flow with no reload ..." : both pages send the same sitting (members and `expectedSha`).
+- control "a draft whose roster cannot be read ...": refuses in words before and at the press, no `caseratify` sent, no signing dialog.
+Local proof: with an UNCOMMITTED stand-in of publication's field (`findings` from `case_roles`, removed again; nothing of publication is in my diff) the suite is 260 tests, 258 pass, 0 fail, 2 todo. Without the stand-in the first two E4 tests are red by name (the real `caseDocument` has no `findings` yet). 
+
+**Not shown by the test, stated:** `publishedcase` `findings` 1 / `complete: true` after the signing: the harness has no store that commits the sitting, so the test asserts the request the store commits from (the finding in `members` with the pinned sha); the live check is the re-walk's reloaded ceremony on a new question.
+
+**For you, one live-behaviour point (no answer needed unless you object):** the evidence loop of the sitting (R13: "per piece of evidence they rest on") never ran on the live plane, because it read `citations` as an array. It now reads `citations.rows`, so a reloaded or non-reloaded ceremony will list and sign `bio-ratify <target> <sha>` for each row whose `version` is a full SHA-256 and that is not a finding (the walker's CASE-2026-8024 row was `no_bytes`, so it signs none). That is the written R13 and R52 takes such members, but it has not run live before. If you would rather the evidence stay out of this round, say so and I take the evidence branch out of `sitting`.
+
+**Checks:** `node --test --test-force-exit bio-plane/test/m/screens-publish/` 260 tests with the local stand-in (258 pass, 0 fail, 2 todo as before); without it 2 E4 tests red by name and the third passes. Users (`impact.mjs`): control-plane 365/365, plane 298/299 (the one red is `release.test.mjs` R24 `screen.objective.purpose`, not mine, as at J22). format 0 failures; architecture 37 files, 126 imports, 0 failures; coverage 80 of 80; words 0 findings (`run.mjs`); ownership 8 files, 0 failures.
+
+**Requirement lines proposed (you write them):** R13 gains: "(fix round 5, C48) The sitting's findings are the roster the signed document pins (`casedocument`'s `findings`), and its evidence the document's `citations.rows`; when the sitting lists fewer findings than the document pins, or none while the draft names findings, the Sign step says so in words before the press and `caseratify` and `publishat` send nothing and ask no key." R70/R77: "after a reload the prepared edition's findings are read from the document's roster."
+
+Size (session_01CbZX6kMXs3nBMuMvqC2NcN): test runs 7, module lines 3612
+
+## J24 · COMPLETE
+
+COMPLETE · SCREENS-PUBLISH #17 · fix round 5, E4 / C48 (B30 taken). Merged tranche/T51 (publication #35 included); code on job/T51/screens-publish at 659d2b2c69 plus the merge, pushed. Nothing deferred, no question open.
+
+**Applied:** as J23 (parts.mjs `rosterOf`, `sitting`, `sittingGap`, `notPublished`; ceremony.mjs reload branch and the fail-closed refusal in `caseratify` and `publishat`; fixtures and four tests moved to the real `{state, rows}` / `findings` shapes). The row owed (K4269): a sentence for "this page could not read what the edition pins"; stand-in `screen.ceremony.sign.nodoc`.
+
+**Failing-first (`seam4.test.mjs`, real case-authoring world, real `publishCase`, reload = fresh page):** the reload test was red on the old source and is now green on the real merged publication, no stand-in: count "the edition and its 1 finding", `caseratify` members = the finding with the sha the document pins. Controls green: no reload sends the same sitting; a document stating no roster refuses in words and sends nothing. Platform check: N. Not shown: `publishedcase` findings 1 / complete true needs the store (the re-walk's reloaded ceremony).
+
+**Tests and checks:** screens-publish 260 tests, 258 pass, 0 fail, 2 todo (as before). Users: control-plane 365/365; plane 298/299, the one red `release.test.mjs` R24 (`screen.objective.purpose`), not mine. run.mjs: format, architecture, coverage (80/80 for the module), words 0 failures. ownership 8 files, 0 failures.
+
+**Requirement lines proposed:** as J23 (R13; R70/R77). Live-behaviour note from J23 stands: evidence now read from `citations.rows` (the written R13).
+
+Size (session_01CbZX6kMXs3nBMuMvqC2NcN): test runs 10, module lines 3612

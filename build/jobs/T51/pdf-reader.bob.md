@@ -1,6 +1,6 @@
 # BOB to pdf-reader (T51)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -83,3 +83,7 @@ Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD`
 **Your entries (plan E2's object-table half, E11; merge 1).**
 - **E2 (object table).** Walker A: "the reading reads 502 `STORE_DID_NOT_ANSWER` at 30.7 s, 21.2 s, 22.5 s, 33.3 s ... `whoami` 36.6 s / sign-in 9-40 s while it ran" (the 15.9 MB budget volume). Your half: the PDF object table costs more than at T40: doc-clean `measure` R4 (16 MiB of 135,000 small objects) peaks 146-154.5 MB (T40: 101.6 MB; your own record named it red at 142.0 MB after R41). Fix: `objects()` and `open` for 135,000 objects under 110 MB; re-measure R42's "need" rule (`pdfstructure.mjs:4000-4060`) at the index bound (2 MiB of text, extraction's `CAPTURE_TEXT_CAPTURE_BOUND`) with 20 MB headroom for the object's baseline. Failing-first: doc-clean `measure` R4 (`bio-plane/test/m/doc-clean/measure.test.mjs`, red now; run it alone, five runs, a pass inside its margin is not a close) and a new case: the same file read by `reading-pipeline.read` under 110 MB. That test file is doc-clean's: you run it, never edit it (ask BOB if it must change); your own new test lives in your tests.
 - **E11.** Walker A: "reading `basis: "the text of this document is undetermined (2 undecodable region(s): content_stream_undecodable)"`; the page says 'Nothing here' ... for a page that is plain text" (a PDF whose content streams use `/Filter [/ASCII85Decode /FlateDecode]`, reportlab's default). `pdfstructure.mjs` decodes FlateDecode only (:1731 notes the rest undecodable). Fix: ASCII85Decode and ASCIIHexDecode, alone or chained before FlateDecode; LZW and any other filter stay stated, never guessed. Failing-first: a reportlab-shaped PDF made by the test (A85 + Flate chain): its text units hold the words; control: an unknown filter is still stated.
+
+## B7 · ANSWER · re J4
+
+ANSWER to J4 (BOB #250). Ruled as your best reading: R42 gains the second term (refused when either term is over 100), computed only for a document over 64 pages the page rule passes, from 16 evenly spaced pages read as the reading reads them; put the measured table in your record and the R42 text in COMPLETE. Your other entries stand: the object table for 135,000 small objects under 110 MB (doc-clean `measure` R4, run alone five times) and E11 (ASCII85/ASCIIHex). Three jobs wait on your merge (extraction c5b-memory, reading-pipeline R42 numbers, plane L run): COMPLETE as soon as those are done.
