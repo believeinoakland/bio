@@ -36,7 +36,8 @@ const pick = async (p, id) => p.click(main(p).querySelector(`#pick-held-${id}`))
 
 test("R4 the screen reads heldcaptures; a list with no row is drawn in the screen's own empty sentence", async () => {
   const p = await open("/app/held", { plane: { heldcaptures: LISTS(HELD) } });
-  assert.deepEqual(p.byOp("heldcaptures").map((r) => r.query.state ?? null), [null, "set_aside"]);
+  /* C14 (capture R102): the page as picker rows, the set-aside list, and the full fields of the rows the page draws; no other read */
+  assert.deepEqual(p.byOp("heldcaptures").map((r) => (r.query.state ? "state:" + r.query.state : r.query.fields ? "fields:" + r.query.fields : r.query.bundle_ids ? "bundle_ids" : "page")).sort(), ["bundle_ids", "fields:picker", "state:set_aside"]);
   const e = await open("/app/held", { plane: { heldcaptures: ok({ ok: true, held: [] }) } });
   assert.ok(says(e, "screen.held.empty"));
   /* control: a read that failed is drawn as failed, never as empty */
@@ -321,7 +322,7 @@ test("R35 R40 controls: a fetched row still names its address; an upload row ans
   const zip = await heldOf([UP({ bytes: 5 * 1048576, archive: { sha256: "d".repeat(64), entries: 3, filed: 3, already_held: 0, not_filed: 0, waiting: 0 }, files: [], files_total: 3, files_truncated: false })]);
   assert.ok(text(zip).includes(word("size.mb", { n: "5.0" })));
   /* held's own two lists stay held and set_aside: it lists no vouched row */
-  assert.deepEqual(p.byOp("heldcaptures").map((r) => r.query.state ?? null), [null, "set_aside"]);
+  assert.ok(p.byOp("heldcaptures").every((r) => r.query.state === undefined || r.query.state === "set_aside"), "held reads no vouched row");
 });
 
 const ZIP = (more = {}) => ({ bundle_id: "INFO-2026-0030-packet", title: "Agenda packet (ZIP)", project: "PROJ-2026-0002-sewer-fund-transfers", age_days: 1, eligible: true, captured_for: { questions: [], withheld: null },

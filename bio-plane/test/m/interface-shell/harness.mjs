@@ -81,11 +81,14 @@ const undeclared = new Map();
 /* the ops that went out with no owner declaration, counted over the process (R104: `declared N of M ops`) */
 export const undeclaredOps = () => new Map(undeclared);
 
+/* a plane's `queue` answer for a list of items: the count (R93) when asked for it, else the list, as the queue answers both */
+export const queueOf = (items) => (req) => (req.query && req.query.count ? ok({ ok: true, member: "mai", count: items.length }) : ok({ items }));
 export const FRAME = Object.freeze({
   whoami: ok(MEMBER),
   interfacewords: ok({ ok: true, language: null, words: [] }),
   groupidentity: ok({ ok: true, group: "river-town", display_name: "River Town" }),
-  queue: ok({ items: [{ id: "a", class: "OBLIGATION" }, { id: "b", class: "FINDING" }, { id: "c", class: "OBLIGATION" }] }),
+  /* queue R93: the frame asks for the count alone (`count=true`) and a screen for the list */
+  queue: (req) => (req.query && req.query.count ? ok({ ok: true, member: "mai", count: 3 }) : ok({ items: [{ id: "a", class: "OBLIGATION" }, { id: "b", class: "FINDING" }, { id: "c", class: "OBLIGATION" }] })),
   infolevel: ok({ level: "prompt", set_at: null, asked_at: null }),
   assistantstate: ok({ on: false }),
   accountreference: ok({ held: false }),

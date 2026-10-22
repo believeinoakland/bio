@@ -22,10 +22,9 @@ const hasKey = (k) => hasWord(k);
 
 /* ---------- C9: R49 (capture R100, R101) ---------- */
 
-/* The sentence for "filed here as well": its row is the design's to write (stand-in key `screen.capture.address.filedhere`, asked of BOB);
-   until it exists the result says where the document is filed with `capture.filed.project`. */
+/* The sentence for "filed here as well" is the design's row (DEC-412), asserted by its key. */
 const FILEDHERE = "screen.capture.address.filedhere";
-const saysFiled = (p, home, mine) => hasKey(FILEDHERE) ? says(p, FILEDHERE, { project: home }) : says(p, "capture.filed.project", { project: mine });
+const saysFiled = (p, home) => says(p, FILEDHERE, { project: home });
 
 test("R49 (C9) a capture from a project's page whose bytes are held under another project's document sends `captureseenin` for the subject project and says it is filed here as well", async () => {
   const p = await open(`/app/capture/address/${MINE}`, { plane: { ...CAPTURED, image: IMAGE, heldat: holder(SHA, HOLDER, HOME), captureseenin: ok({ ok: true, recorded: true, home: HOME }), acquire: ok({ ok: true, existed: true, document: DOC }) } });
@@ -34,7 +33,7 @@ test("R49 (C9) a capture from a project's page whose bytes are held under anothe
   assert.deepEqual(p.byOp("captureseenin").map((r) => r.body), [{ captureSha: SHA, project: MINE }], "the digest and the subject project, nothing else");
   assert.equal(p.byOp("allocid").length + p.byOp("promote").length, 0, "no second document is written");
   assert.equal(anchors(p, HOLDER).length, 1, "the held copy is shown once");
-  assert.ok(saysFiled(p, "Housing repairs", "Pothole repairs"), "the result says it is filed here as well");
+  assert.ok(saysFiled(p, "Housing repairs"), "the result says it is filed here as well");
 });
 
 test("R49 (C9) control: a found document whose home is the subject project is recorded as seen nowhere; with no subject nothing is sent", async () => {
@@ -67,7 +66,7 @@ test("R49 (C9) a `captureseenin` the plane refuses is drawn by its words and the
   await press(p, "acquire");
   assert.ok(hasKey("refusal.PROJECT_ACT_NOT_A_PARTICIPANT") ? says(p, "refusal.PROJECT_ACT_NOT_A_PARTICIPANT") : text(p).includes("You have not joined this project."), "the refusal in words");
   assert.equal(anchors(p, HOLDER).length, 1);
-  assert.ok(!saysFiled(p, "Housing repairs", "Pothole repairs"), "it is not said to be filed");
+  assert.ok(!saysFiled(p, "Housing repairs"), "it is not said to be filed");
 });
 
 test("R49 (C9) an upload whose bytes are held under another project's document is filed in the subject project as well", async () => {
@@ -78,7 +77,7 @@ test("R49 (C9) an upload whose bytes are held under another project's document i
   assert.deepEqual(p.byOp("captureseenin").map((r) => r.body), [{ captureSha: USHA, project: MINE }]);
   assert.equal(p.byOp("captureupload")[0].query.for, undefined, "an existed upload takes no `for` (R29)");
   assert.equal(anchors(p, HOLDER).length, 1);
-  assert.ok(saysFiled(p, "Housing repairs", "Pothole repairs"));
+  assert.ok(saysFiled(p, "Housing repairs"));
 });
 
 test("R49 (acquisition R96) a `CAPTURE_NOT_KEPT` acquire is drawn through its row's words, files nothing and links nothing", async () => {
@@ -131,7 +130,7 @@ test("R2 (C17) control: an upload with a project says what it did before and dra
 
 /* ---------- C14: R77, R88 (the reads the screens make) ---------- */
 
-test("R50 (C14) Add makes one `heldcaptures` read, with fields=picker, and no read for a row; Held reads full rows (no picker fields)", async () => {
+test("R50 (C14) Add makes one `heldcaptures` read, with fields=picker, and no read for a row; Held reads picker rows, then the full fields", async () => {
   const picked = ok({ ok: true, held: [{ bundle_id: "INFO-2026-0003-a", title: "Housing notice", project: null, capture: { sha256: SHA }, standing: "collected" }], truncated: false });
   const add = await open("/app/capture/address", { plane: { ...CAPTURED, heldcaptures: picked, acquire: ok({ ok: true, document: DOC, reading: { title: "Housing notice" } }) } });
   assert.deepEqual(add.byOp("heldcaptures").map((r) => r.query.fields), ["picker"], "one read, the cheap picker row");
@@ -140,7 +139,8 @@ test("R50 (C14) Add makes one `heldcaptures` read, with fields=picker, and no re
   assert.equal(add.byOp("heldcaptures").length, 1, "an act does not read the list again");
   assert.equal(add.byOp("image").length + add.byOp("captureaccounts").length, 0, "no read for each row");
   const held = await open("/app/held", { plane: { heldcaptures: ok({ ok: true, held: [{ bundle_id: "INFO-2026-0003-a", title: "Housing notice", project: null, capture: { sha256: SHA, grade: null }, age_days: 2, eligible: true }], truncated: false }) } });
-  assert.ok(held.byOp("heldcaptures").length >= 1 && held.byOp("heldcaptures").every((r) => r.query.fields === undefined), "Held keeps full rows");
+  const reads = held.byOp("heldcaptures").filter((r) => r.query.state !== "set_aside");
+  assert.deepEqual(reads.map((r) => (r.query.fields === "picker" ? "picker" : r.query.bundle_ids ? "full" : "page")), ["picker", "full"], "Held reads the page as picker rows, then the full fields of its rows (fix round 4)");
   assert.ok(text(held).includes("Housing notice"));
 });
 
@@ -388,11 +388,11 @@ test("N4 'Show my requests for later' with none says none; with some it draws th
   await press(p, "capturerequests");
   const sec = sectionOf(p, "screen.capture.later.head");
   assert.ok(sec, "the section is drawn once asked");
-  assert.ok(sec.textContent.includes(word(hasKey("screen.capture.later.none") ? "screen.capture.later.none" : "state.empty")), "and says there are none");
+  assert.ok(sec.textContent.includes(word("screen.capture.later.none")), "and says there are none");
   const mine = { request: "CR-1", host: "records.example-city.gov", address: "https://records.example-city.gov/a", state: "requested", requested_at: "2026-10-15T10:00:00Z", principal_plane: "member:x" };
   const q = await open("/app/capture/address", { me: { ...MEMBER, member: "x" }, plane: { memberlist: MEMBERS, capturerequests: ok({ ok: true, requests: [mine] }) } });
   const draws = sectionOf(q, "screen.capture.later.head");
-  assert.ok(draws && draws.textContent.includes("records.example-city.gov") && !draws.textContent.includes(word(hasKey("screen.capture.later.none") ? "screen.capture.later.none" : "state.empty")));
+  assert.ok(draws && draws.textContent.includes("records.example-city.gov") && !draws.textContent.includes(word("screen.capture.later.none")));
 });
 
 test("C94 a member is named by handle where the capture screen names one (link and name), never by id; a member with no handle draws the fallback word", async () => {
