@@ -90,6 +90,8 @@ const WORDS = {
   bias: [...STATES, "screen.bias.name", ...own("screen.bias."), "screen.standard.state.adopted", "shell.reason", "act.writinghelp.does", "shell.field.needed", "shell.card.member",
     ...LABELS("bias", ["biasmanifest", "promote", "biasadopt", "biasinhale", "biasdebt", "biasdebtresolve", "writinghelp"])],
   grouprules: [...STATES, "screen.grouprules.name", ...own("screen.grouprules.", "screen.start-send.kind."), "member.founder.unnamed", "refusal.RULE_NEEDS_QUALIFICATION", "screen.group-identity.draft.label", "ai.label.untested", "shell.field.needed", "shell.card.member",
+    // G20 (K4571): the document picker's search, its "nothing matches" and its "the first {n} are shown" (the nearest held rows, the design's own)
+    "form.choose.search", "form.choose.search.none", "screen.people.more",
     ...own("screen.action.kind."), ...LABELS("grouprules", ["ruleconfirm", "rulewithdraw", "ruledraft", "writinghelp"])],
 };
 

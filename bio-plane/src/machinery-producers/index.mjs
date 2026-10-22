@@ -393,6 +393,9 @@ export class MachineryProducers {
     /* capture R46 (the live sessions, each `{session, locator, primarySha, …, state}` with its state parsed) and
        provenance R4 (the capture's home, null when none or gone). */
     for (const s of this.#capture.liveCaptureSessions(nowIso)) {
+      /* R2 (G25; K4577): a large fetch acquisition parked as owed work (`state.fetch_pending`, a zero digest for its primary) has
+         captured nothing and reached no ceiling; it is the Capture screen's "being fetched", not a partial capture. */
+      if (s.state && typeof s.state === "object" && s.state.fetch_pending) continue;
       const r = { ...s, primary_sha: s.primarySha };
       const home = this.#provenance.homeOf(r.primary_sha);
       const bundleId = home ? home.bundleId : null;

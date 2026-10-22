@@ -451,6 +451,18 @@ CREATE TABLE IF NOT EXISTS captured_for (
   PRIMARY KEY (capture_sha, question, asker)
 );
 CREATE INDEX IF NOT EXISTS captured_for_question ON captured_for (question);
+-- R104 (fix round 6; G2; K4562): a large capture fetched in the background and filed: one row per capture session, written once when
+-- the delivery files the document, never rewritten or removed but by purge. A stated read contract for notice-producers, which tells
+-- the opener once (fetchesDone). session the capture session id; document the filed document's bundle id; opener the member's
+-- stamp (member:ID); project the project it was filed under, null for none; at the whole-second UTC instant it was recorded.
+CREATE TABLE IF NOT EXISTS fetch_done (
+  session  TEXT PRIMARY KEY,
+  document TEXT NOT NULL,
+  opener   TEXT NOT NULL,
+  project  TEXT,
+  at       TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS fetch_done_at ON fetch_done (at, session);
 -- R100 (T51 fix round 3; C9; Intake Doctrine section 8): the projects a held document was filed in as a REFERENCE: one row per
 -- (capture, project), written once at the first instant, never rewritten or removed but by purge. A reference and not a second
 -- home: the document keeps the one home provenance records (its R2), so no row here moves, copies or re-homes anything. A stated
@@ -486,5 +498,5 @@ export const CAPTURE_RESHAPE = [["links", "citation_norm"]];
    corpus-derived. The doorbell's tables are `doorbell`'s to declare (T43; N849, N864). */
 export const CAPTURE_PURGED_TABLES = ["task_queue", "source_reachability", "link_verdicts", "links", "site_asset_refs",
   "site_assets", "reuse_verdicts", "capture_sessions", "site_chrome_refs", "site_chrome", "link_chrome", "capture_validators",
-  "capture_actors", "capture_accounts", "late_attestations", "held_acts", "held_act_questions", "captured_for", "seen_in"];
+  "capture_actors", "capture_accounts", "late_attestations", "held_acts", "held_act_questions", "captured_for", "seen_in", "fetch_done"];
 export const CAPTURE_EXEMPT_TABLES = ["capture_limits", "render_allowance", "render_slots"];

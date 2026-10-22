@@ -1,6 +1,6 @@
 # screens-settings (T51)
 
-**Status** · session_013oBjn6cy9rDsXVNuTPr9A1 · depth 2 · COMPLETE · handled B38
+**Status** · session_01GPSmcx32NL7CpoTyeWoeYn · depth 2 · COMPLETE · handled B39
 
 ## J1 · QUESTION
 
@@ -355,3 +355,24 @@ Size (session_013oBjn6cy9rDsXVNuTPr9A1): test runs 14, module lines 5308
 ## J26 · COMPLETE
 
 COMPLETE (per K4466): C84 done and green (seam test through the real file-safety and file-scanner, stale R15 test fixed); C14: read-set tests written, RED BY NAME for security, updates, account, group, teamai until CAUSE-SHELL-4's accessor merges (send CHANGE; I then drop the five repeats). Details, four fields, counts and Size line in my record. Suite 252/257 (the five); format, architecture, ownership 0 failures. Proposed lines: R15 amended (C84 keys), R78 new (a Settings screen reads once each op the frame has read).
+
+## J27 · COMPLETE
+
+COMPLETE (G20, fix round 6; START B39). The document picker of `grouprules` no longer stops silently at 200.
+
+**1. Root cause.** `grouprules.mjs:21` asked `heldcaptures` for `limit: 200` and the draft form (render, the `docs` list) ignored `truncated` and `next`: 250 held documents offered 200, nothing said.
+**2. Why the tests missed it.** R70's tests used fixtures of two or three documents; none went past the bound. Gap fixed: the tests below page past it.
+**3. Fix (file:line).** `grouprules.mjs` draft form, the `docs` block (about lines 106-130) and the source fieldset (about lines 160-166): the screen's first read stays `fields: "picker"`, `limit: 200`, `state: "held_and_vouched"`; while the answer says `truncated` with a `next`, the following page is read by that cursor (1000 rows, twice at most, kept in `view.ui.later`, drawn on arrival; `cs.call` + `cs.set`, shape of screens-investigate's `docsAll`, own code). Past the bound, or when a later page fails, `screen.people.more` ("The first {n} are shown. Search or filter to find the rest.") says how many are shown; a search box (`form.choose.search`, narrowing by title on the page, reading nothing more; `form.choose.search.none` when nothing matches) is the way to narrow. `index.mjs` adds the three keys to `grouprules`' `words` (the served page carries only listed keys: without them the "none" note drew the bare key; found by the test).
+**Stand-in words (R-OLD/words):** all three are held rows (nearest held rows, adopted from screens-investigate's C95/B447); no new row is owed to the design.
+**4. Failing-first tests** (`bio-plane/test/m/screens-settings/grouprules.test.mjs`), through the real screen over the harness's fake plane answering by `limit`/`after` as capture R77 does:
+ - `R70 G20: with 250 documents held the picker reaches the 250th...`: RED before (200 !== 250 options), GREEN after; asks twice (`after: "200"`), the 250th is drafted from (`source.captureSha`); control: 150 documents read once, no "more" sentence.
+ - `R70 G20: past the bound it keeps...`: 2,500 documents: 2,200 offered (200 + 1000 + 1000), "The first 2200 are shown", search narrows to one title and to none, no further `heldcaptures` read.
+ - `R70 G20: a page the cursor names that cannot be read...`: 200 stay offered and are said to be the first 200.
+**5. Platform check:** N.
+
+**Runs.** screens-settings 260 pass, 0 fail. Users named by `build/plan/impact.mjs origin/tranche/T51 HEAD` (screens-inquiry, control-plane, plane, journey-check): screens-inquiry 486 pass, 0 fail. journey-check 104 pass, 23 fail: the same 23 fail, test for test, on a clean worktree of `origin/tranche/T51` (so none is caused by this change; they are inherited reds of that suite: installer container fakes, the Miniflare local arm, R17 "group" word rows). control-plane and plane were not run: they use screens-settings only through its registry acts, which this change leaves as they were (impact lists them by the shared table).
+Checks: `checks/run.mjs`: format, architecture, coverage (6632 of 6632), channels, words 0 failures (screens-settings alone: inline 0, plain 0, testcopy 0, missingkey 0, unkeyed 0); `checks/ownership.mjs`: 4 files, 0 failures; `setup-words/build.mjs --check`: only the stale-rows note about a capture row (not this module).
+
+**Requirement lines I propose (BOB writes `build/requirements/`).** Amend R70: "(T51 fix round 6; G20, K4571) The picker never stops silently at its first page: while `heldcaptures` answers `truncated` with a `next`, the following page is read by that cursor (1000 rows, at most twice more); past that bound, or when a later page cannot be read, the form says how many documents it shows (`screen.people.more`) and a search by title (`form.choose.search`) narrows the choice. Test: 250 held documents reach the 250th; 2,500 say 2,200 are shown; control: 150 are read once and nothing is said."
+
+Size (session_01GPSmcx32NL7CpoTyeWoeYn): test runs 14, module lines 5338

@@ -1,6 +1,6 @@
 # control-plane (T51)
 
-**Status** · session_01ScsNRTFgkShQFLDCyhHJBM · depth 2 · COMPLETE · handled B38
+**Status** · session_01X5bP76qJ2j296J7FB51rWp · depth 2 · COMPLETE · handled B46
 
 ## J1 · QUESTION
 
@@ -541,3 +541,74 @@ control-plane fix round 5 complete, pushed (job/T51/control-plane, tranche/T51 m
 E3: a capture over 24 MiB is never deferred (statement). E2: an `existed` acquire/upload that will not fit is owed; "Read it" asks the owner with `defer=1` (size from the bucket) and answers at once on READING_PENDING. E6: unread scan pages owe an `ocr` entry (promote with and without a reading); the OCR press hands the pages to the ledger and answers at once. E10 (i): `in-<route>` from the object's `server-timing: object;dur=`. E10 (ii) per B35: hop counts pinned as ceilings (whoami 1, projectlist 2, groupidentity 3, bootstrap 4, queue 2). E1, E5 seams green on the merged providers; E3 and E6 seams green; E8's composition test (t51-visitor-copy.test.mjs) is E8's through-the-door test, green.
 Suite: 405 tests, 404 pass; the one red is t51-hops E10 (i), red by name until plane sends `server-timing: object;dur=`. checks: format, architecture, coverage (6614/6614), words (count unchanged), ownership 0 failures. Users' suites: plane 1 red (release R24 words, not mine), journey-check 94 red from missing playwright-core in the container.
 For you: proposed lines for R123, R117, R121, R125 (record). Finding for plane: frequent traffic starves the alarm (60-page scan stuck 300 s at 4 s polling, done in under a minute at 20-30 s).
+
+## Fix round 6 (B40, B41, B42; K4570, K4571, K4573, K4577, K4578)
+
+**Entries applied (file:line in `bio-plane/src/control-plane/`).**
+- **G5.** `index.mjs` `tooBigToReadInline`: any format other than a PDF above `READING_DEFER_TEXT_BYTES` (3 MiB) follows by the ledger (PDF above 2 MiB as before); this covers the `existed` + no-home path, the delivery, and "Read it" (`heldWholeFacts`). `readingHeld(sha)` asks the store's plain `reading` read, so an `existed` capture whose reading is already made is neither read again nor promised again (the owner's `readheldfor` is not asked, as round 5 requires).
+- **G7.** `readingWontFit` is false whenever the size is over `READING_STATEMENT_MIN`, whatever the clock.
+- **G2.** `deliverOwedRender` takes the project and opener from the session's state (a fetch session), else the shell's project (a render); it calls `captureOf(ctx).recordFetchDone({session, document: {bundleId, sha256, locator}, opener, project, at})` for a fetch session only, guarded (B41 item 1). A document-less `fetch_pending` answer passes through untouched (tested). `keptInStore`: a timed-out `acquire`'s `kept` is `held` when the record holds the address (`heldat`) or the opener's own session is kept (`loadcapturesession`, opener only), else the stages decide.
+- **G4 (B41 item 3).** `readUploaded` carries `reading_pending` and `diag` from `read.body` and writes the row.
+- **G14.** A reading that answers `more` (the `readheldfor` answer or the document's `reading.more`) is owed to the ledger on promote/pull (`followEntries`), the `existed` upload, `readHeldAfterAcquire`, the acquire answer and the delivery. **G18.** `followEntries` follows the first 16 and owes the rest (`pendSha`).
+- **G1.** `PLANE_CRONS_STATEMENT = "bio-plane-crons/1 */5 * * * *"` exported and on the made function (`cronsStatement`).
+- **G12c (B41 item 4).** `reviewcopy` forwards `drafts` (query or body list, session path only), each copy of a `review-copies` answer is stamped as the single read is (in-band quartet, group fields per its project); `casedrafts` takes `projects` as a body list or the query; `inquirystrength` `ids` passes in the query (body list passes through the forward).
+
+**Failing-first, seen red then green.** `t51-round6-door.test.mjs` (17): G5 (walker's 12,000,060 B text, format classes, `existed`, held), G7 (40 MB upload and 41.5 MB capture, clock spent, promotion), G1 literal, batch keys, G14, G18, batch answers, `fetch_pending` relay, `kept` asked of the store: all red on the code before (run with the old `index.mjs`), green now. `t51-round6-seam.test.mjs` G5 on the real plane (12 MB text answered unread and owed in 31 s test time; first lines in `text_units`; second upload `existed`, nothing promised): red on the old code, green now; G7 real (40 MB upload, no row owed) green; control 1 MB text read inline. `r124-owed-render.test.mjs` +4: fetch session project/opener, 12 MB text owed, `recordFetchDone` once.
+
+**Red by name (providers unmerged), no other red of mine.** (1) `t51-round6-seam` G2 (two tests): `acquire {locator, project}` of 15,932,155 B at 0.7 MB/s answered in 22.4 s (needs acquisition `fetch_pending`/`owedFetch`, plane `fetch` kind, capture `openCaptures`/`fetch_done`, notice-producers); no Content-Length 21.4 s, same. The 1 MB control is green. (2) G13: after 1,100 s `ENDMARKER` is not in `text_units` and the ledger holds nothing owed (extraction segments and `more`, reading-pipeline cursor, plane continuation). (3) `t51-round6-door` G4: extraction's `acquireReadingOp` still answers `{response}` 502 for a failed read (EXTRACTION #34 J18).
+
+**Measurements (R-CLOCK: the test's clock outside the object).** Local workerd (Miniflare), text uploads read inline: 1 MiB 1.5 s, 2 MiB 2.8 s (about 1.4 s/MiB, as the live 12 MB text's 18 s); 3 MiB+ is owed. The 100 MB declared-length workerd check of G2 and the 12 MB/24 MiB ledger read need the providers; not run.
+
+**Tests changed because the entry changes their rule (not weakened):** `t51-defer-reading` control "large file that is not a PDF" 20 MB html is now a 3 MiB page (above it is the new door tests); `r123-reading` promote F1 9 MB text is now 3 MiB; `t51-round5-door` "text whole under 20 MiB" control is 3 MiB; their no-inline-read assertions stand.
+
+**Words.** No new sentence: nothing drawn here. Stand-ins named: none from this module.
+
+**Proposed requirement lines (BOB writes `build/requirements/`).** R105: `kept` is `held` when the record holds the address or the opener's session is kept. R123/R125: the size rule by format class (non-PDF above 3 MiB, PDF above 2 MiB); a statement is made at once whatever the clock; a reading already held is not promised; a `more` reading is owed; a promotion's documents past the 16th are owed; a failed read after a kept upload is `reading_pending` with `diag`. R124: the delivery serves a finished fetch (project and opener from the session) and records `fetch_done`. R1: the cron literal. R20: batch `drafts`/`projects` and their stamping.
+
+**Found in other modules.** `build/plan/next.md:38` fails `checks/format` (N1265 names no P19 reason): BOB's. Plane suite: one failure, R24 (accepted by name in the plan). `r117-held` R117 (acquire): passes alone 5 of 5 once and 7 of 8 later on the code before my change, and fails 2 of 8 there under load too: the accepted flake, not mine.
+
+**Tests and checks.** control-plane suite without the long seam file: 430 tests, 428 pass, 2 fail (the G4 red above; the R117 flake). Users run green: answer-envelope 43, store-door 55, signin-door 15, tasks 134, op-declarations 247, instance-setup 218, queue 210, screens-action 270, scheduler 135 (all pass), plane 319 of 320. `checks/architecture` 0, `coverage` 92 of 92, `words` 0 failures, `ownership` 0 failures, `format` only `next.md`.
+
+Size (session_01X5bP76qJ2j296J7FB51rWp): test runs 24, module lines 4,620
+
+## J27 · COMPLETE
+
+control-plane fix round 6 (B40-B42) built and pushed. Door side of G5 (3 MiB size rule by format class), G7 (statement ignores the clock), G2 (delivery by session project/opener, recordFetchDone, kept asked of the store, fetch_pending relayed), G4 (diag/reading_pending on upload), G14/G18 (more owed; first 16 followed, rest owed), G1 literal, G12c batch keys and stamping. Failing-first seen red then green. RED BY NAME until providers merge: G2 seam (acquisition fetch_pending, plane fetch kind, capture, notice-producers), G13 seam (extraction/reading-pipeline/plane: ENDMARKER absent after 1100 s), G4 door test (extraction 502). Control-plane suite minus the long seam file 428/430 (the G4 red; the accepted r117-held flake). Users green; plane R24 accepted. Changed 3 old tests to the 3 MiB threshold (noted). Proposed requirement lines, measurements and Size line are in build/jobs/T51/control-plane.md. For BOB: format check fails only on build/plan/next.md:38.
+
+## Re-completion (B43; K4577 follow-up)
+
+Merged `tranche/T51` (acquisition merged). (1) `t51-visitor-copy.test.mjs` lines 63-71 now assert `[ok, render.state, document]` = `[true, "pending", undefined]` and `copySha = hex(RENDERED)`; its alarm half passes (1 of 1). (2) **`r117-held` R117 (acquire) root cause:** the file builds a real Miniflare plane at module scope; its boot runs in the same process while part one's door tests run, and holds the first request for about 17 s (measured: `acquire;dur=17000-17755` in 6 of 14 runs, with only 0-4 ms in any object call). The door's own clock arm of `readingWontFit` (R120: under 8 s of the 25 s bound left) then says "will not fit" and owes the reading instead of asking `readHeld`, so the first assert reads `0 !== 1`. It is a test depending on wall time (R-CLOCK), not a door fault, and not load in the usual sense. Fix: part one's hooks set `acquireBoundMs` to an hour (`NO_CLOCK`), so no case about `readHeld` is decided by the clock; the clock arm itself stays tested in `t51-defer-reading`. 8 of 8 runs green after (was 6 of 14 red). (3) The delivery already reads `state.opened_by`, `state.project`, `answer.document` and calls `recordFetchDone` (tested in r124).
+
+Size (session_01X5bP76qJ2j296J7FB51rWp): test runs 30, module lines 4,620
+
+## J28 · COMPLETE
+
+control-plane re-complete (B43): visitor-copy test updated to acquisition R106 (alarm half passes); r117-held R117 root cause = real Miniflare booting in the same process holds the first request ~17 s so the door's own R120 clock arm owes the reading (test depended on wall time); fixed by pinning acquireBoundMs in part one, 8/8 green; delivery contract (opened_by, project, answer.document, recordFetchDone) as stated. Details in the record.
+
+## B44 follow-up
+
+B44 read (it crossed J28, which answers B43). With acquisition merged, the G2 seam was run against the tranche: still red, `acquire` of the 15,932,155 B file answers in 22.2 s (39.8 s with the tick wait), the no-length case in 21.3 s, 1 MB control green. The hand-off needs the plane's `owe` (`fetch` kind, `PENDING_KINDS`) and capture's `openCaptures`/`fetch_done`, unmerged; red by name until plane and capture merge.
+
+## J29 · REPORT
+
+B44: all three done in J28 (visitor-copy test, r117-held root cause = wall-clock test fixed, contract). G2 seam re-run with acquisition merged: still red (22 s) until plane's fetch kind and capture merge. Nothing else open.
+
+## B45
+
+Merged `tranche/T51` (capture). Capture's `recordFetchDone` takes `document` as a string (the real call refused my object as `recorded: false`, which the spy test could not see): the delivery now passes the document's bundle id. The real-capture test (`r124-owed-render.test.mjs`, last test) finds one `fetch_done` row `{session, document: bundleId, opener, project}` for a fetch and none for a render; red before the fix, green now (9 of 9 in the file). The G2 seam still waits on the plane's `fetch` kind.
+
+## J30 · REPORT
+
+B45 done: merged capture; recordFetchDone takes document as a string, so the delivery now passes the bundle id (my first shape, an object, was refused by the real call and my spy test could not see it). Real-capture test finds one fetch_done row per fetch, none per render; r124 9/9. G2 seam waits on the plane fetch kind.
+
+## B46
+
+Merged `tranche/T51` (plane, extraction, reading-pipeline, capture, acquisition all in). (1) **G2 seam, real plane `fetch` kind and real `owedFetch`: green.** `acquire {locator, project}` of the 15,932,155 B file at 0.7 MB/s answers in under 2 s `fetch_pending` (declared 15932155, no document, at most 1 MiB pulled); `opencaptures` lists the session; the tick files the document in the project; the reading is owed or made, and the PDF's words reach `text_units` (R-STOP); the Queue tells the opener; a second capture answers in under 2 s. No Content-Length: answered at 10.2 s with `fetch_pending`. 1 MB control green (44 s whole test). I had asserted "a reading row is owed" as a snapshot, which raced the ledger's fast read; it now waits for either, then for the words. (2) `t51-round6-door` 17 of 17: `readUploaded` carries `reading_pending`, `diag` and the row for a failed read (G4, now green with extraction merged); `more` is registered on promote, held upload, acquire and delivery (G14); the 16-and-owed rule (G18). (3) **`r117-held` alone five times: 9 of 9 pass in each of five runs** (the wall-clock fix of B43 holds).
+
+**G13 seam still red, and the cause is not the door's.** Run on the merged tranche: the 12 MB text (last line ENDMARKER), uploaded, answered unread and owed, promoted: the ledger's first tick reads it at once (4,096 units, `found: true`), and then the `reading` row is gone (`owedwork` empty) with no continuation: after 1,100 s `ENDMARKER` is not in `text_units`. The door's part is done (the upload is owed; `followEntries` and `readUploaded` register a continuation whenever the reading answers `more`); the first piece comes from the plane's tick through extraction's `readHeld`, and its answer did not carry `more: true` for a text of about 119,000 one-line units, so the ledger settled the row. To look at: extraction `readHeld` (index.mjs ~762-769, `out.more` from the reading-pipeline's read of a text with no blank lines) and plane `pending.mjs` ~106. The test is `t51-round6-seam.test.mjs` G13, unchanged.
+
+Size (session_01X5bP76qJ2j296J7FB51rWp): test runs 40, module lines 4,620
+
+## J31 · COMPLETE
+
+B46: merged tranche. (1) G2 seam GREEN on the real plane fetch kind + owedFetch (fetch_pending <2 s, tick files it in the project, words in text_units, Queue notice, second capture <2 s; no-length 10.2 s). (2) door tests 17/17: readUploaded carries reading_pending, diag and pendSha; more registered on every door path. (3) r117-held alone x5: 9/9 each. G13 seam still RED and not the door's: the 12 MB text's first tick reads 4096 units then the reading row ends with no continuation (owedwork empty), ENDMARKER absent after 1100 s: extraction readHeld's answer did not carry more:true (index.mjs ~762-769) or plane pending.mjs ~106 settled it. Evidence in the record.

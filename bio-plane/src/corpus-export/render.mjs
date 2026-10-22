@@ -19,9 +19,17 @@
  *   ocel2                        OCEL 2.0 JSON (`objectTypes`, `eventTypes`, `objects`, `events`)
  *   popolo                       Popolo JSON (persons, organizations, posts, memberships)
  *   ocds                         OCDS 1.1 release package
- *   fdp                          Frictionless Fiscal Data Package v1 (`datapackage.json`, the rows inline) */
+ *   fdp                          Frictionless Fiscal Data Package v1 (`datapackage.json`, the rows inline)
+ *
+ * PARTS (R14; fix round 6 G22, K4571). One rendering reads at most RENDER_MAX records of each source. A source that holds
+ * more is continued by part: part n (1-based, the cursor) reads that source's records RENDER_MAX*(n-1) to RENDER_MAX*n in
+ * id order, and the answer names the next part. The body an outside party receives states the cut itself, in a note field
+ * (`partNote`): `description` in a Data Package, where the standard has one, otherwise a top-level `note`. A reference
+ * from an item to a record that sits in another part is by id and is resolved by id, so a part never drops an item whose
+ * partner is elsewhere; a record an item merely names (an entity a participant is) may also be rendered in the parts that
+ * name it, and two entries with one id are one entity. */
 import { viewerPredicate } from "../membership/index.mjs";
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 export const FORMATS = Object.freeze(["ftm-event", "ocel2", "popolo", "ftm-people", "ftm", "ocds", "fdp"]);
 export const STANDARDS = Object.freeze({
@@ -29,7 +37,7 @@ export const STANDARDS = Object.freeze({
   "ftm-people": word("corpus-export.ftm_people"), ftm: "FollowTheMoney 3.x (Payment)",
   ocds: "OCDS 1.1 release package", fdp: word("corpus-export.fdp"),
 });
-/** The most records of one source one rendering reads; past it the rendering says `truncated`. */
+/** The most records of one source one part of a rendering reads; past it the rendering is continued by part. */
 export const RENDER_MAX = 5000;
 
 const ORG_KINDS = new Set(["institution", "body", "movement"]);
@@ -56,15 +64,16 @@ function held(o) {
 /** The rows a rendering may read, for one viewer. `deps`: `sql`, `record`, and the owners' services (each an instance
  *  or a function answering it): `entities`, `events`, `lines`, `money`. */
 export class RenderSource {
-  constructor({ sql, record, entities, events, lines, money }, viewer) {
+  constructor({ sql, record, entities, events, lines, money }, viewer, part = 1) {
     this.sql = sql;
+    this.part = part;
     this.viewer = viewer;
     this.gate = viewerPredicate(viewer);
     this.sees = this.gate.scope !== "DENY";
     const declared = record && typeof record.declaredTables === "function" ? record.declaredTables() : [];
     this.yes = new Set(declared.filter((d) => d.export === "yes").map((d) => d.name));
     this.dep = { entities, events, lines, money };
-    this.truncated = false;
+    this.more = false;
     this.memo = new Map();
   }
 
@@ -73,11 +82,11 @@ export class RenderSource {
     return typeof d === "function" ? (this.dep[name] = d()) : d;
   }
   #rows(q, ...a) { try { return [...this.sql.exec(q, ...a)]; } catch { return []; } }
-  /* The ids of a contract table, in id order, bounded (R10 reads at most RENDER_MAX per source). */
+  /* The ids of a contract table, in id order: this part's RENDER_MAX of them, `more` set when the source holds beyond. */
   #ids(table, column, where = "") {
     if (!this.sees || !this.yes.has(table)) return [];
-    const got = this.#rows(`SELECT ${column} AS id FROM ${table} ${where} ORDER BY ${column} LIMIT ?`, RENDER_MAX + 1);
-    if (got.length > RENDER_MAX) { this.truncated = true; got.length = RENDER_MAX; }
+    const got = this.#rows(`SELECT ${column} AS id FROM ${table} ${where} ORDER BY ${column} LIMIT ? OFFSET ?`, RENDER_MAX + 1, (this.part - 1) * RENDER_MAX);
+    if (got.length > RENDER_MAX) { this.more = true; got.length = RENDER_MAX; }
     return got.map((r) => r.id);
   }
 
@@ -125,19 +134,36 @@ export class RenderSource {
       .map((r) => (r && r.ok && r.found ? r.line : null))
       .filter((l) => l && !l.withdrawn && (!kinds || kinds.has(l.kind)));
   }
+  /** The live lines of one kind leaving an entity, in id order, read by id from their owner: a membership in this part
+   *  finds its post's organization whichever part that line sits in. */
+  linesFrom(id, kind) {
+    const k = `l:${kind}:${id}`;
+    if (!this.memo.has(k)) {
+      const svc = this.sees && this.yes.has("lines") ? this.#svc("lines") : null;
+      const r = svc ? svc.linesOf({ entity: id, kinds: [kind], direction: "from", limit: 1000, viewer: this.viewer }) : null;
+      this.memo.set(k, r && r.ok ? r.lines.filter((l) => !l.withdrawn).sort((a, b) => (a.line_id < b.line_id ? -1 : a.line_id > b.line_id ? 1 : 0)) : []);
+    }
+    return this.memo.get(k);
+  }
   facts() {
     const svc = this.#svc("money");
     if (!svc) return [];
     return this.#ids("money_facts", "fact_id").map((id) => svc.readFact({ factId: id, viewer: this.viewer }))
       .map((r) => (r && r.ok && r.found ? r.fact : null)).filter((f) => f && !f.withdrawn);
   }
-  /** Person facts of kinds name, birth and death, not withdrawn, whose citing capture the viewer may see. */
-  personFacts() {
+  /** Person facts of kinds name, birth and death, not withdrawn, of the given persons, whose citing capture the viewer may
+   *  see: every such fact of each person, read by person, so a person in this part is never rendered without a fact that
+   *  another part's cut would have held. */
+  personFacts(persons) {
     if (!this.sees || !this.yes.has("person_facts")) return [];
-    const got = this.#rows(`SELECT fact_id, person, kind, value, capture_sha, extent_json FROM person_facts
-                            WHERE withdrawn_at IS NULL AND kind IN ('name', 'birth', 'death') ORDER BY fact_id LIMIT ?`, RENDER_MAX + 1);
-    if (got.length > RENDER_MAX) { this.truncated = true; got.length = RENDER_MAX; }
-    return got.filter((f) => PERSON_FACT_KINDS.has(f.kind) && this.seesCapture(f.capture_sha))
+    const ids = persons.map((e) => e.entity_id), got = [];
+    for (let i = 0; i < ids.length; i += 50) {
+      const chunk = ids.slice(i, i + 50);
+      got.push(...this.#rows(`SELECT fact_id, person, kind, value, capture_sha, extent_json FROM person_facts
+                              WHERE withdrawn_at IS NULL AND kind IN ('name', 'birth', 'death') AND person IN (${chunk.map(() => "?").join(", ")})`, ...chunk));
+    }
+    return got.sort((a, b) => (a.fact_id < b.fact_id ? -1 : a.fact_id > b.fact_id ? 1 : 0))
+      .filter((f) => PERSON_FACT_KINDS.has(f.kind) && this.seesCapture(f.capture_sha))
       .map((f) => ({ ...f, extent: parse(f.extent_json) }));
   }
 }
@@ -198,7 +224,7 @@ const FTM_LINE = {
 };
 function ftmPeople(src) {
   const persons = src.entities(new Set(["person"]));
-  const facts = src.personFacts();
+  const facts = src.personFacts(persons);
   const byPerson = new Map();
   for (const f of facts) { if (!byPerson.has(f.person)) byPerson.set(f.person, []); byPerson.get(f.person).push(f); }
   const items = persons.map((e) => {
@@ -266,7 +292,7 @@ function ocel2(src) {
 
 function popolo(src) {
   const persons = src.entities(new Set(["person"]));
-  const facts = src.personFacts();
+  const facts = src.personFacts(persons);
   const people = persons.map((e) => {
     const fs = facts.filter((f) => f.person === e.entity_id);
     const one = (k) => fs.filter((f) => f.kind === k).map((f) => f.value)[0] ?? null;
@@ -277,21 +303,22 @@ function popolo(src) {
       identifiers: (e.identifiers || []).filter((i) => !i.withdrawn).map((i) => ({ scheme: i.scheme, identifier: i.id })),
       record_id: e.entity_id, citation: [entityCitation(e), ...fs.map(personFactCitation)] });
   });
-  const lines = src.lines(new Set(["holds", "belongs_to", "post_in", "part_of"]));
-  const postOrg = new Map(lines.filter((l) => l.kind === "post_in").map((l) => [l.from, l.to]));
+  /* A post's organization (the last `post_in` line leaving it) and an organization's parent (the first `part_of`), read by id. */
+  const postOrg = (post) => src.linesFrom(post, "post_in").at(-1)?.to;
   const organizations = src.entities(ORG_KINDS).map((e) => held({ id: e.entity_id, name: e.label,
     classification: e.sector && e.sector !== "undetermined" ? e.sector : null,
-    parent_id: (lines.find((l) => l.kind === "part_of" && l.from === e.entity_id) || {}).to ?? null,
+    parent_id: src.linesFrom(e.entity_id, "part_of")[0]?.to ?? null,
     identifiers: (e.identifiers || []).filter((i) => !i.withdrawn).map((i) => ({ scheme: i.scheme, identifier: i.id })),
     record_id: e.entity_id, citation: entityCitation(e) }));
   const posts = src.entities(new Set(["office"])).map((e) => held({ id: e.entity_id, label: e.label,
-    organization_id: postOrg.get(e.entity_id) ?? null, record_id: e.entity_id, citation: entityCitation(e) }));
-  const personIds = new Set(persons.map((p) => p.entity_id)), orgIds = new Set(organizations.map((o) => o.id)),
-        postIds = new Set(posts.map((p) => p.id));
-  const memberships = lines.filter((l) => (l.kind === "holds" || l.kind === "belongs_to") && personIds.has(l.from)).map((l) => {
+    organization_id: postOrg(e.entity_id) ?? null, record_id: e.entity_id, citation: entityCitation(e) }));
+  /* Who a membership names is looked up by id, not among this part's entities: its person, post or organization may sit in another part. */
+  const kindOf = (id) => src.entity(id)?.kind;
+  const isOrg = (id) => ORG_KINDS.has(kindOf(id));
+  const memberships = src.lines(new Set(["holds", "belongs_to"])).filter((l) => kindOf(l.from) === "person").map((l) => {
     const v = l.valid || {};
-    const post = l.kind === "holds" && postIds.has(l.to) ? l.to : null;
-    const org = l.kind === "belongs_to" || orgIds.has(l.to) ? (orgIds.has(l.to) ? l.to : null) : post ? postOrg.get(post) ?? null : null;
+    const post = l.kind === "holds" && kindOf(l.to) === "office" ? l.to : null;
+    const org = l.kind === "belongs_to" || isOrg(l.to) ? (isOrg(l.to) ? l.to : null) : post ? postOrg(post) ?? null : null;
     return held({ id: l.line_id, person_id: l.from, post_id: post, organization_id: org, role: l.capacity,
                   start_date: v.from, end_date: v.to, record_id: l.line_id, citation: lineCitation(l) });
   });
@@ -344,9 +371,22 @@ function fdp(src) {
                                      dimensionType: "datetime" } } } };
 }
 
-/** R10: one rendering, for one viewer, from the rows R7 would carry to that viewer and no others. */
-export function render(format, deps, viewer, at) {
-  const src = new RenderSource(deps, viewer);
+/** R14: the sentence a part states about its own cut, or null when the part is the whole rendering. A stand-in until the
+ *  design holds the rows (`corpus-export.render.part_more`, `.part_last`). */
+export function partNote(part, more) {
+  if (more)
+    return localize("corpus-export.render.part_more", "This is part {part} of this rendering, and it is not all of it: each kind of record is cut at {max} a part. Ask for part {next} to continue.",
+                    { part: String(part), max: String(RENDER_MAX), next: String(part + 1) });
+  if (part > 1)
+    return localize("corpus-export.render.part_last", "This is part {part} of this rendering, the last: the records before it are in the earlier parts.", { part: String(part) });
+  return null;
+}
+/** The field a standard gives a note: a Data Package's own `description`; the other envelopes carry a top-level `note`. */
+const NOTE_FIELD = Object.freeze({ fdp: "description" });
+
+/** R10, R14: one part of a rendering, for one viewer, from the rows R7 would carry to that viewer and no others. */
+export function render(format, deps, viewer, at, part = 1) {
+  const src = new RenderSource(deps, viewer, part);
   const body = format === "ftm-event" ? ftmEvent(src) : format === "ocel2" ? ocel2(src) : format === "popolo" ? popolo(src)
     : format === "ftm-people" ? ftmPeople(src) : format === "ftm" ? ftmMoney(src) : format === "ocds" ? ocds(src, at) : fdp(src);
   if (format === "fdp") {
@@ -354,7 +394,9 @@ export function render(format, deps, viewer, at) {
     const cs = [...new Set(body.resources[0].data.map((r) => r.currency))];
     if (cs.length === 1) body.model.measures.amount.currency = cs[0]; else delete body.model.measures.amount.currency;
   }
-  return { body, truncated: src.truncated };
+  const note = partNote(part, src.more);
+  if (note) body[NOTE_FIELD[format] ?? "note"] = note;
+  return { body, more: src.more };
 }
 
 /** How many items a rendering holds (for its log row). */

@@ -65,8 +65,9 @@ test("R104 R100 R99 (E8): a capture with the visitor view, the object restarted,
   try { cont = await fresh.acquire(c.cap, { continue: c.sid }, { cls: "member", member: true, sessMember: "member:ann", storeName: "bio", renderWaitMs: 5000 }); }
   finally { net.restore(); }
   assert.equal(cont.status, 200, JSON.stringify(cont.body).slice(0, 300));
-  assert.equal(cont.body.document.capture.method, "rendered", "\"Finish it\" completed the render");
-  const copySha = cont.body.document.capture.sha256;
+  /* acquisition R106 (fix round 6, G3): with the ledger, "Finish it" answers at once, the render pending, and the alarm files the copy */
+  assert.deepEqual([cont.body.ok, cont.body.render && cont.body.render.state, cont.body.document], [true, "pending", undefined], "\"Finish it\" answers at once");
+  const copySha = hex(RENDERED);
   /* that answer is never filed. Before the alarm: the held list holds the page as served alone */
   const before = await heldBundles(c.cap);
   assert.equal(before.held.filter((x) => x.capture && x.capture.sha256 === copySha).length, 0, "the visitor copy is not yet a document");

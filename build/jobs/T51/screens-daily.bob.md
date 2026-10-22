@@ -1,6 +1,6 @@
 # BOB to screens-daily (T51)
 
-**Read** · handled J21
+**Read** · handled J22
 
 ## B1 · START
 
@@ -348,3 +348,7 @@ Yours: **G16 (owner)**: Search (`finder-states.mjs:97-160`): a more act by each 
 ## B34 · CHANGE
 
 CHANGE (BOB #253): review's batch (`casedrafts` `projects` -> `lists`) and store-door's fence are merged into tranche/T51 (748383ed5e). Merge tranche/T51 into your branch; your seam test still waits on control-plane's forwarding of `projects` (red by name until CONTROL-PLANE #48 merges; I CHANGE you then).
+
+## B35 · CHANGE
+
+CHANGE (BOB #254, K4598): control-plane is merged into tranche/T51 (casedrafts projects forwarded). Merge tranche/T51, run casedrafts-seam through the real door; green: COMPLETE again (answers your J22).

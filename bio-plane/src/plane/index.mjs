@@ -1,7 +1,7 @@
 /* plane R6: the Worker's module. Its default export is `control-plane`'s door (`makeFetch`) over the hooks the door takes,
    each composed from the arms' owners' handlers (`door.mjs`); `Store` is the Durable Object class `wrangler.jsonc` binds
-   (R1). The published read is handed its plane binding (`bindPublishedPlane`, public-read's) when this module loads. No
-   other export. */
+   (R1). The published read is handed its plane binding (`bindPublishedPlane`, public-read's) when this module loads. Its
+   default export also carries `scheduled`, the watchdog's cron handler (R79, `watchdog.mjs`). No other export. */
 import "./register.mjs";   /* R68 (T51; K4168): first, since control-plane reads the op tables when it loads */
 import { makeFetch, PUBLISHED_STORE } from "../control-plane/index.mjs";
 import { json, doAnswer, storeSilent, storeRefusal, requiredArgument, STORE_SILENT_REASON,
@@ -9,6 +9,7 @@ import { json, doAnswer, storeSilent, storeRefusal, requiredArgument, STORE_SILE
 import { bindPublishedPlane } from "../publication/worker.mjs";
 import { publicInstanceGroup } from "../setup.mjs";
 import { publicOp, gatedOp } from "./door.mjs";
+import { watchdog } from "./watchdog.mjs";
 
 export { Store } from "./store.mjs";
 
@@ -16,4 +17,5 @@ bindPublishedPlane({ json, doAnswer, storeSilent, storeRefusal, requiredArgument
                      STORE_SILENT_DETAIL, PUBLISHED_STORE });
 
 export default { fetch: makeFetch({ publicOp, gatedOp,
-  publicInstanceGroup: (env, storeName, projection) => publicInstanceGroup(env, storeName, projection, doAnswer) }) };
+  publicInstanceGroup: (env, storeName, projection) => publicInstanceGroup(env, storeName, projection, doAnswer) }),
+  scheduled: (controller, env) => watchdog(controller, env) };

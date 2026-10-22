@@ -3,7 +3,7 @@
    reading. Each test names the requirement ids it checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fresh, bundle, hold, bucket, member, withEntry, i2, noText, ocrAnswer, sha } from "./fixture.mjs";
+import { fresh, bundle, hold, bucket, member, withEntry, i2, noText, ocrAnswer, sha, doc } from "./fixture.mjs";
 
 const pdf = (text) => ({ format: "pdf", structure: async () => ({ ok: true, text: structuredClone(text), pages: (text.pages || []).length, notes: [] }) });
 
@@ -20,6 +20,10 @@ function partsOnly() {
   const bytes = new TextEncoder().encode("%PDF-1.7 a notice kept in parts " + Math.random());
   const d = sha(bytes);
   rows.set(d, row("INFO-1", bytes.length));
+  /* a home is a promoted bundle: its own provenance document states the capture it holds (fix round 6, G6: a digest no stored
+     document names is not read) */
+  const stored = JSON.stringify({ documents: [doc({ digest: d, bytes: bytes.length, ct: "application/pdf", format: "pdf" })] });
+  w.core.readFile = (b, p) => (b === "INFO-1" && p === "data/provenance.json" ? { text: stored } : null);
   return { w, rows, evidence, bytes, d };
 }
 const count = (w, table, d) => w.one(`SELECT count(*) c FROM ${table} WHERE capture_sha=?`, d).c;
