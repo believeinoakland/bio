@@ -170,8 +170,8 @@ test("R95 (C70) control: with no held capture and no knock neither the sentence 
   assert.ok(mine.main.includes(word("screen.queue.count.many", { n: "82" })) && mine.main.includes(word("shell.queue.waiting", { n: "82", todo: "75", noticed: "7", status: "0" })), "and on the page: the same 82");
 });
 
-test("R122, R93 (C14, Home and Queue): a page load sends one `bootstrap` and one read of the queue's list (the frame's own is the count); `groupidentity` is the one known repeat on Home (frame and screen)", async () => {
-  for (const [path, groups] of [["/app", 2], ["/app/queue", 1]]) {
+test("R122, R93 (C14, Home and Queue): a page load sends one `bootstrap` and one read of the queue's list (the frame's own is the count); `groupidentity` is read once (the frame and the screen share one request, interface-shell R123)", async () => {
+  for (const [path, groups] of [["/app", 1], ["/app/queue", 1]]) {
     const p = await open(path, { ...BASE, projectlist: LIST([ROW("PROJ-1", "A", { participation: null })]), themeread: ok({ themes: [] }) });
     await settle(80);
     assert.equal(p.byOp("bootstrap").length, 1, path + ": one bootstrap");

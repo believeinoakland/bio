@@ -1,6 +1,6 @@
 # interface-shell (T51)
 
-**Status** · session_01XNRmAuR8VXqdzNrDodxNZ8 · depth 2 · COMPLETE · handled B33
+**Status** · session_01WsgvMVTibADgx16hWhb92M · depth 2 · COMPLETE · handled B35
 
 ## J1 · BLOCKED
 
@@ -291,3 +291,44 @@ COMPLETE · INTERFACE-SHELL #15 (session_01XNRmAuR8VXqdzNrDodxNZ8) · T51 · ent
 **Found in this module's paths:** none beyond the above. Deferred: none.
 
 Size (session_01XNRmAuR8VXqdzNrDodxNZ8): test runs 29, module lines 3124
+
+## J21 · QUESTION
+
+QUESTION (E12 step 1, offline through my harness with the nine modules' real SCREENS; every `(op, query)` sent per load, admin, assistant reachable). Only two repeats are identical requests; the rest differ in a parameter and each is a screen's own declaration.
+
+IDENTICAL (mine, I fix them): Home `groupidentity` x2 (frame `browser.mjs` loadFrame :2584 + `screens-daily/home.mjs`:37); Project `groupidentity` x2 (frame + `screens-inquiry/project.mjs`:41). Fix: a read request (op declared not mutating) identical to one in flight, or answered in this load with no act since, is shared; every act and every route opens a new epoch, so an act's re-reads and a re-visit still re-read. No requirement text changes.
+
+DIFFER IN A PARAMETER (not identical):
+- Home `queue` x2: frame `{count:true}` (R7, browser.mjs:2584) + the screen's open list `{}` (`home.mjs`:38).
+- Queue `queue` x3: the same count + the open list `{sort?}` (`screens-daily/queue.mjs`:44) + `{muted:true}` (:48; answered/aside in their states, :37-38).
+- Project `inquirystrength` x2: two questions, ids differ (`project.mjs`:313, one per question).
+- Held `heldcaptures` x3: picker list `{limit:50,fields:picker}` (`screens-intake/held.mjs`:11), set-aside list `{state:set_aside}` (:13), and the full fields `{bundle_ids}` (:31, E13's, capture).
+
+ASK (changes R7's text): on Home and Queue the screen reads the whole open queue, which already gives the frame its number and its three kinds (`noteQueue`, R93/R96). My best reading, RECOMMENDED: the frame sends its `count:true` read only when the screen reads no whole open list, or that list came back cut/failed (then right after); so Home and Queue send one `queue` request fewer, and a screen that reads no list (Find, Projects...) is unchanged. Cost: on those two screens the masthead number waits for the list instead of the cheaper count (same time as the screen's own list). Alternative: leave R7 as is (the count stays a separate request). I build the recommended reading only on your word; everything else of E12 goes on now.
+
+## J22 · COMPLETE
+
+COMPLETE · INTERFACE-SHELL #16 (session_01WsgvMVTibADgx16hWhb92M) · T51 · B34 (fix round 5, E12) with B35's ruling on J21
+
+**What changed** (`bio-plane/src/interface-shell/`)
+- `browser.mjs` `call` (:107-145) is now a sharing front over `send` (the old body). A read (an op `OPS` declares not mutating, a call saying `read: true`, which every `reads()` entry, `refreshNow` and the frame's `subscriptionsignin` state do) identical in op, query and body to one in flight, or answered during this load, is that one request; later readers get their own JSON copy (`copyOf`). Epoch: `newEpoch()` on every `route()` (:1530), every session-record write/clear (:82-83), every non-read call and every act press (`req.act = true`, :2146), so an act's re-reads, a revisit and a refresh still ask. A completed answer is shared only while the load is open (`closeLoad`, when the screen's first reads settle, :1592) and for 5 s at most.
+- `index.mjs`: `readOps` in the page data (the ops `OPS` declares not mutating; about 6 KB of the script, served once per release, R1), so `cs.call` reads by any screen are known as reads.
+- B35 ruling: `loadFrame` no longer sends `queue {count:true}`. `countQueue` (`browser.mjs`, called from `show`) sends it once, in the background, only when the screen reads no whole open list (`queue` with at most `limit`/`sort`), or when that list was cut, refused or unanswered (then right after it).
+
+**Step 1 (offline, nine modules' real SCREENS, admin, assistant reachable)**: identical: Home and Project `groupidentity` x2 (frame + `home.mjs`:37, `project.mjs`:41), now one. Parameter-distinct and kept (B35): Queue's `muted` list, one `inquirystrength` per question (`project.mjs`:313), Held's three `heldcaptures` (`held.mjs`:11, :13, :31). Home and Queue: the frame's count is gone (list gives the number). After: no `(op, query)` repeats on the four screens.
+
+**Failing-first** (`e12.test.mjs`, new, 13 tests; `p9.test.mjs`, `fixround3.test.mjs` amended to the ruling). Red before: Home and Project "repeats: groupidentity {} x2"; the in-flight and answered-in-load tests; the control "act re-reads" (red only because the first load sent two); the queue tests "no count read where the whole open list is read" (Home, Queue, p9) red with the old frame count, green now. Mutation check: returning the shared object instead of a copy fails "own copy". Controls green: act re-read asks again; revisit asks again; differing queries each sent; an act's op never shared (two presses, two requests); refused/unanswered list then one count; cut list one count; Project (no list) one count.
+
+**Suites and checks**: module `bio-plane/test/m/interface-shell/`: 321+ tests, all pass (re-run after the last edit: p9, e12, fixround3 green; full module run before the queue change 320/321, the one red was fixround3's, amended). Users (`impact.mjs origin/tranche/T51 HEAD`, 13 modules, 313 other files): 2814 tests, 2801 pass, 11 fail: 7 `journey-check/pseudo.test.mjs` (playwright-core not installed here), 1 `plane/release.test.mjs` R24 (DEC-149; in J20's list), and 3 that encode the old request counts and need their module's job:
+- `screens-daily/fix4.test.mjs`:173 expects `groupidentity` x2 on Home (now 1; its own title says "the one known repeat");
+- `screens-settings/account.test.mjs`:19 expects `whoami` x2 "the shell's own, and the screen's" (now 1);
+- `screens-daily/queue.test.mjs`:39 `mainQueue(p).at(-1)` now finds the frame's count read, since its fixture's queue answer does not give a whole list (no count read would be sent for a whole one).
+Smallest thing I need: BOB to place those three one-line edits with screens-daily and screens-settings. format 0 failures; architecture 0; coverage 116 of 116 (this module); ownership 0 failures; `checks/run.mjs`: words 0 failures, no finding in my files.
+
+**Requirement lines proposed (BOB writes)**
+- R7, replacing "The frame's own queue read asks `queue` with `count: true` once per load, in the background (queue R93), and draws that number": "The frame sends that read once per load, in the background, only when the screen reads no whole open list (`queue` with at most `limit` and `sort`), or that list was cut, refused or unanswered; where it is read whole, the number is the sum of its three kinds (R93, R96)."
+- R123 new (fix round 5, E12; P9): "A read identical in op, query and body to one in flight, or answered during this load, is sent once and each reader is handed its own copy. A load is a route; every route, session change, act and call of a mutating op opens a new epoch; a completed answer is shared only until the screen's first reads settle, and for 5 seconds at most. Test: `e12.test.mjs`. Control: an act's re-reads, a revisit and a refresh ask again."
+
+No platform measure (N: one page's requests); PERFORMANCE re-times the four screens. New data only: none stored. Deferred: none.
+
+Size (session_01WsgvMVTibADgx16hWhb92M): test runs 22, module lines 3190

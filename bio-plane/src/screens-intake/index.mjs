@@ -78,6 +78,8 @@ export const SCREEN_KEYS = Object.freeze({
     "screen.document.text.label", "screen.document.text.full", "screen.document.text.none", "screen.document.text.read", "screen.document.text.unread", "capture.picture.unread",
     /* R49, R2, N4 (T51 fix round 4; DEC-412): the rows the design wrote for the filing of a found document, the none of "requests for later" and the next step of an unread upload */
     "screen.capture.address.filedhere", "screen.capture.later.none", "screen.document.text.unread.next",
+    /* R38, R31 (fix round 5, E7, E8; K4530): a held copy's reading asked for by the press, and what "Finish it" was answered; the nearest held rows stand in (K4269) */
+    "transcribe.why.evidenceabsent", "refusal.CAPTURE_NOT_HELD", "acquisition.index.render_pending_note", "acquisition.note.continuation_files_new",
   ]),
   held: Object.freeze([
     "act.heldcaptures.label.held", "act.heldrestore.label.held", "act.heldsetaside.label.held",

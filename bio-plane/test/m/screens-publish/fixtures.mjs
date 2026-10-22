@@ -48,7 +48,10 @@ export const PREFLIGHT = (o = {}) => ({ wrote: false, ready: false,
 
 export const DOCUMENT = (o = {}) => ({ case_id: C, edition: 2, doc_sha: SHA, text: "…", published_at: null,
   sign: { namespace: "bio-ratify", statement: `bio-ratify-case ${C} 2 ${SHA}\n` },
-  citations: [{ target: "INFO-2026-0004", version: E1, capture: "x" }, { target: "FND-2026-0031", version: B1 }, { target: "INFO-2026-0005", version: "undetermined" }],
+  /* the shapes the real `casedocument` answers (publication; case-grammar R4, R6): `citations` is `{state, rows}`, and the roster the
+     signed document pins is `findings`, `[{target, version_sha, role}]` */
+  citations: { state: "signed", rows: [{ target: "INFO-2026-0004", version: E1, capture: "x" }, { target: "FND-2026-0031", version: "no_bytes", capture: null }, { target: "INFO-2026-0005", version: "undetermined" }] },
+  findings: [{ target: "FND-2026-0031", version_sha: B1, role: "load_bearing" }],
   ...o });
 
 /** `casedetails`' standing values (case-inputs R23): each `{stated, value, set_by, set_at}`; every one not stated unless `o` sets it. */

@@ -94,8 +94,9 @@ test("R112 a screen whose act names successCodes that are no list of codes is ne
   assert.equal(checkScreens(mk(["CONSENSUS_REQUIRED"])), true);
 });
 
-test("R7 R93 (C66, P9) the frame's own queue read asks for the count alone, in the background, and never the list; control: a screen's own queue read keeps its limit", async () => {
-  const p = await boot({ screens: [{ id: "home", words: [], reads: () => ({ list: { op: "queue", query: { limit: 5 } } }), acts: [], render: (cs) => cs.state("list", () => "") }], plane: { queue: queueOf([]) } });
+test("R7 R93 (C66, P9; E12, K4530) the frame's own queue read asks for the count alone, in the background, and never the list, where the screen's list was cut by its limit; control: a screen's own queue read keeps its limit", async () => {
+  const cut = (req) => (req.query.count ? ok({ ok: true, member: "mai", count: 9 }) : ok({ items: [{ id: "a", class: "OBLIGATION" }], truncated: true }));
+  const p = await boot({ screens: [{ id: "home", words: [], reads: () => ({ list: { op: "queue", query: { limit: 5 } } }), acts: [], render: (cs) => cs.state("list", () => "") }], plane: { queue: cut } });
   const frame = p.byOp("queue").filter((r) => r.query.background === "1");
   assert.equal(frame.length, 1, "the frame reads the queue once");
   assert.equal(frame[0].query.count, "true", "for the count alone");
