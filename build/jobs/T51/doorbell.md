@@ -102,3 +102,7 @@ E5 is ready except for its provider. My failing-first test (test/m/doorbell/knoc
 **Proposed requirement line (BOB writes):** R13 add: "A pulled knock is profiled with the text type acquisition's `textTypeOf` answers for its bytes, its stated media type and file name (the upload's rule, acquisition R102); a knock whose bytes are not text, or whose stated type is not a text type, is profiled as before. New data only."
 **Through the door** (`op=knock`, `inboxpull`, `op=reading`) is control-plane's seam test.
 Size (session_01SJ3MSM2hnThczxNQgrgj8g): test runs 4, module lines 1155
+
+## J6 · COMPLETE
+
+E5 done. src/doorbell/index.mjs:18 imports acquisition's textTypeOf; #pull (:652-655) passes the knock's media_type and file_name through it into profileOf (was ct: null). Failing-first knock-text.test.mjs (R13): walker's case and the .txt/.md no-type case red before, green after; controls (NUL, not UTF-8, application/pdf over text, no name/type) green throughout. Doorbell suite 92/92; impact: doorbell only; checks/run.mjs and ownership 0 failures, words count not up. New data only. Proposed R13 line is in my record (BOB writes). Through-the-door seam test is control-plane's. Size (session_01SJ3MSM2hnThczxNQgrgj8g): test runs 4, module lines 1155.
