@@ -103,7 +103,10 @@ test("R117 (a registered home): a second upload of bytes the record holds under 
     const w = world({ answer: (c) => (c.route === "captureupload" ? ok(landed) : c.route === "readheldfor" ? ok(held) : null) });
     const r = await upload(w);
     assert.equal(r.status, 200, r.text);
-    assert.deepEqual(r.json.result, landed, `${JSON.stringify(held)}: relayed as it was`);
+    /* R123: where the whole is not held yet the reading is owed (written down, `reading_pending`); every other answer is relayed as it was */
+    const owed = held.why === "NO_WHOLE_OBJECT";
+    assert.deepEqual(r.json.result, owed ? { ...landed, reading_pending: true } : landed, `${JSON.stringify(held)}: relayed as it was`);
+    assert.equal(asked(w.env, "pendingadd").length, owed ? 1 : 0, `${JSON.stringify(held)}: owed work is written down once`);
     assert.equal(asked(w.env, "readheldfor").length, 1);
     assert.equal(asked(w.env, "readheldfor")[0].params.sha, SHA);
     assert.equal(asked(w.env, "extractread").length, 0, "the door reads nothing: there is no document");
@@ -135,7 +138,8 @@ test("R117 (bytes held with no home): an upload answered `existed: true` WITH it
     const c = world({ answer: (x) => (x.route === "captureupload" ? ok(landed()) : x.route === "readheldfor" ? held.clone() : x.route === "extractread" ? ok(READ) : null) });
     const u = await upload(c);
     assert.equal(u.status, 200, label);
-    assert.deepEqual(u.json.result, landed(), label);
+    /* R123: no whole object yet means the reading is owed and said so; the document is still answered unread */
+    assert.deepEqual(u.json.result, label === "no whole object" ? { ...landed(), reading_pending: true } : landed(), label);
     assert.equal(asked(c.env, "extractread").length, 0, `${label}: not read`);
   }
   /* control: a document that already carries its reading is not read again */
@@ -214,14 +218,15 @@ test("R117 (through the door, the real plane): a digest filed under a home that 
   assert.equal(first.existed, false);
   assert.ok(first.document.reading, "a new upload is read as R100 reads it");
   const { reading: _r, text_units: _t, ...bare } = first.document;
+  /* R123: a document promoted without its reading is read by the door at the promotion, so a home with no reading is no longer what the
+     screen's promotion leaves (the door-level suite above drives `readHeld` for a home that holds none: records filed before this fix) */
   const made = await CAPTURE_SCREEN.parts.promoteDocument(cs, { doc: bare, title: "notes.txt", locator: bare.locator, project: "" });
   assert.equal(made.refused, undefined, JSON.stringify(made));
-  assert.equal((await readingOf(shaA)).found, false, "the home holds no reading for the digest");
+  const now1 = await readingOf(shaA);
+  assert.equal(now1.found, true, "the door read the document at the promotion: " + JSON.stringify(now1).slice(0, 300));
+  assert.ok(JSON.stringify(now1.text_units).includes("a home with no reading"), "its units are the file's lines");
   const again = await up(a, "again");
   assert.equal(again.existed, true);
-  const now1 = await readingOf(shaA);
-  assert.equal(now1.found, true, JSON.stringify(now1).slice(0, 300));
-  assert.ok(JSON.stringify(now1.text_units).includes("a home with no reading"), "its units are the file's lines");
   /* control: a reading already held is left as it is (the same reading, not read again) */
   const held = JSON.stringify(now1.reading);
   assert.equal((await up(a, "third")).existed, true);

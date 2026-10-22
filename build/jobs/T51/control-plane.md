@@ -1,6 +1,6 @@
 # control-plane (T51)
 
-**Status** · session_0141p3Yo3JkgRCshMDkrEkBj · depth 2 · COMPLETE · handled B30
+**Status** · session_01Gs7CrCGk5nXUSZpiDu6qAK · depth 2 · COMPLETE · handled B33
 
 ## J1 · QUESTION
 
@@ -433,3 +433,56 @@ Size (session_0141p3Yo3JkgRCshMDkrEkBj): test runs 40, module lines 4,265
 ## J22 · COMPLETE
 
 COMPLETE (CONTROL-PLANE #45, B30). Applied: R121 (clock, Server-Timing), R120 door part (deferReading, pendingadd), C5b (multipart existed:null asks readHeld; chain test green with extraction merged), readheld collision (door's route is `readheldfor`), R81 e2e on the roster row. Suite 367 of 369; the two reds, by name: (1) large-PDF whole path (`t51-large-pdfs.test.mjs`): fw9 and 2.5 MB pass; the 8.8 MB file is not read by the alarm until PDF-READER #8 (pdf-reader R41) merges; (2) R122 `t51-bootstrap.test.mjs` until cause-shell-4 and the screens merge. Plane fix3-r74 3 of 3; plane suite 296/297 (R24, design's); checks all 0. Four fields per cause in the record.
+
+## J23 · COMPLETE
+
+control-plane R123 (fix round 4b entry 10; D3; K4487) is built and pushed (job/T51/control-plane @ 249e9fc2c1, tranche/T51 merged in). After `promote`, `captureupload` and `inboxpull` the door reads a document the record stores with no reading, inline when it fits the bound, else it writes the digest down for the alarm (`pendingadd`, kind `reading`), and the answer's `result` carries `reading_pending: true`.
+
+**What changed** (`bio-plane/src/control-plane/index.mjs`)
+- Root cause (rule 1), no door code read a document after the act that files it: `readHeld` was called only after an `acquire` answer with `existed` (old :2367) and an upload answer with `existed` (old :2443); `op=promote` and the pull's forward ended at `json(...)`, and a new upload over the bound was read inline from bytes the door could not assemble (`bytesOf` finds no whole over 20 MiB, F2).
+- `readingWontFit(document)` (2439): the one rule for "will not fit", R120's, now shared by acquire's `deferReading` (2380), the upload and the pull: a PDF over 2 MB (stated by capture type, declared type, profile format or name), a capture over 20 MiB (`READING_INLINE_MAX`, reading-pipeline's `MULTIPART_READ_MAX`, 210), or under 8 s of the 25 s bound left.
+- `followEntries(entries)` (2455): per document, at most 16 (`READING_FOLLOWED_MAX`): too large to fit -> `pendSha`; else `readHeld`; a reading made or already held ends it; any other answer (`NO_WHOLE_OBJECT`, `NO_HOME`, a refusal, a silence) is owed too. `pendSha` (2427) is `pendReading`'s write, extracted.
+- promote: `unreadDocuments(b)` (677) takes the documents of the body's `data/provenance.json` with a capture digest and no reading (none for a verified replay); the final forward (3572) follows them after the store answers `ok` and adds `reading_pending: true` to `result`. A refused promotion asks nothing.
+- captureupload: `readUploaded` (2490) no longer reads a document that will not fit, nor one whose whole is not held (`existed: true` + `NO_WHOLE_OBJECT`): it writes the digest down and answers `result.reading_pending: true`, the document unread and the rest as answered.
+- inboxpull (and `inboxresolve` at `pulled`, which is routed as the pull): `pulledEntries(result)` (694) takes store-door R18's `sha` when it answers one, else the doorbell's `capture`; followed as promote's.
+- Re-registering at the promotion is what re-arms an entry the alarm gave up on: plane R77's job (a second registration of a digest re-arms it); the door only registers.
+
+**Why the tests missed it (rule 2):** control-plane's suites faked the store and asserted what crossed on `acquire` and `captureupload` only; no suite promoted, pulled or uploaded over the bound and then asked for the reading, and r117's real-plane test built its "home with no reading" by promoting without a reading, which was the defect itself.
+
+**Failing-first, seen red then green (rule 3)**
+- `test/m/control-plane/r123-reading.test.mjs` (8 tests, R123: promote small/3 MB-PDF-after-10-minutes/owed answers/16-document bound and controls; 40 MB and 3 MB-PDF uploads, `existed` owed; pull and `inboxresolve`): 8 of 8 red before the change (readHeld never asked, no `reading_pending`), 8 of 8 green after.
+- `test/m/control-plane/t51-reading-follows.test.mjs` (real plane under Miniflare, press -> `op=reading`): **F6** a 3 MB text-layer PDF knocked and pulled: red before (`reading_pending` undefined), green after (14.6 s, text found, no press). **F2** a 40 MB upload in five parts and **F1** a 3 MB PDF filed 250 s after its capture (the old five tries are spent by 225 s): the door side passes (`reading_pending: true`, the digest written down at the filing); the final read is red by name until **capture R103** (job 4: the upload's keep over 32 MiB, no whole exists today) and **plane R77** (job 11: an entry never ends by a count, a second registration re-arms it; today the exhausted entry ignores it). Both run on the real plane and turn green by themselves when those two merge; I need nothing else for them. (Per R-SEAM they stay red by name.)
+- Platform (rule 4): no new platform limit touched: the door adds one store-internal call per followed document and no bytes are loaded here; the 20 MiB / 2 MB / 8 s numbers are R120's and reading-pipeline's own, unchanged.
+
+**Tests changed for the requirement (not weakened):** `r117-held.test.mjs`: two door-level cases now expect `reading_pending: true` and one `pendingadd` where `readHeld` answers `NO_WHOLE_OBJECT` (R123: an owed reading is said and written down); the real-plane case can no longer make "a home with no reading" through the screen's promotion (the door now reads it, which is the fix), so it asserts the door-made reading and keeps its controls; the `readHeld`-for-a-home-with-no-reading case stays driven at the door level (records filed before this fix).
+
+**Suites and checks**
+- `node --test --test-force-exit test/m/control-plane/` (concurrency 2): 380 tests, 378 pass, 2 fail = F2 and F1 above, red by name. Every other test, R100, R117, R120, R121 and R105 included, passes.
+- Users `impact.mjs origin/tranche/T51 HEAD` names: plane (11 of 47 test files: body, declarations, fix4-defer, split, t42, t43, t44, t45, t47, t50, t51): 87 tests, 87 pass.
+- `checks/run.mjs`: format 0, architecture 0, words 0 failures (words count 18421, unchanged); coverage control-plane 90 of 90 ids named (the other modules' failures in that run are their own jobs' unmerged ids: R100, R103, R82, R51, R35, R72, R37, R18, R25). `checks/ownership.mjs`: 0 failures.
+
+**Requirement line I propose for R123 (BOB writes it; "not yet met" lifted when the two seams are green)**
+R123 (fix round 4b, F1, F2, F6; K4487; D3; plane R77, capture R103, store-door R18) A reading follows every entry into the record. After `op=promote`, `op=captureupload` and `op=inboxpull` (and `inboxresolve` at `pulled`) answer, the door reads each document the record now stores with no reading: for a promotion, each document of its `data/provenance.json` that states a capture digest and no reading (at most 16; none for a verified replay); for an upload, the document answered (new, or `existed` with no home); for a pull, the pulled capture (store-door R18's `sha`, else the doorbell's `capture`). A reading that fits the bound (a PDF of at most 2 MB, a capture of at most 20 MiB, at least 8 s of R105's 25 s left) is made at once through `readHeld`; any other, and any that `readHeld` could not make (no whole object, no home, a refusal, a silence), is written down as owed work (`pendingadd`, kind `reading`, plane R77) and the answer's `result` carries `reading_pending: true`; an upload over the bound is answered unread. A reading held or made changes the answer by nothing. A refused act asks nothing, and no refusal or silence of the reading changes what the act answered. Test (`r123-reading.test.mjs`): each case with controls; whole path (`t51-reading-follows.test.mjs`): a pulled 3 MB PDF knock read without a press; a 40 MB upload and a 3 MB PDF filed after the alarm gave up, read by the alarm.
+Also, for screens-intake R57: the flag is `result.reading_pending` on the promote, captureupload and inboxpull answers (the promote answer is `{ok, result: {…, reading_pending: true}}`, which `promoteDocument` reads as `p`).
+
+**Row owed:** none (no new sentence; the screen's is screens-intake's R57). **Census ops owned:** none new.
+**Found in another module:** none beyond the two seams above. One note for the walk: the door's 8 s budget makes a reading's inline-or-later choice depend on elapsed time, so under heavy machine load a first slow request can defer an inline read (R100's test failed once at default concurrency, passes at 2); in production this is the intended behaviour.
+
+Size (session_01Gs7CrCGk5nXUSZpiDu6qAK): test runs 22, module lines 4,332
+
+## J24 · COMPLETE
+
+control-plane re-completed for CHANGE B32/B33 (K4492, K4493): `deliverOwedRender` is exported and pushed (job/T51/control-plane, tranche/T51 merged in).
+
+**What changed** (`bio-plane/src/control-plane/index.mjs`)
+- `deliverOwedRender({ctx, env, storeName, answer, session}) -> {ok: true, bundleId, reading_pending?} | {ok: false, reason}` (exported from `index.mjs`; the function plane hands acquisition's `owedRun` as `deliver`). It loads the capture session (`captureOf(ctx).loadCaptureSession`), takes the opener (`state.opened_by`, the viewer form the door stamped as `by`), reads the shell's project with `captureOf(ctx).heldAt({sha256: primarySha, viewer: opener})` (`copy.project`, "" when the opener sees none), then builds and files the rendered document with screens-intake's own `CAPTURE_SCREEN.parts.promoteDocument` (no second copy), run in process: `allocid` is `record.allocId`, `promote` is `promotion.promote` (the route's own call) with the door's promote stamps for the opener (`author`, `actorMemberId`, `actorIdentity`, `actorViewer`). The title is screens-intake's `titleOf`.
+- R123 follows the filing: a rendered document with no reading is read in process (`extractionOf(ctx).readHeld`) when it fits (`tooBigToReadInline`, the size half of R123's rule, now a module function shared with the door's), else written down with `pendingadd` through the object's own stub and `reading_pending: true` is returned. A session that is gone (`NO_SUCH_SESSION`), has no opener (`NO_OPENER`), an answer with no document (`NO_RENDERED_DOCUMENT`) or a refused promotion (its reason) returns `{ok: false, reason}` and delivers nothing; it never throws.
+- It runs in the browser-free part of screens-intake (`promoteDocument` is self-contained over `cs.call/digest/now`), so nothing needed moving. No `uses` edge to add: screens-intake, capture, promotion, record-core and extraction are already control-plane's.
+
+**Tests** `test/m/control-plane/r124-owed-render.test.mjs` (4, over the real record fixture; the function did not exist before, so red-first is its absence): the rendered document lands as its own bundle beside the shell with its reading made; it lands in the shell's project (`INQ-2026-0001`, same as the shell's, the opener a participant); a 3 MB PDF render is written down (`pendingadd`, kind `reading`, its digest) with `reading_pending: true` and not read inline; controls for the four refusals. Control-plane suite without the three long real-plane seams: 381 of 381 pass; `checks/architecture.mjs` control-plane 0 failures (the whole-tree run shows 1 architecture failure that is not control-plane's), format 0, words 0 (count 18421 unchanged), ownership checked at the previous COMPLETE and only this module's files changed since.
+
+**Proposed requirement line (BOB writes it):** R124 (fix round 4b, F5; K4492, K4493; acquisition R100, plane R77) The alarm's delivery of an owed render. `deliverOwedRender({ctx, env, storeName, answer, session})` promotes the rendered document `answer.document` as the capture screen promotes an acquired one (screens-intake's `promoteDocument`, through the record's `promote`), filed under the project of the shell document (the capture session's primary, as the session's opener sees it), the opener its author with the door's promote stamps; then R123's read follows (inline when it fits, else written down, `reading_pending: true`). It answers `{ok: true, bundleId, reading_pending?}`, or `{ok: false, reason}` for a session that is gone, one with no opener, an answer with no document or a refused promotion, delivering nothing. Test: `r124-owed-render.test.mjs`.
+
+**Seam:** plane's seam test (an owed render delivered by the alarm, filed under the shell's project, reading pending) is plane's and runs on this once plane calls it as `deliver`; the door's part is tested here.
+
+Size (session_01Gs7CrCGk5nXUSZpiDu6qAK): test runs 32, module lines 4,423
