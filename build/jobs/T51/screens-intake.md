@@ -363,3 +363,7 @@ COMPLETE (B23, fix round 4). Details, the four fields of each cause, proposed li
 Suites: screens-intake 256/256; screens-inquiry 471/471; control-plane and plane affected files red only on DECLARED_OP_DISAGREES officeconfirm (named). format, architecture, coverage 55/55, words, ownership 0.
 Reports: captured_for is not recorded on a pre-flight hold from a question (capture's); real-provider seam test needs `capture` in `uses` if wanted. No question open.
 Size (session_01PM8Gp86w4h8nprHYCkdss3): test runs 17, module lines 2434
+
+## B24 CHANGE applied (OP-GRADES #24)
+
+Merged `tranche/T51` (003bae9390). screens-intake 256 of 256; screens-inquiry unchanged; plane's affected files 87 of 87; control-plane's affected files 353 of 355: the two reds are `t51-bootstrap.test.mjs` R122 (Home asks `bootstrap` twice) and `t51-large-pdfs.test.mjs` R120/R121 (the 8.8 MB reading not found after the alarm); both are red on `origin/tranche/T51` too (run there), neither is in my module. Nothing else changed.
