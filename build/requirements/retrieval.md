@@ -143,6 +143,8 @@ Internet level
 - **R92** (T51 fix round 2, C21; K4307) **Every hit names its document; a question's excerpt is its own words.** `search`'s page hits and `meaningRows`' `rows=passage` rows each carry `document {bundle_id, title}` (the bundle holding the hit or the unit; the title as the record holds it), added before R78's decorations, which cannot replace it. A hit whose object is an inquiry and whose `snippet_from` is `text` has its `snippet` cut from the question's title and conclusion (the same brackets, ellipsis and word bound as R6's snippet), never from its bundle text; a passage snippet and a document's text snippet are unchanged. Test: a question hit's snippet holds no heading, inquiry id, hash or log text; a passage hit and a passage row carry the document's title; control: a document hit's snippet is unchanged.
 - **R93** (T51 fix round 3, C16 P3; SCREENS-INQUIRY #19's finding; K4402) **A listed question names its project.** Each row `list` (`listBundles`) answers carries the bundle's `project` (the empty text for a project-less bundle), read in the same statement; no row gains a project its viewer could not already see, and no other field changes.
 
+- **R94** *(not yet met: T51)* (fix round 4b, F3 verification 2; K4512; provenance R73) **The frontier counts a capture held in parts once, by its whole.** `frontier`'s content and meaning levels (`frontier.mjs:263-268`, `:366-371`) list a capture held in parts by its whole only (provenance's `part_of` rows skipped), so once the whole has its content and meaning rows nothing of it stays in `never_looked` or `missing_unexplained`. Test: the three-part fixture: before any row, one capture missing; after the whole's rows, none.
+
 ## Private
 
 ### Uses
