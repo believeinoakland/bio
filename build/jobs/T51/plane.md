@@ -350,3 +350,7 @@ Size (session_018hyuuzAysk4N5zXFHkNnwL): test runs 9, module lines 330
 ## J21 · COMPLETE
 
 COMPLETE (PLANE #49, R77). B27's shapes built: `captureOf(ctx).owedLater` (subresources keyed by session, unpack), `acquisition.owedRun`, unpack as the daemon through the door, ocr by `readHeld({sha, kind:"ocr"})` with `owed`, `failure` untouched by plane. Ledger never ends by count or clock; final reasons stay on the row and show in `owedwork`; old ledgers carried over and re-armed. fix4b-r77 (7 tests) red on the old code, green now; plane suite 305, 304 pass, the one red is R24 on stale setup-words rows (red on tranche before my change; clears at your regeneration). workerd: 40 MiB keep finished in ~1.5 s; migration passes. Checks clean, ownership 0 failures. Record in build/jobs/T51/plane.md has the lines for R77 and the Size line. One wording row owed: plane.declared.owedwork.
+
+## J22 · COMPLETE
+
+COMPLETE (PLANE #49, R77) again after B28: failure:"final" ends an entry with its reason, readHeld now gets {sha, storeName, env, kind} for reading too; fix4b-r77 and fix4-r75 14/14 green. Record unchanged otherwise.
