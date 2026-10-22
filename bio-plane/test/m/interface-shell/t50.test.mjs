@@ -31,7 +31,7 @@ const audio = (p) => {
 
 test("R73 the registry is the design's: RE_POINTS holds only the named exception and none the registry lists; every act of the nine screen modules' real SCREENS composes; a stand-in naming an op neither lists throws; RE_POINTS is not consulted for an op the registry lists", async () => {
   /* R117 (fix round 3) adds the two named re-points, each until the registry lists its op on that screen */
-  assert.deepEqual(RE_POINTS, { explore: ["stepsourcewithdraw"], security: ["scanmirror"], places: ["officeconfirm"] });
+  assert.deepEqual(RE_POINTS, { explore: ["stepsourcewithdraw"], security: ["scanmirror"], places: ["officeconfirm"], document: ["readheld"] });
   for (const [id, ops] of Object.entries(RE_POINTS)) for (const op of ops) {
     const reg = SCREEN_REGISTRY.find((r) => r.id === id);
     assert.ok(reg, id + " is a registry screen");

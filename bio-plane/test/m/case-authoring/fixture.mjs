@@ -325,15 +325,22 @@ export function world({ group = "test-group", provider = true, now = null, recor
     ? { run: String(id), status: runs.get(String(id)).status, mode: "draft" } : null) };
   const clockOf = now || ((p) => (p === "millisecond" ? clock.ms : clock.now));
   const caseInquiry = inqWrap ? inqWrap(deps.inquiry || inquiry) : deps.inquiry || inquiry;
-  w.cacc = caseAccountOf(host, { record: caseRecord, membership, inquiry: caseInquiry, runs: aiRuns,
-                                 disclosures: judgedDisclosures, now: clockOf });
-  w.ci = caseInputsOf(host, { record: caseRecord, membership, publication, publishSchedule, account: w.cacc, now: clockOf });
-  w.ca = caseAuthoringOf(host, { record: caseRecord, membership, basisVersions, inputs: w.ci,
-    strength, bias, observations, reevaluation, publication, publishSchedule, ratification: ratWrap ? ratWrap(ratification) : ratification,
-    networkNotices, now: clockOf,
-    disclosures: judgedDisclosures, events,
-    ...given((d) => !READ_BY_DISCLOSURES.includes(d) || d === "inquiry" || d === "strength"),
-    inquiry: caseInquiry });
+  const chain = (h, cacc = null, ci = null) => {
+    cacc ??= caseAccountOf(h, { record: caseRecord, membership, inquiry: caseInquiry, runs: aiRuns,
+                                disclosures: judgedDisclosures, now: clockOf });
+    ci ??= caseInputsOf(h, { record: caseRecord, membership, publication, publishSchedule, account: cacc, now: clockOf });
+    const ca = caseAuthoringOf(h, { record: caseRecord, membership, basisVersions, inputs: ci,
+      strength, bias, observations, reevaluation, publication, publishSchedule, ratification: ratWrap ? ratWrap(ratification) : ratification,
+      networkNotices, now: clockOf,
+      disclosures: judgedDisclosures, events,
+      ...given((d) => !READ_BY_DISCLOSURES.includes(d) || d === "inquiry" || d === "strength"),
+      inquiry: caseInquiry });
+    return { cacc, ci, ca };
+  };
+  ({ cacc: w.cacc, ci: w.ci, ca: w.ca } = chain(host));
+  /* A reload: a second host over the same storage, with its own instance of this module (a Durable Object coming up again),
+     holding nothing in memory that the first held; the modules it asks keep their one instance and their tables. */
+  w.reload = () => chain({ storage: st }, w.cacc, w.ci).ca;
   Object.assign(w, { events, lines, money, people });
   let n = 0;
   Object.assign(w, {
