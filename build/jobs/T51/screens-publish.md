@@ -467,3 +467,7 @@ Suites: screens-publish 266 pass, 0 fail, 2 todo (pre-existing). Checks: words 0
 Proposed requirement line (R8): the docket's document picker lists every held document, reading each next page from `next`, and says how many it lists where it cannot.
 
 Size (session_018p3RDUFnhwwhQG5CBJrBfi): test runs 14, module lines 3650
+
+## J29 · COMPLETE
+
+COMPLETE (B36). tranche/T51 merged (control-plane's batch keys included), pushed. New `door-seam.test.mjs` "R73 C49 G12c (fix round 6, door seam)": the real Worker, its object and review under Miniflare; the member's acts make a project and four drafts (`casedraft`); the Ceremony's page reads go through the real door. It sends two `reviewcopy` (the draft shown, and one batch `drafts=<the other three>`), the door answers the batch, and each draft is named by the scope of its own real copy. Green. Suites: screens-publish 267 pass, 0 fail, 2 todo (pre-existing); words, coverage 80/80, architecture, ownership 0 failures. Nothing open. Ahead: G29 CHANGE when CASE-AUTHORING #39 merges. Size (session_018p3RDUFnhwwhQG5CBJrBfi): test runs 6, module lines 3635
