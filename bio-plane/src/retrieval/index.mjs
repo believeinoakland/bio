@@ -27,6 +27,7 @@ import { localFactsOf } from "../local-facts/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { normalizeType } from "../record-grammar/types.mjs";
 import { routeFinding } from "../provenance-routes/index.mjs";
+import { provenanceOf } from "../provenance/index.mjs";
 import { MEANING_READ_CHECKS, SELECTION_CHECKS } from "./checks.mjs";
 import { projectionOf, PROJECTION_COLS, PROJECTION_LIMIT_DEFAULT, PROJECTION_LIMIT_MAX } from "./projection.mjs";
 import { meaningLevels } from "./levels.mjs";
@@ -212,6 +213,17 @@ export class Retrieval {
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
+  /** R94: the digests that are parts of a capture held in parts among the register rows of `bundleIds`, as provenance marks
+   *  them (its R73: `part_of` on a part's row). A part is a file of its bundle, never a capture of its own. Empty with no
+   *  host or no provenance to ask. */
+  partsHeldIn(bundleIds) {
+    const parts = new Set();
+    let prov = null;
+    try { prov = this.#host ? provenanceOf(this.#host) : null; } catch { prov = null; }
+    if (!prov || typeof prov.registeredFor !== "function") return parts;
+    for (const id of bundleIds) for (const row of prov.registeredFor(id)) if (row.part_of) parts.add(row.capture_sha);
+    return parts;
+  }
   /* The frontier's reads (`frontier.mjs`), which is this module's own file. */
   rowsOf(q, ...a) { return this.#rows(q, ...a); }
   oneOf(q, ...a) { return this.#one(q, ...a); }
