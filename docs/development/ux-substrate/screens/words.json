@@ -22,7 +22,7 @@
   "label": 231,
   "project": 56,
   "grouprule": 1,
-  "refusal": 2582,
+  "refusal": 2586,
   "signing": 23,
   "case": 18,
   "docket": 7,
@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7202,
+  "screen": 7211,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -146,6 +146,7 @@
   "store-door": 4,
   "case-disclosures": 99,
   "plane": 1,
+  "notice": 2,
   "duties": 79,
   "basis-versions": 23,
   "filing-templates": 29,
@@ -232,7 +233,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 18484,
+  "total": 18499,
   "protected": 1112
  },
  "words": [
@@ -77476,6 +77477,111 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-417: B477 plane #50 J29: an owed reading the object stopped three times"
+  },
+  {
+   "key": "screen.capture.fetch.pending",
+   "en": "This file is about {size}. Your team's Civicsmith is fetching it now and will file it under {project}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-418: B481 screens-intake (K4562): a web capture over what is fetched while the member waits; what is happening; {size} a size such as 15.9 MB"
+  },
+  {
+   "key": "screen.capture.fetch.why",
+   "en": "Files over about 8 MB can take longer than you should have to wait here, so your team's Civicsmith fetches them in the background. You can leave this page; you will be told when the file has arrived.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-418: B481 screens-intake (K4562): why a large capture is fetched in the background, shown with the line above"
+  },
+  {
+   "key": "screen.capture.fetch.done",
+   "en": "Fetched. {document} is filed under {project}.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-418: B481 screens-intake (K4562): the capture's own line when the background fetch has finished; {document} the document named"
+  },
+  {
+   "key": "notice.fetch.done",
+   "en": "A large file you captured has been fetched and filed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-418: B481 notice-producers (K4562): the Queue item, to the member who asked for the capture, when the background fetch finishes"
+  },
+  {
+   "key": "notice.fetch.done.door",
+   "en": "Open the document",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-418: B481 notice-producers (K4562): the Queue item's door to the fetched document"
+  },
+  {
+   "key": "screen.document.reading.progress",
+   "en": "Being read: {read} of {total} so far. Your team's Civicsmith is reading this file in pieces, and this page updates as it goes.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-418: B481 screens-inquiry / screens-intake (K4571): a large text file read in the background; minted under screen.document.reading.*; {read} and {total} sizes such as 4 MB"
+  },
+  {
+   "key": "screen.document.reading.partial",
+   "en": "Until the whole file is read, searching and citing cover only what has been read so far.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-418: B481 screens-inquiry / screens-intake (K4571): beside the progress line of a large text file; never a silent partial read"
+  },
+  {
+   "key": "screen.document.reading.done",
+   "en": "Read in full. Every line of this file can now be searched and cited.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-418: B481 screens-inquiry / screens-intake (K4571): when the background reading of a large text file has finished"
+  },
+  {
+   "key": "screen.document.reading.stated",
+   "en": "This document is {size}, which is more than your team's Civicsmith can read. It is kept whole and you can open it, but its words can't be searched or cited.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-418: B481 screens-inquiry (G6, K4571): a reading stated final with its size (a bound that must stay is stated); no OCR act is offered after it"
+  },
+  {
+   "key": "screen.document.reading.repairable",
+   "en": "An earlier attempt did not read this document, but your team's Civicsmith can read it now. Press Read it to try again.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-418: B481 screens-inquiry (G8): an old reading that can be repaired; drawn with the Read it door"
+  },
+  {
+   "key": "screen.document.reading.repairable.door",
+   "en": "Read it",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-418: B481 screens-inquiry (G8): the door beside the repairable statement"
+  },
+  {
+   "key": "refusal.DOCUMENT_COPY_PENDING",
+   "en": "The publishable copy of {document}, a file a member supplied, is still being made. Try again in a few minutes. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-418: B481 screens-publish (G9, G10): a case relying on a member-supplied file whose cleaned copy is not made yet; {document} the document named"
+  },
+  {
+   "key": "refusal.DOCUMENT_NOT_CLEANABLE",
+   "en": "{document}, a file a member supplied, can't be cleaned of the details that could show who made it, so it can't be published. Capture it again from where it was published, supply a plainer copy, or stop relying on it. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-418: B481 screens-publish (G10): a member-supplied file the cleaning refused; {document} the document named"
+  },
+  {
+   "key": "refusal.PHOTO_UNCHECKED",
+   "en": "Signing waits until every photo in the case is checked, including one that only supports a finding: {photo}. Check it, then sign again. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-418: B481 screens-publish (G10): a photo with no standing mark reached by the case; {photo} the photo named"
+  },
+  {
+   "key": "refusal.PHOTO_NOT_COVERABLE",
+   "en": "The format of {photo} can't be obscured, so it can't be published. Capture it again as an ordinary photo, or stop relying on it. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-418: B481 screens-publish (G10): a photo whose format the cover refused; {photo} the photo named"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

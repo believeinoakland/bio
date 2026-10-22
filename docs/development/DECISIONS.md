@@ -6443,3 +6443,18 @@ decided: 2026-10-22 · the design session (P17)
 the design: `action`, `request` and `start-send` list `projectjoin` ("Join") and draw, near the top, a fold "If you were invited and have not joined yet" (`screen.projectact.invited.head`) holding the refusal in the invitation's words, `refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited`: "You have been invited to this project but have not joined it yet, so you can't do this here. Looking, capturing and citing stay open to you. Join the project to go on. Nothing was changed.", and Join beside it. Rows: `document.readnow.pending` "Being read now. Its words can be found and cited once the reading is done, and this page shows them then."; `plane.pending.interrupted` "The reading stopped three times before it finished, so your team's Civicsmith has stopped trying. Ask for a fresh reading, or capture the document again."
 reasoning recorded in: this entry; `screens/registry.src.py`, `screens/mock-screens.js`, `screens/words-drawn.src.py` (block "DEC-417").
 owed: BOB: the invited refusal read where the member is invited (the held sentence stays for a member not invited), Join drawn beside it, the two rows read (T52 under K4269).
+
+### DEC-418 · answered
+raised: 2026-10-22 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (BOB's B481: fix round 6's words, beneath Bob's K4562 and K4571; B479, B480 read)
+for: design
+question: The sentences for large web captures fetched in the background, large texts read in the background, a document's stated reading bound, and four refusals.
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-22 · the design session (P17)
+the design: 15 rows (block "DEC-418" in `screens/words-drawn.src.py`): `screen.capture.fetch.pending` ("This file is about {size}. Your team's Civicsmith is fetching it now and will file it under {project}."), `.fetch.why` (over about 8 MB a file is fetched in the background; the member may leave and is told on arrival), `.fetch.done`; `notice.fetch.done` and its door `notice.fetch.done.door` "Open the document"; `screen.document.reading.progress` ("Being read: {read} of {total} so far"), `.reading.partial` ("Until the whole file is read, searching and citing cover only what has been read so far."), `.reading.done` ("Read in full. Every line of this file can now be searched and cited."), `.reading.stated` (a bound stated with its size: kept whole, openable, its words not searchable or citable), `.reading.repairable` and its door "Read it"; `refusal.DOCUMENT_COPY_PENDING`, `refusal.DOCUMENT_NOT_CLEANABLE`, `refusal.PHOTO_UNCHECKED`, `refusal.PHOTO_NOT_COVERABLE`, each ending with what was not changed. Minted: notice.fetch.done.door, screen.document.reading.progress, .partial, .done, .repairable.door.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-418").
+owed: BOB: the keys read in their modules with the placeholder names used here ({size}, {project}, {document}, {read}, {total}; the refusals' {document}, {photo}), or name any that differ; "about 8 MB" is written in, so a changed LARGE_FETCH_BYTES needs the row changed (or a {limit} fill asked).

@@ -7327,6 +7327,25 @@ w417('screen.projectact.invited.head', 'If you were invited and have not joined 
 w417('document.readnow.pending', 'Being read now. Its words can be found and cited once the reading is done, and this page shows them then.', 'control-plane #47 J26: Read it now or the OCR press answered READING_PENDING')
 w417('plane.pending.interrupted', "The reading stopped three times before it finished, so your team's Civicsmith has stopped trying. Ask for a fresh reading, or capture the document again.", 'plane #50 J29: an owed reading the object stopped three times')
 
+# DEC-418: fix round 6's words (B481; K4562, K4571)
+def w418(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-418: B481 ' + note))
+w418('screen.capture.fetch.pending', "This file is about {size}. Your team's Civicsmith is fetching it now and will file it under {project}.", 'screens-intake (K4562): a web capture over what is fetched while the member waits; what is happening; {size} a size such as 15.9 MB')
+w418('screen.capture.fetch.why', "Files over about 8 MB can take longer than you should have to wait here, so your team's Civicsmith fetches them in the background. You can leave this page; you will be told when the file has arrived.", 'screens-intake (K4562): why a large capture is fetched in the background, shown with the line above')
+w418('screen.capture.fetch.done', 'Fetched. {document} is filed under {project}.', "screens-intake (K4562): the capture's own line when the background fetch has finished; {document} the document named")
+w418('notice.fetch.done', 'A large file you captured has been fetched and filed', 'notice-producers (K4562): the Queue item, to the member who asked for the capture, when the background fetch finishes')
+w418('notice.fetch.done.door', 'Open the document', 'notice-producers (K4562): the Queue item\'s door to the fetched document')
+w418('screen.document.reading.progress', "Being read: {read} of {total} so far. Your team's Civicsmith is reading this file in pieces, and this page updates as it goes.", 'screens-inquiry / screens-intake (K4571): a large text file read in the background; minted under screen.document.reading.*; {read} and {total} sizes such as 4 MB')
+w418('screen.document.reading.partial', 'Until the whole file is read, searching and citing cover only what has been read so far.', 'screens-inquiry / screens-intake (K4571): beside the progress line of a large text file; never a silent partial read')
+w418('screen.document.reading.done', 'Read in full. Every line of this file can now be searched and cited.', 'screens-inquiry / screens-intake (K4571): when the background reading of a large text file has finished')
+w418('screen.document.reading.stated', "This document is {size}, which is more than your team's Civicsmith can read. It is kept whole and you can open it, but its words can't be searched or cited.", 'screens-inquiry (G6, K4571): a reading stated final with its size (a bound that must stay is stated); no OCR act is offered after it')
+w418('screen.document.reading.repairable', "An earlier attempt did not read this document, but your team's Civicsmith can read it now. Press Read it to try again.", 'screens-inquiry (G8): an old reading that can be repaired; drawn with the Read it door')
+w418('screen.document.reading.repairable.door', 'Read it', "screens-inquiry (G8): the door beside the repairable statement")
+w418('refusal.DOCUMENT_COPY_PENDING', "The publishable copy of {document}, a file a member supplied, is still being made. Try again in a few minutes. Nothing was changed.", 'screens-publish (G9, G10): a case relying on a member-supplied file whose cleaned copy is not made yet; {document} the document named')
+w418('refusal.DOCUMENT_NOT_CLEANABLE', "{document}, a file a member supplied, can't be cleaned of the details that could show who made it, so it can't be published. Capture it again from where it was published, supply a plainer copy, or stop relying on it. Nothing was changed.", 'screens-publish (G10): a member-supplied file the cleaning refused; {document} the document named')
+w418('refusal.PHOTO_UNCHECKED', "Signing waits until every photo in the case is checked, including one that only supports a finding: {photo}. Check it, then sign again. Nothing was changed.", 'screens-publish (G10): a photo with no standing mark reached by the case; {photo} the photo named')
+w418('refusal.PHOTO_NOT_COVERABLE', "The format of {photo} can't be obscured, so it can't be published. Capture it again as an ordinary photo, or stop relying on it. Nothing was changed.", 'screens-publish (G10): a photo whose format the cover refused; {photo} the photo named')
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
