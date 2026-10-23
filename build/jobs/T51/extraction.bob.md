@@ -378,3 +378,7 @@ CHANGE (K4654): CSV-READER #3 is merged into tranche/T51 (held cells with `inlin
 ## B39 · CHANGE
 
 CHANGE (K4655): OFFICE-READERS #15 is merged into tranche/T51 (xlsx held cells, workbook-wide cap by `inlineCellsMax` bytes, `cellsIn`, `next_row` absent when whole). With CSV-READER #3, both readers are in: reading-pipeline's seam tests can go green; merge tranche/T51.
+
+## B40 · CHANGE
+
+CHANGE (K4656): `cellsInRange` (reading-pipeline) answers refusals as `{ok: false, reason, why?}` for every entry; read `reason`. A cell's `source` is an object `{kind: "sheet-cell", ref, sheet, cell}`; `maxCells` gives whole rows (a first row over it is given whole).
