@@ -6,7 +6,8 @@
  *   view10   the same file: the safe view answers kind "data" within its bound, the first sheet's truncated, next_row and total_rows stated, the child alive
  *   small    a workbook of about 20,000 cells (the re-walk's): added, read, linted, its inputs read, previewed (the cut, if any, stated)
  *   sheets   a workbook of 60 sheets: the view answers at most SAFE_VIEW_SHEETS_MAX sheets and states the total
- *   ods      an ODS above file-safety's ODS bound (25 MiB declared): the view states its refusal with size and bound, never ok without cells
+ *   ods      an ODS above file-safety's ODS bound (25 MiB declared): the view states its refusal with size and bound, never ok without cells; odssmall one inside it, cut and stated
+ *   big26    a workbook of 26.2 MB declared (over the entry's 20 MiB): the add refused WORKBOOK_FILE_TOO_LARGE {size, bound}, the view refused PREVIEW_NOT_DRAWN with size and bound
  *   csv4     a 4 MB CSV and csv17 a 17.7 MB CSV: the safe view answers alive with the cut stated (truncated, next_row, total_rows)
  *   node g44.probe.mjs [case ...]     (default: all; one run at a time) */
 import { fileURLToPath } from "node:url";
@@ -31,6 +32,9 @@ export const CASES = {
   sheets: async () => ({ label: "G44 safe view of a 60-sheet workbook", doc: await xlsxDoc(0.5, { sheets: 60, rowsPerSheet: 100 }), ops: [VIEW],
                          check: (r, ops) => { const o = ops[0]; return o.sheets_total === 60 && (o.sheets.length === 60 || o.sheets_truncated === true) ? [] : [`sheets ${o.sheets && o.sheets.length}, sheets_total ${o.sheets_total}, sheets_truncated ${o.sheets_truncated}`]; } }),
   ods: async () => ({ label: "G44 safe view of an ODS of 25 MiB declared", doc: await odsDoc(25), ops: [VIEW], check: (r, ops) => statedNoPreview(ops[0]) }),
+  odssmall: async () => ({ label: "G44 safe view of an ODS inside file-safety's bound (about 6 MB declared)", doc: await odsDoc(2.5), ops: [VIEW], check: (r, ops) => viewStated(ops[0]).concat(ops[0].ok === true ? [] : [`not drawn: ${ops[0].renderer_reason}`]) }),
+  big26: async () => ({ label: "G44 add and safe view of a workbook above the entry's 20 MiB declared bound (26.2 MB)", doc: await xlsxDoc(26.2), ops: [ADD, VIEW],
+                        check: (r, ops) => [...((ops[0].ok === false && ops[0].reason === "WORKBOOK_FILE_TOO_LARGE" && Number.isFinite(Number(ops[0].size)) && Number.isFinite(Number(ops[0].bound))) ? [] : [`the add answered ${JSON.stringify({ ok: ops[0].ok, reason: ops[0].reason, size: ops[0].size, bound: ops[0].bound })}, not WORKBOOK_FILE_TOO_LARGE with size and bound`]), ...statedNoPreview(ops[1])] }),
   csv4: async () => ({ label: "G44 safe view of a 4 MB CSV", doc: await heldCsvDoc(4 * 1048576), ops: [VIEW], check: (r, ops) => cutView(ops[0], { sheets: 1 }) }),
   csv17: async () => ({ label: "G44 safe view of a 17.7 MB CSV", doc: await heldCsvDoc(17_700_000), ops: [VIEW], check: (r, ops) => cutView(ops[0], { sheets: 1 }) }),
 };

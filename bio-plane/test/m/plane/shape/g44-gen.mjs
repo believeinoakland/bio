@@ -43,7 +43,7 @@ export function odsFile({ rows }) {
     yield Buffer.from("</table:table></office:spreadsheet></office:body></office:document-content>");
   };
   return zipChunks([
-    { name: "mimetype", text: "application/vnd.oasis.opendocument.spreadsheet" },
+    { name: "mimetype", text: "application/vnd.oasis.opendocument.spreadsheet", stored: true },
     { name: "META-INF/manifest.xml", text: '<?xml version="1.0" encoding="UTF-8"?>\n<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.2"><manifest:file-entry manifest:full-path="/" manifest:media-type="application/vnd.oasis.opendocument.spreadsheet"/><manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/></manifest:manifest>' },
     { name: "content.xml", chunks: content() },
   ]);

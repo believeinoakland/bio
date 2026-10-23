@@ -52,7 +52,13 @@ export async function* zipChunks(entries) {
     central.push(Buffer.concat([u32(0x02014b50), u16(20), u16(20), u16(0x0808), u16(8), u16(DOS_TIME), u16(DOS_DATE), u32(crc), u32(csize), u32(usize), u16(Buffer.byteLength(name)), u16(0), u16(0), u16(0), u16(0), u32(0), u32(startAt), Buffer.from(name)]));
     return Buffer.concat([u32(0x08074b50), u32(crc), u32(csize), u32(usize)]);
   };
-  for (const { name, text, chunks } of entries) {
+  for (const { name, text, chunks, stored } of entries) {
+    if (stored) {   /* method 0, sizes in the local header (an ODS's `mimetype` is first, stored, so its bytes are at a fixed offset) */
+      const raw = Buffer.from(text), crc = crc32(raw), start = offset;
+      const head = Buffer.concat([u32(0x04034b50), u16(20), u16(0), u16(0), u16(DOS_TIME), u16(DOS_DATE), u32(crc), u32(raw.length), u32(raw.length), u16(Buffer.byteLength(name)), u16(0), Buffer.from(name)]);
+      central.push(Buffer.concat([u32(0x02014b50), u16(20), u16(20), u16(0), u16(0), u16(DOS_TIME), u16(DOS_DATE), u32(crc), u32(raw.length), u32(raw.length), u16(Buffer.byteLength(name)), u16(0), u16(0), u16(0), u16(0), u32(0), u32(start), Buffer.from(name)]));
+      offset += head.length + raw.length; yield head; yield raw; continue;
+    }
     const head = local(name), start = offset;
     if (text !== undefined) {
       const raw = Buffer.from(text), z = deflateRawSync(raw), tail = finish(name, start, crc32(raw), z.length, raw.length);
