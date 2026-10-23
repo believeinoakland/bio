@@ -11,7 +11,6 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { Miniflare } from "miniflare";
-import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
 const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));
@@ -143,17 +142,36 @@ async function askQuestion(auth, project, text) {
   assert.notEqual((drew.body.result || drew.body).ok, false, "drawn into the project: " + JSON.stringify(drew.body).slice(0, 400));
   return id;
 }
-/* the Add screen's acquire press, then doneAcquire's own filing step for a document that came in the answer */
+/* the Add screen's acquire press, then the filing step for a document that came in the answer: an information bundle at `collected`
+   naming the capture in its register, as the screen's `promoteDocument` sends it (this file does not import the screen) */
 async function captureAndFile(auth, address, project) {
   const r = await acquire(auth, { locator: address, project });
   assert.equal(r.status, 200, JSON.stringify(r.body).slice(0, 400));
   assert.ok(r.body.document, `captured inside the request: ${JSON.stringify(r.body).slice(0, 400)}`);
-  const cs = { ...screenCall(auth), w: (k, v) => word(k, v), date: (d) => d };
-  const title = CAPTURE_SCREEN.parts.titleOf(cs, { reading: r.body.reading, doc: r.body.document, address });
-  const made = await CAPTURE_SCREEN.parts.promoteDocument(cs, { doc: r.body.document, title, locator: address, project });
-  assert.equal(made.refused, undefined, JSON.stringify(made).slice(0, 400));
-  return { r, made, digest: r.body.document.capture.sha256 };
+  const doc = r.body.document, cs = screenCall(auth);
+  const title = ((r.body.reading && r.body.reading.title) || doc.title || "Zoning notice").slice(0, 200);
+  const now = new Date().toISOString().split(".")[0] + "Z";
+  const mid = ((await cs.call("allocid", { query: { prefix: "INFO", year: now.slice(0, 4) } })).result || {}).id;
+  assert.ok(mid, "an id");
+  const id = `${mid}-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40).replace(/-$/, "")}`;
+  const dataset = JSON.stringify({ documents: [{ bytes: doc.capture.bytes, locator: address, sha256: doc.capture.sha256 }] });
+  const text = ["---", "id: " + id, "object_type: information", "schema: information@2", "title: " + JSON.stringify(title), "current_state: collected",
+    "prior_state: null", "created: " + now, "last_updated: " + now, "produced_by:", "  mode: assisted", "  capability_tier: session", "references: []",
+    "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
+    "criticality: supporting", "source_status: unchanged", "content_hash: sha256:" + sha(dataset), "project: " + project, "source:",
+    "  locator: " + JSON.stringify(address), "  authority: member-entered", "  retrieved: " + now, "monitoring:", "  enabled: false",
+    "  frequency: none", "---", "", "## Summary", "", title, "", "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+  const prov = JSON.stringify({ documents: [doc] }, null, 1);
+  const file = (path, t) => ({ path, text: t, bytes: Buffer.byteLength(t), sha256: sha(t) });
+  const made = await cs.call("promote", { body: { bundleId: id, base: null, snapKey: now.replace(/[-:]/g, "") + "_" + Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, "0"),
+    meta: { object_type: "information", title, current_state: "collected", created: now, last_updated: now },
+    files: [file("bundle.md", text), file("data/provenance.json", prov), file("data/dataset.json", dataset),
+            { path: doc.file, blobSha: doc.capture.sha256, sha256: doc.capture.sha256, bytes: doc.capture.bytes }],
+    register: [{ sha256: doc.capture.sha256, path: doc.file, encoding: doc.capture.encoding, bytes: doc.capture.bytes }] } });
+  assert.notEqual((made.result || made).ok, false, JSON.stringify(made).slice(0, 400));
+  return { r, made, digest: doc.capture.sha256 };
 }
+
 const rowsOfKind = (feed, kind) => { const rows = []; (function walk(v) { if (Array.isArray(v)) v.forEach(walk); else if (v && typeof v === "object") { if (v.kind === kind) rows.push(v); Object.values(v).forEach(walk); } })(feed); return rows; };
 
 test("R41 R14 (G89): after a cited page is captured again with its paragraph changed, the member's notice (`op=reevaluationnotices`) says what the pull read (`op=versionnotice`) says of the same question once the record has read the copy, and stays one open notice", { timeout: 600000 }, async () => {
