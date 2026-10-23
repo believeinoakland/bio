@@ -1,6 +1,6 @@
 # capture (T51)
 
-**Status** · session_018DeoSKvDLtRvtfBB1oDTG9 · depth 2 · WORKING · handled B28
+**Status** · session_018DeoSKvDLtRvtfBB1oDTG9 · depth 2 · WAITING ON BOB (J28) · handled B28
 
 ## J1 · COMPLETE
 
