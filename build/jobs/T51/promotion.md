@@ -91,3 +91,17 @@ Decisions: (a) an absent `files`, `meta` or `snapKey` is already refused naming 
 **Size.** Module lines counted as `wc -l` over `bio-plane/src/promotion/*.mjs` and `bio-plane/src/gate.mjs` (the module's paths): 3966.
 
 Size (session_01FxMw8iuonFjynFMH9nWcSM): test runs 6, module lines 3966
+
+## Fix round 7 · G74 (PROMOTION #53, session_017BterrfaggzcXm1vXYhTRC)
+
+**What changed.** `bio-plane/src/promotion/index.mjs` in `#promote`, just before R56's stage fence (about :694): a non-replay promotion stamped with a session member (`actorMemberId`) whose document states a `project:` (R53's `projectOf`, a project's own bundle excluded) is refused through membership's `notAParticipant(project, member, {act:"promote"})` (its R87, row C-56.3, reason `NOT_A_PARTICIPANT`) when `membership.participation(project, member)` is null. Joined, owner, invited and leaving members pass (gathering stays open, K4557). Machine credentials (no `actorMemberId`) and replays are not asked. An absent project answers exactly as a project she is not in. The refusal runs inside the transaction, so nothing is written (R2). Old records (INFO-2026-0161) untouched.
+**Why tests missed it.** The intake tests filed as the owner or the administrator; none acted as a member outside the project.
+**Failing-first.** `test/m/promotion/r7-foreign-project.test.mjs` (8 tests, named R53 G74): seen RED before the edit (the walker's filing was accepted: `reason` undefined, expected `NOT_A_PARTICIPANT`), GREEN after. Controls: joined, owner, invited, document with no project, machine credential, replay.
+**Platform check.** L (Miniflare door) belongs to the control-plane seam file `t51-round7-seam.test.mjs`; P at the re-walk (BOB's). Mine is the op-level test.
+**Refusal wording.** No new `localize`, no new row, no new code: the served sentence is the held row `refusal.NOT_A_PARTICIPANT` ("You hold no place in this project ... An owner of the project can invite you to it."), the stand-in. **Row owed to UX-DESIGN:** a refusal row for filing into a project one is not in (DEC-83: the sentence, then the remedy: only the project's members can add to it; ask to join), keyed `refusal.NOT_A_PARTICIPANT` or a new key BOB assigns; the code then carries it.
+**Proposed requirement line (BOB writes it).** R53 (G74): a promotion by a session's member whose document states a project she has no participation in (joined, invited or leaving) is refused `NOT_A_PARTICIPANT` through `membership.notAParticipant` (its R87), writing nothing; a machine credential and a replay are not asked. Test: `r7-foreign-project.test.mjs`.
+**Census ops.** None new. No change to `promotionOps` or `DECLARED_OPS`.
+**Suites and checks.** `test/m/promotion/`: 160 pass, 0 fail. Users: control-plane 447/447; monitoring, actions, project-stage, store-door, intent, strength, investigation and screens-intake: 1016/1018 under load, the two (`t51-fix5` R31 E8, `t51-check` R42) pass alone and with the change reverted, and `screens-intake` alone is 309/309. `checks/format`: 0 failures; `architecture promotion`: 0; `coverage promotion`: 61 of 61; `ownership promotion tranche/T51`: 0. Not asked of an administrator who is not a participant: an administrator filing into a project she has no participation in is now refused too (the decision as worded); say if she should be exempt.
+**Deferred.** None.
+
+Size (session_017BterrfaggzcXm1vXYhTRC): test runs 9, module lines 3977
