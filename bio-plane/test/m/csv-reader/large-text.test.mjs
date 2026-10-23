@@ -1,38 +1,39 @@
-/* csv-reader R9 (fix round 4b, F7; K4487): a body over the 20 MiB bound is read, in bounded pieces, through the
-   entry's real text() and structure(). Every body here is a real one built by `large.mjs`, its expected text
-   computed by a route that shares no code with the reader. */
+/* csv-reader R6 and R9 (as G41 amends them, K4652): a body up to MEASURED_CSV_TEXT_BOUND_BYTES (17 MiB, the largest the
+   plane read at its real shape) is read whole, in bounded memory; a body over it, up to ooxml's ceiling, is STATED with its
+   size and `final`, never read in pieces; over the ceiling the marker is textPlan's. Every body is a real one built by
+   `large.mjs`, its expected text computed by a route that shares no code with the reader. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { Worker } from "node:worker_threads";
 import { csvEntry, MEASURED_CSV_TEXT_BOUND_BYTES, walkRecords, createRecordWalk } from "../../../src/csv-reader/index.mjs";
-import { MEASURED_OOXML_TEXT_BOUND_BYTES, STREAMED_TEXT_BOUND_BYTES } from "../../../src/ooxml.mjs";
-import { bigCsv, csvField, randomText, prng } from "./large.mjs";
-import { enc } from "./fixtures.mjs";
+import { STREAMED_TEXT_BOUND_BYTES } from "../../../src/ooxml.mjs";
+import { bigCsv, prng } from "./large.mjs";
+import { harnessCsv } from "./g41.mjs";
 
-const BOUND = MEASURED_OOXML_TEXT_BOUND_BYTES;
+const MIB = 1024 * 1024;
+const BOUND = MEASURED_CSV_TEXT_BOUND_BYTES;
 const same = (got, want, what) => assert.ok(got === want, `${what}: ${got == null ? got : got.length} chars, wanted ${want.length}`);
-const noGuard = (list) => assert.ok(!list.some((u) => u.why === "over_size_bound"), "no over_size_bound marker");
 
-test("R9 csv: a 30 MB body yields its records, quoted fields and line breaks included", async () => {
-  const f = bigCsv({ rows: 13000 });
-  assert.ok(f.declared > MEASURED_CSV_TEXT_BOUND_BYTES, `fixture is ${f.declared} bytes`);
+test("R9 csv: the bound is 17 MiB", () => {
+  assert.equal(BOUND, 17 * MIB);
+});
+
+test("R9 csv: a 12 MB body yields its records, quoted fields and line breaks included, whole, with every cell", async () => {
+  const f = bigCsv({ rows: 5500 });
+  assert.ok(f.declared > 10 * MIB && f.declared <= BOUND, `fixture is ${f.declared} bytes`);
   const parts = await csvEntry.parts(f.bytes);
   assert.equal(parts.ok, true);
   const t = await csvEntry.text(parts);
   assert.equal(t.ok, true);
-  noGuard(t.undetermined);
   same(t.document, f.expected, "document");
   assert.equal(t.sheets[0].usedRows, f.rows);
   assert.equal(t.sheets[0].usedCols, 6);
-  assert.equal(t.sheets[0].cells, null);
+  assert.ok(Array.isArray(t.sheets[0].cells));
   assert.equal(t.dialect.delimiter, "comma");
-  assert.equal(t.piecewise.declared, f.declared);
-  assert.equal(t.piecewise.boundName, "MEASURED_CSV_TEXT_BOUND_BYTES");
-  assert.equal(t.piecewise.metric, "body_bytes");
+  assert.ok(!("piecewise" in t));
   const st = await csvEntry.structure(parts);
   assert.equal(st.ok, true);
-  assert.ok(!st.evidentiary.undetermined.some((u) => u.why === "over_size_bound"));
-  assert.ok(st.notes.includes("text_read_in_pieces"));
+  assert.ok(!st.notes.includes("text_read_in_pieces"));
 });
 
 const WORKER = new URL("./large-worker.mjs", import.meta.url);
@@ -42,13 +43,51 @@ const inWorker = (bytes, limitMb) => new Promise((resolve, reject) => {
   w.once("error", reject);
 });
 
-test("R9 memory: a csv read of about 30 MiB, the ceiling's neighbourhood, completes inside a 128 MB old-space limit", async () => {
-  const f = bigCsv({ rows: 15000 });
-  assert.ok(f.declared > BOUND && f.declared <= STREAMED_TEXT_BOUND_BYTES, `csv declares ${f.declared}`);
+test("R9 memory: a csv read of 17 MiB less a row, the bound, completes inside a 128 MB old-space limit", async () => {
+  const f = bigCsv({ rows: 8900 });
+  assert.ok(f.declared > 16 * MIB - 1 && f.declared <= BOUND, `csv declares ${f.declared}`);
   const got = await inWorker(f.bytes, 128);
   assert.equal(got.ok, true);
   assert.equal(got.undetermined, 0);
   assert.equal(got.documentLength, f.expected.length);
+});
+
+test("R9 csv: a harness CSV of the bound is read whole; one byte more is stated with its size, final, and nothing is read", async () => {
+  const { bytes } = harnessCsv(BOUND - 200);
+  assert.ok(bytes.length <= BOUND);
+  const whole = await csvEntry.text(bytes, { inlineCellsMax: 512 * 1024 });
+  assert.equal(whole.ok, true);
+  assert.ok(whole.document.includes("LASTROWMARK"));
+  const over = new Uint8Array(BOUND + 1).fill(0x61);
+  for (let i = 9; i < over.length; i += 10) over[i] = 0x0a;
+  const marker = { ok: false, text: "undetermined", why: "over_size_bound", size: BOUND + 1, bound: BOUND,
+    boundName: "MEASURED_CSV_TEXT_BOUND_BYTES", metric: "body_bytes", final: true };
+  for (const t of [await csvEntry.text(over), await csvEntry.text(over, { inlineCellsMax: 512 * 1024 })]) {
+    assert.equal(t.ok, true);
+    assert.equal(t.document, null);
+    assert.deepEqual(t.sheets, []);
+    assert.deepEqual(t.undetermined, [marker]);
+    assert.ok(!("piecewise" in t));
+  }
+  const st = await csvEntry.structure(over);
+  assert.deepEqual(st.evidentiary.undetermined[0].guard, marker);
+  assert.ok(st.notes.includes("text_body_over_bound"));
+  assert.deepEqual(await csvEntry.cellsIn(over, { fromRow: 1, toRow: 1 }), { ...marker });
+});
+
+test("R9 csv: a 30 MB body is stated with its size, not read", async () => {
+  const f = bigCsv({ rows: 13000 });
+  assert.ok(f.declared > BOUND && f.declared <= STREAMED_TEXT_BOUND_BYTES, `fixture is ${f.declared} bytes`);
+  const t = await csvEntry.text(f.bytes);
+  assert.equal(t.document, null);
+  assert.deepEqual(t.sheets, []);
+  assert.equal(t.undetermined.length, 1);
+  assert.equal(t.undetermined[0].why, "over_size_bound");
+  assert.equal(t.undetermined[0].size, f.declared);
+  assert.equal(t.undetermined[0].bound, BOUND);
+  assert.equal(t.undetermined[0].final, true);
+  assert.equal(t.undetermined[0].metric, "body_bytes");
+  assert.equal(t.dialect.delimiter, "comma", "the dialect still stands: it is read from the head");
 });
 
 test("R9 csv: over the ceiling the marker is textPlan's guard, final, with metric body_bytes", async () => {
@@ -58,48 +97,6 @@ test("R9 csv: over the ceiling the marker is textPlan's guard, final, with metri
   assert.deepEqual(t.undetermined, [{ ok: false, text: "undetermined", why: "over_size_bound", size: body.length,
     bound: STREAMED_TEXT_BOUND_BYTES, boundName: "STREAMED_TEXT_BOUND_BYTES", metric: "body_bytes", final: true }]);
   assert.ok(!("piecewise" in t));
-});
-
-test("R9 csv: a CRLF or a doubled quote that falls on the edge of a window reads as it does whole", async () => {
-  /* Records are laid out so that, at every 1 MiB window edge of the body, the edge falls between the CR and the LF
-     of a record's end, or between the two quotes of a `""` in a quoted field. */
-  const W = 1 << 20;
-  const rows = [];
-  const lines = [];
-  let at = 0;
-  const add = (fields) => {
-    const line = fields.map(csvField).join(",") + "\r\n";
-    rows.push(line);
-    lines.push(fields.filter((x) => x !== "").join("\t"));
-    at += line.length;
-  };
-  const rand = prng(31);
-  add(["h1", "h2", "h3"]);
-  add(["1", "2", "3"]);
-  for (let edge = 1; edge <= 21; edge++) {
-    // fill with ordinary records up to just short of the edge
-    while (at + 400 < edge * W) add([randomText(rand, 100), randomText(rand, 100), randomText(rand, 100)]);
-    const gap = edge * W - at;
-    if (edge % 2) {
-      // a record whose CR is the last byte before the edge: length gap-1 up to the CR
-      const pad = gap - 1 - "x,y,".length;
-      add(["x", "y", "z".repeat(pad)].slice(0, 2).concat([randomText(rand, pad - 1)]));
-      // the line is now `x,y,<pad-1>` + CRLF, which ends one byte past the edge: shift by one if needed
-    } else {
-      // a quoted field whose opening quote and first half of a doubled pair end on the edge
-      const lead = gap - 1;
-      const fill = randomText(rand, Math.max(0, lead - 4));
-      add([`${fill}"quoted"more`, "q", "r"]);
-    }
-  }
-  const bytes = enc(rows.join(""));
-  assert.ok(bytes.length > MEASURED_CSV_TEXT_BOUND_BYTES);
-  const expectedWhole = walkRecords(new TextDecoder("latin1").decode(bytes), ",");
-  const t = await csvEntry.text(bytes);
-  assert.equal(t.ok, true);
-  assert.equal(t.dialect.delimiter, "comma");
-  same(t.document, expectedWhole.map((r) => r.filter((x) => x !== "").join("\t")).filter((x) => x !== "").join("\n"), "document");
-  assert.equal(t.sheets[0].usedRows, expectedWhole.length);
 });
 
 test("R9 csv: walking a text in pieces cut anywhere gives the records of walking it whole", () => {
@@ -124,7 +121,7 @@ test("R9 csv: walking a text in pieces cut anywhere gives the records of walking
   }
 });
 
-test("R9 csv: a UTF-16 body over the bound is not read in pieces, and is stated with its size, final", async () => {
+test("R9 csv: a UTF-16 body over the bound is stated with its size, final, and its encoding", async () => {
   const n = BOUND / 2 + 8;
   const bytes = new Uint8Array(2 + n * 2);
   bytes.set([0xff, 0xfe]);
@@ -136,26 +133,18 @@ test("R9 csv: a UTF-16 body over the bound is not read in pieces, and is stated 
   assert.equal(t.dialect.encoding, "utf-16le");
 });
 
-test("R9 csv: cells a legacy encoding cannot read are listed up to a limit, then counted", async () => {
+test("R9 csv: cells a legacy encoding cannot read are all listed, a body of the bound included", async () => {
   /* Latin-1 text: its high bytes are no valid UTF-8, so the encoding is undetermined and every accented field is an
-     undetermined cell, over twenty thousand of them in a body over the bound. */
-  const rows = [];
-  for (let i = 0; i < 60; i++) rows.push(`${i},plain,text`);
-  const filler = "p".repeat(1000);
-  const accented = Uint8Array.from([0x63, 0x61, 0x66, 0xe9]);
-  const parts = [enc(rows.join("\n") + "\n")];
-  const lineCount = Math.ceil((BOUND + 4096) / 1000);
-  const chunk = [];
-  for (let i = 0; i < lineCount; i++) {
-    chunk.push(enc(`${i},${filler},`), accented, enc("\n"));
-  }
-  const bytes = new Uint8Array([...parts, ...chunk].reduce((n, p) => n + p.length, 0));
-  let o = 0;
-  for (const p of [...parts, ...chunk]) { bytes.set(p, o); o += p.length; }
+     undetermined cell; 12,000 of them in a body well over the windowed walk's threshold. */
+  const lines = [];
+  for (let i = 0; i < 60; i++) lines.push(`${i},plain,text\n`);
+  for (let i = 0; i < 12000; i++) lines.push(`${i},${"p".repeat(200)},café\n`);
+  const bytes = new Uint8Array(lines.join("").length);
+  const text = lines.join("");
+  for (let i = 0; i < text.length; i++) bytes[i] = text.charCodeAt(i);
   const t = await csvEntry.text(bytes);
   assert.equal(t.ok, true);
-  assert.equal(t.sheets[0].cells, null);
-  assert.equal(t.undetermined.length, 10001);
+  assert.equal(t.undetermined.length, 12000);
   assert.equal(t.undetermined[0].reason, "encoding_undetermined");
-  assert.deepEqual(t.undetermined[10000], { sheet: 0, cell: null, reason: "more_cells_undetermined", count: lineCount - 10000 });
+  assert.ok(!t.undetermined.some((u) => u.reason === "more_cells_undetermined"));
 });

@@ -685,6 +685,8 @@ const BODY_ACTOR = Object.freeze(Object.fromEntries(Object.values(OP_FAMILIES).f
 ])));
 const BODY_ACTOR_KEYS = Object.freeze([...new Set(Object.values(BODY_ACTOR))]);
 
+/* G42 (K4638): the grain, in bytes, of the record's size an administering member is shown. */
+const STATS_GRAIN = 100_000_000;
 /* R61, R62: A BYTE ANSWER, AS ITS OWNER GAVE IT. A served file (an answer at 200 or 206 carrying its owner's digest header,
    which no JSON answer carries; a file's own content type may be anything, JSON or text included) is relayed whole
    — its bytes, content type, length and digest header (`x-capture-sha256` for an original, `x-derived-sha256` for a view
@@ -805,7 +807,8 @@ export async function deliverOwedRender({ ctx, env, storeName = "bio", answer, s
     /* R123: the reading follows the filing */
     let pending = false;
     const filedAt = new Date().toISOString();
-    if (!(doc.reading && typeof doc.reading === "object")) {
+    /* (fix round 6, G43; K4651) a reading the promotion left out of the provenance file (`readingDropped`: too large to embed) is followed as one never made */
+    if (made.readingDropped === true || !(doc.reading && typeof doc.reading === "object")) {
       let held = null;
       if (!tooBigToReadInline(doc)) {
         try { held = await extractionOf(ctx).readHeld({ sha, storeName, env }); } catch { held = null; }
@@ -1914,7 +1917,11 @@ export function makeFetch(hooks = {}) {
        the SERVER from the class that authenticated, AFTER the caller's parameters were copied, so a
        caller's `capacity=1` is overwritten. `admin` is the ADMIN_TOKEN class and the ROOT-admin
        session; an admin-ROLE member signs in as class `member` and does not receive it. */
-    if (op === "stats") inner.searchParams.set("capacity", cls === "admin" ? "1" : "0");
+    /* G42 (K4635, K4638): an administering member's session is stamped capacity as well, and is answered `dbBytes` floored
+       to a whole STATS_GRAIN (below, at the answer): no single write, a lead's included, is visible at that grain, which is
+       the residue the paragraph above guarded against. ADMIN_TOKEN and the founder (class `admin`) keep the exact figure. */
+    if (op === "stats")
+      inner.searchParams.set("capacity", cls === "admin" || (viaSession && sessRights.administer) ? "1" : "0");
     if (op === "memberlist")
       inner.searchParams.set("administer",
         (viaSession ? !!sessRights.administer : cls === "admin") ? "1" : "0");
@@ -2384,13 +2391,20 @@ export function makeFetch(hooks = {}) {
         archiveProject = b && typeof b.project === "string" ? b.project : null;
         captureStep = b && typeof b.step === "string" ? b.step : null;   /* R71: the step a member's fetch is a product of */
       } catch { archiveProject = null; }
+    /* (fix round 6, G43; K4651) what an archive's promotion filed without its reading (too large to embed in the provenance file) is followed here, as
+       a document stored with none is */
+    async function promoteFiled(docs, archiveSha) {
+      const dropped = [];
+      const done = await promoteArchive({ stub, doAnswer, docs, project: archiveProject, archiveSha, who: archiveWho, onDropped: (e) => dropped.push(e) });
+      if (dropped.length) await followEntries(dropped);
+      return done;
+    }
     async function promoteAcquired(res) {
       let b = null;
       try { b = await res.clone().json(); } catch { return res; }
       const docs = archiveDocuments("acquire", b);
       if (!docs.length) return res;
-      const done = await promoteArchive({ stub, doAnswer, docs, project: archiveProject, archiveSha: b.document?.capture?.sha256 ?? null,
-                                          who: archiveWho });
+      const done = await promoteFiled(docs, b.document?.capture?.sha256 ?? null);
       return json({ ...b, ...done }, res.status);
     }
     /* R62 (rev. 2 conflict (c); K1888 (3), K1892; DEC-173; BOB's review (8), K2130): A MEMBER'S OPENING OF AN ORIGINAL GOES
@@ -3835,6 +3849,10 @@ export function makeFetch(hooks = {}) {
     if (out.refused) return storeRefusal(out, { store: storeName, tokenClass: cls });
     if (!out.answered) return storeSilent(op, out.correlation);
     const { body, status } = out.reply;
+    if (op === "stats" && cls !== "admin" && viaSession && sessRights.administer && body.result
+        && typeof body.result.dbBytes === "number")
+      return json({ ...body, result: { ...body.result, dbBytes: Math.floor(body.result.dbBytes / STATS_GRAIN) * STATS_GRAIN },
+                    store: storeName, tokenClass: cls }, status);
     /* (signin-door R1, R4; credentials R16): a member who is revoked is signed out of their own runner, after the act
        and whatever the runner answers; the act's answer is unchanged. */
     const leaver = leaverOf(op, reqBody, body.result, stampOf.by);
@@ -3852,8 +3870,7 @@ export function makeFetch(hooks = {}) {
     if (op === "unpack" && body.result && body.result.ok === true) {
       const docs = archiveDocuments("unpack", body.result);
       if (docs.length || Array.isArray(body.result.documents)) {
-        const done = await promoteArchive({ stub, doAnswer, docs, project: archiveProject,
-                                            archiveSha: body.result.archive?.sha256 ?? null, who: archiveWho });
+        const done = await promoteFiled(docs, body.result.archive?.sha256 ?? null);
         return json({ ...body, result: { ...body.result, ...done }, store: storeName, tokenClass: cls }, status);
       }
     }
