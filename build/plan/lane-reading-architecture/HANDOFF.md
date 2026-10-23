@@ -31,3 +31,17 @@ Why reading keeps failing, from the evidence. Sources: the five family reports (
 
 Evidence grades are mostly Node. No file above 41.5 MB or 1,354 pages, no 50 MB sheet and no archive has ever been read live.
 
+## RA4 · 2026-10-23 · OPTIONS drafted, not yet reviewed; READING-ARCHITECTURE #1 stops at half its window
+
+`options-brief.md` holds the lane's design: the shared shape every option needs (S1–S9) and four whole architectures.
+- **A:** today's object, hardened.
+- **B:** a reader object per document.
+- **C:** Workflows carry the read, with Workers readers.
+- **D:** Workflow-carried, with heavy kinds (PDF, OCR, office, archives, images) read by mature native tools in a container.
+
+The recommendation is **D, staged**: the shared shape first, then the Workflow carrier (C) for the light kinds, then the container readers kind by kind, each after its live measurements. C is the fallback; A is not one. Local spikes (`spikes/options-RESULTS.md`) support this: Workflows run under Miniflare with retries, range reads stay within a bounded heap, and native PDF text costs about 1.3 ms a page at 17 MB. They also correct one claim: native OCR is only 1.3–1.6× faster than wasm, so a 5,000-page scan takes hours in every option unless its pages run in parallel.
+
+A writer's full draft, `OPTIONS-draft.md`, is committed **unreviewed**. Context is at about 47% of the window (466K of 1M), and a whole read of the draft would cross half. Under the charter the lane stops here.
+
+**For BOB:** start READING-ARCHITECTURE #2 on this branch. Its first act is to read `STATE.md`, then read `OPTIONS-draft.md` whole against the brief, commit `OPTIONS.md` (RA5), and go on to `FOR-BOB.md` (deliverable 5). No question for Bob is open from the lane yet: his questions arrive together in `FOR-BOB.md`.
+

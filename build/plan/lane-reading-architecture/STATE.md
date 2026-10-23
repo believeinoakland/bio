@@ -1,6 +1,6 @@
 # READING-ARCHITECTURE lane: state for the next session
 
-**Status** · Written by READING-ARCHITECTURE #1 (`session_01Gpv8oKYGd6HrRswr3cXHmy`), 2026-10-23, at about 41% of its context window. Replaced whole at each handoff. Read with `CHARTER.md` and `HANDOFF.md`.
+**Status** · Written by READING-ARCHITECTURE #1 (`session_01Gpv8oKYGd6HrRswr3cXHmy`), 2026-10-23, at about 47% of its context window (final). Replaced whole at each handoff. Read with `CHARTER.md` and `HANDOFF.md`.
 
 ## Done (committed on `lane/reading-architecture`)
 
@@ -12,9 +12,9 @@
 
 ## In progress: deliverable 4, `OPTIONS.md`
 
-- The lane's design is written as a brief: the shared shape S1–S9 every option needs, four whole architectures (A hardened in-object; B a reader object per document; C Workflows carry the read with Workers readers; D Workflow-carried with container-read heavy kinds), the comparison axes, and the recommendation (D, staged: the shared shape first, then the Workflow carrier with the light kinds, then container readers kind by kind, each after its live measurements). The brief is copied to `options-brief.md` in this folder; OPTIONS.md must keep its substance.
-- Spikes for OPTIONS (Workflows in Miniflare; native tools vs wasm; a range-read check) were started in scratch. If the session ended before their results were committed, re-run them: the prompt is in the brief's spirit and `spikes/RESULTS.md` shows the method.
-- Next: a writer (sonnet, medium) expands the brief into `OPTIONS.md` reading REQUIREMENTS, PLATFORM and CHALLENGES whole (about 310 KB: split it, or give the writer only §1 and §7 of CHALLENGES plus the brief, with the rest read by helpers); the lane reads the draft whole, corrects it, commits it, and adds RA4.
+- The lane's design is `options-brief.md`: the shared shape S1–S9, four whole architectures A–D, the comparison axes, the recommendation (D, staged; C the fallback; A not a fallback) and the spike results that bind it (`spikes/options-RESULTS.md`: Workflows run locally but resumed only when poked after a restart; native OCR is only 1.3–1.6x wasm, so D's case is memory headroom and format coverage, not OCR speed).
+- A writer (sonnet, medium) expanded it into **`OPTIONS-draft.md` (79 KB), committed UNREVIEWED.** Its writer's notes, to check: WN1 sheet-worker is the formula-recompute engine, not a reader (the brief's A/B lists were wrong); WN2 agent-runner's 27 s start was the default instance size; WN3 three OCR times per page in the inputs (1.6 s live, 6.7–7.9 s spike, 10.4 s comment); WN4 D drawn with "the kind decides", a size threshold left to BOB; WN5 a readers-only bundle idle of 20 MB is an assumption; WN6 RR-F1's "64 MB above idle" cannot hold at an 87 MB idle. It added three points beyond the brief, marked: interactive point reads (`cellsOf`, `cropOf`) must not depend on a cold container; D's exposures (native tools against "no character guessed", GPL/AGPL licences to check, hostile input, no container here has read a real file); a thin job-progress check in C.
+- **Next (successor's first act):** read `OPTIONS-draft.md` whole against `options-brief.md`; correct it; save as `OPTIONS.md`, delete the draft, add RA5, push.
 
 ## Then
 
