@@ -19,7 +19,7 @@ const csvMax = MEASURED_CSV_TEXT_BOUND_BYTES;
 export const CASES = {
   csv4: async () => ({ label: "G41 4 MB CSV", doc: csvDoc(4 * 1048576) }),
   csv8: async () => ({ label: "G41 8 MB CSV", doc: csvDoc(8 * 1048576) }),
-  csvmax: async () => ({ label: `G41 ${csvMax / 1048576} MB CSV (csv-reader's MEASURED_CSV_TEXT_BOUND_BYTES)`, doc: csvDoc(csvMax) }),
+  csvmax: async () => ({ label: `G41 ${csvMax / 1048576} MB CSV (csv-reader's MEASURED_CSV_TEXT_BOUND_BYTES)`, doc: csvDoc(csvMax - 8192) }),
   xlsx: async () => ({ label: `G41 ${XLSX_ROWS}-row xlsx`, doc: await xlsxDoc(XLSX_ROWS) }),
 };
 

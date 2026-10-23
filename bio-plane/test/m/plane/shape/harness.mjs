@@ -78,11 +78,13 @@ export function shapeRun(spec, { capMB = null, semiMB = 2, timeoutMs = 1_800_000
 /** One run as text: the cap, whether the child died, then a line per tick (ms, peak MB, rows, units) and the end state. */
 export function report(label, r) {
   const L = [`${label}: cap ${r.capMB ?? "none"} MB, ${r.died ? `CHILD DIED (${r.signal || "exit " + r.code}${r.timedOut ? ", timed out" : ""}): ${r.error || r.stderr}` : "child survived"}`];
+  if (r.fed && r.fed.format) L.push(`  upload profile format: ${JSON.stringify(r.fed.format)}`);
+  if (r.fed && r.fed.held) L.push(`  held in the stand-in bucket (key tail, real bytes, stated length): ${JSON.stringify(r.fed.held)}`);
   if (r.fed) L.push(`  fed: ${r.fed.bytes} B in ${r.fed.parts} part(s), upload ${r.fed.uploadMs} ms, keep_pending ${r.fed.keep_pending}, idle heap ${r.fed.idleMB} MB, ledger [${r.fed.ledger}], stubs ${r.fed.door.stubs}, stub faults ${r.fed.door.threw}`);
   for (const t of r.ticks) L.push(`  tick ${t.n}: ${t.ms} ms, peak heap+buffers ${t.peakMB} MB (${t.aboveBaseMB} above base), rows [${t.rows.map((x) => `${x.kind} att ${x.attempts} int ${x.interrupted}${x.final_why ? " final: " + x.final_why : ""}`)}], units ${t.units}${t.readingFor ? `, readingFor ${JSON.stringify(t.readingFor)}` : ""}`);
   if (r.done) { const d = r.done; L.push(`  done: ${d.ticks} ticks, ${d.totalMs} ms, max tick ${Math.max(0, ...r.ticks.map((t) => t.ms))} ms, peak ${d.peakMB} MB, units ${d.units}, state ${JSON.stringify(d.state)}, found ${JSON.stringify(d.found)}, search ${JSON.stringify(d.search)}, extents ${JSON.stringify(d.extents)}, left [${d.left}]`); }
   if (r.done && r.done.largest) L.push(`  largest stored value: ${r.largestStored} B (readings ${r.done.largest.readings}, reading_history ${r.done.largest.history}, capture_text ${r.done.largest.text}); bound ${STORED_VALUE_BOUND} B: ${r.overBound ? "OVER" : "within"}; shim ${r.shim}`);
-  if (r.cells) L.push(`  cellsOf last row ${r.cells.lastRow}: ${r.cells.error ? "ERROR " + r.cells.error : `${r.cells.values.length} cells in ${r.cells.ms} ms, peak ${r.cells.peakMB} MB, equal to the generator's ${JSON.stringify(r.cells.values) === JSON.stringify(r.cells.expected)}, interpreted ${JSON.stringify(r.cells.interpreted)}, next_row ${r.cells.next_row}`}`);
+  if (r.cells) L.push(`  cellsOf last row ${r.cells.lastRow}: ${r.cells.error ? "ERROR " + r.cells.error : `${r.cells.values.length} cells in ${r.cells.ms} ms, peak ${r.cells.peakMB} MB, equal to the generator's ${JSON.stringify(r.cells.values) === JSON.stringify(r.cells.expected)}, interpreted ${JSON.stringify(r.cells.interpreted)}, next_row ${r.cells.next_row}${r.cells.answer ? ", answer " + r.cells.answer : ""}`}`);
   if (r.reading) { const g = r.reading; L.push(`  op=reading answer: ${g.unitsInAnswer} units, ${g.answerBytes} B, ${g.ms} ms, peak ${g.peakMB} MB, next ${g.next}, more ${g.more}, read_through ${g.read_through}/${g.total}, unread_pages ${g.unread_pages ? g.unread_pages.length : "absent"}, completeness ${JSON.stringify(g.completeness && { state: g.completeness.state, why: g.completeness.why })}, basis \"${String(g.basis || "").slice(0, 170)}\"`); }
   { const p = r.pages; if (p) L.push(`  op=reading paged by next: ${p.pages} pages, ${p.units} units, largest answer ${p.largestBytes} B, peak ${p.peakMB} MB`); }
   if (r.pagingDied) L.push("  op=reading paged by next: THE CHILD DIED PAGING");
@@ -199,7 +201,7 @@ async function child(spec) {
   if (!open().some((r) => r.kind === "keep")) { const r = await call(`http://do/pendingadd?kind=reading&sha=${sha}&store=bio`, { method: "POST" }); if (r.status !== 200) { emit({ ev: "error", message: "pendingadd " + r.status }); process.exit(4); } }
   global.gc(); global.gc();
   const base = used(), idle = v8.getHeapStatistics().used_heap_size;
-  emit({ ev: "fed", sha, bytes, parts, keep_pending: keepPending, uploadMs, baseMB: mb(base), idleMB: mb(idle), ledger: rows().map((r) => r.kind), door, fault: !!spec.fault });
+  emit({ ev: "fed", sha, bytes, parts, keep_pending: keepPending, uploadMs, baseMB: mb(base), idleMB: mb(idle), ledger: rows().map((r) => r.kind), door, fault: !!spec.fault, format: document.profile && document.profile.format, held: [...bucket.held].map(([k, v]) => [k.slice(-12), v.byteLength, v.length]) });
 
   /* THE TICKS: one alarm each, as the platform fires them, until nothing is owed */
   const sql = (q, ...a) => [...ctx.storage.sql.exec(q, ...a)];
@@ -247,8 +249,14 @@ async function child(spec) {
       if (typeof ex.cellsOf !== "function") throw new Error("extraction.cellsOf is not provided");
       const sheet = gen.sheet || (await import("../../../../src/csv-reader/index.mjs")).CSV_SHEET_NAME;
       const got = await ex.cellsOf(sha, sheet, { fromRow: gen.lastRow, toRow: gen.lastRow }); sample();
+      let direct = null;   /* when the cells are not made: the reading-pipeline's own answer for the same range, to say why (the extraction answer states only its reason) */
+      if (!(got.cells || []).length) try {
+        const fmt = (sql(`SELECT capture_format AS f FROM readings WHERE capture_sha=?`, sha)[0] || {}).f;
+        const d = await (await import("../../../../src/reading-pipeline/index.mjs")).cellsInRange(ex.core.evidenceStore(), document, { format: fmt, sheet, fromRow: gen.lastRow, toRow: gen.lastRow, maxCells: 100 });
+        direct = JSON.stringify({ format: fmt, ok: d.ok, reason: d.reason, why: d.why, cells: (d.cells || []).length }).slice(0, 300);
+      } catch (e) { direct = "threw " + String(e && e.message || e).slice(0, 200); }
       emit({ ev: "cells", ms: Date.now() - tc, peakMB: mb(peak), lastRow: gen.lastRow, expected: gen.lastCells, values: (got.cells || []).map((c) => String(c.value)), interpreted: got.interpreted ?? null, next_row: got.next_row ?? null,
-             answer: got.ok === false ? got : undefined });
+             answer: (got.cells || []).length ? undefined : JSON.stringify(got).slice(0, 400) + (direct ? " | direct: " + direct : "") });
     } catch (e) { emit({ ev: "cells", ms: Date.now() - tc, lastRow: gen.lastRow, expected: gen.lastCells, error: String(e && e.message || e).slice(0, 300) }); }
   }
   /* then the member's own read of the finished reading (`op=reading`, extraction's `readingFor`): up to 4,096 units in one answer */
