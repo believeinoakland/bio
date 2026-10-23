@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { uploadInstall, uploadUpdate, namesFor, OBSERVABILITY } from "../../src/steps/index.mjs";
-import { word } from "../../../bio-plane/src/setup-words/index.mjs";
+import { word, localize } from "../../../bio-plane/src/setup-words/index.mjs";
 import { session, immediateTimers, account, release, chosen, realFetch, CAPABLE_SRC } from "./world.mjs";
 
 let restoreTimers;
@@ -55,5 +55,23 @@ test("R40: a settings answer that states observability disabled is refused as on
     return Response.json({ ...j, result: { ...j.result, observability: { enabled: false } } });
   };
   await assert.rejects(update(await bundle()), (e) => e.message === word("installer.fleet.why.program"));
+  w.restore();
+});
+
+test("R40: settings that cannot be read do not stop the act: it continues and says the logs could not be confirmed (a lasting failure is rethrown, as heldBindings does)", async () => {
+  for (const [name, act, pre] of ACTS) {
+    for (const blind of [{ settingsBlind: true }]) {
+      const w = account({ pre, ...blind });
+      const said = [];
+      await act(await bundle(), { note: (t) => said.push(t) });
+      assert.deepEqual(said, [localize("installer-steps.plane.logsunconfirmed", "The installer could not confirm that your Cloudflare account switched on the logs of your team's Civicsmith.")], name);
+      assert.equal(w.schedules.size, 1, name + ": the schedule is still set");
+      w.restore();
+    }
+  }
+  const w = account({ pre: { grp: [] } });
+  const said = [];
+  await update(await bundle(), { note: (t) => said.push(t) });
+  assert.deepEqual(said, [], "readable settings say nothing");
   w.restore();
 });

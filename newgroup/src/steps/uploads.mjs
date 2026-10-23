@@ -1,10 +1,10 @@
 /* R12, R13, R15: the plane's two uploads, whether it is already as the release wants it, and its secrets. */
-import { cf } from "./api.mjs";
+import { cf, special } from "./api.mjs";
 import { rand, uploadForm } from "./bytes.mjs";
 import { scriptHash, releaseSha } from "./readback.mjs";
 import { planeCronsOfStream } from "./statements.mjs";
 import { setSchedules } from "./containers.mjs";
-import { word } from "../../../bio-plane/src/setup-words/index.mjs";
+import { word, localize } from "../../../bio-plane/src/setup-words/index.mjs";
 import { selfBinding, BROWSER_BINDING, memberBindings, instanceAiBinding, sealBinding, profilesBinding, ownHostsBinding, SEAL_BINDING, PROFILES_BINDING } from "./bindings.mjs";
 
 /* R39 (K4566; fix round 6, G1) — THE PLANE'S SCHEDULE. The plane's one cron is the watchdog that heals a stalled object, and
@@ -28,9 +28,19 @@ const setPlaneSchedules = (token, acct, slug, crons) => setSchedules(token, acct
    Stand-in for the sentence: `installer.fleet.why.program`; the row owed is `installer-steps.plane.observability`, one line
    for "your Cloudflare account did not switch on the plane's logs". */
 export const OBSERVABILITY = Object.freeze({ enabled: true });
-async function observabilityHeld(token, acct, slug) {
-  const s = await cf(token, `/accounts/${acct}/workers/scripts/${slug}/settings`);
-  if (s?.observability?.enabled !== true) throw new Error(word("installer.fleet.why.program"));
+/* Refused only when the settings ARE read (they state their bindings) and the setting is not enabled. A read that fails, or
+   answers nothing readable, is unknown, never "off" (as `heldBindings`): the act continues and `opts.note` is told, in words,
+   that the logs could not be confirmed (row owed `installer-steps.plane.logsunconfirmed`); an approval or a lasting wait is
+   rethrown as everywhere. */
+async function observabilityHeld(token, acct, slug, note) {
+  let s;
+  try { s = await cf(token, `/accounts/${acct}/workers/scripts/${slug}/settings`); }
+  catch (e) { if (special(e)) throw e; s = null; }
+  if (!s || !Array.isArray(s.bindings)) {
+    if (typeof note === "function") note(localize("installer-steps.plane.logsunconfirmed", "The installer could not confirm that your Cloudflare account switched on the logs of your team's Civicsmith."));
+    return;
+  }
+  if (s.observability?.enabled !== true) throw new Error(word("installer.fleet.why.program"));
 }
 
 /* `opts.noSelf` exists for ONE reason: an install PUT names a service binding to
@@ -90,7 +100,7 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
   };
   const put = await cf(token, `/accounts/${acct}/workers/scripts/${slug}`,
     { method: "PUT", body: uploadForm(meta, release.blob) });
-  await observabilityHeld(token, acct, slug);
+  await observabilityHeld(token, acct, slug, opts.note);
   await setPlaneSchedules(token, acct, slug, crons);
   return put;
 }
@@ -186,7 +196,7 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
   };
   const put = await cf(token, `/accounts/${acct}/workers/scripts/${slug}`,
     { method: "PUT", body: uploadForm(meta, release.blob) });
-  await observabilityHeld(token, acct, slug);
+  await observabilityHeld(token, acct, slug, opts.note);
   await setPlaneSchedules(token, acct, slug, crons);
   return put;
 }
