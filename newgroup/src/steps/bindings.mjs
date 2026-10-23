@@ -1,6 +1,7 @@
 /* R11: the bindings the uploads share, and the members a plane is bound to. The binding names are instance-setup's. */
 import { cf, special, approve } from "./api.mjs";
 import { scriptExists } from "./probes.mjs";
+import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 import { FLEET_BINDINGS } from "../../../bio-plane/src/setup-fleet.mjs";
 
 /* REC-26 / D-102 again: the instance name IS the worker name, so a Worker's
@@ -130,10 +131,59 @@ export const PROFILES_BINDING = "JURISDICTION_PROFILES";
 const profilesBinding = (ids) => Array.isArray(ids) && ids.length
   ? [{ type: "plain_text", name: PROFILES_BINDING, text: ids.join(",") }] : [];
 
+/* R41, R42 (fix round 7 G83; K4746, K4747, K4752) — WHERE THE TEAM'S RECORD OBJECT IS CREATED. Cloudflare creates it wherever
+   its first `get()` runs and never moves it, so the plane is told, in one plain-text binding `STORE_LOCATION`, the hint to
+   pass at every `get()`. The installer reads the founder's `cf` once, at the door, and hands the hint to the install's first
+   upload; every later upload restates what the script holds (a plain text is not in `keep_bindings`), a room never moves, and
+   nothing here invents a place or a generation. `LOCATION_HINTS` is this module's own copy of Cloudflare's eleven hints (R35:
+   it imports no other module); a test of the suite keeps it equal to `runtime-limits`' list. A hint is where the hosting
+   platform runs the room, never a jurisdiction. */
+export const LOCATION_BINDING = "STORE_LOCATION";
+export const GENERATION_BINDING = "STORE_GENERATION";
+export const LOCATION_HINTS = Object.freeze(["wnam", "enam", "sam", "weur", "eeur", "apac", "apac-ne", "apac-se", "oc", "afr", "me"]);
+/* A longitude is a finite number or a non-blank numeric string (Cloudflare sends a string); `Number("")` is 0, so blank is missing. */
+const longitudeOf = (v) => {
+  const n = typeof v === "number" ? v : typeof v === "string" && v.trim() !== "" ? Number(v) : NaN;
+  return Number.isFinite(n) ? n : null;
+};
+/* Continent and longitude only, no country table; anything else, or a missing field, answers null: never a guess. */
+function locationHintFor(cf) {
+  const lon = longitudeOf(cf?.longitude);
+  switch (cf?.continent) {
+    case "NA": return lon === null ? null : lon < -98 ? "wnam" : "enam";
+    case "EU": return lon === null ? null : lon < 20 ? "weur" : "eeur";
+    case "AS": return lon === null ? null : lon < 60 ? "me" : "apac";
+    case "SA": return "sam";
+    case "AF": return "afr";
+    case "OC": return "oc";
+    default: return null;
+  }
+}
+const storeLocationBinding = (h) => typeof h === "string" && LOCATION_HINTS.includes(h) ? [{ type: "plain_text", name: LOCATION_BINDING, text: h }] : [];
+
+/* The place the held plane script carries, as the bindings to restate: the values of `STORE_LOCATION` and `STORE_GENERATION` it
+   holds, as they are (none held, none restated). A script that does not exist holds none (404). A script whose settings cannot
+   be read refuses the act here, before anything is uploaded, since a value not restated is dropped; an `approveAgain` or a
+   `lasting` error is rethrown. Stand-in for the sentence: `installer.fleet.why.program`; the row owed is `installer-steps.plane.heldplace`, one line
+   for "your Cloudflare account would not show what your team's Civicsmith already holds, so nothing was uploaded". */
+async function heldPlace(token, acct, slug) {
+  let s;
+  try { s = await cf(token, `/accounts/${acct}/workers/scripts/${slug}/settings`); }
+  catch (e) {
+    if (special(e)) throw e;
+    if (e && e.status === 404) return [];
+    s = null;
+  }
+  if (!s || !Array.isArray(s.bindings))
+    throw new Error(word("installer.fleet.why.program"));
+  return s.bindings.filter((b) => b && b.type === "plain_text" && typeof b.text === "string" && (b.name === LOCATION_BINDING || b.name === GENERATION_BINDING))
+    .map((b) => ({ type: "plain_text", name: b.name, text: b.text }));
+}
+
 /* R46: the copy's Workers, by script name: the plane, and every member it binds or the release names. */
 function copyWorkers(slug, release, names) {
   const out = [slug, ...BINDING_OF.keys()].map((n) => (n === slug ? n : names.member(n)));
   for (const m of Array.isArray(release.man?.fleet) ? release.man.fleet : []) if (m && typeof m.member === "string") out.push(names.member(m.member));
   return [...new Set(out)];
 }
-export { selfBinding, BINDING_OF, memberBindings, membersPresent, instanceAiBinding, sealBinding, heldBindings, ownHostsBinding, hostOf, profilesBinding, copyWorkers };
+export { selfBinding, BINDING_OF, memberBindings, membersPresent, instanceAiBinding, sealBinding, heldBindings, ownHostsBinding, hostOf, profilesBinding, copyWorkers, locationHintFor, storeLocationBinding, heldPlace };
