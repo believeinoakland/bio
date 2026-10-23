@@ -467,3 +467,12 @@ QUESTION (G47, two things I need before I can finish; I carry on with the rest o
 **Proposed requirement lines (R14 amended).** "The document is measured as built; over `publication`'s `CASE_DOCUMENT_BYTES_MAX` the act is refused `CASE_DOCUMENT_TOO_LARGE` (C-136.9) carrying `size`, `bound`, `materials` and `members`, before any side effect, and a refusal of the store is the act's refusal, never a prepared document with no `doc_sha`. The document declares its format through `case-grammar`'s `caseDocumentFormatFor` over its attestation rows (`/9` only when a row carries a `sha`, else `/8`)."
 
 **Size (session_01MN9xdJBsqY5jNetBuRbobY): test runs 9, module lines 3056** (`bio-plane/src/case-authoring/*.mjs`).
+
+## J24 · COMPLETE
+
+COMPLETE for G47 (B26 START, B27, B28). Record: build/jobs/T51/case-authoring.md, "Fix round 6, G47: completion record", pushed.
+Changed: checks.mjs C-136.9 CASE_DOCUMENT_TOO_LARGE (words a localize stand-in, owed to UX-DESIGN B491); index.mjs #publishCase measures docText right after it is built and refuses over publication's CASE_DOCUMENT_BYTES_MAX (1,572,864 B, read from its exports) before any side effect, and a refused store (ok false / no doc_sha) is the act's refusal; document.mjs writes format and passes it to attribution/lens lines via caseDocumentFormatFor (/9 only with an attestation sha).
+Tests: g47-refusal.test.mjs (b, c, d): (c) red then green on old source; (b)/(d) red by name until PUBLICATION merged, green now. R17 green and now also asserts /9 for 501 captures of one source. R55's three deepEqual tests gained sha: null. Module suite 244/244 under the preload. format 0, architecture 0, coverage 58/58, words 0, ownership 0.
+Reds remaining: none of mine. CASE-CHECKER #16 and CASE-INPUTS #8 were not merged when I last merged; nothing of mine waits on them. Users: all pass except 11 failures that fail identically with my source replaced by the tranche's (screens-publish R3/R4/R24 words, screens-intake t51-fix5 R31, affordances t36, screens-action contract, plane release R24).
+Protective bound: none set here; the number is publication's 1,572,864 B (K1881 yours to report). Census ops: no accepted key changes. Screen row for C-136.9: yours to settle with the design stream.
+Proposed R14 lines and the Size line are in the record.
