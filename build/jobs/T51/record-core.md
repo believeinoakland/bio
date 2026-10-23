@@ -1,6 +1,6 @@
 # record-core (T51)
 
-**Status** · session_01JW6vYMw9VE4YLAc84eswpM · depth 2 · WAITING ON BOB (J6) · handled B6
+**Status** · session_01JW6vYMw9VE4YLAc84eswpM · depth 2 · WAITING ON BOB (J6) · handled B7
 
 ## Completion (T51-177)
 
