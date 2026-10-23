@@ -1,6 +1,6 @@
 # instance-setup (T51)
 
-**Status** · session_019X53EdmQwW5EaH384CWbSf · depth 2 · WAITING ON BOB (J13) · handled B10
+**Status** · session_019X53EdmQwW5EaH384CWbSf · depth 2 · COMPLETE · handled B10
 
 ## J1 · REPORT · re B1
 
