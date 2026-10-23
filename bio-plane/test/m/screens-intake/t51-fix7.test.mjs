@@ -122,3 +122,25 @@ test("R61 (G43) control: a document whose reading fits is filed with it by the a
   await p.settle();
   assert.deepEqual(JSON.parse(provOfPage(p).text).documents[0].text_units, [{ n: 1, text: "a,b" }]);
 });
+
+/* B39 (K4657): a reading whose text units the door cut is no whole reading, however small its file: embedded, promotion's projection would store it as the document's reading
+   and the rest of the text would never be read (a silent partial read, K4571) */
+const small = (more) => ({ ...docWith("a,b"), ...more });
+for (const [why, more] of [["a unit marked truncated", { text_units: [{ extent: "x", seq: 1, text: "a,b", truncated: true }] }],
+                           ["text_units_over_bound", { text_units_over_bound: true }], ["text_units_skipped above zero", { text_units_skipped: 3 }]]) {
+  test(`R61 (G43, B39) a small reading with ${why} is filed without it and answers readingDropped, so the follow reads the whole`, async () => {
+    const cs = stub(), doc = small(more);
+    assert.ok(fits(doc) < BOUND);
+    const made = await promoteDocument(cs, { doc, title: "Sheet", locator: "", project: "" });
+    assert.equal(made.readingDropped, true);
+    const got = JSON.parse(provOf(cs).text).documents[0];
+    for (const k of ["reading", "text_units", "text_units_over_bound", "text_units_skipped"]) assert.ok(!(k in got), `${k} is gone`);
+  });
+}
+
+test("R61 (G43, B39) control: whole units (none truncated, none over the bound, none skipped) keep the reading", async () => {
+  const cs = stub(), doc = { ...docWith("a,b"), text_units: [{ extent: "x", seq: 1, text: "a,b", truncated: false }], text_units_over_bound: false, text_units_skipped: 0 };
+  const made = await promoteDocument(cs, { doc, title: "Sheet", locator: "", project: "" });
+  assert.equal(made.readingDropped, undefined);
+  assert.equal(provOf(cs).text, JSON.stringify({ documents: [doc] }, null, 1));
+});

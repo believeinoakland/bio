@@ -131,7 +131,10 @@ async function promoteDocument(cs, o) {
      large file is. `prov.length` first (a code unit is never fewer than one byte), then the UTF-8 length. */
   const PROV_EMBED_MAX = 1048576 - 65536; /* inside the function: the page is served function by function */
   let prov = JSON.stringify({ documents: [doc] }, null, 1), readingDropped = false;
-  if (prov.length > PROV_EMBED_MAX || len(prov) > PROV_EMBED_MAX) {
+  /* B39 (K4657): and a reading whose units the door cut (a unit `truncated`, units over the bound or skipped) is not the document's whole reading however small
+     its file: promotion's projection would keep it as if whole and the rest of the text would never be read */
+  const cut = (Array.isArray(doc.text_units) && doc.text_units.some((u) => u && u.truncated === true)) || doc.text_units_over_bound === true || Number(doc.text_units_skipped) > 0;
+  if (cut || prov.length > PROV_EMBED_MAX || len(prov) > PROV_EMBED_MAX) {
     const { reading: _r, text_units: _u, text_units_over_bound: _o, text_units_skipped: _k, ...unread } = doc;
     prov = JSON.stringify({ documents: [unread] }, null, 1);
     readingDropped = true;
