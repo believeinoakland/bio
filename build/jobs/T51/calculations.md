@@ -323,4 +323,4 @@ Requirement line: R44 is met by this change; BOB removes its "not yet met" mark.
 
 **Suites and checks.** `test/m/calculations/` 114 of 114 (111 before; +3). Users: workbooks, contradiction, screens-investigate calculation, op-grades owners, op-declarations t33, screens-daily find-in, credentials t48: 239 tests, 231 pass, 0 fail (rest skipped). `node build/plan/impact.mjs origin/tranche/T51 HEAD` lists 78 modules, the reds in it (pdf-worker, agent-steps, agent-worker, control-plane, plane, journey-check …) are other modules' and none touches `declareTable`. civicos-process `checks/format.mjs` 0 failures; `architecture.mjs calculations` 0; `coverage.mjs calculations` 44 of 44 ids named, 0; `ownership.mjs` 0 failures; `checks/run.mjs` names no finding in calculations (words included). Census ops: none of mine changes its accepted keys. Deferred: none. Found in other modules: none.
 
-Size (session_01CQKpA3NbmkvjeXYd9nxaAk): test runs 6, module lines 3873
+Size (session_01CQKpA3NbmkvjeXYd9nxaAk): test runs 6, module lines 3860
