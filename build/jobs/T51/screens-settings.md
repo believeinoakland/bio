@@ -440,3 +440,8 @@ CORRECTION to J31 (it said checks 0 failures; the architecture check has 2): sto
 ## J33 · QUESTION
 
 Moved as ruled (K4648): g42-storage-seam.test.mjs is now bio-plane/test/m/plane/g42-storage-seam.test.mjs (one-file commit; passes 4/4 alone), the old file removed in a second commit, screens-settings' own tests unchanged (270 less the 4 seam tests; the screen's edges, member, null/absent stay on the fake plane). checks/run.mjs: architecture still 2 failures, now plane's: the test drives the screen through screens-settings' kit and fixtures (test/m/screens-settings/kit.mjs, fixtures.mjs), and plane does not declare screens-settings in uses. Fix is yours (modules.json): add screens-settings to plane's uses (plane 170 is later than 162, no cycle). Otherwise tell me how to drive the group screen from a plane test without its kit. Everything else: format, coverage, words, channels, ownership 0 failures.
+
+## After B44/B45 (K4648, K4652)
+
+The G42 seam test is `bio-plane/test/m/plane/g42-storage-seam.test.mjs` (own commit, moved from screens-settings' tests; plane's `uses` now holds screens-settings). Merged `tranche/T51`. screens-settings 266 tests plus the seam's 4 = 270 pass, 0 fail. `checks/run.mjs`: format, architecture, coverage, channels, words 0 failures. `ownership`: 1 failure, that one path (outside my paths; BOB accepts it by name at the merge, K4648).
+Size (session_01LW6V3mNSxPRyfn48u2tZEY): test runs 19, module lines 5417
