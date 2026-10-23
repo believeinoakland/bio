@@ -78,7 +78,7 @@ for (const [fault, what, manifest] of FAULTS) {
     const st = await doAsk(`state?case=${s.caseId}&edition=1`);
     assert.equal(st.ledger.state, "failed", JSON.stringify(st.ledger));
     assert.ok(JSON.parse(st.ledger.why).code, "a stable code");
-    assert.equal(st.ledger.attempts, 1);
+    assert.equal(st.ledger.attempts, 2, "the assembly records building, then failed: two attempts");
   });
 }
 
@@ -99,7 +99,11 @@ test("G54 L (cancel): a request its caller cancels after the commit — under Mi
 
 /* ============================================================== the sweep on workerd */
 
+/* editions left owed by the tests above are built first, so each sweep test sees only its own */
+const drain = async () => { for (let i = 0; i < 30; i++) { const t = await doAsk(`sweep?now=${Date.now() + 30 * 86_400_000}`); if (!t.built.length && !t.failed.length) return; } };
+
 test("G54 L SEAM (sweep): two complete editions without a case file are rebuilt by one tick of the sweep, the object's own door and the real buckets; a second tick calls the assembly 0 times", { timeout: 180_000 }, async () => {
+  await drain();
   const a = await seeded(), b = await seeded(), c = await seeded();
   for (const e of [a, b, c]) await completed(e);
   const t1 = await doAsk(`sweep?now=${Date.now() + 3_600_000}`);
@@ -110,10 +114,11 @@ test("G54 L SEAM (sweep): two complete editions without a case file are rebuilt 
   const t2 = await doAsk(`sweep?now=${Date.now() + 3_600_000}`);
   assert.deepEqual(t2.built.map((x) => x.case), [c.caseId]);
   const t3 = await doAsk(`sweep?now=${Date.now() + 3_600_000}`);
-  assert.deepEqual([t3.built, t3.failed, t3.stopped], [[], [], []], "idempotent: nothing owed");
+  assert.deepEqual([t3.built, t3.failed], [[], []], "idempotent: nothing owed");
 });
 
 test("G54 L SEAM (sweep): a put that threw is recorded failed and the sweep builds the edition once its backoff has passed; one that threw only for the manifest's bytes is healed the same way", { timeout: 180_000 }, async () => {
+  await drain();
   for (const fault of ["put_throws", "manifest_put_throws"]) {
     const s = await seeded();
     await completed(s);

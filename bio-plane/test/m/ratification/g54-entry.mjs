@@ -94,7 +94,7 @@ export class G54Held {
     st.sql.exec(`CREATE TABLE refs (bundle_id TEXT NOT NULL, target_id TEXT NOT NULL, kind TEXT NOT NULL DEFAULT '',
                                    PRIMARY KEY (bundle_id, target_id, kind))`);
     const none = { self: [], via: [] };
-    const publication = publicationOf(host, { storage: st, record, membership, promotion, now: () => NOW,
+    const publication = publicationOf(host, { storage: st, record, membership, promotion, now: () => new Date().toISOString(),
       inquiry: { exclusionsNaming: () => [] }, basisVersions: { testimonyReach: () => none },
       reevaluation: { registerCaseParts: () => ({ ok: true }) } });
     const publishSchedule = publishScheduleOf(host, { storage: st, record, membership, publication, now: () => NOW });
