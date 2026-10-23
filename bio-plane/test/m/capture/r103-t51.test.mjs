@@ -30,9 +30,9 @@ const up = (c, bytes, extra = {}) => c.uploadCapture({ bytes, statement: STATEME
 /* the plane's hand-off, recording what it is given (plane/pending.mjs keepLater) */
 const handOff = (c) => { const given = []; c.keepLater = async (k) => { given.push(k); return { ok: true }; }; return given; };
 
-test("R103 (F2): a 40 MiB upload in five parts is made whole under its digest by the store's real putFromParts, awaited inside the bound, with nothing owed", async () => {
+test("R103 (F2): with no ledger a 40 MiB upload in five parts is made whole under its digest by the store's real putFromParts, awaited inside the bound, with nothing owed", async () => {
   const { c, b, core } = setup();
-  const given = handOff(c);
+  const given = [];
   const big = varied(40 * MiB, 3);
   assert.ok(big.length > MULTIPART_KEEP_MAX);
   const r = await up(c, big);
@@ -46,19 +46,20 @@ test("R103 (F2): a 40 MiB upload in five parts is made whole under its digest by
   assert.deepEqual(b.calls.filter((x) => x[0] === "put" && x[1] === wholeKey(big)), [], "this module did not assemble the whole in memory");
 });
 
-test("R103 (F2): an upload whose keep does not end inside the bound is answered kept in its parts with keep_pending, and the plane is handed the whole's digest and its parts in order, so one alarm makes the whole", async () => {
+test("R103 (F2; G79): with the plane's ledger the keep of a file past MULTIPART_KEEP_MAX is handed over at once, in the parts' order, and the answer is not held for it: the store is not asked by the upload and the answer says keep_pending", async () => {
   const { c, b, core } = setup();
   const given = handOff(c);
   const real = core.evidenceStore();
   const asked = [];
   let release;
   const gate = new Promise((res) => { release = res; });
+  /* a keep that would never end inside the answer: if the upload awaited it, this test would not finish */
   core.evidenceStore = () => ({ ...real, putFromParts: async (d, p) => { asked.push({ d, p }); await gate; return real.putFromParts(d, p); } });
   const big = varied(40 * MiB, 4);
-  const r = await up(c, big, { boundMs: 5000 });
+  const r = await up(c, big, { boundMs: 60000 });
   assert.equal(r.ok, true, "the upload is not refused for the keep");
   assert.equal(r.keep_pending, true);
-  assert.deepEqual(r.document.parts.map((p) => p.sha256), asked[0].p, "the store was asked from the parts in order");
+  assert.deepEqual(asked, [], "the upload did not start the keep itself");
   assert.equal(given.length, 1);
   assert.deepEqual(given[0], { sha: sha(big), parts: r.document.parts.map((p) => p.sha256) });
   assert.equal(b.held.has(wholeKey(big)), false, "no whole yet");
@@ -69,17 +70,32 @@ test("R103 (F2): an upload whose keep does not end inside the bound is answered 
   assert.equal(sha(b.held.get(wholeKey(big))), sha(big), "the whole is held after the one alarm");
 });
 
+test("R103 (F2): with no ledger a keep that does not end inside the bound is answered kept in its parts, nothing claimed owed", async () => {
+  const { c, core } = setup();
+  const real = core.evidenceStore();
+  let release;
+  const gate = new Promise((res) => { release = res; });
+  core.evidenceStore = () => ({ ...real, putFromParts: async (d, p) => { await gate; return real.putFromParts(d, p); } });
+  const r = await up(c, varied(40 * MiB, 11), { boundMs: 5000 });
+  assert.equal(r.ok, true);
+  assert.equal(r.keep_pending, undefined, "no ledger took it");
+  release();
+});
+
 test("R103 controls: a store that refuses or throws is owed to the plane, never a refused upload; with no store call or no hand-off the upload still files in its parts", async () => {
   for (const how of ["refuse", "throw"]) {
-    const { c, core } = setup();
-    const given = handOff(c);
-    const real = core.evidenceStore();
-    core.evidenceStore = () => ({ ...real, putFromParts: async () => { if (how === "throw") throw new Error("down"); return { ok: false, reason: "EVIDENCE_STORE_REFUSED" }; } });
-    const big = varied(33 * MiB, 5);
-    const r = await up(c, big);
-    assert.equal(r.ok, true, how);
-    assert.equal(r.keep_pending, true, how);
-    assert.equal(given.length, 1, how);
+    /* with the ledger the keep is handed over without being tried; with none it is tried, fails, and nothing is claimed owed */
+    for (const ledger of [true, false]) {
+      const { c, core } = setup();
+      const given = ledger ? handOff(c) : [];
+      const real = core.evidenceStore();
+      core.evidenceStore = () => ({ ...real, putFromParts: async () => { if (how === "throw") throw new Error("down"); return { ok: false, reason: "EVIDENCE_STORE_REFUSED" }; } });
+      const big = varied(33 * MiB, 5);
+      const r = await up(c, big);
+      assert.equal(r.ok, true, how);
+      assert.equal(r.keep_pending, ledger ? true : undefined, how);
+      assert.equal(given.length, ledger ? 1 : 0, how);
+    }
   }
   { /* no putFromParts on the store: the parts stand, as before */
     const { c, core } = setup();
@@ -126,7 +142,6 @@ test("R103 controls: an upload within MULTIPART_KEEP_MAX is put whole by this mo
 
 test("R103: a second press of the same large file while the first keep is under way shares it: the store is asked once", async () => {
   const { c, core } = setup();
-  handOff(c);
   const real = core.evidenceStore();
   let asked = 0;
   core.evidenceStore = () => ({ ...real, putFromParts: async (d, p) => { asked++; await sleep(300); return real.putFromParts(d, p); } });
