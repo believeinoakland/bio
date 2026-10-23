@@ -1,0 +1,200 @@
+<title>Reading Files: Your Decisions</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one reading column; each decision a numbered block with options as a list and the recommendation set apart */
+:root{
+  --bg:#f6f7f9; --panel:#ffffff; --fg:#1d2430; --muted:#5a6475; --rule:#d9dee6;
+  --accent:#1f5f8b; --rec-bg:#e8f1f7; --rec-fg:#163f5c;
+  --display:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --body:"IBM Plex Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#12161c; --panel:#1a2029; --fg:#e4e8ee; --muted:#9aa5b5; --rule:#2c3440;
+  --accent:#7db7e0; --rec-bg:#17303f; --rec-fg:#cfe6f5; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161c; --panel:#1a2029; --fg:#e4e8ee; --muted:#9aa5b5; --rule:#2c3440;
+  --accent:#7db7e0; --rec-bg:#17303f; --rec-fg:#cfe6f5; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 64px}
+main{max-width:46rem;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1,h2{font-family:var(--display);text-wrap:balance;line-height:1.25;margin:0}
+h1{font-size:2rem;font-weight:600}
+h2{font-size:1.35rem;font-weight:600}
+.eyebrow{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+p{margin:0}
+section{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:22px 22px;display:flex;flex-direction:column;gap:12px}
+section.plain{background:transparent;border:none;padding:0}
+ul,ol{margin:0;padding-left:1.25rem;display:flex;flex-direction:column;gap:6px}
+.rec{background:var(--rec-bg);color:var(--rec-fg);border-radius:4px;padding:12px 14px}
+.rec b{font-weight:600}
+.ask{font-weight:600;color:var(--accent)}
+.summary{display:grid;grid-template-columns:auto 1fr auto;gap:6px 14px;font-size:.95rem}
+.summary div{min-width:0}
+.summary .n{color:var(--muted);font-variant-numeric:tabular-nums}
+.summary .r{font-weight:600;color:var(--accent);text-align:right}
+small,.muted{color:var(--muted)}
+</style>
+
+<main>
+  <header style="display:flex;flex-direction:column;gap:10px">
+    <div class="eyebrow">Civicsmith · reading files · for Bob</div>
+    <h1>Reading files: the decisions that are yours</h1>
+    <p class="muted">From the reading-architecture study you asked for on 23 October (K4812). BOB agrees with every recommendation below. You can answer with one line, for example “all as recommended”, or name the ones you want differently.</p>
+  </header>
+
+  <section>
+    <div class="eyebrow">Your answers at a glance</div>
+    <div class="summary">
+      <div class="n">1</div><div>Where reading runs</div><div class="r">D, staged</div>
+      <div class="n">2</div><div>Money: a capped container line</div><div class="r">(a) accept</div>
+      <div class="n">3</div><div>The alpha against your standard</div><div class="r">(b) ship, limits stated</div>
+      <div class="n">4</div><div>What “or” and “500 MB total” mean</div><div class="r">(a) and (a)</div>
+      <div class="n">5</div><div>Time told to a member</div><div class="r">(a) progress + “about”</div>
+      <div class="n">6</div><div>Safety holds and passwords</div><div class="r">(a) now, (c) later; no typed passwords</div>
+      <div class="n">7</div><div>What counts as text; Excel dates</div><div class="r">(a); (b)</div>
+      <div class="n">8</div><div>Safety limits inside your standard</div><div class="r">(a) as a class</div>
+      <div class="n">9</div><div>Beyond your list</div><div class="r">(a) TAR, GZ, 7z, Spanish</div>
+      <div class="n">10</div><div>Five smaller screen choices</div><div class="r">as recommended</div>
+    </div>
+  </section>
+
+  <section class="plain">
+    <h2>Why reading keeps failing</h2>
+    <p>Today all of a team's reading runs inside one small shared space on Cloudflare: the team's record, with about 128 MB of memory, doing one thing at a time. The record itself already uses 50 to 87 MB of that. A large file is read in a sliver of memory, on the same line of work that draws the member's screens. Each fix so far made one path work, then the same failure came back on another path or another kind of file. Nothing larger than 41.5 MB or 1,354 pages has ever been read on the live copy. Your standard is 100 MB or 5,000 pages.</p>
+    <p><b>What every option shares.</b> Each file gets one durable “reading job” before the member is answered, within 2 seconds. The file is then read piece by piece, each piece landing in the record as it is read. The member sees “being read, 1,200 of 5,000 pages” and can search what has landed so far. This shared part alone removes about half of the failure types. The options differ only in where the reading happens.</p>
+  </section>
+
+  <section>
+    <div class="eyebrow">Decision 1 · architecture</div>
+    <h2>Where reading runs</h2>
+    <ul>
+      <li><b>A. Keep reading inside the team's record, hardened.</b> Least new work, but keeps the cramped memory and slows screens while a file is read (Home took 7.7 s against about 3). Four rounds of hardening have not held.</li>
+      <li><b>B. Each file gets its own small reading space, built by us.</b> Fast screens, more memory; we still build the machinery that restarts reading after interruptions.</li>
+      <li><b>C. Cloudflare Workflows carries the long job.</b> A Cloudflare service built to carry long jobs through crashes and updates. Our own readers still do the reading, and they are where most failures come from; they would also need new code for kinds your list requires that we cannot read today (.doc, .xls, RTF, email files, TIFF, HEIC, GIF, WebP).</li>
+      <li><b>D. As C, but heavy files are read by established open-source tools on a larger Cloudflare machine (a “container”, 4 GB or more).</b> PDFs, scans, Office files, archives and images go there; text, CSV and web pages stay as in C. Memory stops being the limit, most required kinds come with the tools, and about 900 KB of our most fragile code is retired rather than repaired.</li>
+    </ul>
+    <div class="rec"><b>Recommended: D, built in stages.</b> The shared part first, then the Workflows carrier for light files, then each heavy kind moved to the larger machine only after it reads at least as faithfully as today on test files at your standard's sizes and on a live trial. C is the fallback if the larger machine disappoints. A is not a fallback: it keeps the cause of the failures.</div>
+    <p class="ask">Your decision: A, B, C or D.</p>
+  </section>
+
+  <section>
+    <div class="eyebrow">Decision 2 · money</div>
+    <h2>The container line on the bill</h2>
+    <p>Reading is cheap under every option: a 100 MB PDF about 3 cents; a 5,000-page scan about 20 cents to $1.20, almost all of it text recognition. A modest team's month of about 1,000 files costs about $1 to $2.50 before Cloudflare's included allowances, most of it inside them. D adds one line: the larger machine, about 7 cents an hour while awake, asleep when idle; at that load well under a dollar a month beyond the allowance.</p>
+    <ul>
+      <li><b>(a)</b> Accept the container line, with a cap on how many machines run at once (BOB sets it) and the monthly figure reported to you.</li>
+      <li><b>(b)</b> No container charges, which means option C.</li>
+    </ul>
+    <div class="rec"><b>Recommended: (a).</b></div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Decision 3 · the alpha</div>
+    <h2>The alpha against your standard</h2>
+    <p>Your standard is for the beta (K4632); now, a file inside its limit is read whole and never fails (K4630). Today's alpha has seven smaller safety limits BOB set, for example CSV read up to 17 MB, images up to 24 MB, the PDF reader up to 64 MB. The new architecture meets your standard, but in stages.</p>
+    <ul>
+      <li><b>(a)</b> The alpha waits until your full standard is met.</li>
+      <li><b>(b)</b> The alpha ships with its current limits, each told to members in plain words with the file's size and the limit, never shown as “read”; your standard is met by the beta.</li>
+      <li><b>(c)</b> The alpha ships with its current limits, unstated.</li>
+    </ul>
+    <div class="rec"><b>Recommended: (b).</b> Honest with members, and the alpha is not held hostage to the larger build. (c) would break your “never a silent partial read” ruling (K4571).</div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Decision 4 · meaning of your standard</div>
+    <h2>“100 MB or 5,000 pages” and “archives 500 MB total”</h2>
+    <p><b>“Or”</b> can mean refused above either limit, or only above both.</p>
+    <ul>
+      <li><b>(a)</b> Refused above either, the reason stated (“6,200 pages, more than the 5,000 your team's Civicsmith reads”). <b>(b)</b> Only above both. <b>(c)</b> Bytes only.</li>
+    </ul>
+    <div class="rec"><b>Recommended: (a).</b> A 50 MB file of 40 million short rows, or a small PDF of 20,000 pages, would take many hours and could not usefully be cited row by row or page by page.</div>
+    <p><b>“Total”</b> can mean the archive as uploaded, or everything inside once unpacked; compressed files often unpack to several times their size.</p>
+    <ul>
+      <li><b>(a)</b> The archive up to 500 MB, its unpacked contents up to 2 GB, each file inside within its own kind's limit. <b>(b)</b> 500 MB unpacked. <b>(c)</b> Keep today's 256 MB.</li>
+    </ul>
+    <div class="rec"><b>Recommended: (a).</b> A 500 MB zip of scanned records unpacks to more than 500 MB.</div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Decision 5 · time</div>
+    <h2>What a member is told while a big file is read</h2>
+    <p>A 5,000-page text PDF takes minutes under D. A 5,000-page scan takes hours under every option, because recognising text in a picture is slow: about 2 to 14 hours page by page, under 2 hours with several pages side by side (C and D can). Nothing large has been timed live yet.</p>
+    <ul>
+      <li><b>(a)</b> No promised time: “read 1,200 of 5,000 pages”, an estimate marked “about” once it can be measured, and a notice when it finishes or stops.</li>
+      <li><b>(b)</b> A promised maximum per kind (for example 15 minutes for the largest text file, 2.5 hours for the largest scan).</li>
+      <li><b>(c)</b> Progress only, no estimate.</li>
+    </ul>
+    <div class="rec"><b>Recommended: (a) now.</b> A promise can be considered once live trials have measured real rates; made before then it would be a false expectation.</div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Decision 6 · safety</div>
+    <h2>Virus holds and passwords</h2>
+    <p><b>Does a safety hold stop reading?</b> Today a file is read and searchable whatever the virus scan says; only opening the original waits for the scan. The scanner has never yet run with virus signatures on the live copy.</p>
+    <ul>
+      <li><b>(a)</b> Keep this, and say it plainly. <b>(b)</b> Read only after a clean scan (every file waits, possibly on a scanner that cannot answer yet). <b>(c)</b> Read at once, but take a file's text out of search if the scan later finds a threat.</li>
+    </ul>
+    <div class="rec"><b>Recommended: (a) for the alpha, (c) once the scanner has signatures.</b></div>
+    <p><b>Password-protected files</b> are marked as needing a password (your K4803). Open: may a member type the password? It would be a secret the record must never keep.</p>
+    <ul>
+      <li><b>(a)</b> No: stated “needs a password”, and the member can upload an unprotected copy. <b>(b)</b> Yes, used once and never stored.</li>
+    </ul>
+    <div class="rec"><b>Recommended: (a) for the beta;</b> revisit if members ask.</div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Decision 7 · text</div>
+    <h2>What counts as a document's text</h2>
+    <p>Today only the body of a Word or OpenDocument file is read. Footnotes, headers, footers, comments, tracked deletions, text boxes and speaker notes are not, yet the reading says “whole”. A footnote in a staff report is often where the dollar figure is. These parts will be read; the question is how members meet them.</p>
+    <ul>
+      <li><b>(a)</b> Everything searchable by default, each result saying what it is (“a footnote”, “a comment”, “deleted wording”), so a citation names it. <b>(b)</b> Read, but out of search unless asked. <b>(c)</b> Not read, stated.</li>
+    </ul>
+    <div class="rec"><b>Recommended: (a).</b></div>
+    <p><b>Excel dates.</b> Inside an Excel file a date is stored as a number (45123), so a search for “2024-05-01” finds it in a CSV but not in an Excel file. Fixing it reverses an earlier rule that a date implied only by formatting is not inferred.</p>
+    <ul>
+      <li><b>(a)</b> Keep the rule and say so on the document's page. <b>(b)</b> Treat such cells as dates, keeping the original number beside them.</li>
+    </ul>
+    <div class="rec"><b>Recommended: (b).</b></div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Decision 8 · protective limits</div>
+    <h2>Safety limits inside your standard</h2>
+    <p>Within your size limits a file can still be built to break a reader: a million columns, one cell of 50 million characters, zips nested in zips, a picture of a billion pixels. A limit that changes what a member may do is yours (K1881). These would sit at or beyond what ordinary programs produce, for example Excel's own 16,384 columns and 32,767 characters a cell.</p>
+    <ul>
+      <li><b>(a)</b> Accept them as a class: BOB sets each at or beyond what ordinary programs produce, a file over one is stated with its own figure (never silently cut), and the full list is reported to you. <b>(b)</b> Each brought to you one by one.</li>
+    </ul>
+    <div class="rec"><b>Recommended: (a).</b></div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Decision 9 · scope</div>
+    <h2>Beyond your list</h2>
+    <p>Your beta list is set (K4628). Option D's tools can also cheaply read TAR, GZ and 7z archives (public bodies sometimes export records that way), RAR, and text recognition in languages other than English. Chinese, Japanese and Thai search is a separate question already queued with you.</p>
+    <ul>
+      <li><b>(a)</b> Add TAR, GZ and 7z with the archive work, plus text recognition in the languages Oakland's public bodies publish in, Spanish first; not RAR, whose licence restricts it. <b>(b)</b> Your list only, for now. <b>(c)</b> All of them.</li>
+    </ul>
+    <div class="rec"><b>Recommended: (a).</b> BOB checks each tool's licence before it is used.</div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Decision 10 · what members see</div>
+    <h2>Five smaller screen choices</h2>
+    <ul>
+      <li><b>A large spreadsheet's preview</b> shows its first 1,000 cells and says so. <i>Recommended:</i> add a “show more” that pages through the rest (a screen for the design stream).</li>
+      <li><b>The safe view of a very long document</b> shows the first 500 pages and says so (5,000 pages would be about 2 GB of pictures; the whole text stays searchable). <i>Recommended:</i> keep 500 pages as a stated view.</li>
+      <li><b>“As a visitor saw it”</b> captures the page as first loaded: not scrolled, banners not dismissed, no embedded frames. <i>Recommended:</i> say exactly that now; add bounded scrolling and frames later.</li>
+      <li><b>A page that cannot be made out</b> (blurred, sideways, faint). <i>Recommended:</i> turn it upright automatically; under a fifth legible, store no text and say “this page couldn't be read”; under four-fifths, keep the text marked partly legible.</li>
+      <li><b>Analysis workbooks over 50,000 cells</b> cannot be added for analysis today, though they are read as documents; the city budget books have 130,000 to 143,000 cells. <i>Recommended:</i> hold the workbook whole and work out only the cells a calculation or citation touches, up to 250,000 cells (your “adding is not interpreting”, K4632).</li>
+    </ul>
+  </section>
+
+  <section class="plain">
+    <h2>Not asked, and why</h2>
+    <p><b>Already answered by your rulings, so applied:</b> the largest file per kind and that nothing inside it fails (K4628, K4630); scans as documents up to 5,000 pages (K4803); .doc, .xls, RTF, TSV, JSON, XML, email files and the six image types read (K4628); zips opened and each file read; a within-limit scan's unusual pages read or named page by page; a large web capture answered at once and continued (K4562).</p>
+    <p><b>BOB's to decide and report:</b> Workflows, containers, tools, step sizes and thresholds; text encodings (older Windows and Latin-1 files read, the assumed encoding shown); how a 100 MB or 500 MB upload reaches storage; the order of work, the live trials and the migration.</p>
+    <p><b>Queued with you elsewhere:</b> selective interpretation (N1269, N1272); the record split and capacity study (N1271, N1274); the region picker (N1273); Chinese, Japanese and Thai search; whether a member may see another project's name on a shared copy.</p>
+    <p class="muted">What happens next: on your answer, the study writes the gap from today's code to the confirmed design, module by module, and BOB plans it as T51 work.</p>
+  </section>
+</main>
