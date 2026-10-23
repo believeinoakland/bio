@@ -8,9 +8,9 @@ import { DECLARED_OPS, translationsOps } from "../../../src/translations/index.m
 import { boot } from "./fixture.mjs";
 import { world as aiAccountsWorld } from "../ai-accounts/fixture.mjs";
 import { list as jList, get as jGet, combine as jCombine } from "../../../../jurisdictions/index.mjs";
-import { INTERFACE_WORDS } from "../../../src/translations/index.mjs";
-const ORDINARY = INTERFACE_WORDS.find((w) => !w.protected && !/\{/.test(w.en));
-const PROTECTED = INTERFACE_WORDS.find((w) => w.protected && !/\{/.test(w.en));
+import { interfaceWords } from "../../../src/translations/index.mjs";
+const ORDINARY = interfaceWords().find((w) => !w.protected && !/\{/.test(w.en));
+const PROTECTED = interfaceWords().find((w) => w.protected && !/\{/.test(w.en));
 const sameCode = (x, y) => x && y && x.ok === y.ok && (x.code ?? x.reason) === (y.code ?? y.reason);
 /* the founder `admin` and members ruth, sam and tom; ruth and sam asked to translate es; when asked, ruth has kept an ordinary word, or a protected one that now awaits a second check */
 const mkWorld = async ({ adopted = false, awaiting = false } = {}) => {
