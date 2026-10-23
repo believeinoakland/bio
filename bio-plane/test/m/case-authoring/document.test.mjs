@@ -260,6 +260,10 @@ test("R17: the searched section is computed from the observation log at authorin
   /* 502 captures (the leg's own and the 501 above): 500 computed over, 2 folded into unidentified */
   assert.deepEqual([blv.content.subjects, blv.content.unidentified], [SEARCHED_SUBJECT_MAX, 2]);
   assert.notEqual(blv.content.outcome, "searched");
+  /* R14 (G47 4): 501 captures of one source carry attestation shas, so the document declares /9 through case-grammar's helper */
+  const bigFm = w2.fm(docOf(w2, big).text);
+  assert.equal((bigFm.material_attestations || []).some((a) => a.sha), true);
+  assert.equal(bigFm.format, "bio-case-document/9");
 });
 
 test("R17: searchedSection refuses to compute dishonestly — no instant, a subject source other than case_basis, no levels, a level or subject kind the vocabulary does not name — and never says never_looked where the evidence is one-sided", () => {

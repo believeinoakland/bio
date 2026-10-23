@@ -1,6 +1,6 @@
 # case-authoring (T51)
 
-**Status** · session_01HY5TwSfVfVqu5SdyPrBkAL · depth 2 · COMPLETE · handled B25
+**Status** · session_01MN9xdJBsqY5jNetBuRbobY · depth 2 · COMPLETE · handled B28
 
 ## Completion record (T51, B1 START)
 
@@ -420,3 +420,59 @@ Size (session_01HY5TwSfVfVqu5SdyPrBkAL): test runs 10, module lines 3018
 ## J22 · COMPLETE
 
 COMPLETE (B25, G29, K4609). Every document row of case_citations (project edge or R86 resting document; pinned, only_capture, undetermined, no_capture) now carries bundle_sha = record.head(target).bundleSha as of the prepare act; a non-document row carries none. Written alike into the answer, the stored document, the body's Citations line and casedocument's citations.rows (signedCitations returns rows as signed; no case-grammar change). New data only. Root cause: ratification answers RATIFY_STALE unless expectedSha is the bundle head (finding.mjs:64-67); rows held only a capture sha, none for undetermined. Failing-first (evidence-rows.test.mjs, real publish): RED before (no bundle_sha; seam RATIFY_STALE), GREEN 7/7; seam uses the real ratification gateFacts + findingFactsRefusal (control: capture sha is RATIFY_STALE); not the whole op=caseratify sitting (ratification's own test world) - stated in my record. Suites: case-authoring 241/241; users 521+627+527, 0 fail. run.mjs: format/architecture/coverage 6667/words 18421 unchanged/channels 0; ownership 0. Proposed R16/R86 lines and the word owed (case-authoring.document.head_of_the_document, a localize stand-in) are in my record: build/jobs/T51/case-authoring.md. SCREENS-PUBLISH signs row.bundle_sha.
+
+## J23 · QUESTION
+
+QUESTION (G47, two things I need before I can finish; I carry on with the rest on my best reading).
+1. The format helper (entry part 4): case-grammar's helper that answers `/9` or `/8` for a set of attestation rows is not merged, so I do not know its export name or arguments. Best reading: a function exported from case-grammar's index that takes the document's attestation rows (the `materials` block's `material_attestations` rows as case-disclosures `materialRows` hands them to `caseDocumentText`) and answers the format string; document.mjs then writes `format:` and passes the same string to attributionBodyLines/lensSectionLines. Please tell me its name and argument (or tell me CASE-GRAMMAR #20 will post it).
+2. The bound: `CASE_DOCUMENT_BYTES_MAX` is not yet exported by publication (PUBLICATION #36 unmerged), so your (b) and (d) cases (a document over / just under the bound through the real act) cannot name the constant today. Best reading: I read it as `import * as PUBLICATION` in index.mjs (`PUBLICATION.CASE_DOCUMENT_BYTES_MAX`), the tests read it from the same export, and (b)/(d) are therefore red by name until PUBLICATION merges (I keep no copy of the number). If you want (b)/(d) green now, tell me to carry a local fallback of 1,572,864 for the interim, which I would delete at the merge.
+
+## Fix round 6, G47 (B26 START, CASE-AUTHORING #41): progress
+
+**Providers' state (B26):** CASE-GRAMMAR #20, PUBLICATION #36, CASE-CHECKER #16, CASE-DISCLOSURES #17 and CASE-INPUTS #8 were NOT merged when I started; `publication` does not yet export `CASE_DOCUMENT_BYTES_MAX` and case-grammar has no format helper.
+
+**Done (commit on job/T51/case-authoring).**
+- `checks.mjs`: new row `CASE_DOCUMENT_TOO_LARGE`, C-136.9 (next free of C-136), `where` `#publishCase > is-case-document-too-large`, words a `localize` stand-in (`case-authoring.checks.case_document_too_large`, K3930) with `{size}`, `{bound}`, `{materials}`, `{members}`; row owed to UX-DESIGN (B491).
+- `index.mjs` `#publishCase`: `docBytes` moved up to right after `docText`; over `publicationExports.CASE_DOCUMENT_BYTES_MAX` (read from publication's exports, no copy) it refuses `CASE_DOCUMENT_TOO_LARGE {size, bound, materials, members}` before the reevaluation raise, `#standardsUse` and the store (words `case-authoring.index.case_document_too_large`, MB to one decimal). After `storeCaseDocument`, `ok === false` (or no `doc_sha`) is the act's refusal: the store's `reason` (a `CASE_DOCUMENT_TOO_LARGE` from the store is the same row), else `CASE_DOCUMENT_NOT_STORED`; never `doc_sha: null` as prepared.
+- Tests: `g47-refusal.test.mjs` (b), (c), (d); `invariants.test.mjs` R29 lists C-136.9 and the row's `where`.
+
+**Failing-first.** (c): red on the old source (answered `ok` with `doc_sha: null`), green now. (b) and (d): red today by name (`publication` exports no bound); with the constant added to publication locally and not committed, both green (the refused document, snapshot unchanged, no row; a document just under the bound stored with `doc_sha` equal to the hash of its bytes). They stay red by name until PUBLICATION merges.
+
+**Open, asked of BOB (J23 QUESTION):** (1) the name and argument of case-grammar's `/9`-or-`/8` format helper (entry part 4; not written, not guessable); (2) whether (b)/(d) wait red for PUBLICATION or I carry an interim fallback of the number.
+
+**Seam reds by name:** `document.test.mjs` R17 (waits for CASE-GRAMMAR, PUBLICATION, CASE-CHECKER, CASE-DISCLOSURES). Suite: 241 pass, 3 fail (R17, G47 b, G47 d), all red by name.
+
+**Protective bound (K1881):** none set by this module; it reads publication's 1,572,864 B.
+**Census ops:** none changes its accepted keys.
+**Proposed requirement lines (R14 amended):** "The document is measured as built; over `publication`'s `CASE_DOCUMENT_BYTES_MAX` the act is refused `CASE_DOCUMENT_TOO_LARGE` (C-136.9) carrying `size`, `bound`, `materials`, `members`, before any side effect, and a refusal of the store is the act's refusal, never a prepared document with no `doc_sha`."
+
+## Fix round 6, G47: completion record (B26 START, B27 ANSWER, B28 CHANGE)
+
+**Providers' state at COMPLETE.** Merged on `tranche/T51` and merged into my branch: PUBLICATION #36 (`CASE_DOCUMENT_BYTES_MAX`), CASE-DISCLOSURES #17, CASE-GRAMMAR #20 (`caseDocumentFormatFor`), CASE-CARRIAGE #15. **Not merged when I last merged: CASE-CHECKER #16, CASE-INPUTS #8.** No red of mine waits on them: R17 is green.
+
+**What changed.**
+- `checks.mjs` (end of `PUBLISH_ACT_CHECKS`): `CASE_DOCUMENT_TOO_LARGE`, C-136.9, `where` `#publishCase > is-case-document-too-large`; `localize` stand-in words (`case-authoring.checks.case_document_too_large`), row owed to UX-DESIGN (B491).
+- `index.mjs` `#publishCase` (after `docText`, about :1190-1215): `docBytes` moved up; over `publicationExports.CASE_DOCUMENT_BYTES_MAX` the act refuses `CASE_DOCUMENT_TOO_LARGE {size, bound, materials, members}` before the reevaluation raise, `#standardsUse` and the store; after `storeCaseDocument` (about :1230) `ok === false` or no `doc_sha` is the act's refusal (the store's own `reason`; its `CASE_DOCUMENT_TOO_LARGE` is the same row; else `CASE_DOCUMENT_NOT_STORED`).
+- `document.mjs`: the `format:` line, `attributionBodyLines` and `lensSectionLines` take `caseDocumentFormatFor(materials.attestations)` (`/9` only when a row carries a `sha`, else `/8`).
+- Tests: new `g47-refusal.test.mjs` (b, c, d); `document.test.mjs` R17 now also asserts `/9` and an attestation `sha` for 501 captures of one source; `carries.test.mjs` R55's three deepEqual tests gain `sha: null` (B28); `invariants.test.mjs` R29 lists C-136.9 and its `where`.
+
+**Failing-first.** (c) red on the old source (answered `ok` with `doc_sha: null`), green. (b) and (d) were red by name before PUBLICATION merged (no exported bound) and are green now. R17 was the seam test: green after the merges, with the `/9` assertion added.
+
+**Measures.** Bound read from publication: 1,572,864 B; this module sets none (K1881 is BOB's to report). A document of 1,572,864 B or less is prepared (case (d), measured near the bound); over it, refused with nothing written (case (b): snapshot equal). Census ops: none changes its accepted keys. Screen: screens-publish draws a refusal by its words; whether it needs a row for C-136.9 is for BOB to settle with the design stream (the check row's `translation` and `detail` carry the words today).
+
+**Suite.** `bio-plane/test/m/case-authoring/` under the preload: 244 pass, 0 fail. format 0, architecture 0, coverage 58 of 58, words 0 failures (inline 0). Ownership: see COMPLETE.
+
+**Users** (impact.mjs: 822 files in 44 modules). Run: screens-publish, screens-settings, screens-wizards, tasks, store-door, signin-door, screens-intake, screens-investigate, affordances, screens-action, plane release: all pass except 11 failures that fail identically with my three source files replaced by `origin/tranche/T51`'s: screens-publish (R3 ceremony words, R4 R30 photo facts, R3 R50 placeholder, R24 x2), screens-intake `t51-fix5` R31 (E8), `affordances/t36` x4, `screens-action/contract` R24 or R1-R6, plane `release` R24 (accepted). Not mine; all pre-existing at the tranche.
+
+**Proposed requirement lines (R14 amended).** "The document is measured as built; over `publication`'s `CASE_DOCUMENT_BYTES_MAX` the act is refused `CASE_DOCUMENT_TOO_LARGE` (C-136.9) carrying `size`, `bound`, `materials` and `members`, before any side effect, and a refusal of the store is the act's refusal, never a prepared document with no `doc_sha`. The document declares its format through `case-grammar`'s `caseDocumentFormatFor` over its attestation rows (`/9` only when a row carries a `sha`, else `/8`)."
+
+**Size (session_01MN9xdJBsqY5jNetBuRbobY): test runs 9, module lines 3056** (`bio-plane/src/case-authoring/*.mjs`).
+
+## J24 · COMPLETE
+
+COMPLETE for G47 (B26 START, B27, B28). Record: build/jobs/T51/case-authoring.md, "Fix round 6, G47: completion record", pushed.
+Changed: checks.mjs C-136.9 CASE_DOCUMENT_TOO_LARGE (words a localize stand-in, owed to UX-DESIGN B491); index.mjs #publishCase measures docText right after it is built and refuses over publication's CASE_DOCUMENT_BYTES_MAX (1,572,864 B, read from its exports) before any side effect, and a refused store (ok false / no doc_sha) is the act's refusal; document.mjs writes format and passes it to attribution/lens lines via caseDocumentFormatFor (/9 only with an attestation sha).
+Tests: g47-refusal.test.mjs (b, c, d): (c) red then green on old source; (b)/(d) red by name until PUBLICATION merged, green now. R17 green and now also asserts /9 for 501 captures of one source. R55's three deepEqual tests gained sha: null. Module suite 244/244 under the preload. format 0, architecture 0, coverage 58/58, words 0, ownership 0.
+Reds remaining: none of mine. CASE-CHECKER #16 and CASE-INPUTS #8 were not merged when I last merged; nothing of mine waits on them. Users: all pass except 11 failures that fail identically with my source replaced by the tranche's (screens-publish R3/R4/R24 words, screens-intake t51-fix5 R31, affordances t36, screens-action contract, plane release R24).
+Protective bound: none set here; the number is publication's 1,572,864 B (K1881 yours to report). Census ops: no accepted key changes. Screen row for C-136.9: yours to settle with the design stream.
+Proposed R14 lines and the Size line are in the record.
