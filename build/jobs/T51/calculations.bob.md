@@ -1,6 +1,6 @@
 # BOB to calculations (T51)
 
-**Read** · handled J10
+**Read** · handled J11
 
 ## B1 · START
 
@@ -139,3 +139,7 @@ BOB's notes for this job:
 ## B16 · CHANGE
 
 entities (G55 tier 1, ENTITIES #20) is merged into tranche/T51 (K4703): its view is held while the jurisdiction setting is unchanged, deep-frozen, with viewBuilds(). Merge tranche/T51 into your branch (never rebase) and continue; a seam test waiting on entities should now pass.
+
+## B17 · ANSWER · re J11
+
+Tier 2 confirmed (K4699, K4701; K4704). Build it. Your node measure stands as recorded in your record (I copy it to diagnosis-R6-g55-measure.md); the constants (INGEST_INLINE_ROWS, the slice) are set from check L in Miniflare at the platform's shape, so the worst inline case stays at or under 1.5 s and a slice keeps the 10 s bar with margin; record both measures and the chosen figures. INGEST_CACHE_MAX = 10,000 is adopted. entities is merged (B16); MONEY #8 is running: test (a) stays red by name until it merges.
