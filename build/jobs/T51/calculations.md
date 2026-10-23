@@ -137,3 +137,7 @@ REPORT: B7 (K4650) applied and pushed. A figure input's engine mark is persisted
 **Found in another module.** `bio-plane/test/platform-sqlite.mjs:44`, the words check's "plain" hit for the string "string or blob too big" (test-support): needs a `localize` id or a dev tag, TEST-SUPPORT's.
 
 Size (session_015P7YZfAbM7iah2fh9UyBGM): test runs 20, module lines 3,495
+
+## J9 · COMPLETE
+
+COMPLETE: G41 (calculations) done at the tip of job/T51/calculations, tranche/T51 merged through CONTENT #19 and RETRIEVAL-BROWSE #4. cellsAt awaited at its reads; explicit undetermined engine on cells_truncated or a failed cellsAt (never null); a range over the cells limit is a stated fault; the figure's engine mark persisted (K4650); K4647 numbering asserted. Under the preload: calculations 75/75, users 904 pass, seam tests green (were red), no seam red. checks/run.mjs: format, architecture, coverage, channels 0 failures; ownership 0. One words hit is in test-support's platform-sqlite.mjs:44 (not mine). Proposed requirement lines, the word row owed and the Size line are in my record, section "Round 6 · G41 · COMPLETE".
