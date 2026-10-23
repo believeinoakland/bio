@@ -1513,9 +1513,14 @@ export class PublicRead {
         const account = named ? accounts.find((x) => x.by === a.by && material && x.capture === material.sha) ?? null : null;
         /* K1315: each timestamp token or co-archive record `publication` held for this material (its R57), by its own
            hash, registered under the material's ref with kind `attestation`. */
+        /* G47t: a row stating its capture (`sha`, 64 hex; any other value reads as none) carries the tokens `publication`
+           held for that capture and those held for no one capture (`capture_sha` null: shared, or registered before the
+           column); a row stating none carries every token of the `ref`, as before. */
+        const cap = captureOf(a);
         const held = a.by_kind !== "co_attestation" ? [] : this.#rows(
           `SELECT sha256 FROM published_shas WHERE bundle_id=? AND kind='attestation' AND path=('materials/' || sha256)
-            ORDER BY sha256`, a.ref).map((r) => ({ sha: r.sha256, text: text(r.sha256) }));
+            ${cap ? "AND (capture_sha IS NULL OR capture_sha=?)" : ""} ORDER BY sha256`, a.ref, ...(cap ? [cap] : []))
+          .map((r) => ({ sha: r.sha256, text: text(r.sha256) }));
         /* a row stating no capture (`sha: null` as the reader answers it) is carried as it always was: no key added */
         const { sha: stated, ...plain } = a;
         return { row: stated == null ? plain : a, account: account ? { by: account.by, at: account.at, text: account.text,
