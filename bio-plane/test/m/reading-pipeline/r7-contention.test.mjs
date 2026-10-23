@@ -33,13 +33,13 @@ async function measure(label, kind, bytes) {
   assert.equal((await put.json()).ok, true);
   await cheap();
   const idle = []; for (let i = 0; i < 4; i++) idle.push(...await Promise.all(Array.from({ length: BURST }, cheap)));
-  const waits = [], ticks = [];
+  const waits = [], ticks = [], store = [];
   let cursor = "", done = false;
   const reader = (async () => {
     for (let n = 0; n < 2000 && !done; n++) {
       const t = performance.now();
       const r = await (await mf.dispatchFetch(`http://x/tick?sha=${sha}&bytes=${bytes.length}&kind=${kind}&cursor=${encodeURIComponent(cursor)}`)).json();
-      ticks.push(performance.now() - t);
+      ticks.push(performance.now() - t); store.push(r.served);
       assert.equal(r.failure, null, JSON.stringify(r));
       assert.equal(r.refused, null, JSON.stringify(r));
       if (r.more !== true) break;
@@ -49,7 +49,7 @@ async function measure(label, kind, bytes) {
   })();
   while (!done) { waits.push(...await Promise.all(Array.from({ length: BURST }, cheap))); await new Promise((r) => setTimeout(r, 10)); }
   await reader;
-  console.log(`# G82 L ${label} (${(bytes.length / 1048576).toFixed(1)} MiB, ${ticks.length} ticks): cheap read idle p95 ${pct(idle, .95).toFixed(0)} ms; while the ticks run p50 ${pct(waits, .5).toFixed(0)} p95 ${pct(waits, .95).toFixed(0)} max ${Math.max(...waits).toFixed(0)} ms (n=${waits.length}); ticks: first ${ticks[0].toFixed(0)} ms, slowest ${Math.max(...ticks).toFixed(0)} ms`);
+  console.log(`# G82 L ${label} (${(bytes.length / 1048576).toFixed(1)} MiB, ${ticks.length} ticks): cheap read idle p95 ${pct(idle, .95).toFixed(0)} ms; while the ticks run p50 ${pct(waits, .5).toFixed(0)} p95 ${pct(waits, .95).toFixed(0)} max ${Math.max(...waits).toFixed(0)} ms (n=${waits.length}); ticks: first ${ticks[0].toFixed(0)} ms (store ${(store[0] / 1048576).toFixed(1)} MiB), the rest at most ${Math.max(...ticks.slice(1)).toFixed(0)} ms (store at most ${(Math.max(...store.slice(1)) / 1048576).toFixed(1)} MiB)`);
   return { waits };
 }
 

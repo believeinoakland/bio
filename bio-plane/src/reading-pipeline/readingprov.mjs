@@ -116,8 +116,8 @@ function* utf8Slices(s) {
     at = end;
   }
 }
-export async function sha256Hex(s) {
-  if (s.length > 4 * 1024 * 1024) return sha256StreamYielding(utf8Slices(s));
+export async function sha256Hex(s, yielding = false) {
+  if (s.length > 4 * 1024 * 1024) return yielding ? sha256StreamYielding(utf8Slices(s)) : sha256Stream(utf8Slices(s));
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
@@ -191,9 +191,11 @@ function chainTierOf(chain, page) {
  * @param {string|null}        a.planeVersion  the plane's VERSION binding, which names tier 1's producer
  * @param {string|null}        a.member  the producer to name when the text is on NO tier of the ladder —
  *                                       an HTML page's text, read at intake in the plane
+ * @param {boolean}            a.yielding  a big text's digest gives the turn back between its slices (G82: a read in pieces); false keeps
+ *                                         it one stretch and the caller's memory as R36 holds it
  */
 export async function readingProvenance({ text = null, chain = null, tier = null, container = null,
-                                          planeVersion = null, member: offLadder = null, textFrom = null } = {}) {
+                                          planeVersion = null, member: offLadder = null, textFrom = null, yielding = false } = {}) {
   const out = { scheme: PROVENANCE_SCHEME, text_tier: Number.isInteger(tier) ? tier : null,
                 container: typeof container === "string" ? container : null,
                 text_sha256: null, text_chars: 0, text_from: null,
@@ -209,7 +211,7 @@ export async function readingProvenance({ text = null, chain = null, tier = null
   out.text_chars = flat.text.length;
   /* AN EMPTY TEXT IS NOT DIGESTED. Two empty strings agree on nothing (`CLAUDE.md` §5), so a digest of
      one would let two readings that read NOTHING compare as agreeing. */
-  out.text_sha256 = flat.text.length ? await sha256Hex(flat.text) : null;
+  out.text_sha256 = flat.text.length ? await sha256Hex(flat.text, yielding) : null;
   /* R18: null for empty text says why, as it does for absent text. */
   if (!flat.text.length) out.why = word("reading-pipeline.why.text_document_yielded");
   const byKey = new Map();
@@ -237,7 +239,7 @@ export async function readingProvenance({ text = null, chain = null, tier = null
          there are two or more. */
       const several = chainTiersOf(chain, p.page).filter((c) => c.tier != null);
       const entry = { page: p.page, tier: t, member: t == null ? null : (TIER_MEMBERS[t] ?? null),
-                      chars: pt.length, text_sha256: pt.length ? await sha256Hex(pt) : null };
+                      chars: pt.length, text_sha256: pt.length ? await sha256Hex(pt, yielding) : null };
       if (several.length > 1)
         entry.producers = several.map((c) => ({ tier: c.tier, member: TIER_MEMBERS[c.tier] ?? null }));
       out.pages.push(entry);

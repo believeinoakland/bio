@@ -3,11 +3,10 @@
    keeps the open document between the pieces of one digest (one entry; replaced by another digest's, dropped by the last piece or
    a failed range), and a tick that finds its digest open does not read the object at all. Counted by WORK at the interface (R-CLOCK):
    the bytes the evidence store hands out each tick, and the pages of every piece against the one-piece read.
-   SEAM: `openPdfRange` is pdf-reader's and merges before this module (layer 1); until it is merged every test here is red by name
-   (the first assertion says so), and BOB sends a CHANGE then. */
+   (`openPdfRange` is pdf-reader's R44, merged before this module.) */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import * as pdfReader from "../../../src/pdfstructure.mjs";   /* by namespace: a missing name must fail a test, not the file */
+import * as pdfReader from "../../../src/pdfstructure.mjs";
 import { read } from "../../../src/reading-pipeline/index.mjs";
 import { bucket, evidenceStore, hold, doc } from "./fixture.mjs";
 import { synthPdf } from "./bigpdf.mjs";

@@ -11,14 +11,13 @@
    budget binds the acquire answer only; OCR past its per-request pages states its cursor and owes the rest; a whole above
    what the object can hold is never loaded. G68 (fix round 7): a piece after the first of a text or a CSV is read from the
    byte window of the object its cursor names, not from the whole object (R40, `textWindowTick`, `csvWindowTick`), and a PDF
-   read in page ranges is kept open between its pieces (pdf-reader's `openPdfRange`). */
+   read in page ranges is kept open between its pieces (pdf-reader's `openPdfRange`, R44; G82: with the turn given back, R45). */
 import { layerChain, appendStep, describeChain, checkChain, checkAnchor, applyConfidenceFloor, mergedChain,
          convertedChain, readingSource, mergeTier2Text, tier2Note, glyphCount, stepCovers } from "../textchain.mjs";
 import { getFormat, readingDialect, detectFormat } from "../formats.mjs";
 import { identify, doctypeFor, readText } from "../../../docprofile/registry.mjs";
 import { driveConvertStep } from "../drive.mjs";
-import { extractPdfRange } from "../pdfstructure.mjs";
-import * as pdfReader from "../pdfstructure.mjs";   /* by namespace: `openPdfRange` (pdf-reader R44) is read where it is used, and its absence is the old way (G68) */
+import { extractPdfRange, openPdfRange } from "../pdfstructure.mjs";
 import { readingProvenance, describePages, yieldNow } from "./readingprov.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 
@@ -1904,8 +1903,7 @@ async function windowTick(evidence, sha, c, ask) {
    whole-file read (the objects scanned, the object streams decoded, the page index built) a range needs, and answers
    `{ok, pages, range({from, count, maxBytes})}`, each range exactly what `extractPdfRange` answers. The open document is kept here
    between the pieces of one digest, for the next tick of the object that ran this one: one entry, replaced when another digest is
-   opened, dropped when the last piece is read or a range fails. A tick that finds its digest open does not read the object. Without
-   `openPdfRange` (an older pdf-reader) each tick reads and parses the object, as it did. */
+   opened, dropped when the last piece is read or a range fails. A tick that finds its digest open does not read the object. */
 let openedPdf = null;   /* {sha, opened} */
 const HELD_OPEN = new Uint8Array(0);   /* stands for the bytes of a document that is open: they are not read again */
 
@@ -2226,7 +2224,7 @@ async function textCountsSliced(text) {
 /* G82 (fix round 7): the object has one thread, and a read of a big capture is several stretches of compute: between them the thread is
    given back (a timer turn, which lets the object's other requests run), when the capture is big enough to matter. */
 const BREATHE_AT = 256 * 1024;
-const breatheIf = (on) => (n) => (on && n > BREATHE_AT ? yieldNow() : undefined);
+const breatheIf = (on) => (n) => (on && n > BREATHE_AT ? yieldNow() : undefined);   /* called as `if (piecesOn) await breathe(n)`: a read that is not in pieces is never suspended here */
 
 const failed = (doc, docType, basis, extra = {}) => ({
   content_type: docType ? docType.type.key : null, reader_version: docType ? (docType.type.version ?? null) : null,
@@ -2388,7 +2386,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     fmt = detectFormat(bytes, profile.source_content_type || ct || null).format;
   let textRead = !multipart && profile.profiled_from_text === true && bytes;
   let text = textRead ? new TextDecoder("utf-8", { fatal: false }).decode(bytes) : "";
-  await breathe(text.length);
+  if (piecesOn) await breathe(text.length);
   if (!textRead && multipart && bytes && fmt === "undetermined" && TEXT_TYPE.test(profile.source_content_type || "")) {
     const decoded = utf8TextOf(bytes);
     if (decoded !== null) { textRead = true; text = decoded; }
@@ -2434,9 +2432,9 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
   if (!wireable && textRead) {
     /* R1: text read as text with no format entry that reads it goes to the content type's reader. */
     classifiedText = text; member = "plane";
-    await breathe(text.length);
+    if (piecesOn) await breathe(text.length);
     const { stackId, docType } = classify();
-    await breathe(text.length);
+    if (piecesOn) await breathe(text.length);
     /* R32: its text units, drawn from the decoded text (the page's visible text for HTML); a capture whose text holds
        no glyph has none. The reader's outcome below does not change them. */
     if (piecesOn) {
@@ -2447,7 +2445,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       if (p.refused) return p;
       if (p.fields.more && !html)
         p.fields.cursor = (await textWindowCursorOf(evidence, { sha, bytes, text, whole: got.whole === true, at: p.at, through: p.fields.read_through, grain: p.grain })) ?? p.fields.cursor;
-      await breathe(visible.length);
+      if (piecesOn) await breathe(visible.length);
       const tot = await totalsOfText(visible, html, p.grain);
       textUnits = p.units.length ? p.units : null;
       pieceInfo = { ...p.fields, piece: { ...p.piece, units_total: tot.units } };
@@ -2518,9 +2516,9 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       if (ranged) {
         const ask = { from: ranged.from, count: pieceAsk.rangePages, maxBytes: PDF_RANGE_BYTES };
         let open = held;
-        if (!open && typeof pdfReader.openPdfRange === "function") {
+        if (!open) {
           openedPdf = null;   /* one open document at a time: the last digest's is let go before this one is parsed */
-          const opened = await pdfReader.openPdfRange(bytes);
+          const opened = await openPdfRange(bytes, { yieldNow });   /* G82: the turn is given back between the slices of the open */
           if (opened && opened.ok === true && typeof opened.range === "function") open = { sha, opened };
         }
         st = open ? await open.opened.range(ask) : await extractPdfRange(bytes, ask);
@@ -2560,9 +2558,9 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         }
       } else if (typeof entry.text === "function") {
         const parts = typeof entry.parts === "function" ? await entry.parts(bytes) : bytes;
-        await breathe(bytes.length);
+        if (piecesOn) await breathe(bytes.length);
         const tt = await entry.text(parts, { inlineCellsMax: INLINE_CELLS_MAX_BYTES, ...(bytes.length > BREATHE_AT ? { yieldNow } : {}) });   /* R44: the cap is opt-in, asked here only; G82: and the turn given back between windows, where the entry can */
-        await breathe(objLen);
+        if (piecesOn) await breathe(objLen);
         bytes = null;
         if (tt && tt.ok !== false) { i2text = tt; wiredTier = 1; }
         else refusal = refusalOf(tt);
@@ -2620,9 +2618,9 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         try { readDialect = readingDialect(i2text.dialect); } catch { readDialect = undefined; }
       }
       /* R17 over the text in hand, then the joined copy let go: the stages below read the pages. */
-      await breathe(objLen);
+      if (piecesOn) await breathe(objLen);
       heldCounts = textCountsOf(i2text);
-      await breathe(objLen);
+      if (piecesOn) await breathe(objLen);
       { const lean = withoutJoinedDocument(i2text); if (lean !== i2text) joinedDropped = true; i2text = lean; }
       emitted = i2text;
       const extent = containerExtentOf(i2text, { pdfPaints, fmt });
@@ -2642,9 +2640,9 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       } else if (piecesOn) {
         /* R40/R41: the units of the entry's text in pieces, from the first or the cursor's; a piece after the first is units alone. */
         const all = allUnitsOf(i2text) || [];
-        await breathe(objLen);
+        if (piecesOn) await breathe(objLen);
         const plan = pieceUnitPlan(i2text, all);   /* G48: made once for the piece and its totals */
-        await breathe(objLen);
+        if (piecesOn) await breathe(objLen);
         const p = listPieceAnswer(plan, { sha, ...pieceAsk });
         if (p.refused) return p;
         /* G68: the pieces after this one are read by a window when the capture can be (a cursor of the old kind is moved on to one) */
@@ -2660,12 +2658,12 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         if (pieceAsk.cursor !== null) return { ...(textUnits ? { text_units: textUnits } : {}), ...p.fields, piece: p.piece };
       } else ({ textUnits, textUnitsOverBound, textUnitsSkipped } = textUnitsFor(i2text, { budget: unitsBudget }));
       if (i2text) {
-        await breathe(objLen);
+        if (piecesOn) await breathe(objLen);
         wired = readText(decodeView(i2text), { headers, locator, content_type: ct || null, at: retrieved, origin: CAPTURE_ORIGIN,
                                                ...vw });
         classifiedText = i2text;
       }
-      await breathe(objLen);
+      if (piecesOn) await breathe(objLen);
       if (i2text && !chain) chain = layerChainFor(i2text, { tier: wiredTier, container: fmt });
       /* R10: a Drive export's conversion at the head, after every other part is settled; a refused prepend records
          no chain and fails the reading, naming the refusal. */
@@ -2684,7 +2682,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         : { ...failed(doc, classify().docType, [tier2note, ocrNote, localize("reading-pipeline.index.entry_no_text", "the {fmt} entry produced no text from these bytes", { fmt: String(fmt) })]
               .filter(Boolean).join(" — "), { failure: memberDown ? FAILURE_TRANSIENT : FAILURE_FINAL }) };
       /* R35: a reading with text units counts its words. */
-      if (textUnits && !rangeScope) await breathe(objLen);
+      if (textUnits && !rangeScope && piecesOn) await breathe(objLen);
       if (textUnits) Object.assign(reading, rangeScope ? { words_total: null, words_read: pieceInfo.piece.words } : textWordsFor(i2text, textUnits, pieceBase ? { all: pieceBase } : undefined));
       /* R37 (D4): a reading that read nothing says whether it can be read again: a member that was down is a cause outside
          the document, anything else is the document's own. */
@@ -2721,12 +2719,12 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
 
   /* R14: the reading's provenance, at one site for every branch, over exactly the text the reader was handed; text
      read as text at intake names the plane with tier null. */
-  await breathe(typeof classifiedText === "string" ? classifiedText.length : objLen);
+  if (piecesOn) await breathe(typeof classifiedText === "string" ? classifiedText.length : objLen);
   reading.provenance = await readingProvenance({
     text: classifiedText, chain: Array.isArray(reading.text_source) ? reading.text_source : null,
     tier: Number.isInteger(reading.text_tier) ? reading.text_tier : null,
     container: typeof reading.text_container === "string" ? reading.text_container : null,
-    planeVersion, member, ...(joinedDropped ? { textFrom: "document" } : {}) });
+    planeVersion, member, yielding: piecesOn, ...(joinedDropped ? { textFrom: "document" } : {}) });
   /* G26: a PDF read in ranges digests the pages of the first range only; the provenance says so. */
   if (rangeScope && reading.provenance && typeof reading.provenance === "object")
     reading.provenance.text_scope = { pages: [rangeScope.from, rangeScope.to ?? rangeScope.from + rangeScope.count] };
