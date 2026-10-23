@@ -493,3 +493,22 @@ Entry G53 (`build/plan/fix-round-6-T51.md`), owner op-declarations. tranche/T51 
 **Deferred.** Nothing. **Found in other modules.** None.
 
 Size (session_015mbjCf96bpaBuNz4yP3orh): test runs 9, module lines 3468
+
+## G55 · fix round 6 (CHANGE B38; OP-DECLARATIONS #36)
+
+Entry G55 (`build/plan/fix-round-6-T51.md`), my part: the declaration of `moneyingestread`. tranche/T51 merged in first.
+
+**Change.**
+- `bio-plane/src/op-declarations/index.mjs` calculations family (beside `moneyingest`, :301): `moneyingestread: "read"`. Its spec is the family's read (admin, member, probe; not mutating), NEEDS a present null, in both session sets, the viewer stamped from the query (the family's actor); `ingest`, `kind`, `after` and `limit` are request fields the door passes as given, no stamp.
+- **Which list:** `moneyingest` is named at :2718 in `ACT_HELP_ABSENT.unexplained` (an act with no explanation). A read joins the `read` ground of the same table, as `owedwork` did (alphabetical, between `moneydetectors` and `moneyjunction`); I added one sentence to the block's comment naming it. `moneyingest` stays under `unexplained`.
+- `t49.test.mjs`: the counted totals gain the one row (family rows 533, NEEDS keys 882).
+- `t51.test.mjs`: new test "R19, R2, R3, R4, R34 (T51 fix round 6, G55; K4208)" for the op and controls.
+- **No other op changes its keys or spec** (K4208): `moneyingest` and every other op unchanged.
+
+**Seam, red by name until calculations merges:** `t33.test.mjs:290` (R19, R6) fails with `calculations: moneyingestread` served by no owner map, because calculations' ops map does not serve it yet. In a scratch edit (reverted) adding `moneyingestread` to calculations' map made R6 pass; the same scratch showed R4 needs the owner to read `viewer` from the query, as the plan says the act's visibility does. Also red by name: `t50.test.mjs` R73 (G53, until wizard-scripts merges, as in the section above). `declared.test.mjs`, the R3/R4 tests of t33, t34, t36, t42, t45, t49 and t51 pass; there is no `owners.test.mjs`.
+
+**Checks.** `checks/run.mjs`: format 0, architecture 0, coverage 6686 of 6686 (0), channels 0; words 1 failure, the accepted `inline 1` at `case-checker/spec.mjs:11`. `checks/ownership.mjs op-declarations tranche/T51 job/T51/op-declarations`: 0 failures. Suite per file: every file passes but t33 (the seam above) and t50 (G53).
+
+**Deferred.** Nothing. **Found in other modules.** None. Op-grades must grade `moneyingestread` (the plan names it).
+
+Size (session_015mbjCf96bpaBuNz4yP3orh): test runs 14, module lines 3470

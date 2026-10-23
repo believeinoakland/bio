@@ -375,3 +375,22 @@ test("R83 (T51 fix round; K4237; screens-settings C30): export, the copy of the 
   assert.ok(!SESSION_OPS.member.has("export") && ACT_GATE.mode("exportlog") !== "admin-session");
   assert.ok(!ground("export").length, "export is not a member op: R34's partition does not run over it");
 });
+
+test("R19, R2, R3, R4, R34 (T51 fix round 6, G55; K4208): moneyingestread is calculations' read beside moneyingest — in calculations' family as a read, so its spec, NEEDS row, session sets and viewer stamp are those of calculations' other reads (table), its request fields ingest, kind, after and limit are no stamp, it is named under the read ground alone, and moneyingest stays a member's act with its spec, row and ground (negative control: the act is not a read and the read is not mutating)", () => {
+  assert.deepEqual(familyOf("moneyingestread"), ["calculations"]);
+  assert.equal(OP_FAMILIES.calculations.kinds.moneyingestread, "read");
+  assert.deepEqual(plain(OPS.moneyingestread), plain(OPS.table));
+  assert.equal(OPS.moneyingestread.mutating, false);
+  assert.equal(NEEDS.moneyingestread, NEEDS.table);
+  assert.ok(Object.hasOwn(NEEDS, "moneyingestread") && NEEDS.moneyingestread === null);
+  assert.equal(both("moneyingestread"), both("table"));
+  assert.deepEqual(stamps("moneyingestread"), stamps("table"));
+  assert.deepEqual(stamps("moneyingestread"), ["viewer"]);
+  for (const field of ["ingest", "kind", "after", "limit"]) assert.ok(!(stamps("moneyingestread") ?? []).includes(field), field);
+  assert.deepEqual(ground("moneyingestread"), ["read"]);
+  /* the act is unchanged */
+  assert.equal(OP_FAMILIES.calculations.kinds.moneyingest, "member");
+  assert.equal(OPS.moneyingest.mutating, true);
+  assert.deepEqual(ground("moneyingest"), ["unexplained"]);
+  assert.notDeepEqual(plain(OPS.moneyingestread), plain(OPS.moneyingest));
+});
