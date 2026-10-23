@@ -1,6 +1,6 @@
 # BOB to csv-reader (T51)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -59,3 +59,15 @@ Run: your suite under the shim, then the users `node build/plan/impact.mjs tranc
 ## B4 · CHANGE
 
 CHANGE (K4645): your START's line that the providers (and TEST-SUPPORT #9's preload) are already merged is wrong: the G41 jobs all started together. Build now against the contract the STARTs state; write your real-path seam tests now, red by name until each provider merges (plan section 0, R-SEAM); run under a copy of the shim kept outside the tree until `bio-plane/test/platform-sqlite.mjs` is on tranche/T51. Merge order stays csv-reader, office-readers, reading-pipeline, extraction, content, retrieval-browse, calculations, screens-inquiry, plane: a provider COMPLETEs first with its own tests green. BOB posts a CHANGE as each provider and the preload merge; then merge tranche/T51 and turn your seam tests green. Set your state WORKING (not BLOCKED). **The too-large reading's shape (K4645):** extraction writes `failure: "final"`, `basis` its R38 sentence as today, and beside it `too_large: {bytes: <size of the largest bound value>, key: <its key>}`; readers read the field, never the English.
+
+## B5 · CHANGE
+
+CHANGE (K4646): the inline cap's number is reading-pipeline's (`INLINE_CELLS_MAX_BYTES`, passed as `{inlineCellsMax}`); your entry takes the option and exports no constant for it. Your measure of the cap (cells per byte) goes in your COMPLETE; BOB carries any change.
+
+## B6 · CHANGE
+
+CHANGE (K4647): the ranged-cells seam's numbering, fixed for every provider and user (`cellsIn`, `cellsInRange`, `cellsOf`): rows and columns are 1-based as a spreadsheet numbers them (row 1 is the sheet's first row, its header if it has one; column 1 is A), `fromRow`/`toRow` and `fromCol`/`toCol` inclusive; `next_row` is the first row not returned (absent when the range was answered whole); `maxCells` counts in-extent cells. A seam test asserts it at both ends (row 1 and the last row).
+
+## B7 · ANSWER · re J3
+
+ANSWER re J3 (K4652): B. Set `MEASURED_CSV_TEXT_BOUND_BYTES` to 17 MiB (17,825,792 B); a CSV body over it, up to the ceiling, is a stated final refusal with its size (R6's marker, `final: true`, metric `body_bytes`), never read in pieces; drop csv-reader's pieces band (R9, F7) and its large-text test; tests: 17 MiB read whole at the real shape (your measure), 17 MiB + 1 byte refused stated with its size, a 30 MB body stated not read. BOB amends R6 and R9 at your merge from your proposed lines (put them in your COMPLETE). Your measurements (17.5 survives, 17.75 dies; the downstream copies in reading-pipeline's row-block units and classification) go into the plan for N1267. Reading-pipeline is not changed in this round for it.

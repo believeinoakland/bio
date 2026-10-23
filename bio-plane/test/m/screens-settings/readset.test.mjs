@@ -33,3 +33,11 @@ for (const [req, id, table, repeat] of cases) {
     assert.ok(o.p.all.length >= 10);
   });
 }
+
+/* R78 R79 G42: the record's gauge is read by `stats` once, for a session that administers, and never for a member. */
+test("R78 R79 G42 group: an administrator's screen reads `stats` once; a member's sends none", async () => {
+  const a = await open("group", { me: F.ADMIN, table: F.groupTable() });
+  assert.equal(a.p.all.filter((r) => r.op === "stats").length, 1, "an administrator reads stats once");
+  const m = await open("group", { me: F.MEMBER, table: F.groupTable() });
+  assert.equal(m.p.all.filter((r) => r.op === "stats").length, 0, "a member's screen sends no stats");
+});

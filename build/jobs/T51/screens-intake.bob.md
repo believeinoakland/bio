@@ -354,3 +354,29 @@ CHANGE (BOB #253): capture is merged into tranche/T51 (b3b6b6cf16), with `acquir
 ## B35 · CHANGE
 
 CHANGE (BOB #253): interface-shell is merged (a0c92dca25, G12b): the tab now keeps one sessionStorage key, `bio-session:frame`. Two of your tests assert an empty tab storage and fail: `open-file.test.mjs:221` and `common.test.mjs:172` (`assert.deepEqual([...p.store.keys()], [])`). Merge tranche/T51 and change each to exclude that key (your tests, this job). Then COMPLETE again.
+
+## B36 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/screens-intake tranche/T51 && git branch -m job/T51/screens-intake stale/screens-intake-local && git checkout -b job/T51/screens-intake origin/job/T51/screens-intake`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · SCREENS-INTAKE #19 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #257 is depth 1; fix round 6, G43; K4649, K4651) · reading set per mechanics §6 step 2 (your other tests are run, not read)
+
+Mail with `--module screens-intake`; record `build/jobs/T51/screens-intake.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). TEST-SUPPORT #9's preload (`bio-plane/test/platform-sqlite.mjs`) may not be on tranche/T51 yet: run under an out-of-tree copy until it is (K4645). At most two suites at once; always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). Your diff touches only your module's paths, tests and your record. Merge `tranche/T51` first. Providers are NOT merged yet: build against the contract; seam tests red by name until they land; BOB posts a CHANGE as each merges (K4645).
+
+**Read in full:** `build/plan/fix-round-6-T51.md` sections 0 and G43 (with its amendment), rulings K4649 and K4651 (`tail -n 4 build/rulings.md`), your requirements (both parts), your code the entry touches, and the tests naming the requirements it changes.
+
+**Bob (K4426):** "We need to be rigorous about truely understanding the issues we're experiencing, understanding (and fixing) why they weren't caught in the fixtures, and be confident that we do understand, can properly tes, and have really fixed every issue before we do another deployment." **Bob's focus: an alpha release as quickly and efficiently as possible: do what the entry needs, nothing more.**
+
+**Rules** (plan section 0): R-FOUR, R-SEAM, R-NOTMET, R-OLD (new data only: provenance files already stored are unchanged), R-CLOCK. Declare every census op you own whose accepted keys change (K4208). A drawn module reads sentences by key only (K4640).
+
+**Your entry (G43, owner; K4649, K4651).** Read G43 and its amendment in `build/plan/fix-round-6-T51.md` whole: it is your entry. In `promoteDocument` (`screens-intake/capture.mjs:100`, `prov` :128, `files` :131-132): measure `prov` (precheck `prov.length`, then the UTF-8 length) against a local `PROV_EMBED_MAX = 1,048,576 - 65,536`; above it compose the file again without `reading`, `text_units`, `text_units_over_bound`, `text_units_skipped`, and answer `readingDropped: true` beside the bundle id; below it byte-identical to today. Failing-first (red today: `OVERSIZE_INLINE` at 20.36 MB): a Miniflare seam test in your tests, loading the plane from its file path as `t51-seam-e7.test.mjs:30-39` does: upload a 1,048,576 B generated CSV (last row `LASTROWMARK`) by `captureupload`, then `promoteDocument`: a bundle, `data/provenance.json` under 1 MiB, `readingDropped: true`; after the follow, `op=reading` read with the last row found and `cells_held` (red by name until G41's providers merge). Controls: a unit test with a stub `cs` (just under the bound keeps the reading, byte-identical; just over drops it); the address path (`:620`, an acquired 1 MB CSV) drops it too; a docx with a large table. (4) **L** the Miniflare test. control-plane's CONTROL-PLANE #51 makes the owed-render caller follow on `readingDropped`; its seam waits on yours: merge first. Propose your requirement line.
+
+Run: your suite; `node build/plan/impact.mjs tranche/T51 HEAD`'s impact set; `node /home/user/civicos-process/checks/run.mjs /home/user/bio`; `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-intake tranche/T51 job/T51/screens-intake`. COMPLETE: what changed, the failing-first red then green, the L result, the requirement line you propose, and the `Size` line.
+
+## B37 · CHANGE
+
+CHANGE (K4654): CSV-READER #3 is merged into tranche/T51 (held cells with `inlineCellsMax`, `cells_held`, `cellsIn`, the 17 MiB stated bound). Merge tranche/T51 into your branch when your next step needs it; run your seam tests that depend only on csv-reader.
+
+## B38 · CHANGE
+
+CHANGE (K4655): OFFICE-READERS #15 is merged into tranche/T51 (xlsx held cells, workbook-wide cap by `inlineCellsMax` bytes, `cellsIn`, `next_row` absent when whole). With CSV-READER #3, both readers are in: reading-pipeline's seam tests can go green; merge tranche/T51.
