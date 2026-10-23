@@ -22,6 +22,7 @@ import { FLAG_SENTENCE, tensionFrontmatterLines, tensionBodyLines, tensionSenten
          acceptedBodyLines } from "../case-disclosures/index.mjs";
 import { CASE_DOCUMENT_FORMAT, attributionFrontmatterLines, attributionBodyLines, captureBlockLines,
          sourceBlockLines } from "../publication/index.mjs";
+import * as caseGrammar from "../case-grammar/index.mjs";
 import { caseConclusionRowLines } from "../ratification/index.mjs";
 /* R14 (T47; N908; K1333): the acknowledgement list's two renderings are `case-inputs`' (its R2), moved there and imported
    here, never copied, so the signed document is byte-identical before and after the split. */
@@ -97,9 +98,13 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     : localize("case-authoring.document.each_row_is_an_adoption", "each row is an adoption in this scope whose pinned revision the team had proposed and not accepted when this case was signed; that revision was not in force at signing");
   const frozenOf = (m) => (frozen && frozen.get(m)) || null;
   const concOf = new Map((conclusions || []).map((c) => [c.target, c]));
+  /* R14 (G47; K4672): the format the document declares, through case-grammar's helper (`/9` only when an attestation row
+     carries a `sha`, else `/8`). */
+  const format = typeof caseGrammar.caseDocumentFormatFor === "function"
+    ? caseGrammar.caseDocumentFormatFor((materials && materials.attestations) || []) : CASE_DOCUMENT_FORMAT;
   const fm = [
     "---",
-    `format: ${CASE_DOCUMENT_FORMAT}`,
+    `format: ${format}`,
     `case_id: ${caseId}`,
     `case_edition: ${edition}`,
     `case_project: ${project}`,
@@ -333,7 +338,7 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     ...captureBodyLines(captures, sources),
     ...(materials ? carriesBodyLines(method, materials, group) : []),
     ...acceptedBodyLines(accepted),
-    ...(attributions.length ? attributionBodyLines(attributions, CASE_DOCUMENT_FORMAT) : []),
+    ...(attributions.length ? attributionBodyLines(attributions, format) : []),
     ...calculationBodyLines(calculations),
     ...timelineBodyLines(timeline, timelineLeftOut, { cut: timelineCut, unread: timelineUnread, withheld: timelineWithheld }),
     "## What This Excludes",
@@ -427,7 +432,7 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     ...reviewCommentBodyLines(reviewComments),
     /* R40 (DEC-103): case-grammar R9's section, which prints the bias acknowledgement first and then the lens; it
        stands where the acknowledgement's own section stood, so the acknowledgement is printed once. */
-    ...lensSectionLines({ acknowledgement: bias, format: CASE_DOCUMENT_FORMAT,
+    ...lensSectionLines({ acknowledgement: bias, format,
                           statements: lensRead && lensRead.in_force === true ? lensRead.statements : [],
                           inForce: lensRead ? lensRead.in_force : false,
                           stated: lensRead ? lensRead.stated : null }),
