@@ -869,3 +869,7 @@ CHANGE (K4830): plane is merged into tranche/T51 (R96: the door forwards stateTi
 ## B66 · CHANGE
 
 CHANGE (K4832): record-core is merged into tranche/T51 (G115, R91: writeCount() leaves bookkeeping tables' rows out; the key-value heartbeat moves it once per scheduler firing, accepted). Every provider of yours is now merged: merge tranche/T51 into your branch and turn the seam file's Queue count section (G115/G116) green, with the rest of B65. Then COMPLETE; you merge last.
+
+## B67 · ANSWER · re J48
+
+ANSWER (J48, K4833): (1) CHANGE sent to SCREENS-INTAKE (read fetch_pending.failed); (2) CHANGE sent to RATIFICATION (copyMaterials in groups of 8, R60); keep both seams red by name until they merge, then merge tranche/T51 again and turn them green. (3) Ruled (BOB's, P17): a member's bootstrap is 4 object calls (session, doorwindow, bootstrap, bootstrapfacts); the plan's 'at most 3' was an estimate before G118 split the facts read; the session read once is the cause's fix. Set r8-hops' member bootstrap to 4, administrator as measured, and keep asserting the session is read once. The time is read at the re-walk (bootstrap;dur). (4) Your finding (two distinct PDFs sharing a large stream refused CAPTURE_HELD_BY_ANOTHER_BUNDLE): noted for the reading fix round (capture identity, GAP Stage 1); keep your files distinct. Two door defects you fixed are yours, good. Carry on; COMPLETE when (1) and (2) are green.
