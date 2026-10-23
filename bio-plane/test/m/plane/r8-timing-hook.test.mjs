@@ -83,3 +83,44 @@ test("R96 (G106, G120): every route answer of the object states `object-age;dur=
   const young = await store();
   assert.ok(await age(young) < second, "an instance started later is younger");
 });
+
+/* instance-setup R103 (K4825): `op=bootstrap` through the real door and the real object, the session read (`caseReader`, admission's) the only stand-in,
+   in a child (node's module mocks). A signed-in member's report carries her `language` and `words_version`; without a session, or with a machine identity,
+   neither; the door's `stateTiming` reaches the report, which states entries through it. */
+function bootstrapViaDoor(readers) {
+  const script = `
+    import "${file("plane/register.mjs")}";
+    import { mock } from "node:test";
+    const real = { ...(await import(${JSON.stringify(file("control-plane/index.mjs") + "?real")})) };
+    let reader = { viewer: "" };
+    mock.module(${JSON.stringify(file("control-plane/index.mjs"))}, { namedExports: { ...real, caseReader: async () => reader } });
+    const { store } = await import(${JSON.stringify("file://" + FIXTURE)});
+    const { publicOp } = await import(${JSON.stringify(file("plane/door.mjs"))});
+    const { instanceSetupOf } = await import(${JSON.stringify(file("setup.mjs"))});
+    const x = await store();
+    instanceSetupOf(x.ctx).memberLanguageSet({ language: "es", by: "member:ada" });
+    const stub = { fetch: (r, i) => x.s.fetch(r instanceof Request ? r : new Request(r, i)) };
+    const env = { ...x.env, VERSION: "1", STORE: { idFromName: (n) => n, get: () => stub } };
+    const out = [];
+    for (const r of ${JSON.stringify(readers)}) {
+      reader = r;
+      const u = new URL("http://w/api/?op=bootstrap");
+      const entries = [];
+      const res = await publicOp({ req: new Request(u), url: u, env, op: "bootstrap", stub, fp: "fp", presentedAi: { cred: null }, stateTiming: (n) => entries.push(n) });
+      out.push({ body: await res.json(), entries });
+    }
+    console.log("RESULT " + JSON.stringify(out));`;
+  const out = execFileSync(process.execPath, ["--experimental-test-module-mocks", "--no-warnings", "--import", join(SRC, "../test/platform-sqlite.mjs"),
+    "--input-type=module", "-e", script], { encoding: "utf8", cwd: join(SRC, "..") });
+  return JSON.parse(/^RESULT (.*)$/m.exec(out)[1]);
+}
+
+test("R96 (K4825; instance-setup R103): a member's bootstrap through the door carries language and words_version; without a session, or for a machine identity, neither; the door's stateTiming reaches the report", () => {
+  const [member, none, machine, admin] = bootstrapViaDoor([{ viewer: "member:ada", cls: "member" }, { viewer: "" }, { viewer: "class:member", cls: "member" },
+    { viewer: "member:ada", cls: "admin" }]);
+  assert.equal(member.body.language, "es");
+  assert.equal(typeof member.body.words_version, "string");
+  for (const r of [none, machine]) { assert.equal("language" in r.body, false); assert.equal("words_version" in r.body, false); }
+  assert.equal(admin.body.language, "es", "an administrator's session is a member too");
+  assert.ok(member.entries.length > 0 && none.entries.length > 0, "the report states its entries through the door's hook");
+});

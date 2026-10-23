@@ -55,7 +55,13 @@ export async function publicOp({ req, url, env, op, stub, fp, presentedAi, crede
   let caller = null;
   try {
     const reader = await caseReader(url, env, "bio", presentedAi.cred, credential);
-    if (!reader.silent && reader.cls === "admin") caller = { cls: "admin" };
+    if (!reader.silent) {
+      /* instance-setup R103 (fix round 8, G114): a signed-in member's viewer, in the session's form the door stamps elsewhere (never a machine identity),
+         so the report carries her `language` and `words_version`; absent without a session. */
+      const viewer = (reader.cls === "member" || reader.cls === "admin") && typeof reader.viewer === "string" && reader.viewer !== ""
+                     && !reader.viewer.startsWith(MACHINE_CLASS_PREFIX) ? reader.viewer : null;
+      if (reader.cls === "admin" || viewer) caller = { ...(reader.cls === "admin" ? { cls: "admin" } : {}), ...(viewer ? { viewer } : {}) };
+    }
   } catch { caller = null; }
   return bootstrapOp(url, env, fp, { stub, json, storeSilent, storeRefusal, doAnswer, caller, ...hook });
 }
