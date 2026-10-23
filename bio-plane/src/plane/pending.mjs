@@ -218,7 +218,15 @@ export function pendingOf(ctx, deps = {}) {
       end(row);
       put(row.sha, "reading", [], {});
       const reading = stamp(all(`SELECT * FROM keeps_pending WHERE sha=? AND kind='reading'`, row.sha)[0], at);
-      return await readNow(reading, at);
+      /* G79: a keep handed to the ledger at once can end before the screen has filed the document: no home yet (`NO_HOME`) owes nothing, the filing's
+         promotion owes the reading through control-plane's `unreadDocuments`. A filed document's keep still owes its reading. */
+      const asked = await call(() => extractionOf(ctx).readHeld({ sha: reading.sha, kind: reading.kind, detail: json(reading.detail, {}), storeName: store(), env: timed(reading) }));
+      if (asked && asked.ok === true && asked.read === false && asked.why === "NO_HOME") {
+        sql.exec(`DELETE FROM keeps_pending WHERE sha=? AND kind='reading'`, reading.sha);
+        meters.delete(keyOf(reading));
+        return "finished";
+      }
+      return settle(reading, at, asked);
     },
     subresources: async (row, at) => {
       const acq = acquisitionOf(ctx);

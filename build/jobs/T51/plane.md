@@ -732,3 +732,17 @@ What I need, the smallest thing: your ruling on who owns G82's fix, so that the 
 REPORT (B66): l79's restart test does not reproduce: green twice on the merged tree and once on the tranche tip's plane source (15-18 s). Cause: its 30 s wait for the object's own alarm after a Miniflare reboot is too close to the 15-17 s it takes alone; under host load it passes. Not scheduler's code. Fixed in the plane's test (wait bound 90 s, assertion unchanged), pushed. G82's QUESTION J44 is still open: I need your ruling on who owns the piece slicing.
 
 Ringing BOB for J45 failed: BOB's session (session_019nbajVa3dgbtMJtymhoSVB) is archived. The pushed entries J44 (G82 owner QUESTION, still open) and J45 are the message; BOB's backstop reads them.
+
+## Record (PLANE #54, B67 and B68)
+
+**B67 (G82).** Closed in plane as ruled: L shows the block; the owner is reading-pipeline (G68); nothing built in plane. `r7-contention.test.mjs` keeps asserting the control under 500 ms and printing the real reads.
+
+**B66 (l79).** Answered in J45: not reproducible, not scheduler's code; the test's wait bound is 90 s.
+
+**B68 (G79's plane half).** `plane/pending.mjs`, the `keep` owner: after the whole is put, the reading is asked in the same tick; an answer `NO_HOME` now ends the keep owing nothing (the entered `reading` row is deleted; the filing's promotion owes the reading through control-plane's `unreadDocuments`); every other answer settles as before, so a filed document's keep still owes its reading and a transient failure still leaves it owed. **Red first:** with `origin/job/T51/capture` merged (merge dropped afterwards, so this branch carries none of capture's files), control-plane `t51-round6-seam` G7 failed ("no reading row owed", the row `NO_HOME`, attempts 1); with the change G7 passes (26 s). New `r7-keephome.test.mjs` (3: no home owes nothing, red without the change; filed-home control; transient-failure control). Two older plane tests asserted the opposite (a keep's `NO_HOME` stays owed) and are re-pointed to the ruling, not weakened: `fix4-r75` "R75 R77 (C5c)" (NO_HOME now leaves no row; READING_HELD, NO_WHOLE_OBJECT, throw as before) and `fix4b-r77` "R77 (F1)" (no row after the keep; the promotion's `pendingadd` then reads it). Proposed requirement line (BOB writes it): plane **R94** (G79; amends R77): after a keep, a digest with no home owes nothing; one with a home and no reading owes its reading.
+
+**Found in another module (not plane's).** `g48-classify.test.mjs` R86 G48 (c1) is red on the merged tree: `fw18:minutes@held` is now classified `handler: 'conservative'`, the recorded answer is `handler: 'client_rendered', kind: 'shell'`. Nothing in plane touches doctype detection; it appeared with the merge of tranche/T51 at 1493568889 (site-profiles / doctype side). For BOB to route.
+
+**Suites.** Plane suite: reds are only `release` R24, `l77-size` R77 L twice (accepted) and the `g48` c1 above. Checks rerun below.
+
+Size (session_01DF6wNQ8rKsb7yeYo9gZnev): test runs 22, module lines 148
