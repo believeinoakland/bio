@@ -137,7 +137,7 @@
  * WRITES nothing.
  */
 
-import { MEASURED_OOXML_TEXT_BOUND_BYTES, textPlan } from "../ooxml.mjs";
+import { textPlan } from "../ooxml.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 
 /* ------------------------------------------------------------------ *
@@ -255,25 +255,29 @@ export const CSV_SHEET_NAME = "csv";
  * marker below and its DIALECT is still stated, so the record says which of
  * the two it is — never a silent truncation.
  *
- * R35 (F7, fix round 4b): THIS IS NOW THE BOUND ON WHAT THE WALK HOLDS, NOT ON
- * WHAT IS READ. The 12x above is the walk's records (an array of arrays of
- * strings) and its typed cells, both of which grow with the file in objects.
- * Over the bound, up to ooxml.mjs's STREAMED_TEXT_BOUND_BYTES, the body is
- * decoded and walked in 1 MiB windows (`createRecordWalk`), each record is
- * folded into the sheet's text as it completes and none is kept, and the
- * typed `cells` list is not made (`cells` is null, as over the guard); the
- * answer says so (`piecewise`). A body in UTF-16 over the bound is not read in
- * pieces (the strict decode that tells a valid UTF-16 body from an invalid
- * one needs the whole body), and is stated with its size and `final`. Over the
- * streamed ceiling the text is refused with the marker, its size and `final`. */
-export const MEASURED_CSV_TEXT_BOUND_BYTES = MEASURED_OOXML_TEXT_BOUND_BYTES;
+ * G41 (K4636, K4652): THE BOUND IS NOW MEASURED AT THE PLANE, AND IS 17 MiB. The
+ * plane's object (128 MB) read a harness CSV whole at its real shape up to 17.5
+ * MiB and died at 17.75 (the copies are reading-pipeline's row-block units and
+ * classification, after this entry; this entry's own share of a 20 MB body is
+ * about 31 MB). A body over the bound, up to ooxml.mjs's STREAMED_TEXT_BOUND_BYTES,
+ * is therefore STATED with its size and `final` and never read in pieces (the
+ * read in pieces of fix round 4b, F7, is dropped: that band died at the plane
+ * the same way); over the ceiling the marker is `textPlan`'s. Up to the bound a
+ * body over SHEET_WINDOW_MIN_BYTES is walked in windows, keeping no records, and
+ * a caller that passes `{inlineCellsMax}` gets the cells only while they fit it
+ * (`cells_held` otherwise); `cellsIn` makes the cells of a range from the held
+ * body. Raising the bound again is N1267's (the text read by range). */
+export const MEASURED_CSV_TEXT_BOUND_BYTES = 17 * 1024 * 1024;   // 17,825,792
 
-/** The window a body over the bound is decoded and walked in (R35), and the most
- *  per-cell "could not be read" entries such a read lists before it says how
- *  many more there were: a cell is a small object, and a file in a legacy
- *  encoding can hold a million of them. */
+/** The window a large body is decoded and walked in. */
 const CSV_WINDOW_BYTES = 1 << 20;
-const CSV_STREAMED_UNDETERMINED_MAX = 10000;
+const CSV_TEXT_CHUNK_LINES = 2048;
+
+/** A body over this many bytes is walked in `CSV_WINDOW_BYTES` windows and no record list is kept (G41, K4636): the
+ *  records of a body are about 15 times its size in objects, so at this size they are about 1 MB, and above it they are
+ *  what a read of a larger body cannot afford (`diagnosis-R6-g40.md` section 3.2). A body at or under it is walked whole,
+ *  as before. */
+export const SHEET_WINDOW_MIN_BYTES = 64 * 1024;
 
 /** How much of the body a SIGNATURE may look at. The signature runs over the
  *  head so that a body over the size bound still yields a dialect: a reading
@@ -537,24 +541,23 @@ async function csvParts(bytes) {
   if (!sig.ok) return sig;
   const { b, enc, body, delim } = sig;
 
-  /* THE BOUND, on the body's own length — the metric a CSV has (header §4). Up
-     to it the body is walked whole; over it, up to the streamed ceiling, in
-     windows (R35), and over that it is refused, the marker stating the size.
-     A UTF-16 body over the bound is not read in pieces (header §4) and is
-     stated at the bound, with its size and `final`. */
+  /* THE BOUND, on the body's own length — the metric a CSV has (header §4).
+     Up to MEASURED_CSV_TEXT_BOUND_BYTES the body is read whole; over it, up to
+     ooxml's ceiling, it is STATED with its size and `final` (G41, K4652), never
+     read in pieces: the plane's object holds the text several times over, and
+     the largest body it read at its real shape was 17.5 MiB. Over the ceiling
+     the marker is `textPlan`'s guard. */
   const plan = textPlan(body.length);
   const utf16 = enc.encoding === "utf-16le" || enc.encoding === "utf-16be";
   const bodyMetric = { metric: "body_bytes" };
-  let guard = null, piecewise = null;
+  let guard = null;
   if (plan.read === "none") guard = { ...plan.guard, ...bodyMetric };
-  else if (plan.read === "pieces" && utf16) {
+  else if (body.length > MEASURED_CSV_TEXT_BOUND_BYTES) {
     guard = { ok: false, text: "undetermined", why: "over_size_bound", size: body.length,
       bound: MEASURED_CSV_TEXT_BOUND_BYTES, boundName: "MEASURED_CSV_TEXT_BOUND_BYTES", ...bodyMetric,
-      final: true, encoding: enc.encoding };
-  } else if (plan.read === "pieces") {
-    piecewise = { ...plan.piecewise, boundName: "MEASURED_CSV_TEXT_BOUND_BYTES", ...bodyMetric };
+      final: true, ...(utf16 ? { encoding: enc.encoding } : {}) };
   }
-  const stream = piecewise != null;
+  const windowed = !guard && body.length > SHEET_WINDOW_MIN_BYTES;
 
   /* The records. For every encoding whose delimiters, quotes and line breaks
      are the ASCII bytes (us-ascii, utf-8, undetermined) the walk runs over the
@@ -562,11 +565,16 @@ async function csvParts(bytes) {
      own (`fieldValue`): the signature saw only the head, and a byte past it
      that the signature's encoding cannot read must be a stated undetermined
      cell, never a character a lenient decoder made up. UTF-16 (BOM, certain)
-     is decoded whole; a body that is not valid UTF-16 is marked so that the
-     cells it spoils are stated too. A body read in windows keeps no records:
-     text() walks it again and folds each record in as it completes. */
+     is decoded as a whole body is; a body that is not valid UTF-16 is marked so
+     that the cells it spoils are stated too. A body over SHEET_WINDOW_MIN_BYTES
+     keeps no records: text() and cellsIn() walk it again in windows and fold each
+     record in as it completes (the validity of a UTF-16 body is found here, in
+     windows, because the decode that tells it must see the whole body). */
   let records = null, transport = false, invalidUtf16 = false;
-  if (!guard && !stream) {
+  if (windowed) {
+    if (utf16) invalidUtf16 = !validUtf16(body, enc.encoding);
+    else transport = true;
+  } else if (!guard) {
     let text;
     if (utf16) {
       try { text = new TextDecoder(enc.encoding, { fatal: true, ignoreBOM: true }).decode(body); }
@@ -580,9 +588,39 @@ async function csvParts(bytes) {
 
   return {
     ok: true, format: "csv", bytes: b,
-    bodyBytes: body.length, encoding: enc, delimiter: delim, guard, records, transport: transport || stream, invalidUtf16,
-    stream, body, piecewise,
+    bodyBytes: body.length, encoding: enc, delimiter: delim, guard, records, transport, invalidUtf16,
+    windowed, utf16, body,
   };
+}
+
+/** Is this UTF-16 body valid, decided in windows so no decoded copy of the body is held? */
+function validUtf16(body, encoding) {
+  const decoder = new TextDecoder(encoding, { fatal: true, ignoreBOM: true });
+  try {
+    for (let at = 0; at < body.length; at += CSV_WINDOW_BYTES) {
+      decoder.decode(body.subarray(at, at + CSV_WINDOW_BYTES), { stream: at + CSV_WINDOW_BYTES < body.length });
+    }
+    return true;
+  } catch { return false; }
+}
+
+/** Every record of the body in order, to `onRecord(fields)`: the list `parts()` kept for a small body, else a walk in
+ *  windows that keeps none. `stopped()`, asked after each record of a list and each window, ends the walk early; a walk
+ *  that ends early does not flush the record it was in the middle of. */
+function forEachRecord(parts, onRecord, stopped = () => false) {
+  if (parts.records) {
+    for (const record of parts.records) { if (stopped()) return; onRecord(record); }
+    return;
+  }
+  const walk = createRecordWalk(parts.delimiter.delimiter, onRecord);
+  const decoder = parts.utf16 ? new TextDecoder(parts.encoding.encoding, { fatal: !parts.invalidUtf16, ignoreBOM: true }) : BYTE_TRANSPORT;
+  const { body } = parts;
+  for (let at = 0; at < body.length; at += CSV_WINDOW_BYTES) {
+    const last = at + CSV_WINDOW_BYTES >= body.length;
+    walk.feed(decoder.decode(body.subarray(at, at + CSV_WINDOW_BYTES), parts.utf16 ? { stream: !last } : undefined));
+    if (stopped()) return;
+  }
+  walk.end();
 }
 
 /** The dialect AS THE ENTRY STATES IT (BOB #32: "found by signature and
@@ -632,7 +670,6 @@ function csvStructure(parts) {
     word("csv.notes.url_cell_text"),
   ];
   if (parts.guard) notes.push("text_body_over_bound");
-  if (parts.piecewise) notes.push("text_read_in_pieces");
   return {
     ok: true,
     container: "csv",
@@ -670,6 +707,19 @@ function asciiClean(s) {
   return true;
 }
 
+/** The bytes of a string's UTF-8 (a lone surrogate counts as the three of its replacement character). */
+function utf8Length(s) {
+  let n = 0;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    if (c < 0x80) n += 1;
+    else if (c < 0x800) n += 2;
+    else if (c >= 0xd800 && c < 0xdc00 && i + 1 < s.length && (s.charCodeAt(i + 1) & 0xfc00) === 0xdc00) { n += 4; i++; }
+    else n += 3;
+  }
+  return n;
+}
+
 /** The number of `\n` in a string: the lines a record's text adds beyond its first. */
 function countLineBreaks(s) {
   let n = 0;
@@ -698,7 +748,7 @@ function fieldValue(field, parts) {
   return { why: "not_us_ascii" };
 }
 
-function csvText(parts) {
+function csvText(parts, opts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "csv", reason: parts?.why ?? "PARTS_ABSENT" };
   }
@@ -727,7 +777,10 @@ function csvText(parts) {
   }
 
   const undetermined = [];
-  const lines = [];
+  /* The sheet's lines, joined a chunk at a time: a line is a string of its own, so holding all of a large body's lines at
+     once is about a quarter again its size beside the text they make; a chunk's lines are garbage once it is joined. */
+  const chunks = [];
+  let lines = [];
   /* One 1-based row number per line of the sheet's text (`lineRows`, G15, K4579): empty records add no line, and a
      quoted line break makes one record several lines, so a line's index is not its row. Same length as the lines
      of `text`, on the whole-file and the streamed path alike. */
@@ -735,13 +788,25 @@ function csvText(parts) {
   /* R30: one typed cell per field holding a value — every csv field is
      `text`, the format declaring no type (`declared` null), and a field the
      encoding cannot read keeps its entry with a null value. A body read in
-     windows lists none (`cells` is null, R35), and lists at most
-     CSV_STREAMED_UNDETERMINED_MAX of the cells it could not read, then says
-     how many more there were. */
-  const cells = parts.stream ? null : [];
-  let undeterminedMore = 0;
-  const typedCell = (row, col, value) => ({ source: csvCellRef(row, col), value, type: "text",
-    declared: null, cached: null, formula: null });
+     windows over the size bound lists none (`cells` is null, R35), and lists at
+     most CSV_STREAMED_UNDETERMINED_MAX of the cells it could not read, then says
+     how many more there were. G41 (K4636, K4642): a caller that passes
+     `{inlineCellsMax}` (bytes) gets the cells only while their JSON is under it;
+     past it `cells` is null and `cells_held` true, the walk goes on for the text,
+     the rows and the counts, and `cellsIn` makes the cells of a range from the
+     held body. A caller that passes nothing gets every cell, as before. */
+  const inlineMax = Number.isFinite(opts?.inlineCellsMax) && opts.inlineCellsMax >= 0 ? opts.inlineCellsMax : null;
+  let cells = [];
+  let cellsHeld = false;
+  let cellsBytes = 2;   // "[]"
+  const listCell = (row, col, value) => {
+    if (!cells) return;
+    const cell = typedCell(row, col, value);
+    cells.push(cell);
+    if (inlineMax == null) return;
+    cellsBytes += (cells.length > 1 ? 1 : 0) + utf8Length(JSON.stringify(cell));
+    if (cellsBytes > inlineMax) { cells = null; cellsHeld = true; }
+  };
   let cellCount = 0, usedRows = 0, usedCols = 0;
 
   let r0 = 0;
@@ -758,10 +823,8 @@ function csvText(parts) {
         /* The grid survives an encoding that cannot read these bytes; these
            characters do not. Named per cell with its own reference, never
            mojibake. */
-        if (undetermined.length < (parts.stream ? CSV_STREAMED_UNDETERMINED_MAX : Infinity)) {
-          undetermined.push({ sheet: 0, cell: `${columnLetters(col)}${row}`, reason: read.why });
-        } else undeterminedMore++;
-        if (cells) cells.push(typedCell(row, col, null));
+        undetermined.push({ sheet: 0, cell: `${columnLetters(col)}${row}`, reason: read.why });
+        listCell(row, col, null);
         if (row > usedRows) usedRows = row;
         if (col > usedCols) usedCols = col;
         return;
@@ -769,7 +832,7 @@ function csvText(parts) {
       const field = read.value;
       if (field === "") return;   // an empty cell is a measured emptiness, not text
       cellCount++;
-      if (cells) cells.push(typedCell(row, col, field));
+      listCell(row, col, field);
       if (row > usedRows) usedRows = row;
       if (col > usedCols) usedCols = col;
       vals.push(field);
@@ -780,22 +843,15 @@ function csvText(parts) {
     if (vals.length) {
       const line = vals.join("\t");
       lines.push(line);
+      if (lines.length >= CSV_TEXT_CHUNK_LINES) { chunks.push(lines.join("\n")); lines = []; }
       /* a value with a line break in it (a quoted field) is several lines of the text, all of this record's row */
       for (let n = 1 + countLineBreaks(line); n > 0; n--) lineRows.push(row);
     }
   };
-  if (parts.stream) {
-    const walk = createRecordWalk(parts.delimiter.delimiter, addRecord);
-    for (let at = 0; at < parts.body.length; at += CSV_WINDOW_BYTES) {
-      walk.feed(BYTE_TRANSPORT.decode(parts.body.subarray(at, at + CSV_WINDOW_BYTES)));
-    }
-    walk.end();
-  } else parts.records.forEach(addRecord);
-  if (undeterminedMore) {
-    undetermined.push({ sheet: 0, cell: null, reason: "more_cells_undetermined", count: undeterminedMore });
-  }
+  forEachRecord(parts, addRecord);
 
-  const text = lines.join("\n");
+  if (lines.length) chunks.push(lines.join("\n"));
+  const text = chunks.length === 1 ? chunks[0] : chunks.join("\n");
   const sheet = {
     sheet: 0, name: CSV_SHEET_NAME, hidden: false,
     /* THE BOUND IS NULL — `.ods`'s reason exactly: RFC 4180 fixes no maximum
@@ -804,7 +860,7 @@ function csvText(parts) {
        format never fixed. The USED range is measured and emitted beside it. */
     rows: null, cols: null, usedRows, usedCols,
     range: usedSheetRange(CSV_SHEET_NAME, usedRows, usedCols),
-    text, lineRows, cells, undetermined,
+    text, lineRows, cells, ...(cellsHeld ? { cells_held: true } : {}), undetermined,
   };
   return {
     ...base,
@@ -813,8 +869,56 @@ function csvText(parts) {
     undetermined,
     counts: { chars: text.length, cells: cellCount, formulas: 0,
       undetermined: undetermined.length },
-    ...(parts.piecewise ? { piecewise: parts.piecewise } : {}),
   };
+}
+
+/** One typed cell (R8): every csv field is `text`, the format declaring no type. */
+function typedCell(row, col, value) {
+  return { source: csvCellRef(row, col), value, type: "text", declared: null, cached: null, formula: null };
+}
+
+/** `cellsIn` (G41, K4636; R18): the typed cells of the rows `fromRow..toRow` (1-based, the record's number as `cells` and
+ *  `usedRows` count it) and columns `fromCol..toCol`, made from the held body, identical to what `text()` lists for them
+ *  (`typedCell` is the one builder; an unreadable field is a cell with a null value). The walk stops after `toRow`; with
+ *  `maxCells` it stops before the row that would pass it, whole rows only (a first row alone over `maxCells` is given
+ *  whole, so every call advances), and `next_row` names that row. Never throws. */
+async function csvCellsIn(partsOrBytes, query) {
+  const given = partsOrBytes && typeof partsOrBytes === "object" && !isBytes(partsOrBytes) && "ok" in partsOrBytes;
+  const parts = given ? partsOrBytes : await csvParts(partsOrBytes);
+  if (!parts.ok) return { ok: false, why: parts.why };
+  const q = query ?? {};
+  if (!(q.sheet == null || q.sheet === 0 || q.sheet === CSV_SHEET_NAME)) return { ok: false, why: "no_such_sheet" };
+  const whole = (n, min) => Number.isInteger(n) && n >= min;
+  const fromRow = q.fromRow ?? 1, fromCol = q.fromCol ?? 1;
+  const toRow = q.toRow ?? Infinity, toCol = q.toCol ?? Infinity;
+  const maxCells = q.maxCells ?? Infinity;
+  if (!whole(fromRow, 1) || !whole(fromCol, 1) || !(toRow === Infinity || whole(toRow, fromRow))
+    || !(toCol === Infinity || whole(toCol, fromCol)) || !(maxCells === Infinity || whole(maxCells, 1))) {
+    return { ok: false, why: "bad_range" };
+  }
+  if (parts.guard) return { ...parts.guard };
+
+  const cells = [];
+  let row = 0, nextRow = null, done = false;
+  forEachRecord(parts, (record) => {
+    if (done) return;
+    row++;
+    if (row < fromRow) return;
+    if (row > toRow) { done = true; return; }
+    const rowCells = [];
+    record.forEach((raw, c0) => {
+      const col = c0 + 1;
+      if (col < fromCol || col > toCol) return;
+      const read = fieldValue(raw, parts);
+      if (read.why) rowCells.push(typedCell(row, col, null));
+      else if (read.value !== "") rowCells.push(typedCell(row, col, read.value));
+    });
+    if (cells.length > 0 && cells.length + rowCells.length > maxCells) { nextRow = row; done = true; return; }
+    for (const cell of rowCells) cells.push(cell);
+    if (row >= toRow) done = true;
+  }, () => done);
+  const to = nextRow != null ? nextRow - 1 : Math.min(toRow, row);
+  return { ok: true, cells, rows: { from: fromRow, to }, ...(nextRow != null ? { next_row: nextRow } : {}) };
 }
 
 /** The `sheet-cell` reference for a 1-based row and column of THE one sheet.
@@ -872,10 +976,15 @@ export const csvEntry = {
       : partsOrBytes;
     return csvStructure(parts);
   },
-  text: async (partsOrBytes) => {
+  /* `opts.inlineCellsMax` (bytes; R17) is the caller's opt-in to holding the
+     sheet's cells back: without it every cell is listed, as before. */
+  text: async (partsOrBytes, opts) => {
     const parts = isBytes(partsOrBytes)
       ? await csvParts(partsOrBytes)
       : partsOrBytes;
-    return csvText(parts);
+    return csvText(parts, opts);
   },
+  /* G41 (R18): the OPTIONAL `cellsIn` slot, as `dialect` is one: the typed cells
+     of a range, made from the held body when a member opens or cites it. */
+  cellsIn: (partsOrBytes, query) => csvCellsIn(partsOrBytes, query),
 };
