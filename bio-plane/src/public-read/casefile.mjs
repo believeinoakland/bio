@@ -28,6 +28,9 @@ import { CASE_FILE_FORMAT, CASE_FILE_FORMATS_ACCEPTED, CASE_FILE_MANIFEST_PATH, 
 import * as grammar from "../case-grammar/index.mjs";
 import { CONTAINER_MAX_BYTES } from "../container.mjs";
 
+/** R44 (G121): the size of a group of concurrent R2 calls: the case file's reads of materials, and the `head` and `put` of its files. */
+export const CASEFILE_GROUP = 8;
+
 const enc = new TextEncoder();
 const utf8 = (s) => enc.encode(String(s));
 
@@ -77,7 +80,7 @@ const entryCost = (name, bytes) => bytes + utf8(name).length * 2 + 76;
  *  or the signed document's bytes do not hash to its digest: a case file that would leave out what it must carry is
  *  never built. It is a statement inside an act that has committed, never a refusal (R6). `maxBytes` is the part bound
  *  (R5). */
-export async function buildCaseFile({ facts, group = null, read, maxBytes = CONTAINER_MAX_BYTES }) {
+export async function buildCaseFile({ facts, group = null, read: readStore, maxBytes = CONTAINER_MAX_BYTES }) {
   const files = [];
   /* G50 (B): one file at one path is listed once (a shared archive two captures reach, the same copy two rows name); a
      second file at the same path with other bytes is kept, and the case file's own check then states the repeated path. */
@@ -91,6 +94,34 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
     return notAssembled(localize("public-read.casefile.signed_document_text_does_not", "the signed case document's text does not hash to its digest"), { sha256: facts.document.doc_sha });
   await add(caseFilePath("case_document"), "case_document", docBytes);
   await add(caseFilePath("case_signature"), "case_signature", utf8(facts.document.sig_armored ?? ""));
+
+  /* R44 (G121): every object the assembly will read is read first, in groups of 8, each answer (or throw) kept by its hash and
+     handed back at the place that asks for it, so the files, the `unheld` list and every statement are what the one-at-a-time
+     read gave, in the same order, and a read that threw throws where it was asked. */
+  const wanted = [];
+  const inline = (sha, text) => { if (text == null) wanted.push(sha); };
+  for (const f of facts.findings) if (f.published) inline(((f.published.parts || []).find((x) => x && x.sha256 === f.published.bundle_sha) ?? { sha256: f.published.bundle_sha }).sha256);
+  for (const m of facts.materials) {
+    if (m.original_of_copy || m.capture_invalid) continue;
+    inline(m.sha, m.bytes_text);
+    if (m.kind !== "observation") inline(m.text_sha, m.extracted_text);
+    if (m.kind !== "observation") for (const a of m.archives || []) if (a.registered !== false) inline(a.sha, a.text);
+  }
+  for (const o of facts.obscured || []) if (o.registered && !o.capture_invalid) wanted.push(o.copy);
+  for (const a of facts.attestations) for (const t of a.held || []) inline(t.sha, t.text);
+  for (const c of facts.calculations || []) for (const i of c.inputs || []) inline(i.sha, i.text);
+  const fetched = new Map();
+  const todo = [...new Set(wanted)].filter((sha) => /^[0-9a-f]{64}$/.test(String(sha ?? "")));
+  for (let i = 0; i < todo.length; i += CASEFILE_GROUP)
+    await Promise.all(todo.slice(i, i + CASEFILE_GROUP).map(async (sha) => {
+      try { fetched.set(sha, { bytes: await readStore(sha) }); } catch (error) { fetched.set(sha, { error }); }
+    }));
+  const read = async (sha) => {
+    const got = fetched.get(sha);
+    if (!got) return readStore(sha);
+    if (got.error) throw got.error;
+    return got.bytes;
+  };
 
   for (const f of facts.findings) {
     const at = (kind) => caseFilePath(kind, f.bundle_id);

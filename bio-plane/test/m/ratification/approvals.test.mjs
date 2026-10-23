@@ -115,7 +115,7 @@ test("R49: op=caseratify refuses APPROVAL_MISSING (C-58.11) naming each approver
                    ["APPROVAL_MISSING", "APPROVAL_MISSING", "C-58.11", rowOf("APPROVAL_MISSING").translation]);
   assert.deepEqual([r.body.approvers, r.body.missing, r.body.not_carried, r.body.approvalSha], [["bo", "cy"], ["cy"], [], s.digest]);
   assert.deepEqual(s.asked.at(-1), { case: CASE, edition: 1, docSha: s.digest }, "asked at the stored document's approval digest");
-  assert.deepEqual(r.p.fetched, ["casedocfacts", "casetestimony", "caseapproval"], "refused before the gate and the commit");
+  assert.deepEqual(r.p.fetched, ["casedocfacts", "casetestimony", "caseapproval", "casegate"], "refused before the commit (R60: the three reads of the document are asked together)");
   assert.equal(committed(s.w), 0);
   s.approve("cy");
   const ok = await s.op(caseRatifyOp, s.req);

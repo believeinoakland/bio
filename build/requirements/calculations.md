@@ -81,7 +81,7 @@ Terms. A **recipe** is `calc-grammar`'s (`bio-calc/1`), evaluated only by it. A 
 
 #### T51 fix round 8 (K4817; `build/plan/fix-round-8-T51.md`)
 
-- **R44** (fix round 8, G101; K4817) **A CSV table is the file's.** `declareTable` over a `document` source whose container is `csv` reads the stored bytes with `csv-reader`'s walk, never the reading's units; such a source whose bytes are not held is refused, stated, never made from the index; other sources as before. Test: the comma CSV of 18,098 rows declares 18,098 rows and the tab twin's sha; a source with no held bytes is refused. *(not yet met: T51)*
+- **R44** (fix round 8, G101; K4817) **A CSV table is the file's.** `declareTable` over a `document` source whose container is `csv` reads the stored bytes with `csv-reader`'s walk, never the reading's units; such a source whose bytes are not held is refused, stated, never made from the index; other sources as before. Test: the comma CSV of 18,098 rows declares 18,098 rows and the tab twin's sha; a source with no held bytes is refused.
 
 ## Private
 

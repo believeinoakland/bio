@@ -1,6 +1,6 @@
 # ratification (T51)
 
-**Status** · session_011tm6afKMQNi7iG6sqa1TmS · depth 2 · COMPLETE · handled B12
+**Status** · session_01Aitu5ptyoRC1Hw82dyhsuk · depth 2 · COMPLETE · handled B14
 
 ## J1 · REPORT
 
@@ -241,3 +241,31 @@ COMPLETE · fix round 7, G62 (ratification side) and G59 (parity test), B12. Rea
 **For BOB:** when retrieval's and record-grammar's G62/G59 are merged on the tranche, merge it into this branch and the six red tests turn green with no further change of mine; send a CHANGE if any stays red. Also: screens-publish should read `publish_at.source`/`why` (and `publish_at_stated` for the not-reached case, which is case-authoring's).
 
 Size (session_011tm6afKMQNi7iG6sqa1TmS): test runs 8, module lines 3987
+
+## J14 · QUESTION
+
+QUESTION (G120, the phase entries `gate;dur`, `commit;dur`, `copy;dur`, `assemble;dur`, `reuse;dur`). The Worker half gets its `ctx` from `plane/door.mjs:116`, which hands no clock, and `phase-clock.mjs` accepts no module-stated entries yet (control-plane's job). My best reading, which I build now: `caseCeremony` calls an optional `ctx.stateTiming(name, ms)` once per phase, a no-op when absent (so nothing breaks before control-plane merges), and my r8-chain test asserts the five calls with a stub. For the entries to reach `Server-Timing`, plane/door.mjs must pass `stateTiming` into this ctx and the clock must take them. Please give control-plane (or plane) that provider with exactly this name and signature, or tell me the name you chose and I rename. I carry on meanwhile.
+
+## Fix round 8 (RATIFICATION #34, session_01Aitu5ptyoRC1Hw82dyhsuk): G120
+
+**(1) Cause.** `ratification/ops.mjs` `caseCeremony` awaited `casetestimony`, `caseapproval` and `casegate` one after the other (the store reads depend only on the document `casedocfacts` answered), and `copyMaterialsDetailed` copied one material at a time (head, get, put each awaited). **(2) Why missed:** no test counted depth or concurrency; Miniflare answers in ms. **(3) Failing-first** `r8-chain.test.mjs`, seen RED before the change: `AssertionError: peak concurrency of the bucket calls is 1`; `all three in flight at once` failed; the phases test failed (no stated phases). Green after: 5 of 5. **(4) Platform check:** L (counts, in the tests); P after the redeploy is BOB's: `caseratify;dur` with `gate;dur`, `commit;dur`, `copy;dur`, `assemble;dur`, `reuse;dur`.
+
+Applied: the three reads issued together with `Promise.all`, their answers weighed in the old refusal order (R35 testimony, CASE_RATIFY_STALE, R49 approval, NO_SIGNERS, signature, then the gate); the gate read is now speculative before the signature check, a read only (nothing written by a refused act, tested). `copyMaterialsDetailed` copies in groups of `COPY_GROUP = 8`, counting outcomes in item order (answer unchanged). Each phase stated once through the optional `ctx.stateTiming(name, ms)` (no-op without it).
+
+**Call budget (re-derived):** object chain today 21 calls; the three reads together save 2 → 19 sequential; case file (G121): 12 files in groups of 8 = 2 x (head, put) = 4; 2 `PUBLISHED.get` = 6 → 25; the material copy adds no depth beyond its group (one group of at most 8 beside the case file's). My module's part of the 21 is 15 → 13 sequential; the rest (session, reauthdue, recordcasefile, casefilefacts, recordcasemanifest, reusedparts x2) is the door's, public-read's and mine after the commit, unchanged. A figure below 25 at the door is explained by the member commits and reuse loops running sequentially only when a sitting has members.
+
+**Edits to existing tests (declared, not weakened):** `approvals.test.mjs` R49 and `relays.test.mjs` R17 pinned "the gate was not asked after the approval refusal" / "the act's last fetch is the refusing op". With the three reads together the gate read is asked too; both now assert the true invariant (the commit and everything after is not asked, nothing written, the same refusal bytes). 
+
+**Requirements:** R60 is amended in `build/requirements/ratification.md` by me (B4); the ownership check lists that one file.
+
+**Provider owed (QUESTION J14):** `plane/door.mjs:116` must pass `stateTiming` into the ctx and `phase-clock.mjs` must carry module-stated entries (control-plane's). Until then the phases are not on `Server-Timing`; nothing breaks. The door count test (`r8-caseratify-calls`, depth at most 25) is control-plane's.
+
+Nothing deferred. Nothing found in another module beyond the provider above.
+
+Tests and checks: `node --test` ratification: tests 324, pass 324, fail 0. Plane/public-read/case-authoring/mk6 tests naming caseratify: 50 of 50. impact.mjs: 45 modules affected (transitive); the direct users run above. format 0 failures; architecture 0; coverage 59 of 59, 0; words 0 failures; ownership: 6 files, 1 failure = the requirements file B4 accepts.
+
+Size (session_01Aitu5ptyoRC1Hw82dyhsuk): test runs 9, module lines 3711
+
+## J15 · COMPLETE
+
+COMPLETE · G120 done, record section 'Fix round 8' pushed on job/T51/ratification. R60 amended by me in build/requirements/ratification.md (the one file ownership lists). ratification tests 324/324; format, architecture, coverage (59/59), words 0 failures; ownership: only the requirements file listed. The three independent reads are together, the material copy in groups of 8, phases via ctx.stateTiming (B14). Call budget 25 re-derived in the record. Two existing tests (R49 approvals, R17 relays) pinned the old call order and now assert the invariant (commit not asked, nothing written, same bytes). Needs from others: the door count test and the stateTiming forwarding (PLANE #55, control-plane).

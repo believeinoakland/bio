@@ -188,10 +188,12 @@ export function defaultFakes() {
 /** The items of a feed by id. */
 export const byId = (feed) => Object.fromEntries((feed.items || []).map((i) => [i.id, i]));
 
-/** A feed answer with its timings removed (R91: `feeds[].ms` and `feeds_ms` are how long this ask took, so two asks differ in
- *  them and in nothing else). */
+/** A feed answer with its timings and its serving mark removed (R91: `feeds[].ms` and `feeds_ms` are how long this ask took;
+ *  R94: `derivation` is whether it was made now or kept, so two asks differ in them and in nothing else). */
 export const untimed = (feed) => {
   if (!feed || !Array.isArray(feed.feeds)) return feed;
-  const { feeds_ms: _, ...rest } = feed;
+  const { feeds_ms: _, derivation: __d, ...rest } = feed;
   return { ...rest, feeds: feed.feeds.map(({ ms: __, ...row }) => row) };
 };
+/** A count answer without its serving mark (R94). */
+export const plainCount = ({ derivation: _, ...rest }) => rest;

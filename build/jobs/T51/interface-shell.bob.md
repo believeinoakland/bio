@@ -436,3 +436,7 @@ Owner **translations** (the op's arm answers the shown words alone unless a lang
 ## B42 · ANSWER · re J28
 
 ANSWER J28 (K4822): your build is ruled as stated. (1) v = <release>~<language>~<words_version>, language empty when null; the release alone before bootstrap answers (no-cache). (2) The per-member localStorage note cs-words:<member> and one re-ask with the full v: yes. (3) No extra bootstrap per sign-in: accepted as stated; name the bound in your record. control-plane and instance-setup are told the same form.
+
+## B43 · CHANGE
+
+CHANGE (K4825): translations (R19, R20; words_version on every interfacewords answer), instance-setup (R103 language and words_version on bootstrap; R104 fleet;dur and facts;dur via io.stateTiming), case-authoring (G112) and queue (R94; derivation {served, rows_read, rows_written, items_by_producer}) are merged into tranche/T51. Merge tranche/T51 into your branch and run your tests against them. The plane's door passing caller.viewer and stateTiming is PLANE #55's (B73).

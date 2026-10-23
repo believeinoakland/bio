@@ -84,8 +84,10 @@ test("R11 a read that throws, answers no object, answers a promise or answers a 
     w.m.registerMemberLanguageRead(answer);
     const words = w.m.interfaceWords({ viewer: "ruth" });
     assert.equal(words.language, null, String(answer));
-    assert.ok(words.words.every((x) => x.fallback && x.text === x.en && x.text));
-    assert.equal(words.words.length, interfaceWords().length);
+    assert.deepEqual(words.words, [], "R19: no language set, no word shown");
+    const named = w.m.interfaceWords({ language: "es", viewer: "ruth" }).words;
+    assert.ok(named.every((x) => x.fallback && x.text === x.en && x.text));
+    assert.equal(named.length, interfaceWords().length);
     assert.equal(w.m.readingLanguage({ member: "ruth" }).reason, "LANGUAGE_NOT_SET", String(answer));
   }
   const ok = boot();

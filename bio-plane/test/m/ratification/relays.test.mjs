@@ -108,6 +108,7 @@ async function drive(relay, answer, handed) {
   const res = await relay.run(p.request(body), p.stub, p.ctx);
   return { res, p, w };
 }
+const PARALLEL = ["casetestimony", "caseapproval", "casegate"];
 const committed = (w) => w.pub.committed.length + w.count("published_bundles");
 const wire = (res) => JSON.stringify(res.body);
 
@@ -122,7 +123,11 @@ test("R17 (N339, N354): each of the nine relays answers the store's own refusal 
       for (const [body, status] of refusals) {
         const { res, p, w } = await drive(relay, () => reply(body, status), handed);
         assert.ok(p.fetched.includes(relay.op), `${relay.name}: the store was asked`);
-        assert.equal(p.fetched[p.fetched.length - 1], relay.op, `${relay.name}: the act stopped at the refusal`);
+        /* R60: the three reads that depend only on the document are issued together, so the act stops at the refusal with their
+           siblings asked (reads); nothing past them (the commit) is asked. */
+        if (PARALLEL.includes(relay.op))
+          assert.deepEqual(p.fetched.slice(1).sort(), [...PARALLEL].sort(), `${relay.name}: the act stopped at the refusal`);
+        else assert.equal(p.fetched[p.fetched.length - 1], relay.op, `${relay.name}: the act stopped at the refusal`);
         assert.deepEqual([res.status, res.body], [status, body], `${relay.name} ${label}: the store's answer, as it gave it`);
         assert.equal(committed(w), 0, `${relay.name} ${label}: nothing committed`);
         assert.equal(p.published.size, 0, `${relay.name} ${label}: nothing copied`);

@@ -849,3 +849,15 @@ Owner **ratification** (the pre-commit chain, `ops.mjs:65-260` `caseCeremony`, a
 ## B61 · ANSWER · re J47
 
 ANSWER J47 (K4822). (1) Yes: v = <release>~<language>~<words_version>; the release alone answered private, no-cache. The door learns the stamp from the object's interfacewords answer, whose result carries words_version beside language (TRANSLATIONS #3 told by CHANGE now); compare with env.VERSION and that answer only. (2) object-age;dur: stated by the object, PLANE #55 started now (plane R96) for it and for forwarding the hook; merges before you. (3) Your forms are ruled: body;dur and bytes;dur once per request, request_start before the object call and request_done after. The module hook's ONE name is stateTiming(name, ms), optional: you hand it to instance-setup in its io argument (io.stateTiming) and to the plane's door context, which forwards it to handlers (ratification calls ctx.stateTiming).
+
+## B62 · CHANGE
+
+CHANGE (K4825): translations (R19, R20; words_version on every interfacewords answer), instance-setup (R103 language and words_version on bootstrap; R104 fleet;dur and facts;dur via io.stateTiming), case-authoring (G112) and queue (R94; derivation {served, rows_read, rows_written, items_by_producer}) are merged into tranche/T51. Merge tranche/T51 into your branch and run your tests against them. The plane's door passing caller.viewer and stateTiming is PLANE #55's (B73).
+
+## B63 · CHANGE
+
+CHANGE (K4826): admission (R32, one session read per request) is merged. Also: your test 'R122 (the page's bootstrap is read once per load)' failed once under a concurrent plane run (54 s) and passes alone (ADMISSION #17's report). K4787: make it assert the work (the count of bootstrap reads) or a same-run control, never a wall time, inside this job.
+
+## B64 · CHANGE
+
+CHANGE (K4827): acquisition (R110 member matching and the delivering mark; R111 DELIVERY_FINAL ends final with the code; R112 keep inside the bar) and screens-intake (G108-G111) are merged into tranche/T51: merge it and turn seam sections A, A2 and the G108/G109 halves green.

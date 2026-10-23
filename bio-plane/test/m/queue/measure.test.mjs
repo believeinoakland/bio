@@ -50,7 +50,7 @@ test("R91: the timings are how long this ask took and nothing else: the items, c
   const w = setup();
   w.bundle("DOC-1"); w.task("TASK-2026-0001-a", "DOC-1", { assignee: "alice" });
   const a = w.feed("alice"), b = w.feed("alice");
-  const strip = ({ feeds_ms: _, feeds, ...rest }) => ({ ...rest, feeds: feeds.map(({ ms: __, ...r }) => r) });
+  const strip = ({ feeds_ms: _, derivation: __d, feeds, ...rest }) => ({ ...rest, feeds: feeds.map(({ ms: __, ...r }) => r) });
   assert.deepEqual(strip(a), strip(b));
   assert.equal(a.items.length, 1);
 });

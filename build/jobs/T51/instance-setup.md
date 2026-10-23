@@ -1,6 +1,6 @@
 # instance-setup (T51)
 
-**Status** · session_019X53EdmQwW5EaH384CWbSf · depth 2 · COMPLETE · handled B10
+**Status** · session_01SPUpVJsJxBhU7hbLvsUMXD · depth 2 · COMPLETE · handled B12
 
 ## J1 · REPORT · re B1
 
@@ -176,3 +176,31 @@ REPORT (re B9, G83, R102): the change is built and pushed (45ef9bf54f on job/T51
 ## J14 · COMPLETE
 
 COMPLETE (re B9, B10; fix round 7, G83 and G84). R102 is met; nothing deferred. What changed: bio-plane/src/setup.mjs (import of store-place.mjs; publicInstanceGroup, instanceGroupOp, groupIdentityOp, groupLogoAsset, selftest and instanceSetupOp's store() all call storeStub(env, storeName); selftest states store_location, store_generation and store_place_note, configuration only; line 64 re-exports interfaceWords) and bio-plane/src/livefire.mjs (storeStub). Failing-first: bio-plane/test/m/instance-setup/store-place.test.mjs, a recording env.STORE over every entry path (hint wnam, generation 2 giving bio~g2 and scratch~g2, both, neither, malformed values) plus selftest's two fields; RED on the unchanged source, GREEN after. L: worker-reports.test.mjs runs op=selftest on the real Miniflare binding with STORE_LOCATION=wnam and answers it. Suites, with the real helper merged and before the G84 re-point: instance-setup 222 pass, 0 fail. Users named by impact.mjs: answer-envelope 43/0, store-door 56/0, signin-door 15/0, screens-action 278/0, plane 113 pass in the batch run (killed at its time limit) and worker.test.mjs alone 7/0, control-plane 446 pass, 1 fail: t51-round6-seam.test.mjs R123/R125 (G7) 'a 40 MB five-part upload ... no reading row owed' (the reading ledger; not in my module; not checked against the tranche tip, it fails on a re-run alone). The ONE red I name (G84): with the re-point of setup.mjs:64 and t50.test.mjs to interfaceWords, the instance-setup suite cannot load until translations merges (the tranche's translations/index.mjs still exports INTERFACE_WORDS only); it is red by that import alone. Checks: format 0, architecture 0, coverage 74 of 74, words inline 0 plain 0 testcopy 0 missingkey 0 unkeyed 0, ownership 6 files 0 failures. Found in other modules: none of mine; note store-door's routes.test.mjs imported INTERFACE_WORDS from setup.mjs: it must use translations' export or interfaceWords when you merge. Stale generated artifacts: none. Requirement wording: none proposed. Size (session_019X53EdmQwW5EaH384CWbSf): test runs 12, module lines 3684
+
+## J15 · QUESTION
+
+QUESTION (re B11; two seams at the door, best reading below; I carry on on it and COMPLETE on it unless you change it).
+
+1. Signed-in caller (R103). `bootstrapReport`/`bootstrapOp` take `caller` already ({cls:"admin"} or {administrator:true}, R95). For a member's session I read `caller.viewer` (the signed-in member's id, as the control plane stamps `viewer` elsewhere): a non-empty `viewer` means signed in, and `language` (memberLanguage) and `words_version` (translations R20 `wordsVersion()`) are stated; none, neither key. The admin-class token with no viewer gets the seven facts and no language. So plane's door must pass `{viewer}` (and `administrator`/`cls` as now) to `bootstrapOp`. One store hop serves both: the store-internal route `bootstrapfacts` takes `facts=1` and/or `viewer=`.
+2. Phase entries (R104). `bootstrapReport`/`bootstrapOp` take an optional `timing(name, ms)` in their io argument and call it as `timing("fleet", ms)` and `timing("facts", ms)` (ms of `partsReport`, 0 when kept; ms of the store hop); absent, nothing happens. Control-plane's phase clock should hand its module-stated-entry function as `timing` (the door passes it through `publicOp`). Please confirm that name/shape to control-plane, or give me the one it builds.
+Not blocking: the tests for R103 use a stand-in `wordsVersion` until translations R20 merges.
+
+## J16 · COMPLETE · re B11, B12
+
+COMPLETE (re B11, B12; fix round 8, G118 and G114). R104 and R103 are built; the requirements' "(not yet met: T51)" marks can be lifted (BOB writes). One dependency stays by BOB's B12: `translations` R20 (`wordsVersion()`) is not merged, so my R103 tests use a stand-in `deps.translations`; after BOB's CHANGE I re-run on the merged service.
+
+**G118 (R104).** (1) Cause: `bootstrapReport` awaited `partsReport`, which asked agent-worker and file-scanner `/version` (4 s bound each) on every call (`setup.mjs` `partsReport`). Fix: the parts are kept 60 s per environment (`PARTS_KEPT_MS`, `partsAnswer`); a call that finds the ask running shares it; `members=1` is not kept. The parts ask and the store's second hop now run together. `bootstrapReport`/`bootstrapOp` take `stateTiming(name, ms)` (B12) and state `fleet` (0 when kept) and `facts` (sum of the store hops). (2) Missed because no test counted the fleet calls of `bootstrap`. (3) `test/m/instance-setup/r8-parts-report.test.mjs`. RED before: `actual: { AGENT_WORKER: 2, FILE_SCANNER: 2 }, expected: { AGENT_WORKER: 1, FILE_SCANNER: 1 }`; entries `actual: [], expected: ['facts','fleet']`. GREEN after (6 pass). (4) P by BOB after redeploy.
+
+**G114 (R103).** (1) Cause: `bootstrap` carried neither the viewer's language nor the adoptions stamp, so the shell could not name `v`. Fix: a non-empty `caller.viewer` (not a machine identity) means signed in; then `language` and `words_version` (each a string or `null`), else neither key; the store route `bootstrapfacts` takes `facts=0|1` and `viewer=` so one hop serves the seven facts and the viewer's two; the store's own bootstrap answer cannot set either key. (2) Missed: no requirement existed. (3) Same file, R103 tests; RED before: `actual: undefined, expected: 'es'`. GREEN after.
+
+**Door to place (BOB, with plane and control-plane):** the door passes `caller.viewer` and `stateTiming` to `bootstrapOp`; plane's `publicOp` passes neither today.
+
+**Words:** no new sentence. Stale generated artifacts: none made.
+
+Tests and checks: instance-setup 228 pass, 0 fail. Users named by `impact.mjs` that touch bootstrap, run: control-plane `t51-bootstrap` 1/0, plane `door` 6/0, `worker` 7/0, `hosts` 4/0, op-declarations `t47` 13/0, credentials `t51` 5/0, `members` 1/0. format 0; architecture 0; coverage 76 of 76; words 0 (inline 0, plain 0, testcopy 0, missingkey 0); ownership 3 files, 0 failures.
+
+Size (session_01SPUpVJsJxBhU7hbLvsUMXD): test runs 9, module lines 3700
+
+## J17 · COMPLETE
+
+COMPLETE (re B11, B12): R103 and R104 built, record J16. 228 pass; checks 0. Door must pass caller.viewer and stateTiming to bootstrapOp. Re-run on the merged translations R20 at your CHANGE.

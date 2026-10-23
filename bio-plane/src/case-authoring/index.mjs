@@ -102,7 +102,7 @@ import { caseAccountOf } from "../case-account/index.mjs";
 /* B10 (K4240): `capture`, the one instance on the host, which records the members who captured each capture (its R69). */
 import { captureOf } from "../capture/index.mjs";
 /* R56, R57 (T33): case-grammar's `calculationsLines` and `timelineLines` (its R18, R20), the one spelling of each block. */
-import { calculationsLines, timelineLines, materialsOf, passagesOf } from "../case-grammar/index.mjs";
+import { calculationsLines, timelineLines, materialsOf, passagesOf, memberTiesOf } from "../case-grammar/index.mjs";
 /* R63, R68 (T41; D56, D60): case-grammar's account and approval blocks (its R23, R26), the one spelling of each, and the
    approval digest an approval names (its R26; K2528). The review comments' block is `case-account` R7's answer. */
 import { accountLines, accountSectionLines, approvalsLines, approvalSubjectSha } from "../case-grammar/index.mjs";
@@ -1591,7 +1591,10 @@ export class CaseAuthoring {
   publishPreflight(args = {}, calculationFacts = null) {
     const given = args && typeof args === "object" ? args : {};
     const carried = given.viewer && typeof given.viewer === "object" ? given.viewer : null;
-    const a = this.#withDraft(carried ? { ...given, viewer: carried.stamp ?? null } : given);
+    const drafted = this.#withDraft(carried ? { ...given, viewer: carried.stamp ?? null } : given);
+    /* R34, R75, R76 (fix round 8, G112): the ties were attested when the edition was prepared, and the unsigned document
+       holds that attestation; a reload's call sends none, so it is read from the document, in this rolled-back run only. */
+    const a = this.#tieAttestedInPreparation(drafted) ? { ...drafted, tieAttested: true } : drafted;
     const seen = {};
     let answer = null, text = null;
     try {
@@ -1723,6 +1726,33 @@ export class CaseAuthoring {
     const editions = this.draftEditions({ caseId: answer && answer.ok === true ? (answer.minted ? null : answer.caseId) : stoodAt,
                                           draft: str(a.draft) || null });
     return { ok: true, wrote: false, ready: !first && !blockers.length && ratify.reached, first, blockers, steps, editions };
+  }
+
+  /* R34, R75, R76 (fix round 8, G112; diagnosis-R8-capture.md F): whether the call's own signer already attested, in the
+     unsigned document the record holds for the case the call stands at (R83's `draftEditions`): an `attestation` row of
+     `member_ties:` naming her. Only for a call that sends no confirmation; it reads and never throws, and it is never
+     handed to `op=publish`, which asks the confirmation in its own act (R76). Nothing prepared, or prepared by another
+     signer, is false. */
+  #tieAttestedInPreparation(a) {
+    try {
+      if (a.tieAttested === true) return false;
+      const who = str(a.author);
+      if (!who || isMachineIdentity(who)) return false;
+      /* the case identity the call stands at, from the record without the act (R83), as the pre-flight tells it */
+      const viewer = a.viewer ?? null;
+      const auth = this.#authority(a.project ?? null, viewer, who);
+      if (auth.ok === false) return false;
+      const members = membersOf(a.targets, a.target);
+      const judged = members.length ? this.#judgeMembers(members, auth.proj, viewer, auth.gate) : null;
+      const held = this.draftEditions({ caseId: this.#caseStood(members, a.caseId, a.newCase, judged),
+                                        draft: str(a.draft) || null });
+      if (!held.case || held.prepared === null) return false;
+      const d = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=? AND sig_armored IS NULL`,
+                          held.case, held.prepared);
+      if (!d) return false;
+      const bare = (x) => String(x ?? "").trim().replace(/^member:/, "");
+      return memberTiesOf(parseFrontmatter(d.text).data || {}).some((r) => r.row === "attestation" && bare(r.signer) === bare(who));
+    } catch { return false; }
   }
 
   /* R83 (R7, R9): the case identity a call stands at, told from the record without the act: the one named, else the one
