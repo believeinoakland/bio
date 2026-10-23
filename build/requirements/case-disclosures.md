@@ -200,6 +200,7 @@ This module judges each against the owner's lists and the record at the act, and
 - (T46; N901) `answers`: the `{holdings, rules, looks}` shape (its R33) in which R30's caller hands `cited`, which R30 translates for `checkAccount`.
 - `case-carriage` (T37; K2171's edge): `photoMarks`, `OBSCURED_LABEL` (its R10, R11; R6, R7, R29); `documentCopy`, `COPY_CLEANED_LABEL` (its R16, R15; T39, R6, R7).
 - (T51; K4026) `civil-time`: `localDay` (R33). `retrieval`: `zone()` (its R69; R33). `image-cover`: `COVER_REFUSALS` and `doc-clean`: `CLEAN_REFUSALS` (tests only: their refusal lists read from the owners' declarations, K3268).
+- (fix round 6, G50; K4690) `public-read`: tests only, publication's `assembleCaseContainer` and the published projection it reads (`publication/worker.mjs`, `container.mjs`, public-read's world fixture), for the end-to-end seam of a case with two captures of one source; this module's own code imports nothing of it.
 
 ### Invariants
 
