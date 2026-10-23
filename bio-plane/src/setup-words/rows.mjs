@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (18524 design words, 1112 protected; SHA-256
-   24f0ffdeb236000f948540c221752da2e833674406dba6c952a7a2a67abe2c5b) followed by 7209 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   24f0ffdeb236000f948540c221752da2e833674406dba6c952a7a2a67abe2c5b) followed by 7219 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -25138,6 +25138,16 @@ export const WORD_ROWS = Object.freeze([
   ["run-rules.test-bar.stringify_has_not_passed_its","{stringify} has not passed its bar on Civicsmith's test investigations, or what must come before it is not yet verified, and this is not a test instance (R29). Nothing was sent to the assistant",null,null,false,"code"],
   ["scheduler.index.the_file_safety_owner_offers_no_onfilework","the file-safety owner offers no onFileWork",null,null,false,"code"],
   ["scheduler.index.the_key_key_is_one","the key '{key}' is one of the answer's own fields or another consumer's",null,null,false,"code"],
+  ["screen.group.storage.factors.latency","How much delay you accept when a search has to run in the background instead of at once.",null,null,false,"code"],
+  ["screen.group.storage.factors.lead","How large your record can realistically grow depends on four things.",null,null,false,"code"],
+  ["screen.group.storage.factors.limits","The limits of the platform itself.",null,null,false,"code"],
+  ["screen.group.storage.factors.pare","How far you pare the record, by what your investigations and queries touch.",null,null,false,"code"],
+  ["screen.group.storage.factors.plan","The Cloudflare plan your team has and is willing to pay for.",null,null,false,"code"],
+  ["screen.group.storage.head","How full your team's record is",null,null,false,"code"],
+  ["screen.group.storage.size","Your team's record holds {used} GB of the {limit} GB one record can hold ({percent}%).",null,null,false,"code"],
+  ["screen.group.storage.unstated","The size of your team's record is not stated.",null,null,false,"code"],
+  ["screen.group.storage.warn1","Your team's record has passed 70% of what one record can hold. Decide what to do before it fills.",null,null,false,"code"],
+  ["screen.group.storage.warn2","Your team's record has passed 90% of what one record can hold. At the limit, writes will fail: nothing more can be saved until room is made.",null,null,false,"code"],
   ["sheet-worker.contract.loading_the_workbook_took_longer","loading the workbook took longer than the time budget, so evaluation was not started",null,null,false,"code"],
   ["sheet-worker.contract.no_capture_with_that_sha_in","no capture with that sha in that store",null,null,false,"code"],
   ["sheet-worker.contract.recompute_is_not_enabled_here","workbook recompute is not enabled on this instance; an administrator enables it after the release deploys this member",null,null,false,"code"],
