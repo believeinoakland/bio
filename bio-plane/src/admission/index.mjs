@@ -307,6 +307,8 @@ export async function classify(token, env) {
    that did not resolve" and "a session that did not resolve" stay two answers. */
 export const AI_TOKEN_SHAPE = /^aik-[0-9a-f]{64}$/;
 const SESSION_TOKEN_SHAPE = /^[0-9a-f]{64}$/;
+/* G83 (K4746, K4747; runtime-limits R28): the team's room is obtained through the one helper, which passes its location
+   hint and names it by its generation, so every store call of this module reaches the same room. */
 const bioStore = (env) => storeStub(env, "bio");
 
 /* R6, R20 (K2038) — HOW A LOOKUP REACHES THE STORE: in a header, never the address. `x-bio-session` carries the token
