@@ -426,3 +426,22 @@ COMPLETE (B25, G29, K4609). Every document row of case_citations (project edge o
 QUESTION (G47, two things I need before I can finish; I carry on with the rest on my best reading).
 1. The format helper (entry part 4): case-grammar's helper that answers `/9` or `/8` for a set of attestation rows is not merged, so I do not know its export name or arguments. Best reading: a function exported from case-grammar's index that takes the document's attestation rows (the `materials` block's `material_attestations` rows as case-disclosures `materialRows` hands them to `caseDocumentText`) and answers the format string; document.mjs then writes `format:` and passes the same string to attributionBodyLines/lensSectionLines. Please tell me its name and argument (or tell me CASE-GRAMMAR #20 will post it).
 2. The bound: `CASE_DOCUMENT_BYTES_MAX` is not yet exported by publication (PUBLICATION #36 unmerged), so your (b) and (d) cases (a document over / just under the bound through the real act) cannot name the constant today. Best reading: I read it as `import * as PUBLICATION` in index.mjs (`PUBLICATION.CASE_DOCUMENT_BYTES_MAX`), the tests read it from the same export, and (b)/(d) are therefore red by name until PUBLICATION merges (I keep no copy of the number). If you want (b)/(d) green now, tell me to carry a local fallback of 1,572,864 for the interim, which I would delete at the merge.
+
+## Fix round 6, G47 (B26 START, CASE-AUTHORING #41): progress
+
+**Providers' state (B26):** CASE-GRAMMAR #20, PUBLICATION #36, CASE-CHECKER #16, CASE-DISCLOSURES #17 and CASE-INPUTS #8 were NOT merged when I started; `publication` does not yet export `CASE_DOCUMENT_BYTES_MAX` and case-grammar has no format helper.
+
+**Done (commit on job/T51/case-authoring).**
+- `checks.mjs`: new row `CASE_DOCUMENT_TOO_LARGE`, C-136.9 (next free of C-136), `where` `#publishCase > is-case-document-too-large`, words a `localize` stand-in (`case-authoring.checks.case_document_too_large`, K3930) with `{size}`, `{bound}`, `{materials}`, `{members}`; row owed to UX-DESIGN (B491).
+- `index.mjs` `#publishCase`: `docBytes` moved up to right after `docText`; over `publicationExports.CASE_DOCUMENT_BYTES_MAX` (read from publication's exports, no copy) it refuses `CASE_DOCUMENT_TOO_LARGE {size, bound, materials, members}` before the reevaluation raise, `#standardsUse` and the store (words `case-authoring.index.case_document_too_large`, MB to one decimal). After `storeCaseDocument`, `ok === false` (or no `doc_sha`) is the act's refusal: the store's `reason` (a `CASE_DOCUMENT_TOO_LARGE` from the store is the same row), else `CASE_DOCUMENT_NOT_STORED`; never `doc_sha: null` as prepared.
+- Tests: `g47-refusal.test.mjs` (b), (c), (d); `invariants.test.mjs` R29 lists C-136.9 and the row's `where`.
+
+**Failing-first.** (c): red on the old source (answered `ok` with `doc_sha: null`), green now. (b) and (d): red today by name (`publication` exports no bound); with the constant added to publication locally and not committed, both green (the refused document, snapshot unchanged, no row; a document just under the bound stored with `doc_sha` equal to the hash of its bytes). They stay red by name until PUBLICATION merges.
+
+**Open, asked of BOB (J23 QUESTION):** (1) the name and argument of case-grammar's `/9`-or-`/8` format helper (entry part 4; not written, not guessable); (2) whether (b)/(d) wait red for PUBLICATION or I carry an interim fallback of the number.
+
+**Seam reds by name:** `document.test.mjs` R17 (waits for CASE-GRAMMAR, PUBLICATION, CASE-CHECKER, CASE-DISCLOSURES). Suite: 241 pass, 3 fail (R17, G47 b, G47 d), all red by name.
+
+**Protective bound (K1881):** none set by this module; it reads publication's 1,572,864 B.
+**Census ops:** none changes its accepted keys.
+**Proposed requirement lines (R14 amended):** "The document is measured as built; over `publication`'s `CASE_DOCUMENT_BYTES_MAX` the act is refused `CASE_DOCUMENT_TOO_LARGE` (C-136.9) carrying `size`, `bound`, `materials`, `members`, before any side effect, and a refusal of the store is the act's refusal, never a prepared document with no `doc_sha`."
