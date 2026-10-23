@@ -14,7 +14,12 @@
  * made here in node and posted to the object. Each ends read, indexed (the marker found), the largest value stored under 1 MiB, and, for a
  * sheet, `cellsOf` of its last row answered with the marker; then Miniflare is stopped and started again over the same storage and
  * `readingOf`, `readingFor` and `cellsOf` answer the same. `limit` as a size also INSERTs 2,098,176 and 2,252,800 bytes of text into the
- * object's SQLite, the limit the guard is set from (record-core/schema.mjs:30-35). */
+ * object's SQLite, the limit the guard is set from (record-core/schema.mjs:30-35).
+ *
+ * (fix round 6, G41 follow-up; R98, K4664, K4669) A size `ucsv:<mebibytes>` or `uxlsx:<rows>` is the same sheet held with a capture format of
+ * `undetermined` (as an upload over one part is stored); `cellsOf` of its last row is answered through the reading's own container. A size
+ * `dxlsx:<rows>` is the workbook with the reading's container set to `text` (a container with no cell-making entry), so only the format detected again
+ * from the held head and the declared type can name it. */
 import { mkdirSync, writeFileSync, readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -42,8 +47,10 @@ const sha = async (b) => [...new Uint8Array(await crypto.subtle.digest("SHA-256"
 export class Probe extends DurableObject {
   constructor(ctx, env) {
     super(ctx, env);
-    this.rows = new Map();
-    this.docs = new Map();
+    /* the register stand-in and the provenance documents are kept in the object's storage, so a restart (a new isolate over the same storage) finds them as the real register does */
+    const kept = ctx.storage.kv.get("held");
+    this.rows = new Map(kept ? kept.rows : []);
+    this.docs = new Map(kept ? kept.docs : []);
     this.core = recordOf(ctx, { evidence: env.CAPTURES, evidencePrefix: "bio/captures/" });
     this.core.migrate();
     const membership = membershipOf(ctx, { record: this.core });
@@ -68,6 +75,10 @@ export class Probe extends DurableObject {
     if (u.pathname === "/post") {
       const bytes = new Uint8Array(await req.arrayBuffer());
       return Response.json({ ...(await this.hold(bytes, q("ct"), q("format"), q("name"), q("text") === "1")), mem: this.mem() });
+    }
+    if (u.pathname === "/container") {
+      this.ctx.storage.sql.exec("UPDATE readings SET reading=json_set(reading, '$.text_container', ?) WHERE capture_sha=?", q("c"), q("sha"));
+      return Response.json({ ok: true, format: this.ctx.storage.sql.exec("SELECT capture_format f FROM readings WHERE capture_sha=?", q("sha")).toArray()[0].f });
     }
     if (u.pathname === "/tick") {
       const r = await this.x.readHeld({ sha: q("sha"), kind: "reading", storeName: "bio", env: this.env });
@@ -114,6 +125,7 @@ export class Probe extends DurableObject {
       profile: { profiled_from_text: text !== false, format: { format, confidence: "none", signals: [] }, jurisdiction_view: null },
       provenance_chain: [{ who: "t", asserts: "served", via: "direct", bound: false }],
       capture: { sha256: d, bytes: total, content_type: ct, transport: { http_headers: [] } } });
+    this.ctx.storage.kv.put("held", { rows: [...this.rows], docs: [...this.docs] });
     return { sha: d, bytes: total };
   }
   mem() { try { const m = globalThis.process.memoryUsage(); return { rss: m.rss, heapUsed: m.heapUsed, external: m.external, arrayBuffers: m.arrayBuffers }; } catch { return null; } }
@@ -145,7 +157,9 @@ const newMiniflare = (persist) => new Miniflare({
 });
 
 for (const size of sizes) {
-  const [kind, amount] = size.includes(":") ? size.split(":") : size === "limit" ? ["limit", ""] : ["text", size];
+  const [kind0, amount] = size.includes(":") ? size.split(":") : size === "limit" ? ["limit", ""] : ["text", size];
+  /* u: held with the capture format `undetermined`; d: also with the container taken from the reading (detection alone can name the format) */
+  const kind = { ucsv: "csv", uxlsx: "xlsx", dxlsx: "xlsx" }[kind0] || kind0, undet = kind0 in { ucsv: 1, uxlsx: 1, dxlsx: 1 }, detectOnly = kind0 === "dxlsx";
   const persist = mkdtempSync(join(tmpdir(), "extraction-r6-l-"));
   let mf = newMiniflare(persist);
   try {
@@ -161,7 +175,8 @@ for (const size of sizes) {
     else {
       const made = kind === "csv" ? csvBytes(Number(amount)) : xlsxBytes(Number(amount));
       mark = "LASTROWMARK"; sheet = kind === "csv" ? "csv" : "Budget"; lastRow = made.rows;
-      const [ct, format, name] = kind === "csv" ? ["text/csv", "csv", "table.csv"] : ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx", "table.xlsx"];
+      const [ct, format0, name] = kind === "csv" ? ["text/csv", "csv", "table.csv"] : ["application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx", "table.xlsx"];
+      const format = undet ? "undetermined" : format0;
       held = await call(`/post?ct=${encodeURIComponent(ct)}&format=${format}&name=${name}&text=${kind === "csv" ? 1 : 0}`, { method: "POST", body: made.bytes });
     }
     await new Promise((r) => setTimeout(r, 500));
@@ -179,6 +194,7 @@ for (const size of sizes) {
         heapPeak = Math.max(heapPeak, out.mem ? out.mem.heapUsed + (out.mem.external || 0) : 0);
       } while (out.r && out.r.more === true && ticks.length < 400);
     } finally { clearInterval(sampler); }
+    if (detectOnly) await call(`/container?sha=${held.sha}&c=text`);
     const state = await call(`/state?sha=${held.sha}&mark=${mark}`);
     const mb = (n) => (n / 1048576).toFixed(0);
     const under = state.largest < 1048576;
