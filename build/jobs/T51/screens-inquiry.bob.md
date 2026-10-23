@@ -539,3 +539,7 @@ CHANGE (K4654): CSV-READER #3 is merged into tranche/T51 (held cells with `inlin
 ## B49 · CHANGE
 
 CHANGE (K4655): OFFICE-READERS #15 is merged into tranche/T51 (xlsx held cells, workbook-wide cap by `inlineCellsMax` bytes, `cellsIn`, `next_row` absent when whole). With CSV-READER #3, both readers are in: reading-pipeline's seam tests can go green; merge tranche/T51.
+
+## B50 · CHANGE
+
+CHANGE (K4657): READING-PIPELINE #26 is merged into tranche/T51 (`cellsInRange`, `cells_held`, the cap passed at the entry call; refusals `{ok:false, reason, why?}`), with both readers. Extraction's `cellsOf` seam can go green now; merge tranche/T51.

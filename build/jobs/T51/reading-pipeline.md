@@ -1,6 +1,6 @@
 # reading-pipeline (T51)
 
-**Status** · session_019VpajmgG3BFzWYz8moVQRC · depth 2 · COMPLETE · handled B19
+**Status** · session_01NKjBP2CpqyAaDcRx7TcMRK · depth 2 · COMPLETE · handled B26
 
 ## J1 · COMPLETE
 
@@ -377,3 +377,83 @@ The failure J17 reported (memory.test.mjs BUDGET-2024-APP, 87 MB heap) did not r
 Checks: format, architecture, channels 0 failures; coverage 6673 of 6673; words 18524, inline 0, plain 0, testcopy 0 (unchanged); ownership 5 files, 0 failures. Pushed.
 Requirement lines proposed: R35 as in J17; R43 stands as written. K4208: no census op changes. No new sentence.
 Size (session_019VpajmgG3BFzWYz8moVQRC): test runs 16, module lines 2230
+
+## J19 · BLOCKED
+
+BLOCKED, cause: providers not merged (needs BOB to merge them to tranche/T51; not a Bob decision).
+
+B20 START says csv-reader #3 and office-readers #15 are merged and TEST-SUPPORT #9's shim is on tranche/T51. After merging origin/tranche/T51 (c7ee6ccfc2 on my branch) none of the three is there:
+- no 'cellsIn' and no INLINE_CELLS_MAX_BYTES anywhere in bio-plane/src (grep over the merged tree finds them only in build/ notes, rulings and mailboxes);
+- bio-plane/test/platform-sqlite.mjs does not exist;
+- origin/job/T51/csv-reader (6fecaae76a), origin/job/T51/office-readers (1ec121a9d9) and origin/job/T51/test-support (e1b7913b6d) are not ancestors of my branch.
+Without the entries' cellsIn I cannot write the failing-first g41-held test through the real merged entries (rule 3), and cannot pass inlineCellsMax at the entry call (D2 part 0). I have changed nothing. Please merge those three jobs into tranche/T51 and ring me; I then merge tranche/T51 and do the whole entry (D2 parts 0 to 3). I did the start fix from B20's FIRST paragraph (stale local branch moved to stale/ and re-checked out; mail start pushed).
+
+## J20 · QUESTION
+
+QUESTION (best reading below; I carry on with it): where does the inline cap's number come from?
+B20 says to pass {inlineCellsMax: INLINE_CELLS_MAX_BYTES} at the entry call and that 'the entries export it'. But (1) neither csv-reader's nor office-readers' branch has it yet, so an import of it would fail to link until both merge; (2) my modules.json 'uses' holds neither csv-reader nor office-readers (only format-registry), so architecture.mjs will flag an import of either; modules.json is yours, not mine.
+Best reading: reading-pipeline exports its own INLINE_CELLS_MAX_BYTES = 512 * 1024 (K4642's number) and passes it as {inlineCellsMax} at the entry call, to every entry (an entry without the option ignores it); no new edge. If a provider's measure ends at another number, BOB tells me and I change one line. If you prefer the entries own it, add csv-reader and office-readers to my uses and tell me which file exports it; I then import it after they merge.
+Nothing else is blocked: I write the g41-held test (red by name for the seam), cellsInRange, emittedFieldsOf' cells_held, and the opt-in call now.
+
+## J21 · REPORT
+
+REPORT (K4645, K4646, K4647): the module is built to the contract; its seam tests are red by name until csv-reader #3 and office-readers #15 merge. Not COMPLETE: the four seam tests need those providers, and BOB's CHANGE for each brings me back (merge `tranche/T51`, re-run, COMPLETE).
+
+**What changed** (`bio-plane/src/reading-pipeline/index.mjs`; one test file added, `bio-plane/test/m/reading-pipeline/g41-held.test.mjs`):
+- `INLINE_CELLS_MAX_BYTES = 512 * 1024` exported (:59; B22: owned here, K4646) and passed as `{inlineCellsMax}` to every entry at the one call `entry.text(parts, {inlineCellsMax})` (:2080). An entry called by any other caller is unchanged.
+- `emittedFieldsOf` (:1738-1752): a sheet with `cells_held === true` and no cell list is named in `cells_held` (list of sheet names), absent when none; `cells` stays `{sheet: null}` for it; a sheet with a list, or with `cells` null and no marker (over an entry's own guard), is not named; the reading carries it through the existing assembly at :2231 (no other change there).
+- `cellsInRange(evidence, doc, {format, sheet, fromRow, toRow, fromCol, toCol, maxCells})` exported (:2247): `bytesOf` (whole object, or parts), `getFormat(format).cellsIn(bytes, ask)`, the entry's answer returned as it is. `{ok: false, reason: "cells_not_interpretable"}` for an entry without the slot, an unknown or absent format, a throwing entry or a non-answer; `{ok: false, reason: "bytes_not_held", failure: "transient"}` for bytes the store does not hold (a store that throws, no store, an absent document included; a whole over WHOLE_READ_MAX carries `failure: "final"` and `why`). Never throws. Parameters not given are not passed. `CELLS_NOT_INTERPRETABLE` and `BYTES_NOT_HELD` exported. The pieces path (`sheetBlocks`, `pieceUnitsOf`, `listPieceAnswer`) is not touched: every row's text is still indexed in pieces; R35 holds.
+
+**Failing-first, seen red then green** (`g41-held.test.mjs`, 11 tests, under the shim copied from `origin/job/T51/test-support` to a path outside the tree):
+- Red on `tranche/T51`'s source: the file does not load: `SyntaxError: The requested module '../../../src/reading-pipeline/index.mjs' does not provide an export named 'INLINE_CELLS_MAX_BYTES'` (no `cellsInRange` either).
+- Green now (7): the entry is asked with `{inlineCellsMax: 524288}` and nothing else changed; `cells_held` names exactly the held sheets (mixed workbook, none, an entry-guarded null sheet, a nameless sheet, a non-`true` marker); a held 9,000-row sheet keeps every row in the pieces' units and `words_read` sum = `words_total` (R35, R-STOP); `cellsInRange` passes bytes (whole and parts) and the range, answers the entry's answer, passes no parameter not given; both reasons, the unknown-format, no-store, throwing-store, absent-document, throwing-entry, non-answer and an entry's own refusal.
+- Controls (green): a 3-row CSV lists its 6 cells and has no `cells_held`; a 50-row (200-cell) workbook lists its cells and has none.
+- Seam, RED BY NAME until the provider merges (4): "seam csv-reader #3" x2 (a 1 MB CSV: `cells_held` + `cells` null + every row in units + words add up; `cellsInRange` of the last rows, row 1, column bounds, `maxCells`/`next_row`) fails today with "its cells are not listed (71200 cells are)" and "cells_not_interpretable"; "seam office-readers #15" x2 (the 5,000-row x 4-cell workbook) fail today with "its cells are not listed (20000 cells are)" and "cells_not_interpretable". They assert K4647's numbering at both ends (row 1, the last row; column 1 = A; bounds inclusive; `next_row` the first row not returned and absent when the range was answered whole). An assertion that failed on the 71,200-cell list by `deepEqual` ran the node process out of memory while writing the diff, so these assert booleans (a gap fixed in the test).
+- A bound I could not make red here: R-OLD does not apply (the module stores nothing); R-CLOCK (no timing asserted).
+
+**Run (summary lines):**
+- `node --import <shim> --test --test-force-exit test/m/reading-pipeline/*.test.mjs test/m/extraction/read.test.mjs`: tests 237, pass 232, fail 5 = my 4 seam tests (red by name) + `pdf-pieces.test.mjs` (R40 R36, the BUDGET volume at 112 MB, which R40 says to run alone and which fails when run beside the others for time, 45.6 s); `pdf-pieces.test.mjs` alone: pass 1 of 1 (29.1 s).
+- `d606-perpage-ocr`, `tier2-wire`, `system/pdf-worker-binding` under the shim: pass 3 of 3; `tier-pagewise.probe.mjs`: exit 0.
+- Direct callers (`extraction` is the only one besides `member-roster/order.mjs`): `test/m/extraction/*.test.mjs` + `test/m/member-roster/*.test.mjs` WITHOUT the shim: tests 505, pass 505. Under the shim, `test/m/extraction/*.test.mjs`: tests 299, pass 292, fail 7: the seven are `g38`/`g40` 1 MB CSV reads whose reading `extraction` stores whole (`SQLITE_TOOBIG`, `string or blob too big`): the cause G41 is, extraction #38's red by its own D3; none is in my files.
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD` names 174 of 176 modules (it includes the whole tree through `format-registry`'s edge); I ran the module that calls my services (extraction, member-roster) as above.
+- `format.mjs`: 176 modules, 176 requirements files; 0 failures. `architecture.mjs reading-pipeline`: 51 product files, 147 relative imports; 0 failures. `coverage.mjs reading-pipeline`: 43 of 43 live requirement ids named by a test; 0 failures. `ownership.mjs reading-pipeline origin/tranche/T51`: 0 failures. `checks/run.mjs`: all 0 failures; words 18524 words, `unkeyed 1982`, `dev 268`, the same figures as on `tranche/T51`'s source (this change adds no sentence; the two reasons are codes).
+- `g15.probe.mjs` alone at its cap 127 MB: before (tranche source) peak 128.5 MB, 1,113 ms tick, units 8, `LASTROWMARK` found; after peak 129.3 MB, 1,124 ms, same units, found, child survived; green both (the csv entry is unchanged until csv-reader #3 merges, so the numbers are the same shape; I run it again after it merges).
+
+**Proposed requirement lines (BOB writes them):**
+- **R28 amended:** after "over the entry's size guard a sheet's cells are null": "(fix round 6, G41; K4636, K4642) A sheet whose typed cells the entry holds in the file, not in the reading (its `cells` null and `cells_held` true, emitted when the entry was called with `inlineCellsMax` and the workbook's or CSV's cells together pass it), is named in the reading's `cells_held`, a list of sheet names present only when there is one; its `cells` stays null. Test: a held sheet and a listed sheet in one workbook: `cells_held` names the first only; control: no held sheet, no key."
+- **R44 new:** "(fix round 6, G41; K4636, K4639, K4642, K4647) **A held sheet's cells are made from the held file for a range.** `INLINE_CELLS_MAX_BYTES` (512 KiB) is passed by `read` as `{inlineCellsMax}` where it calls an entry for text, and nowhere else. `cellsInRange(evidence, doc, {format, sheet, fromRow, toRow, fromCol, toCol, maxCells})` (async; the parameters pass to the format's `cellsIn`, those not given are not passed) reads the bytes as `bytesOf` does and answers the entry's `{ok, cells, rows, next_row?}`; rows and columns 1-based, bounds inclusive, `next_row` the first row not returned and absent when the range was answered whole, `maxCells` counting in-extent cells (K4647). It answers `{ok: false, reason}` and never throws: `cells_not_interpretable` for an entry without `cellsIn`, an unknown or absent format, or an entry that throws; `bytes_not_held` with `failure: "transient"` for bytes the store does not hold (`failure: "final"` and `why` for a whole over WHOLE_READ_MAX). Every row's text stays indexed in pieces (R40, R41; R35 holds). Test: `g41-held.test.mjs`."
+- **R23:** add `cellsInRange`, `INLINE_CELLS_MAX_BYTES` to the exported pieces; **Uses:** `format-registry`: `getFormat` (cellsIn slot, R44). **Seam for extraction #38 (call shape):** `await cellsInRange(evidence, document, {format: reading.text_container, sheet, fromRow, toRow, fromCol, toCol, maxCells})` with `evidence` the store `read` is given, `document` the capture's acquire document (`capture.sha256`, `parts`), `format` the reading's `text_container` (`"csv"`, `"xlsx"`); the answer `{ok: true, cells, rows, next_row?}` or `{ok: false, reason, failure?, why?}`.
+
+**Deferred:** none. **Found in another module:** none. **Seam tests still red by name:** the four above; two wait on csv-reader #3, two on office-readers #15 (the marker, the cap, `cellsIn`).
+
+Size (session_01NKjBP2CpqyAaDcRx7TcMRK): test runs 14, module lines 2661
+
+## J22 · REPORT
+
+REPORT (re B24, K4654): csv-reader #3 merged into my branch (`tranche/T51` merged). Its two seam tests are green: a 1 MB CSV names its sheet in `cells_held`, `cells` null, every row in the units, words add up; `cellsInRange` of its last rows, row 1, column bounds, `maxCells` and `next_row` equal the fixture's cells (K4647 numbering). Module suite under the shim: tests 233, pass 230, fail 3 = the two office-readers #15 seam tests (red by name) and `pdf-pieces.test.mjs` (run alone: passes). `g15.probe.mjs` alone at 127 MB: green, peak 105 MB (was 129.3 MB), 718 ms, units 8, `LASTROWMARK` found.
+Two notes on csv-reader's provider, for its owner, not blocking me: (1) `csvEntry.cellsIn` answers its own refusals as `{ok: false, why: "no_such_sheet"|"bad_range"}`, with `why`, where the seam says `{ok: false, reason}`; `cellsInRange` passes an entry's answer as it is, so extraction #38 sees `why` for those two and `reason` for mine. (2) A cell's `source` is an object `{kind: "sheet-cell", ref, sheet, cell}`, not a string; consumers must read `source.cell`. `maxCells` gives whole rows only (stops before the row that would pass it), so a call with fewer than one row's cells returns the first row whole; my test asserts that.
+Still waiting on office-readers #15 for the other two seam tests; then COMPLETE.
+
+## J23 · COMPLETE
+
+COMPLETE (G41, reading-pipeline D2; B20, B22 K4646, B23 K4647, B24 K4654, B25 K4655, B26 K4656). Branch `job/T51/reading-pipeline` pushed; `tranche/T51` merged in (both readers in).
+
+**What changed** (`bio-plane/src/reading-pipeline/index.mjs`, test `bio-plane/test/m/reading-pipeline/g41-held.test.mjs`): `INLINE_CELLS_MAX_BYTES = 512 * 1024` exported (:59), passed as `{inlineCellsMax}` at the one entry call `entry.text(parts, {...})` (:2080); `emittedFieldsOf` (:1738-1752) names held sheets in `cells_held` (absent when none; `cells` `{sheet: null}`); `cellsInRange` (:2247, exported, async, never throws): `bytesOf` then the format's `cellsIn`, `cells_not_interpretable` / `bytes_not_held` (transient; a whole over WHOLE_READ_MAX `final` with `why`), and one refusal shape `{ok: false, reason, why?}` with `reason` set from an entry's `why` (K4656). Pieces path untouched: every row still indexed, R35 holds.
+
+**Failing-first, red then green** (12 tests, shim): red on `tranche/T51`'s source: the file does not load (`does not provide an export named 'INLINE_CELLS_MAX_BYTES'`, no `cellsInRange`); the real-entry tests were red by name before the providers ("its cells are not listed (71200 cells are)" for the 1 MB CSV, "(20000 cells are)" for the 5,000-row workbook, `cells_not_interpretable`); the K4656 test red with the normalisation removed. Now 12 of 12 green: both seam pairs (1 MB CSV, 5,000-row workbook: `cells_held`, `cells` null, every row in the units, words add up; `cellsInRange` of the last rows, row 1, column bounds inclusive, `maxCells` whole rows with `next_row` the first row not returned and absent when whole), controls (3-row CSV, 200-cell workbook list their cells and carry no marker), the opt-in call, `cells_held` mixed/none/guarded/nameless, a held 9,000-row sheet in pieces, `cellsInRange`'s reasons and one refusal shape for scripted entries and for both real readers.
+
+**Measures:** `g15.probe.mjs` alone at 127 MB: before (tranche source, providers unmerged) peak 128.5 MB, tick 1,113 ms; after both merges peak 110 MB, tick 658 ms, units 8, `LASTROWMARK` found, child survived; green both.
+
+**Run (summary lines):** reading-pipeline + `extraction/read.test.mjs` under the shim: tests 238, pass 237, fail 1 = `pdf-pieces.test.mjs` (R40 says run alone: alone it passes, pass 1 of 1). d606, tier2-wire, pdf-worker-binding: pass 3 of 3. Users: `extraction` + `member-roster` suites WITHOUT the shim: tests 505, pass 500, fail 5. The five are extraction's own `g38.test.mjs:95` (`op=reading` of the 1 MB CSV expects `cells` listed and "under 2 MB in pages") and `g40.test.mjs` x4 ("the reading is large (1921 characters)": they used the CSV's 11 MB of cells as their large reading; the reading is now 1.9 KB because the cells are held). Not in my files or mine to change: extraction #38 rewrites them (its D3 guard needs another large fixture). Under the shim `extraction/*.test.mjs`: tests 299, pass 294, fail 5 (the same five). `format.mjs`: 176 modules, 0 failures; `architecture.mjs reading-pipeline`: 52 product files, 149 relative imports, 0 failures; `coverage.mjs reading-pipeline`: 43 of 43 live requirement ids named; 0 failures; `ownership.mjs reading-pipeline origin/tranche/T51`: 0 failures; `run.mjs`: all 0 failures, words 18524 / unkeyed 1982 / dev 268, unchanged from the tranche.
+
+**Seam tests still red by name:** none of mine. **Red outside my module caused by the providers merging (for BOB):** the five extraction tests above, which wait for EXTRACTION #38.
+
+**Requirement lines I propose:** as in J21 (R28 amended, R44 new, R23 and Uses, the call shape for extraction #38), with R44 gaining K4656: "an entry's refusal is answered `{ok: false, reason, why?}`, `reason` from the entry's `why` when that is all it gives". Notes from J22 stand: a cell's `source` is the object the reader gives, passed as is.
+
+**Deferred:** none. **Found in another module:** none beyond the five extraction tests named.
+
+Size (session_01NKjBP2CpqyAaDcRx7TcMRK): test runs 22, module lines 2282
+
+## J24 · REPORT
+
+Correction to J23's Size line: module lines are 2665 (wc -l of bio-plane/src/reading-pipeline/*.mjs), not 2282. Size (session_01NKjBP2CpqyAaDcRx7TcMRK): test runs 22, module lines 2665
