@@ -504,3 +504,7 @@ QUESTION for `interface-shell` (G114, R128): the shape of `v`, which control-pla
 **Ran.** Module suite (merged with the tranche at B43): 369 of 369 pass (one R26 flake before the fix above). `impact.mjs`: the nine screen modules' suites: screens-inquiry 1 fail (R96 G13, "red by name until extraction's `more` merges") and screens-intake 2–3 fail (R26/R31 E8) are identical with the tranche's browser.mjs; the others 0 fail; control-plane's five page files 33 of 33. Checks: format 0 failures; architecture 0 failures; coverage 123 of 123 ids named; ownership 0 failures; words 0 failures.
 
 Size (session_01FNJXyii9ZX1WYQ6je365RX): test runs 16, module lines 3387
+
+## J29 · COMPLETE
+
+COMPLETE for interface-shell, fix round 8, G114 (R128). `loadWords` names `<release>~<language>~<words_version>` as ruled in B42 (release alone before bootstrap answers; per-member device note `cs-words:<member>`; one re-ask with the full v). Failing-first `r8-words-version.test.mjs` seen red then green (5/5); module suite 369/369 after merging tranche (B43); users' suites and control-plane page files unchanged from the tranche tip; format, architecture, coverage (123/123), ownership, words: 0 failures. Fixed a fragile R26 assertion in my module. Bound named in the record (first sign-in at front without a record names the release alone). Proposed R128/R24 wording and Size line are in the record. Deferred: none. Nothing for BOB to do but the platform check P after the deploy.
