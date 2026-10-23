@@ -5161,6 +5161,7 @@
     "act.owed_importregrade.does",
     "act.owed_installalongside.does",
     "act.owed_installcheck.does",
+    "act.owed_installregion.does",
     "act.owed_installremove.does",
     "act.owed_installremoveconfirm.does",
     "act.owed_installupdate.does",
@@ -5562,14 +5563,14 @@
     "refusal.uncatalogued"
    ],
    "counts": {
-    "reads": 735,
+    "reads": 736,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 42,
     "inline": 1,
     "inlineKeyed": 0,
     "inlineUnkeyed": 1,
-    "computedKeys": 596,
+    "computedKeys": 597,
     "actHelp": 457,
     "vocabulary": 144
    },
@@ -5588,7 +5589,7 @@
    ],
    "counts": {
     "reads": "*",
-    "generatedRows": 25805
+    "generatedRows": 25808
    },
    "unkeyed": [],
    "note": "generates the word list from words.json (setup-words R1–R3) and exports word(key, vars): it reads every key"
@@ -5697,223 +5698,223 @@
    "unkeyed": [
     {
      "file": "admission/index.mjs",
-     "line": 100,
+     "line": 101,
      "text": "no namespace ${…} exists on this instance",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 122,
+     "line": 123,
      "text": "op=${…} always answers from the bio namespace and has no ${…} counterpart; nothing was read or written",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 178,
+     "line": 179,
      "text": "credential '${…}' is confined to the ${…} namespace for its whole life and cannot address ${…}; nothing was read or written",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 198,
+     "line": 199,
      "text": "no namespace ${…} exists on this instance; the namespaces are ${…}",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 199,
+     "line": 200,
      "text": "probe class is confined to the ${…} namespace, refused request for ${…}",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 251,
+     "line": 252,
      "text": "a credential was sent in the request's address; send it in the Authorization header or the body",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 252,
+     "line": 253,
      "text": "this request's web address names ${…}, and a credential or a secret is read only from the request's Authorization header (`Bearer",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 252,
+     "line": 253,
      "text": "`) or its JSON body, never from its address, where it is kept in logs and browser history. It was not read, compared or looked up, and nothing was read or written.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 389,
+     "line": 392,
      "text": "credential '${…}' was withdrawn on ${…} by ${…}. The entry and the date are kept rather than deleted, so what it did while it was live stays readable.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 398,
+     "line": 401,
      "text": "credential '${…}' expired on ${…}. An agent credential lives for the days it was minted with and is never renewed: a member mints a new one to replace it, and the entry stays, so what it did while it was live stays readable.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 405,
+     "line": 408,
      "text": "no member of this team reaches '{String}', so no declared scope reaches it either. An agent is confined to what a member could do themselves, which is a property of the operation rather than a list kept anywhere.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 412,
+     "line": 415,
      "text": "'${…}' answers who a source is, so a member's reach alone does not hand it to an agent: credential '${…}' declares the task scope '${…}', which does not name it. Naming it is an authored, dated act by a member on the record (D-199 (2)/(3)), not something the agent holding it can ask for.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 420,
+     "line": 423,
      "text": "credential '${…}' declares the task scope '${…}', whose writes are ${…}. Widening it is an authored, dated act by a member on the record (D-199 (2)/(3)), not something the agent holding it can ask for.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 428,
+     "line": 431,
      "text": "credential '${…}' was made for one run, and writes only to it. This request ${…}, so nothing was written. A run's credential is made by the plane when the member starts that run, and ends with it.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 478,
+     "line": 481,
      "text": "'${…}' is not an operation this instance performs. A scope naming something nothing recognises would sit in the record looking like a permission and meaning nothing, which is exactly what declaring the scope on the record rather than in a settings row is for (D-199 (2)).",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 485,
+     "line": 488,
      "text": "'${…}' is reached by a member only from that member's own signed-in session, and no agent credential is among the credentials it admits, so it cannot be handed to an agent. This is a property of the operation and not a list of forbidden ones: its OPS row names the credentials that reach it, and an agent's is not one.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 489,
+     "line": 492,
      "text": "'{op}' is not reachable by a member of this team, so it cannot be handed to an agent. This is a property of the operation and not a list of forbidden ones: the unattended worker's own verbs carry no member class by construction, so they are outside every scope anybody can author.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 508,
+     "line": 511,
      "text": "'${…}' is not a confinement a credential can carry. The one namespace a credential may be bound to for its whole life is ${…}; ${…} is where every unconfined credential already lands, so recording it as a confinement would put a fence in the record that holds nothing (D-199 (2)). The name is matched exactly, so a capital letter or a stray space is a different name. Leave the field out altogether to mint an unconfined credential.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 571,
+     "line": 574,
      "text": "this operation is reserved to the founder's session",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 572,
+     "line": 575,
      "text": "'${…}' is reachable from a signed-in session, but only the founder's: the password session made when this instance was claimed with its root credential. This is a member's session, which is what every enrolled member signs in with, an administrator of this team included — so an administrator's session is refused this exactly as this one is, and nothing here says whether you are one. There is no machine credential to go and find: the founder performs this from their own browser.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 581,
+     "line": 584,
      "text": "this operation is reserved to a member's own session",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 582,
+     "line": 585,
      "text": "'${…}' is reachable from a signed-in session, but only a member's own, and this is the founder's session. There is no machine credential to go and find: a member performs this from their own browser.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 589,
+     "line": 592,
      "text": "this operation requires a machine credential, not a signed-in session",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 593,
+     "line": 596,
      "text": "no signed-in session reaches this operation, and no decision on record says why",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 594,
+     "line": 597,
      "text": "'${…}' is reachable by no session of any role, and this instance holds no recorded decision that it is not meant for a person. The plane will not invent one: a member told an absence is a decision stops reporting it as the gap it may well be. If you expected to perform this, that expectation is worth filing rather than working around.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 618,
+     "line": 621,
      "text": "creating a project needs the create-projects capability. This account may still contribute to projects it has been invited to, if it holds contribute.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 658,
+     "line": 661,
      "text": "the shared member key is retired",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 659,
+     "line": 662,
      "text": "this request presented the team's shared member key, which is retired: it no longer signs anybody in, and nothing was read or written. A member signs in with their own password, and an agent uses an agent credential a member creates for it.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 679,
+     "line": 682,
      "text": "a full working-corpus export needs the root of trust: the ADMIN_TOKEN-class credential, or the founder's own session, which the claim made from it. A member's session is neither, and neither is in-app administrator status: an administrator signs in as a member. The published record needs no credential at all: see op=publishedmanifest.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 702,
+     "line": 705,
      "text": "forbidden for token class",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 711,
+     "line": 714,
      "text": "this account does not hold the ${…} capability. Capabilities are set by an administrator, so ask one to grant it rather than looking for another route.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 803,
+     "line": 806,
      "text": "section 4 governance is a named administrator's own act, delivered through that administrator's own signed-in session. The credential that asked is the operator's `${…}`-class bearer token, which holds no position on the roster: it cannot be one of the administrators whose consensus §4.7 requires, and a vote it delivered would be attributed to whoever the caller named. Sign in as the administrator and do it there (D-136, applying D-421).",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 814,
+     "line": 817,
      "text": "the team's display name and its domain claim are set by a named administrator's own signed-in session, and the record names who set each one (Publication §7). The credential that asked is the operator's `${…}`-class bearer token, which holds no place on the roster. Nothing was changed.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 898,
+     "line": 901,
      "text": "at most ${…} requests from one source in any ${…} minutes",
      "why": "DOOR_WINDOW_STATED, the limit as a field beside DOOR_RATE_LIMITED; the member reads refusal.DOOR_RATE_LIMITED, which carries {minutes}"
     },
     {
      "file": "admission/index.mjs",
-     "line": 908,
+     "line": 911,
      "text": "at most ${…} requests from one signed-in session in any ${…} minutes",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 940,
+     "line": 943,
      "text": "this signed-in session",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "admission/index.mjs",
-     "line": 944,
+     "line": 947,
      "text": "too many requests to the operations anyone may call reached this team's Civicsmith from {where} in a short time, so this one was turned away before the operation ran; nothing was read or written. Try again in {wait} seconds.",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     }
@@ -6614,6 +6615,7 @@
     "act.owed_importregrade.does",
     "act.owed_installalongside.does",
     "act.owed_installcheck.does",
+    "act.owed_installregion.does",
     "act.owed_installremove.does",
     "act.owed_installremoveconfirm.does",
     "act.owed_installupdate.does",
@@ -8074,14 +8076,14 @@
     "state.loading"
    ],
    "counts": {
-    "reads": 1818,
+    "reads": 1819,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 1051,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 767
+    "computedKeys": 768
    },
    "unkeyed": []
   },
@@ -8419,6 +8421,7 @@
     "act.owed_importregrade.does",
     "act.owed_installalongside.does",
     "act.owed_installcheck.does",
+    "act.owed_installregion.does",
     "act.owed_installremove.does",
     "act.owed_installremoveconfirm.does",
     "act.owed_installupdate.does",
@@ -9684,14 +9687,14 @@
     "updates.ready.security_says"
    ],
    "counts": {
-    "reads": 1595,
+    "reads": 1596,
     "minted": 3,
     "keyedRows": 0,
     "literalKeys": 657,
     "inline": 2,
     "inlineKeyed": 0,
     "inlineUnkeyed": 2,
-    "computedKeys": 938
+    "computedKeys": 939
    },
    "unkeyed": [
     {
@@ -10033,6 +10036,7 @@
     "act.owed_importregrade.does",
     "act.owed_installalongside.does",
     "act.owed_installcheck.does",
+    "act.owed_installregion.does",
     "act.owed_installremove.does",
     "act.owed_installremoveconfirm.does",
     "act.owed_installupdate.does",
@@ -10596,14 +10600,14 @@
     "state.undetermined"
    ],
    "counts": {
-    "reads": 884,
+    "reads": 885,
     "minted": 0,
     "keyedRows": 0,
     "literalKeys": 123,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
-    "computedKeys": 762
+    "computedKeys": 763
    },
    "unkeyed": [],
    "retired": [
@@ -12397,6 +12401,7 @@
     "monitor.freq.per_meeting",
     "monitor.freq.weekly",
     "photo.reminder",
+    "project.notmember",
     "reference.label",
     "refusal.ACQUIRE_TIMED_OUT",
     "refusal.ACQUIRE_TIMED_OUT.held",
@@ -12419,7 +12424,9 @@
     "refusal.MEMBER_SESSION_REQUIRED",
     "refusal.NOT_A_PERSON",
     "refusal.NO_SAFE_VIEW",
+    "refusal.NO_SUCH_SESSION",
     "refusal.PRESENT",
+    "refusal.PROMOTE_NOT_A_PARTICIPANT",
     "refusal.RESOLVE_NO_REASON",
     "refusal.SAFE_VIEW_FAILED",
     "refusal.SCAN_HOLD",
@@ -12957,10 +12964,10 @@
     "transcribe.why.evidenceabsent"
    ],
    "counts": {
-    "reads": 634,
+    "reads": 637,
     "minted": 0,
     "keyedRows": 0,
-    "literalKeys": 618,
+    "literalKeys": 621,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
@@ -14227,6 +14234,8 @@
     "case-account.framing.by_question",
     "case-account.framing.by_rule",
     "case-account.framing.time_order",
+    "case-authoring.publish_at_not_reached_sentence",
+    "case-authoring.publish_at_unanswered_sentence",
     "case-grammar.load_bearing",
     "case-import.group_fields_label",
     "case-import.group_fields_none",
@@ -14274,6 +14283,7 @@
     "refusal.BAD_ACCOUNT_DRAFT",
     "refusal.BAD_ACCOUNT_FRAMING",
     "refusal.FINDING_IN_SEVERAL_CASES",
+    "refusal.GATE_REFUSED",
     "refusal.IMPORTED_NOT_ACCEPTED",
     "refusal.IMPORT_ACCEPT_NO_REASON",
     "refusal.IMPORT_NOTHING_ACCEPTED",
@@ -14994,10 +15004,10 @@
     "time.pm"
    ],
    "counts": {
-    "reads": 874,
+    "reads": 877,
     "minted": 0,
     "keyedRows": 0,
-    "literalKeys": 872,
+    "literalKeys": 875,
     "inline": 0,
     "inlineKeyed": 0,
     "inlineUnkeyed": 0,
@@ -15376,6 +15386,7 @@
     "act.owed_importregrade.does",
     "act.owed_installalongside.does",
     "act.owed_installcheck.does",
+    "act.owed_installregion.does",
     "act.owed_installremove.does",
     "act.owed_installremoveconfirm.does",
     "act.owed_installupdate.does",
@@ -17098,14 +17109,14 @@
     "updates.skip.why"
    ],
    "counts": {
-    "reads": 2089,
+    "reads": 2090,
     "minted": 2,
     "keyedRows": 0,
     "literalKeys": 2031,
     "inline": 1,
     "inlineKeyed": 0,
     "inlineUnkeyed": 1,
-    "computedKeys": 63
+    "computedKeys": 64
    },
    "unkeyed": [
     {
@@ -17165,73 +17176,73 @@
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 289,
+     "line": 290,
      "text": "this answer exactly as served, without its `inband` key: parse it, delete `inband`, and hash JSON.stringify(rest, null, 1) as UTF-8",
      "why": "a diagnostic for builders (an HTTP body, a pack that would not render, a hash recipe, a wiring or registry finding)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 322,
+     "line": 323,
      "text": "this answer exactly as served, without its `inband` key: parse it, delete `inband`, and hash JSON.stringify(rest, null, 1) as UTF-8",
      "why": "a diagnostic for builders (an HTTP body, a pack that would not render, a hash recipe, a wiring or registry finding)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 518,
+     "line": 519,
      "text": "knockerconsent is a POST",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 592,
+     "line": 593,
      "text": "the pack could not be rendered",
      "why": "a diagnostic for builders (an HTTP body, a pack that would not render, a hash recipe, a wiring or registry finding)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 1064,
+     "line": 1066,
      "text": "instance has no bootstrap credential set",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 1067,
+     "line": 1069,
      "text": "bootstrap credential is a published repository value and can never arm a claim; set a fresh ADMIN_TOKEN in the Cloudflare dashboard",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 1070,
+     "line": 1072,
      "text": "bootstrap credential does not match",
      "why": "the wire's `error` or `detail` beside a refusal's code, for builders; the shell draws refusal.<CODE> with the answer's fields, never these (interface-shell R13)"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 1308,
+     "line": 1310,
      "text": "capabilities are set by an administrator and gate what this account may DO, not what it may see",
      "why": "whoami's `detail`, which no screen draws"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 1309,
+     "line": 1311,
      "text": "a machine credential has no member behind it and therefore holds no capabilities; it is bounded by the operation table and by namespace confinement instead",
      "why": "whoami's `detail`, which no screen draws"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 2344,
+     "line": 2346,
      "text": "this promotion says it is a replay of the record's own past, and a replay is honoured only when the plane can check it: it must name a drive-provenance capture (`provenanceCapture`) that this promotion registers at ${…}, whose bytes the record holds, and whose preserved promotion records name this record and list this revision's bundle.md SHA-256. One of those did not hold. Nothing was written.",
      "why": "a replaying tool's refusal `detail`, never a member's"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 3801,
+     "line": 3803,
      "text": "a POST to op=reviewcopy with the value above as `secret` in its JSON body, never in the address",
      "why": "API usage for the client holding the value, never drawn"
     },
     {
      "file": "control-plane/index.mjs",
-     "line": 3821,
+     "line": 3823,
      "text": "a POST to op=templateread with the value above as `secret` in its JSON body, never in the address",
      "why": "API usage for the client holding the value, never drawn"
     },
@@ -17299,91 +17310,91 @@
    "unkeyed": [
     {
      "file": "plane/ask.mjs",
-     "line": 59,
+     "line": 60,
      "text": "an ask is a POST",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 61,
+     "line": 62,
      "text": "the ask's body is not JSON",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 85,
+     "line": 86,
      "text": "a draft is a POST",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 87,
+     "line": 88,
      "text": "the draft's body is not JSON",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 367,
+     "line": 368,
      "text": "a reading is a member's own act",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 387,
+     "line": 388,
      "text": "a status report's draft names its plan and hands the items its report is drawn from",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 388,
+     "line": 389,
      "text": "the plan this draft is about cannot be read here",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 468,
+     "line": 469,
      "text": "a reading names its subject as {kind, id}, kind one of ${…}",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 501,
+     "line": 502,
      "text": "${…}. Nothing was drafted.",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 520,
+     "line": 521,
      "text": "the records this draft is about cannot be read here",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 521,
+     "line": 522,
      "text": "a draft that reads records is a member's own act",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 525,
+     "line": 526,
      "text": "a bearing draft names the action the reply was received on",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 530,
+     "line": 531,
      "text": "the reply named is not an entry received on this action",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 534,
+     "line": 535,
      "text": "the reply's text is not held in a reading this member may read",
      "why": "a `why` in the records handed to the assistant, not drawn for a member"
     },
     {
      "file": "plane/ask.mjs",
-     "line": 539,
+     "line": 540,
      "text": "an infraction draft names the matter's plan or its actions",
      "why": "BAD_TASK's or a malformed request's `detail`: a request the interface never sends"
     },
@@ -26184,11 +26195,12 @@
     "refusal.SCAN_HOLD",
     "refusal.SCAN_PENDING",
     "refusal.SCAN_STALE",
+    "refusal.SIGNATURES_RUN_RECENT",
     "refusal.USE_NOT_ALLOWED",
     "refusal.WARNING_NOT_CONFIRMED"
    ],
    "counts": {
-    "reads": 76,
+    "reads": 77,
     "unkeyed": 84
    },
    "unkeyed": [
@@ -52975,6 +52987,7 @@
     "installer.fleet.done.one",
     "installer.fleet.done.other",
     "installer.fleet.left.item",
+    "installer.fleet.logsunconfirmed",
     "installer.fleet.note.scanner",
     "installer.fleet.note.schedule",
     "installer.fleet.note.vpc.connected",
@@ -53047,7 +53060,7 @@
     "screen.install.approveagain"
    ],
    "counts": {
-    "reads": 79,
+    "reads": 80,
     "unkeyed": 0
    },
    "unkeyed": [],

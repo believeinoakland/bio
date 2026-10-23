@@ -777,6 +777,7 @@
    "installer.fleet.done.one",
    "installer.fleet.done.other",
    "installer.fleet.left.item",
+   "installer.fleet.logsunconfirmed",
    "installer.fleet.note.scanner",
    "installer.fleet.note.schedule",
    "installer.fleet.note.vpc.connected",

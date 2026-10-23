@@ -42283,12 +42283,6 @@
    "note": "DEC-425: B498 G61 queue: the kind's one-line meaning"
   },
   {
-   "key": "screen.ceremony.gate.head",
-   "en": "What Civicsmith's checks found",
-   "protected": false,
-   "note": "DEC-425: B498 G60 screens-publish: the heading over the findings a GATE_REFUSED signing lists, under refusal.GATE_REFUSED; each finding drawn with its message, its check named in plain words, and its repairs. Proposed key: the job names its own if it differs"
-  },
-  {
    "key": "screen.ceremony.gate.check",
    "en": "Check: {check}",
    "protected": false,
@@ -42413,6 +42407,96 @@
    "en": "Only inside the European Union (a legal requirement)",
    "protected": false,
    "note": "DEC-426: B499 installer: the jurisdiction choice (eu)"
+  },
+  {
+   "key": "acquisition.index.render_did_not_return",
+   "en": "the page as a visitor saw it did not come back in time",
+   "protected": false,
+   "note": "DEC-428: B503 acquisition/index.mjs:1492: a final render's failure detail"
+  },
+  {
+   "key": "acquisition.index.the_rendered_document_is_length",
+   "en": "the rendered document is {length} bytes, over this surface's {MAX}.",
+   "protected": false,
+   "note": "DEC-428: B503 acquisition/index.mjs:1511 (G72): {length} and {MAX} byte counts"
+  },
+  {
+   "key": "calculations.index.taking_every_row_of_a",
+   "en": "Taking every row of a table is the rare case, so say why you need them all. Nothing was written.",
+   "protected": false,
+   "note": "DEC-428: B503 calculations/index.mjs:1762 (G63): an all-rows read with no reason given (K1468)"
+  },
+  {
+   "key": "calculations.index.the_source_reads_as_one",
+   "en": "the source reads as one cell per line (delimiter found: {delimiter}), and the declared header has {columns} columns; check the file's separator or the header you declared. Nothing was written.",
+   "protected": false,
+   "note": "DEC-428: B503 calculations/index.mjs:566 (G64)"
+  },
+  {
+   "key": "capture.index.vouched_basis",
+   "en": "this document is already vouched for, so whether it could be vouched for in a batch is not asked",
+   "protected": false,
+   "note": "DEC-428: B503 capture/index.mjs:259 (G78): the batch-vouch basis of a document already vouched for"
+  },
+  {
+   "key": "capture.index.file_too_large",
+   "en": "the file exceeds what this surface will capture even in parts; nothing was written",
+   "protected": false,
+   "note": "DEC-428: B503 capture/index.mjs:745"
+  },
+  {
+   "key": "capture.index.file_bytes_unreadable",
+   "en": "the file's bytes could not be read whole or held under their own digest, so nothing was written",
+   "protected": false,
+   "note": "DEC-428: B503 capture/index.mjs:757, :770"
+  },
+  {
+   "key": "reading-pipeline.index.bytes_not_held",
+   "en": "the capture's bytes are not held in the evidence store, so nothing was read",
+   "protected": false,
+   "note": "DEC-428: B503 reading-pipeline/index.mjs:2369, :2434 (G68)"
+  },
+  {
+   "key": "reading-pipeline.index.no_capture_digest",
+   "en": "the document names no capture digest, so there are no bytes to read",
+   "protected": false,
+   "note": "DEC-428: B503 reading-pipeline/index.mjs:2349"
+  },
+  {
+   "key": "reading-pipeline.index.reading_not_composed",
+   "en": "the reading could not be composed ({detail}), so nothing is claimed about this document's text; it is a failed reading, never an emptied document",
+   "protected": false,
+   "note": "DEC-428: B503 reading-pipeline/index.mjs:2264: {detail} the cause"
+  },
+  {
+   "key": "reading-pipeline.index.entry_no_text",
+   "en": "the {fmt} entry produced no text from these bytes",
+   "protected": false,
+   "note": "DEC-428: B503 reading-pipeline/index.mjs:2693: {fmt} the format's reader"
+  },
+  {
+   "key": "reading-pipeline.index.entry_not_read_bytes",
+   "en": "the {fmt} entry could not read these bytes ({detail}), so nothing is claimed about its text",
+   "protected": false,
+   "note": "DEC-428: B503 reading-pipeline/index.mjs:2722: {fmt} the format's reader, {detail} the cause"
+  },
+  {
+   "key": "translations.index.the_teams_translations_could_not",
+   "en": "the team's translations could not be read, so every word is shown in English.",
+   "protected": false,
+   "note": "DEC-428: B503 translations/index.mjs:738"
+  },
+  {
+   "key": "instance-setup.selftest.store_place_note",
+   "en": "store_location and store_generation are what this copy is configured with for where its team's room is first created and which room it uses. They do not say where the room runs.",
+   "protected": false,
+   "note": "DEC-428: B503 setup.mjs:3201: the self-test's note beside the two settings (operator-facing; the setting names stay literal)"
+  },
+  {
+   "key": "installer.update.stopped.lookup.unread",
+   "en": "Stopped: the installer couldn't read the settings of your team's Civicsmith, which say what it holds and where its record is kept, so it changed nothing rather than guess. Your team's Civicsmith runs as before. Run the update again in a minute; this is usually temporary.",
+   "protected": false,
+   "note": "DEC-428: B503 INSTALLER #25 (J24/J25; K4758): newgroup/src/index.mjs:1140 and :478, the update refused before uploading when held settings do not answer; replaces installer.update.stopped.lookup with installer.keys.unread as {said}; no fills"
   }
  ],
  "rewrite": {

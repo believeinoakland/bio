@@ -7852,7 +7852,6 @@ w425('refusal.NO_SUCH_SESSION', "This capture has ended, so there is nothing lef
 w425('queue.kind.ingest-done', 'Tables you asked to be read into money facts, now read', "G61 queue: the kind's one-line meaning (the style of queue.kind.capture-completed-unattended)")
 w425('queue.kind.ingest-stopped', 'Tables whose reading into money facts was stopped', "G61 queue: the kind's one-line meaning")
 w425('queue.kind.fetch-done', 'Large files you captured, now fetched and filed', "G61 queue: the kind's one-line meaning")
-w425('screen.ceremony.gate.head', 'What Civicsmith\'s checks found', "G60 screens-publish: the heading over the findings a GATE_REFUSED signing lists, under refusal.GATE_REFUSED; each finding drawn with its message, its check named in plain words, and its repairs. Proposed key: the job names its own if it differs")
 w425('screen.ceremony.gate.check', 'Check: {check}', "G60: the line naming a finding's check under its message; {check} the check's plain name where the record holds one, else its number")
 w425('screen.ceremony.publishat.nozone', 'Your team\'s Civicsmith holds no time zone to count a publishing time in, so only "Sign and publish now" is offered.', "G62 screens-publish: reason (i), no zone held; replaces refusal.PUBLISH_AT_NO_ZONE's \"isn't set … under Settings\" on the Sign step. Proposed key")
 w425('screen.ceremony.publishat.notreached', 'Publishing at a set time isn\'t offered for this edition yet: {reason} Only "Sign and publish now" is offered for now.', "G62: reason (ii), the ratification check not reached; {reason} the sentence publish_at_stated gives. Proposed key")
@@ -7878,6 +7877,25 @@ w426('screen.install.region.oc', 'Oceania', 'installer: a region name (oc)')
 w426('screen.install.region.afr', 'Africa', 'installer: a region name (afr)')
 w426('screen.install.region.me', 'The Middle East', 'installer: a region name (me)')
 w426('screen.install.region.eu', 'Only inside the European Union (a legal requirement)', 'installer: the jurisdiction choice (eu)')
+
+# DEC-428: fix round 7's end HANDOFF (B503): its 13 new keys in code, word for word the code's English (its tests assert it; rewording parked for T52), the update's unreadable-settings stop, ceremony.gate.heading kept on both
+def w428(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-428: B503 ' + note))
+w428('acquisition.index.render_did_not_return', "the page as a visitor saw it did not come back in time", "acquisition/index.mjs:1492: a final render's failure detail")
+w428('acquisition.index.the_rendered_document_is_length', "the rendered document is {length} bytes, over this surface's {MAX}.", "acquisition/index.mjs:1511 (G72): {length} and {MAX} byte counts")
+w428('calculations.index.taking_every_row_of_a', "Taking every row of a table is the rare case, so say why you need them all. Nothing was written.", "calculations/index.mjs:1762 (G63): an all-rows read with no reason given (K1468)")
+w428('calculations.index.the_source_reads_as_one', "the source reads as one cell per line (delimiter found: {delimiter}), and the declared header has {columns} columns; check the file's separator or the header you declared. Nothing was written.", "calculations/index.mjs:566 (G64)")
+w428('capture.index.vouched_basis', "this document is already vouched for, so whether it could be vouched for in a batch is not asked", "capture/index.mjs:259 (G78): the batch-vouch basis of a document already vouched for")
+w428('capture.index.file_too_large', "the file exceeds what this surface will capture even in parts; nothing was written", "capture/index.mjs:745")
+w428('capture.index.file_bytes_unreadable', "the file's bytes could not be read whole or held under their own digest, so nothing was written", "capture/index.mjs:757, :770")
+w428('reading-pipeline.index.bytes_not_held', "the capture's bytes are not held in the evidence store, so nothing was read", "reading-pipeline/index.mjs:2369, :2434 (G68)")
+w428('reading-pipeline.index.no_capture_digest', "the document names no capture digest, so there are no bytes to read", "reading-pipeline/index.mjs:2349")
+w428('reading-pipeline.index.reading_not_composed', "the reading could not be composed ({detail}), so nothing is claimed about this document's text; it is a failed reading, never an emptied document", "reading-pipeline/index.mjs:2264: {detail} the cause")
+w428('reading-pipeline.index.entry_no_text', "the {fmt} entry produced no text from these bytes", "reading-pipeline/index.mjs:2693: {fmt} the format's reader")
+w428('reading-pipeline.index.entry_not_read_bytes', "the {fmt} entry could not read these bytes ({detail}), so nothing is claimed about its text", "reading-pipeline/index.mjs:2722: {fmt} the format's reader, {detail} the cause")
+w428('translations.index.the_teams_translations_could_not', "the team's translations could not be read, so every word is shown in English.", "translations/index.mjs:738")
+w428('instance-setup.selftest.store_place_note', "store_location and store_generation are what this copy is configured with for where its team's room is first created and which room it uses. They do not say where the room runs.", "setup.mjs:3201: the self-test's note beside the two settings (operator-facing; the setting names stay literal)")
+w428('installer.update.stopped.lookup.unread', "Stopped: the installer couldn't read the settings of your team's Civicsmith, which say what it holds and where its record is kept, so it changed nothing rather than guess. Your team's Civicsmith runs as before. Run the update again in a minute; this is usually temporary.", "INSTALLER #25 (J24/J25; K4758): newgroup/src/index.mjs:1140 and :478, the update refused before uploading when held settings do not answer; replaces installer.update.stopped.lookup with installer.keys.unread as {said}; no fills")
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})

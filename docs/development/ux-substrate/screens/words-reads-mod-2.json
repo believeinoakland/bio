@@ -3317,6 +3317,7 @@
    "refusal.SCAN_HOLD",
    "refusal.SCAN_PENDING",
    "refusal.SCAN_STALE",
+   "refusal.SIGNATURES_RUN_RECENT",
    "refusal.USE_NOT_ALLOWED",
    "refusal.WARNING_NOT_CONFIRMED"
   ],
