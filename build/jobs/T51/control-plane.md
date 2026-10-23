@@ -770,3 +770,7 @@ The G62 test was stale: since B46 the ceremony sends `tieAttested: true` once th
 Control-plane directory: 476 tests, 474 pass, 2 red by name: round-6 G7 (until PLANE #54) and round-7 G58 (plane). Checks as at J44.
 
 Size (session_01DVeYe6wF7P8CpLfVhfSwSK): test runs 17, module lines 4695
+
+## J45 · COMPLETE
+
+B58 done: G62 seam test now builds the pre-flight body with the ceremony's own PARTS.caseArgs + tieAttested when prepared; green (zone America/Los_Angeles with source), control TIE_ATTESTATION_MISSING green. Control-plane dir 476 tests, 474 pass; red by name only G7 (PLANE #54) and G58 (plane). Record updated.
