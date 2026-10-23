@@ -4,7 +4,7 @@
    alone. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, WORDS, STATEMENT, caseDocText } from "./fixture.mjs";
+import { world, V, WORDS, STATEMENT } from "./fixture.mjs";
 import * as publicationModule from "../../../src/publication/index.mjs";
 
 function setup() {
@@ -36,14 +36,13 @@ test("R2 G47: a splice publication refuses as too large is answered refused, wit
   assert.equal("too_large" in ok || "why" in ok, false, "a splice that worked states no refusal");
 });
 
-test("R2 G47 (seam: waits for PUBLICATION #36): through the real publication, an acknowledgement that would push a document past the bound is answered `reauthored: false` with `too_large` and `why`, the stored text unchanged; control: the same act on a small document re-authors", () => {
+test("R2 G47 (seam, publication R21's bound): through the real publication, an acknowledgement that would push a document past the bound is answered `reauthored: false` with `too_large` and `why`, the stored text unchanged; control: the same act on a small document re-authors", () => {
   const bound = publicationModule.CASE_DOCUMENT_BYTES_MAX;
-  assert.equal(typeof bound, "number", "publication exports CASE_DOCUMENT_BYTES_MAX (PUBLICATION #36 has not merged)");
+  assert.equal(typeof bound, "number", "publication exports CASE_DOCUMENT_BYTES_MAX");
   const { w, P } = setup();
   /* the document sized to sit a few bytes under the bound: the statement is printed twice, front matter and body */
-  const bare = Buffer.byteLength(caseDocText({ caseId: "CASE-2026-0001", edition: 1, project: P, statement: "", author: "alice",
-                                               acks: w.ci.statementAcknowledgements(P, "CASE-2026-0001", 1, "", "alice", null, null, null) }));
-  const statement = "x".repeat(Math.floor((bound - bare - 16) / 2));
+  const probe = Buffer.byteLength(w.docOf(w.prepare(P, "alice", { statement: "x" }).caseId, 1).text);
+  const statement = "x".repeat(1 + Math.floor((bound - probe - 16) / 2));
   const big = w.prepare(P, "alice", { statement });
   const held = w.docOf(big.caseId, 1);
   assert.ok(Buffer.byteLength(held.text) <= bound && bound - Buffer.byteLength(held.text) < 64, "the stored document sits at the bound");
