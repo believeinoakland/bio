@@ -39,3 +39,39 @@ What would prove which: a log line naming the step, the error and the sizes, whi
 ## 6. Unsettled
 - Which of candidates 1 and 2 happened, for these two editions. Not knowable now; the self-healing sweep rebuilds both and the recorded outcome names the next failure.
 - Whether 4783's missing extracted-text object was never copied or failed to copy.
+
+## 7. Step 0 (RATIFICATION #31, 2026-10-23; the unchanged tree at `tranche/T51` 49d97c2f71)
+
+### 7.1 The candidates tried on workerd (Miniflare; `test/m/ratification/g54-l.test.mjs`, entry `g54-entry.mjs`, the `l75-entry.mjs` pattern)
+The Worker half's post-commit block (`copyMaterials`, then `assembleCaseContainer`) is run as `op=caseratify` runs it, in the plane's Worker, over the object's own door (a real Durable Object with the plane's `Store`) and real R2 buckets, on a case edition laid by the modules' own commits (`storeCaseDocument`, `commitCaseEdition`, `commitEdition`) and complete at the finding's commit. One fault at a time:
+
+| candidate | what the edition is afterwards | what is recorded | red today? |
+| --- | --- | --- | --- |
+| none (control) | `manifest_sha` set, the case file built | n/a | green |
+| (b) a bucket `put` throws | complete, `manifest_sha` null | nothing: the block **throws** out of `caseRatifyOp` (no catch), after the commit | **RED** |
+| (b') only the manifest's own `put` throws | complete, `manifest_sha` **set** (recorded) but its bytes never stored | nothing: the same uncaught throw | **RED** (and the harder one: `manifest_sha` set, so nothing owes it) |
+| (c) `recordcasemanifest` not answered | complete, `manifest_sha` null | nothing: the statement `STORE_DID_NOT_ANSWER` is returned inside the act's `container`, seen once | **RED** |
+| (a) the caller cancels after the commit | complete, case file **built** | n/a | **not reproduced**: under Miniflare the request ran to its end after the caller aborted; the platform's cancellation is not shown here (Cloudflare cancels an invocation when the client disconnects; GraphQL shows `clientDisconnected` in both windows, `diagnosis` section 3) |
+
+So three of the four candidates leave exactly the walker's state (complete, `manifest_sha` null or a manifest never stored) and record nothing; (a) is neither shown nor ruled out, and is covered by the sweep either way (a `building` left by a cancelled request is an attempt). The tree before the fix has no column, no log and no retry for any of them.
+
+### 7.2 Probe of the evidence store for 4783's materials (read-only; account `20b533579290b9b93168345edd3b7f72` only, checked by `GET /accounts`; existence and size by hash only; no write; no secret printed)
+Commands (the credential is injected by the proxy; list by key prefix, `result[].size` read, nothing else):
+`curl -sS "https://api.cloudflare.com/client/v4/accounts/20b533579290b9b93168345edd3b7f72/r2/buckets/<bucket>/objects?prefix=<key prefix><sha>"`, `bio-captures` with prefix `bio/captures/` and `bio/obscured/`, `bio-published` with prefix `bio/published/`. The materials are those `op=publishedcase&id=CASE-2026-4783` lists (`GET https://biosmoke8.believeinoakland.workers.dev/`).
+
+CASE-2026-4783 lists one included material (INFO-2026-0089, foia.gov FAQ):
+- the document, `ae95e37e…a23110`: **`bio/captures/` 46,222 B and `bio/published/` 46,222 B** (held in the evidence store, and copied to the published bucket: `copyMaterials` ran for it).
+- its extracted text, `d299837e…436db8`: not in `bio/captures/`, `bio/published/` or `bio/obscured/` (0 objects).
+- no `derived` copy (`included: true`).
+
+Controls (the three healthy editions, same method): the extracted text of a healthy edition is **not** in `bio/captures/` either (6254a02b…, 6644's and 6227's material: `captures` 0, `published` 6,815 B), and it is in `bio/published/` only after the case file's assembly put it there. The reason is in the code: an extracted text is a material text held **inline** in the Durable Object (`published_material_texts`, case-carriage R1, `hold(ref, "extracted_text", textSha, text)`, `held: "inline"`) and `buildCaseFile` reads it from `facts.materials[].extracted_text`, not from a bucket (`public-read/casefile.mjs` `held(m.text_sha, m.extracted_text)`); only the assembly writes it to the bucket, as one of the case file's files. So:
+
+**Finding.** 4783's extracted text is not an evidence-store object that is "absent": it was never owed from there. Its absence from the published bucket is the symptom (no assembly reached the file puts), not a missing material. Every material 4783 lists that the evidence store holds (the document) is present in both buckets. The diagnosis's earlier reading ("a second silent partial") is corrected: `copyMaterials` completed for 4783, and the block was cut short or failed at or after `casefilefacts`, before the files were put.
+
+**Consequence for the design.** 4783 is repairable (`built`), not `stopped`: the sweep's assembly reads the inline text and puts it. The probe found no material absent from the evidence store for 4783, so the `stopped` rule has nothing to apply to it. The plan's sentence that the sweep "re-copies 4783's extracted text from the evidence store" is not what happens (nothing to re-copy); `heldMaterialsOf` lists the inline text as `held: "inline"`, which `copyMaterials` does not copy by design. 6227 is the same shape (material text 6254a02b… inline).
+
+### 7.3 The L measure of the assembly at the real shape (RATIFICATION #31, 2026-10-23; `test/m/ratification/g54-l.test.mjs`, "measure"; counted, not timed: R-CLOCK)
+An edition of 120 included documents of 330 KiB each (about 40 MB of material) and their extracted texts, laid in the published bucket, assembled by the one assembly (`assembleCaseContainer`) on workerd under Miniflare, in a real Durable Object with real R2:
+- **248 files** in the case file (each document and each text, and the case document, its signature, the finding, the grading facts, the passages, the criteria and the complete edition), **one part**, case-file bytes **40,753,997**.
+- the bucket was asked for **241 `get`, 249 `head` and 3 `put`** (the documents and texts were already stored, so their puts were skipped by the `head` guards; the rest hash alike), and **40,658,975 bytes were read**: **about 2 R2 subrequests for each file**, plus the object's two hops (`casefilefacts`, `recordcasemanifest`). So an edition of 4,000 files costs about 8,000 subrequests against the script's 10,000 (`limits.subrequests`): the TOO_LARGE bound (4,000 files) leaves the margin the plan wants, and the tick's 400 files stop it at about 800.
+- **Memory:** the assembly holds every file's bytes at once (`files`, `worker.mjs:417-425`; `buildCaseFile`); the 40.7 MB edition is held whole (the complete edition rendered from the files is about 90 KB, it names them and does not carry them). A local workerd does not enforce the production isolate's 128 MB, so **a memory kill cannot be shown here**: the held bytes are the case file's own, about 41 MB for this edition, with transient copies of one file at a time (about 330 KB), so a peak near 50 MB. The tick's 16 MB bound stops a SECOND edition after a large first one, so the peak is one edition's, never two. What this does not bound is one edition of more than about 100 MB of material, which production would kill; the bound refusing that is the estimate in files only (4,000), so **bytes of one edition are not bounded before the build** (heldMaterialsOf carries no sizes). Reported to BOB: P (post-deploy, `casefile_attempt` lines carry bytes and wall) is where a kill would show; the constants stay provisional as named (2 editions, 400 files, 16 MB, 4,000 files).

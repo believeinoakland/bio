@@ -18,11 +18,13 @@ import { verifySshsig, ratifyStatement, caseRatifyStatement, NS_RATIFY } from ".
 import { deliveringPrincipal, delivererOf } from "../deliverer.mjs";
 /* K651, K691: the case container's one assembly (public-read R6), read here rather than handed in by the door; the file
    is public-read's since publication's merge (K697). */
-import { assembleCaseContainer as assembleContainer } from "../publication/worker.mjs";
+/* G54: public-read's recorder of a failure met before or inside the assembly (`recordCaseFileFailure`, its R6) is read from
+   the same module by namespace; a caller may hand its own as `recordCaseFileFailure` (the module's tests do). */
+import * as casefile from "../publication/worker.mjs";
 import { parseFrontmatter, isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { rowOf, withCaseMemberChecks } from "./checks.mjs";
 import { findingFactsRefusal, findingShas, findingPublishArgs, copyFinding, reuseCheck, casesToAssemble,
-         findingAnswer, statedIn, editionsToAssemble } from "./finding.mjs";
+         findingAnswer, statedIn, editionsToAssemble, assembleEdition, recordedFailure, failedCopy, priorOf } from "./finding.mjs";
 import { machineCaseRefusal, operatorCaseRefusal, testimonyCaseRefusal, attributionUnchosenRefusal,
          attributionStaleRefusal } from "./refusals.mjs";
 import { localize } from "../setup-words/index.mjs";
@@ -63,7 +65,8 @@ export async function publishAtOp(req, stub, ctx) { return caseCeremony(req, stu
 async function caseCeremony(req, stub, ctx, later) {
   const { env, json, doAnswer, storeSilent, storeRefusal, storeName, cls, aiCred, viaSession,
           sessViewer, sessRights } = ctx;
-  const assembleCaseContainer = ctx.assembleCaseContainer || assembleContainer;
+  const assembleCaseContainer = ctx.assembleCaseContainer || casefile.assembleCaseContainer;
+  const recordFailure = ctx.recordCaseFileFailure || casefile.recordCaseFileFailure;
   const relay = { json, storeRefusal };
     /* REC-123 / C-32.13: the machine fence alone, FIRST and before the payload is read (`./refusals.mjs` holds the
        refusal and its region; R18's pre-flight answers the same one). THE GUARD'S SHAPE IS REC-46's AND NOT STYLE:
@@ -236,16 +239,24 @@ async function caseCeremony(req, stub, ctx, later) {
        its pin is COMPLETE at this act, and no op=ratify will come to assemble it — so it is
        assembled here, by the one function op=ratify uses. `completedCase` is the store's internal
        state and is destructured OFF the answer above, never spread into it (REC-58's pick). */
-    const materialsCopied = await copyMaterials(env, storeName, Array.isArray(evidenceMaterials) ? evidenceMaterials : []);
+    const { absent: materialsAbsent, ...materialsCopied } = await copyMaterialsDetailed(env, storeName, Array.isArray(evidenceMaterials) ? evidenceMaterials : []);
     /* R52: each member committed with the case is copied and re-checked as op=ratify does after its commit (R6), and
        the editions complete now (the case's own, or one its members completed) are assembled once, after every copy. */
     const commits = Array.isArray(memberCommits) ? memberCommits : [];
+    /* R6, R57 (G54): the act has committed, so a member's copy that throws is stated in its answer and handed to the
+       assembly (`prior`, with the materials not copied), which records the attempt; it never changes the act's answer. */
     const copies = [];
-    for (const [i, c] of commits.entries()) copies.push(await copyFinding(env, storeName, members[i]));
+    let copyError = null;
+    for (const [i] of commits.entries()) {
+      try { copies.push(await copyFinding(env, storeName, members[i])); }
+      catch (e) { copyError ??= e; copies.push(failedCopy(e)); }
+    }
     let container = null;
     const containers = new Map();
+    const prior = priorOf({ missing: materialsCopied.missing, absent: materialsAbsent, copyError });
     for (const cs of editionsToAssemble(completedCase, commits)) {
-      container = await assembleCaseContainer({ env, stub, storeName, cs, via: "caseratify" });
+      container = await assembleEdition({ assemble: assembleCaseContainer, recordFailure, env, stub, storeName, cs,
+                                          via: "caseratify", prior });
       containers.set(`${cs.case_id ?? cs.caseId ?? ""}#${cs.edition}`, container);
     }
     const memberAnswers = [];
@@ -292,14 +303,23 @@ export const obscuredCopyKey = (store, sha) => `${store}/obscured/${sha}`;
 const sourceKey = (store, sha, held) => (held === "derived" ? obscuredCopyKey(store, sha) : `${store}/captures/${sha}`);
 
 export async function copyMaterials(env, storeName, items) {
-  const out = { copied: 0, present: 0, missing: [] };
+  const { absent, ...out } = await copyMaterialsDetailed(env, storeName, items);
+  return out;
+}
+
+/** R39, R57 (G54): `copyMaterials`' copy, and which of the materials it could not copy the evidence store answered ABSENT
+ *  (`absent`, a subset of `missing`: the read answered, and held nothing under the hash) as against a copy that failed
+ *  (a read or a put that threw, which a later try may mend). Only the sweep reads the difference (it stops an edition for a
+ *  material confirmed absent, never for one whose copy failed); the act's answer is `copyMaterials`'. */
+export async function copyMaterialsDetailed(env, storeName, items) {
+  const out = { copied: 0, present: 0, missing: [], absent: [] };
   for (const item of items) {
     const { sha, held } = typeof item === "string" ? { sha: item, held: "evidence" } : item;
     const key = `${storeName}/published/${sha}`;
     try {
       if (await env.PUBLISHED.head(key)) { out.present++; continue; }
       const obj = await env.CAPTURES.get(sourceKey(storeName, sha, held));
-      if (!obj) { out.missing.push(sha); continue; }
+      if (!obj) { out.missing.push(sha); out.absent.push(sha); continue; }
       await env.PUBLISHED.put(key, obj.body, { sha256: sha });
       out.copied++;
     } catch { out.missing.push(sha); }
@@ -319,7 +339,8 @@ export async function copyMaterials(env, storeName, items) {
 export async function ratifyOp(req, stub, ctx) {
   const { env, json, doAnswer, storeSilent, storeRefusal, storeName, cls, aiCred, viaSession,
           sessViewer, sessRights, withBiasChecks, STORE_SILENT_REASON, STORE_SILENT_DETAIL } = ctx;
-  const assembleCaseContainer = ctx.assembleCaseContainer || assembleContainer;
+  const assembleCaseContainer = ctx.assembleCaseContainer || casefile.assembleCaseContainer;
+  const recordFailure = ctx.recordCaseFileFailure || casefile.recordCaseFileFailure;
   const relay = { json, storeRefusal };
   const op = "ratify";
     /* DEC-49 REGION is-machine-ratify-bundle — REC-123 / C-32.12. The fence alone, first,
@@ -405,15 +426,23 @@ export async function ratifyOp(req, stub, ctx) {
       return json({ ok: false, ...(pub && pub.reason ? pub : { reason: "PUBLISH_FAILED", detail: pub }),
                     store: storeName, tokenClass: cls }, publishRefusalStatus(pub));
 
-    /* R6: the ratified bytes to the published store, every part re-verified there (`copyFinding`). */
-    const copy = await copyFinding(env, storeName, f);
+    /* R6: the ratified bytes to the published store, every part re-verified there (`copyFinding`). R57 (G54): the act has
+       committed, so a copy that throws is stated in the 200 answer (`published.reason` `COPY_FAILED`) and never undoes it. */
+    let copy, copyError = null;
+    try { copy = await copyFinding(env, storeName, f); }
+    catch (e) { copyError = e; copy = failedCopy(e); }
     /* REC-44 / DEC-34, D-442: THE CASE CONTAINER, assembled the moment the LAST member finding of an edition is
        ratified and not before, by the one function both acts that can complete an edition call; a sha several cases
        pin ratifies with no SOLE case (`pub.case` absent, IC-74), so every such edition is named in `containerCases`.
        There is NO case-level strength here and there must never be one. */
     let container = null;
     for (const cs of casesToAssemble(pub))
-      container = await assembleCaseContainer({ env, stub, storeName, cs, via: "ratify" });
+      /* R57 (G54): an edition this act completes is assembled once the finding's bytes are copied; when the copy threw the
+         assembly is not reached and the failure is recorded for the edition (step `copy`), so the sweep owes it. */
+      container = copyError
+        ? await recordedFailure({ recordFailure, stub, cs, via: "ratify", step: "copy", error: copyError })
+        : await assembleEdition({ assemble: assembleCaseContainer, recordFailure, env, stub, storeName, cs, via: "ratify",
+                                  prior: priorOf() });
     /* CAP-4: the reuse re-fetch, post-commit, stating what it could not read (`reuseCheck`). */
     const reuseReport = await reuseCheck({ env, ask: askOf(stub, doAnswer), bundleId: body.bundleId,
                                            silentReason: STORE_SILENT_REASON, silentDetail: STORE_SILENT_DETAIL });
