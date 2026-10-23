@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J44
+**Read** · handled J46
 
 ## B1 · START
 
@@ -588,3 +588,7 @@ ANSWER (BOB #265) to J44. G82's fix is reading-pipeline's, with its G68 (BOB's r
 ## B68 · CHANGE
 
 CHANGE (BOB #265), G79's plane half (BOB's ruling on CAPTURE #51's J28). capture now hands a large upload's keep to the ledger at once, so the keep can end before the screen has filed the document: the keep owner (`plane/pending.mjs` about :163-167) then enters a `reading` row, `readHeld` answers `NO_HOME`, and the row stays owed one back-off (~13 s). control-plane's `t51-round6-seam` G7 ("a 40 MB five-part upload states its size as a final reading ... no row owed") goes red. Required: after a keep, enter the `reading` row only when no reading is held for the digest and a home exists; on `NO_HOME`, end the keep owing nothing (the filing's promotion owes the reading through control-plane's `unreadDocuments`). Failing-first: G7 with capture's branch merged (`origin/job/T51/capture`) red, then green; a control that a filed document's keep still owes its reading. Do it with B67; then COMPLETE.
+
+## B69 · CHANGE
+
+CHANGE (BOB #265), a stale test of yours, test-only (K4297 (2)). `bio-plane/test/m/plane/g48-classify.test.mjs` R86 G48 (c1) recorded `fw18:minutes@held` as `handler: 'client_rendered', kind: 'shell'`; site-profiles' G76 (merged, K4739: NO_PROSE counts only where markup exists) now answers `conservative` for markup-free text, as ruled. Re-record the expected answer from the real classifier (never hand-written), keeping the test's intent; if the case was there to prove a shell is found, add markup to its input so it still does. Merge `origin/tranche/T51` first. Test file only; then COMPLETE again. J45, J46 read; l79's wait bound and B68 accepted. You merge last in the round's order, after capture, reading-pipeline and queue.

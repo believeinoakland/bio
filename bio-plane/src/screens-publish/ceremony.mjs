@@ -6,6 +6,23 @@
  * draft, else nothing ready to publish. Every function is self-contained (interface-shell R21 (1)). */
 import { PARTS } from "./parts.mjs";
 
+/* G60 (fix round 7): the signing-time refusal GATE_REFUSED carries the case gate's findings (`ratification` R2: `findings`, each
+ * `{check, detail, repairs?}`, or `says: {key, vars}` where a finding carries its words); the refusal's sentence is followed by one
+ * line for each, its text as data, its check as the reference a member can quote, and what repairs it. A finding with neither text
+ * nor check is not drawn. Self-contained (interface-shell R21 (1)); `caseratify` and `publishat` take it alike. */
+const GATE_REFUSED = function (r, cs) {
+  const str = function (v) { return typeof v === "string" && v.trim() ? v.trim() : ""; };
+  const lines = (Array.isArray(r.findings) ? r.findings : []).map(function (f) {
+    if (!f || typeof f !== "object") return "";
+    const check = str(f.check), text = f.says && typeof f.says.key === "string" ? cs.w(f.says.key, f.says.vars || {}) : cs.esc(str(f.detail) || str(f.message));
+    if (!check && !text) return "";
+    const fix = (Array.isArray(f.repairs) ? f.repairs : f.repairs ? [f.repairs] : []).map(function (x) { return str(typeof x === "string" ? x : x && (x.detail || x.says || x.text || x.message)); }).filter(Boolean);
+    return '<br><span data-gate-finding="' + cs.esc(check) + '">' + text + (check ? ' <code class="meta">' + cs.esc(check) + "</code>" : "")
+      + fix.map(function (x) { return ' <span class="meta" data-repair>' + cs.esc(x) + "</span>"; }).join("") + "</span>";
+  }).filter(Boolean);
+  return cs.w("refusal.GATE_REFUSED") + (lines.length ? "<br><b>" + cs.w("ceremony.gate.heading") + "</b>" + lines.join("") : "");
+};
+
 export const CEREMONY = Object.freeze({
   id: "ceremony",
   parts: PARTS,
@@ -74,7 +91,11 @@ export const CEREMONY = Object.freeze({
     const mine = ui.attested || { disc: [], words: {}, sa: [], why: {}, bias: "" };
 
     // R3's reads: the checks against the bar, what will be disclosed, and an edition waiting to publish.
-    const pre = P.later(cs, view, "preflight", "publishpreflight", { body: args });
+    // G62 (B46): once the member has attested the ties and the edition is prepared (this page's own `publish`, or the draft's record),
+    // the pre-flight carries `tieAttested: true` as `caseratify` will, so the signing check is reached and the time offered
+    const mineEd = all.find(function (x) { return x && x.draft_id === draft; });
+    const tied = !!ui.prepared || !!(mineEd && mineEd.editions && Number(mineEd.editions.prepared) > 0);
+    const pre = P.later(cs, view, "preflight", "publishpreflight", { body: tied ? Object.assign({}, args, { tieAttested: true }) : args });
     const ten = P.later(cs, view, "tensions", "publishtensions", { body: { project: args.project, draft: draft } });
     const found = P.findingsOf(copy);
     // C46: a finding is named by its title, where the draft's copy states one, never by its id
@@ -159,6 +180,9 @@ export const CEREMONY = Object.freeze({
         const code = String(b && (b.code || b.reason) || "");
         if (code === "PUBLISH_NO_FINDING" || code === "NO_TARGET" || (code && seen[code])) return;
         seen[code] = true;
+        // G60: a case gate that refused lists the findings it found, one line each, not its sentence alone
+        const gated = code === "GATE_REFUSED" ? P.gateLines(cs, b) : [];
+        if (gated.length) { gated.forEach(function (l) { lines.push(l); }); return; }
         const says = b && b.says && typeof b.says.key === "string" ? cs.w(b.says.key, b.says.vars || {}) : P.refusalText(cs, b);
         lines.push(cs.w("ceremony.gate.other", { what: { html: says.replace(/[.\s]+$/, "") } }));
       });
@@ -345,12 +369,20 @@ export const CEREMONY = Object.freeze({
     const phone = /data-phone-act/.test(cs.act("caseratify"));
     if ((prepared || phone) && !published && !waiting && !(ui.signed && ui.signed.at)) {
       const doc = prepared && !phone ? P.later(cs, view, "document", "casedocument", { query: { case: prepared.caseId, edition: String(prepared.edition) } }) : null;
-      const pa = signStep && signStep.publish_at || {};
-      const zone = pa.zone || pa.time_zone || "";
+      const pa = signStep && signStep.publish_at && typeof signStep.publish_at === "object" ? signStep.publish_at : null;
+      const zone = pa ? pa.zone || pa.time_zone || "" : "";
       // G11 (fix round 6): a publishing time is offered only where the op offers it (`publish_at.offered`, with the zone it is counted in);
-      // a team with no zone is told why by the held refusal, and only "Sign and publish now" is drawn
-      const timed = pre.state === "ok" && pa.offered !== false && !!zone;
+      // only "Sign and publish now" is drawn otherwise
+      const timed = pre.state === "ok" && !!pa && pa.offered !== false && !!zone;
       const untimed = pre.state === "ok" && !timed;
+      // G62 (fix round 7): three answers offer no time and are told apart: no zone held (`offered: false`, the offer's own `reason`); no
+      // offer because the signing check was not reached or did not say (`publish_at: null`, `ratification.reached`, which
+      // case-authoring's `publish_at_stated` words); an offer that names no zone. Stand-ins until the design words the third (row owed:
+      // `screen.ceremony.when.nozonestated`): the op's own held sentence for the check that did not say.
+      const rat = signStep && signStep.ratification && typeof signStep.ratification === "object" ? signStep.ratification : null;
+      const why = !pa ? (rat && rat.reached === false ? "notreached" : "unanswered") : pa.offered === false ? "nozone" : "nozonestated";
+      const noTime = why === "nozone" ? P.refusalText(cs, { code: typeof pa.reason === "string" && pa.reason ? pa.reason : "PUBLISH_AT_NO_ZONE" })
+        : cs.w(why === "notreached" ? "case-authoring.publish_at_not_reached_sentence" : "case-authoring.publish_at_unanswered_sentence");
       // R70: preparing publishes nothing; the Sign step is the one that says publishing makes the edition permanent
       let sign = '<p class="mk-sub">' + cs.w("screen.ceremony.permanent") + "</p>"
         + '<p class="mk-explain">' + cs.w("signing.ceremony.who", { signer: (view.me && view.me.handle) || "", project: projectTitle, group: groupName }) + "</p>";
@@ -359,7 +391,7 @@ export const CEREMONY = Object.freeze({
         sign += (timed ? '<fieldset class="cs-field"><legend>' + cs.w("screen.ceremony.when") + "</legend>"
           + '<p class="help">' + cs.w("screen.ceremony.when.help", { zone: zone }) + "</p>"
           + cs.field("ce-date", "screen.ceremony.when.date", { type: "date" }) + cs.field("ce-time", "screen.ceremony.when.time", { type: "time" }) + "</fieldset>"
-          : untimed ? '<p class="mk-note" role="status" data-publish-at-none>' + cs.w("refusal.PUBLISH_AT_NO_ZONE") + "</p>" : "")
+          : untimed ? '<p class="mk-note" role="status" data-publish-at-none="' + why + '"' + (pa && typeof pa.source === "string" ? ' data-source="' + cs.esc(pa.source) + '"' : "") + (pa && typeof pa.why === "string" ? ' data-why="' + cs.esc(pa.why) + '"' : "") + ">" + noTime + "</p>" : "")
           + cs.state(doc, function (d) {
             const list = P.sitting(d, prepared) || [];
             // E4 (fix round 5, C48): said before the press as well: the page could not read what the edition pins
@@ -434,7 +466,7 @@ export const CEREMONY = Object.freeze({
         const at = view.parts.attested(view, cs);
         if (at.refuse) return { refuse: at.refuse };
         view.ui.attested = at.held; view.ui.attestedBody = at.body;
-        return { body: Object.assign(view.parts.caseArgs(copy, view.ui.draftId || ""), at.body) };
+        return { body: Object.assign(view.parts.caseArgs(copy, view.ui.draftId || ""), at.body, view.ui.prepared ? { tieAttested: true } : {}) };
       },
       done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "publishpreflight", answer)) view.parts.forget(view); }, // D29
     },
@@ -541,6 +573,7 @@ export const CEREMONY = Object.freeze({
           cs.set("notowner", { owners: Array.isArray(r.owners) ? r.owners.join(", ") : String(r.owners || "") });
           return cs.w("screen.ceremony.refused.notowner");
         },
+        GATE_REFUSED: GATE_REFUSED, // G60
       },
       send: async function (view, el, cs) {
         const P = view.parts, pr = view.ui.prepared;
@@ -576,6 +609,7 @@ export const CEREMONY = Object.freeze({
           cs.set("notowner", { owners: Array.isArray(r.owners) ? r.owners.join(", ") : String(r.owners || "") });
           return cs.w("screen.ceremony.refused.notowner");
         },
+        GATE_REFUSED: GATE_REFUSED, // G60
       },
       send: async function (view, el, cs) {
         const P = view.parts, pr = view.ui.prepared;

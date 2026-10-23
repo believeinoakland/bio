@@ -10,7 +10,7 @@ import { readFileSync } from "node:fs";
 import { digestOf } from "./digest.mjs";
 
 const [mode, file] = process.argv.slice(2);
-const { extractPdfStructure, extractPdfRange, openPdf } = await import(process.env.BIO_PDFSTRUCTURE_SRC || "../../../src/pdfstructure.mjs");
+const { extractPdfStructure, extractPdfRange, openPdfRange, openPdf } = await import(process.env.BIO_PDFSTRUCTURE_SRC || "../../../src/pdfstructure.mjs");
 if (mode === "idle") {
   global.gc(); global.gc();
   console.log(JSON.stringify({ baseHeapMB: process.memoryUsage().heapUsed / 1048576 }));
@@ -71,6 +71,32 @@ if (mode === "idle") {
   }
   clearInterval(timer);
   console.log(JSON.stringify({ baseMB: base / 1048576, peakMB: peak / 1048576, slowestMs: slowest, pages: total, calls, digest: h.digest("hex") }));
+} else if (mode === "opened") {
+  /* R44: the file opened once, then every range of `count` pages from the one opened document, which is held to the end;
+     the same measures as "range" (the peak is read while the opened document is still held), and the pages' digest. */
+  const { createHash } = await import("node:crypto");
+  const count = Number(process.argv[4]);
+  const bytes = new Uint8Array(readFileSync(file));
+  const used = () => { const m = process.memoryUsage(); return m.heapUsed + m.arrayBuffers; };
+  global.gc(); global.gc();
+  const base = used();
+  let peak = 0;
+  const timer = setInterval(() => { const v = used() - base; if (v > peak) peak = v; }, 2);
+  const h = createHash("sha256");
+  const t0 = performance.now();
+  const opened = await openPdfRange(bytes);
+  const openMs = performance.now() - t0;
+  let slowest = 0, calls = 0;
+  for (let from = 0; ; from += count) {
+    const t1 = performance.now();
+    const r = await opened.range({ from, count });
+    slowest = Math.max(slowest, performance.now() - t1);
+    calls++;
+    for (const p of r.text.pages) h.update(JSON.stringify([p.page, p.text, p.undetermined]));
+    if (r.count === 0 || from + count >= opened.pages) break;
+  }
+  clearInterval(timer);
+  console.log(JSON.stringify({ baseMB: base / 1048576, peakMB: peak / 1048576, openMs, slowestMs: slowest, pages: opened.pages, calls, digest: h.digest("hex"), held: Boolean(opened.range) }));
 } else {
   const bytes = new Uint8Array(readFileSync(file));
   console.log(JSON.stringify({ digest: digestOf(await extractPdfStructure(bytes)) }));

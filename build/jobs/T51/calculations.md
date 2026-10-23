@@ -1,6 +1,6 @@
 # calculations (T51)
 
-**Status** · session_01JvAUJPqBqefbQpFDLeiHqB · depth 2 · COMPLETE · handled B19
+**Status** · session_01LHEUrW5gHDpiRBNPpspztm · depth 2 · COMPLETE · handled B21
 
 ## J1 · REPORT
 
@@ -269,3 +269,43 @@ COMPLETE: G55 (calculations) done on job/T51/calculations (818fef4601); detail a
 - Census ops (K4208): moneyingest keeps its keys and inline answer; new op moneyingestread. Words owed: calculations.ingest.started, .already, .stopped_attempts, .stopped_table, .bad_kind, .no_ingest.
 - Note for BOB: build/plan/diagnosis-R6-g55-measure.md is yours to update from my record (ownership refuses my write there).
 Size (session_01JvAUJPqBqefbQpFDLeiHqB): test runs 31, module lines 3,810
+
+## J14 · COMPLETE
+
+COMPLETE · CALCULATIONS (session_01LHEUrW5gHDpiRBNPpspztm) · fix round 7: G64, G63 · answers B20
+
+**G64 (a tab-delimited source declared as one cell per line).**
+(1) Cause: `calculations/tables.mjs` `csvScan` split on a comma only (`:43-44` before the change), so a tab file was one cell per line and its header line (not equal to the declared header cell for cell, `tables.mjs:268-272`) stayed as data row 0. `declareTable` (`index.mjs`, the scan after `#sourceRows`) accepted it silently. Fixed: `csvScan`/`scanCsv` take the separator (`tables.mjs:39, 75, 90`, default comma, strictness unchanged); `declareTable` finds the delimiter with csv-reader's `delimiterSignature` over the first 1 Mi characters (`delimiterWindow`, `index.mjs` above the class), none found reads as comma as before; the canonical bytes stay comma RFC 4180 (a tab file and the comma file of the same rows give one sha, tested). A source that is one cell per line against a header wider than one column is refused `SOURCE_NOT_READ {content_id, delimiter (name or null), columns_expected}` with a sentence naming both, nothing written. `uses` edge calculations to csv-reader is already in `modules.json`.
+(2) Why the tests missed it: every table test declared comma files whose header matched; none declared another delimiter, and no test fed a one-cell-per-line source against a wider header. Gap fixed by `test/m/calculations/r7-delimiter.test.mjs`.
+(3) Failing-first, seen red before the change (control green, 3 red): (a) comma control, exactly the data rows (green throughout); (b) the walker's shape as a constructed stand-in, 18,098 tab rows: red (header kept as row 0, one cell per line), green after: 3 columns, 18,098 rows, header dropped, same sha as the comma file; (c) semicolon and pipe, and a quoted tab/comma inside a cell stays in its cell: red, green; (d) one cell per line against 3 columns: red (accepted), green (refused `SOURCE_NOT_READ`, delimiter null, columns_expected 3, nothing written); control: a one-column header over one cell per line is that table. The test goes through the real `declareTable`; the seam file repeats (b) through the door (control-plane's).
+(4) Platform check N (parsing), as stated.
+Open point, a stated gap not a deferral: the walker's 18,101 versus 18,098 rows. A tab file gives header + 18,098 = 18,099, not 18,101; the source's first bytes and `op=table` (P, BOB's) decide whether the walker's file differs in more than the delimiter. The delimiter fix is complete without it; the failing-first test uses the constructed shape until then. Old records: existing tables untouched (new data only); a real table declared over a tab file is a one-cell-per-line table that the member re-declares; P reads the count.
+Words: one new sentence, `localize("calculations.index.the_source_reads_as_one", ...)` (the nearest-held-row stand-in does not exist, calculations is not a drawn-screen module); row owed to UX-DESIGN / T52: `calculations.index.the_source_reads_as_one` ("the source reads as one cell per line (delimiter found: {delimiter}), and the declared header has {columns} columns; check the file's separator or the header you declared. Nothing was written.").
+
+**G63 (`moneyingest` answered in 4.1 s).**
+Measure first (offline, node, the walker's shape: 18,098 rows, 306,003 characters; `scratchpad/g63-measure.mjs`, work counted, R-CLOCK): the first `moneyingest` "all" over the table with a cold cache answered "ingesting" in 10.0 ms, warm 4.6 ms; the cold path is one statement reading 306,003 characters of chunk and one sha of them, about 5 ms here (the diagnosis's 31 ms for the same sha on workerd). So the cold table read is not the 4.1 s: the act floor (every act of the walk 3 to 5 s on the live copy) dominates, as the entry's reading said. It does scale with the table: a table near the 20 MiB bound would read and hash 20 MiB (about 2 s at 31 ms per 287 KB), which the started path does not need.
+Change (small, no regret, in the entry's own gate): `ingestMoney` (`index.mjs`, after the binding and ALREADY_INGESTING checks) no longer reads the table for an act that only starts a background ingest. The count of "all" is the table record's (`calc_tables.rows`, what `textTable` calls its size); the bytes are probed for, not read (cache, or one `SELECT 1 FROM calc_table_bytes`); a table not at hand is fetched from the evidence store as before; the refusals keep their order (NO_SUCH_TABLE, NO_REASON/NO_ROWS, INGEST_TOO_LARGE, MONEY_NOT_REACHABLE). The alarm leg's slices read the table (`ingestTick`, unchanged). `#startIngest` takes `total` and `picked` (null for "all") and its key hashes "all" instead of the 18,098-number list (12 ms offline). Old records: none changed; the ingest key of a new "all" act differs from what the old code would have made (the key is not read back by anything but the row itself).
+(3) Failing-first `test/m/calculations/r7-g63-started.test.mjs`, through the op `moneyingest` as `calculationsOps` answers it, work counted (statements that select the table's chunks and the characters they return): a 12,000-row "all" act read 1 statement, 202,904 characters (red), now 0 and 0, answers `ingesting` with `rows_total` 12,000, the slices then read the table and finish with every row judged once; 10,001 listed rows start likewise (red, green); the refusals in order; control: 1,500 rows run whole and do read the table. The L run in Miniflare at the real limits is the seam file's (control-plane #, the plane restarted between `bindingadopt` and `moneyingest`, wall time taken by the test outside the object); the P read of `Server-Timing` against a trivial member act on a quiet copy (R-QUIET) is BOB's. My figures say what that run should show: the walker's case moves by about 10 ms, so a 4 s answer stays at the act floor (G12/PLANE, with Bob, K4599). Per-stage `Server-Timing` entries are the door's (control-plane / plane), not an op of this module; calculations adds no timing to its answers (R-CLOCK: no clock inside the object sees compute).
+
+**Suites and checks.** `test/m/calculations/` 111 of 111 (104 before this job; +4 delimiter, +3 G63). Users run: workbooks, strength, hypotheses, scheduler, notice-producers, control-plane `t36-door` and `r53-routes`: 600 of 600. `node checks/run.mjs /home/user/bio` (process repo pulled): format 0 failures; architecture 0 failures; no finding names calculations; the failures it prints are other modules' (coverage: record-core R89 R90 named by no test; words: 6 inline in case-checker spec.mjs, 5 missingkey in newgroup installer-steps), the words counts for my module do not rise (inline 0, plain 0, testcopy 0, missingkey 0 here). `node bio-plane/src/setup-words/build.mjs --check`: stale rows note naming my new key, expected. `node checks/ownership.mjs /home/user/bio calculations tranche/T51 job/T51/calculations`: 5 files, 0 failures.
+
+**Requirement lines I propose (BOB writes `build/requirements/`).**
+- R1 amendment (G64): "`declareTable` reads a CSV source in the delimiter the document's own reader finds (csv-reader's delimiter signature: comma, semicolon, tab or pipe; none found reads as comma); the canonical bytes are comma RFC 4180 whichever the source used, so one table has one sha. A source that is one cell per line against a declared header of more than one column is refused `SOURCE_NOT_READ {content_id, delimiter, columns_expected}`, naming the delimiter found and the columns expected, nothing written. New declarations only: a table held stays as declared."
+- R14 (2) amendment (G63): "The act that only starts a background ingest (more than `INGEST_INLINE_ROWS` rows) reads and hashes none of the table's bytes: the count of `rows: \"all\"` is the table record's; the slices read the table."
+- Test names for R-coverage: `r7-delimiter.test.mjs` (R1) and `r7-g63-started.test.mjs` (R14).
+
+Census ops: none of mine changes its accepted keys. Deferred: none. Found in other modules: none.
+
+Size (session_01LHEUrW5gHDpiRBNPpspztm): test runs 9, module lines 3848
+
+## J15 · COMPLETE
+
+COMPLETE · CALCULATIONS · answers B21 · no code change.
+
+I ran control-plane's seam file (`origin/job/T51/control-plane`, `t51-round7-seam.test.mjs`) in a scratch worktree of my branch (job/T51/calculations at 4bcdf41-era HEAD, the J14 commit), through Miniflare, as you asked: G64 PASSES (comma control 120 rows, tab, semicolon and pipe 120 data rows with 3 columns, the one-cell-per-line file refused naming the delimiter), 1 of 1 in 35 s; G63 PASSES (moneyingest over 12,000 rows after a plane restart answered in 33 ms by the test's clock, beside a trivial member act at 376 ms), 1 of 1 in 56 s.
+
+So the door's input is read correctly by the code of J14: the reading text the door hands `declareTable` (the document's reading, not comma-separated) is tab-joined, and csv-reader's delimiter signature finds that delimiter, which J14's `declareTable` now uses. CONTROL-PLANE #52's red was taken against a tranche without my J14 commit (the comma control read 121 rows because the scan was comma-only on that text). It was not a second cause, so no further change, and my failing-first tests stay as J14 stated them (`r7-delimiter.test.mjs` through the real `declareTable`; `r7-g63-started.test.mjs`). I did not hand-write the door's shape: the door's own acts are the seam file's, and it is green.
+
+If CONTROL-PLANE #52 still sees red after merging job/T51/calculations into its run, send me the exact answer it got and I will diagnose the input it hands me.
+
+Size (session_01LHEUrW5gHDpiRBNPpspztm): test runs 11, module lines 3848

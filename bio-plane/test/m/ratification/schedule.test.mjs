@@ -59,6 +59,9 @@ async function setup({ raw = [], reader = true, mutate = (d) => d, worker = null
   return { w, P, key, other, docSha, sig, text, body, scheduled, registered, holdAsked, op, entry };
 }
 
+/* R58 adds `source` and `why` to `publish_at`, which r7-publish-at.test.mjs asks; R44's tests ask the offer alone */
+const offerOf = ({ source, why, ...kept }) => kept;
+
 const nothingCommitted = (w) => {
   assert.equal(w.row(`SELECT sig_armored FROM case_documents WHERE case_id=?`, CASE).sig_armored, null, "the document is unsigned");
   assert.equal(w.count("published_cases"), 0, "no case edition committed");
@@ -358,17 +361,17 @@ test("R3: an edition publish-schedule holds waiting is refused PUBLISH_AT_ALREAD
 test("R44: the pre-flight answers publish_at — offered with the group's zone when the active profiles hold one, else not offered, PUBLISH_AT_NO_ZONE — and its other answers are unchanged", async () => {
   const s = await setup();
   const before = s.w.r.caseRatifyPreflight({ text: s.text, signer: "alice", viewer: V("alice") });
-  assert.deepEqual(before.publish_at, { offered: false, zone: null, reason: "PUBLISH_AT_NO_ZONE" });
+  assert.deepEqual(offerOf(before.publish_at), { offered: false, zone: null, reason: "PUBLISH_AT_NO_ZONE" });
   s.w.record.setSetting("jurisdiction_profiles", ["test-port-ellery"], V("alice"));
   const after = s.w.r.caseRatifyPreflight({ text: s.text, signer: "alice", viewer: V("alice") });
-  assert.deepEqual(after.publish_at, { offered: true, zone: "America/Halifax" });
+  assert.deepEqual(offerOf(after.publish_at), { offered: true, zone: "America/Halifax" });
   const { publish_at: a, ...restA } = before, { publish_at: b, ...restB } = after;
   assert.deepEqual(restA, restB);
   assert.deepEqual(restA, { ok: true, ready: true, refusals: [] });
 });
 
 test("R44 (T50, N1203): the offered zone is the one retrieval R69 reads — a local correction governs; no zone there offers nothing, even with a profile zone; a retrieval that cannot be read falls back to the profiles", async () => {
-  const offer = (s) => s.w.r.caseRatifyPreflight({ text: s.text, signer: "alice", viewer: V("alice") }).publish_at;
+  const offer = (s) => offerOf(s.w.r.caseRatifyPreflight({ text: s.text, signer: "alice", viewer: V("alice") }).publish_at);
   const corrected = await setup({ retrieval: { zone: () => "America/Chicago" } });
   corrected.w.record.setSetting("jurisdiction_profiles", ["test-port-ellery"], V("alice"));
   assert.deepEqual(offer(corrected), { offered: true, zone: "America/Chicago" }, "the governing (local) zone is offered");

@@ -56,6 +56,7 @@
  *                  at an instrument key and portion, R18) and `addressesOf` (its R24), for R36.
  *   now            the clock for the instants it writes, an ISO string (default: the wall clock, to the second).
  *   env            the instance bindings: `REEVAL_NOTICE_DELAY_MS` (R25).
+ *   log            where a sweep tick's one structured line goes (default: the console); a log changes nothing.
  *
  * READ CONTRACTS it joins in its own SQL: record-core's `bundles` (`bundle_id`, `object_type`, `current_state`, `title`,
  * `last_updated`, its R37) and `files` (the D-256 audit's scan, below); inquiry's `inquiry_basis` (`bundle_id`, `ord`,
@@ -196,6 +197,7 @@ const DOCUMENT_EXTENT = canonicalExtent({ kind: "document" });
 const PAIR_AXES = Object.freeze(["capture", "connection", "testimony"]);
 
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
+const defaultLog = (line) => { try { console.log(JSON.stringify(line)); } catch { /* a log changes nothing */ } };
 const MACHINE_ADMIN = `${MACHINE_CLASS_PREFIX}admin`;
 const UNSTORABLE = /["\\\n\r]/;
 /* R26 (K365): a pinned capture is a whole sha-256, as publication R41 answers it. */
@@ -288,7 +290,7 @@ export class Reevaluation {
   constructor({ storage, record, membership, promotion, host = null, inquiry = null, content = null,
                 connections = null, provenance = null, strength = null, basisVersions = null, contradiction = null,
                 sources = null, acceptedWork = null, events = null, calculations = null, standards = null, now = null,
-                env = null } = {}) {
+                env = null, log = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
@@ -297,6 +299,7 @@ export class Reevaluation {
                    events, calculations, standards };
     this.now = typeof now === "function" ? now : () => stampInstant("second");
     this.env = env && typeof env === "object" ? env : {};
+    this.log = typeof log === "function" ? log : defaultLog;
   }
 
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
@@ -2600,18 +2603,31 @@ export class Reevaluation {
 
   /* R25: where the pass stands (`reevaluation_sweep`); an absent row is no pass yet complete and no receipt counted. */
   #sweepRow() {
-    return this.#one(`SELECT cursor, pass_began, pass_seq, complete_began, complete_seq, receipt_seq
+    return this.#one(`SELECT cursor, pass_began, pass_seq, complete_began, complete_seq, receipt_seq, pass_mark, complete_mark
                         FROM reevaluation_sweep WHERE id = 1 LIMIT 1`)
-      || { cursor: null, pass_began: null, pass_seq: null, complete_began: null, complete_seq: null, receipt_seq: 0 };
+      || { cursor: null, pass_began: null, pass_seq: null, complete_began: null, complete_seq: null, receipt_seq: 0,
+           pass_mark: null, complete_mark: null };
   }
 
   #sweepWrite(row) {
-    this.sql.exec(`INSERT INTO reevaluation_sweep (id, cursor, pass_began, pass_seq, complete_began, complete_seq, receipt_seq)
-                   VALUES (1,?,?,?,?,?,?)
+    this.sql.exec(`INSERT INTO reevaluation_sweep (id, cursor, pass_began, pass_seq, complete_began, complete_seq, receipt_seq,
+                                                   pass_mark, complete_mark)
+                   VALUES (1,?,?,?,?,?,?,?,?)
                    ON CONFLICT(id) DO UPDATE SET cursor=excluded.cursor, pass_began=excluded.pass_began,
                      pass_seq=excluded.pass_seq, complete_began=excluded.complete_began,
-                     complete_seq=excluded.complete_seq, receipt_seq=excluded.receipt_seq`,
-                  row.cursor, row.pass_began, row.pass_seq, row.complete_began, row.complete_seq, row.receipt_seq);
+                     complete_seq=excluded.complete_seq, receipt_seq=excluded.receipt_seq,
+                     pass_mark=excluded.pass_mark, complete_mark=excluded.complete_mark`,
+                  row.cursor, row.pass_began, row.pass_seq, row.complete_began, row.complete_seq, row.receipt_seq,
+                  row.pass_mark ?? null, row.complete_mark ?? null);
+  }
+
+  /* R25 (G66): the filing mark, the highest `register` row now (provenance R48's read contract). A capture joins a page's
+     version chain when a document holding it is filed (provenance R17: a receipt and a register row), and a filing is
+     not a receipt, so the sweep that ran between a capture's receipt and its filing found nothing newer and, without
+     this, was never pending again. A row appended raises it, a row purged moves it (one pass more, never fewer); an
+     empty register, or one this host does not hold, reads 0. */
+  #filingMark() {
+    try { return Number(this.#one(`SELECT COALESCE(MAX(rowid), 0) AS m FROM register`).m) || 0; } catch { return 0; }
   }
 
   /* R25: a receipt was written: the count moves. Not a service: it is the listener the factory registers with
@@ -2621,11 +2637,14 @@ export class Reevaluation {
                    ON CONFLICT(id) DO UPDATE SET receipt_seq = receipt_seq + 1`);
   }
 
-  /* R25: pending while a pass is part-way, when a receipt was counted since the last complete pass began, or, with no
-     pass yet complete, when any basis leg rests on a passage. */
+  /* R25: pending while a pass is part-way, when a receipt was counted or a document was filed (G66: a register row
+     written or purged) since the last complete pass began, or, with no pass yet complete, when any basis leg rests on a passage. A
+     pass written before the filing mark existed holds none, which reads as one pass owed. */
   #sweepPending(row = this.#sweepRow()) {
     if (row.pass_began !== null) return true;
-    if (row.complete_began !== null) return Number(row.receipt_seq) > Number(row.complete_seq ?? 0);
+    if (row.complete_began !== null)
+      return Number(row.receipt_seq) > Number(row.complete_seq ?? 0)
+        || row.complete_mark === null || this.#filingMark() !== Number(row.complete_mark);
     return !!this.#one(`SELECT 1 AS x FROM inquiry_basis WHERE content_id IS NOT NULL AND content_id <> '' LIMIT 1`);
   }
 
@@ -2655,15 +2674,21 @@ export class Reevaluation {
     const ms = Number(now);
     const began = row.pass_began !== null ? row.pass_began
       : Number.isFinite(ms) ? stampInstant("second", ms) : this.#when();
-    const pass = row.pass_began !== null ? { began, seq: row.pass_seq ?? 0, after: row.cursor }
-      : { began, seq: Number(row.receipt_seq) || 0, after: null };
+    /* A pass keeps the marks it began at (a receipt or a filing during it stays counted); one part-way when the mark
+       column was added holds none, and reads as the mark now. */
+    const pass = row.pass_began !== null
+      ? { began, seq: row.pass_seq ?? 0, mark: row.pass_mark ?? this.#filingMark(), after: row.cursor }
+      : { began, seq: Number(row.receipt_seq) || 0, mark: this.#filingMark(), after: null };
     const batch = this.raiseNotices({ after: pass.after });
     /* The count read now: a receipt counted during the batch stays counted. */
     const seq = this.#sweepRow().receipt_seq;
     this.#sweepWrite(batch.cursor
-      ? { ...row, receipt_seq: seq, cursor: batch.cursor, pass_began: pass.began, pass_seq: pass.seq }
-      : { ...row, receipt_seq: seq, cursor: null, pass_began: null, pass_seq: null,
-          complete_began: pass.began, complete_seq: pass.seq });
+      ? { ...row, receipt_seq: seq, cursor: batch.cursor, pass_began: pass.began, pass_seq: pass.seq, pass_mark: pass.mark }
+      : { ...row, receipt_seq: seq, cursor: null, pass_began: null, pass_seq: null, pass_mark: null,
+          complete_began: pass.began, complete_seq: pass.seq, complete_mark: pass.mark });
+    /* K4428: what each tick read and raised, one structured line, so a notice that never comes can be told from a tick
+       that never ran. */
+    this.log({ event: "notice_sweep", examined: batch.examined, unread: batch.chain_unread, raised: batch.count });
     return batch;
   }
 

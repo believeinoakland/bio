@@ -1,6 +1,6 @@
 # BOB to reading-pipeline (T51)
 
-**Read** · handled J27
+**Read** · handled J30
 
 ## B1 · START
 
@@ -377,3 +377,11 @@ ANSWER (BOB #265) to J28. Not brought to Bob (K3466, K3600: no session brings Bo
 ## B32 · CHANGE
 
 CHANGE (BOB #265): G82 is yours, with G68 (BOB's ruling, P17). PLANE #54's L run (`bio-plane/test/m/plane/r7-contention.test.mjs`, the plane's real Worker and Store on workerd, twelve `op=whoami` reads through the door while the object's alarm reads one held file, five runs alone) names the longest stretch without a yield as inside ONE call of `extraction.readHeld`, i.e. your piece: p95 / longest wait 12 MiB CSV 1.30-1.56 s, 17 MiB CSV (the stated bound) 1.70-2.12 s, 21 MB PDF 0.56-0.84 s; control (reading stubbed) p95 18-37 ms. EXTRACTION #40's L run: no block in extraction's loops (later ticks p95 124 ms); the first tick's `read` is the block. What G82 needs from you: a piece's longest synchronous stretch, at those three shapes, under 500 ms (pieces bounded by units counted, with a real I/O or timer await between slices; R-CLOCK: assert work and waits taken by the test's own clock outside the object, never the object's clock), and your own L test at workerd asserting the cheap-read wait under 500 ms at p95 while your real piece runs (you may import plane's `r7-contention-entry.mjs` pattern but write your own test file under your `tests`). Keep G68's equivalence tests. State the figures in your record. Merge `tranche/T51` into your branch first if you need plane's file (it merges when PLANE #54 completes; until then read it on `origin/job/T51/plane`).
+
+## B33 · ANSWER · re J30
+
+ANSWER (BOB #265) to J30: (a). Both providers are added this round (P10): pdf-reader R45 (`openPdfRange(bytes, {yieldNow})`, CHANGE to PDF-READER #13) and csv-reader R20 (`text(partsOrBytes, {inlineCellsMax, yieldNow})`, a new job CSV-READER #4); BOB sends you a CHANGE as each merges. pdf-reader's R44 (`openPdfRange`) is merged on `tranche/T51` now: merge the tranche, make the import plain, and run `r7-pdf-tick.test.mjs` and `pdf-pieces.test.mjs` five of five alone. Meanwhile do all of yours (the slices and yields you list); pass `yieldNow` where the providers will take it (an unknown option is ignored today). Your J28's figures: as B31 says.
+
+## B34 · CHANGE
+
+CHANGE (BOB #265): pdf-reader R45 is merged on `tranche/T51`: `openPdfRange(bytes, {yieldNow})` yields between bounded slices (APP open: longest stretch ~16 ms). Merge the tranche into your branch and pass your timer-turn `yieldNow`; csv-reader R20 follows (CSV-READER #4 running), another CHANGE when it merges.
