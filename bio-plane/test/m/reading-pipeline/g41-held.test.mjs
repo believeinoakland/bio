@@ -318,3 +318,25 @@ test("R44 (G41): `cellsInRange` answers `cells_not_interpretable` for an entry w
     assert.deepEqual(await cellsInRange(store(b), document, { format: "t41", sheet: "Nope" }), { ok: false, reason: "no_such_sheet" }, "an entry's own refusal is answered as it is");
   });
 });
+
+test("R44 (G41, K4656): one refusal shape whatever the entry: `reason` is set from an entry that answers only `why`, `why` kept; both real readers' refusals (a sheet that is not there, a bad range)", async () => {
+  const b = bucket();
+  const d = await hold(b, "t41 bytes");
+  const document = doc({ digest: d, bytes: 9, ct: "application/x-t41", format: "t41" });
+  await withEntry({ format: "t41", cellsIn: async () => ({ ok: false, why: "bad_range" }) }, async () => {
+    assert.deepEqual(await cellsInRange(store(b), document, { format: "t41" }), { ok: false, why: "bad_range", reason: "bad_range" });
+  });
+  await withEntry({ format: "t41", cellsIn: async () => ({ ok: false, reason: "r", why: "w" }) }, async () => {
+    assert.deepEqual(await cellsInRange(store(b), document, { format: "t41" }), { ok: false, reason: "r", why: "w" });
+  });
+  const csv = await heldCsv([["a", "b"], ["1", "2"]]);
+  const bad = await cellsInRange(store(csv.b), csv.document, { format: "csv", sheet: "csv", fromRow: 0 });
+  assert.equal(bad.ok, false); assert.equal(typeof bad.reason, "string"); assert.ok(bad.reason.length > 0);
+  const nosheet = await cellsInRange(store(csv.b), csv.document, { format: "csv", sheet: "No such sheet" });
+  assert.equal(nosheet.ok, false); assert.equal(nosheet.reason, "no_such_sheet");
+  const book = await heldBook(bookRows(3));
+  const nb = await cellsInRange(store(book.b), book.document, { format: "xlsx", sheet: "No such sheet", fromRow: 1, toRow: 1 });
+  assert.equal(nb.ok, false); assert.equal(typeof nb.reason, "string"); assert.ok(nb.reason.length > 0);
+  const bb = await cellsInRange(store(book.b), book.document, { format: "xlsx", sheet: "Budget", fromRow: 0 });
+  assert.equal(bb.ok, false); assert.equal(typeof bb.reason, "string");
+});

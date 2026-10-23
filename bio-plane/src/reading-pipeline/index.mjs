@@ -2243,7 +2243,8 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
    (csv-reader, office-readers), and its answer `{ok, cells, rows, next_row?}` is answered as it is. `{ok: false, reason}`
    with `cells_not_interpretable` for an entry without the slot (or none, or one that throws or answers no object), and
    `bytes_not_held` for bytes the store does not hold (transient, as `bytesOf` states it; a whole over WHOLE_READ_MAX
-   carries `failure: "final"`). It never throws. */
+   carries `failure: "final"`). An entry's own refusal is answered `{ok: false, reason, why?}` (K4656): `reason` from its `why`
+   when that is all it gives. It never throws. */
 export async function cellsInRange(evidence, doc, { format, sheet, fromRow, toRow, fromCol, toCol, maxCells } = {}) {
   try {
     const entry = typeof format === "string" && format ? getFormat(format) : null;
@@ -2257,7 +2258,10 @@ export async function cellsInRange(evidence, doc, { format, sheet, fromRow, toRo
     const ask = { sheet, fromRow, toRow, fromCol, toCol, maxCells };
     for (const k of Object.keys(ask)) if (ask[k] === undefined) delete ask[k];
     const out = await entry.cellsIn(got.bytes, ask);
-    return out && typeof out === "object" && typeof out.ok === "boolean" ? out : { ok: false, reason: CELLS_NOT_INTERPRETABLE };
+    if (!out || typeof out !== "object" || typeof out.ok !== "boolean") return { ok: false, reason: CELLS_NOT_INTERPRETABLE };
+    /* K4656: one refusal shape whatever the entry: `reason`, set from the entry's `why` when that is all it answers, `why` kept */
+    if (out.ok === false && typeof out.reason !== "string") return { ...out, reason: typeof out.why === "string" ? out.why : CELLS_NOT_INTERPRETABLE };
+    return out;
   } catch (e) {
     return { ok: false, reason: CELLS_NOT_INTERPRETABLE, why: String(e && e.message || e).slice(0, 200) };
   }
