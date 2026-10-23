@@ -243,3 +243,7 @@ Size (session_01B7MEiXsVRUtMmYX6BygGKT): test runs 9, module lines 4,505
 **Deferred / found elsewhere.** Nothing deferred. For reading-pipeline's job (merge order: this first): pass `maxBytes: PDF_RANGE_BYTES` on every tick; the answer's `count` is the pages built, so the cursor must advance by `count`, never by the ask. No flaw found in another module.
 
 Size (session_01WhttbwTfU7TU6DZbChyyAD): test runs 21, module lines 4,513
+
+## J8 · COMPLETE
+
+COMPLETE · PDF-READER #12 · G56 provider half. extractPdfRange accepts an optional range.maxBytes: asked = min(asked, max(1, floor(maxBytes / (bytes.length / total)))) when maxBytes is a finite number above 0; absent or invalid, the call is unchanged byte for byte; answer shape unchanged. New test in range.test.mjs (pages, never time) seen red then green; pdf-reader suite 138 of 138; pdf-ranges 4 of 4; pdf-pieces passed on rerun (its 1.5 parse-total bar is the known marginal red, reading-pipeline's). checks/run.mjs: format, architecture, coverage 0 failures; words 1 failure, the accepted case-checker/spec.mjs:11. ownership 0 failures. Stale bundles (not regenerated): pdf-worker, ocr-worker, agent-worker, bio-plane. Proposed R43 text for you to write is in build/jobs/T51/pdf-reader.md, 'Completion (fix round 6, G56 ...)'. Reading-pipeline: pass maxBytes on every tick and advance the cursor by count. Size (session_01WhttbwTfU7TU6DZbChyyAD): test runs 21, module lines 4,513
