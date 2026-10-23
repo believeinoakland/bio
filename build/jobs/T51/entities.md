@@ -1,6 +1,6 @@
 # entities (T51)
 
-**Status** · session_01KsYNk1nPchfRUwMdahprpu · depth 2 · COMPLETE · handled B10
+**Status** · session_01Liu7BL68LjcrB4XrvLNv3e · depth 2 · COMPLETE · handled B11
 
 ## Completion (T51 fix round 3, ENTITIES #18)
 
@@ -163,3 +163,23 @@ Size (session_01KsYNk1nPchfRUwMdahprpu): test runs 12, module lines 3,150
 ## J10 · COMPLETE
 
 COMPLETE (ENTITIES #19): C64-more provider met (look-first for a member's office, existed:true, nothing written); four fields, proposed R65 line and counts are in build/jobs/T51/entities.md. Entities 156 pass; checks 0 failures. One expected red: actions t33 'R9 R47 actionCreate fills an office arm's entity id...' (B10). No open question.
+
+## Completion (T51 fix round 6, G55, ENTITIES #20)
+
+**G55 (provider, tier 1).** (1) Root cause: `Entities.view()` (`entities/index.mjs` `view()`, was :2054) ran `jurisdictions.combine` on every call, and `entityByIdentifier` (:1222) called it first, so a money ingest paid the combine per row. (2) Gap: R44 was written for one lookup; nothing counted builds. `g55-view.test.mjs` counts them through `viewBuilds()`. (3) Failing-first: with the hold removed, `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/entities/g55-view.test.mjs` gives 4 fail, 1 pass ("builds rose by 1000"); on the base the five fail (`viewBuilds` absent); with the change 5 pass. (4) L: calculations' job.
+
+**What changed.** `view()` re-reads `jurisdiction_profiles` on every call (one `getSetting` statement), keys it as `JSON.stringify` of the list (a non-array, null or unreadable value is keyed `[]`, as before), and returns the same deep-frozen object while the key is equal. `viewBuilds()` counts builds; the held view, its key and the count are `#` fields. **Bound: one entry per instance, about 145 KB, replaced when the key changes, never accumulated; dropped with the object.** `jurisdictions` is untouched (`get` hands out clones, so nothing it holds is frozen; a test says so).
+
+**Readers of `view()` (all inside this module; no other module calls it).** :585 (`records_laws`), :1124, :1189, :1222, :1258, :1338, :1442 (`#idContext`), :2032, :2098, and through them `id-spaces` (`idSpaces`, `recogniseId`, `judgePair`, `systemOf`, `parcelStanding`) and `civil-time` (`validAt`). None mutates it; the freeze would throw if one did, and the whole entities suite and the suites of events, lines, money, calculations, connections, duties, people and retrieval pass. Nothing needed copying.
+
+**Proposed requirement lines (BOB writes).** R20: the view `jurisdictions.combine` makes of the active profiles is held by the instance while the `jurisdiction_profiles` setting, read on every call, is unchanged (keyed by its parsed value, a non-list as `[]`); the held view is frozen to its depth and a reader that changes one copies it; `viewBuilds()` answers how many views were built. R44: a lookup (`entityByIdentifier`) reads the setting and the identifier row and builds no view while the setting is unchanged. Tests: `g55-view.test.mjs` (R20, R44).
+
+**Census.** No op declared or changed (`DECLARED_OPS` untouched).
+
+**Tests and checks.** entities 161 pass, 0 fail (`g55-view.test.mjs` 5 new). Users run: events 93, lines 36, money 92, calculations 86, connections 146, duties 75, people 79, retrieval 183: all pass. `checks/run.mjs`: format, architecture, coverage 0 failures (entities 65 of 65); words: one failure, the inherited `case-checker/spec.mjs:11`, none in entities; ownership 0 failures. No generated artifact edited; `bio-plane/dist` embeds entities' source and is stale (BOB regenerates).
+
+Size (session_01Liu7BL68LjcrB4XrvLNv3e): test runs 14, module lines 2,589
+
+## J11 · COMPLETE
+
+COMPLETE (ENTITIES #20): G55 tier 1 met. view() is held while the jurisdiction_profiles setting is unchanged (key JSON.stringify of the list, non-list as []), deep-frozen, viewBuilds() added; bound about 145 KB, one entry per instance. No reader of view() mutates, so none changed. g55-view.test.mjs 5 tests, seen red (1000 builds) then green; entities 161 pass; users events, lines, money, calculations, connections, duties, people, retrieval pass; checks 0 failures in entities (inherited words failure case-checker/spec.mjs:11). Proposed R20/R44 lines and counts in build/jobs/T51/entities.md. Size (session_01Liu7BL68LjcrB4XrvLNv3e): test runs 14, module lines 2,598 (the record line says 2,589; this is the right count). No census op changed.
