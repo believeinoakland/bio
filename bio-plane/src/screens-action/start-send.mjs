@@ -4,7 +4,7 @@
    started): prepare what is sent, approve it, give the second approval where the project asks one, and record the
    sending. Every function here is self-contained (interface-shell R21 (1)). */
 import { OPS } from "../op-declarations/index.mjs";
-import { draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, stakeAsk, readOnly, kindWord, kindsOf, officeLine, joinFirst, PREPARE, PREPARE_FILING, APPROVE, STAKE, SECOND, RECORD_SENT, TEMPLATE_SAVE, WRITE_HELP } from "./send-steps.mjs";
+import { draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, stakeAsk, readOnly, kindWord, kindsOf, officeLine, joinFirst, PREPARE, PREPARE_FILING, APPROVE, STAKE, SECOND, RECORD_SENT, TEMPLATE_SAVE, JOIN, WRITE_HELP } from "./send-steps.mjs";
 
 // R21: `actionstake` is an owed act (`interface-shell` R73): it is registered once `op-declarations` declares it, and the
 // shell draws it as it draws every act (R12).
@@ -204,6 +204,7 @@ export const startSend = Object.freeze({
     Object.assign({}, SECOND, { rereads: ["filings"] }),
     Object.assign({}, RECORD_SENT, { rereads: ["filings", "action"] }),
     TEMPLATE_SAVE,
+    JOIN,
     WRITE_HELP,
   ],
 });

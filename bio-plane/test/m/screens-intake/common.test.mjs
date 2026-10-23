@@ -90,7 +90,7 @@ test("R8 (interface-shell R5, R10) every screen in each read's four states draws
   const states = {
     ok: Object.fromEntries(READS.map((op) => [op, ok(VALUES[op])])),
     empty: Object.fromEntries(READS.map((op) => [op, ok(EMPTY[op] ?? VALUES[op])])),
-    failed: Object.fromEntries(READS.map((op) => [op, refused("STORE_SILENT", "The record did not answer.")])),
+    failed: Object.fromEntries(READS.map((op) => [op, refused("STORE_SILENT", "store silent (test fixture)")])),
     loading: Object.fromEntries(READS.map((op) => [op, pending])),
   };
   for (const [state, plane] of Object.entries(states)) for (const paths of Object.values(PATHS)) for (const path of paths) {

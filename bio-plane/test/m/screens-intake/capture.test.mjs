@@ -683,7 +683,7 @@ test("R31 controls: no open capture draws no section; a read that failed is draw
   assert.ok(!text(p).includes(word("capture.finish")));
   assert.ok(!text(p).includes(word("capture.unfinished", { title: "", n: 1, ago: "" }).split("{")[0].slice(0, 12)) || true);
   assert.equal(main(p).querySelectorAll("[data-state=\"empty\"]").length, 0, "R17: no empty section");
-  const f = await open("/app/capture/address", { plane: { opencaptures: refused("STORE_SILENT", "The record did not answer.") } });
+  const f = await open("/app/capture/address", { plane: { opencaptures: refused("STORE_SILENT", "store silent (test fixture)") } });
   assert.ok(failed(f), "a failed read is drawn failed");
   for (const t of ["file", "saw"]) assert.equal((await open(`/app/capture/${t}`)).byOp("opencaptures").length, 0, t);
 });

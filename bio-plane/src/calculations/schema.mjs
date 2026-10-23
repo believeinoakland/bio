@@ -244,7 +244,11 @@ export const CALCULATIONS_TABLES = Object.freeze([
 ]);
 
 /* Columns added to a table after it was first made: [table, column, declaration]. */
-const ADDED = Object.freeze([["calculations", "input_shas_json", "TEXT"], ["calc_draws", "question", "TEXT"], ["calc_inputs", "engine_json", "TEXT"]]);
+const ADDED = Object.freeze([["calculations", "input_shas_json", "TEXT"], ["calc_draws", "question", "TEXT"], ["calc_inputs", "engine_json", "TEXT"],
+  /* G55: an ingest over INGEST_INLINE_ROWS runs in slices; a row stored before has none of these and reads as done (R-OLD) */
+  ["calc_ingests", "state", "TEXT"], ["calc_ingests", "next_row", "INTEGER"], ["calc_ingests", "attempts", "INTEGER"],
+  ["calc_ingests", "rows_total", "INTEGER"], ["calc_ingests", "written_count", "INTEGER"], ["calc_ingests", "not_written_count", "INTEGER"],
+  ["calc_ingests", "table_sha", "TEXT"], ["calc_ingests", "stop_reason", "TEXT"], ["calc_ingests", "finished_at", "TEXT"]]);
 
 /** Creates the tables where absent, and adds a column added since a table was made. Idempotent. */
 export function migrateCalculations(sql) {

@@ -171,6 +171,21 @@ export function owners(set = {}) {
         return rec("caseCarriage.onCopyWork", [module], r);
       },
     },
+    /* G55 (R7, R24): a stand-in shaped as calculations R14 states its background ingest: `ingestDue(now)` and `ingestWake(now)`
+       (the `ingest` consumer's `due` and `wake` in `set`; none by default), `ingestTick(now)` answering a Promise, and
+       `onIngestWork(module, fn)`, whose listeners it keeps and whose answer is `set["ingest-work"].tick` ({ok: true, module}). */
+    calculations: {
+      listeners: [],
+      ingestDue: (now) => rec("calculations.ingestDue", [now], v("ingest", "due", now)),
+      ingestWake: (now) => rec("calculations.ingestWake", [now], v("ingest", "wake", now)),
+      ingestTick: async (now) => rec("calculations.ingestTick", [now], v("ingest", "tick", now,
+        { ok: true, ingest: null, state: "ingesting", rows_done: 0, finished: 0 })),
+      onIngestWork(module, fn) {
+        const r = v("ingest-work", "tick", null, { ok: true, module });
+        if (r && r.ok) this.listeners.push(fn);
+        return rec("calculations.onIngestWork", [module], r);
+      },
+    },
     inquiry: {
       datedWaitsDue: (now) => rec("inquiry.datedWaitsDue", [now], v("dated-waits", "due", now, false)),
       datedWaitsWake: (now) => rec("inquiry.datedWaitsWake", [now], v("dated-waits", "wake", now)),
@@ -193,8 +208,11 @@ export const COPY_CONSUMER = "document-copy";
 /** R26's consumer: a world includes `question-explorer` only when a test asks (`explore`), or names it in `set`. */
 export const EXPLORE_CONSUMER = "question-explore";
 
+/** G55's consumer: a world includes `calculations` only when a test asks (`ingest`), or names it in `set`. */
+export const INGEST_CONSUMER = "ingest";
+
 /** A scheduler over a fresh storage and the owners above; `env` its bindings; `zone` the group's time zone. */
-export function world(set = {}, env = null, { daily = false, files = false, copies = false, explore = false, zone = null, st = null } = {}) {
+export function world(set = {}, env = null, { daily = false, files = false, copies = false, explore = false, ingest = false, zone = null, st = null } = {}) {
   const store = st || storage();
   const w = owners(set || {});
   const of = { ...w.of };
@@ -202,6 +220,7 @@ export function world(set = {}, env = null, { daily = false, files = false, copi
   if (!files && !FILE_CONSUMERS.some((n) => set && n in set)) delete of.fileSafety;
   if (!copies && !(set && COPY_CONSUMER in set)) delete of.caseCarriage;
   if (!explore && !(set && EXPLORE_CONSUMER in set)) delete of.questionExplorer;
+  if (!ingest && !(set && INGEST_CONSUMER in set)) delete of.calculations;
   const s = new Scheduler({ storage: store, env, owners: of, zone: () => zone });
   return { s, st: store, calls: w.calls, o: w.o, set };
 }

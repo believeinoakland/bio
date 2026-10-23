@@ -129,7 +129,7 @@ test("R38 (E7) control: a copy with text sends no readheld; an unreadable readin
     assert.equal(marks(a, "read") + marks(a, "pending"), 0, "and says nothing of a reading");
     assert.ok(says(a, "screen.capture.a64.already_in_the_record_as"));
 
-    const unknown = await open({ ...plane(f).plane, reading: () => refused("STORE_SILENT", "The record did not answer.", 503) });
+    const unknown = await open({ ...plane(f).plane, reading: () => refused("STORE_SILENT", "store silent (test fixture)", 503) });
     await pressCapture(unknown);
     assert.equal(unknown.byOp("readheld").length, 0, "a reading that could not be read is not read again blind");
 

@@ -1,6 +1,6 @@
 # screens-action (T51)
 
-**Status** · session_01G4KPZ8PUsRbsiLajjUaHCP · depth 2 · COMPLETE · handled B28
+**Status** · session_015opo2yPs5rDEGC6mU3j4mb · depth 2 · COMPLETE · handled B31
 
 ## J1 · REPORT
 
@@ -296,3 +296,35 @@ COMPLETE (SCREENS-ACTION #15, G20 for this screen; re B28). Pushed on `job/T51/s
 
 **Found in other modules:** none new.
 Size (session_01G4KPZ8PUsRbsiLajjUaHCP): test runs 9, module lines 5136
+
+## Round 6 · G52 (SCREENS-ACTION #16, session_015opo2yPs5rDEGC6mU3j4mb, B29 START)
+
+**What changed.** `start-send`, `request` and `action` register `projectjoin` (`JOIN` in `send-steps.mjs`: sent as `{query: {projectId}}`, `rereads` `standing` and `projects`). `joinFirst` draws the design's fold (DEC-417, B477): a `<details>` whose summary is `screen.projectact.invited.head`, holding `refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited` and Join in place; where Join is drawn the project-page link is dropped (a screen that does not register the act, the dashboard, still gets the link, and only its truthiness). Words added to the three screens' lists: `screen.projectact.invited.head`, `refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited` (the act labels `act.projectjoin.label.<screen>` come with the acts). No sentence written; no test copies one.
+
+**Tests, red then green.** `join-t51.test.mjs`: `told()` revised to the fold; the `test.todo` (K4559) made real, one test per screen (press Join: `projectjoin` sent with the project, `standing` re-read, the act offered; control: a joined member sees no fold). `join-seam-t51.test.mjs`: presses Join in place in the fold, the real `projectjoin` through the door. `send-t51.test.mjs`: the registry-acts test lists `projectjoin`. Red before the code (registry carrying the act): 13 fail in those four files; green after: whole suite 278 pass, 0 fail.
+
+**Provider not on the tranche (reported, J-entry below).** The shell checks each screen's acts against wizard-scripts' generated `screen-registry.mjs`, which is still taken at design commit `43379a1a44` (its `SOURCES.registry`), so it lacks `projectjoin` on these three screens. Until wizard-scripts re-takes the registry at DEC-419 (`f72b2f8a4c`), `checkScreens` throws "screen start-send's act projectjoin is not the registry's for it" for every page that composes `SCREENS`: with only my commit, the impact set (control-plane, plane) has 26 failures beyond the accepted `release` R24. To measure my change I added `projectjoin` to those three rows in the generated file locally, ran everything, and reverted it (never committed; it is wizard-scripts' artifact, mechanics §14). With the row present: screens-action 278/0; control-plane and plane impact files (123): 740 pass, 1 fail (`release` R24, inherited).
+
+**Proposed requirement line (R3's last sentence, "The door in place waits for the design registry (K4559, T52)"):** replace with "G52, K4686: the invited, not joined member's sentence is the design's fold, `screen.projectact.invited.head` holding `refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited` and Join in place (`projectjoin`, a registry act of `start-send`, `request` and `action`); the screen reads her place again after the join and offers the act; where Join is not drawn, a reference to the project's page." Also drop "(where Join is drawn)" and the reference wording from R3's earlier sentence. The three screens' act counts in R3, R4, R5 gain `projectjoin`.
+
+**Word keys for the design's reads list (BOB hands them to UX-DESIGN).** None of these is in `words-reads.json`'s reads for screens-action: `screen.projectact.invited.head`, `refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited`, `act.projectjoin.label.start-send`, `.request`, `.action` (and their `act.projectjoin.does`).
+
+**Checks.** `checks/run.mjs`: format 0, architecture 0, coverage 0 (6686/6686), channels 0, words 1 failure (the inherited `inline` at `case-checker/spec.mjs:11`); ownership 9 files, 0 failures. Census: no op's accepted keys change.
+
+**State.** Code and tests complete; not COMPLETE only because the merge waits on the wizard-scripts registry re-take.
+
+Size (session_015opo2yPs5rDEGC6mU3j4mb): test runs 9, module lines 4943
+
+## J25 · BLOCKED
+
+BLOCKED (cause: tests; a provider is not on the tranche). G52 is built and tested: start-send, request and action register projectjoin and draw the design's fold with Join in place (commits 46796d1a4d, record 5c3ecca9fb+). Whole screens-action suite 278 pass, 0 fail, red-first 13 fail before. The blocker is not in my module: the shell checks each screen's acts against wizard-scripts' generated screen-registry.mjs, which is still taken at design commit 43379a1a44 (SOURCES.registry in wizard-scripts/build-data.mjs) and so lacks projectjoin on these three screens. Until wizard-scripts re-takes the registry at DEC-419 (f72b2f8a4c), checkScreens throws for EVERY page composing SCREENS: with my commit alone the impact set has 26 reds in control-plane and plane beyond the accepted release R24. I measured with projectjoin added by hand to those three rows locally and reverted (never committed; it is wizard-scripts' artifact): control-plane+plane impact files 740 pass, 1 fail (release R24, inherited). Your START said no provider was needed; the words are on the tranche, but the generated registry is not. Needed: a wizard-scripts job to re-take screen-registry.mjs (and its vendored source file) at f72b2f8a4c, merged before screens-action; or tell me to merge as is knowing the page is red until then. When it is in, tell me and I merge tranche/T51, re-run suite, impact set and checks, and post COMPLETE. Also in my record: a proposed R3 line, and five word keys for UX-DESIGN's reads list (screen.projectact.invited.head, refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited, act.projectjoin.label.start-send/.request/.action).
+
+## Round 6 · G52 completed (after B31 CHANGE)
+
+Merged `tranche/T51` (G53's registry at `f72b2f8a4c`). `contract.test.mjs:34` is green against the real registry with no local patch. Suite: screens-action 278 pass, 0 fail. Impact set (screens-action 30, control-plane 72, plane 51 files): 1018 pass, 1 fail (plane `release` R24, inherited). `checks/run.mjs`: format, architecture, coverage (6690/6690), channels 0 failures; words 11 failures, none in screens-action (case-checker `spec.mjs` inline x6, inherited/not mine; installer-steps `installer.fleet.logsunconfirmed` missingkey x5, from the merged tranche, not mine). Ownership 9 files, 0 failures. Proposed R3 line and the five word keys are in the section above. Nothing deferred.
+
+Size (session_015opo2yPs5rDEGC6mU3j4mb): test runs 12, module lines 4943
+
+## J26 · COMPLETE
+
+COMPLETE (G52): merged tranche/T51 (G53); contract.test.mjs:34 green on the real registry, no local patch. screens-action 278/0. Impact set (screens-action 30, control-plane 72, plane 51 files): 1018 pass, 1 fail (plane release R24, inherited). checks/run.mjs: format, architecture, coverage, channels 0; words 11 failures, none mine (case-checker spec.mjs inline x6; installer-steps installer.fleet.logsunconfirmed missingkey x5, from the merged tranche); ownership 0. Proposed R3 line and five word keys for UX-DESIGN are in the record. Nothing deferred.

@@ -1,4 +1,4 @@
-/* notice-producers — the feed's newer producers (requirements: `build/requirements/notice-producers.md`, R1–R24).
+/* notice-producers — the feed's newer producers (requirements: `build/requirements/notice-producers.md`, R1–R28).
  * A new seam after `queue-producers` with no copy (plan T33-82; Choices 8 and 23): each producer derives, on read and
  * writing nothing, the items one provider's facts earn for a viewer, naming each item's subjects and homes for `queue`
  * to home, offer, mint and publish, exactly as `queue-producers` does for the rest.
@@ -42,11 +42,13 @@
  *       review-comment-left-out  FINDING, review.reviewCommentsLeftOut
  *   R24 watched-changed          FINDING, retrieval.browse(only: watched) + following.watchedBy   a watched item changed after the
  *                                watcher's mark, told to her alone, once per change (T50; N1204, DEC-238)
+ *   R27 fetch-done              FINDING, capture.fetchesDone           a large capture's fetch delivered, to the member who began it (G2)
+ *   R28 ingest-done, ingest-stopped  FINDING, calculations.ingestNotices   a background money ingest finished or stopped, to who ingested (G55)
  *
  * REACHED as `noticeProducersOf(host, deps)` (K1563 (1)): one instance per Durable Object storage. It registers nothing
  * and holds no check row: it refuses nothing. `deps` (each defaults to its module's instance on the same host, reached
  * lazily when first asked): membership, people, moneyChecks, duties, entities (R20's `{office}`, K3144), answers, inquiry, credentials (R12), aiAccounts (R16's suspended sign-ins, T48), following, standards,
- * retrieval (R24's watched items), fileSafety, provenance, aiUse (R16), steps (with `step`, R17's step work), questionExplorer, investigation, review (R17);
+ * retrieval (R24's watched items), capture (R27), calculations (R28), fileSafety, provenance, aiUse (R16), steps (with `step`, R17's step work), questionExplorer, investigation, review (R17);
  * and `view`, the jurisdiction view whose time zone R13's to R17's dates are read in (the profile's, when not given; read
  * once a read of `noticeItems`).
  *
@@ -74,6 +76,7 @@ import { standardsOf } from "../standards/index.mjs";
 import { fileSafetyOf, findingKind } from "../file-safety/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { captureOf } from "../capture/index.mjs";
+import { calculationsOf } from "../calculations/index.mjs";
 import { aiUseOf } from "../ai-use/index.mjs";
 import { stepsOf } from "../steps/index.mjs";
 import { questionExplorerOf } from "../question-explorer/index.mjs";
@@ -155,7 +158,16 @@ export const NOTICE_KINDS = Object.freeze({
   "watched-changed": "FINDING",
   /* R27 (G2, K4562): a large capture's background fetch was delivered */
   "fetch-done": "FINDING",
+  /* R28 (G55, K4562): a money ingest run in the background finished, or was stopped */
+  "ingest-done": "FINDING",
+  "ingest-stopped": "FINDING",
 });
+/** R28: the window of finished or stopped ingests read, by the ingest's age (as R27's), and the ingests one read follows. */
+export const INGEST_NOTICE_DAYS = 90;
+export const INGEST_NOTICE_MAX = 1000;
+export const INGEST_NOTICE_PAGE = 200;
+/** R28: the two states of an ingest that are told (calculations' `state`; `ingesting` is never told). */
+export const INGEST_STATES = Object.freeze(["done", "stopped"]);
 /** R27: the window of `fetch_done` records read, by the record's age (as R14's), and the records one read follows. */
 export const FETCH_DONE_DAYS = 90;
 export const FETCH_DONE_MAX = 1000;
@@ -240,6 +252,7 @@ export class NoticeProducers {
   get #standards() { return this.#dep("standards", () => standardsOf(this.#host)); }
   get #fileSafety() { return this.#dep("fileSafety", () => fileSafetyOf(this.#host)); }
   get #capture() { return this.#dep("capture", () => captureOf(this.#host)); }
+  get #calculations() { return this.#dep("calculations", () => calculationsOf(this.#host)); }
   get #provenance() { return this.#dep("provenance", () => provenanceOf(this.#host)); }
   get #aiUse() { return this.#dep("aiUse", () => aiUseOf(this.#host)); }
   get #steps() { return this.#dep("steps", () => stepsOf(this.#host)); }
@@ -286,6 +299,7 @@ export class NoticeProducers {
       review_left_out: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
       watched_changed: { bound: WATCHED_ITEMS_MAX, truncated: false },
       fetch_done: { bound: FETCH_DONE_MAX, days: FETCH_DONE_DAYS, truncated: false },
+      ingest: { bound: INGEST_NOTICE_MAX, days: INGEST_NOTICE_DAYS, truncated: false },
       failed,
     };
     const run = (provider, fn) => {
@@ -319,6 +333,7 @@ export class NoticeProducers {
       run("review", () => ({ fact: "review_left_out", ...this.#reviewLeftOut(me, viewer, at) }));
       run("retrieval", () => ({ fact: "watched_changed", ...this.#watchedChanged(me, viewer, at) }));
       run("capture", () => ({ fact: "fetch_done", ...this.#fetchDone(me, viewer, at) }));
+      run("calculations", () => ({ fact: "ingest", ...this.#ingestNotices(me, viewer, at) }));
       return { items, facts };
     } catch {
       return { items: [], facts: { ...facts, failed: [...new Set([...failed, "notice-producers"])] } };
@@ -1427,6 +1442,60 @@ export class NoticeProducers {
         assignee: null, assignee_role: null,
         recipients: [me],
         options: [...this.#optionsOf([f.document])],
+      });
+    }
+    return { items, facts: { truncated } };
+  }
+
+  /* ================================================================== R28 · a background ingest finished or was stopped
+   * (calculations' `ingestNotices`, G55; K4562: the member who ingested a table over the inline threshold "is told when it is
+   * done"). One FINDING per ingest `calculations` answers this viewer as `done` or `stopped` (only the viewer's own ingests it
+   * sees; it names no other member), to the viewer alone while active, keyed `FINDING::ingest-done::<ingest>` or
+   * `FINDING::ingest-stopped::<ingest>` so queue mints it once and a later cycle answers the same item. Its order is the order
+   * the ingests were started, not finished, so no `next` is kept between cycles: each read starts at `after` 0 and pages by `next`
+   * to at most the bound. The window is 90 days of `finished_at`. A stopped ingest adds the reason's `says`. */
+  #ingestNotices(me, viewer, now) {
+    if (!this.#active(me)) return { items: [], facts: {} };
+    const since = now - INGEST_NOTICE_DAYS * DAY_MS;
+    const done = [];
+    let after = 0, truncated = false;
+    for (;;) {
+      if (done.length >= INGEST_NOTICE_MAX) { truncated = true; break; }
+      const r = this.#calculations.ingestNotices({ after, limit: Math.min(INGEST_NOTICE_PAGE, INGEST_NOTICE_MAX - done.length), viewer });
+      if (!r || r.ok !== true || !Array.isArray(r.items)) throw failure("calculations");
+      done.push(...r.items);
+      if (r.next === null || r.next === undefined || r.next === after || r.items.length === 0) break;
+      after = r.next;
+    }
+    const items = [];
+    const seen = new Set();
+    for (const g of done) {
+      if (!g || !filled(g.ingest) || !INGEST_STATES.includes(g.state) || seen.has(g.ingest)) continue;
+      const when = Date.parse(g.finished_at);
+      if (!(Number.isFinite(when) && when >= since)) continue;      /* the window is the item's life, as R27's */
+      seen.add(g.ingest);
+      const kind = `ingest-${g.state}`;
+      const count = (v) => (Number.isSafeInteger(v) && v >= 0 ? v : 0);
+      const fills = { written: String(count(g.written_count)), not_written: String(count(g.not_written_count)), rows: String(count(g.rows_total)) };
+      const says = g.state === "stopped" && g.stopped && filled(g.stopped.says) ? g.stopped.says.trim() : "";
+      const sentence = g.state === "done"
+        ? localize("notice-producers.ingest.done", "Your table has been ingested: {written} of {rows} rows were written as money facts, {not_written} were not.", fills)
+        : localize("notice-producers.ingest.stopped", "Your table's ingest was stopped after {written} of {rows} rows were written; the rest were not.", fills);
+      items.push({
+        id: `FINDING::${kind}::${g.ingest}`, class: "FINDING", kind,
+        label: NOTICED_LABEL, by: localize("notice-producers.group_civicsmith", "the team's Civicsmith"),
+        case: this.#homesOf([]),
+        subject: { kind: "ingest", id: g.ingest, binding: g.binding ?? null, state: g.state },
+        summary: sentence,
+        detail: says ? `${sentence} ${says}` : sentence,
+        fills,
+        basis: { source: "calculations.ingestNotices", ingest: g.ingest, binding: g.binding ?? null, state: g.state, finished_at: g.finished_at ?? null,
+                 reason: g.state === "stopped" && g.stopped ? g.stopped.reason ?? null : null,
+                 detail: localize("notice-producers.index.an_ingests_end_is_calculations", "an ingest's end is calculations' (its R14): told once, to the member who ingested, when a background run is done or was stopped, and to nobody else.") },
+        age: ageFrom(g.finished_at, now, "no_ingest_instant"),
+        assignee: null, assignee_role: null,
+        recipients: [me],
+        options: this.#optionsOf([]),
       });
     }
     return { items, facts: { truncated } };

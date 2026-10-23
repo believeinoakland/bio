@@ -240,11 +240,11 @@ test("R4 (C14) the rows are listed from the picker at once, and the full fields 
   assert.ok(says(p, "screen.held.ineligible.alone"), "a full field drawn from the second read");
   const bad = await openPage("/app/held", { plane: heldPlane(3, { heldcaptures: (req) => {
     if (req.query.state === "set_aside") return ok({ ok: true, held: [], truncated: false });
-    if (req.query.bundle_ids) return refused("STORE_SILENT", "The record did not answer.", 502);
+    if (req.query.bundle_ids) return refused("STORE_SILENT", "store silent (test fixture)", 502);
     return ok({ ok: true, truncated: false, held: [0, 1, 2].map(pickerRow) });
   } }), screens: [...SCREENS, DOCUMENT_STUB] });
   assert.equal(main(bad).querySelectorAll('[id^="pick-held-"]').length, 3, "the rows are still listed");
-  assert.match(text(bad), /The record did not answer\./);
+  assert.match(text(bad), /store silent \(test fixture\)/);
   assert.ok(main(bad).querySelector('[data-state="failed"]'));
 });
 

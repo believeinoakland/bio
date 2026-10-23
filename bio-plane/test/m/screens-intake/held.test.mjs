@@ -41,9 +41,9 @@ test("R4 the screen reads heldcaptures; a list with no row is drawn in the scree
   const e = await open("/app/held", { plane: { heldcaptures: ok({ ok: true, held: [] }) } });
   assert.ok(says(e, "screen.held.empty"));
   /* control: a read that failed is drawn as failed, never as empty */
-  const f = await open("/app/held", { plane: { heldcaptures: refused("STORE_SILENT", "The record did not answer.") } });
+  const f = await open("/app/held", { plane: { heldcaptures: refused("STORE_SILENT", "store silent (test fixture)") } });
   /* interface-shell R61: a refusal with its own words is drawn as those words alone */
-  assert.match(text(f), /The record did not answer\./);
+  assert.match(text(f), /store silent \(test fixture\)/);
   assert.ok(main(f).querySelector('[data-state="failed"]'));
   assert.ok(!says(f, "state.failed", { reason: "x" }) && !text(f).includes(word("state.failed", { reason: "" }).split("{")[0].trim()));
   assert.ok(!says(f, "screen.held.empty"));
@@ -186,11 +186,11 @@ test("R13 the Set aside list: heldcaptures with state set_aside, each row naming
   assert.deepEqual(q.byOp("heldrestore")[0].body, { ids: ["INFO-2026-0002-budget", "INFO-2026-0007-memo"], reason: "Both belong." });
   assert.ok(says(q, "screen.held.restored", { count: 2 }));
   /* control: the Held list offers no restore, and a failed set-aside read is drawn failed, never empty */
-  const f = await open("/app/held", { plane: { heldcaptures: (req) => (req.query.state === "set_aside" ? refused("STORE_SILENT", "The record did not answer.") : HELD) } });
+  const f = await open("/app/held", { plane: { heldcaptures: (req) => (req.query.state === "set_aside" ? refused("STORE_SILENT", "store silent (test fixture)") : HELD) } });
   assert.equal(btn(f, "heldrestore"), null);
   assert.ok(!says(f, "screen.held.asideempty"));
   /* interface-shell R61: a refusal with its own words is drawn as those words alone */
-  assert.match(text(f), /The record did not answer\./);
+  assert.match(text(f), /store silent \(test fixture\)/);
   assert.ok(main(f).querySelector('[data-state="failed"]'));
 });
 
