@@ -274,3 +274,7 @@ B16 done. The observability read-back refuses only when settings are read (state
 \`observabilityHeld\` calls \`note(word("installer.fleet.logsunconfirmed"))\`; no \`localize\` in \`steps/\` or its tests; the test compares with \`word\` of that key; the key is added to \`STEP_KEYS\`. tranche/T51 merged. **Expected reds until INSTALLER #24 writes the row \`installer.fleet.logsunconfirmed\` and merges alongside:** words \`missingkey 2\` (\`uploads.mjs:40\`, \`observability.test.mjs:67\`; \`marker\` is 0 again; the other failure is the inherited \`case-checker/spec.mjs:11\`), and two steps tests by name: R40 (the unreadable-settings note: UNKNOWN_WORD) and R36 (each STEP_KEYS key is a row). Steps suite 108 tests, 106 expected once the row exists, 104 now. format, architecture, coverage 0 failures; ownership 0 failures.
 
 Size (session_01WaNWPB8W8wmgcuybTWiVtm): test runs 12, module lines 2102
+
+## J18 · COMPLETE
+
+B17 done: the note is word("installer.fleet.logsunconfirmed") (no localize in steps/ or its test; key added to STEP_KEYS); tranche/T51 merged. Words: marker 0; missingkey 2 (uploads.mjs:40, observability.test.mjs:67) EXPECTED until INSTALLER #24's row exists, plus the inherited case-checker inline 1. Two steps tests red by name until then: R40 (note) and R36 (each STEP_KEYS key is a row); 104 of 108 pass now, 106 once the row exists. format/architecture/coverage/ownership 0 failures. Merge together with INSTALLER #24. Size (session_01WaNWPB8W8wmgcuybTWiVtm): test runs 12, module lines 2102
