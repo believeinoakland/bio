@@ -758,3 +758,7 @@ After merging tranche/T51 (B56): control-plane dir 476 tests, 473 pass, 3 red: G
 Control-plane directory after merging tranche/T51: 476 tests, 473 pass, 3 red by name (K4764): round-6 G7 (until PLANE #54's keep-owner change, NO_HOME owes nothing), round-7 G58 (plane), round-7 G62 (screens-publish; actual value in J43: `TIE_ATTESTATION_MISSING`, `publish_at` null). Checks: format 0; architecture, coverage and words show failures none of which names control-plane; ownership 0. Impact set: control-plane 71/87, plane 54/66 (run by their jobs).
 
 Size (session_01DVeYe6wF7P8CpLfVhfSwSK): test runs 15, module lines 4695
+
+## J44 · COMPLETE
+
+G83 done (5 sites via storeStub, t51-g83-location 13/13, 7 red before). Control-plane dir 476 tests, 473 pass; red by name per K4764: round-6 G7 (PLANE #54), G58 (plane), G62 (screens-publish; actual value in J43). Checks: format 0, ownership 0, no architecture/coverage/words finding names control-plane. Record updated.
