@@ -1,6 +1,6 @@
 # queue (T51)
 
-**Status** · session_0193vawNA3pryumn3wcVVBRD · depth 2 · WAITING ON BOB (J1) · handled B12
+**Status** · session_0193vawNA3pryumn3wcVVBRD · depth 2 · WAITING ON BOB (J11) · handled B12
 
 ## J1 · QUESTION
 
