@@ -1,6 +1,6 @@
 # control-plane (T51)
 
-**Status** · session_01YAZZqemwaGayLxQo7ovcWS · depth 2 · COMPLETE · handled B50
+**Status** · session_01AwthwuHLmeRX25rjM7qqN9 · depth 2 · COMPLETE · handled B51
 
 ## J1 · QUESTION
 
@@ -679,3 +679,25 @@ Size (session_01YAZZqemwaGayLxQo7ovcWS): test runs 11, module lines 4645
 ## J37 · COMPLETE · re B50
 
 B50 done and pushed: STORAGE_WORDS (ten screen.group.storage.* rows, size a function of used/limit/percent) in control-plane/storage-words.mjs, test storage-words.test.mjs; words check 0; setup-words --check reports only the stale-rows note. See J36.
+
+## G43, control-plane's half (CONTROL-PLANE #51, B51; K4649, K4651)
+
+**Entries applied.** (1) `deliverOwedRender` (`control-plane/index.mjs:810`) follows the reading (`readHeld`, else `pendingadd`) when `made.readingDropped === true` as well as when the original document carries none. (2) `archive.mjs`: `PROV_EMBED_MAX = promotion's INLINE_MAX - 65,536` (imports `INLINE_MAX`, which promotion exports for this use; control-plane uses promotion), `embedded(doc)` files a document whose provenance text is over it without `reading`, `text_units`, `text_units_over_bound`, `text_units_skipped` (indent 2 unchanged; a document with none of those keys is filed whole); `promoteArchive` takes `onDropped({sha, document})`, called per document filed without its reading; the answer's shape is unchanged. `index.mjs` `promoteFiled` (both callers: acquire's `promoteAcquired`, and `op=unpack`) follows those with `followEntries`. A 1 MB CSV acquired as an archive member cannot reach this path with a reading (unpack's documents carry none, `unpack.mjs`), but acquire's answer for the archive's own document can (the door reads it), so the bound is applied rather than argued away.
+
+**Failing-first.** `t51-g43-embed.test.mjs`. (a) R58 archive test: archive document and first member carry 1.5 MB / 2 MiB readings; red before (no bound existed: the 2 MiB reading went into `data/provenance.json`; the file fails to load without `PROV_EMBED_MAX`), green after: every provenance file is within the bound, no reading embedded, `readheldfor` and `pendingadd` asked for exactly the two digests whose reading was left out, `promoted` keys unchanged; control: readings that fit are embedded byte-identical and nothing is followed. (b) `promoteArchive` unit: `onDropped` only for the dropped one; a large non-reading field is filed whole. (c) Equality: `INLINE_MAX` is 1,048,576 and the door's bound 65,536 below it. (d) **Seam, red by name until SCREENS-INTAKE #19 merges:** `R124 (G43; K4651): an owed render of a 1 MiB CSV ...` (real `extraction.read` of a 1 MiB CSV with `LASTROWMARK` in the last row, real `promoteDocument`, real promotion): refused `OVERSIZE_INLINE` today. With a local, uncommitted stand-in for the provider's drop (undone), it passes (104 s), and with my `readingDropped` condition removed it fails (neither read nor owed): so the delivery change is what makes it green. Control: a render whose reading fits is filed with it and followed by nothing. The "last row found" half of the plan's test is screens-intake's seam (its tests, K4651 (e)); mine asserts read-or-owed and the file bound.
+
+**L.** The Miniflare real-DO/R2 form is screens-intake's seam (K4651 (e)); mine uses the real record, extraction and promotion in process (the file's pattern). No Miniflare test added here.
+
+**Other embedders, by reading (4).** `store-door/pull.mjs:56` files `doc` from a pulled knock (capture's document, made by capture/acquisition, never passed through the door's reading: the door reads only in `readUploaded` and the acquire handler); `capture-requests/index.mjs:1089` and `monitoring/index.mjs:2582` file the daemon's own captures, which `readHeld` reads afterwards. None carries a door reading; none changed.
+
+**Deferred:** none. **Found in other modules:** none new; plane's two reds (`release.test.mjs` R24 words rule, `l77-size.test.mjs` R77 L) are unchanged from J32/J33.
+
+**Proposed requirement lines (BOB writes them).** R58: "A document the door files from an archive (an acquire's `document`, a member) whose `data/provenance.json` would exceed promotion's inline bound less 65,536 B is filed without its `reading`, `text_units`, `text_units_over_bound` and `text_units_skipped`, and its reading follows by the ledger (G43)." R124: "The delivery follows the reading of a document whose promotion answers `readingDropped`, as one filed with none."
+
+**Tests and checks.** control-plane directory: tests 447, pass 446, fail 1 (the seam above, red by name). plane: 351, pass 349, fail 2 (the same two as J32). `impact.mjs origin/tranche/T51 HEAD`: control-plane 69/85, plane 50/58. `checks/run.mjs`: format, architecture, coverage (6674 of 6674), channels, words all 0 failures; words count unchanged (no new sentence). `ownership.mjs`: 0 failures.
+
+Size (session_01AwthwuHLmeRX25rjM7qqN9): test runs 14, module lines 4680
+
+## J38 · COMPLETE
+
+G43, control-plane's half, done and pushed (job/T51/control-plane). deliverOwedRender follows when promoteDocument answers readingDropped; archive.mjs bounds the provenance file (PROV_EMBED_MAX = INLINE_MAX - 65536; drops reading/text_units; promoteArchive onDropped; both callers follow). Tests t51-g43-embed: archive test red before/green after; 1 MiB CSV owed-render seam RED BY NAME (OVERSIZE_INLINE) until SCREENS-INTAKE #19 merges; with a temporary local stand-in for the drop it passes, and fails without my condition. control-plane 447 tests, 446 pass, 1 = that seam; plane 349/351 (same two as J32); checks 0 failures; ownership 0. pull.mjs/capture-requests/monitoring embed no door reading (by reading). Details and proposed R58/R124 lines in the record. Size (session_01AwthwuHLmeRX25rjM7qqN9): test runs 14, module lines 4680.
