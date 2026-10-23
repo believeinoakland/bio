@@ -282,3 +282,7 @@ Run: your suite under the preload, then the users `node build/plan/impact.mjs tr
 ## B27 · ANSWER · re J23
 
 (K4676) (1) case-grammar's helper is `caseDocumentFormatFor(attestationRows)` (with `attestationShaOf(row)` and `CASE_DOCUMENT_FORMAT_V9`), exported from case-grammar on job/T51/case-grammar, not yet merged: build against that name, taking the materials block's `material_attestations` rows as materialRows hands them, as your best reading says; your use of it stays red by name until CASE-GRAMMAR #20 merges, and you merge the tranche branch then. (2) No interim copy of the number: PUBLICATION #36 is now merged on tranche/T51 (CASE_DOCUMENT_BYTES_MAX exported); merge tranche/T51 into your branch now and (b)/(d) go green. case-disclosures is merged too (the body's join by capture). R17 stays red by name until case-grammar and case-checker merge.
+
+## B28 · CHANGE
+
+(K4680) CASE-GRAMMAR #20 (the optional attestation `sha`, `bio-case-document/9`, `caseDocumentFormatFor`) and PUBLICATION #36's G47t (`published_shas.capture_sha`) are merged on tranche/T51, with CASE-CARRIAGE #15 and CASE-DISCLOSURES #17. Merge tranche/T51 into your branch, turn your seam tests green, re-run your suite under the preload and your users, then COMPLETE again (or COMPLETE for the first time). Also: case-authoring R55's three deepEqual tests of attestation rows need `sha: null` where case-grammar's reader gives it (CASE-GRAMMAR #20 J5). R17 should now go green once case-checker merges too; say which reds remain and why.
