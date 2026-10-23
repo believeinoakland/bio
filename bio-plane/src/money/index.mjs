@@ -58,6 +58,7 @@ const BUYS_FIELDS = new Set(["quantity", "unit", "what"]);
 
 const SHA_RE = /^[0-9a-f]{64}$/;
 const DECIMAL_RE = /^(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?$/;
+const deepFreeze = (o) => { if (o && typeof o === "object") { Object.values(o).forEach(deepFreeze); Object.freeze(o); } return o; };
 const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const filled = (v) => typeof v === "string" && v.trim() !== "";
 const clip = (s, n = TEXT_MAX) => String(s).trim().replace(/\s+/g, " ").slice(0, n);
@@ -134,6 +135,7 @@ export function moneyOf(ctx, opts = {}) {
 export class Money {
   #sql; #record; #membership; #entities; #provenance; #events; #lines; #calculations; #now;
   #listeners = []; #declared = false; #registered = false; #stepped = false;
+  #held = null; #heldKey = null; #builds = 0;
 
   constructor(storage, { record, membership = null, entities = null, provenance = null, events = null, lines = null,
                          calculations = null, now = null } = {}) {
@@ -212,13 +214,24 @@ export class Money {
     return row;
   }
 
-  /* ---- the jurisdiction view (fiscal years, classification schemes, time zone) ---- */
+  /* ---- the jurisdiction view (fiscal years, classification schemes, time zone) ----
+     R30 (G55): the last view is held with the key it was built from (the active profiles' list, as the setting is read
+     on every call, so a change is seen at once) and shared by every reader, so it is deep-frozen. One entry, about
+     145 KB, replaced when the key changes; dropped with the instance. */
 
   #view() {
     const ids = typeof this.#record.getSetting === "function" ? this.#record.getSetting("jurisdiction_profiles") : null;
-    const c = combine(Array.isArray(ids) ? ids : []);
-    return c && c.ok ? c.view : {};
+    const list = Array.isArray(ids) ? ids : [];
+    const key = JSON.stringify(list);
+    if (this.#held !== null && this.#heldKey === key) return this.#held;
+    const c = combine(list);
+    this.#builds += 1;
+    this.#heldKey = key;
+    return (this.#held = deepFreeze(c && c.ok ? c.view : {}));
   }
+
+  /** R30 (G55): how many times this instance has built the jurisdiction view. */
+  viewBuilds() { return this.#builds; }
 
   /* ---- the period (Terms; R1) ---- */
 
