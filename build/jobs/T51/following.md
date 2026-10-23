@@ -137,3 +137,7 @@ So the candidate 8 MiB does not hold; **4 MiB is the largest size at which the t
 **Suites and checks.** following (under the preload): 127 pass, 0 fail (9 new). Users run: scheduler 151/0, promotion 152/0 (row-census green), op-declarations 247/0, plane 354/2 (the two are the accepted reds by name: `release` R24 and `l77-size` R77 L). Process repo: format 0, architecture 0, coverage 36 of 36 ids, ownership 0, words 0 (following; and with monitoring, link-sweep, scheduler), `checks/run.mjs` 0 failures; `setup-words build.mjs --check`: stale-rows note naming `following.index.snapshot_over_parse_bound` (expected, not a refusal). Protective bound for BOB to report to Bob (K1881): `PORTAL_PARSE_MAX_BYTES` 4 MiB (candidate 8 MiB did not hold), `PORTAL_ROWS_INLINE_MAX` 524,288 B, piece 256 Ki characters. No seam test red; nothing deferred.
 
 Size (session_01QjU7Wn9EN1hqzzBdD8DJR6): test runs 14, module lines 2260
+
+## J6 · COMPLETE
+
+G46 complete on job/T51/following. Portal snapshots over 524,288 B are stored in pieces (portal_snapshot_parts, one transaction), a capture over PORTAL_PARSE_MAX_BYTES (4 MiB by measure, not 8) is stated, a held capture without snapshot is written once. following 127/0 (9 new, red then green); users: scheduler, promotion, op-declarations green, plane 354/2 (accepted reds). Checks 0 failures. Protective bounds to report to Bob: 4 MiB parse, 524,288 B inline. No portal corpus reachable for the share. Detail, measures, proposed R10/R11/R17 lines in build/jobs/T51/following.md.
