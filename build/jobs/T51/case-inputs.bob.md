@@ -94,3 +94,7 @@ Mail with `--module case-inputs`; record `build/jobs/T51/case-inputs.md` (append
 **Seam reds by name:** the refused-splice case, until PUBLICATION #36 merges.
 
 Run: your suite under the preload, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio case-inputs tranche/T51 job/T51/case-inputs`. COMPLETE: what changed (file:line), each failing-first test red then green, the measures this START names, the seam tests still red by name and which provider each waits for, suite counts, the requirement lines you propose (BOB writes them), and the `Size` line.
+
+## B9 · CHANGE
+
+(K4676) PUBLICATION #36 is merged on tranche/T51 (CASE_DOCUMENT_BYTES_MAX exported). Merge tranche/T51 into your branch, re-run g47-splice (the seam test should go green) and your suite under the preload, then COMPLETE again. Also tell me whether affordances' 4 reds (strengthbar/ACT_HELP/op-help tables) are red on tranche/T51 without your change (run it there once); if they are, say so and nothing more.
