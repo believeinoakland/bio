@@ -1,0 +1,1183 @@
+{
+ "recorded_on": "job/T51/reading-pipeline 63d73af2a8 (tranche/T51 tip)",
+ "whole_bound": 2097152,
+ "cases": {
+  "csv-100k": {
+   "chars": 100000,
+   "budget": 524288,
+   "pieces": [
+    {
+     "ask": null,
+     "answer": {
+      "reading": {
+       "content_type": "unregistered",
+       "reader_version": 0,
+       "read_from_text": true,
+       "found": false,
+       "entities": [],
+       "facts": {},
+       "text_source": [
+        {
+         "step": "layer",
+         "tier": 1,
+         "container": "csv",
+         "cap": null,
+         "measured_by": "unmeasured: a text layer is itself an unverified transcription (CPDF-9, the MEASUREMENTS ledger 2026-08-03)",
+         "calibration": null
+        }
+       ],
+       "text_tier": 1,
+       "text_container": "csv",
+       "basis": "the unregistered reader could not parse the csv text-layer text (the unregistered content type declares no reader), so nothing is claimed about its entities",
+       "position_parts": 0,
+       "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
+       "words_total": 20305,
+       "words_read": 20305,
+       "title": null,
+       "page_count": null,
+       "page_boxes": null,
+       "container_extent": {
+        "container": "csv",
+        "levels": [
+         "sheets",
+         "images"
+        ],
+        "sheets": [
+         {
+          "name": "csv",
+          "rows": null,
+          "cols": null,
+          "usedRows": 2032,
+          "usedCols": 4
+         }
+        ],
+        "paragraphs": null,
+        "slides": null,
+        "images": []
+       },
+       "text_chars": 99999,
+       "text_glyphs": 79695,
+       "text_undetermined": 0,
+       "metadata": null,
+       "cells": {
+        "csv": null
+       },
+       "cells_held": [
+        "csv"
+       ],
+       "dialect": {
+        "delimiter": "comma",
+        "encoding": "us-ascii",
+        "confidence": {
+         "delimiter": "certain",
+         "encoding": "certain"
+        },
+        "signals": {
+         "delimiter": [
+          "comma occurs 3 time(s) outside quotes on every one of the first 50 complete lines"
+         ],
+         "encoding": [
+          "no byte >= 0x80 in the first 100000 bytes",
+          "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically"
+         ]
+        },
+        "undetermined": []
+       }
+      },
+      "more": false,
+      "cursor": null,
+      "read_through": 99999,
+      "total": 99999,
+      "piece": {
+       "units": 1,
+       "words": 20305,
+       "units_total": 1
+      },
+      "units": {
+       "n": 1,
+       "sha": "777dcdf94e5a6e7bb2ec741a7316c68f0d3a1a506c55385f8e7708580ffdf578"
+      }
+     }
+    }
+   ]
+  },
+  "csv-under-bound": {
+   "chars": 2097151,
+   "budget": 524288,
+   "pieces": [
+    {
+     "ask": null,
+     "answer": {
+      "reading": {
+       "content_type": "unregistered",
+       "reader_version": 0,
+       "read_from_text": true,
+       "found": false,
+       "entities": [],
+       "facts": {},
+       "text_source": [
+        {
+         "step": "layer",
+         "tier": 1,
+         "container": "csv",
+         "cap": null,
+         "measured_by": "unmeasured: a text layer is itself an unverified transcription (CPDF-9, the MEASUREMENTS ledger 2026-08-03)",
+         "calibration": null
+        }
+       ],
+       "text_tier": 1,
+       "text_container": "csv",
+       "basis": "the unregistered reader could not parse the csv text-layer text (the unregistered content type declares no reader), so nothing is claimed about its entities",
+       "position_parts": 0,
+       "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
+       "words_total": 405215,
+       "words_read": 78594,
+       "title": null,
+       "page_count": null,
+       "page_boxes": null,
+       "container_extent": {
+        "container": "csv",
+        "levels": [
+         "sheets",
+         "images"
+        ],
+        "sheets": [
+         {
+          "name": "csv",
+          "rows": null,
+          "cols": null,
+          "usedRows": 40523,
+          "usedCols": 4
+         }
+        ],
+        "paragraphs": null,
+        "slides": null,
+        "images": []
+       },
+       "text_chars": 2097151,
+       "text_glyphs": 1691937,
+       "text_undetermined": 0,
+       "metadata": null,
+       "cells": {
+        "csv": null
+       },
+       "cells_held": [
+        "csv"
+       ],
+       "dialect": {
+        "delimiter": "comma",
+        "encoding": "us-ascii",
+        "confidence": {
+         "delimiter": "certain",
+         "encoding": "certain"
+        },
+        "signals": {
+         "delimiter": [
+          "comma occurs 3 time(s) outside quotes on every one of the first 50 complete lines"
+         ],
+         "encoding": [
+          "no byte >= 0x80 in the first 1048576 bytes",
+          "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically"
+         ]
+        },
+        "undetermined": []
+       }
+      },
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjN9",
+      "read_through": 393140,
+      "total": 2097551,
+      "piece": {
+       "units": 3,
+       "words": 78594,
+       "units_total": 17
+      },
+      "units": {
+       "n": 3,
+       "sha": "45b3320290864e09639a7c5ccb59fe3bcc10c09c9354f71734be103438b3d660"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjN9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjZ9",
+      "read_through": 786266,
+      "total": 2097551,
+      "piece": {
+       "units": 3,
+       "words": 75970
+      },
+      "units": {
+       "n": 3,
+       "sha": "0ba80bd84f113648785e3557c375c722349f5e3782efbc1275452135232f037b"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjZ9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjl9",
+      "read_through": 1179424,
+      "total": 2097551,
+      "piece": {
+       "units": 3,
+       "words": 75160
+      },
+      "units": {
+       "n": 3,
+       "sha": "4267cc90f4eeb08fe8667104984af6d65a9137e9dbcc07ea52f8451ff44cfcb6"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjl9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjEyfQ",
+      "read_through": 1572586,
+      "total": 2097551,
+      "piece": {
+       "units": 3,
+       "words": 75160
+      },
+      "units": {
+       "n": 3,
+       "sha": "c5e82b3176155bc3c18d4eb9c0ce4b6f652a68ecdd67e2ab8645a546008a1665"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjEyfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjE1fQ",
+      "read_through": 1965727,
+      "total": 2097551,
+      "piece": {
+       "units": 3,
+       "words": 75150
+      },
+      "units": {
+       "n": 3,
+       "sha": "57013128b2bc782d0bee91a59208f5e2415a8278d3c7f6e8f805dde16fbf39f4"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjE1fQ",
+     "answer": {
+      "more": false,
+      "cursor": null,
+      "read_through": 2097551,
+      "total": 2097551,
+      "piece": {
+       "units": 2,
+       "words": 25181
+      },
+      "units": {
+       "n": 2,
+       "sha": "c5bd18f163195adc3e46b74be5724fdb2dc7584218bf1e0978bcc23ed4c76df2"
+      }
+     }
+    }
+   ]
+  },
+  "csv-3m": {
+   "chars": 3000000,
+   "budget": 524288,
+   "pieces": [
+    {
+     "ask": null,
+     "answer": {
+      "reading": {
+       "content_type": "unregistered",
+       "reader_version": 0,
+       "read_from_text": true,
+       "found": false,
+       "entities": [],
+       "facts": {},
+       "text_source": [
+        {
+         "step": "layer",
+         "tier": 1,
+         "container": "csv",
+         "cap": null,
+         "measured_by": "unmeasured: a text layer is itself an unverified transcription (CPDF-9, the MEASUREMENTS ledger 2026-08-03)",
+         "calibration": null
+        }
+       ],
+       "text_tier": 1,
+       "text_container": "csv",
+       "basis": "the unregistered reader could not parse the csv text-layer text (the unregistered content type declares no reader), so nothing is claimed about its entities",
+       "position_parts": 0,
+       "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
+       "words_total": 577845,
+       "words_read": 78594,
+       "title": null,
+       "page_count": null,
+       "page_boxes": null,
+       "container_extent": {
+        "container": "csv",
+        "levels": [
+         "sheets",
+         "images"
+        ],
+        "sheets": [
+         {
+          "name": "csv",
+          "rows": null,
+          "cols": null,
+          "usedRows": 57786,
+          "usedCols": 4
+         }
+        ],
+        "paragraphs": null,
+        "slides": null,
+        "images": []
+       },
+       "text_chars": 2999999,
+       "text_glyphs": 2422155,
+       "text_undetermined": 0,
+       "metadata": null,
+       "cells": {
+        "csv": null
+       },
+       "cells_held": [
+        "csv"
+       ],
+       "dialect": {
+        "delimiter": "comma",
+        "encoding": "us-ascii",
+        "confidence": {
+         "delimiter": "certain",
+         "encoding": "certain"
+        },
+        "signals": {
+         "delimiter": [
+          "comma occurs 3 time(s) outside quotes on every one of the first 50 complete lines"
+         ],
+         "encoding": [
+          "no byte >= 0x80 in the first 1048576 bytes",
+          "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically"
+         ]
+        },
+        "undetermined": []
+       }
+      },
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjN9",
+      "read_through": 393140,
+      "total": 3000549,
+      "piece": {
+       "units": 3,
+       "words": 78594,
+       "units_total": 23
+      },
+      "units": {
+       "n": 3,
+       "sha": "45b3320290864e09639a7c5ccb59fe3bcc10c09c9354f71734be103438b3d660"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjN9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjZ9",
+      "read_through": 786266,
+      "total": 3000549,
+      "piece": {
+       "units": 3,
+       "words": 75970
+      },
+      "units": {
+       "n": 3,
+       "sha": "0ba80bd84f113648785e3557c375c722349f5e3782efbc1275452135232f037b"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjZ9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjl9",
+      "read_through": 1179424,
+      "total": 3000549,
+      "piece": {
+       "units": 3,
+       "words": 75160
+      },
+      "units": {
+       "n": 3,
+       "sha": "4267cc90f4eeb08fe8667104984af6d65a9137e9dbcc07ea52f8451ff44cfcb6"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjl9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEyfQ",
+      "read_through": 1572586,
+      "total": 3000549,
+      "piece": {
+       "units": 3,
+       "words": 75160
+      },
+      "units": {
+       "n": 3,
+       "sha": "c5e82b3176155bc3c18d4eb9c0ce4b6f652a68ecdd67e2ab8645a546008a1665"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEyfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE1fQ",
+      "read_through": 1965727,
+      "total": 3000549,
+      "piece": {
+       "units": 3,
+       "words": 75150
+      },
+      "units": {
+       "n": 3,
+       "sha": "57013128b2bc782d0bee91a59208f5e2415a8278d3c7f6e8f805dde16fbf39f4"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE1fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE4fQ",
+      "read_through": 2358888,
+      "total": 3000549,
+      "piece": {
+       "units": 3,
+       "words": 75160
+      },
+      "units": {
+       "n": 3,
+       "sha": "a8ea0b63477b4d6804a7ec30a87f1444c5f9d6b59b65604da4d20c86ef68832d"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE4fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIxfQ",
+      "read_through": 2751995,
+      "total": 3000549,
+      "piece": {
+       "units": 3,
+       "words": 75150
+      },
+      "units": {
+       "n": 3,
+       "sha": "2d996f113a00ae549644a61e6f2bc8326470de23d7129cdcfc253a720d22b350"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIxfQ",
+     "answer": {
+      "more": false,
+      "cursor": null,
+      "read_through": 3000549,
+      "total": 3000549,
+      "piece": {
+       "units": 2,
+       "words": 47501
+      },
+      "units": {
+       "n": 2,
+       "sha": "d2ccf81e4680a538a432bf0c853e8801a23fa17d2735109d34b8a73c398e78ca"
+      }
+     }
+    }
+   ]
+  },
+  "csv-3m-small-budget": {
+   "chars": 3000000,
+   "budget": 153600,
+   "maxUnits": 2,
+   "pieces": [
+    {
+     "ask": null,
+     "answer": {
+      "reading": {
+       "content_type": "unregistered",
+       "reader_version": 0,
+       "read_from_text": true,
+       "found": false,
+       "entities": [],
+       "facts": {},
+       "text_source": [
+        {
+         "step": "layer",
+         "tier": 1,
+         "container": "csv",
+         "cap": null,
+         "measured_by": "unmeasured: a text layer is itself an unverified transcription (CPDF-9, the MEASUREMENTS ledger 2026-08-03)",
+         "calibration": null
+        }
+       ],
+       "text_tier": 1,
+       "text_container": "csv",
+       "basis": "the unregistered reader could not parse the csv text-layer text (the unregistered content type declares no reader), so nothing is claimed about its entities",
+       "position_parts": 0,
+       "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
+       "words_total": 577845,
+       "words_read": 26494,
+       "title": null,
+       "page_count": null,
+       "page_boxes": null,
+       "container_extent": {
+        "container": "csv",
+        "levels": [
+         "sheets",
+         "images"
+        ],
+        "sheets": [
+         {
+          "name": "csv",
+          "rows": null,
+          "cols": null,
+          "usedRows": 57786,
+          "usedCols": 4
+         }
+        ],
+        "paragraphs": null,
+        "slides": null,
+        "images": []
+       },
+       "text_chars": 2999999,
+       "text_glyphs": 2422155,
+       "text_undetermined": 0,
+       "metadata": null,
+       "cells": {
+        "csv": null
+       },
+       "cells_held": [
+        "csv"
+       ],
+       "dialect": {
+        "delimiter": "comma",
+        "encoding": "us-ascii",
+        "confidence": {
+         "delimiter": "certain",
+         "encoding": "certain"
+        },
+        "signals": {
+         "delimiter": [
+          "comma occurs 3 time(s) outside quotes on every one of the first 50 complete lines"
+         ],
+         "encoding": [
+          "no byte >= 0x80 in the first 1048576 bytes",
+          "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically"
+         ]
+        },
+        "undetermined": []
+       }
+      },
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjF9",
+      "read_through": 131043,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 26494,
+       "units_total": 23
+      },
+      "units": {
+       "n": 1,
+       "sha": "5b83a42402ce17ec90b4c7214e77f0800e6f52adf9f3c93d10a1410c6206968f"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjF9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjJ9",
+      "read_through": 262095,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 26050
+      },
+      "units": {
+       "n": 1,
+       "sha": "a64cf6895204cd54cb361c258b0965f053fbfeebc6d37c0d8747505db93a18bc"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjJ9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjN9",
+      "read_through": 393140,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 26050
+      },
+      "units": {
+       "n": 1,
+       "sha": "4021b017188a2e03f9699758dab82547cde6b83ac7702bedba8b2fd5d172d40e"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjN9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjR9",
+      "read_through": 524198,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25870
+      },
+      "units": {
+       "n": 1,
+       "sha": "de9a4248010b525edafb68ad869dc5136889e87c3188ea50e0784aae41b1f034"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjR9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjV9",
+      "read_through": 655230,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "35ed13400d67e78dc262d823a07ed414d8b4ffd456314ef628d59a7c69d9ea0f"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjV9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjZ9",
+      "read_through": 786266,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "0a31249e8a704c524aed21d64b2b058dae7773293b3fb211be8638f8d0a814bc"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjZ9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjd9",
+      "read_through": 917310,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "4d8556e2b04766bfab8a918484f4ac02cc6757311fcac77ddf759b2920ec963d"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjd9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjh9",
+      "read_through": 1048356,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "dcc083da67ecaf12e91ffea81e4373f9317c6a63974e3a05d3d0011bfd24e390"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjh9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjl9",
+      "read_through": 1179424,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25060
+      },
+      "units": {
+       "n": 1,
+       "sha": "cbd509807455a0486887e5ab6465ffec972858fa1c23861af8b4d34004f59a5a"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjl9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEwfQ",
+      "read_through": 1310472,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "d3ad59d6c1a5e9f82e8ae2138a8c7299065f340aff937c1c0c561f6bf7562354"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEwfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjExfQ",
+      "read_through": 1441522,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "4c4b5352de0859e73dd179786f581830cc0547fd2effb7b383f56de8542cd856"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjExfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEyfQ",
+      "read_through": 1572586,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25060
+      },
+      "units": {
+       "n": 1,
+       "sha": "86ee5657e7718de1ab2cff9a70f3d5a95c3f1cde0efe7828103da39445443fe2"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEyfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEzfQ",
+      "read_through": 1703632,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "935ed03857626677a5e1ce0afdd545c9639ea7c147f44fa55d7c34f44ece7dcf"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEzfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE0fQ",
+      "read_through": 1834683,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "5f3a6f4baee1e54fecb975af05a4ab199e63df10340353d1606eed4f78bb20f0"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE0fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE1fQ",
+      "read_through": 1965727,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "eb4b9fa08ce7db4c9ae08cfbc0d95002eb3d2241b572ebc1ffea50f42d087916"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE1fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE2fQ",
+      "read_through": 2096796,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25060
+      },
+      "units": {
+       "n": 1,
+       "sha": "e688ea73d2ef0fc270af6403012cc8e4b1fcb35942d12e18510122122c200608"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE2fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE3fQ",
+      "read_through": 2227841,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "bb507a1bef24da960970ac0a6d607e09e4c5c40703ca2f00397e78e14bdf4ac2"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE3fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE4fQ",
+      "read_through": 2358888,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "ef72d590250a7cc22761feb5c2c622cf6b64d170a002f0cbac37eb8f4c5d8611"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE4fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE5fQ",
+      "read_through": 2489909,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "782e3640624b610459d47dd91f15dae52912a2bac1fb561d8e6ea7c78a6c1838"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE5fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIwfQ",
+      "read_through": 2620951,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "26e757e5b0849598ca7a4700504aacc1d8302cb6c5c3ec015f7768918934b7fb"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIwfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIxfQ",
+      "read_through": 2751995,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "28b9b73502551e35893c4c759753ed456418f6ac54bd75d2c2f30d0a34eaa63a"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIxfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIyfQ",
+      "read_through": 2883032,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "2ee76758ece5624fccf9d17900974c5af51166134637145bbb6d6e51a6728344"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIyfQ",
+     "answer": {
+      "more": false,
+      "cursor": null,
+      "read_through": 3000549,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 22451
+      },
+      "units": {
+       "n": 1,
+       "sha": "6d654d702bc8a5c33d87175282a2a34696e187099e48892c524202b89a64dfdb"
+      }
+     }
+    }
+   ]
+  },
+  "workbook-two-sheets": {
+   "chars": 0,
+   "budget": 524288,
+   "pieces": [
+    {
+     "ask": null,
+     "answer": {
+      "reading": {
+       "content_type": "unregistered",
+       "reader_version": 0,
+       "read_from_text": true,
+       "found": false,
+       "entities": [],
+       "facts": {},
+       "text_source": [
+        {
+         "step": "layer",
+         "tier": 1,
+         "container": "g48wb",
+         "cap": null,
+         "measured_by": "unmeasured: a text layer is itself an unverified transcription (CPDF-9, the MEASUREMENTS ledger 2026-08-03)",
+         "calibration": null
+        }
+       ],
+       "text_tier": 1,
+       "text_container": "g48wb",
+       "basis": "the unregistered reader could not parse the g48wb text-layer text (the unregistered content type declares no reader), so nothing is claimed about its entities",
+       "position_parts": 0,
+       "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
+       "words_total": 63202,
+       "words_read": 63202,
+       "title": null,
+       "page_count": null,
+       "page_boxes": null,
+       "container_extent": {
+        "container": "xlsx",
+        "levels": [
+         "sheets"
+        ],
+        "sheets": [
+         {
+          "name": "Fund",
+          "rows": null,
+          "cols": null,
+          "usedRows": 9179,
+          "usedCols": 3
+         },
+         {
+          "name": "Grant",
+          "rows": null,
+          "cols": null,
+          "usedRows": 30,
+          "usedCols": 3
+         }
+        ],
+        "paragraphs": null,
+        "slides": null
+       },
+       "text_chars": 1,
+       "text_glyphs": 276404,
+       "text_undetermined": 0,
+       "metadata": null,
+       "cells": {
+        "Fund": null,
+        "Grant": null
+       }
+      },
+      "more": false,
+      "cursor": null,
+      "read_through": 339636,
+      "total": 339636,
+      "piece": {
+       "units": 4,
+       "words": 63202,
+       "units_total": 4
+      },
+      "units": {
+       "n": 4,
+       "sha": "9541840e18fc6131f1a23f30c89eafbcbdf0641e2d93ac57e47d3150da4d88f9"
+      }
+     }
+    }
+   ]
+  },
+  "pdf": {
+   "chars": 0,
+   "budget": 524288,
+   "pieces": [
+    {
+     "ask": null,
+     "answer": {
+      "reading": {
+       "content_type": "unregistered",
+       "reader_version": 0,
+       "read_from_text": true,
+       "found": false,
+       "entities": [],
+       "facts": {},
+       "text_source": [
+        {
+         "step": "layer",
+         "tier": 1,
+         "container": "pdf",
+         "cap": null,
+         "measured_by": "unmeasured: a text layer is itself an unverified transcription (CPDF-9, the MEASUREMENTS ledger 2026-08-03)",
+         "calibration": null
+        }
+       ],
+       "text_tier": 1,
+       "text_container": "pdf",
+       "basis": "the unregistered reader could not parse the pdf text-layer text (the unregistered content type declares no reader), so nothing is claimed about its entities",
+       "position_parts": 6,
+       "position_why": null,
+       "words_total": null,
+       "words_read": 4320,
+       "title": null,
+       "page_count": 6,
+       "page_boxes": null,
+       "container_extent": {
+        "container": "pdf",
+        "levels": [
+         "images"
+        ],
+        "images": null,
+        "images_why": "a placement the structure op reported could not be read as {page, rect}"
+       },
+       "text_chars": 31187,
+       "text_glyphs": null,
+       "text_undetermined": 0,
+       "metadata": null
+      },
+      "more": false,
+      "cursor": null,
+      "read_through": 6,
+      "total": 6,
+      "piece": {
+       "units": 6,
+       "words": 4320,
+       "pages": [
+        0,
+        6
+       ]
+      },
+      "units": {
+       "n": 6,
+       "sha": "9b93bf39495c787b4276edecfdcd52ee3334d83a50bbf1164fb8df6975f78b4e"
+      }
+     }
+    }
+   ]
+  },
+  "text-capture": {
+   "chars": 0,
+   "budget": 524288,
+   "pieces": [
+    {
+     "ask": null,
+     "answer": {
+      "reading": {
+       "content_type": "unregistered",
+       "reader_version": 0,
+       "read_from_text": false,
+       "found": false,
+       "entities": [],
+       "facts": {},
+       "title": null,
+       "basis": "the unregistered content type declares no reader, so this document has no reading",
+       "text_source": [
+        {
+         "step": "layer",
+         "tier": null,
+         "container": "text",
+         "cap": null,
+         "measured_by": "unmeasured: a text layer is itself an unverified transcription (CPDF-9, the MEASUREMENTS ledger 2026-08-03)",
+         "calibration": null
+        }
+       ],
+       "text_container": "text",
+       "words_total": 4400,
+       "words_read": 4400,
+       "text_chars": 26578,
+       "text_glyphs": 21780,
+       "text_undetermined": null,
+       "metadata": null
+      },
+      "more": false,
+      "cursor": null,
+      "read_through": 26578,
+      "total": 26578,
+      "piece": {
+       "units": 400,
+       "words": 4400,
+       "units_total": 400
+      },
+      "units": {
+       "n": 400,
+       "sha": "26329c07b73f32892b36e2f4e363285846889f111084c4b91f42a00cbc7020fa"
+      }
+     }
+    }
+   ]
+  }
+ }
+}
