@@ -1968,23 +1968,24 @@ export class Calculations {
       : { reason: "ATTEMPTS", says: localize("calculations.ingest.stopped_attempts", "this ingest failed three times in a row and was stopped; the facts already written stay, marked as not complete.") };
   }
 
-  /** R14 (G55): `ingestNotices({after, limit, viewer})`: the ingests the viewer asked for that are `done` or `stopped`, in the order they finished, for
-   *  the notice path to tell once each (`notice-producers` reads them by `after`, the `next` of the last page). Never throws. */
+  /** R14 (G55): `ingestNotices({after, limit, viewer})`: the ingests the viewer asked for that are `done` or `stopped`, in the order they were started
+   *  (by row, not by when they finished), for the notice path to tell once each by key (`notice-producers` reads from the start each cycle). `next` is
+   *  null on the last page, else the cursor to pass as `after`. Never throws. */
   ingestNotices({ after = 0, limit = 100, viewer = null } = {}) {
     try {
       if (!stamped(viewer)) return { ok: true, items: [], next: null };
       const lim = Math.max(1, Math.min(READ_LIMIT_MAX, Number.isInteger(Number(limit)) ? Number(limit) : 100));
       const from = Number.isInteger(Number(after)) ? Number(after) : 0;
       const items = [];
-      let next = null;
+      let next = null, more = false;
       for (const r of this.#rows(`SELECT rowid AS rid, * FROM calc_ingests WHERE state IN ('done','stopped') AND rowid > ? ORDER BY rowid`, from)) {
         if (!this.#sees(r.bundle_id, viewer) || !sameMember(r.asked_by, viewer)) continue;
-        if (items.length >= lim) break;
+        if (items.length >= lim) { more = true; break; }
         items.push({ ingest: r.ingest_key, binding: r.binding_key, state: r.state, rows_total: r.rows_total, written_count: r.written_count ?? 0,
           not_written_count: r.not_written_count ?? 0, finished_at: r.finished_at ?? null, ...(r.state === "stopped" ? { stopped: this.#stopSays(r.stop_reason) } : {}) });
         next = r.rid;
       }
-      return { ok: true, items, next };
+      return { ok: true, items, next: more ? next : null };
     } catch { return { ok: true, items: [], next: null }; }
   }
 

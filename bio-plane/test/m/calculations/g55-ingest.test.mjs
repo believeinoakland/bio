@@ -409,7 +409,7 @@ test("R14 (G55 g) R-OLD: a record stored before has no state and reads as done t
   assert.equal(w.c.ingestDue(), false);
 });
 
-test("R14 (G55 notices) a done ingest and a stopped one are each read once by the viewer who asked, in the order they finished; another viewer reads none", async () => {
+test("R14 (G55 notices) a done ingest and a stopped one are each read once by the viewer who asked, in the order they were started; another viewer reads none", async () => {
   const { w, b } = await resolving(INGEST_INLINE_ROWS + 1);
   marked(w);
   const r = await ingest(w, b.binding);
@@ -418,7 +418,8 @@ test("R14 (G55 notices) a done ingest and a stopped one are each read once by th
   const n = w.c.ingestNotices({ viewer: V("bob") });
   assert.equal(n.items.length, 1);
   assert.deepEqual([n.items[0].ingest, n.items[0].state, n.items[0].written_count], [r.ingest, "done", INGEST_INLINE_ROWS + 1]);
-  assert.equal(w.c.ingestNotices({ viewer: V("bob"), after: n.next }).items.length, 0, "read once");
+  assert.equal(n.next, null, "a page that is not full is the last: no empty read follows");
+  assert.equal(w.c.ingestNotices({ viewer: V("bob"), after: 1 }).items.length, 0, "read once");
   assert.equal(w.c.ingestNotices({ viewer: V("carol") }).items.length, 0, "another member's ingest raises none");
   /* a stopped one, on another table of the same world */
   const two = await setup(INGEST_INLINE_ROWS + 2, () => "P001", { world: w });
@@ -427,10 +428,14 @@ test("R14 (G55 notices) a done ingest and a stopped one are each read once by th
   const r2 = await ingest(w, two.b.binding);
   for (let k = 0; k < INGEST_MAX_ATTEMPTS; k++) await w.c.ingestTick();
   w.money.recordFact = real;
-  const n2 = w.c.ingestNotices({ viewer: V("bob"), after: n.next });
+  const n2 = w.c.ingestNotices({ viewer: V("bob"), after: 1 });
   assert.equal(n2.items.length, 1);
   assert.deepEqual([n2.items[0].ingest, n2.items[0].state, n2.items[0].stopped.reason], [r2.ingest, "stopped", "ATTEMPTS"]);
-  assert.deepEqual(w.c.ingestNotices({ viewer: V("bob") }).items.map((x) => x.state), ["done", "stopped"], "in the order they finished");
+  assert.deepEqual(w.c.ingestNotices({ viewer: V("bob") }).items.map((x) => x.state), ["done", "stopped"], "in the order they were started");
+  const paged = w.c.ingestNotices({ viewer: V("bob"), limit: 1 });
+  assert.equal(paged.items.length, 1);
+  assert.notEqual(paged.next, null, "a full page with more behind it gives its cursor");
+  assert.equal(w.c.ingestNotices({ viewer: V("bob"), limit: 1, after: paged.next }).next, null);
 });
 
 test("R14 (G55 h) seam: money marks the facts of an open ingest partial and closes it with the last slice (MONEY #8; red by name until it merges)", async () => {
