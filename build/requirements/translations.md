@@ -50,9 +50,9 @@ What the members of a group read the screens in, and who may put words into a la
 
 #### T51 fix round 8 (K4817; `build/plan/fix-round-8-T51.md`)
 
-- **R19** (fix round 8, G113; K4817; amends R8) **The words answer holds only what the screens show.** `interfaceWords` with no `language` named answers only the words whose `fallback` is `false` (the team's shown translations in the viewer's language), each as R8 states it, so with no translation held it holds no word and is at most 4 KiB; with a `language` named (the settings screen's translation read) it answers every word as R8 states. The op's declared description says the same. Test: no translation held, no word; after one adoption and confirmation, exactly that word with `fallback: false`; with `language` named, every word. *(not yet met: T51)*
+- **R19** (fix round 8, G113; K4817; amends R8) **The words answer holds only what the screens show.** `interfaceWords` with no `language` named answers only the words whose `fallback` is `false` (the team's shown translations in the viewer's language), each as R8 states it, so with no translation held it holds no word and is at most 4 KiB; with a `language` named (the settings screen's translation read) it answers every word as R8 states. The op's declared description says the same. Test: no translation held, no word; after one adoption and confirmation, exactly that word with `fallback: false`; with `language` named, every word.
 
-- **R20** (fix round 8, G114; K4817) **The adoptions stamp.** `wordsVersion()` (in-process) answers `words_version`, a short string naming no member and no word, that changes whenever a translation of the team is adopted, confirmed or undone and is otherwise the same across requests and isolates. Test: equal across two reads; changed after an adoption, a confirmation and an undo. *(not yet met: T51)*
+- **R20** (fix round 8, G114; K4817) **The adoptions stamp.** `wordsVersion()` (in-process) answers `words_version`, a short string naming no member and no word, that changes whenever a translation of the team is adopted, confirmed or undone and is otherwise the same across requests and isolates. Test: equal across two reads; changed after an adoption, a confirmation and an undo.
 
 ## Private
 
