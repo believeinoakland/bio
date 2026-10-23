@@ -7,7 +7,7 @@
    where a reply's date has passed with none recorded, behind a fold on any other. The subject is the action's id. It holds
    no member-facing English (R19). Every function here is self-contained (interface-shell R21 (1)). */
 import { OPS } from "../op-declarations/index.mjs";
-import { draftsOf, stepOf, readOnly, kindWord, later, officeLine, chosenLawOf, joinFirst, WRITE_HELP } from "./send-steps.mjs";
+import { draftsOf, stepOf, readOnly, kindWord, later, officeLine, chosenLawOf, joinFirst, JOIN, WRITE_HELP } from "./send-steps.mjs";
 
 // R23: `actioninquiry` is an owed act (`interface-shell` R73): it is registered once `op-declarations` declares it, and the
 // shell draws it as it draws every act (R12).
@@ -634,6 +634,7 @@ export const action = Object.freeze({
       op: "procedureguides",
       send: function (view, el, cs) { cs.set("guideN", (view.ui.guideN || 0) + 1); return null; },
     },
+    JOIN,
     WRITE_HELP,
     {
       // R5 (v0.2 rule 15): confidential or not, with a reason; a published case keeps what it said.

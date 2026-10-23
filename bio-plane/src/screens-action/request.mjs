@@ -6,7 +6,7 @@
    office known to hold such records the screen says so and points an administrator to where one is added (R20); on every
    preparation it draws the matter's stake (R21).
    Every function here is self-contained (interface-shell R21 (1)). */
-import { draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, readOnly, officeLine, joinFirst, recordsLawsOf, chosenLawOf, templateOffered, PREPARE, APPROVE, RECORD_SENT } from "./send-steps.mjs";
+import { draftsOf, stepOf, sendSteps, draftOf, readFiling, stakeLines, readOnly, officeLine, joinFirst, recordsLawsOf, chosenLawOf, templateOffered, PREPARE, APPROVE, RECORD_SENT, JOIN } from "./send-steps.mjs";
 
 export const request = Object.freeze({
   id: "request",
@@ -265,5 +265,6 @@ export const request = Object.freeze({
     Object.assign({}, PREPARE, { rereads: ["filings"] }),
     Object.assign({}, APPROVE, { rereads: ["filings"] }),
     Object.assign({}, RECORD_SENT, { rereads: ["filings", "action"] }),
+    JOIN,
   ],
 });
