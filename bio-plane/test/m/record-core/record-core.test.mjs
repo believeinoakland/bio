@@ -614,7 +614,7 @@ test("R31: every service reads and writes only this module's tables and the cloc
   assert.equal(others(), before, "no other module's table was read into a write or changed (none was declared to purge)");
   // and what it holds: no member, capability or fence table among its own
   const own = rows(s, `SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'other_%' AND name NOT LIKE 'sqlite_%'`).map((r) => r.name).sort();
-  assert.deepEqual(own, ["bundles", "derived_stale", "files", "history", "leases", "manifest", "minted_ids", "seq", "settings", "tombstones"]);
+  assert.deepEqual(own, ["bookkeeping_tally", "bundles", "derived_stale", "files", "history", "leases", "manifest", "minted_ids", "seq", "settings", "tombstones"]);
 });
 
 test("R29: history and manifest are append-only under every service but purge", () => {
@@ -2136,7 +2136,7 @@ test("R71: migrate runs RECORD_SCHEMA itself and this module's own migrations, s
   const rc = recordOf({ storage: s });
   rc.migrate();
   const tables = () => rows(s, `SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`).map((r) => r.name);
-  assert.deepEqual(tables(), ["bundles", "derived_stale", "files", "history", "leases", "manifest", "minted_ids", "seq", "settings", "tombstones"]);
+  assert.deepEqual(tables(), ["bookkeeping_tally", "bundles", "derived_stale", "files", "history", "leases", "manifest", "minted_ids", "seq", "settings", "tombstones"]);
   const once = dump(s), schemaOnce = JSON.stringify(rows(s, `SELECT * FROM sqlite_master ORDER BY name`));
   rc.migrate();
   assert.deepEqual(dump(s), once); assert.equal(JSON.stringify(rows(s, `SELECT * FROM sqlite_master ORDER BY name`)), schemaOnce, "running it twice changes nothing");

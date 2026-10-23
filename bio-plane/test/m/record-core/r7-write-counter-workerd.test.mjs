@@ -45,3 +45,16 @@ test("R89 on workerd: a bulk write of 20,000 rows raises the counter by at least
   assert.ok(got.count > before);
   assert.ok(got.rows >= 20000);
 });
+
+test("R91 on workerd: a bookkeeping table's insert, update, bulk write and delete leave the counter, the triggers are the platform's own (TEMP schema is refused there), a rolled-back one never lowers it, and a record write still raises it", async () => {
+  const start = await ask("none");
+  for (const act of ["bk-insert", "bk-update", "bk-delete"]) {
+    const got = await ask(act, 5);
+    assert.equal(got.count, start.count, `${act} left the counter at ${start.count}`);
+  }
+  assert.equal((await ask("bk-insert", 50)).sessions, 50, "the rows were written");
+  assert.equal((await ask("none")).count, start.count, "fifty bookkeeping rows left it");
+  assert.ok((await ask("bk-rollback")).count >= start.count, "a rolled-back bookkeeping write never lowers it");
+  const after = (await ask("none")).count;
+  assert.ok((await ask("insert")).count > after, "a write to a table the list does not name raises it");
+});
