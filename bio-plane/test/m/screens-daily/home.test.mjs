@@ -3,7 +3,7 @@
    sentence is asserted as `word(key, vars)` (R34): no test here holds a sentence's English. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { open, ok, refused, text, ops, button, press, beside, last, main, screen, settle, MEMBER, word, hasWord, dmy, inOrder, withScreens } from "./page.mjs";
+import { open, ok, refused, batched, text, ops, button, press, beside, last, main, screen, settle, MEMBER, word, hasWord, dmy, inOrder, withScreens } from "./page.mjs";
 import { ADMIN } from "../interface-shell/harness.mjs";
 
 // A busy group's home, as the plane answers each read Home draws (R17).
@@ -22,17 +22,11 @@ const PLANE = {
   groupidentity: ok({ ok: true, group: "lakeshore", display_name: "Lakeshore Tenants", description: "Rents and leases on city land." }),
   queue: ok({ items: QITEMS, item_count: 6 }),
   projectlist: ok({ ok: true, count: 3, limit: 200, truncated: false, projects: [
-    { id: "PROJ-1", name: "The Coliseum lease", stage: "investigating", lastChange: "2026-10-12T15:00:00Z" },
-    { id: "PROJ-2", name: "Pothole repairs", stage: "forming", lastChange: "2026-09-20T15:00:00Z" },
-    { id: "PROJ-3", name: "Odd", stage: "paused" },
+    // Each project's questions and drafts shared for review are on its roster row (project-roster R42): PROJ-1 holds 3 questions and shares drafts, PROJ-2 one, PROJ-3 none.
+    { id: "PROJ-1", name: "The Coliseum lease", stage: "investigating", lastChange: "2026-10-12T15:00:00Z", question_count: 3, shared_drafts: { count: 3, newest: "2026-10-10T10:00:00Z" } },
+    { id: "PROJ-2", name: "Pothole repairs", stage: "forming", lastChange: "2026-09-20T15:00:00Z", question_count: 1, shared_drafts: { count: 0, newest: null } },
+    { id: "PROJ-3", name: "Odd", stage: "paused", question_count: 0, shared_drafts: null },
   ] }),
-  // Each project's questions, paged (basis-versions R50): PROJ-1 holds 3 over two pages, PROJ-2 one, PROJ-3 none.
-  projectquestions: (req) => {
-    const pages = { "PROJ-1": [[{ inquiry: "INQ-1" }, { inquiry: "INQ-2" }], [{ inquiry: "INQ-3" }]], "PROJ-2": [[{ inquiry: "INQ-4" }]], "PROJ-3": [[]] };
-    const at = req.query.after ? 1 : 0;
-    const list = pages[req.query.project] || [[]];
-    return ok({ ok: true, project: req.query.project, items: list[at] || [], cursor: at + 1 < list.length ? "INQ-2" : null });
-  },
   startfrom: ok({ ok: true, scripts: [], doors: [{ door: "elsewhere", scripts: [], opens: "elsewhere" }] }),
   lookedsince: ok({ since: "2026-10-01T00:00:00Z" }),
 };
@@ -55,7 +49,9 @@ test("R17: Home reads the queue, projectlist, startfrom, lookedsince and groupid
   for (const op of ["memberlist", "profiles", "grouplanguages", "aiuseovertime"]) assert.equal(p.byOp(op).length, 0, `control: ${op} is an administrator's`);
   const a = await open("/app", ADMIN_PLANE);
   for (const op of ["memberlist", "profiles", "grouplanguages"]) assert.equal(a.byOp(op).length, 1, op);
-  assert.equal(a.byOp("bootstrap").length, p.byOp("bootstrap").length + 1, "bootstrap read for Administration, beside the shell's own");
+  assert.equal(a.byOp("bootstrap").length, 1, "R122: the Administration reading's bootstrap is answered from the page's one answer: one request");
+  assert.equal(p.byOp("bootstrap").length, 1, "and one for a member's page");
+  assert.equal(a.byOp("queue").filter((r) => r.query.count !== "true" && r.query.count !== "1").length, 1, "C14: one list read of the queue (the frame's own is the count)");
   assert.equal(a.byOp("aiuseovertime")[0].query.owner, "group");
 });
 
@@ -172,40 +168,17 @@ test("R1, R8: each project the member sees is a reference opening project, with 
   assert.deepEqual(ladders[0].children.map((s) => s.textContent), ["forming", "investigating", "matured", "closed"].map((s) => word(`screen.home.stage.${s}`)));
 });
 
-test("R8, R21, R25: each project's question count is read from projectquestions, paged to its end, and drawn with the project, picking the singular or plural key; a count at zero is not drawn", async () => {
+test("R8, R21, R25 (fix round 3, C14): each project's question count is its roster row's own, drawn with the project, picking the singular or plural key; a count at zero is not drawn; none is read project by project", async () => {
   const p = await open("/app", PLANE);
   await settle();
-  const reads = p.byOp("projectquestions").map((r) => `${r.query.project}:${r.query.after || ""}`);
-  assert.deepEqual(reads.sort(), ["PROJ-1:", "PROJ-1:INQ-2", "PROJ-2:", "PROJ-3:"], "PROJ-1 paged on past its first page's cursor");
+  assert.equal(p.byOp("projectquestions").length, 0, "no per-project read (project-roster R42)");
   assert.ok(text(p).includes("The Coliseum lease" + word("screen.home.questions.many", { n: "3" })));
   assert.ok(text(p).includes("Pothole repairs" + word("screen.home.questions.one")), "R25: one question, the singular key");
   assert.ok(!text(p).includes(word("screen.home.questions.many", { n: "0" })));
 });
 
-test("R8: a page shorter than its limit with a cursor is not the end: the count pages on until the cursor is null", async () => {
-  const p = await open("/app", { ...PLANE, projectlist: ok({ ok: true, projects: [{ id: "PROJ-1", name: "A", stage: "forming" }] }),
-    projectquestions: (req) => ok({ ok: true, items: req.query.after === "c2" ? [{ inquiry: "Q9" }] : req.query.after === "c1" ? [] : [{ inquiry: "Q1" }],
-      cursor: req.query.after === "c2" ? null : req.query.after === "c1" ? "c2" : "c1" }) });
-  await settle();
-  assert.equal(p.byOp("projectquestions").length, 3);
-  assert.ok(text(p).includes("A" + word("screen.home.questions.many", { n: "2" })));
-});
-
-test("R8: a count is loading until its pages are read, and a failed read is drawn failed, never as none", async () => {
-  const loading = await open("/app", { ...PLANE, projectquestions: { pending: true } });
-  await settle();
-  assert.equal(main(loading).querySelectorAll('.cs-row [data-state="loading"]').length, 3);
-  assert.doesNotMatch(text(loading), /\d+ questions?/);
-  let calls = 0;
-  const failed = await open("/app", { ...PLANE, projectquestions: (req) => (req.query.project === "PROJ-1" && ++calls === 2 ? refused("STORE_DID_NOT_ANSWER", null, 502) : PLANE.projectquestions(req)) });
-  await settle();
-  assert.equal(main(failed).querySelectorAll('.cs-row [data-state="failed"]').length, 1, "PROJ-1's second page failed: its count is failed");
-  assert.doesNotMatch(text(failed), /The Coliseum lease\d+ question/, "control: never drawn as a count from the pages read");
-  assert.ok(text(failed).includes("Pothole repairs" + word("screen.home.questions.one")));
-});
-
 test("R8: a project whose stage is null is drawn undetermined; a list answered truncated says more projects exist", async () => {
-  const p = await open("/app", { ...PLANE, projectlist: ok({ ok: true, truncated: true, projects: [{ id: "PROJ-5", name: "Unstaged", stage: null }] }) });
+  const p = await open("/app", { ...PLANE, projectlist: ok({ ok: true, truncated: true, projects: [{ id: "PROJ-5", name: "Unstaged", stage: null, question_count: 0 }] }) });
   await settle();
   assert.ok(text(p).includes("Unstaged" + word("state.undetermined", { reason: word("screen.home.stage.none") })));
   assert.equal(main(p).querySelectorAll(".cs-ladder [aria-current]").length, 0);
@@ -235,7 +208,7 @@ test("R17: an item's own acts on Home send their bodies and re-read the queue, n
 test("R1, R25, R30: \"Start a project\" sends promote with the member's title as a new forming project, written as its title, and opens project on success", async () => {
   const p = await open("/app", { ...PLANE, ...CREATOR, promote: ok({ ok: true, bundleId: "PROJ-77", owner: "mai" }) });
   assert.ok(button(p, "promote").textContent.startsWith(word("project.start.go")), "the form's own act: its label, then the weight the shell draws");
-  await press(p, "promote", { values: { "home-title": "  Park bond oversight " } });
+  await press(p, "promote", { values: { "home-visibility-hidden": true, "home-title": "  Park bond oversight " } });
   const r = last(p, "promote");
   assert.equal(r.method, "POST");
   assert.equal(r.headers.Authorization, "Bearer tok-1");
@@ -252,27 +225,31 @@ test("R1, R25, R30: \"Start a project\" sends promote with the member's title as
   assert.equal(p.location.pathname, "/app/project/PROJ-77");
   // A title with a quote or newline stays one YAML string.
   const q = await open("/app", { ...PLANE, ...CREATOR });
-  await press(q, "promote", { values: { "home-title": 'A "quoted"\ntitle' } });
+  await press(q, "promote", { values: { "home-visibility-hidden": true, "home-title": 'A "quoted"\ntitle' } });
   assert.match(last(q, "promote").body.files[0].text, /\ntitle: "A \\"quoted\\"\\ntitle"\n/);
 });
 
-test("R30: the form asks the title and who can find it; hidden is preselected and an untouched form sends it; choosing findable sends discoverable", async () => {
+test("R30, R80: the form asks the title and who can find it; neither choice is preselected; none chosen sends nothing and says so; choosing findable sends discoverable", async () => {
   const p = await open("/app", { ...PLANE, ...CREATOR, promote: ok({ ok: true, bundleId: "PROJ-77" }) });
   const start = main(p).querySelector('details[data-start="project"]');
   const sel = start.querySelector("#home-visibility");
   assert.ok(start.querySelector("label[for=home-title]").textContent.includes(word("project.start.title")));
   assert.ok(start.textContent.includes(word("project.start.title.help")) && start.textContent.includes(word("project.visibility.start.later")));
-  assert.deepEqual(sel.querySelectorAll("option").map((o) => o.textContent), [word("project.visibility.start.hidden"), word("project.visibility.start.discoverable")]);
-  assert.equal(sel.value, "hidden", "preselected");
-  await press(p, "promote", { values: { "home-title": "Parks" } });
-  assert.equal(last(p, "promote").body.visibility, "hidden", "control: an untouched form sends hidden");
+  assert.deepEqual(sel.querySelectorAll("input[type=radio]").map((o) => o.parentNode.textContent.trim()), [word("project.visibility.start.hidden"), word("project.visibility.start.discoverable")]);
+  assert.equal(sel.querySelectorAll("input[type=radio]").filter((o) => o.checked).length, 0, "R80: nothing is chosen for the member");
+  const refusedBtn = await press(p, "promote", { values: { "home-title": "Parks" } });
+  assert.equal(p.byOp("promote").length, 0, "R80: Start with neither chosen sends nothing");
+  assert.ok(beside(p, refusedBtn).includes(word("project.visibility.start.required")), "R80: refused in place with the required key");
   const q = await open("/app", { ...PLANE, ...CREATOR, promote: ok({ ok: true, bundleId: "PROJ-78" }) });
-  await press(q, "promote", { values: { "home-title": "Parks", "home-visibility": "discoverable" } });
+  await press(q, "promote", { values: { "home-title": "Parks", "home-visibility-discoverable": true } });
   assert.equal(last(q, "promote").body.visibility, "discoverable");
+  const h = await open("/app", { ...PLANE, ...CREATOR, promote: ok({ ok: true, bundleId: "PROJ-79" }) });
+  await press(h, "promote", { values: { "home-title": "Parks", "home-visibility-hidden": true } });
+  assert.equal(last(h, "promote").body.visibility, "hidden", "control: hidden, once chosen, is sent");
   // PROJECT_VISIBILITY_NO_OWNER and NAME_TAKEN are drawn by their words.
   for (const code of ["PROJECT_VISIBILITY_NO_OWNER", "NAME_TAKEN"]) {
     const t = await open("/app", { ...PLANE, ...CREATOR, promote: refused(code, null, 409) });
-    const b = await press(t, "promote", { values: { "home-title": "Parks" } });
+    const b = await press(t, "promote", { values: { "home-visibility-hidden": true, "home-title": "Parks" } });
     assert.equal(beside(t, b).replace(/\s+/g, " "), word(`refusal.${code}`), code);
   }
 });
@@ -283,7 +260,7 @@ test("R1, R25: control: with no title nothing is sent and the member is told in 
   assert.equal(p.byOp("promote").length, 0);
   assert.equal(beside(p, b), word("screen.home.title.needed"));
   const t = await open("/app", { ...PLANE, ...CREATOR, promote: refused("NAME_TAKEN", null, 409) });
-  const c = await press(t, "promote", { values: { "home-title": "Parks" } });
+  const c = await press(t, "promote", { values: { "home-visibility-hidden": true, "home-title": "Parks" } });
   assert.equal(beside(t, c), word("refusal.NAME_TAKEN"));
   assert.equal(t.doc.getElementById("home-title").value, "Parks", "the form keeps what the member typed (interface-shell R13)");
   assert.equal(t.location.pathname, "/app");
@@ -334,7 +311,8 @@ test("R40: pressing a door sends startfrom for it and opens its offer in place; 
   assert.equal(main(p).querySelectorAll("button[data-script]").length, 0, "no script name before a press");
   assert.doesNotMatch(text(p), /Trace the deed|Pull the file/);
   await press(p, "startfrom", { nth: 0 });
-  assert.ok(p.byOp("startfrom").some((r) => r.query.door === "problem"), "startfrom is sent for the door");
+  // R81: the door is page memory; `startfrom` takes no `door` (the guard, over the owner's declaration), so the press sends it bare.
+  assert.ok(p.byOp("startfrom").length >= 2 && p.byOp("startfrom").every((r) => r.query.door === undefined), "startfrom is sent on the press with no door field");
   assert.deepEqual(doorOps(p, "problem"), [["WIZ-33b5887790b7561b", "1"], ["WIZ-cb0ad18a17a04233", "2"]]);
   assert.deepEqual(doorOps(p, "money"), [], "only the pressed door is open");
   // Control: with "Follow the money" not offered, the money door names only what startfrom names.
@@ -470,49 +448,6 @@ test("R34: every key Home reads is a word of the list, and what it draws for a s
     assert.ok(text(p).includes(word(k)), k);
 });
 
-test("R8: counts that answer out of order, or across a redraw, are all drawn: each answer is merged into the page's current memory (CONTROL-PLANE #37)", async () => {
-  const gates = {};
-  const gate = (id) => new Promise((resolve) => { gates[id] = resolve; });
-  const plane = { ...PLANE, startfrom: DOORS,
-    projectquestions: (req) => gate(req.query.project).then(() => ok({ ok: true, project: req.query.project, items: gates[req.query.project + ":n"], cursor: null })) };
-  const p = await open("/app", plane);
-  await settle();
-  const countOf = (name) => { const row = main(p).querySelectorAll(".cs-row").find((r) => r.textContent.includes(name)); return row ? text(p, row) : ""; };
-  assert.ok(gates["PROJ-1"] && gates["PROJ-2"] && gates["PROJ-3"], "each project's count was asked");
-  gates["PROJ-2:n"] = [{ inquiry: "A" }]; gates["PROJ-1:n"] = [{ inquiry: "B" }, { inquiry: "C" }]; gates["PROJ-3:n"] = [{ inquiry: "D" }, { inquiry: "E" }, { inquiry: "F" }];
-  // Out of order, close together: PROJ-2, then PROJ-1.
-  gates["PROJ-2"](); gates["PROJ-1"]();
-  await settle();
-  assert.ok(countOf("Pothole repairs").includes(word("screen.home.questions.one")), "PROJ-2 drawn");
-  assert.ok(countOf("The Coliseum lease").includes(word("screen.home.questions.many", { n: "2" })), "PROJ-1 drawn too");
-  // Across a redraw: a door is pressed between PROJ-3's asking and its answer.
-  await p.click(main(p).querySelector('[data-door="problem"] button'));
-  await settle();
-  gates["PROJ-3"]();
-  await settle();
-  assert.ok(countOf("Odd").includes(word("screen.home.questions.many", { n: "3" })), "PROJ-3 drawn after a redraw");
-  assert.ok(countOf("Pothole repairs").includes(word("screen.home.questions.one")) && countOf("The Coliseum lease").includes(word("screen.home.questions.many", { n: "2" })), "and the earlier two are kept");
-});
-
-test("R8: projectRows keeps each count under its own key: two answers that land out of order against a page memory that is replaced on each write both survive", async () => {
-  const rows = screen("home").parts.projectRows;
-  const gates = {};
-  const view = { ui: {}, me: {}, data: {} };
-  const cs = {
-    // The page's memory is replaced on every write (a copy with the key set), as a shell redrawing from a fresh copy would.
-    set: (k, v) => { view.ui = Object.assign({}, view.ui, { [k]: v }); },
-    call: (op, o) => new Promise((resolve) => { gates[o.query.project] = () => resolve({ result: { ok: true, items: [{ inquiry: "x" }], cursor: null } }); }),
-    w: (k) => k, esc: (x) => String(x), state: (s) => s.state, ref: (k, id, t) => t, row: (a, b) => b, sheet: (x) => x, date: (x) => x,
-  };
-  const draw = () => rows(cs, view, "screen.home", false)({ projects: [{ id: "A", name: "A" }, { id: "B", name: "B" }] });
-  draw();
-  gates.B(); await new Promise((r) => setTimeout(r, 0));
-  gates.A(); await new Promise((r) => setTimeout(r, 0));
-  const out = draw();
-  assert.ok(!/loading/.test(out), "neither count is left loading: " + out);
-  assert.equal((out.match(/screen\.home\.questions\.one/g) || []).length, 2, "both counts drawn");
-});
-
 // R64: Home's remaining readings, as the plane answers the reads each makes.
 const R64 = {
   browse: (req) => ok({ ok: true, items: [], total: req.query.kinds === "document" ? 142 : 0, truncated: false }),
@@ -522,8 +457,8 @@ const R64 = {
   publishedcase: (req) => ok({ ok: true, caseId: req.query.caseId, edition: Number(req.query.edition), scope: req.query.caseId === "CASE-1" ? "The Coliseum lease" : "Pothole repairs" }),
   peopledirectory: ok({ ok: true, following: 10, in_your_projects: 2, rows: [], limit: 1 }),
   clocksrunning: ok({ ok: true, total: 3, by_owed: { group: { count: 1, next: "2026-10-23" }, body: { count: 2, next: "2026-10-14" }, undetermined: { count: 0, next: null } }, truncated: false }),
-  casedrafts: (req) => ok({ ok: true, project: req.query.project, count: 1, drafts: req.query.project === "PROJ-1"
-    ? [{ draft_id: "DRAFT-1", case: { case_id: "CASE-1", edition: 3, identity: "x" } }, { draft_id: "DRAFT-2", case: { case_id: "CASE-2", edition: 2, identity: "x" } }, { draft_id: "DRAFT-3", case: { case_id: null, edition: null, identity: "x" } }] : [] }),
+  casedrafts: batched((id) => ({ ok: true, project: id, count: 1, drafts: id === "PROJ-1"
+    ? [{ draft_id: "DRAFT-1", case: { case_id: "CASE-1", edition: 3, identity: "x" } }, { draft_id: "DRAFT-2", case: { case_id: "CASE-2", edition: 2, identity: "x" } }, { draft_id: "DRAFT-3", case: { case_id: null, edition: null, identity: "x" } }] : [] })),
   reviewcopy: (req) => ok({ ok: true, comments: req.query.draft === "DRAFT-2" ? [{ author_kind: "recipient", text: "x" }] : [],
     grants: [{ grant_id: "G-1", live: true, until: "2026-10-20T00:00:00Z" }, { grant_id: "G-0", live: false, until: "2026-10-30T00:00:00Z" }] }),
   securitymap: ok({ ok: true, level: "Raised", levelAt: null, buckets: [], totals: {} }),
@@ -564,19 +499,19 @@ test("R64: edition lines: a case with a draft shared until a date says so, with 
   const inv = text(p, main(p).querySelector('[data-area="investigation"]'));
   assert.ok(inv.includes(word("screen.home.area.edition", { n: "2", case: "The Coliseum lease", date: dmy("2026-09-18"), until: dmy("2026-10-20") })), "no comment: the sentence that says none is to answer");
   assert.ok(inv.includes(word("screen.home.area.edition.comments.one", { n: "1", case: "Pothole repairs", date: dmy("2026-10-02"), until: dmy("2026-10-20") })), "one recipient commented");
-  assert.deepEqual(p.byOp("casedrafts").map((r) => r.query.project).sort(), ["PROJ-1", "PROJ-2", "PROJ-3"], "each of the member's projects");
+  assert.deepEqual(p.byOp("casedrafts").map((r) => r.query.projects), ["PROJ-1"], "one read, for the project whose row says a draft is shared (project-roster R42)");
   assert.deepEqual(p.byOp("reviewcopy").map((r) => r.query.draft).sort(), ["DRAFT-1", "DRAFT-2"], "a draft of no case reads no grant");
   assert.equal(p.byOp("publishedcase").filter((r) => r.query.caseId === "CASE-1")[0].query.edition, "2", "the latest edition");
-  const bare = await open("/app", { ...R64_ADMIN, casedrafts: ok({ ok: true, drafts: [] }) });
+  const bare = await open("/app", { ...R64_ADMIN, casedrafts: batched(() => ({ ok: true, drafts: [] })) });
   await settle();
   assert.ok(text(bare, main(bare).querySelector('[data-area="investigation"]')).includes(word("screen.home.area.edition.published", { n: "1", case: "Pothole repairs", date: dmy("2026-10-02") })), "the latest edition, no draft");
   const only = await open("/app", { ...R64_ADMIN, publishedlist: ok({ bundles: [], cases: [] }),
-    casedrafts: (req) => ok({ ok: true, drafts: req.query.project === "PROJ-1" ? [{ draft_id: "DRAFT-1", case: { case_id: "CASE-9", edition: 1 } }] : [] }),
+    casedrafts: batched((id) => ({ ok: true, drafts: id === "PROJ-1" ? [{ draft_id: "DRAFT-1", case: { case_id: "CASE-9", edition: 1 } }] : [] })),
     reviewcopy: ok({ ok: true, comments: [], grants: [{ live: true, until: "2026-10-20T00:00:00Z" }] }) });
   await settle();
   assert.ok(text(only, main(only).querySelector('[data-area="investigation"]')).includes(word("screen.home.area.edition.draftonly", { case: "CASE-9", until: dmy("2026-10-20") })), "a draft on a case with no edition yet");
   const one = await open("/app", { ...R64_ADMIN, publishedlist: ok({ bundles: [], cases: [] }),
-    casedrafts: (req) => ok({ ok: true, drafts: req.query.project === "PROJ-1" ? [{ draft_id: "DRAFT-1", case: { case_id: "CASE-9", edition: 1 } }] : [] }),
+    casedrafts: batched((id) => ({ ok: true, drafts: id === "PROJ-1" ? [{ draft_id: "DRAFT-1", case: { case_id: "CASE-9", edition: 1 } }] : [] })),
     reviewcopy: ok({ ok: true, comments: [{ author_kind: "recipient", text: "x" }], grants: [{ live: true, until: "2026-10-20T00:00:00Z" }] }) });
   await settle();
   assert.ok(text(one, main(one).querySelector('[data-area="investigation"]')).includes(word("screen.home.area.edition.draftonly.comments.one", { case: "CASE-9", until: dmy("2026-10-20") })), "one comment on a draft with no edition yet");
@@ -599,4 +534,53 @@ test("R64: controls: a member who is not an administrator sends no securitymap a
   assert.ok(!t.includes(word("screen.home.rd.documents")) && !t.includes(word("screen.home.rd.cases")) && !t.includes(word("screen.home.rd.followed.other")), "no reading at zero");
   const a = text(quiet, main(quiet).querySelector('[data-area="action"]'));
   assert.ok(!a.includes(word("screen.home.rd.clocks")) && !a.includes(word("home.move.theirs")), "no clock reading at zero");
+});
+
+// C74, C96 (fix round 2): an invitation is drawn once, its Join says which project, and a row's Open opens its subject.
+const INVITATION = (project, name) => ({ id: `OBLIGATION::project-invitation::${project}::mai`, class: "OBLIGATION", kind: "project-invitation", assignee: "mai", assignee_role: "member",
+  subject: { kind: "project", id: project, name }, basis: { inviter: "rosa" }, options: [{ id: "projectjoin" }], disposition: { available: false, instead: "projectjoin" } });
+const INVITED = ok({ ok: true, projects: [{ id: "PROJ-8", name: "Library hours", stage: "forming", participation: "invited" }, { id: "PROJ-9", name: "Park lights", stage: "forming", participation: "invited" },
+  { id: "PROJ-1", name: "The Coliseum lease", stage: "investigating", participation: "joined" }] });
+
+test("R29, C74: a project the member is invited to is one row on Home though the queue holds its invitation too; an invitation the list does not know is drawn from the queue", async () => {
+  const p = await open("/app", { ...PLANE, projectlist: INVITED, queue: ok({ items: [INVITATION("PROJ-9", "Park lights")], item_count: 1 }), projectjoin: ok({ ok: true }) }, { screens: withScreens("project") });
+  await settle();
+  const joins = main(p).querySelectorAll('button[data-act="projectjoin"]');
+  assert.equal(joins.length, 2, "PROJ-8 and PROJ-9 once each, not PROJ-9 twice");
+  assert.deepEqual(joins.map((b) => b.dataset.project).sort(), ["PROJ-8", "PROJ-9"]);
+  assert.ok(!text(p).includes(word("queue.project-invitation.detail")) || main(p).querySelectorAll("section")[0].querySelectorAll(".cs-row").length === 2, "one row for each project in Needs you");
+  assert.equal(main(p).querySelectorAll("section").filter((s) => s.querySelector("h2") && s.querySelector("h2").textContent === word("screen.home.needsgroup")).length, 0, "and none under Needs the group");
+  // Control: the project is not in the list the member is invited to, so the queue's own invitation is the one drawn.
+  const only = await open("/app", { ...PLANE, projectlist: ok({ ok: true, projects: [{ id: "PROJ-1", name: "The Coliseum lease", stage: "investigating", participation: "joined" }] }),
+    queue: ok({ items: [INVITATION("PROJ-9", "Park lights")], item_count: 1 }), projectjoin: ok({ ok: true }) }, { screens: withScreens("project") });
+  await settle();
+  assert.equal(main(only).querySelectorAll('button[data-act="projectjoin"]').length, 1);
+});
+
+test("R29, C96: two invitations draw two distinct labels, each naming its project", async () => {
+  const p = await open("/app", { ...PLANE, projectlist: INVITED, queue: ok({ items: [], item_count: 0 }), projectjoin: ok({ ok: true }) }, { screens: withScreens("project") });
+  await settle();
+  const labels = main(p).querySelectorAll('button[data-act="projectjoin"]').map((b) => b.getAttribute("aria-label"));
+  assert.equal(labels.length, 2);
+  assert.equal(new Set(labels).size, 2, "distinct");
+  assert.ok(labels.some((l) => l.includes("Library hours")) && labels.some((l) => l.includes("Park lights")));
+  assert.ok(labels.every((l) => l.startsWith(word("act.projectjoin.label.home"))), "the label's own word leads");
+  // Control: a joined project offers none; the queue's invitation for a project with a name is told apart the same way.
+  const item = await open("/app", { ...PLANE, projectlist: ok({ ok: true, projects: [] }), queue: ok({ items: [INVITATION("PROJ-8", "Library hours"), INVITATION("PROJ-9", "Park lights")], item_count: 2 }), projectjoin: ok({ ok: true }) });
+  await settle();
+  const two = main(item).querySelectorAll('button[data-act="projectjoin"]').map((b) => b.getAttribute("aria-label"));
+  assert.equal(new Set(two).size, 2);
+});
+
+test("R17, C74: a row's Open opens its subject's screen; a subject that opens nothing draws no Open, not a link to the queue", async () => {
+  const items = [
+    { id: "CONDITION::a", class: "CONDITION", kind: "reply", summary: "A reply is due", subject: { kind: "action", id: "ACT-2" } },
+    { id: "CONDITION::b", class: "CONDITION", kind: "request-awaiting", summary: "A request is awaited", subject: { kind: "capture_request", id: "CR-1" } },
+  ];
+  const p = await open("/app", { ...PLANE, queue: ok({ items, item_count: 2 }) }, { screens: withScreens("action") });
+  await settle();
+  const rowOf = (needle) => main(p).querySelectorAll(".cs-row").find((r) => text(p, r).includes(needle));
+  const opens = (r) => r.querySelectorAll("a[data-nav]").filter((a) => a.textContent === word("screen.home.open")).map((a) => a.getAttribute("href"));
+  assert.deepEqual(opens(rowOf("A reply is due")), ["/app/action/ACT-2"], "its subject's screen");
+  assert.deepEqual(opens(rowOf("A request is awaited")), [], "no Open to the queue");
 });

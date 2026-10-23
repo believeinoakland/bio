@@ -11,6 +11,8 @@
  * it is graded here. (T38; R28) `obscuremark` left `T37_RUNG_ABSENT`: a withdrawal (`obscuremarkwithdraw`) takes a mark
  * back, so `./t38.mjs` grades it `reversible`; its reason stays here. */
 
+import { word } from "../setup-words/index.mjs";
+
 const R = (s) => `read: ${s}; writes nothing`;
 const TRANSLATION_WORD = "translation-directed: keyed by a language and an interface word; the group's own wording of "
   + "Civicsmith's words, shown to members reading that language; moves no bundle";
@@ -54,9 +56,9 @@ export const T37_NON_ACTS = {
   translationdraft: "translation-directed: keyed by a language and interface words; drafts labeled machine work for a "
     + "granted speaker to check (`to_language`), or an administrator's back-translation of one protected word that "
     + "writes nothing (`to_english`); moves no bundle",
-  translationadopt: TRANSLATION_WORD,
-  translationconfirm: TRANSLATION_WORD,
-  translationrevert: TRANSLATION_WORD,
+  translationadopt: word("translations.declared.translationadopt"),
+  translationconfirm: word("translations.declared.translationconfirm"),
+  translationrevert: word("translations.declared.translationrevert"),
   translationmark: TRANSLATION_WORD,
   photomarks: R("a photo's marks, oldest first, its state (marked, nothing to obscure or unchecked) and its current "
     + "obscured copy, to a member who may see it"),

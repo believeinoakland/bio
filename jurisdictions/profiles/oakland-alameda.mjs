@@ -409,7 +409,7 @@ export default {
         { stage: "court_filing", label: "verified petition to the superior court", citation: "Cal. Gov. Code §§ 7923.000, 7923.100" }],
       requesters: { text: "any person, including a corporation, partnership, firm or association; no purpose need be given",
         citation: "Cal. Gov. Code §§ 7920.520, 7921.300, 7922.530(a)", status: "researched", basis: "2026-10-11 actions-law" },
-      basis: "D-149" },
+      response: "records_response", basis: "D-149" },
     /* The City's own records law, whose Immediate Disclosure Request is OMC 2.20.230 (time-law §2). */
     { level: "city", name: "Oakland Sunshine Ordinance", citation: "Oakland Mun. Code ch. 2.20",
       stages: [
@@ -420,7 +420,9 @@ export default {
         { stage: "court_filing", label: "proceedings for injunctive relief, declaratory relief, or writ of mandate", citation: "Oakland Mun. Code § 2.20.270(B)(1)" }],
       requesters: { text: "any person; no reason or use need be stated", citation: "Oakland Mun. Code §§ 2.20.230(D), 2.20.270(B)(1)",
         status: "researched", basis: "2026-10-11 actions-law" },
-      basis: "2026-10-05 time-law" },
+      response: "immediate_disclosure", basis: "2026-10-05 time-law" },
+    /* R95 (T51, C64): read live 2026-10-21 on the official text, the United States Code (2024 Edition) as govinfo.gov prints
+       it, never from memory (`test/fixtures/foia-text.mjs`); the 20-day determination and the appeal are clause (A)(i)'s and (ii)'s. */
     { level: "federal", name: "Freedom of Information Act", citation: "5 U.S.C. § 552",
       stages: [
         { stage: "request", label: "request for records", citation: "5 U.S.C. § 552(a)(3)(A)" },
@@ -428,12 +430,12 @@ export default {
         { stage: "extension_notice", label: "written notice of unusual circumstances", citation: "5 U.S.C. § 552(a)(6)(B)(i)" },
         { stage: "production", label: "records made promptly available", citation: "5 U.S.C. § 552(a)(3)(A)" },
         { stage: "denial", label: "determination denying the request", citation: "5 U.S.C. § 552(a)(6)(A)(i)" },
-        { stage: "appeal", label: "appeal of an adverse determination", citation: "5 U.S.C. § 552(a)(6)(A)(i), (ii)" },
+        { stage: "appeal", label: "appeal of an adverse determination", citation: "5 U.S.C. § 552(a)(6)(A)(i)" },
         { stage: "appeal_decision", label: "determination on the appeal", citation: "5 U.S.C. § 552(a)(6)(A)(ii)" },
         { stage: "court_filing", label: "complaint in the district court", citation: "5 U.S.C. § 552(a)(4)(B)" }],
       requesters: { text: "any person; an element of the intelligence community does not make records available to a foreign government entity or its representative",
-        citation: "5 U.S.C. § 552(a)(3)(A), (E)", status: "researched", basis: "2026-10-11 actions-law" },
-      basis: "2026-10-05 time-law" },
+        citation: "5 U.S.C. § 552(a)(3)(A), (E)", status: "researched", basis: "2026-10-21 foia-text" },
+      response: "foia_response", basis: "2026-10-21 foia-text" },
   ],
 
   standard_sources: [
@@ -592,7 +594,7 @@ export default {
     { rule: "claim_suit_after_rejection", applies_to: "claim", units: "months", amount: 6, direction: "forward", starts: "served",
       roll: true, closures: "judicial", owed_by: "group", citation: "Cal. Gov. Code § 945.6(a)(1)", status: "researched", basis: "2026-10-05 time-law" },
     /* "within 20 days (excepting Saturdays, Sundays, and legal public holidays) after the receipt". */
-    { rule: "foia_response", applies_to: "records_request", units: "days", amount: 20, count: "business", direction: "forward",
+    { rule: "foia_response", label: "answer to a first request", applies_to: "records_request", units: "days", amount: 20, count: "business", direction: "forward",
       starts: "received", closures: "federal",
       extension: { days: 10, count: "business", when: "unusual circumstances, by written notice to the requester",
         citation: "5 U.S.C. § 552(a)(6)(B)(i)" },
@@ -612,7 +614,7 @@ export default {
       consequence: { text: "the claim shall be deemed to have been rejected by the board on the last day of the period within which the board was required to act upon the claim",
         citation: "Cal. Gov. Code § 912.4(c)" },
       citation: "Cal. Gov. Code § 912.4(a)", status: "researched", basis: "2026-10-11 actions-law" },
-    { rule: "foia_appeal_response", applies_to: "records_request", units: "days", amount: 20, count: "business", direction: "forward",
+    { rule: "foia_appeal_response", label: "decision on an appeal", applies_to: "records_request", units: "days", amount: 20, count: "business", direction: "forward",
       starts: "received", closures: "federal", owed_by: "body",
       consequence: { text: "shall be deemed to have exhausted his administrative remedies with respect to such request if the agency fails to comply with the applicable time limit provisions of this paragraph",
         citation: "5 U.S.C. § 552(a)(6)(C)(i)" },
@@ -656,6 +658,19 @@ export default {
   computation: [
     { key: "ccp_12", rule: "exclude_first_include_last", citation: "Cal. Code Civ. Proc. § 12; Cal. Gov. Code § 6800",
       status: "researched", basis: "2026-10-05 time-law" },
+  ],
+  /* R49: the City of Oakland's fiscal year runs July 1 to June 30 and is named by its first year, written "FY 2025-26"
+     (oaklandca.gov, Fiscal Year 2025-2027 Budget, "New fiscal year 2025-2026 begins on July 1"; the two-year cycle "July 1,
+     2025 through June 30, 2027"; read 2026-10-22). Alameda County's runs July 1 to June 30 and is written "FY 2025-26"
+     (the county's budget press release: "The new budget goes into effect from July 1, 2024, to June 30, 2025"; the Board
+     letter "Fiscal Year (FY) 2025-26 Final Budget"; budget.alamedacountyca.gov; read 2026-10-22). The State Controller's
+     Office keeps no entry: no page of its own was read. */
+  fiscal_year: [
+    ...["Finance Department", "Oakland City Council", "Office Of The City Auditor"].map((body) => ({
+      body, start: "07-01", named_by: "start", label: "FY{start}-{end2}", status: "researched",
+      basis: "2026-10-22 oaklandca.gov-fy2025-27-budget" })),
+    { body: "Alameda County Civil Grand Jury", start: "07-01", named_by: "start", label: "FY{start}-{end2}", status: "researched",
+      basis: "2026-10-22 acgov.org-budget-press-release, 2026-10-22 budget.alamedacountyca.gov-fy2025-26-board-letter" },
   ],
   /* Legistar's PersonId, BodyId and OfficeRecordId, the register that issues them (legistar-events §1, §7; B1b.4, N569,
      N613). An office record is one seat's holding: person × body × dates, the source's own key. */

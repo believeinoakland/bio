@@ -4,7 +4,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { declaredOpHolds } from "../../declared-ops.mjs";
-import { DECLARED_OPS, ratificationOps } from "../../../src/ratification/index.mjs";
+import { DECLARED_OPS, ratificationOps, caseConclusionRowLines } from "../../../src/ratification/index.mjs";
+import { caseRatifyOp } from "../../../src/ratification/ops.mjs";
+import { world as ratificationWorld, plane, newKey, signCase, cleanCase, fmText, CASE_BODY } from "./fixture.mjs";
 import { world as retrievalWorld, V, sha, infoMd } from "../retrieval/fixture.mjs";
 import { ratificationOf } from "../../../src/ratification/index.mjs";
 import { contradictionOf } from "../../../src/contradiction/index.mjs";
@@ -55,4 +57,31 @@ test("R53 ratification declares release: its requires alone raise no refusal nam
 test("R53 ratification declares retire: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
   await declaredOpHolds({ op: "retire", declaration: DECLARED_OPS["retire"], call: mk("retire", {"viewer":"member:ann","owner":"o","author":"member:ann"}, null, null, (fields, env) => (real(fields, env))),
     refusedNaming: named({"handle":["NO_SUCH_SELECTION"],"reason":["NO_REASON"]}, true), same: sameCode });
+});
+
+const CASE = "CASE-2026-0001", Q1 = "INQ-2026-0001-first";
+const OWN = { version: "first", claim: "the council approved it", falsifier: "f", falsifier_override: null,
+              by: "member:alice", at: "2026-09-27T10:00:00Z" };
+
+test("R54 ratification declares caseratify: its requires alone raise no refusal naming a field, each missing one is refused naming it by the door's Worker half, and an undeclared field is dropped", async () => {
+  const w = ratificationWorld();
+  const key = await newKey();
+  w.member("alice", { signer: key }); w.member("bo");
+  const P = w.project("Team", "alice", { joined: ["bo"] });
+  w.inquiry(Q1);
+  w.bv.conc.set(w.key(P, Q1), OWN);
+  const conc = w.r.caseConclusionFor(P, Q1, V("alice"), "open");
+  const doc = cleanCase({ caseId: CASE, edition: 1, project: P, members: [{ id: Q1, pin: w.sha(Q1) }] });
+  const text = fmText(doc, { raw: ["case_conclusions:", ...caseConclusionRowLines(Q1, conc)], body: CASE_BODY });
+  const docSha = w.caseDoc(CASE, 1, text);
+  w.pub.facts.set(`${CASE}#1`, { ok: true, doc: { case_id: CASE, edition: 1, doc_sha: docSha, text },
+    attribution: { reached: [], legacy: [], stated: [], current: [] }, signers: w.credentials.attestingKeys(),
+    memberBasis: null, priorCase: null });
+  const sig = await signCase(key, CASE, 1, docSha);
+  /* the call as the door runs it: the Worker half, over the request's body, with the member's session */
+  const call = async (fields) => { const p = plane(w); const res = await caseRatifyOp(p.request(fields), p.stub, p.ctx);
+                                   return { status: res.status, ...res.body }; };
+  await declaredOpHolds({ op: "caseratify", declaration: DECLARED_OPS.caseratify, call, same: sameCode,
+                          values: { caseId: CASE, edition: 1, expectedSha: docSha, sig },
+                          outside: ["undeclared_field_caseratify"] });
 });

@@ -1,6 +1,6 @@
 # money (T51)
 
-**Status** · session_01EALiSa4XrZJimPmaSkDTWA · depth 2 · COMPLETE · handled B2
+**Status** · session_016NRUKZLwLKyy8zbRsvcjbP · depth 2 · COMPLETE · handled B6
 
 ## J1 · REPORT
 
@@ -56,3 +56,90 @@ Act needed: push the branch from /home/user/bio with `git push -u origin job/T51
 ## J4 · COMPLETE
 
 Pushed. The product commits are on origin: `6ce8fb314c` (the change) and `97587a6881` (merge of tranche/T51) reached origin with the mail pushes; `git push origin HEAD:job/T51/money` reports up to date. This withdraws J3 BLOCKED. Nothing else changed: the record in J2 COMPLETE stands, with the same checks and the Size line `test runs 4, module lines 1424`.
+
+## J5 · COMPLETE
+
+Completion, T51 fix round 3, money #6 (session_013Lo8EBZnWAC7FpsjEcuWjd).
+
+**Cause met: C8 + N1, money R28** (my part: the read). `moneySets({concerns, purpose?, limit, after, viewer}) → {ok: true, sets, limit, truncated, next}` (`op=moneysets`, served by the ops map and declared in `DECLARED_OPS` as a read, classes admin/member/probe, accepts concerns/purpose/limit/after, requires concerns). Sets whose `concerns` equal the id asked, newest first by creation (`at`, then insertion), each `{set_id, purpose, label, concerns, inclusions, exclusions}` with the facts the viewer may see; `purpose` narrows (`UNKNOWN_PURPOSE` otherwise); bounded 1–500 (default 100); `next` is the last set_id of a cut page and `after` continues from it (`BAD_AFTER` for an id not in the list). An id naming a bundle the viewer cannot see (a project, membership R43 through `#visibleBundle`) answers exactly as an id naming nothing: `{ok: true, sets: [], truncated: false, next: null}`, the id not echoed. No write change.
+
+**The confirmation asked for:** a trail started in a project carries the project in its `concerns` if the caller passes it: `createSet` keeps one `concerns` string for a trail, with no kind check, so a project id is held as given (a write change is not needed). The screen that starts a trail must send `concerns=<project id>` (screens-investigate, wave 2). Nothing to ask BOB.
+
+**Tests** (`bio-plane/test/m/money/moneysets.test.mjs`, 7 tests, all named R28, seen failing first with `moneySets is not a function`): four trails in one project listed newest first in the set's shape; another project's trail not listed; a hidden project lists none and equals an id naming nothing (also viewer ""); controls: a set with no concerns is listed under no id, `purpose: attribution` lists no trail on a project and does list the attribution set on its contract, `purpose: trail` on the contract lists none; bound, `truncated`, `next`, no repeat or gap across pages; read writes nothing and `readSet` and `createSet` unchanged; the ops-map arm and the declaration. `ops.test.mjs` line 8 gained `moneysets` in R18's list of arms (the arm count is the requirement; nothing weakened).
+
+**Runs:** money 86/86; money-checks 48/48, duties 75/75, people 79/79, explore 59/59, query-language 57/57, retrieval-browse 51/51, retrieval 178/178, calculations 62/62, strength 177/177, op-grades 145/145, control-plane 340/340. Checks: architecture 0 failures; words 0 failures (money); coverage money 28 of 28 live ids named (0 failures); ownership 0 failures (4 files); format 1 failure, `build/rulings.md:4346` K4349 (BOB's file, not mine, red on the tranche tip). impact.mjs flags 90 modules because `DECLARED_OPS` is a shared table; I ran the direct users above, not all 1304 files.
+
+**For BOB (REPORT, other modules, P9):**
+1. `moneysets` has no spec yet: `op-declarations` (its spec for the op, and a NEEDS row of null for a read, R17–R20) and `op-grades` (a "read" row beside `moneyset`, t33.mjs line ~213) must add it. Until then two suites are red on my branch only because of the new op: `op-declarations` t33.test.mjs:290 (R19, R6: "money" lists `moneysets` as served with no spec) and `affordances` t33.test.mjs:195 (R12 R24: `moneysets` unaccounted). The rest of both suites pass.
+2. `plane` release.test.mjs:78 (R24) fails "screen.objective.purpose is held by the words list": nothing of money's; not checked against the tranche tip, I believe it is red there (words list of the design stream).
+3. Words: no new member-facing sentence on a drawn screen; the three new refusal details are `localize` ids (`money.index.money_sets_are_listed_by`, `…a_money_sets_purpose_is_2`, `…after_names_no_set_in`), so there is no word-table stand-in to list.
+4. R28's text in `build/requirements/money.md` says "a set holds `concerns`"; the Terms still say `concerns?` is one entity or none and name events, entities and a line, not a project (RC-11 in fix-round-3-reqs.md). BOB to line the Terms up.
+
+No proposed requirement lines beyond R28; the `limit` key in the answer (beside `sets`, `truncated`, `next`) is mine, add it to R28's shape if wanted.
+
+Size (session_013Lo8EBZnWAC7FpsjEcuWjd): test runs 14, module lines 1478
+
+## J6 · QUESTION
+
+Fix round 4, cause C8-words (money R29), mid-job. Work committed locally as 15607d09e8 on job/T51/money (pushing with this post).
+
+**Cause, four fields**
+1. Root cause (certain): `bio-plane/src/money/index.mjs:238` and `:248` refused an unmapped fiscal key with `BAD_PERIOD`, the code `following` also answers; the translation is keyed by code, so money's real reason was hidden. Platform: N (pure code).
+2. Test gap: each module tests only its own code; the census that no two modules share a code is not in place (see question A).
+3. Failing-first: `bio-plane/test/m/money/refusal-codes.test.mjs` (R29 titles). Red before the change: `{fiscal:"FY2025-26", body:"Port Ellery Harbour District"}` and `{fiscal:"FY1999-00X", body:"Nobody"}` both answered `BAD_PERIOD`. Green after: both answer `MONEY_BAD_PERIOD`, detail names the fiscal key and body. Controls: a first day after a last day stays `BAD_PERIOD`; a valid fiscal key (`FY2013-14`) is accepted and writes a fact.
+4. Platform: N.
+
+Changed: `money/index.mjs` (two `refusal` codes), `money/test record.test.mjs` (two expectations moved to `MONEY_BAD_PERIOD` per R29). Money suite: 90 of 90 pass. Format, architecture, coverage (29 of 29 R-ids named), ownership: clean. `checks/run.mjs`: the words failures are on other modules' lines (op-grades t33, t51), not money's; I have not touched them.
+
+**Question A (decides what I build next).** R29 says `BAD_PERIOD` "remains following's and civil-time's alone" and "a census test finds no code answered by two modules". Today money still answers `BAD_PERIOD` for its other period refusals (from/to, `index.mjs:226-263`, about ten sites), and `following` and `calculations` answer it too. Options:
+- (a) Recommended: money's own period refusals (from/to too) move to `MONEY_BAD_PERIOD`, so money answers no `BAD_PERIOD`. The "refused as before" control stays a refusal; only its code changes. The calculations' use is calculations' to change; I will report it.
+- (b) Keep from/to on `BAD_PERIOD`, and scope the census to codes money answers uniquely.
+Also the census scope: a literal survey of refusal codes across `bio-plane/src` shows many codes answered by several modules, mostly shared act rows (record-grammar's `SHARED_ACT_CHECKS`, e.g. `NO_REASON` in eight modules). Recommended scope: codes not in `SHARED_ACT_CHECKS`. Please answer which of (a)/(b) and the census scope.
+
+**Question B (words).** `refusal.MONEY_BAD_PERIOD` has no row in `docs/development/ux-substrate/screens/words.json` (DESIGN handoff ask 1). I have not invented a sentence. The refusal's `detail` carries the real reason through the existing money keys (`money.index.the_profiles_fiscal_year_for`, `money.index.the_active_profiles_hold_no`). Please have the design stream write the row, or tell me the stand-in key you want.
+
+Impact: 90 modules use money; I am running their affected suites (1327 files) now and will report the counts in COMPLETE.
+
+## J7 · QUESTION
+
+Money fix round 4, after your ANSWER B5 (applied; commits 7dd51def43 and 2b5885dbb9 on job/T51/money, pushed).
+
+**REPORT: a test of another module breaks on my change.** `bio-plane/test/m/intent/amount.test.mjs:119` asserts `row(bad, "ENT-1").amount.code === "BAD_PERIOD"`, a money period refusal. Under R29 (a) money now answers `MONEY_BAD_PERIOD`, so this assertion fails. I have not edited intent (P9). Its owner needs to move the expectation to `MONEY_BAD_PERIOD`, or intent's own code path needs to be checked. The same grep found `calculations/index.mjs` and `following` answering `BAD_PERIOD` for their own reasons: calculations' use is what your ANSWER asked me to report in COMPLETE.
+
+**QUESTION C: the census clashes 16 money codes.** `bio-plane/test/m/money/refusal-census.test.mjs` (R29's census, red by name) finds 16 codes money answers that another module also answers, with the record-grammar shared rows excluded:
+- NO_PERIOD (events, workbooks); BAD_RANGE (workbooks); UNKNOWN_BASIS (people); NO_STAGE (progressions); NO_SUCH_LINE (lines); QUESTION_NOT_HELD (events, people, standards); NO_METHOD (events); MACHINE_NEEDS_IDENTIFIERS (lines); LISTENER_FAILED (events); NO_REASON (consequences, events, lines, people, progressions, workbooks); NO_SHA (lines, people, workbooks); NO_LABEL (money-checks); NO_CONTRACT (money-checks); MEMBER_ACT_ONLY (events, money-checks, people); NO_SET (events, progressions); NO_BASIS (lines, progressions).
+
+My recommendation: (1) the codes that are a shared act row in `record-grammar`'s `SHARED_ACT_CHECKS` (NO_REASON, NO_SHA, MEMBER_ACT_ONLY, and others that the table names) are excluded by design, but the census check reads the table by text, so please confirm which of these are in the table and I'll correct the exclusion; (2) for the rest, money keeps its own code by prefixing it `MONEY_` (renaming around 12 codes and their tests; no screen row is keyed to them yet, to my reading); (3) money-checks is a sibling module of money: its `NO_LABEL`, `NO_CONTRACT` and `MEMBER_ACT_ONLY` are its own to rename, and I will not change them. Please answer which way, and whether money-checks is in scope.
+
+Until the answer, COMPLETE stays open. The census test is red by name, not silent.
+
+Impact: 90 modules, 10,485 tests run on the earlier build (before the all-period change): 10,456 pass, 17 fail. The failures are in screens, plane, affordances, words, and tasks modules, plus the intent test above. I have not yet confirmed which of the 17 are on the tranche tip. I will re-run on the current build and name them.
+
+## J8 · COMPLETE
+
+COMPLETE, cause C8-words (money R29). Head: b6a11c41ff on job/T51/money (pushed). Merged tranche/T51 at 1b032f9d00.
+
+**The cause, four fields**
+1. Root cause (certain): `bio-plane/src/money/index.mjs` refused an unmapped fiscal key with `BAD_PERIOD`, the code `following` also answers, so the translation keyed by code hid money's reason (the fiscal key and the body). Per B5, every period refusal of money (from, to, fiscal) now goes through one `badPeriod` helper and answers `MONEY_BAD_PERIOD`; money answers no `BAD_PERIOD`. The stand-in sentence is `localize("refusal.MONEY_BAD_PERIOD", "That period is not one this team's money records can read.")`, the detail keeps the real reason.
+2. Test gap: each module tested only its own code, so no test saw two modules answering one code. Added `bio-plane/test/m/money/refusal-census.test.mjs`: no money act answers `BAD_PERIOD` (the census narrowed per B6, K4444), with a control that the census sees `MONEY_BAD_PERIOD` on money alone.
+3. Failing-first: `refusal-codes.test.mjs` (R29 titles). Red before: `{fiscal:"FY2025-26", body:"Port Ellery Harbour District"}` and `{fiscal:"FY1999-00X", body:"Nobody"}` both answered `BAD_PERIOD`. Green after: both answer `MONEY_BAD_PERIOD`, the detail names the key and body. Controls: a first day after a last day is refused (now `MONEY_BAD_PERIOD`, per B5); a valid fiscal key (`FY2013-14`) is accepted and writes a fact. The census was red first, with sixteen clashing codes (the broader reading, J7); it is green on the narrowed reading.
+4. Platform: N (pure code).
+
+**Requirement met:** R29 (money). R1 stands; R1's `BAD_PERIOD` remains following's and civil-time's.
+
+**Suites**
+- money: 92 of 92 pass (`bio-plane/test/m/money/*.test.mjs`).
+- checks: format (175 modules, 0 failures); architecture (money, 0 failures); coverage (money, 29 of 29 ids named); ownership (money, 0 failures, 5 files).
+- `checks/run.mjs` on the repo: the three words failures and the coverage/architecture reds are in other modules' files (op-grades t33, t51; case-authoring, acquisition, agent-harness, agent-runner, control-plane, installer-steps, interface-shell, journey-check, pdf-reader, public-read, screens-daily, screens-inquiry, screens-publish). None is in money's files.
+- impact (`build/plan/impact.mjs origin/tranche/T51 HEAD`): 90 modules, 1,327 test files, run on the current build: 10,486 tests, 10,454 pass, 20 fail.
+
+**Each red from the impact run**
+- **Caused by my change (intent):** `bio-plane/test/m/intent/amount.test.mjs:119` (`R31 R4 a total summable refuses…`) expects `BAD_PERIOD` from money. Per B6, BOB fixes this at the merge (test file only). I have not touched intent.
+- **Not money's, not yet confirmed on the tranche tip:** `journey-check/pseudo.test.mjs` (R29 (a)-(c), six tests, words); `filings/packet.test.mjs` (R30 and R9, claim deadline and calendar); `plane/store.test.mjs` (R9, the plane's route); `agent-worker/test/requirements.test.mjs` (a file-level failure, 60 s). I tried to run these on a tranche-tip worktree to compare, and that command was refused by the permission check, so I have not run them on the tip. I'm not claiming they are pre-existing. BOB or a tip run can settle each.
+- Calculations: `calculations/index.mjs:167` is a comment still citing money R1's `BAD_PERIOD`. It is stale, not a code path. Report for calculations to update.
+
+**Reported to BOB:** REPORT (intent test, J7); QUESTION C (census clash, answered by B6); the stand-in key `refusal.MONEY_BAD_PERIOD` awaits the design's row (words batch).
+
+**Open:** none held by me. The intent test and the tip check for the four red files are BOB's to settle at the merge. No QUESTION is open.
+
+**Size (session_016NRUKZLwLKyy8zbRsvcjbP): test runs 8, module lines 1482** (money's `bio-plane/src/money/*.mjs`, held code only).

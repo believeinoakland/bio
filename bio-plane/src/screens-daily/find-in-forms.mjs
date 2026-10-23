@@ -125,13 +125,16 @@ export function forms() {
         out.stage = val(cs, f + "-stage");
         out.from = { as_written: val(cs, f + "-payer") };
         out.to = { as_written: val(cs, f + "-payee") };
-        out.date = val(cs, f + "-date");
+        // R81: `recordfact` accepts no `date`; the day of an actual payment is the day the fact holds over (its period).
+        out.period = { from: val(cs, f + "-date"), to: val(cs, f + "-date"), precision: "day" };
       }
       return { body: Object.assign(out, q) };
     }
     if (op === "tabledeclare") {
       const header = val(cs, f + "-header").split(",").map(function (x) { return x.trim(); }).filter(Boolean);
-      return { body: { source: it.content_id ? String(it.content_id) : { capture_sha: it.capture_sha, extent: it.extent }, header: header } };
+      // R81: a table is declared with its schema, the header's columns as strings (calculations R1), as `calculation` declares one.
+      return { body: { source: it.content_id ? String(it.content_id) : { capture_sha: it.capture_sha, extent: it.extent }, header: header,
+        schema: { fields: header.map(function (name) { return { name: name, type: "string" }; }) } } };
     }
     return null;
   };

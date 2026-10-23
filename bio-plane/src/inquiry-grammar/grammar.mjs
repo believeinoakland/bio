@@ -840,8 +840,8 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
  *  array of objects. Exactly REC-14's `completeness`/`completeness_excluded` and
  *  REC-16's `division`/`division_apportionment` split, for the same reason.
  *
- *  THE PARTITION IS TOTAL OR ABSENT. If ANY leg names a ground, EVERY leg
- *  must. A half-labelled basis would leave legs nobody grouped sitting beside
+ *  THE PARTITION IS TOTAL OR ABSENT. If ANY leg names a ground, EVERY supporting leg
+ *  must (R68: a leg that cuts against is never in a ground, and naming one there is refused). A half-labelled basis would leave legs nobody grouped sitting beside
  *  branches somebody did, and the honest reading of an unlabelled leg —
  *  necessary, so binding on every branch — is not what a member who labelled
  *  half a basis is likely to have meant. Refused here rather than guessed. (The
@@ -868,6 +868,15 @@ function checkGrounds(fm, legs, findings) {
   legs.forEach((leg, i) => {
     if (!leg || typeof leg !== 'object') return;
     const g = leg.ground;
+    /* R68 (K4194): a leg that cuts against is not a reason FOR the conclusion, so it never belongs to a ground and the
+       totality below counts the other legs only. Naming one in a ground is its own finding. */
+    if (leg.role === 'cuts_against') {
+      if (g !== undefined && g !== null && g !== '') {
+        findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_cuts_against_ground', 'basis[{i}] cuts against the conclusion, so it is not a reason for it and belongs to no ground, but it names the ground \'{ground}\'', { i: String(i), ground: String(typeof g === 'string' ? g.slice(0, 60) : g) }),
+          [localize('inquiry-grammar.grammar.remove_the_ground_from_the_leg', 'remove the ground from basis[{i}]: a ground groups the legs that support the conclusion', { i: String(i) })]));
+      }
+      return;
+    }
     if (g === undefined || g === null || g === '') { unlabelled++; return; }
     if (typeof g !== 'string' || !GROUND_LABEL_RE.test(g)) {
       findings.push(f('C-2.8', 'error', localize('inquiry-grammar.grammar.basis_i_ground_string_is', 'basis[{i}].ground \'{String}\' is not a ground label: up to 48 characters of letters, digits, spaces, \'-\' and \'_\', naming the branch of the argument this leg belongs to', { i: String(i), String: String(String(g).slice(0, 60)) })));

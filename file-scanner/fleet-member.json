@@ -5,7 +5,7 @@
   "testDir": "test",
   "surface": {
     "POST /scan": "R1-R4: ClamAV's verdicts on a duplicate of each target's stored bytes",
-    "POST /mirror": "R6: one run of the signature mirror (also the daily scheduled trigger)",
+    "POST /mirror": "R6: one run of the signature mirror (also the scheduled trigger's daily run)",
     "POST /render": "R7: the safe view, a PDF of page images",
     "GET /version": "R8: the build, ClamAV's and the renderer's versions, the mirror's and lists' state, the catalogue, the bounds",
     "POST /provider/scan": "R5: an outside scanner's verdicts",
@@ -24,8 +24,8 @@
       "class_name": "FileScanner",
       "image": {
         "repository": "docker.io/civicsmith/file-scanner-scanner",
-        "digest": "sha256:293e2fce0a0de51e2753323d270c3de209c295ecd6f1dde0a37fd977dad487d5",
-        "source_sha256": "99df90a8475a85f688d8f066028f04aaf59fcb60915d5ac9f17951c7a58f0c85",
+        "digest": "sha256:26257d937f0d072fb933964afea45649123c44a5c618a27763b9843745bf8cfc",
+        "source_sha256": "d38afe88c0bde05046c6b1ae4ea559ef4740f888f0a35e30d17dab27f3bd5fd1",
         "platform": "linux/amd64",
         "port": 8080,
         "schedulingPolicy": "default",
@@ -54,7 +54,7 @@
       "class_name": "SafeViewRenderer",
       "image": {
         "repository": "docker.io/civicsmith/file-scanner-renderer",
-        "digest": "sha256:8817aefd13a90bbf25c59914cd70d701536ec8b245a9cdb39939a0508cb05bf9",
+        "digest": "sha256:2e86dc547803b3864eb43082ab9aa02a4190e5f2ba56caa90d3ef61854c6bc7a",
         "source_sha256": "d40851be1a9e49a54e888694fc7f5cff4aa88cd3a90b11eee7f1ab0a9a2500fd",
         "platform": "linux/amd64",
         "port": 8080,
@@ -93,7 +93,7 @@
   },
   "triggers": {
     "crons": [
-      "17 4 * * *"
+      "*/10 * * * *"
     ]
   },
   "optional_bindings": [
@@ -104,10 +104,12 @@
     }
   ],
   "egress": {
-    "containers": [],
-    "worker": "database.clamav.net (R6), and per call only the hosts of the called tool's descriptor for the spec's region, or the spec's own host (R12)"
+    "containers": [
+      "FileScanner, the signature-updater instance alone: database.clamav.net, by freshclam (R6, R34)"
+    ],
+    "worker": "no host of its own for the mirror (R6, R34); per call only the hosts of the called tool's descriptor for the spec's region, or the spec's own host (R12)"
   },
-  "note": "The fleet-member marker of a container member with two classes (R10; bundler R24, R25, R27 as T36-2 amended them, K2077). `bundle` is the Worker that answers the plane's FILE_SCANNER service binding (`callers`) and hosts both classes (src/worker.mjs), built by `npm run build` and guarded as every member's bundle is. Each entry of `containers` is one class: its image, named only as repository@digest once the release publishes it (`digest` null until then, as agent-runner's was), its base pinned by digest (as its Dockerfile's FROM), and its package statement (the Debian packages it installs, bundler R27); `bind` is the binding through which the member's own Worker reaches the class. Both containers run with no internet (`egress.containers` empty): the Worker reads every byte from the team's bucket and hands them copies.",
+  "note": "The fleet-member marker of a container member with two classes (R10; bundler R24, R25, R27 as T36-2 amended them, K2077). `bundle` is the Worker that answers the plane's FILE_SCANNER service binding (`callers`) and hosts both classes (src/worker.mjs), built by `npm run build` and guarded as every member's bundle is. Each entry of `containers` is one class: its image, named only as repository@digest once the release publishes it (`digest` null until then, as agent-runner's was), its base pinned by digest (as its Dockerfile's FROM), and its package statement (the Debian packages it installs, bundler R27); `bind` is the binding through which the member's own Worker reaches the class. Both containers run with no internet except the one instance the daily mirror starts: `FileScanner` as the signature updater, where ClamAV's own `freshclam` reaches ClamAV's database host and nothing else (`egress.containers`); the Worker reads every byte from the team's bucket and hands the scanning instance copies.",
   "callers": [
     {
       "member": "bio-plane",

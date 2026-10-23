@@ -15,7 +15,7 @@
  * store handed in (`capture`'s) reaches it as `store.acquisition`, as it reaches attestation's instance.
  *
  * Every refusal is an answer `{ok: false, reason, code, check, translation, ...}`, never a throw. */
-import { listArchive, streamMember, ARCHIVE_LIMITS, ARCHIVE_DEPTH_MAX, ARCHIVE_TREE_TOTAL_MAX, ARCHIVE_TREE_ENTRIES_MAX,
+import { hasZipMagic, listArchive, streamMember, ARCHIVE_LIMITS, ARCHIVE_DEPTH_MAX, ARCHIVE_TREE_TOTAL_MAX, ARCHIVE_TREE_ENTRIES_MAX,
          normalizePartName, CONTENT_TYPES_PART, ODF_MIMETYPE_PART } from "../ooxml.mjs";
 import { createSha256, isMachineIdentity } from "../record-grammar/index.mjs";
 import { partsHeld, UNPACKED_VIA, provenanceOf } from "../provenance/index.mjs";
@@ -44,12 +44,13 @@ export const UNPACK_LIMITS = Object.freeze({ UNPACK_CALL_ENTRIES, UNPACK_CALL_BY
 export const ARCHIVE_CHECK_READS = 2;
 
 /** R48: the evidence store as one decision reads it: a `head` asked twice is answered once, and the bytes of an object
- *  (`get`, one part at most 8 MiB) are read once, the last two kept, so verifying a part (provenance R7), profiling the
+ *  (`get`, one part at most 8 MiB) are read once, the first read and the last two kept (the first part is asked again for
+ *  the ZIP magic after every other part has been verified), so verifying a part (provenance R7), profiling the
  *  capture (R17) and listing it (ooxml R27) share one read of each. Only `head` and `get` are passed on; it holds nothing
  *  beyond the call that made it; `put` is passed on. */
 export function readThrough(ev) {
   const heads = new Map();
-  const kept = [];   // [{key, buf}], the two most recently read
+  const kept = [];   // [{key, buf}], the first read and the two most recently read
   return {
     async head(key) {
       if (heads.has(key)) return heads.get(key);
@@ -57,19 +58,25 @@ export function readThrough(ev) {
       heads.set(key, h);
       return h;
     },
-    async get(key) {
+    async get(key, options) {
+      /* R88 (record-core): a ranged look is the store's, never cached as the whole */
       const hit = kept.find((k) => k.key === key);
+      if (options && options.range && !hit) return ev.get(key, options);
+      if (options && options.range) { const r = options.range, b = hit.buf.slice(r.offset, r.offset + r.length); return { key, size: hit.buf.byteLength, arrayBuffer: async () => b }; }
       if (hit) return { key, size: hit.buf.byteLength, arrayBuffer: async () => hit.buf };
       const o = await ev.get(key);
       if (!o) return o;
       const buf = await o.arrayBuffer();
-      if (buf.byteLength <= PART) { kept.push({ key, buf }); if (kept.length > 2) kept.shift(); }
+      if (buf.byteLength <= PART) { kept.push({ key, buf }); if (kept.length > 3) kept.splice(1, 1); }
       return { key, size: buf.byteLength, ...(o.checksums ? { checksums: o.checksums } : {}), arrayBuffer: async () => buf };
     },
     /* a write goes straight through, and what was asked about the key before it is asked again */
     async put(key, bytes, opts) { heads.delete(key); return ev.put(key, bytes, opts); },
   };
 }
+
+/* R107: the most captures an instance remembers as no archive. CHOSEN: a digest and two short words each. */
+const NOT_ARCHIVES_MAX = 20000;
 
 /* R38's form of a stored file: parts of 8 MiB, each under its own SHA-256, as R10 stores a fetched one. */
 const PART = 8 * 1024 * 1024;
@@ -220,6 +227,10 @@ const byRecord = new WeakMap();    // record-core instance → Acquisition, so a
 
 export class Acquisition {
   #sql; #record; #provenance; #membership;
+  /* R107: the captures this instance has decided are no archive, by digest, with what the decision answered (`notAnArchive`'s arguments).
+     A digest names its bytes for ever, so the decision is never stale; it is held in this instance's memory and bounded, and
+     it is not a table: R41's `archiveList` is a read that writes nothing. A restarted object asks again, once for each digest. */
+  #notArchives = new Map();
 
   constructor({ storage, record, provenance = null, membership = null }) {
     this.#sql = storage.sql;
@@ -300,6 +311,53 @@ export class Acquisition {
       return this.#rows(`SELECT archive_sha, idx FROM archive_entries WHERE sha256=? AND idx>=0 AND state IN ('filed','already_held')
                           ORDER BY archive_sha, idx`, s).map((r) => ({ archiveSha: r.archive_sha, index: r.idx }));
     } catch { return []; }
+  }
+
+  /** R107: what this instance decided of a capture that is no archive, `{format, part}`, or null when it has not decided. */
+  knownNotArchive(sha) { return this.#notArchives.get(sha) ?? null; }
+  rememberNotArchive(sha, decided) {
+    if (!shaOf(sha)) return;
+    this.#notArchives.delete(sha);
+    this.#notArchives.set(sha, decided);
+    if (this.#notArchives.size > NOT_ARCHIVES_MAX) this.#notArchives.delete(this.#notArchives.keys().next().value);
+  }
+  /** R107: which of these captures this instance has decided are no archive, one read of its memory, no store call. A set of
+   *  digests. Writes nothing, never throws. */
+  notArchivesAmong(captureShas) {
+    const out = new Set();
+    try { for (const s of Array.isArray(captureShas) ? captureShas : []) if (typeof s === "string" && this.#notArchives.has(s)) out.add(s); }
+    catch { /* none is known */ }
+    return out;
+  }
+
+  /** R41 (T51; C14): `memberOf` for several captures in one read: a map of each capture's digest to the archives it was filed from
+   *  or found in, in `memberOf`'s order; a capture in none has no key. Writes nothing, never throws. */
+  membersOf(captureShas) {
+    const out = new Map();
+    try {
+      const shas = [...new Set((Array.isArray(captureShas) ? captureShas : []).map(shaOf).filter(Boolean))];
+      if (!shas.length) return out;
+      for (const r of this.#rows(`SELECT sha256, archive_sha, idx FROM archive_entries WHERE sha256 IN (SELECT value FROM json_each(?))
+                                   AND idx>=0 AND state IN ('filed','already_held') ORDER BY sha256, archive_sha, idx`, JSON.stringify(shas))) {
+        const list = out.get(r.sha256) || [];
+        list.push({ archiveSha: r.archive_sha, index: r.idx });
+        out.set(r.sha256, list);
+      }
+    } catch { /* none is known: the captures read as in no archive */ }
+    return out;
+  }
+
+  /** R41 (T51; C14): which of these captures this module recorded opening as an archive (it holds the archive's own row), one read.
+   *  A set of digests. Writes nothing, never throws. */
+  openedAmong(captureShas) {
+    const out = new Set();
+    try {
+      const shas = [...new Set((Array.isArray(captureShas) ? captureShas : []).map(shaOf).filter(Boolean))];
+      if (!shas.length) return out;
+      for (const r of this.#rows(`SELECT archive_sha FROM archive_entries WHERE idx=-1 AND archive_sha IN (SELECT value FROM json_each(?))`, JSON.stringify(shas)))
+        out.add(r.archive_sha);
+    } catch { /* none is known */ }
+    return out;
   }
 
   /** R40: where an archive stands in its unpack tree: its depth (the outermost at 1) and its outermost archive, from its
@@ -589,12 +647,26 @@ export async function unpack(store, { archiveSha = null, by = null, cls = null, 
   const left = inst.entryRows(sha).filter((r) => r.state === "waiting").length;
   inst.markWaiting(sha, left ? stoppedOn : null);
   /* The driver (Suggestions): an automatic run that stopped only for the call's share, or that filed a nested archive
-     it may open, asks the queue handed in to continue as `op=unpack` (capture R15's `archive-unpack`). */
-  if (mode === "automatic" && typeof st.taskEnqueue === "function") {
+     it may open, asks the queue handed in to continue as `op=unpack` (capture R15's `archive-unpack`).
+     R100 (fix round 4b, F11; plane R77): with the plane's owed-work ledger handed in (`internal.owedLater`, else the store's
+     `owedLater`), the continuation is an entry of that ledger instead, `{kind: "unpack", sha}`, which no count of tries ends,
+     and an automatic run that stopped on a daily budget is owed too: the day's figures start again at the next UTC day. A stop on
+     the tree's figures or the depth is not owed: the tree never shrinks, so only a member's own `op=unpack` goes past it
+     (R40), and the archive's page states it (R41). */
+  if (mode === "automatic") {
     const more = [...(left && stoppedForCall && !stoppedOn ? [sha] : []), ...(h.depth < ARCHIVE_DEPTH_MAX ? out.nested : [])];
-    for (const s of more) {
-      try { await st.taskEnqueue({ kind: "archive-unpack", captureSha: s, subject: s, at }); }
-      catch { /* an unqueued continuation waits for a member; it never fails the run */ }
+    const given = internal && typeof internal.owedLater === "function" ? internal.owedLater : typeof st.owedLater === "function" ? (e) => st.owedLater(e) : null;
+    if (given) {
+      const owed = [...more, ...(left && (stoppedOn === "UNPACK_DAILY_ENTRIES" || stoppedOn === "UNPACK_DAILY_BYTES") ? [sha] : [])];
+      for (const s of owed) {
+        try { await given({ kind: "unpack", sha: s }); }
+        catch { /* an unregistered continuation waits for a member; it never fails the run */ }
+      }
+    } else if (typeof st.taskEnqueue === "function") {
+      for (const s of more) {
+        try { await st.taskEnqueue({ kind: "archive-unpack", captureSha: s, subject: s, at }); }
+        catch { /* an unqueued continuation waits for a member; it never fails the run */ }
+      }
     }
   }
   return {
@@ -758,15 +830,28 @@ async function archiveProfile(inst, ev, sha, parts) {
     });
     return officePart ? notAnArchive(sha, { format: null, part: officePart.name }) : null;
   }
+  /* R48 (fix round 4, P10 c; K4445): the opening bytes first. A capture that does not begin with the ZIP local-file magic is no ZIP archive
+     (R17's `zip` needs the magic, `formats.mjs`), so it is answered at once from its first part's head, never profiled whole. */
+  try {
+    const first = await ev.get(parts[0].sha256, { range: { offset: 0, length: Math.min(1024, parts[0].bytes) } });
+    const head = first ? new Uint8Array(await first.arrayBuffer()).subarray(0, 1024) : null;
+    if (head && !hasZipMagic(head.subarray(0, 4))) {
+      const f = detectFormat(head, null);
+      return remembered(inst, sha, { format: f && f.format !== "zip" ? f.format : null });
+    }
+  } catch { /* an unreadable head is profiled as before */ }
   const total = parts.reduce((n, x) => n + x.bytes, 0);
-  let fmt = null;
+  let fmt = null, decided = false;
   try {
     const prof = await profileOf({ ev, sha, ct: null, total, multipart: parts.length > 1, headers: {}, locator: null,
       view: undefined, retrieved: stampSecond(), origin: null, parts });
     fmt = prof && prof.format ? prof.format.format : null;
+    decided = true;
   } catch { fmt = null; }
-  return fmt === "zip" ? null : notAnArchive(sha, { format: fmt });
+  /* R107: a decision made from the bytes is remembered; one made because the profile could not be read is not (it may read next time) */
+  return fmt === "zip" ? null : decided ? remembered(inst, sha, { format: fmt }) : notAnArchive(sha, { format: fmt });
 }
+const remembered = (inst, sha, decided) => { inst.rememberNotArchive(sha, decided); return notAnArchive(sha, decided); };
 
 /* R41, C-139.20: a capture held and visible that is not an archive; `format` what R17's rule profiled it as, or `part` the
    office or OpenDocument part its recorded listing names. */
@@ -792,6 +877,10 @@ export async function archiveList(instOrStore, { archiveSha = null, viewer = nul
   if (viewerPredicate(viewer).scope === "DENY" || (home && !inst.sees(viewer, home.bundleId))) return notHeld();
   if (!(await holds({}, inst, sha))) return notHeld();
   /* END DEC-49 REGION is-archive-held */
+  /* R107: a capture this instance already decided is no archive is answered from that decision, with no read of the evidence store
+     (the fence and the register above are asked first, so a viewer who may not see it is told what they always were) */
+  const known = inst.knownNotArchive(sha);
+  if (known) return notAnArchive(sha, known);
   const sees = (s) => {
     let hh = null;
     try { hh = s && p && typeof p.homeOf === "function" ? p.homeOf(s) : null; } catch { hh = null; }
@@ -857,6 +946,24 @@ export async function archiveList(instOrStore, { archiveSha = null, viewer = nul
                ...(refused.limit !== undefined ? { limit: refused.limit } : {}) } : null },
     summary, entries: page, limit: lim, truncated, next: truncated ? page[page.length - 1].index : null,
   };
+}
+
+/** R41 (T51; C14): the module-level forms of `membersOf` and `openedAmong`, through the instance a store reaches. Never throw;
+ *  a store with no instance answers nothing known. */
+export function membersOf(store, captureShas) {
+  try { const inst = store instanceof Acquisition ? store : instanceOf(store); return inst ? inst.membersOf(captureShas) : new Map(); }
+  catch { return new Map(); }
+}
+export function openedAmong(store, captureShas) {
+  try { const inst = store instanceof Acquisition ? store : instanceOf(store); return inst ? inst.openedAmong(captureShas) : new Set(); }
+  catch { return new Set(); }
+}
+
+/** R107: the module-level form of `notArchivesAmong`, through the instance a store reaches. Never throws; a store with no instance
+ *  answers nothing known. */
+export function notArchivesAmong(store, captureShas) {
+  try { const inst = store instanceof Acquisition ? store : instanceOf(store); return inst ? inst.notArchivesAmong(captureShas) : new Set(); }
+  catch { return new Set(); }
 }
 
 /** R41: the module-level form of `memberOf`, through the instance a store reaches. Never throws. */

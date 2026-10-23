@@ -2,12 +2,18 @@
    Cloudflare answers it, and stateful as the installer's own fake is (newgroup/test/fixture.mjs, read, never imported):
    OAuth with PKCE (the consent page a browser is sent to, the token exchange the installer makes), the account list, the
    plan probe, the evidence buckets, each script uploaded with its bindings (`keep_bindings` applied by type), its bytes
-   read back, the workers.dev prefix and each script's address, and no Logpush job. The public release repository does
+   read back, the Durable Object classes its migrations declare (the namespaces a container application is made for), the
+   Containers applications the installer creates and rolls out (K4435: a container member installs only when the account
+   holds an application for each of its classes), the schedules set on a script, the workers.dev prefix and each script's
+   address, and no Logpush job. The schedules it holds are read back as Cloudflare reads them back, and a script's can be
+   refused (`refuseSchedules`), so the plane's watchdog cron (G1) is asserted after an install and an update and a refusal
+   is seen to stop them. The public release repository does
    not answer, so the installer installs its built-in release and says why. Every call it does not answer is recorded as
    `unanswered` and refused, so the walk fails on it rather than passing over it. */
 
 import { readFileSync, existsSync, statSync } from "node:fs";
 import { join, dirname, normalize, sep } from "node:path";
+import { localize } from "../setup-words/index.mjs";
 import { fileURLToPath } from "node:url";
 
 /* The release a person's install fetches its members from: the repository's own committed `release/` (whose bytes the
@@ -36,19 +42,50 @@ export const AUTHORIZE = "https://dash.cloudflare.com/oauth2/auth";
 export const TOKEN = "https://dash.cloudflare.com/oauth2/token";
 export const RELEASES = "https://raw.githubusercontent.com/";
 
+/* The plane's watchdog cron (fix round 6, G1; K4566): what the plane's signed statement `bio-plane-crons/1 <cron>` states, the
+   one cron the plane's script must hold after an install and after an update. The statement is read from the bytes the
+   account holds for the script, as the installer reads it, never taken from the installer. */
+export const WATCHDOG_CRON = "*/5 * * * *";
+const CRONS_TAG = "bio-plane-crons/1";
+export function statedCrons(source) {
+  const bodies = new Set();
+  for (const m of String(source).matchAll(new RegExp("([\"'`])" + CRONS_TAG.replace("/", "\\/") + "( [^\"'`\\\\\\n]*)\\1", "g"))) bodies.add(m[2].trim());
+  return bodies.size === 1 ? { ok: true, crons: [[...bodies][0]] } : { ok: false, why: bodies.size ? "states more than one" : "states none" };
+}
+
+/* What is wrong with the plane `slug`'s schedules in `account` (null when nothing is): its bytes state the watchdog cron
+   and the script holds exactly it. Run after an install and after an update. */
+export function planeScheduleProblem(account, slug) {
+  const held = account.scripts.get(slug);
+  if (!held) return localize("journey-check.account.the_plane_s_script_slug_is_not", "the plane's script {slug} is not in the account", { slug: String(slug) });
+  const stated = statedCrons(held.source);
+  if (!stated.ok) return localize("journey-check.account.the_plane_s_bytes_state_no_watchdog", "the plane's bytes state no watchdog cron ({tag}: {why})", { tag: CRONS_TAG, why: String(stated.why) });
+  if (stated.crons.join("|") !== WATCHDOG_CRON) return localize("journey-check.account.the_plane_states_the_cron_not_the", "the plane states the cron \"{stated}\", not the watchdog's \"{watchdog}\"", { stated: stated.crons.join(" | "), watchdog: WATCHDOG_CRON });
+  const got = account.schedules.get(slug);
+  if (!got) return localize("journey-check.account.the_plane_s_script_slug_holds_no", "the plane's script {slug} holds no cron: no schedules were set on it", { slug: String(slug) });
+  if (got.join("|") !== stated.crons.join("|")) return localize("journey-check.account.the_plane_s_script_slug_holds_got", "the plane's script {slug} holds \"{got}\", its statement says \"{stated}\"", { slug: String(slug), got: got.join(" | "), stated: stated.crons.join(" | ") });
+  return null;
+}
+
 /* `onScript(name, {bindings, source})` is called after each script upload the account accepts, with the bindings the
    script now holds; the local arm starts or reconfigures the copy from it. `copyFetch(request)` answers a request to a
    script's workers.dev address, once it is enabled. */
-export function fakeAccount({ name = "Journey test account", onScript = async () => {}, copyFetch = null } = {}) {
+export function fakeAccount({ name = "Journey test account", onScript = async () => {}, copyFetch = null, refuseSchedules = null } = {}) {
   const ACCT = "acct" + "0".repeat(28);
   const scripts = new Map();           /* name -> {bindings, source} */
   const buckets = new Set();
   const enabled = new Set();
   const grants = new Map();            /* code -> {challenge, redirect, state} */
   const tokens = new Set();
+  const applications = [];
+  const classes = new Map();           /* script -> Set of Durable Object class names its migrations declared */
+  const schedules = new Map();
+  const deployments = new Map();       /* script -> deployments, newest first (an update reads the one it replaces, to put it back) */
+  const rollouts = [];
   const unanswered = [];
   const calls = [];
   let prefix = null;
+  const refused = (script) => refuseSchedules === true || (refuseSchedules instanceof RegExp ? refuseSchedules.test(script) : typeof refuseSchedules === "function" && refuseSchedules(script));
 
   /* The consent page Cloudflare would show: what is asked, and one "Allow" that returns to the installer. */
   async function consent(url) {
@@ -94,6 +131,13 @@ export function fakeAccount({ name = "Journey test account", onScript = async ()
       && !explicit.some((x) => x.name === b.name));
     const bindings = [...explicit, ...kept];
     scripts.set(nameOf, { bindings, source, meta });
+    const made = deployments.get(nameOf) || [];
+    deployments.set(nameOf, [{ id: `d${made.length + 1}`, versions: [{ version_id: `ver-${nameOf}-${made.length + 1}`, percentage: 100 }] }, ...made]);
+    /* the classes a migration declares (the whole `migrations` object or each of its `steps`) are the script's namespaces */
+    const held = classes.get(nameOf) || new Set();
+    const m = meta.migrations;
+    for (const step of m ? (m.steps || [m]) : []) for (const c of [...(step.new_classes || []), ...(step.new_sqlite_classes || [])]) held.add(c);
+    classes.set(nameOf, held);
     await onScript(nameOf, { bindings, source, meta });
     return ok({ id: nameOf });
   }
@@ -107,11 +151,31 @@ export function fakeAccount({ name = "Journey test account", onScript = async ()
     /* the lists the installer reads to know the copies and parts the account holds (installer R62, R69) */
     if (rest === "/workers/scripts" && m === "GET")
       return ok([...scripts].filter(([, v]) => !v.probe).map(([id, v]) => ({ id, ...(v.meta?.migrations?.new_tag ? { migration_tag: v.meta.migrations.new_tag } : {}) })));
-    if (rest === "/containers/applications" && m === "GET") return ok([]);
+    /* the Containers applications (wrangler's own calls, which the installer makes): listed, read, created for a class's
+       namespace, rolled out to an image, deleted. A created application starts nothing (`instances: 0`) and holds no failed one. */
+    if (rest === "/containers/applications" && m === "GET") return ok(applications);
+    if (rest === "/containers/applications" && m === "POST") {
+      const body = await req.json();
+      applications.push({ id: "app" + (applications.length + 1), ...body, health: { instances: { active: 0, starting: 0, failed: 0 } } });
+      return ok(applications.at(-1));
+    }
+    if ((x = /^\/containers\/applications\/([^/]+)(\/rollouts(?:\/([^/]+))?)?$/.exec(rest))) {
+      const at = applications.findIndex((a) => a.id === x[1]);
+      if (at < 0) return no("not found", 404);
+      if (!x[2] && m === "GET") return ok(applications[at]);
+      if (!x[2] && m === "DELETE") { applications.splice(at, 1); return ok({}); }
+      if (x[2] && m === "POST") {
+        const body = await req.json();
+        rollouts.push({ id: "r" + (rollouts.length + 1), app: x[1], ...body });
+        applications[at].configuration = { ...(applications[at].configuration || {}), ...body.target_configuration };
+        return ok({ id: rollouts.at(-1).id, status: "completed" });
+      }
+      if (x[3] && m === "GET") return ok({ id: x[3], status: "completed" });
+    }
     if (rest === "/r2/buckets" && m === "GET") return ok({ buckets: [...buckets].map((n) => ({ name: n })) });
     if ((x = /^\/workers\/scripts\/([^/]+)$/.exec(rest))) {
       if (m === "PUT") return putScript(x[1], req);
-      if (m === "DELETE") { scripts.delete(x[1]); return ok({}); }
+      if (m === "DELETE") { scripts.delete(x[1]); classes.delete(x[1]); return ok({}); }
       if (m === "GET") return scripts.has(x[1]) ? new Response(scripts.get(x[1]).source,
         { headers: { "content-type": "application/javascript+module" } }) : no("not found", 404, 10007);
     }
@@ -135,6 +199,10 @@ export function fakeAccount({ name = "Journey test account", onScript = async ()
       if (!scripts.has(x[1])) return no("not found", 404, 10007);
       enabled.add(x[1]); return ok({ enabled: true });
     }
+    if ((x = /^\/workers\/scripts\/([^/]+)\/deployments$/.exec(rest)) && m === "GET")
+      return scripts.has(x[1]) ? ok({ deployments: deployments.get(x[1]) || [] }) : no("not found", 404, 10007);
+    if ((x = /^\/workers\/scripts\/([^/]+)\/deployments$/.exec(rest)) && m === "POST")
+      return scripts.has(x[1]) ? ok({ id: "rolled-back" }) : no("not found", 404, 10007);
     if (rest === "/workers/subdomain" && m === "GET") return prefix ? ok({ subdomain: prefix }) : no("no subdomain", 404, 10007);
     if (rest === "/workers/subdomain" && m === "PUT") { prefix = (await req.json()).subdomain; return ok({ subdomain: prefix }); }
     if ((x = /^\/r2\/buckets\/([^/]+)$/.exec(rest)) && m === "GET")
@@ -146,7 +214,20 @@ export function fakeAccount({ name = "Journey test account", onScript = async ()
     }
     if (rest === "/logpush/jobs" && m === "GET") return ok([]);
     if (rest.startsWith("/workers/durable_objects/namespaces") && m === "GET")
-      return ok([...scripts].filter(([, s]) => s.meta?.migrations).map(([n]) => ({ id: "ns-" + n, script: n, class: "Store" })));
+      return ok([...classes].filter(([n]) => scripts.has(n)).flatMap(([n, cs]) => [...cs].map((c) => ({ id: `ns-${n}-${c}`, script: n, class: c }))));
+    /* the schedules a member's `Worker` part states (installer R44) */
+    if ((x = /^\/workers\/scripts\/([^/]+)\/schedules$/.exec(rest)) && m === "GET") {
+      if (!scripts.has(x[1])) return no("not found", 404, 10007);
+      return ok({ schedules: (schedules.get(x[1]) || []).map((cron) => ({ cron })) });
+    }
+    if ((x = /^\/workers\/scripts\/([^/]+)\/schedules$/.exec(rest)) && m === "PUT") {
+      if (!scripts.has(x[1])) return no("not found", 404, 10007);
+      if (refused(x[1]))
+        return no(localize("journey-check.account.the_cron_triggers_of_this_script", "The cron triggers of this script could not be set."), 403, 10000);
+      const body = await req.json();
+      schedules.set(x[1], body.map((t) => t.cron));
+      return ok({ schedules: body });
+    }
     return null;
   }
 
@@ -171,6 +252,6 @@ export function fakeAccount({ name = "Journey test account", onScript = async ()
     return new Response("the walk's fake account does not answer this", { status: 599 });
   }
 
-  return { handle, scripts, buckets, unanswered, calls, account: ACCT, prefix: () => prefix,
+  return { handle, scripts, buckets, applications, rollouts, schedules, unanswered, calls, account: ACCT, prefix: () => prefix,
     addressOf: (slug) => (prefix && enabled.has(slug) ? `https://${slug}.${prefix}.workers.dev` : null) };
 }

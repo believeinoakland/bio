@@ -45,9 +45,9 @@ test("R65 the shell draws its own elements with the design's classes: the member
   const written = classLiterals(html.slice(html.indexOf("<script")));
   for (const c of REPLACED) assert.ok(!written.has(c), c + " is written in the program");
   for (const c of [...REPLACED, "cs-testband"]) assert.ok(!new RegExp("\\." + c + "\\b").test(styleOf(html)), c + " is styled");
-  /* STYLE holds only the page's height settings and the reduced-motion rule */
+  /* STYLE holds only the page's height settings and the reduced-motion rule (and, R120, the layout of a row with no first part) */
   const selectors = styleOf(html).replace(/@media[^{]*\{[\s\S]*\}\s*$/, "").split("}").map((r) => r.split("{")[0].trim()).filter(Boolean);
-  for (const sel of selectors) assert.match(sel, /^(html,body\.cs|body\.cs|#cs-root)/, sel);
+  for (const sel of selectors) assert.match(sel, /^(html,body\.cs|body\.cs|#cs-root|\.cs-main \.cs-row\[data-lead=none\])/, sel);
   assert.match(styleOf(html), /@media \(prefers-reduced-motion:reduce\)/);
   /* the design's classes are all defined by the served stylesheets */
   const css = ASSET_FILES["civicsmith.css"].body + ASSET_FILES["shell.css"].body;
@@ -104,6 +104,7 @@ test("R68 explanations close: a card opened by a control closes when the control
   assert.equal(tip(p).hidden, true, "closed when the focus leaves it for the next field");
   assert.equal(act.getAttribute("aria-describedby"), null);
   /* a card opened by the pointer likewise, once the focus goes to a field */
+  p.fire(act, "pointerout", { relatedTarget: p.root() });
   p.fire(act, "pointerover", { pointerType: "mouse" });
   await p.clock.tick(500);
   assert.equal(tip(p).hidden, false);

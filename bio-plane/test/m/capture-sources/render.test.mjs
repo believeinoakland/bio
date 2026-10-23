@@ -212,6 +212,80 @@ test("R9: a completed load not kept reads undetermined with its reason; a report
   }
 });
 
+/* R8, R9 (fix round 4, C13a, P7): the store charges what it really costs. A trip to the evidence store is ~0.27 s (measured on the live
+   copy, lane-performance P7); `put` below is acquisition's own (`head` before `put`: two trips a body). */
+const TRIP_MS = 270;
+const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+const slowStore = ({ failOn = null } = {}) => {
+  const held = new Map(), calls = [];
+  let live = 0, peak = 0;
+  const trip = async () => { live++; peak = Math.max(peak, live); await pause(TRIP_MS); live--; };
+  return { held, calls, peak: () => peak,
+    sha256: async (b) => hex(b),
+    put: async (d, b) => {
+      calls.push(["head", d]); await trip();
+      if (held.has(d)) return;
+      calls.push(["put", d]); await trip();
+      if (failOn && failOn(b)) throw new Error("bucket unavailable");
+      held.set(d, b);
+    } };
+};
+const bodies = (n, label = "r") => Array.from({ length: n }, (_, i) => ({ url: `https://${HOST}/${label}${i}.js`, outcome: "completed", body_text: `${label}-${i}`.padEnd(1000, "x") }));
+
+test("R8 (C13a, P7): thirty-three bodies kept against a store that costs 0.27 s a trip are kept several at a time, in under 6 s, each digest in its request's place", async () => {
+  const s = slowStore();
+  const reqs = bodies(33);
+  const t0 = Date.now();
+  const out = await keepRenderBodies({ requests: reqs }, s);
+  const took = Date.now() - t0;
+  assert.ok(took < 6000, `${took} ms for 33 bodies (sequentially 33 x 2 trips x 270 ms = ${33 * 2 * TRIP_MS} ms)`);
+  assert.equal(out.length, 33);
+  reqs.forEach((r, i) => {
+    const b = enc(r.body_text);
+    assert.deepEqual(out[i], { sha256: hex(b), bytes: b.length, body_as: "decoded_text", kept: true }, `the entry for request ${i} is that request's`);
+    assert.ok(s.held.has(hex(b)));
+  });
+  assert.ok(s.peak() > 1 && s.peak() <= 8, `several at a time, never past eight lanes (${s.peak()})`);
+});
+
+test("R8 R9 (C13a, P7): results stay in the requests' order whichever body finishes first; a body that fails frees its place for a later one; a failing body does not touch the others", async () => {
+  /* the first body is the slowest to hash, the last the fastest */
+  const reqs = bodies(12, "o");
+  const order = [];
+  const out = await keepRenderBodies({ requests: reqs }, {
+    sha256: async (b) => { await pause(300 - 20 * Number(String.fromCharCode(...b).match(/o-(\d+)/)[1])); return hex(b); },
+    put: async (d) => { order.push(d); } });
+  assert.equal(out.length, 12);
+  reqs.forEach((r, i) => assert.equal(out[i].sha256, hex(enc(r.body_text)), `request ${i}`));
+  assert.notDeepEqual(order, out.map((o) => o.sha256), "the bodies did finish out of order");
+
+  /* one put fails: its entry is undetermined with the store's words, the rest are kept, and nothing is thrown */
+  const s = slowStore({ failOn: (b) => String.fromCharCode(...b).startsWith("r-3") });
+  const o2 = await keepRenderBodies({ requests: bodies(8) }, s);
+  assert.equal(o2[3].sha256, "undetermined");
+  assert.match(o2[3].digest_reason, /could not keep the bytes \(bucket unavailable\)/);
+  assert.deepEqual(o2.filter((_, i) => i !== 3).map((o) => o.kept), Array(7).fill(true));
+
+  /* the count ceiling is held in the requests' order, and a body whose put failed does not count: the first body past the ceiling
+     takes its place, as it did when the bodies were kept one at a time */
+  const many = bodies(SUBRESOURCE_CAP + 2, "c");
+  const capped = await keepRenderBodies({ requests: many }, { sha256: async (b) => hex(b), put: async (d, b) => { if (String.fromCharCode(...b).startsWith("c-1x")) throw new Error("bucket unavailable"); } });
+  assert.equal(capped[1].sha256, "undetermined");
+  assert.equal(capped.filter((o) => o.kept).length, SUBRESOURCE_CAP);
+  assert.equal(capped.at(-2).kept, true, "the slot the failed body left is taken by the first body past the ceiling");
+  assert.equal(capped[SUBRESOURCE_CAP - 1].kept, true);
+  assert.equal(capped.at(-1).digest_reason, word("render.past_body_per", { subresource_cap: String(SUBRESOURCE_CAP) }), "and the next one is past it");
+});
+
+test("R8 control (C13a, P7): the same bytes asked for twice in one render are put to the store once, and both entries are answered", async () => {
+  const s = slowStore();
+  const same = [0, 1, 2].map((i) => ({ url: `https://${HOST}/same${i}.png`, outcome: "completed", body_text: "pixel" }));
+  const out = await keepRenderBodies({ requests: same }, s);
+  assert.equal(s.calls.filter((c) => c[0] === "put").length, 1);
+  assert.deepEqual(out.map((o) => o.sha256), Array(3).fill(hex(enc("pixel"))));
+  assert.deepEqual(out.map((o) => o.kept), [true, true, true]);
+});
+
 test("R10: originKey is scheme//host, or null when unparseable", () => {
   assert.equal(originKey("https://Cdn.Example.com:8443/a/b?c#d"), "https://cdn.example.com:8443");
   assert.equal(originKey("http://example.org/x"), "http://example.org");

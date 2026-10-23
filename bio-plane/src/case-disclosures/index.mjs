@@ -183,6 +183,20 @@ export class CaseDisclosures {
     return f && typeof f.text === "string" ? f.text : null;
   }
 
+  /* R2, R16 (C39): the targets a member's own `references[]` records as withdrawn. `inquiry_basis` is a projection that
+     drops the status, so the live set is read from the document, which stays the authority. Severance only narrows on
+     evidence (connections R22): a document that cannot be read has none, and the first entry for a target decides it. */
+  #severedTargets(id) {
+    const text = this.#liveText(id);
+    if (text === null) return new Set();
+    let refs = null;
+    try { refs = parseFrontmatter(text).data?.references; } catch { refs = null; }
+    const first = new Map();
+    for (const x of Array.isArray(refs) ? refs : [])
+      if (x && typeof x === "object" && typeof x.target === "string" && !first.has(x.target)) first.set(x.target, x.status);
+    return new Set([...first].filter(([, status]) => status === "severed").map(([t]) => t));
+  }
+
   /* R6, R8, R31: the reads `chainsOf` walks, as `viewer` sees the record (membership R43's one rule). */
   #chainIo(viewer) {
     const gate = viewerPredicate(viewer);
@@ -192,6 +206,7 @@ export class CaseDisclosures {
       visible: (id) => gate.scope !== "DENY"
         && !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args),
       readFile: (b, p) => this.record.readFile(b, p),
+      registeredFor: (b) => this.provenance.registeredFor(b), partsNamed: (b, sha) => this.provenance.partsNamed(b, sha),
       unitsOf: (sha) => this.extraction.unitsOf(sha),
       sha256: (s) => createSha256().update(new TextEncoder().encode(s)).hex(), extractedTextOf,
     };
@@ -222,8 +237,9 @@ export class CaseDisclosures {
         undetermined.push({ target: p.id, why: basis ? basis.reason ?? word("case-disclosures.why.read_failed") : NO_ANSWER });
         continue;
       }
+      const severed = this.#severedTargets(p.id);
       for (const leg of (Array.isArray(basis.legs) ? basis.legs : []))
-        if (leg && leg.grade_source === "hunch") hunches.push({ target: p.id, ord: leg.ord, leg_target: leg.target_id });
+        if (leg && leg.grade_source === "hunch" && !severed.has(leg.target_id)) hunches.push({ target: p.id, ord: leg.ord, leg_target: leg.target_id });
     }
     if (!hunches.length && !undetermined.length) return null;
     /* DEC-49 REGION is-hunch-cleared */
@@ -279,6 +295,11 @@ export class CaseDisclosures {
                                    WHERE bundle_id IN (${marks(part)}) ORDER BY bundle_id, ord`, ...part))
         legsOf.get(r.bundle_id).push(r);
     });
+    /* C39: a leg whose citation the member severed is no longer what the question rests on. */
+    for (const [id, list] of legsOf) {
+      const severed = this.#severedTargets(id);
+      if (severed.size) legsOf.set(id, list.filter((l) => !severed.has(l.target_id)));
+    }
     const legs = [...legsOf.values()].flat();
     const captureOfContent = new Map();
     chunked([...new Set(legs.map((l) => l.content_id).filter((c) => typeof c === "string" && c))], (part) => {
@@ -335,8 +356,11 @@ export class CaseDisclosures {
     const ca = onCa ? { locator: onCa.locator, late: false } : lateCa ? { locator: lateCa.archived_locator, late: true } : null;
     const accounts = acc && Array.isArray(acc.accounts) ? acc.accounts : [];
     return { capture: sha, grade: g.grade ?? null, grade_basis: g.basis ?? null, grade_why: g.why ?? null,
-             co_attested: !!(ts && ca), timestamp_at: ts ? ts.at : null, co_archive: ca ? ca.locator : null,
+             co_attested: !!(ts && ca), missing: [...(ts ? [] : ["timestamp"]), ...(ca ? [] : ["co_archive"])], timestamp_at: ts ? ts.at : null, co_archive: ca ? ca.locator : null,
              late: !!((ts && ts.late) || (ca && ca.late)),
+             /* C40: a timestamp made by `reattest` is the attempt it is: marked late, with when it proves the bytes existed. */
+             timestamp_late: !!(ts && ts.late),
+             late_words: ts && ts.late && ts.at ? localize("case-disclosures.index.late_proves", "late: proves the bytes existed by {at}, not at capture", { at: String(ts.at) }) : null,
              accounts_read: accounts.map((a) => ({ by: a.by ?? null, at: a.at ?? null, text: String(a.text ?? ""),
                                                   signature: a.signature == null ? null : String(a.signature) })) };
   }
@@ -376,14 +400,19 @@ export class CaseDisclosures {
       membersOf.get(r.capture).push(r.member);
     }
     const refusals = [];
+    /* C40: which of the two a capture lacks, as `captureFacts` states it; facts handed in without it are read from their own fields. */
+    const lacks = (f) => Array.isArray(f.missing) ? f.missing
+      : [...(f.timestamp_at ? [] : ["timestamp"]), ...(f.co_archive ? [] : ["co_archive"])];
     const unacknowledged = [...facts.values()].filter((f) => f.grade === EARNED_CAPTURE_CEILING && !f.co_attested
-      && membersOf.get(f.capture).some((m) => roleOf.get(m) === "load_bearing") && !byCapture.has(f.capture));
+      && membersOf.get(f.capture).some((m) => roleOf.get(m) === "load_bearing") && !byCapture.has(f.capture))
+      .map((f) => ({ ...f, missing: lacks(f), timestamp_late: !!f.timestamp_late, late_words: f.late_words ?? null }));
     /* DEC-49 REGION is-co-attestation-acknowledged */
     if (unacknowledged.length)
       refusals.push(disclosureRefusal("CO_ATTESTATION_UNACKNOWLEDGED", {
         unacknowledged: unacknowledged.map((f) => ({ capture: f.capture, members: membersOf.get(f.capture), grade: f.grade,
-                                                     timestamp_at: f.timestamp_at, co_archive: f.co_archive })),
-        detail: localize("case-disclosures.index.length_load_bearing_grade_earned", "{length} load-bearing Grade {EARNED_CAPTURE_CEILING} document(s) hold no trusted timestamp and co-archive ({map}). Retry them (op=reattest), or list each in selfAttested with your reason to publish it as self-attested only (DEC-81 item 3). The case is never refused because a document is not co-attested. Nothing was written.", { length: String(unacknowledged.length), EARNED_CAPTURE_CEILING: String(EARNED_CAPTURE_CEILING), map: String(unacknowledged.map((f) => `${f.capture} under ${membersOf.get(f.capture).join(", ")}`).join("; ")) }) }));
+                                                     timestamp_at: f.timestamp_at, co_archive: f.co_archive,
+                                                     missing: f.missing, timestamp_late: f.timestamp_late, late_words: f.late_words })),
+        detail: localize("case-disclosures.index.length_load_bearing_grade_earned", "{length} load-bearing Grade {EARNED_CAPTURE_CEILING} document(s) hold no trusted timestamp and co-archive ({map}). Retry them (op=reattest), or list each in selfAttested with your reason to publish it as self-attested only (DEC-81 item 3). The case is never refused because a document is not co-attested. Nothing was written.", { length: String(unacknowledged.length), EARNED_CAPTURE_CEILING: String(EARNED_CAPTURE_CEILING), map: String(unacknowledged.map((f) => localize("case-disclosures.index.capture_lacking", "{capture} under {members}, lacking {missing}", { capture: String(f.capture), members: String(membersOf.get(f.capture).join(", ")), missing: String(f.missing.map((m) => m === "timestamp" ? localize("case-disclosures.index.missing_timestamp", "the trusted timestamp") : localize("case-disclosures.index.missing_co_archive", "the co-archive")).join(" and ")) })).join("; ")) }) }));
     /* END DEC-49 REGION is-co-attestation-acknowledged */
     const noReason = [...byCapture.values()].filter((d) => !d.reason);
     /* DEC-49 REGION is-self-attested-reasoned */
@@ -1362,6 +1391,13 @@ export class CaseDisclosures {
       origin: (sha) => withheld.has(sha) ? null : (this.#one(`SELECT address FROM captured_locators WHERE capture_sha=?
                          AND address NOT LIKE 'knock:%' ORDER BY first_retrieved, address LIMIT 1`, sha) || {}).address ?? null,
       registered: (sha) => this.#one(`SELECT bundle_id, registered FROM register WHERE capture_sha=?`, sha),
+      /* R7 (C47; K4438): the title the document's record states (record-core R37's `bundles.title`, the title acquisition
+         R98 read from the capture and promotion filed), words only; a blank or unreadable one is none */
+      title: (m) => {
+        let t = null;
+        try { t = (this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, m.ref) || {}).title; } catch { t = null; }
+        return typeof t === "string" && t.trim() ? t.trim() : null;
+      },
       member: (m, f) => {
         const attr = attributionOf.get(m.kind === "observation" ? m.ref : m.sha) || null;
         if (m.kind === "observation")

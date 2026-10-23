@@ -11,7 +11,13 @@ import { hasWord } from "../../../src/setup-words/index.mjs";
 
 const REASONS = ["threw", "refused", "undetermined", "partial"];
 const FEEDS = ["bias-debts", "proposals", "shared-inquiries", "leads", "exports", "references", "objectives", "sources", "machinery",
-  "contradictions", "signing-keys", "action", "attribution", "docket", "cited-cases", "wizards", "schedule", "places", "projects"];
+  "contradictions", "signing-keys", "action", "attribution", "docket", "cited-cases", "wizards", "schedule", "places", "projects", "members"];
+/* R50: the provider read each broken feed names when its provider answers a refusal or undetermined (`<module>.<read>`). */
+const READ = {
+  "bias-debts": "bias.uncleared", proposals: "progressions.proposalsFeed", "shared-inquiries": "basis-versions.basisVersions",
+  leads: "capture-requests.leads", exports: "corpus-export.exportLog", references: "reevaluation.notices", objectives: "intent.gaps",
+  sources: "monitoring.flagged", contradictions: "contradiction.candidatesFor", docket: "docket.coreDue",
+  "cited-cases": "case-import.watchItems", wizards: "wizard-scripts.brokenScripts", schedule: "publish-schedule.scheduledEditions" };
 const boom = () => { throw new Error("the provider threw"); };
 const ids = (r) => r.items.map((i) => i.id).sort();
 
@@ -52,7 +58,8 @@ test("R45: a feed whose read throws contributes no item and is named {feed, reas
     const w = everyKind();
     for (const [k, v] of Object.entries(BREAK[feed](boom))) Object.assign(w.fakes[k], v);
     const r = w.read("alice");
-    assert.deepEqual(r.facts.failed.filter((f) => f.feed !== "machinery"), [{ feed, reason: "threw" }], `${feed}: named, and nothing else`);
+    /* R50: a read that threw inside a read the feed names carries that read alone (the contradictions feed names its four) */
+    assert.deepEqual(r.facts.failed.filter((f) => f.feed !== "machinery"), [{ feed, reason: "threw", ...(feed === "contradictions" ? { read: READ[feed] } : {}) }], `${feed}: named, and nothing else`);
     const gone = ids(base).filter((id) => !ids(r).includes(id));
     assert.ok(gone.length > 0, `${feed}: the fixture makes it speak, so its items go`);
     const kindOf = (id) => base.items.find((x) => x.id === id).kind;
@@ -68,12 +75,13 @@ test("R45: a provider that answers a refusal names the feed `refused`, one that 
       const w = everyKind();
       for (const [k, v] of Object.entries(BREAK[feed](answer))) Object.assign(w.fakes[k], v);
       const r = w.read("alice");
-      assert.deepEqual(r.facts.failed.filter((f) => f.feed === feed), [{ feed, reason }], `${feed}: ${reason}`);
+      /* R50: the read it asked and, for a refusal, the code the provider gave (`REFUSED`) */
+      assert.deepEqual(r.facts.failed.filter((f) => f.feed === feed), [{ feed, reason, read: READ[feed], ...(reason === "refused" ? { code: "REFUSED" } : {}) }], `${feed}: ${reason}`);
     }
   }
   const w = busy({ intent: { gaps: () => ({ ok: false, reason: "NO_PROJECT" }) } });
   const r = w.read("alice");
-  assert.deepEqual(r.facts.failed.filter((f) => f.feed === "objectives"), [{ feed: "objectives", reason: "refused" }]);
+  assert.deepEqual(r.facts.failed.filter((f) => f.feed === "objectives"), [{ feed: "objectives", reason: "refused", read: "intent.gaps", code: "NO_PROJECT" }]);
   assert.ok(!r.items.some((i) => i.kind === "objective-gap"));
   assert.ok(r.items.some((i) => i.kind === "source-modified"), "the other feeds' items stand");
 });
@@ -88,7 +96,7 @@ test("R45: the places feed, the signing-keys feed and the projects feed fail on 
   const w3 = world({ projectRoster: { projectList: boom, projectParticipants: boom, projectRequests: boom, projectInvitations: boom } }); w3.member("alice");
   assert.deepEqual(own(w3.read("alice")), [{ feed: "projects", reason: "threw" }]);
   const w4 = world({ projectRoster: { projectList: () => ({ ok: false, reason: "REFUSED" }) } }); w4.member("alice");
-  assert.deepEqual(own(w4.read("alice")), [{ feed: "projects", reason: "refused" }]);
+  assert.deepEqual(own(w4.read("alice")), [{ feed: "projects", reason: "refused", read: "project-roster.projectList", code: "REFUSED" }]);
 });
 
 test("R45: a provider the machinery or action feed names in its own facts.failed is carried under that feed's id with reason `partial`, and the items it did raise stand", () => {
@@ -103,7 +111,7 @@ test("R45: a provider the machinery or action feed names in its own facts.failed
   /* a machinery or an action producer that throws or answers no list is that feed failed whole */
   const t = world({ machinery: { conditionItems: boom }, actionProducers: { actionItems: () => null } });
   t.member("alice");
-  assert.deepEqual(t.read("alice").facts.failed, [{ feed: "machinery", reason: "threw" }, { feed: "action", reason: "refused" }]);
+  assert.deepEqual(t.read("alice").facts.failed, [{ feed: "machinery", reason: "threw" }, { feed: "action", reason: "refused", read: "action-producers.actionItems" }]);
 });
 
 test("R45: every feed answering means `failed` is [] and the items are R8's as before; a feed id is a code, never a sentence, and a reason is one of threw, refused, undetermined, partial", () => {

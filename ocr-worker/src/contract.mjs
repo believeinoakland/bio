@@ -100,7 +100,20 @@ export const REFUSALS = {
   /* R23. A picture is a one-page document; this is not the renderer's refusal (R7 step 2) but the member's own,
      stated before any pixel is made, so the page asked for is named. */
   NO_SUCH_PAGE: localize("ocr-worker.contract.a_picture_is_a_one", "a picture is a one-page document (page 0); the page asked for does not exist"),
+  /* R25. The engine read the picture and rated almost none of it: the text is not returned, and the refusal says so. */
+  PICTURE_NOT_LEGIBLE: localize("ocr-worker.contract.the_picture_is_too_unclear_to_read", "the picture is too unclear to read: the engine rated almost none of its words as read, so no text is given rather than text that is mostly wrong"),
 };
+
+/** R25 · A word the engine rated at or over this (its own 0..1 confidence for the word, R9's basis) counts as read.
+ *  Not a measurement of accuracy: over the fixtures of `pdf-pixels` R44 and this module's tests, the share of words rated
+ *  this high came within 0.1 of the share of the page's words truly read, and under it (0.5 / 0.2 / 0.0 against the true
+ *  share 0.6 / 0.0 at the hard pages, 0.97-1.00 for the clean ones), which is what makes the share a statement and not a
+ *  guess. A line's own rating is the mean of its words', so one bad word would hide its good ones: the words are rated. */
+export const LEGIBLE_CONFIDENCE = 0.6;
+/** R25 · A picture whose share of words read is under this has it said in a note. */
+export const LEGIBLE_NOTE_BELOW = 0.8;
+/** R25 · A picture whose share of words read is under this is refused `PICTURE_NOT_LEGIBLE`. */
+export const LEGIBLE_REFUSE_BELOW = 0.2;
 
 /** R23 · THE LONG EDGE A PICTURE IS REDUCED TO, in pixels. Not a measurement: it is `PICTURE_FRAME_MAX`'s own
  *  4096-pixel edge (pdf-pixels R42), so a 12-megapixel camera frame (4032 x 3024, 4000 x 3000) reaches the engine

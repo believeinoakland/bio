@@ -3,6 +3,7 @@
    one held once before the first request; and `action-holds`' `purgeHeld` the reader the door is handed (hold.test.mjs).
    Each module's own behaviour is its own tests'; these check the composition through the plane's interface:
    construction over a storage, the route map and the object's door. Each test carries a negative control (K874). */
+import "../../../src/plane/register.mjs";   /* R68: the start's registration before any op table is read */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
@@ -109,7 +110,7 @@ test("R39 (K2858, K2874; P8: K1654): the T45 readers are handed the plane's own 
 });
 
 /* Instants and minted ids differ between two objects; everything else must not. */
-const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>");
+const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>").replace(/"(ms|feeds_ms)":[\d.]+/g, '"$1":"<n>"');
 
 test("R39, R5 (op-declarations R49; K2839): every op of action-holds', action-replies', plan-work's and case-check's maps is in the route map, each map at its place, and an op of each answers through the door what its own map answers called directly", async () => {
   const u = new URL("http://do/");

@@ -1,6 +1,6 @@
 # credentials (T51)
 
-**Status** · session_01MVQ8cwXNydHkeU6mxmzKQs · depth 2 · COMPLETE · handled B4
+**Status** · session_019Weuk3yVSt11Vsjp9xvR7M · depth 2 · COMPLETE · handled B10
 
 ## J1 · COMPLETE
 
@@ -108,3 +108,127 @@ Tests and checks:
 No pull request is opened, per the job's rule; BOB merges at the tranche boundary.
 
 Size (session_01XeEQiwMvWUVaEbgAvHSsgC): test runs 1, module lines 2651
+
+## J5 · QUESTION
+
+Three points from reading B5, with my best reading for each. I carry on with everything else.
+
+1. **C80 (R81) cannot be seen failing yet: `member-roster` R76 is not on `tranche/T51`.** B5 says it merged before I started. It has not: `tranche/T51` at abc09b300a has no `member-roster` R76 line, `memberFacts("admin")` still answers null, and `member-roster`'s own job (MEMBER-ROSTER #3) only started after mine. The refusal is `#signerMemberBar` -> `memberFacts`, so the change is `member-roster`'s, not mine, and I will not decide "the founder is active" in this module (it would copy a rule that module owns). Best reading: I write the R81 test now (founder registers a key after the claim; refused before it; a non-founder as before), see it fail for that reason, and finish C80 when `tranche/T51` carries R76. Please tell me when to merge it, or tell me to take another course.
+
+2. **`subscriptionsignin` is not served by this module** (census row: "no ops-map arm found"). `agent-worker/src/signin.mjs` says the plane's door routes it to the member's own runner (`control-plane`; `agent-worker` R66). I declare nothing for it and leave it to its owner. The other 17 ops of entry 3 are declared.
+
+3. **`securitymap` cannot be declared as the rows stand.** It is a read (`op-declarations`: `mutating: false`), but `op-grades` holds a hand row `RUNG_ABSENT.securitymap = {ground: "caller-owned"}` (t48.mjs). A declaration with `weight: "caller-owned"` is refused as a ground on a read (`DECLARED_OP_BAD_WEIGHT`, ground-on-read); `weight: "read"` is refused as disagreeing with the hand row (`DECLARED_OP_DISAGREES`, hand=caller-owned). Best reading: `op-grades` drops that hand row (its `NON_ACTS` row already states the read) and I then declare `securitymap` as `weight: "read"`, `fields: {accepts: ["from","to"], requires: ["from","to"]}`; or you give it its own job. Until then it stays undeclared.
+
+Also decided, to be recorded (no answer needed unless you disagree): `fp` (the bootstrap secret's fingerprint the control plane puts in `claim` and `bootstrap`) is a door stamp like `source` and `country`, so it is not in `accepts`; `login`, `recover` and `reauth` answer a missing field with their one fixed refusal (R4, R47), so their `requires` are the fields without which no call can succeed and the tests count that refusal as naming them. Requirement lines (R81 for C80; R82 for `DECLARED_OPS`, one line for entries 2 and 3) I put in my record for you, because my paths do not include `build/requirements/`.
+
+## J6 · REPORT
+
+Applied B5 and B6 (FR-09) as far as the tranche allows, on `job/T51/credentials`.
+
+- **Entries 2 and 3 (K4168, K4202): done.** `DECLARED_OPS` declares 17 ops (the 16 earlier ones and `securitymap`, now declared `weight: "read"`, `accepts` and `requires` `from`, `to`, per B6 (3)); `subscriptionsignin` is control-plane's and is not declared here. `declared-ops.test.mjs` (18 tests, all pass) holds each declaration true through test-support's `declaredOpHolds`. The `op-grades` `RUNG_ABSENT.securitymap` hand row must go for the registration to agree (BOB's CHANGE to OP-GRADES #16). Hand rows in `op-declarations` and `op-grades` that can now go once the registration agrees: the rows for the 17 ops above.
+- **Requirement lines, written in `build/requirements/credentials.md` (B6: either place is fine):** R81 (C80, *not yet met: T51*) and R82 (`DECLARED_OPS`, met: the tests name it).
+- **Entry 1 (C80, R81): waiting on `member-roster` R76.** `tranche/T51` still carries no R76 line and `memberFacts("admin")` still answers null. The R81 test (`t51.test.mjs`:39, with its control at :59) is written and fails for that reason alone (`NO_SUCH_MEMBER` for the founder after the claim); the pin at `own-keys.test.mjs`:55 is changed to the unclaimed case only. This module changes no code for R81 unless it still refuses once R76 has merged. I finish it when BOB's CHANGE says R76 is merged.
+
+Wording point: R81's refusal before the claim stays `noSuchMember("admin")`, the founder not yet being a member.
+
+Tests and checks:
+- `node --test "test/m/credentials/*.test.mjs"` (bio-plane): tests 183, pass 182, fail 1 (R81, as above).
+- `node checks/format.mjs /home/user/bio`: 175 modules, 175 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio credentials`: 30 product files; 0 failures.
+- `node checks/coverage.mjs /home/user/bio credentials`: 58 of 58 live requirement ids named by a test; 0 failures.
+- `node checks/words.mjs /home/user/bio credentials`: 0 failures.
+- `node checks/ownership.mjs /home/user/bio credentials tranche/T51 job/T51/credentials`: 0 failures (before this commit's requirements file, which B6 accepts).
+
+## J7 · REPORT
+
+J6: DECLARED_OPS done (17 ops incl. securitymap as read; op-grades must drop RUNG_ABSENT.securitymap), R82 met, R81/R82 lines written. C80/R81 waits on member-roster R76 (not on tranche/T51): its test is written and fails only for that reason. Send CHANGE when R76 is merged. Details in my record J6.
+
+## J8 · COMPLETE
+
+Applied B7 (CHANGE, K4218): merged `tranche/T51` (member-roster R76 on it). R81's test passes with no change to this module's code, as J6 said.
+
+Entries applied: 1 (C80, R81), 2 and 3 (`DECLARED_OPS`, R82; see J6). R81 and R82 are written in `build/requirements/credentials.md` (not in this record), both marked met; the ownership check lists that one file, which B6 accepts.
+
+R76 made two older pins stale, both of the founder being no member; I moved them to the new behaviour (no assertion weakened, the refusal-writes check kept):
+- `keys.test.mjs` (R6): `signerAdd` for `memberId: "admin"` now succeeds after the claim (asserted after the "no refusal writes" check; the final key count is 5).
+- `grant.test.mjs` (R32): the founder is no longer in the "not active" list; `aiGrantMintStanding("admin")` is `NO_ACCOUNT` (active, no account of her own).
+
+Deferred: nothing. Another module: `op-grades` hand row `RUNG_ABSENT.securitymap` (t48.mjs) must go for the `securitymap` declaration to agree; and the hand rows of the 17 declared ops in `op-declarations` and `op-grades` can go once registration agrees. The whole-repo words check shows 20 `testcopy` failures in `op-grades` tests (none in credentials), and coverage shows failures in other modules (none in credentials).
+
+Tests and checks:
+- `node --test "test/m/credentials/*.test.mjs"` (bio-plane): tests 183, pass 183, fail 0.
+- `node checks/format.mjs /home/user/bio`: 175 modules; 0 failures.
+- `node checks/architecture.mjs /home/user/bio credentials`: 30 product files; 0 failures.
+- `node checks/coverage.mjs /home/user/bio credentials`: 58 of 58 live requirement ids named by a test; 0 failures.
+- `node checks/words.mjs /home/user/bio credentials`: 0 failures.
+- `node checks/ownership.mjs /home/user/bio credentials tranche/T51 job/T51/credentials`: 1 failure, `build/requirements/credentials.md` (accepted, B6).
+- `node checks/run.mjs /home/user/bio`: format, architecture, channels 0 failures; coverage 5 and words 21 failures, none in credentials.
+
+Size (session_01PVXWdCkqAhUVeYE1E8cxT4): test runs 5, module lines 2750
+
+## J9 · COMPLETE
+
+J8 COMPLETE: R81 met after R76 (two founder pins updated), R82 met, DECLARED_OPS incl. securitymap. Details in my record J8.
+
+## J10 · COMPLETE
+
+Applied B8 (CHANGE, K4237): `DECLARED_OPS.bootstrap` now accepts `members` (not required). Commit a1b0f4344e on `job/T51/credentials`.
+
+- `bio-plane/src/credentials/index.mjs` (`DECLARED_OPS.bootstrap`): `fields: {accepts: ["members"], requires: []}`, with a comment saying where the field is answered.
+- `bio-plane/test/m/credentials/declared-ops.test.mjs`: a new R82 test for `bootstrap`: `members` is declared and not required, and `declaredOpHolds` holds the declaration with the undeclared-field control (`undeclared_field_bootstrap` is dropped or refused naming it).
+- `build/requirements/credentials.md`, R82: one sentence added recording `bootstrap` accepts `members` (K4237). R82 stays met.
+
+Finding for BOB, not changed here: this module's `bootstrap` arm (`index.mjs` ~2079) reads only the `fp` stamp, not `members`. The `members=1` answer is given at the public door by instance-setup's `bootstrapOp` (`bio-plane/src/setup.mjs`:3344), which reads `url.searchParams.get("members")`. So the `members` declaration is true of the op as the door serves it, but the declared field is read in instance-setup's code, not in this module's arm. Instance-setup declares no `bootstrap` row of its own, so the screen guard checks this declaration. If you want the declaration to name only what this module's arm reads, the two options are: `accepts` stays `[]` and the guard finds `members` answered by instance-setup, or instance-setup takes over the `bootstrap` declaration. I have not chosen; the CHANGE you sent says to add it, and I did.
+
+Requirement line for BOB (also in `build/requirements/credentials.md`, R82, amended):
+> **R82** … `bootstrap` accepts `members` (not required; K4237): the screens' ask for each member's own build, answered at the public door by instance-setup's `bootstrapOp`, not by this module's arm. …
+
+Deferred: nothing.
+
+Found in other modules: none new. The whole-repo `checks/run.mjs` run shows coverage failures (4) and words failures (27) in other modules; none names credentials.
+
+Hand rows that can go once the registration agrees: none new (B6 already named the 17 ops; `op-grades` `RUNG_ABSENT.securitymap` is still pending its CHANGE to OP-GRADES #16).
+
+Tests and checks:
+- `node --test test/m/credentials/*.test.mjs` (bio-plane): tests 184, pass 184, fail 0.
+- `node --test test/m/credentials/declared-ops.test.mjs`: tests 19, pass 19, fail 0.
+- `node checks/format.mjs /home/user/bio`: 175 modules, 175 requirements files; 0 failures.
+- `node checks/architecture.mjs /home/user/bio credentials`: 30 product files; 0 failures.
+- `node checks/coverage.mjs /home/user/bio credentials`: 58 of 58 live requirement ids named by a test; 0 failures.
+- `node checks/words.mjs /home/user/bio credentials`: 0 failures.
+- `node checks/run.mjs /home/user/bio`: format, architecture, channels 0 failures; coverage and words failures only in other modules.
+- `node checks/ownership.mjs /home/user/bio credentials tranche/T51 job/T51/credentials`: 1 failure, `build/requirements/credentials.md` (outside the paths). B6 accepts this listing of that one file at merge.
+
+Size (session_019uitbe7o6WXsqjVUksVxFY): test runs 3, module lines 2699
+
+## J11 · QUESTION
+
+QUESTION (C51, the 37.6 s registration): the credentials arm is not where the time goes, so the dominant stage sits in a module I do not hold.
+
+Measured at the module's interface, real SQLite and real membership (the credentials test world): `signerRegisterOwn` takes 0.4 to 2 ms and makes 5 store calls (the member's row, the key's row, the insert, membership's list of active administrators, the credentials row for that list). The count is the same with 2 members and 0 keys or 12 members and 60 keys. The administrator "notification" is not a fan-out: the answer's `notified` is membership's list read at the act, and the feed reads the key's row later. No hash or other costly work is in the arm. So 37.6 s is not credentials' own work.
+
+Stages that remain, none mine: (1) the control plane / admission path in front of `signerregister` (the op has weight `credential`; whether an act of that weight triggers a password hash, a re-ask check or a session read before the store door is for admission and control-plane to say); (2) the store door's dispatch around `dispatch.mjs:427`; (3) the browser: the key made in the member's own browser (WebCrypto) and, per the walk, a fresh key made at each signing, which belongs to screens-publish / screens-settings (wave 2). I cannot name which from here without a live run: the arm's `timings` now carries the plane's part, so a walk on biosmoke8 that reads the answer will show the arm at 0 to 2 ms and place the rest on the door or the browser.
+
+Best reading: ask the control-plane job (and screens-publish) to time the door and the browser stages for C51; mine is met and proven. Nothing here blocks me, so I carry on to COMPLETE.
+
+## J12 · COMPLETE
+
+COMPLETE · fix round 3 (B9), CREDENTIALS #25. Commits on `job/T51/credentials`; `tranche/T51` merged at its tip (482aff3dcf) before this entry.
+
+**Cause met: C51 (the plane's part), requirement R9 (signerregister, served as signerregisterown).**
+- Measured first, at the module's interface (real SQLite, real membership): `signerRegisterOwn` takes 0.4 to 2 ms and makes 5 store calls (the member's row, the key's row, the insert, membership's active administrators, the credentials row that list reads). No hash, no fan-out: the administrator "notice" is membership's list read at the act, and the feed reads the key's row later. The cost behind the walker's 37.6 s is therefore not this module's; the stage and numbers are in J11 (QUESTION) for the control-plane and screens-publish jobs.
+- Built: a successful registration's answer carries `timings: {total_ms, stages}`, whole non-negative milliseconds, stages `standing`, `lookup`, `write` (absent when the key is already the member's) and `notify`; the stages sum to no more than the total. A refusal carries no `timings` (its key set is unchanged, so every refusal test stands). Nothing else in the answer changed; the administrators are still told (`notified`).
+- Tests, written first and seen failing (the timings test failed before the change; the store-call test describes the arm as it already was, so it held and is the bound, not a fix): `own-keys.test.mjs` "R9 C51 a registration's store calls are bounded …" (at most 6 calls; the same count with 12 members and 60 keys as with a small team; a key already held and a refusal are no dearer) and "R9 C51 a registration's answer carries timings …" (the keys, the whole numbers, the sum, no `write` stage for a held key, no timings on a refusal; control: `notified` equals membership's `activeAdmins()`). Two existing exact-shape assertions on a success (`own-keys.test.mjs` R9 registration and held key; `t51.test.mjs` R81 founder) now set the new `timings` key aside and stay strict about every other key; nothing was weakened.
+
+**Proposed requirement line for BOB to write (R9, amend):** "A registration that succeeds carries `timings: {total_ms, stages}`: the whole milliseconds the arm took and each stage that ran (`standing`, `lookup`, `write`, `notify`), the stages summing to no more than `total_ms`; a registration makes a bounded number of store calls (at most six) whatever the size of the team or of the roster. Refusals carry no `timings`." Test: the two above.
+
+**Deferred:** nothing. **Found in other modules, not changed:** the stage behind C51's 37.6 s (J11): the door and control-plane path for a `credential`-weight op, or the browser's key making; `build/rulings.md:4346` fails the format check (K4349 states no standing-list decision), on the tranche tip, not mine.
+`setup-words --check`: no new words in this change.
+
+**Tests and checks:**
+- `node --test --test-force-exit "test/m/credentials/*.test.mjs"` (bio-plane): tests 186, pass 186, fail 0.
+- Users of the arm (15 test files naming `signerRegisterOwn`/`signerregister`: screens-inquiry, screens-settings, ratification, op-declarations, interface-shell, screens-publish, op-grades, store-door, control-plane): tests 213, pass 213, fail 0. `build/plan/impact.mjs` names 105 modules by its shared-table rule (`DECLARED_OPS` is unchanged by this change); I ran the ones that read this answer, not all 1,507 files.
+- `checks/format.mjs`: 175 modules, 175 requirements files; 1 failure, `build/rulings.md:4346`, not mine.
+- `checks/architecture.mjs credentials`: 30 product files; 0 failures. `checks/coverage.mjs credentials`: 58 of 58 live ids named by a test; 0 failures. `checks/words.mjs credentials`: 0 failures. `checks/ownership.mjs credentials tranche/T51 job/T51/credentials`: 4 files changed; 0 failures.
+
+Size (session_019Weuk3yVSt11Vsjp9xvR7M): test runs 5, module lines 2708

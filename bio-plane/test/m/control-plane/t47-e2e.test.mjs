@@ -4,6 +4,7 @@
    stand-in, every request it makes answered by the same plane: Home's projects with their question counts, a wizard
    started from one of Home's front doors, and the doorbell's page handing over a file with no credential, read back
    through the real ops. */
+import "./register-declared.mjs";
 import "../../sandbox.mjs";
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
@@ -11,8 +12,9 @@ import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { Miniflare } from "miniflare";
-import { boot } from "../interface-shell/harness.mjs";
-import { OPS } from "../../../src/op-declarations/index.mjs";
+const { boot } = await import("../interface-shell/harness.mjs");
+const { APP_SCREENS, GUIDE } = await import("./app-screens.mjs");
+const { OPS } = await import("../../../src/op-declarations/index.mjs");
 
 const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));
 const ADM = "adm-e2e47-0123456789abcdef", PASSWORD = "the founder's long password, T47";
@@ -67,7 +69,7 @@ const asFounder = async (url, init = {}) => (await toPlane(url, { ...init, heade
    the plane. */
 async function appAt(path, who = session) {
   const html = await (await mf.dispatchFetch(`${ORIGIN}${path}`)).text();
-  const p = await boot({ html, session: who, path, plane: real });
+  const p = await boot({ screens: APP_SCREENS, guide: GUIDE, html, session: who, path, plane: real });
   await run(p);
   return p;
 }
@@ -128,7 +130,7 @@ async function promoteProject(title, cites) {
   return r.result.bundleId;
 }
 
-test("R81 end to end: Home draws the group's projects from the real `projectlist`, each with its question count paged from the real `projectquestions`, every read under the founder's session", async () => {
+test("R81 end to end: Home draws the group's projects from the real `projectlist`, each with its question count from the roster row's own `question_count` (C14: no per-project `projectquestions` read), every read under the founder's session", async () => {
   await signIn();
   const year = new Date().getUTCFullYear();
   const q1 = await promoteInquiry(`INQ-${year}-4701-e2e-lights`, "Who turned off the street lights on Seminary Ave?");
@@ -144,7 +146,7 @@ test("R81 end to end: Home draws the group's projects from the real `projectlist
   assert.deepEqual((qs.result.items || []).map((x) => x.inquiry).sort(), [q1, q2].sort(), JSON.stringify(qs).slice(0, 400));
 
   const p = await appAt("/app");
-  /* the counts are read one after the list, each paged: wait for both to be drawn (or the time to run out) */
+  /* the counts come with the list: wait for the busy project's to be drawn (or the time to run out) */
   /* screens-daily R10, R21: a count is drawn in the row's meta, and never at zero, so wait for the busy project's */
   /* the wait is on the busy project's own row, the thing asserted below (not any "2 questions" on the page), bounded generously */
   /* a project is referenced more than once on Home (a "Last change" line names it too): its ROW is the reference whose
@@ -154,11 +156,12 @@ test("R81 end to end: Home draws the group's projects from the real `projectlist
     && containerOf(a).querySelector('[data-ladder="stage"]'));
   const rowTextOf = (id) => { const a = rowOf(id); return a ? text(containerOf(a)) : ""; };
   assert.ok(await until(p, () => /2 questions/.test(rowTextOf(busy)), 90000), "the busy project's count is drawn in its row: " + rowTextOf(busy)
-    + " | projectquestions asked: " + JSON.stringify(p.byOp("projectquestions").map((r) => [r.query.project, r.status ?? r.answered ?? null, r.after ?? r.query.after ?? null]))
+    
     + " | requests: " + p.requests.length);
   answered(p, "projectlist");
-  const asked = answered(p, "projectquestions");
-  assert.deepEqual([...new Set(asked.map((r) => r.query.project))].sort(), [busy, quiet].sort(), "each listed project's count is read");
+  assert.equal(p.byOp("projectquestions").length, 0, "C14, P9: the count is the roster row's, no read is made for each listed project");
+  const listedRows = answered(p, "projectlist");
+  assert.equal(listedRows.length, 1, "the roster is read once for the load");
   const m = main(p);
   const row = (id) => rowOf(id) ?? m.querySelectorAll("a").find((a) => (a.getAttribute("href") || "").includes(encodeURIComponent(id)) || (a.getAttribute("href") || "").includes(id));
   for (const [id, title] of [[busy, "The dark streets"], [quiet, "The library hours"]]) {
@@ -249,7 +252,7 @@ test("R81 end to end: the doorbell's page at `/app/doorbell`, booted with no ses
   /* every answer the knock is given, as the plane gave it */
   const knocks = [];
   const plane = { ...real, knock: async (req) => { const a = await answerOf(await toPlane(req.url, req.init)); knocks.push(a); return a; } };
-  const p = await boot({ html, session: null, path: "/app/doorbell", plane });
+  const p = await boot({ screens: APP_SCREENS, guide: GUIDE, html, session: null, path: "/app/doorbell", plane });
   await until(p, () => main(p) && main(p).querySelector('button[data-act="knock"]') && p.doc.getElementById("db-file")
     && /e2e-town-47/.test(text(main(p))));
   assert.equal(p.byOp("whoami").length, 0, "no session read on the public frame");

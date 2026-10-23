@@ -159,5 +159,79 @@ export function progress(cs, entries, o) {
 /** R82 (CR-19; DEC-368): the format ids the registry names, each with its `document.kind.<id>` word; any other id draws `document.kind.undetermined`. */
 export const KIND_IDS = Object.freeze(["csv", "docx", "html", "jpeg", "odp", "ods", "odt", "pdf", "png", "pptx", "text", "undetermined", "xlsx", "zip"]);
 
+/** C36 (R2, R3, R24, R34): the words of the passage a leg cites, from a reading's text units. `want` is the leg's extent as the record states it
+ *  (`{page: "2"}`, `{kind: "doc-para", para: "2"}`: strings); a unit's extent is the extent grammar's (reading-pipeline R15), the fields it does not
+ *  narrow to null (`rect`, `run`), and a null field states nothing. A leg draws a unit's words when it names exactly the fields the unit states,
+ *  equal; a leg narrower (a rect) or wider (no page) than the unit is not the unit's words, and a leg that names nothing has none. */
+export function legWords(units, want) {
+  const stated = (e) => Object.entries(e).filter(([, v]) => v !== undefined && v !== null && v !== "").map(([k, v]) => [k, String(v)]);
+  const keys = Object.keys(want || {}).filter((k) => k !== "kind");
+  if (!keys.length || !Array.isArray(units)) return "";
+  const hit = units.find((u) => {
+    if (!u || !u.extent || typeof u.extent !== "object" || !String(u.text || "").trim()) return false;
+    const have = stated(u.extent);
+    return have.length > 0 && (want.kind === undefined || have.some(([k, v]) => k === "kind" && v === want.kind))
+      && have.filter(([k]) => k !== "kind").length === keys.length && have.every(([k, v]) => k === "kind" || want[k] === v);
+  });
+  return hit ? String(hit.text) : "";
+}
+
+/** C36: a leg's extent as the record states it, from its own `extent_*` fields (every one but the capture and how it was cited as) and an
+ *  `extent` object when it has one; the leg's fields win. */
+export function legExtent(x) {
+  const bag = {};
+  if (!x) return bag;
+  for (const [k, v] of Object.entries(x)) if (k.startsWith("extent_") && k !== "extent_capture" && k !== "extent_cited_as" && v !== undefined && v !== null && v !== "") bag[k.slice(7)] = String(v);
+  if (x.extent && typeof x.extent === "object") for (const [k, v] of Object.entries(x.extent)) if (v !== undefined && v !== null && v !== "" && bag[k] === undefined) bag[k] = String(v);
+  return bag;
+}
+
+/** G38 (R3, R96; extraction's `op=reading` pages by bytes as well as units, so a long reading takes several pages): the units of a reading across its
+ *  pages, following `next` from the first page (`first`, an `op=reading` answer's value) until `done(units)` says it has what it needs, `limit` pages have been
+ *  followed (none: no limit), or no page remains. `read(key, query)` is the screen's own reader (`later`, or an act's view of the page's memory); each page is the
+ *  read `{sha256, after: next}` kept under `key` + the first page's totals + `next`, so a reading that grows while it is being read (its totals change) is read
+ *  again and not taken from a page kept while it was shorter, and every consumer of one reading shares its pages. Returns `{units, state, more, failed}`:
+ *  `state` `loading` while a page is on its way (the units so far), `failed` when one was refused (`failed` is that read; the units so far), else `ok`; `more`
+ *  whether a page remains unread. A cursor that comes round again ends the walk. Self-contained. */
+export function readPages(read, key, sha, first, done, limit) {
+  const cursorOf = (v) => (v && v.next !== undefined && v.next !== null && v.next !== "" ? String(v.next) : null);
+  const version = first ? [first.units_total, first.read_through, first.total].map((v) => (v === undefined || v === null ? "" : String(v))).join("/") : "";
+  let units = first && Array.isArray(first.text_units) ? first.text_units.slice() : [];
+  let cursor = cursorOf(first), state = "ok", failed = null, n = 0;
+  const seen = new Set();
+  while (cursor !== null && !(done && done(units)) && !seen.has(cursor) && !(limit !== undefined && limit !== null && n >= limit)) {
+    seen.add(cursor);
+    n++;
+    const r = read(key + version + ":" + cursor, { sha256: sha, after: cursor });
+    if (!r || r.state === "loading") { state = "loading"; break; }
+    if (r.state !== "ok" || !r.value) { state = "failed"; failed = r; break; }
+    units = units.concat(Array.isArray(r.value.text_units) ? r.value.text_units : []);
+    cursor = cursorOf(r.value);
+  }
+  return { units, state, more: cursor !== null, failed };
+}
+
+/** G12c (R1, R9; strength R6 as T51 fix round 6 amends it): the strength of many questions in ONE read for each 50 of them (`inquirystrength` with `ids`,
+ *  comma-joined, strength's batch), never one read for each question. `read(key, query)` is the screen's own reader (`later`/`ask`); `esc` the kit's.
+ *  Returns `of(id)`: that question's read as the single read gives it (`{state, value}`), loading while its batch is, failed with the plane's words when
+ *  its entry is a refusal or the batch left it out. The answer holds `results`, one entry for each id asked, keyed by id. */
+export function strengths(read, ids, esc) {
+  const list = [...new Set((Array.isArray(ids) ? ids : []).map(String).filter(Boolean))];
+  const chunks = [];
+  for (let i = 0; i < list.length; i += 50) chunks.push(list.slice(i, i + 50));
+  const reads = chunks.map((c) => read("strengths:" + c.join(","), { ids: c.join(",") }));
+  return (id) => {
+    const i = chunks.findIndex((c) => c.includes(String(id)));
+    const r = i < 0 ? null : reads[i];
+    if (!r || r.state === "loading") return { state: "loading" };
+    if (r.state !== "ok") return r;
+    const all = r.value && r.value.results;
+    const one = Array.isArray(all) ? all.find((x) => x && String(x.target) === String(id)) : all && typeof all === "object" ? all[String(id)] : undefined;
+    if (!one || typeof one !== "object") return { state: "failed", refusal: null };
+    if (one.ok === false) return { state: "failed", refusal: { code: String(one.code || one.reason || ""), words: one.translation ? esc(String(one.translation)) : "" } };
+    return { state: "ok", value: one };
+  };
+}
+
 /** The parts every screen of the module carries. */
-export const COMMON = Object.freeze({ front, later, plain, who, unavailable, ending, costLine, progress, kinds: KIND_IDS });
+export const COMMON = Object.freeze({ front, later, plain, who, unavailable, ending, costLine, progress, legWords, legExtent, readPages, strengths, kinds: KIND_IDS });

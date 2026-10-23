@@ -195,7 +195,9 @@ test("R12 R24: with the control plane's rows for them (op-declarations R17–R20
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
   assert.deepEqual(r.stale.filter((op) => all.has(op)), []);
   assert.deepEqual([...all].filter((op) => !A.unaccounted([]).stale.includes(op)), []);
-  for (const op of ALL_READS) assert.ok(A.unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
+  /* K4279 (R12): an owner-declared read the table carries ungated is not stale; a read no row carries is */
+  for (const op of ALL_READS) assert.ok(!A.unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
+  for (const op of ALL_READS) assert.ok(A.unaccounted([]).stale.includes(op), op);
   const left = A.unaccounted([...table, { op: "moneyunnamed", mutating: true, gated: true }]);
   assert.deepEqual([left.unpublished, left.unranked], [["moneyunnamed"], ["moneyunnamed"]]);
   for (const op of Object.keys(ALL_WRITES)) {

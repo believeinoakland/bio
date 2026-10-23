@@ -10,6 +10,7 @@ import * as DECLARATIONS from "../op-declarations/index.mjs";
 import { OPS, NEEDS, SESSION_OPS } from "../op-declarations/index.mjs";
 import { RUNGS, RUNG_ABSENT, IRREVERSIBLE_WEIGHT, MARKS, phoneOf } from "../op-grades/index.mjs";
 import { SCREEN_REGISTRY } from "../wizard-scripts/index.mjs";
+import { sha256HexSync } from "../record-grammar/index.mjs";
 import { shellProgram } from "./browser.mjs";
 
 /* R32 (N999; K3052; replaces setup-page R31): the session record's key in the browser's `localStorage`, this module's:
@@ -17,7 +18,8 @@ import { shellProgram } from "./browser.mjs";
    (`own` or `shared`), `w` the handle signed in with. Every tab reads it; nothing else holds the token. */
 export const SESSION_STORE_KEY = "bio-session";
 
-/* R2 (setup-page R28's rule; answer-envelope R6): the literal each script element's nonce holds, filled per response. */
+/* R2 (setup-page R28's rule; answer-envelope R6): the literal each script element's nonce holds, filled per response. The interface
+   page no longer holds it (R1: no inline script, no nonce slot, fix round 3); other pages' slots are `answer-envelope`'s. */
 export const NONCE_SLOT = "__CSP_NONCE__";
 
 /* The phone width (the Terms): `civicsmith.css`' breakpoint, a viewport of 760 px or less. */
@@ -46,7 +48,7 @@ export const PATHS = Object.freeze({
   projects: ["projects"], project: ["projects", "@project"], document: ["projects", "@project", "screen.document.name"],
   question: ["projects", "@project", "screen.question.name"], assistant: ["projects", "@project", "screen.question.name"],
   projectai: ["projects", "@project", "screen.projectai.name"],
-  calculation: ["projects", "@project", "screen.calculation.name"], standard: ["projects", "@project", "screen.standard.name"],
+  calculation: ["projects", "@project", "screen.calculation.name"], standard: ["projects", "@project", "screen.standard.crumb"],
   plan: ["projects", "@project", "screen.plan.name"], "start-send": ["projects", "@project", "screen.plan.name", "screen.start-send.name"],
   request: ["projects", "@project", "screen.request.name"], action: ["projects", "@project", "screen.action.name"],
   timeline: ["projects", "@project", "screen.timeline.name"], money: ["projects", "@project", "screen.money.name"],
@@ -148,6 +150,11 @@ const isBrowserAct = (op, screenId) => Object.hasOwn(browserActs(), op) && brows
    session's token (`LOCKED_OPS`), not a re-point. */
 export const RE_POINTS = Object.freeze({
   explore: Object.freeze(["stepsourcewithdraw"]),
+  /* R117 (fix round 3; C84, C64): each until the registry lists the op on that screen */
+  security: Object.freeze(["scanmirror"]),
+  places: Object.freeze(["officeconfirm"]),
+  /* B3 (K4467; screens-inquiry J21, N5): the read of a record stored unread, until the registry lists `readheld` on `document` */
+  document: Object.freeze(["readheld"]),
 });
 export const LOCKED_OPS = Object.freeze(["unlock"]);
 export const ANY_SCREEN_OPS = Object.freeze(["infolevelset"]);
@@ -169,12 +176,17 @@ export const ADMIN_ACTS = Object.freeze(new Set([
   /* R101 (T51): a member's signing key added by an administrator (`credentials` R6), and the root of trust's seeding of the
      team (`instance-setup` R4) */
   "signeradd", "instancegroupseed",
+  /* fix round 3 (C64; `file-safety` R49, `entities` R64): an administrator starts a signature run; an administrator confirms an
+     office a member named */
+  "scanmirror", "officeconfirm",
 ]));
 
 /* R107 (T51 fix round; K4197 T-07): the acts that carry the Reasoned mark and no weight (`op-grades` `MARKS`, R64) and that the
    walk found asking no reason: the administrator's acts on a member or the team (`ADMIN_ACTS`), a project's owner added, and a
    review granted. The shell asks their reason before they run, as it does for a Reasoned weight (R11). */
 export const MARK_ASKS_EXTRA = Object.freeze(["projectowneradd", "reviewgrant"]);
+/* R11, R107: whether the shell asks the reason of an act drawn with the Reasoned mark and no weight */
+const asksReason = (op) => ADMIN_ACTS.has(op) || MARK_ASKS_EXTRA.includes(op);
 
 /* The shell's own reads and acts (R3, R4, R7, R17, R20, R33, R34, R36). */
 export const SHELL_OPS = Object.freeze(["whoami", "interfacewords", "groupidentity", "queue", "infolevel", "infolevelset",
@@ -210,6 +222,10 @@ export function checkScreens(screens) {
     /* R87: the shell asks a Reasoned act's reason, or sends the member's own words in the act's `reasonField`; a screen that
        names a `reasonField` that is no field's name supplies neither, so it is never served */
     for (const a of s.acts) if (a && a.reasonField !== undefined && !(typeof a.reasonField === "string" && a.reasonField)) throw new Error(`interface-shell: screen ${id}'s act ${String(a.op)} names a reasonField that is no field's name, so it would send without a reason`);
+    /* R113: an act's `rereads` is a list of read names or "all"; a read's `after` is a list of ops */
+    for (const a of s.acts) if (a && a.rereads != null && a.rereads !== "all" && !(Array.isArray(a.rereads) && a.rereads.every((n) => typeof n === "string"))) throw new Error(`interface-shell: screen ${id}'s act ${String(a.op)} names rereads that are neither a list of reads nor "all"`);
+    /* R112: the codes an act names as its success are a list of codes */
+    for (const a of s.acts) if (a && a.successCodes !== undefined && !(Array.isArray(a.successCodes) && a.successCodes.every((c) => typeof c === "string" && c))) throw new Error(`interface-shell: screen ${id}'s act ${String(a.op)} names successCodes that are not a list of codes`);
     if (s.words !== undefined && !Array.isArray(s.words)) throw new Error(`interface-shell: screen ${id}'s words is not a list`);
     if (s.ABSENT_CODES !== undefined && !(Array.isArray(s.ABSENT_CODES) && s.ABSENT_CODES.every((c) => typeof c === "string"))) throw new Error(`interface-shell: screen ${id}'s ABSENT_CODES is not a list of codes`);
   }
@@ -294,13 +310,23 @@ function dataOf(screens, guide) {
     ops: pick(() => true),
     /* R30, R45: the public ops (`classes: null`), the only ones a page with no session calls, by an act or by `cs.call` */
     publicOps: Object.keys(OPS).filter((op) => OPS[op].classes === null),
+    /* R123 (E12): the ops `OPS` declares not mutating, whichever screen asks them: the reads the page may share while they are in flight */
+    readOps: Object.keys(OPS).filter((op) => OPS[op].mutating === false),
     needs: pick((op) => (Object.hasOwn(NEEDS, op) ? NEEDS[op] : undefined)),
+    /* R12 (K4237): a read is gated by its classes, not by `SESSION_OPS`, which holds mutating ops alone */
+    readClasses: pick((op) => (OPS[op] && OPS[op].mutating === false && (OPS[op].classes === null || Array.isArray(OPS[op].classes)) ? (OPS[op].classes === null ? null : [...OPS[op].classes]) : undefined)),
     sessionOps: { member: [...ops].filter((op) => SESSION_OPS.member.has(op)), admin: [...ops].filter((op) => SESSION_OPS.admin.has(op)) },
     adminActs: [...ops].filter((op) => ADMIN_ACTS.has(op)),
-    markAsks: [...ops].filter((op) => ADMIN_ACTS.has(op) || MARK_ASKS_EXTRA.includes(op)),
+    markAsks: [...ops].filter(asksReason),
     rungs: pick(rungOf),
-    /* R64 (`op-grades` R42): the design kit's mark for an act R11 draws with no weight, a mark and its explanation only */
-    marks: pick((op) => (rungOf(op) === "none" && Object.hasOwn(MARKS, op) ? String(MARKS[op]).toLowerCase() : undefined)),
+    /* R64 (`op-grades` R42): the design kit's mark for an act R11 draws with no weight, a mark and its explanation only.
+       R11, R107 (fix round 2, C76; K4199): the mark and the asking agree. A read carries no mark; an act is marked Reasoned
+       only where the shell asks its reason (`markAsks`), so no act says "Asks for a reason" and asks nothing. */
+    marks: pick((op) => {
+      if (rungOf(op) !== "none" || !Object.hasOwn(MARKS, op) || (OPS[op] && OPS[op].mutating === false)) return undefined;
+      const mark = String(MARKS[op]).toLowerCase();
+      return mark === "reasoned" && !asksReason(op) ? undefined : mark;
+    }),
     /* R50 (K3156): the acts held at the phone width: every act carrying a weight that `op-grades.phoneOf` answers false
        for (its terminal, attested and irreversible rungs, `IRREVERSIBLE_WEIGHT`, its larger-screen acts through
        `OP_ALIASES`); never one run on press (a read, or an op `RUNG_ABSENT` grounds otherwise than `undetermined`: the
@@ -318,21 +344,28 @@ function dataOf(screens, guide) {
 
 /* The shell's own styles (R56, R65: only these two, never a hand copy of a design rule, which `shell.css` carries): the
    page's height settings, so the frame's main column scrolls and the page never does (R57; the frame's own fixed height is
-   the design's `.cs-frame`), and motion stopped under reduced motion (R22). Every element the shell draws is a design
+   the design's `.cs-frame`), and motion stopped under reduced motion (R22); with the phone block (R108) and, R120, the grid of a
+   `cs.row` whose first part is empty (`data-lead="none"`: the design's grid is lead, text, act, and a row with no lead would give
+   the text the first column and the act what is left of the row). Every element the shell draws is a design
    class (R65), so nothing else is carried; no rule gives `cursor: help`, nor a pointer to an element that only explains
    itself (R52). */
 const STYLE = `html,body.cs{height:100%}body.cs{margin:0;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 #cs-root{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}#cs-root>.cs-frame{flex:1 1 auto;min-height:0;height:auto;overflow:hidden}
 #cs-root>.cs-frame>.cs-main{overflow:auto;min-height:0}#cs-root>.cs-frame:not(.cs-shell){display:grid;grid-template-rows:minmax(0,1fr)}
+.cs-main .cs-row[data-lead=none]{grid-template-columns:minmax(0,1fr) auto}.cs-main .cs-row[data-lead=none]>.meta{grid-column:1/-1}
 @media (max-width:${PHONE_WIDTH}px){
-.cs-main{overflow-x:hidden}.cs-main .cs-row,.cs-main .mk-rowname{grid-template-columns:auto minmax(0,1fr);min-width:0}.cs-main .cs-row>*{min-width:0}
+:root:root .cs-main .cs-row[data-lead=none]{grid-template-columns:minmax(0,1fr)}:root:root .cs-main .cs-row[data-lead=none]>*{grid-column:1}
+.cs-main{overflow-x:hidden;overflow-wrap:anywhere}.cs-main .cs-row,.cs-main .mk-rowname{grid-template-columns:auto minmax(0,1fr);min-width:0}.cs-main .cs-row>*{min-width:0}
 .cs-main td,.cs-main th{min-width:0;overflow-wrap:anywhere}.cs-main .cs-field label{min-width:0}.cs-main fieldset.cs-field label{display:flex;align-items:flex-start;gap:8px}
 .cs-main fieldset.cs-field label>span{display:block;min-width:0}.cs-main [role=tablist]{flex-wrap:wrap}
 .cs-btn,button.mk-avatar,.cs-main a.cs-ref,.cs-main input:not([type=checkbox]):not([type=radio]),.cs-main select,.cs-tabs a,.cs-mast a,.cs-mast button{min-height:44px;min-width:44px}
-.cs-main input[type=checkbox],.cs-main input[type=radio]{width:24px;height:24px}
+.cs-main input[type=checkbox],.cs-main input[type=radio]{width:24px;height:24px;flex:none}
+:root:root .cs-main input.mk-pick{width:44px;height:44px;margin:0}
+:root:root .mk-open,:root:root .mk-mastsearch{min-width:44px;min-height:44px;box-sizing:border-box;align-items:center}
+:root:root .cs-main label:has(>input[type=checkbox]),:root:root .cs-main label:has(>input[type=radio]){display:flex;align-items:center;gap:8px;min-height:44px;box-sizing:border-box}
 .cs-main,.cs-main>*,.cs-section,.cs-section>*,.cs-sheet,.cs-row>*,.mk-card,.cs-field,.mk-acts>*{min-width:0;max-width:100%}
 .cs-main :is(p,li,dt,dd,td,th,h1,h2,h3,.rec,.mk-data,.meta,a.cs-ref,code){overflow-wrap:anywhere}
-.mk-cards{grid-template-columns:minmax(0,1fr)}.cs-row .meta,.mk-acts{flex-wrap:wrap}.tw{max-width:100%;overflow-x:auto}
+.mk-people{max-width:100%;flex-wrap:wrap}.mk-next li>span{min-width:0;overflow-wrap:anywhere}.mk-strip .mk-strip-sum{min-width:0;max-width:100%}.mk-cards{grid-template-columns:minmax(0,1fr)}.cs-row .meta,.mk-acts{flex-wrap:wrap}.tw{max-width:100%;overflow-x:auto}
 .cs-field :is(input,select,textarea){box-sizing:border-box;width:100%;max-width:100%;min-width:0}
 .cs-btn{max-width:100%;white-space:normal;text-align:left}
 .cs-path a,.cs-mast a,.cs-mast button,.cs-part>summary{display:inline-flex;align-items:center;box-sizing:border-box;min-height:44px}
@@ -396,23 +429,60 @@ export function checkClasses(screens, guide, program) {
 /* the page's own escaping of a served word */
 const escape = (t) => String(t).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
+/* R1, R2 (fix round 3, C15; P2.4; fix round 6, G30, R126): the shell's script, composed from the shell's own functions and each screen's and the
+   guide's; it depends on those alone (the release version and the test-instance band are the page's), so it is the same for a release. The script,
+   the checks of the screens and guide it is made from and its hash are done once, for the last screens and guide handed in (a release's isolate
+   hands in the same ones every request): a front page and a script fetch after the first only read what was kept. A set that fails its checks
+   is kept nowhere and is refused again at the next ask. */
+const WORK = { scripts: 0, hashes: 0, checks: 0 };
+/* R126: how much work the page route has done in this isolate, as counts (the Worker's clock is frozen during synchronous work, so a time
+   measured in it reads as nothing, R-CLOCK): the scripts composed, the hashes taken of one and the screen and guide checks run. For a release
+   served by one isolate each is 1, however many pages and script fetches it has answered; control-plane's `page` log line states them. */
+export function pageWork() { return { ...WORK }; }
+let SCRIPT = null;
+function release(screens, options) {
+  const guide = options && options.guide ? options.guide : null;
+  if (SCRIPT && SCRIPT.screens === screens && SCRIPT.guide === guide) return SCRIPT;
+  WORK.checks++;
+  checkScreens(screens);
+  checkGuide(guide);
+  const program = shellProgram.toString();
+  checkClasses(screens, guide, program);
+  const D = dataOf(screens, guide);
+  WORK.scripts++;
+  const source = `(${program})(${toSource(D)}, ${toSource(screens)}, window, ${toSource(guide)}).start();`;
+  return (SCRIPT = { screens, guide, source, hash: null });
+}
+export function interfaceScript(screens = [], options = {}) {
+  return release(screens, options).source;
+}
+const base64 = (hex) => btoa(hex.match(/../g).map((h) => String.fromCharCode(parseInt(h, 16))).join(""));
+/* R1: the hash the page policy names in place of a nonce (`answer-envelope` R6): `sha256-<base64>` of the script's UTF-8 bytes */
+export function interfaceScriptHash(screens = [], options = {}) {
+  const made = release(screens, options);
+  if (made.hash === null) { WORK.hashes++; made.hash = "sha256-" + base64(sha256HexSync(made.source)); }
+  return made.hash;
+}
+/* R1: the address that carries the release version (`control-plane` R75 serves the script there, `immutable`) */
+export const scriptPath = (version) => "/app/shell-" + encodeURIComponent(String(version == null || version === "" ? "0" : version)) + ".js";
+export function versionOfScriptPath(pathname) {
+  const m = /^\/app\/shell-([^/]+)\.js$/.exec(String(pathname || ""));
+  if (!m) return null;
+  try { return decodeURIComponent(m[1]); } catch { return null; }
+}
+
 /**
  * R1: the page. One document, `<html lang>` `en` until the member's language is read; `interface-assets`' `civicsmith.css`
  * and then its `shell.css` (R56), both before the shell's own `<style>`; icons referenced from its `icons.svg`; one
- * script, its nonce `NONCE_SLOT`, composed from the shell's program and each screen's functions. No member-facing text
+ * script (R1, fix round 3): external, at the address that carries the release version (`options.version`, also named in the page for the
+ * shell's `interfacewords` request, R5), its hash exported; no inline script and no nonce slot. No member-facing text
  * stands outside the words. R28: `screens` are the nine screen modules' `SCREENS`; R31: `options.guide` is
  * `screens-wizards`' `GUIDE`, the dock's wizard guide; R58: `options.testInstance` true serves the test band in the page
  * itself, above the frame, from first paint (`control-plane` R95). R56: throws for a class no served stylesheet defines.
  */
 export function interfacePage(screens = [], options = {}) {
-  checkScreens(screens);
-  const guide = options && options.guide ? options.guide : null;
-  checkGuide(guide);
-  const program = shellProgram.toString();
-  checkClasses(screens, guide, program);
-  const D = dataOf(screens, guide);
-  const script = `(${program})(${toSource(D)}, ${toSource(screens)}, window, ${toSource(guide)}).start();`
-    .replace(/<\/(script)/gi, "<\\/$1").replace(/<!--/g, "<\\!--");
+  const hash = interfaceScriptHash(screens, options);
+  const version = options && typeof options.version === "string" && options.version ? options.version : null;
   /* R58, R67: the band as served: the design's `.cs-band[data-band="test"]`, the machine icon, `instance.test.band` and
      `instance.test.notice`, in the English of their words until the member's words are read (R5) */
   const band = options && options.testInstance === true
@@ -423,7 +493,7 @@ export function interfacePage(screens = [], options = {}) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title></title>
-<link rel="stylesheet" href="${STYLESHEET}">
+${version ? `<meta name="cs-version" content="${escape(version)}">\n` : ""}<link rel="stylesheet" href="${STYLESHEET}">
 <link rel="stylesheet" href="${SHELL_STYLESHEET}">
 <style>${STYLE}</style>
 </head>
@@ -431,7 +501,7 @@ export function interfacePage(screens = [], options = {}) {
 ${band}<div id="cs-root"></div>
 <div class="sr" id="cs-live" role="status" aria-live="polite"></div>
 <div class="cs-tip" id="cs-tip" role="tooltip" hidden></div>
-<script nonce="${NONCE_SLOT}">${script}</script>
+<script src="${scriptPath(version)}" integrity="${hash}"></script>
 </body>
 </html>
 `;

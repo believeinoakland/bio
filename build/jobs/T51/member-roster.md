@@ -1,6 +1,32 @@
 # member-roster (T51)
 
-**Status** · session_013u4GnD6sY4tCk8yKGT2zGx · depth 2 · COMPLETE · handled B3
+**Status** · session_01WzR28gkdxHayrjWwZ6pTwS · depth 2 · COMPLETE · handled B6
+
+## Completion (MEMBER-ROSTER #4) · FR-07 (B4; K4165, K4168, K4169, K4202, K4204)
+
+**Requirement lines.** Written by me in `build/requirements/member-roster.md` (B5/B6), each marked *(not yet met: T51)*: R76 (C80), R77, R78 (C62's two reads, from the draft §4.3), R79 (`expertisewithdraw`, DEC-386; C79's behaviour), R80 (the declaration of `adminendorse`, `expertiseconfirm`, `expertisedeclare`, `memberpairingset` and the new `expertisewithdraw`), R81 (the census ops). R72 gained the founder; no other existing line changed.
+
+**Entries applied.**
+1. **C80 (R76).** Claimed, `memberFacts("admin")` answers `{cover: null, handle, role: "admin", status: "active"}` (`handle` her held one or null), `expertiseDeclare` and `expertiseConfirm` accept `memberId: "admin"`, `expertiseList` reads it, and `expertiseHolders` lists her (merged in member-id order). Unclaimed: `null` and `NO_SUCH_MEMBER`. A members row holding `admin` is read as before. Tests `t51-founder-member.test.mjs`; `t49-founder-handle.test.mjs` (R59) now expects her facts instead of `null`.
+2. **C62 (R77, R78).** `endorsementsOwed({by})` and `expertiseAwaitingConfirmation({by})` as the draft states them. Answer is the plain list; `truncated` is a non-enumerable property of it, so a caller who is not an administrator gets the plain `[]`. Tests `t51-owed-reads.test.mjs`.
+3. **C79 (R79).** The arm already gave "the confirmation and the declaration taken back together" for `expertiseList` (the label reads `withdrawn`, neither declared nor confirmed; `expertiseHolders` and R78 do not list it; the member may declare again), asserted in a test. One flaw found and fixed: a withdrawn label could be **confirmed again** without the member declaring it (the arm refused only a never-declared label); now `NOT_DECLARED` until she declares again.
+4. **DEC-386 (R79).** `expertiseWithdraw({memberId, label, reason, by})` / `op=expertisewithdraw`: `NOT_AN_ADMIN`, `NO_SUCH_MEMBER`, `NO_REASON`, `NOT_DECLARED`, `NOT_CONFIRMED`; one `withdrawn` entry with `by` and the reason (new nullable column `member_expertise.reason`, added at boot to an older store, `schema.mjs`); history entries carry `reason` for a withdrawal only. `expertiseconfirm` keeps its `withdraw` field and answers as before (declared as accepted, R80). Tests `t51-expertise-withdraw.test.mjs`.
+5. **DECLARED_OPS (R80, R81).** 20 ops, rows copied from the hand rows (`classes`, `machineClasses`, `mutating`, weight = the rung or ground, description = the `NON_ACTS` reason else the `RUNG_ABSENT` sentence, each `localize("member-roster.declared.<op>", ...)` with the English unchanged), fields read from the arms. `expertisewithdraw`: reasoned, `refusal: "NO_REASON"`, description the design's key `act.owed_expertisewithdraw.does`, `stamps: ["viewer", "by"]`, `needs: null`, classes as `expertiseconfirm`'s. Test `declared-ops.test.mjs`: `declaredOpHolds` through the ops map for each (21 tests); I also showed in a scratch run that a wrong declaration (a field required that is not, a field read that is not accepted) is rejected. Agreement checked in a scratch run: `op-grades`' and `op-declarations`' `registerDeclaredOps({"member-roster": DECLARED_OPS})` both accept it (18 agreed, `expertisewithdraw` and `invitelook` registered by op-grades).
+
+**Readings I took (a QUESTION posted for them; change by CHANGE if you read otherwise).** (a) `expertisedeclare`: the plane stamps `memberId` into the body (control-plane/index.mjs:2879), so the declaration accepts and requires `label` only. (b) `handlecheck` requires `invite` (the only screen that sends it is the join page; a member's own check rides her `viewer` stamp). (c) `memberadd` does not accept `expertise` (the arm reads it only to refuse it, `EXPERTISE_IS_NOT_ASSIGNED`). (d) `invitelook` has no `op-grades` row: weight `read` by K4204's rule, description mine ("read: what a live invitation offers the invitee … never the member's id"). (e) `memberpairingset` requires `memberId` only (`published` absent reads false). (f) `memberFacts("admin")` has `cover: null` (she holds none). (g) `expertiseHolders` lists the founder (R76), which `membership`'s `checkAddressees` will then apply its sight rule to. (h) `adminremove` carries `refusal: "NO_REASON"`.
+
+**Deferred.** None.
+
+**Found in other modules (also a REPORT).**
+- `membership` (composes this module since CR-4): two of its tests are red from my change, both its own to settle: `t49-founder-handle.test.mjs:33` (R68) asserts `memberFacts("admin")` is `null`; `t51-delegation.test.mjs:19` (R154) wants a same-name delegate on `Membership` for every public name of `Members`, and `expertiseWithdraw`, `endorsementsOwed`, `expertiseAwaitingConfirmation` are new. The consumers of `memberFacts` (tasks `#routeTask`, bias, credentials, actions) now see the founder as an active member when claimed: tasks routes a project she owns to her, as intended by C80, but `tasks` R1's note "earliest active administrator is the first after the founder" and its tests should be read again by that job.
+- `op-grades` tests: `t41.test.mjs:24`, `t46.test.mjs:195` (handlecheck's sentence) and `t49.test.mjs:27` (founderhandleset's) copy a sentence that my `localize` calls now hold, so the words check's `testcopy` arm fails on them; they read it through `declaredSentence` (K4206's way). I may not edit them.
+- Generated artifact stale: `bio-plane/src/setup-words/rows.mjs` (and `words-unreviewed.json`) gain 19 `member-roster.declared.*` ids, `member-roster.index.withdrawing_a_members_confirmed_expertise` and `member-roster.index.a_withdrawal_is_recorded_with_a`; `setup-words/build.mjs --check` was already stale from other modules.
+- Hand rows that can now go (they agree with `DECLARED_OPS`): the `op-declarations` and `op-grades` rows of `adminendorse`, `adminremove`, `courtnoticeset`, `enroll`, `expertiseconfirm`, `expertisedeclare`, `founderhandleset`, `groupdescriptionset`, `handlecheck`, `hostingaccessset`, `invitewithdraw`, `joinlinkenable`, `joinlinkinvite`, `memberadd`, `membercaps`, `memberpairingset`, `memberset`, `websitekeycreate`; `invitelook` has none in `op-grades`. The routing of `expertisewithdraw` (a reason-stamped door) comes from its row alone.
+- The 16 other `run.mjs` failures (coverage of `monitoring` and others, `testcopy` in `op-grades` t36/t47/t48) are not this module's.
+
+**Tests.** `node --test bio-plane/test/m/member-roster/*.test.mjs`: 206 pass, 0 fail (29 test files; the four new files hold 42 tests; the suite held 164 before). `membership` tests 174 of 176 (the two above), `queue-producers` 117 of 117. **Checks** from the process repository: `format` 0 failures; `architecture member-roster` 0; `coverage member-roster` 81 of 81 ids named, 0 failures; `words member-roster` 0 (inline 0, testcopy 0, marker 0, missingkey 0, unkeyed 0); `ownership member-roster tranche/T51 job/T51/member-roster` 0 failures.
+
+Size (session_01WzR28gkdxHayrjWwZ6pTwS): test runs 24, module lines 2923
 
 ## Completion (MEMBER-ROSTER #2) · CHANGE B3 (K4036): act phrases keyed, op details to REPORT
 
@@ -108,3 +134,22 @@ member-roster, CHANGE B3 complete. Record: build/jobs/T51/member-roster.md, sect
 (b) Two op-naming details are in a REPORT (J3), not keyed.
 
 Tests 164 pass. words.mjs member-roster 0 failures (testcopy 0). ownership 0. format 0. Merged tranche/T51 (no tranche commit touched this module).
+
+## J5 · QUESTION
+
+FR-07 (B4): eight readings of mine where the rows or the arm leave a choice; I have adopted each and finished the job on it. Say CHANGE if you read any other way. Full text: build/jobs/T51/member-roster.md, "Completion (MEMBER-ROSTER #4)", "Readings I took".
+(a) expertisedeclare accepts and requires `label` only: the plane stamps `memberId` into the body. (b) handlecheck requires `invite` (the join page is its only sender; a member's own check rides her viewer stamp). (c) memberadd does not accept `expertise` (the arm only refuses it). (d) invitelook has no op-grades row: weight `read` by K4204, description mine. (e) memberpairingset requires `memberId` only. (f) memberFacts("admin") answers `cover: null`. (g) expertiseHolders lists the founder once claimed, so membership's checkAddressees will apply its sight rule to `admin`. (h) the shape of C62's reads: a plain list with a non-enumerable `truncated`, `[]` for a non-administrator.
+
+## J6 · REPORT
+
+FR-07 found in other modules (details in my record, "Found in other modules"):
+1. membership (composes this module since CR-4): t49-founder-handle.test.mjs:33 (R68) asserts memberFacts("admin") is null, now her facts; t51-delegation.test.mjs:19 (R154) wants a delegate on Membership for each new public name: expertiseWithdraw, endorsementsOwed, expertiseAwaitingConfirmation. Its other tests pass (174 of 176). Consumers of memberFacts (tasks #routeTask, bias, credentials, actions) now see the claimed founder as an active member (C80's intent); tasks R1's "earliest active administrator is the first after the founder" should be read again by that job.
+2. op-grades tests t41:24, t46:195 (handlecheck) and t49:27 (founderhandleset) copy a sentence my localize calls now hold; the words check's testcopy arm fails on them. They should read it through declaredSentence (K4206).
+3. Generated, stale: setup-words rows.mjs and words-unreviewed.json (19 member-roster.declared.* ids plus two member-roster.index ids); regenerate at the layer close.
+4. Hand rows that can go, op-declarations and op-grades, for the 18 ops that agree: adminendorse adminremove courtnoticeset enroll expertiseconfirm expertisedeclare founderhandleset groupdescriptionset handlecheck hostingaccessset invitewithdraw joinlinkenable joinlinkinvite memberadd membercaps memberpairingset memberset websitekeycreate. expertisewithdraw and invitelook have no hand row in op-grades; expertisewithdraw has none in op-declarations either, so its routing comes from DECLARED_OPS (stamps viewer, by).
+
+## J7 · COMPLETE
+
+member-roster FR-07 (B4) complete. Record: build/jobs/T51/member-roster.md, section "Completion (MEMBER-ROSTER #4)" on job/T51/member-roster. Requirement lines R76 to R81 are written in build/requirements/member-roster.md, marked not yet met: T51 (B5/B6).
+Applied: C80 founder is a member once claimed (R76: memberFacts, expertiseDeclare, expertiseConfirm, expertiseHolders); C62 endorsementsOwed and expertiseAwaitingConfirmation (R77, R78); C79 the withdrawal reads as DEC-376 states, plus one flaw fixed (a withdrawn label could be confirmed without a new declaration; R79); DEC-386 expertiseWithdraw / op=expertisewithdraw with the reason kept (R79); DECLARED_OPS for 20 ops, each held true by declaredOpHolds through the ops map (R80, R81).
+Tests: bio-plane/test/m/member-roster, 29 files, 206 pass, 0 fail (42 new). Checks: format 0; architecture 0; coverage 81 of 81; words 0; ownership 0 failures. QUESTION J5 lists eight readings; REPORT J6 the findings in membership, op-grades and the generated rows.

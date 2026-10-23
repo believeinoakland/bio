@@ -4,7 +4,7 @@
    what was not done. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, pdf, T0 } from "./fixture.mjs";
+import { filedWorld as world, pdf, T0 } from "./fixture.mjs";
 import { FILE_SAFETY_CHECKS, THREAT_REASONS, PROVIDER_REASON_WORDS, FINDING_KINDS, fileSafetyOps } from "../../../src/file-safety/index.mjs";
 import { PROVIDERS } from "../../../../file-scanner/src/providers/catalogue.mjs";
 import { canonicalJson, sha256HexSync } from "../../../src/record-grammar/index.mjs";

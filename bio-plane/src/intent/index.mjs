@@ -454,7 +454,7 @@ export class Intent {
     if (c && isObj(c.filter) && "amount" in c.filter) c.filter = { ...c.filter, amount: amountShape(c.filter.amount).amount };
     const at = this.#when();
     let text = removeBlock(p.doc.text, CONDITION_KEY);
-    if (c) text = setBlock(text, CONDITION_KEY, conditionLines(c, str(author), at));
+    if (c) text = setBlock(text, CONDITION_KEY, conditionLines(c, str(author), at, why));
     text = setField(text, "last_updated", q(at));
     text = logEntry(text, at, c ? word("intent.objective_condition_set") : word("intent.objective_condition_removed"), str(author),
                     `${c ? `the objective's satisfaction condition is ${JSON.stringify(c)}.` : "the objective states no condition."}`
@@ -665,6 +665,7 @@ export class Intent {
     const why = n === 0 ? word("intent.instance_matches_condition")
       : m.truncated ? word("intent.instances_match_condition", { measure_max: String(MEASURE_MAX) }) : null;
     return { ok: true, project, objective, condition: held.condition, set_by: held.set_by, set_at: held.set_at,
+             set_reason: held.set_reason,
              computable: true, matched: n, meeting: k, short: m.short, undetermined: m.undetermined, satisfied,
              ...(why ? { satisfied_why: why } : {}), limit: MEASURE_MAX, truncated: m.truncated,
              instances: { meeting: m.meeting }, computed_at };

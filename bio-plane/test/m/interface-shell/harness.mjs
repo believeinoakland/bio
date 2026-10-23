@@ -3,7 +3,7 @@
    page makes is recorded with its address, op, query, headers and body; the plane answers each op from a table (a value,
    a refusal, no answer, or never), with the frame's own reads answered by default. Timers are a fake clock, so the
    explanations' timings (R14) are read exactly. */
-import { interfacePage, NONCE_SLOT } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, interfaceScript, NONCE_SLOT } from "../../../src/interface-shell/index.mjs";
 import { webcrypto } from "node:crypto";
 import { fileURLToPath } from "node:url";
 import { declaredOpsOf } from "../../declared-ops.mjs";
@@ -41,6 +41,17 @@ const COLLECTED = await declaredOpsOf(fileURLToPath(new URL("../../../../", impo
 /* the owners' rows, `{op: declaration}`, as `test-support`'s one collector finds them; an op it lists as a duplicate fails (`declared.test.mjs`) */
 export const collectedDuplicates = () => COLLECTED.duplicates.slice();
 export function collectOwnerRows() { return COLLECTED.ops; }
+/* a stand-in's `send` for a real op: the fields its owner requires, read through the collector (K3268) and carried into the page as
+   data, with `extra` (an expression of view, el and cs) over them. A screen's function is self-contained, so it is built from source. */
+export const fitSend = (op, extra = "{}") => new Function("view", "el", "cs", "extra", `return { body: Object.assign(${JSON.stringify(declaredFit(op))}, ${extra}) };`);
+/* a request body a stand-in screen sends for a real op: exactly the fields its owner requires (the first alternative of a list), read
+   through the collector and never copied by hand (K3268), with `extra` over them */
+export function declaredFit(op, extra = {}) {
+  const row = COLLECTED.ops[op];
+  const body = {};
+  if (row && row.fields) for (const need of row.fields.requires || []) { const f = Array.isArray(need) ? need[0] : need; body[f] = "x"; }
+  return { ...body, ...extra };
+}
 const isRow = (r) => !!(r && typeof r === "object" && r.fields && typeof r.fields === "object");
 const flat = (list) => (Array.isArray(list) ? list : []).flatMap((x) => (Array.isArray(x) ? x : [x]));
 /* the field names a request carries: its query (less the marks the shell adds) and a JSON object body */
@@ -70,11 +81,14 @@ const undeclared = new Map();
 /* the ops that went out with no owner declaration, counted over the process (R104: `declared N of M ops`) */
 export const undeclaredOps = () => new Map(undeclared);
 
+/* a plane's `queue` answer for a list of items: the count (R93) when asked for it, else the list, as the queue answers both */
+export const queueOf = (items) => (req) => (req.query && req.query.count ? ok({ ok: true, member: "mai", count: items.length }) : ok({ items }));
 export const FRAME = Object.freeze({
   whoami: ok(MEMBER),
   interfacewords: ok({ ok: true, language: null, words: [] }),
   groupidentity: ok({ ok: true, group: "river-town", display_name: "River Town" }),
-  queue: ok({ items: [{ id: "a", class: "OBLIGATION" }, { id: "b", class: "FINDING" }, { id: "c", class: "OBLIGATION" }] }),
+  /* queue R93: the frame asks for the count alone (`count=true`) and a screen for the list */
+  queue: (req) => (req.query && req.query.count ? ok({ ok: true, member: "mai", count: 3 }) : ok({ items: [{ id: "a", class: "OBLIGATION" }, { id: "b", class: "FINDING" }, { id: "c", class: "OBLIGATION" }] })),
   infolevel: ok({ level: "prompt", set_at: null, asked_at: null }),
   assistantstate: ok({ on: false }),
   accountreference: ok({ held: false }),
@@ -89,7 +103,14 @@ export const STORE_KEY = "bio-session";
 
 /* One response as the door makes it (answer-envelope R6): a fresh nonce in every slot. */
 export function served(html, nonce = "n0nce") { return html.split(NONCE_SLOT).join(nonce); }
-export const scriptOf = (html) => { const at = html.lastIndexOf("<script"); return html.slice(html.indexOf(">", at) + 1, html.lastIndexOf("</script>")); };
+/* the shell's script of a page: the external script (R1, fix round 3) is `interfaceScript` over the screens and guide the page was built from;
+   a page that still holds an inline script (another module's HTML) gives that text */
+export const scriptOf = (html, screens, options = {}) => {
+  if (screens !== undefined) return interfaceScript(screens, options);
+  const at = html.lastIndexOf("<script");
+  if (/<script\b[^>]*\bsrc=/i.test(html.slice(at, html.indexOf(">", at) + 1))) throw new Error("scriptOf: the page's script is external; pass the screens it was built from");
+  return html.slice(html.indexOf(">", at) + 1, html.lastIndexOf("</script>"));
+};
 
 const tick = () => new Promise((r) => setImmediate(r));
 export async function settle(n = 40) {
@@ -138,8 +159,9 @@ export function fakeIndexedDB(dbs = new Map()) {
  * Answers `{doc, win, requests, root, clock, settle, click, fire, back, assigned, store, local, byOp, location, ...}`:
  * `store` is the tab's sessionStorage, `local` its localStorage.
  */
-export async function boot({ screens = [], plane = {}, session = SESSION, path = "/app", hash = "", phone = false, local = {}, localThrows = false, html, run = true, tabs: group = null, idb = new Map(), guide = null, testInstance = false, declared = collectOwnerRows() } = {}) {
-  html = html || served(interfacePage(screens, { ...(guide ? { guide } : {}), ...(testInstance ? { testInstance } : {}) }));
+export async function boot({ screens = [], plane = {}, session = SESSION, path = "/app", hash = "", phone = false, local = {}, localThrows = false, tabStore = null, tabThrows = false, html, run = true, tabs: group = null, idb = new Map(), guide = null, testInstance = false, version = null, declared = collectOwnerRows() } = {}) {
+  const options = { ...(guide ? { guide } : {}), ...(testInstance ? { testInstance } : {}), ...(version ? { version } : {}) };
+  html = html || served(interfacePage(screens, options));
   const doc = documentOf(html);
   const requests = [], polls = [];
   const answers = { ...FRAME, ...plane };
@@ -147,7 +169,7 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
     const u = new URL(url, "https://group.example");
     /* R92: the version poll is a plain-text address of its own, not an op */
     const op = u.pathname === "/version" ? "version" : u.searchParams.get("op");
-    const req = { url: String(url), op, query: Object.fromEntries(u.searchParams), init, headers: { ...(init.headers || {}) },
+    const req = { url: String(url), op, at: performance.now(), query: Object.fromEntries(u.searchParams), init, headers: { ...(init.headers || {}) },
       body: init.body === undefined ? undefined : typeof init.body === "string" ? safeJson(init.body) : init.body, method: init.method || "GET" };
     /* R92: the version poll is a plain-text address of its own, no op: kept apart from `requests`, which are the op door's */
     (op === "version" ? polls : requests).push(req);
@@ -186,7 +208,8 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
     async tick(ms) { const end = now + ms; for (;;) { const due = timers.filter((t) => t.f && t.at <= end).sort((a, b) => a.at - b.at)[0]; if (!due) break; now = due.at; const f = due.f; due.f = null; f(); await settle(5); } now = end; },
   };
   const assigned = [];
-  const store = new Map();
+  /* `tabStore` (a Map, from an earlier page's `store`) is the same tab's sessionStorage carried to a page load that follows; `tabThrows` a sessionStorage that denies every use (G12b) */
+  const store = tabStore || new Map();
   const localMap = group ? group.local : new Map();
   for (const [k, v] of Object.entries(local)) localMap.set(k, v);
   if (session) localMap.set(STORE_KEY, JSON.stringify(session));
@@ -200,7 +223,7 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
   const win = {
     document: doc, fetch, location,
     history: { pushState: (s, t, u) => go(u), replaceState: (s, t, u) => go(u) },
-    sessionStorage: { getItem: (k) => store.get(k) ?? null, setItem: (k, v) => store.set(k, String(v)), removeItem: (k) => store.delete(k) },
+    sessionStorage: { getItem: (k) => { if (tabThrows) throw new Error("denied"); return store.get(k) ?? null; }, setItem: (k, v) => { if (tabThrows) throw new Error("denied"); store.set(k, String(v)); }, removeItem: (k) => { if (tabThrows) throw new Error("denied"); store.delete(k); } },
     localStorage: {
       getItem: (k) => { if (throwsFor(k)) throw new Error("denied"); return localMap.get(k) ?? null; },
       setItem: (k, v) => { if (throwsFor(k)) throw new Error("denied"); localMap.set(k, String(v)); tell(k); },
@@ -228,7 +251,7 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
     /* the page's clock is the fake one: `Date.now()` advances with `clock.tick` (cs.now, K3002) */
     const base = Date.now();
     const FakeDate = class extends Date { static now() { return base + clock.at(); } };
-    new Function("window", "setTimeout", "clearTimeout", "Date", scriptOf(html))(win, clock.setTimeout, clock.clearTimeout, FakeDate);
+    new Function("window", "setTimeout", "clearTimeout", "Date", scriptOf(html, screens, options))(win, clock.setTimeout, clock.clearTimeout, FakeDate);
     await settle();
   }
   page.byOp = (op) => (op === "version" ? polls : requests).filter((r) => r.op === op);

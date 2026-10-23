@@ -40,7 +40,7 @@ The case document's grammar, one spelling for every module: the formats and thei
 #### The case's method, its materials and the case file (DEC-112; DEC-119)
 
 - **R11** The case document's `method:` block, `{grading, checks}`. `grading` is the grading method's version (`strength` R31). `checks` is the catalogue version the document was checked under (`promotion`'s `CATALOG_VERSION`). `methodOf(fm)` reads it back. A document without it answers null. Pure; never throws. (DEC-112 (3): "the version of the method and checks inside the signed case")
-- **R12** The case document's `materials:` block has one row per document or observation that any member's chain reaches: `{ref, kind, sha, text_sha, origin, archived_copy, included, rests_under}`.
+- **R12** The case document's `materials:` block has one row per document or observation that any member's chain reaches: `{ref, kind, sha, text_sha, origin, archived_copy, included, rests_under, title}`; `title` (fix round 4, C47; K4438) is the document's title as its capture holds it, `null` when it has none or for an observation, and a row written before it may lack it (a signed case is never rewritten).
   - `kind` is `document` or `observation`.
   - `included` is true when the material travels whole, and false when only its fingerprint, origin and archived copy travel.
   - `rests_under` is `load_bearing` when any load-bearing member's chain reaches it, else `supporting`.

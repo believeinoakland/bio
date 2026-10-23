@@ -45,3 +45,25 @@ test("R77: an unreadable source answers minutes {undetermined: true} and no rows
   assert.equal(refused.first.reason, "NO_STATEMENT");
   assert.deepEqual(sign(refused).minutes, { undetermined: true });
 });
+
+test("R77 (fix round 3, K4332): a source that answers no list, one that answers a malformed row, and the door not bound each answer minutes {undetermined: true} and no rows, never [] and never a row filled in; reached rows are unchanged (control)", () => {
+  const { w, P } = setup();
+  const reached = w.ci.registerMinutesComparisons("filings", { minutesComparisonsOn: () => ROWS });
+  assert.equal(reached.ok, true);
+  const good = sign(w.ca.publishPreflight(act(P))).minutes;
+  assert.deepEqual(good, ROWS.map((r) => ({ ...r, ...minutesLine(r) })), "control: reached minutes are unchanged");
+  const ask = (answer) => {
+    const x = setup();
+    x.w.ci.registerMinutesComparisons("filings", { minutesComparisonsOn: () => answer });
+    return sign(x.w.ca.publishPreflight(act(x.P))).minutes;
+  };
+  assert.deepEqual(ask("rows"), { undetermined: true });
+  assert.deepEqual(ask(undefined), { undetermined: true });
+  assert.deepEqual(ask([ROWS[0], { meeting: "the Planning Commission" }]), { undetermined: true });
+  const x = setup();
+  x.w.ci.registerMinutesComparisons("filings", { minutesComparisonsOn: () => ROWS });
+  x.w.ci.minutesComparisonsOn = undefined;   /* the door not bound on the instance the step asks */
+  const pre = x.w.ca.publishPreflight(act(x.P));
+  assert.deepEqual(sign(pre).minutes, { undetermined: true });
+  assert.equal(pre.first, null);
+});

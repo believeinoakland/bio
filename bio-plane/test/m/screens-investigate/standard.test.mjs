@@ -1,7 +1,7 @@
 /* screens-investigate R8: a standard the city set itself, on interface-shell's served page over a scripted plane. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ok } from "../interface-shell/harness.mjs";
+import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import { open, main, actsIn, button, fill, press, plane, STD, P, SHA, STD_PROPOSALS, word, drew, notDrew, dayOf } from "./fixtures.mjs";
 
 const at = "/app/standard/" + STD;
@@ -83,4 +83,65 @@ test("R34 the standard's text is a document chosen on screen, never typed conten
   fill(none, { "st-cite": "c", "st-issuer": "i" });
   await press(none, "standarddeclare", { reason: "r" });
   assert.equal(none.byOp("standarddeclare").length, 0);
+});
+
+/* R51 (T51; DEC-375, C40) */
+test("R51 a date sends standardinforce with the declared fields and draws the owner's answer, including not in force; control: no date sends nothing", async () => {
+  const inForce = (r) => ok({ ok: true, id: STD, date: r.query.date, state: r.query.date < "2023-01-01" ? "not_in_force" : "in_force",
+    why: r.query.date < "2023-01-01" ? "the period starts after that day" : "that day lies within the period" });
+  const p = await open(at, { plane: { standardinforce: inForce } });
+  const sec = main(p).querySelectorAll("section").find((x) => x.querySelector("h2").textContent === word("screen.standard.inforce.heading"));
+  assert.ok(sec, "the section is drawn with the standard");
+  drew(sec, "screen.standard.inforce.refused.summary");
+  assert.ok(sec.textContent.includes(word("screen.standard.inforce.day.label")), "the day field is labelled by its key (B419 2)");
+  await press(p, "standardinforce");
+  assert.equal(p.byOp("standardinforce").length, 0, "no day, nothing sent");
+  fill(p, { "st-inforce-day": "2026-10-08" });
+  await press(p, "standardinforce");
+  assert.deepEqual(p.byOp("standardinforce")[0].query, { op: "standardinforce", id: STD, date: "2026-10-08" }, "the op is the request's; the declared fields are id and date");
+  let shown = main(p).querySelector('[data-inforce="in_force"]');
+  assert.ok(shown && shown.textContent.includes("that day lies within the period"));
+  drew(shown, "screen.standard.inforce.result.line", { date: dayOf("2026-10-08"), state: word("screen.standard.inforce.state.in_force") });
+  drew(shown.parentElement, "screen.standard.inforce.result.meta", { from: dayOf("2023-01-01") });
+  fill(p, { "st-inforce-day": "2022-05-01" });
+  await press(p, "standardinforce");
+  shown = main(p).querySelector('[data-inforce="not_in_force"]');
+  assert.ok(shown && shown.textContent.includes("the period starts after that day"), "not in force is drawn with its reason");
+  drew(shown, "screen.standard.inforce.result.line", { date: dayOf("2022-05-01"), state: word("screen.standard.inforce.state.not_in_force") });
+  assert.equal(main(p).querySelector('[data-inforce="in_force"]'), null);
+  const und = await open(at, { plane: { standardinforce: ok({ ok: true, id: STD, date: "2026-10-08", state: "undetermined", why: "the standard states no period" }) } });
+  fill(und, { "st-inforce-day": "2026-10-08" });
+  await press(und, "standardinforce");
+  assert.ok(main(und).querySelector('[data-inforce="undetermined"] .cs-gap'), "undetermined is the gap mark with its reason");
+  drew(main(und).querySelector('[data-inforce="undetermined"]'), "screen.standard.inforce.result.line", { date: dayOf("2026-10-08"), state: word("screen.standard.inforce.state.undetermined") });
+  const bad = await open(at, { plane: { standardinforce: refusedIn("DATE_INVALID", "That day does not exist.") } });
+  fill(bad, { "st-inforce-day": "2026-02-30" });
+  await press(bad, "standardinforce");
+  assert.equal(bad.byOp("standardinforce").length, 1);
+  assert.ok(main(bad).textContent.includes("That day does not exist.") || main(bad).textContent.includes(word("refusal.DATE_INVALID")), "a refusal beside the act");
+  const proj = await open("/app/standard/" + P);
+  assert.equal(proj.doc.getElementById("st-inforce-day"), null, "control: a project's page (no standard) asks no date");
+});
+
+/* R56, R57 (T51; DEC-384 I-30) */
+const crumbs = (p) => main(p).querySelector("nav.cs-crumbs");
+test("R56 R57 the path of a standard under a project names the project by its title and the last step says which standard; control: an unreadable project is the unjoined key, never its id", async () => {
+  const p = await open("/app/standard/" + P);
+  const nav = crumbs(p);
+  assert.ok(nav.textContent.includes("Pothole repairs"), "the project's title");
+  assert.ok(!nav.textContent.includes(P), "never the id");
+  const lost = await open("/app/standard/" + P, { plane: { image: refusedIn("NO_SUCH_BUNDLE", "Not found.") } });
+  const nl = crumbs(lost);
+  assert.ok(nl.textContent.includes(word("crumb.project.unjoined")), "the unjoined key's word");
+  assert.ok(!nl.textContent.includes("PROJ-"), "no PROJ- text");
+  assert.ok(nl.textContent.includes(word("screen.standard.name")) || nl.textContent.includes(word("screen.standard.crumb", { name: "x" }).replace("x", "")), "the last step names the standard screen");
+});
+
+test("R57 the last step of a standard's own page is screen.standard.crumb with the standard's citation", async () => {
+  const p = await open(at);
+  const nav = crumbs(p);
+  assert.ok(nav.textContent.includes(word("screen.standard.crumb", { name: "Administrative Instruction 9.1, §2" })), "Standard: <cite>");
+  const onProject = await open("/app/standard/" + P);
+  assert.ok(crumbs(onProject).textContent.includes(word("screen.standard.name")), "control: a project's page names no standard, so the last step is the screen's own name");
+  assert.ok(!crumbs(onProject).textContent.includes(word("screen.standard.crumb", { name: "" }).trim()), "and not the crumb word");
 });

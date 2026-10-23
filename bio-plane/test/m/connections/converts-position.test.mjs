@@ -96,7 +96,7 @@ test("Terms, R1, R4 (converts reading-position): a connection is exactly its 14 
   assert.equal(byC.ok, true); assert.equal(byC.count, 2); assert.equal(byC.capture_sha, a);
   for (const k of byC.connections) {
     assert.ok([k.a_capture_sha, k.b_capture_sha].includes(a));
-    assert.deepEqual(Object.keys(k).sort(), CONNECTION_KEYS);
+    assert.deepEqual(Object.keys(k).sort(), [...CONNECTION_KEYS, "mentions", "mentions_truncated"].sort(), "R70: the capture arm adds the document's mentions, and nothing else");
   }
 
   /* Neither end placed: the third form of the basis, positioned false, both positions null. */

@@ -7,6 +7,9 @@ import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
 import { open, main, actsIn, fill, press, says, word, rawKeys, SCREENS, P } from "./fixtures.mjs";
 
+/* every owner's declarations, registered once before the first read (test-support R17, K4245): the project's acts name ops its owners declare */
+
+
 const at = "/app/project/" + P;
 /* a day as `cs.date` draws it, read through the same words (DEC-333), never copied */
 const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
@@ -143,10 +146,11 @@ test("R75 a three-owner project: 2 of 3 on the live row; the owner standing down
 
 test("R75 a vote she already cast draws as cast and offers no second; the plane's ALREADY_VOTED and NO_REASON are drawn by their words", async () => {
   const votes = ok({ ok: true, projectId: P, changes: [{ change: "remove", target: "mai", proposed_by: "mai", proposed_at: "2026-10-09T09:00:00Z", agreed: ["mai"], awaiting: ["dev"] }] });
-  const p = await opened({ projectparticipants: TWO, projectownerarith: arith(2), projectownervotes: votes });
-  assert.equal(checks(p)[3].getAttribute("data-holds"), "yes", "a vote she already cast draws as cast");
-  assert.equal(stateE(p).querySelector('[data-vote-for="mai"]').getAttribute("data-voted"), "yes");
-  assert.equal(stateE(p).querySelectorAll('button[data-act="projectownerremove"]').length, 0, "and no second is offered");
+  /* R122: with her removal already waiting, her row says the vote is open and offers no second stand-down */
+  const p = await open(at, { plane: { projectparticipants: TWO, projectownerarith: arith(2), projectownervotes: votes } });
+  const mine = main(p).querySelectorAll(".cs-row").find((r) => r.textContent.includes("mai"));
+  assert.ok(says(mine, "project.owners.standdown.opened", { awaiting: "dev" }));
+  assert.equal(mine.querySelectorAll('button[data-act="projectownerremove"]').length, 0, "and no second is offered");
   for (const code of ["ALREADY_VOTED", "NO_REASON", "LAST_OWNER", "NOT_AN_OWNER"]) assert.ok(hasWord("refusal." + code), code);
   const refused = await opened({ projectparticipants: TWO, projectownerarith: arith(2), projectownerremove: refusedIn("ALREADY_VOTED") });
   fill(refused, { "project-ownerstand-reason": "again" });
@@ -161,13 +165,12 @@ test("R75 controls: a member who is not an owner is drawn no stand-down and no c
   assert.ok(!actsIn(main(m)).includes("projectownerremove"), "no owner act");
   assert.equal(checks(m).length, 0);
   assert.equal(m.byOp("projectownerarith").length, 0, "and the table is not read for her");
-  /* the last owner: standing down is not possible at this size; the act is not offered, and the reason is her refusal's words */
-  const p = await opened({ projectparticipants: SOLE, projectownerarith: arith(1) });
-  const c = checks(p);
-  assert.equal(c[2].getAttribute("data-holds"), "no");
-  assert.ok(says(c[2], "refusal.LAST_OWNER"));
-  assert.equal(c[1].getAttribute("data-holds"), "no", "and no other owner is named");
-  assert.equal(stateE(p).querySelectorAll('button[data-act="projectownerremove"]').length, 0);
+  /* the last owner: standing down is not possible at this size, so (fix round 2, C90) the entry act is not drawn at all, and the row
+     says to add another owner first; no panel opens and nothing is read for it */
+  const p = await open(at, { plane: { projectparticipants: SOLE, projectownerarith: arith(1) } });
+  assert.ok(!actsIn(main(p)).includes("projectownerremove"), "no stand-down act for the only owner");
+  assert.equal(main(p).querySelectorAll('[data-state-e]').length, 0, "no panel with a vote that could never carry");
+  assert.ok(says(main(p).querySelector('[data-standdown="sole"]'), "refusal.LAST_OWNER"));
   assert.equal(p.byOp("projectownerremove").length, 0);
   /* a table that cannot be read is drawn failed, never as a table of zeros */
   const f = await opened({ projectparticipants: TWO, projectownerarith: refusedIn("SOME_REFUSAL", "Could not read it.") });

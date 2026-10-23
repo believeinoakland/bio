@@ -56,13 +56,13 @@ function render(cs, view) {
     const members = Array.isArray(t.members) ? t.members : [];
     const hunches = Array.isArray(t.hunches) ? t.hunches : [];
     const ended = Array.isArray(t.withdrawn) ? t.withdrawn : [];
-    const placedRow = (m) => cs.row("", `<b>${target(m.target, m.target_kind)}</b> <span class="mk-small">${cs.w(S + "placed.by", { who: handle(m.placed_by_handle), date: day(m.placed_at), note: cs.esc(m.note || "") })}</span>`
-      + (m.proposed_by_handle ? `<br><span class="mk-small">${cs.mark("hunch")} ${cs.w(S + "hunch.mark")} · ${cs.w(S + "hunch.by", { who: handle(m.proposed_by_handle), date: day(m.proposed_at), note: cs.esc(m.proposal_note || "") })}</span>` : ""),
+    const placedRow = (m) => cs.row("", `<b>${target(m.target, m.target_kind)}</b> <span class="mk-small">${cs.w(S + "placed.by", { who: handle(m.placed_by_handle), date: day(m.placed_at), note: m.note || "" })}</span>`
+      + (m.proposed_by_handle ? `<br><span class="mk-small">${cs.mark("hunch")} ${cs.w(S + "hunch.mark")} · ${cs.w(S + "hunch.by", { who: handle(m.proposed_by_handle), date: day(m.proposed_at), note: m.proposal_note || "" })}</span>` : ""),
     mine(m.placed_by_handle) ? cs.act("themewithdraw", { label: S + "takeout", data: { target: m.target } }) : "");
-    const hunchRow = (m) => cs.row(cs.mark("hunch"), `<b>${target(m.target, m.target_kind)}</b> <span class="mk-small">${cs.w(S + "hunch.by", { who: handle(m.proposed_by_handle), date: day(m.proposed_at), note: cs.esc(m.proposal_note || "") })}</span>`,
+    const hunchRow = (m) => cs.row(cs.mark("hunch"), `<b>${target(m.target, m.target_kind)}</b> <span class="mk-small">${cs.w(S + "hunch.by", { who: handle(m.proposed_by_handle), date: day(m.proposed_at), note: m.proposal_note || "" })}</span>`,
       cs.act("themeplace", { label: S + "confirm", data: { target: m.target } }) + cs.act("themewithdraw", { label: S + "reject", data: { target: m.target } }));
     const endedRow = (m) => cs.row("", `<b>${target(m.target, m.target_kind)}</b>`
-      + `<br><span class="mk-small">${cs.w(m.state === "rejected" ? S + "out.rejected" : S + "out.withdrawn", { who: handle(m.ended_by_handle), date: day(m.ended_at), reason: cs.esc(m.reason || "") })}</span>`);
+      + `<br><span class="mk-small">${cs.w(m.state === "rejected" ? S + "out.rejected" : S + "out.withdrawn", { who: handle(m.ended_by_handle), date: day(m.ended_at), reason: m.reason || "" })}</span>`);
     return `<p class="mk-sub">${cs.w(S + "test.label")}: ${cs.esc(t.test)}</p><p class="mk-small">${cs.w(S + "declared", { who: handle(t.declared_by_handle), date: day(t.at) })}</p>`
       + (members.length ? cs.sec(S + "placed", cs.sheet(members.map(placedRow).join(""))) : "")
       + (hunches.length ? cs.sec(S + "hunches", `<p class="mk-note">${cs.w(S + "hunch.note")}</p>` + cs.sheet(hunches.map(hunchRow).join(""))) : "")
@@ -81,7 +81,7 @@ const acts = [
         const r = a && a.result !== undefined ? a.result : a;
         const refused = !a || a.ok === false || (r && (r.ok === false || typeof r.refused === "string"));
         view.data.themes = refused
-          ? { state: "failed", value: null, refusal: { code: String((r && (r.code || r.reason)) || ""), words: cs.esc((r && r.translation) || (a && a.translation) || cs.w("shell.noanswer")) } }
+          ? { state: "failed", value: null, refusal: { code: String((r && (r.code || r.reason)) || ""), words: (r && r.translation) || (a && a.translation) ? cs.esc((r && r.translation) || (a && a.translation)) : cs.w("shell.noanswer") } }
           : (!r || !Array.isArray(r.themes) || !r.themes.length ? { state: "empty", value: r, refusal: null } : { state: "ok", value: r, refusal: null });
         cs.set("searched", q);
       });

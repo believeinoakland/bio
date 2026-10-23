@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { word } from "../../../src/setup-words/index.mjs";
-import { A, C, O, world, gate, refused, member, hex64, aik, cred, PLACES } from "./harness.mjs";
+import { A, C, O, world, gate, refused, member, hex64, aik, cred, PLACES, arranged } from "./harness.mjs";
 
 const { UNATTENDED_BY_DECISION } = O;
 
@@ -23,7 +23,7 @@ async function sweep() {
   await d({ op: "promote", token: lack });                                           /* C-38.5 */
   await d({ op: "index", token: env.PROBE_TOKEN, params: { store: "bio" }, method: "GET" }); /* C-38.6 */
   await d({ op: "governorconfig", token: S.ann });                                   /* C-38.7 */
-  out.push(A.sessionOpGate("member", "export", O.OPS.export, "POST"));               /* C-38.8 */
+  out.push(A.sessionOpGate("member", "purge", O.OPS.purge, "POST", arranged((m, a, d) => { delete d.purge; })));               /* C-38.8 */
   await d({ op: "index", params: { store: "nope" } });                               /* C-78.1 */
   await d({ op: "knock", params: { store: "scratch" } });                            /* C-78.2 */
   await d({ op: "index", token: K.confined, params: { store: "bio" } });             /* C-78.3 */

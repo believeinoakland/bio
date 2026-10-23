@@ -56,8 +56,9 @@
  *
  * READ CONTRACTS it joins in its own SQL: record-core's `bundles` (`bundle_id`, `object_type`, `current_state`) and
  * `files` (`bundle_id`, `path`, `content`), its R37 (R12's findings, R19's project); publication's `cases`
- * (`case_id`, `project_id`), `published_cases` (`case_id`, `edition`) and `case_documents` (`case_id`, `edition`,
- * `doc_sha`, `text`, `draft_id`, `sig_armored`), its R40 (R3, R5, R31, R33).
+ * (`case_id`, `project_id`), `published_cases` (`case_id`, `edition`, `scope`), `published_case_members` (`case_id`,
+ * `edition`, `ord`, `bundle_id`, `role`; R39's starting point) and `case_documents` (`case_id`, `edition`,
+ * `doc_sha`, `text`, `draft_id`, `sig_armored`), its R40 (R3, R5, R31, R33, R39).
  *
  * READ CONTRACT it states (R26): `case_drafts` (`draft_id`, `case_id`, `project_id`, `params`, `statement_by`,
  * `created_at`), on record-core R37's terms, which `case-inputs`' statement writer (its R3) reads under
@@ -69,14 +70,14 @@ import { strengthOf } from "../strength/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
 import { caseTensionsOf } from "../case-tensions/index.mjs";
-import { caseAuthoringOf } from "../case-authoring/index.mjs";
+import { caseAuthoringOf, AUTHORED_FIELDS, ACT_FIELDS, MEMBER_ROLES } from "../case-authoring/index.mjs";
 import { caseInputsOf } from "../case-inputs/index.mjs";
 import { caseAccountOf } from "../case-account/index.mjs";
-import { ratificationOf } from "../ratification/index.mjs";
+import { ratificationOf, SUBJECT_POSITIONS } from "../ratification/index.mjs";
 import { localFactsOf } from "../local-facts/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import * as caseGrammar from "../case-grammar/index.mjs";
-import { isMachineIdentity, parseFrontmatter } from "../record-grammar/index.mjs";
+import { isMachineIdentity, parseFrontmatter, HEADINGS } from "../record-grammar/index.mjs";
 import { REVIEW_COPY_CHECKS } from "./checks.mjs";
 import { REVIEW_TABLES, migrateReview } from "./schema.mjs";
 import { word, localize } from "../setup-words/index.mjs";
@@ -84,9 +85,11 @@ import { word, localize } from "../setup-words/index.mjs";
 export { REVIEW_COPY_CHECKS } from "./checks.mjs";
 export { REVIEW_SCHEMA, REVIEW_TABLES } from "./schema.mjs";
 
-/** R4: the fields of `op=publish` a draft keeps; every other field of the act is dropped. */
-export const REVIEW_DRAFT_FIELDS = Object.freeze(["targets", "target", "caseId", "newCase", "scope", "statement",
-  "excluded", "subjectPosition", "subjectJustification", "biasAcknowledgement", "roles"]);
+/** R4, R37 (K4209): the fields of `op=publish` a draft keeps, derived and never hand-listed from `case-authoring`'s R65
+ *  (its `AUTHORED_FIELDS` and `ACT_FIELDS`), less the four that are not a draft's arguments: `project` and `draft` name
+ *  this module's own act, `viewer` and `author` are the control plane's stamps. Every other field of the act is dropped. */
+export const REVIEW_DRAFT_FIELDS = Object.freeze([...new Set([...AUTHORED_FIELDS, ...ACT_FIELDS])]
+  .filter((k) => !["project", "draft", "viewer", "author"].includes(k)));
 /** R3: a draft's arguments as JSON, at most the size `op=publish` would accept. */
 export const REVIEW_DRAFT_MAX = 64 * 1024;
 /** R18: a comment's trimmed text. */
@@ -102,6 +105,10 @@ export const APPROVAL_REASON_MAX = 4000;
  *  earlier in the order, reads `case_drafts` under the same bound and keeps its own copy of it, `DRAFTS_READ_MAX`
  *  (its R3; K242). */
 export const REVIEW_LIST_MAX = 500;
+/** R19 (G12c): the most projects one `casedrafts` read names, and the most drafts one `reviewcopy` read names. A longer
+ *  list is refused whole (`REVIEW_BATCH_TOO_LARGE`), never answered in part. */
+export const REVIEW_BATCH_LISTS_MAX = 50;
+export const REVIEW_BATCH_COPIES_MAX = 20;
 /** R11: the marking every copy carries. Read by members and by recipients outside the group, so it names no machine
  *  and addresses no one as the group (DEC-149, T34-87). */
 export const REVIEW_MARKING = word("review.review_marking");
@@ -121,6 +128,14 @@ function validInstant(s) {
 function refusal(code, detail, extra) {
   const row = REVIEW_COPY_CHECKS[code];
   return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
+}
+
+/* R10, R19 (G12c): a batch longer than its bound is refused whole, naming the bound. */
+function batchTooLarge(max) {
+  /* DEC-49 REGION is-review-batch-too-large */
+  return refusal("REVIEW_BATCH_TOO_LARGE",
+           localize("review.index.a_batch_names_at_most", "a batch names at most {max} ids; ask for the rest in another call. Nothing was read.", { max: String(max) }), { max });
+  /* END DEC-49 REGION is-review-batch-too-large */
 }
 
 /** R10: THE ONE DEAD ANSWER. A revoked grant, a grant whose draft has moved to another edition, a secret that never
@@ -169,7 +184,7 @@ export function caseIdentitySentence(caseId, edition, newCase) {
     return word("review.text.next_edition_draft", { edition: String(edition), case_id: String(caseId) });
   if (caseId) return word("review.text.next_edition", { edition: String(edition), case_id: String(caseId) });
   if (newCase) return word("review.text.new_case_whose");
-  return localize("review.index.derived_case_identity", "a case this draft does not name and publication DERIVES, so which case it is stays UNDETERMINED here: the draft names no case and does not ask for a new one, so publication reads the record at that moment — a further edition of the one case its findings already serve, a refusal to choose if they serve several, and a new case only if they serve none and no prepared, unsigned edition claims them");
+  return localize("review.index.derived_case_identity", "a draft that does not name a case yet; which case it becomes is settled when it is published");
 }
 
 /* The statement as a case document PRINTS it: the frontmatter-safe normalisation the acknowledgements hash, so two
@@ -180,6 +195,14 @@ const printed = (s) => String(s ?? "").replace(/[\r\n]+/g, " ").replace(/["\\]/g
 function listCap(limit) {
   const asked = Number.parseInt(String(limit ?? ""), 10);
   return Number.isInteger(asked) && asked >= 1 ? Math.min(asked, REVIEW_LIST_MAX) : REVIEW_LIST_MAX;
+}
+
+/* R10, R19 (G12c): the ids a batch names, from a list or a comma-separated string, each once in the order given; blanks and
+   anything that is not text are dropped. `null` when the key was not sent at all (the single read applies). */
+function idList(v) {
+  if (v === undefined || v === null) return null;
+  const raw = Array.isArray(v) ? v : typeof v === "string" ? v.split(",") : [];
+  return [...new Set(raw.filter((x) => typeof x === "string").map((x) => x.trim()).filter(Boolean))];
 }
 
 /** R17 (REC-200, BOB #32's ruling of 2026-09-23 on §6A.3 point 1): THE COPY CARRIES THE DATE OF ITS LAST CHANGE, the
@@ -234,6 +257,68 @@ function lastChange({ draft, comments, grants, acknowledgements }) {
     undetermined_within: tied.map((c) => ({ at: c.at, by: c.by, by_kind: c.by_kind, kind: c.kind })),
     stated: localize("review.index.act_tiestated_this_is_the", "{act}.{tieStated} THIS IS THE DATE THE COPY CARRIES IN-BAND (BIO_Publication_v0_1.md §6A.3 point 1, as BOB #32 ruled it on 2026-09-23): the copy's LAST CHANGE, so a comment, a grant, an acknowledgement or an edit moves both the hash and this date. IT DOES NOT SEE what this copy draws live and dates nowhere — each finding's text, the publish gates' verdict, and the project's declared floors — any of which can move the hash without moving this date.", { act: String(act), tieStated: String(tieStated) }),
   };
+}
+
+/* R12, R36: a draft's targets as the act took them: a list, or a comma-separated string, else the single `target`. */
+function draftTargets(params) {
+  return Array.isArray(params.targets) ? params.targets
+       : typeof params.targets === "string" && params.targets.trim() ? params.targets.split(",")
+       : params.target ? [params.target] : [];
+}
+
+/* R41 (L15, C46): a finding is answered in its own words, never as the file. The team's Session Log (`## Session Log`
+   to the next `## ` heading, or the end) is the team's working record, with its record ids, hashes and members' reasons,
+   and never reaches a reader of the copy, whichever door: it is cut from every text answered. Text without such a
+   section is answered unchanged. */
+function withoutLog(text) {
+  const m = /^## Session Log[ \t]*\r?$/m.exec(text);
+  if (!m) return text;
+  const rest = text.slice(m.index + m[0].length);
+  const next = rest.search(/\n## /);
+  const before = text.slice(0, m.index).replace(/\s+$/, "");
+  const after = next < 0 ? "" : rest.slice(next + 1);
+  return before ? `${before}\n${after ? `\n${after}` : ""}` : after;
+}
+
+/* R41: an inquiry's section headings as record-grammar holds them (`## Conclusion`, `## What Would Falsify This`). */
+const CONCLUSION_HEADING = HEADINGS.inquiry.find((h) => /Conclusion/.test(h));
+const FALSIFIER_HEADING = HEADINGS.inquiry.find((h) => /Falsify/.test(h));
+
+/* R41 (C46): the text under one heading line of a finding's body, to the next `## ` heading or the end, trimmed; null
+   when the heading is absent or its section holds nothing. */
+function sectionOf(text, heading) {
+  const m = new RegExp(`^${heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}[ \\t]*\\r?$`, "m").exec(text);
+  if (!m) return null;
+  const rest = text.slice(m.index + m[0].length);
+  const next = rest.search(/\n## /);
+  const got = (next < 0 ? rest : rest.slice(0, next)).trim();
+  return got || null;
+}
+
+/* R41 (L15, C46; fix round 3): a finding file's words without its front matter (the lines between the opening and closing
+   `---` fences), without the Session Log and without the file's headings. `statement` is the finding's own words: the
+   front matter's `conclusion` (what `op=conclude` wrote there) or `statement` when it holds one as a plain string, first;
+   else the text of the body's `## Conclusion` section; else, for words that are not laid out in sections at all (no `## `
+   heading), the words themselves. A file laid out in sections whose Conclusion holds nothing has no statement (null:
+   not concluded yet), never its headings. `falsifier` is what would change it, the front matter's, else the body's
+   `## What Would Falsify This` section, else null. `text` is what follows the front matter. A file with no front matter
+   answers its words unchanged (less any Session Log). `concluded` says whether a statement was found. */
+function findingWords(content) {
+  const raw = String(content ?? "");
+  let parsed = null;
+  try { parsed = parseFrontmatter(raw); } catch { parsed = null; }
+  const laid = (t) => /^## /m.test(t);
+  if (!parsed || parsed.data === null || typeof parsed.data !== "object") {
+    const text = withoutLog(raw);
+    const statement = sectionOf(text, CONCLUSION_HEADING) ?? (laid(text) || !text.trim() ? null : text);
+    return { text, statement, falsifier: sectionOf(text, FALSIFIER_HEADING), concluded: statement !== null };
+  }
+  const body = withoutLog(String(parsed.body ?? "").replace(/^(?:\r?\n)+/, ""));
+  const own = (k) => (typeof parsed.data[k] === "string" && parsed.data[k].trim() ? parsed.data[k].trim() : null);
+  const statement = own("conclusion") ?? own("statement") ?? sectionOf(body, CONCLUSION_HEADING)
+                    ?? (laid(body) || !body.trim() ? null : body);
+  return { text: body, statement, falsifier: own("falsifier") ?? sectionOf(body, FALSIFIER_HEADING),
+           concluded: statement !== null };
 }
 
 /* R13: the dry run's own throw, so a rollback is told apart from a failure. */
@@ -310,19 +395,68 @@ export class Review {
     } catch { return null; }
   }
 
-  /* R12: one id as the given reader may see it: present with its type, state, role and text, or absent with its role. */
-  #finding(raw, roles, gate) {
+  /* R41 (C46, fix round 4): THE CONCLUSION THE PROJECT RECORDED for a question, in its own words. A project that concludes a
+     question adopts a reading's claim and keeps it as its own conclusion record (basis-versions R22), and writes nothing
+     into the question's bytes (`inquiry_moved: false`), so the file holds no `conclusion` for a reader to find. It is asked
+     of ratification's `caseConclusionFor` (its R1), the one answer the publish gate and the case document use: the claim
+     adopted and the falsifier, only while the project's latest act on the question is a conclusion (a withdrawn one, another
+     project's and a conclusion written in the question's own bytes are not this project's: those answer the file's words).
+     Null when there is none; never throws. */
+  #recorded(id, state, project, viewer) {
+    if (!project) return null;
+    let c = null;
+    try { c = this.ratification.caseConclusionFor(project, id, viewer, state); } catch { return null; }
+    if (!c || c.state !== "concluded" || c.relationship !== "project") return null;
+    const words = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
+    const claim = c.claim && c.claim.state === "adopted" ? words(c.claim.text) : null;
+    return claim ? { statement: claim, falsifier: words(c.falsifier) } : null;
+  }
+
+  /* R12: one id as the given reader may see it: present with its type, state, role and text, or absent with its role.
+     `by` is the project the draft belongs to and the viewer its findings are read as (the draft's last editor), so a
+     question that project concluded answers that conclusion's words (R41). */
+  #finding(raw, roles, gate, by = null) {
     const id = String(raw ?? "").trim();
     /* D-539: THE ROLE IS THE DRAFT'S OWN AUTHORED FACT, said back whether or not the finding can be read, so an edit
        written from the answer does not lose it. It discloses nothing the target id beside it does not. */
     const role = roles && typeof roles === "object" ? roles[id] ?? null : null;
-    const b = this.#one(`SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b
+    const b = this.#one(`SELECT b.bundle_id, b.title, b.object_type, b.current_state FROM bundles b
                          WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args);
     if (!b) return { target: id, present: false, role,
                      detail: localize("review.index.this_draft_names_a_finding", "this draft names a finding its editor cannot read, or one that does not exist.") };
     const md = this.#one(`SELECT content FROM files WHERE bundle_id=? AND path='bundle.md'`, id);
-    return { target: id, present: true, object_type: b.object_type, state: b.current_state, role,
-             text: md ? md.content : null };
+    /* R41 (L15): a reader reads the finding's own words, never the file's front matter. */
+    let words = md ? findingWords(md.content) : null;
+    /* R41 (fix round 4, C46): the project's own conclusion record comes first, as the case document records it. */
+    const rec = b.object_type === "inquiry" && by ? this.#recorded(id, b.current_state, by.project, by.viewer) : null;
+    if (rec) words = { text: words ? words.text : null, statement: rec.statement,
+                       falsifier: rec.falsifier ?? (words ? words.falsifier : null), concluded: true };
+    const concluded = !!(words && words.concluded);
+    /* R41 (fix round 3): a finding with no words of its own is told as not concluded yet; the sentence is a stand-in
+       for the design's row (`review.index.not_concluded_yet`). */
+    return { target: id, present: true, title: typeof b.title === "string" && b.title.trim() ? b.title : null,
+             object_type: b.object_type, state: b.current_state, role,
+             text: words ? words.text : null, statement: words ? words.statement : null,
+             falsifier: words ? words.falsifier : null, concluded,
+             not_concluded: concluded ? null : localize("review.index.not_concluded_yet", "Not concluded yet") };
+  }
+
+  /** R40 (L14): THE SHORT TITLE a screen draws as a draft's heading, beside the identity sentence it keeps for body text:
+   *  a named case reads "Case X, edition N"; a draft that names none reads `review.title.draft` with its scope or, failing
+   *  that, its subject (the first finding it names that its editor can read: that finding's title), else
+   *  `review.title.untitled`. Reads; never the identity sentence. */
+  #title(ident, params, gate) {
+    if (ident.caseId)
+      return localize("review.index.case_edition_title", "Case {case_id}, edition {edition}", { case_id: String(ident.caseId), edition: String(ident.edition) });
+    const scope = typeof params.scope === "string" ? params.scope.trim() : "";
+    let subject = "";
+    if (!scope) {
+      for (const raw of draftTargets(params)) {
+        const b = this.#one(`SELECT b.title FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, String(raw ?? "").trim(), ...gate.args);
+        if (b && typeof b.title === "string" && b.title.trim()) { subject = b.title.trim(); break; }
+      }
+    }
+    return scope || subject ? word("review.title.draft", { title: scope || subject }) : word("review.title.untitled");
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -352,6 +486,27 @@ export class Review {
   #topEdition(caseId) {
     const r = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=?`, caseId);
     return r && r.m != null ? Number(r.m) : 0;
+  }
+
+  /** R39 (C9, DEC-374): A NEW DRAFT THAT NAMES A PUBLISHED CASE BEGINS FROM THAT CASE'S HIGHEST PUBLISHED EDITION, and
+   *  carries only what the next edition may: the findings it rests on and the roles they hold (publication's
+   *  `published_case_members`, its R40) and its scope (`published_cases`). A field the act sent, even as `null`, is
+   *  the member's own and is never filled. The four statements, the position, the bias acknowledgement and the account are
+   *  authored afresh for every edition (DEC-12), so they are not carried. Reads; the case's own rows are never written. */
+  #fromPublished(params, caseId, sent) {
+    const top = this.#topEdition(caseId);
+    if (top < 1) return;
+    if (!sent.has("targets") && !sent.has("target")) {
+      const members = this.#rows(`SELECT bundle_id, role FROM published_case_members WHERE case_id=? AND edition=?
+                                  ORDER BY ord`, caseId, top);
+      if (members.length) {
+        params.targets = members.map((m) => m.bundle_id);
+        const held = members.filter((m) => m.role);
+        if (!sent.has("roles") && held.length) params.roles = Object.fromEntries(held.map((m) => [m.bundle_id, m.role]));
+      }
+    }
+    const edition = this.#one(`SELECT scope FROM published_cases WHERE case_id=? AND edition=?`, caseId, top);
+    if (!sent.has("scope") && edition && typeof edition.scope === "string" && edition.scope.trim()) params.scope = edition.scope;
   }
 
   /** R5: A DRAFT'S CASE IDENTITY IS READ FROM THE PUBLISHED RECORD EVERY TIME, never stored and never taken from the
@@ -465,8 +620,21 @@ export class Review {
                localize("review.index.this_draft_is_project_id", "this draft is {project_id}'s production, and a case does not change hands (DEC-72). Draft this material as a new case under the other project instead.", { project_id: String(existing.project_id) }));
       /* END DEC-49 REGION is-review-draft-changes-project */
     if (!this.membership.isProjectEditor(owning, who)) return notReviewOwner("draft");
+    /* R37 (C3): AN EDIT KEEPS EVERY FIELD IT DOES NOT SEND. The draft's arguments after an edit are the old ones with each
+       sent field replaced; a sent `null` or an empty (blank) string clears that field, `caseId: null` the draft's case
+       too. An empty list is a value, not a clearing: `excluded: []` is a claim (case-authoring R3), and silence is not. */
     const params = {};
-    for (const k of REVIEW_DRAFT_FIELDS) if (k in rest) params[k] = rest[k];
+    if (existing) {
+      const held = JSON.parse(existing.params);
+      for (const k of REVIEW_DRAFT_FIELDS) if (k in held) params[k] = held[k];
+    }
+    const sent = new Set();
+    for (const k of REVIEW_DRAFT_FIELDS) {
+      if (rest[k] === undefined) continue;
+      sent.add(k);
+      const v = rest[k];
+      if (v === null || (typeof v === "string" && !v.trim())) delete params[k]; else params[k] = v;
+    }
     const named = typeof params.caseId === "string" && params.caseId.trim() ? params.caseId.trim() : null;
     if (named) {
       if (this.#caseProject(named) !== owning)
@@ -475,7 +643,8 @@ export class Review {
                  localize("review.index.no_case_of_owning_s", "no case of {owning}'s answers to {named}. A draft names an EXISTING case to be its next edition, and a case this project did not publish is answered exactly as one that does not exist.", { owning: String(owning), named: String(named) }), { caseId: named });
         /* END DEC-49 REGION is-review-no-such-case */
       params.caseId = named;
-    }
+      if (!existing) this.#fromPublished(params, named, sent);
+    } else delete params.caseId;
     const json = JSON.stringify(params);
     if (json.length > REVIEW_DRAFT_MAX)
       /* DEC-49 REGION is-review-draft-too-large */
@@ -636,13 +805,11 @@ export class Review {
     const { draft: d, grant, reader } = door;
     const params = JSON.parse(d.params);
     const ident = this.draftIdentity(d);
-    const targets = Array.isArray(params.targets) ? params.targets
-                  : typeof params.targets === "string" && params.targets.trim() ? params.targets.split(",")
-                  : params.target ? [params.target] : [];
+    const targets = draftTargets(params);
     /* R12: THE FINDINGS ARE READ AS THE DRAFT'S EDITOR SEES THEM, for both doors: the grant is the editor's act, so a
        recipient is shown exactly what the editor put in front of them and never a document the editor could not see. */
     const gate = viewerPredicate(`member:${d.updated_by}`);
-    const findings = targets.map((raw) => this.#finding(raw, params.roles, gate));
+    const findings = targets.map((raw) => this.#finding(raw, params.roles, gate, { project: d.project_id, viewer: `member:${d.updated_by}` }));
     const gates = this.#gates(d);
     const cap = listCap(limit);
     const commentRows = this.#rows(`SELECT c.comment_id, c.author_kind, c.author, c.grant_id, c.text, c.at,
@@ -713,10 +880,15 @@ export class Review {
       case: { case_id: ident.caseId, edition: statedEdition(ident, !!params.newCase),
               identity: caseIdentitySentence(ident.caseId, ident.edition, !!params.newCase),
               newCase: !!params.newCase },
+      title: this.#title(ident, params, gate),
       authored: { scope: params.scope ?? null, statement: params.statement ?? null,
                   excluded: params.excluded ?? null, subjectPosition: params.subjectPosition ?? null,
                   subjectJustification: params.subjectJustification ?? null,
-                  biasAcknowledgement: params.biasAcknowledgement ?? null },
+                  biasAcknowledgement: params.biasAcknowledgement ?? null,
+                  account: params.account ?? null, whatChanged: params.whatChanged ?? null },
+      /* R38 (C2): the choices `op=publish` accepts, so a screen offers them without listing either: the positions
+         `ratification` names (`case-authoring` imports the same list) and `case-authoring`'s member roles. */
+      choices: { subject_positions: [...SUBJECT_POSITIONS], roles: [...MEMBER_ROLES] },
       findings, gates: gates.gates, missing: gates.missing, evaluated: gates.evaluated,
       comments, comments_truncated: commentRows.length > cap, list_limit: cap,
       statement_acknowledgements: statementAcks,
@@ -736,6 +908,17 @@ export class Review {
     };
   }
 
+  /** R10, R11 (G12c): THE REVIEW COPIES OF MANY DRAFTS IN ONE READ (`op=reviewcopy` with `drafts`): for each draft named, once,
+   *  in the order given, exactly the answer the single read gives it, so a draft the reader may not see and one that does
+   *  not exist answer the same dead answer, byte for byte. More than `REVIEW_BATCH_COPIES_MAX` ids is refused whole. Writes
+   *  nothing. */
+  copyMany({ drafts = null, ...args } = {}) {
+    const ids = idList(drafts) ?? [];
+    if (ids.length > REVIEW_BATCH_COPIES_MAX) return batchTooLarge(REVIEW_BATCH_COPIES_MAX);
+    return { ok: true, kind: "review-copies", count: ids.length,
+             copies: Object.fromEntries(ids.map((id) => [id, this.copy({ ...args, draft: id })])) };
+  }
+
   /* R16 (MK-7, MEMBER-KNOWLEDGE-DESIGN.md §4.2): EVERY OBSERVATION THE EDITION WOULD REACH from its present findings,
      with whether its author has chosen an attribution level for this case edition, never the level itself (that is the
      author's to state, in the case document). A draft naming no case has no identity a level can be keyed to. */
@@ -752,15 +935,26 @@ export class Review {
     });
   }
 
+  /** R18 (C52): THE MEMBER A COMMENTING VIEWER NAMES, whichever way the control plane spells it: `member:<id>`, that
+   *  spelling carrying a project (`member:<id>@<project>`, membership R149) and the founder's bare `admin`; the member's
+   *  id, never the spelling. A machine credential, an unrecognised spelling and an absent viewer name none (null): a
+   *  comment is a person's. */
+  #commenter(viewer) {
+    const gate = viewerPredicate(viewer);
+    if (gate.scope !== "participant") return null;
+    return gate.member ?? (String(gate.viewer ?? "").split("@")[0] || null);
+  }
+
   /** R18: a comment through R10's doors (`op=reviewcomment`). A recipient's is attributed to the grant, a member's to
    *  the member. */
   comment({ draft = null, secretSha = null, viewer = null, bySecret = false, text = "" } = {}) {
     const v = String(viewer ?? "");
-    const door = bySecret || v.startsWith("member:") ? this.#door({ draft, secretSha, viewer: v, bySecret }) : null;
+    const member = this.#commenter(v);
+    const door = bySecret || member ? this.#door({ draft, secretSha, viewer: v, bySecret }) : null;
     if (!door) return noReviewCopy();
     const { draft: d, grant } = door;
     const kind = grant ? "recipient" : "member";
-    const author = grant ? grant.grant_id : v.slice("member:".length);
+    const author = grant ? grant.grant_id : member;
     const body = String(text ?? "").trim();
     if (!body || body.length > REVIEW_TEXT_MAX)
       /* DEC-49 REGION is-review-comment-text */
@@ -801,11 +995,92 @@ export class Review {
                updated_by: d.updated_by, updated_at: d.updated_at,
                /* REC-193: null where the draft predates the stamp — UNDETERMINED, not the editor. */
                statement_by: d.statement_by ?? null,
+               /* R19 (C48, C50): what the draft has prepared and published, as case-authoring states it (its R83). */
+               editions: this.#editions(ident, d),
                read: `op=reviewcopy&draft=${d.draft_id}` };
     });
     const { concluded, truncated: concludedTruncated } = this.#concluded(pid, viewer, cap);
     return { ok: true, kind: "review-drafts", project: pid, drafts, count: drafts.length,
              total, limit: cap, truncated: total > drafts.length, concluded, concluded_truncated: concludedTruncated };
+  }
+
+  /** R19 (G12c): THE DRAFT LISTS OF MANY PROJECTS IN ONE READ (`op=casedrafts` with `projects`): for each project named, once,
+   *  in the order given, exactly the answer the single read gives it, the dead answer for a project the viewer has no
+   *  standing in and for one that does not exist alike. More than `REVIEW_BATCH_LISTS_MAX` ids is refused whole. Writes
+   *  nothing. */
+  listMany({ projects = null, ...args } = {}) {
+    const ids = idList(projects) ?? [];
+    if (ids.length > REVIEW_BATCH_LISTS_MAX) return batchTooLarge(REVIEW_BATCH_LISTS_MAX);
+    return { ok: true, kind: "review-drafts-batch", count: ids.length,
+             lists: Object.fromEntries(ids.map((id) => [id, this.list({ ...args, project: id })])) };
+  }
+
+  /* R19 (fix round 3; case-authoring R83, K4363): what a draft has prepared and published, `{prepared, published}` for
+     the case identity it stands at, from case-authoring's one read, `draftEditions`. Nulls where it cannot answer, never
+     a throw: a list that cannot say states nothing prepared and nothing published. */
+  #editions(ident, draft) {
+    try {
+      const got = this.caseAuthoring.draftEditions({ caseId: ident.caseId, draft });
+      return { prepared: got && got.prepared != null ? got.prepared : null,
+               published: got && got.published ? got.published : null, case: got && got.case ? got.case : null };
+    } catch { return { prepared: null, published: null, case: null }; }
+  }
+
+  /** R43 (fix round 3, C14; project-roster R42): THE DRAFTS SHARED FOR REVIEW, BY PROJECT, in reads that do not grow with
+   *  the projects asked. For each project asked: the number of its case drafts the viewer may see (R9) that hold a live
+   *  grant (R8: not revoked, not lapsed, its draft still at the case identity the grant was bound to, so a grant whose
+   *  edition has since been published is not counted), and the instant the newest such grant was issued (`null` when none).
+   *  A project the viewer may not see, or that does not exist, is `{count: 0, newest: null}`. A draft with several live
+   *  grants counts once. Writes nothing. */
+  sharedDraftsByProject({ projectIds = [], viewer = null } = {}) {
+    const ids = [...new Set((Array.isArray(projectIds) ? projectIds : []).filter((p) => typeof p === "string" && p.trim()).map((p) => p.trim()))];
+    const out = Object.fromEntries(ids.map((p) => [p, { count: 0, newest: null }]));
+    const gate = viewerPredicate(viewer);
+    if (!ids.length || gate.scope === "DENY") return out;
+    const CHUNK = 200;
+    const seen = [];
+    for (let i = 0; i < ids.length; i += CHUNK) {
+      const part = ids.slice(i, i + CHUNK);
+      const q = part.map(() => "?").join(",");
+      const rows = gate.scope === "member"
+        ? this.#rows(`SELECT b.bundle_id FROM bundles b WHERE b.object_type='project' AND b.bundle_id IN (${q})`, ...part)
+        : this.#rows(`SELECT b.bundle_id FROM bundles b WHERE b.object_type='project' AND b.bundle_id IN (${q}) AND ${gate.sql}`,
+                     ...part, ...gate.args);
+      for (const r of rows) seen.push(r.bundle_id);
+    }
+    const now = this.#when();
+    for (let i = 0; i < seen.length; i += CHUNK) {
+      const part = seen.slice(i, i + CHUNK);
+      const q = part.map(() => "?").join(",");
+      const grants = this.#rows(`SELECT g.draft_id, g.case_id AS bound_case, g.edition AS bound_edition, g.issued_at, g.until,
+                                        d.project_id, d.case_id AS draft_case
+                                 FROM review_grants g JOIN case_drafts d ON d.draft_id=g.draft_id
+                                 WHERE g.revoked_at IS NULL AND d.project_id IN (${q})`, ...part);
+      const cases = [...new Set(grants.map((g) => g.draft_case).filter(Boolean))];
+      const top = new Map();
+      for (let j = 0; j < cases.length; j += CHUNK) {
+        const cq = cases.slice(j, j + CHUNK).map(() => "?").join(",");
+        for (const r of this.#rows(`SELECT case_id, MAX(edition) AS m FROM published_cases WHERE case_id IN (${cq}) GROUP BY case_id`,
+                                   ...cases.slice(j, j + CHUNK))) top.set(r.case_id, Number(r.m));
+      }
+      const drafts = new Map();
+      for (const g of grants) {
+        if (this.#lapsed(g.until, now)) continue;
+        /* R8's identity: the draft's case now (highest published edition plus one; edition 1 for none) against the bound one */
+        const named = String(g.draft_case ?? "").trim() || null;
+        const edition = named ? (top.get(named) ?? 0) + 1 : 1;
+        if ((named ?? null) !== (g.bound_case ?? null) || edition !== Number(g.bound_edition)) continue;
+        const key = g.draft_id;
+        const held = drafts.get(key);
+        if (!held || instantOrder(g.issued_at, held.issued_at) > 0) drafts.set(key, { issued_at: g.issued_at, project: g.project_id });
+      }
+      for (const { issued_at: at, project } of drafts.values()) {
+        const row = out[project];
+        row.count++;
+        if (row.newest === null || instantOrder(at, row.newest) > 0) row.newest = at;
+      }
+    }
+    return out;
   }
 
   /* R36: the questions the project has concluded (ratification R1's `caseConclusionFor` answers `concluded` for the
@@ -826,7 +1101,7 @@ export class Review {
       const c = this.ratification.caseConclusionFor(pid, inq, viewer, b.current_state);
       if (!c || c.state !== "concluded" || c.relationship !== "project") continue;
       found.push({ inquiry: inq, title: b.title ?? null, concluded_at: c.at ?? null, concluded_by: c.by ?? null,
-                   findings: [this.#finding(inq, null, gate)] });
+                   findings: [this.#finding(inq, null, gate, { project: pid, viewer })] });
     }
     /* by instant, never by string; an unparseable stamp is not ranked and goes last, keeping its order */
     found.sort((x, y) => {
@@ -1076,11 +1351,65 @@ export function reviewOps(r, url, body) {
     reviewgrant: () => r.act({ act: "grant", draft: b.draft ?? q("draft"), recipient: b.recipient ?? q("recipient"),
                                until: b.until ?? q("until"), author: q("author"), secretSha: sha }),
     reviewrevoke: () => r.act({ act: "revoke", grant: b.grant ?? q("grant"), author: q("author") }),
-    reviewcopy: () => r.copy({ draft: q("draft"), secretSha: sha, viewer: q("viewer"),
-                               bySecret: q("bySecret") === "1", limit: q("limit") }),
+    /* R10, R11 (G12c): `drafts`, a list in the body or comma-separated in the query, answers one copy per draft. */
+    reviewcopy: () => {
+      const drafts = b.drafts ?? q("drafts");
+      const read = { secretSha: sha, viewer: q("viewer"), bySecret: q("bySecret") === "1", limit: q("limit") };
+      return drafts === null || drafts === undefined ? r.copy({ ...read, draft: q("draft") }) : r.copyMany({ ...read, drafts });
+    },
     reviewcomment: () => r.comment({ draft: q("draft"), secretSha: sha, viewer: q("viewer"),
                                      bySecret: q("bySecret") === "1", text: b.text }),
     /* REC-198: the store fails closed on an absent `viewer`. */
-    casedrafts: () => r.list({ project: q("project"), viewer: q("viewer"), limit: q("limit") }),
+    /* R19 (G12c): `projects`, a list in the body or comma-separated in the query, answers one list per project. */
+    casedrafts: () => {
+      const projects = b.projects ?? q("projects");
+      const read = { viewer: q("viewer"), limit: q("limit") };
+      return projects === null || projects === undefined ? r.list({ ...read, project: q("project") }) : r.listMany({ ...read, projects });
+    },
   };
 }
+
+/** R42 (T51; K4168, K4202; op-declarations R80, op-grades R49): THE OPS A SCREEN SENDS, declared by their owner beside the ops
+ *  map. Each row's `classes`, `mutating`, `weight` and `description` are copied from the op's existing rows in
+ *  `op-declarations` and `op-grades`, never chosen (the registrations refuse a row that differs). `fields.accepts` is every
+ *  field the arm reads from the query and the body, less the control plane's stamps (`author`, `viewer`, `bySecret` and the
+ *  grant's `secretSha`, R22, R29); `fields.requires` the ones it refuses without, as the refusal names them. `reviewcomment`
+ *  is addressed by `draft` in the query and answers a request without it, like every request the doors refuse, with the
+ *  dead answer (R10), which names nothing: so `draft` is accepted there and not required. A recipient presents the link's
+ *  `secret` in the body; the control plane takes it, sends only its fingerprint as `secretSha` (R29) and drops the field,
+ *  so the op as a screen reaches it accepts `secret` though this arm never reads one (a member's call sends none). `casedraft` is
+ *  satisfied by a project (a new draft) or a draft (an edit), and keeps the fields a draft keeps (R4, R37). */
+export const DECLARED_OPS = Object.freeze({
+  casedraft: {
+    classes: ["admin", "member", "probe"], mutating: true, weight: "reversible",
+    description: localize("review.declared.casedraft", "review copy: its subject is a DRAFT CASE keyed draft_id, beside publish and never a bundle in a state — the answer names op=reviewcopy"),
+    fields: { accepts: Object.freeze(["draft", "project", ...REVIEW_DRAFT_FIELDS]), requires: Object.freeze([Object.freeze(["project", "draft"])]) },
+  },
+  reviewgrant: {
+    classes: ["admin", "member", "probe"], mutating: true, weight: "credential",
+    description: localize("review.declared.reviewgrant", "review copy: its subject is a DRAFT CASE keyed draft_id and its product is a grant keyed grant_id, not a move of any bundle"),
+    fields: { accepts: Object.freeze(["draft", "recipient", "until"]), requires: Object.freeze(["draft", "recipient"]) },
+  },
+  reviewrevoke: {
+    classes: ["admin", "member", "probe"], mutating: true, weight: "credential",
+    description: localize("review.declared.reviewrevoke", "review copy: its subject is a GRANT keyed grant_id, not a bundle in a state"),
+    fields: { accepts: Object.freeze(["grant"]), requires: Object.freeze(["grant"]) },
+  },
+  /* G12c (K4208): the two reads a screen repeated once per item take a list of ids; both answer a call with none of the keys
+     with the one dead answer (R10, R19), which names nothing, so nothing is required. The descriptions are the hand rows'. */
+  casedrafts: {
+    classes: ["admin", "member", "probe"], mutating: false, weight: "read",
+    description: localize("review.declared.casedrafts", "read: the drafts of one project (BIO_Publication §6A.4), fenced exactly like reading one draft (BOB #32); each row names op=reviewcopy for its draft, and nothing is written"),
+    fields: { accepts: Object.freeze(["project", "projects", "limit"]), requires: Object.freeze([]) },
+  },
+  reviewcopy: {
+    classes: null, mutating: false, weight: "read",
+    description: localize("review.declared.reviewcopy", "read: a review copy of one draft, or one per draft named in drafts, through a live grant or as a member with standing; any other reader gets the one dead answer; writes nothing"),
+    fields: { accepts: Object.freeze(["draft", "drafts", "limit", "secret"]), requires: Object.freeze([]) },
+  },
+  reviewcomment: {
+    classes: null, mutating: true, weight: "reversible",
+    description: localize("review.declared.reviewcomment", "review-directed: keyed by a review copy; a reader's comment for the case's owner"),
+    fields: { accepts: Object.freeze(["draft", "text", "secret"]), requires: Object.freeze(["text"]) },
+  },
+});

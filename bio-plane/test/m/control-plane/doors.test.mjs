@@ -29,8 +29,9 @@ test("R1: routing: OPTIONS answers 204 with access-control-allow-origin *, /vers
 
 test("R109 (T51-123; K3807, K3814, K3835; amends R1, R104): the signing page is not served: `/sign` and `/sign/` answer as any unknown address does (R104's page, 404, no-store, the page policy), `/api/sign` and `/?op=sign` answer UNKNOWN_OP as JSON (R2), the deleted files are found nowhere in this module's paths; controls: `/version` and `/app` answer as before, an address under `/app/` that begins with `sign` is the interface's page", async () => {
   const { env } = world();
-  const nonce = (r) => /'nonce-([^']+)'/.exec(r.headers.get("content-security-policy") || "")?.[1];
-  const strip = (r) => r.text.replaceAll(nonce(r) ?? "\0", "NONCE");
+  /* the interface page is served under the hash of its one external script (fix round 3, C15; answer-envelope R6), no nonce */
+  const hashed = (r) => /script-src 'self' 'sha256-[A-Za-z0-9+/]{43}='/.test(r.headers.get("content-security-policy") || "");
+  const strip = (r) => r.text;
   const unknown = await call(env, { path: "/nonesuch" });
   assert.equal(unknown.status, 404);
   const app = await call(env, { path: "/app" });
@@ -40,7 +41,7 @@ test("R109 (T51-123; K3807, K3814, K3835; amends R1, R104): the signing page is 
     assert.equal(r.status, 404, path);
     assert.match(r.headers.get("content-type"), /^text\/html/, path);
     assert.equal(r.headers.get("cache-control"), "no-store", path);
-    assert.ok(nonce(r), `${path}: the page policy and its nonce`);
+    assert.ok(hashed(r), `${path}: the page policy and its script's hash`);
     assert.equal(strip(r), strip(unknown), `${path}: the page any unknown address draws`);
     assert.equal(strip(r), strip(app), `${path}: the interface's own page`);
     assert.equal(/<title>[^<]*signing keys/i.test(r.text), false, `${path}: no signing page`);
@@ -64,7 +65,7 @@ test("R109 (T51-123; K3807, K3814, K3835; amends R1, R104): the signing page is 
 });
 
 test("R1, R82 (T47; N1002): GET / with no op answers interface-shell's page (`interfacePage` over the screen modules' screens, the page `/app` answers), text/html, cache-control: no-store, under the page policy, whatever namespace it names (R1's gate first) and with no store asked; no route serves the setup page (control: none of setupPage's text)", async () => {
-  const strip = (html) => html.replace(/ nonce="[^"]*"/g, "");
+  const strip = (html) => html;
   const { env: appEnv } = world();
   const app = await call(appEnv, { path: "/app" });
   assert.equal(app.status, 200);
@@ -77,7 +78,8 @@ test("R1, R82 (T47; N1002): GET / with no op answers interface-shell's page (`in
     assert.equal(r.status, 200);
     assert.match(r.headers.get("content-type"), /^text\/html/);
     assert.equal(r.headers.get("cache-control"), "no-store");
-    assert.match(r.headers.get("content-security-policy") || "", /script-src 'nonce-/);
+    assert.match(r.headers.get("content-security-policy") || "", /script-src 'self' 'sha256-[A-Za-z0-9+/]{43}='/);
+    assert.doesNotMatch(r.headers.get("content-security-policy") || "", /nonce/);
     assert.match(r.text, /^<!doctype html>/i);
     assert.equal(strip(r.text), strip(app.text), "the interface's page, as /app answers it");
     /* control: the setup page is served by no route, and nothing of the record is read for the page */

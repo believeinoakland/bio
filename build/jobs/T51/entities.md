@@ -1,6 +1,25 @@
 # entities (T51)
 
-**Status** · session_015aYMNxepX61Evw4qN8aqmA · depth 2 · COMPLETE · handled B3
+**Status** · session_01KsYNk1nPchfRUwMdahprpu · depth 2 · COMPLETE · handled B10
+
+## Completion (T51 fix round 3, ENTITIES #18)
+
+**Causes met.** C64 (the provider's part; DEC-401, DEC-402 @ 43379a1a44): **R63** an office a non-administrator member registers carries `named_by_member: true` (an administrator's or a machine's carries `false`; an office held before the mark reads unmarked); `readEntity`, `entitiesByAlias` and `entitiesOfKind` answer `named_by_member`, `confirmed_by` (and `readEntity` `confirmed_at`) for an office, `null`/absent for any other kind; an office also holds `contact` (`{kind: address|email|portal, value}`) and `law` (K4364): `law` is the `citation` or `name` of a `records_laws` entry of the active profiles' view, held as its citation, an unknown one refused `UNKNOWN_LAW` naming the laws, a bad contact `BAD_CONTACT`, either on another kind `OFFICE_FIELD_NOT_FOR_KIND`, each before an id is allocated; `null` when not stated. **R64** `confirmOffice({entityId, by, viewer})` (`op=officeconfirm`): refusals in order `NO_ENTITY`, `NO_SUCH_ENTITY`, `NOT_AN_ADMIN` (membership's, a `class:` caller included), `CONFIRM_NOT_AN_OFFICE`, `NOT_NAMED_BY_A_MEMBER` (K4364: the two catalogue rows C-91.10 and C-91.11 of this module; `refusal.CONFIRM_NOT_AN_OFFICE`, `refusal.NOT_NAMED_BY_A_MEMBER`), each writing nothing; otherwise clears the mark, records `confirmed_by` and `confirmed_at`, answers `{ok, entity_id, named_by_member: false, confirmed_by, at}`; a repeat (by anyone) answers `already: true` with the first confirmer. **R62**: `officeconfirm` declared (classes admin/member/probe, `machineClasses: []`, mutating, weight `reversible`, `stamps: ["viewer","by"]`, `needs: null`, fields accepts/requires `entityId`); `entitycreate`'s accepts gain `contact`, `law`. The arm reads `by` and `viewer` from the address (the stamps), never from the body (tested: a body `by` is not read). C60 (test only): a vouched memo naming a registered organisation resolves to it and is held by `strongestByCapture` and `concerns` (what `connections.derive`, the `connect` act, reads) and found by `namingDocuments`; the test passes first time: **no defect in `entities`**; `connect` itself is `connections`' and the screen's (`person.mjs` `connect` reads `r.documents` and `r.connections`), so the walk's 0 is a lag or those modules' (as C60's own note says).
+
+**Readings (BOB may correct; J6 asked, B7 answered).** (1) R63's "from the request screen only" is the door's grade (`op-grades`, cause-shell-3); entities marks every office a non-administrator member (not a machine, not `null`) registers and refuses nothing by screen. (2) `officeconfirm`'s weight `reversible` and `needs: null` (an administrator's act the module itself enforces, as `memberadd`, `expertiseconfirm`). (3) `createEntity`'s own answer is unchanged (no `named_by_member` in it, so its key list is as before). (4) `contact.value` is trimmed and cut at 500, not validated by kind. (5) `law` is matched as `actions` matches a law (`citation`, else `name`).
+
+**Stand-ins (they join the design's batch).** `refusal.CONFIRM_NOT_AN_OFFICE`, `refusal.NOT_NAMED_BY_A_MEMBER` (the rows' translations, `localize` defaults in `checks.mjs`; `t50.test.mjs` takes the design's row when it lands); `entities.index.an_office_is_confirmed_by`, `entities.index.confirming_an_office_a_member` (the act phrase `NOT_AN_ADMIN` names), `entities.index.only_an_office_a_member`, `entities.index.this_office_was_not_named`, `entities.index.where_requests_go_and_the`, `entities.index.where_requests_go_is_a`, `entities.index.the_law_requests_go_under`, and the op description `entities.declared.officeconfirm`. Not in `WORD_KEYS` (that list is the design's `reads`).
+
+**Deferred.** None.
+
+**Found in other modules.** (a) `op-declarations` / `control-plane` (L11, wave 2) must route `officeconfirm`: its declared row is taken (NEEDS_MISSING gone with `needs: null`); the family hand rows are theirs. (b) `request` screen: `entitycreate` from `request` sends `contact` and `law` (DEC-402's "where requests go" and "the law it goes under"); `screens-action` should send `law` as a `records_laws` citation, and the first profile must hold the federal records law (FOIA) in `records_laws` for DEC-402's choice to be accepted: today `oakland-alameda` holds the state law only (`jurisdictions`' to add). (c) Retrieval-browse's fixture builds `entities` from `ENTITIES_SCHEMA` without `migrate`: the schema now holds the new columns, so nothing to do there. (d) Stale generated artifacts (manifest §14): `bio-plane/dist/bio-plane.bundled.mjs` (and the release copy) embed entities' source; not regenerated here.
+
+**Tests and checks.**
+- `node --test --test-force-exit bio-plane/test/m/entities/`: 152 pass, 0 fail (`t51r3.test.mjs` 10 new; `ops`, `registry`, `t35`, `t50` updated for the office keys, the two rows and the new op). Seen failing first: every new test failed before the code (7 of 8 on the first run; the C60 test passed first time as above; the contact/law and row tests failed before they were built).
+- Impact (`build/plan/impact.mjs origin/tranche/T51 HEAD`, `DECLARED_OPS` is a shared table: 101 modules, 1,440 test files): first run 274 fail, all `op-declarations: officeconfirm: NEEDS_MISSING (R80)` (fixed by `stamps`/`needs`) plus 3 in retrieval-browse (fixed by the schema holding the columns); the 201 files that failed, re-run: 13 fail, the same 13 failing tests as on `origin/tranche/T51` (a worktree of the tip), none names entities or officeconfirm. After the last merge of `tranche/T51` (which holds op-grades' own `officeconfirm` hand row, K4379: weight `reversible` and a description my declaration had to equal, `DECLARED_OP_DISAGREES`, now equal), op-declarations, op-grades, answer-envelope, store-door, plane and retrieval-browse: 822 tests, 14 fail, the same 14 as on `origin/tranche/T51` (op-grades R42/R46 marks, answer-envelope families, wizard-scripts' registry gaps, store-door's `groupdescriptiondraft`, other modules'); none names entities; `officeconfirm` is in none of their failures.
+- format 0 failures; architecture 0 failures; coverage 64 of 64; words 0 failures (inline 0, plain 0, testcopy 0, missingkey 0); ownership 0 failures; `setup-words --check`: the stale-rows note only, none names entities.
+
+Size (session_01Sh4ALdMiG1TkftB8H71Tn6): test runs 20, module lines 2,560
 
 ## Completion (T51-195)
 
@@ -56,3 +75,91 @@ T51-195 (entities, words pass) is done and pushed at cddeabe61b. The 46 findings
 ## J3 · COMPLETE
 
 B3 (K3998) done and pushed. t48.test.mjs no longer holds events' status sentence: it passes its own caller sentence through notAProceeding. Words check for entities: 0 failures. Entities tests 131 pass, 0 fail. checks/run.mjs: format and architecture 0 failures. Ownership: 1 file. Size: test runs 5, module lines 2402. Re-completion in build/jobs/T51/entities.md.
+
+## J4 · COMPLETE
+
+## Completion (B4, K4243)
+
+**Entries applied.** B4 (K4243): `entitybyalias` is declared in `DECLARED_OPS` (`bio-plane/src/entities/index.mjs`, after `resolutiondefect`), in the round's shape. Classes and `mutating: false` are the hand row's (`op-declarations`); `weight: "read"` is the read weight other modules' read rows use (the hand row carries none). Fields: `accepts: ["alias"]`, which the arm reads whole; the viewer is the control plane's stamp and is not an accept. `requires: []`: a call without `alias` answers `count: 0`, not a refusal, so no field is required (the test helper requires a refusal naming each required field). No behaviour change. Test: `R62 entities declares entitybyalias` in `bio-plane/test/m/entities/declared-ops.test.mjs`, with `declaredOpHolds` (only its requires, a field outside its accepts), naming R62. Commit 5d9d8ba312.
+
+**Requirement line for BOB.** R62's declared-op list (`build/requirements/entities.md`) should read `…resolutiondefect, entitybyalias`. I have not edited the requirements.
+
+**Readings (BOB may correct).**
+1. `weight: "read"` for a read row, as the other modules' read rows carry it. The hand row has no weight field, so there is nothing to copy.
+2. `requires: []` rather than `["alias"]`: the arm answers `count: 0` without `alias`, so no refusal names it; with `["alias"]` the helper's requires check would fail.
+
+**Deferred.** None.
+
+**Found in other modules.** `node --test bio-plane/test/m/op-declarations/*.test.mjs` has 2 failures, both red on the base too (checked with my change stashed): `R10, R6` (link-sweep's ops map against its spec) and `R19, R6` (each module's ops map against its family spec). Neither names entities. These belong to the owning jobs, or to BOB.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/entities/*.test.mjs`: 139 pass, 0 fail.
+- `node --test bio-plane/test/m/op-declarations/*.test.mjs bio-plane/test/m/screens-settings/bias.test.mjs bio-plane/test/m/control-plane/routes.test.mjs`: 254 pass, 2 fail (the two base reds above).
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs entities`: 0 failures. `checks/coverage.mjs entities`: 62 of 62 live ids named by a test. `checks/words.mjs entities`: 0 failures. `checks/ownership.mjs entities tranche/T51` (on 5d9d8ba312): 2 files changed by entities, 0 failures.
+
+Size (session_01RV4G2Edww7FayCK93fNip7): test runs 3, module lines 2425
+
+## Completion (B5, K4337)
+
+**Entries applied.** Cause 1: `resolutionsFor` (R14) also answers `unresolved: [{ref, label, page}]` and `unresolved_truncated`: the capture's references (each at its first place) that no resolution row holds, in reading order (the reading's write order), at most the op's `limit`, by reading one past; `page` as R61 (null where the reading cannot say). A fully resolved reading, and a capture with no reading, answer `[]`. A testimony resolves a reference. `op=resolutions` carries it. Also declared `resolutions` in `DECLARED_OPS` (read, accepts `sha256`, `limit`; requires `sha256`, refused `NO_SHA`; K4208) with its `declared-ops` test.
+
+**Requirement lines for BOB to write.**
+- R14: "`resolutionsFor` also answers `unresolved: [{ref, label, page}]`, the references of the capture that no entity resolution holds, one per reference (at its first place), in reading order, at most `limit`, with `unresolved_truncated` by reading one past; `page` as R61 (null when the reading cannot say); `[]` for a fully resolved reading. Sight is R14's. Test: a reading with three unmatched names answers them in order; a testimony removes one; control: a fully resolved reading answers `[]`."
+- R62's list gains `resolutions` (accepts `sha256`, `limit`; requires `sha256`).
+
+**Readings (BOB may correct).** (1) "Reading order" is the order the reading wrote its references (row order). (2) `label` is the reference's own label, `null` if it holds none; no fallback to the key. (3) A reference counts as unresolved when no entity has any resolution (including D) for it.
+
+**Deferred.** None. **Found in other modules.** None new.
+
+**Tests and checks.** New tests seen failing first; negative control (dropping the "no resolution" condition) fails 2 tests. `node --test --test-force-exit bio-plane/test/m/entities/*.test.mjs`: 142 pass, 0 fail. Direct users of entities (all test dirs of modules whose uses name it): 2 fail, identical to the tranche tip (`R24` DEC-149 words, `R17` groupdescriptiondraft); same test names, no new red. format 0 failures; architecture 0; coverage 62 of 62; words 0; ownership 0 (HEAD ca83658d7a).
+
+Size (session_012itnSuHrePTTFaLFKMtKqc): test runs 6, module lines 2447
+
+## J5 · COMPLETE
+
+B5 (K4337 cause 1) done, pushed. resolutionsFor/op=resolutions answers unresolved [{ref,label,page}] + unresolved_truncated (reading order, bounded, [] when fully resolved); resolutions declared in DECLARED_OPS. entities tests 142/0; direct users: same 2 reds as tranche tip; format/architecture/coverage 62of62/words/ownership clean. Requirement lines for R14 and R62 in my record (Completion B5). Size: test runs 6, module lines 2447.
+
+## J6 · QUESTION
+
+QUESTION (C64, entities R63/R64; carrying on with my best readings, nothing blocks):
+1. NOT_AN_OFFICE already exists as another module's code: duties mints it with the word row `refusal.NOT_AN_OFFICE` ("Powers are read for an office...") and lines refuses it inline. A catalogue row of mine under that key would say the wrong thing at my site, so `confirmOffice` answers `NOT_AN_OFFICE` and `NOT_NAMED_BY_A_MEMBER` as plain `{ok:false, reason, detail}` (no `code`/`check` row), each detail its own sentence, like entities' UNKNOWN_SECTOR/NOT_AN_ORGANISATION. If you want catalogue rows (R29), name the keys (my proposal: `refusal.OFFICE_NOT_AN_OFFICE_TO_CONFIRM`, `refusal.NOT_NAMED_BY_A_MEMBER`) and a different code than duties' for the first.
+2. Stand-in sentences (localize defaults, no word row yet): `entities.index.an_office_is_confirmed_by`, `entities.index.confirming_an_office_a_member` (the act phrase NOT_AN_ADMIN names), `entities.index.only_an_office_a_member`, `entities.index.this_office_was_not_named`, and the op description `entities.declared.officeconfirm`.
+3. DEC-402 draws "where requests go" and "the law it goes under" beside the office's name on `request`, but `entitycreate` accepts only kind, label, note, aliases, sector, proceeding, forum_kind: the entity holds no address or law. I register what the screen sends as kind/label/note/aliases and hold nothing else. If the office is to carry its recipient address and law, that is a requirement line for BOB (where it lives) before the screen can rely on it.
+4. R63's "from the request screen only" is the door's grade (op-grades, cause-shell-3): entities cannot see a screen, so it marks every office a non-administrator member (not a machine) registers and refuses nothing by screen. My reading of `officeconfirm`: weight `reversible`, classes admin/member/probe (the module refuses a member), `by` stamped into the body like `entityidentify`'s; op-declarations/control-plane must route it (L11).
+
+## J7 · COMPLETE
+
+COMPLETE (fix round 3, ENTITIES #18). C64 provider's part met: R63 (`named_by_member` on an office a non-administrator member registers, read by readEntity/entitiesByAlias/entitiesOfKind; office `contact` and `law`, K4364) and R64 (`confirmOffice`, `op=officeconfirm`; rows C-91.10 CONFIRM_NOT_AN_OFFICE and C-91.11 NOT_NAMED_BY_A_MEMBER, K4364); R62 declares officeconfirm (stamps viewer,by; needs null; weight reversible; description equal to op-grades' hand row). C60 test added and passes first time: no defect in entities (connect is connections' and the screen's). Entities 152 pass, 0 fail (t51r3.test.mjs new). Impact over 101 modules/1,440 files: the only new reds were officeconfirm NEEDS_MISSING and a retrieval-browse fixture, both fixed; the rest equal the tranche tip's reds. format, architecture, coverage 64/64, words, ownership 0 failures. Tranche/T51 merged (through 3033d0015a).
+Requirement lines for BOB: R63/R64 as written plus: (1) `named_by_member`, `confirmed_by` also in entitiesByAlias items; `confirmed_at` in readEntity; non-office kinds answer null (readEntity) or omit them (entitiesOfKind); (2) `law` is a `citation` or `name` of an active profile's `records_laws` entry, held as its citation; refusals UNKNOWN_LAW, BAD_CONTACT, OFFICE_FIELD_NOT_FOR_KIND, each before an id is allocated; (3) the confirm's stamps are the address's `by` and `viewer` (a body `by` is never read); (4) R62 lists officeconfirm (accepts/requires entityId).
+Found elsewhere: (a) DEC-402 needs the federal records law (FOIA) in the first profile's `records_laws` (jurisdictions): today it holds the state law only, so `law` from the request screen would be refused UNKNOWN_LAW for FOIA; (b) screens-action sends `law` as that citation and `contact` as {kind: address|email|portal, value}; (c) control-plane/wave 2 routes officeconfirm; (d) stale generated artifact: bio-plane/dist/bio-plane.bundled.mjs and the release copy embed entities' source. Stand-in sentences listed in my record (they join the design's batch).
+Size (session_01Sh4ALdMiG1TkftB8H71Tn6): test runs 20, module lines 2,560
+
+## J8 · COMPLETE
+
+COMPLETE again (B8): officeconfirm's description was already your sentence word for word (commit 'officeconfirm's description is op-grades'), declared through localize entities.declared.officeconfirm; behaviour matches it. Merged tranche/T51 again; entities 152 pass, op-grades cause3 clean of entities reds. Nothing else changed.
+
+## J9 · QUESTION
+
+QUESTION (C64-more, entities). Built and green in my module: `entitycreate` of an office by a non-administrator member (the R63 marked path) first looks for a held office of the same folded name (a live alias; one that states another law does not match) and answers it with `existed: true`, writing nothing; an administrator's or a machine's creation is unchanged (they may register two offices of one name, e.g. the Town Clerk of two towns). New tests `t51r4.test.mjs` (R65, seen red then green). Entities suite 156 pass.
+
+The conflict: `actions/t33.test.mjs` "R9 R47 actionCreate fills an office arm's entity id..." registers a second "Town Clerk" office through `createEntity` with `declaredBy` a plain member (the fixture has no members row, so she reads as a non-administrator), to test the ambiguous case. With the look-first it gets the first office back, so that test fails (the only failure in 25 suites run; the others failing there also fail on the tranche tip). I cannot change `actions`.
+
+Best reading and my plan unless you say otherwise: keep look-first as the default for a member's office (your instruction), and the `actions` job (or you) makes that test's twin through an administrator's or a machine's stamp (the one-line change: `declaredBy` a machine for the twin). Alternative if you would rather no other test moves: I make the look-first opt-in by an `accepts` field `reuse: true` on `entitycreate`, which `screens-action`'s "Use this office" would send; the seam test there then needs that field. I recommend the default (no new field).
+
+## Completion (T51 fix round 4, ENTITIES #19)
+
+**C64-more (provider).** (1) Root cause: `entitycreate` created without looking (`entities/index.mjs` `#create`, the insert after R63's `marked`); the screen's one-box comma split is `screens-action`'s (`request.mjs:204`). Fix: a non-administrator member's office (the R63 marked path) is first looked up by its folded name among the live aliases of offices (a withdrawn alias matches nothing, R8); an office that states a different law does not match; a hit answers `{ok, existed: true, entity_id, kind, label, alias_count, at, sector}` and writes nothing (no entity, no alias, no mark change). An administrator's or a machine's creation is unchanged (twins stay theirs to make). A refusal still comes first. (2) Gap: no test named an office twice; `t51r4.test.mjs` does (and the control kinds, law, administrator twin). (3) Failing-first: `node --test .../t51r4.test.mjs` with the source change stashed: 3 fail, 1 pass (the control that a refusal comes first); with it: 4 pass. (4) N.
+
+**Reading (BOB answered B10: default look-first, no new field).** Matching is the module's fold (`normAlias`: case and whitespace; punctuation is not folded, as R6). Kind other than office, and an administrator's or a machine's office, are not looked up.
+
+**Expected red (B10):** `actions/t33.test.mjs` "R9 R47 actionCreate fills an office arm's entity id from the one office entity held..." (its twin office is made by a plain member; BOB fixes it with a machine's stamp at merge). Not touched.
+
+**Proposed requirement line (BOB writes):** R65 (T51 fix round 4, C64-more; amends R63) `createEntity` of kind `office` by a non-administrator member (the R63 marked path), when a held office has the same folded name as its label or a standing alias (R6's fold; a withdrawn alias, R8, matches nothing) and does not state another `law` than the one given, registers nothing and answers that office with `existed: true`; an administrator's or a machine's office is registered as before. Test: a member names an office twice (also with other casing and spacing, and by another member): both answers name the first, no row written; control: an administrator's twin is a new entry, a different name, a person of the same name, and an office under another law are new entries; a refusal is answered first.
+
+**Tests and checks.** `node --test --test-force-exit bio-plane/test/m/entities/`: 156 pass, 0 fail. Users run (offices created): actions 147/1 (the expected red above), duties, instance-setup, filings, escalation, conformance, consequences, following, people, screens-action 229, screens-settings 246/1, retrieval-browse, op-grades, op-declarations 244/1, affordances, money, lines, events, calculations, wizard-scripts, inquiry, bias, case-disclosures, screens-entry, screens-investigate: all pass but the three named; screens-settings (R15 C84) and op-declarations (R34) fail identically on `tranche/T51`'s tip. format, architecture, coverage (64 of 64), words, ownership: 0 failures. No generated artifact edited; `bio-plane/dist` still embeds entities' source (stale, BOB regenerates).
+
+Size (session_01KsYNk1nPchfRUwMdahprpu): test runs 12, module lines 3,150
+
+## J10 · COMPLETE
+
+COMPLETE (ENTITIES #19): C64-more provider met (look-first for a member's office, existed:true, nothing written); four fields, proposed R65 line and counts are in build/jobs/T51/entities.md. Entities 156 pass; checks 0 failures. One expected red: actions t33 'R9 R47 actionCreate fills an office arm's entity id...' (B10). No open question.

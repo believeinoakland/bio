@@ -1,0 +1,18 @@
+FIRST, if `mail start` cannot push because your container's copy of `job/T51/screens-inquiry` is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/screens-inquiry tranche/T51 && git branch -m job/T51/screens-inquiry stale/screens-inquiry-local && git checkout -b job/T51/screens-inquiry origin/job/T51/screens-inquiry`, then re-run `mail start` (your session, depth 2). If a step is refused, post BLOCKED naming it and wait.
+
+CHANGE (K4258, K4259, K4269, K4270) for SCREENS-INQUIRY, a new session. Merge `tranche/T51` into your branch first. Before any test run, every directory with a tracked `package-lock.json` must have its `node_modules` (rulings-active §4, K4113).
+
+**Scope rule (Bob, K4269/K4270): only what makes an operation work or a required screen reachable.** Misused words and improper renderings are NOT in this job: if you see one, list it in your COMPLETE under "for later-ux" (screen · what · where) and do not fix it.
+
+Entries (each the operation named; requirement ids in `build/requirements/screens-inquiry.md`):
+1. **R110** on the question screen: `citeimported` and `withdrawimported` (citation's ops, merged) are sent and their answers drawn, so a member can cite and withdraw an imported finding.
+2. **`document`'s `captureprogressions`** (the registry, wizard-scripts R41): the document screen sends it.
+3. **Reads the screens need to work:** the typings read (content's `transcriptions`), origins (provenance's `origins`) and one document's route (`provenanceroutes` with `bundleId`), each read and drawn where the design places it; `contradiction`'s `taken_up` read so a taken-up contradiction is not offered again; the objective's `progressions` list (progressions' `progressions`) and `entitieskind` for its pickers.
+4. **`reasonField: "statement"`** on `aspirationdeclare` and `goaldeclare`, so the declaration sends the reason its owner requires.
+5. **The project page's Matter row** opens `/app/matter/<project>` when no determination is held (a project needs a door to its first determination, K4170); R90's test reversed accordingly (BOB's, K4259).
+
+NOT in this job (recorded in `build/plan/later-ux.md` by BOB): adopting DEC-391's minted label keys in place of `GAP_WORDS`/`PENDING_WORDS`; `rerunread`'s finding titles; `strength`'s `ungraded` display. Leave those as they are unless one blocks an operation above (then say so).
+
+Read in full, never scan (K3678): your requirements, these entries, your layer's contract, your own code files that these entries touch, and of each used module only the services named above (their Provides). If a file you must read is too large to read whole, stop at once and post BLOCKED, cause `reading`. Workers: sonnet medium for reading or diagnosis, haiku low for mechanical edits; never opus.
+
+Test: every id you change is named by a test at the module's interface (no sentence copied; read words by key). Run your module's suite, then `checks/run.mjs`; then COMPLETE with the requirement lines you want BOB to write, and the `Size` line.

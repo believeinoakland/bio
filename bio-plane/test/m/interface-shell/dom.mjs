@@ -110,7 +110,8 @@ export class Element extends Node {
   get outerHTML() { return serialize(this); }
   matches(sel) { return compile(sel)(this); }
   closest(sel) { const m = compile(sel); for (let x = this; x && x.nodeType === 1; x = x.parentNode) if (m(x)) return x; return null; }
-  focus() { const d = this.ownerDocument; const was = d.activeElement; if (was === this) return; d.activeElement = this;
+  /* a focus without `preventScroll` scrolls the element into view, as a browser's does (recorded as `scrolledTo`, like `scrollIntoView`) */
+  focus(o) { const d = this.ownerDocument; const was = d.activeElement; if (!(o && o.preventScroll)) d.scrolledTo = this; if (was === this) return; d.activeElement = this;
     if (was && was !== d.body) was.dispatchEvent(new Event("focusout", { relatedTarget: this })); this.dispatchEvent(new Event("focusin")); }
   blur() { const d = this.ownerDocument; if (d.activeElement === this) { d.activeElement = d.body; this.dispatchEvent(new Event("focusout")); } }
   click() { this.dispatchEvent(new Event("click")); }
@@ -264,6 +265,9 @@ export function documentOf(html) {
   const body = /<body[^>]*>([\s\S]*)<\/body>/i.exec(html);
   const lang = /<html[^>]*\blang="([^"]*)"/i.exec(html);
   if (lang) d.documentElement.setAttribute("lang", lang[1]);
+  /* the page's version, named in its head (R5, fix round 3) */
+  const meta = /<meta\s+name="cs-version"\s+content="([^"]*)"/i.exec(html);
+  if (meta) { const m = d.createElement("meta"); m.setAttribute("name", "cs-version"); m.setAttribute("content", meta[1]); d.head.append(m); }
   d.body.innerHTML = body ? body[1] : html;
   return d;
 }

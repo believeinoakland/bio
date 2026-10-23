@@ -1,6 +1,6 @@
 # sources (T51)
 
-**Status** · session_01WG9setBbZFc6ABChv97kKy · depth 2 · COMPLETE · handled B2
+**Status** · session_01HJVgnne3GN9P39oYCyyD1Q · depth 2 · COMPLETE · handled B4
 
 ## Entries applied
 
@@ -44,3 +44,30 @@ Words round RW (K4015) for sources: the two findings are fixed (commit 6b4b893d7
 ## J4 · COMPLETE
 
 B2 (words round RW, K4015) done: sources' two findings fixed by localize (checks.mjs BAD_DISCLOSURE and NO_SERVICE), commit 6b4b893d7e. Checks: words 0 failures for sources; tests 38/38; format, architecture, coverage clean for sources; setup-words --check shows only the expected stale-rows note; ownership 0 failures. Record: build/jobs/T51/sources.md.
+
+## J5 · COMPLETE
+
+COMPLETE for FR-55 (sources, T51; K4206). Commit a97c03ed66 on job/T51/sources.
+
+**Entries applied**
+- B3 entry 1 (K4206): `knockerconsent` declared in `DECLARED_OPS` (bio-plane/src/sources/index.mjs). Row: `classes: null` (no account), `mutating: true`, `weight: "credential"` (the ground op-grades holds for it), `description` = localize("sources.declared.knockerconsent", the op's hand sentence). Both must agree with the hand rows (op-declarations R81, op-grades R50), and they do. `fields.accepts`: `knockerSecret`, `entry`, `audience`, `withdraw`, the fields the arm reads. The connecting address and the instant are control-plane stamps, so they are not accepts.
+- `fields.requires` is empty, by design: R11 says every failure answers SECRET_NOT_RECOGNISED, naming no field, so a refusal names no required field. No refusal was changed, and no meaning was changed.
+- Requirement: new R22 in build/requirements/sources.md, marked *(not yet met: T51)*, as B4 asks. The Status line now says T51 (K4206). I wrote the line myself in the module's requirements file, not in this record.
+- Tests: build/requirements/sources.md R22 is named by two tests in bio-plane/test/m/sources/declared-ops.test.mjs. (1) declaredOpHolds holds the declaration. (2) A door-level test (sourcesOps → knockerconsent) shows that a consent with all accepted fields is ok, and that each omitted field (knockerSecret, entry, audience) answers the same SECRET_NOT_RECOGNISED as a wrong secret.
+- Seen failing: with the row removed, test (1) fails ("declaration has no fields.accepts and fields.requires arrays"). Test (2) passes with or without the row. It is a control for the uniform refusal that already held, not a red test for the fix.
+- test-support is already in `uses`, so BOB needs to add nothing.
+- Deferred: none.
+
+**Found in other modules (P9; none is in sources; all fail identically with my change stashed, so they predate it)**
+- op-grades / op-declarations collector suites: R42 (MARKS frozen and total over the rungless acts: `expertisewithdraw` is the one op the actual and expected lists disagree on), R46 (rungless registered act has an entry), and R73 (R21, T50; the wizard-scripts declaration check, registryActGaps). 3 of 441 tests fail.
+- words testcopy failures in bio-plane/test/m/op-grades/t36.test.mjs (lines 47, 49, 52, 55, 59), t47.test.mjs:36 and t48.test.mjs:34.
+- coverage (`checks/run.mjs`): live ids named by no test in agent-harness (R17), agent-runner (R37, R38, R40), citation (R16–R18), installer-steps (R26, R31), journey-check (R19), link-sweep (R13–R15), monitoring (R75–R77).
+
+**Checks and tests (run from the process repository, with node_modules installed for every tracked lockfile directory)**
+- `node --test bio-plane/test/m/sources/declared-ops.test.mjs`: 6 pass, 0 fail.
+- `node --test bio-plane/test/m/sources/`: 44 pass, 0 fail.
+- `node checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; coverage: nothing for sources (the failures are the other modules listed above); words: 0 failures for sources (the 7 testcopy failures are in op-grades, above).
+- `node checks/ownership.mjs /home/user/bio sources tranche/T51 job/T51/sources`: 0 failures.
+- Collector suites (op-declarations, op-grades, test-support): 438 of 441 pass; the 3 failures above are the same with and without my change.
+
+Size (session_01HJVgnne3GN9P39oYCyyD1Q): test runs 7, module lines 1095

@@ -1,34 +1,58 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #230 (`session_019NF6ADBafVfG9j7bUX4C1L`, depth 1, parent ROOT #7, primary account), 2026-10-20 ~06:35 UTC, at 54% context (§5.8). **T51 is OPEN** on `tranche/T51`; the **fix round** runs (plan section "Fix round" in `build/plan/current.md`; binding text `build/plan/fix-round-T51.md`, `fix-round-T51-pass.md`, `starts-T51-FR/*.txt`). Read `build/rulings-active.md` whole, then with the Read tool, whole, **K4188–K4199** (the last lines of `build/rulings.md`; `sed -n` them into a scratch file first), then `build/plan/fix-round-T51.md` and `build/plan/fix-round-T51-pass.md`. Bodies over ~50 KB (`walk-T51-live/CAUSES-live.md`, the STARTs as a set) are read by a reading worker if needed (K3676).
+**Status** · Replaced whole at each handoff. Written by BOB #258 (`session_015JBWKDY86hatNaHfvPXxCE`, depth 1, parent ROOT #8 `session_01R3hvN64bYHG3vPQmYmaeLR`, secondary account), 2026-10-23 ~02:27 UTC, at 40 % of its window, at a clean point: every merge pushed and ruled, every job entry answered, every reviewed START posted. **T51 is OPEN** on `tranche/T51`; fix round 6. Read `build/rulings-active.md` whole, then **K4659 to the last line** of `build/rulings.md` whole, then `build/plan/fix-round-6-T51.md` sections 0, 3, 7 and the entries G41 (with its "G41 follow-up" bullet above G42) to G47.
 
-## Where the round stands
+## Bob's direction today (in force)
 
-- **Wave 1 merged:** FR-01 test-support, FR-02 bundler, FR-03 op-grades, FR-04 op-declarations, FR-05 interface-shell, FR-46 wizard-scripts (registry, library and front doors at the design `1cc4a957f0`). Their met marks are struck.
-- **Re-opened, sessions alive (merge again on their COMPLETE):** OP-DECLARATIONS #27 `session_01Wn8nVUduH4GbFBXsW5fYy7` (CHANGE B12: the 37 owed acts the new registry draws, into `OWED_BY_FIX_ROUND`, derived not hand-listed); INTERFACE-SHELL #8 `session_018RtYmRfvBFKT71cztJSVMH` (CHANGE B18: the shell's added `reason` is a mark, not a declared field). The other wave-1 sessions (TEST-SUPPORT #7, BUNDLER #24, OP-GRADES #15, WIZARD-SCRIPTS #14) are complete and idle; archive all six at the round's close with their rows (§5.6, §10).
-- **Accepted red by name on the tranche:** bundler R39's real-fleet arm and `fleetbundles` §9 (until FR-14 agent-runner merges); `fleetbundles`' stale bundles (regenerated after the round); interface-shell R106 "opens where registered" ×7 (until the wave-2 screen jobs draw the six screens); the design-drawn "acts are exactly its registry acts" reds of the screen modules (K4174, K4187); affordances R57/R61 (FR-40); plane R24 (new screens' words, at regeneration); screens-intake R8 (FR-26).
+- Alpha as quickly and efficiently as possible; token efficiency (K3269, K4614). No pause at 80 % (K4614).
+- K4426 at planning (K4597): `fixplan` 0 before any START; an independent reviewer before a new plan entry is used. Every review this session found real defects (G44: 13, G45-G47: 16, G47's rewrite: 11): never skip it.
+- **Nothing is open with Bob.**
+- To report to Bob when the round ends (protective bounds, K1881): a CSV over 17 MiB stated refused (K4652); one citation at most 20,000 cells (K4642 (6)); a stored reading row over 1 MiB stated (K4639); a workbook added over ~50,000 cells or over its file bound stated, the safe view's per-sheet cut (K4662, K4665; figures set by the jobs' measures); an ingest's reason 2,000 characters (K4671); a case document over 1.5 MiB stated (K4669); the portal snapshot parse bound (~8 MiB, set by measure, K4669).
 
-## Next, in order
+## Running (17 sessions; STARTs `build/plan/starts-T51-F6k/`)
 
-1. Take over (§5.1): Status and Writer lines; delete WATCH #230 `trig_01CT9Z8pPyvqQQU7Yhea5XXh` (into ROOT) and my backstop (`Backstop #230`, into my session); arm yours; archive me and write my BOB-final row under T51; read the channel (UX design #35 `session_017Kc5zXnyJCdnZCKZ4daDSe`; read through U418, posted through B414).
-2. When op-declarations and interface-shell are COMPLETE: merge them (op-declarations writes no requirement file: R80/R81 are written; interface-shell's R103–R109 are written).
-3. **The mechanical pass** (`fix-round-T51-pass.md`; mechanics §5.10; no job running): one worker (sonnet, medium); its module list from the guard's census (`node --test bio-plane/test/m/interface-shell/declared.test.mjs` prints `declared N of M`), minus every owner with a job; any judgment hands the module its own wave-2 job; whole suite, `checks/run.mjs`, artifacts once; commit with a ruling.
-4. **Wave 2** (§5.3), all at once: the STARTs in `build/plan/starts-T51-FR/` not yet used (FR-06 to FR-45 and FR-47, FR-40 affordances; the plan's section 4 is the list and merge order). Each job's model is in its START. Before each START: job branch an ancestor of the tranche (K3969); reading-set line as written.
-5. Then the round's second pass (plan §7 "Placed in T51"): the mark-and-asking rule (K4199); deleting the superseded hand rows after the redeploy shows the plane assembling the owners' declarations; bundler's size (4,228 lines by the job's count, K4190) measured by K2513's rule, split if over.
-6. Then one check pass on one tree (every module's tests with `mt.mjs`, `checks/run.mjs`, the regenerated artifacts, the local walk once), **redeploy biosmoke8** (unsigned dev build, K4186; `deploy-test.yml` cannot be dispatched until it is on `main`, so deploy directly from your session: `node bio-plane/scripts/deploy-fleet.mjs <member> --instance biosmoke8 --test-instance`, then the plane's `deploy.mjs biosmoke8 <version> dist/bio-plane.bundled.mjs --test-instance`; an auto-mode refusal is brought to Bob in your session, K4177; after file-scanner's deploy call `POST /mirror` once and confirm the 27 files scan), the smoke, a targeted re-walk (incl. the 390 px inspector walk, I-08, T-06, I-34), the census re-run with the guard's count; repeat only for what that pass finds.
-7. At the end: the alpha release cut and signed (Bob's one click), T51's close (§5.7), the report to Bob.
+| job | for | state |
+|---|---|---|
+| PLANE #52 `session_019MQdmdBDvLzCM4txninn2N` | G41 proof, then G44 (CHANGE B50) | G41 shape proof done but 8 MB/17 MiB `cellsOf` red by name on EXTRACTION #39, and the >=12 MB first-tick 10 s assertion red by name on G48 |
+| FILE-SAFETY #18 `session_016eGP24TnGhJiYfns4RdWuR` | G44 safe view | started 01:57 |
+| WORKBOOKS #5 `session_01BnkTWoC5GF8VJe3V4sMRF5` | G44 add bound | started 01:57 |
+| SCREENS-INTAKE #20 `session_01S2atqbcekracFHqkp4KjL2` | G44 drawing | **COMPLETE (J34)**; merge right after file-safety, then regenerate setup-words rows; its 5 reds are by name `UNKNOWN_WORD` until then. Its J34 is left unread on purpose |
+| EXTRACTION #39 `session_013ZBMsX3r7H8TLywtAcFXZJ` | G41 follow-up (format fallback, ANSWER B43) | working |
+| CAPTURE #50 `session_01L1Y9FNxaoQ4v7iZDkLBJWG` | G41 follow-up (multipart upload profile) | started 02:24 |
+| CALCULATIONS #8 `session_015P7YZfAbM7iah2fh9UyBGM` | G45 (CHANGE B13); G41 already merged (K4668) | working |
+| FOLLOWING #13 `session_01QjU7Wn9EN1hqzzBdD8DJR6` | G46 | started 02:16 |
+| CASE-GRAMMAR #20 `session_01Fki6itUmQ4gkEDi9Uhphep` | G47 (optional `sha`, format `/9`) | started 02:24 |
+| CASE-TENSIONS #3 `session_01TSmueyvUPtNYuxRUg58uBu` | G47 | started 02:24 |
+| PUBLICATION #36 `session_01QheArVvjbWvvMPvEMfwKVF` | G47 (1.5 MiB bound) | started 02:24 |
+| PUBLIC-READ #30 `session_01GnvpRhqTuRSK7Kr4FmJwte` | G47 | started 02:24 |
+| CASE-CHECKER #16 `session_01RPHamJS9k22iJs3Y7dJ4XG` | G47 (`spec.mjs`, maps) | started 02:24 |
+| CASE-DISCLOSURES #17 `session_01JCHNeQistwMeSv51kQxgRA` | G47 (`materialRows` sha) | started 02:24 |
+| CASE-INPUTS #8 `session_01QBHmyVdK3F9mLRdReuQNVZ` | G47 (`why` of a refused splice) | started 02:24 |
+| CASE-AUTHORING #41 `session_01MN9xdJBsqY5jNetBuRbobY` | G47 (refusal row) | started 02:24 |
+
+Merge order: `modules.json` order (plan section 3). After each provider merge post a CHANGE to its users and ring them. New sessions start reading their mailbox themselves; ring every job `mail check` lists RING. A merged job's session is archived at once with its row; CALCULATIONS #8 stays open until G45 merges.
+
+## Do next, in order
+
+1. **Take over** (§5.1): archive BOB #258 once idle (row `BOB-final`, T51); delete its backstop `trig_0111D48E1mHbPPUHm5Uptyjj` and WATCH #258 `trig_01Tm3ASoLLjKsTkHvLy8kwsC`; arm yours; `node_modules` (K4113). Use the process repository's own `mail.mjs` (`/home/user/civicos-process/tools/mail.mjs`): running `cp-close`'s copy was refused by auto mode (K4659); job branches are moved by a plain fast-forward push of `origin/tranche/T51` after `git merge-base --is-ancestor` (never forced). `fixplan` runs from `/home/user/cp-close/checks/fixplan.mjs` (worktree of civicos-process `prep/T51-close-v2`; it ran fine).
+2. `mail check`; act on every entry; merge each COMPLETE in order. **Read each check's own failure count** (`checks/run.mjs` prints "1 failure" singular: K4668).
+3. **G48** (K4673): plan it from PLANE #52's J36 (the 17 MiB CSV's first tick: whole-text classification 6.8 s in docprofile `readText`/`doctypeFor`, site-profiles `recognise`, roster-reader detectors, doctypes windows; per-unit counts 3.7 s in reading-pipeline and textchain `glyphCount`), in the four fields, by a planning worker; independent review; STARTs. Without it the 12 MB+ CSVs fail the 10 s tick bar; lowering the 17 MiB bound only if it fails (K4670).
+4. **The round end** (plan §7): regenerate in the manifest's order (setup-words rows at file-safety's and workbooks' merges; case-checker `program.mjs` after G47; bundles all stale; newgroup last), verify `fleetbundles`, `newgroup-bundle-fresh`, case-checker `program.test.mjs`; the whole suite (`module-tests.mjs` now loads the preload, K4666); update `k4426-check-T51-F6.md` (G41-G48 rows); `fixplan` 0; **one redeploy** (K4296 route); the targeted re-walk (plan §7.3, with the G44 workbooks and the 4 MB CSV preview); the final pass.
+5. **T51's close** (§5.7): the design MERGE U458 (DEC-422, K4663) first.
+
+## Accepted reds (by name)
+
+plane `release` R24; plane `l77-size` R77 L (K4608, K4613); file-safety R24; promotion row-census; `fleetbundles` section 10, agent-worker `requirements`, ocr-worker, `newgroup-bundle-fresh` arms (C)/(D) (stale bundles until the round-end regeneration); newgroup R8, R11, R20, R33, R44, R55, R61, R71, `wizard.test.mjs` (K4580); case-authoring R17 `document.test.mjs` (until G47 merges, K4666); case-checker `program.test.mjs` R13 (stale program until the round-end regeneration, K4672). screens-inquiry's R96 reds are cleared (K4672). Heavy files run alone: `reading-pipeline/pdf-pieces`, `memory`, the shape probes, `control-plane` R122.
+
+## Lesson (this session)
+
+A START drafted before a merge carries that day's facts: re-read each START's "providers' state", the preload line and the BOB number just before posting it (K4667 corrected four). And a review's fixes create new owners: every reviewed rewrite of a cause gets its own short review before its new jobs start (K4671, K4672).
 
 ## Acts on main or sessions (reviewed acts, §5.8)
 
-- `main` moves only by T51's close PR (§5.7 (3), K2273) and the design PR at the close on its MERGE (K1177); no refusal recorded.
-- Deploys to biosmoke8: each deploy act may be refused by auto mode ("Production Deploy"); Bob's approval holds only in the session where he gives it (K4177). Never force-push; account 20b5…7f72 only.
+- `main` moves only by T51's close PR (§5.7 (3)), the design MERGE first (§5.7 (1), K1177; U458 asks it, K4663); no refusal recorded. The process repository's `main` by PR at the close (K4275), carrying `prep/T51-close-v2`.
+- Job branches only by fast-forward (K4385, K4659); never a force-push.
+- Deploys to biosmoke8 by push to `deploy-test/biosmoke8/{dry-run,deploy}` (K4296); none until every round-6 cause, G41-G48 included, passes K4426's check and `fixplan` reads 0.
+- Sessions: archive each job at its merge; lanes' sessions are not BOB's to archive.
 
-## Helpers (rebuild in your scratchpad)
-
-- `mt.mjs`: a copy of `.github/scripts/module-tests.mjs` that filters modules by argv, passes `--test-force-exit`, and excludes `journey-check/journey.test.mjs`. Write test output to a file.
-- Packages before any test run (K4113).
-- The design's merges go into the tranche as they arrive (K3917): merge, `node bio-plane/src/setup-words/build.mjs`, `--check`, commit, ACK; a running job that reads the registry gets a CHANGE.
-
-## Open with Bob
-
-- None.
+Lanes: AI-DESIGN A41, JOURNEYS W4, INVESTIGATION-DESIGN H43, PERFORMANCE P15 (unchanged). UX-DESIGN through U458 read (MERGE DEC-422 at the close, K4663); B492 ours, unread by it.

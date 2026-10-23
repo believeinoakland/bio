@@ -65,17 +65,21 @@ test("R17 every screen drawn over an empty fixture shows no empty section and no
 });
 
 test("R18 before a capture the address tab has the underlined tab bar, one act row of acquire and capturerequest, and no watching section; after one, Watch and Check join that row", async () => {
-  const p = await open("/app/capture/address", { plane: FULL });
+  /* R49: `existed` alone files nothing; a new capture is promoted, then the watching acts join the row */
+  const p = await open("/app/capture/address", { plane: { ...FULL, acquire: ok({ ok: true, document: { capture: { sha256: SHA } } }),
+    allocid: ok({ ok: true, id: "INFO-2026-0009" }), promote: (req) => ok({ ok: true, bundleId: req.body.bundleId }) } });
   assert.ok(main(p).querySelector(".mk-tabs2"), "the design's tab bar");
   assert.equal(main(p).querySelectorAll('.mk-tabs2 [aria-selected="true"]').length, 1);
   assert.equal(main(p).querySelectorAll(".mk-tabs2 a[data-nav]").length, 3);
-  assert.equal(main(p).querySelectorAll(".mk-acts").length, 1, "one act row");
+  /* R47 added a section of its own (the logins), whose act is not the capture's: the capture's acts are one row */
+  const capRows = (q) => main(q).querySelectorAll(".mk-acts").filter((r) => r.querySelector('[data-act="acquire"]'));
+  assert.equal(capRows(p).length, 1, "one act row");
   assert.ok(!btn(p, "monitorset") && !btn(p, "monitor"));
   assert.ok(!says(p, "screen.capture.address.watch"));
   fill(p, { "ci-address": "https://x.example/a" });
   await press(p, "acquire");
-  assert.equal(main(p).querySelectorAll(".mk-acts").length, 1, "still one act row");
-  const row = main(p).querySelector(".mk-acts");
+  assert.equal(capRows(p).length, 1, "still one act row");
+  const row = capRows(p)[0];
   for (const op of ["acquire", "capturerequest", "monitorset", "monitor"]) assert.ok(row.querySelector(`button[data-act="${op}"]`), `${op} in the act row`);
 });
 
@@ -94,7 +98,8 @@ test("R19 an empty Set aside is not drawn; one that holds a row is; a failed rea
 
 test("R19 the held reads ask a bounded page, so the unfiltered read the walk saw stall is no longer asked for 200 rows with their archive listings", async () => {
   const p = await open("/app/held", { plane: FULL });
-  assert.deepEqual(p.byOp("heldcaptures").map((r) => r.query.limit), ['50', '50']);
+  /* the picker page, the set-aside list and the full fields of the rows drawn (C14), each bounded to the page */
+  assert.deepEqual(p.byOp("heldcaptures").map((r) => r.query.limit), ['50', '50', '50']);
 });
 
 test("R20 archive and open-file opened bare draw the shell's \"Nothing is here\" with the way back, never \"Name an archive\" or \"Name a file\"", async () => {

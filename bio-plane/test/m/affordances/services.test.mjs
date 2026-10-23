@@ -60,15 +60,18 @@ test("R12: unranked lists the mutating ops in neither RUNGS nor RUNG_ABSENT, gat
   assert.deepEqual(unaccounted(table).unranked, ["frobnicate", "ungated"]);
 });
 
-test("R12: stale lists the keys of RUNGS and RUNG_ABSENT the table does not carry as mutating, and of NON_ACTS it "
-   + "does not carry as gated", () => {
+test("R12: stale lists the keys of RUNGS and RUNG_ABSENT the table does not carry as mutating, and of NON_ACTS those no row "
+   + "carries at all (K4279: a read the table carries ungated is not stale; one it does not carry is)", () => {
   const mutating = new Set(["conclude", "promote"]);
   const table = [...new Set([...Object.keys(RUNGS), ...Object.keys(RUNG_ABSENT), ...Object.keys(NON_ACTS), ...ACTS.map((a) => a.id)])]
     .map((op) => ({ op, mutating: mutating.has(op), gated: op !== "queue" }));
   /* T48 (R39): a `caller-owned` absence carried as a gated row is accounted for, though not as mutating */
   const accounted = (op) => RUNG_ABSENT[op]?.ground === "caller-owned" && !Object.hasOwn(RUNGS, op) && op !== "queue";
-  const want = [...new Set([...Object.keys(RUNGS), ...Object.keys(RUNG_ABSENT)].filter((op) => !mutating.has(op) && !accounted(op)).concat(["queue"]))].sort();
+  const want = [...new Set([...Object.keys(RUNGS), ...Object.keys(RUNG_ABSENT)].filter((op) => !mutating.has(op) && !accounted(op)))].sort();
   assert.deepEqual(unaccounted(table).stale, want);
+  /* the control: `queue` is a NON_ACT the table carries ungated, so it is not stale; with no row for it, it is */
+  assert.ok(!unaccounted(table).stale.includes("queue"));
+  assert.ok(unaccounted(table.filter((r) => r.op !== "queue")).stale.includes("queue"));
 });
 
 test("R12: all three are empty exactly when the table and the catalogue account for each other", () => {

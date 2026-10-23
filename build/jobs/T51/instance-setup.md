@@ -1,6 +1,6 @@
 # instance-setup (T51)
 
-**Status** · session_014RUYYmkPmsWz2WmzcUC1Mk · depth 2 · COMPLETE · handled B2
+**Status** · session_018SUX5UvD4QojUdVCPkUvFj · depth 2 · COMPLETE · handled B7
 
 ## J1 · REPORT · re B1
 
@@ -126,3 +126,45 @@ Checks and tests:
 Commit on `job/T51/instance-setup`, pushed.
 
 Size (session_014RUYYmkPmsWz2WmzcUC1Mk): test runs 11, module lines 3589
+
+## J9 · QUESTION
+
+QUESTION (K4202, the census; pass §3 step 5). Two ops of the sixteen have no existing row I may copy, so I declare nothing for them yet and declare the other fourteen.
+
+1. `runtime` and `selftest` (sent by registry/updates): `op-declarations` gives each its classes (`admin`, `member`, `probe`, `mutating: false`), but `op-grades` holds no row for either (no `RUNGS`, `RUNG_ABSENT` or `NON_ACTS` entry; reads need none today), so there is no weight and no description to copy. Fields are plain: `runtime` and `selftest` read nothing from the address or the body (their `cls` and `viewer` are stamps), so `fields: {accepts: [], requires: []}`.
+   My best reading: declare both with `weight: "read"`, `mutating: false`, the classes above, `machineClasses` omitted, and a description of my own, `localize("instance-setup.declared.runtime", "read: what the instance was measured to cost and where its limits lie (the runtime's measurements, the CPU probe's trail, the subrequest ceiling)")` and `("instance-setup.declared.selftest", "read: whether the deployment is healthy (its bindings, the store's stats and a storage round trip); it never returns a secret")`, taken from R37 and R18. Please confirm that, or give the sentences.
+2. `grouplogoset` is judgment only in shape: the screen sends the file as the request's body with `rawType` in the address (R86), or JSON `{raw, rawType}`; I declare `accepts: ["raw", "rawType"]`, `requires: ["raw"]` (`raw: null` clears). Its refusal for no file (`LOGO_REFUSED`, "the logo is sent as the file's bytes, and none was sent") does not name the field, so the test maps `raw` to that code (the pass's `named` table). Say if that is not acceptable.
+
+## J10 · COMPLETE · re B6
+
+COMPLETE (re B6, B7). Merged `tranche/T51` (twice; last at 4635d09d34 and later). Requirement lines R100 and R101 are written in `build/requirements/instance-setup.md` (the ownership check lists that one file, accepted per B7), not in this record.
+
+Entries applied:
+1. **C11 / R100.** One function (`groupWellKnownFile`) builds `{path, body: {instance, group}}` from the address and the producing slug. The verifier's comparison reads its body; `groupdomainset` answers it as `well_known` and `groupidentity` as `domain_claim.well_known`. With no slug or no address `well_known` is null and `well_known_detail` is the verdict's own sentence (`instance-setup.domain.detail.no_team_name` / `.no_address`). What the verifier accepts is unchanged (R7/R8/R11 tests pass). Tests (`wellknown.test.mjs`, seen failing first): path equals the path fetched, body planted verifies, another instance or group is `mismatched`, same file in `groupidentity` and for a later claim, null with the word table's reason and nothing fetched.
+2. **K4202 / R101.** `DECLARED_OPS` declares the sixteen ops; rows copied from the hand rows. `registerDeclaredOps` of `op-grades` and `op-declarations` over my rows: 14 agreed, `runtime` and `selftest` registered, no disagreement; no op duplicated across owners (`declaredOpsOf`: 257 ops, 0 duplicates). `declared-ops.test.mjs` (`declaredOpHolds` per op, a naming test for the 16 new ids `instance-setup.declared.<op>`, and a control that a wrong declaration is rejected). Per B7: runtime/selftest read, `grouplogoset` accepts raw, rawType, requires raw (mapped to LOGO_REFUSED). `updateskip` also carries `refusal: UPDATE_SKIP_NO_REASON`.
+
+Deferred: none. Found in other modules: `rows.mjs` is stale for the 16 new ids (BOB regenerates). Plane must register `DECLARED_OPS` of this module with the two `registerDeclaredOps` at composition if it does not collect owners itself (I did not check plane's wiring). op-declarations' `registryActGaps` test (R73, R21) is red on `expertisewithdraw`, not mine.
+
+Tests and checks: instance-setup 216 pass, 0 fail. Consumers: control-plane 309, store-door 48, screens-entry 86, answer-envelope 41 all pass; op-declarations 241 pass, 1 fail (above). Not run: plane, installer, installer-steps, stewards (R100/R101 only add keys and an export). format 0; architecture 0; coverage 73 of 73; words 0 findings for instance-setup (whole tree: 9 testcopy in op-grades); ownership: 1 failure, the requirements file (accepted, B7).
+
+Size (session_01HudVPERVJyVzstKHMw2ZzA): test runs 16, module lines 3668
+
+## J11 · COMPLETE
+
+COMPLETE (re B6, B7): R100 (the website file in groupdomainset and groupidentity) and R101 (sixteen ops declared) applied; requirement lines are in build/requirements/instance-setup.md. instance-setup 216 pass; consumers pass except op-declarations' registryActGaps (expertisewithdraw, not mine). Details in my record J10.
+
+## J12 · COMPLETE
+
+COMPLETE (re B8, fix round 4, C64-law). R12's new sentence is met; nothing deferred, nothing "not met".
+
+**What changed.** `bio-plane/src/setup.mjs` `profileView` (~:2905-2920): the view also carries `records_laws` (each law whole, as `jurisdictions.combine` gives it), `records_help` and `name`, each absent when `combine` states none or cannot give the view; `deadlines`, `legal_organisations` and `venues` are unchanged (agent-worker R51). Header comment of `profileView` says so. Test: `bio-plane/test/m/instance-setup/profiles.test.mjs`: the new R12 test "profiles().view also carries records_laws..., records_help and name" (control: no active profile, none of the three; the first profile, `oakland-alameda`: `records_laws` deep-equals combine's three laws, each with `level, name, citation, response, stages, requesters`, the federal one `response: "foia_response"`, `name` present, `records_help` absent as combine gives none for it; the test profile: `records_help` present as combine gives it); the helper `viewOf` of the older R12/R16 test extended with the three.
+
+**Failing-first.** Before the change: `profiles.test.mjs` 5 pass, 2 fail (the new test: `records_laws` undefined against combine's three laws; the older view test, whose expected view now holds the three). After: 7 pass, 0 fail.
+
+**Suites.** instance-setup 218 pass, 0 fail. Users by `impact.mjs origin/tranche/T51 HEAD` (7 modules, 144 files): plane 296 pass, 1 fail (R24 words test); store-door 52 pass, 1 fail (R17 `groupdescriptiondraft`): both identical without my commit (checked by restoring the old `setup.mjs`); answer-envelope 43 pass; signin-door 15 pass; case-authoring 225 pass; control-plane 367 pass, 2 fail (R120/R121 PDF timings; R122 one `op=bootstrap` per load): neither touches `profiles()`; I did not re-run them on the old file (they wait on timing and the page, not on this view). agent-worker reads the three old facts; unchanged.
+
+**Checks.** `checks/run.mjs`: no finding in my files; words: inline 0, plain 0, testcopy 0, missingkey 0, marker 0 (count not risen); architecture's 2 failures are case-authoring's `reload.test.mjs` imports; coverage's 11 are other modules. `checks/ownership.mjs ... instance-setup`: 3 files, 0 failures.
+
+**Found in another module.** None. For BOB: requirement R12's "*(not yet met: T51)*" can now be lifted.
+
+Size (session_018SUX5UvD4QojUdVCPkUvFj): test runs 14, module lines 3650

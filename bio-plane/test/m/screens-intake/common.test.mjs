@@ -2,7 +2,7 @@
  * served page: `interfacePage(SCREENS)` through interface-shell's harness. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { interfacePage, checkScreens, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, interfaceScript, interfaceScriptHash, checkScreens, SHELL_OPS } from "../../../src/interface-shell/index.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
 import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
@@ -32,6 +32,7 @@ const VALUES = {
   captureaccounts: { ok: true, captureSha: SHA, actors: [{ actor: "member:mai", at: "2026-10-01T00:00:00Z" }], accounts: [] },
   projectlist: { projects: [{ id: "PROJ-1", name: "P" }] },
   memberlist: { members: [{ member_id: "mai", handle: "mai-h", role: "member", status: "active" }] },
+  capturerequests: { ok: true, requests: [{ request: "CR-1", host: "records.example.gov", state: "refused", source_reason: "login", requested_at: "2026-10-01T00:00:00Z", principal_plane: "member:mai" }] },
 };
 const EMPTY = { heldcaptures: { ok: true, held: [] }, verdictnotes: { ok: true, notes: [] }, inbox: { inbox: [] }, opencaptures: { ok: true, captures: [] },
                 archivelist: { ok: true, archive: {}, summary: {}, entries: [] } };
@@ -39,11 +40,18 @@ const READS = Object.keys(VALUES);
 /* the ops a screen declares: its reads' and its acts' */
 const declared = (id) => { const s = SCREENS.find((x) => x.id === id); return [s, Object.values(s.reads({ subject: SHA, me: MEMBER, data: {}, ui: {} })).map((r) => r.op), s.acts.map((a) => a.op)]; };
 
-test("R8 R15 SCREENS meets interface-shell R21: five registry screens, archive among them, served by interfacePage without a throw", () => {
-  assert.deepEqual(SCREENS.map((s) => s.id), ["capture", "held", "archive", "open-file", "inbox"]);
+test("R8 R15 SCREENS meets interface-shell R21: eight registry screens, archive and the three of the T51 fix round among them, served by interfacePage without a throw", () => {
+  assert.deepEqual(SCREENS.map((s) => s.id), ["capture", "held", "archive", "open-file", "inbox", "about-knocker", "leads", "watching"]);
   assert.ok(Object.isFrozen(SCREENS));
   assert.equal(checkScreens(SCREENS), true);
-  assert.match(interfacePage(SCREENS), /<script nonce=/);
+  /* interface-shell R1, R2 (fix round 3): the page loads the shell as one external script named by its hash, with no inline script and no nonce;
+     the screens' functions are in that script */
+  const page = interfacePage(SCREENS, { version: "9" });
+  assert.equal((page.match(/<script\b/g) || []).length, 1, "one script element");
+  assert.match(page, /<script src="\/app\/shell-9\.js" integrity="sha256-[^"]+"><\/script>/);
+  assert.ok(!/<script nonce=/.test(page) && !/nonce/.test(page), "no nonce slot");
+  assert.ok(page.includes(`integrity="${interfaceScriptHash(SCREENS, {})}"`), "named by its hash");
+  assert.ok(interfaceScript(SCREENS).includes("capture"), "the screens are in the external script");
   for (const s of SCREENS) {
     assert.equal(typeof s.reads, "function");
     assert.equal(typeof s.render, "function");
@@ -58,7 +66,8 @@ test("R8 every act names one op OPS holds and a member's session reaches, the re
     if (listed.has("capture")) listed.add("captureupload");   /* draft-T46-interface.md §3 item 1 */
     for (const a of s.acts) {
       assert.ok(OPS[a.op], `${s.id}: ${a.op} in OPS`);
-      assert.ok(SESSION_OPS.member.has(a.op), `${s.id}: ${a.op} reached by a member's session`);
+      /* interface-shell R12: SESSION_OPS gates mutating ops alone; a read is reached when the session's class is among its OPS classes */
+      assert.ok(OPS[a.op].mutating ? SESSION_OPS.member.has(a.op) : OPS[a.op].classes.includes("member"), `${s.id}: ${a.op} reached by a member's session`);
       assert.ok(listed.has(a.op), `${s.id}: ${a.op} the registry's`);
     }
     for (const op of listed) if (op !== "capture") assert.ok(s.acts.some((a) => a.op === op), `${s.id} draws ${op}`);
@@ -69,7 +78,9 @@ test("R8 after an act the screen reads again what it changed (every read, or non
   for (const s of SCREENS) {
     const reads = Object.keys(s.reads({ subject: s.id === "capture" ? "address" : SHA, me: MEMBER, data: {}, ui: {} }));
     for (const a of s.acts) {
-      if (reads.length) assert.equal(a.rereads, undefined, `${s.id} ${a.op} reads everything again`);
+      /* what an act changed is read again, not every read (C14: an act does not read a whole list it did not change): an act names
+         reads the screen has, or names none (it reads all); a screen with no reads has nothing to name */
+      if (reads.length) assert.ok(a.rereads === undefined || [...a.rereads].every((n) => reads.includes(n)), `${s.id} ${a.op} names reads the screen has`);
       else assert.deepEqual([...(a.rereads || [])], [], `${s.id} ${a.op}`);
     }
   }
@@ -126,7 +137,7 @@ test("R9 no act or read records which member opened which file: every request is
   /* the shell's own frame reads, `bootstrap` among them (interface-shell R36: public, once, for the test-instance band), read from
      the shell's declaration of them (N1073) */
   const FRAME = new Set(SHELL_OPS);
-  const ours = new Set([...SCREENS.flatMap((s) => s.acts.map((a) => a.op)), ...READS, "allocid", "promote", "select", "image", "heldat"]);
+  const ours = new Set([...SCREENS.flatMap((s) => s.acts.map((a) => a.op)), ...READS, "allocid", "promote", "select", "image", "heldat", "projectquestions", "captureseenin"]);
   const plane = { ...Object.fromEntries(READS.map((op) => [op, ok(VALUES[op])])),
                   openoriginal: { status: 200, bytes: "b", type: "application/pdf" }, openwithwarning: { status: 200, bytes: "b", type: "application/pdf" } };
   const pages = [];
@@ -158,7 +169,7 @@ test("R9 no act or read records which member opened which file: every request is
     }
     /* the page's storage holds only the shell's own keys: the session record (interface-shell R32, in local storage) and
        its level, theme and width; nothing of these screens */
-    assert.deepEqual([...p.store.keys()], [], "session storage holds nothing");
+    assert.deepEqual([...p.store.keys()].filter((k) => k !== "bio-session:frame"), [], "session storage holds nothing");
     assert.ok(p.local.has("bio-session"), "the session record, in local storage");
     for (const k of p.local.keys()) assert.match(k, /^(cs-|bio-session(:active)?$)/, `local storage key ${k} is the shell's`);
   }

@@ -105,7 +105,6 @@ test("R55: each refusal, in order, writes nothing and carries its check and tran
   const w = await world();
   const cases = [
     [{ by: "nobody" }, "CAPTURE_CREDENTIAL_NOT_A_MEMBER"],
-    [{ by: "admin" }, "CAPTURE_CREDENTIAL_NOT_A_MEMBER"],                   /* the founder is not a member row */
     [{ by: "nobody", kind: "bad", host: "x/y", scope: "bad", secret: "" }, "CAPTURE_CREDENTIAL_NOT_A_MEMBER"],
     [{ kind: "cookie" }, "CAPTURE_CREDENTIAL_BAD_KIND"],
     [{ kind: "cookie", host: "https://x" }, "CAPTURE_CREDENTIAL_BAD_KIND"],
@@ -133,6 +132,10 @@ test("R55: each refusal, in order, writes nothing and carries its check and tran
   }
   for (const v of [undefined, null, 5]) assert.equal(codeOf(await w.c.credentialSupply(v)), "CAPTURE_CREDENTIAL_NOT_A_MEMBER");
   assert.equal(w.raw().length, 0);
+  /* the founder, once claimed, is an active member (member-roster R76): her own member credential is supplied */
+  const own = await w.supply({ by: "admin" });
+  assert.deepEqual([own.ok, own.credential.scope, own.credential.supplied_by], [true, "member", "admin"]);
+  assert.equal(w.raw().length, 1);
   /* No key bound: refused last, nothing stored in the clear or at all. */
   const k = await world({ key: null });
   assert.equal(codeOf(await k.supply({ kind: "cookie" })), "CAPTURE_CREDENTIAL_BAD_KIND");

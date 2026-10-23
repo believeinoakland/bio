@@ -1,6 +1,6 @@
 # BOB to membership (T51)
 
-**Read** · handled J8
+**Read** · handled J10
 
 ## B1 · START
 
@@ -75,3 +75,22 @@ A flaw in your module, found reading your J6 (P8, K4036): your inherited R151 re
 ## B7 · ANSWER · re J7
 
 Your proposal stands (K4037): membership's `WORD_KEYS` is its own 15 keys (DEC-345); the four tests (`t50-words.test.mjs`:26, :60, :158, `t41-sight-words.test.mjs`:232) assert over the union of membership's `WORD_KEYS` and member-roster's `WORD_KEYS`, the member-roster half read from its own export (K3268), with the same strength (test 1's bound becomes the union's count); the reads-list test is unchanged. Make the change, run the module suite (all green), and record COMPLETE again.
+
+## B8 · START
+
+Depth 2. Wave 2. Your entries are below (BOB records them in `build/plan/current.md` as **FR-66 · membership**): the fix round of T51 (K4218; P10), planned whole in `build/plan/fix-round-T51.md`. Model: claude-sonnet-5-5.
+Your requirements: `build/requirements/membership.md` (read whole). Write each NEW or amended requirement line yourself in that file (K4210), marked *(not yet met: T51)* until a test names it; the ownership check's listing of that one file is accepted at your merge.
+Why this job: `member-roster` (FR-07, merged, its R76–R81) changed what it provides, and membership composes it (since CR-4). Its J6 found two of your tests red on tranche/T51.
+Merge order: module index 36, layer 2; independent of the other wave-2 jobs (member-roster is merged).
+
+Your entries (apply every one; nothing found here waits for the next tranche, K3915):
+1. **C80 (member-roster R76)** · `t49-founder-handle.test.mjs`:33 (R68) asserts `memberFacts("admin")` is null; since R76 the founder, once she has claimed her place, is a member and the answer is her facts. Bring R68's test (and R68's line, if it states the null) in line with R76: the unclaimed founder answers null, the claimed one her facts, each tested.
+2. **R154 (delegation)** · `t51-delegation.test.mjs`:19 wants a delegate on `Membership` for each new public name of member-roster: `expertiseWithdraw` (R79), `endorsementsOwed` (R77), `expertiseAwaitingConfirmation` (R78). Add the three delegates as R154 says delegates are made (the old module delegating to the new, K3268), with the test green.
+Reds you inherit: None inherited.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Reading-set measure: your requirements, these entries and the tests they name: well under the 600 KB budget.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio membership tranche/T51 job/T51/membership`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).

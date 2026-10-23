@@ -15,7 +15,7 @@
  * no later module: a later module registers the litigation-hold reader (`registerReader`, R3). At its creation it
  * creates its six tables and declares them to record-core's purge as exempt. */
 import { DOORBELL_VIA } from "../provenance/index.mjs";
-import { profileOf, profileView, firstHopWho, INSTALLATION_CHECKS } from "../acquisition/index.mjs";
+import { profileOf, profileView, firstHopWho, textTypeOf, INSTALLATION_CHECKS } from "../acquisition/index.mjs";
 import { viewerPredicate, listenerRefusal } from "../membership/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
 import { captureOf } from "../capture/index.mjs";
@@ -82,6 +82,16 @@ export const DOORBELL_READERS = Object.freeze(["litigation-hold"]);
 export const REASON_MAX = 2000;
 /* R3: a reason is a string with something other than white space in it, at most REASON_MAX characters. */
 const reasonGiven = (r) => typeof r === "string" && r.trim() !== "" && [...r].length <= REASON_MAX;
+
+/* R27: the bounds, in characters, on the file name and media type a knock's sender states. */
+export const STATED_MAX = Object.freeze({ fileName: 255, mediaType: 127 });
+/* R27: what the sender stated, kept as text: control characters dropped, white space trimmed, cut at the bound; a value that is
+   not a string, or is empty once cleaned, is absent (null). Never read as a type check: the file-safety scan decides. */
+const statedOf = (value, max) => {
+  if (typeof value !== "string") return null;
+  const clean = [...value.replace(/[\u0000-\u001f\u007f]/g, "").trim()].slice(0, max).join("");
+  return clean || null;
+};
 
 /* R19 (BOB's privacy ruling): how many UTC days the tally keeps. */
 export const TALLY_DAYS = 30;
@@ -410,7 +420,7 @@ export class Doorbell {
    *  removed unless another knock's row already names the same digest. */
   async knock({ contentB64 = null, content = null, note, contact, sourceAddress = null, windowMs = KNOCK.windowMs,
                 perIpLimit = KNOCK.perIp, globalLimit = KNOCK.global, now = null, knockerSecret = null,
-                generateSecret = false, country = null } = {}) {
+                generateSecret = false, country = null, fileName = null, mediaType = null } = {}) {
     const nowMs = now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
     let bytes;
     try {
@@ -450,11 +460,11 @@ export class Doorbell {
       const late = this.#countKnock(rate);
       if (late) return late;
       this.#sql.exec(
-        `INSERT INTO inbox (knock_id,sha256,bytes,content,in_r2,note,contact,received,status,knocker_digest,pseudonym,content_b64)
-         VALUES (?,?,?,?,?,?,?,?,'new',?,?,?)`,
+        `INSERT INTO inbox (knock_id,sha256,bytes,content,in_r2,note,contact,received,status,knocker_digest,pseudonym,content_b64,file_name,media_type)
+         VALUES (?,?,?,?,?,?,?,?,'new',?,?,?,?,?)`,
         knockId, sha, bytes.length, bucket ? null : new TextDecoder().decode(bytes), bucket ? 1 : 0,
         String(note ?? "").slice(0, 2000), String(contact ?? "").slice(0, 300), received, knockerDigest, pseudonym,
-        bucket ? null : b64Of(bytes));
+        bucket ? null : b64Of(bytes), statedOf(fileName, STATED_MAX.fileName), statedOf(mediaType, STATED_MAX.mediaType));
       return { ok: true, knockId, sha256: sha, bytes: bytes.length, pseudonym, ...(generated ? { secret: generated } : {}) };
     });
     if (!answer.ok && stored && !this.#one(`SELECT 1 AS x FROM inbox WHERE sha256 = ?`, sha)) {
@@ -489,7 +499,7 @@ export class Doorbell {
     const found = this.#rows(
       `SELECT * FROM (SELECT i.knock_id, i.sha256, i.bytes, i.in_r2, i.note, i.contact, i.received, i.status, i.resolved,
                              i.resolved_by, i.resolve_reason, i.knocker_digest, i.pseudonym, i.capture_sha, i.pulled_by,
-                             i.pulled_at, b.project AS project, ${k0} AS k0, ${k1} AS k1
+                             i.pulled_at, i.file_name, i.media_type, b.project AS project, ${k0} AS k0, ${k1} AS k1
                         FROM inbox i LEFT JOIN register r ON r.capture_sha = i.capture_sha
                         LEFT JOIN bundles b ON b.bundle_id = r.bundle_id
                        WHERE ${status ? "i.status = ?" : "1=1"}) q
@@ -523,7 +533,7 @@ export class Doorbell {
   inboxGet(knockId) {
     if (typeof knockId !== "string" || !knockId) return this.#noSuchKnock(knockId);
     const r = this.#one(`SELECT knock_id, sha256, bytes, content, in_r2, note, contact, received, status, resolved, resolved_by,
-                                resolve_reason, knocker_digest, pseudonym, capture_sha, pulled_by, pulled_at FROM inbox WHERE knock_id=?`, knockId);
+                                resolve_reason, knocker_digest, pseudonym, capture_sha, pulled_by, pulled_at, file_name, media_type FROM inbox WHERE knock_id=?`, knockId);
     return r ? { ok: true, item: r } : this.#noSuchKnock(knockId);
   }
 
@@ -639,7 +649,10 @@ export class Doorbell {
        act under their session; a knock is made with no account (R1) and its row names no member session, so no knock
        is one, and every pull is profiled as `"fetch"`: a type read only from a member's own capture (court-doctypes R2)
        never matches a stranger's knock, whoever brings it in. */
-    const profile = await profileOf({ ev, sha, ct: null, total: bytes.length, multipart: false, headers: {}, locator: address,
+    /* R13 (fix round 5, E5): the knock's stated media type and file name go through acquisition's one text rule, as an upload's
+       do; the stated type is never a type check, so bytes that are not text profile as they always did. */
+    const ct = textTypeOf({ bytes, type: row.media_type, name: row.file_name });
+    const profile = await profileOf({ ev, sha, ct, total: bytes.length, multipart: false, headers: {}, locator: address,
                                       view: profileView(this.core), retrieved: when, origin: "fetch" });
     const document = this.#pulledDocument(row, { by, at: when, profile });
     const receiptOf = (fn) => { try { return fn(); } catch (e) { return { recorded: false, error: String(e && e.message || e).slice(0, 200) }; } };
@@ -744,7 +757,7 @@ export class Doorbell {
     const from = after ? keyOf(after, 2) : ["", ""];
     if (!from) return badCursor();
     const found = this.#rows(
-      `SELECT knock_id, sha256, bytes, note, received, status, capture_sha FROM inbox
+      `SELECT knock_id, sha256, bytes, note, received, status, capture_sha, file_name, media_type FROM inbox
         WHERE pseudonym = ? AND (received, knock_id) > (?, ?) ORDER BY received, knock_id LIMIT ?`, pseudonym, ...from, cap + 1);
     const knocks = found.slice(0, cap), truncated = found.length > cap, last = knocks[knocks.length - 1];
     return { ok: true, pseudonym, continuity: word("doorbell.continuity"), knocks, count: knocks.length,
@@ -792,7 +805,15 @@ export function doorbellOps(d, url, body) {
    the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
 export const DECLARED_OPS = Object.freeze({
   knock: { classes: null, mutating: true, weight: "credential", description: localize("doorbell.declared.knock", "an unauthenticated request to be let in"),
-    fields: { accepts: ["content","contentB64","note","contact","knockerSecret","generateSecret"], requires: [] } },
+    fields: { accepts: ["content","contentB64","note","contact","knockerSecret","generateSecret","fileName","mediaType"], requires: [] } },
+  inboxlist: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("doorbell.declared.inboxlist", "read: the knocks in the inbox, newest first, bounded and paged, sortable by received time, status, secret or project; never a contact in a pulled document; writes nothing"),
+    fields: { accepts: ["status","sort","dir","limit","after"], requires: [] } },
+  inboxget: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("doorbell.declared.inboxget", "read: one knock in the inbox, keyed by knock id; writes nothing"),
+    fields: { accepts: ["id"], requires: ["id"] } },
+  doorbelltally: { classes: ["admin","member"], machineClasses: [], mutating: false, weight: "read", description: localize("doorbell.declared.doorbelltally", "read: the doorbell's count-only tally of knocks it turned away, by day, for a member session only; holds no address, time or content, and writes nothing"),
+    fields: { accepts: [], requires: [] } },
+  pulledknocks: { classes: ["admin","member"], machineClasses: [], mutating: false, weight: "read", description: localize("doorbell.declared.pulledknocks", "read: the knocks pulled into one capture, keyed by capture sha, never a contact; writes nothing"),
+    fields: { accepts: ["capture","captureSha"], requires: [] } },
   knocksof: { classes: ["admin","member"], machineClasses: [], mutating: false, weight: "read", description: localize("doorbell.declared.knocksof", "read: the knocks that presented the same knocker secret, keyed by pseudonym, oldest first, with the continuity sentence and never an identity; writes nothing"),
     fields: { accepts: ["pseudonym","limit","after"], requires: ["pseudonym"] } },
   inboxpull: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reversible", description: localize("doorbell.declared.inboxpull", "knock-directed: a member pulls one knock into the record, keyed by knock id: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled; reached from the inbox, never beside a bundle"),

@@ -3,8 +3,8 @@
    clock the test moves; an instant is epoch milliseconds, as the scheduler's own `due(now)` reads it. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, pdf, sha, T0, DAY } from "./fixture.mjs";
-import { FileSafety, FILE_SAFETY_POLL_MS, REPUTATION_REFRESH_MS, RESCAN_INTERVAL_MS, FILE_WORK_BATCHES } from "../../../src/file-safety/index.mjs";
+import { filedWorld as world, pdf, sha, T0, DAY } from "./fixture.mjs";
+import { FileSafety, FILE_SAFETY_POLL_MS, REPUTATION_REFRESH_MS, RESCAN_INTERVAL_MS, FILE_WORK_BATCHES, WAITING_RECHECK_MS } from "../../../src/file-safety/index.mjs";
 
 const HOUR = 3_600_000;
 const POLL = FILE_SAFETY_POLL_MS;
@@ -220,7 +220,8 @@ test("R40: onFileWork(module, fn) registers once (a second by one module LISTENE
   /* after a batch moves the answer later, a new receipt is sooner again */
   await w.fs.scanBatch({}); await w.fs.renderBatch({});
   assert.equal(w.fs.scanWake(w.clock.now) > w.clock.now, true, "as the scheduler asks after a tick");
-  assert.equal(w.fs.renderWake(w.clock.now), null);
+  /* the two receipts above named bytes the store never held: their views wait for them (R51), looked at again in an hour */
+  assert.equal(w.fs.renderWake(w.clock.now), w.clock.now + WAITING_RECHECK_MS);
   w.tick(1000);
   await w.capture(pdf(false, "c3"));
   await settle();
@@ -245,7 +246,8 @@ test("R40: onFileWork(module, fn) registers once (a second by one module LISTENE
   const ct = await w.tool("glasswall-halo", { config: { host: "halo.example.org" } });
   w.exec("UPDATE fs_tools SET use = 'routine' WHERE tool_id = ?", ct);
   await w.fs.renderBatch({});
-  assert.equal(w.fs.renderWake(w.clock.now), null, "as the scheduler asks after a tick");
+  /* nothing is queued: only the views waiting for bytes the store never held (R51) are left, at their own instant */
+  assert.equal(w.fs.renderWake(w.clock.now), Date.parse(w.row("SELECT MIN(render_wait_at) AS t FROM fs_files WHERE render_state = 'waiting'").t), "as the scheduler asks after a tick");
   w.tick(POLL + 1);
   const q = await w.capture(pdf(false, "copied"));
   await settle();

@@ -121,7 +121,7 @@ test("R53 R28 R30 dated stays in its own list: a fact a source also reports stay
   const alone = w.ev.timeline({ set: [], captures: [s], viewer: MEMBER });
   assert.equal(asked.length, 1, "a set of no entity or event asks no source");
   assert.deepEqual(alone.ours.sources, [{ source: "actions", items: [], truncated: false }]);
-  assert.deepEqual(alone.world.items, []);
+  assert.deepEqual(alone.world.items.map((i) => i.event_id), [ev.event_id], "K4310: the event the capture is cited by is the world's, found by the capture");
 });
 
 test("R53 R40 control: a fact whose capture is in a hidden project is absent and uncounted, a capture not held answers alike, and audience public omits dated", () => {
@@ -169,4 +169,68 @@ test("R53 R36 the timeline op reads captures from the url or the body, and lanes
   assert.equal(ops({ viewer: MEMBER }).reason, "NO_SET");
   assert.equal(ops({ captures: a, audience: "public", viewer: MEMBER }).dated, undefined);
   assert.equal(ops({ captures: Array.from({ length: 201 }, (_, i) => sha(`x${i}`)).join(","), viewer: MEMBER }).reason, "TOO_MANY_CAPTURES");
+});
+
+const cites = (w, capture, by = MEMBER, extra = {}) => w.ev.createEvent({ kind: "meeting", attestations: [{ captureSha: capture, extent: doc }], by, ...extra });
+const worldIds = (t) => [...t.world.items, ...t.world.placed_nowhere].map((i) => i.event_id);
+
+test("R53 events found by the captures they cite: an event with one capture attestation and no concerns is answered by timeline({captures}) with no set, whether it cites an extent or a dated fact", () => {
+  const w = world();
+  const a = w.capture("r53c-a"), b = w.capture("r53c-b");
+  const byExtent = cites(w, a);
+  assert.equal(byExtent.ok, true);
+  const f = fact(w, b, "2026-05-05", "meeting");
+  const byFact = w.ev.createEvent({ kind: "meeting", attestations: [{ datedFactId: f.dated_fact_id }], by: MEMBER });
+  assert.equal(byFact.ok, true);
+  const t = w.ev.timeline({ captures: [a, b], viewer: MEMBER });
+  assert.equal(t.ok, true);
+  assert.deepEqual(t.world.placed_nowhere.map((i) => i.event_id), [byExtent.event_id], "an event no document dates is placed nowhere, answered");
+  assert.deepEqual(t.world.items.map((i) => i.event_id), [byFact.event_id]);
+  assert.deepEqual(t.world.items[0].of, [], "it was found by a capture, not by a member of the set");
+  assert.ok(Array.isArray(t.world.items[0].participants) && "grade" in t.world.items[0], "drawn as any world item");
+  assert.deepEqual(t.dated.items.map((i) => i.dated_fact_id), [f.dated_fact_id], "the dated list is as before");
+  /* the lane may be named alone */
+  assert.deepEqual(worldIds(w.ev.timeline({ captures: [a], lanes: ["world"], viewer: MEMBER })), [byExtent.event_id]);
+  /* a merged event is answered once, as its kept event */
+  const merged = w.ev.mergeEvents({ keep: byExtent.event_id, absorb: byFact.event_id, reason: "one meeting", by: MEMBER });
+  assert.equal(merged.ok, true);
+  assert.deepEqual(worldIds(w.ev.timeline({ captures: [a, b], viewer: MEMBER })), [byExtent.event_id]);
+});
+
+test("R53 control: an event is not answered by a capture it does not cite, nor by testimony, and one already answered from the set is not repeated", () => {
+  const w = world();
+  const p = w.entity("Cy");
+  const a = w.capture("r53c-cite"), other = w.capture("r53c-other");
+  const mine = cites(w, a, MEMBER, { concerns: [p] });
+  const elsewhere = cites(w, other);
+  const told = w.ev.createEvent({ kind: "statement", attestations: [{ testimony: "I was there" }], by: MEMBER });
+  assert.deepEqual([mine.ok, elsewhere.ok, told.ok], [true, true, true]);
+  const t = w.ev.timeline({ captures: [a], viewer: MEMBER });
+  assert.deepEqual(worldIds(t), [mine.event_id], "neither the other capture's event nor the testimony event");
+  const both = w.ev.timeline({ set: [p], captures: [a], viewer: MEMBER });
+  assert.deepEqual(worldIds(both), [mine.event_id], "once");
+  assert.deepEqual(both.world.placed_nowhere[0].of, [p], "as the set found it");
+  assert.deepEqual(worldIds(w.ev.timeline({ set: [p], viewer: MEMBER })), [mine.event_id]);
+  assert.deepEqual(worldIds(w.ev.timeline({ captures: [sha("r53c-never")], viewer: MEMBER })), []);
+});
+
+test("R53 R40 control: a capture the viewer may not see contributes no event, uncounted, answered as a capture not held; R27 limit; R30 audience public answers the world lane as without it", () => {
+  const w = world();
+  w.project("PROJ-2026-0001-p", "alice");
+  const open = w.capture("r53c-open");
+  const hidden = w.capture("r53c-hidden", { bundleId: "INFO-2026-0009-h", project: "PROJ-2026-0001-p" });
+  const seen = cites(w, open), secret = cites(w, hidden);
+  assert.deepEqual([seen.ok, secret.ok], [true, true]);
+  assert.deepEqual(worldIds(w.ev.timeline({ captures: [open, hidden], viewer: MEMBER })).sort(), [seen.event_id, secret.event_id].sort(), "the project's member sees both");
+  const out = w.ev.timeline({ captures: [open, hidden], viewer: OUTSIDER });
+  assert.deepEqual(worldIds(out), [seen.event_id]);
+  const limited = w.ev.timeline({ captures: [open, hidden], limit: 1, viewer: OUTSIDER });
+  assert.equal(limited.world.truncated, false, "a hidden event does not count toward truncated");
+  assert.deepEqual(w.ev.timeline({ captures: [hidden], viewer: OUTSIDER }).world, w.ev.timeline({ captures: [sha("r53c-nope")], viewer: OUTSIDER }).world, "hidden and not held alike");
+  assert.deepEqual(worldIds(w.ev.timeline({ captures: [open], viewer: null })), [], "no viewer sees nothing");
+  const cut = w.ev.timeline({ captures: [open, hidden], limit: 1, viewer: MEMBER });
+  assert.deepEqual([cut.world.placed_nowhere.length, cut.world.truncated], [1, true], "R27's limit cuts the lane");
+  const pub = w.ev.timeline({ captures: [open], audience: "public", viewer: MEMBER });
+  assert.deepEqual(pub.world, w.ev.timeline({ captures: [open], viewer: MEMBER }).world);
+  assert.ok(!("dated" in pub));
 });

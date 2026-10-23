@@ -1,14 +1,18 @@
 /* Settings, the index (R17), and Recovery codes (R20), at the module's interface. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { acts, all, ancestor, day, has, lacks, open, said, textOf } from "./kit.mjs";
-import { ADMIN, MEMBER, env, refuse, recoveryTable } from "./fixtures.mjs";
+import { acts, all, ancestor, day, has, lacks, open as openPlain, said, textOf, SCREENS } from "./kit.mjs";
+import { ADMIN, MEMBER, READER, env, refuse, recoveryTable } from "./fixtures.mjs";
 
+/* The doors to `watching` and `leads` are drawn where the shell knows the ops those screens (another module's) act on; this stand-in names them,
+   as the composed page does (interface-shell R12). */
+const stub = (id, op) => ({ id, reads: () => ({}), render: () => "", acts: [{ op, send: () => null }], words: [], parts: {} });
+const open = (id, o) => openPlain(id, { ...o, screens: [...SCREENS, stub("watching", "monitoring"), stub("leads", "lead")] });
 const links = (o) => all(o.tree, (e) => e.tag === "a" && e.attrs["data-screen"]).map((e) => e.attrs["data-screen"]);
 
 test("R17 settings: \"Yours\" then, to a session that administers, \"The group's\", each a reference to its screen; a member is drawn only their own", async () => {
   const a = await open("settings", { me: ADMIN, table: {} });
-  assert.deepEqual(links(a), ["account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members", "teamai", "places", "security", "updates", "translations", "wizards"]);
+  assert.deepEqual(links(a), ["account", "connect", "ties", "notes", "recovery", "group", "group-identity", "members", "teamai", "places", "security", "updates", "translations", "wizards", "bias", "grouprules", "watching", "leads"]);
   for (const id of links(a)) {
     const l = all(a.tree, (e) => e.tag === "a" && e.attrs["data-screen"] === id)[0];
     assert.equal(l.attrs.href, "/app/" + id);
@@ -16,17 +20,18 @@ test("R17 settings: \"Yours\" then, to a session that administers, \"The group's
   }
   const t = a.text;
   assert.ok(t.indexOf(said("screen.settings.yours")) < t.indexOf(said("screen.settings.groups")), "yours first");
+  assert.ok(t.indexOf(said("screen.settings.groups")) < t.indexOf(said("screen.settings.everyone")), "then the section for every member");
   // control: a member who does not administer is drawn no group section
   const m = await open("settings", { me: MEMBER, table: {} });
-  assert.deepEqual(links(m), ["account", "connect", "ties", "notes", "recovery"]);
-  lacks(m, "screen.settings.groups");
+  assert.deepEqual(links(m), ["account", "connect", "ties", "notes", "recovery", "bias", "grouprules", "watching", "leads"]);
+  lacks(m, "screen.settings.groups"); has(m, "screen.settings.everyone");
   assert.ok(!a.html.includes('href="/"'), "no link opens the setup page");
 });
 
 test("R32 settings draws its sections as the design's link list: each its icon and its screen's name as the reference, its purpose beneath, the two never run together", async () => {
   const a = await open("settings", { me: ADMIN, table: {} });
   const lists = all(a.tree, (e) => /\bmk-links\b/.test(e.attrs.class || ""));
-  assert.equal(lists.length, 2, "Yours, and the team's");
+  assert.equal(lists.length, 3, "Yours, the team's, and for every member");
   for (const id of links(a)) {
     const l = all(a.tree, (e) => e.tag === "a" && e.attrs["data-screen"] === id)[0];
     assert.equal(all(l, (e) => e.tag === "svg").length, 1, `${id} has its icon`);
@@ -40,7 +45,7 @@ test("R32 settings draws its sections as the design's link list: each its icon a
   }
   // control: the group's section is not drawn to a member who does not administer
   const m = await open("settings", { me: MEMBER, table: {} });
-  assert.equal(all(m.tree, (e) => /\bmk-links\b/.test(e.attrs.class || "")).length, 1);
+  assert.equal(all(m.tree, (e) => /\bmk-links\b/.test(e.attrs.class || "")).length, 2, "Yours, and for every member");
   assert.ok(!links(m).includes("updates"), "R27: no Updates section for a member who does not administer");
 });
 
@@ -92,5 +97,37 @@ test("R42 recovery draws screen.recovery.onlyyou once, above the act that issues
     has(m, "screen.recovery.onlyyou");
     assert.equal(m.text.split(said("screen.recovery.onlyyou")).length, 2, "once");
     assert.ok(m.text.indexOf(said("screen.recovery.onlyyou")) < m.text.indexOf(said("act.recoverycodesissue.label.recovery")), "above the act");
+  }
+});
+
+test("R17 C91: the doors to the watched addresses and the leads are drawn from Settings to an administrator and to a member who may use them, under 'For every member'; a session that may not write a lead is drawn no door to the leads (control)", async () => {
+  for (const me of [ADMIN, MEMBER]) {
+    const o = await open("settings", { me, table: {} });
+    const w = all(o.tree, (e) => e.tag === "a" && e.attrs["data-screen"] === "watching")[0], l = all(o.tree, (e) => e.tag === "a" && e.attrs["data-screen"] === "leads")[0];
+    assert.ok(w && l, me.handle);
+    assert.deepEqual([w.attrs.href, textOf(w)], ["/app/watching", said("screen.watching.name")]);
+    assert.deepEqual([l.attrs.href, textOf(l)], ["/app/leads", said("screen.leads.name")]);
+    const list = ancestor(w, (e) => /\bmk-links\b/.test(e.attrs.class || ""));
+    assert.ok(list && ancestor(l, (e) => e === list), "in one list");
+    assert.ok(o.text.indexOf(said("screen.settings.everyone")) < o.text.indexOf(said("screen.watching.name")), "under For every member");
+  }
+  // control: a reader holds no capability to write a lead: watching, which anyone reads, is drawn, the leads not
+  const r = await open("settings", { me: READER, table: {} });
+  assert.deepEqual(links(r).filter((id) => id === "watching" || id === "leads"), ["watching"]);
+});
+
+/* ---- T51 fix round 3: C87 (d) (R17) ---- */
+
+test("R17 C87 (d): Settings holds a door to the team's own rules, under 'For every member', to an administrator and to a member; every screen the list names is named once (control)", async () => {
+  for (const me of [ADMIN, MEMBER]) {
+    const o = await open("settings", { me, table: {} });
+    const door = all(o.tree, (e) => e.tag === "a" && e.attrs["data-screen"] === "grouprules");
+    assert.equal(door.length, 1, "one door");
+    assert.deepEqual([door[0].attrs.href, textOf(door[0])], ["/app/grouprules", said("screen.grouprules.name")]);
+    assert.ok(o.text.indexOf(said("screen.settings.everyone")) < o.text.indexOf(said("screen.grouprules.name")), "under For every member");
+    has(o, "screen.grouprules.purpose");
+    // a screen already linked from the list gets no second door
+    const ids = links(o);
+    assert.equal(new Set(ids).size, ids.length, "no screen is linked twice");
   }
 });

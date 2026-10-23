@@ -7,6 +7,9 @@ import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import { REF_SCREENS } from "../../../src/interface-shell/index.mjs";
 import { open, main, actsIn, fill, press, says, section, word, P } from "./fixtures.mjs";
 
+/* every owner's declarations, registered once before the first read (test-support R17, K4245): the project's acts name ops its owners declare */
+
+
 const at = "/app/project/" + P;
 /* a day as `cs.date` draws it, read through the same words (DEC-333), never copied */
 const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];

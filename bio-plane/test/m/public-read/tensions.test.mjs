@@ -82,7 +82,7 @@ test("R3 a /5 document's tension section round-trips to `tensions`: each disclos
                                                         word("case-disclosures.held_irreconcilable_reopened")]);
   const open = t[0];
   assert.deepEqual([open.finding, open.depth, open.depth_stated, open.acknowledged_by, open.acknowledged_at, open.highlighted],
-                   [F, 1, TENSION_DEPTH_SENTENCE, V("olive"), "2026-09-29T00:00:00Z", false]);
+                   [F, 1, TENSION_DEPTH_SENTENCE, "h_olive", "2026-09-29T00:00:00Z", false]);
   assert.deepEqual(open.sides.a, { kind: "claim", text: "A1 says so", source: "SRC-A1", date: "2026-09-01", doctype: "minutes", capture: null });
   assert.equal(open.sides.b.text, "B1 says so");
   assert.deepEqual(open.owner_words, { text: "We know.", by: word("case-grammar.by.case_owner") });

@@ -163,3 +163,27 @@ test("R9 R30 (K3997) an undetermined reason answered as {key, vars}, itself carr
   assert.deepEqual([said("already said"), said(7), said(null)], ["already said", 7, null]);
   assert.equal(said({ key: "civil-time.end_stated", vars: {} }).includes("[object Object]"), false);
 });
+
+test("R59 R25 filingRead answers the exhibits and the venue standard as filingPrepare stored them, in the same order and shape, through the module and the op; a draft stored before they existed answers exhibits [] and venue_standard null, and a communication answers the same empty pair", () => {
+  const x = world();
+  const f = x.f;
+  const A = x.action();
+  const d = f.filingPrepare({ action: A, text: "To the {{counterparty_role}}: a letter.", preparer: V("bo"), viewer: V("bo"), language: "en" });
+  assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
+  assert.ok(d.exhibits.length >= 2, "the draft rests on captures");
+  assert.equal(d.venue_standard.state, "undetermined");
+  const r = f.filingRead({ filing: d.id, viewer: V("bo") });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  assert.deepEqual(r.exhibits, d.exhibits);
+  assert.deepEqual(r.venue_standard, d.venue_standard);
+  assert.deepEqual(x.op("filingread", { filing: d.id, viewer: V("bo") }).exhibits, d.exhibits, "the op answers the same");
+  /* control: an older row with neither */
+  x.w.st.sql.exec(`UPDATE filing_drafts SET exhibits=NULL, venue_standard=NULL WHERE filing_id=?`, d.id);
+  const old = f.filingRead({ filing: d.id, viewer: V("bo") });
+  assert.equal(old.ok, true);
+  assert.deepEqual([old.exhibits, old.venue_standard], [[], null]);
+  assert.equal(old.text, d.text, "the rest is as stored");
+  const c = f.communicationPrepare({ action: A, text: "A word to the board.", purpose: "a letter", preparer: V("bo"), viewer: V("bo"), language: "en" });
+  const rc = f.filingRead({ filing: c.id, viewer: V("bo") });
+  assert.deepEqual([rc.exhibits, rc.venue_standard], [[], null]);
+});

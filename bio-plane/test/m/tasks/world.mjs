@@ -84,9 +84,9 @@ export function world(fakes = {}, { bare = false, start = false } = {}) {
     },
     cite(from, to, kind = "cites") { db.prepare(`INSERT INTO refs (bundle_id, target_id, kind) VALUES (?,?,?)`).run(from, to, kind); },
     task(id, refersTo, { kind = "authority-undetermined", assignee = "unassigned", role = "group-admin", status = "open",
-                         created = iso(NOW - 3600000), resolvedAt = null, history = null } = {}) {
-      db.prepare(`INSERT INTO tasks (id, kind, refers_to, subject_text, assignee, assignee_role, status, created, resolved_at, history)
-                  VALUES (?,?,?,?,?,?,?,?,?,?)`).run(id, kind, refersTo, `about ${refersTo}`, assignee, role, status, created,
+                         created = iso(NOW - 3600000), resolvedAt = null, history = null, capture = null } = {}) {
+      db.prepare(`INSERT INTO tasks (id, kind, refers_to, capture_sha, subject_text, assignee, assignee_role, status, created, resolved_at, history)
+                  VALUES (?,?,?,?,?,?,?,?,?,?,?)`).run(id, kind, refersTo, capture, `about ${refersTo}`, assignee, role, status, created,
         resolvedAt, JSON.stringify(history || [{ at: created, event: "created", actor: "alarm" }]));
     },
   };

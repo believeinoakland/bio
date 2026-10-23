@@ -308,7 +308,8 @@ test("R18: categories are drawn by their words, never as lowercase codes: a cate
   const story = cells.find((c) => c.includes("Story with a reporter"));
   assert.ok(story.includes(W("screen.plan.category.other")));
   assert.ok(!story.includes("zzcode"));
-  for (const c of ["mitigation", "legal", "awareness", "journalistic", "grassroots", "other"]) assert.ok(hasWord(`screen.plan.category.${c}`), c);
+  for (const c of ["mitigation", "legal", "awareness", "journalistic", "grassroots", "other"]) assert.ok(hasWord(`screen.plan.category.${c}`) && hasWord(`screen.plan.option.kind.${c}`), c);
+  // DEC-387 (B424): the add form's options read the design's `screen.plan.option.kind.*` rows
   const choices = p.doc.getElementById("plan-opt-category").querySelectorAll("option").map((o) => o.textContent.trim());
-  assert.deepEqual(choices, ["mitigation", "legal", "awareness", "journalistic", "grassroots", "other"].map((c) => W(`screen.plan.category.${c}`)));
+  assert.deepEqual(choices, ["mitigation", "legal", "awareness", "journalistic", "grassroots", "other"].map((c) => W(`screen.plan.option.kind.${c}`)));
 });

@@ -1,6 +1,6 @@
 # interface-shell (T51)
 
-**Status** · session_018RtYmRfvBFKT71cztJSVMH · depth 2 · COMPLETE · handled B18
+**Status** · session_01GuYhDBuwX3wYXyAxnpXWHF · depth 2 · COMPLETE · handled B37
 
 ## J1 · BLOCKED
 
@@ -135,3 +135,291 @@ COMPLETE (B18) for `interface-shell` in T51.
 **Checks.** Module suite 232 of 232 (before the fix 225; the seven were mine). `checks/run.mjs`: format, architecture, words 0 failures; coverage for interface-shell clean; ownership 0 failures.
 
 Size (session_018RtYmRfvBFKT71cztJSVMH): test runs 28, module lines 2886
+
+## J9 · COMPLETE
+
+COMPLETE (B19) for `interface-shell` in T51.
+
+**Applied.** The 15 red tests are green: the guard now checks real declarations (`declared 162 of 299 ops`) and every stand-in of this module sends what its owner declares or uses an op with no declaration. `harness.mjs` gains `declaredFit(op, extra)` (the fields the owner requires, read through the collector, never a hand copy, K3268) and `fitSend(op, extra)` (a self-contained `send` built from source with those fields carried as data); the fixture screens, `stand` in `t50`, and the stand-ins in `acts`, `design`, `idle`, `kit`, `frame` use them. Where a test asserted a stand-in's old request, it now asserts the declared one: `airunopen` carries `contextType` and `contextId` (not `context`), `knock` carries `content` (not `text`), `heldrestore` and `heldsetaside` carry `ids`, `attest`'s dialog field is `locator`, and a discriminating read query is `state` or `q` (not `closed`, `timer`, `show`, `n`). No assertion was loosened.
+**Control.** `declared.test.mjs`: against the real declarations a stand-in sending `knock` `text` fails with `FieldMismatch` (unknown field `text`), and one sending `content` passes. Module suite 232 of 232.
+
+**Stand-ins that mirror a real screen's request** (each real screen's wave-2 job fixes its own screen; the screen suites show the guard's findings by name):
+- Findings from the real screens' suites today (screen, op, what): settings/connect `accountreferenceset` and `accountreferenceremove` send `member` (not accepted); daily/find-in `recordfact` sends `date`, `tabledeclare` lacks `schema`; inquiry/question `hypothesishold` lacks `about`, `narrow` lacks `ord` and `extent`; investigate/explore `explore` lacks `from` and `at`, investigate/proceeding `entitycreate` lacks `label`; publish/docket `docketfile` lacks `edition or takesBack` and `capture or takesBack`. screens-settings now fails 27 (R107's reason box, B17, plus the connect two above), publish 10, inquiry 4, daily 3, investigate 5; intake 1 is the owed `capturerequestretry` of the design merge (registry red, not mine). Entry, wizards, action: no guard finding.
+
+**Checks.** `checks/run.mjs`: format, architecture, words 0 failures; coverage for interface-shell clean; ownership 0 failures.
+
+Size (session_018RtYmRfvBFKT71cztJSVMH): test runs 33, module lines 2886
+
+## J10 · COMPLETE
+
+COMPLETE (B20) for `interface-shell` in T51.
+
+**1. Stand-ins meet the owners' new declarations.** The 13 red tests are green. `promote` (promotion R61: requires `files`, `meta`, `snapKey`): the fixture `home` screen's act now sends the declared fields (`declaredFit("promote")`, read through the collector, K3268) with the typed title carried as `meta`; the two assertions of the old body (`acts` R21, `idle` R34) assert the declared one. `openoriginal` (file-safety R48): the stand-in without a `send` uses `fitSend("openoriginal")`, the two `cs.download` stand-ins send `capture` (not `sha256`/`id`). R64's loop stand-in uses `fitSend(op)`. No assertion loosened; control unchanged (`declared.test.mjs`: a stand-in sending an undeclared field still fails with `FieldMismatch`).
+Stand-ins that mirror a real screen's request: the fixture `home` `promote` mirrors screens-daily's/queue's `promote`; the real screens-daily `queue` screen sends `project` with `promote` (not accepted): new guard finding for screens-daily's wave-2 job, beside the ones listed at J9 (screens-daily now fails 4: the registry red R1–R13, find-in `recordfact` `date`, `tabledeclare` lacks `schema`, queue `promote` sends `project`; screens-settings 27 as before).
+
+**2. The standard's crumb (R110, new).** `place(view)` may answer `{project, last}`; on `standard` the path's last step is `screen.standard.crumb` filled with `{name}` = `last` (data, escaped, never a key), the project's step still its title. `PATHS.standard` ends in `screen.standard.crumb`; where `place` gives no `last` (a string, `{project}` alone, an empty or non-string `last`) the step falls back to `screen.standard.name`, today's crumb. Two tests in `fixround.test.mjs` (test and control). One older assertion moved with it: `frame.test.mjs` R28 compares every path to the design's, now with `standard`'s last step the crumb word (R110), every other step still the design's.
+
+**Checks.** Module suite 235 of 235. `checks/run.mjs`: format 0, architecture 0, words 0 failures for interface-shell (the run's other failures are other modules': coverage in agent-harness, agent-runner, citation, installer-steps, journey-check, link-sweep, monitoring; testcopy in op-grades); `coverage.mjs interface-shell` 107 of 107; ownership 0 failures.
+
+Size (session_01Sy13QU3XNn8qQ1dY4WHoab): test runs 8, module lines 2876
+
+## J11 · COMPLETE
+
+COMPLETE (B21, B22; B20 was J10) for `interface-shell` in T51, merged `tranche/T51` first.
+
+**B22 (R110, K4228).** `place(view)` may answer `{project, last, projectKey?}`: when `projectKey` is a string the page holds (the screen lists it in its `words`) the project's step draws that word with `{name}` = the project's title, escaped data, in place of the title; absent, not a string or an unknown key, the title as before. Tests in `fixround.test.mjs`: the word replaces the title and the last step is unchanged, a `{name}` word gets the title as typed (`<b>&` escaped), and the control (none, unknown, non-string, empty keep the title). **Requirement line (ownership bars me from `build/requirements/interface-shell.md`, as at J7; please enter it):** R110 (K4228, `screens-publish` R68) — append: *`place` may also answer `projectKey`, a word key the screen holds in its `words`: the project's step then draws that word, `{name}` = the project's title (HTML-escaped data), in place of the title; where `projectKey` is absent, not a string, or not a key the page holds, the step is the title as before. Test: `projectKey` draws that word for the project's step, a `{name}` word gets the title as data; control: none, an unknown key or a non-string keeps the title.* Status: `Last changed T51 (K4228: R110 amended, projectKey)`. **Screens-publish must list `crumb.project.unjoined` in its `words`** (it is in `rows.mjs`, design row) or the key is not held and the title is drawn.
+
+**B21.** `projectowneradd` stand-in (`b17.test.mjs`, shared by `memberadd`, `memberset`, `membercaps`, `expertiseconfirm`, `memberlanguageset`) now sends the declared fields (`fitSend`). The tranche merge brought further declarations; the guard also found and I brought to the declared request: `cite` (fixture screen: `extent_para` and `content_id` with the declared required fields; `acts.test` asserts them, `frame.test` stand-in), `enroll` (fixture: `invite` always present), `wizarddraft` (`kit.test`), the fixture members screen's `memberadd` and `membercaps`. No assertion loosened.
+
+**Checks.** Module suite 236 of 236. `format`, `architecture`, `coverage` (107 of 107), `ownership` 0 failures.
+
+Size (session_01TP4eDyx3cz3mY4jPr8VbyZ): test runs 9, module lines 2876
+
+## J12 · COMPLETE
+
+COMPLETE (B21, B22) — see J11 in my record. R110 projectKey applied with test and control; stand-ins brought to the owners' declarations (projectowneradd and the other member acts, cite, enroll, wizarddraft). Module suite 236/236; format, architecture, coverage (107/107), ownership 0 failures. Needs your edit: the R110 requirement line (ownership bars me from the requirements file), text in J11. Screens-publish must list crumb.project.unjoined in its words.
+
+## J13 · COMPLETE
+
+COMPLETE (B23) for `interface-shell` in T51, merged `tranche/T51` first.
+
+**R12 (K4237).** `can` draws a read (`OPS[op].mutating` false) that no `SESSION_OPS` set holds when the session's class is among `OPS[op].classes`, or when the op is public (`classes: null`, `bootstrap`); the page data gains `readClasses` (`pick` over `OPS`). Tests in `fixround.test.mjs`: `selftest`, `runtime`, `bootstrap` (updates), `exportlog` (group), `biasmanifest`, `biasinhale`, `biasdebt` (bias) drawn for an admin and a member session, all in neither set; controls: `export` (mutating, outside the set) not drawn, and `selftest` not drawn to a session of class `agent`, which it does not list. The first test fails without the change. `export`'s session reach stays OP-DECLARATIONS #30's. R110's projectKey line is BOB's at the merge (J11).
+
+**Checks.** Module suite 239 of 239; format, architecture, coverage, ownership below.
+
+Size (session_01TP4eDyx3cz3mY4jPr8VbyZ): test runs 4, module lines 2880
+
+## J14 · COMPLETE
+
+COMPLETE (B23) — see J13. R12: a read in no SESSION_OPS set is drawn when the session's class is among OPS[op].classes (a public read too); the eight acts' reads (selftest, runtime, bootstrap, exportlog, biasmanifest, biasinhale, biasdebt) now draw; export (mutating) stays outside, as you said. Test and controls; module suite 239/239; format, architecture, coverage 107/107, ownership 0 failures.
+
+## J15 · COMPLETE
+
+COMPLETE (B24, B25) for `interface-shell` in T51, merged `tranche/T51` first.
+
+**B24 (1) registerDeclared.** `test/m/interface-shell/register.mjs` calls test-support's `registerDeclared(root, registerDeclaredOps)` (R17); `t50.test.mjs` and `declared.test.mjs` import it first, so the real SCREENS compose (the inherited R73 red, `expertisewithdraw`, is cleared); a new R104 test asserts every declared op is in OPS. It is per file, not in `harness.mjs`: the screen modules' tests import the harness and register by hand, so a harness-wide registration made them fail with "a second registration" (checked: 19+14+17 tests). REPORT: adding op-grades' `registerDeclaredOps` to the call is refused with `DECLARED_OP_DISAGREES: accountusesset description` (an owner's row against the hand row; not mine), so only op-declarations' registration is made.
+**B24 (2) failed hook.** An act may carry `failed(view, answer, cs)` (`answer` = `{kind: "refused"|"silent", code, translation, fields}`): called as soon as the act's request is refused or unanswered, after busy clears and before the refusal is drawn beside the act, so a working line is cleared first. Tests (R21): refused and silent clear the line and the refusal is drawn; controls: success runs `done` and not `failed`; an act with no `failed` is refused as before.
+**B24 (3) kept choice.** Cause: an act with no `rereads` re-reads every read, each drawn as loading, so a choice inside `cs.state` left the tree and came back at its seed. A plain `cs.choice` now records the member's pick in `view.ui` (key `choice:<id>`, page memory) and draws it again; the seed `o.value` applies only until the member chooses; `redraw` and `acts` choices unchanged. Test (R90) fails without the change; controls: an unchosen choice keeps its seed; a numeric option value is kept.
+**Requirement lines for BOB (ownership bars me from the file).** R21 (3): append "An act may carry `failed(view, answer, cs)`, called when its request is refused or unanswered, before the refusal is drawn beside the act. Test: a refused and an unanswered act clear a line the press raised and draw the refusal; control: a successful act never calls it." R90: append "A plain `cs.choice` keeps the value the member chose across redraws (page memory, `view.ui['choice:<id>']`), `o.value` seeding it only until then. Test: a choice kept across an act that re-reads every read; control: an unchosen choice keeps its seed." R104: "the tests that compose the real SCREENS register the owners' declarations with `registerDeclared` (test-support R17)."
+**Also:** `t50.test.mjs` R78 stand-in `ask` sent `q`; the merged declaration accepts `question`: stand-in now sends that.
+**B25.** No key of the shell's U420 names is missing (words check: missingkey 0 for interface-shell). QUESTION on the reason box: the shell opens it by weight alone (`determine`, `consequencerevise`, `consequencerecord` are graded Reasoned, so it always opens; `matter` names `reasonField` on revise). Opening it only when the act replaces an earlier determination / the member assesses needs a per-press decision the shell cannot make from the grade; it would take a kit option (e.g. `cs.act(op, {reason: false})` for a press that asks none, or `send` answering `{noReason: true}`) and `op-grades` ruling the weight. Tell me if you want that built; not built.
+**Checks.** Module suite 243 of 243; screens-* suites identical to the base (pass/fail counts unchanged); format 0, architecture 0, words 0 for interface-shell (the run's 24 testcopy are other modules'), coverage 107 of 107, ownership 0, `setup-words build --check` clean.
+
+Size (session_01KQHd3HJbcAh8FMDw347XK5): test runs 12, module lines 2893
+
+## J16 · COMPLETE
+
+COMPLETE (after B26, K4259) for `interface-shell` in T51. Pushed at ea97f9fd32.
+
+**Entry applied.** `ref` (browser.mjs) draws the `<b>` lead only when `shell.card.<kind>` is held; a kind with no word is its facts alone, nothing if none, as `theme` was. The old exemption by name (`theme`) and the `someFact` test are gone. Test (written first, seen failing): `fixround.test.mjs` "R106 an objective reference with no facts draws no empty lead…" (no `<b>` with no facts or a list of null and ""; control: `published` keeps its word). `dash-action` stays out of REF_SCREENS.
+
+**Requirement line for BOB (amends R106's last sentence):** "A kind with no `shell.card.<kind>` word is drawn with the item's own facts alone, as `theme` is (R81); an item with no facts either has no card heading and no tip (the reference is a link, or a label, only)."
+
+**A red my change causes in another module (REPORT).** `screens-investigate` `common.test.mjs:77` (R10 "every record item a screen names is a reference with its card"), assertion at :82: on `timeline`, a `statement` reference carries no `data-tip`. It had one only because the old `ref` drew an empty `<b></b>` for a kind with no word and no facts; that tip said nothing. The fix is that module's: give the reference facts, or relax the test to references that have something to say. I did not touch it.
+
+**Other reds, not mine (same before and after my change, compared):** `screens-publish` 1 (R10, the nine registry screens' acts), `screens-investigate` R10 acts (`linewithdraw`).
+
+**Tests and checks.** `node --test bio-plane/test/m/interface-shell/`: 244 tests, 244 pass. Screen suites run: screens-inquiry 372/0, screens-intake 179/0, screens-daily 207/0, screens-settings 209/0, screens-action 210/0, screens-publish 176/1 fail (not mine), screens-investigate 174/2 fail (one mine, above). `checks/run.mjs`: format 0, architecture 0, words 1 failure (op-grades' test copy, not this module), coverage 6 failures (agent-harness, agent-runner, installer-steps, journey-check, screens-inquiry R110 R119, screens-intake R53; none interface-shell). Ownership: 0 failures.
+
+Size (session_01PJfJCZsnNnrrxo4GRZ1ehd): test runs 8, module lines 2892
+
+## J17 · COMPLETE
+
+COMPLETE for `interface-shell` in T51 (fix round 2, wave 3, START B27, cause 1; `tranche/T51` merged first).
+
+**Entry applied (an answer that is a success, drawn as one).** An act may name `successCodes: [CODE, ...]`. An answer that is a refusal in form (`ok: false` with that code, at the top level or in `result`, status below 500) is then the act's success: `done(view, answer, cs)` is handed the answer's fields, the act's named `rereads` run, `failed` is not called, no refusal tone sounds, and the code's own sentence (R13's words: the act's `refusals` key, else `refusal.<code>`, else the translation, with its fields filled) is drawn beside the act as `<span class="cs-state" data-state="done" role="status">`: polite, not an alert, kept by the act's key so the re-read's redraw draws it again, and ended by the act's next press or by leaving the screen, as a refusal is. A code the act does not name, a server error and no answer are refusals as ever. `checkScreens` throws, naming the screen and the act, for `successCodes` that are not a list of non-empty strings. The button follows R74 as after any success of that act: `adminendorse` and `memberadd` have no weight (credential ground), so, as after a plain success, no `data-done` (the test compares the two). No new word and no new style (`cs-state` is the design's).
+
+**Requirement line for BOB (new R112; ownership bars me from the file):** *R112 (fix round 2, K4334; SCREENS-SETTINGS #13; amends R13, R21) **An act may name the answers that are its success.** An act's `successCodes` is a list of answer codes: an answer `ok: false` with one of them (status below 500) is drawn as done, not as a refusal: the code's own sentence (R13's words) beside the act in the done style (`role="status"`), `done` is handed the answer's fields, the act's `rereads` run, `failed` is not called and no refusal tone sounds. A code not listed, a server error and no answer are refusals (R13). A `successCodes` that is not a list of codes makes `interfacePage` throw naming the screen and the act. Test: `adminendorse`'s recorded-and-pending answer (`CONSENSUS_REQUIRED`) is drawn as done, hands `done` its fields and re-reads. Control: the same code on an act that does not name it, a real refusal of the same act, a 503 and no answer are refusals.* Status line: `Last changed T51 (fix round 2, K4334: R112 new, an act's successCodes)`.
+
+**To report when merged (screens-settings adoption, a later CHANGE):** `adminendorse` and `memberadd` (an administrator beyond the second) answer `CONSENSUS_REQUIRED`; screens-settings names `successCodes: ["CONSENSUS_REQUIRED"]` on both and drops its own request. Their `refusal.CONSENSUS_REQUIRED` row ("Your endorsement is recorded... Still to endorse: {awaiting}.") is the sentence; the answer's `awaiting` is a list, so it is filled as the list's text (`rosa,mai`): a screen that wants handles with spaces gives the act a `refusals` function for the code. The same shape applies to any other success-coded refusal an owner declares.
+
+**Tests and checks.** Tests (`fixround3.test.mjs`, seen failing before the change): both answer shapes, the controls (not named, real refusal of the same act, 503, no answer, an ordinary success, the next press), the malformed list. `node --test --test-force-exit bio-plane/test/m/interface-shell/`: 268 tests, 268 pass. Users (`impact.mjs origin/tranche/T51 HEAD`): screens-wizards 75/0, screens-entry 96/0, screens-daily 252/0, screens-investigate 211/0, screens-publish 212/0, screens-action 223/0, control-plane 340/0; reds also on the tranche tip with the tranche's own shell (compared by name), none mine: screens-settings R39, screens-inquiry 3 (R5…, R10, R10 entry 25), screens-intake R7 (C28), plane R24. `checks`: format 0, architecture 0, coverage 108 of 108, words 0 (interface-shell), ownership 0.
+
+Size (session_018xL836aY5gPSaoL972peEg): test runs 9, module lines 3004
+
+## J18 · COMPLETE
+
+COMPLETE (B28, K4337, C66) for `interface-shell` in T51, `tranche/T51` merged first.
+
+The frame's own `queue` read (`browser.mjs`, the masthead/rail count) asked `limit: 500`, which the walk saw refused 400; it now asks 200, the limit screens-inquiry's dashproject uses. Test (R7, seen failing: it asked 500): the frame's background queue reads carry `limit` 200; control: a screen's own queue read keeps its limit. The R7 count is unchanged (a list of at most 200 items; the sum of the three kinds is counted from what is read). Requirement line, if BOB wants it written: R7 — the frame's queue read asks `limit` 200.
+
+Module suite 269 of 269; format, architecture, coverage (108 of 108), words 0 failures. The J17 line for R112 stands.
+
+Size (session_018xL836aY5gPSaoL972peEg): test runs 12, module lines 3004
+
+## J19 · COMPLETE
+
+COMPLETE · INTERFACE-SHELL #14 · fix round 3, wave 2 provider · C51* (SCREENS-PUBLISH #15's REPORT, K4398).
+
+**Met: interface-shell R116** (`cs.signer.sign(statements, {keyFile})`). `keyFile` is the text `cs.keyFile` answered (or its `{ok, text}` answer). With no key held the sign dialog then draws no key-file box and asks only the passphrase; a wrong passphrase is refused beside the dialog and the text is kept for the retry; the right one signs with that key. With a key held `keyFile` is not used and the dialog asks neither a file nor a passphrase. A `BIOKEY-RAW1.` file given this way signs on a blank passphrase. The existing dialog path (no `keyFile`, the file box and `cs-key-file` filled by id) is unchanged, so screens-publish's merged code works as before. SCREENS-SETTINGS can use `cs.signer.sign(list, {keyFile: (await cs.keyFile(id)).text})`. No new words, no new census op.
+
+**Tests** (`signer.test.mjs`, written first and seen failing: the dialog still drew `#cs-key-file`): "R116 a screen signs with a key file's text and no key held …" (file made by `register({passphrase, defer})`, wrong then right passphrase, verified with `verifySshsig`, no key or passphrase in storage or any request) and "R116 control: with a key held …" (held key signs, no file box or passphrase field; the RAW1 file signs). Also named R114 and R115 in the titles of their existing tests (`cause3.test.mjs`), which coverage found unnamed in my module.
+
+**Runs.** `bio-plane/test/m/interface-shell/`: 283 tests, 282 pass, 1 fail: `kit.test.mjs` R50 "scanmirror: declared by its owner" — red on the tranche tip too (before my change: 281 tests, 1 fail); `op-declarations` does not yet declare `scanmirror` (file-safety R49 / RC-7 provider). Named, not fixed. `build/plan/impact.mjs tranche/T51 HEAD`: affected modules 0 of 175 (the change is inside the shell's program; no other module's tests read it). Checks: format 0 failures; architecture 0; coverage for interface-shell 113 of 113, 0 failures; ownership 0 failures. The whole-product coverage and words runs show reds in other modules only (agent-harness, agent-runner, control-plane, entities, installer-steps, journey-check, op-grades, screens-publish; words in `op-grades` t33/t51), none in my files.
+
+**Reported to BOB.** The R50 red above (needs `scanmirror` declared by `op-declarations`). Proposed requirement line: none; R116 is already written. Deferred: none. Nothing found in another module beyond the above.
+
+Size (session_01NH5dcSiHndngPRW6Doo7DH): test runs 6, module lines 2630
+
+## J20 · COMPLETE
+
+COMPLETE · INTERFACE-SHELL #15 (session_01XNRmAuR8VXqdzNrDodxNZ8) · T51 · entries B29 to B33 (fix round 3; C51*, C84, C64, C87 (c))
+
+**Met**
+- **B29 · R116 (C51*)**: verified, not rebuilt. Session #14 built it (J19). This session re-ran `signer.test.mjs`: both R116 tests pass.
+- **B30 · R117 (C84, C64)**: `RE_POINTS` gains `security: ["scanmirror"]` and `places: ["officeconfirm"]`. Test (`fixround3.test.mjs`, seen failing first: "screen security's act scanmirror is not the registry's for it"): both served; control: another unlisted op on those screens still throws. Amended the exact `RE_POINTS` assertions in `t50` (R73) and `design` (R55) to the three entries.
+- **B30 · kit R50** ("scanmirror: declared by its owner") now passes. The cause was the test, not `RE_POINTS`: `kit.test.mjs` never registered the owners' declarations, so `OPS` lacked `scanmirror`. It now imports `register.mjs` as the other composing tests do.
+- **B31 / B33 · R118**: built (a `screen` field on every act request), then retired by B33 and reverted (`36680b3573` reverts `3430ea7a82`: field, harness exemption, test). Check B31 asked for: under the owners' declarations, 25 distinct ops in the test traffic would refuse an extra `screen` field (for example `promote`, `adminendorse`, `login`, `cite`, `memberadd`, `knock`). Moot now that R118 is retired.
+- **B32 · R119 (C87 (c))**: an act's `ready(view, el, cs)` runs on the press before any reason box opens (`readyFirst` in `browser.mjs`). `{refuse}` is drawn beside the act and nothing is asked; `{fills}` reach the send as `extra.fills`. Tests (`fixround3.test.mjs`, both seen failing first): "R119 a reasoned act whose ready refuses …" (control: an act without `ready` still asks the reason) and "R119 the fills ready answers reach the act's send …".
+
+**Requirement lines for BOB**
+- R117 and R119 are met and tested; BOB clears the "(not yet met: T51)" marker at merge. Nothing new proposed. R118 is retired per B33; nothing to write.
+- Note for screen authors: an act's functions reach the page as their own source, so a `send` or `ready` cannot close over test or module variables. My first R119 draft failed for that reason, not for a product fault.
+
+**Suites and checks**
+- Module: `node --test bio-plane/test/m/interface-shell/*.test.mjs`: 286 tests, 286 pass.
+- Affected modules (`impact.mjs origin/tranche/T51 HEAD`): 13 modules. I ran the other modules' 275 affected files on the final code: 2610 tests, 2594 pass, 14 fail. Those 12 files were re-run on the tranche tip at the same merge (`263b820968`): the same 7 failures on both, so none is from this module. The 7 are: R10 (two), R1–R13 (interface-shell R21, R38), R24 (DEC-149), R5 R14–R16 ..., R81 end to end (Home's projects), and "the shell serves the screens: interfacePage passes its R21 check".
+- Module checks: format 0 failures; architecture 0; coverage 115 of 115; words: no finding in this module; `setup-words --check`: no line for this module; ownership (`interface-shell`, `origin/tranche/T51`, `job/T51/interface-shell`): 7 files, 0 failures.
+- `checks/run.mjs /home/user/bio`: failures only in other modules (listed below).
+
+**Reported to BOB (other modules; not fixed here)**
+- `op-grades/src/op-grades/t33.mjs:214`, `t51.mjs:41` and `:45`: inline sentences (words check). `t51` :41 and :45 are the `scanmirror` and `officeconfirm` rows, which are op-grades' own.
+- Coverage named by no test: agent-harness R17; agent-runner R37, R38, R40; control-plane R117, R118; installer-steps R26, R31; journey-check R19; jurisdictions R95; op-grades R53; screens-publish R74 to R79.
+- Architecture: `screens-inquiry/fr4-project.test.mjs` imports `screens-action/plan.mjs` before it is in the order; `screens-inquiry/phone.mjs` imports `interface-assets` it does not declare.
+- Words testcopy: `screens-inquiry/fr4-document.test.mjs:115–116`.
+
+**Found in this module's paths:** none beyond the above. Deferred: none.
+
+Size (session_01XNRmAuR8VXqdzNrDodxNZ8): test runs 29, module lines 3124
+
+## J21 · QUESTION
+
+QUESTION (E12 step 1, offline through my harness with the nine modules' real SCREENS; every `(op, query)` sent per load, admin, assistant reachable). Only two repeats are identical requests; the rest differ in a parameter and each is a screen's own declaration.
+
+IDENTICAL (mine, I fix them): Home `groupidentity` x2 (frame `browser.mjs` loadFrame :2584 + `screens-daily/home.mjs`:37); Project `groupidentity` x2 (frame + `screens-inquiry/project.mjs`:41). Fix: a read request (op declared not mutating) identical to one in flight, or answered in this load with no act since, is shared; every act and every route opens a new epoch, so an act's re-reads and a re-visit still re-read. No requirement text changes.
+
+DIFFER IN A PARAMETER (not identical):
+- Home `queue` x2: frame `{count:true}` (R7, browser.mjs:2584) + the screen's open list `{}` (`home.mjs`:38).
+- Queue `queue` x3: the same count + the open list `{sort?}` (`screens-daily/queue.mjs`:44) + `{muted:true}` (:48; answered/aside in their states, :37-38).
+- Project `inquirystrength` x2: two questions, ids differ (`project.mjs`:313, one per question).
+- Held `heldcaptures` x3: picker list `{limit:50,fields:picker}` (`screens-intake/held.mjs`:11), set-aside list `{state:set_aside}` (:13), and the full fields `{bundle_ids}` (:31, E13's, capture).
+
+ASK (changes R7's text): on Home and Queue the screen reads the whole open queue, which already gives the frame its number and its three kinds (`noteQueue`, R93/R96). My best reading, RECOMMENDED: the frame sends its `count:true` read only when the screen reads no whole open list, or that list came back cut/failed (then right after); so Home and Queue send one `queue` request fewer, and a screen that reads no list (Find, Projects...) is unchanged. Cost: on those two screens the masthead number waits for the list instead of the cheaper count (same time as the screen's own list). Alternative: leave R7 as is (the count stays a separate request). I build the recommended reading only on your word; everything else of E12 goes on now.
+
+## J22 · COMPLETE
+
+COMPLETE · INTERFACE-SHELL #16 (session_01WsgvMVTibADgx16hWhb92M) · T51 · B34 (fix round 5, E12) with B35's ruling on J21
+
+**What changed** (`bio-plane/src/interface-shell/`)
+- `browser.mjs` `call` (:107-145) is now a sharing front over `send` (the old body). A read (an op `OPS` declares not mutating, a call saying `read: true`, which every `reads()` entry, `refreshNow` and the frame's `subscriptionsignin` state do) identical in op, query and body to one in flight, or answered during this load, is that one request; later readers get their own JSON copy (`copyOf`). Epoch: `newEpoch()` on every `route()` (:1530), every session-record write/clear (:82-83), every non-read call and every act press (`req.act = true`, :2146), so an act's re-reads, a revisit and a refresh still ask. A completed answer is shared only while the load is open (`closeLoad`, when the screen's first reads settle, :1592) and for 5 s at most.
+- `index.mjs`: `readOps` in the page data (the ops `OPS` declares not mutating; about 6 KB of the script, served once per release, R1), so `cs.call` reads by any screen are known as reads.
+- B35 ruling: `loadFrame` no longer sends `queue {count:true}`. `countQueue` (`browser.mjs`, called from `show`) sends it once, in the background, only when the screen reads no whole open list (`queue` with at most `limit`/`sort`), or when that list was cut, refused or unanswered (then right after it).
+
+**Step 1 (offline, nine modules' real SCREENS, admin, assistant reachable)**: identical: Home and Project `groupidentity` x2 (frame + `home.mjs`:37, `project.mjs`:41), now one. Parameter-distinct and kept (B35): Queue's `muted` list, one `inquirystrength` per question (`project.mjs`:313), Held's three `heldcaptures` (`held.mjs`:11, :13, :31). Home and Queue: the frame's count is gone (list gives the number). After: no `(op, query)` repeats on the four screens.
+
+**Failing-first** (`e12.test.mjs`, new, 13 tests; `p9.test.mjs`, `fixround3.test.mjs` amended to the ruling). Red before: Home and Project "repeats: groupidentity {} x2"; the in-flight and answered-in-load tests; the control "act re-reads" (red only because the first load sent two); the queue tests "no count read where the whole open list is read" (Home, Queue, p9) red with the old frame count, green now. Mutation check: returning the shared object instead of a copy fails "own copy". Controls green: act re-read asks again; revisit asks again; differing queries each sent; an act's op never shared (two presses, two requests); refused/unanswered list then one count; cut list one count; Project (no list) one count.
+
+**Suites and checks**: module `bio-plane/test/m/interface-shell/`: 321+ tests, all pass (re-run after the last edit: p9, e12, fixround3 green; full module run before the queue change 320/321, the one red was fixround3's, amended). Users (`impact.mjs origin/tranche/T51 HEAD`, 13 modules, 313 other files): 2814 tests, 2801 pass, 11 fail: 7 `journey-check/pseudo.test.mjs` (playwright-core not installed here), 1 `plane/release.test.mjs` R24 (DEC-149; in J20's list), and 3 that encode the old request counts and need their module's job:
+- `screens-daily/fix4.test.mjs`:173 expects `groupidentity` x2 on Home (now 1; its own title says "the one known repeat");
+- `screens-settings/account.test.mjs`:19 expects `whoami` x2 "the shell's own, and the screen's" (now 1);
+- `screens-daily/queue.test.mjs`:39 `mainQueue(p).at(-1)` now finds the frame's count read, since its fixture's queue answer does not give a whole list (no count read would be sent for a whole one).
+Smallest thing I need: BOB to place those three one-line edits with screens-daily and screens-settings. format 0 failures; architecture 0; coverage 116 of 116 (this module); ownership 0 failures; `checks/run.mjs`: words 0 failures, no finding in my files.
+
+**Requirement lines proposed (BOB writes)**
+- R7, replacing "The frame's own queue read asks `queue` with `count: true` once per load, in the background (queue R93), and draws that number": "The frame sends that read once per load, in the background, only when the screen reads no whole open list (`queue` with at most `limit` and `sort`), or that list was cut, refused or unanswered; where it is read whole, the number is the sum of its three kinds (R93, R96)."
+- R123 new (fix round 5, E12; P9): "A read identical in op, query and body to one in flight, or answered during this load, is sent once and each reader is handed its own copy. A load is a route; every route, session change, act and call of a mutating op opens a new epoch; a completed answer is shared only until the screen's first reads settle, and for 5 seconds at most. Test: `e12.test.mjs`. Control: an act's re-reads, a revisit and a refresh ask again."
+
+No platform measure (N: one page's requests); PERFORMANCE re-times the four screens. New data only: none stored. Deferred: none.
+
+Size (session_01WsgvMVTibADgx16hWhb92M): test runs 22, module lines 3190
+
+## J23 · QUESTION
+
+QUESTION (G12b, bootstrap; changes R86's text). R86 says the shell's independent requests are in flight together, and its test (`t50.test.mjs`:496) asserts `bootstrap` leaves at the same instant as `whoami`. G12b says `bootstrap` never blocks a mark. Reading: the diagnosis (R6 speed §2) lists `bootstrap` (1.4-1.8 s, 4 hops) among the frame reads that share the object with the screen's reads, and nothing but a screen that itself reads `bootstrap` (Home, setup, connect, security, updates) waits for it; so the only way it can "block" a mark is by reaching the object ahead of the first reads.
+BEST READING (I am building it): `bootstrap` is sent after the screen's first reads and the guide's marks request have left (in `show`, or at once if the screen itself reads it, since that read waits for it as R122 says), never before them; it is still sent once per load, with the same session or none, its answer drawn as R36/R58 say. Cost: its answer, and so the test band's correction when `test_instance` is not true, arrives about one round trip (~0.2 s) later; the band served in the page (R58) is unchanged.
+Effect on tests: R86's test changes from "whoami and bootstrap at 0" to "whoami alone at 0; bootstrap with the screen's reads on whoami's answer". Alternative if you want R86 kept as it is: bootstrap stays beside whoami and G12b's "never blocks" is met as it is today (no mark waits for it); I would then say so in the record and send nothing else. Proposed text if my reading stands: R86's "independent requests" excludes `bootstrap`, which R122 places after the screen's first reads.
+
+## J24 · COMPLETE
+
+COMPLETE · INTERFACE-SHELL #17 (session_01AQngXihE8KDBsQRFsE7fEX) · T51 · B36 (fix round 6, G12b), with B37's ruling on J23
+
+**Root cause (file:line, `bio-plane/src/interface-shell/browser.mjs`).** Every full page load sent the six frame reads (`loadFrame`/`loadReach`, old :2636-2677, from `whoami` :1631-1633) though they are constant for a session; `bootstrap` left at `start` before `whoami` (old :2712) and so reached the object ahead of the screen's reads; `wizardsat` was asked only when `entered` ran after the reads settled (`show` :1609 -> `screens-wizards/guide.mjs:277,336`). Why the tests missed it: none counted requests across two page loads of one session, none ordered `bootstrap` against the screen's reads, none crossed members in one tab.
+
+**What changed** (all in `browser.mjs`; no word added, no other module touched)
+- `frameBoot` (replaces `loadFrame`/`loadReach`; :2636 on): the six reads are read from the tab's sessionStorage key `bio-session:frame` = `{who: member|tag-of-token, reads}` when `who` matches this member and session, drawn at once, and asked again once, after the screen's first reads settle (`frameRevalidate`, from `show`); those not kept are asked now, together, as before. Only what the frame uses of each answer is kept (`min`: display_name; level, set_at, asked_at; on; held; connected; on), re-normalised on read-back; no token (a hash tag of it names the session), no route, no screen's read. A screen's own identical read (no query; `subscriptionsignin` state) is taken as the answer (`noteFrame`), so it is not asked twice. The frame follows an answer that differs (name, assistant button, level note).
+- Cleared: `writeRecord`/`clearRecord` (sign-in, sign-out, end, 401) and `lock()` call `frameDrop`; a member's own `setLevel` drops the kept level (`frameForget`). Storage denied/absent/garbage/another's: ignored, cold path.
+- Per read, safely cacheable (kept + revalidated): `groupidentity`, `infolevel` (dropped on the member's own change), `assistantstate`, `accountreference`, `subscriptionsignin {step:state}`, `groupkeystate`. Not cached: `whoami` (the gate), `interfacewords` (already per-release), `bootstrap` (R58), the queue count (live number), `/version`. A change made by an act in one page shows in the next page's first draw until the revalidation (about the screen's settle).
+- R125: `marksAhead` (in `show`) sends the guide's `wizardsat {screen}` with the screen's reads (only for a guide whose `ops` name it); `call` takes `hold: true` so that answer survives the load's end and the 5 s cap until `entered`'s identical `cs.call` takes it. `screens-wizards` unchanged.
+- R122 (B37): `startBoot` sends `bootstrap` after the screen's reads and marks request (at once if the screen reads it), once per load.
+
+**Failing-first** (`g12b.test.mjs`, 16 tests; `harness.mjs` gains `tabStore`, `tabThrows`, request `at`). Against the old shell 12 were red: second load sends none of the six before the screen settles (red: six sent), never-settling reads, frame follows a differing answer, marks within 50 ms of the first read with the read still out (red: not asked), bootstrap after first read and marks (red: first), different member / other session in one tab, storage unavailable/rubbish/another's, sign-out/lock/end clear, own level change not kept, kept read that fails keeps its value, first-load shape and store contents. Green now. Mutation checks: `hold` off -> both marks tests red; store keyed without member/session -> the cross-member test red.
+Existing tests amended (module's own): `t50` R86 (whoami alone at 0; bootstrap with the screen's reads at 500, B37), `t51` R92 and `session` R24 (the tab's storage holds the one frame key and nothing else). R24 stays true: no log of reads or screens.
+
+**Measurements.** Offline, scripted plane (no platform path; N): second page load of a session sends 0 of the six before the screen settles (was 6) and 6 after, once each; `wizardsat` leaves with the screen's first read (was after settle); `bootstrap` third (was first). PERFORMANCE re-times; expected -6 reads off wave 1, ~-0.3 s.
+
+**Suites and checks.** Module `bio-plane/test/m/interface-shell/*.test.mjs`: 337 tests, 337 pass. Users (`impact.mjs origin/tranche/T51 HEAD`, 21 modules, 411 other files, concurrency 2): 3679 tests, 3665 pass, 11 fail. The 9 known: 7 `journey-check/pseudo.test.mjs` R29 (playwright-core not installed here), `control-plane` R117 (acquire), `plane` release R24 (DEC-149). Caused by this change, both in screens-intake and both asserting an empty tab storage: `screens-intake/open-file.test.mjs`:221 and `common.test.mjs`:172 (`assert.deepEqual([...p.store.keys()], [])`). **Smallest thing I need:** BOB places those two one-line edits with screens-intake (exclude the key `bio-session:frame`, or expect it). format 0 for my files (1 failure in `build/plan/next.md:38`, not mine); architecture 0; coverage 117/117; ownership 0 failures; `checks/run.mjs`: no finding in my files, words count unchanged.
+
+**Requirement lines for BOB**
+- R124 new (G12b): "The tab keeps six of the frame's reads for the session: `groupidentity`, `infolevel`, `assistantstate`, `accountreference`, `subscriptionsignin` (state) and `groupkeystate`, only what the frame uses of each answer, in sessionStorage under the member and a tag of the session (never the token). A page load draws the frame from them and asks each again once, when the screen's first reads have settled (a read the screen itself had answered is not asked again); a differing answer is followed. They are cleared at sign-in, sign-out, an end and the lock; the member's own change of the level drops the kept level; storage that is unavailable, unreadable or another member's or session's is ignored and the reads go out at once as on a first load. Test: g12b.test.mjs. Control: a first load asks all six together."
+- R125 new: "The guide's marks (`wizardsat` for the screen) are asked at the route's start with the screen's reads and handed to `entered` when the route has settled; the answer is held for that one reader past the end of the load and the 5 seconds (R123)."
+- R122 (not in the file): "`bootstrap` is asked once per page load, after the screen's first reads and the marks request have left (at once if the screen reads it), with the page's session when it holds one."
+- R86: "independent requests in flight together" excludes `bootstrap` (B37). R123: "...shared only until the screen's first reads settle, and for 5 seconds at most" gains "except an answer asked at the route's start for one later reader (R125)". R7: the group's name may be drawn from the tab's kept read (R124). R24: the tab's storage may hold R124's key, which holds no read of a screen and no route.
+
+Words: none added. R-OLD: new data only (a per-tab key no earlier release wrote). Census ops owned: none new. Deferred: none.
+
+Size (session_01AQngXihE8KDBsQRFsE7fEX): test runs 9, module lines 3478
+
+## J25 · COMPLETE
+
+COMPLETE · INTERFACE-SHELL #18 (session_01GuYhDBuwX3wYXyAxnpXWHF) · T51 · B38 (fix round 6, G30 and G31)
+
+**G30 · the front page's work is done once per release (B-21).**
+
+*Root cause (`bio-plane/src/interface-shell/index.mjs`, before this job).* `interfaceScript` kept the composed source but not its hash, and ran `checkScreens` and `checkGuide` on every call before looking at what it kept (old :437-440). So each `GET /` paid the whole script's hash twice (control-plane's `page()` calls `interfaceScriptHash`, :890, and `interfacePage` hashes again, old :471) and re-checked all the screens; each script fetch re-checked them. Offline that is 100-180 ms of synchronous CPU a request; on workerd it is more (measured below). The plan's cause was "probable, not reproduced"; it is now measured: it is the whole of the idle cost of the page route, and it is what a burst of requests stacks up behind.
+
+*What changed.* `index.mjs` :432-465: `release(screens, options)` keeps `{source, hash}` for the last screens and guide handed in and runs the checks, the class check and the compose only on a miss; `interfaceScriptHash` hashes once per kept script. New export `pageWork()` (:441): counts of scripts composed, hashes taken and checks run in this isolate. Counts, not times, because the Worker's clock is frozen during synchronous work (R-CLOCK); this is what control-plane's `page` log line (K4428) states. control-plane is not touched: its `page()` (:888-892) now finds the hash kept, so its two calls cost one hash per release.
+
+*Why the tests missed it (rule 2) and the gap fixed.* Nothing counted or timed the work behind the page route (`page.test.mjs` asserts two responses are equal; the second is as slow as the first). `g30.test.mjs` counts it, through the module's entries the way control-plane calls them, over the real screens of the nine modules (4.8 MB script).
+
+*Failing-first (rule 3), seen red against the code as it was (counter added first, memo not):* "twenty front pages and twenty script fetches": actual `{scripts: 1, hashes: 40, checks: 60}`, expected `{1, 1, 1}` (twice per hit, as the plan said); the "hit hands back the kept hash" control red at 45 vs 44. Green after: 4 of 4. Controls in the file: the hash is the SHA-256 of the script's UTF-8 bytes, base64, and the page's `integrity` is the same string; a different set of screens is another release (composed, checked, hashed again, its own hash); a broken screen or guide is refused on every ask and leaves the kept release as it was.
+
+*Platform check L (rule 4), `page-contention.probe.mjs` (committed, a probe not a test: it boots workerd and takes a minute).* Real screens of the nine modules plus `plane/register.mjs`, bundled with esbuild, served from one workerd isolate: `GET /` does what `page()` does (hash, then page), the versioned script, and a body drained as `captureupload` drains one. Wall clock outside the isolate. `node page-contention.probe.mjs <dir> [<index.mjs>]`.
+
+| measure (workerd, this container) | before (module at `tranche/T51`) | after |
+|---|---|---|
+| first `GET /` of a release (the build) | 1754 ms | 1374 and 1464 ms |
+| 20 `GET /` idle, one at a time | median 361 ms, max 430 ms | median 1 ms, max 4-5 ms |
+| 10 `GET /` during a 20 MB upload | median 3104 ms, max 4288 ms (bar 2000: FAILS) | median 9 ms, max 220-266 ms (bar met) |
+| 10 script fetches during it | median 4595 ms, max 4660 ms | median 389-420 ms, max 444-462 ms |
+
+The build (compose, class check, one hash) is paid once per release by the first request an isolate gets, about 1.4 s; every later page is 1-5 ms of the module's work. 10 concurrent pages in 3-4 s against a walk's 19-53 parallel reads plus uploads fits the walker's 20 and 30 s draws. Platform check P (20 timed fetches of `/` idle and during a walk on biosmoke8) is a read-only measure of the deployed fix: PERFORMANCE's after-deploy re-timing in plan section 7, not possible before the deploy.
+
+**G31 · a first sign-in sends each request once (A-27).**
+
+*The plan's reading was "by design, a walker artefact". Half of it holds; the other half was a defect.* Driven through the real entry (the real `front` screen's `login` act over the real screens of the nine modules, sign-in returning to Queue and to Home): (a) `queue` twice is by design: the open list and the muted list are two queries of one op (`screens-daily/queue.mjs`), each once; with the real op's whole-list shape (`ok, member, items, limit, sort, item_count, truncated: false`) the frame asks no `count` read and the rail and masthead draw the list's number. These two cases were green from the start; kept as controls (with the cut list, `truncated: true`, asking exactly one count). (b) But 8 of the 23 requests after the press were repeats: `whoami`, `interfacewords` and the six frame reads each went out twice (and `groupidentity` a third time on Home).
+
+*Root cause.* `screens-entry/front.mjs:106` hands the session over to stay and read `whoami` (`cs.signin(a, {…, stay: true})`) and :109 hands it over again to open the page kept (`cs.signin(a, opts)`; its comment: "the record written again, as it was"). The shell's `signedIn` (old browser.mjs:1654-1666) took each for a new session: `writeRecord` (new epoch, frame dropped), `ME = null`, then `route()` (new epoch) and so `whoami()` (:1583) with `loadWords()` and `frameBoot()` (:1639-1640) again; and the epoch change kept Home's own `groupidentity` from sharing the frame's. The walker's second document load (a second tab) is by design (R32) and is a control here: the other tab sends its one set once.
+
+*What changed (`browser.mjs`).* `signedIn` :1657: a session handed over again exactly as it is (same token, expiry, device and handle, `whoami` already answered, not locked) is one sign-in: the record is not rewritten, `whoami` not sent, and the hand-over opens the page kept as part of the same load. `route(keep)` :1549 opens no new epoch for that second hand-over, and the first (`stay`) opens the load (`LOADING = true`), so the frame's reads are shared with the screen's identical ones (R123's own rule, which the epoch change had cut). A different token, handle or device, or a session whose `whoami` has not answered, is a new hand-over as before. `screens-entry` is not touched (its two calls are harmless now, and are its R18's intent).
+
+*Why the tests missed it, and the gap fixed.* `e12` boots one page on one route with the session already in storage; no test crossed a sign-in. `g31.test.mjs` (7 tests) does, through the real front screen.
+
+*Failing-first, seen red against the old `browser.mjs` (the file put back for the run), green with the change:* first sign-in on Queue: repeats `whoami x2, interfacewords x2, groupidentity x2, infolevel x2, assistantstate x2, accountreference x2, subscriptionsignin x2, groupkeystate x2`; on Home the same; the record written twice (one write now); the other tab's set doubled. Green: 7 of 7. Controls: another token over a live session is a new session (`whoami` again, the frame read again, the record rewritten); a cut open list asks one count; the muted list and the open list are sent once each.
+
+*Count at the walker's case.* The sign-in load after the press is 15 requests (login, whoami, interfacewords, the six frame reads, the open queue, the muted list, `heldcaptures`, `inbox`, `memberlist`, `wizardsat`), was 23. The walker's 49 on the live copy is the same shape with a larger home page; PERFORMANCE counts again after the deploy. Platform check N.
+
+**Suites and checks**
+- Module `bio-plane/test/m/interface-shell/*.test.mjs`: 348 tests, 348 pass (337 before; +4 `g30`, +7 `g31`). `g30` and `g31` each seen red first (above).
+- Users, from `impact.mjs origin/tranche/T51 HEAD` (13 modules, 363 files): the screen modules, two suites at a time: screens-entry, -wizards, -settings, -intake, -daily: tests 1003, pass 1003; screens-inquiry, -investigate, -publish, -action: tests 1293, pass 1289, fail 1 (the one red is `screens-investigate/fix4-seam.test.mjs:92` "Money, the real plane", a 63 s real-plane test that failed under two suites at once and passes alone with this change, 1 of 1); control-plane page and door tests that compose the page (`doors`, `t46-app`, `t46-e2e`, `t47-door`, `t47-e2e`, `t48-door`, `t51-bootstrap`) and plane `t47`, `wizards`: 63 of 63. `journey-check/*.test.mjs` (after `npm ci` in `bio-plane/src/journey-check`, K4113): 128 tests, 104 pass, 23 fail; the SAME 23 fail at `origin/tranche/T51` with this job's files absent (run in a worktree, same failing names; the first failing step is journey 28's install step "locator.textContent: Timeout 30000ms", the installer's fake account; also the two G1 watchdog-cron tests, which stay red by name until installer-steps merges, the words R17 "group" test, and the arms that walk on after journey 28). None touches this job's code.
+- `checks/run.mjs`: format 0 failures, architecture 0, coverage 0 (6656 of 6656 ids named), channels 0, words 0 failures with counts unchanged (module: inline 0, dev 18, unkeyed 1, before and after; whole: dev 268, unkeyed 1982). `checks/ownership.mjs interface-shell tranche/T51 job/T51/interface-shell`: 0 failures.
+
+**Requirement lines for BOB**
+- R126 new (G30; B-21; K4428): "The page's script, the hash of it the page policy names, and the checks of the screens and guide it is made from are done once per release in an isolate (for the screens and guide it was last made from): a front page and a script fetch after the first only read what was kept, so no request pays for the script's build, its hash or its checks; a set that fails its checks is kept nowhere and is refused again at the next ask. The module exports `pageWork()`, the counts of scripts composed, hashes taken and checks run in this isolate (counts, not times: a Worker's clock does not see synchronous work, R-CLOCK), for control-plane's `page` log line. Test: `g30.test.mjs`. Controls: the hash is the SHA-256 of the script's UTF-8 bytes; another set of screens is another release; a broken screen is refused every time. Platform: `page-contention.probe.mjs`."
+- R127 new (G31; A-27): "A session handed to the shell again exactly as it is (the same token, expiry, device and handle, `whoami` answered, not locked), as `front` does to stay and read `whoami` and then to open the page kept, is one sign-in: the record is not written again, and `whoami`, the words and the frame's reads are not sent again; the second hand-over opens the page kept as part of the same load, which the first opened (R123: no new epoch). A different token, handle or device is a new hand-over. Test: `g31.test.mjs`, through the real `front` screen. Control: the other tab sends its own set once; a cut open list asks one count."
+- R46: `cs.signin`'s line gains "(R127: handed over again as it is, it is the one session)". R123: "every route ... opens a new epoch" gains "except the route that follows a hand-over that stayed (R127)".
+
+**Found in another module.** control-plane `page()` (:888-892): no change needed for the hash (now once per release); its `page` CPU log line (G30, K4428) is its next job's and reads `pageWork()`. screens-entry `front.mjs:106-109`: the double hand-over is now harmless; it may stay (its R18 says the record is written again). No other module.
+
+Words: none added (no member-facing string). R-OLD: new data only (no stored data). Census ops owned: none (the shell declares no op). Deferred: none. REPORT/QUESTION: none open.
+
+Size (session_01GuYhDBuwX3wYXyAxnpXWHF): test runs 20, module lines 3347

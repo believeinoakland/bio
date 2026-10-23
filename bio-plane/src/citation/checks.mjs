@@ -50,6 +50,13 @@ export const CITE_CHECKS = {
     where: 'src/citation/index.mjs cite > is-cite-question',
     translation: word('refusal.NO_SUCH_QUESTION'),
   },
+  /* Fix round 4 (cite-refusal; R21): the group a new citation joins, minted in `cite`'s region is-cite-ground; the next free
+     C-33 row, awaiting the stamp. */
+  BAD_GROUND: {
+    check: 'C-33.58',
+    where: 'src/citation/index.mjs cite > is-cite-ground',
+    translation: localize('citation.checks.bad_ground', 'A new citation can join only a group its question already declares, and a case has no groups. Name one of the question\'s groups, or cite without one. Nothing was written.'),
+  },
   NOT_AN_INQUIRY: {
     check: 'C-33.53',
     where: 'src/citation/index.mjs cite > is-cite-question',
@@ -99,5 +106,26 @@ export const CITE_EXTENT_CHECKS = {
     check: 'C-45.16',
     where: 'src/citation/index.mjs cite > is-cite-found',
     translation: word('refusal.FOUND_CAPTURE_MOVED'),
+  },
+};
+
+/* R16 (T51; K4189; UC-082) — resting a question on another team's accepted finding. The three rows are the next free
+   ones of the C-33 family (C-33.55 to C-33.57), awaiting the stamp; `citeImported` and `withdrawImported` mint them in
+   the regions is-cite-imported-member and is-cite-imported-shape. */
+export const CITE_IMPORTED_CHECKS = {
+  MACHINE_CANNOT_CITE_IMPORTED: {
+    check: 'C-33.55',
+    where: 'src/citation/index.mjs citeImported > is-cite-imported-member',
+    translation: localize('citation.checks.only_a_member_rests_a_question', 'Only a named member rests a question on another team\'s finding or takes it back, and this came from an automated or unnamed credential. Nothing was written.'),
+  },
+  IMPORTED_REF_MALFORMED: {
+    check: 'C-33.56',
+    where: 'src/citation/index.mjs citeImported > is-cite-imported-shape',
+    translation: localize('citation.checks.the_import_and_finding_do_not_name', 'The import and finding named here do not spell another team\'s finding. Name the import and the finding as the imported case shows them. Nothing was written.'),
+  },
+  IMPORTED_EDITION_MALFORMED: {
+    check: 'C-33.57',
+    where: 'src/citation/index.mjs citeImported > is-cite-imported-shape',
+    translation: localize('citation.checks.the_edition_is_a_whole_number', 'The edition is a whole number of one or more: the edition of the other team\'s case that your team accepted. Nothing was written.'),
   },
 };

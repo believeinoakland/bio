@@ -1,6 +1,6 @@
 # promotion (T51)
 
-**Status** · session_01NQ73uXH2mGnUfNvX2qwAyZ · depth 2 · COMPLETE · handled B4
+**Status** · session_01FxMw8iuonFjynFMH9nWcSM · depth 2 · COMPLETE · handled B6
 
 ## J1 · QUESTION
 
@@ -55,3 +55,39 @@ Size (session_01NQ73uXH2mGnUfNvX2qwAyZ): test runs 12, module lines 3951
 ## J5 · COMPLETE
 
 CR-5 done: R59 capture_sha (with tests); the 3 words findings converted; civicos-ui census patterns and gate.mjs comments removed; second stamp 1.79.0, 1923 rows, c5885eaf..., system/row-census green; promotion tests 150 pass; words 0. Open for BOB: (a) modules.json promotion tests entry still names row-census-1.78.0.jsonl, now 1.79.0 (format, architecture and ownership each show 1 failure until moved); (b) case-checker program.mjs stale after the stamp (3 tests; regenerate with build-program.mjs); (c) R59's not-yet-met marker is BOB's to clear. Detail in my record.
+
+## J6 · REPORT
+
+Found in other modules, not changed here (B6, K4206):
+
+(a) `bio-plane/dist/bio-plane.bundled.mjs` (owner `not_product`, manifest §14) embeds promotion's source. It is stale after commit a28b7c1c96 until regenerated (`npm run build` in `bio-plane/`, or `bio-plane/scripts/bundles.mjs` at layer close). Not regenerated in this job.
+
+(b) Three tests fail in `op-declarations` and `op-grades`: R73 (T50, every act of the registry has a declaration: a deep-equal list), R42 (MARKS is total over the rungless acts: a deep-equal list) and R46 (`expertisewithdraw` is rungless and has no mark). The same three fail with promotion's change reverted, so they are not caused by this job. Owners: `op-declarations`, `op-grades`, and whichever module owns `expertisewithdraw`.
+
+(c) For your decision: registered steps of other modules read body fields that promote's declaration does not list: `intent` reads `personWarningSeen`, `ai-runs` reads `run` and `assistantPrincipal`, `provenance` reads its testimony key. `accepts` names only the fields promotion's own code reads (R80: "the fields the arm reads"). Say whether a step's reads belong in `accepts`.
+
+## J7 · COMPLETE
+
+**Entries applied.** B6 · K4206: `promote` declared in `DECLARED_OPS` (`bio-plane/src/promotion/index.mjs`), beside `reopen` and `projectfork`. Class, mutating flag and weight are its existing rows': classes `admin`, `member`, `probe`; `mutating: true`; weight `substrate` (its op-grades ground, the RUNG_ABSENT row). Description is its existing NON_ACTS sentence, `localize("promotion.declared.promote", "substrate: the one write path every act rides")`. Fields: `accepts` = `bundleId`, `base`, `files`, `meta`, `snapKey`, `author`, `replay`, `writer`, `operation`, `visibility`, `ownerMemberId`, `actorIdentity`, `actorViewer`, `actorMemberId`, `drop`, `register`; `requires` = `files`, `meta`, `snapKey`.
+
+Decisions: (a) an absent `files`, `meta` or `snapKey` is already refused naming the field (R7, R11), so the arm is unchanged. (b) `bundleId` is accepted but not required: a project's creation mints it (R19), and a revision without it is refused `MALFORMED` naming it; `requires` cannot say "unless creating", so it is left out. (c) `refs` and `basis` are not accepted: the arm refuses them by name when sent (R7). (d) No `stamps`, `needs` or `machineClasses`: the existing hand row has none, and `needs` is only required for a mutating op with no hand row.
+
+**Requirement for BOB (NEW R61).** Proposed text, to add to `build/requirements/promotion.md`: "**R61** (T51, K4206; op-declarations R80; op-grades R49; test-support R15) The module declares `promote` in `DECLARED_OPS`, its class, mutating flag and weight copied from its existing rows, its `fields.accepts` the package fields the arm reads and `fields.requires` `files`, `meta` and `snapKey`. Test: `declaredOpHolds` for `promote` in `declared-ops.test.mjs` (R61)." R60's text also names `reopen` and `projectfork` as the declared ops; `promote` joins them, and R60's not-yet-met marker is BOB's to clear.
+
+**Deferred.** None.
+
+**Found in other modules.** Reported in the REPORT before this entry: (a) the plane bundle is stale; (b) three registry tests fail, also with my change reverted; (c) the body-field question for steps.
+
+**Tests and checks.**
+- `test/m/promotion/` and `d526-refusal-order`: 153 pass, 0 fail. `declared-ops.test.mjs`: 3 pass (R60 reopen, R60 projectfork, R61 promote). The R61 test was seen failing first (no declaration). The probe compares answers without the minted project id and sha, since a creation mints a random suffix.
+- `op-declarations/`, `op-grades/` and the sibling declared-ops suites: 389 pass, 3 fail (listed above; the same three fail with the change reverted).
+- `checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; words 0 failures; coverage's 7 failures are other modules' (agent-harness, agent-runner, citation, installer-steps, journey-check, link-sweep, monitoring).
+- `checks/ownership.mjs /home/user/bio promotion tranche/T51 job/T51/promotion`: 0 failures.
+- `checks/coverage.mjs /home/user/bio promotion`: 60 of 60 live ids named.
+- `node_modules` installed for the five directories that lacked it (K4113).
+
+**CR-5 (B5).** B5 was the CR-5 start; J5 (session #51) completed it, and its `promotion` tests pass in this job's suite (153). I did not re-run CR-5.
+
+**Size.** Module lines counted as `wc -l` over `bio-plane/src/promotion/*.mjs` and `bio-plane/src/gate.mjs` (the module's paths): 3966.
+
+Size (session_01FxMw8iuonFjynFMH9nWcSM): test runs 6, module lines 3966

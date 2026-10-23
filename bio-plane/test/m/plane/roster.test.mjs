@@ -13,6 +13,7 @@ import { recordOf } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { instanceSetupOf } from "../../../src/setup.mjs";
+import { reviewOf } from "../../../src/review/index.mjs";
 import { projectRosterOf, projectRosterOps, PROJECT_ROSTER_TABLES } from "../../../src/project-roster/index.mjs";
 
 const PR = [...PROJECT_ROSTER_TABLES];
@@ -105,7 +106,9 @@ test("R5, R9, R45 (T38-26; N783; T47 N972): project-roster's whole ops map is ro
   await same(`/projectvisibility?projectId=${x.P}&viewer=member:alice`, r.projectVisibility({ projectId: x.P, viewer: "member:alice" }));
   await same(`/projectdirectory?viewer=member:bob`, r.projectDirectory({ viewer: "member:bob" }));
   /* R45 (T47): project-roster's new read, through the route map */
-  await same(`/projectlist?viewer=member:alice`, r.projectList({ viewer: "member:alice", limit: null }));
+  /* (R74, control-plane R118) the door hands it review's shared-drafts reader, so the direct call is handed the same one */
+  await same(`/projectlist?viewer=member:alice`, r.projectList({ viewer: "member:alice", limit: null,
+    sharedDraftsOf: (asked) => reviewOf(x.ctx).sharedDraftsByProject(asked) }));
   await same(`/projectrequests?by=bob&viewer=member:bob`, r.projectRequests({ by: "bob", viewer: "member:bob" }));
   const parts = await x.call(`/projectparticipants?projectId=${x.P}&by=alice`);
   assert.equal(parts.ok, true, JSON.stringify(parts));

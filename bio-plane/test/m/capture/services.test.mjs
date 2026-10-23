@@ -116,7 +116,7 @@ test("R45: the event queue for its drainer: oldest first, count, attempt, remove
   assert.doesNotThrow(() => c.taskEvents({ limit: "nonsense" }));
 });
 
-test("R22 R46: a session holds resume state for its ttl; unknown or expired answers found: false; drop removes it; live sessions listed", () => {
+test("R22 R46 R103: a session holds resume state for its ttl and is live only within it; an unknown one answers found: false; an expired one is still found, saying so, until drop removes it (the clock ends no owed work); live sessions listed", () => {
   const { c } = fresh();
   const t0 = "2026-03-01T00:00:00Z";
   const s = c.saveCaptureSession({ session: "cs1", locator: "https://x.example/", primarySha: A, primaryFile: "snapshots/p",
@@ -133,7 +133,10 @@ test("R22 R46: a session holds resume state for its ttl; unknown or expired answ
   assert.equal(c.loadCaptureSession({ session: "nope" }).found, false);
   assert.match(c.loadCaptureSession({ session: "nope" }).note, /never existed|expired/);
   c.saveCaptureSession({ session: "cs2", locator: "l", primarySha: B, primaryFile: "f", base: "b", state: {}, ttlMs: 1000, at: t0 });
-  assert.equal(c.loadCaptureSession({ session: "cs2", at: "2026-03-01T00:00:05Z" }).found, false, "an expired session");
+  const gone = c.loadCaptureSession({ session: "cs2", at: "2026-03-01T00:00:05Z" });
+  assert.deepEqual([gone.found, gone.expired], [true, true], "an expired session is still held: R103, the clock ends no owed work");
+  assert.equal(c.loadCaptureSession({ session: "cs2", at: "2026-03-01T00:00:00Z" }).expired, false);
+  assert.equal(c.liveCaptureSessions("2026-03-01T00:00:05Z").some((x) => x.session === "cs2"), false, "but it is no longer live");
   c.saveCaptureSession({ session: "cs3", locator: "l", primarySha: B, primaryFile: "f", base: "b", state: {} });
   assert.equal(c.saveCaptureSession({ session: "cs4", locator: "l", primarySha: B, primaryFile: "f", base: "b" }).saved, false);
   assert.equal(c.loadCaptureSession({ session: "cs3" }).found, true, "default ttl is an hour");
@@ -482,7 +485,7 @@ test("R74 (N418): every statement that changes the store, from every writer this
   assert.deepEqual(outside, [], "no statement changed the store outside a transaction");
   /* the doorbell's writers (knock, knockAttempt, inboxResolve, pullKnock, doorbellRefused) are `doorbell`'s, its R22 (T42) */
   for (const w of ["recordCaptureActor", "recordCaptureAccount", "reattest", "renderAdmit",
-                   "renderSpend", "recordLinks", "recordLinkVerdict", "deriveSiteChrome", "saveCaptureSession", "loadCaptureSession",
+                   "renderSpend", "recordLinks", "recordLinkVerdict", "deriveSiteChrome", "saveCaptureSession",
                    "dropCaptureSession", "recordSiteAssets", "recordReuseVerdicts", "recordCaptureLimit", "taskEnqueue", "taskEventAttempt",
                    "taskEventRemove", "recordValidators", "recordSourceOutcome", "uploadCapture", "setAside", "restoreHeld"])
     assert.ok(inside.has(w), `${w} wrote, through transact`);

@@ -7,7 +7,7 @@
    date with where it comes from. "Start the action" sends `actioncreate` with the action's document composed as `request`
    composes its own, and the action opens. The subject is the project. It holds no member-facing English (R19). Every
    function here is self-contained (interface-shell R21 (1)). */
-import { readOnly, kindWord, kindsOf, WRITE_HELP } from "./send-steps.mjs";
+import { readOnly, kindWord, kindsOf, officeLine, WRITE_HELP } from "./send-steps.mjs";
 
 export const actionNew = Object.freeze({
   id: "actionnew",
@@ -31,7 +31,7 @@ export const actionNew = Object.freeze({
   },
 
   parts: {
-    readOnly: readOnly, kindWord: kindWord, kindsOf: kindsOf,
+    readOnly: readOnly, kindWord: kindWord, kindsOf: kindsOf, officeLine: officeLine,
     // R24: the offices a suggestion answered, else none
     officesOf: function (view) { return Array.isArray(view.ui.offices) ? view.ui.offices : []; },
     // R24: a leg's two ways of linking, each worded by its key where the design holds one
@@ -77,7 +77,7 @@ export const actionNew = Object.freeze({
       const suggest = leg ? cs.act("addresseesuggest", { data: { subject: leg } }) : "";
       const officeChoice = offices.length ? cs.choice("an-office", "screen.actionnew.to.who", [{ value: "", text: "" }].concat(offices.map(function (o, i) {
         const a = o.addressee || {};
-        return { value: String(i), text: [a.role, a.body].filter(Boolean).join(", ") };
+        return { value: String(i), text: P.officeLine(a) };
       }))) : "";
       const whoSec = cs.sec("screen.actionnew.to", to + (named
         ? cs.field("an-who", "screen.actionnew.to.who") + officeChoice + (suggest ? '<div class="mk-acts">' + suggest + "</div>" : "")
@@ -165,8 +165,14 @@ export const actionNew = Object.freeze({
         return { body: { document: lines.join("\n") } };
       },
       done: function (view, answer, cs) { if (answer && answer.id) cs.go("action", answer.id); return { stay: true }; },
-      refusals: { ACTION_KIND_UNKNOWN: "refusal.ACTION_KIND_UNKNOWN", ACTION_BASIS_REFUSED: "refusal.ACTION_BASIS_REFUSED", COUNTERPARTY_REFUSED: "refusal.COUNTERPARTY_REFUSED",
-        CLOCK_REFUSED: "refusal.CLOCK_REFUSED" },
+      // L20 (K4195): a refusal that carries `findings[]` draws each finding's own `detail` after the code's sentence ("an action cannot
+      // rest on another action" was drawn for a target that was not a canonical id); one with none draws the code's sentence alone.
+      refusals: { ACTION_KIND_UNKNOWN: "refusal.ACTION_KIND_UNKNOWN", COUNTERPARTY_REFUSED: "refusal.COUNTERPARTY_REFUSED", CLOCK_REFUSED: "refusal.CLOCK_REFUSED",
+        ACTION_BASIS_REFUSED: function (refusal, cs) {
+          const found = refusal && Array.isArray(refusal.findings) ? refusal.findings : [];
+          const lines = found.map(function (f) { return f && typeof f.detail === "string" && f.detail.trim() ? "<li>" + cs.esc(f.detail.trim()) + "</li>" : ""; }).join("");
+          return cs.w("refusal.ACTION_BASIS_REFUSED") + (lines ? '<ul class="mk-list" data-findings="refusal">' + lines + "</ul>" : "");
+        } },
     },
     WRITE_HELP,
   ],

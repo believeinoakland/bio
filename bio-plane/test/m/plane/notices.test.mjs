@@ -16,7 +16,7 @@ import { corpusExportOf, corpusExportOps } from "../../../src/corpus-export/inde
 const tableNames = (x) => [...x.ctx.storage.sql.exec(`SELECT name FROM sqlite_master WHERE type='table'`)].map((r) => r.name);
 const json = async (res) => ({ status: res.status, body: await res.json() });
 /* Instants differ between two objects; everything else must not. */
-const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>");
+const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>").replace(/"(ms|feeds_ms)":[\d.]+/g, '"$1":"<n>"');
 
 /* Every module that declared a table to purge, in declaration order (record-core R21), each named once. */
 function declarers(x) {
@@ -64,9 +64,10 @@ test("R2 negative control: on a host where another module took network-notices' 
   const n = networkNoticesOf(st.ctx);
   assert.equal(n.publicReadsRegistration.ok, false);
   assert.equal(n.publicReadsRegistration.reason, "PROVIDER_DECLARED");
-  /* the squatter's read stands, and none of network-notices' is registered; case-checker's two (R17) are its own names */
+  /* the squatter's read stands, and none of network-notices' is registered; case-checker's two (R17) and case-inputs' one
+     (R17, K4221) are their own names */
   assert.deepEqual(publicReadOf(st.ctx).publicReads().map((r) => [r.name, r.module]),
-    [["casechecker", "case-checker"], ["casefilespec", "case-checker"], ["noticespublic", "zz-squatter"]]);
+    [["casechecker", "case-checker"], ["casedetailspublic", "case-inputs"], ["casefilespec", "case-checker"], ["noticespublic", "zz-squatter"]]);
 });
 
 test("R2: network-notices is built at its place in the modules' order: its purge declaration follows publication's and precedes every layer-9 and layer-10 module's", async () => {

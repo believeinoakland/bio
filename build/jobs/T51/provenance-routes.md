@@ -1,6 +1,6 @@
 # provenance-routes (T51)
 
-**Status** · session_01UjdYc5ECwMjd18DbJT7WbE · depth 2 · COMPLETE · handled B3
+**Status** · session_019f42SKkqVGHjB6qhASjtVD · depth 2 · COMPLETE · handled B4
 
 ## Completion (PROVENANCE-ROUTES #3)
 
@@ -72,3 +72,28 @@ CHANGE B3 done. Commit 42264efb4b on job/T51/provenance-routes (tranche/T51 merg
 **Deferred.** None. The earlier For-BOB items in J3 stand unchanged.
 
 Size (session_01UjdYc5ECwMjd18DbJT7WbE): test runs 4, module lines 1204
+
+## J5 · COMPLETE
+
+CHANGE B4 done. Commit 7ca87f5105 on job/T51/provenance-routes (pushed).
+
+**Applied (entry 1).** I took the first option: `provenanceroutes` takes an optional `bundleId`, so no new op name and nothing to register in `op-declarations`, `op-grades` or `control-plane` (the op already has its viewer stamp there). With a non-empty `bundleId` the arm answers `provenanceRouteOf({bundleId, viewer})` (new method, `index.mjs`) instead of the page: `{ok: true, bundleId, state, objectType, route}`, `route` being `routeFinding(objectType, latest mark)`, so it is never absent: NEVER_LOOKED, PRESENT, LOOKED_INDETERMINATE for a document, `applies: false` for a bundle that is not information. A bundle that is absent, unseen (membership R43) or asked of an unstamped viewer answers `{ok: false, reason: "NO_SUCH_BUNDLE", bundleId}`, alike. A read: it appends nothing. Without `bundleId` (or with an empty one) the paged roster is exactly as before. The `bundleId` and the viewer are the query's stamps, never the body's.
+`DECLARED_OPS` gains `provenanceroutes`: classes admin/member/probe, `mutating: false`, weight `read`, a `localize` description, `accepts: [after, limit, bundleId]`, `requires: []`. Both `op-declarations` and `op-grades` `registerDeclaredOps` accept the module's rows (run alone, since `plane/declarations.test.mjs` is red on another module's op, below).
+
+**Requirement lines for BOB** (next free id, R15; the file is yours):
+- NEW **R15** *(T51; K4259)* `provenanceRouteOf({bundleId, viewer}) → {ok, bundleId, state, objectType, route} | {ok: false, reason: NO_SUCH_BUNDLE, bundleId}`. Reads one bundle's standing route for a viewer who may see it: `route` is `routeFinding` (R5) of the bundle's type and latest mark, so `NEVER_LOOKED` (no assessment ever ran) and `PRESENT` read apart and `route` is never absent; for a bundle that is not information it is R5's not-applicable statement. A bundle absent, unseen by the viewer (membership R43) or asked for with no viewer stamped answers `NO_SUCH_BUNDLE`, alike. Writes nothing.
+- Amend **R9**: `provenanceroutes` answers `provenanceRouteOf({bundleId, viewer})` (R15) when the query's `bundleId` is non-empty, else `provenanceRoutesMarked` (R5); a body's fields are never read.
+- Amend **R14**'s list: `provenanceroute` and `provenanceroutes` (accepts `after`, `limit`, `bundleId`; requires none; a read).
+
+**Tests** (`route-read.test.mjs`, written first and seen failing, through the ops map over `url` on the real modules): each route state read for one document (NEVER_LOOKED before assessing, then PRESENT and LOOKED_INDETERMINATE, equal to `routeOf`); reading writes nothing (snapshot unchanged); a non-document states not-applicable; absent, project-fenced, stranger-viewer and unstamped answers equal; query-only stamps; control: no `bundleId` or an empty one gives the paged roster unchanged, and a `bundleId` read carries no page or census; the declaration. `declared-ops.test.mjs` adds `provenanceroutes` to R14's `declaredOpHolds`.
+
+**Deferred.** None.
+
+**Found in other modules (REPORT).** (1) `bio-plane/test/m/plane/declarations.test.mjs` is red before and after this job: `DECLARED_OP_DISAGREES: groupdescriptiondraft description`, which stops the whole assembly. Not mine; it masks every module's row there. (2) Of the 1,189 tests in the plane, op-declarations, op-grades, control-plane, provenance and affordances suites, 92 fail, the identical set with this change stashed (checked by diff), so none is caused by it. (3) `checks/run.mjs`: coverage names agent-harness R17, agent-runner R37 R38 R40, installer-steps R26 R31, journey-check R19, screens-inquiry R110 R119, screens-intake R53; words has one testcopy in `op-grades/t37.test.mjs:32`. None is in provenance-routes. (4) The bundled `bio-plane/dist/bio-plane.bundled.mjs` (and the release copy) carry this module's source: stale until BOB regenerates at the layer close (manifest §14); I did not touch them.
+
+**Tests and checks** (process repo pulled first):
+- `node --test bio-plane/test/m/provenance-routes/`: 49 pass, 0 fail (48 before the declared-ops case was added).
+- `node checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; channels 0 failures; coverage 6439 of 6449 live ids named, 6 failures in other modules (above); words 1 failure, in op-grades (above), none in provenance-routes.
+- `node checks/ownership.mjs /home/user/bio provenance-routes tranche/T51 job/T51/provenance-routes`: 0 failures.
+
+Size (session_019f42SKkqVGHjB6qhASjtVD): test runs 6, module lines 1233

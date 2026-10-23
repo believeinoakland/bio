@@ -65,7 +65,7 @@ const SCOPES = ok({ ok: true, scopes: ["everything", "question", "document", "ac
 const FIELDS = ok({ ok: true, total: 2, hits: [
   { bundle_id: "INF-1", object_type: "information", title: "Sewer fund transfers", grade: "B", snippet: "the [sewer] fund" },
   { bundle_id: "INF-2", object_type: "information", title: "Budget amendment", snippet: null }],
-  scope: { documents: 412, documents_with_rows: 391, documents_without_rows: 21, existence_only_projects: [{ project: "PROJ-8", name: "A" }, { project: "PROJ-9", name: "B" }] }, levels: { meaning: { reason: "no read names it" } } });
+  scope: { documents: 412, documents_with_rows: 391, documents_without_rows: 21, existence_only_projects: [{ project: "PROJ-8", name: "A" }, { project: "PROJ-9", name: "B" }] }, levels: { meaning: { state: "UNDETERMINED", why: "no read names it" } } });
 const PASSAGES = ok({ ok: true, total: 2, rows: [
   { bundle_id: "INF-1", title: "Council minutes", snippet: "…transfer from the [sewer fund]…", extent: { passage: 4 } },
   { bundle_id: "INF-2", title: "Budget amendment", snippet: "…the [sewer fund] shall be reimbursed…", extent: { passage: 2 } }] });
@@ -172,4 +172,17 @@ test("R57: the cite state's own words: the legend, Support it and Cut against it
 
 test("R34: every key Find reads is a word of the list", () => {
   for (const k of screen("finder").words) assert.ok(hasWord(k), k);
+});
+
+test("R76: the row \"what anything rests on\" reads the plane's own `why` after \"because\"; with no reason it draws no stub", async () => {
+  const sentence = "no read of a meaning-level arm names it for these words";
+  const withWhy = ok({ ...FIELDS.json.result, levels: { meaning: { state: "UNDETERMINED", why: sentence } } });
+  const p = await open("/app/finder/sewer fund", { ...THREE, search: withWhy });
+  assert.ok(text(p).includes(word("state.undetermined", { reason: sentence })), "the plane's sentence is drawn after because");
+  assert.ok(text(p).includes(word("screen.finder.covered.rests")));
+  // Control: no reason, no row that ends in the middle of a sentence.
+  const bare = ok({ ...FIELDS.json.result, levels: { meaning: { state: "UNDETERMINED" } } });
+  const q = await open("/app/finder/sewer fund", { ...THREE, search: bare });
+  assert.ok(!text(q).includes(word("screen.finder.covered.rests")), "no stub row without a reason");
+  assert.ok(!text(q).includes(word("state.undetermined", { reason: "" }).trim()), "no dangling because");
 });

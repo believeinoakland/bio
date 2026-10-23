@@ -1,5 +1,5 @@
-/* test-support R15, R16: the op-declaration helper and the collector
- * (build/requirements/test-support.md). The fixture ops are plain functions
+/* test-support R15, R16, R17: the op-declaration helper, the collector and the
+ * registration call (build/requirements/test-support.md). The fixture ops are plain functions
  * `call(fields) -> answer`, standing in for an op run as the door runs it. */
 import { SANDBOX } from "../../sandbox.mjs";
 import { test } from "node:test";
@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { declaredOpHolds, declaredOpsOf } from "../../declared-ops.mjs";
+import { declaredOpHolds, declaredOpsOf, registerDeclared } from "../../declared-ops.mjs";
 
 const REPO = fileURLToPath(new URL("../../../../", import.meta.url));
 
@@ -196,4 +196,58 @@ test("R16 on this repository it answers the three parts from build/modules.json 
   assert.equal(typeof ops, "object");
   assert.deepEqual(Object.keys(owners).sort(), Object.keys(ops).sort());
   assert.ok(Array.isArray(duplicates));
+});
+
+/* ---------------------------------------------------------------- R17 */
+
+const recorder = () => {
+  const calls = [];
+  const registration = (pairs) => { calls.push(pairs); };
+  return { calls, registration };
+};
+const shape = (pairs) => pairs.map(([owner, DECLARED_OPS]) => [owner, Object.keys(DECLARED_OPS)]);
+
+test("R17 each registration is called once with every owner's pairs, duplicates included, in modules.json order", async () => {
+  const root = tree(
+    [{ id: "alpha", paths: ["alpha.mjs"] }, { id: "beta", paths: ["beta.mjs"] }],
+    { "alpha.mjs": declares("foo", "bar"), "beta.mjs": declares("bar", "baz") },
+  );
+  const first = recorder();
+  const second = recorder();
+  await registerDeclared(root, first.registration, second.registration);
+  assert.equal(first.calls.length, 1);
+  assert.equal(second.calls.length, 1);
+  assert.deepEqual(shape(first.calls[0]), [["alpha", ["foo", "bar"]], ["beta", ["bar", "baz"]]]);
+  assert.deepEqual(shape(second.calls[0]), shape(first.calls[0]));
+});
+
+test("R17 a second call in the same process is a no-op for a registration already called; a new one is called", async () => {
+  const root = tree([{ id: "solo", paths: ["solo.mjs"] }], { "solo.mjs": declares("only") });
+  const old = recorder();
+  const added = recorder();
+  await registerDeclared(root, old.registration);
+  await registerDeclared(root, old.registration, added.registration);
+  assert.equal(old.calls.length, 1, "already called, so not called again");
+  assert.equal(added.calls.length, 1, "not yet called, so called once");
+  assert.deepEqual(shape(added.calls[0]), [["solo", ["only"]]]);
+});
+
+test("R17 a registration's own refusal propagates, naming the op it refused", async () => {
+  const root = tree(
+    [{ id: "alpha", paths: ["alpha.mjs"] }, { id: "beta", paths: ["beta.mjs"] }],
+    { "alpha.mjs": declares("bar"), "beta.mjs": declares("bar") },
+  );
+  const refuses = (pairs) => {
+    const owners = pairs.filter(([, DECLARED_OPS]) => "bar" in DECLARED_OPS).map(([owner]) => owner);
+    if (owners.length > 1) throw new Error(`DECLARED_OP_DUPLICATE: "bar" is declared by ${owners.join(" and ")}`);
+  };
+  await assert.rejects(registerDeclared(root, refuses), (e) => {
+    assert.match(e.message, /DECLARED_OP_DUPLICATE/);
+    assert.match(e.message, /\bbar\b/);
+    return true;
+  });
+});
+
+test("R17 a call with no registrations reads nothing, so a root with no modules.json does not throw", async () => {
+  await registerDeclared(join(SANDBOX, "no-such-root"));
 });

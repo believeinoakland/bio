@@ -1,7 +1,7 @@
 /* project-roster — the acts on a project's working group that follow its setup: the roster and its removals record,
  * the owners' votes and an administrator's rescue, the visibility history and the directory, and requests to join.
  *
- * Requirements: build/requirements/project-roster.md (R1–R38; T51 adds R35 `projectInvitations`, R36 the list's cursor, R37 `member_id` on requests, R38 `mine` and `scope` on the list). T45 adds a project's scope (R21–R23: a counsel matter, a
+ * Requirements: build/requirements/project-roster.md (R1–R42; fix round 3 adds R42, `question_count` and `shared_drafts` on the list; T51 adds R35 `projectInvitations`, R36 the list's cursor, R37 `member_id` on requests, R38 `mine` and `scope` on the list). T45 adds a project's scope (R21–R23: a counsel matter, a
  * member's own project; the guard membership calls before an invitation or a visibility change, its R128) and the
  * second-approval setting (R24), the acts it names checked against the active profiles' `action_kinds`; T46 (R25)
  * reads their refusals' words by key from `words.json` (`checks.mjs`' `said`); T47 (R26) lists the
@@ -19,7 +19,7 @@
  * `participationWrite` (its R118); it joins record-core's `bundles` and `manifest` only on its read contract
  * (record-core R37) and asks every other bundle fact of `core.bundleInfo` (R34). Calls go one way: membership never calls this module but
  * through the two notice slots and the one guard this module registers in (membership R116, R117, R128). */
-import { MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
+import { MACHINE_CLASS_PREFIX, parseFrontmatter, LEGACY_TYPE_ALIASES } from "../record-grammar/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { Membership, membershipOf, noSuchProject, viewerPredicate } from "../membership/index.mjs";
@@ -831,8 +831,9 @@ export class ProjectRoster {
    *  which is an empty list and never a refusal: an empty list is true of what that viewer sees.
    *
    *  `stage` is the project document's recorded `current_state` (record-core R37) as recorded, null when none is: not
-   *  `project-stage`'s derived stage, a later module this one cannot use. `name` is its title (record-core R34). No
-   *  question count: Home takes it from basis-versions' read. `limit` and `truncated` are R9's rule. Writes nothing.
+   *  `project-stage`'s derived stage, a later module this one cannot use. `name` is its title (record-core R34). The
+   *  question count is R42's (it was Home's, from basis-versions' read, one per project). `limit` and `truncated` are
+   *  R9's rule. Writes nothing.
    *
    *  R27 (T47; DEC-201 `projects`): each project's `owner`, the member who opened it (its first author, as the record
    *  states), `{member, handle}`, the founder's as R29 names her, or null when that opener is no
@@ -843,10 +844,14 @@ export class ProjectRoster {
    *  R38 (T51; N1184, DEC-340): each row's `mine`, `{in, owner}` (the viewer's own stamp only: `in` joined to it, `owner`
    *  holding its owner flag, membership R54, R65) and `scope` (R23's, `none`, `own` or `counsel_matter`).
    *
+   *  R42 (fix round 3; C14): each row's `question_count` (`#questionCounts`) and `shared_drafts` `{count, newest}` from
+   *  the `sharedDraftsOf` reader the caller hands in (`null` on every row when none is), both null on a row seen only
+   *  at an administrator's EXISTENCE (R39).
+   *
    *  R28 (T47; N1025; DEC-214 (3)): each project's `members`, eight weeks' `activity` and `lastChange`, by the viewer's
    *  sight (`#projectFacts`). */
   projectList(asked = {}) {
-    const { viewer = null, limit = null, after = null } = asked && typeof asked === "object" ? asked : {};
+    const { viewer = null, limit = null, after = null, sharedDraftsOf = null } = asked && typeof asked === "object" ? asked : {};
     const gate = viewerPredicate(viewer);
     /* R36: `after` is a project id, read only when a non-empty string; anything else starts from the first. */
     const cursor = typeof after === "string" && after !== "" ? after : null;
@@ -866,9 +871,21 @@ export class ProjectRoster {
         WHERE b.object_type = 'project' AND (${gate.sql}) AND (? IS NULL OR b.bundle_id > ?)
         ORDER BY b.bundle_id
         LIMIT ?`, ROOT_ADMIN, ...gate.args, cursor, cursor, cap + 1);
-    const truncated = rows.length > cap;
-    const page = truncated ? rows.slice(0, cap) : rows;
+    /* R39 (T51 fix round; C84): an administrator's list also holds each hidden project the rescue is open to her for,
+       merged into R26's rows in id order, so paging counts them as it counts any row. */
+    const asker = viewer === ROOT_ADMIN ? ROOT_ADMIN : gate.member;
+    const admin = !!asker && this.m.isAdministrator(asker);
+    const rescue = admin ? this.#rescueOpenRows(asker, viewer, gate, cursor, cap + 1) : [];
+    const merged = rescue.length ? [...rows, ...rescue].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)).slice(0, cap + 1) : rows;
+    const truncated = merged.length > cap;
+    const both = truncated ? merged.slice(0, cap) : merged;
+    const open = new Set(rescue.map((r) => r.id));
+    const page = both.filter((r) => !open.has(r.id));
     const { members, activity, lastChange } = this.#projectFacts(page.map((r) => r.id), gate);
+    /* R42 (fix round 3; C14, P2.2): each project's question count, for the page in two statements, and its shared drafts,
+       from the reader the caller handed in, asked once for the page. */
+    const questions = this.#questionCounts(page.map((r) => r.id), gate);
+    const shared = this.#sharedDrafts(sharedDraftsOf, page.map((r) => r.id), viewer);
     /* R34 (T50; N1118): the viewer's own state in each project as membership records it; null for a non-participant. */
     const me = viewer === ROOT_ADMIN ? ROOT_ADMIN : gate.member;
     const own = new Map(me && page.length ? this.#rows(
@@ -878,17 +895,100 @@ export class ProjectRoster {
     const scopes = new Map(page.length ? this.#rows(
       `SELECT project_id, scope FROM project_scopes WHERE project_id IN (${page.map(() => "?").join(",")}) ORDER BY seq`,
       ...page.map((r) => r.id)).map((x) => [x.project_id, x.scope]) : []);
-    const projects = page.map((r) => ({ id: r.id, participation: own.get(r.id)?.state ?? null,
+    const projects = both.map((r) => open.has(r.id)
+      /* R39: at an administrator's EXISTENCE of the project, nothing of it beyond its id and name, and the mark. */
+      ? { id: r.id, participation: null, mine: { in: false, owner: false }, scope: null, name: this.#bundle(r.id)?.title ?? null,
+          stage: null, owner: null, members: [], activity: Array(ProjectRoster.ACTIVITY_WEEKS).fill(0), lastChange: null,
+          rescue_open: true, question_count: null, shared_drafts: null }
+      : { id: r.id, participation: own.get(r.id)?.state ?? null,
       mine: { in: own.get(r.id)?.state === "joined", owner: !!own.get(r.id)?.owner },
       scope: scopes.get(r.id) ?? "none",
       name: this.#bundle(r.id)?.title ?? null, stage: typeof r.state === "string" && r.state !== "" ? r.state : null,
       owner: r.founder ? this.#person(ROOT_ADMIN, null)
         : r.owner ? { member: r.owner, handle: r.owner_handle ?? null } : null,
       members: members.get(r.id) ?? [], activity: activity.get(r.id) ?? Array(ProjectRoster.ACTIVITY_WEEKS).fill(0),
-      lastChange: lastChange.get(r.id) ?? null }));
+      lastChange: lastChange.get(r.id) ?? null, ...(admin ? { rescue_open: false } : {}),
+      question_count: questions.get(r.id) ?? 0, shared_drafts: shared === null ? null : shared.get(r.id) ?? { count: 0, newest: null } });
     return { ok: true, projects, count: projects.length, limit: cap, truncated,
              next: truncated ? projects[projects.length - 1].id : null };
   }
+
+  /* R39 (T51 fix round; C84): THE HIDDEN PROJECTS THE RESCUE IS OPEN TO `asker` FOR, up to `n`, in id order after `cursor`:
+     the project is hidden and `viewer`'s sight of it is EXISTENCE (`#rescueAtExistence`, R5's), membership's
+     `rescueRefusal` answers null (an administrator, owner rows, every owner inactive) and its scope is not `own` (R22).
+     The statement only narrows what is read to hidden projects below FULL sight whose owners are all inactive; each is
+     then asked of the act's own predicates, so the mark and the act cannot disagree. Writes nothing. */
+  #rescueOpenRows(asker, viewer, gate, cursor, n) {
+    const out = [];
+    for (const c of this.#rows(
+      `SELECT b.bundle_id AS id FROM bundles b JOIN project_sight s ON s.project_id = b.bundle_id
+        WHERE b.object_type = 'project' AND s.setting = 'hidden' AND NOT (${gate.sql}) AND (? IS NULL OR b.bundle_id > ?)
+          AND EXISTS (SELECT 1 FROM project_participants o WHERE o.project_id = b.bundle_id AND o.owner = 1)
+          AND NOT EXISTS (SELECT 1 FROM project_participants o JOIN members om ON om.member_id = o.member_id AND om.status = 'active'
+                           WHERE o.project_id = b.bundle_id AND o.owner = 1)
+        ORDER BY b.bundle_id`, ...gate.args, cursor, cursor)) {
+      if (out.length >= n) break;
+      if (!this.#rescueAtExistence(c.id, viewer) || this.m.rescueRefusal(c.id, asker) !== null
+          || this.projectScope(c.id).scope === "own") continue;
+      out.push({ id: c.id });
+    }
+    return out;
+  }
+
+  /** R42 (fix round 3; C14, P2.2): THE QUESTION COUNT of each of `ids` (already those the viewer sees at FULL), a Map project
+   *  -> count, in two statements however many projects there are: the inquiries the project draws on, by basis-versions
+   *  R41's own test (its document holds a `cites` reference to the inquiry not marked `severed`), restated here over
+   *  record-core's read contract (R37: `files.content` of `bundle.md`, `bundles.object_type`), since that module is a
+   *  later one. A target counts when the record holds it as an inquiry and the viewer's sight (`gate`, membership R43, the
+   *  rule R50 applies) admits it; distinct targets once. A store without the table, an unreadable document or a failing
+   *  statement reads as none. Writes nothing; never throws. */
+  #questionCounts(ids, gate) {
+    const counts = new Map();
+    if (!ids.length) return counts;
+    try {
+      const cited = new Map();
+      for (const d of this.#rows(`SELECT bundle_id AS project, content FROM files WHERE path='bundle.md' AND bundle_id IN (${
+        ids.map(() => "?").join(",")})`, ...ids)) {
+        let fm = {};
+        try { fm = typeof d.content === "string" ? parseFrontmatter(d.content).data || {} : {}; } catch { fm = {}; }
+        const live = [...new Set((Array.isArray(fm.references) ? fm.references : [])
+          .filter((x) => x && typeof x === "object" && x.rel === "cites" && x.status !== "severed")
+          .map((x) => String(x.target ?? "").trim()).filter(Boolean))];
+        if (live.length) cited.set(d.project, live);
+      }
+      const targets = [...new Set([...cited.values()].flat())];
+      if (!targets.length) return counts;
+      const seen = new Set(this.#rows(
+        `SELECT b.bundle_id AS bundle_id FROM bundles b WHERE b.bundle_id IN (SELECT value FROM json_each(?))
+            AND b.object_type IN (SELECT value FROM json_each(?)) AND (${gate.sql})`,
+        JSON.stringify(targets), ProjectRoster.INQUIRY_TYPES, ...gate.args).map((r) => r.bundle_id));
+      for (const [project, live] of cited) counts.set(project, live.filter((t) => seen.has(t)).length);
+    } catch { counts.clear(); }
+    return counts;
+  }
+
+  /** R42: THE SHARED DRAFTS of each of `ids`, a Map project -> `{count, newest}`, from `reader`, the one the caller hands
+   *  in (`review` R43's `sharedDraftsByProject({projectIds, viewer})`, wired by the door, control-plane R118), asked once
+   *  for the whole page. `null` (not a Map) when no reader was handed in or it failed, so every row answers `null`. An
+   *  entry the reader leaves out, or cannot be read as `{count, newest}`, is `{count: 0, newest: null}`. Never throws. */
+  #sharedDrafts(reader, ids, viewer) {
+    if (typeof reader !== "function") return null;
+    const out = new Map();
+    if (!ids.length) return out;
+    let got = null;
+    try { got = reader({ projectIds: ids, viewer }); } catch { return null; }
+    if (!got || typeof got !== "object") return null;
+    for (const id of ids) {
+      const e = Object.hasOwn(got, id) ? got[id] : null;
+      out.set(id, e && Number.isInteger(e.count) && e.count > 0
+        ? { count: e.count, newest: typeof e.newest === "string" ? e.newest : null } : { count: 0, newest: null });
+    }
+    return out;
+  }
+
+  /* Every stored `object_type` spelling of an inquiry, the declared one and its legacy aliases (basis-versions' own). */
+  static INQUIRY_TYPES = JSON.stringify(["inquiry", ...Object.keys(LEGACY_TYPE_ALIASES)
+    .filter((t) => LEGACY_TYPE_ALIASES[t] === "inquiry")]);
 
   /** R35 (T51; N1209): THE VIEWER'S OWN INVITATIONS, each project where her participation is `invited`, `{projectId, name,
    *  invited_by, invited_at}` in project id order; `invited_by` is `{member, handle}` (the founder as R29 names her) or
@@ -1265,6 +1365,34 @@ const parseList = (v) => { try { return JSON.parse(v); } catch { return v; } };
 const stakeParam = (url) => (!url.searchParams.has("stake") ? undefined
   : url.searchParams.get("stake") === "null" ? null : url.searchParams.get("stake"));
 
+/* R40, R41 (T51 fix round; K4168, K4202; op-declarations R80, op-grades R49): the ops this module serves that the screens send,
+   declared by their owner beside the ops map: each row's class, weight and description are the op's existing rows' (the
+   hand rows of `op-declarations` and `op-grades`, with which they agree), its fields are what the arm below reads from
+   the request (the stamps `by` and `viewer` excluded). `reason` is accepted where the arm reads one of its own. */
+export const DECLARED_OPS = Object.freeze({
+  projectowneradd: { classes: ["admin", "member", "probe"], mutating: true, weight: "credential",
+    description: localize("project-roster.declared.projectowneradd", "roster act on a project"),
+    fields: { accepts: ["projectId", "handle"], requires: ["projectId", "handle"] } },
+  projectownerremove: { classes: ["admin", "member", "probe"], mutating: true, weight: "reasoned",
+    description: "act.projectownerremove.does",
+    fields: { accepts: ["projectId", "handle", "reason"], requires: ["projectId", "handle", "reason"] } },
+  projectownerrescue: { classes: ["admin", "member", "probe"], mutating: true, weight: "reasoned",
+    description: "act.projectownerrescue.does",
+    fields: { accepts: ["projectId", "handle", "reason"], requires: ["projectId", "handle", "reason"] } },
+  projectrequest: { classes: ["admin", "member", "probe"], mutating: true, weight: "credential",
+    description: localize("project-roster.declared.projectrequest", "request to join (§7.14): made at EXISTENCE sight, where no object is before the caller — reached from op=projectdirectory's row, not from a target's control strip"),
+    fields: { accepts: ["projectId", "comment"], requires: ["projectId"] } },
+  projectrequestwithdraw: { classes: ["admin", "member", "probe"], mutating: true, weight: "credential",
+    description: localize("project-roster.declared.projectrequestwithdraw", "request to join (§7.14): the requester's act on their own REQUEST, not on a bundle — listed by op=projectrequests"),
+    fields: { accepts: ["projectId"], requires: ["projectId"] } },
+  projectrequestanswer: { classes: ["admin", "member", "probe"], mutating: true, weight: "credential",
+    description: localize("project-roster.declared.projectrequestanswer", "request to join (§7.14): an owner's grant or decline of a REQUEST, not a state of the project — listed in the owner's queue by op=projectrequests"),
+    fields: { accepts: ["projectId", "handle", "answer", "comment"], requires: ["projectId", "handle", "answer"] } },
+  projectstakeset: { classes: ["admin", "member", "probe"], mutating: true, weight: "reversible",
+    description: localize("project-roster.declared.projectstakeset", "project-directed: a project's declared stake, every value kept, keyed by project; moves no bundle"),
+    fields: { accepts: ["projectId", "stake"], requires: ["projectId", "stake"] } },
+});
+
 export function projectRosterOps(r, url, body, env) {
   const q = (k) => url.searchParams.get(k);
   return {
@@ -1287,7 +1415,8 @@ export function projectRosterOps(r, url, body, env) {
     projectdirectory: () => r.projectDirectory({ viewer: q("viewer"), limit: q("limit") }),
     /* T47 (R26–R28): the projects the stamped viewer sees at FULL, with each one's recorded stage, opener, members and
        activity; the instant is the server's, never a query's. */
-    projectlist: () => r.projectList({ viewer: q("viewer"), limit: q("limit"), after: q("after") }),
+    projectlist: () => r.projectList({ viewer: q("viewer"), limit: q("limit"), after: q("after"),
+      sharedDraftsOf: env && typeof env.sharedDraftsOf === "function" ? env.sharedDraftsOf : null }),
     /* T51 (R35): the stamped viewer's own invitations. */
     projectinvitations: () => r.projectInvitations({ viewer: q("viewer"), limit: q("limit"), after: q("after") }),
     projectparticipants: () => r.projectParticipants({ projectId: q("projectId"), by: q("by") }),

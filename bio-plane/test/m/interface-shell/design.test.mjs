@@ -6,10 +6,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { interfacePage, checkScreens, classLiterals, stylesheetClasses, HOOK_CLASSES, PATHS, RE_POINTS, SETTINGS_SCREENS, ADMIN_SCREENS } from "../../../src/interface-shell/index.mjs";
+import { interfacePage, interfaceScript, checkScreens, classLiterals, stylesheetClasses, HOOK_CLASSES, PATHS, RE_POINTS, SETTINGS_SCREENS, ADMIN_SCREENS } from "../../../src/interface-shell/index.mjs";
 import { ASSET_FILES } from "../../../src/interface-assets/index.mjs";
 import { MARKS } from "../../../src/op-grades/index.mjs";
-import { boot, ok, refused, httpError, ADMIN, MEMBER } from "./harness.mjs";
+import { fitSend, boot, ok, refused, httpError, ADMIN, MEMBER } from "./harness.mjs";
 import { documentOf } from "./dom.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { ALL, HELD } from "./screens.fixture.mjs";
@@ -77,7 +77,7 @@ test("R54 the paths of the screens PR #34's registry adds are mock-shell.js' PAT
 });
 
 test("R55 (amended by R73) the one op a screen needs that the registry does not list stays a named re-point: stepsourcewithdraw on explore; control: a screen naming another unlisted op still throws", () => {
-  assert.deepEqual(RE_POINTS, { explore: ["stepsourcewithdraw"] });
+  assert.deepEqual(RE_POINTS, { explore: ["stepsourcewithdraw"], security: ["scanmirror"], places: ["officeconfirm"], document: ["readheld"] });
   const r = (id, ...ops) => ({ id, render: () => "", acts: ops.map((op) => ({ op })) });
   assert.equal(checkScreens([r("explore", "stepsourcewithdraw")]), true);
   assert.ok(interfacePage([r("explore", "stepsourcewithdraw")]).length > 1000, "served");
@@ -101,7 +101,7 @@ test("R56 the page links civicsmith.css and then shell.css, both before its own 
   for (const [c, reader] of Object.entries(HOOK_CLASSES)) assert.ok(typeof reader === "string" && reader.length > 10, c + " names what reads it");
   /* the shell's own program draws only defined classes */
   const defined = stylesheetClasses(ASSET_FILES["civicsmith.css"].body, ASSET_FILES["shell.css"].body, styleOf(html));
-  const shellOwn = classLiterals(/<script[^>]*>([\s\S]*)<\/script>/.exec(interfacePage([]))[1]);
+  const shellOwn = classLiterals(interfaceScript([]));
   for (const c of shellOwn) assert.ok(defined.has(c) || Object.hasOwn(HOOK_CLASSES, c), c);
   assert.ok(shellOwn.size > 30);
 });
@@ -298,11 +298,11 @@ test("R63 R69 the phone's More page heads with screen.more.sub and lists the pla
   }
 });
 
-test("R64 an act R11 draws with no weight carries the mark MARKS names, a mark and its explanation only: Sign in, Search, Start a project, Capture and Mute each draw theirs; control: Search still runs on press, and a weighed act carries its weight, not a mark", async () => {
-  const cases = [["front", "login"], ["finder", "search"], ["home", "promote"], ["capture", "acquire"], ["queue", "queuemute"]];
+test("R64 an act R11 draws with no weight carries the mark MARKS names, a mark and its explanation only: Sign in, Search, Capture and Mute draw theirs (Reversible: none above it), a Terminal-marked act its mark; control: Search still runs on press, and a weighed act carries its weight, not a mark. (fix round 2, C76) Start a project is marked Reasoned and asks nothing, so it draws no mark", async () => {
+  const cases = [["front", "login"], ["finder", "search"], ["capture", "acquire"], ["queue", "queuemute"], ["connect", "subscriptiondisconnect"]];
   for (const [id, op] of cases) {
     assert.ok(Object.hasOwn(MARKS, op), op + " in MARKS");
-    const s = { id, reads: () => ({}), acts: [{ op }], render: fn(`return cs.act("${op}");`) };
+    const s = { id, reads: () => ({}), acts: [{ op, send: fitSend(op) }], render: fn(`return cs.act("${op}");`) };
     const p = await boot({ screens: [s], path: "/app/" + id, plane: { whoami: ok({ ...ADMIN, capabilities: ["contribute", "create_projects", "publish"] }) } });
     const b = btn(p, op);
     assert.ok(b, op);
@@ -323,7 +323,7 @@ test("R64 an act R11 draws with no weight carries the mark MARKS names, a mark a
     assert.equal(p.byOp(op).length, 1, op + " runs on press");
   }
   /* control: a weighed act carries its weight */
-  const c = { id: "document", reads: () => ({}), acts: [{ op: "release" }, { op: "cite" }], render: (cs) => cs.act("release") + cs.act("cite") };
+  const c = { id: "document", reads: () => ({}), acts: [{ op: "release", send: fitSend("release") }, { op: "cite" }], render: (cs) => cs.act("release") + cs.act("cite") };
   const q = await boot({ screens: [c], path: "/app/document/x" });
   assert.equal(btn(q, "release").querySelector(".w").hasAttribute("data-mark"), false);
   assert.equal(btn(q, "cite").querySelector(".w"), null, "R77: a Reversible act draws no weight");

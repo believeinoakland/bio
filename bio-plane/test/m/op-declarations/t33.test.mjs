@@ -6,6 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";
+import { REGISTERED } from "./register-owners.mjs";
 import { eventsOps } from "../../../src/events/index.mjs";
 import { linesOps } from "../../../src/lines/index.mjs";
 import { moneyOps } from "../../../src/money/index.mjs";
@@ -151,7 +152,7 @@ test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — o
     "calculations", "capture", "capture-requests", "case-account", "case-carriage", "connections", "corpus-export", "credentials", "duties",
     "entities", "events", "explore", "extraction", "file-safety", "following", "hypotheses", "inquiry", "instance-setup", "investigation",
     "leg-earning", "lines", "membership", "money", "money-checks", "people", "public-read", "publish-schedule",
-    "question-explorer", "reading-guides", "retrieval", "review", "run-productions", "sources", "standards", "steps", "tasks",
+    "question-explorer", "reading-guides", "retrieval", "review", "run-productions", "sources", "standards", "steps", "strength", "tasks",
     "wizard-scripts", "workbooks",
     /* T45 (R49): the owners T45 gives a family */
     "action-holds", "action-plans", "action-replies", "agent-worker", "case-check", "conformance", "consequences", "filings", "local-facts",
@@ -401,8 +402,11 @@ test("R19, R4, R5, R30 (K1674, K1683): OP_STAMPS maps every op this module decla
   assert.ok(Object.isFrozen(OP_STAMPS));
   /* T34 (R21): an alias of a stamped op carries its op's stamps */
   const aliased = Object.keys(OP_ALIASES).filter((al) => FAMILY_OPS.includes(OP_ALIASES[al]));
-  assert.deepEqual(Object.keys(OP_STAMPS).sort(), [...FAMILY_OPS, ...ASK_GRANT_OPS, "exportpage", "moneydetectorsrun", ...aliased,
-    "claim", "login", "agentpack"].sort());
+  /* R80: an op an owner declares is stamped by its declaration, registered beside the hand rows (`register-owners.mjs`), so
+     the stamped ops outside the declarations are exactly the hand list; a declared op may be stamped by either */
+  const DECLARED = new Set(Object.values(REGISTERED).flatMap((rows) => Object.keys(rows)));
+  const HAND = [...new Set([...FAMILY_OPS, ...ASK_GRANT_OPS, "exportpage", "moneydetectorsrun", ...aliased, "claim", "login", "agentpack"])];
+  assert.deepEqual(Object.keys(OP_STAMPS).filter((op) => !DECLARED.has(op)).sort(), HAND.filter((op) => !DECLARED.has(op)).sort());
   for (const al of aliased) assert.deepEqual([...OP_STAMPS[al]], [...OP_STAMPS[OP_ALIASES[al]]], al);
   for (const [op, keys] of Object.entries(OP_STAMPS)) {
     assert.ok(Object.isFrozen(keys) && Array.isArray(keys), op);

@@ -185,8 +185,11 @@ export const tablePart = (name, ref) => `<?xml version="1.0"?><table ${S} id="1"
 
 /** A member whose CRC is declared wrong, so readPart refuses it (crc_mismatch). */
 export const CORRUPT = { crc: 0x12345678 };
-/** A declared uncompressed size over the 20 MiB bound (the bytes themselves are small). */
-export const OVER = { usize: 20 * 1024 * 1024 + 1 };
+/** A declared uncompressed size over the streamed ceiling, 32 MiB (R12, R35: the text is neither held nor read in
+ *  pieces); the bytes themselves are small. */
+export const OVER = { usize: 32 * 1024 * 1024 + 1 };
+/** One over the 20 MiB bound a reader holds whole: such a part is read in pieces (R35). */
+export const OVER_WHOLE = { usize: 20 * 1024 * 1024 + 1 };
 
 /* ------------------------------------------------------------------ VBA (R32) */
 

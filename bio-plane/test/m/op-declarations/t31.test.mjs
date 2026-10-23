@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";
 import { caseImportOps } from "../../../src/case-import/index.mjs";
 import { wizardScriptsOps } from "../../../src/wizard-scripts/index.mjs";
+import { REGISTERED } from "./register-owners.mjs";
 
 const { OPS, SESSION_OPS, NEEDS, UNATTENDED_BY_DECISION, ACT_GATE, PLAN_RUN_SCOPE } = O;
 const LISTS = Object.entries(O).filter(([, v]) => Array.isArray(v));
@@ -113,12 +114,16 @@ test("R15, R4: the wizard lists are exactly R15's ops — the progress tally and
 test("R16, R6: every op case-import's ops map serves has a spec and is named by the tables, the watch ops among them; case-import's acts list names exactly the map's mutating ops (negative control: an op added to the map without a spec is seen)", () => {
   const served = Object.keys(caseImportOps({}, new URL("https://instance.invalid/"), {}));
   for (const op of Object.keys(R16)) assert.ok(served.includes(op), `${op} is not served`);
+  /* an op case-import declares that no act list names is stamped by its declaration (R80, K3268): read, not listed */
+  const DECLARED = Object.keys(REGISTERED["case-import"]);
+  const declaredOnly = (op) => DECLARED.includes(op) && listsHolding(op).length === 0;
   for (const op of served) {
     assert.ok(Object.hasOwn(OPS, op) && Object.hasOwn(NEEDS, op), `${op}: no spec or NEEDS row`);
     assert.ok(SESSION_OPS.member.has(op) && SESSION_OPS.admin.has(op), op);
+    if (declaredOnly(op)) assert.deepEqual([...O.OP_STAMPS[op]].sort(), [...(REGISTERED["case-import"][op].stamps ?? ["viewer"])].sort(), op);
   }
-  assert.deepEqual([...O.CASE_IMPORT_ACTIONS].sort(), served.filter((op) => OPS[op].mutating).sort());
-  assert.deepEqual([...O.CASE_IMPORT_BY].sort(), served.filter((op) => OPS[op].mutating).sort());
+  assert.deepEqual([...O.CASE_IMPORT_ACTIONS].sort(), served.filter((op) => OPS[op].mutating && !declaredOnly(op)).sort());
+  assert.deepEqual([...O.CASE_IMPORT_BY].sort(), served.filter((op) => OPS[op].mutating && !declaredOnly(op)).sort());
   assert.deepEqual([...served, "importwatchall"].filter((op) => !Object.hasOwn(OPS, op)), ["importwatchall"]);
 });
 

@@ -40,7 +40,7 @@ import { registerReaders, rosterReads, ROSTER_CONTENT_TYPES, officePorts, duties
          retrievalTerms } from "../../../src/plane/wiring.mjs";
 
 const tableNames = (x) => [...x.ctx.storage.sql.exec(`SELECT name FROM sqlite_master WHERE type='table'`)].map((r) => r.name);
-const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>");
+const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>").replace(/"(ms|feeds_ms)":[\d.]+/g, '"$1":"<n>"');
 
 /* Every module that declared a table to purge, in declaration order (record-core R21), each named once. */
 function declarers(x) {

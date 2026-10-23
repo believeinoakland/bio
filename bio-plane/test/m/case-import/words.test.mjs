@@ -24,12 +24,17 @@ test("R14 R4 R19 R21 (plan rule 6): the module's keys are the owner's declared l
 });
 
 test("R14 (plan rule 6): every refusal row's translation is the word of its key refusal.<CODE>, read through setup-words", () => {
-  for (const [code, row] of Object.entries(CASE_IMPORT_CHECKS)) {
+  /* the sixteen rows of the design stream's list; the six of T51's rerun (C-130.17 on) are written once by `localize` (R14) */
+  const keyed = Object.entries(CASE_IMPORT_CHECKS).filter(([code]) => hasWord(`refusal.${code}`));
+  for (const [code, row] of keyed) {
     assert.equal(row.translation, word(`refusal.${code}`), code);
     assert.equal(rowWord(code), row.translation, code);
     assert.ok(keysRead().has(`refusal.${code}`), `${code} was read by key`);
   }
-  assert.equal(Object.keys(CASE_IMPORT_CHECKS).length, 16, "every row of the family reads a key");
+  assert.equal(keyed.length, 16, "every row of the list reads a key");
+  const written = Object.entries(CASE_IMPORT_CHECKS).filter(([code]) => !hasWord(`refusal.${code}`));
+  assert.deepEqual(written.map(([code]) => code), ["MACHINE_CANNOT_RERUN", "RERUN_ALREADY", "NOT_A_RERUN", "NO_SUCH_SOURCE_FINDING", "NO_SUCH_OWN_FINDING", "REGRADE_LENS_UNKNOWN"]);
+  for (const [code, row] of written) assert.ok(typeof row.translation === "string" && row.translation.length > 20, code);
   /* control: no row's translation is another's, and the key of a code no row names is refused */
   const all = Object.values(CASE_IMPORT_CHECKS).map((r) => r.translation);
   assert.equal(new Set(all).size, all.length);

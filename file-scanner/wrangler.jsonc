@@ -21,8 +21,8 @@
   // which the mirror's streaming and a batch's reads stay within.
   "limits": { "cpu_ms": 300000 },
 
-  // R6: the daily mirror run.
-  "triggers": { "crons": ["17 4 * * *"] },
+  // R6: every ten minutes: finishes an open mirror request, resumes a stopped run, otherwise mirrors once a day.
+  "triggers": { "crons": ["*/10 * * * *"] },
 
   // The team's bucket: captures are read (never written, R11); the mirror and reputation lists are written under
   // clamav/ and reputation/. The installer names the team's bucket here.
@@ -38,13 +38,13 @@
   "containers": [
     {
       "class_name": "FileScanner",
-      "image": "docker.io/civicsmith/file-scanner-scanner@sha256:293e2fce0a0de51e2753323d270c3de209c295ecd6f1dde0a37fd977dad487d5",
+      "image": "docker.io/civicsmith/file-scanner-scanner@sha256:26257d937f0d072fb933964afea45649123c44a5c618a27763b9843745bf8cfc",
       "instance_type": "standard-1",
       "max_instances": 3
     },
     {
       "class_name": "SafeViewRenderer",
-      "image": "docker.io/civicsmith/file-scanner-renderer@sha256:8817aefd13a90bbf25c59914cd70d701536ec8b245a9cdb39939a0508cb05bf9",
+      "image": "docker.io/civicsmith/file-scanner-renderer@sha256:2e86dc547803b3864eb43082ab9aa02a4190e5f2ba56caa90d3ef61854c6bc7a",
       "instance_type": "standard-1",
       "max_instances": 3
     }

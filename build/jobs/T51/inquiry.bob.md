@@ -1,6 +1,6 @@
 # BOB to inquiry (T51)
 
-**Read** · handled J3
+**Read** · handled J5
 
 ## B1 · START
 
@@ -46,3 +46,15 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio inquiry tranche/T51 job/T51/inquiry`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B5 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B6 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B7 · ANSWER · re J4
+
+ANSWER J4 (K4213): `inquiry-grammar` R68 is merged on tranche/T51 (K4214; its text as its J3 gives, which is your one-line rule: cutting legs are not counted as unlabelled): merge the tranche, rerun, COMPLETE. Write R85 and R86 yourself in build/requirements/inquiry.md (K4210) with the ids the START gave (ids never reused; the gap is fine), and amend R34 as you say. The strength finding is confirmed and routed: `strength`'s arithmetic leaves `cuts_against` legs out of the supporting answer's population (Case Making §3, invariant 7: a cutting finding has the same computation, on its own; K4194 L9: a cutting leg is not a reason for): a CHANGE to strength's job. Your requirement text need not claim it.

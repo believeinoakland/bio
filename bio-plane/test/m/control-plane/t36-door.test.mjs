@@ -1,6 +1,6 @@
 /* control-plane T36 (T36-37): R59 and R28 (F1's tail, K2111: a credential in the address refused C-38.10 by admission's
    gate, run directly after admission R1), R53 (`assistantset` not routed), R60 (standards' and calculations' new ops),
-   R61 (file-safety's 23 ops; the byte answers relayed as their owner gives them), R62 (a member's and an `ai`
+   R61 (every op file-safety's map serves; the byte answers relayed as their owner gives them), R62 (a member's and an `ai`
    credential's opening of an original through file-safety), R63 (credentials' keep-away), K2146 (the forward strips a
    caller's `secretSha` and `bySecret`) and R29 over standards' body author. Driven through `makeFetch(hooks)` over the
    harness's store, which records every request the plane makes. */
@@ -187,8 +187,8 @@ test("K2146 (R44, R59; publication R73): the generic forward strips `secretSha` 
 
 /* ---------------------------------------------------------------- R61 */
 
-test("R61, R29 (op-declarations R32): every one of file-safety's 23 ops reaches the store's route of its own name for every caller its spec admits — with the stamps it declares set from the credential, none the caller forged — and every caller it refuses reaches no store", async () => {
-  assert.equal(FILE_SAFETY_OPS.length, 23, FILE_SAFETY_OPS.join(","));
+test("R61, R29 (op-declarations R32): every op file-safety's map serves reaches the store's route of its own name for every caller its spec admits — with the stamps it declares set from the credential, none the caller forged — and every caller it refuses reaches no store", async () => {
+  assert.ok(FILE_SAFETY_OPS.length > 0, "the owner's own map is the list: no hand number (K3268)");
   const { w, list } = callers();
   let reached = 0;
   const seenOps = new Set();

@@ -834,4 +834,8 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["source","entry","audience","evidence"], requires: ["source","entry","audience","evidence"] } },
   sourceconsentwithdraw: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("sources.declared.sourceconsentwithdraw", "source-directed: a member records the withdrawal of a source's consent for one disclosure and one audience, keyed by (source, entry); binds only later publications, and what is published stays published"),
     fields: { accepts: ["source","entry","audience"], requires: ["source","entry","audience"] } },
+  /* R22 (T51; K4206): `requires` is empty by design: every failure answers SECRET_NOT_RECOGNISED, naming no field (R11). The
+     weight and description are op-grades' hand row for this op (its ground and sentence), which the declaration must agree with. */
+  knockerconsent: { classes: null, mutating: true, weight: "credential", description: localize("sources.declared.knockerconsent", "a source, proving who they are by their knocker secret and holding no account, consents to or withdraws from one disclosure for one audience (sources R11)"),
+    fields: { accepts: ["knockerSecret","entry","audience","withdraw"], requires: [] } },
 });

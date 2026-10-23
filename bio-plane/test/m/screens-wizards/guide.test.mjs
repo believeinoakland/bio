@@ -26,8 +26,9 @@ const AT = (q) => ok({ ok: true, screen: q.screen, scripts: q.screen === "finder
      { id: "WIZ-00000000000000d1", version: "WIZ-00000000000000d1@1", name: "My search draft", steps: [{ screen: "finder", act: "search", what: "a", why: "b" }], approver: null, finished: 0, draft: true }]
   : [] });
 const DRAWN = { finder: ["search"], document: ["cite"], ties: ["declaretie"], question: ["testify"], home: [] };
-/* R17: a document or a question with none to choose opens as it always did, so these walks hold none */
-const plane = (over = {}) => ({ wizardread: read, wizardsat: AT, wizardprogress: ok({ ok: true }), list: ok({ ok: true, bundles: [] }), ...over });
+/* R20: a document or a question step opens the most recent the member may see, so these walks hold one of each */
+const RECENT = (q) => ok({ ok: true, bundles: q.type === "inquiry" ? [{ bundle_id: "INQ-1", title: "q", last_updated: "2026-10-01" }] : [{ bundle_id: "DOC-1", title: "d", last_updated: "2026-10-01" }] });
+const plane = (over = {}) => ({ wizardread: read, wizardsat: AT, wizardprogress: ok({ ok: true }), list: RECENT, ...over });
 const ACT_OPS = new Set(Object.keys(OPS).filter((op) => OPS[op].mutating !== false && op !== "wizardprogress"));
 const sentActs = (g) => g.requests.filter((r) => ACT_OPS.has(r.op) || r.op === "wizarddraft");
 
@@ -62,7 +63,7 @@ test("R2 the guide walks a two-screen script: name, step i of n, what and why, B
   assert.deepEqual(g.rings, ["search", "search", "search"]);
   // Next opens the step's screen (`cs.go`) and rings its act there, once
   await g.control("next");
-  assert.deepEqual(g.nav, [["document", null]]);
+  assert.deepEqual(g.nav, [["document", "DOC-1"]]);
   assert.deepEqual(g.rings.slice(3), ["cite"]);
   text = g.text();
   assert.ok(text.includes(said("guide.step", { i: "2", n: "4" })) && text.includes(said("screen.guide.back")));
@@ -248,7 +249,8 @@ test("R6 progress goes only through wizardprogress (start, each step reached, fi
   assert.deepEqual(d.progress(), []);
   // the run's place is in the page's memory only: no device note, no address
   assert.deepEqual([...g.store.keys()], []);
-  assert.ok(g.nav.every(([, subject]) => subject === null));
+  // the only subjects an address carries are records the member may see (R20), never the run's place
+  assert.ok(g.nav.every(([, subject]) => subject === null || subject === "DOC-1"));
 });
 
 test("R6 nothing names the member: no request beyond wizardprogress's unattributed tally carries the member, and a wizard's draft run counts nothing", async () => {

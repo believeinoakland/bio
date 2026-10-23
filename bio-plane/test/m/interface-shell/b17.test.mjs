@@ -2,13 +2,13 @@
    layout carries the walk's 390 px rules. Every weight name is read by key. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { boot, ok, ADMIN, MEMBER } from "./harness.mjs";
+import { boot, ok, ADMIN, MEMBER, fitSend } from "./harness.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 import { interfacePage } from "../../../src/interface-shell/index.mjs";
 
 const caps = ["contribute", "administer", "create_projects", "publish"];
 const WHO = { ...ADMIN, capabilities: caps };
-const act = (op) => ({ op, send: (view, el) => ({ body: { who: el.dataset.who || "x" } }) });
+const act = (op) => ({ op, send: fitSend(op) });
 const members = { id: "members", words: [], reads: () => ({}), acts: [act("memberadd"), act("memberset"), act("expertiseconfirm"), act("membercaps")],
   render: (cs) => ["memberadd", "memberset", "expertiseconfirm", "membercaps"].map((op) => cs.act(op, { label: "act." + op + ".label.members", data: { who: "mai" } })).join("") };
 const account = { id: "account", words: [], reads: () => ({}), acts: [act("memberlanguageset"), act("setpassword")],

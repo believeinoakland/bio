@@ -11,7 +11,7 @@ const PQ = ok({ ok: true, project: "PROJ-1", items: [{ inquiry: "INQ-1", title: 
 const ZONE = (id) => ok({ ok: true, count: 1, facts: [{ path: "p.time_zone", fact: { profile: "p1", fact: "time_zone" }, status: "confirmed", governs: { value: id, origin: "profile" } }] });
 const kinds = (list) => ok({ ok: true, scope: { form: "project", project: "PROJ-1", captures: 3, title: "The Coliseum lease" }, kinds: list });
 const PERSON = { kind: "people", items: [{ kind: "people", words: "Dana Reyes, director", capture_sha: SHA, title: "Housing code", extent: { passage: 3 }, entity: "ENT-9", recorded: [] }], count: 1 };
-const PLANE = (list, zone = "America/Los_Angeles") => ({ projectquestions: PQ, factstatus: ZONE(zone), findin: kinds(list), image: ok({ "bundle.md": '---\ntitle: "The Coliseum lease"\n---\n' }) });
+const PLANE = (list, zone = "America/Los_Angeles") => ({ memberlist: ok({ members: [{ member_id: "u-mai", handle: "Mai", status: "active" }] }), projectquestions: PQ, factstatus: ZONE(zone), findin: kinds(list), image: ok({ "bundle.md": '---\ntitle: "The Coliseum lease"\n---\n' }) });
 const shown = async (list, extra = {}) => {
   const p = await open("/app/find-in/PROJ-1", { ...PLANE(list), ...extra });
   await press(p, "findin", { values: { "findin-kind-people": true, "findin-question": "INQ-1" }, reason: R });
@@ -115,7 +115,9 @@ test("R48: the money form asks the flow step only for an actual payment: who pai
   assert.equal(beside(p, none), word("findin.fieldneeded", { field: word("screen.find-in.field.payee.short") }));
   await press(p, "recordfact", { values: { [m + "-payee"]: "Acme Paving" } });
   const b = last(p, "recordfact").body;
-  assert.deepEqual([b.from, b.to, b.date, b.phase, b.stage], [{ as_written: "City of Oakland" }, { as_written: "Acme Paving" }, "2024-03-01", "actual", "paid"]);
+  // R81: `recordfact` accepts no `date` (the guard); the day of the payment is the period the fact holds over.
+  assert.deepEqual([b.from, b.to, b.date, b.phase, b.stage], [{ as_written: "City of Oakland" }, { as_written: "Acme Paving" }, undefined, "actual", "paid"]);
+  assert.deepEqual(b.period, { from: "2024-03-01", to: "2024-03-01", precision: "day" });
 });
 
 test("R48: after a record the acknowledgement is drawn with a link to the screen, and the passage keeps its acts and counts its facts; an already-cited passage says who", async () => {

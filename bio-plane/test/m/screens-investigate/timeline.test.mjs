@@ -45,9 +45,12 @@ test("R3 an event whose order is undetermined is drawn so, with the evidence tha
 test("R3 createevent from a passage; addparticipant; relate \"Link events\" and \"Cite which came first\"; recorddatedfact (a day or a month); each read again after", async () => {
   const p = await open(at, { plane: { createevent: ok({ ok: true, event_id: "EVT-2026-0050", attestation_ids: [9] }), addparticipant: ok({ ok: true }), relate: ok({ ok: true }), recorddatedfact: ok({ ok: true }) } });
   fill(p, { "tl-doc": SHA, "tl-kind": "vote" });
+  const reads = p.byOp("timeline").length;
   await press(p, "createevent", { reason: "the minutes record the vote" });
-  assert.deepEqual(p.byOp("createevent")[0].body, { kind: "vote", attestations: [{ captureSha: SHA, extent: { kind: "document" } }], concerns: [ENT], reason: "the minutes record the vote" });
-  assert.equal(p.byOp("timeline").at(-1).query.set, ENT + ",EVT-2026-0050", "the new event joins the set and the timeline is read again");
+  assert.deepEqual(p.byOp("createevent")[0].body, { kind: "vote", attestations: [{ captureSha: SHA, extent: { kind: "document" } }], reason: "the minutes record the vote" }, "C54: attested by the passage chosen, tied to no person the page guessed");
+  assert.ok(p.byOp("timeline").length > reads, "the timeline is read again");
+  assert.equal(p.byOp("timeline").at(-1).query.set, ENT, "by the set the project's document names, and by its captures (events R53), not by a list the page kept");
+  assert.equal(p.byOp("timeline").at(-1).query.captures, SHA + "," + SHA2);
   fill(p, { "tl-doc": SHA, "tl-event": "EVT-2026-0001", "tl-who": ORG, "tl-role": "voted", "tl-vote": "yes" });
   await press(p, "addparticipant", { reason: "the roll call" });
   assert.deepEqual(p.byOp("addparticipant")[0].body, { eventId: "EVT-2026-0001", entityId: ORG, role: "voted", attestation: { captureSha: SHA, extent: { kind: "document" } }, voteValue: "yes", reason: "the roll call" });
@@ -64,8 +67,8 @@ test("R3 createevent from a passage; addparticipant; relate \"Link events\" and 
   assert.deepEqual(p.byOp("recorddatedfact")[0].body, { captureSha: SHA, extent: { kind: "document" }, kind: "signed", value: { value: "2024-03", precision: "edtf" }, method: word("screen.timeline.method.member") });
 });
 
-test("R3 each act names its passage (control: none sends nothing)", async () => {
-  const p = await open(at);
+test("R3 each act names its passage (control: with no document held, none sends nothing)", async () => {
+  const p = await open(at, { plane: { heldcaptures: ok({ ok: true, held: [], truncated: false }) } });
   for (const op of ["createevent", "addparticipant", "recorddatedfact"]) {
     await press(p, op, { el: main(p).querySelectorAll(`button[data-act="${op}"]`).at(-1), reason: "x" });
     assert.equal(p.byOp(op).length, 0, op);
@@ -242,4 +245,56 @@ test("K3996 an event placed nowhere draws its grade_why, {key, vars}, through it
   t.world.placed_nowhere[0].grade_why = "a sentence written elsewhere";
   const q = await open(at, { plane: { timeline: ok(t) } });
   assert.ok(!main(q).textContent.includes("a sentence written elsewhere"));
+});
+
+/* R49 (T51; C26) */
+test("R49 the project's timeline always offers Define a progression, even where it follows no matter yet; pressing it sends progressiondefine with the declared fields and opens the new flow", async () => {
+  const p = await open(at, { plane: { instances: ok({ ok: true, count: 0, items: [], truncated: false }), progressiondefine: ok({ ok: true, progression_key: "a_permit", version: 1 }) } });
+  assert.equal(main(p).querySelectorAll("section").some((s) => s.querySelector("h2").textContent === word("progression.follows")), false, "no matter followed: no list");
+  const fold = main(p).querySelector("details[data-define]");
+  assert.ok(fold, "the form is offered on the project's own timeline");
+  drew(fold, "progression.define");
+  fill(p, { "pd-name": "A permit", "pd-basis": "the code", "pd-cite": "Code 1", "pd-steps": "filed | Filed" });
+  await press(p, "progressiondefine");
+  assert.deepEqual(p.byOp("progressiondefine")[0].body, { progressionKey: "a_permit", label: "A permit", basis: "the code", citation: "Code 1",
+    stages: [{ key: "filed", label: "Filed", after: null, within: null, required: "sometimes", cardinality: "0..n" }] });
+  assert.equal(decodeURIComponent(p.location.pathname), "/app/timeline/" + P + "/progression/a_permit");
+  assert.equal(p.byOp("progression").at(-1).query.key, "a_permit", "the new flow is opened (state c)");
+});
+
+test("R49 a progression address of a key the record does not hold draws the empty state with the define form beside it; control: a known flow is drawn as today, with its steps and the one define form", async () => {
+  const p = await open(MORE_PATHS.progression, { plane: { progression: ok({ ok: true, found: false, progression_key: "pra" }) } });
+  const m = main(p);
+  assert.ok(m.querySelector('[data-state="empty"]'), "the empty state");
+  assert.ok(m.querySelector("details[data-define]"), "and the form that defines it");
+  assert.ok(p.doc.getElementById("pd-name"));
+  const known = await open(MORE_PATHS.progression);
+  assert.equal(main(known).querySelectorAll("details[data-define]").length, 1);
+  assert.equal(main(known).querySelector('[data-state="empty"]'), null);
+  drew(main(known), "progression.steps");
+  const refused = await open(MORE_PATHS.progression, { plane: { progression: ok({ ok: true, found: false }), progressiondefine: { status: 200, json: { ok: true, result: { ok: false, code: "NO_BASIS", reason: "NO_BASIS" } } } } });
+  fill(refused, { "pd-name": "X", "pd-basis": "the code", "pd-steps": "a" });
+  await press(refused, "progressiondefine");
+  assert.equal(refused.byOp("progressiondefine").length, 1, "sent once");
+  assert.ok(main(refused).textContent.includes(word("refusal.NO_BASIS")), "the owner's refusal is drawn beside the act");
+});
+
+/* B14 entry 2 (K4259; registry at 09fbb247eb): `instance` and `progression` are acts the design draws as the sections they read */
+test("R33 B14 the module names instance and progression among the timeline's acts, and draws each as the design does: the section it reads carries the act (data-act), never a button; the three states", async () => {
+  const names = (await import("./fixtures.mjs")).SCREENS.find((s) => s.id === "timeline").acts.map((a) => a.op);
+  for (const op of ["instance", "progression"]) assert.ok(names.includes(op), op);
+  const sectionActs = (p) => main(p).querySelectorAll("section[data-act]").map((s) => s.getAttribute("data-act"));
+  const a = await open(at);
+  assert.deepEqual(sectionActs(a), ["instance"], "state a: Progressions it follows is the instance read");
+  assert.equal(secOf(a, "progression.follows").getAttribute("data-act"), "instance");
+  const b = await open(MORE_PATHS.matter);
+  assert.equal(secOf(b, "progression.steps").getAttribute("data-act"), "instance", "state b: Its steps");
+  assert.deepEqual(sectionActs(b), ["instance"]);
+  const c = await open(MORE_PATHS.progression);
+  assert.equal(secOf(c, "progression.steps").getAttribute("data-act"), "progression", "state c: Steps");
+  assert.deepEqual(sectionActs(c), ["progression"]);
+  for (const p of [a, b, c]) for (const op of ["instance", "progression"]) assert.ok(button(p, op) === null, `${op} is a read the section draws, not a button`);
+  /* control: a project that follows no matter draws no instance section (R22) */
+  const none = await open(at, { plane: { instances: ok({ ok: true, count: 0, items: [], truncated: false }) } });
+  assert.deepEqual(sectionActs(none), []);
 });

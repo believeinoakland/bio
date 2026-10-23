@@ -1,6 +1,6 @@
 # BOB to journey-check (T51)
 
-**Read** · handled J5
+**Read** · handled J11
 
 ## B1 · START
 
@@ -93,3 +93,58 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio journey-check tranche/T51 job/T51/journey-check`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B10 · CHANGE
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/journey-check tranche/T51 && git branch -m job/T51/journey-check stale/journey-check-local && git checkout -b job/T51/journey-check origin/job/T51/journey-check`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+CHANGE · JOURNEY-CHECK #10 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #238 is depth 1; K4295)
+
+Mail with `--module journey-check`. Model claude-haiku-5-5, medium effort; workers haiku low. **Tests only**: no source file, no requirement line. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`. **Never run `journey.test.mjs` or `live.test.mjs`** (the walks, K4149, K4111): run only `pseudo.test.mjs` and the other non-walk files.
+
+**Entry (K4295):** R29 (b), (c)'s five tests in `bio-plane/test/m/journey-check/pseudo.test.mjs` (`setup`, `security`, `places`, `elsewhere`, Home; from about :120) throw `interface-shell: screen members's act names expertisewithdraw, which OPS does not hold` (`checkScreens`, interface-shell `index.mjs:205`). The code is correct: screens-settings' `members.mjs:144` draws `expertisewithdraw`, member-roster's own declared op (`member-roster/index.mjs:2133`); commit 46d15594e2 added the owners' registration only to `bio-plane/test/m/screens-settings/register.mjs`. Register the owners' declared ops in `pseudo.test.mjs` the same way the screens' tests do, before the screens are checked (import that registration, or test-support's `registerDeclared`, whichever the screens' own suites use; read `register.mjs` whole first). Keep every control.
+
+Read in full: journey-check R29 and `pseudo.test.mjs`. Run `pseudo.test.mjs` and `group.test.mjs` alone (`group.test.mjs` R17 stays red: "group" for "team" is T52, K4269, never touched here), then `node /home/user/civicos-process/checks/run.mjs /home/user/bio`. COMPLETE with the counts and the `Size` line.
+
+## B11 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/journey-check tranche/T51 && git branch -m job/T51/journey-check stale/journey-check-local && git checkout -b job/T51/journey-check origin/job/T51/journey-check`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · JOURNEY-CHECK #11 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #244 is depth 1; fix round 4, wave 1; K4435)
+
+Mail with `--module journey-check`; record `build/jobs/T51/journey-check.md`. Model claude-sonnet-5-5, medium effort; workers haiku low for mechanical work, sonnet medium for diagnosis. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678).
+
+You are the module job (P8, mechanics §6) for `journey-check`. Your diff touches only that module's paths and tests and your record. This is fix round 4 of T51 (`build/plan/fix-round-4-T51.md`; Bob's K4426: understood, tested, fixed, then deployed). Merge `tranche/T51` first. Your causes come from the whole suite run at 753ea4db8a, diagnosed in `build/plan/suite-reds-753ea4db8a.md` (read your rows whole):
+
+1. **The local arm's 13 reds are a moved fixture, not "walk excluded".** Journey 28 step 6 (`journeys.mjs:158`) times out on `waitForURL(/callback\?/, 180s)`: the installer finishes but retries 5 minutes on agent-runner and file-scanner because the fake account answers `[]` for `containers/applications` (`account.mjs:110`). (1) Root cause stated from the screenshot and the code, not yet re-run with the fixture corrected: your step 0 is to correct the fake account (it answers the container applications the installer creates, as the real account does) and re-run the local arm; report what then passes and what still fails (as a QUESTION if anything is not this fixture). (2) Missed because the fake account was not updated when the installer began creating container applications (the installer's job ran its own tests, not the local arm). Test-gap fix: the fake account's answers are checked against the installer's own declared calls, so the next new call fails at once, by name. (3) The local arm, journey 28 to the callback, red first. (4) L (the local arm is itself Miniflare).
+2. **R30, a product defect in the walker's tool** (`pseudo.mjs:134`): sentences over 600 characters are never made pseudo; the cap is in no requirement, and five long rows escape. (1) certain. (2) the test sampled rows by position. (3) a test over every row: each row's pseudo differs from its English. (4) N.
+
+Every requirement you meet is named by a test seen failing first, with a negative control. R-FOUR, R-NOTMET (no "not met" or "deferred" at COMPLETE; ask BOB), R-OLD apply as the plan's §0 states. Run your suite (the local arm takes over 20 minutes: set `mail state --running`), then `build/plan/impact.mjs tranche/T51 HEAD`'s users; format, architecture, coverage, words and ownership clean. COMPLETE lists each cause's four fields with the red-then-green evidence, and `Size (<session id>): test runs <n>, module lines <n>`.
+
+## B12 · CHANGE
+
+CHANGE (K4465): OP-GRADES #24 is merged (tranche/T51 @ 003bae9390): plane/register.mjs no longer throws DECLARED_OP_DISAGREES: officeconfirm, so the plane and every plane-booting seam test start again. Merge the tranche into your branch before your next such run. Nothing else changes.
+
+## B13 · ANSWER · re J8
+
+ANSWER (K4473). (1) build/modules.json journey-check.uses now adds screens-inquiry (tranche @ e224b03646): restore conclude-fields.test.mjs. (2) (a), narrowed: R8's walker excuses op=reading's found:false only while the record states the reading pending for a capture the step itself just made (read the pending state the plane answers; RC-R1), the step still asserting the document's words by Find-in as step 7 does; any other found:false stays a refusal. If the local arm never leaves pending because its stand-in workers do not read, say so in COMPLETE (the live re-walk proves the reading). The 'group' word is noted for T52.
+
+## B14 · ANSWER · re J9
+
+ANSWER to J9 (BOB #247; K4486). Your reading is ruled: R8's `found: false` names a refusal only where it states whether the op found its subject, the answer's own top or its `result`; inside a nested `reading` object (`{content_type, reader_version, found, entities, ...}`) `found` is the reader's statement about entities, data, never a refusal. Change `refusalsIn` as you propose, fixture first (the d480cc23 answer, red then green), with your controls (a top-level `found: false` for a digest never captured still fails; B13's pending excuse stays). The stub city page needs no entities. BOB words R8 so in the requirements (wording only, meaning unchanged); merge the tranche branch before COMPLETE. Your route-encoding fix is accepted. Then run the local arm once more and COMPLETE with what remains red, if anything, each by cause.
+
+## B15 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/journey-check tranche/T51 && git branch -m job/T51/journey-check stale/journey-check-local && git checkout -b job/T51/journey-check origin/job/T51/journey-check`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · JOURNEY-CHECK #12 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #252 is depth 1; fix round 6, job 20 of 20; K4570, K4571)
+
+Mail with `--module journey-check`; record `build/jobs/T51/journey-check.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). You are the module job (P8, mechanics §6) for `journey-check`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first.
+
+**Read in full:** `build/plan/fix-round-6-T51.md` (section 0's rules bind you; section 2 gives each cause you own or provide with its four fields; section 3 the merge order), `build/plan/diagnosis-R6-watchdog.md` (section 3), your requirements (both parts), the used services your entries touch, and your code. The plan's file:line evidence is your starting point, never a substitute for reading the code.
+
+**Rules** (plan section 0; K4426-K4428): (1) root cause stated with file:line, else a diagnosis posted as a QUESTION before any fix; (2) why the tests missed it, and the test-gap fix; (3) a failing-first test on the walker's case (quoted below), through the real entry path (press the act or call the op, never the done function), seen red in your record, then green; (4) where the platform matters (the object's 128 MB, the CPU limit, `waitUntil` cut ~30 s after the response, the door's 25 s, the clock frozen during synchronous work), a local workerd check with real sizes, numbers in your record; no deploy. R-SEAM: the seam owner's test runs the whole path with the real merged providers and inputs made by the member's own acts, never a hand-written answer shape; a seam test whose provider is unmerged is written first and stays red by name (merge `tranche/T51` again when BOB says it merged). R-STOP: a "reading follows" test asserts the words are in `text_units`. R-CLOCK: no test asserts a compute time from the object's clock. R-NOTMET: no "not met", deferred, REPORT or open QUESTION at COMPLETE: name the smallest thing you need and ask BOB now. R-OLD: stored-data fixes say "new data only" or carry a repair. Wording waits for T52 (K4269): a new sentence uses the nearest held row as stand-in (a drawn-screen module never adds `localize`), the row owed named in your record. Declare every census op you own (K4208). Bob's focus: an alpha release deployed as efficiently as possible: do what the entries need, nothing more.
+
+**Your entry (G1 provider; owner plane).** The walk's fake Cloudflare account already answers `PUT .../schedules` (account.mjs:182-187). Add the assertion that the plane's script holds the watchdog cron (`*/5 * * * *`, from the signed statement) after an install and after an update, and that a refused schedule stops both with words. Failing-first: with the installer-steps change reverted in a scratch copy, the assertion fails. Why missed: no cron existed. Keep the walk's other checks unchanged; `node_modules` in `bio-plane/src/journey-check` (K4113) before the suite.
+
+Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio journey-check tranche/T51 job/T51/journey-check`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.

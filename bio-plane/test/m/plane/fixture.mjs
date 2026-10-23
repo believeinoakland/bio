@@ -38,10 +38,15 @@ export function storage(db = new DatabaseSync(":memory:")) {
     },
     get databaseSize() { return 0; },
   };
-  let alarm = null;
+  let alarm = null, n = 0;
   const blocked = [];
   const ctx = {
-    storage: { sql, transactionSync: (fn) => fn(), getAlarm: async () => alarm, setAlarm: async (t) => { alarm = t; },
+    storage: { sql, transactionSync: (fn) => {   /* as workerd's: a savepoint, rolled back and rethrown when the callback throws (B24, K4442); nests */
+      const sp = `sp${n++}`;
+      db.exec(`SAVEPOINT ${sp}`);
+      try { const r = fn(); db.exec(`RELEASE ${sp}`); return r; }
+      catch (e) { db.exec(`ROLLBACK TO ${sp}`); db.exec(`RELEASE ${sp}`); throw e; }
+    }, getAlarm: async () => alarm, setAlarm: async (t) => { alarm = t; },
                deleteAlarm: async () => { alarm = null; } },
     id: { equals: () => false, toString: () => "do" },
     blockConcurrencyWhile(fn) { const p = fn(); blocked.push(p); return p; },

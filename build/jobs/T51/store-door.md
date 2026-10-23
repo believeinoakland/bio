@@ -1,6 +1,6 @@
 # store-door (T51)
 
-**Status** · session_01JifjKBEkxVwREXfmY1gSL5 · depth 2 · COMPLETE · handled B2
+**Status** · session_01Y1tK2bChnRiKo7qQwUbbEF · depth 2 · COMPLETE · handled B9
 
 ## J1 · REPORT
 
@@ -43,3 +43,107 @@ Checks (store-door):
 - ownership store-door tranche/T51 job/T51/store-door: 1 file changed; 0 failures
 
 Size (session_01JifjKBEkxVwREXfmY1gSL5): test runs 3, module lines 650
+
+## J5 · REPORT
+
+Found in another module (instance-setup, its R65 `groupDescriptionDraft`, setup.mjs:2369). Not changed here; for Bob to decide.
+
+The door's own admin check (store-door dispatch.mjs, `adminRefusal`) strips a `member:` prefix from `by` and admits the administrator. The handler then tests `isAdministrator(by)` with the value as given, so `by=member:ann` is refused NOT_AN_ADMIN, while `by=ann` drafts. I reproduced both on the real record fixture. My arm passes `by` unchanged, as it did before.
+
+The question: which form does the Worker stamp into `by` for `groupdescriptiondraft`? I did not verify it. My declaration and test use the bare id, as the Worker's stamp form is what the declaration describes. If the Worker stamps `member:<id>`, every administrator's group draft is refused today. The fix belongs to instance-setup (or to the stamp), not to the door; say which.
+
+## J6 · COMPLETE
+
+CR-FR-61 · store-door applied (FR-61 entry 1, K4206). Commit 3f5a976576 on job/T51/store-door, pushed.
+
+Change: `DECLARED_OPS` in bio-plane/src/store-door/dispatch.mjs, beside controlPlaneRoutes. One row, `groupdescriptiondraft`: classes admin and member, machineClasses [], mutating false, stamps viewer and by (the arm reads both from the query), weight "reasoned", description `localize("store-door.declared.groupdescriptiondraft", <op-grades' sentence>)`, fields accepts and requires both `["answers"]`. Why `answers` is required and nothing else: the handler refuses an absent `answers` naming it (GROUP_DRAFT_ANSWERS_MALFORMED, its detail says "The answers are a list..."). `assistant` is resolved by the door and never read from the body, so it is declared nowhere. No refusal and no arm changed.
+
+Requirement: NEW R17 in build/requirements/store-door.md (B5). Written by me, not marked "not yet met", since the tests name it. test-support is already in store-door's uses. Ownership flags that one file as outside store-door's paths; B5 says that listing is accepted at merge.
+
+Tests: bio-plane/test/m/store-door/declared-ops.test.mjs, 3 tests: R17 holds the declaration through declaredOpHolds (requires alone raise no refusal naming a field; no `answers` is refused naming it; body `assistant` and `viewer` are dropped); a control on the row's shape; a control that the holds check refuses a false declaration. Run against HEAD (no DECLARED_OPS) they fail. Store-door suite: 51 of 51 pass (48 prior, 3 new).
+
+Checks (store-door, node checks/* against /home/user/bio):
+- format: 175 modules, 0 failures
+- architecture store-door: 11 product files, 120 relative imports, 0 failures
+- coverage store-door: 17 of 17 live ids named, 0 failures
+- words store-door: 0 failures
+- ownership tranche/T51 → job/T51/store-door: 0 failures (build/requirements/store-door.md accepted, B5)
+- checks/run.mjs /home/user/bio: no store-door finding. Other modules' findings are below.
+
+Deferred: none.
+
+Found in another module (REPORT posted separately): instance-setup's group draft refuses `by` in the `member:<id>` form, which the door admits (its own check strips the prefix). Question for Bob.
+
+Whole-product run, not store-door's: coverage reds in agent-harness R17; agent-runner R37, R38, R40; installer-steps R26, R31; journey-check R19; link-sweep R13, R14, R15. Words: 18 testcopy findings, all in op-grades tests (copies of op-grades' own sentences, one of them the sentence this declaration also carries), and one inline in strength/method.mjs:349. Not touched by this round.
+
+Size (session_01VKHhG6NACRGhAiYZCkJSez): test runs 6, module lines 661
+
+## J7 · COMPLETE
+
+COMPLETE · CHANGE B6 (K4247) applied. Commit 1694d05423 on job/T51/store-door, pushed.
+
+Entries applied:
+- B6 (K4247): `groupdescriptiondraft` in DECLARED_OPS (bio-plane/src/store-door/dispatch.mjs:397) is `weight: "read"`, `mutating: false`. Classes, stamps, description and fields are unchanged. The row is a read, as writinghelp is.
+- Requirement line for BOB (written by me, build/requirements/store-door.md R17): the row's weight is `read`; op-grades R49 registers it without refusal (K4247).
+
+Tests (bio-plane/test/m/store-door/declared-ops.test.mjs):
+- Control on the row changed: now asserts weight "read".
+- NEW registration test: registers the real owner row through a fresh op-grades instance. RED on the tranche today: `DECLARED_OP_DISAGREES: groupdescriptiondraft weight hand=caller-owned owner=read`. The hand row is op-grades bio-plane/src/op-grades/t48.mjs:52 (RUNG_ABSENT ground "caller-owned"). This test goes green when OP-GRADES #20 withdraws that row. Merge the two together, as you said. I did not weaken the test.
+- NEW control: the same row declared with weight "reasoned" is refused by op-grades, `DECLARED_OP_BAD_WEIGHT` naming the op and `rung-on-read`. Passes.
+- Full store-door suite: 1 failure (the registration test above), the rest pass.
+
+Checks:
+- node checks/run.mjs /home/user/bio (process repo, pulled to a4c42ff): format 0 failures; architecture 0 failures; no finding naming store-door in coverage, words or any other check. Other modules red, not ours: coverage agent-harness R17, agent-runner R37 R38 R40, installer-steps R26 R31, journey-check R19; words: screens-intake missingkey (t51-about-knocker, t51-watching*), op-grades testcopy (owners, t35, t36, t37, t41, t46, t47, t48, t49), strength inline (method.mjs:349).
+- node checks/ownership.mjs /home/user/bio store-door tranche/T51 job/T51/store-door: 1 file changed; 0 failures.
+- setup-words --check: stale rows only (expected; BOB regenerates at the layer close). No refusal naming store-door.
+
+Deferred: none. Found in another module: the op-grades testcopy and missingkey findings above (not store-door's); for OP-GRADES #20 the t48.mjs:52 hand row.
+
+Size (session_01EKV3w3RDWaapU3s2BdW4wC): test runs 2, module lines 661.
+
+## J8 · COMPLETE
+
+COMPLETE · B7 (entry 9, F6, R18) applied. Commit on job/T51/store-door, pushed.
+
+What changed:
+- `bio-plane/src/store-door/pull.mjs` (`readingOfAnswer`, used by the three ok returns of `pullAndFile`): the answer now carries `sha` (the pulled document's capture digest) and `reading_pending`: true unless the document carries a `reading` or `deps.extraction.readingOf(sha)` holds one. A refusal carries neither. Covers the fresh pull, the `pulled` resolve, a repeated pull, and a knock pulled around the door and promoted by the next pull.
+- `bio-plane/src/store-door/dispatch.mjs`: `inboxpullfile` hands `extraction: extractionOf(ctx)` as `deps.extraction` (an existing use, `modules.json` unchanged).
+- Root cause: the doorbell's `#pulledDocument` (doorbell/index.mjs:718) has no `reading`, `projectPromotion` skips a document with none, and the pull answered nothing the door could read (pull.mjs, old lines 109-121). Why tests missed it: pull tests checked only the filing, never the reading.
+
+Failing-first (bio-plane/test/m/store-door/pull.test.mjs, through the real route `inboxpullfile`): "R18 (F6)" files a 3 MB PDF knock (`%PDF` bytes, `application/pdf`) by direct pull, repeated pull, `pulled` resolve, and pull-around; every answer names the knock's sha and `reading_pending: true`, and `extractionOf(ctx).readingOf(sha)` is null (so the reading depends on the door). RED against HEAD (both R18 tests failed with src/store-door stashed), GREEN now. "R18 control": a reading held by extraction, or one the document carries, is not pending; refused pulls (`NO_SUCH_KNOCK`, `NO_PULLER`) carry neither key.
+Seam: control-plane R123 (job 10) reads `reading_pending` and `sha` from this answer; its test of F6's pulled knock needs this commit merged first (merge order: store-door before control-plane).
+Measurements: none needed (a 3 MB knock is inside the 8 MiB part; no platform ceiling is involved in the answer).
+
+Also fixed in my own test: `declared-ops.test.mjs` R17 registration test asserted `agreed: []`; op-grades now holds a hand `NON_ACTS` row for `groupdescriptiondraft` that reads store-door's word (op-grades R51), so the op comes back `agreed`, not `registered`. The test now asserts the op is taken in or agreed, no throw; the control (a rung is refused) is unchanged.
+
+Requirement lines for BOB (R18 as written stands; one clause added): "`inboxpull` answers `sha` (the pulled document's capture digest) and `reading_pending`: true unless the document carries a reading or extraction already holds one for the digest; a refusal carries neither (fix round 4b, F6; K4487; control-plane R123)." Also store-door's Uses: `extraction` (`readingOf`), already a use.
+
+Tests: store-door suite 55 of 55 pass (51 prior + 2 new R18 + R17 registration test updated; was 1 red in this tranche). Impact (`impact.mjs origin/tranche/T51 HEAD`): control-plane 14 files, 91 tests, 0 fail; plane 43 files, 289 tests, 288 pass, 1 fail: plane/release.test.mjs:74 R24, `screen.objective.purpose` not held by the words list (stale rows, regenerated by BOB at layer close; not store-door's).
+Checks: format 175 modules 0 failures; architecture store-door 0 failures; coverage store-door 18 of 18 live ids named, 0 failures; ownership vs origin/tranche/T51 5 files, 0 failures; checks/run.mjs words: testcopy 0, missingkey 0, no store-door finding.
+Wording: no new sentence. Deferred: none. Found in another module: none new.
+
+Size (session_014oBokwMxB7BUQaUUJzFq9K): test runs 6, module lines 683
+
+## J9 · COMPLETE
+
+COMPLETE · fix round 6 · B8 (G12c provider, the fence for the batch keys). Commit on job/T51/store-door; tests and checks below.
+
+**What changed.**
+- `bio-plane/src/store-door/dispatch.mjs`: `PROJECT_NAMING_READS` gains `casedrafts` `projects` and `inquirystrength` `ids` beside their single keys (:57, :60). New `PROJECT_NAMING_LISTS` (`casedrafts: [projects]`, `inquirystrength: [ids]`) and `listedIds` name which parameters are lists. `existenceRead` (:~215) reads a list parameter from the body (array or string) and from the query (a JSON array, a comma list or the key repeated), splitting on anything that cannot be in an id, so no spelling a route accepts leaves an id unasked; it asks `visibilityOf` once per distinct id and `existenceAct` only for a discoverable one, exactly the single read's test. A single parameter is read as before (a comma in `id` is not a list).
+- `reviewcopy` stays among `PROJECT_NAMING_READS_NOT`: its `draft` and the batch `drafts` are DRAFT ids (a thing inside a project), not bundle ids, so the single read has no door fence and the batch has none; the reason now names `drafts`. R2's tests still classify each read in at most one table. If BOB wants `drafts` in the naming table anyway, it is one line, but the read would then sit in both classes' meaning.
+- Where the answer is concerned: a list holding an id the caller sees only at EXISTENCE is answered with the single read's answer for that id, byte for byte, before the route runs. With several such ids the lowest id answers, so the answer does not depend on the order the caller listed them. The door cannot give a per-id entry inside a batch answer, because the answer's shape is the owner's; the screens build their lists from projects the caller sees at FULL (Home's list is `projectlist`), so a mixed list is only a hand-made call. A hidden id falls through to the owner (the owner's own fence, as for the single read). Tell the owners' jobs this convention: the batch key is an array in the body or a JSON array or comma list in the query; their bounds (50, 20, 50) are theirs to refuse over (the door asks every distinct id it is given, one indexed lookup each, and never truncates).
+- Test: `bio-plane/test/m/store-door/dispatch.test.mjs`, "R2 (fix round 6, G12c; K4571): the batch reads ...".
+
+**Failing-first.** Seen red before the change (assertion `casedrafts array in the body PROJ-seen: the single read's answer, byte for byte`: the door routed the batch, `answered: casedrafts`), then green. It drives `dispatch` through five spellings of the list, six id mixes, hidden/seen controls, order independence, the lookup count (3 `visibilityOf` for 5 ids with repeats, `existenceAct` for the discoverable one only), no viewer (membership not consulted), malformed lists (no throw), and `reviewcopy`.
+
+**Why missed.** No batch read existed, and R2's sweep drives only a single value per parameter.
+
+**Platform check:** none needed (one in-object lookup per id; no clock, no I/O).
+
+**Requirement line for BOB (R2 amended, or an R19):** "(fix round 6, G12c; K4571) A read whose parameter is a list of bundle ids (`casedrafts` `projects`, `inquirystrength` `ids`) is fenced id by id exactly as the single read: each distinct id is asked of `visibilityOf`, and `existenceAct` for a discoverable one, before the route runs; a project the viewer sees only at EXISTENCE answers the single read's answer, the lowest such id when several; a hidden or fully seen id falls through to the route with the list as sent. A list is an array (body) or a JSON array, comma list or repeated key (query). `reviewcopy`'s `drafts` are draft ids and stay among the reads naming no project." Also in Provides R2 text: "the declared PROJECT_NAMING_READS" now includes the two list keys.
+
+**Tests.** `node --test --test-force-exit bio-plane/test/m/store-door/*.test.mjs`: 56 tests, 56 pass, 0 fail. Users named by `impact.mjs origin/tranche/T51 HEAD` (control-plane 16, plane 46): 402 tests, 401 pass, 1 fail: plane `release.test.mjs` "R24 (DEC-149 ...)" `screen.objective.purpose is held by the words list`, which fails identically with the tranche's `dispatch.mjs` swapped back in (stale generated `rows.mjs`, BOB regenerates at the round end; plan section 4), not mine.
+**Checks** (`node checks/run.mjs /home/user/bio`): format 1 failure, `build/plan/next.md:38` N1265 (BOB's file, not mine); architecture 0; coverage 6617 of 6617 live ids named; words 0 failures, unkeyed 1982 (my change adds no sentence); channels 0. ownership store-door tranche/T51 job/T51/store-door: 3 files, 0 failures.
+**Deferred:** none. **Found in another module:** none (the format failure above is in `build/plan/next.md`).
+
+Size (session_01Y1tK2bChnRiKo7qQwUbbEF): test runs 7, module lines 705

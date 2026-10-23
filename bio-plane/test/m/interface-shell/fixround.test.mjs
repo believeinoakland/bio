@@ -5,7 +5,8 @@ import assert from "node:assert/strict";
 import { PATHS, REF_SCREENS, SETTINGS_SCREENS, PROJECT_PART, ADMIN_SCREENS } from "../../../src/interface-shell/index.mjs";
 import { SCREEN_REGISTRY } from "../../../src/wizard-scripts/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
-import { boot } from "./harness.mjs";
+import { boot, ok, ADMIN } from "./harness.mjs";
+import { OPS, SESSION_OPS } from "../../../src/op-declarations/index.mjs";
 
 /* ---------- R105 ---------- */
 
@@ -155,3 +156,93 @@ for (const id of NEW) {
   });
 }
 const textOf = (s) => String(s).replace(/<[^>]*>/g, "").replace(/&amp;/g, "&").trim();
+
+/* ---------- R110 ---------- */
+
+/* a stand-in for `standard` (a real registry id) whose `place` answers what the test sets (built from source: a screen's function is self-contained) */
+const standardWith = (placed, words = []) => ({ id: "standard", words, reads() { return {}; }, acts: [], render() { return "<h1>x</h1>"; }, place: new Function("view", `return ${JSON.stringify(placed)};`) });
+const stepsOf = async (placed, words) => {
+  const p = await boot({ screens: [standardWith(placed, words)], path: "/app/standard/S-1" });
+  return p.root().querySelector(".cs-crumbs").textContent.split("›").map((t) => t.trim());
+};
+
+test("R110 place answering {project, last} draws the standard's crumb filled with the name last, the project's title before it; a name that is also a word key is drawn as typed", async () => {
+  const project = { id: "PROJ-1", title: "Coliseum lease" };
+  const steps = await stepsOf({ project, last: "AB 32 & 5" });
+  assert.equal(steps.length, 3);
+  assert.equal(steps[1], "Coliseum lease");
+  assert.equal(steps[2], word("screen.standard.crumb", { name: "AB 32 & 5" }));
+  const typed = await stepsOf({ project, last: "screen.standard.name" });
+  assert.equal(typed[2], textOf(word("screen.standard.crumb", { name: "screen.standard.name" })), "data, never read as a key");
+});
+
+test("R110 control: a place answering a string, {project} alone or an empty last keeps today's crumb; another screen's path is unchanged", async () => {
+  const project = { id: "PROJ-1", title: "Coliseum lease" };
+  for (const placed of [{ project }, { project, last: "" }, { project, last: 7 }]) {
+    const steps = await stepsOf(placed);
+    assert.equal(steps[1], "Coliseum lease");
+    assert.equal(steps[2], textOf(word("screen.standard.name")));
+  }
+  assert.equal((await stepsOf("a string")).pop(), textOf(word("screen.standard.name")));
+  const q = await boot({ screens: [{ id: "calculation", words: [], reads() { return {}; }, acts: [], render() { return "<h1>x</h1>"; }, place: () => ({ project: { id: "P", title: "T" }, last: "ignored" }) }], path: "/app/calculation/C-1" });
+  assert.equal(q.root().querySelector(".cs-crumbs").textContent.split("›").pop().trim(), textOf(word("screen.calculation.name")));
+});
+
+/* ---------- R110: projectKey (B22; screens-publish R68) ---------- */
+
+test("R110 place answering projectKey draws that word in place of the project's title, {name} the title escaped, the last step unchanged", async () => {
+  const project = { id: "PROJ-1", title: "Lease <b>&" };
+  const steps = await stepsOf({ project, last: "AB 32", projectKey: "crumb.project.unjoined" }, ["crumb.project.unjoined"]);
+  assert.equal(steps.length, 3);
+  assert.equal(steps[1], textOf(word("crumb.project.unjoined")));
+  assert.equal(steps[2], word("screen.standard.crumb", { name: "AB 32" }));
+  /* a key whose word holds {name} gets the title, as data */
+  const named = await boot({ screens: [standardWith({ project, projectKey: "screen.standard.crumb" }, ["screen.standard.crumb"])], path: "/app/standard/S-1" });
+  assert.ok(named.root().querySelector(".cs-crumbs").textContent.split("›")[1].trim().endsWith("Lease <b>&"), "the title, as typed, fills {name}");
+  assert.ok(named.root().querySelector(".cs-crumbs").innerHTML.includes("Lease &lt;b&gt;&amp;"), "the title is data, never markup");
+});
+
+test("R110 control: a place answering no projectKey, an unknown key or a non-string draws the project's title as before", async () => {
+  const project = { id: "PROJ-1", title: "Coliseum lease" };
+  for (const projectKey of [undefined, "no.such.word.key", 7, ""]) assert.equal((await stepsOf({ project, last: "AB 32", projectKey }))[1], "Coliseum lease");
+});
+
+/* ---------- R12: a read is gated by its classes (B23, K4237) ---------- */
+
+const gateScreen = (id, ops) => ({ id, words: [], reads() { return {}; }, acts: ops.map((op) => ({ op })), render: new Function("cs", `return ${JSON.stringify(ops)}.map(function (o) { return cs.act(o); }).join("");`) });
+const drawnOps = async (id, ops, who, path) => {
+  const p = await boot({ screens: [gateScreen(id, ops)], path, plane: { whoami: ok(who) } });
+  return ops.filter((op) => p.root().querySelector(`button[data-act="${op}"]`));
+};
+
+test("R12 a read in no session set whose classes hold the session's class is drawn (selftest, runtime, exportlog, biasmanifest, biasinhale, biasdebt); a public read (bootstrap) too", async () => {
+  const reads = { updates: ["selftest", "runtime", "bootstrap"], group: ["exportlog"], bias: ["biasmanifest", "biasinhale", "biasdebt"] };
+  const who = { ...ADMIN, capabilities: ["contribute", "administer", "create_projects", "publish"] };
+  for (const [id, ops] of Object.entries(reads)) for (const op of ops) assert.equal(SESSION_OPS.member.has(op) || SESSION_OPS.admin.has(op), false, op + " is in no set");
+  for (const tokenClass of ["admin", "member"]) for (const [id, ops] of Object.entries(reads)) assert.deepEqual(await drawnOps(id, ops, { ...who, tokenClass }, "/app/" + id), ops, id + " as " + tokenClass);
+});
+
+test("R12 control: a mutating op outside the set is not drawn, and a read whose classes exclude the session's class is not drawn", async () => {
+  const who = { ...ADMIN, capabilities: ["contribute", "administer", "create_projects", "publish"] };
+  assert.equal(OPS.export.mutating, true);
+  assert.deepEqual(await drawnOps("group", ["export"], who, "/app/group"), [], "export mutates and no set holds it");
+  assert.equal(OPS.selftest.classes.includes("agent"), false);
+  assert.deepEqual(await drawnOps("updates", ["selftest"], { ...who, tokenClass: "agent" }, "/app/updates"), [], "a class the read does not list");
+});
+
+/* K4259: a kind with no `shell.card.<kind>` word is drawn with the item's facts alone, nothing if it has none, as `theme` is */
+const BARE = { id: "home", words: [], reads() { return {}; }, acts: [],
+  render(cs) { return [cs.ref("objective", "X-1", "bare", []), cs.ref("objective", "X-1", "bare-null", [null, ""]), cs.ref("published", "X-1", "word", [])].join(" "); } };
+
+test("R106 an objective reference with no facts draws no empty lead and no card; control: published keeps its word", async () => {
+  assert.ok(!hasWord("shell.card.objective"), "the kind holds no card word");
+  assert.ok(hasWord("shell.card.published"));
+  const p = await boot({ screens: [BARE], path: "/app" });
+  const find = (t) => p.root().querySelectorAll("a.cs-ref, span.cs-card").find((e) => e.textContent === t);
+  for (const t of ["bare", "bare-null"]) {
+    const tip = find(t).getAttribute("data-tip");
+    assert.ok(!tip || !tip.includes("<b></b>"), "no empty heading");
+    assert.ok(!tip || !tip.includes("<b>"), "no lead of any kind: the item has no facts and the kind no word");
+  }
+  assert.ok((find("word").getAttribute("data-tip") || "").includes(word("shell.card.published")), "published unchanged");
+});

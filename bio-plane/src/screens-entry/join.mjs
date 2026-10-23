@@ -1,4 +1,4 @@
-/* screens-entry R7 (and R8–R11): `join`, "Your invitation", in the setup frame at `/app/join` (the shell forwards
+/* screens-entry R7 (and R8–R11, R30, R31): `join`, "Your invitation", in the setup frame at `/app/join` (the shell forwards
    `/#invite=` and `/#join=` here and hands the fragment as `view.fragment`, taken from the address on load). An
    invitation is read with `invitelook`; a join link first asks the name the group will know the person by and sends
    `joinlinkinvite`. A dead link draws "This link no longer works" and no form (state e), the daily cap in its own fold. Then the language among the group's
@@ -64,15 +64,16 @@ export const join = {
         : check.state === "taken" ? W("handle.taken", { handle: check.handle, group, suggestion: check.suggestion || "" })
           : check.state === "not_allowed" ? W("handle.characters") : check.paused ? W("handle.refused.paused", { minutes: String(check.minutes || 1) }) : "";
       return `<h1 class="t-title">${W(S + "invited", { group })}</h1>` + (v.cover ? `<p class="mk-sub">${W(S + "invited.as", { cover: v.cover })}</p>` : "")
-        // the language by the kit's field, each named in its own language, never by its tag (R12)
-        + (tags.length ? cs.choice("jn-lang", S + "language", tags.map((t) => ({ value: t, text: own(t) }))) + `<p class="mk-small">${W(S + "language.help")}</p>` : "")
+        // the language by the kit's field, each named in its own language, never by its tag (R12); the design's field for
+        // `memberlanguageset` (R31): no button of its own, the language is sent once the person is signed in (`enroll`)
+        + (tags.length ? `<div data-act="memberlanguageset">${cs.choice("jn-lang", S + "language", tags.map((t) => ({ value: t, text: own(t) })))}</div><p class="mk-small">${W(S + "language.help")}</p>` : "")
         + cs.field("jn-handle", S + "handle", { help: S + "handle.help", autocomplete: "username" })
         + `<p class="mk-small">${W("handle.fixed")}</p>`
         + `<div class="mk-acts">${cs.act("handlecheck", { tone: "quiet" })}</div>`
         + (said ? `<p class="cs-due" data-due="${check.state === "free" ? "met" : "near"}" role="status">${said}</p>` : "")
         + cs.field("jn-pw", "screen.entry.password", { type: "password", help: "screen.entry.twelve", autocomplete: "new-password" })
         + cs.field("jn-pw2", "screen.entry.again", { type: "password", autocomplete: "new-password" })
-        + `<div class="mk-acts">${cs.act("enroll", { tone: "primary" })}${cs.act("invitelook", { tone: "quiet" })}</div>`
+        + `<div class="mk-acts">${cs.act("enroll", { tone: "primary" })}${cs.act("invitelook", { tone: "quiet", label: S + "invite.reread" })}</div>`
         + `<p class="mk-note">${W(S + "codes.after")}</p>` + member;
     });
   },
@@ -104,6 +105,9 @@ export const join = {
         const invite = (view.ui && view.ui.invite) || f.invite;
         return invite ? { body: { invite } } : null;
       } },
+    // R31: the act the language field carries; the member has no session until `enroll` answers, so `enroll` sends it
+    { op: "memberlanguageset", rereads: [],
+      send(view, el, cs) { return { body: { language: cs.value("jn-lang") || null } }; } },
     { op: "handlecheck", rereads: [],
       send(view, el, cs) {
         const f = view.fragment || {};

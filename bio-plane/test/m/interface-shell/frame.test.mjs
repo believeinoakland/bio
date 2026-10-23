@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { WORD_ROWS, word } from "../../../src/setup-words/index.mjs";
 import { PATHS, FRAMES, PLACE_SCREENS } from "../../../src/interface-shell/index.mjs";
-import { boot, ok, refused, silent, pending, httpError, STORE_KEY, tabs, SESSION } from "./harness.mjs";
+import { fitSend, boot, ok, refused, silent, pending, httpError, STORE_KEY, tabs, SESSION } from "./harness.mjs";
 import { ALL, ASSISTANT, FRONT, DOORBELL, PUBLISHED, JOIN, PERSON } from "./screens.fixture.mjs";
 
 const IMAGE = ok({ title: "A lease", pages: 3, grade: "B", why: "w", project: { id: "P1", title: "Pothole repairs" }, passages: [{ n: 1, text: "Closed" }] });
@@ -111,7 +111,7 @@ const pathAt = (commit) => {
   return new Function(/(const PATH = \{[\s\S]*?\n\};)/.exec(src)[1] + "; return PATH;")();
 };
 const PROJECTS = new Set(["The Coliseum lease", "Pothole repairs", "Sewer fund transfers"]);
-const step = (s) => (s === "@project" ? "@project" : /^(shell|screen)\./.test(s) ? word(s) : word("rail." + s + ".name"));
+const step = (s) => (s === "@project" ? "@project" : /\.crumb$/.test(s) ? word(s, { name: "<name>" }) : /^(shell|screen)\./.test(s) ? word(s) : word("rail." + s + ".name"));
 const T46 = ["home", "queue", "inbox", "finder", "answers", "capture", "held", "open-file", "find-in", "project", "document", "question", "assistant", "members", "account", "connect", "notes"];
 
 test("R8 each screen's path is mock-shell.js' PATH for its id at 3f40899950, a project's step its title (members: Settings › Members; held: Add › Held captures; document: Projects › <project> › Document)", () => {
@@ -130,7 +130,8 @@ test("R28 every screen of the new screen modules has its path from mock-shell.js
   const NEW = ["wizards", "person", "explore", "timeline", "money", "calculation", "proceeding", "due-date", "standard", "ties", "case-editor", "review-copy", "ceremony", "imported", "docket", "plan", "start-send", "request", "action", "matter", "archive", "group-identity", "security", "translations"];
   /* the design's PATH is in its words of the day; the interface says "team" where it said "group" (setup-words) */
   const team = (x) => x.replace(/\bgroup('s)?\b/g, "team$1");
-  for (const id of NEW) assert.deepEqual(PATHS[id].map(step).map(team), A[id].map((x) => (PROJECTS.has(x) ? "@project" : x)).map(team), id);
+  /* R110 (K4217): the standard's last step is the design's crumb word (DEC-384 entry 9), not its name; every step before it is the design's */
+  for (const id of NEW) assert.deepEqual(PATHS[id].map(step).map(team), A[id].map((x) => (PROJECTS.has(x) ? "@project" : x)).map(team).map((x, i, all) => (id === "standard" && i === all.length - 1 ? step("screen.standard.crumb") : x)), id);
   for (const id of ["people", "settings", "projects", "group", "places", "recovery"]) assert.deepEqual(PATHS[id].map(step).map(team), B[id].map(team), id);
   assert.deepEqual(PATHS.plan.map(step), [word("rail.projects.name"), "@project", word("screen.plan.name")]);
   assert.deepEqual(PATHS.wizards.map(step), [word("rail.settings.name"), word("screen.wizards.name")]);
@@ -177,7 +178,7 @@ test("R20 the assistant is reachable when assistantstate answers on and the memb
     assert.ok(p.root().querySelector("#cs-frame").classList.contains("with-dock"));
     assert.ok(p.root().querySelector("#cs-main"), "beside the screen it serves");
     await p.click(dock.querySelector('button[data-act="airunopen"]'));
-    assert.deepEqual(p.byOp("airunopen")[0].body.context, { screen: "document", subject: "c1" });
+    assert.deepEqual([p.byOp("airunopen")[0].body.contextType, p.byOp("airunopen")[0].body.contextId], ["document", "c1"]);
   }
   const NOT = [{ assistantstate: ok({ on: false }), accountreference: ok({ held: true }) }, { ...ON }, { ...ON, groupkeystate: ok({ held: true, on: false }) },
     { ...ON, groupkeystate: ok({ held: false, on: true }) }, { assistantstate: silent, accountreference: ok({ held: true }) },
@@ -280,7 +281,7 @@ test("R35 unavailable: an unknown screen or subject draws Nothing is here; NOT_V
 
 test("R35 what was typed is kept while the screen can't be reached and comes back with it", async () => {
   let up = true;
-  const s = { id: "document", reads: (view) => ({ d: { op: "image", query: { id: view.subject }, subject: true } }), acts: [{ op: "cite", send: () => ({ body: {} }) }],
+  const s = { id: "document", reads: (view) => ({ d: { op: "image", query: { id: view.subject }, subject: true } }), acts: [{ op: "cite", send: fitSend("cite") }],
     render: (cs, view) => cs.state("d", view, (d) => cs.title(d.title)) + cs.field("note", "shell.reason") + cs.act("cite") };
   const p = await boot({ screens: [s], path: "/app/document/c1", plane: { image: () => (up ? IMAGE : silent) } });
   p.doc.getElementById("note").value = "kept words";
@@ -306,7 +307,7 @@ test("R30 a screen of the public or published frame is drawn without a session: 
   p.doc.getElementById("d-what").value = "a leaked memo";
   await p.click('button[data-act="knock"]');
   assert.equal(p.byOp("knock")[0].headers.Authorization, undefined);
-  assert.deepEqual(p.byOp("knock")[0].body, { text: "a leaked memo" });
+  assert.deepEqual(p.byOp("knock")[0].body, { content: "a leaked memo" });
   /* control: /app/home with no record still draws front, never the working frame */
   const q = await boot({ screens: [...ALL, FRONT], path: "/app/home", session: null });
   assert.equal(q.root().querySelector("#cs-main").getAttribute("data-screen"), "front");

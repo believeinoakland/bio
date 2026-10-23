@@ -2,7 +2,7 @@
    module's interface, over the scripted scanner and an evidence bucket whose reads are counted. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, pdf, enc, sha, T0 } from "./fixture.mjs";
+import { filedWorld as world, pdf, enc, sha, T0 } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { SAFE_VIEW_TEXT_MAX, FILE_SAFETY_CHECKS } from "../../../src/file-safety/index.mjs";

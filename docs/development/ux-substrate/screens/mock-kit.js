@@ -10,11 +10,13 @@ const WSHOW = { Reasoned: 'Asks for a reason', Terminal: 'Ends something', Signe
 const pips = w => `<span class="cs-pips">${[1,2,3,4,5].map(i => `<i${i <= w ? ' class="on"' : ''}></i>`).join('')}</span>`;
 /* weights follow DEC-87 and DEC-88; an act whose weight is not yet set is treated as reasoned */
 const WEIGHT = {
-  owed_citeimported:1, owed_withdrawimported:2, owed_namedrequestset:1, owed_sweepset:1, owed_sweepratify:1,
+  owed_followfrom:1, owed_exploreall:1, owed_explorepath:1, owed_exploreshorter:1,
+  owed_registerimport:1, owed_registerlist:1, owed_registersearch:1, owed_registerrowcite:1, owed_registerwatch:1, owed_registerwatchstop:1, owed_alertconnect:2, owed_registerask:1, owed_registermatch:1, owed_registerwatchpropose:1, owed_registerfilter:1, owed_registerdelta:1, owed_registerpreread:1, owed_registerpropose:1, owed_explorecontinue:1,
+  contradictionflag:2, owed_citeimported:1, owed_withdrawimported:2, owed_namedrequestset:1, owed_sweepset:1, owed_sweepratify:1,
   owed_casedetailsset:1, owed_casedetails:1, owed_casedetailspublic:1, templatesave:1, reattest:1, captureaccount:2,
   owed_importregrade:1, owed_rerunstart:1, owed_rerunpair:1, owed_rerunread:1,
   templatesave:1, reattest:1, captureaccount:2,
-  cite:1, sever:1, reinstate:1, select:1, search:1, queuesnooze:1, queuemute:1, owed_updatestart:1, owed_installupdate:1, owed_installalongside:2, owed_installremove:1, owed_installremoveconfirm:5, owed_founderhandleset:2, owed_projectstakeset:1, owed_capturecredentialsupply:1, owed_capturecredentiallist:1, owed_capturecredentialwithdraw:1, owed_declareorigin:1, owed_projectclose:1, owed_taskdecide:2, owed_actionstake:1, planask:1, entityalias:2, relationdeclare:2, resolve:1, resolvetestify:2, connect:1, stepsource:2, stepsourcewithdraw:2, actionreplyquoting:2, readtranslate:1, owed_updatelater:1, owed_updateskip:2, taskforward:1, addparticipant:1, relate:1, followregister:1,
+  cite:1, sever:1, reinstate:1, select:1, search:1, queuesnooze:1, queuemute:1, owed_updatestart:1, owed_installupdate:1, owed_installcheck:1, owed_installalongside:2, owed_installremove:1, owed_installremoveconfirm:5, owed_founderhandleset:2, owed_projectstakeset:1, owed_capturecredentialsupply:1, owed_capturecredentiallist:1, owed_capturecredentialwithdraw:1, owed_declareorigin:1, owed_projectclose:1, owed_taskdecide:2, owed_actionstake:1, planask:1, entityalias:2, relationdeclare:2, resolve:1, resolvetestify:2, connect:1, stepsource:2, stepsourcewithdraw:2, actionreplyquoting:2, readtranslate:1, owed_updatelater:1, owed_updateskip:2, taskforward:1, addparticipant:1, relate:1, followregister:1,
   pdfstructure:2, transcriptionattest:2, provenanceroute:1, connectionassert:2, resolutiondefect:2,
   importwatch:1, standingquestionset:1, standingquestionend:1, keepversion:1, explore:1, explorepreset:1, connectionchoose:1,
   calculationdraw:1, clockpropose:1, obscuremark:2, handlecheck:1, handlechange:2, accountusesset:2, pagetranscribe:2, escalationstoppursuing:3, escalationreopen:2, monitorset:1, recoverycodesissue:1, login:1, unlock:1, recover:2, signout:1, signouteverywhere:2, joinlinkinvite:1, owed_passwordresetlink:2, projectbarset:2, drawquestion:2, spotcheckvisit:2, projectquestions:1, projectlist:1, statusreportassist:1, airundispatch:2, actionscope:3, outcomecarry:3, filingsecondapprove:3, jointsignatory:3, holdnoticesent:2, casecheck:1, dutiesarising:1, procedureguides:1, openitemswith:1, textcheck:1, infractiondraft:1, bearingdraft:1, ruleoffer:1, advocacycheck:1, actionbearingpropose:1, transcribe:2, ailimitset:2, projectkeyset:2, projectsigninset:2, projectaccountswitch:2, projectaccountremove:3, projectkeynoticeseen:1, projectaikeepaway:2, exploreapprove:2, obscuremarkwithdraw:2, selectionrelease:1, frontier:1, countask:1, bind:1, createset:1, monitor:1, reminderset:1, ruleanswer:1, suggest:1,
@@ -22,22 +24,22 @@ const WEIGHT = {
   projectjoin:1, projectrequest:1, projectrequestwithdraw:1, projectrequestanswer:2, startfrom:1, deadlinecompute:1, optionstartpreview:1, publishpreflight:1, publishtensions:1, exploreverify:1,
   addresseesuggest:1, tabledeclare:1, addworkbook:1, recordline:2, registerproceeding:2, declare:2, courtlink:2,
   conclude:2, narrow:2, promote:2, optiondispose:2, optionadd:2, optionadopt:2, optionpropose:1, scenarioset:2, checkpointrecord:2, plansubjectadd:2,
-  proposedispose:2, heldsetaside:2, heldrestore:2, clockadopt:2, recordpersonfact:2, claimidentity:2, withdrawidentityclaim:2, createevent:2, recordfact:2,
+  proposedispose:2, heldsetaside:2, heldrestore:2, clockadopt:2, recordpersonfact:2, claimidentity:2, withdrawidentityclaim:2, linewithdraw:2, createevent:2, recordfact:2,
   recorddatedfact:2, include:2, exclude:2, reconcile:2, committedagainstpaid:1, authoritychain:1, importaccept:2, importflag:2, inboxpull:2, inboxresolve:2,
   declaretie:2, withdrawtie:2, memberadd:2, membercaps:2, memberset:2, adminendorse:2, expertiseconfirm:2, owed_expertisewithdraw:2, expertisedeclare:1, strengthbarset:2,
   calculationcreate:2, calculationaccept:2, recordcheck:2, actioncreate:2, actionlaws:2, communicationprepare:2, filingprepare:2, optionstart:2,
   actionmove:2, actioncorrespond:2, actionpressure:2, actionhold:2, escalationopen:2, escalationadvance:2, declinetoescalate:2, standarddeclare:2,
   standardadopt:2, lawrelate:2, casedraft:2, reopen:2, whatchangedpropose:1, statementack:2, attribute:2, reviewgrant:2, reviewcomment:1, caseimport:2,
-  testify:2, acquire:1, captureupload:2, capturerequest:1, hypothesishold:1, themeread:1, instance:1, progression:1, captureprogressions:1, thread:1, progressiondefine:2, discharge:2, themedeclare:1, themeplace:1, themepropose:1, themewithdraw:2, connectionassert:2, projectinvite:2, adoptversion:2, reminderanswer:2,
+  testify:2, acquire:1, captureupload:2, capturerequest:1, capturerequests:1, hypothesishold:1, themeread:1, instance:1, progression:1, captureprogressions:1, thread:1, progressiondefine:2, discharge:2, themedeclare:1, themeplace:1, themepropose:1, themewithdraw:2, connectionassert:2, projectinvite:2, adoptversion:2, reminderanswer:2,
   standardadopt:2, lawrelate:2, casedraft:2, whatchangedpropose:1, statementack:2, attribute:2, reviewgrant:2, reviewcomment:1, caseimport:2,
-  testify:2, acquire:1, captureupload:2, capturerequest:1, hypothesishold:1, hypothesisrevise:2, hypothesiswithdraw:3, inquirydivide:3, reevaluationrecord:2, reevaluations:1, standardinforce:1, themeread:1, instance:1, progression:1, captureprogressions:1, thread:1, progressiondefine:2, discharge:2, themedeclare:1, themeplace:1, themepropose:1, themewithdraw:2, connectionassert:2, projectinvite:2, adoptversion:2, reminderanswer:2,
+  testify:2, acquire:1, captureupload:2, capturerequest:1, capturerequests:1, hypothesishold:1, hypothesisrevise:2, hypothesiswithdraw:3, inquirydivide:3, reevaluationrecord:2, reevaluations:1, standardinforce:1, themeread:1, instance:1, progression:1, captureprogressions:1, thread:1, progressiondefine:2, discharge:2, themedeclare:1, themeplace:1, themepropose:1, themewithdraw:2, connectionassert:2, projectinvite:2, adoptversion:2, reminderanswer:2,
   taskresolve:2, groupnameset:2, groupdomainset:2, profilesset:2, officesseed:2, assistantset:2, hostingaccessset:2, grouplanguagesset:2, grouplogoset:2, passwordreset:2, signrequest:1, publishatmove:2, publishatcancel:2, enroll:2,
   bootstrap:5, selftest:1, setpassword:2, accountreferenceset:2, projectcreated:2, wizarddraft:2, wizardrevise:1, wizardsubmit:2, wizardapprove:2,
   filingrecordsent:2, owed_groupprofileset:2, owed_groupprofilevisibility:2, memberlanguageset:1, owed_websitekeymint:2, owed_joinlinkset:2,
   owed_noteadd:1, owed_noteconvert:2, translationdraft:1, translationadopt:2, owed_checkrequest:2, knock:2, sourcelink:2,
   goallink:1, goalclose:3, aspirationretire:3,
   biasmanifest:1, biasinhale:1, biasdebt:1, biasadopt:2, biasdebtresolve:3,
-  retire:3, planclose:3, filingapprove:3, personexpunge:5, adminremove:3, accountreferenceremove:3, subscriptiondisconnect:3, reviewrevoke:3, escalationend:3, wizardretire:3,
+  retire:3, planclose:3, filingapprove:3, personexpunge:5, adminremove:3, accountreferenceremove:3, subscriptiondisconnect:3, reviewrevoke:3, casedrafts:1, escalationend:3, wizardretire:3,
   signerrevokeown:3, importacceptwithdraw:3, contradictiondismiss:3, contradictionoptin:3, contradictionrespond:3, contradictionclarify:2, contradictiontakeup:2, contradictionresolve:2,
   retire:3, planclose:3, filingapprove:3, personexpunge:5, adminremove:3, accountreferenceremove:3, subscriptiondisconnect:3, reviewrevoke:3, escalationend:3, escalationresume:1, wizardretire:3,
   signerrevokeown:3, importacceptwithdraw:3,
@@ -101,6 +103,17 @@ const sheet = inner => `<div class="cs-sheet">${inner}</div>`;
 const row = (a, b, c = '', meta = '') => `<div class="cs-row">${a}<span>${b}</span>${c}${meta ? `<span class="meta">${meta}</span>` : ''}</div>`;
 const note = t => `<p class="mk-note">${t}</p>`;
 const acts = (...b) => `<div class="mk-acts">${b.join('')}</div>`;
+/* DEC-410: "Follow from here" (DEC-409): one control, the same on every person, organization, payment, donation, event and
+   document. It opens a small menu of the other dimensions; each is one act that opens that dimension's screen already
+   scoped to the item, in place. Ops reuse the target screen's own act where it exists (search, explore, registersearch). */
+const FOLLOW_OP = 'owed:followfrom DEC-409', FOLLOW_ROWS = 'owed:registersearch DEC-406';
+const FOLLOW = {
+  who: [['Money given or received', FOLLOW_OP], ['Organizations and offices held', FOLLOW_OP], ['Events taken part in', FOLLOW_OP], ['Documents that name them', 'search'], ['Register rows that name them', FOLLOW_ROWS], ['Connections to…', 'explore']],
+  money: [['Who paid and who received it', FOLLOW_OP], ['Other payments from the same source', FOLLOW_OP], ['Events it is tied to', FOLLOW_OP], ['Documents that state it', 'search'], ['Register rows that match it', FOLLOW_ROWS], ['Connections to…', 'explore']],
+  event: [['Who took part', FOLLOW_OP], ['Money that moved around it', FOLLOW_OP], ['Documents that date it', 'search'], ['Register rows from that time', FOLLOW_ROWS], ['Connections to…', 'explore']],
+  document: [['People and organizations it names', FOLLOW_OP], ['Money it states', FOLLOW_OP], ['Events it dates', FOLLOW_OP], ['Register rows that match it', FOLLOW_ROWS], ['Connections to…', 'explore']]
+};
+const follow = kind => `<details class="mk-details mk-follow" data-follow="${kind}"><summary data-tip="${esc('Opens another view of this item in place: the screen for that dimension, already narrowed to it. Nothing starts over.')}">Follow from here</summary><div class="mk-acts">${FOLLOW[kind].map(([l, op]) => btn(op, l, { tone: 'quiet' })).join('')}</div></details>`;
 const machine = (who, inner) => `<div class="cs-machinework">${inner}<span class="by">${I('machine')}Machine work · the assistant, at ${who === 'you' ? 'your request' : esc(who) + '\'s request'}</span></div>`;
 const wizmark = (n, names) => `<button type="button" class="cs-wizmark" title="${esc(names)}">${I('wizard')}Show me how${n > 1 ? ` (${n})` : ''}</button>`;
 const crumbs = list => `<nav class="mk-crumbs" aria-label="Where you are">${list.map(esc).join(' <i>›</i> ')}</nav>`;

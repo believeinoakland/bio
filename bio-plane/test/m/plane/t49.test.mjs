@@ -10,7 +10,7 @@ import { MODULE_MAPS, ownMaps } from "./maps.mjs";
 /* the ops T49's owners add to the maps this module spreads: membership R144 (`founderhandleset`) and project-roster R30
    (`projectownervotes`), each declared in the map of the module that serves it */
 const T49_OPS = ["founderhandleset", "projectownervotes"];
-const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>");
+const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>").replace(/"(ms|feeds_ms)":[\d.]+/g, '"$1":"<n>"');
 
 test("R5 (T49; N1072, N1091; membership R144, project-roster R30): `founderhandleset` and `projectownervotes` are in the route map, each reached through the door and answering what its owner's map answers called directly; control: a probe no map serves is in none", async () => {
   const u = new URL("http://do/");

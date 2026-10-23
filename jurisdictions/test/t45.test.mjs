@@ -381,7 +381,8 @@ test("R85 the first profile holds each sourced action fact, with its citation, o
   /* stages on each records law; none for a fee waiver under the CPRA */
   for (const l of f.records_laws) {
     assert.ok(l.stages && l.stages.length >= 3 && l.stages.every((s) => s.citation), l.name);
-    assert.deepEqual([l.requesters.status, l.requesters.basis], ["researched", M], l.name);
+    /* the federal law was re-read live on the official text at T51 (R95; `t51-foia.test.mjs`) */
+    assert.deepEqual([l.requesters.status, l.requesters.basis], ["researched", l.level === "federal" ? "2026-10-21 foia-text" : M], l.name);
   }
   const cpra = f.records_laws.find((l) => l.name === "California Public Records Act");
   assert.ok(!cpra.stages.some((s) => s.stage === "fee_waiver_request" || s.stage === "appeal"), "the CPRA has no fee waiver and no appeal");

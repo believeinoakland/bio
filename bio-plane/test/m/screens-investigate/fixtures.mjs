@@ -29,6 +29,12 @@ export const STD = "STD-2026-0004-policy";
 export const COURT = "ENT-2026-0101";
 export const HELD = { ok: true, held: [{ bundle_id: "INFO-2026-0001", title: "Lease amendment 1", capture: { sha256: SHA } }, { bundle_id: "INFO-2026-0002", title: "Rent schedule", capture: { sha256: SHA2 } }], truncated: false };
 
+export const SHA3 = "5c" + "2".repeat(62);
+/** `heldcaptures` as `capture` R77/R88 answers it: the default list is the documents at `collected` (held); `held_and_vouched` adds
+ *  the ones a member has vouched for. A document in neither state is in neither list. */
+export const HELD_VOUCHED = { ok: true, held: [...HELD.held, { bundle_id: "INFO-2026-0003", title: "Vouched minutes", capture: { sha256: SHA3 } }], truncated: false };
+export const heldByState = (r) => ok(r.query && r.query.state === "held_and_vouched" ? HELD_VOUCHED : HELD);
+
 export const PROJECT_MD = ["---", `id: ${P}`, "object_type: project", "title: \"Pothole repairs\"", "references:",
   `  - target: ${ENT}`, "    rel: cites", "    status: active", "  - target: INQ-2026-0001-seven-days", "    rel: cites", "    status: active", "---", ""].join("\n");
 
@@ -61,6 +67,9 @@ export const WALK = (o = {}) => ({ ok: true, from: ENT, at: { value: "2026-10-14
 export const VOCAB = { vocabularies: { connection_kinds: { values: ["line:holds:employee", "money_flow", "mentioned_together", "proxy_for"],
   words: { "line:holds:employee": { word: "held the post (employee)", group: "pos" }, money_flow: { word: "money", group: "money" }, mentioned_together: { word: "co-mentioned", group: "ment" }, proxy_for: { word: "proxy for", group: "same" }, event_voted: { word: "voted", group: "part" }, step_source: { word: "step sourced", group: "step_source" } } } } };
 VOCAB.vocabularies.connection_kinds.values.push("event_voted", "step_source");
+/** `affordances` R39: the event kinds the plane answers (scripted here, as every fixture is); the screen offers exactly what it is told. */
+export const PLANE_EVENT_KINDS = ["meeting", "vote", "award", "order", "statement", "filing", "other"];
+VOCAB.vocabularies.event_kinds = { values: [...PLANE_EVENT_KINDS], words: Object.fromEntries(PLANE_EVENT_KINDS.map((k) => [k, { word: k.replace(/_/g, " ") }])) };
 VOCAB.vocabularies.proceeding_kinds = [{ kind: "civil", label: "Civil", forum_kind: "court" }, { kind: "writ", label: "Writ", forum_kind: "court" }, { kind: "appeal", label: "Appeal", forum_kind: "court" },
   { kind: "complaint", label: "Complaint", forum_kind: "commission" }];
 /** `exploregraph`'s answer: a person one ring out and an organisation two rings out, the far node a stop (explore R21). */
@@ -80,10 +89,13 @@ export const TIMELINE = (o = {}) => ({ ok: true, set: [ENT],
   ours: { label: "what we did", sources: [{ source: "actions", items: [{ at: "2026-09-04", label: "We requested the rent schedules", ref: ACT, kind: "request" }], truncated: false }] }, ...o });
 export const EVENT = (id) => ({ ok: true, found: true, event: { event_id: id, kind: "vote", attestations: [{ attestation_id: 1, capture_sha: SHA, extent: { kind: "pdf-page", page: 6 }, grade: "B" }],
   participants: [{ participant_id: 1, entity_id: ORG, role: "decider", superseded: false }] } });
-const fact = (id, o = {}) => ({ ok: true, fact_id: id, amount: "4200000.00", as_read: "4,200,000", currency: "USD", sign: "+", precision: "exact", kind: "transfer", phase: "adopted", basis: "budgetary",
+/** A money fact as `money` holds it (the `fact` of its answer). */
+const fact = (id, o = {}) => ({ fact_id: id, amount: "4200000.00", as_read: "4,200,000", currency: "USD", sign: "+", precision: "exact", kind: "transfer", phase: "adopted", basis: "budgetary",
   period: { from: "2021-07-01", to: "2022-06-30", precision: "day", zone: "UTC", fiscal: "FY2021-22" }, from: { fund: "ENT-2026-0500", as_written: "Sewer Fund 3100" }, to: { fund: "ENT-2026-0501", as_written: "General Fund 1010" },
   codes: [], concerns: [], source: { capture_sha: SHA, extent: { kind: "pdf-page", page: 87 } }, citation: "page 88", method: "typed", grade: { reading: "B", reading_basis: "direct capture", parties: {} },
   by: "member:ana", at: "2026-10-01T09:00:00Z", withdrawn: null, question: null, ...o });
+/** `money`'s answer as the plane gives it: `{ok, found, fact}` (the fact is not the answer itself; C8). */
+export const moneyAnswer = (f) => ({ ok: true, found: true, fact: f });
 export const FACTS = { [M1]: fact(M1), [M2]: fact(M2, { amount: "4750000.00", phase: "actual", stage: "paid", period: { from: "2021-07-01", to: "2022-06-30", fiscal: "FY2021-22" } }),
   [M3]: fact(M3, { amount: "310000.00", kind: "allocation", phase: "actual", stage: "paid", to: null }) };
 export const TRAIL = (o = {}) => ({ ok: true, found: true, set: { set_id: MSR, purpose: "trail", label: "Stormwater fund transfers, FY2023", concerns: P, by: "member:ana", at: "2026-10-01T09:00:00Z" },
@@ -146,10 +158,14 @@ export const THEME = (o = {}) => ({ ok: true, theme_id: "THEME-2026-0001", name:
   hunches: [{ target: "INFO-2026-0002", target_kind: "document", state: "hunch", proposed_by_handle: "dev", proposed_at: "2026-10-03T09:00:00Z", proposal_note: "maybe" }],
   withdrawn: [{ target: "INFO-2026-0003", target_kind: "document", state: "withdrawn", ended_by_handle: "mai", ended_at: "2026-10-04T09:00:00Z", reason: "wrong year" }], ...o });
 
+/** The roster as `memberlist` answers it: the founder's id is `admin`, her handle `sparky`; a member may have no handle (C94). */
+export const ROSTER = { members: [{ member_id: "admin", handle: "sparky", founder: true }, { member_id: "mai", handle: "mai" }, { member_id: "dev", handle: "dev" },
+  { member_id: "ana", handle: "ana" }, { member_id: "u-2", handle: "rosa" }, { member_id: "u-3", handle: null }] };
+
 /** The plane every screen reads from, keyed by op. */
 export function plane(o = {}) {
   return {
-    peopledirectory: ok(DIRECTORY()),
+    peopledirectory: (r) => ok(r.query.show === "contracts" ? DIRECTORY({ rows: [{ entity: "ENT-2026-0005", kind: "contract", name: "Stormwater lining contract", today: {}, documents: 2, questions: 0, projects: 1, newest_added: "2026-10-02T09:00:00Z", mine: true }] }) : DIRECTORY()),
     person: ok(PERSON()),
     samepersoncandidates: ok({ ok: true, entity_id: ENT, count: 1, candidates: [{ entity_id: "ENT-2026-0019", fields: { names: { state: "agrees" }, identifiers: { state: "absent" }, posts: { state: "differs" }, life: { state: "absent" } } }], truncated: false }),
     affordances: ok(VOCAB),
@@ -160,7 +176,7 @@ export function plane(o = {}) {
     timeline: ok(TIMELINE()),
     event: (r) => ok(EVENT(r.query.id)),
     moneyset: ok(TRAIL()),
-    money: (r) => ok(FACTS[r.query.id] || { ok: false, reason: "NO_SUCH_FACT" }),
+    money: (r) => ok(FACTS[r.query.id] ? moneyAnswer(FACTS[r.query.id]) : { ok: false, reason: "NO_SUCH_FACT" }),
     calculation: (r) => ok(r.query.id === "CALC-2026-0002" ? ESTIMATE : CALCULATION()),
     spotcheck: ok(SPOT()),
     entity: (r) => ok(r.query.id === PROC ? ENTITY : PERSON_ENTITY),
@@ -179,6 +195,12 @@ export function plane(o = {}) {
     sequence: ok({ ok: true, answer: "undetermined", why: { key: "events.why.precision_held_settle", vars: {} } }),
     memberties: ok(TIES),
     heldcaptures: ok(HELD),
+    /** `memberlist` (membership): the roster `cs.memberName` names members from (interface-shell R111): id to handle. */
+    memberlist: ok(ROSTER),
+    /** `reading` (extraction R76): a capture's text units, each `{extent, reference, text}`, in order. */
+    reading: (r) => ok({ ok: true, sha256: r.query && r.query.sha256, unread_pages: [], text_units: r.query && r.query.sha256 === SHA2
+      ? [{ extent: { kind: "pdf-page", page: 0 }, reference: "p1", text: "Monthly rent is due on the first.", truncated: false }]
+      : [{ extent: { kind: "pdf-page", page: 0 }, reference: "p1", text: "Lin Chen, Director of Public Works", truncated: false }, { extent: { kind: "pdf-page", page: 1 }, reference: "p2", text: "Appointed in March 2022", truncated: false }] }),
     entitieskind: (r) => ok(r.query.kind === "body" ? { ok: true, kind: "body", entities: [{ entity_id: COURT, kind: "body", label: "Alameda Housing Tribunal", forum_kind: "court" }], count: 1, truncated: false } : { ok: true, kind: "institution", entities: [], count: 0, truncated: false }),
     readingname: ok({ ok: true, entity_id: ENT, documents: [{ capture_sha: SHA, bundle_id: "INFO-2026-0001", ref: "L. Chen", label: "L. Chen", matched_alias: "L. Chen", page: 2 }], truncated: false }),
     instances: ok({ ok: true, count: 1, items: [{ progression_key: "pra", label: "A public records request", definition_version: 2, entity_id: ORG, thread_version: 1, stage_count: 4, placed_count: 1, grade: null, grade_determined: false, established: false, finding_count: 1, open_finding_count: 1, next_deadline: "2026-10-02" }], truncated: false }),

@@ -1,6 +1,6 @@
 # BOB to queue (T51)
 
-**Read** · handled J2
+**Read** · handled J10
 
 ## B1 · START
 
@@ -48,3 +48,77 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio queue tranche/T51 job/T51/queue`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B4 · ANSWER · re J3
+
+ANSWER J3 (K4210): (1) accepted: producers' items carry an optional door; BOB sends tasks and queue-producers each a CHANGE to mint it. (2) accepted: queue-producers publishes facts.ms per feed (CHANGE to FR-22); your memoising per ask is yours. Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B5 · CHANGE
+
+CHANGE (K4213; tasks J2): a task put aside by `taskresolve` now carries `resolved_undecided` in its history in place of `resolved` (tasks R21); a decided one carries `decided` then `resolved`. Read `resolved_undecided` as a resolving event wherever you read who resolved a task (`index.mjs` :1617, :1735), so `resolved_by` is not null for one put aside. tasks merges before you (index 143 < 148).
+
+## B6 · CHANGE
+
+CHANGE (K4222): tasks is merged: a task of kind `authority-undetermined` now carries `door: ["taskdecide","taskforward","taskresolve"]` (tasks R24) in `taskList`, `recentTasks` and `resolvedTasks`. Build the item's options from that `door` (never a hand list, K3268). Merge `tranche/T51` first.
+
+## B7 · CHANGE
+
+CHANGE (K4233), a new job session (QUEUE #29, haiku): queue-producers is merged (R46–R51): (1) carry `read` and `code` from `facts.failed[]` into the answer's `feeds[]` entry for that feed, so the live copy can say which read refused (L12); (2) the `members` feed's items (`endorsement-owed`, `expertise-confirmation-owed`) carry `door` (`adminendorse`, `projectowneradd`/`projectownerremove`, `expertiseconfirm`) and `summary_key`/`detail_key`: check your item-building reads them as for tasks' `door` (R12), never a hand list; (3) `facts.ms` includes `members`. Tests with controls; requirement lines (K4210) in your record if ownership refuses the file. Suite, checks, `Size`, COMPLETE. Merge `tranche/T51` first.
+
+## B8 · CHANGE
+
+CHANGE (K4238): QUEUE #30, depth 2 (BOB #234 is depth 1). Your branch is at the tranche's tip.
+Entry: `DECLARED_OPS.proposedispose` requires `[project|key|progressionKey]`, `[finding|key|progressionKey]`, `[to|state]` and `reason` at the top level, but its set arm (`items`) carries those per item, so the guard refuses a set (SCREENS-DAILY #11 J8: queue-states R58's set arm). Read the arm: each group a set request satisfies through `items` gains `items` as an alternative; a field the set arm still needs at the top level (e.g. `reason`, if it does) stays required. Test with test-support's `declaredOpHolds` over a set and a single request; control: a request with neither the fields nor `items` is refused naming them. Requirement line for BOB in your COMPLETE.
+Before tests: every tracked lockfile directory has its node_modules (K4113). Reading (K3678): your requirements, this entry, the arm and the tests naming the ids it changes, whole. Model haiku, medium effort; workers haiku low.
+
+## B9 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/queue tranche/T51 && git branch -m job/T51/queue stale/queue-local && git checkout -b job/T51/queue origin/job/T51/queue`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · QUEUE #31 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #239 is depth 1; fix round 2, wave 1)
+
+Mail with `--module queue`; record `build/jobs/T51/queue.md`. Model claude-sonnet-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`.
+
+You are the **module job** (P8, mechanics §6) for `queue`. Your diff touches only that module's paths and tests and your record.
+This is fix round 2 of T51, planned whole in `build/plan/fix-round-2-T51.md` (K-numbers there). The walk of the T51 build on biosmoke8 is diagnosed in `build/plan/walk-T51-build/CAUSES.md` (C-numbers below are its; read the entries of yours whole). Nothing found here waits for the next tranche (K3915, P19). Merge `tranche/T51` into your branch first.
+
+**Your causes** (each: what is wrong, the source, the requirement to meet, the test; an implementation named is a suggestion only, the requirement is what you meet; where a cause has "Your part", the requirement and test cover the whole cause and you meet and prove your part, the other job's half being merged before or after you):
+1. **C66** (MINOR) Small action-side gaps: reply words/quote not shown back; "Show the routes" silent when none; the review-copy page for a member shows the share boxes with no button and no sentence; console 400 on `op=queue&limit=500`. **Your part: queue's part: the cap of `limit` is documented in the declared field and enforced; the screens ask within it.** Source: `screens-action`; `screens-publish/review-copy.mjs`; `queue/index.mjs` `queueFeed` (cap 200). Requirement: Show back; say none; hide the form for a member; callers ask for at most the queue's cap. Test: One harness test per item with a control.
+2. **C72** (MINOR) Queue "What you answered" omits acts on derived items (e.g. expertise confirm) and names the founder by internal id. **Your part: queue's part: record and list every answered obligation, derived items included.** Source: `queue/index.mjs:1805-1858` (tasks, forwards, snoozes, dispositions only); `screens-daily`. Requirement: Every answered obligation is recorded and listed (queue); the screen draws the member's handle (C94). Test: queue: an answered expertise confirm is listed; control: an unanswered one is not.
+
+Read in full (never in part): queue lines on `queueFeed` limit, the answered list (R40 and neighbours) and the declared fields; for each cause above, the code files named in its source, whole, and the tests that name the requirement ids you meet; your layer's contract in `build/layers.md`. Other tests are run, not read. A job about to read a document of its reading set only in part stops (BLOCKED, cause reading) (K3678). Where a cause needs a requirement line that is not written, or a module you do not hold, post a QUESTION to BOB with your best reading and carry on with the rest (mechanics §6 step 3); a flaw in another module goes to BOB (P9).
+Tests: for each cause one test written first and seen failing, at the module's interface through the real path, with the control that shows the fix is the cause; a test names the requirement id it proves (K874). Words (K3810): a sentence a member reads is read by key or written once with `localize`; a test asserts the key, never copies a sentence, and never hand-lists another module's ops, rows or words (K3268). A new member-facing sentence on a drawn screen is a word-table row the design stream writes first: use the row if one exists (`docs/development/ux-substrate/screens/words.json`, `setup-words`); if none, list the keys you need in your record and post one QUESTION to BOB naming them, and carry on with the rest; never invent a sentence. Declare every census op you own (K4208). Never edit a generated artifact (manifest §14); report one you make stale.
+Run: your suite (`node --test --test-force-exit bio-plane/test/m/queue/`; `node --test --test-force-exit bio-plane/test/conclude-project.test.mjs`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio queue tranche/T51 job/T51/queue`.
+COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
+
+## B10 · ANSWER · re J8
+
+C66: keep R6 as written (clamp 1-500, default 200, never refuse); queue changes nothing for C66 and its internal limit-500 reads stay. The console 400 is not queue's: I send it to the shell job (its caller at browser.mjs:2368) to trace. C72: R59 stands. The receipts of acts another module keeps are not queue's rows by a requirement in force, so the derived-items half of C72 is not a defect against queue's requirements; it goes to the design lane's later list as an observation, not built. The founder-by-id half is C94 (the shell's memberName, screens-daily). So queue has no cause left: COMPLETE stating both readings, with your suite's count and the Size line. (K4307)
+
+## B11 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/queue tranche/T51 && git branch -m job/T51/queue stale/queue-local && git checkout -b job/T51/queue origin/job/T51/queue`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · QUEUE #32 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #244 is depth 1; fix round 4, wave 1; K4429)
+
+Mail with `--module queue`; record `build/jobs/T51/queue.md`. Model claude-sonnet-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678).
+
+You are the **module job** (P8, mechanics §6) for `queue`. Your diff touches only that module's paths, tests and your record. Fix round 4 of T51, planned whole in `build/plan/fix-round-4-T51.md` (K4429): read its section 0 and your causes' section 2 entries. Rows below are verbatim from `build/plan/walk-T51-rewalk3/A.md`, `B.md`, `build/plan/lane-performance/HANDOFF.md`. Merge `tranche/T51` first. Wave 1 (16 providers, independent) merges in the plan's table order; you are #15. Wave 0 is on `tranche/T51`; a wave-1 provider merged before you is read when you merge again before COMPLETE, until then a scripted double, said in the record.
+
+Requirement lines: queue R93 (`op=queue` with `count: true`; written) (`build/plan/fix-round-4-reqs.md`), **written by BOB on tranche/T51 before your wave**; propose any further line in COMPLETE (BOB writes `build/requirements/`).
+
+**Rules (plan section 0; K4426-K4428).** R-FOUR: each cause has four fields, which BOB checks before the one redeploy: (1) root cause with file:line, or "root cause unknown": step 0 is a diagnosis posted as a QUESTION to BOB before any fix, BOB releases the fix; (2) why the tests missed it, and the test-gap fix; (3) a failing-first test of the walker's row on the same entry path (press the act, never call the done function), seen red then green; (4) the platform check: L (local workerd/miniflare, real limits: 128 MB object, `waitUntil` cut ~30 s after the response, 25 s door bound, service binding, real-size file), P (read-only probe of the smoke copy), F (fixture from the live record or site) or N; numbers in the record; LIVE-CHECKs are read-only reads of https://biosmoke8.believeinoakland.workers.dev without the proxy, as `build/plan/walk-T51-build/BRIEF.md` says; no mid-round deploy; a check you cannot run is said so and the cause stays open. R-SEAM: for a cause spanning modules the seam owner (S) is the last-merged job on the path press -> stored result; its test is the whole path with the real merged providers, its inputs made by the member's own acts through the real ops (`conclude`, `acquire`, `knock`), no scripted double of an earlier-merged module and no hand-written answer shape; providers test the same case at their interface; a seam test needing an unmerged provider is written first and stays red by name. R-NOTMET: no "not met", "deferred", "not proved", REPORT or open QUESTION at COMPLETE; name the smallest thing you need and ask BOB now. R-OLD: a fix to stored data is "new data only" or has a repair entry. R-ONE: one owning job per cause; the walker's row names the first test.
+
+**Your causes** (your part; the walker's row verbatim; the four fields):
+
+1. **P9 / P10 / C14 (provider part)**: Provider for P9: a count the frame reads without the 117 KB list (queue R93, `count: true`). Users: control-plane, screens-daily, cause-shell-4.
+   > ## P9 · every screen still draws in 3.6-5 s because the frame costs more than the screen
+   > - **Measured, alone and repeated 5×** (so not the walkers' load): `whoami` 0.20 s, `bootstrap` **1.0-1.3 s for 452 bytes**, `groupidentity` 0.58 s for 2.5 KB, `queue` 0.69-0.82 s for 117 KB, `projectlist` 0.31 s, `heldcaptures` picker 0.31 s. In a page load, the same reads take 1.5-3 s (contention with the other reads and the walkers).
+   (1) Known (lane): `capture/index.mjs` `#pageAnswers`/`#wholeOf` per-row work (P10); the frame reads `bootstrap` and `queue` for itself and the screen again (P9); repeats `casedrafts` 3x, `projectquestions` 11x, `inquirystrength` 2x. ROOT CAUSE UNKNOWN: why `bootstrap` costs 1 s and where each slow act spends its time (no per-op server time exists).
+   (2) Jobs counted reads, not time (class b). Fix: tests assert the read set (one `queue`, one `bootstrap`, no per-project repeat); the record gives the time on the smoke copy.
+   (3) Step 0 (control-plane): `Server-Timing` per op. Failing-first: the read-set tests; `heldcaptures` of 27 rows, picker-first, under 1 s alone.
+   (4) LIVE-CHECK (P, read-only): the reads timed on the smoke copy (`Server-Timing` once deployed; before that `build/plan/lane-performance/tools/probe.mjs`), numbers in the record; acts over 2 s are measured at the re-walk and carried as P11 if they miss.
+
+Read in full: the lines above, the code your causes name, the tests naming your ids, `build/layers.md`; other tests are run. A flaw in a module you do not hold goes to BOB (P9). One test per cause, written first, seen failing, with a control, naming its requirement id (K874). Words (K3810): by key or `localize`; tests assert the key; a missing row: stand-in key, one QUESTION. Declare every census op you own (K4208). No generated artifact edited (manifest §14).
+Run: your suite (`node --test --test-force-exit bio-plane/test/m/<module>/`), then `node build/plan/impact.mjs tranche/T51 HEAD`'s users; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (0 findings for your files; reds also on the tranche tip are named, not fixed); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio queue tranche/T51 job/T51/queue`.
+COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BOB's release), (2) test-gap fix merged, (3) the failing-first test for the walker's row, red then green with the evidence, (4) the platform check L/P/F/N and its numbers; then requirement ids met, suite counts, each QUESTION with BOB's answer (none open), and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: held modules' own code).

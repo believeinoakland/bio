@@ -2391,6 +2391,7 @@ reasoning recorded in: this entry; `docs/development/ux-substrate/layouts.html` 
 owed: (BOB) instance-setup: the named place (an administrator's act, held locally, never exported to the network) and the queue item when an installed update brings a held profile covering it; the op behind the registry's `owed:placewanted DEC-150`.
 
 ### DEC-151 · answered
+amended: 2026-10-21 by DEC-404 (Bob): after the alpha, places come in layers (federal, state, county, city); Civicsmith's researched federal and California layers come filled in and read-only, and a team adds only its county and city, or only its city, as its own research. This is how (2) below is carried out.
 raised: 2026-10-06 · the UX design session with Bob on his primary account (session_01SEmEip2dMnNBFgsXF9Tids; the development process also runs on his primary account since K1428) (the layouts page's question S5, from Bob's comment "They can type in a different location, right?")
 for: bob
 question: May a group outside the places Civicsmith ships rules for write its own place's rules?
@@ -5977,3 +5978,498 @@ decided: 2026-10-20 · the design session (P17)
 the design: "Withdraw an expertise" is its own act, `owed:expertisewithdraw` (member-roster's withdrawal, C79, FR-07; today `expertiseConfirm({withdraw: true})`), weight 2, its explanation "Withdraws a confirmed expertise, with your reason. It can no longer be asked for, and the history keeps who confirmed and who withdrew it."; "Confirm declared expertise" stays `expertiseconfirm`.
 reasoning recorded in: this entry; `screens/registry.src.py`, `screens/mock-screens.js`, `screens/mock-acts.js`, `screens/mock-kit.js`.
 owed: BOB: member-roster serves the withdrawal as its own op (`expertisewithdraw`) and declares it.
+
+### DEC-387 · answered
+raised: 2026-10-20 · the UX design session with Bob on his primary account (session_017Kc5zXnyJCdnZCKZ4daDSe; the development process also runs on his primary account since K1428) (BOB's HANDOFFs B416 to B428: K4206, K4214, K4218, K4227, K4228, K4231, K4233, K4234, K4236, K4237, K4238, K4239, K4240; the T51 fix round's screen jobs)
+for: design
+question: The rows, labels and small drawings the fix round's jobs found missing, and the drawing questions they raised.
+why it is Bob's: it is not (P17, K3930, K3944): words and drawing detail beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-20 · the design session (P17)
+the design: every row is added under the key the job reads, or a key named in U420; the drawing answers: a wizard step that lands on an action, matter or due-date screen with no subject explains in place and offers "Open a plan" (as DEC-384 for questions); "Make one for me" is a tick beside the doorbell's secret phrase; the docket's file form picks the edition it answers and the captured document it rests on, with "Capture it first"; the action's reply form shows how the reply came, what it follows and the reply's document; `determine` asks a reason only when it replaces an earlier determination, `consequencerecord` only when the member assesses it, `consequencerevise` always; the plan form keeps "Add another" for repeated rows; releasing a sentence the record contradicts is drawn on the send steps; "Defer" and "Bring back" and a snoozed section on the queue; one "We will remind you on {date}." (`screen.reminder.on`) for due-date and action; counts as "label: count"; the 15 declared ops' descriptions say "team"; the domain file's example is "example-tenants.org"; the bias screen's labels, headings and templates, with team-only and project-only adoption lines; the Updates health names each part in words; `linewithdraw` on the person page; "Withdraw an expertise" (DEC-386) unchanged; `imported` keeps "Help me write this" for its citing note. Strength's rule 11 of `bio-grading/4` stays code (the reads lists' unkeyed entries, beside V1_LINES and V2_LEGS). The reads lists are regenerated from the tranche @ the fix round's head (B417's notice: `affordances` now holds the 64 declared ops' `act.<op>.does`).
+reasoning recorded in: this entry; `screens/*` (rows noted "DEC-387"); U420 (the keys by HANDOFF).
+owed: BOB: name the ops for "Bring back" (no unsnooze act) and for releasing a contradicted sentence if it is not `release`; check the reply's medium tokens against the vocabulary; give the unit codes `runtime` answers, for their words.
+
+### DEC-388 · answered
+raised: 2026-10-20 · the UX design session with Bob on his primary account (session_017Kc5zXnyJCdnZCKZ4daDSe; the development process also runs on his primary account since K1428) (the standing consistency read after DEC-387)
+for: design
+question: Do DEC-387's rows agree with the words already established?
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-20 · the design session (P17)
+the design: "Acknowledgments" (American spelling, `screen.case-editor.acknowledgements_from_whoever_wrote_it_are`); "Can't be undone" for the matter's way, as the established option says (`screen.matter.way.cannot`); "Checked {title} just now, but could not tell whether the page changed: {note}"; the snoozed section's help says "snoozed", so Defer (put aside with a reason) and Snooze do not compete. Kept: the queue rows' {have} and {agreed}, the placeholders the producers answer (B422).
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-screens.js`.
+owed: none.
+
+### DEC-389 · answered
+raised: 2026-10-20 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B430, K4249: its answers to DEC-387's owed items)
+for: design
+question: How do DEC-387's owed items take BOB's answers from the code?
+why it is Bob's: it is not (P17): words and drawing beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-20 · the design session (P17)
+the design: (1) "Bring back" (`screen.queue.bringback`) is `queuesnooze` with `{case, clear}` (queue R21). (2) "Release this sentence" on Start and send is part of approving: its button and reason field carry `filingapprove` with `release: [{ord, reason}]` (filings R34, screens-action R42); `release` leaves start-send's acts; `act.release.label.start-send` stays as a drawn row ("Release this sentence"). (3) The reply's medium is free text up to 500 characters (actions R13): the five options send their tokens as the value. "Not stated" and "Not decided" omit the field (no `none` token); "Not decided" is offered only on received entries and never where outcome is required (fee_waiver_decision, denial, appeal_decision, court_decision). A sent entry's stages are worded: "The request", "Request for a fee waiver", "Appeal", "Court filing". (4) `runtime`'s units are worded "milliseconds" (`ms`) and "bytes" (`bytes`), filling `{unit}`; the subrequests ceiling shows no unit.
+reasoning recorded in: this entry; `screens/registry.src.py`, `screens/mock-screens.js`, `screens/words-drawn.src.py` (rows noted "DEC-389" or "B430").
+owed: none.
+
+### DEC-390 · answered
+raised: 2026-10-20 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B432, K4252)
+for: design
+question: What does `groupdescriptiondraft`'s declared description say, and what mark does `sweeps` carry?
+why it is Bob's: it is not (P17): words and marks beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-20 · the design session (P17)
+the design: `store-door.declared.groupdescriptiondraft` reads "Asks the assistant for a labeled draft of your team's description for an administrator to edit, and changes nothing in the record." `sweeps` keeps the kit's weight 1, which is every read's weight (as `monitoring` and `monitorslate`): `WNAME` spells weight 1 "Reversible", and a weight-1 act draws no mark under its button (`btn` draws one only from weight 2). So `marks.mjs`'s "Reversible" for `sweeps` already is a read's mark; nothing changes in the kit.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (row noted "DEC-390").
+owed: none.
+
+### DEC-391 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B435, K4258: words the built screens need)
+for: design
+question: Which rows do the objective, contradiction, document, question, project and open-file screens need, under which keys?
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: (1) the objective screen's 23 `PENDING_WORDS` keyed (`screen.objective.*`). (2) the contradiction screen's 31 `GAP_WORDS` keyed (`screen.contradiction.*`) and its purpose line in SCREEN_HELP; the four lines the code draws without a key are minted: `screen.contradiction.stated.dates`, `.kinds` ({first}, {second}), `.passage.meta` ({date}, {kind}, {member}, {captured}), `.party.asked` ({date}). (3)-(5) every key document.mjs, question.mjs and project.mjs look up was already keyed except `screen.project.cmp_only_ours` and `cmp_withdraw_do` (keyed); the words BOB names that the code does not yet look up are minted as whole phrases for the screen job to adopt: document `text.label`, `text.full|none|unread`, `said_by`, `retired_copy`, `checked.words_and_address`, `checked.issuer`; question `hunches_left_out.one|other` ({n}), `hunch.history.hold|revise|withdraw`, `reeval.cause.<source>` for the 17 causes other than edition ({document}); project `cmp_their_reading`, `cmp_our_reading` ({text}), `stage.reached|not_reached` ({stage}), `ask_owners` ({owners}). From/To stay `screen.explore.from` and `screen.security.to`. (6) `screen.open-file.result.not_scanned` was already keyed ("Not scanned yet", on the tranche since U422).
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (rows noted "DEC-391"), `screens/mock-refs.js`.
+owed: the standing consistency read of these rows (the next DEC).
+
+### DEC-392 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (the standing consistency read after DEC-391)
+for: design
+question: Do DEC-391's rows agree with the words already established?
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: one verb per idea: "Defer it" (as `screen.queue.defer`, `state.item.deferred`), "{document} was deferred"; "Withdrew this hunch"; "Dismiss this lead". "Grade" for what the reruns compare and for a source's or observation's standing ("Their grades: {text}", "Our grades: {text}"; "reading" stays one whole account of a question). Plainer labels: "Which passage the question is about", "Which project asks", "The projects that asked", "What in the record shows it", "Who holds it"; "Checked: the department's own site published it"; "the web address". Reeval causes: a cited case's status changed; "Something this question rests on was named wrongly". The contradiction screen's purpose says "in tension", as its name, and names its four ways to settle it. Kept: "About which party"; the writing help's empty-field line (matches `screen.case-editor.help.needed`).
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-refs.js`.
+owed: none.
+
+### DEC-393 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B437, K4262: gaps the screen jobs found while drawing)
+for: design
+question: Which rows and drawings close B437's four gaps, and which button words are meant on the queue and Home?
+why it is Bob's: it is not (P17): words and drawing beneath his rulings.
+provisional: as below.
+alternative: the registry's general act names on every button (rejected: a button says what it does in its own place).
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: (1) the minutes fold's two in-place refusals keyed (`screen.action.minutes.notfound`, `.needed`). (2) `screen.home.todo.vouch.one`; a letter awaiting approval is the queue kind `letter-approval` (`queue.letter-approval.summary` with {title}, `.detail`); on the queue and Home the buttons say what they do on their row, the drawn words, while `act.<op>.label.<screen>` stays the act's name in menus and explanations; the drawn words' keys are listed in U428 (six minted: `screen.home.ailimit.set`, `.remove`, `screen.queue.explore.today`, `.mute.kind`, `.check.open`, `.hint.promote`, `.vouch.them`). (3) the docket's "Help me write this" stays: `field()` draws it under the summary whenever the team's assistant is on, as on other screens. (4) the reads lists regenerated from the tranche, so `words-reads.json` holds the updates screen's runtime keys.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (rows noted "DEC-393"), `screens/words-reads.json`.
+owed: none.
+
+### DEC-394 · answered (items 1 and 3; item 2 put to Bob)
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B441, K4304: operations a member cannot finish with the screens as drawn; T51's bar, K4269/K4270)
+for: design (items 1, 3); Bob (item 2)
+question: How are a project's earlier drafts and their review links reached, and which controls complete the operations the walk found unreachable?
+why it is Bob's: items 1 and 3 are not (P17: drawing beneath his rulings); item 2 decides who may add an office, put to him on the page "Federal Records Requests" (https://claude.ai/artifact/FcRtETPqMVjaqocMQHQLTX), recommendation A (a member names the office inside the request, marked "named by a member" for an administrator to confirm).
+provisional: as below.
+alternative: none weighed for 1 and 3.
+recommendation: as below.
+reversal cost: low.
+response: items 1 and 3 none needed (the design's detail); item 2 awaits Bob.
+decided: 2026-10-21 · the design session (P17), items 1 and 3
+the design: (1) `case-editor`, `ceremony` and `review-copy` carry a "Which draft" chooser (read `casedrafts`), each draft named by its scope and the date it was prepared, the newest marked; `review-copy` lists every live review link on any draft (who, which draft, when, comments) each with "Stop sharing" (`reviewrevoke`); the editor and ceremony say how many links are live and link to it. (3a) `project`: "The project's documents" (`heldcaptures` with the project, held and vouched). (3b) the stored login was drawn by DEC-381 on `capture` (`capturecredentialsupply`, `capturecredentiallist`, `capturecredentialwithdraw`), registered `owed:` until the ops reach `main`, so its label key reads `act.owed_capturecredentialsupply.label.capture`. (3c) `capture`: "Your requests for later" (`capturerequests`), each with its state. (3d) `document`: "A name the record did not match" (`resolvetestify`, grade D, with a required reason). (3e) `document`: "This contradicts another document", drawn on the owed op `contradictionflag` (no member op exists: the contradiction ops take a run's judgement or an existing candidate).
+reasoning recorded in: this entry; `screens/registry.src.py`, `screens/mock-screens.js`, `screens/mock-acts.js`, `screens/mock-kit.js`, `screens/words-drawn.src.py` (rows noted "DEC-394"); `question-federal-office.html`.
+owed: Bob: item 2 (federal offices: A, B or C). BOB: an op for UC-155's flag (`contradictionflag`: two passages and a reason, making a candidate); the stored login's act keys (owed_ prefix until the ops reach main).
+
+### DEC-395 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B443, K4321: DEC-394's drafts rows hold sample text, so interface-shell R23 fails)
+for: design
+question: How are DEC-394's draft rows worded so the shell names no place?
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: on `case-editor`, `ceremony` and `review-copy`, `screen.<screen>.drafts.item` "Scope: {scope} · prepared {date}" is each draft's line (it replaces `drafts.earlier`), and `drafts.newest` is the word "newest" after the newest draft's line; `screen.case-editor.links.live` and `screen.ceremony.links.live` read "{count} review links are live, {earlier} of them on an earlier draft." The drawing marks the chooser's options and the live links' scope lines as record data. No other DEC-394 row holds sample text.
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-screens.js`.
+owed: none.
+
+### DEC-396 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B444, K4323: rows T51's fix round 2 jobs key and need written)
+for: design
+question: Which rows do B444's twelve items need, under which keys?
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: (1) the file scanner's state: `file-safety.index.no_signatures`, `.no_signatures_since` ({date}), `.signatures_refused` ({status}), `.signatures_failed`, `.signatures_not_fetched`. (2)-(4), (6) keys minted where the code reads none yet: `screen.document.text.read` ({read}, {total}), `screen.project.opened.date` ({date}), `screen.question.leg.paragraph` ({n}), `screen.matter.pick.choose`, `.pick.none`, `screen.matter.routes.none`. (5) C58's words were all keyed already. (7) six action kinds `screen.action.kind.*` and `screen.start-send.kind.*` (records_petition, brown_act_demand, assessment_challenge, taxpayer_action, consent_decree_motion, constitutional_claim). (8) `screen.standard.held`, `.held.more`; `screen.money.f.contract` and `.nocontract` lose "(a record id)". (9) `shell.member.unknown` "A member of your team", as `shell.card.member`, so the two do not compete. (10) `screen.money.proposed.member`. (11) `screen.ceremony.signs.count.findings` ({n}, {findings}), `screen.ceremony.published.edition` ({n}). (12) `refusal.FLAG_NO_PASSAGE`, `FLAG_SAME_DOCUMENT`, `FLAG_NO_REASON`; the document's act is now `contradictionflag` (no longer owed), so its label key is `act.contradictionflag.label.document`. Parked for T52: `screen.money.proposed` says "the machine".
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (rows noted "DEC-396"), `screens/registry.src.py`, `screens/mock-*.js`, `screens/parked-T52.md`.
+owed: none.
+
+### DEC-397 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B446, K4326, and B447, K4327)
+for: design
+question: Which words say a timed-out capture's kept state, and label the document picker's search?
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: `refusal.ACQUIRE_TIMED_OUT.held` (what was received is kept and held to check), `refusal.ACQUIRE_TIMED_OUT.undetermined` (it cannot tell; look in Held captures before trying again), both beside `refusal.ACQUIRE_TIMED_OUT`'s 25 seconds; `form.choose.search` "Search your documents", `form.choose.search.none`.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (rows noted "DEC-397").
+owed: none.
+
+### DEC-398 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B448, K4328, and B450, K4331)
+for: design
+question: Which rows do B448's and B450's keys need?
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: a discarded knock's "Put it back" (`act.inboxresolve.label.inbox.putback`, `act.inboxresolve.putback.does`, `screen.inbox.putback.done`); a copy that cannot be retired (`screen.document.retire.refused.illegal`, `.cited` with {questions}); Settings (`screen.group.hosting.now.date`, `screen.group.export.count.tables.one|other`, `screen.security.nosignatures.next`, `screen.group.domain.checked`), `shell.field.needed`; the purposes of `watching` and `leads` (SCREEN_HELP); a live review link's `shared {date}` and comment counts, and `links.live.one` on the editor and ceremony. Parked for T52: `heldsetaside` on `document`.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (rows noted "DEC-398"), `screens/mock-refs.js`, `screens/parked-T52.md`.
+owed: none.
+
+### DEC-399 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B451, K4332, and B453, K4335)
+for: design
+question: Why a parts-only copy cannot be vouched for, and the labels of a knock's sender-stated file name and type.
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: `screen.held.vouch.partsonly` (only parts were kept, so it cannot be vouched for: capture it again whole, or set it aside); `screen.inbox.knock.name` "File name, as the sender gave it", `screen.inbox.knock.type` "Kind of file, as the sender gave it".
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (rows noted "DEC-399").
+owed: none.
+
+### DEC-400 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B455, K4337)
+for: design
+question: Three rows B455 names.
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: `screen.contradiction.flagged.by` "{member} said these two contradict, {date}"; `act.heldcaptures.here.project` "List this project's documents"; `screen.document.testify.how` "How you know".
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (rows noted "DEC-400").
+owed: none.
+
+### DEC-401 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B441 item 2, K4304: a records request to a federal office; DEC-394 put it to Bob)
+for: Bob
+question: How does a member file a records request with an office that is not among the team's places (a federal body such as HUD)?
+why it is Bob's: it decides who may add an office to the team's record (doctrine: who may do what).
+provisional: none.
+alternative: B, Civicsmith comes with federal offices built in; C, only administrators add offices, a member asks from inside the request.
+recommendation: A.
+reversal cost: low (an office a member named stays marked until an administrator confirms it).
+response: "Federal Offices: A for now, but B should be added as time and tokens allow."
+decided: 2026-10-21 · Bob
+the design: A now: when no listed office fits, the member names the office inside the request (agency and office, where requests go, the law picked from the laws Civicsmith knows); the office is saved for the team's next request and marked "named by a member" until an administrator confirms or corrects it under Places and offices. B later, as time and tokens allow: federal records offices built in, from the government's own list, each with the Freedom of Information Act's rules.
+reasoning recorded in: this entry; `question-federal-office.html` (https://claude.ai/artifact/FcRtETPqMVjaqocMQHQLTX).
+owed: the drawing of A on `request` (the next DEC); BOB: B placed in a later tranche's plan when time and tokens allow.
+
+### DEC-402 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (Bob's DEC-401: federal offices A)
+for: design
+question: How is Bob's A drawn on the request screen?
+why it is Bob's: it is not (P17): drawing beneath his ruling.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: `request`'s dead end now reads "If you know which office holds them, name it yourself below." and opens "Name the office yourself": the agency and office, where requests go, the law it goes under (which sets the due date), and "Use this office" (`entitycreate`, now on `request`'s acts), which saves the office for the team, marked "Named by a member" until an administrator confirms it, and chooses it for this request. BOB owes: `entitycreate` admitted to a member from `request` for an office, with the mark, and the administrator's confirm on Places and offices.
+reasoning recorded in: this entry; `screens/mock-screens.js`, `screens/registry.src.py`, `screens/words-drawn.src.py` (rows noted "DEC-402").
+owed: BOB: as above; B (federal offices built in) placed when time and tokens allow.
+
+### DEC-403 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_01N188yDWfxJHtvptW5hirUW) (BOB's B458, K4356, K4357: T51 fix round 3, operations a member still cannot finish)
+for: design
+question: How does a member see and give a stored login for a site, and where are the subject-naming and hand-flag controls drawn?
+why it is Bob's: it is not (P17): drawing beneath his rulings (DEC-381).
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: (1) `capture` gains "Logins for sites", standing on its own, not only under a refused request: "Show the stored logins" (`capturecredentiallist`), each login's site and line "{kind} · {scope} · given by {member}, {date}" with "Withdraw this login" (`capturecredentialwithdraw`); the empty line "No login is stored yet. Give one below when a site asks for it."; "Give a login for a site": the site (host), what it asks for (the three kinds: login, user-agent, other), who may use it (member, project, team), username, secret, "Store this login" (`capturecredentialsupply`). (2) Both are drawn since DEC-394 (U429, merged K4311) on `document`: in "People and organizations it names", the fold "A name the record did not match" (`resolvetestify`); and the fold "This contradicts another document" (`contradictionflag`, registered since DEC-396). The live copy lacks them because no screen job has built them yet.
+reasoning recorded in: this entry; `screens/mock-screens.js`, `screens/words-drawn.src.py` (rows noted "DEC-403").
+owed: none.
+
+### DEC-404 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (Bob's question in the design session: "Should jurisdiction support be implemented in layers - city, county, state, federal - so that a team working in a place for which there isn't currently jurisdiction support for just needs to add city or just city and county details, where the areas like state and federal are prefilled and read-only?")
+for: Bob
+question: Are places held in layers, so that a team outside the places Civicsmith holds adds only its city (or its city and county) while the state and federal rules come filled in and read-only?
+why it is Bob's: it decides what ships with the product and who may write the rules a team's due dates rest on (doctrine and requirements, P17); it carries out DEC-151 (2).
+provisional: one researched package per place (jurisdictions R1, R44); the only real one, "City of Oakland and Alameda County", holds the federal law (FOIA) and California's (the Public Records Act) inside it; laws carry a level tag (jurisdictions R31) and offices one too (R88); several packages combine (R12 to R16, R34), a disagreement withheld, never overridden. A team elsewhere gets nothing filled in (DEC-150, DEC-151 (1)).
+alternative: B, A plus a team may write its own state layer where Civicsmith has none, marked as its own research; C, whole-place packages researched by Civicsmith only, as today.
+recommendation: A as the direction, B once A works; not in T51 (K4269, K4270: T51 takes only an operation that does not work or a screen that cannot be reached).
+reversal cost: low now (nothing built); the split of the Oakland package is the work.
+response: "Let's go with A after the alpha"
+decided: 2026-10-21 · Bob
+the design: after the alpha release, a place is four layers: federal, state, county, city. Civicsmith ships the federal layer (FOIA, its deadlines, federal holidays; the home of DEC-401's B, the federal records offices) and the California layer (the Public Records Act, its deadlines, state holidays and offices), researched with their sources, filled in and read-only; Alameda County and the City of Oakland become their own researched layers. A team chooses its state (California only, until another is researched) and, where held, its county; it adds what is missing (its county and city, or only its city: local records and open-meeting laws and their deadlines, holidays, hours, offices, where records are published), each with its source and marked as the team's own research, serving only that team (DEC-151 (2)). A team does not edit a read-only layer; it reports a rule it believes wrong to Civicsmith. Layers sit side by side, not overriding one another: a request names the law it goes under, so a city's shorter deadline and the state's both stand. How layers stack and how a disagreement within one key is settled are BOB's. A team outside California gets the federal layer only until its state is researched (B, a team's own state layer, is not ruled).
+reasoning recorded in: this entry; the screens page's gap "A place Civicsmith doesn't hold yet".
+owed: BOB: placed in the plan after the alpha release (requirements: layers in jurisdictions and instance-setup; the Oakland package split into federal, California, Alameda County and Oakland layers; a team-written county and city layer marked as its own research; reporting a wrong rule); joined with DEC-401's B (N1256). Design: the places screen's layer drawing when that tranche opens.
+
+### DEC-405 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (Bob, on the gap "Plain-words reading of a charge or a rule": "If any parts of this process aren't yet supported, that support should be included and test in the alpha release.")
+for: Bob
+question: When does the assistant's answer to "What's this charge?" or "What does this rule require?" ship: in the alpha, or after it?
+why it is Bob's: release scope and a requirement (P17); A or C would have reversed his K3803 (the alpha walked unassisted) and N1220.
+provisional: alpha unassisted, no assistant work in T51 (K3803; current.md rule 9); the assistant's stage 0 not running, L1 partly built and unreachable, L3 not built, L4 partly built (Capability Ladders §9.3); the test set empty (N829).
+alternative: A, all four steps in the alpha; C, steps 1 to 3 in the alpha, step 4 later.
+recommendation: B, alpha unassisted; the four steps the first target after it, tested against a real-question test set.
+reversal cost: low (plan placement only).
+response: "Make a note that we want to measure CS's accuracy over time once the workflow is functioning. We also want to understand the root causes for when it gets it wrong, and study how to improve our metrics. You're right about the alpha not including the assistant. The first beta will include the assistant and should also include the ruling or charge process we're discussing. So your option B."
+decided: 2026-10-21 · Bob
+the design: B. The alpha stays unassisted. The first beta carries the assistant and the four steps for a charge or a rule: it runs; it answers from the team's record, citing it; it applies rules (what a provision requires, the law in force, a computed due date) with basis and status, labelled "not legal advice"; where the rule is not held it says so and offers a search for it. All four are tested before the beta, against real questions with answers written by people. Once the workflow runs: accuracy measured over time, every wrong answer root-caused and the causes counted, and the measures studied and improved; each bar set before measuring.
+reasoning recorded in: this entry; `docs/architecture/BIO_Capability_Ladders_v0_1.md` (Status "Amended 2026-10-21", §9.5 "RULED 2026-10-21"); the screens page's gap "Plain-words reading of a charge or a rule".
+owed: BOB: the first beta's plan carries stage 0, L1, L3 and L4's backward question for D.1 to D.3, with their tests; a standing accuracy measure with root-cause records and a study of the measures (requirements); the test set (N829) filled with real questions and human-written answers, Oakland's first, which Bob may supply or approve. Design: the answer's drawing when that tranche opens.
+
+### DEC-406 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (Bob, on the gap "Public registers and outside alerts", after the design session explained it)
+for: Bob
+question: When do public registers (campaign finance, economic interests, lobbying, licences, companies, court dockets) and outside alerts come in, and with or without the assistant?
+why it is Bob's: release scope and a requirement (P17); it adds to the alpha.
+provisional: later (Capability Ladders §5A.5 L5, stage 4; about 15 to 20 requirements after people L1 to L4); today a member captures a register's page and follows it by hand.
+alternative: none put; the design session had offered placing NetFile and Form 700 early.
+recommendation: none put (the session asked whether Bob wanted it earlier).
+reversal cost: medium: it adds to the alpha's scope and may move its date.
+response: "With regard for 'Public registers and outside alerts': The capability to pull from these data sources with and without the assistant should be in the design today - with assistant support paused until the alpha is out and the AI provider support is in, tested, and judged functional. But the unassisted capability is an important element that must be in the alpha, as a system without it isn't really usable."
+decided: 2026-10-21 · Bob
+the design: in the alpha, unassisted: a member imports a public register whole (NetFile, CAL-ACCESS, FEC; Form 700; Oakland's lobbyist directory; state licence files; company officers), each import a capture with its source and date, processed in the background; searches it and cites a row; watches a named filer, licence or docket and is told once when it changes; receives outside alerts where a service offers them (CourtListener for federal dockets), the rest re-checked or followed by hand. After the alpha, assisted (plain-words asking across registers, proposed matches to the team's subjects, proposed watches), once support for several AI providers (N1220) is in, tested and judged functional. The guardrails K1484, K1485, K1492, K1493 and the FEC's purpose limit stand. Both parts drawn now, on the screen `registers` (the next DEC).
+reasoning recorded in: this entry; `docs/architecture/BIO_Capability_Ladders_v0_1.md` (Status "Amended 2026-10-21 (DEC-406)", §5A.5 "RULED 2026-10-21"); the screens page's gap "Public registers and outside alerts".
+owed: BOB: the alpha's plan carries the unassisted part (requirements: register imports as background captures, a register's rows searchable and citable, a watch by named identifier with a queue item on change, outside alerts through monitoring, the guardrails' tests), with the people and money groundwork it needs, and its effect on the alpha's date reported to Bob; the assisted part placed after the alpha with N1220. Design: the screen `registers` drawn (the next DEC).
+
+### DEC-407 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (Bob's DEC-406: registers drawn now)
+for: design
+question: How is DEC-406 drawn?
+why it is Bob's: it is not (P17): drawing beneath his ruling.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: a new screen `registers`, "Public registers" (rail Add; journeys 10, 12, 14), reached from Add's capture screen and from Watched addresses: "Registers your team holds" (source, when brought in, rows, next check; an empty line); "Bring in a register" (the known registers, or another by its address; kept whole as a capture with its source and date, read in the background, the team told in the queue when it is ready); "Search the registers" (person or organization, amounts, dates, register; "Cite this row"); "Watched filers, licenses and dockets" (watch by number, "Stop watching", told once in the queue on change); "Alerts from outside services" (CourtListener for federal dockets with the team's own sealed key; a county court such as Alameda's re-checked when a member asks); "Ask across the registers", drawn paused as "Comes after the alpha" (plain-words asking, proposed matches to subjects, proposed watches); "What these registers never do" (a watch is of a named filer, license or docket, never a search for a person; no home address or phone number kept, neither ever published; the FEC's donor-data limit). Acts all owed to DEC-406: registerimport, registerlist, registersearch, registerrowcite, registerwatch, registerwatchstop, alertconnect; paused: registerask, registermatch, registerwatchpropose. 67 keys `screen.registers.*`.
+reasoning recorded in: this entry; `screens/registry.src.py`, `screens/mock-screens.js`, `screens/mock-acts.js`, `screens/mock-refs.js`, `screens/words-drawn.src.py` (rows noted "DEC-407").
+owed: BOB: the ops above (names are proposals; BOB's own names replace them) with DEC-406's requirements.
+
+### DEC-408 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (Bob, on DEC-407's guardrail line)
+for: Bob
+question: May a home address or phone number be kept at all, and where?
+why it is Bob's: doctrine on personal facts (K1485, K1493).
+provisional: DEC-407 drew "An import never keeps a home address or a phone number, and neither is ever published."
+alternative: none put.
+recommendation: none put (Bob's own clarification).
+reversal cost: low.
+response: "I believe the proper limitations are that a home address or phone number can be kept by a member in their notes - but is never published."
+decided: 2026-10-21 · Bob
+the design: consistent with K1485 and K1493, which stand: an import never bulk-copies home addresses or phone numbers (K1485); a member may keep one in their own notes; it is never published (K1493), and it is removed on a lawful demand the place's profile lists (California Gov. Code 7928.215: an official's home address or phone number, within 48 hours; K1493). `registers`' line now reads "An import never copies home addresses or phone numbers. A member may keep one in their own notes, and it is never published." (key screen.registers.never.keep).
+reasoning recorded in: this entry; `screens/words-drawn.src.py`, `screens/mock-screens.js`.
+owed: BOB: the publication filter's test that a home address or phone number in a member's note never reaches a published surface, with N1259.
+
+### DEC-409 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (Bob's direction: "The support for the assistant doing research on people, events, money, donations, and other dimensions should be robust ... The UX for members doing similar investigations should also be rich, powerful, efficient, and robust.")
+for: Bob
+question: What does "follow the money, and every other dimension" commit Civicsmith to, and when?
+why it is Bob's: doctrine, requirements and release scope (P17).
+provisional: Capability Ladders §2 CONNECTIONS (K1469, K1487): one `explore` across every owner, cited and graded, weakest hop governing, bounded; screens People, Timeline, Money trail, Explore connections, Find drawn; people and money layers largely unbuilt (the 2026-10-05 study).
+alternative: B, combined walks in the alpha too; C, "Follow from here", combined walks and the assistant all in the first beta.
+recommendation: A: the alpha carries each dimension's tools, the registers and "Follow from here"; the first beta the combined walks and the assistant's research.
+reversal cost: medium (scope of the alpha and the first beta).
+response: "Sure, efficiency is counted in steps, but if the first way a connection is made across multiple hops may not be the most direct. Just as in math a problem can be 'simplified', the system should include support for recognizing all meaningful connections, though also be able to find the must [most] direct path. The choice is A today, but B in the first beta."
+decided: 2026-10-21 · Bob
+the design: as folded in Capability Ladders §2 CONNECTIONS "RULED 2026-10-21": the doctrine (following the trail in every dimension, singly and in combination, is the core, for members and the assistant through the same explorer); the alpha: each dimension's tools, the registers, "Follow from here" from any item into any dimension in place; the first beta: combined walks across dimensions and the assistant's research across every dimension (measured as DEC-405); between two things, every meaningful connection within bounds and the most direct path (fewest hops, then the strongest weakest hop, then date; never a judgment score), and a member's step-by-step chain "simplified" by showing a shorter cited path beside it; robust measured (a real Oakland matter per combined walk, K4354's 2 seconds, acts counted against a target set before the walk).
+reasoning recorded in: this entry; `docs/architecture/BIO_Capability_Ladders_v0_1.md` (Status "Amended 2026-10-21 (DEC-409)"; §2 CONNECTIONS "RULED 2026-10-21").
+owed: BOB: the alpha's plan (with N1259) carries "Follow from here" across the dimension screens and `explore`'s all-connections and most-direct-path reads with the simplified-chain offer, and their tests; the first beta's (with N1258) the combined walks and the assistant's research across dimensions, with the step targets and Oakland test matters. Design: "Follow from here", all connections, most direct path and "a shorter path" drawn (the next DEC).
+
+### DEC-410 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (Bob's DEC-409)
+for: design
+question: How are "Follow from here", every connection, the most direct path and a shorter path drawn?
+why it is Bob's: it is not (P17): drawing beneath his ruling.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: (1) "Follow from here", one control (`follow(kind)` in mock-kit.js) for a person or organization, money, an event and a document, opening a menu of the other dimensions, each opening that screen scoped to the item in place: on `people` rows, `money` figures, `timeline` events, `document`, `finder` results, `registers` result rows (as a donation) and `explore` chains (`owed:followfrom DEC-409`, else existing ops). (2) On `explore`: "List every connection" and "Find the most direct path" beside Explore; "Most direct path" first, with "The most direct path has the fewest steps. If two are equally short, the one whose weakest step is strongest comes first, then the earlier date. This is a fact about the chains, not a judgment of them."; "Every connection between them", each chain with its steps, weakest grade and dates, hub and declared-only steps marked, and "Not every connection was searched: …" when the bounds cut it short; "A chain you built" with "A shorter cited path joins the same two ends." and "See the shorter path" / "Keep mine" (`owed:exploreall`, `owed:explorepath`, `owed:exploreshorter`, DEC-409). (3) Drawn paused, "Comes in the first beta": combined walks; "Ask the assistant to research this". 47 keys (`screen.follow.*`, `screen.explore.direct|all|shorter|later.*`).
+reasoning recorded in: this entry; `screens/mock-kit.js`, `screens/mock-screens.js`, `screens/mock-acts.js`, `screens/registry.src.py`, `screens/words-drawn.src.py`, `screens/page.src.html` (rows noted "DEC-410").
+owed: BOB: the ops above (names are proposals) with DEC-409's requirements. Design, later: "Follow from here" on offices, laws and funds once their screens carry items.
+
+### DEC-411 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (BOB's B469 HANDOFF, for Bob's K4403 given in BOB #243's session)
+for: design
+question: How are `registers` and `explore` redrawn for Bob's K4403?
+why it is Bob's: it is not (P17): drawing beneath his ruling K4403 (cited, not re-ruled).
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: `registers`: "Registers we know" (name, source, URL, size in bytes, rows) with the door "A register we know that is not listed" (name, URL, source; "Propose this register"); company officers listed, tagged "Not in the alpha", "Bringing in company officers in bulk comes in the beta.", no import control; import "Whole or in part" with a filter (names or organizations, amounts, dates, filer numbers) prefilled from the current project and saying so; "Work out what it would add" (new rows, bytes, an estimated time) before the import; "Importing runs by fixed steps and never uses the assistant."; "Phone and address columns are left out as it arrives." (DEC-408); the filter kept with the import and shown as what watching looks for; "Read it ahead, for the team" (a pre-read as a resource); watches automatic only for a project's stated interest, shown with it, one queue item per watch per change with a count; FEC rows carry 11 CFR 104.15's notice and no donor-list export; a cited row "Cited as an extract of {file}, fingerprint {fingerprint}, {date}". `explore`: shorter paths evidenced first, then "Leads", each "a lead, not evidence", the note never calling the member's chain wrong; at 2 seconds "The explorer stopped after 2 seconds and shows what it found. More may exist." with "Keep looking". New acts owed to K4403: registerfilter, registerdelta, registerpreread, registerpropose, explorecontinue. About 39 keys added, 6 retired, 7 reworded.
+reasoning recorded in: this entry; `screens/mock-screens.js`, `screens/mock-acts.js`, `screens/mock-kit.js`, `screens/registry.src.py`, `screens/words-drawn.src.py` (rows noted "DEC-411").
+owed: BOB: the acts above with N1259 and N1260 (names are proposals).
+
+### DEC-412 · answered
+raised: 2026-10-21 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (BOB's B471 HANDOFF, T51 fix round 3's word batch, and B472 its addendum)
+for: design
+question: The sentences members read where T51's fix round 3 shows a stand-in or a bare key; and two drawing questions (the agency and office as one field or two; 44 px targets for links inside running text).
+why it is Bob's: it is not (P17): words and drawing beneath his rulings.
+provisional: as below.
+alternative: one field split at the first comma (today); the 44 px rule on every link.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-21 · the design session (P17)
+the design: (1) 55 rows (block "DEC-412" in `screens/words-drawn.src.py`): file-safety's signature-check refusal and details; `refusal.CAPTURE_NOT_KEPT`; `case-disclosures.index.late_proves`; `review.index.not_concluded_yet`; entities' office-confirm refusals, details and declared description; `refusal.SEEN_IN_NOT_RECORDED`; `shell.keyfile.none|unreadable|empty`; seven `act.*.does` rows (origins, inboxlist, transcriptions, progressions, remindersfor, moneysets, captureseenin), with `act.scanmirror.does` and `act.officeconfirm.does` from the act help; the ceremony's proof rows and "registering" line; Home's and Projects' unknown question count; `screen.capture.address.filedhere`, `screen.capture.later.none`, and `screen.document.text.unread.next` (new key, the next step for an unread non-picture upload); settings' scanmirror and officeconfirm labels and results, and the signing box's proof label; `screen.action.routes.none`. Reworded: `screen.document.ocr.refused.unread` (the cause is an unread copy), `refusal.CAPTURE_NOT_HELD` (fits citing and filing). (2) The registry lists `scanmirror` on `security` and `officeconfirm` on `places`, each drawn with its button and result line. (3) On `request`, "Name the office yourself" has two fields, "The agency" and "The office within it", and its note "Why you are naming this office" with its own help (not shell.reason). (4) Links inside running text are exempt from the 44 px target (WCAG 2.5.8's inline exception: a 44 px box would overlap the lines around it) and get about 24 px by padding; stand-alone links and buttons keep 44 px (`visual-language/components.css`, rebuilt `civicsmith.css`). (5) B472's three op-grades strings and capture's seen-in details added to the `unkeyed` lists (`screens/words-reads-handoffs.json`).
+reasoning recorded in: this entry; the files named.
+owed: BOB: regenerate `words-reads.json` against the tranche (the handoffs file's additions take effect then); `refusal.CAPTURE_NOT_HELD` and `act.contradictionflag.does` into capture's and affordances' reads, `screen.capture.address.filedhere` and `screen.capture.later.none` into SCREEN_KEYS.capture, the other new keys into their modules' reads, t36 updated; screens-intake keys `screen.document.text.unread.next`; the request's two fields and note keys and `screen.action.routes.none` read in the code; the shell's inline-link rule (`interface-shell/index.mjs`:353's `.cs-main a.cs-ref{min-height:44px}`) carries the exemption. `SIGNATURES_RUN_UNDER_WAY` and `a_run_is_under_way` were not asked: send them if they need rows.
+
+### DEC-413 · answered
+raised: 2026-10-22 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (BOB's B473, K4458: regenerate words-reads.json against origin/tranche/T51)
+for: design
+question: The reads lists regenerated against T51 after fix round 3, and the inline strings that regeneration leaves untriaged.
+why it is Bob's: it is not (P17): the design's word machinery.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-22 · the design session (P17)
+the design: `screens/words-reads.json` regenerated from origin/tranche/T51's bio-plane/src (163 modules, 18,887 keys read, 5,868 inline strings unkeyed), with DEC-412's handoff additions (op-grades' moneysets and scanmirror strings). Nine strings it left untriaged are triaged: control-plane's six owner-op descriptions and the plane's `ask` description as builders' grading text (`dev("grade")`; their member sentences are act.<op>.does rows), screens-settings' bias file label "## What This Does Not Enforce" as file grammar; and affordances' last stand-in gets its row, `act.readheld.does`, word for word its default (extraction R80). The words check on T51 with these files: 0 failures (from 3).
+reasoning recorded in: this entry; `screens/words-reads.src.mjs` (block "DEC-413"), `screens/words-drawn.src.py`.
+owed: none.
+
+### DEC-414 · answered
+raised: 2026-10-22 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (BOB's B474: T51 fix round 4's design asks)
+for: design
+question: (1) 44 px targets at 390 px for small controls and inline links; (2) "Give a login"'s submit label, and the agency and office as one field or two; (3) one number or two for the queue's vouch band; (4) five owed rows.
+why it is Bob's: it is not (P17): drawing and words beneath his rulings.
+provisional: as below.
+alternative: (3) the bell and sidebar counting the band's captures too.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-22 · the design session (P17)
+the design: (1) Every control at 390 px keeps a 44 px target (the design's phone rule stands; the controls under 30 px on Home, Queue, Find and Projects are a defect of the shell's stylesheet, not a new rule); a link inside running text is exempt, with about 24 px by padding (DEC-412 (4), `visual-language/components.css`). (2) The submit is "Store this login" (`screen.capture.logins.store`, DEC-403); the agency and the office are two fields, "The agency" and "The office within it" (DEC-412 (3)). (3) Two numbers, each saying what it counts: the bell and the sidebar count queue items only; the vouch band draws its own number apart, "Captures waiting for a vouch: {n}. They are not counted in your queue." (`screen.queue.vouchband.apart`), matching K4429 (the band's rows are not queue items). (4) Rows: `act.readheld.label.document` "Read it now"; `screen.document.readnow.refused.NO_HOME`, `.NO_WHOLE_OBJECT`; `screen.document.cite.repair.says`; `screen.capture.reading.pending`.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-414").
+owed: BOB: the shell's 44 px rule reaching the small controls (T52 under K4269); the six keys read in their modules.
+
+### DEC-415 · answered
+raised: 2026-10-22 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (Bob: "Is there a means by which we can simplify the Cloudflare signup and configuration process and confirm that the configuration is correct before trying to deploy CS for one of these outside teams?")
+for: Bob
+question: How does a non-technical founder get a Cloudflare account ready, and how is it confirmed before installing?
+why it is Bob's: a requirement on the installer and its experience (P17; K3447, K3456).
+provisional: the installer's first page lists what is needed; Cloudflare's permission page; the preflight (installer R70) checks plan, containers, limits and the name only once the install has started, and a missing card shows only when a bucket fails; each stop says what to fix; nothing guides signup.
+alternative: B, the guide only; C, A plus Cloudflare's partner programs (Civicsmith opening accounts for teams), against the sovereign model.
+recommendation: A, a "Get ready" guide and a "Check my account" button.
+reversal cost: low.
+response: "A, but the 'Check my account' button is a gate that must be passed in order for the install to proceed. This allows the installer to help the team prepare for the install rather than hav[e] it fail midway through."
+decided: 2026-10-22 · Bob
+the design: as folded in `BIO_Distribution_v0_1.md` §5, "RULED 2026-10-22": "Get ready" (five plain steps, each opening the exact Cloudflare page; links checked on a schedule); "Check my account" after Cloudflare's permission page (every preflight check at once, plus the payment method by a throwaway probe; nothing kept; a checklist with each line's fix and link; re-runnable); the gate: "Install now" only when every line is ready; the install's own stops stay as a second line. Before any outside team installs.
+reasoning recorded in: this entry; `docs/architecture/BIO_Distribution_v0_1.md` §5.
+owed: BOB: requirements (installer: a check-only run of R70's checks plus a payment-method probe, creating nothing that stays, answering a per-check list; the install refused unless that list is all ready within the session; the guide's link check), placed before the first outside install, with its date effect reported to Bob; Bob: registering the sixth OAuth scope (account-logs.read, K3815) on the OAuth client, if the check is to cover request logging. Design: `install` drawn with "Get ready", "Check my account" and the gate (the next DEC).
+
+### DEC-416 · answered
+raised: 2026-10-22 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (Bob's DEC-415)
+for: design
+question: How are "Get ready", "Check my account" and the gate drawn on the installer?
+why it is Bob's: it is not (P17): drawing beneath his ruling.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-22 · the design session (P17)
+the design: `install` gains state `ready` ("Get ready", from "Get your Cloudflare account ready first" on start and on the needs list): five numbered steps, each a sentence, what the founder will see, and a button opening Cloudflare's own page in a new tab (an account in the team's name with a shared email; verify the email; a payment card; Workers Paid; containers on), then "When these are done, check your account" to Cloudflare's permission page; states `check` and `checkok` after it: "Check my account", "Checking creates nothing that stays in your account.", one line per check (Workers Paid, containers, room under the limits, the short name free, a payment card), each "Ready" or "Not ready yet" with its fix and a button to the page that fixes it, "Check again"; "Install now" (bootstrap) disabled with "Install now opens when every line is ready." until all are ready; `refused` adds "This is rare: the check before installing should have caught it." Journey 1 walks start, ready, cloudflare, check, checkok, progress, done. Act `owed:installcheck DEC-415`; 52 keys (`screen.install.getready.*`, `screen.install.check.*`, `screen.install.refused.rare`).
+reasoning recorded in: this entry; `screens/mock-screens.js`, `screens/mock-journeys.js`, `screens/mock-acts.js`, `screens/mock-kit.js`, `screens/registry.src.py`, `screens/words-drawn.src.py` (rows noted "DEC-416").
+owed: BOB: installcheck (DEC-415's requirements).
+
+### DEC-417 · answered
+raised: 2026-10-22 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (BOB's B477, K4557, K4559; B476 noted)
+for: design
+question: Where does an invited, not yet joined member find the join door on an action, and the rows owed from T51's round (later-ux.md).
+why it is Bob's: it is not (P17): drawing and words beneath his K4557.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-22 · the design session (P17)
+the design: `action`, `request` and `start-send` list `projectjoin` ("Join") and draw, near the top, a fold "If you were invited and have not joined yet" (`screen.projectact.invited.head`) holding the refusal in the invitation's words, `refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited`: "You have been invited to this project but have not joined it yet, so you can't do this here. Looking, capturing and citing stay open to you. Join the project to go on. Nothing was changed.", and Join beside it. Rows: `document.readnow.pending` "Being read now. Its words can be found and cited once the reading is done, and this page shows them then."; `plane.pending.interrupted` "The reading stopped three times before it finished, so your team's Civicsmith has stopped trying. Ask for a fresh reading, or capture the document again."
+reasoning recorded in: this entry; `screens/registry.src.py`, `screens/mock-screens.js`, `screens/words-drawn.src.py` (block "DEC-417").
+owed: BOB: the invited refusal read where the member is invited (the held sentence stays for a member not invited), Join drawn beside it, the two rows read (T52 under K4269).
+
+### DEC-418 · answered
+raised: 2026-10-22 · the UX design session with Bob, on his secondary account with BOB (session_013KihJX63gbyQmh21swQqQs) (BOB's B481: fix round 6's words, beneath Bob's K4562 and K4571; B479, B480 read)
+for: design
+question: The sentences for large web captures fetched in the background, large texts read in the background, a document's stated reading bound, and four refusals.
+why it is Bob's: it is not (P17): words beneath his rulings.
+provisional: as below.
+alternative: none weighed.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-22 · the design session (P17)
+the design: 15 rows (block "DEC-418" in `screens/words-drawn.src.py`): `screen.capture.fetch.pending` ("This file is about {size}. Your team's Civicsmith is fetching it now and will file it under {project}."), `.fetch.why` (over about 8 MB a file is fetched in the background; the member may leave and is told on arrival), `.fetch.done`; `notice.fetch.done` and its door `notice.fetch.done.door` "Open the document"; `screen.document.reading.progress` ("Being read: {read} of {total} so far"), `.reading.partial` ("Until the whole file is read, searching and citing cover only what has been read so far."), `.reading.done` ("Read in full. Every line of this file can now be searched and cited."), `.reading.stated` (a bound stated with its size: kept whole, openable, its words not searchable or citable), `.reading.repairable` and its door "Read it"; `refusal.DOCUMENT_COPY_PENDING`, `refusal.DOCUMENT_NOT_CLEANABLE`, `refusal.PHOTO_UNCHECKED`, `refusal.PHOTO_NOT_COVERABLE`, each ending with what was not changed. Minted: notice.fetch.done.door, screen.document.reading.progress, .partial, .done, .repairable.door.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-418").
+owed: BOB: the keys read in their modules with the placeholder names used here ({size}, {project}, {document}, {read}, {total}; the refusals' {document}, {photo}), or name any that differ; "about 8 MB" is written in, so a changed LARGE_FETCH_BYTES needs the row changed (or a {limit} fill asked).
+
+### DEC-419 · answered
+raised: 2026-10-22 · the UX design session with Bob, on his secondary account with BOB (session_01DvXHQqV1arHFoxUeFp1nmG) (BOB's B485: the rows for fix round 6's G14 to G24, beneath Bob's K4571 (never a silent partial read; a bound that must stay is said to the member), K4575, K4578)
+for: design
+question: The sentences that say when a reading, a search, a find-in, a list, a capture's supporting files, a followed meeting body, an export or a pattern covered only part of what there is.
+why it is Bob's: it is not (P17): words beneath his ruling K4571.
+provisional: as below.
+alternative: one sentence per screen for each cut list; not taken: one shared "Showing {shown} of {total}." with "Show more" or a narrowing hint reads the same everywhere, so no two explanations compete.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-22 · the design session (P17)
+the design: 25 rows (block "DEC-419" in `screens/words-drawn.src.py`). (1) Reading: `screen.document.reading.inpart` ("Read in part. Not yet searchable or citable: {where}."), `.inpart.going`, `.notext` (pages with no readable words), `.toolarge` ("This file is {size}, more than the {limit} your team's Civicsmith can read whole. …"; DEC-418's `.stated` serves when no limit is answered). (2) Search: `screen.finder.showmore` "Show more results"; `screen.finder.unread` (and `.one`): "{n} documents in what you searched are not read yet or can be searched only in part, so they may hold more than is found here."; `screen.finder.partial` drawn instead of "looked everywhere" when a look was partial. (3) Find in: `screen.findin.searched` "Searched {read} of {total} documents.", `.continue` "Keep searching", `.more`, `.cells.more`, `.cells.showall`. (4)(6) Every cut list (the Document's links, names, connections, themes; pickers, the inbox, the question choosers): `screen.list.showing` "Showing {shown} of {total}.", `.showing.unknown`, `screen.list.showmore` "Show more", `screen.list.narrow` "Type part of a name to narrow the list." (5) `screen.capture.supporting.kept` "{kept} of {total} supporting files kept. …" with reasons `.cap`, `.toolarge`, `.unavailable`. Wave 2: `screen.follow.meetings.read`/`.done`, `screen.export.cut`, `screen.pattern.sample`.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-419").
+owed: BOB: the keys read in their modules with these placeholders ({where}, {pages}, {size}, {limit}, {n}, {read}, {total}, {shown}, {kept}, {cap}, {body}, {source}), or a QUESTION naming any fill that differs (B485).

@@ -82,7 +82,7 @@ export const PUBLISHED_PAGES = Object.freeze({
       + ' · <a href="' + P.hrefOf(caseId, edition) + '" data-nav data-whole-case>' + cs.w("screen.published.back.to.the.whole.case") + "</a></p>";
     const stand = f.standing && typeof f.standing === "object" ? f.standing : {};
     const meets = stand.meets === true ? "yes" : stand.meets === false ? "no" : null, bar = stand.bar && typeof stand.bar === "object" ? stand.bar : {};
-    const strengths = (stand.role === "load_bearing" ? cs.w("case-grammar.load_bearing") + " · " : "") + P.gradeMark(cs, "capture", P.gradeOf(f, "capture")) + " " + P.gradeMark(cs, "connection", P.gradeOf(f, "connection"))
+    const strengths = P.strengthLine(cs, view, stand, f)
       + (meets ? " " + cs.w(meets === "yes" ? "screen.published.meets" : "screen.published.below", { capture: String(bar.capture || "–"), connection: String(bar.connection || "–") }) : "");
     if (body.state === "unavailable" || body.state === "withheld") {
       // the finding's identity and strengths, never an empty page; the reason as the plane gave it, in its words (DEC-342), and a
@@ -93,13 +93,13 @@ export const PUBLISHED_PAGES = Object.freeze({
       return head + '<article class="mk-finding" data-finding="' + cs.esc(f.bundle_id) + '" data-body="' + cs.esc(body.state) + '"><p>' + strengths + "</p>"
         + (why ? '<p class="cs-state" data-state="failed" role="alert">' + why + "</p>" : "") + listed + "</article>";
     }
-    let out = head + '<article class="mk-finding" data-finding="' + cs.esc(f.bundle_id) + '"><p class="rec mk-fbody">' + cs.esc(body.conclusion || (body.authored && body.authored.conclusion) || "")
+    let out = head + '<article class="mk-finding" data-finding="' + cs.esc(f.bundle_id) + '"><p class="rec mk-fbody">' + cs.esc(P.claimOf(view, f))
       + "</p><p>" + strengths + "</p></article>";
 
     // "What would overturn it": the falsifier as signed, and, when the member chose to publish without one, who and when
     const au = body.authored && typeof body.authored === "object" ? body.authored : {};
     const ov = au.falsifier_override && typeof au.falsifier_override === "object" ? au.falsifier_override : null;
-    const falsifier = typeof au.falsifier === "string" && au.falsifier ? '<p class="rec">' + cs.esc(au.falsifier) + "</p>" : "";
+    const said = P.falsifierOf(view, f), falsifier = said ? '<p class="rec">' + cs.esc(said) + "</p>" : "";
     const over = ov ? P.fold(cs, "screen.published.falsifier.override.summary", '<div class="cs-gap" data-gap="undetermined"><span>'
       + cs.w("screen.published.falsifier.override", { member: ov.by || "", date: { html: ov.at ? cs.date(ov.at) : "" } }) + "</span></div>"
       + '<p class="mk-note">' + cs.w("screen.published.falsifier.override.explain") + "</p>") : "";
@@ -119,7 +119,8 @@ export const PUBLISHED_PAGES = Object.freeze({
         what = '<span class="cs-card" tabindex="0" data-level="1" data-tip="' + cs.esc("<b>" + cs.w("screen.published.leg.namedonly") + "</b>" + cs.w("screen.published.leg.namedonly.explain"))
           + '">' + cs.w("screen.published.leg.namedonly") + "</span>";
       }
-      return cs.row("", "<b>" + cs.w("screen.published.leg", { n: String(i + 1) }) + "</b> · " + cs.w(P.cuts(l) ? "screen.published.leg.cuts" : "screen.published.leg.supports") + " " + what, grade);
+      const doc = P.docLine(cs, l); // C47: the document the leg rests on, by name and place
+      return cs.row("", "<b>" + cs.w("screen.published.leg", { n: String(i + 1) }) + "</b> · " + cs.w(P.cuts(l) ? "screen.published.leg.cuts" : "screen.published.leg.supports") + " " + what + (doc ? " " + doc : ""), grade);
     }).join("")), ["screen.published.each.leg.is.one.thing.explain", "screen.published.a.leg.the.team.holds.explain", "screen.published.leg.grade.explain"]);
 
     // "What rests on what": the chain from the documents up to the finding, a line for each leg

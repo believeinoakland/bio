@@ -23,7 +23,7 @@ const FOUND = ok({ ok: true, scope: { form: "project", project: "PROJ-1", captur
 const PROJECT_DOC = ok({ "bundle.md": '---\nobject_type: project\ntitle: "The Coliseum lease"\nobjective: "The Coliseum lease"\ncurrent_state: forming\n---\n\n## Session Log\n' });
 const PQ = ok({ ok: true, project: "PROJ-1", items: [{ inquiry: "INQ-1", title: "Is the city repairing reported potholes within seven days?" }], cursor: null });
 const ZONE = ok({ ok: true, count: 1, facts: [{ path: "profile.time_zone", fact: { profile: "p1", fact: "time_zone" }, status: "confirmed", governs: { value: "America/Los_Angeles", origin: "profile" } }] });
-const PLANE = { search: QUESTIONS, projectquestions: PQ, factstatus: ZONE, findin: FOUND, image: PROJECT_DOC };
+const PLANE = { memberlist: ok({ members: [{ member_id: "u-mai", handle: "Mai", status: "active" }] }), search: QUESTIONS, projectquestions: PQ, factstatus: ZONE, findin: FOUND, image: PROJECT_DOC };
 const R = "looking";
 const ALL_KINDS = { "findin-kind-people": true, "findin-kind-money": true, "findin-kind-dates": true, "findin-kind-requirements": true, "findin-kind-events": true, "findin-term": "closed" };
 const shown = async (plane = {}) => {
@@ -90,6 +90,24 @@ test("R5, R48: the member ticks what to find, with an optional term (no tick box
   const none = await open("/app/find-in/PROJ-1", { ...PLANE, projectquestions: ok({ ok: true, project: "PROJ-1", items: [], cursor: null }) });
   assert.ok(text(none).includes(word("screen.document.cite.noquestion")));
   assert.ok(!none.doc.getElementById("findin-question"));
+});
+
+test("R48 (7), C35: with no project scope the questions are listed with their project's name, so two questions alike in title are told apart; a question listed once is listed once", async () => {
+  const TWINS = ok({ hits: [{ bundle_id: "INQ-1", title: "Is the city repairing potholes?" }, { bundle_id: "INQ-2", title: "Is the city repairing potholes?" }, { bundle_id: "INQ-3", title: "Who approved the lease?" }] });
+  const projects = ok({ ok: true, projects: [{ id: "PROJ-1", name: "Potholes on Fruitvale", stage: "forming" }, { id: "PROJ-2", name: "Potholes on Foothill", stage: "forming" }, { id: "PROJ-3", name: "The Coliseum lease", stage: "forming" }] });
+  const byProject = { "PROJ-1": ["INQ-1"], "PROJ-2": ["INQ-2"], "PROJ-3": ["INQ-3"] };
+  const plane = { ...PLANE, search: TWINS, projectlist: projects, projectquestions: (req) => ok({ ok: true, project: req.query.project, items: byProject[req.query.project].map((inquiry) => ({ inquiry, title: "x" })), cursor: null }) };
+  for (const path of ["/app/find-in/sel-abc", "/app/find-in/" + SHA]) {
+    const p = await open(path, plane);
+    const options = p.doc.getElementById("findin-question").querySelectorAll("option").filter((o) => o.getAttribute("value"));
+    assert.deepEqual(options.map((o) => o.getAttribute("value")), ["INQ-1", "INQ-2", "INQ-3"], "each question once");
+    assert.deepEqual(options.map((o) => o.textContent), ["Is the city repairing potholes? · Potholes on Fruitvale", "Is the city repairing potholes? · Potholes on Foothill", "Who approved the lease? · The Coliseum lease"], "each with its project's name");
+  }
+  // Control: a project that is not read (the plane answers it no questions) leaves the question as its title alone, listed once; a project scope lists its own questions as before.
+  const lone = await open("/app/find-in/sel-abc", { ...PLANE, search: QUESTIONS, projectlist: ok({ ok: true, projects: [] }) });
+  assert.deepEqual(lone.doc.getElementById("findin-question").querySelectorAll("option").filter((o) => o.getAttribute("value")).map((o) => o.textContent), ["Is the city repairing reported potholes within seven days?"]);
+  const inProject = await open("/app/find-in/PROJ-1", PLANE);
+  assert.deepEqual(inProject.doc.getElementById("findin-question").querySelectorAll("option").map((o) => o.textContent), [word("findin.question.choose"), "Is the city repairing reported potholes within seven days?"]);
 });
 
 test("R5, R26: results by kind, each with its words as written, its document's title, its passage and Found by search; a kind with none says \"Nothing here\"", async () => {

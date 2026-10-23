@@ -32,7 +32,10 @@ CREATE TABLE IF NOT EXISTS inbox (
   pulled_document TEXT,
   -- Inline knocks only (no evidence store): the bytes themselves, base64, so a pull holds exactly what was
   -- received; content keeps the text a member reads. NULL with an evidence store, and on a row written before it.
-  content_b64 TEXT
+  content_b64 TEXT,
+  -- R27: the file name and media type the sender stated, bounded and never trusted; NULL when none was stated.
+  file_name   TEXT,
+  media_type  TEXT
 );
 CREATE INDEX IF NOT EXISTS inbox_status ON inbox(status);
 
@@ -87,6 +90,8 @@ export const DOORBELL_ADDITIVE_COLUMNS = [
   ["inbox", "pulled_document", "TEXT"],              // R13: the document a pull answered, answered again to a repeat
   ["inbox", "content_b64", "TEXT"],                  // R13: an inline knock's bytes as received
   ["inbox", "resolve_reason", "TEXT"],               // R3 (DEC-88): the member's reason for a status change
+  ["inbox", "file_name", "TEXT"],                    // R27: the file name the sender stated
+  ["inbox", "media_type", "TEXT"],                   // R27: the media type the sender stated
 ];
 
 /* R25 (record-core R21): the six tables, every one exempt from purge: operational facts about this instance (the inbox,

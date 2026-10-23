@@ -183,47 +183,95 @@ async function openSession(binding) {
   return { sessionId, ws: up.webSocket };
 }
 
-/** D-529 — the bytes of every response the render LOADED, as the browser has them.
+/* R68 — HOW MANY BODIES ARE ASKED FOR AT ONCE. A CHOICE, not a measurement: a handful, so a page of many slow
+   sub-resources costs about its slowest few and not their sum, and the browser is not asked for hundreds of
+   buffers in one breath. */
+export const BODY_CONCURRENCY = 6;
+
+/** D-529, R25, R68 — the bytes of every response the render LOADED, as the browser has them.
  *  `Network.getResponseBody` per completed request, BOUNDED in count, bytes and time by
  *  subresource capture's own ceilings and `BODY_PHASE_MS`. Mutates each entry to carry
  *  `body_base64` (exact bytes), `body_text` (the browser's decoding of a text body, which
  *  is what CDP returns for text) or `body_unavailable` (the browser's or the bound's own
  *  sentence). The driver hashes NOTHING: the plane hashes what it keeps (`render.mjs`
- *  `keepRenderBodies`), so the digest on the record is never the renderer's word. */
+ *  `keepRenderBodies`), so the digest on the record is never the renderer's word.
+ *
+ *  R68: the collector takes a body AS ITS LOAD COMPLETES (`offer`, from the load's own event), up to
+ *  BODY_CONCURRENCY at a time, so the bodies are collected during the load and not one after another once the
+ *  page is quiet. `finish` offers what was not offered (a redirect hop, which is closed as it is met), waits for
+ *  the bodies still outstanding, and ends the phase at the least of BODY_PHASE_MS from the call and `until`, the
+ *  render's own bound: a body not collected by then is `body_unavailable` saying so, and never filled later. */
+function bodyCollector(conn, sessionId, { now, until }) {
+  const queue = [], seen = new Set(), active = new Set(), abandoned = new WeakSet();
+  let taken = 0, spent = 0, stopped = false, notify = null;
+  const pump = () => {
+    while (!stopped && queue.length && active.size < BODY_CONCURRENCY) {
+      /* The ceilings are held in the order the loads completed: a slot is reserved for a body in flight, and a
+         later body takes the slot of one that failed. */
+      if (taken + active.size >= SUBRESOURCE_CAP) {
+        if (active.size === 0) for (const e of queue.splice(0)) e.body_unavailable = `past the ${SUBRESOURCE_CAP}-body ceiling`;
+        break;
+      }
+      if (spent >= SUBRESOURCE_BUDGET) {
+        for (const e of queue.splice(0)) e.body_unavailable = word("browserrender.body_unavailable.byte_body_budget", { subresource_budget: String(SUBRESOURCE_BUDGET) });
+        break;
+      }
+      const left = until - now();
+      if (left <= 0) break;
+      const e = queue.shift();
+      active.add(e);
+      conn.send("Network.getResponseBody", { requestId: e.rid }, sessionId, Math.min(BODY_CALL_MS, left)).then((b) => {
+        if (abandoned.has(e)) return;
+        if (typeof b.body !== "string") { e.body_unavailable = word("browserrender.body_unavailable.browser_answered_body"); return; }
+        /* The bound is on what the PLANE will keep, so it is taken on the decoded size;
+           base64 is 4/3 of it and a text body is at least its character count. */
+        const size = b.base64Encoded ? Math.floor(b.body.length * 3 / 4) : b.body.length;
+        if (size > SUBRESOURCE_MAX) { e.body_unavailable = word("browserrender.body_unavailable.body_bytes_over", { size: String(size), subresource_max: String(SUBRESOURCE_MAX) }); return; }
+        if (spent >= SUBRESOURCE_BUDGET) { e.body_unavailable = word("browserrender.body_unavailable.byte_body_budget", { subresource_budget: String(SUBRESOURCE_BUDGET) }); return; }
+        if (b.base64Encoded) e.body_base64 = b.body; else e.body_text = b.body;
+        taken++; spent += size;
+      }, (err) => {
+        if (abandoned.has(e)) return;
+        /* The browser REFUSES bodies it no longer holds (evicted, or a resource type it
+           never buffers). Its own words are the reason, never ours. */
+        e.body_unavailable = word("browserrender.body_unavailable.browser_would_give", { err: String(String((err && err.message) || err).slice(0, 200)) });
+      }).finally(() => { active.delete(e); pump(); if (notify) notify(); });
+    }
+  };
+  const offer = (e) => {
+    if (seen.has(e) || e.outcome !== "completed") return;
+    seen.add(e);
+    if (e.redirect) { e.body_unavailable = word("browserrender.body_unavailable.redirect_hop_whose"); return; }
+    if (!e.rid) { e.body_unavailable = word("browserrender.body_unavailable.browser_gave_request"); return; }
+    queue.push(e);
+    pump();
+  };
+  return {
+    offer,
+    /** Ends the phase; answers once every entry carries a body or the reason it has none. */
+    async finish(entries) {
+      for (const e of entries) offer(e);
+      const phaseEnd = Math.min(now() + BODY_PHASE_MS, until);
+      while ((queue.length || active.size) && now() < phaseEnd) {
+        pump();
+        if (queue.length || active.size) await new Promise((r) => { notify = r; setTimeout(r, 25); });
+      }
+      stopped = true; notify = null;
+      const sentence = phaseEnd === until
+        ? word("browserrender.text.render_reserved_bound")
+        : word("browserrender.text.ms_body_collection", { body_phase_ms: String(BODY_PHASE_MS) });
+      for (const e of queue.splice(0)) e.body_unavailable = sentence;
+      for (const e of active) { abandoned.add(e); e.body_unavailable = sentence; }
+    },
+    stop() { stopped = true; queue.length = 0; },
+  };
+}
+
 export async function collectBodies(conn, sessionId, entries, { now = () => Date.now(), until = Infinity } = {}) {
   /* CONDUCT #22 (c22-batch29), composing D-529 with D-520: D-520 makes the render honour its
      navigation bound, so the navigation half of the reservation is no longer slack this phase
      can assume; the phase also ends at `until`, the render's own `navMs + timeoutMs`. */
-  const deadline = Math.min(now() + BODY_PHASE_MS, until);
-  let taken = 0, spent = 0;
-  for (const e of entries) {
-    if (e.outcome !== "completed") continue;
-    if (e.redirect) { e.body_unavailable = word("browserrender.body_unavailable.redirect_hop_whose"); continue; }
-    if (!e.rid) { e.body_unavailable = word("browserrender.body_unavailable.browser_gave_request"); continue; }
-    if (taken >= SUBRESOURCE_CAP) { e.body_unavailable = `past the ${SUBRESOURCE_CAP}-body ceiling`; continue; }
-    if (spent >= SUBRESOURCE_BUDGET) { e.body_unavailable = word("browserrender.body_unavailable.byte_body_budget", { subresource_budget: String(SUBRESOURCE_BUDGET) }); continue; }
-    const left = deadline - now();
-    if (left <= 0) {
-      e.body_unavailable = deadline === until
-        ? word("browserrender.text.render_reserved_bound")
-        : word("browserrender.text.ms_body_collection", { body_phase_ms: String(BODY_PHASE_MS) });
-      continue;
-    }
-    try {
-      const b = await conn.send("Network.getResponseBody", { requestId: e.rid }, sessionId, Math.min(BODY_CALL_MS, left));
-      if (typeof b.body !== "string") { e.body_unavailable = word("browserrender.body_unavailable.browser_answered_body"); continue; }
-      /* The bound is on what the PLANE will keep, so it is taken on the decoded size;
-         base64 is 4/3 of it and a text body is at least its character count. */
-      const size = b.base64Encoded ? Math.floor(b.body.length * 3 / 4) : b.body.length;
-      if (size > SUBRESOURCE_MAX) { e.body_unavailable = word("browserrender.body_unavailable.body_bytes_over", { size: String(size), subresource_max: String(SUBRESOURCE_MAX) }); continue; }
-      if (b.base64Encoded) e.body_base64 = b.body; else e.body_text = b.body;
-      taken++; spent += size;
-    } catch (err) {
-      /* The browser REFUSES bodies it no longer holds (evicted, or a resource type it
-         never buffers). Its own words are the reason, never ours. */
-      e.body_unavailable = word("browserrender.body_unavailable.browser_would_give", { err: String(String((err && err.message) || err).slice(0, 200)) });
-    }
-  }
+  await bodyCollector(conn, sessionId, { now, until }).finish(entries);
 }
 
 /* D-520: the session opening, inside the navigation bound. `binding.fetch` takes no
@@ -329,9 +377,11 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
   /* R64: an address the hold would refuse is refused before a browser is spent on it. */
   const refusedAddress = requestRefusal(String(asked.url || ""), ownHosts);
   if (refusedAddress) return { ok: false, error: localize("capture-sources.browserrender.the_browser_could_not_navigate", "the browser could not navigate to {String}: {refusedSentence}", { String: String(String(asked.url || "")), refusedSentence: String(refusedSentence(String(asked.url || ""), refusedAddress)) }) };
-  let sess = null, conn = null, targetId = null;
+  let sess = null, conn = null, targetId = null, collector = null;
   const started = now();
   const navDeadline = started + navMs;
+  /* The whole render ends inside this, the figure reserved (R20). */
+  const overall = started + navMs + timeoutMs;
   /* What is left of a phase, for one command. A phase already spent fails the render BY
      NAME rather than sending a command with a zero or negative bound. */
   const left = (deadline, phase) => {
@@ -406,6 +456,9 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
     try { await conn.send("Page.enable", {}, sessionId, navLeft()); } catch { /* the load event is one of two wait conditions; the other still works */ }
     try { await conn.send("Debugger.enable", {}, sessionId, navLeft()); sawDebugger = true; } catch { /* scripts -> null */ }
 
+    /* R68: a body is taken as its load completes (`offer`, below), not after the page is quiet. */
+    collector = bodyCollector(conn, sessionId, { now, until: overall });
+    let loadAt = null;
     let inflight = 0, lastQuietAt = null, loadFired = false, mainFrameId = null, mainStatus = null;
     let quietYoungSince = null;
     /* R64: requests the hold refused before the network ledger met them, by network id; and the documents refused, so
@@ -494,7 +547,7 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
         }
         case "Network.loadingFinished": {
           const r = requests.get(p.requestId);
-          if (r && r.outcome === "pending") { r.outcome = "completed"; inflight--; lastQuietAt = inflight === 0 ? now() : null; }
+          if (r && r.outcome === "pending") { r.outcome = "completed"; inflight--; lastQuietAt = inflight === 0 ? now() : null; collector.offer(r); }
           break;
         }
         case "Network.loadingFailed": {
@@ -505,7 +558,7 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
           settle(r, p.blockedReason ? "blocked" : "failed", p.blockedReason ? String(p.blockedReason) : null);
           break;
         }
-        case "Page.loadEventFired": loadFired = true; break;
+        case "Page.loadEventFired": loadFired = true; loadAt = now(); break;
         case "Debugger.scriptParsed":
           /* An INLINE script has no url. It is the page's own bytes, already in
              the shell we hold, and naming it would invent an origin; the set
@@ -523,6 +576,7 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
        failed render and says which address and why — it is never a render of
        `about:blank` reported as the page. A navigation the hold refused (R64), at
        the address asked or a redirect hop of it, names the address refused. */
+    const navigatedAt = now();
     const nav = await conn.send("Page.navigate", { url: String(asked.url || "") }, sessionId, navLeft());
     if (nav.errorText) {
       const doc = refusedDocuments.find((d) => d.frameId && d.frameId === nav.frameId) || refusedDocuments[0];
@@ -541,7 +595,6 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
     /* And the whole render ends inside `navMs + timeoutMs`, the figure reserved: the wait
        gives up to SERIALISE_MS of its end to the serialisation below only when the
        navigation used so much of its own bound that the two would not otherwise fit. */
-    const overall = started + navMs + timeoutMs;
     const deadline = Math.min(now() + timeoutMs, overall - SERIALISE_MS);
     let fired = null;
     /* R26: the requests still open that are older than N, at a moment. */
@@ -563,6 +616,7 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
       await new Promise((r) => setTimeout(r, 25));
     }
     if (!fired) fired = "timeout";
+    const waitEndedAt = now();
     /* R26: N, and the requests the wait did not wait for (open and older than N when it
        ended), whichever rule ended it. Absent while the rule is off. */
     const open = longLived();
@@ -590,7 +644,9 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
 
     /* D-529: AFTER the document is taken, so collecting bodies cannot change what the
        page showed, and before the session closes, which is when the browser drops them. */
-    if (sawNetwork) await collectBodies(conn, sessionId, [...requests.values()], { now, until: overall });
+    const bodiesFrom = now();
+    if (sawNetwork) await collector.finish([...requests.values()]);
+    const bodiesMs = now() - bodiesFrom;
 
     const elapsed = now() - started;
     return {
@@ -606,6 +662,14 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
       timezone: envOk.timezone ? asked.timezone : null,
       wait: { condition: asked.wait || null, fired, ...(longLivedReport ? { long_lived: longLivedReport } : {}) },
       elapsed_ms: elapsed,
+      /* R68: the whole milliseconds each phase took: the session (opening it and every setup command up to the
+         navigation), the load (the navigation to the load event, or to the end of the wait when it never fired),
+         the quiet wait (the load event to the end of the wait; `null` when the load event never fired) and the
+         bodies (what the render waited for them after taking the document). */
+      phases_ms: { session: Math.max(0, Math.round(navigatedAt - started)),
+                   load: Math.max(0, Math.round((loadAt ?? waitEndedAt) - navigatedAt)),
+                   quiet: loadAt === null ? null : Math.max(0, Math.round(waitEndedAt - loadAt)),
+                   bodies: Math.max(0, Math.round(bodiesMs)) },
       navigated_to: navigatedTo,
       status: mainStatus,
       /* `sha256` IS NEVER SET HERE, AND THAT IS A STATEMENT. CORRECTED by D-529 (BOB #33,
@@ -633,6 +697,7 @@ export async function renderWithBinding(binding, req, { now = () => Date.now() }
   } catch (e) {
     return { ok: false, error: String((e && e.message) || e) };
   } finally {
+    collector?.stop();
     /* THE SESSION IS CLOSED ON EVERY PATH, INCLUDING THE FAILING ONE. A browser
        session left open spends the instance's allowance for as long as the
        platform keeps it, and the allowance is the fence BOB #32 item 3 rests on. */

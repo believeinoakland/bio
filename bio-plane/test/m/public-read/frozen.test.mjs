@@ -52,10 +52,10 @@ test("R38 a finding two cases pin answers one entry for each, in case order, eac
   assert.deepEqual([b.strength.capture.grade, b.strength.connection.grade, b.strength.testimony.grade], ["D", "A", "B"],
                    "the case that froze a testimony axis carries it");
   assert.deepEqual([a.strength_from, b.strength_from], ["case_document", "case_document"]);
-  assert.deepEqual([a.signed_by.member, b.signed_by.member], ["olive", "bo"], "each case document's own signer");
-  assert.deepEqual([a.delivered_by, b.delivered_by], [{ kind: "member", member: "olive" }, { kind: "member", member: "bo" }],
+  assert.deepEqual([a.signed_by.member, b.signed_by.member], ["h_olive", "h_bo"], "each case document's own signer, named by her handle (R41)");
+  assert.deepEqual([a.delivered_by, b.delivered_by], [{ kind: "member", member: "h_olive" }, { kind: "member", member: "h_bo" }],
                    "the deliverer beside the signer, a second fact (R12)");
-  assert.deepEqual([a.finding_signed_by.member, b.finding_signed_by.member], ["olive", "olive"], "the finding's own signer");
+  assert.deepEqual([a.finding_signed_by.member, b.finding_signed_by.member], ["h_olive", "h_olive"], "the finding's own signer");
   assert.equal(typeof a.signed_by.key_b64, "string");
   assert.deepEqual([a.signed_at, a.published_at, b.signed_at, b.published_at].map((x) => typeof x), ["string", "string", "string", "string"]);
   assert.deepEqual([a.withdrawn, b.withdrawn, a.withheld, b.withheld], [null, null, null, null]);
@@ -140,7 +140,7 @@ test("R38 a court order withholding an edition whole lists it with `withheld` an
   assert.deepEqual([a.case_id, a.withheld.whole, a.withheld.document, Array.isArray(a.withheld.orders)], [C1, true, true, true]);
   assert.deepEqual([a.strength, a.strength_from, a.signed_by, a.delivered_by], [null, null, null, null]);
   assert.deepEqual([a.finding.edition, a.pinned], [1, true], "its identity and pin check stay: both are public");
-  assert.deepEqual([b.case_id, b.withheld, b.strength.capture.grade, b.signed_by.member], [C2, null, "D", "bo"]);
+  assert.deepEqual([b.case_id, b.withheld, b.strength.capture.grade, b.signed_by.member], [C2, null, "D", "h_bo"]);
   assert.equal(JSON.stringify(a).includes('"B"'), false, "nothing of the withheld pair is served");
 });
 
@@ -184,7 +184,7 @@ test("R38 a pre-/2 case document, which states no pair of its own, is read from 
     strength: [{ axis: "capture", state: "graded", grade: "A" }, { axis: "connection", state: "graded", grade: "B" }] }).ok, true);
   const [a] = w.read("publishedfrozen", { id: F }).cases;
   assert.deepEqual([a.strength_from, a.strength.capture.grade, a.strength.connection.grade], ["member_bytes", "A", "B"]);
-  assert.equal(a.signed_by.member, "olive", "the case document's signer is stated apart from the finding's");
+  assert.equal(a.signed_by.member, "h_olive", "the case document's signer is stated apart from the finding's");
 });
 
 test("R38 the four sentences it says are read from the word table by key, and each key is held", () => {

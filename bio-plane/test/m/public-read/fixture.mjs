@@ -159,7 +159,7 @@ function withRead(w, opts = {}) {
   /* R36: project-roster's tables, as the host's boot makes them, so a project's matter stake reads. */
   w.roster = projectRosterOf(w.host);
   w.roster.migrate();
-  w.pr = publicReadOf(w.host, { publication: w.p, docket: w.docket });
+  w.pr = publicReadOf(w.host, { publication: w.p, docket: w.docket, ...(opts.members ? { members: opts.members } : {}) });
   w.stamps = stampsOn(w);
   w.read = (name, query = {}) => {
     const url = new URL(`http://do/${name}`);

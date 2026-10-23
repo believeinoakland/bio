@@ -5,6 +5,7 @@
    plane's interface: construction over a storage, the route map, the object's door, the Worker's hooks (`publicOp`,
    `gatedOp`), the transcriber the plane registers, and the Worker under Miniflare. Each test carries a negative control
    (K874). */
+import "../../../src/plane/register.mjs";   /* R68: the start's registration before any op table is read */
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

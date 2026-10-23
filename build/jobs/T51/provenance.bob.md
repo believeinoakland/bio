@@ -1,6 +1,6 @@
 # BOB to provenance (T51)
 
-**Read** · handled J3
+**Read** · handled J9
 
 ## B1 · START
 
@@ -50,3 +50,53 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio provenance tranche/T51 job/T51/provenance`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B4 · ANSWER · re J4
+
+ANSWER J4 (K4210): your ids R64-R69 stand. Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B5 · CHANGE
+
+CHANGE (K4259): PROVENANCE, depth 2 (BOB #236 is depth 1). Your branch is at the tranche's tip. Model: claude-sonnet-5-5, medium effort (one model up if it blocks on tests).
+Why: `declareorigin` writes `origin_declarations` (`schema.mjs:108-115`) but only the in-process `originOf` (latest row) reads it; no op lists a document's declared origins (screens-inquiry R108 is session-only). A screen of this round needs it (screens-inquiry J11's report, confirmed by BOB's reading worker against the code, K4259). Requirement lines (amended or a NEW R, next free id) in your COMPLETE for BOB.
+Entries:
+1. A read op `origins {bundleId}` answering every declaration in `seq` order `{seq, system, by, at}`, gated by sight; refusals `NO_SUCH_BUNDLE` and `ORIGIN_NOT_A_DOCUMENT` as R64; its `DECLARED_OPS` row (`weight: "read"`). Test: two declarations read back in order; control: an unseen document refused as an absent one.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio provenance tranche/T51 job/T51/provenance`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B6 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/provenance tranche/T51 && git branch -m job/T51/provenance stale/provenance-local && git checkout -b job/T51/provenance origin/job/T51/provenance`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · PROVENANCE #26 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #240 is depth 1; fix round 2, wave 3, K4323)
+
+Mail with `--module provenance`; record `build/jobs/T51/provenance.md`. Model claude-sonnet-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678).
+
+You are the **module job** (P8, mechanics §6) for `provenance`. Your diff touches only that module's paths and tests and your record. This is fix round 2 of T51 (`build/plan/fix-round-2-T51.md`); merge `tranche/T51` into your branch first. Nothing found here waits for the next tranche (K3915, P19). Every requirement you meet is named by a test seen failing first, with a negative control; propose any requirement line in your COMPLETE for BOB to write (BOB writes `build/requirements/`). Run your suite, then `build/plan/impact.mjs tranche/T51 HEAD`'s users; format, architecture, coverage, words and ownership clean (reds also on the tranche tip are named, not fixed). Declare every census op you own (K4208).
+
+**Your causes:**
+1. **C14's bound (PERF, reported by CAUSE-CAPTURE-T51 J2, K4323).** `captureGrade` reads once per capture; capture's held-captures read calls it once per distinct row, so a long list costs one read per row. Requirement (new line, proposed by you): a batch `captureGrades(shas)` answers every capture's grade in one read per batch, the same grade `captureGrade` answers for each. Test: equal answers to per-capture calls over a mixed set, and a read count of one per batch; control: an unknown sha answers as `captureGrade` does. capture adopting it is a later CHANGE; REPORT when merged.
+
+## B7 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/provenance tranche/T51 && git branch -m job/T51/provenance stale/provenance-local && git checkout -b job/T51/provenance origin/job/T51/provenance`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · PROVENANCE #27 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #247 is depth 1; fix round 4b, job 2 of 12; K4487)
+
+Mail with `--module provenance`; record `build/jobs/T51/provenance.md`. Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). You are the module job (P8, mechanics §6) for `provenance`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first.
+
+**Why this round.** Bob asked (K4483): "Are there other file extraction situations where only part of the file is read at a time, possibly causing it to be lost and abandoned the why big PDFs were? We should identify and fix any similar conditions." Read in full: `build/plan/fix-round-4b-T51.md` (the plan: section 1's decisions D1-D6 bind you, section 2's table gives the merge order and seam owners) and, in `build/plan/audit-partial-reads-T51.md`, "Root facts" and every finding your entry names (its file:line evidence is your starting point, never a substitute for reading the code). Then your requirements (both parts; your new id is written there, marked not yet met), the used services your entry touches, and your code.
+
+**Rules** (fix round 4 §0, `build/plan/fix-round-4-T51.md`; K4426-K4428): (1) root cause stated with file:line, else step 0 is a diagnosis posted as a QUESTION before any fix; (2) why the tests missed it, and the test-gap fix; (3) a failing-first test on the case named, through the real entry path (press the act or call the op, never the done function), seen red in your record, then green; (4) where the platform matters (128 MB object, `waitUntil` cut ~30 s after the response, 25 s door bound), a local workerd check with real sizes, numbers in your record; no deploy. R-SEAM: the seam owner's test runs the whole path with the real merged providers; a provider tests the same case at its interface; a seam test needing an unmerged provider is written first and stays red by name. A lower module never imports plane: it registers owed work through the hook plane hands it at composition (as acquisition's `keepLater` does today). R-NOTMET: no "not met", "deferred", REPORT or open QUESTION at COMPLETE: name the smallest thing you need and ask BOB now. R-OLD: stored data is "new data only" or has a repair. Wording waits for T52 (K4269): a new sentence uses the nearest held row as stand-in (a drawn-screen module never adds `localize`), the row owed named in your record. Declare every census op you own. Bob's focus: an alpha release deployed as efficiently as possible: do what the entry needs, nothing more.
+
+Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio provenance tranche/T51 job/T51/provenance`. COMPLETE: what changed (file:line), the failing-first tests red then green, measurements, suite counts, requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+**Your entry (2).** (D1). **R72**: a multipart capture's whole sha resolves to its bundle by `homeOf` and by the `register` table (`whole` row); the repair back-fills old bundles once. Failing-first: the common fixture, `homeOf(whole)` null before, the bundle after; a bundle's verification unchanged; the repair on a bundle promoted before the change.
+
+## B8 · RESUME
+
+RESUME (BOB #247 backstop): your record shows WORKING and nothing pushed for 23 minutes while your session is idle. Finish your step, post COMPLETE (or a QUESTION naming the smallest thing you need).

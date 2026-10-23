@@ -1,5 +1,5 @@
 /* host-governor — the per-host request governor (layer 3; D-95). Requirements: build/requirements/host-governor.md
-   (R1–R28). Extracted from `legacy-store` (store.mjs, schema.mjs) and `legacy-index` (index.mjs) in T4 (T4-1, N25).
+   (R1–R30). Extracted from `legacy-store` (store.mjs, schema.mjs) and `legacy-index` (index.mjs) in T4 (T4-1, N25).
 
    Our APPETITE is a configured constant because it is ours. Their CAPACITY is discovered by being refused and
    recorded, the pattern capture_limits proved. The governor lives in the Durable Object because the object
@@ -85,6 +85,12 @@ export class HostGovernor {
     return r;
   }
 
+  /* R29: the state R2 would create for a host not yet met, held in memory only: a peek decides on it and writes none. */
+  #unmet(host, now) {
+    return { host, appetite_per_min: null, tokens: GOVERNOR.burstTokens, refilled_at: now, last_grant_at: 0,
+             cooloff_until: 0, refusals: 0, last_refusal_at: null, last_refusal_status: null };
+  }
+
   /** This module's table, at every boot, idempotent; and its purge declaration (R24), once: exempt, because a
    *  cool-off is a counterparty's refusal and a purged instance still honours it. Run by the host inside its boot. */
   migrate() {
@@ -107,18 +113,22 @@ export class HostGovernor {
       ?? GOVERNOR.defaultAppetitePerMin;
   }
 
-  /** R1–R6. Never throws on its own logic. */
+  /** R1–R6, R29. Never throws on its own logic. `{host, peek: true}` (the one option this op accepts besides `host`;
+   *  declared for the census, K4208) answers exactly as the booking would at this instant and writes nothing: no
+   *  state for a host not yet met (R2's full burst is answered), no token, no grant, no refusal counted. Only
+   *  `peek === true` peeks. */
   governorAdmit(q) {
     const host = hostOf(q);
     if (!host) return { admitted: false, reason: "no host named" };
+    const peek = q.peek === true;
     const now = this.now();
     const at = new Date(now).toISOString();
-    const r = this.#rowOrNew(host, now);
+    const r = peek ? (this.#row(host) ?? this.#unmet(host, now)) : this.#rowOrNew(host, now);
     const appetite = this.#appetite(r);
 
     /* R4, R22: a cool-off overrides the bucket entirely, whatever appetite is configured. */
     if (r.cooloff_until > now) {
-      this.sql.exec(`UPDATE host_governor SET refused_total = refused_total + 1, updated_at = ? WHERE host = ?`, at, host);
+      if (!peek) this.sql.exec(`UPDATE host_governor SET refused_total = refused_total + 1, updated_at = ? WHERE host = ?`, at, host);
       return { admitted: false, reason: "cooling_off", retry_in_ms: r.cooloff_until - now,
                refusals: r.refusals, last_refusal_status: r.last_refusal_status };
     }
@@ -128,8 +138,9 @@ export class HostGovernor {
     const tokens = Math.min(GOVERNOR.burstTokens, r.tokens + (Math.max(0, now - r.refilled_at) / 60_000) * appetite);
     if (tokens < 1) {
       const retryIn = Math.ceil(((1 - tokens) / appetite) * 60_000);
-      this.sql.exec(`UPDATE host_governor SET tokens = ?, refilled_at = ?, refused_total = refused_total + 1, updated_at = ? WHERE host = ?`,
-        tokens, now, at, host);
+      if (!peek)
+        this.sql.exec(`UPDATE host_governor SET tokens = ?, refilled_at = ?, refused_total = refused_total + 1, updated_at = ? WHERE host = ?`,
+          tokens, now, at, host);
       return { admitted: false, reason: "appetite", retry_in_ms: retryIn };
     }
 
@@ -140,9 +151,17 @@ export class HostGovernor {
     const gapWanted = (60_000 / appetite) * j;
     const sinceLast = now - (r.last_grant_at || 0);
     const wait = Math.max(0, Math.round(gapWanted - sinceLast));
-    this.sql.exec(
-      `UPDATE host_governor SET tokens = ?, refilled_at = ?, last_grant_at = ?, granted = granted + 1, updated_at = ? WHERE host = ?`,
-      tokens - 1, now, now + wait, at, host);
+    const cap = q.maxWaitMs == null || q.maxWaitMs === "" ? NaN : Number(q.maxWaitMs);
+    if (Number.isFinite(cap) && wait > Math.max(0, cap)) {
+      if (!peek)
+        this.sql.exec(`UPDATE host_governor SET tokens = ?, refilled_at = ?, refused_total = refused_total + 1, updated_at = ? WHERE host = ?`,
+          tokens, now, at, host);
+      return { admitted: false, reason: "appetite", retry_in_ms: wait };
+    }
+    if (!peek)
+      this.sql.exec(
+        `UPDATE host_governor SET tokens = ?, refilled_at = ?, last_grant_at = ?, granted = granted + 1, updated_at = ? WHERE host = ?`,
+        tokens - 1, now, now + wait, at, host);
     return { admitted: true, wait_ms: wait, appetite_per_min: appetite };
   }
 
@@ -288,14 +307,17 @@ export function governorOverStub(stub) {
   return { admit: (q) => ask("governoradmit", q), report: (q) => ask("governorreport", q) };
 }
 
-/** R15–R17. Every governed outbound fetch asks for admission first, waits the jittered gap the governor names,
+/** R30: the longest wait inside a request that `governedFetch` sleeps, R6's gap included (8 s: the whole gap at the default appetite, max 7.5 s); a longer one is refused. */
+export const MAX_WAIT_MS = 8000;
+
+/** R15–R17, R30. Every governed outbound fetch asks for admission first, waits the jittered gap the governor names,
  *  fetches with the agent the caller supplied, and reports the outcome back so the host's capacity is learned rather
  *  than guessed. Refusal by the governor is a named answer, not an exception. An UNREACHABLE governor never blocks
  *  the fetch: this is politeness, not coordination, and if the store is down the op fails by itself anyway. MEASURED
  *  case in point, 2026-07-30 on the deployed 0.46.0: eleven captures of one municipal site from Workers egress, one
  *  403 on the only cold back-to-back pair, ten paced or warmed requests admitted. */
 export async function governedFetch(target, { userAgent = null, fetch: doFetch = globalThis.fetch, governor = null,
-                                              now = () => Date.now(),
+                                              now = () => Date.now(), maxWaitMs = MAX_WAIT_MS,
                                               sleep = (ms) => new Promise((s) => setTimeout(s, ms)) } = {}) {
   let host = null;
   try { host = new URL(target).host || null; } catch { /* an unreadable target is fetched ungoverned (R17) */ }
@@ -303,23 +325,30 @@ export async function governedFetch(target, { userAgent = null, fetch: doFetch =
   let waitMs = 0;
   if (gov) {
     try {
-      const g = await gov.admit({ host });
+      const g = await gov.admit({ host, maxWaitMs });
       if (g && g.admitted === false)
         return { refusedByGovernor: true, reason: g.reason || "governed",
                  retry_in_ms: g.retry_in_ms || 0, last_refusal_status: g.last_refusal_status ?? null };
       waitMs = (g && Number(g.wait_ms)) || 0;
+      /* R30: a governor that did not honour `maxWaitMs` is not slept out; refused as R5 refuses (its grant stands). */
+      if (waitMs > maxWaitMs)
+        return { refusedByGovernor: true, reason: "appetite", retry_in_ms: waitMs, last_refusal_status: null };
     } catch { /* ungoverned is better than unfetched; see above */ }
   }
   if (waitMs > 0) await sleep(waitMs);
   const headers = typeof userAgent === "string" && userAgent !== "" ? { "user-agent": userAgent } : {};
   const res = await doFetch(target, { redirect: "follow", headers });
+  let retryIn = null;
   if (gov && typeof gov.report === "function") {
     try {
       const ra = res && res.headers && typeof res.headers.get === "function" ? res.headers.get("retry-after") : null;
-      await gov.report({ host, status: res.status, retry_after_ms: retryAfterMs(ra, now()) });
+      const rec = await gov.report({ host, status: res.status, retry_after_ms: retryAfterMs(ra, now()) });
+      /* R30: a status R9 holds against (403, 429, 503) comes back with the cool-off it recorded, so the caller can say
+         when to try again without a second request. */
+      if (rec && rec.recorded === true && Number.isFinite(rec.cooloff_ms)) retryIn = rec.cooloff_ms;
     } catch { /* an unrecorded outcome is not a failed fetch */ }
   }
-  return { res };
+  return retryIn === null ? { res } : { res, retry_in_ms: retryIn };
 }
 
 /* The Worker's side of a store call when a caller of `governorOp` hands no relay: `{answered, result}`, a body that is

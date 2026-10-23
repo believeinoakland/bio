@@ -1,4 +1,4 @@
-/* screens-entry R6 (and R8–R11, R14–R20, R22, R23): `setup`, "Set up your team's Civicsmith", in the setup frame at
+/* screens-entry R6 (and R8–R11, R14–R20, R22, R23, R26, R30, R33): `setup`, "Set up your team's Civicsmith", in the setup frame at
    `/app/setup` (the shell forwards `/#boot=` here and hands the one-time password as `view.fragment.boot`, taken from
    the address on load). Drawn as the design draws it (R22, DEC-279): numbered parts that open and close (`.cs-part`),
    each with its name, one line of what it is for and its state; choices (`.cs-choice`) that open only what they need;
@@ -40,6 +40,8 @@ export const setup = {
       groupkey: { op: "groupkeystate" },
       court: { op: "courtnotice" },
       hosting: { op: "hostingaccess" },
+      // R33: the scanner's true state (signatures held or not); drawn only while the scanner part is built in
+      scan: { op: "scanstatus" },
       members: { op: "memberlist" },
       catalogue: { op: "securitytoolcatalogue" },
       tools: { op: "securitytools", empty: (v) => !(v && Array.isArray(v.tools) && v.tools.length) },
@@ -92,6 +94,40 @@ export const setup = {
     // `screen.setup.state.skipped`, explained by `.skipped.help`) while the page is open
     const skip = (key) => `<div class="mk-acts"><label class="cs-btn" data-tone="quiet" data-skip="${key}" tabindex="0" data-level="2" data-tip="${E(W("setup.skip_does"))}">`
       + `<input type="checkbox" class="sr" id="su-skip-${key}"${ui.skipped && ui.skipped[key] ? " checked" : ""}>${W("setup.skip")}</label></div>`;
+
+    // R26: the file the team puts on its website, drawn from the answer `instance-setup` gives (`domain_claim.well_known`:
+    // `{path, body}`, or null) and never built here; the steps that need its path only when it is answered
+    const domainFile = () => {
+      const claim = id.domain_claim;
+      if (!claim || typeof claim !== "object") return "";
+      const F = "screen.domainfile.";
+      const wk = claim.well_known && typeof claim.well_known === "object" && typeof claim.well_known.path === "string" && claim.well_known.body !== undefined ? claim.well_known : null;
+      const segs = wk ? wk.path.split("/").filter(Boolean) : [];
+      const name = segs.at(-1) || "", folder = segs.length > 1 ? segs[0] : "";
+      const text = wk ? (typeof wk.body === "string" ? wk.body : JSON.stringify(wk.body, null, 2)) + "\n" : "";
+      const address = wk && claim.domain ? "https://" + claim.domain + wk.path : "";
+      const steps = [["step1"], ["step2", folder && { folder: { html: `<code>${E(folder)}</code>` } }], ["step3"], ["step4", address && { address: { html: `<code>${E(address)}</code>` } }], ["step5"]]
+        .filter(([k, fills]) => (k !== "step2" && k !== "step4") || fills);
+      const verdict = claim.latest && typeof claim.latest.verdict === "string" ? claim.latest.verdict : "";
+      const gap = (kind) => `<div class="cs-gap" data-gap="${kind === "undetermined" ? "undetermined" : "refused"}" data-state="${kind}"><span>${W(F + "refused." + kind)}</span></div>`;
+      return (["absent", "mismatched", "undetermined"].includes(verdict) ? gap(verdict) : "")
+        + `<details class="mk-details" data-domainfile><summary>${W(F + "summary")}</summary><p class="mk-small">${W(F + "what")}</p>`
+        + (wk ? `<div class="cs-sheet"><b class="mk-small">${E(name)}</b><pre class="mk-small" data-domainfile-text>${E(text)}</pre><div class="mk-acts">${String(cs.save(name, text, { label: F + "download" }) || "")}${String(cs.copy(text, { label: "shell.copy" }) || "")}</div></div>` : "")
+        + `<p class="mk-small">${W(F + "steps")}</p><ol class="mk-small">${steps.map(([k, fills]) => `<li>${W(F + k, fills || undefined)}</li>`).join("")}</ol>`
+        + `<p class="mk-small">${W(F + "daily")}</p>`
+        + `<details class="mk-details"><summary>${W(F + "refused.summary")}</summary><div>${["malformed", "absent", "mismatched", "undetermined", "notadmin"].map(gap).join("")}</div></details></details>`;
+    };
+    // R30: who recorded the hosting account: the setup or the system have their own words; a member is drawn as before
+    const recordedBy = (by) => {
+      if (typeof by !== "string" || !by) return "member";
+      const who = by.replace(/^member:/, "");
+      return who === "" || who === "admin" || who === "bootstrap" || who === "setup" ? "setup" : /^(token|class|daemon|system|seed|session|accelerator|sweep)/.test(who) ? "system" : "member";
+    };
+    const hostingNow = (cur) => {
+      const by = recordedBy(cur.recorded_by);
+      return by === "member" ? W(S + "hosting.now", { holders: String(cur.holders || "") })
+        : `${W("screen.group.hosting.now." + by, { date: { html: cs.date(cur.at) } })} ${E(String(cur.holders || ""))}`;
+    };
 
     const out = [];
     // R15: the lede ("Welcome… First, claim it") follows the claimed state: drawn only while the instance answers that
@@ -205,7 +241,7 @@ export const setup = {
       + pick("su-site", S + "site.q", [{ value: "no", key: S + "site.no" }, { value: "yes", key: S + "site.yes", tip: S + "site.tip" }], site)
       + (site === "yes" ? (id.domain && id.domain_verified_at ? `<p>${W(S + "domain.verified", { domain: id.domain })}</p>` : "")
         + cs.field("su-domain", S + "domain", { help: S + "domain.help", value: id.domain || "" })
-        + `<div class="mk-acts">${cs.act("groupdomainset")}</div>` : ""),
+        + `<div class="mk-acts">${cs.act("groupdomainset")}</div>` + domainFile() : ""),
       { open: states.group !== "done" }));
 
     // 3 Where your team works: the place chosen among those Civicsmith knows, or "Somewhere else", which opens the place
@@ -266,9 +302,25 @@ export const setup = {
       + pick("su-court", S + "court.legend", [{ value: "tell", key: S + "court.tell" }, { value: "dont", key: S + "court.dont" }], court.choice || null)
       + `<div class="mk-acts">${cs.act("courtnoticeset")}</div>`));
 
+    // R33: what is true of the scanner. Signatures held: the checked sentence. None: since when and why, in the words the
+    // answer's keys carry (else its own words), never the scanner's code. Unread, unreachable or not answered: nothing is
+    // claimed that is not known.
+    const scannerState = () => {
+      const sc = ok(data.scan);
+      if (!sc) return "";
+      const ns = sc.no_signatures && typeof sc.no_signatures === "object" ? sc.no_signatures : null;
+      if (!ns) return sc.scanner && (sc.scanner.unreachable === true || sc.scanner.bound === false) ? "" : `<p class="mk-note" data-state="scanner">${W(S + "security.scanner")}</p>`;
+      // the key's word where the list holds it and every fill is answered; else the answer's own words
+      const said1 = (key, words, fills) => { const t = typeof key === "string" ? String(W(key, fills)) : ""; return t && t !== E(key) && !/\{\w+\}/.test(t) ? t : typeof words === "string" ? E(words) : ""; };
+      const status = /^REFUSED:[^:]*:(\d{3})$/.exec(String(ns.reason || ""));
+      const first = said1(ns.key, ns.words, ns.since ? { date: { html: cs.date(ns.since) } } : {});
+      const second = typeof ns.reason_key === "string" ? said1(ns.reason_key, ns.reason_words, status ? { status: status[1] } : {}) : "";
+      return (first ? `<p class="mk-note" data-state="nosignatures">${first}</p>` : "") + (second ? `<p class="mk-note" data-state="nosignatures-reason">${second}</p>` : "");
+    };
+
     // 7 Security: each offered tool with the fields its entry names; the scanner's sentence only while one runs
     out.push(part(7, "security", S + "security", S + "part.security.why", states.security,
-      (boot.part_scanner === true ? `<p class="mk-note">${W(S + "security.scanner")}</p>` : "") + `<p class="mk-note">${W(S + "security.what")}</p>`
+      (boot.part_scanner === true ? scannerState() : "") + `<p class="mk-note">${W(S + "security.what")}</p>`
       + (ui.tool ? `<p data-state="tool">${W(ui.tool.passed ? S + "security.passed" : S + "security.failed", { tool: ui.tool.name })}</p>` : "")
       + tools.map((t) => nameOf(t)).filter(Boolean).map((n) => `<p>${W(S + "security.held", { tool: n })}</p>`).join("")
       // R12: an empty catalogue draws nothing (a failed read is still drawn as failed)
@@ -292,7 +344,7 @@ export const setup = {
       + cs.field("su-adm-id", S + "admins.id", { help: S + "admins.id.help", autocomplete: "off" })
       + cs.field("su-adm-cover", S + "admins.cover", { autocomplete: "off" })
       + `<div class="mk-acts"><span class="mk-actwrap" data-level="2" data-tip="${E(W("setup.admin.invite_does"))}">${cs.act("memberadd", { tone: "primary", label: "setup.admin.invite" })}</span></div>`
-      + (host.current ? `<p>${W(S + "hosting.now", { holders: String(host.current.holders || "") })}</p>` : "")
+      + (host.current ? `<p>${hostingNow(host.current)}</p>` : "")
       + cs.field("su-holders", S + "hosting.field", { help: S + "hosting.help" }) + cs.field("su-hnote", S + "hosting.note")
       + `<div class="mk-acts">${cs.act("hostingaccessset")}</div>`) + "</div>");
 
@@ -399,8 +451,10 @@ export const setup = {
     // each part's act keeps its part open while its answer is drawn (R22)
     { op: "groupnameset", rereads: ["identity"],
       send(view, el, cs) { view.ui.at = "group"; const name = String(cs.value("su-name") || "").trim(); return name ? { body: { name } } : { refuse: "screen.setup.name.empty" }; } },
+    // R26: the verifier's refusals in the design's words
     { op: "groupdomainset", rereads: ["identity"],
-      send(view, el, cs) { view.ui.at = "group"; const domain = String(cs.value("su-domain") || "").trim(); return domain ? { body: { domain } } : { refuse: "screen.setup.domain.empty" }; } },
+      send(view, el, cs) { view.ui.at = "group"; const domain = String(cs.value("su-domain") || "").trim(); return domain ? { body: { domain } } : { refuse: "screen.setup.domain.empty" }; },
+      refusals: { GROUP_DOMAIN_MALFORMED: "screen.domainfile.refused.malformed", NOT_AN_ADMIN: "screen.domainfile.refused.notadmin" } },
     // the place chosen: one the profiles hold, or none ("Somewhere else")
     { op: "profilesset", rereads: ["profiles", "offices"],
       send(view, el, cs) {

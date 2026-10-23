@@ -1,6 +1,6 @@
 # BOB to tasks (T51)
 
-**Read** · handled J1
+**Read** · handled J7
 
 ## B1 · START
 
@@ -42,3 +42,39 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio tasks tranche/T51 job/T51/tasks`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B3 · CHANGE
+
+CHANGE (K4210; queue J3, C62): the rows you mint for a kind you declare carry an optional door: an op name or a list of op names, the one the screen leads with first; for authority-undetermined: [taskdecide, taskforward, taskresolve]. An added optional field of a provided service (no existing answer changes); queue reads it. Test: recentTasks rows of that kind carry the door; other rows unchanged (control). Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B4 · ANSWER · re J2
+
+ANSWER J2 (K4213): Q1: (B), as the batches fall out: your restart comes after `provenance` (FR-10) is merged on tranche/T51. Merge the tranche into your branch, replace the fake with the real `provenance.declareAuthority` (conform to its signature if it differs from the draft), run, and COMPLETE. Q2: `test-support` is in tasks' `uses` (K4213). Requirement lines: write R20 to R23 and the Uses line yourself in build/requirements/tasks.md (K4210; the ownership listing of that file is accepted at the merge). `docs/development/INBOX-GRAMMAR.md` gains `decided` and `resolved_undecided`: BOB's edit at your merge, not yours. Your findings are routed: `queue` reads `resolved_undecided` as a resolving event (CHANGE to queue); `control-plane` stamps `actor` for `taskdecide` and routes it (CHANGE to control-plane); the four hand rows go in the round's second pass (hand-row deletion, K4168).
+
+## B5 · CHANGE
+
+CHANGE (K4218; member-roster J6): since member-roster R76 (merged) the founder, once she has claimed her place, is an active member: `memberFacts("admin")` answers her facts. Re-read R1's routing ("the earliest active administrator ... the first after the founder") against that: say in your requirement line whether the founder now takes a routed task, keep the routing as R1 means it, and test it with the claimed founder present (control: unclaimed).
+
+## B6 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/tasks tranche/T51 && git branch -m job/T51/tasks stale/tasks-local && git checkout -b job/T51/tasks origin/job/T51/tasks`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · TASKS #17 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #247 is depth 1; fix round 4b, job 8 of 12; K4487)
+
+Mail with `--module tasks`; record `build/jobs/T51/tasks.md`. Model claude-haiku-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). You are the module job (P8, mechanics §6) for `tasks`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first.
+
+**Why this round.** Bob asked (K4483): "Are there other file extraction situations where only part of the file is read at a time, possibly causing it to be lost and abandoned the why big PDFs were? We should identify and fix any similar conditions." Read in full: `build/plan/fix-round-4b-T51.md` (the plan: section 1's decisions D1-D6 bind you, section 2's table gives the merge order and seam owners) and, in `build/plan/audit-partial-reads-T51.md`, "Root facts" and every finding your entry names (its file:line evidence is your starting point, never a substitute for reading the code). Then your requirements (both parts; your new id is written there, marked not yet met), the used services your entry touches, and your code.
+
+**Rules** (fix round 4 §0, `build/plan/fix-round-4-T51.md`; K4426-K4428): (1) root cause stated with file:line, else step 0 is a diagnosis posted as a QUESTION before any fix; (2) why the tests missed it, and the test-gap fix; (3) a failing-first test on the case named, through the real entry path (press the act or call the op, never the done function), seen red in your record, then green; (4) where the platform matters (128 MB object, `waitUntil` cut ~30 s after the response, 25 s door bound), a local workerd check with real sizes, numbers in your record; no deploy. R-SEAM: the seam owner's test runs the whole path with the real merged providers; a provider tests the same case at its interface; a seam test needing an unmerged provider is written first and stays red by name. A lower module never imports plane: it registers owed work through the hook plane hands it at composition (as acquisition's `keepLater` does today). R-NOTMET: no "not met", "deferred", REPORT or open QUESTION at COMPLETE: name the smallest thing you need and ask BOB now. R-OLD: stored data is "new data only" or has a repair. Wording waits for T52 (K4269): a new sentence uses the nearest held row as stand-in (a drawn-screen module never adds `localize`), the row owed named in your record. Declare every census op you own. Bob's focus: an alpha release deployed as efficiently as possible: do what the entry needs, nothing more.
+
+Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio tasks tranche/T51 job/T51/tasks`. COMPLETE: what changed (file:line), the failing-first tests red then green, measurements, suite counts, requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+**Your entry (8).** (3d). **R25**: step 0 shows whether D1 resolves the waiting `authority-undetermined` event; an event that ends unrun after its retries is stated as a queue item, never dropped. Failing-first: the common fixture's event.
+
+## B7 · ANSWER · re J4
+
+ANSWER to J4 (BOB #247; K4488). Neither (A) nor (B): (C), which is D2's rule applied to your drain. An unfiled capture's event is not lost work, it is work waiting on the filing, which already re-arms the drain (`tasks/index.mjs:1262`). So the drain never stops by count: after its eight quick tries it backs off to at most one hour and keeps trying while the event is queued; promotion re-arms it at once. No queue item and no queue-producers change. BOB has reworded R25 so (merge the tranche before COMPLETE). Failing-first: an event whose capture is filed after its eighth try is run (red today), plus your seam test with the 20 MB three-part capture, red by name until PROVENANCE #27 merges.
+
+## B8 · ANSWER · re J5
+
+ANSWER to J5 (BOB #247; K4491). (A): in tasks' suite, against the real provenance and capture (both already in your `uses`), composed as the plane composes them (test-support's helpers where they serve), red by name until PROVENANCE #27 merges; then COMPLETE naming it. BOB re-runs it at provenance's merge and CHANGEs you only if it stays red.

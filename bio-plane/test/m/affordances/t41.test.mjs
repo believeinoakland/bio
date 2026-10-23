@@ -31,7 +31,9 @@ test("R12: with the control plane's rows for T41's ops nothing is unaccounted; c
   const retired = A.unaccounted([...ROWS, ...RETIRED.map((op) => ({ op, mutating: true, gated: true }))]);
   assert.deepEqual([retired.unpublished.sort(), retired.unranked.sort()], [[...RETIRED].sort(), [...RETIRED].sort()],
     "a retired op still declared reads unpublished and unranked");
-  for (const op of reads) assert.ok(A.unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
+  /* K4279 (R12): an owner-declared read the table carries ungated is not stale; a read no row carries is */
+  for (const op of reads) assert.ok(!A.unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
+  for (const op of reads) assert.ok(A.unaccounted([]).stale.includes(op), op);
 });
 
 test("R12 (DEC-188 (8)): the four retired ops are named in no table — no grade, no reason, no act — so a table without "

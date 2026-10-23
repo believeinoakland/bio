@@ -10,6 +10,9 @@ import { hasWord } from "../../../src/setup-words/index.mjs";
 import { verifySshsig, NS_NOTICE } from "../../../src/sshsig.mjs";
 import { open, main, actsIn, fill, says, word, rawKeys, SCREENS, P } from "./fixtures.mjs";
 
+/* every owner's declarations, registered once before the first read (test-support R17, K4245): the project's acts name ops its owners declare */
+
+
 const at = "/app/project/" + P;
 const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
 const day = (iso) => { const [y, m, d] = iso.slice(0, 10).split("-").map(Number); return word("date.daymonthyear", { day: String(d), month: word("date.month." + MONTHS[m - 1]), year: String(y) }); };

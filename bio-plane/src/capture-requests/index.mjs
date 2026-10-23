@@ -1876,6 +1876,33 @@ export function captureRequestsOf(host, deps = {}) {
   return c;
 }
 
+/* R57, R58 (T51 fix round; K4189, K4202; op-declarations R80): the ops this module's ops map serves that the screens send,
+   each declared by its owner. Each row copies its op's existing hand rows (`classes` and `mutating` from op-declarations,
+   the ground as `weight` and the NON_ACTS reason as `description` from op-grades), never chosen. `fields.accepts` is
+   every body or query field the arm reads except the stamps (`viewer`, and `principal`, the control plane's caller stamp,
+   which the rule excludes as it excludes `by` where an arm reads the same stamp under that name);
+   `fields.requires` is each field the arm refuses without, as its refusal carries it. */
+export const DECLARED_OPS = Object.freeze({
+  capturerequest: {
+    classes: ["admin", "member", "probe"],
+    mutating: true,
+    weight: "substrate",
+    description: "the investigative session's request for a capture (§4 group 1), keyed by run and address, or (capture-requests R56) a member's own request for later, keyed by her stamp and address: writes a row and fetches nothing — the daemon captures, and DEC-47's conduct is applied at that drain. Not object-directed; the completion reaches a member as a queue CONDITION, not as an act",
+    fields: {
+      accepts: ["run", "address", "target", "lead_inquiry", "lead", "purpose", "ua_mode", "render", "step", "co_archive",
+                "site_kind", "sweep", "capture_sha", "sha256", "bytes", "content", "provenance_chain", "via", "retrieved"],
+      requires: ["address"],
+    },
+  },
+  capturerequestretry: {
+    classes: ["admin", "member"],
+    mutating: true,
+    weight: "substrate",
+    description: "request-directed: retries a capture request the source refused, keyed by request id; travels with the request in op=capturerequests",
+    fields: { accepts: ["request"], requires: ["request"] },
+  },
+});
+
 /** The op handlers the control plane routes to (K3): `capturerequest`, `capturerequestdrain`, `capturerequests`,
  *  `capturerequestretry`. The viewer and the caller's principal come from the QUERY STRING, where the control plane
  *  stamped them, and never from the body. */

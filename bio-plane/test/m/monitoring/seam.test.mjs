@@ -20,13 +20,13 @@ const state = (w) => JSON.stringify(TABLES.map((t) => { try { return w.rows(`SEL
 const findingsOf = (g, arm) => { const f = []; checkGatheringGrammar({ files: new Map([["data/gathering.json", JSON.stringify(g)]]) }, f, arm); return f; };
 const carry = (w, id, g, o = {}) => w.promote(id, infoMd(id, `https://records.example.org/${id}`, { enabled: false, ...o }), { files: [gj(g)] });
 
-test("R65 sweepHost() answers the same frozen set of services on every call, writing nothing and never throwing", () => {
+test("R65 sweepHost() answers the same frozen set of services on every call, asking for it writing nothing and never throwing (R77 adds write)", () => {
   const w = world();
   const before = state(w);
   const h = w.m.sweepHost();
   assert.equal(w.m.sweepHost(), h, "one object");
   assert.ok(Object.isFrozen(h));
-  assert.deepEqual(Object.keys(h).sort(), ["claim", "closeEpoch", "gate", "land", "openEpoch", "paused", "ranked", "recheckMs", "running"]);
+  assert.deepEqual(Object.keys(h).sort(), ["claim", "closeEpoch", "gate", "land", "openEpoch", "paused", "ranked", "recheckMs", "running", "write"]);
   for (const k of Object.keys(h)) if (k !== "running") assert.equal(typeof h[k], "function", k);
   assert.equal(state(w), before, "asking for the host writes nothing");
 });

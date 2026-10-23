@@ -137,7 +137,7 @@ export { ACT_HELP, ACT_HELP_KEYS, BROWSER_ACTS } from "./affordances/act-help.mj
 import { RUNG_LADDER, IRREVERSIBLE_CORRECTION_KEY, RUNG_ABSENCE_GROUNDS, CONSEQUENCE_STATEMENTS, LARGER_SCREEN_ACTS,
          IRREVERSIBLE_WEIGHT, RUNGS, RUNG_ABSENT, MACHINE_REFUSALS, NON_ACTS, phoneOf, OP_ALIASES } from "./op-grades/index.mjs";
 /* R39 (T33-85): the new closed vocabularies with the members' words, read at the call from the composed owners. */
-import { composedVocabularies } from "./affordances/words.mjs";
+import { composedVocabularies, EVENTS_VOCABULARY_KEYS } from "./affordances/words.mjs";
 /* R62, R64 (K3366; DEC-253): this module holds no member-facing English; every label, prompt and sentence is a key read through `word`. */
 import { word, hasWord } from "./setup-words/index.mjs";
 
@@ -606,7 +606,16 @@ export function vocabulariesFor(kinds, profile = null) {
     profiled.action_kind_labels = Object.fromEntries(Object.entries(p.action_kind_labels)
       .filter(([, label]) => typeof label === "string" && label.trim().length > 0));
   /* R39: T33's vocabularies, each `{values, words}`, present only where its owner is composed (./affordances/words.mjs). */
-  return { ...VOCABULARIES, action_kind: ok ? kinds : PRODUCT_KINDS, ...profiled, ...composedVocabularies() };
+  /* R39 (E14): `events` registers in the Durable Object only, so an isolate that has not started it composes none of its
+     five; the store's answer carries them, composed where the owner is registered, and fills what this isolate lacks. */
+  const composed = composedVocabularies();
+  const carried = {};
+  const fromStore = p.events_vocabularies && typeof p.events_vocabularies === "object" ? p.events_vocabularies : {};
+  for (const k of EVENTS_VOCABULARY_KEYS) {
+    const v = fromStore[k];
+    if (!composed[k] && v && Array.isArray(v.values) && v.words && typeof v.words === "object") carried[k] = v;
+  }
+  return { ...VOCABULARIES, action_kind: ok ? kinds : PRODUCT_KINDS, ...profiled, ...carried, ...composed };
 }
 
 /* REC-38, UI-22's delegation: THE CAPTURE-DIRECTED ACTS' METADATA, and the
@@ -1683,12 +1692,13 @@ export function explainRefusal(arg) {
  * sets: publication over the ops a capability gates (`gated`: the op has a `NEEDS` row, so a session reaches it and
  * a surface could offer it; a row without the key counts as gated), rungs over every mutating op. `unpublished`: a
  * gated op in none of the four registries. `unranked`: a mutating op with neither a rung nor a stated absence.
- * `stale`: a key of `RUNGS` or `RUNG_ABSENT` the table does not carry as mutating, or of `NON_ACTS` it does not carry
- * as gated. An alias of a published act is published (R51). All three empty is the totality; each list is sorted, so
+ * `stale`: a key of `RUNGS` or `RUNG_ABSENT` the table does not carry as mutating, or of `NON_ACTS` the table does not
+ * carry at all (K4279: an owner-declared read the door serves is not stale). An alias of a published act is published (R51). All three empty is the totality; each list is sorted, so
  * an answer names the ops. */
 export function unaccounted(opTable) {
   const rows = Array.isArray(opTable) ? opTable.filter((r) => r && typeof r.op === "string") : [];
   const all = new Set(rows.filter((r) => r.gated !== false).map((r) => r.op));
+  const carried = new Set(rows.map((r) => r.op));
   const mutating = new Set(rows.filter((r) => r.mutating === true).map((r) => r.op));
   const published = new Set([...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].map((a) => a.id));
   /* T45 (R51): an alias answers as its op (`op-grades` R17, op-declarations R21), so an alias of a published act is
@@ -1704,7 +1714,8 @@ export function unaccounted(opTable) {
        read the door declares `ownread`; any other absence ground still wants the mutating row. */
     ...Object.keys(RUNG_ABSENT).filter((op) => !mutating.has(op)
       && !(RUNG_ABSENT[op]?.ground === "caller-owned" && all.has(op))),
-    ...Object.keys(NON_ACTS).filter((op) => !all.has(op)),
+    /* K4279 (R12): a NON_ACT is stale only when the table has no row for it at all; an owner-declared read the door serves is not. */
+    ...Object.keys(NON_ACTS).filter((op) => !carried.has(op)),
   ])];
   return { unpublished: unpublished.sort(), unranked: unranked.sort(), stale: stale.sort() };
 }

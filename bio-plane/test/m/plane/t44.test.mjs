@@ -3,6 +3,7 @@
    `class:ai/<tokenId>` (R6). Each is checked at the plane's interface (the transcriber's AI path, its page rendering, the
    Worker's gated hook) with a negative control (K874). The pictures are pdf-pixels' own fixtures (`picture-variants.json`,
    made with Pillow) or a JPEG header written here; the vector-only PDF page is written here. */
+import "../../../src/plane/register.mjs";   /* R68: the start's registration before any op table is read */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

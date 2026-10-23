@@ -225,23 +225,24 @@ test("R17 with no project to choose it says wizard.subject.none.project in a fol
   assert.deepEqual(g.nav, [["finder", null]], "Next goes on to the next step");
 });
 
-test("R17 a step on a screen that needs no subject opens at once; a question or a document with none to choose opens as it always did", async () => {
-  const g = standIn({ plane: plane17({ wizardread: readSteps([{ screen: "finder", act: "search", what: "a", why: "b" }, { screen: "document", act: null, what: "c", why: "d" }]) }), drawn: { finder: ["search"] } });
+test("R17 a step on a screen that needs no subject opens at once; a question or a document is no longer asked, R20 opens the most recent", async () => {
+  const g = standIn({ plane: plane17({ wizardread: readSteps([{ screen: "finder", act: "search", what: "a", why: "b" }, { screen: "document", act: null, what: "c", why: "d" }]),
+    list: okr({ ok: true, bundles: [{ bundle_id: "DOC-1", title: "The lease", last_updated: "2026-10-01" }] }) }), drawn: { finder: ["search"] } });
   await g.start({ script: "WIZ-00000000000000c1" });
   assert.deepEqual(g.nav, [["finder", null]]);
   assert.deepEqual(g.requests.filter((r) => r.op === "projectlist" || r.op === "list"), []);
-  // a document with none to choose: read, then opened as before
+  // a document: read (`list` of type `information`), then the most recent opened, no choice drawn
   await g.control("next");
-  assert.deepEqual(g.nav.at(-1), ["document", null]);
+  assert.deepEqual(g.nav.at(-1), ["document", "DOC-1"]);
   assert.deepEqual(g.requests.filter((r) => r.op === "list").map((r) => r.query), [{ type: "information", limit: "500" }]);
-  // a question is chosen from the questions the member may see (`list` of type `inquiry`)
+  assert.ok(!g.render().includes('id="wz-subject"'));
+  // a question is read the same way (`list` of type `inquiry`)
   const q = standIn({ plane: plane17({ wizardread: readSteps([{ screen: "question", act: null, what: "a", why: "b" }]),
-    list: okr({ ok: true, bundles: [{ bundle_id: "INQ-1", title: "Are potholes repaired?" }] }) }), values: { "wz-subject": "INQ-1" } });
+    list: okr({ ok: true, bundles: [{ bundle_id: "INQ-1", title: "Are potholes repaired?", last_updated: "2026-10-01" }] }) }) });
   await q.start({ script: "WIZ-00000000000000c1" });
   assert.deepEqual(q.requests.filter((r) => r.op === "list").map((r) => r.query), [{ type: "inquiry", limit: "500" }]);
-  assert.ok(q.text().includes(unhtml(word("wizard.subject.question"))) && q.render().includes("Are potholes repaired?"));
-  await q.control("subjectgo");
   assert.deepEqual(q.nav, [["question", "INQ-1"]]);
+  assert.ok(!q.render().includes('id="wz-subject"'), "R20 amends R17: no choice for a question");
   // control: a subject the run already holds for the screen (the member is on it) is not asked
   const h = standIn({ plane: plane17(), drawn: {} });
   await h.enter("project", "P9");

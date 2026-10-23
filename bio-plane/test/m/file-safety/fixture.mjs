@@ -53,6 +53,12 @@ const verdict = (capture_sha, tool, engine, fields) => ({ capture_sha, tool, eng
      refresh[id]()        → a reputation list refresh's answer (default {ok, list_version, fetched_at}); `NO_LOCAL_LIST`
                             for a tool with no local list
      test[id]             → {passed, detail}
+     mirror(params)       → /mirror's answer (default: 202 {ok, started}, file-scanner R6 `?async=1`)
+     runTrace: true       → /mirror?async=1 leaves the trace file-scanner R6 (fix round 4, C84) states, as the real handler does:
+                            `last_attempt` now, `last_error` RUN_STARTED, `stage` seed, `stage_at` now, at the start; the invocation is then
+                            cancelled (nothing follows) until a test calls `binding.stage(name)` or `binding.end(error)`
+     signatures           → the signature state /version answers (default: a set published an hour ago); `null` versions and
+                            `published` is a scanner that has mirrored none
      render(sha, route)   → bytes | {code, detail}
    Every request is recorded as `{path, body}`. */
 export function scanner(script = {}, { now = () => T0 } = {}) {
@@ -62,14 +68,22 @@ export function scanner(script = {}, { now = () => T0 } = {}) {
   const derived = new Set();   /* the copies made, which R2 holds in the derived area only */
   const binding = {
     calls,
+    /* the run reaches a later stage, or ends (`error` its `last_error`, null on success): file-scanner's own writes, scripted */
+    stage(name) { Object.assign(s.signatures, { stage: name, stage_at: new Date(now()).toISOString() }); },
+    end(error = null) { delete s.signatures.stage; delete s.signatures.stage_at; Object.assign(s.signatures, { last_error: error }); },
     async fetch(req) {
       const u = new URL(req.url);
       const body = req.method === "POST" ? await req.json() : null;
-      calls.push({ path: u.pathname, body, method: req.method });
+      calls.push({ path: u.pathname, search: u.search, body, method: req.method });
       const at = now();
       if (u.pathname === "/version") return reply({ ok: true, name: "file-scanner", version: "1.0.0", clamav_version: "1.4.3",
-        signatures: { versions: { main: 62 }, published: new Date(at - 3_600_000).toISOString(), mirrored_at: null, last_attempt: null, last_error: null },
+        signatures: s.signatures ?? { versions: { main: 62 }, published: new Date(at - 3_600_000).toISOString(), mirrored_at: null, last_attempt: null, last_error: null },
         providers: {}, reputation_lists: s.lists ?? [], renderer_version: "libreoffice 7; poppler 24", bounds: {} });
+      /* file-scanner R6 (fix round 3, C84): `POST /mirror?async=1` starts a run and answers 202 at once; `mirror(search)` scripts another answer */
+      if (u.pathname === "/mirror") {
+        if (s.runTrace && !s.mirror && s.signatures) Object.assign(s.signatures, { last_attempt: new Date(at).toISOString(), last_error: "RUN_STARTED", stage: "seed", stage_at: new Date(at).toISOString() });
+        return s.mirror ? s.mirror(u.searchParams) : reply({ ok: true, started: true }, 202);
+      }
       if (u.pathname === "/scan") {
         const out = [];
         for (const t of body.targets) {
@@ -136,7 +150,7 @@ export function scanner(script = {}, { now = () => T0 } = {}) {
 
 /* A world: the modules on one storage, a clock the test moves, the bucket and the scanner. `scan` false leaves the
    scanner unbound. Members: `m1`, `m2` (members), `boss` (an active administrator). */
-export function world({ scan = {}, bound = true, now = T0, scanWaitMs = 50 } = {}) {
+export function world({ scan = {}, bound = true, now = T0, scanWaitMs = 50, homed = false } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -164,21 +178,32 @@ export function world({ scan = {}, bound = true, now = T0, scanWaitMs = 50 } = {
     rows: exec, row: (q, ...a) => exec(q, ...a)[0] ?? null,
     tick(ms) { clock.now += ms; },
     /** Bytes held as a capture: stored, then a receipt as acquisition writes one (R1). */
-    async capture(bytes, { address = null, via = "direct", locator = null, reputation = undefined } = {}) {
+    async capture(bytes, { address = null, via = "direct", locator = null, reputation = undefined, homed: filed = homed } = {}) {
       const data = typeof bytes === "string" ? enc(bytes) : bytes;
       const s = sha(data);
       await b.put(`bio/captures/${s}`, data);
       const a = address || `https://files.example/${s.slice(0, 12)}`;
       prov.recordReceipt({ address: a, addressNorm: a, captureSha: s, retrieved: new Date(clock.now).toISOString().replace(/\.\d+Z$/, "Z"),
                            via, retrievalLocator: locator ?? a, ...(reputation !== undefined ? { reputation } : {}) });
+      /* R51 (D6): a member's sight is judged by the capture's home, and a capture with none is refused to a member, so a capture
+         is filed as the screen files it, in a bundle outside every project, when the world is `homed` (file-safety's own tests;
+         another module's tests that use this world keep the unfiled capture they always had) or the call says so */
+      if (filed && !exec(`SELECT 1 FROM register WHERE capture_sha = ?`, s).length) w.home(s, `INFO-AUTO-${s.slice(0, 8)}`);
       return s;
     },
     /** Register a capture under a bundle (its home), as a promotion would: the bundle row and the register row. */
     home(captureSha, bundleId, { project = null } = {}) {
+      exec(`DELETE FROM register WHERE capture_sha = ? AND bundle_id LIKE 'INFO-AUTO-%'`, captureSha);
       exec(`INSERT OR IGNORE INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version, project)
             VALUES (?, 'information', 'g', 't', 'collected', '2026-01-01', '2026-01-01', 'x', 1, ?)`, bundleId, project);
       exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered, authored) VALUES (?, ?, 'snapshots/x', 'binary', 1, '2026-01-01T00:00:00Z', 0)`,
            captureSha, bundleId);
+    },
+    /** Files every capture the record holds a receipt for and no register row names, as `capture` does (R51): the members an archive's
+     *  unpack cut are captures of their own, filed as the screen files them. */
+    homeAll() {
+      for (const r of prov.receipts({}).rows || [])
+        if (!exec(`SELECT 1 FROM register WHERE capture_sha = ?`, r.capture_sha).length) w.home(r.capture_sha, `INFO-AUTO-${r.capture_sha.slice(0, 8)}`);
     },
     /** A promoted Information document holding one capture, as a promotion leaves it: its bundle row, its live files
      *  (the capture, `bundle.md`, `data/provenance.json`) and its register row. */
@@ -230,3 +255,6 @@ export function world({ scan = {}, bound = true, now = T0, scanWaitMs = 50 } = {
 /* A minimal PDF: plain, or with an OpenAction script. */
 export const pdf = (active = false, tag = "") => enc(`%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R${active ? "/OpenAction<</S/JavaScript/JS(app.alert(1))>>" : ""}>>endobj\n`
   + `2 0 obj<</Type/Pages/Kids[]/Count 0>>endobj\ntrailer<</Root 1 0 R>>\n%${tag}\n%%EOF`);
+
+/* A world whose captures are filed (R51: a member's sight is judged by a capture's home), as file-safety's own tests use it. */
+export const filedWorld = (opts = {}) => world({ homed: true, ...opts });

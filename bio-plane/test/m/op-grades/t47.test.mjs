@@ -33,8 +33,7 @@ test("R35: deepercheck is held in RUNG_ABSENT under `observational`, as deeperba
   assert.equal(gradeOf("deepercheck"), gradeOf("deeperbatch"), "as deeperbatch");
   assert.match(RUNG_ABSENT.deepercheck.is, /verdict note naming no member/);
   assert.match(RUNG_ABSENT.deepercheck.is, /\(file-safety R3, R10, R13\)$/);
-  assert.equal(NON_ACTS.deepercheck, "file-directed: keyed by a capture's digest; asks the group's outside tools about "
-    + "this file; records no one");
+  assert.equal(NON_ACTS.deepercheck, declaredSentence("file-safety", "deepercheck"));
   assert.equal(RUNGS.inboxpull, "reversible");
   assert.ok(!Object.hasOwn(RUNG_ABSENT, "inboxpull"));
   assert.match(NON_ACTS.inboxpull, /^knock-directed: a member pulls one knock into the record/);
@@ -60,8 +59,7 @@ test("R36: projectlist and projectquestions are reads, `read: …`, ungraded", (
 test("R36: drawquestion `reversible` as cite, sever taking the edge back; its NON_ACTS sentence word for word", () => {
   assert.equal(RUNGS.drawquestion, "reversible");
   assert.equal(gradeOf("drawquestion"), gradeOf("cite"), "as cite");
-  assert.equal(NON_ACTS.drawquestion, "project-directed: keyed by a project and one question; draws the question into "
-    + "the project as a confirmed `cites` edge and promotes the project; moves the project's bundle");
+  assert.equal(NON_ACTS.drawquestion, declaredSentence("citation", "drawquestion"));
   /* BAD_NOTE is a note's shape, never a reason (control) */
   assert.ok(!JUSTIFICATION_REFUSALS.includes("BAD_NOTE"));
   assert.notEqual(gradeOf("drawquestion"), "reasoned");
@@ -80,8 +78,7 @@ test("R36: projectbarset `reasoned`, PROJECT_BAR_NO_REASON joining JUSTIFICATION
 
 test("R36: monitorset `reversible`, a later monitorset taking it back; its NON_ACTS sentence word for word", () => {
   assert.equal(RUNGS.monitorset, "reversible");
-  assert.equal(NON_ACTS.monitorset, "bundle-directed: whether a captured document is watched, and how often; a member's "
-    + "own revision of the bundle; fetches nothing");
+  assert.equal(NON_ACTS.monitorset, declaredSentence("monitoring", "monitorset"));
   /* control: the monitor tick stays a capture act's reason and its own ground */
   assert.equal(RUNG_ABSENT.monitor.ground, "observational");
   assert.notEqual(NON_ACTS.monitorset, NON_ACTS.monitor);
@@ -245,9 +242,8 @@ test("R36 R37: affordances R12's totality holds over a stand-in of op-declaratio
 /* ---- R5 (K3164) ---------------------------------------------------------------------------------------------------- */
 test("R5 R1 (K3164): statementack and reviewcomment carry NON_ACTS rows by R5's rule, case-directed and review-directed, "
    + "their grades unchanged; neither is a capture act or a machine refusal", () => {
-  assert.equal(NON_ACTS.statementack, "case-directed: keyed by a case edition; a member acknowledges what the case does "
-    + "not cover");
-  assert.equal(NON_ACTS.reviewcomment, "review-directed: keyed by a review copy; a reader's comment for the case's owner");
+  assert.equal(NON_ACTS.statementack, declaredSentence("case-inputs", "statementack"));
+  assert.equal(NON_ACTS.reviewcomment, declaredSentence("review", "reviewcomment"));
   assert.deepEqual([RUNGS.statementack, RUNGS.reviewcomment], ["reasoned", "reversible"]);
   for (const op of ["statementack", "reviewcomment"]) {
     assert.ok(!NON_ACTS[op].startsWith("capture-directed:") && !isRead(op), op);

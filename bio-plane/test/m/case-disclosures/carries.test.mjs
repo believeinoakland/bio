@@ -69,9 +69,9 @@ test("R6, R7: materialsJudged lists every document a member's chain reaches with
   const { out } = blocks(w, [Q, Q2], { supporting: [Q2] });
   assert.deepEqual(out.materials.rows, [
     { ref: DOC, kind: "document", sha: a, text_sha: textSha(DOC), origin: `https://example.org/${DOC}`,
-      archived_copy: "https://archive.example/web/x", included: true, rests_under: "load_bearing", obscured: null },
+      archived_copy: "https://archive.example/web/x", included: true, rests_under: "load_bearing", title: `Document ${DOC}`, obscured: null },
     { ref: DOC2, kind: "document", sha: b, text_sha: null, origin: null, archived_copy: null, included: false, rests_under: "supporting",
-      obscured: null }]);
+      title: `Document ${DOC2}`, obscured: null }]);
   /* read back through case-grammar's one reader */
   const fm = fmOf(w, materialBlockLines({ materials: out.materials.rows, attestations: out.materials.attestations }));
   assert.deepEqual(materialsOf(fm).materials, out.materials.rows);
@@ -339,5 +339,34 @@ test("R20: everything a row asserts arrived as an argument or was read from the 
     { project: "p", group: "g", at: "t", facts: () => { throw new Error("not asked for an observation"); }, origin: () => "o",
       registered: () => null, member: () => [] });
   assert.deepEqual(rows, { rows: [{ ref: "x", kind: "observation", sha: "s", text_sha: null, origin: "o", archived_copy: null,
-    included: true, rests_under: "supporting", obscured: null }], attestations: [{ ref: "x", by_kind: "group", by: "g", level: null, at: "t", signature: "case", recorded_in: null }] });
+    included: true, rests_under: "supporting", title: null, obscured: null }], attestations: [{ ref: "x", by_kind: "group", by: "g", level: null, at: "t", signature: "case", recorded_in: null }] });
+});
+
+test("R7 (fix round 4, C47; K4438): each materials: row carries `title`, the document's title as its capture holds it, so the signed case names a document by its title and not its address; null for an observation and for a document that states none (nothing about a person is added, R26)", () => {
+  const w = setup();
+  const FAQ = "Freedom of Information Act: frequently asked questions", REPORT = "Capture B";
+  const a = w.doc(DOC, {}, { receipt: true, title: FAQ });
+  const b = w.doc(DOC2, {}, { title: REPORT });
+  const c = w.doc("INFO-2026-0003-c", {}, { title: "A note by the member" });
+  const d = w.doc("INFO-2026-0004-d");
+  w.st.sql.exec(`UPDATE register SET authored=1 WHERE bundle_id=?`, "INFO-2026-0003-c");
+  w.st.sql.exec(`UPDATE bundles SET title=NULL WHERE bundle_id=?`, "INFO-2026-0004-d");
+  w.finding(Q, [{ target: DOC }, { target: DOC2 }, { target: "INFO-2026-0003-c" }, { target: "INFO-2026-0004-d" }]);
+  const { out } = blocks(w, [Q]);
+  assert.deepEqual(out.materials.rows.map((r) => [r.ref, r.kind, r.sha, r.title]), [
+    [DOC, "document", a, FAQ], [DOC2, "document", b, REPORT],
+    ["INFO-2026-0003-c", "observation", c, null], ["INFO-2026-0004-d", "document", d, null]]);
+  /* control: a title is the capture's own; the document's address (origin) is never taken for it */
+  assert.equal(out.materials.rows[0].origin, `https://example.org/${DOC}`);
+  assert.notEqual(out.materials.rows[0].title, out.materials.rows[0].origin);
+  /* control: blank words are no title */
+  w.st.sql.exec(`UPDATE bundles SET title='   ' WHERE bundle_id=?`, DOC2);
+  assert.equal(blocks(w, [Q]).out.materials.rows[1].title, null);
+  /* the written block (case-grammar R12): each title is in the block's lines, and the one reader gives the rows back */
+  const rows = out.materials.rows;
+  const lines = materialBlockLines({ materials: rows, attestations: out.materials.attestations });
+  assert.ok(lines.join("\n").includes(FAQ) && lines.join("\n").includes(REPORT), "the titles are written into the case document");
+  const fm = fmOf(w, lines);
+  assert.deepEqual(materialsOf(fm).materials.map((r) => [r.ref, r.title]), rows.map((r) => [r.ref, r.title]));
+  assert.deepEqual(materialsOf(fm).materials, rows);
 });

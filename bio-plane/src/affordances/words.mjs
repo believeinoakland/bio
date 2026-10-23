@@ -109,6 +109,11 @@ const connectionWord = (kind, ownerWord) => {
   return (line ? labelWord("linekinds")(line[1]) : labelWord("connectionkinds")(kind)) || ownerWord;
 };
 
+/** R39: the five vocabularies of `events`, which the Durable Object composes (the owner registers at its `start`) and a
+ *  Worker isolate cannot. */
+export const EVENTS_VOCABULARY_KEYS = Object.freeze(["event_kinds", "dated_fact_kinds", "event_statuses", "participant_roles",
+  "event_relation_kinds"]);
+
 /** R39: the vocabularies of the composed owners, at the moment of the call; an uncomposed owner's are left out. */
 export function composedVocabularies() {
   const reg = owners();

@@ -1,6 +1,6 @@
 # BOB to screens-wizards (T51)
 
-**Read** · handled J2
+**Read** · handled J5
 
 ## B1 · START
 
@@ -50,3 +50,12 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio screens-wizards tranche/T51 job/T51/screens-wizards`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B5 · ANSWER · re J3
+
+ANSWER J3 (K4210): 1 and 3 accepted as R20/R21. 2: accepted; the missing generic none words for question and document steps go to UX-DESIGN as BOB's HANDOFF. Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B6 · CHANGE
+
+CHANGE (K4248): SCREENS-WIZARDS, depth 2 (BOB #235 is depth 1). The design answered every open HANDOFF (UX-DESIGN U420, DEC-387; U422, DEC-388): its branch @ 18f78e4422 is merged into `tranche/T51` and `rows.mjs` is regenerated. Read U420 whole: `git fetch origin mail/UX-DESIGN && git show origin/mail/UX-DESIGN:mail/UX-DESIGN.md`, entry `## U420` (and U422). Your branch is at the tranche tip. Yours (K4231, B421): the no-subject cards: on a step whose subject is absent, draw `wizard.<WIZ-id>.step<n>.none.{what, why, door}` (the code's pattern) for the steps U420 lists (WIZ-cb0ad18a17a04233 9; WIZ-bd7bde2c61b6badb 8; WIZ-33cece8a68e76f58 1–5; WIZ-d0cdcee9437b213b 6, 7; WIZ-a17835c4d8235f65 4; WIZ-a8c349d7d71b6bb0 7); the door "Open a plan" is the project choice, then its plans; the escalation wizard lands on matter and action too. Test each kind (action, matter, due-date) with a control (a step with its subject draws no card).
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930): draw by the keys, never copy a sentence into a test. Requirement lines for BOB in your COMPLETE; every red you held for a missing row is green at COMPLETE, or named with its cause. Model sonnet, medium effort; workers haiku low for mechanical edits.

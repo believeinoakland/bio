@@ -78,7 +78,7 @@ import {
   REPO_ROOT, discoverMembers, buildMember, writeMember, verifyStatic, verifyFresh,
   freshBuildRunnable, unresolvableSpecifiers, sha256, fleetProvenance, memberPaths,
   planeMember, assetsOf, optionsFor, isContainer, isGuarded,
-  BUDGET, MIB, sizeVerdict, startVerdict, measureStart, budgetReport, releaseBindingFindings,
+  BUDGET, MIB, sizeVerdict, startVerdict, measureStart, budgetReport, releaseBindingFindings, ASCII_RECIPE,
 } from "../../scripts/fleet-bundle.mjs";
 
 let pass = 0, fail = 0;
@@ -759,6 +759,18 @@ console.log("\n--- 9 · the release is coherent: every binding names a class or 
   show(findings.map((f) => f.text));
   t("R39: every service and Durable Object binding, container class and migration class of the plane and each member is exported by the release's bundles", findings.map((f) => f.text), []);
   t("R39: every bundle was built here to read its exports", unchecked.map((u) => `${u.name}: ${u.reason}`), []);
+}
+
+console.log("\n--- 10 · every committed fleet bundle is pure ASCII (R2; G39), and its manifest records the recipe ---");
+{
+  /* One character above U+007F anywhere makes V8 hold the whole script two bytes a character (36 MB of the plane's 86 MB idle). */
+  for (const m of [planeMember(), ...members.filter((x) => x.bundle)]) {
+    const bytes = readFileSync(join(m.abs, m.bundle.outfile));
+    let at = -1;
+    for (let i = 0; i < bytes.length; i++) if (bytes[i] > 0x7f) { at = i; break; }
+    t(`R2: ${m.name}'s committed bundle holds no byte over 0x7F`, at, -1);
+    t(`R2: ${m.name}'s manifest records the ASCII recipe`, JSON.parse(readFileSync(join(m.abs, m.bundle.manifest), "utf8")).recipe.ascii, { ...ASCII_RECIPE });
+  }
 }
 
 console.log(`\nfleetbundles: ${pass} pass, ${fail} fail`);

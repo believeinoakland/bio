@@ -1036,6 +1036,33 @@ export class Progressions {
     }
   }
 
+  /** R48 (`op=progressions`): the declared flows, in key order, each `{progression_key, label, current_version,
+   *  stage_count, stages}` as R5 reads the current version, so a screen offers the flows a group holds rather than asking
+   *  for a typed id. `limit` 1-200 (default 50), `truncated` by reading one past, `next` the last key, to pass as `after`.
+   *  Names no declarer, basis or bundle; writes nothing and never throws. */
+  listProgressions({ limit = null, after = null, viewer = null } = {}) {
+    void viewer;
+    try {
+      const n = limit === null || limit === undefined || limit === "" ? INSTANCES_LIMIT_DEFAULT : Number(limit);
+      const size = Number.isFinite(n) ? Math.min(INSTANCES_LIMIT_MAX, Math.max(1, Math.floor(n))) : INSTANCES_LIMIT_DEFAULT;
+      const cut = typeof after === "string" && after !== "" ? after : null;
+      const keys = this.#rows(
+        `SELECT progression_key FROM progression_defs${cut === null ? "" : " WHERE progression_key > ?"}
+           ORDER BY progression_key LIMIT ?`, ...(cut === null ? [] : [cut]), size + 1).map((r) => r.progression_key);
+      const truncated = keys.length > size;
+      const items = keys.slice(0, size).map((k) => {
+        const cur = this.#current(k);
+        return { progression_key: k, label: cur.label, current_version: cur.version, stage_count: cur.stages.length,
+                 stages: cur.stages };
+      });
+      return { ok: true, count: items.length, items, limit: size, truncated,
+               ...(truncated ? { next: items[items.length - 1].progression_key } : {}) };
+    } catch (e) {
+      return { ok: false, reason: "PROGRESSIONS_UNREADABLE", code: "PROGRESSIONS_UNREADABLE",
+               detail: localize("progressions.index.the_progressions_could_not_be", "the progressions could not be read: {String}", { String: String(String(e && e.message || e).slice(0, 200)) }) };
+    }
+  }
+
   /* ===================================================================== *
    * EXCEPTION DOCUMENTS (R14, R15; FW-10, K102).
    * ===================================================================== */
@@ -1600,6 +1627,9 @@ export function progressionOps(p, url, body) {
   return {
     progressiondefine: () => p.defineProgression({ ...(body || {}), viewer: q("viewer") }),
     progression: () => p.readProgression({ progressionKey: q("key"), version: q("version"), viewer: q("viewer") }),
+    /* R48: the definitions listed, paged */
+    progressions: () => p.listProgressions({ limit: q("limit") ?? (body && body.limit), after: q("after") ?? (body && body.after),
+                                             viewer: q("viewer") }),
     thread: () => p.threadInstance({ ...(body || {}), viewer: q("viewer") }),
     instance: () => p.readInstance({ progressionKey: q("key"), entityId: q("id"), viewer: q("viewer") }),
     discharge: () => p.dischargeStage({ ...(body || {}), viewer: q("viewer") }),
@@ -1625,6 +1655,8 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["progressionKey","entityId","stageKey","stage","captureSha","capture_sha","reason","citation"], requires: ["progressionKey","entityId",["stageKey","stage"],["captureSha","capture_sha"],"reason","citation"] } },
   progression: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.progression.label.timeline",
     fields: { accepts: ["key","version"], requires: ["key"] } },
+  progressions: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("progressions.declared.progressions", "the progression definitions, listed"),
+    fields: { accepts: ["limit","after"], requires: [] } },
   instance: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.instance.label.timeline",
     fields: { accepts: ["key","id"], requires: ["key","id"] } },
   captureprogressions: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: "act.captureprogressions.label.document",

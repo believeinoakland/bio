@@ -325,6 +325,10 @@ ol.cs-ladder { list-style: none; margin: 0; padding: 0; }
 .cs-tip .why { display: block; margin-top: 4px; }
 .cs-ref { color: inherit; text-decoration: underline; text-decoration-color: var(--c-accent); text-underline-offset: 3px; }
 .cs-ref:hover, .cs-ref:focus-visible { color: var(--c-accent-strong); }
+/* DEC-412 (C81; WCAG 2.5.8, the inline exception): a link inside running text (p, li) is exempt from the 44 px target rule, because a 44 px box
+   would overlap the lines above and below it; it still gets padding so its target is at least 24 px high. A stand-alone link or button
+   keeps 44 px (--tap). The selector outweighs the shell's `.cs-main a.cs-ref` 44 px rule, which an inline box cannot honour anyway. */
+.cs-main p a.cs-ref, .cs-main li > a.cs-ref:not(:only-child) { display: inline; padding-block: 3px; min-height: 0; min-width: 0; }
 
 /* ============================================================
    The security screen (K1875, DEC-165): the level against the group's usual, and a map of kinds over time.

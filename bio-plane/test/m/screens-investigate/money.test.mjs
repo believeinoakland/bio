@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
-import { open, main, actsIn, button, fill, press, TRAIL, P, MSR, M1, M2, M3, SHA, SHA2, word, drew, dayOf } from "./fixtures.mjs";
+import { open, main, actsIn, button, fill, press, TRAIL, P, MSR, M1, M2, M3, SHA, SHA2, word, drew, notDrew, dayOf } from "./fixtures.mjs";
 
 const at = "/app/money/" + MSR;
 const rowOf = (p, key) => main(p).querySelectorAll("tr.cs-r").find((r) => r.querySelector(`[data-id="${key}"]`));
@@ -75,7 +75,7 @@ test("R4 each row's panel by its kind: reconcile (a budgeted figure beside a pai
   assert.ok(panelOf(p, M2).textContent.includes("Grade B: bytes as fetched."), "the grade note, as the capture holds it");
   fill(p, { "mf-address": "https://city.example/afr-2022.pdf" });
   await press(p, "acquire", { within: panelOf(p, M2) });
-  assert.deepEqual(p.byOp("acquire")[0].body, { locator: "https://city.example/afr-2022.pdf", project: P });
+  assert.deepEqual(p.byOp("acquire")[0].body, { locator: "https://city.example/afr-2022.pdf" });
   fill(p, { "mf-expertise": "municipal budget" });
   await press(p, "checkrequest", { within: panelOf(p, M2), reason: "how was it read?" });
   const cr = p.byOp("checkrequest")[0].body;
@@ -99,7 +99,9 @@ test("R4 \"Ask the city for the record\" opens request for the project", async (
 });
 
 test("R4 the screen's own acts: Read a figure (recordfact), Start a money trail (createset, its name its words), committedagainstpaid", async () => {
+  let proposed = false;
   const p = await open(at, { plane: { recordfact: ok({ ok: true, fact_id: "MNY-2026-new", grade: { reading: "B" } }), createset: ok({ ok: true, set_id: "MSR-2026-0002" }),
+    moneysetpropose: () => { proposed = true; return ok({ ok: true }); }, moneyset: () => ok(TRAIL(proposed ? { proposals: [{ proposal_id: 1, fact_id: "MNY-2026-new", method: "member:recordfact", by: "member:ana", at: "x", label: "proposed", trail: { from: { stated: true }, to: { stated: true }, gaps: [] } }] } : {})),
     committedagainstpaid: ok({ ok: true, committed: { sum: { value: "1300000.00" } }, paid: { sum: { value: "1250000.00" } }, difference: { figure: { value: "50000.00" } } }) } });
   fill(p, { "mf-amount": "310,000", "mf-asread": "Overhead allocation … 310,000", "mf-kind": "allocation", "mf-phase": "actual", "mf-stage": "paid", "mf-basis": "undetermined",
     "mf-fiscal": "FY2022", "mf-payer": "Sewer Fund 3100", "mf-doc": SHA });
@@ -107,10 +109,10 @@ test("R4 the screen's own acts: Read a figure (recordfact), Start a money trail 
   assert.deepEqual(p.byOp("recordfact")[0].body, { amount: "310,000", as_read: "Overhead allocation … 310,000", currency: "USD", sign: "+", precision: "exact", kind: "allocation",
     phase: "actual", basis: "undetermined", period: { fiscal: "FY2022" }, from: { as_written: "Sewer Fund 3100" }, to: null,
     source: { capture_sha: SHA, extent: { kind: "document" } }, stage: "paid" });
+  assert.equal(p.byOp("moneysetpropose")[0].body.factId, "MNY-2026-new", "C8: proposed to the open trail");
   assert.ok(rowOf(p, "MNY-2026-new"), "the new figure is a row, not yet in the trail");
-  fill(p, { "mf-contract": "ENT-2026-0005" });
   await press(p, "committedagainstpaid");
-  assert.equal(p.byOp("committedagainstpaid")[0].query.contract, "ENT-2026-0005");
+  assert.equal(p.byOp("committedagainstpaid")[0].query.contract, "ENT-2026-0005", "C57: the contract is chosen, not typed");
   drew(main(p), "screen.money.cap.diff", { committed: "1300000.00", paid: "1250000.00", difference: "50000.00" });
   fill(p, { "mf-label": "Overhead charges, FY2022" });
   await press(p, "createset");
@@ -162,4 +164,42 @@ test("R34 the money trail's figure form chooses the document by title and sends 
   assert.equal(main(p).querySelectorAll("*").filter((e) => /^mf-(sha|page)$/.test(e.getAttribute("id") || "")).length, 0);
   const none = await open("/app/money/" + MSR, { plane: { heldcaptures: ok({ ok: true, held: [] }) } });
   assert.equal(none.doc.getElementById("mf-doc"), null, "no document: the choice's empty state");
+});
+
+/* C8, N1 (fix round 3; R4, money R28): a project's money trails are read by what they concern and listed, newest first, so a trail
+ * started there is found again after the page is reloaded. */
+const SETS = ["MSR-2026-0009", "MSR-2026-0008", "MSR-2026-0007", "MSR-2026-0006"].map((id, i) => ({ set_id: id, purpose: "trail", label: "Trail " + (4 - i), concerns: P, inclusions: [], exclusions: [] }));
+const linksOf = (p) => main(p).querySelectorAll('a[href^="/app/money/MSR-"]').map((a) => a.getAttribute("href"));
+
+test("R4 C8 a project's four trails are listed newest first, each opening its own page; the read names the project and asks for trails", async () => {
+  const p = await open("/app/money/" + P, { plane: { moneysets: ok({ ok: true, sets: SETS, limit: 500, truncated: false, next: null }) } });
+  const q = p.byOp("moneysets");
+  assert.equal(q.length, 1, "one read of the project's trails");
+  assert.equal(q[0].query.concerns, P);
+  assert.equal(q[0].query.purpose, "trail");
+  assert.deepEqual(linksOf(p), SETS.map((x) => "/app/money/" + x.set_id), "the owner's order, newest first");
+  for (const x of SETS) assert.ok(main(p).textContent.includes(x.label), "each by its label");
+  notDrew(main(p), "screen.money.notrail", {}, "the page does not say no trail is open");
+  assert.ok(button(p, "createset"), "starting another is still offered");
+});
+
+test("R4 C8 the trail is found after a reload: a trail started here is listed by a fresh page over the same record", async () => {
+  const held = [];
+  const plane = { moneysets: () => ok({ ok: true, sets: held.slice().reverse(), limit: 500, truncated: false, next: null }), createset: (r) => { held.push({ set_id: "MSR-2026-0042", purpose: "trail", label: r.body.label, concerns: r.body.concerns, inclusions: [], exclusions: [] }); return ok({ ok: true, set_id: "MSR-2026-0042" }); } };
+  const first = await open("/app/money/" + P, { plane });
+  fill(first, { "money-label": "Overhead charges" });
+  await press(first, "createset");
+  const again = await open("/app/money/" + P, { plane });
+  assert.deepEqual(linksOf(again), ["/app/money/MSR-2026-0042"]);
+  assert.ok(main(again).textContent.includes("Overhead charges"));
+});
+
+test("R4 C8 control: a project with none says so and offers only Start a money trail; a refused read draws no list", async () => {
+  const none = await open("/app/money/" + P, { plane: { moneysets: ok({ ok: true, sets: [], limit: 500, truncated: false, next: null }) } });
+  drew(main(none), "screen.money.notrail");
+  assert.deepEqual(linksOf(none), []);
+  assert.deepEqual(actsIn(main(none)), ["createset"]);
+  const refused = await open("/app/money/" + P, { plane: { moneysets: refusedIn("NO_CONCERNS", "Name what the trails concern.") } });
+  assert.deepEqual(linksOf(refused), []);
+  notDrew(main(refused), "screen.money.notrail");
 });

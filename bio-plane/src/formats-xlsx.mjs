@@ -60,13 +60,31 @@
  *
  * THE SIZE BOUND is COFF-6's measured metric, enacted in ooxml.mjs: 20 MiB
  * of DECLARED UNCOMPRESSED text-part bytes (sheets + sharedStrings), summed
- * from the central directory BEFORE inflation. Over the bound, the container
- * and metadata treatment still runs in full — links from rels (their cell
- * joins honestly undetermined), hidden SHEETS still flagged from the small
- * workbook.xml — but text extraction is refused as a STATED
- * text-undetermined carrying the guard's own marker verbatim. Streaming to
- * 64 MiB is DEFERRED (COFF-6's landed line) and deliberately not built.
- * Every part read passes ooxml.mjs's part cap (R12, F18).
+ * from the central directory BEFORE inflation. It is what this entry may hold
+ * in memory at once. Over it, up to ooxml.mjs's STREAMED_TEXT_BOUND_BYTES, the
+ * text is READ IN PIECES (R35, F7): each sheet part is inflated in windows and
+ * walked a run of whole rows at a time, so a sheet is never held whole and its
+ * rows are consumed as they come; the typed `cells` list (R30) is not made
+ * (`cells` is null, as over the guard) and the answer says it was read in
+ * pieces (`piecewise`). Over the streamed ceiling the text is refused as a
+ * STATED text-undetermined carrying the guard's marker, its size and
+ * `final: true`; the container and metadata treatment still runs in full —
+ * links from rels (their cell joins honestly undetermined), hidden SHEETS
+ * still flagged from the small workbook.xml. Every part read passes
+ * ooxml.mjs's part cap (R12, F18).
+ *
+ * HELD CELLS (G41; K4636, K4639, K4642). A sheet's typed cells are not all made
+ * at intake. A caller that passes `{inlineCellsMax}` to text() (reading-pipeline,
+ * which stores the reading) gets a sheet's `cells` only while the workbook's
+ * cells together, as JSON, are within that many bytes; past it every walked
+ * sheet carries `cells: null` and `cells_held: true`, and the cells of a range
+ * are made from the held bytes by `cellsIn()`, the same cells the whole read
+ * makes, one run of rows at a time. A caller that passes no option is answered
+ * as it always was. A workbook under the bound above is read whole, the cells held
+ * too: measured (job record, G41), an opted-in read of 19.6 MiB of declared
+ * text survives at 48 MB of old space over an idle of 17, inside the 79 MB less
+ * the file's size the plane's object leaves, so no smaller threshold for reading
+ * in windows is needed (windows cost more for long strings than they save).
  *
  * ACTIVE CONTENT (R32): `active` on structure() and text(), from docx.mjs's
  * one `activeContent` builder, Excel 4.0 macro sheets included; .xlsm/.xltm/
@@ -79,8 +97,8 @@
 import {
   hasZipMagic, readContainer, readPart, discriminate,
   CONTENT_TYPES_PART, relsPartFor, normalizePartName, walkRels,
-  sizeGuard, declaredTextBytes, CORE_PROPERTIES_PART, readCoreProperties,
-  withContainerImages,
+  declaredTextBytes, CORE_PROPERTIES_PART, readCoreProperties,
+  withContainerImages, textPlan, readPartPieces, pieceWhy, cutBefore,
 } from "./ooxml.mjs";
 import { linkWrapper } from "./subresources.mjs";
 import { withMetadata, activeContent, withActive, detectByContentType } from "./docx.mjs";
@@ -176,48 +194,11 @@ async function sha256Hex(u8) {
   return out;
 }
 
-/* IC-1: the sheet-cell element reference, produced by the container that
- * knows it. `ref` is the exact human form a citation surface displays.
- *
- * EXPORTED 2026-09-14 by COFF-10, and the export is the whole change to this
- * file: the `.ods` entry (`odf.mjs`) emits `sheet-cell` references too, and
- * its brief says REUSE the sibling's builder rather than grow a fourth. A
- * second copy of two lines is how two producers of one IC-1 arm drift — the
- * same argument that made `linkWrapper` imported rather than re-derived.
- * Behaviour here is untouched; the over-strictness arm proves this entry's
- * outputs are byte-identical across the change. */
-export function sheetCellRef(sheet, cell) {
-  return { kind: "sheet-cell", ref: `${sheet}!${cell}`, sheet, cell };
-}
-
-/** FW-19 / IC-124 — `{kind:"sheet-range", ref:"Sheet1!A1:C10", sheet, range}`
- *  (EXTRACTION-BREADTH §3.2): a table in a workbook, or a sheet as a unit
- *  (`CONTENT-SEARCH-DESIGN.md` §4.1's workbook unit). `range` is A1:A1
- *  notation with the top-left corner first. EXPORTED for `odf.mjs`'s `.ods`
- *  entry — one builder per arm (COFF-10's rule, which is why `sheetCellRef`
- *  above is exported too). */
-export function sheetRangeRef(sheet, range) {
-  return { kind: "sheet-range", ref: `${sheet}!${range}`, sheet, range };
-}
-
-/** A 1-based column number -> its A1 letters (1 -> A, 27 -> AA). Bijective
- *  base 26 — there is no zero digit, which is the mistake available here. */
-export function columnLetters(n) {
-  let out = "";
-  for (let c = n; c > 0; c = Math.floor((c - 1) / 26)) out = String.fromCharCode(65 + ((c - 1) % 26)) + out;
-  return out;
-}
-
-/** The WHOLE-SHEET unit a sheet's walk can honestly name: A1 to the far
- *  corner of its USED range, or NULL when that range was not measured or is
- *  empty. The used range and not the grid, deliberately and unlike the
- *  `sheet-cell` BOUND: this is a UNIT a reader is shown ("the sheet"), and a
- *  unit of a million blank rows is not what anybody means by the sheet. The
- *  bound a citation is REFUSED against stays the grid (`rows`/`cols`). */
-export function usedSheetRange(name, usedRows, usedCols) {
-  if (!(Number.isInteger(usedRows) && usedRows > 0 && Number.isInteger(usedCols) && usedCols > 0)) return null;
-  return sheetRangeRef(name, `A1:${columnLetters(usedCols)}${usedRows}`);
-}
+/* The sheet-reference builders (IC-1 `sheet-cell`, FW-19 `sheet-range`, A1 column letters) live in
+ * `csv-reader` (module order: office-readers uses it); re-exported here so docx, odf and the
+ * tests that import them from this file are unchanged. */
+import { sheetCellRef, sheetRangeRef, columnLetters, usedSheetRange } from "./csv.mjs";
+export { sheetCellRef, sheetRangeRef, columnLetters, usedSheetRange };
 
 /* ------------------------------------------------------------------ *
  * D-415 — A WORKBOOK'S NAMED UNITS (R9; EXTRACTION-BREADTH §3.3 item 1).
@@ -359,7 +340,7 @@ function xlsxRangeUnits(parts) {
  * ------------------------------------------------------------------ *
  *
  * THE BOUND IS THE GRID, NEVER THE USED RANGE, and that is a decision rather
- * than a convenience. `walkSheetXml` can say exactly how far this workbook's
+ * than a convenience. the sheet walk can say exactly how far this workbook's
  * cells reach, and feeding THAT to the `sheet-cell` arm of C-45.1 would refuse
  * `Summary!D500` on a sheet filled to row 12 — a cell that EXISTS in the
  * workbook and was EMPTY at capture. That is the record refusing a TRUE
@@ -516,35 +497,55 @@ async function xlsxParts(bytes) {
 
   /* THE MEASURED BOUND (COFF-6, enacted in ooxml.mjs): declared uncompressed
    * text-part bytes — the sheets and sharedStrings — summed from the central
-   * directory BEFORE any inflation. `guard` is null under the bound, the
-   * stated marker over it (the docx.mjs pattern, so the two entries carry the
-   * refusal identically). */
+   * directory BEFORE any inflation. Under the bound the parts are read whole.
+   * Over it, up to the streamed ceiling, they are read in PIECES (R35): the
+   * shared strings now, as a list, and each sheet when text() or structure()
+   * walks it, so no sheet is held. Over the ceiling `guard` is the stated
+   * marker (the docx.mjs pattern, so the two entries carry the refusal
+   * identically). */
   const sheetParts = new Set(sheets.map((s) => s.part).filter(Boolean));
   const isTextPart = (n) => sheetParts.has(n) || n === SHARED_STRINGS_PART;
   const declared = declaredTextBytes(container, isTextPart);
-  const guardR = sizeGuard(declared.total);
-  const guard = guardR.ok ? null : guardR;
+  const plan = textPlan(declared.total);
+  const guard = plan.read === "none" ? plan.guard : null;
+  const piecewise = plan.read === "pieces" ? plan.piecewise : null;
 
   let sharedStrings = null;
-  if (!guard) {
+  if (plan.read !== "none") {
     /* sharedStrings, if the package has one. Absence is normal; presence
      * that cannot be read is a stated undetermined every t="s" cell will
      * inherit rather than a guessed string. */
     if (container.byName.has(SHARED_STRINGS_PART)) {
-      const ss = await readPart(b, container, SHARED_STRINGS_PART);
-      if (ss.ok) sharedStrings = elements(UTF8.decode(ss.bytes), "si").map((si) => textRuns(si.inner));
-      else undetermined.push({ part: SHARED_STRINGS_PART, why: ss.why });
+      if (plan.read === "whole") {
+        const ss = await readPart(b, container, SHARED_STRINGS_PART);
+        if (ss.ok) sharedStrings = elements(UTF8.decode(ss.bytes), "si").map((si) => textRuns(si.inner));
+        else undetermined.push({ part: SHARED_STRINGS_PART, why: ss.why });
+      } else {
+        const strings = [];
+        const ss = await readPartPieces(b, container, SHARED_STRINGS_PART, SI_CUT, (piece) => {
+          for (const si of elements(piece, "si")) strings.push(textRuns(si.inner));
+        });
+        if (ss.ok) sharedStrings = strings;
+        else undetermined.push({ part: SHARED_STRINGS_PART, ...pieceWhy(ss) });
+      }
     }
     for (const sheet of sheets) {
       if (!sheet.part) { undetermined.push({ part: `(sheet ${sheet.name})`, why: sheet.why }); continue; }
+      if (plan.read === "pieces") {
+        /* Walked in pieces by text() and structure(), each time it is asked
+           for; a sheet the package does not hold is stated now. */
+        if (container.byName.has(sheet.part) || container.entries.some((e) => normalizePartName(e.name) === sheet.part)) sheet.pieces = true;
+        else { sheet.why = "part_absent"; undetermined.push({ part: sheet.part, why: "part_absent" }); }
+        continue;
+      }
       const read = await readPart(b, container, sheet.part);
       if (read.ok) sheet.xml = UTF8.decode(read.bytes);
       else { sheet.why = read.why; undetermined.push({ part: sheet.part, why: read.why }); }
     }
   }
-  /* Over the bound, nothing is inflated and nothing is pushed here: the guard
-   * marker itself is the statement, carried by structure()'s envelope and by
-   * text() verbatim (the docx.mjs pattern). */
+  /* Over the streamed ceiling, nothing is inflated and nothing is pushed here:
+   * the guard marker itself is the statement, carried by structure()'s
+   * envelope and by text() verbatim (the docx.mjs pattern). */
 
   /* docProps/core.xml: absent is normal OPC; present-but-unreadable is a
    * stated undetermined, distinct from absence. */
@@ -561,7 +562,7 @@ async function xlsxParts(bytes) {
 
   return {
     ok: true, format: "xlsx", variant: disc.variant ?? null, bytes: b, container,
-    sheets, definedNames, tables, rels, sharedStrings, core, active, declared, guard, undetermined,
+    sheets, definedNames, tables, rels, sharedStrings, core, active, declared, guard, piecewise, undetermined,
   };
 }
 
@@ -572,33 +573,20 @@ async function xlsxParts(bytes) {
  *   hiddenRows, hiddenCols, hyperlinks
  * ------------------------------------------------------------------ */
 
-function walkSheetXml(xml) {
-  const rows = elements(xml, "row").map((row) => ({
-    r: row.attrs.r != null ? parseInt(row.attrs.r, 10) : null,
-    hidden: row.attrs.hidden === "1" || row.attrs.hidden === "true",
-    cells: elements(row.inner, "c").map((c) => {
-      const f = elements(c.inner, "f");
-      const v = elements(c.inner, "v");
-      const is = elements(c.inner, "is");
-      return {
-        cell: c.attrs.r ?? null,
-        t: c.attrs.t ?? null,
-        f: f.length ? decodeXmlEntities(f[0].inner) : null,
-        v: v.length ? decodeXmlEntities(v[0].inner) : null,
-        is: is.length ? textRuns(is[0].inner) : null,
-      };
-    }),
-  }));
-  const hiddenRows = rows.filter((r) => r.hidden && r.r != null).map((r) => r.r);
-  const hiddenCols = elements(xml, "col")
-    .filter((c) => c.attrs.hidden === "1" || c.attrs.hidden === "true")
-    .map((c) => ({ min: parseInt(c.attrs.min, 10), max: parseInt(c.attrs.max, 10) }));
-  const hyperlinks = elements(xml, "hyperlink").map((h) => ({
-    cell: h.attrs.ref ?? null,
-    relId: h.attrs.id ?? null,
-    location: h.attrs.location ?? null,
-    display: h.attrs.display ?? null,
-  }));
+/* The cuts for a sheet part read in pieces: between two rows (or a row and
+ * the first hyperlink), so every piece holds whole elements. The expressions
+ * are built here, not shared, and carry no state between cuts. */
+const SHEET_CUT = cutBefore(/<(?:[\w.-]+:)?(?:row|hyperlink)\b/g);
+const SI_CUT = cutBefore(/<(?:[\w.-]+:)?si\b/g);
+
+/* A sheet's walk, one run of whole elements at a time: `feed(xml)` takes the
+ * whole part or a piece of it that ends between two rows, `done()` the totals.
+ * `onRow` is called with each row as it is walked. The whole part given to
+ * `feed` once is the walk this function has always made. */
+function sheetWalker(onRow) {
+  const hiddenRows = [];
+  const hiddenCols = [];
+  const hyperlinks = [];
   /* COFF-11 — THE USED EXTENT, accumulated over the cells this walk has
      already read. It is taken from the CELLS and not from the `<row>`
      elements: a producer may declare a row to carry formatting and put no
@@ -610,15 +598,63 @@ function walkSheetXml(xml) {
      which is a MEASURED zero (this sheet holds nothing) and is a different
      fact from the NULL the bound carries when the format fixes no maximum. */
   let usedRows = 0, usedCols = 0;
-  for (const row of rows) {
-    if (!row.cells.length) continue;
-    if (Number.isInteger(row.r) && row.r > usedRows) usedRows = row.r;
-    for (const c of row.cells) {
-      const col = a1Col(c.cell);
-      if (col != null && col > usedCols) usedCols = col;
-    }
-  }
-  return { rows, hiddenRows, hiddenCols, hyperlinks, usedRows, usedCols };
+  return {
+    feed(xml) {
+      for (const el of elements(xml, "row")) {
+        const row = {
+          r: el.attrs.r != null ? parseInt(el.attrs.r, 10) : null,
+          hidden: el.attrs.hidden === "1" || el.attrs.hidden === "true",
+          cells: elements(el.inner, "c").map((c) => {
+            const f = elements(c.inner, "f");
+            const v = elements(c.inner, "v");
+            const is = elements(c.inner, "is");
+            return {
+              cell: c.attrs.r ?? null,
+              t: c.attrs.t ?? null,
+              f: f.length ? decodeXmlEntities(f[0].inner) : null,
+              v: v.length ? decodeXmlEntities(v[0].inner) : null,
+              is: is.length ? textRuns(is[0].inner) : null,
+            };
+          }),
+        };
+        if (row.hidden && row.r != null) hiddenRows.push(row.r);
+        if (row.cells.length) {
+          if (Number.isInteger(row.r) && row.r > usedRows) usedRows = row.r;
+          for (const c of row.cells) {
+            const col = a1Col(c.cell);
+            if (col != null && col > usedCols) usedCols = col;
+          }
+        }
+        onRow(row);
+      }
+      for (const c of elements(xml, "col")) {
+        if (c.attrs.hidden === "1" || c.attrs.hidden === "true") {
+          hiddenCols.push({ min: parseInt(c.attrs.min, 10), max: parseInt(c.attrs.max, 10) });
+        }
+      }
+      for (const h of elements(xml, "hyperlink")) {
+        hyperlinks.push({
+          cell: h.attrs.ref ?? null,
+          relId: h.attrs.id ?? null,
+          location: h.attrs.location ?? null,
+          display: h.attrs.display ?? null,
+        });
+      }
+    },
+    done: () => ({ hiddenRows, hiddenCols, hyperlinks, usedRows, usedCols }),
+  };
+}
+
+/* One sheet part walked, whole (its XML in hand) or in pieces (R35): `onRow`
+ * gets every row as it is walked, and the answer is the walk's totals, or
+ * `{ failed: why }` when the part could not be read to its end. A caller whose
+ * answer is `failed` has been given rows of a part that is not the part, and
+ * drops what it built from them. */
+async function walkSheetPart(parts, sheet, onRow) {
+  const w = sheetWalker(onRow);
+  if (sheet.xml != null) { w.feed(sheet.xml); return w.done(); }
+  const read = await readPartPieces(parts.bytes, parts.container, sheet.part, SHEET_CUT, (piece) => w.feed(piece));
+  return read.ok ? w.done() : { failed: pieceWhy(read) };
 }
 
 /** One cell's DISPLAYED value (the cached claim the published sheet shows).
@@ -699,12 +735,37 @@ async function xlsxStructure(parts) {
       for (const r of sheet.rels.relationships) if (r.id) relTargets.set(r.id, r);
     }
 
-    if (sheet.xml == null) {
+    /* The sheet walked: whole (its XML in hand) or in pieces (R35), the
+     * formulas gathered as the rows come (DEC-5, below) and no row kept. A
+     * sheet read in pieces that cannot be read to its end is stated, with the
+     * reason, and its links fall back to the rels alone. */
+    const formulas = [];
+    let walked = null, failedWhy = null;
+    if (sheet.xml != null || sheet.pieces) {
+      walked = await walkSheetPart(parts, sheet, (row) => {
+        for (const c of row.cells) {
+          if (c.f == null) continue;
+          formulas.push({
+            kind: "formula",
+            source: c.cell ? sheetCellRef(sheet.name, c.cell) : null,
+            formula: c.f,
+            value: c.v, // the cached result, null when the file carries none — stated, not invented
+          });
+        }
+      });
+      if (walked.failed) {
+        failedWhy = walked.failed.why;
+        evUndetermined.push({ part: sheet.part, ...walked.failed });
+        walked = null;
+      }
+    }
+
+    if (walked == null) {
       /* Over the bound, or an unreadable sheet: the rels still name every
        * EXTERNAL target this sheet carries, so the outbound graph survives —
        * but the cell join lives in the unread sheet XML, so each link's
        * element reference is honestly null and the reason is on the record. */
-      const why = guard == null ? (sheet.why ?? "sheet_unreadable") : "over_size_bound";
+      const why = failedWhy ?? (guard == null ? (sheet.why ?? "sheet_unreadable") : "over_size_bound");
       for (const [, r] of relTargets) {
         if (!r.external) continue;
         const partition = classifyUrl(r.target);
@@ -719,7 +780,6 @@ async function xlsxStructure(parts) {
       continue;
     }
 
-    const walked = walkSheetXml(sheet.xml);
     const usedRels = new Set();
 
     /* Hyperlinks: the sheet XML knows the CELL, the rels know the TARGET. */
@@ -775,17 +835,7 @@ async function xlsxStructure(parts) {
     /* DEC-5: formulas BESIDE their cached values — two named fields on one
      * item, never collapsed. The value in the TEXT stream stays the cached
      * <v> (what the sheet displays); the derivation lives here, cell-keyed. */
-    for (const row of walked.rows) {
-      for (const c of row.cells) {
-        if (c.f == null) continue;
-        evItems.push({
-          kind: "formula",
-          source: c.cell ? sheetCellRef(sheet.name, c.cell) : null,
-          formula: c.f,
-          value: c.v, // the cached result, null when the file carries none — stated, not invented
-        });
-      }
-    }
+    for (const f of formulas) evItems.push(f);
 
     /* DEC-5: hidden rows and columns, flagged per sheet. */
     if (walked.hiddenRows.length) {
@@ -831,6 +881,7 @@ async function xlsxStructure(parts) {
     notes.push("text_parts_over_bound");
     evUndetermined.push({ part: "(text parts: worksheets + sharedStrings)", why: "over_size_bound", guard });
   }
+  if (parts.piecewise) notes.push("text_read_in_pieces");
 
   /* Defined names -> anchor (workbook-scoped: no single source cell, and a
    * null source is a statement, never a guess). */
@@ -900,7 +951,20 @@ async function xlsxStructure(parts) {
  * text(parts) -> the I2 text shape
  * ------------------------------------------------------------------ */
 
-function xlsxText(parts) {
+/* G41: the cap on a workbook's cells in the answer, in bytes of their JSON, from the caller's option (the number is
+ * reading-pipeline's, K4646); null when the caller did not opt in (then every cell is listed, as it always was). */
+function inlineCellsCap(opts) {
+  const v = opts?.inlineCellsMax;
+  return typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : null;
+}
+const JSON_ENC = new TextEncoder();
+/** The UTF-8 bytes of one cell's JSON. */
+function cellJsonBytes(cell) {
+  const j = JSON.stringify(cell);
+  return /[^\x00-\x7f]/.test(j) ? JSON_ENC.encode(j).length : j.length;
+}
+
+async function xlsxText(parts, opts) {
   /* The shapes below are IC-2's pageless degenerate form AS ACCEPTED from
    * docx.mjs (paragraphs[] there, sheets[] here — the per-unit list named for
    * what the unit IS; `ok`/`container`/`document`/`undetermined`/`counts`
@@ -908,10 +972,10 @@ function xlsxText(parts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "xlsx", reason: parts?.why ?? "PARTS_ABSENT" };
   }
-  const { sheets, sharedStrings, guard } = parts;
+  const { sheets, sharedStrings, guard, piecewise } = parts;
 
   if (guard) {
-    /* Over the measured bound: the sizeGuard marker carried VERBATIM inside
+    /* Over the streamed ceiling: the sizeGuard marker carried VERBATIM inside
      * `undetermined` (the docx.mjs pattern — ooxml.mjs shaped the marker for
      * exactly this), never a silent truncation. */
     return {
@@ -925,34 +989,62 @@ function xlsxText(parts) {
   const outSheets = [];
   const allUndetermined = [];
   let cellCount = 0, formulaCount = 0;
+  /* G41: with the caller's cap, the workbook's cells are listed while all of them together, as JSON, are within it;
+     once they are not, every sheet's list is dropped and none is made (`held`). Over the whole-read bound none is
+     made either (R35). Without the caller's cap nothing is held: every cell is listed, as always. */
+  const cap = inlineCellsCap(opts);
+  let held = false, listedBytes = 0;
+  const walkedOut = [];
+
+  /* A sheet that gave no text: the marker, and the sheet as a unit with no
+   * text and no cells. */
+  const unreadable = (sheet, why, extra = {}) => {
+    const marker = { sheet: sheet.index, cell: null, reason: why, ...extra };
+    /* COFF-11: the BOUND still stands — this is a sheet of an XLSX workbook
+       whether or not its part could be read, so an impossible address is
+       still impossible and is still refused. The USED range is NULL rather
+       than 0, because nothing walked it: a zero here would say "this sheet
+       holds nothing", which is the one thing an unread sheet cannot say. */
+    outSheets.push({ sheet: sheet.index, name: sheet.name, hidden: sheet.hidden,
+      rows: XLSX_GRID_ROWS, cols: XLSX_GRID_COLS, usedRows: null, usedCols: null,
+      range: null, text: "", cells: null, undetermined: [marker] });
+    allUndetermined.push(marker);
+  };
 
   for (const sheet of sheets) {
-    if (sheet.xml == null) {
-      const marker = { sheet: sheet.index, cell: null, reason: sheet.why ?? "sheet_unreadable" };
-      /* COFF-11: the BOUND still stands — this is a sheet of an XLSX workbook
-         whether or not its part could be read, so an impossible address is
-         still impossible and is still refused. The USED range is NULL rather
-         than 0, because nothing walked it: a zero here would say "this sheet
-         holds nothing", which is the one thing an unread sheet cannot say. */
-      outSheets.push({ sheet: sheet.index, name: sheet.name, hidden: sheet.hidden,
-        rows: XLSX_GRID_ROWS, cols: XLSX_GRID_COLS, usedRows: null, usedCols: null,
-        range: null, text: "", cells: null, undetermined: [marker] });
-      allUndetermined.push(marker);
-      continue;
-    }
-    const walked = walkSheetXml(sheet.xml);
+    if (sheet.xml == null && !sheet.pieces) { unreadable(sheet, sheet.why ?? "sheet_unreadable"); continue; }
     const undetermined = [];
     const lines = [];
-    const typed = [];
-    for (const row of walked.rows) {
+    /* G15: the 1-based row of each line, beside `lines` (empty rows give no
+       line, so the line index is not the row). A row with no readable `r`
+       follows the row before it, as the format defines. */
+    const lineRows = [];
+    let lastRow = 0;
+    /* R30's typed cells: a sheet read in pieces lists none (`cells` is null,
+       as over the guard), because they are the one thing here that grows with
+       the sheet in objects, not in text (R35); nor does a workbook whose cells
+       are held (G41). */
+    let typed = piecewise || held ? null : [];
+    let sheetBytes = 2;
+    let sheetCells = 0, sheetFormulas = 0;
+    const walked = await walkSheetPart(parts, sheet, (row) => {
       const vals = [];
+      const rowNo = Number.isInteger(row.r) && row.r > 0 ? row.r : lastRow + 1;
+      lastRow = rowNo;
       for (const c of row.cells) {
-        if (c.f != null) formulaCount++;
-        /* R30: every cell holding a value or a formula, typed as declared. */
+        if (c.f != null) sheetFormulas++;
+        /* R30: every cell holding a value or a formula, typed as declared. A cell type outside the format's list is
+           stated whether or not the cells are listed. */
         if (c.v != null || c.f != null || (c.t === "inlineStr" && c.is != null)) {
-          const tc = typedCell(c, sheet.name, sharedStrings);
-          typed.push({ ref: c.cell, cell: tc.cell });
-          if (tc.why === "cell_type_unknown") undetermined.push({ sheet: sheet.index, cell: c.cell, reason: tc.why });
+          if (c.t != null && CELL_TYPES[c.t] == null) undetermined.push({ sheet: sheet.index, cell: c.cell, reason: "cell_type_unknown" });
+          if (typed) {
+            const tc = typedCell(c, sheet.name, sharedStrings);
+            typed.push({ ref: c.cell, cell: tc.cell });
+            if (cap != null) {
+              sheetBytes += cellJsonBytes(tc.cell) + (typed.length > 1 ? 1 : 0);
+              if (listedBytes + sheetBytes > cap) { held = true; typed = null; }
+            }
+          }
         }
         const r = cellValue(c, sharedStrings);
         if (r.undetermined) {
@@ -960,11 +1052,19 @@ function xlsxText(parts) {
           continue;
         }
         if (r.value == null || r.value === "") continue;
-        cellCount++;
+        sheetCells++;
         vals.push(r.value);
       }
-      if (vals.length) lines.push(vals.join("\t"));
+      if (vals.length) { lines.push(vals.join("\t")); lineRows.push(rowNo); }
+    });
+    if (walked.failed) {
+      const { why, ...rest } = walked.failed;
+      unreadable(sheet, why, rest);
+      continue;
     }
+    cellCount += sheetCells;
+    formulaCount += sheetFormulas;
+    if (typed) listedBytes += sheetBytes;
     const text = lines.join("\n");
     /* COFF-11 / IC-100 — the sheet's own extent, in TWO figures that are two
        different facts: `rows`/`cols` is the BOUND (the grid this format makes
@@ -976,8 +1076,16 @@ function xlsxText(parts) {
       usedRows: walked.usedRows, usedCols: walked.usedCols,
       /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
       range: usedSheetRange(sheet.name, walked.usedRows, walked.usedCols),
-      text, cells: rowColumnOrder(typed).map((x) => x.cell), undetermined });
+      text, lineRows, cells: typed ? rowColumnOrder(typed).map((x) => x.cell) : null, undetermined });
+    walkedOut.push(outSheets[outSheets.length - 1]);
     for (const u of undetermined) allUndetermined.push(u);
+  }
+  /* G41: a caller that opted in is told, for every sheet it was given no cells of, that they are held. */
+  if (cap != null) {
+    for (const o of walkedOut) {
+      if (held || piecewise) o.cells = null;
+      if (o.cells === null) o.cells_held = true;
+    }
   }
 
   const document = outSheets.map((s) => s.text).filter((t) => t.length).join("\n");
@@ -992,7 +1100,127 @@ function xlsxText(parts) {
     undetermined: allUndetermined,
     counts: { chars: document.length, cells: cellCount, formulas: formulaCount,
       undetermined: allUndetermined.length },
+    /* R35: said when the text was read in pieces, the figures it was judged by. */
+    ...(piecewise ? { piecewise } : {}),
   };
+}
+
+/* ------------------------------------------------------------------ *
+ * cellsIn(parts | bytes, range) -> the typed cells of a range, from the held bytes (G41)
+ * ------------------------------------------------------------------ *
+ *
+ * `range` is `{ sheet, fromRow, toRow, fromCol, toCol, maxCells }`: `sheet` the
+ * sheet's name (exact, else without case when exactly one answers) or its
+ * 0-based position; rows and columns 1-based and inclusive, `fromRow` and
+ * `fromCol` 1 and `toRow` and `toCol` the end of the sheet when absent. The
+ * answer is `{ ok:true, sheet, cells, rows:{from, to}, next_row, undetermined }`:
+ * the cells text() would have listed for those rows and columns (the same
+ * `typedCell`, shared strings from the one list, hidden rows and columns not
+ * left out), in row then column order. A call answers at most `maxCells`
+ * (default CELLS_IN_MAX) cells and whole rows only: the row that would pass it
+ * is left to the next call, `next_row` its number, and `rows.to` the last row
+ * answered; the first row is answered whole even if alone it is over. `next_row`
+ * is absent when the range was answered whole. The sheet part is inflated in windows
+ * to its end, so its length and CRC are verified, and only the rows in range
+ * are parsed; a part that cannot be read to its end gives `{ ok:false, reason }`.
+ * Rows are taken in the order the format requires, ascending: a piece whose
+ * rows all lie outside the range is not parsed on that account. A cell with no
+ * readable column is in every column range. Never throws.
+ */
+export const CELLS_IN_MAX = 20000;
+
+function cellsInArguments(range) {
+  if (range == null || typeof range !== "object") return { reason: "invalid_argument", argument: "range" };
+  const { sheet, fromRow = 1, toRow = null, fromCol = 1, toCol = null, maxCells = CELLS_IN_MAX } = range;
+  if (!((typeof sheet === "string" && sheet !== "") || (Number.isInteger(sheet) && sheet >= 0))) return { reason: "invalid_argument", argument: "sheet" };
+  const pos = (v) => Number.isInteger(v) && v >= 1;
+  if (!pos(fromRow)) return { reason: "invalid_argument", argument: "fromRow" };
+  if (toRow !== null && !(pos(toRow) && toRow >= fromRow)) return { reason: "invalid_argument", argument: "toRow" };
+  if (!pos(fromCol)) return { reason: "invalid_argument", argument: "fromCol" };
+  if (toCol !== null && !(pos(toCol) && toCol >= fromCol)) return { reason: "invalid_argument", argument: "toCol" };
+  if (!pos(maxCells)) return { reason: "invalid_argument", argument: "maxCells" };
+  return { sheet, fromRow, toRow: Math.min(toRow ?? XLSX_GRID_ROWS, XLSX_GRID_ROWS), toRowGiven: toRow !== null, fromCol, toCol: toCol ?? XLSX_GRID_COLS, maxCells };
+}
+
+/* The sheet's rows are the elements `<row ...>`: how many a piece holds, and the first and last `r` it names, read
+ * without parsing a row. */
+const ROW_TAG = /<(?:[\w.-]+:)?row\b([^>]*)>/g;
+function rowSpan(piece) {
+  ROW_TAG.lastIndex = 0;
+  let n = 0, noR = 0, first = null, last = null, m;
+  while ((m = ROW_TAG.exec(piece)) !== null) {
+    n++;
+    const r = /(?:^|\s)r\s*=\s*["'](\d+)["']/.exec(m[1]);
+    if (!r) { noR++; continue; }
+    const v = parseInt(r[1], 10);
+    if (first == null) first = v;
+    last = v;
+  }
+  return { n, noR, first, last };
+}
+
+async function xlsxCellsIn(parts, a) {
+  if (!parts || !parts.ok) return { ok: false, reason: parts?.why ?? "PARTS_ABSENT" };
+  const { sheets, sharedStrings, guard } = parts;
+  if (guard) return { ok: false, reason: guard.why, size: guard.size, bound: guard.bound, boundName: guard.boundName, final: true };
+  let sheet = null;
+  if (typeof a.sheet === "number") sheet = sheets[a.sheet] ?? null;
+  else {
+    sheet = sheets.find((s) => s.name === a.sheet) ?? null;
+    if (!sheet) {
+      const ci = sheets.filter((s) => s.name.toLowerCase() === a.sheet.toLowerCase());
+      if (ci.length === 1) sheet = ci[0];
+    }
+  }
+  if (!sheet) return { ok: false, reason: "no_such_sheet" };
+  if (sheet.xml == null && !sheet.pieces) return { ok: false, reason: sheet.why ?? "sheet_unreadable" };
+
+  const out = [], undetermined = [];
+  let lastRow = 0, maxRow = 0, nextRow = null, stopped = false, lastTaken = null;
+  const feed = (xml, skipping) => {
+    if (stopped) return;
+    for (const el of elements(xml, "row")) {
+      const given = el.attrs.r != null ? parseInt(el.attrs.r, 10) : null;
+      const rowNo = Number.isInteger(given) && given > 0 ? given : lastRow + 1;
+      lastRow = rowNo;
+      if (rowNo > maxRow) maxRow = rowNo;
+      if (rowNo < a.fromRow || rowNo > a.toRow) continue;
+      const cells = [];
+      for (const c of elements(el.inner, "c")) {
+        const f = elements(c.inner, "f"), v = elements(c.inner, "v"), is = elements(c.inner, "is");
+        const w = { cell: c.attrs.r ?? null, t: c.attrs.t ?? null,
+          f: f.length ? decodeXmlEntities(f[0].inner) : null, v: v.length ? decodeXmlEntities(v[0].inner) : null,
+          is: is.length ? textRuns(is[0].inner) : null };
+        if (!(w.v != null || w.f != null || (w.t === "inlineStr" && w.is != null))) continue;
+        const col = a1Col(w.cell);
+        if (col != null && (col < a.fromCol || col > a.toCol)) continue;
+        const tc = typedCell(w, sheet.name, sharedStrings);
+        if (tc.why) undetermined.push({ sheet: sheet.index, cell: w.cell, reason: tc.why });
+        cells.push({ ref: w.cell, cell: tc.cell });
+      }
+      if (out.length > 0 && out.length + cells.length > a.maxCells) { nextRow = rowNo; stopped = true; return; }
+      for (const c of cells) out.push(c);
+      lastTaken = rowNo;
+    }
+  };
+  /* A piece wholly before the range, or wholly after it, is not parsed (ascending rows, every row named). */
+  const piece = (xml) => {
+    if (stopped) return;
+    const span = rowSpan(xml);
+    if (span.n > 0 && span.noR === 0 && span.first <= span.last) {
+      if (span.last < a.fromRow) { lastRow = span.last; if (span.last > maxRow) maxRow = span.last; return; }
+      if (span.first > a.toRow) { lastRow = span.last; if (span.last > maxRow) maxRow = span.last; return; }
+    }
+    feed(xml);
+  };
+  if (sheet.xml != null) piece(sheet.xml);
+  else {
+    const read = await readPartPieces(parts.bytes, parts.container, sheet.part, SHEET_CUT, piece);
+    if (!read.ok) { const { why, ...rest } = pieceWhy(read); return { ok: false, reason: why, ...rest }; }
+  }
+  const cells = rowColumnOrder(out).map((x) => x.cell);
+  const to = nextRow != null ? nextRow - 1 : (a.toRowGiven ? a.toRow : Math.max(a.fromRow, maxRow));
+  return { ok: true, sheet: sheet.name, cells, rows: { from: a.fromRow, to }, ...(nextRow != null ? { next_row: nextRow } : {}), undetermined };
 }
 
 /* ------------------------------------------------------------------ *
@@ -1032,11 +1260,23 @@ export const xlsxEntry = {
       : partsOrBytes;
     return withActive(await xlsxStructure(parts), parts);
   },
-  text: async (partsOrBytes) => {
+  /* `opts.inlineCellsMax` (G41): see HELD CELLS above. */
+  text: async (partsOrBytes, opts) => {
     const parts = isBytes(partsOrBytes)
       ? await xlsxParts(partsOrBytes)
       : partsOrBytes;
     /* FW-19 / IC-124: `images` under xl/media/, exhaustive or NULL. */
-    return withContainerImages(withActive(withMetadata(xlsxText(parts), parts), parts), parts, "xl/media/");
+    return withContainerImages(withActive(withMetadata(await xlsxText(parts, opts), parts), parts), parts, "xl/media/");
+  },
+  /* G41: the typed cells of a range of one sheet, made from the held bytes (an optional slot, as `dialect` is). */
+  cellsIn: async (partsOrBytes, range) => {
+    const args = cellsInArguments(range);
+    if (args.reason) return { ok: false, reason: args.reason, ...(args.argument ? { argument: args.argument } : {}) };
+    try {
+      const parts = isBytes(partsOrBytes) ? await xlsxParts(partsOrBytes) : partsOrBytes;
+      return await xlsxCellsIn(parts, args);
+    } catch {
+      return { ok: false, reason: "cells_in_failed" };
+    }
   },
 };

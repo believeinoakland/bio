@@ -8,6 +8,7 @@ import { PARTS } from "./parts.mjs";
 import { TIMELINE_PARTS } from "./timeline-parts.mjs";
 import { FORM_SHARED } from "./graphwords.mjs";
 import { WHY_KEYS } from "./whywords.mjs";
+import { rereading } from "./rereads.mjs";
 
 /* R33 (4): the addresses. State a is the project (`/app/timeline/<project>`); state b one matter the project follows,
  * `<project>/matter/<progression>/<entity>`; state c one progression, `<project>/progression/<progression>`. */
@@ -20,7 +21,8 @@ function reads(view) {
     project: { op: "image", query: { id }, subject: true, empty: (v) => !v || typeof v !== "object" || !v["bundle.md"] },
     people: { op: "peopledirectory", query: { limit: "200" } },
     questions: { op: "list", query: { type: "inquiry", limit: "500" } },
-    docs: { op: "heldcaptures", query: { project: id, limit: "200" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
+    docs: { op: "heldcaptures", query: { project: id, limit: "200", state: "held_and_vouched", fields: "picker" }, empty: (v) => !v || !Array.isArray(v.held) || !v.held.length },
+    vocab: { op: "affordances", query: {} },
   };
   if (mode === "matter" && key && eid) out.matter = { op: "instance", query: { key, id: eid } };
   if (mode === "progression" && key) out.def = { op: "progression", query: { key } };
@@ -78,11 +80,11 @@ function render(cs, view) {
         + `${cs.act("findin", { label: S + "find.dates" })}</div></div>${citedOrder(it)}` : "";
     return `<div class="mk-ev" data-event="${cs.esc(it.event_id)}"><span class="mk-date">${when(it.when)}</span> <b>${P.refOf(cs, it.event_id, it.kind ? cs.w(S + "kind", { kind: it.kind }) : it.event_id, [it.status || ""], "event")}</b> ${detail(it)}${order}</div>`;
   };
-  /* the project's set: the people, organisations and events its document cites, and the events recorded here since */
-  const set = doc ? [...new Set(doc.refs.filter((r) => /^(ENT|EVT)-/.test(String(r.target || "")) && r.status !== "severed").map((r) => r.target)
-    .concat(Array.isArray(view.ui.added) ? view.ui.added : []))] : [];
+  /* the project's set: the people, organisations and events its document cites. An event recorded here is found by the captures it cites
+     (events R53, C54), which are the project's own documents below, so no list of what was recorded is kept in the page. */
+  const set = doc ? [...new Set(doc.refs.filter((r) => /^(ENT|EVT)-/.test(String(r.target || "")) && r.status !== "severed").map((r) => r.target))] : [];
   /* R33 (5): the capture digests of the project's documents (at most 200, newest first, events R53) join the set */
-  const docsRead = view.data.docs && view.data.docs.state === "ok" && view.data.docs.value && Array.isArray(view.data.docs.value.held) ? view.data.docs.value.held : [];
+  const docsRead = P.docsAll(cs, view, { project: id }).rows;
   const shas = docsRead.map((r) => r && r.capture && r.capture.sha256).filter(Boolean).slice(0, 200);
   const q = {};
   if (set.length) q.set = set.join(",");
@@ -90,10 +92,17 @@ function render(cs, view) {
   const tl = doc && (set.length || shas.length) ? P.later(cs, view, "timeline", "timeline", { query: q }) : null;
   const titleOf = (sha) => { const r = docsRead.find((x) => x && x.capture && x.capture.sha256 === sha); return (r && r.title) || ""; };
   const kinds = ["meeting", "adopted", "effective", "signed", "issued", "published", "received", "entered", "hearing", "period_covered", "edited"];
+  /* R34, C56: the kinds the form offers are the kinds `events` accepts, as `affordances` answers them (its R39), never a list copied
+     here: a kind with a word of the design's is worded by it, any other by the owner's own word as record data; an unread
+     vocabulary draws the choice failed, not a guess */
+  const vk = view.data.vocab && view.data.vocab.state === "ok" && view.data.vocab.value && view.data.vocab.value.vocabularies ? view.data.vocab.value.vocabularies.event_kinds : null;
+  const kindOptions = vk && Array.isArray(vk.values) ? vk.values.map((k) => (cs.w(S + "evkind." + k) !== cs.esc(S + "evkind." + k) ? [k, S + "evkind." + k]
+    : { value: k, text: String((vk.words && vk.words[k] && vk.words[k].word) || k) })) : null;
+  const kindChoice = kindOptions ? cs.choice("tl-kind", S + "evkind", kindOptions, {}) : cs.state("vocab", view, () => `<p class="cs-state" data-state="failed" role="alert">${cs.w("state.failed", { reason: { html: cs.w("shell.noanswer") } })}</p>`);
   const precisions = ["day", "minute", "second", "edtf"];
   const datedRow = (f) => cs.row("", `<span class="mk-date">${P.when(cs, f.upper_bound ? { precision: "upper_bound", end: f.value } : { value: f.value, precision: f.precision })}</span>`
     + (kinds.includes(f.kind) ? ` <b>${cs.w(S + "datekind." + f.kind)}</b>` : ""), "",
-  cs.w(S + "dated.meta", { precision: precisions.includes(f.precision) ? cs.w("label.timeprecisions." + f.precision) : "", document: cs.esc(titleOf(f.capture_sha) || P.plain(cs, S + "source")), grade: cs.esc(String(f.grade || "")) }));
+  cs.w(S + "dated.meta", { precision: precisions.includes(f.precision) ? cs.w("label.timeprecisions." + f.precision) : "", document: titleOf(f.capture_sha) || P.plain(cs, S + "source"), grade: String(f.grade || "") }));
   if (!proj || proj.state !== "ok") out.push(cs.state("project", view, () => ""));
   else if (!tl) out.push(`<p>${cs.w(S + "noset")}</p>`);
   else out.push(cs.state(tl, (v) => {
@@ -112,17 +121,17 @@ function render(cs, view) {
       + (ourItems.map((x) => `<div class="mk-ev us"><span class="mk-date">${cs.date(x.at) || cs.esc(String(x.at || ""))}</span> <b>${P.refOf(cs, x.ref, x.label || x.ref, [x.kind || ""], /^ACTN-/.test(String(x.ref)) ? "action" : undefined)}</b></div>`).join(""))
       + ourFails.map((s) => cs.mark("gap", "undetermined", { reason: cs.w(S + "lane.failed", { source: s.source || "" }) })).join("") + "</section></div>";
     return lanes
-      + ((world.placed_nowhere || []).length ? cs.sec(S + "undated.head", cs.sheet(world.placed_nowhere.map((x) => cs.row("", P.refOf(cs, x.event_id, x.kind ? cs.w(S + "kind", { kind: x.kind }) : x.event_id, [], "event"), `<span class="mk-small">${cs.w(S + "undated.apart")}</span>${x.grade_why ? ` <span class="mk-small">${P.why(cs, x.grade_why)}</span>` : ""}`)).join(""))) : "")
+      + ((world.placed_nowhere || []).length ? cs.sec(S + "undated.head", cs.sheet(world.placed_nowhere.map((x) => cs.row("", P.refOf(cs, x.event_id, x.kind ? cs.w(S + "kind", { kind: x.kind }) : x.event_id, [x.status || "", cs.w(S + "undated.apart")], "event"), `<span class="mk-small">${cs.w(S + "undated.apart")}</span>${x.grade_why ? ` <span class="mk-small">${P.why(cs, x.grade_why)}</span>` : ""}`)).join(""))) : "")
       ;
   }));
   /* R33 (1): the matters the project follows through a progression, each a reference to its steps (state b) */
   if (set.length) {
     const inst = P.later(cs, view, "instances", "instances", { query: { set: set.join(",") } });
     const known = view.parts.options(view, "people", (v) => v.rows, (r) => ({ value: r.entity, text: r.name || "" }));
-    if (inst.state !== "ok" || ((inst.value && inst.value.items) || []).length) out.push(cs.sec("progression.follows", cs.state(inst, (v) => cs.sheet(((v && v.items) || []).map((m) => cs.row("",
+    if (inst.state !== "ok" || ((inst.value && inst.value.items) || []).length) out.push(P.actSec(cs.sec("progression.follows", cs.state(inst, (v) => cs.sheet(((v && v.items) || []).map((m) => cs.row("",
       `<b>${P.refOf(cs, [id, "matter", m.progression_key, m.entity_id].join("/"), (known.find((o) => o.value === m.entity_id) || {}).text || P.plain(cs, "connection.node.unnamed"), [m.label || ""], "timeline")}</b>`
-      + `<br><span class="mk-small">${cs.w("progression.followed", { progression: cs.esc(m.label || ""), n: String(m.definition_version) })} · ${cs.w("progression.threadedto")}: ${String(m.placed_count)} / ${String(m.stage_count)}`
-      + (m.finding_count ? ` · ${cs.w("progression.findings")}: ${String(m.finding_count)}` : "") + "</span>")).join(""))), { help: S + "tip.progressions" }));
+      + `<br><span class="mk-small">${cs.w("progression.followed", { progression: m.label || "", n: String(m.definition_version) })} · ${cs.w("progression.threadedto")}: ${String(m.placed_count)} / ${String(m.stage_count)}`
+      + (m.finding_count ? ` · ${cs.w("progression.findings")}: ${String(m.finding_count)}` : "") + "</span>")).join(""))), { help: S + "tip.progressions" }), "instance"));
   }
   /* R33 (5): "Dated in the documents": a third list apart from the two lanes; it creates no event and is never merged into a lane */
   const datedAll = tl && tl.state === "ok" && tl.value.dated && Array.isArray(tl.value.dated.items) ? tl.value.dated.items : [];
@@ -133,9 +142,11 @@ function render(cs, view) {
   const qs = view.data.questions && view.data.questions.state === "ok" && Array.isArray(view.data.questions.value.bundles) ? view.data.questions.value.bundles : [];
   const cited = doc ? doc.refs.filter((r) => /^INQ-/.test(String(r.target || "")) && r.status !== "severed").map((r) => r.target) : [];
   const qChoice = cited.map((q) => { const b = qs.find((x) => x.bundle_id === q); return { value: q, text: (b && b.title) || q }; });
+  /* R49: the first expected flow is defined from the project's own timeline, not only from inside a flow's page */
+  if (proj && proj.state === "ok") out.push(view.parts.defineFold(cs));
   out.push(cs.sec(S + "record.head",
-    P.docChoice(cs, view, "tl-doc")
-    + cs.choice("tl-kind", S + "evkind", ["vote", "meeting", "decision", "award", "statement", "filing", "other"].map((k) => [k, S + "evkind." + k]), {})
+    P.docChoice(cs, view, "tl-doc", { project: id, query: { project: id }, passage: false, drive: true }) + P.passagePick(cs, view, "tl-doc", "tl-passage", P.later)
+    + kindChoice
     + cs.act("createevent", { label: "act.createevent.label.timeline", tone: "primary" })
     + evChoice("tl-event", S + "event") + cs.choice("tl-who", S + "who", view.parts.options(view, "people", (v) => v.rows, (r) => ({ value: r.entity, text: r.name || r.entity })), {})
     + cs.choice("tl-role", S + "rolepick", ["decider", "voted", "signatory", "actor", "party", "present", "speaker", "author"].map((r) => [r, S + "roles." + r]), {})
@@ -146,31 +157,26 @@ function render(cs, view) {
     + cs.field("tl-date", S + "date", { help: S + "date.help" })
     + cs.choice("tl-datekind", S + "datekind", ["meeting", "adopted", "effective", "signed", "issued", "published", "received"].map((k) => [k, S + "datekind." + k]), {})
     + cs.act("recorddatedfact", { label: "act.recorddatedfact.label.timeline" })
-    + cs.choice("tl-question", S + "question", qChoice, {}) + cs.field("tl-hunch", S + "hunch", { area: true, rec: true })
+    + cs.choice("tl-question", S + "question", qChoice, qChoice.length ? { value: qChoice[0].value } : {}) + cs.field("tl-hunch", S + "hunch", { area: true, rec: true })
     + cs.act("hypothesishold", { label: "act.hypothesishold.label.timeline" })
     + cs.act("findin", { label: "act.findin.label.timeline" })));
   if (view.ui.said) out.push(`<p class="mk-note">${cs.w(view.ui.said)}</p>`);
   return out.join("");
 }
 
-const acts = [
+const acts = rereading([
   { op: "createevent", label: "act.createevent.label.timeline",
     send(view, el, cs) {
-      const at = view.parts.chosen(cs, "tl-doc");
+      const at = view.parts.chosen(cs, "tl-doc", "tl-passage");
       if (!at) return { refuse: "screen.timeline.passage.empty" };
-      const proj = view.data.project;
-      const set = proj && proj.state === "ok" ? view.parts.front(proj.value["bundle.md"]).refs.filter((r) => /^ENT-/.test(String(r.target || ""))).map((r) => r.target) : [];
-      return { body: Object.assign({ kind: String(cs.value("tl-kind") || "other"), attestations: [at] }, set.length ? { concerns: set.slice(0, 1) } : {}) };
+      /* C54: the event is attested by the passage chosen; the timeline finds it again by that capture, so it is tied to no person the page guessed */
+      return { body: { kind: String(cs.value("tl-kind") || "other"), attestations: [at] } };
     },
-    done(view, answer, cs) {
-      const r = answer && answer.result !== undefined ? answer.result : answer;
-      if (r && r.event_id) view.ui.added = (Array.isArray(view.ui.added) ? view.ui.added : []).concat([r.event_id]);
-      view.ui.later = {};
-    } },
+    done(view) { view.ui.later = {}; } },
   { op: "addparticipant", label: "act.addparticipant.label.timeline",
     send(view, el, cs) {
       const eventId = String(cs.value("tl-event") || ""), entityId = String(cs.value("tl-who") || "").trim();
-      const at = view.parts.chosen(cs, "tl-doc");
+      const at = view.parts.chosen(cs, "tl-doc", "tl-passage");
       if (!eventId || !entityId || !at) return { refuse: "screen.timeline.who.empty" };
       const role = String(cs.value("tl-role") || "actor");
       const vote = String(cs.value("tl-vote") || "").trim();
@@ -181,7 +187,7 @@ const acts = [
   { op: "relate", label: "act.relate.label.timeline",
     send(view, el, cs) {
       const from = String(el.dataset.event || cs.value("tl-event") || ""), to = String(cs.value("tl-to") || "");
-      const at = view.parts.chosen(cs, "tl-doc");
+      const at = view.parts.chosen(cs, "tl-doc", "tl-passage");
       if (!from || !to || from === to || !at) return { refuse: "screen.timeline.relate.empty" };
       /* "Cite which came first": the member's chosen event came first, so `precedes` runs from it */
       if (el.dataset.kind === "precedes") return { body: { from, to, kind: "precedes", attestation: at } };
@@ -191,7 +197,7 @@ const acts = [
   /* an exact date from a passage, a day or a month ("YYYY-MM", month known) */
   { op: "recorddatedfact", label: "act.recorddatedfact.label.timeline",
     send(view, el, cs) {
-      const at = view.parts.chosen(cs, "tl-doc");
+      const at = view.parts.chosen(cs, "tl-doc", "tl-passage");
       const v = String(cs.value("tl-date") || "").trim();
       if (!at || !/^\d{4}-\d{2}(-\d{2})?$/.test(v)) return { refuse: "screen.timeline.date.empty" };
       return { body: { captureSha: at.captureSha, extent: at.extent, kind: String(cs.value("tl-datekind") || "adopted"),
@@ -248,7 +254,10 @@ const acts = [
     done(view, answer, cs) { const r = answer && answer.result !== undefined ? answer.result : answer; view.ui.later = {}; if (r && r.progression_key && !/\/progression\//.test(String(view.subject || ""))) cs.go("timeline", String(view.subject || "").split("/")[0] + "/progression/" + r.progression_key); } },
   { op: "findin", label: "act.findin.label.timeline",
     send(view, el, cs) { cs.go("find-in", String(view.subject || "")); return null; } },
-];
+  /* B14: the registry's reads of states b and c, drawn as the sections that show them (`data-act`), never as buttons */
+  { op: "instance", label: "act.instance.label.timeline", send() { return null; } },
+  { op: "progression", label: "act.progression.label.timeline", send() { return null; } },
+], ["project", "people", "questions", "vocab", "matter", "def"]);
 
 const TIMELINE_KEYS = [
   "screen.timeline.more.people", "screen.timeline.order.cited.before", "screen.timeline.order.cited.after", "screen.timeline.order.relation",
@@ -258,7 +267,7 @@ const TIMELINE_KEYS = [
   "screen.timeline.lane.ours", "screen.timeline.lane.failed", "screen.timeline.more", "screen.timeline.undated.head",
   "screen.timeline.undated.apart", "screen.timeline.record.head", "screen.timeline.record.head.holds", "screen.timeline.sha",
   "screen.timeline.sha.help", "screen.timeline.page", "screen.timeline.evkind", "screen.timeline.evkind.vote", "screen.timeline.evkind.meeting",
-  "screen.timeline.evkind.decision", "screen.timeline.evkind.award", "screen.timeline.evkind.statement", "screen.timeline.evkind.filing",
+  "screen.timeline.evkind.award", "screen.timeline.evkind.statement", "screen.timeline.evkind.filing",
   "screen.timeline.evkind.other", "screen.timeline.event", "screen.timeline.who", "screen.timeline.rolepick", "screen.timeline.roles.decider",
   "screen.timeline.roles.voted", "screen.timeline.roles.signatory", "screen.timeline.roles.actor", "screen.timeline.roles.party",
   "screen.timeline.roles.present", "screen.timeline.roles.speaker", "screen.timeline.roles.author", "screen.timeline.vote", "screen.timeline.to",

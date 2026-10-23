@@ -129,6 +129,8 @@ export { OCCURRENCE_REF_RE, parseOccurrenceRef } from "./legs.mjs";
 export const VERSION_STRENGTH_STATES_MAX = VERSION_MACHINE.legal.length;
 /** R26: the longest error message a candidate pair answers. */
 export const CANDIDATE_ERROR_MAX = 200;
+/** R44: the most inquiries one `inquirystrength` call may name in `ids`. */
+export const INQUIRY_STRENGTH_IDS_MAX = 50;
 
 /* R10: every spelling this record has reached for when it meant "the strength". The guard fails on the NAME, before
    anybody reasons about the value; `pair` is checked separately, by totality. */
@@ -394,9 +396,32 @@ export class Strength {
     return new Map(Object.entries((reg && reg.earned && reg.earned.capture) || {}));
   }
 
+  /* R43: an inquiry's LIVE legs. The projected basis keeps a leg whose citation the question has withdrawn (its
+     reference entry marked `severed`; the projection drops the status), so the legs are read against the question's own
+     bundle.md, as `connections.edgeSevered` reads it: the first reference entry naming the target. Evidence narrows
+     only: an unreadable document, or no entry for the target, is live. A bounded read that was cut short and lost a leg
+     to this is read again whole, so the bound counts live legs. */
   #legsOf(id, opts = undefined) {
     const b = this.inquiry.basisFor(id, opts);
-    return (b && Array.isArray(b.legs)) ? b.legs : [];
+    const legs = (b && Array.isArray(b.legs)) ? b.legs : [];
+    const live = this.#liveLegs(id, legs);
+    if (live.length === legs.length || !b.truncated) return live;
+    const whole = this.inquiry.basisFor(id);
+    return this.#liveLegs(id, (whole && Array.isArray(whole.legs)) ? whole.legs : []);
+  }
+
+  #liveLegs(id, legs) {
+    if (!legs.length || !id || typeof this.record?.readFile !== "function") return legs;
+    const md = this.record.readFile(id, "bundle.md");
+    const refs = md && typeof md.text === "string" ? parseFrontmatter(md.text).data?.references : null;
+    if (!Array.isArray(refs)) return legs;
+    const seen = new Set(), severed = new Set();
+    for (const x of refs) {
+      if (!x || typeof x !== "object" || seen.has(x.target)) continue;
+      seen.add(x.target);
+      if (x.status === "severed") severed.add(x.target);
+    }
+    return severed.size ? legs.filter((l) => !severed.has(l.target_id)) : legs;
   }
 
   /* A leg's kind as the walk reads it (R2, R33, R36–R38): another group's finding by its reference, an occurrence by
@@ -689,8 +714,29 @@ export class Strength {
     const withheld = STRENGTH_AXES.some((a) => axes[a].out_of_view === true);
     /* R5: the hunch legs this answer names, so a hunch on a target the viewer may not see is neither named nor counted. */
     const seenHunches = hunchCount(legs.filter((l) => !(l.target_id && keep(l.target_id) === null)));
-    return { ok: true, target: id, depth_bound: s.depth_bound, ...axes, hunches_left_out: seenHunches,
-             ...(withheld ? { out_of_view: true } : {}) };
+    /* R6 (T51; K4259): the ungraded members, after the redaction above: those inert on every axis, once each by target. */
+    const ungraded = ungradedEverywhere(axes);
+    return { ok: true, target: id, depth_bound: s.depth_bound, ...axes, ungraded, ungraded_count: ungraded.length,
+             hunches_left_out: seenHunches, ...(withheld ? { out_of_view: true } : {}) };
+  }
+
+  /** R44 (fix round 6; G12c): `op=inquirystrength` with `ids`, one `inquiryStrength` per id in one call: `{ok: true,
+   *  results: {<id>: that id's single answer}}`, in the order asked, an id named twice answered once. Each id is gated
+   *  exactly as the single read gates it, so an inquiry the viewer may not see has its result, `NO_SUCH_BUNDLE` as an
+   *  absent one, never an omission. More than `INQUIRY_STRENGTH_IDS_MAX` ids, or anything but ids, is `BAD_IDS`, whole;
+   *  none named is `NO_ID`. Computed on read, as the single read is. */
+  inquiryStrengthMany({ ids = null, viewer = null } = {}) {
+    const list = idsOf(ids);
+    if (list === null)
+      return { ok: false, reason: "BAD_IDS", limit: INQUIRY_STRENGTH_IDS_MAX,
+        detail: localize("strength.index.ids_must_be_a_list_of_record_ids",
+          "ids must be a list of at most {max} record ids, each named once: pass ids=<record id>,<record id>…",
+          { max: INQUIRY_STRENGTH_IDS_MAX }) };
+    if (!list.length)
+      return { ok: false, reason: "NO_ID",
+        detail: localize("strength.index.the_derived_pairs_are_asked_of_ids",
+          "the derived pairs are asked of the inquiries named: pass ids=<record id>,<record id>…") };
+    return { ok: true, results: Object.fromEntries(list.map((id) => [id, this.inquiryStrength({ id, viewer })])) };
   }
 
   /** R13: the pair the search cache holds for an inquiry, `{capture: {grade, state}, connection: {grade, state}}`, or
@@ -808,9 +854,11 @@ export class Strength {
                                role: r.role, grade_axis: axis, grade_source: source, why }]);
         return { ...base, grade: null, why };
       };
+      /* R42: a cutting leg is listed with its own grade and its role, never as part of the supported answer. */
+      const cutting = r.role === "cuts_against" ? { role: r.role } : {};
       const carries = (grade, why) => {
         placed.push(["graded", { target_id: r.target_id, ord: r.ord, ground: r.ground,
-                                 grade_axis: axis, grade_source: source, grade, authored, why }]);
+                                 grade_axis: axis, grade_source: source, grade, authored, why, ...cutting }]);
         return { ...base, grade };
       };
       if (isHunch(source)) return inert(HUNCH_WHY, "hunches");
@@ -824,7 +872,7 @@ export class Strength {
         const d = this.#derive(r);
         if (d.stopped) { inert(d.stopped, "ungraded"); return { ...base, grade_axis: "capture", grade: null }; }
         placed.push(["graded", { target_id: r.target_id, ord: r.ord, ground: r.ground, grade_axis: "capture",
-                                 grade_source: source, grade: d.grade, authored: null, why: d.why }]);
+                                 grade_source: source, grade: d.grade, authored: null, why: d.why, ...cutting }]);
         return { ...base, grade_axis: "capture", grade: null };
       }
       if (!axis) return inert(word("strength.inert.leg_states_axis"), "ungraded");
@@ -1554,6 +1602,16 @@ export class Strength {
   }
 }
 
+/* R44: the inquiry ids `ids` names, as a list of at most `INQUIRY_STRENGTH_IDS_MAX` distinct non-blank strings: a
+   comma-separated string (the op's query) is split and its blanks dropped; a list holds only non-blank strings; anything
+   else, or more than the bound, is null, a refusal. */
+function idsOf(ids) {
+  const list = typeof ids === "string" ? ids.split(",").map((i) => i.trim()).filter(Boolean) : ids;
+  if (!Array.isArray(list) || list.some((i) => typeof i !== "string" || !i.trim() || i.length > 300)) return null;
+  const distinct = [...new Set(list.map((i) => i.trim()))];
+  return distinct.length > INQUIRY_STRENGTH_IDS_MAX ? null : distinct;
+}
+
 /* The distinct non-blank groups a set of legs carries: a leg naming no part is not a part anybody declared. */
 function distinctParts(legs) {
   return new Set(legs.map((l) => String(l.ground ?? "").trim()).filter(Boolean)).size;
@@ -1569,6 +1627,20 @@ function distinctParts(legs) {
    `population`) count unseen members too, so they go whenever anything is withheld (`hidden`, which also covers a
    load-bearing member no list names). Nothing says how much was withheld: `out_of_view: true` states only that
    something was. Returns the original object when nothing is withheld. */
+/* R6 (T51; K4259): a member inert on every axis carries no grade at all, so it is ungraded; a leg graded on one axis
+   is inert on the others and is not. One entry per target, in the order the first axis names them. */
+function ungradedEverywhere(axes) {
+  const keyOf = (m) => m.target_id ?? m.bundle_id;
+  const inert = STRENGTH_AXES.map((a) => new Set((axes[a].not_load_bearing ?? []).map(keyOf)));
+  const seen = new Set();
+  return (axes[STRENGTH_AXES[0]].not_load_bearing ?? []).filter((m) => {
+    const key = keyOf(m);
+    if (seen.has(key) || !inert.every((set) => set.has(key))) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function redactAxis(axis, keep, hidden) {
   let touched = !!hidden;
   const unseen = (id) => id != null && keep(id) === null;
@@ -1667,18 +1739,25 @@ function refusePairComposed(out) {
 export { refusePairComposed };
 
 /** The module's ops (K3): `strength` (in-process), `inquirystrength`, `versionstrength`, `partitionindependence`,
- *  `strengthbar`, `projectbarset` (R40), `strengthbarof`. `viewer` and `author` are the control plane's stamps. */
+ *  `strengthbar` and `strengthbarset` (R41), `projectbarset` (R40), `strengthbarof`; `inquirystrength` reads one `id` or a list of `ids` (R44). `viewer` and `author` are the control plane's stamps. */
 export function strengthOps(s, url, body) {
   const q = (k) => url.searchParams.get(k);
   return {
     strength: () => s.strengthOf(q("id")),
-    inquirystrength: () => s.inquiryStrength({ id: q("id"), viewer: q("viewer") }),
+    /* R44: `ids` (the body's list, else the query's comma-separated one) asks many in one call; absent, the single read. */
+    inquirystrength: () => {
+      const ids = body && body.ids != null ? body.ids : q("ids");
+      return ids == null ? s.inquiryStrength({ id: q("id"), viewer: q("viewer") })
+                         : s.inquiryStrengthMany({ ids, viewer: q("viewer") });
+    },
     versionstrength: () => s.versionStrength({ id: q("id"), version: q("version"), project: q("project"),
                                                states: q("states"), viewer: q("viewer") }),
     partitionindependence: () => s.partitionIndependence({ id: q("id"),
       partition: (body && body.partition !== undefined) ? body.partition : q("partition"),
       version: q("version"), viewer: q("viewer") }),
     strengthbar: () => s.strengthBarSet({ ...(body || {}), author: q("author") }),
+    /* R41 (T51; K4258): the same act under the name the screens send; `strengthbar` stays served until its hand row goes. */
+    strengthbarset: () => s.strengthBarSet({ ...(body || {}), author: q("author") }),
     /* R40: the project from the body, else the query; `author`, `viewer` and `identity` are the control plane's stamps,
        never the body's. */
     projectbarset: () => s.projectBarSet({ ...(body || {}), project: (body && body.project != null) ? body.project : q("project"),
@@ -1692,8 +1771,10 @@ export function strengthOps(s, url, body) {
 /* R41 (T51; K4168; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by their owner beside
    the ops map: each row's class, weight and description are the op's existing rows', its fields are what the arm reads. */
 export const DECLARED_OPS = Object.freeze({
-  strengthbarset: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("strength.declared.strengthbarset", "governance: the GROUP's declared default required strength, keyed by group and not by any bundle — a declaration about the group's own work, never a property of an object or of a reader"),
+  strengthbarset: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", needs: "publish", description: localize("strength.declared.strengthbarset", "governance: the GROUP's declared default required strength, keyed by group and not by any bundle — a declaration about the group's own work, never a property of an object or of a reader"),
     fields: { accepts: ["group","capture","connection","reason"], requires: [["capture","connection"],"reason"] } },
+  inquirystrength: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("strength.declared.inquirystrength", "read: the derived pair for one question — the panel the acts are rendered under, never an act on an object"),
+    fields: { accepts: ["id","ids"], requires: [["id","ids"]] } },
   projectbarset: { classes: ["admin","member","probe"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("strength.declared.projectbarset", "project-directed: keyed by a project; the project's own required strength, set with the member's reason; never the group's bar, and it gates nothing (`strength` R21)"),
     fields: { accepts: ["project","capture","connection","reason"], requires: ["project","reason"] } },
 });

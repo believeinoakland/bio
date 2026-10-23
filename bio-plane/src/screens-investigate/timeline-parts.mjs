@@ -2,7 +2,8 @@
  * self-contained, interface-shell R21). State b is one matter the project follows through a progression: its steps in order
  * with the documents threaded to them, how sure the chain is, and the findings; state c is the progression itself: its steps,
  * its basis, every version. A finding reports and never decides, and nothing here says "overdue" or "late": the sentence of a
- * missing step is the finding's own `says` (progressions R45), read through `word`, never composed here. */
+ * missing step is the finding's own `says` (progressions R45), read through `word`, never composed here. The three sections that
+ * are the reads `instance` (states a and b) and `progression` (state c) carry that act, as the design draws them (B14). */
 
 export const TIMELINE_PARTS = Object.freeze({
   /** R33 (2): one matter (`instance`), drawn under the project's timeline. */
@@ -18,10 +19,9 @@ export const TIMELINE_PARTS = Object.freeze({
       const threads = Array.isArray(m.threads) ? m.threads : [];
       const last = threads.length ? threads[threads.length - 1] : null;
       const words = { always: "always", usually: "usually", sometimes: "sometimes", unless_exception: "unless", never: "never" };
-      const handle = (h) => String(h || "").replace(/^member:/, "");
       const labelOf = (st, i) => `${i + 1} · ${cs.esc(st.label || st.stage_key)}`;
       const titleOf = (sha) => {
-        const rows = view.data.docs && view.data.docs.state === "ok" && view.data.docs.value && Array.isArray(view.data.docs.value.held) ? view.data.docs.value.held : [];
+        const rows = P.docsAll(cs, view, { project }).rows;
         const r = rows.find((x) => x && x.capture && x.capture.sha256 === sha);
         return (r && r.title) || "";
       };
@@ -29,7 +29,7 @@ export const TIMELINE_PARTS = Object.freeze({
         const title = titleOf(d.capture_sha) || (d.bundle_id ? "" : "");
         const ref = P.refOf(cs, d.bundle_id || d.capture_sha, title || P.plain(cs, S + "source"), [], d.bundle_id ? "document" : "capture");
         const dated = d.own_date && d.own_date.value
-          ? cs.w("progression.threadedby", { date: cs.date(String(d.own_date.value).slice(0, 10), { year: true }), who: cs.esc(handle(last && last.threaded_by)), when: cs.date(String((last && last.at) || "").slice(0, 10), { year: true }) })
+          ? cs.w("progression.threadedby", { date: cs.date(String(d.own_date.value).slice(0, 10), { year: true }), who: cs.esc(P.who(cs, last && last.threaded_by)), when: cs.date(String((last && last.at) || "").slice(0, 10), { year: true }) })
           : cs.mark("gap", "undetermined", { reason: d.own_date_why || "" });
         return `${ref} <span class="mk-small">${dated}</span>`;
       };
@@ -58,13 +58,13 @@ export const TIMELINE_PARTS = Object.freeze({
       };
       const fold = (summary, inner) => `<details class="mk-details" open><summary>${cs.w(summary)}</summary>${inner}</details>`;
       const chain = m.grade_determined && m.grade ? `<p>${cs.grade("capture", m.grade)}</p>` : `<p>${cs.w("progression.chain.undetermined")}</p>`;
-      return `<p class="mk-sub"><b>${cs.esc((m.entity && m.entity.label) || "")}</b> · ${cs.w("progression.followed", { progression: cs.esc(m.label || ""), n: String(m.definition_version) })}</p>`
+      return `<p class="mk-sub"><b>${cs.esc((m.entity && m.entity.label) || "")}</b> · ${cs.w("progression.followed", { progression: m.label || "", n: String(m.definition_version) })}</p>`
         + `<p class="mk-note">${cs.w("progression.finding.never")}</p>`
-        + cs.sec("progression.steps", cs.sheet(stages.map(stepRow).join("")), { help: S + "tip.steps" })
+        + P.actSec(cs.sec("progression.steps", cs.sheet(stages.map(stepRow).join("")), { help: S + "tip.steps" }), "instance")
         + cs.sec("progression.chain", chain, { help: S + "tip.sure" })
         + (findings.length ? cs.sec("progression.findings", cs.sheet(findings.map(findingRow).join("")), { help: S + "tip.findings" }) : "")
-        + fold("progression.thread", cs.choice("pm-thread-stage", "progression.steps", stageOpts, {}) + P.docChoice(cs, view, "pm-thread-doc") + cs.act("thread", { label: "progression.thread" }))
-        + fold("progression.discharge", cs.choice("pm-dis-stage", "progression.steps", stageOpts, {}) + P.docChoice(cs, view, "pm-dis-doc")
+        + fold("progression.thread", cs.choice("pm-thread-stage", "progression.steps", stageOpts, {}) + P.docChoice(cs, view, "pm-thread-doc", { project, query: { project } }) + cs.act("thread", { label: "progression.thread" }))
+        + fold("progression.discharge", cs.choice("pm-dis-stage", "progression.steps", stageOpts, {}) + P.docChoice(cs, view, "pm-dis-doc", { project, query: { project } })
           + cs.field("pm-dis-reason", "entity.relation.why", { area: true, rec: true }) + cs.field("pm-dis-cite", "entity.relation.cite", { help: "entity.relation.cite.help" })
           + cs.act("discharge", { label: "progression.discharge" }))
         + (findingOpts.length ? fold("progression.setaside", cs.choice("pm-aside-finding", "progression.findings", findingOpts, {})
@@ -77,11 +77,11 @@ export const TIMELINE_PARTS = Object.freeze({
     const [, , key] = String(view.subject || "").split("/");
     const back = `<p class="mk-small"><a data-nav href="/app/timeline/${encodeURIComponent(project)}">${cs.w(S + "name")}</a></p>`;
     return back + cs.state("def", view, (v) => {
-      if (!v || v.found === false) return `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>`;
+      /* R49: a progression the record does not hold is the empty state with the form that defines it beside it */
+      if (!v || v.found === false) return `<p class="cs-state" data-state="empty">${cs.w("state.empty")}</p>` + view.parts.defineFold(cs);
       const stages = Array.isArray(v.stages) ? v.stages : [];
-      const handle = (h) => String(h || "").replace(/^member:/, "");
       const words = { always: "always", usually: "usually", sometimes: "sometimes", unless_exception: "unless", never: "never" };
-      const sub = (n, by, at) => cs.w(S + "progression.sub", { what: cs.esc(v.label || ""), n: String(n), name: cs.esc(handle(by)), date: cs.date(String(at || "").slice(0, 10), { year: true }) });
+      const sub = (n, by, at) => cs.w(S + "progression.sub", { what: cs.esc(v.label || ""), n: String(n), name: cs.esc(view.parts.who(cs, by)), date: cs.date(String(at || "").slice(0, 10), { year: true }) });
       const noOf = (k) => stages.findIndex((s) => s.stage_key === k) + 1;
       const days = (w) => { const m = /^(\d+)\s*days?$/.exec(String(w || "")); return m ? m[1] : null; };
       const stepRow = (st, i) => cs.row("", `<b>${i + 1} · ${cs.esc(st.label || st.stage_key)}</b> · ${cs.w("progression.req." + (words[st.required] || "sometimes"))}<br><span class="mk-small">`
@@ -94,15 +94,24 @@ export const TIMELINE_PARTS = Object.freeze({
       /* R45: the six parts of a step's line, in order, each by its label */
       const columns = `<p class="mk-small" data-columns="steps">${["key", "label", "after", "within", "required", "cardinality"].map((c) => cs.w("progression.steps.label." + c)).join(" | ")}</p>`;
       return `<p class="mk-sub"><b>${cs.esc(v.label || "")}</b> · ${sub(v.version, v.declared_by, v.at)}</p>`
-        + cs.sec("progression.steps", cs.sheet(stages.map(stepRow).join("")), { help: S + "tip.stepsdef" })
+        + view.parts.actSec(cs.sec("progression.steps", cs.sheet(stages.map(stepRow).join("")), { help: S + "tip.stepsdef" }), "progression")
         + cs.sec("progression.basis", `<p>${basisOf(v.basis)}</p>` + cs.sheet(versions.map((x) => cs.row("", `<span class="mk-small">${sub(x.version, x.declared_by, x.at)}</span> ${basisOf(x.basis)}`)).join("")), { help: S + "tip.basis" })
         + fold("progression.revise", `<p class="mk-small">${cs.w("progression.revise.help")}</p>` + cs.field("pd-rv-basis", "progression.basis", { area: true, rec: true, help: "progression.basis.help" }) + cs.field("pd-rv-cite", "entity.relation.cite", { help: "entity.relation.cite.help" })
           + columns + cs.field("pd-rv-steps", "progression.steps", { area: true, rec: true, value: stepsText, help: "progression.steps.help" })
           + cs.act("progressiondefine", { label: "progression.revise", data: { mode: "revise", key: String(key || "") } }))
-        + fold("progression.define", cs.field("pd-name", "theme.name.label", { help: "theme.name.help" }) + cs.field("pd-basis", "progression.basis", { area: true, rec: true, help: "progression.basis.help" })
-          + cs.field("pd-cite", "entity.relation.cite", { help: "entity.relation.cite.help" }) + `<p class="mk-small">${cs.w(S + "progression.steps.note")}</p>` + columns + cs.field("pd-steps", "progression.steps", { area: true, rec: true, help: "progression.steps.help" })
-          + cs.act("progressiondefine", { label: "progression.define.go", tone: "primary", data: { mode: "define" } }));
+        + view.parts.defineFold(cs);
     });
+  },
+  /** R33 (3), R49: "Define a progression": the fold that declares one (`progressiondefine`), drawn in state c, beside the empty state of
+   *  a progression the record does not hold, and on the project's timeline whether or not it follows a matter yet. */
+  defineFold(cs) {
+    const S = "screen.timeline.";
+    const columns = `<p class="mk-small" data-columns="steps">${["key", "label", "after", "within", "required", "cardinality"].map((c) => cs.w("progression.steps.label." + c)).join(" | ")}</p>`;
+    return `<details class="mk-details" open data-define="1"><summary>${cs.w("progression.define")}</summary>` + cs.field("pd-name", "theme.name.label", { help: "theme.name.help" })
+      + cs.field("pd-basis", "progression.basis", { area: true, rec: true, help: "progression.basis.help" })
+      + cs.field("pd-cite", "entity.relation.cite", { help: "entity.relation.cite.help" }) + `<p class="mk-small">${cs.w(S + "progression.steps.note")}</p>` + columns
+      + cs.field("pd-steps", "progression.steps", { area: true, rec: true, help: "progression.steps.help" })
+      + cs.act("progressiondefine", { label: "progression.define.go", tone: "primary", data: { mode: "define" } }) + "</details>";
   },
   /** R33 (3): a definition's steps from the lines a member typed: `key | label | after | within | required | cardinality`;
    *  a blank required is "sometimes" and a blank cardinality "0..n", which raise no finding on their own. */

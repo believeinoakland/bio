@@ -130,6 +130,29 @@ function joinItemised(items, textOf, sourceOf) {
   return { text, segments };
 }
 
+/** The segment map of an itemised array over a `document` string it is compared with,
+ *  or null when the array's own join (joinItemised's) is not that string byte for byte.
+ *  The comparison walks the document in place and builds no joined copy (R38): the
+ *  answer is the one `joinItemised(...).text === document` gives, at no whole-text cost. */
+function segmentsOver(document, items, textOf, sourceOf) {
+  const segments = [];
+  let pos = 0;
+  for (let i = 0; i < items.length; i++) {
+    const t = textOf(items[i]);
+    if (!t || !t.length) continue;
+    if (pos) {
+      if (document.charCodeAt(pos) !== 10) return null;
+      pos++;
+    }
+    if (!document.startsWith(t, pos)) return null;
+    const start = pos;
+    pos += t.length;
+    const source = sourceOf(items[i], i);
+    if (source) segments.push({ start, end: pos, source });
+  }
+  return pos === document.length ? segments : null;
+}
+
 /** Flatten a producer's text field to the one string the recognisers read.
  *  Exported for the suite; callers use readText().
  *
@@ -164,15 +187,15 @@ export function flattenText(supplied) {
     const pages = Array.isArray(supplied.pages) ? supplied.pages : null;
     const paras = Array.isArray(supplied.paragraphs) ? supplied.paragraphs : null;
     if (pages && pages.length) {
-      const j = joinItemised(pages, (p) => (p && typeof p.text === "string" ? p.text : ""),
-                             (p) => (p && Number.isInteger(p.page) ? pdfPageSource(p.page) : null));
-      if (j.text === text) segments = j.segments;
+      const found = segmentsOver(text, pages, (p) => (p && typeof p.text === "string" ? p.text : ""),
+                                 (p) => (p && Number.isInteger(p.page) ? pdfPageSource(p.page) : null));
+      if (found) segments = found;
       else position_why = localize("docprofile.readtext.this_producers_document_text_is_not_its_pages", "this producer's document text is not its pages joined, so the page a reference was read on cannot be established from it and is not guessed");
     } else if (paras && paras.length) {
-      const j = joinItemised(paras, (p) => (p && typeof p.text === "string" ? p.text : ""),
-                             (p, i) => docParaSource(Number.isInteger(p && p.para) ? p.para : i,
-                                                     p && p.ref));
-      if (j.text === text) segments = j.segments;
+      const found = segmentsOver(text, paras, (p) => (p && typeof p.text === "string" ? p.text : ""),
+                                 (p, i) => docParaSource(Number.isInteger(p && p.para) ? p.para : i,
+                                                         p && p.ref));
+      if (found) segments = found;
       else position_why = localize("docprofile.readtext.this_producers_document_text_is_not_its_paragraphs", "this producer's document text is not its paragraphs joined, so the paragraph a reference was read in cannot be established from it and is not guessed");
     } else {
       position_why = localize("docprofile.readtext.this_producer_emitted_document_text", "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said");
@@ -271,7 +294,11 @@ export function readText(supplied, ctx = {}) {
       why: localize("docprofile.readtext.the_tier_that_produced_this", "the tier that produced this text could not decode most of it ({undetermined} undetermined against {chars} decoded{named}); a reading over the fragment would silently misrepresent the document", { undetermined: String(flat.undetermined), chars: String(flat.chars), named: String(named) }),
     };
   }
-  const dctx = { ...ctx, text: flat.text };
+  /* R38: `pages` is the supplied pages, the very array the caller gave (as `ctx.supplied`
+     hands the reader), beside `text`, so a type can scan a very large text a page at a
+     time; `[]` where the supplied text carries none (a bare string, a paragraph shape). */
+  const pages = supplied && typeof supplied === "object" && Array.isArray(supplied.pages) ? supplied.pages : [];
+  const dctx = { ...ctx, text: flat.text, pages };
   const stack = identify(dctx);
   const doctype = doctypeFor({ ...dctx, handler: stack.handler, kind: stack.kind });
   let parsed = null, parse_error = null;

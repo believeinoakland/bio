@@ -539,7 +539,7 @@ test("R22 (N363, K562; N382, K606; K1868 (1)): the door reads tasks' table — I
                    [["INBOX_REFUSED", "C-19.2"], ["MACHINE_CANNOT_FORWARD", "C-32.10"], ["MACHINE_CANNOT_RESOLVE", "C-32.11"], ["TASK_NOT_YOURS", "C-76.1"],
                     ...Object.entries(T.CHECK_REQUEST_CHECKS).map(([code, r]) => [code, r.check])].sort());
   assert.deepEqual(Object.values(T.CHECK_REQUEST_CHECKS).map((r) => r.check).sort((a, b) => +a.split(".")[1] - +b.split(".")[1]),
-                   Array.from({ length: 17 }, (_, i) => `C-138.${i + 1}`));
+                   Array.from({ length: Object.keys(T.CHECK_REQUEST_CHECKS).length }, (_, i) => `C-138.${i + 1}`));
   for (const [code, row] of rows) {
     assert.deepEqual(M.dec49Row(code), { check: row.check, translation: row.translation }, code);
     const w = world({ answer: (c) => (c.route === "taskresolve" ? reply({ ok: true, result: { ok: false, reason: code } })() : null) });

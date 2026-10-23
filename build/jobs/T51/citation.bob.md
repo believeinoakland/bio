@@ -1,6 +1,6 @@
 # BOB to citation (T51)
 
-**Read** · handled J4
+**Read** · handled J14
 
 ## B1 · START
 
@@ -53,3 +53,69 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio citation tranche/T51 job/T51/citation`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B5 · ANSWER · re J5
+
+ANSWER J5 (K4210): (1) cite: requires project and handle-or-found, role in accepts only: accepted. (2) owner as a door stamp: accepted. uses + test-support added on tranche/T51 (merge it). Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B6 · CHANGE
+
+CHANGE (K4223), a new job session (CITATION #16): `DECLARED_OPS.citeimported` is mutating and has no `needs`, so op-declarations' `registerDeclaredOps` refuses it (`NEEDS_MISSING`, R80) and the plane cannot register every owner's declarations. Add `needs`: the capability the arm already requires of the member (read your arm and requirements; a member's own contribution is `contribute`, as its sibling acts declare), and the same check for `withdrawimported` and any other mutating row of yours. Test: register your `DECLARED_OPS` with op-declarations' `registerDeclaredOps` and expect no refusal, with a control. Your requirement line (K4210): amend R-line of the declaration in `build/requirements/citation.md`. Merge `tranche/T51` first; run your module's tests and the checks; record `Size`; COMPLETE.
+
+## B7 · CHANGE
+
+CHANGE (K4226): merged, but the architecture check fails on your `register.test.mjs`: it imports op-declarations (index 152), which is later than citation (81) in the order, so citation may not use it. Remove that import: keep the test that every mutating row of `DECLARED_OPS` declares `needs: "contribute"` (shape only), and drop the `registerDeclaredOps` calls; the registration of your rows is proven by op-declarations' own `register-owners.mjs` (OP-DECLARATIONS #29 adds citation there). R18's line names the shape test. Run `checks/architecture.mjs` over the whole product: 0. Merge `tranche/T51` first.
+
+## B8 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/citation tranche/T51 && git branch -m job/T51/citation stale/citation-local && git checkout -b job/T51/citation origin/job/T51/citation`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · CITATION #17 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #239 is depth 1; fix round 2, wave 1)
+
+Mail with `--module citation`; record `build/jobs/T51/citation.md`. Model claude-sonnet-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`.
+
+You are the **module job** (P8, mechanics §6) for `citation`. Your diff touches only that module's paths and tests and your record.
+This is fix round 2 of T51, planned whole in `build/plan/fix-round-2-T51.md` (K-numbers there). The walk of the T51 build on biosmoke8 is diagnosed in `build/plan/walk-T51-build/CAUSES.md` (C-numbers below are its; read the entries of yours whole). Nothing found here waits for the next tranche (K3915, P19). Merge `tranche/T51` into your branch first.
+
+**Your causes** (each: what is wrong, the source, the requirement to meet, the test; an implementation named is a suggestion only, the requirement is what you meet; where a cause has "Your part", the requirement and test cover the whole cause and you meet and prove your part, the other job's half being merged before or after you):
+1. **C31** (MINOR) The cite act is a GET that writes (a refresh or prefetch repeats it) and leaves no mark at the passage; the only trace is far down in "Your citations". **Your part: citation's part: the `cite` arm takes its fields from the body and refuses a GET without writing; declared fields updated.** Source: `screens-inquiry/document.mjs:917` (`query: {project, role, found}`); `citation`'s arm. Requirement: A write is not a GET: the `cite` arm reads its fields from a POST body (declared); the document marks a passage already cited in this question. Test: citation: `cite` with the fields in the body cites; as a GET it refuses without writing; screens (wave 2): the act sends a body and the passage carries the mark; control: an uncited passage has no mark.
+
+Read in full (never in part): `citation` lines on `cite`, `alreadyCited` and the declared fields (R14 and its neighbours); for each cause above, the code files named in its source, whole, and the tests that name the requirement ids you meet; your layer's contract in `build/layers.md`. Other tests are run, not read. A job about to read a document of its reading set only in part stops (BLOCKED, cause reading) (K3678). Where a cause needs a requirement line that is not written, or a module you do not hold, post a QUESTION to BOB with your best reading and carry on with the rest (mechanics §6 step 3); a flaw in another module goes to BOB (P9).
+Tests: for each cause one test written first and seen failing, at the module's interface through the real path, with the control that shows the fix is the cause; a test names the requirement id it proves (K874). Words (K3810): a sentence a member reads is read by key or written once with `localize`; a test asserts the key, never copies a sentence, and never hand-lists another module's ops, rows or words (K3268). A new member-facing sentence on a drawn screen is a word-table row the design stream writes first: use the row if one exists (`docs/development/ux-substrate/screens/words.json`, `setup-words`); if none, list the keys you need in your record and post one QUESTION to BOB naming them, and carry on with the rest; never invent a sentence. Declare every census op you own (K4208). Never edit a generated artifact (manifest §14); report one you make stale.
+Run: your suite (`node --test --test-force-exit bio-plane/test/m/citation/`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio citation tranche/T51 job/T51/citation`.
+COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
+
+## B9 · ANSWER · re J9
+
+Not merged yet: refusing the address fields would break callers no running job holds (wizard-scripts' cite steps, journey-check) and the live copy between merges. Change it to (citation R20, K4308): "`cite` reads `project`, `handle`, `found`, `question`, `note`, `role` and the part's fields from the POST body; where the body does not carry a field, the address's value is still read (a caller not yet moved); the door's stamps stay in the address; a GET with no source is refused `CITE_ONE_SOURCE`, writing nothing. `found` is an object or one JSON string." Test: a POST with the fields in the body cites; a call with them only in the address still cites; body wins where both differ. Then the affordances and members tests need no change; COMPLETE again.
+
+## B10 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/citation tranche/T51 && git branch -m job/T51/citation stale/citation-local && git checkout -b job/T51/citation origin/job/T51/citation`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · CITATION #18 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #244 is depth 1; fix round 4, wave 1; K4429)
+
+Mail with `--module citation`; record `build/jobs/T51/citation.md`. Model claude-sonnet-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678).
+
+You are the **module job** (P8, mechanics §6) for `citation`. Your diff touches only that module's paths, tests and your record. Fix round 4 of T51, planned whole in `build/plan/fix-round-4-T51.md` (K4429): read its section 0 and your causes' section 2 entries. Rows below are verbatim from `build/plan/walk-T51-rewalk3/A.md`, `B.md`, `build/plan/lane-performance/HANDOFF.md`. Merge `tranche/T51` first. Wave 1 (16 providers, independent) merges in the plan's table order; you are #8. Wave 0 is on `tranche/T51`; a wave-1 provider merged before you is read when you merge again before COMPLETE, until then a scripted double, said in the record.
+
+Requirement lines: RC-R9 (citation R21) (`build/plan/fix-round-4-reqs.md`), **written by BOB on tranche/T51 before your wave**; propose any further line in COMPLETE (BOB writes `build/requirements/`).
+
+**Rules (plan section 0; K4426-K4428).** R-FOUR: each cause has four fields, which BOB checks before the one redeploy: (1) root cause with file:line, or "root cause unknown": step 0 is a diagnosis posted as a QUESTION to BOB before any fix, BOB releases the fix; (2) why the tests missed it, and the test-gap fix; (3) a failing-first test of the walker's row on the same entry path (press the act, never call the done function), seen red then green; (4) the platform check: L (local workerd/miniflare, real limits: 128 MB object, `waitUntil` cut ~30 s after the response, 25 s door bound, service binding, real-size file), P (read-only probe of the smoke copy), F (fixture from the live record or site) or N; numbers in the record; LIVE-CHECKs are read-only reads of https://biosmoke8.believeinoakland.workers.dev without the proxy, as `build/plan/walk-T51-build/BRIEF.md` says; no mid-round deploy; a check you cannot run is said so and the cause stays open. R-SEAM: for a cause spanning modules the seam owner (S) is the last-merged job on the path press -> stored result; its test is the whole path with the real merged providers, its inputs made by the member's own acts through the real ops (`conclude`, `acquire`, `knock`), no scripted double of an earlier-merged module and no hand-written answer shape; providers test the same case at their interface; a seam test needing an unmerged provider is written first and stays red by name. R-NOTMET: no "not met", "deferred", "not proved", REPORT or open QUESTION at COMPLETE; name the smallest thing you need and ask BOB now. R-OLD: a fix to stored data is "new data only" or has a repair entry. R-ONE: one owning job per cause; the walker's row names the first test.
+
+**Your causes** (your part; the walker's row verbatim; the four fields):
+
+1. **cite-refusal**: Provider: `repairs` on `BASIS_REFUSED` (RC-R9, citation R21). Seam owner: screens-inquiry (S).
+   > | (cite) | - | 1280 | admin | question with its only citation grouped ("No, my answer falls") then "Cite this" on a second passage | NEW (MAJOR) | the press is refused (BASIS_REFUSED) and the page draws, among the words, "C-2.8 1 basis leg carries no ground while 1 do: a basis is grouped WHOLE or not at all, because a leg nobody grouped sitting beside branches somebody did is a relationship the record would have to guess at": code and jargon, no way forward in words (the repairs are not shown). It took 0.8 s | shots/B/cite-refused-1280.png |
+   (1) CERTAIN: `inquiry-grammar/grammar.mjs:950` finding C-2.8 is the module's own English; `citation/index.mjs:632-640` answers `BASIS_REFUSED` with findings; the screen draws them as they are.
+   (2) Refusal tested by code, not by what the member reads. Fix: the words check counts a finding's sentence drawn on a screen.
+   (3) That state: a sentence in the member's words with two acts ("add it to the group", "take the first out") (RC-R9 citation R21 `repairs`).
+   (4) N.
+
+Read in full: the lines above, the code your causes name, the tests naming your ids, `build/layers.md`; other tests are run. A flaw in a module you do not hold goes to BOB (P9). One test per cause, written first, seen failing, with a control, naming its requirement id (K874). Words (K3810): by key or `localize`; tests assert the key; a missing row: stand-in key, one QUESTION. Declare every census op you own (K4208). No generated artifact edited (manifest §14).
+Run: your suite (`node --test --test-force-exit bio-plane/test/m/<module>/`), then `node build/plan/impact.mjs tranche/T51 HEAD`'s users; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (0 findings for your files; reds also on the tranche tip are named, not fixed); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio citation tranche/T51 job/T51/citation`.
+COMPLETE lists each cause's four fields: (1) root cause (or step-0 report and BOB's release), (2) test-gap fix merged, (3) the failing-first test for the walker's row, red then green with the evidence, (4) the platform check L/P/F/N and its numbers; then requirement ids met, suite counts, each QUESTION with BOB's answer (none open), and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: held modules' own code).
+
+## B11 · ANSWER · re J13
+
+ANSWER to J13 (BOB #244; K4438). Your reading is accepted: `cite` gains an optional `ground` (a label the question already declares; on a case `GROUND_NOT_APPLICABLE`), the second repair is `inquiryground` with `{target, grounds: []}` (the screen collects its reason), the top-level `repairs` beside `findings` as you state, offered only on a grouped basis with a C-2.8 finding read from the document; your two stand-in keys stand until the design writes rows. Put the R21 and R19 lines in your COMPLETE; BOB writes them at your merge. screens-inquiry (the seam owner) is told the shape.

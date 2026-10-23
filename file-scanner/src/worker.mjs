@@ -1,23 +1,31 @@
 /* The fleet member's Worker (R10): the plane reaches its default export through the `FILE_SCANNER` service binding,
  * and it hosts the two container classes, `FileScanner` (ClamAV) and `SafeViewRenderer`, each with no internet at all
- * (R12): the Worker hands them every byte they work on. Its scheduled trigger runs the daily mirror (R6). Its bindings:
+ * (R12): the Worker hands them every byte they work on. The one exception is the `FileScanner` instance the daily mirror
+ * (R6) starts, the signature updater: ClamAV's own `freshclam` runs in it and reaches ClamAV's database host (R34).
+ * The Worker itself opens no connection to that host. Its scheduled trigger, every ten minutes, finishes an open mirror request, resumes a stopped run and otherwise mirrors once a day (R6). Its bindings:
  * `CAPTURES` (the group's bucket), `SCANNER` and `RENDERER` (the classes), and `SECURITY_VPC` (a Workers VPC binding,
  * absent unless the installer adds it for a tunnelled tool, R21). */
 import { Container, ContainerProxy } from '@cloudflare/containers';
 import member from '../fleet-member.json' with { type: 'json' };
-import { handle } from './handler.mjs';
-import { runMirror } from './clamav.mjs';
+import { handle, scheduled } from './handler.mjs';
 import { MEMBER_LIMITS_STATEMENT } from './limits.mjs';
 
 export { ContainerProxy };
 
 const classOf = (name) => member.containers.find((c) => c.class_name === name);
 
+/** R6, R12, R34: the request header by which the Worker starts the image's one other instance, the signature updater,
+ *  whose `freshclam` alone may reach ClamAV's database host. Every other instance, the scanning one, has no internet. */
+const UPDATER_HEADER = 'x-signature-updater';
+
 export class FileScanner extends Container {
   defaultPort = classOf('FileScanner').image.port;
   sleepAfter = '10m';
   enableInternet = false;
-  async fetch(request) { return this.containerFetch(request, this.defaultPort); }
+  async fetch(request) {
+    this.enableInternet = request.headers.get(UPDATER_HEADER) === '1';
+    return this.containerFetch(request, this.defaultPort);
+  }
 }
 
 export class SafeViewRenderer extends Container {
@@ -28,9 +36,13 @@ export class SafeViewRenderer extends Container {
 }
 
 /** A class's one instance, as a `(path, init)` fetch. */
-function container(ns, name) {
+function container(ns, name, headers = {}) {
   if (!ns) return async () => { throw new Error('container not bound'); };
-  return (path, init = {}) => ns.get(ns.idFromName(name)).fetch(new Request(`http://container${path}`, init));
+  return (path, init = {}) => {
+    const req = new Request(`http://container${path}`, init);
+    for (const [k, v] of Object.entries(headers)) req.headers.set(k, v);
+    return ns.get(ns.idFromName(name)).fetch(req);
+  };
 }
 
 async function socketConnect(address, options) {
@@ -38,21 +50,22 @@ async function socketConnect(address, options) {
   return connect(address, options);
 }
 
-function depsOf(env) {
+function depsOf(env, ctx) {
   return {
-    bucket: env.CAPTURES || null, scanner: container(env.SCANNER, 'file-scanner'), renderer: container(env.RENDERER, 'safe-view'),
+    bucket: env.CAPTURES || null, scanner: container(env.SCANNER, 'file-scanner'),
+    updater: container(env.SCANNER, 'file-scanner-signature-updater', { [UPDATER_HEADER]: '1' }), renderer: container(env.RENDERER, 'safe-view'),
     fetch: (req) => fetch(req), connect: socketConnect, vpc: env.SECURITY_VPC || null, now: () => Date.now(),
-    version: env.VERSION,
+    version: env.VERSION, waitUntil: ctx && typeof ctx.waitUntil === 'function' ? (p) => ctx.waitUntil(p) : null,
   };
 }
 
 export default {
   // installer R39: the member's limits, stated in the bundle a release signs.
   limits: MEMBER_LIMITS_STATEMENT,
-  fetch(request, env) {
-    return handle(request, depsOf(env));
+  fetch(request, env, ctx) {
+    return handle(request, depsOf(env, ctx));
   },
   scheduled(event, env, ctx) {
-    ctx.waitUntil(runMirror(depsOf(env)));
+    ctx.waitUntil(scheduled(depsOf(env, ctx)));
   },
 };

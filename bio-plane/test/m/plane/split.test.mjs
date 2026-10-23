@@ -64,15 +64,18 @@ test("R2, R3 (N512): before the first request provenance-routes holds its start 
   assert.notEqual(recordOf(x.ctx).registerAuditFinding("provenance-routes", "route", () => ({})).ok, true);
 });
 
-test("R5 (N512): `provenancechain`, `provenanceroute` and `provenanceroutes` are provenance-routes' arms in the route map, each answering what its service answers", async () => {
+test("R5 (N512): `provenancechain`, `provenanceroute` and `provenanceroutes` are provenance-routes' arms in the route map, each answering what its service answers (the list without a `bundleId`; with one, that document's route, R15)", async () => {
   const x = await store();
-  const q = "?bundleId=X-none&viewer=member:nobody&author=member:nobody&limit=5";
-  const map = x.routes("/x" + q);
   const routes = provenanceRoutesOf(x.ctx);
   const same = (a, b) => assert.equal(JSON.stringify(a), JSON.stringify(b));
-  same(await map.provenanceroutes(), routes.provenanceRoutesMarked({ after: null, limit: "5", viewer: "member:nobody" }));
-  same(await map.provenanceroute(), routes.provenanceRouteAssess({ bundleId: "X-none", viewer: "member:nobody", author: "member:nobody" }));
-  same(await map.provenancechain(), routes.provenanceChainRebuild({ bundleId: "X-none", apply: false, viewer: "member:nobody",
+  /* the list form: a `bundleId` in the query answers one document instead (R15), so the list is asked without one */
+  const list = x.routes("/x?viewer=member:nobody&author=member:nobody&limit=5");
+  same(await list.provenanceroutes(), routes.provenanceRoutesMarked({ after: null, limit: "5", viewer: "member:nobody" }));
+  /* with a `bundleId`, the same arm answers that document's standing route, as `provenanceRouteOf` does */
+  const one = x.routes("/x?bundleId=X-none&viewer=member:nobody&author=member:nobody&limit=5");
+  same(await one.provenanceroutes(), routes.provenanceRouteOf({ bundleId: "X-none", viewer: "member:nobody" }));
+  same(await one.provenanceroute(), routes.provenanceRouteAssess({ bundleId: "X-none", viewer: "member:nobody", author: "member:nobody" }));
+  same(await one.provenancechain(), routes.provenanceChainRebuild({ bundleId: "X-none", apply: false, viewer: "member:nobody",
                                                                     author: "member:nobody" }));
 });
 

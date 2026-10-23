@@ -1,6 +1,6 @@
 # BOB to filings (T51)
 
-**Read** · handled J3
+**Read** · handled J10
 
 ## B1 · START
 
@@ -57,3 +57,58 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio filings tranche/T51 job/T51/filings`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B6 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B7 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B8 · ANSWER · re J4
+
+ANSWER J4 (K4213): all five readings stand. (1) `resolutions: [{sentence, resolution, words?}]` and `release: [{ord, reason}]` are the declaration; screens-action sending `index` is its defect, sent to it as a CHANGE. (2) Conditional fields are accepted, not required: right (a declaration states no condition). (3) Declare the screens' name `filingrecordsent` with `artifact_sha` and `artifactSha`: right. (4) C75's refusal `TEMPLATE_TIER3_FILE` in `templateSave`: right, write its requirement line with the others. (5) Descriptions copy the hand rows' sentences: right.
+
+## B9 · CHANGE
+
+CHANGE (K4236): FILINGS #25, depth 2 (BOB #234 is depth 1). Your branch is at the tranche's tip.
+Entry: `filingRead` (R59, `op=filingread`) answers a prepared draft "as it was stored, so a reload between preparing and approving loses nothing", but its answer omits the draft's stored `exhibits` and `venue_standard` (R25; stored at `index.mjs` ~854, answered by the prepare call ~865), so screens-action's send steps lose the exhibits after a reload (SCREENS-ACTION #7 J6 (6)). Answer both, as stored, in `filingRead`; a draft stored before they existed answers `exhibits: []` and `venue_standard: null`. Requirement line for BOB: R59's answer list gains `exhibits` and `venue_standard` (R25), as stored (K4236). Test at the interface: prepare, then `filingread` answers the same exhibits and standard; control: an older row with neither.
+Before tests: every tracked lockfile directory has its node_modules (K4113). Reading (K3678): your requirements, this entry, your code and the tests naming R59 and R25, whole; a document you can only read in part stops you (BLOCKED, reading). Words (K3930): no sentence in code or tests. Model sonnet, medium effort; workers sonnet medium (reading), haiku low (mechanical). Merges before screens-action #8, which draws the exhibits from your answer.
+
+## B10 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/filings tranche/T51 && git branch -m job/T51/filings stale/filings-local && git checkout -b job/T51/filings origin/job/T51/filings`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · FILINGS #26 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #239 is depth 1; fix round 2, added by K4313)
+
+Mail with `--module filings`; record `build/jobs/T51/filings.md`. Model claude-sonnet-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`.
+
+You are the **module job** (P8, mechanics §6) for `filings`. Your diff touches only that module's paths and tests and your record.
+This is fix round 2 of T51, planned whole in `build/plan/fix-round-2-T51.md` (K-numbers there). The walk of the T51 build on biosmoke8 is diagnosed in `build/plan/walk-T51-build/CAUSES.md` (C-numbers below are its; read the entries of yours whole). Nothing found here waits for the next tranche (K3915, P19). Merge `tranche/T51` into your branch first.
+
+**Your cause** (found by CAUSE-ACTION-T51, the real site of C65):
+1. **C65** A filing template cannot be saved for an action that rests on no determination: `templateSave` (`filings/index.mjs:2871`) takes a new template's project only from the filing basis's `project`, empty for such an action, so filing-templates R3 refuses every author `TEMPLATE_SCOPE_REFUSED`; its other sites read `a.project || basis.project` (`:1487`, `:1643`, `:2773`). Requirement: a new template's scope is the project the request names, else the basis's project, as the module's other acts take it; write the line in your record (I fold it) and test it: a template saved for an action resting on no determination, its project named, is saved; control: one naming no project and no basis project is still refused.
+
+Read in full (never in part): filings' lines on templates and their scope, `templateSave` and the three sites named; filing-templates R1, R3 (read, not yours); the tests naming those lines; your layer's contract in `build/layers.md`. Other tests are run, not read. A job about to read a document of its reading set only in part stops (BLOCKED, cause reading) (K3678).
+Tests: for each cause one test written first and seen failing, at the module's interface through the real path, with the control that shows the fix is the cause; a test names the requirement id it proves (K874). Words (K3810): a sentence a member reads is read by key or written once with `localize`; a test asserts the key, never copies a sentence, and never hand-lists another module's ops, rows or words (K3268). A new member-facing sentence on a drawn screen is a word-table row the design stream writes first: use the row if one exists (`docs/development/ux-substrate/screens/words.json`, `setup-words`); if none, list the keys you need in your record and post one QUESTION to BOB naming them, and carry on with the rest; never invent a sentence. Declare every census op you own (K4208). Never edit a generated artifact (manifest §14); report one you make stale.
+Run: your suite (`node --test --test-force-exit bio-plane/test/m/filings/`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio filings tranche/T51 job/T51/filings`.
+COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
+
+## B11 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/filings tranche/T51 && git branch -m job/T51/filings stale/filings-local && git checkout -b job/T51/filings origin/job/T51/filings`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · FILINGS #27 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #251 is depth 1; fix round 5, E9 under Bob's K4557; K4558; merge 1 of 3)
+
+Mail with `--module filings`; record `build/jobs/T51/filings.md` (append a new section; earlier sections are history). You are the module job (P8, mechanics §6) for `filings`: your diff touches only that module's paths, tests and your record. Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). Merge `tranche/T51` first.
+
+**Read in full:** Bob's ruling K4557 (the last lines of `build/rulings.md` from K4557, and its line in `build/rulings-active.md`), `build/plan/census-join-K4557.md` (the census: your file:line starting points), section 0 of `build/plan/fix-round-5-T51.md` (the rules) and its E9, `build/plan/fix-round-5-step0.md` §4 (the walked case), your requirements (both parts), membership's `projectAuthority` and `isJoinedParticipant` (its requirements R54 and the service you call), and your code.
+
+**Rules** (K4426-K4428): root cause with file:line; why the tests missed it and the gap fixed (the old tests act as the administrator or a joined member; none acts as an invited member); a failing-first test on the walker's case through the real entry path, seen red in your record, then green. R-NOTMET: no "not met", deferred, REPORT or open QUESTION at COMPLETE: name the smallest thing you need and ask BOB now. Wording waits for T52 (K4269): use the held row `refusal.PROJECT_ACT_NOT_A_PARTICIPANT` (membership's code; it already says to join); a drawn-screen module adds no `localize`; any new row owed is named in your record. Declare every census op you own (K4208). Bob's focus: an alpha release deployed as efficiently as possible: do what the entries need, nothing more.
+
+Walker's row (fix round 5 E9, B `C65 | CA66`): "As the MEMBER who made and sent the request: refused with 'This is done by a member taking part in the template's project ... and you are not. Nothing was changed.' although the member is in my project and made the request". Step 0: the member `walker` was **invited, not joined** (`joined_at` null) in PROJ-2026-4538, the action ACTN-2026-0008's project, and yet prepared, approved and recorded the sending of FIL-2026-0003.
+
+Run: your suite, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio`; `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio <module> tranche/T51 job/T51/<module>`. COMPLETE: what changed (file:line), the failing-first tests red then green, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+**Your entry.** A project's weighty filing acts need a joined member (K4557). The eight ops with no check today: `filingprepare` (`filings/index.mjs:739`), `communicationprepare` (:879), `filingapprove` (:1436), `filingsecondapprove` (:1653), `filingsent`/`filingrecordsent` (:1550), `jointsignatory` (:1686), and `counselpacket` and `holdnoticeprepare` (each prepares a document that speaks for the team: BOB's reading of "weighty", K4558). Each, after its sight check and before any write, asks `membership.projectAuthority(project, identity, "joined", act)` for the filing's project (the action's, `#bundleProject` :344, or the draft's `basis.project`, :1487, :1643) and refuses with membership's `PROJECT_ACT_NOT_A_PARTICIPANT`; a filing with no project is untouched; one private helper, no copy per op. Failing-first: as an invited, not joined member of the action's project, `filingprepare` of a records request: refused with that code, nothing written (red today: prepared); the same member after `projectjoin`: prepares, approves, records the sending and keeps it as a template (`templatesave`, through filing-templates). Controls: a joined member and the owner unchanged; a filing with no project unchanged; an administrator not joined is refused like anyone (the held sentence says so).

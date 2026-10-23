@@ -40,7 +40,7 @@ async function real(bytes, { id = DOC, w = world(), fmt = XLSX } = {}) {
     assert.equal(m.ok, true, JSON.stringify(m));
     return m.content_id;
   };
-  const quiet = (fn) => { const before = w.snapshot(); const r = fn(); assert.deepEqual(w.snapshot(), before, "writes nothing"); return r; };
+  const quiet = async (fn) => { const before = w.snapshot(); const r = await fn(); assert.deepEqual(w.snapshot(), before, "writes nothing"); return r; };
   return { w, sha: cap.sha, reading: out.reading, cite, quiet };
 }
 
@@ -49,26 +49,26 @@ test("R52: cellsAt answers a sheet-cell or sheet-range row's typed cells inside 
   const all = reading.cells.Budget;
   assert.ok(Array.isArray(all) && all.length === 7, "control: the real reading holds the sheet's typed cells");
   const rid = cite({ kind: "sheet-range", sheet: "Budget", range: "B1:B4" });
-  const r = quiet(() => w.content.cellsAt(rid));
+  const r = await quiet(() => w.content.cellsAt(rid));
   assert.deepEqual(r.cells, all.filter((c) => c.source.cell.startsWith("B")), "field for field, as the reader states them");
   assert.deepEqual(r.cells.map((c) => c.source.cell), ["B1", "B2", "B3", "B4"]);
   assert.equal(r.extent_kind, "sheet-range");
   /* The stored lexical value, never re-rendered through a float; a shared string resolved by the reader. */
-  const b1 = w.content.cellsAt(cite({ kind: "sheet-cell", sheet: "Budget", cell: "B1" })).cells;
+  const b1 = (await w.content.cellsAt(cite({ kind: "sheet-cell", sheet: "Budget", cell: "B1" }))).cells;
   assert.deepEqual([b1.length, b1[0].value, b1[0].type], [1, "0.10", "number"]);
-  assert.equal(w.content.cellsAt(cite({ kind: "sheet-cell", sheet: "Budget", cell: "A2" })).cells[0].value, "Library");
+  assert.equal((await w.content.cellsAt(cite({ kind: "sheet-cell", sheet: "Budget", cell: "A2" }))).cells[0].value, "Library");
   /* A range spelled bottom-right first names the same cells, in the same order; a block reads row then column. */
-  assert.deepEqual(w.content.cellsAt(cite({ kind: "sheet-range", sheet: "Budget", range: "$B$4:b1" })).cells, r.cells);
-  assert.deepEqual(w.content.cellsAt(cite({ kind: "sheet-range", sheet: "Budget", range: "A1:B2" })).cells.map((c) => c.source.cell),
+  assert.deepEqual((await w.content.cellsAt(cite({ kind: "sheet-range", sheet: "Budget", range: "$B$4:b1" }))).cells, r.cells);
+  assert.deepEqual((await w.content.cellsAt(cite({ kind: "sheet-range", sheet: "Budget", range: "A1:B2" }))).cells.map((c) => c.source.cell),
                    ["A1", "B1", "A2", "B2"]);
   /* An empty cell inside a read sheet is a measured empty list, not undetermined; another sheet reads its own cells. */
-  assert.deepEqual(w.content.cellsAt(cite({ kind: "sheet-cell", sheet: "Budget", cell: "A4" })).cells, []);
-  assert.equal(w.content.cellsAt(cite({ kind: "sheet-cell", sheet: "Notes", cell: "A1" })).cells[0].value, "unaudited");
+  assert.deepEqual((await w.content.cellsAt(cite({ kind: "sheet-cell", sheet: "Budget", cell: "A4" }))).cells, []);
+  assert.equal((await w.content.cellsAt(cite({ kind: "sheet-cell", sheet: "Notes", cell: "A1" }))).cells[0].value, "unaudited");
 });
 
 test("R52: a formula's cached value is the file's statement and nothing is recalculated", async () => {
   const { w, cite } = await real(budget());
-  const got = w.content.cellsAt(cite({ kind: "sheet-cell", sheet: "Budget", cell: "B3" })).cells;
+  const got = (await w.content.cellsAt(cite({ kind: "sheet-cell", sheet: "Budget", cell: "B3" }))).cells;
   assert.deepEqual([got[0].formula, got[0].cached, got[0].value], ["B1+B2", "999", "999"], "the cached 999 stands, never 0.30");
   assert.equal(w.content.passageText(cite({ kind: "sheet-cell", sheet: "Budget", cell: "B3" })), "999");
 });
@@ -76,26 +76,26 @@ test("R52: a formula's cached value is the file's statement and nothing is recal
 test("R52: null with its reason for a row not held, stale, of another kind, or whose reading holds no typed cells for that sheet — never an empty list", async () => {
   const no = (got, reason) => { assert.equal(got.cells, null); assert.equal(got.reason, reason); assert.equal(typeof got.why, "string"); };
   const { w, sha, reading, cite } = await real(budget());
-  no(w.content.cellsAt("f".repeat(64)), "not_held");
-  no(w.content.cellsAt(null), "not_held");
-  no(w.content.cellsAt(cite({ kind: "document" })), "not_a_sheet_extent");
+  no(await w.content.cellsAt("f".repeat(64)), "not_held");
+  no(await w.content.cellsAt(null), "not_held");
+  no(await w.content.cellsAt(cite({ kind: "document" })), "not_a_sheet_extent");
   /* Stale (R22): the cells held now are the newer reading's. */
   const id = cite({ kind: "sheet-cell", sheet: "Budget", cell: "B2" });
-  assert.equal(w.content.cellsAt(id).cells.length, 1, "control: read before the re-read");
+  assert.equal((await w.content.cellsAt(id)).cells.length, 1, "control: read before the re-read");
   w.content.markStale(sha, [{ step: "layer", tier: 1, container: "xlsx", cap: null, mark: "re-read" }]);
-  no(w.content.cellsAt(id), "stale");
+  no(await w.content.cellsAt(id), "stale");
   /* A sheet over its reader's guard (cells null), and a reading stored before R28 (no cells at all): not read, never []. */
   for (const stored of [{ ...reading, cells: { ...reading.cells, Budget: null } }, (({ cells, ...rest }) => rest)(reading)]) {
     const v = await real(budget("0.11"), { id: "INFO-2026-0003-c" });
     v.w.ex.readings[v.sha] = readingFacts(stored, "xlsx");
-    no(v.w.content.cellsAt(v.cite({ kind: "sheet-range", sheet: "Budget", range: "A1:B2" })), "cells_not_held");
+    no(await v.w.content.cellsAt(v.cite({ kind: "sheet-range", sheet: "Budget", range: "A1:B2" })), "cells_not_held");
   }
 });
 
 test("R46: a sheet-cell row's text is its typed cell's stored value; a sheet-range's the values inside it, one per line; a cell not held is null", async () => {
   const { w, cite, quiet } = await real(budget());
   const b1 = cite({ kind: "sheet-cell", sheet: "Budget", cell: "B1" });
-  assert.equal(quiet(() => w.content.passageText(b1)), "0.10");
+  assert.equal(await quiet(() => w.content.passageText(b1)), "0.10");
   assert.equal(w.content.passageText(cite({ kind: "sheet-range", sheet: "Budget", range: "A1:B4" })),
                "Parks\n0.10\nLibrary\n0.20\nTotal\n999\n7");
   /* The whole used range: the cells, one per line, never the index unit's tab-joined rows. */
@@ -126,7 +126,7 @@ test("R53: officeMetadataOf answers the metadata an office capture's reading hol
   const no = (got, reason) => { assert.equal(got.metadata, null); assert.equal(got.reason, reason); assert.equal(typeof got.why, "string"); };
   {
     const { w, sha, quiet } = await real(budget());
-    const got = quiet(() => w.content.officeMetadataOf(sha));
+    const got = await quiet(() => w.content.officeMetadataOf(sha));
     assert.deepEqual(got, { capture_sha: sha, metadata: { author: "A. Clerk", lastModifiedBy: "B. Editor",
       created: "2026-01-02T03:04:05Z", modified: "2026-02-03T04:05:06Z", source: "docProps/core.xml" } }, "W3CDTF strings unchanged");
     no(w.content.officeMetadataOf("e".repeat(64)), "never_read");

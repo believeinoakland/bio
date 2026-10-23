@@ -215,3 +215,22 @@ test("R51: a project not joined by the actor, and a project the actor cannot see
   assert.equal(conclude(w, { project: "PROJ-2026-0404-none", reading: WORDS, falsifier: "f" }).reason, "NOT_A_PROJECT");
   assert.deepEqual([w.sha(Q), w.sha(bos)], base);
 });
+
+test("R51, R3: a question with a supporting leg in a part and a leg cutting against with no ground concludes on its own reading, the cutting leg carried and placed in no part", () => {
+  const w = setup({ lines: [...block({ basis: [{ target: DOC, role: "supports", ground: "the minutes" }, { target: DOC2, role: "cuts_against" }],
+                                       refs: [DOC, DOC2] }), ...GROUNDS.slice(0, 4)] });
+  const r = conclude(w, { reading: WORDS, falsifier: "the minutes say otherwise" });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 500));
+  const [v] = read(w).versions;
+  assert.deepEqual(v.legs.map((l) => [l.target_id, l.role, l.ground]), [[DOC, "supports", "the minutes"], [DOC2, "cuts_against", ""]]);
+  assert.equal(v.parts.length, 1);
+  assert.equal(fmOf(w, Q).current_state, "concluded");
+});
+
+test("R51, R3: a question whose legs carry no ground and one of them cuts against concludes on one part holding the supporting leg only", () => {
+  const w = setup({ lines: block({ basis: [{ target: DOC, role: "supports" }, { target: DOC2, role: "cuts_against" }], refs: [DOC, DOC2] }) });
+  const r = conclude(w, { reading: WORDS, falsifier: "the minutes say otherwise" });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 500));
+  const [v] = read(w).versions;
+  assert.deepEqual(v.legs.map((l) => [l.target_id, l.role, l.ground]), [[DOC, "supports", "g1"], [DOC2, "cuts_against", ""]]);
+});

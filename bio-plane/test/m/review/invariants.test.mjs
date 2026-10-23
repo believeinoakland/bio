@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { standard, P, V, SECRET } from "./fixture.mjs";
 import { REVIEW_COPY_CHECKS, REVIEW_MARKING, REVIEW_TABLES, REVIEW_LIST_MAX, noReviewCopy, caseIdentitySentence,
          statedEdition, reviewOwns } from "../../../src/review/index.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 import * as recordCore from "../../../src/record-core/index.mjs";
 import * as membership from "../../../src/membership/index.mjs";
 import * as strength from "../../../src/strength/index.mjs";
@@ -50,6 +51,7 @@ function drive(w, code, draftId) {
     case "REVIEW_NO_SECRET": return w.r.act({ act: "grant", author: "ann", draft: draftId, recipient: "R", secretSha: "x" });
     case "REVIEW_NO_GRANT": return w.r.act({ act: "revoke", author: "ann" });
     case "REVIEW_NO_COMMENT_TEXT": return w.r.comment({ draft: draftId, viewer: V("ann"), text: "" });
+    case "REVIEW_BATCH_TOO_LARGE": return w.r.copyMany({ drafts: Array.from({ length: 21 }, (_, i) => `DRAFT-2026-${i}`), viewer: V("ann") });
     case "REVIEW_BAD_UNTIL": return w.r.act({ act: "grant", author: "ann", draft: draftId, recipient: "R", secretSha: SECRET(6), until: "tomorrow" });
     case "APPROVAL_RULE_BAD_APPROVERS": return w.r.approvalRuleSet({ approvers: [], by: "adm" });
     case "CASE_NOT_AN_APPROVER": return w.r.caseApprove({ case: "CASE-2026-0009", edition: 2, docSha: SECRET(7), by: "out" });
@@ -106,13 +108,13 @@ test("R21: no secret's value is received or stored, only its fingerprint", () =>
     assert.equal(JSON.stringify(r).includes(VALUE), false);
 });
 
-test("R23, R27, R30, R31: C-87.1–C-87.11 and C-32.16 held here with their ids and translations, T41's C-87.13–C-87.16 and T48's C-87.17 (R34), each refused at its interface; C-87.12 retired, its number held by no row", () => {
+test("R23, R27, R30, R31: C-87.1–C-87.11 and C-32.16 held here with their ids and translations, T41's C-87.13–C-87.16 and T48's C-87.17 (R34) and G12c's C-87.18 (a batch read over its bound), each refused at its interface; C-87.12 retired, its number held by no row", () => {
   const want = { MACHINE_CANNOT_REVIEW: "C-32.16", NO_REVIEW_COPY: "C-87.1", REVIEW_UNKNOWN_ACT: "C-87.2",
     REVIEW_NOT_PROJECT_OWNER: "C-87.3", REVIEW_NO_PROJECT: "C-87.4", REVIEW_DRAFT_CHANGES_PROJECT: "C-87.5",
     REVIEW_NO_SUCH_CASE: "C-87.6", REVIEW_DRAFT_TOO_LARGE: "C-87.7", REVIEW_NO_RECIPIENT: "C-87.8", REVIEW_NO_SECRET: "C-87.9",
     REVIEW_NO_GRANT: "C-87.10", REVIEW_NO_COMMENT_TEXT: "C-87.11", APPROVAL_RULE_BAD_APPROVERS: "C-87.13",
     CASE_NOT_AN_APPROVER: "C-87.14", APPROVAL_NO_SUCH_DOCUMENT: "C-87.15", APPROVAL_REASON_TOO_LONG: "C-87.16",
-    REVIEW_BAD_UNTIL: "C-87.17" };
+    REVIEW_BAD_UNTIL: "C-87.17", REVIEW_BATCH_TOO_LARGE: "C-87.18" };
   assert.deepEqual(Object.fromEntries(Object.entries(REVIEW_COPY_CHECKS).map(([k, v]) => [k, v.check])), want);
   assert.ok(Object.isFrozen(REVIEW_COPY_CHECKS));
   /* R27 (N322): C-87.12 retired into record-core's C-59.6; its number is not reused here */
@@ -178,7 +180,7 @@ test("R26: REVIEW_LIST_MAX, statedEdition and caseIdentitySentence are exported 
   statedEdition(ident, true);
   assert.deepEqual(ident, { caseId: "C", edition: 3 }, "pure: nothing it is given changes");
   assert.equal(caseIdentitySentence("C", 3, false), caseIdentitySentence("C", 3, false));
-  assert.equal(caseIdentitySentence("C", 3, false), "the next edition (3) of C");
+  assert.equal(caseIdentitySentence("C", 3, false), word("review.text.next_edition", { edition: "3", case_id: "C" }));
   /* the read contract: the columns, holding what this module's writes put there */
   const w = standard();
   w.clock.now = "2026-09-28T05:00:00.000Z";
@@ -186,8 +188,8 @@ test("R26: REVIEW_LIST_MAX, statedEdition and caseIdentitySentence are exported 
   const cols = w.rows(`PRAGMA table_info(case_drafts)`).map((c) => c.name);
   for (const c of ["draft_id", "case_id", "project_id", "params", "statement_by", "created_at"]) assert.ok(cols.includes(c), c);
   const r = w.row(`SELECT draft_id, case_id, project_id, params, statement_by, created_at FROM case_drafts`);
-  assert.deepEqual(r, { draft_id: d.draftId, case_id: null, project_id: P, params: JSON.stringify({ scope: "x", statement: "S" }),
-                        statement_by: "ed", created_at: "2026-09-28T05:00:00.000Z" });
+  assert.deepEqual({ ...r, params: JSON.parse(r.params) }, { draft_id: d.draftId, case_id: null, project_id: P,
+                        params: { scope: "x", statement: "S" }, statement_by: "ed", created_at: "2026-09-28T05:00:00.000Z" });
 });
 
 test("R26: case-inputs' own copy of the bound, DRAFTS_READ_MAX (its R3; case-authoring's before T47), equals REVIEW_LIST_MAX (K242)", () => {

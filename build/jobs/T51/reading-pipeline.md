@@ -1,6 +1,6 @@
 # reading-pipeline (T51)
 
-**Status** · session_01Lok5rc1LRdKaFhnhJxw8j2 · depth 3 · COMPLETE · handled B4
+**Status** · session_01NKjBP2CpqyAaDcRx7TcMRK · depth 2 · COMPLETE · handled B26
 
 ## J1 · COMPLETE
 
@@ -80,3 +80,380 @@ COMPLETE (B4, K3989): the member-readable literals are keyed. `tranche/T51` merg
 Checks: `checks/words.mjs` for the module `inline 0, plain 0, testcopy 0, unkeyed 0; 0 failures`; module tests `tests 137, pass 137, fail 0`; d606, tier2-wire, pdf-worker-binding `pass 1, fail 0` each; probe exit 0; format, architecture, coverage (34 of 34), ownership `0 failures`; `checks/run.mjs` names nothing in reading-pipeline. `rows.mjs` is stale for the new `reading-pipeline.index.*` ids (expected).
 
 Size (session_01Lok5rc1LRdKaFhnhJxw8j2): test runs 9, module lines 1800
+
+## J5 · COMPLETE
+
+COMPLETE (B5, FR-65, L6, K4194): the reading of a captured web page is its content.
+
+**Entry applied.** `visibleTextOfHtml` (`bio-plane/src/reading-pipeline/index.mjs`) now drops, before tags are stripped: any `nav` and any element with `role="navigation"` (first role token, case-insensitive) with its contents, counted by the element's own name so a nested one does not end it early; skip links (an `a` whose `href` begins `#` and whose text, markup removed, begins "Skip to"); and, after references are decoded, the tokens `{digits}`, `{identifier}` and `##LOC[...]##`. Everything else visible is kept; a page with no landmark keeps all its text. R32 is amended in `build/requirements/reading-pipeline.md` with that line (and the Status line), as B5 asked; no id is marked not yet met, because R32 is named by tests.
+
+**Choice made (my ruling, in scope of the entry):** an element with no end tag is not guessed at: its tag goes and its words stay (dropping to the end of the page would lose the article). Noted in R32.
+
+**Tests (`test/m/reading-pipeline/text-units.test.mjs`), written first and seen failing:** the furniture page yields units for the article only, and text_chars and provenance digest are over the whole page as before; each landmark alone; controls: a `nav` inside the article is dropped with its contents and the words around it stay, nesting by name (a sibling after a nested role=navigation div is kept), case-insensitive names, an unclosed nav keeps its words; a page with no landmarks keeps everything; other roles, `#` links not beginning Skip to, a Skip to link that is not a `#` link, and braces that are not a token are kept; plain text is untouched; two readings are identical.
+
+**Found in another module / stale generated artifacts (not edited):** `bio-plane/dist/bio-plane.bundled.mjs`, `agent-worker/dist/agent-worker.bundled.mjs` and the two `release/*.bundled.mjs` hold the old `visibleTextOfHtml`; they are stale until rebuilt. `rows.mjs` is stale for ai-accounts (`build.mjs --check` names `ai-accounts.declared.accountusesset`, not mine). One run of the wider set (extraction, acquisition, answers, query-language) showed 1 failure of 490 that I could not catch again: three further runs and the run before my change were 0 failures; I did not identify the test.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/reading-pipeline/*.test.mjs bio-plane/test/m/extraction/read.test.mjs`: `tests 141, pass 141, fail 0`.
+- `node --test` over extraction, acquisition, answers, query-language: `tests 490, pass 490, fail 0` (three runs).
+- `checks/format.mjs`: `0 failures`; `architecture.mjs reading-pipeline`: `0 failures`; `coverage.mjs reading-pipeline`: `34 of 34 live requirement ids named by a test; 0 failures`; `words.mjs reading-pipeline`: `inline 0, plain 0, testcopy 0 ... 0 failures`; `ownership.mjs`: `0 failures`.
+- `checks/run.mjs /home/user/bio`: no line names reading-pipeline; its 7 coverage and 7 words failures are other modules' (inherited).
+
+Size (session_01Ff44xuNBVDnvzJCTR8DH73): test runs 12, module lines 1790
+
+## J6 · COMPLETE
+
+COMPLETE (B6, fix round 2, C5's reading half, K4323): the reader reads the whole object held under the document's fingerprint first. `tranche/T51` merged into the branch.
+
+**Entry applied.** `bytesOf` (`bio-plane/src/reading-pipeline/index.mjs`) for a multipart document now asks `evidence.get(capture.sha256)` first and returns that object whole; it assembles parts, under MULTIPART_READ_MAX, only when no whole object is held (a failing read of the whole falls through to the parts). A document with neither is refused as before (parts over the bound: the same `why`; a missing part: the same `why`).
+
+**Proposed R2 wording, for BOB to write:** append to R2: "(T51 fix round 2, C5; K4323; capture R86, acquisition R10, R11) **The whole object first.** A multi-part capture whose whole object is held under the document's fingerprint is read from that object; its parts are assembled, within MULTIPART_READ_MAX, only when no whole object is held, and a document with neither is a failed reading saying so. Test: a 21 MiB three-part capture whose whole object is held is read whole, the parts never fetched; control: the same parts with no whole object held, over the bound, still refuse as before." Also the R23 line for `bytesOf` could say "(R2: the whole object first)".
+
+**Test** (`test/m/reading-pipeline/pieces.test.mjs`, "R2 R23: bytesOf reads the whole object held ..."), seen failing first on the unchanged code (`pass 8, fail 1`), then passing; its control is inside it: parts only, 21 MiB, refuses with the over-the-bound sentence; with the whole held only that key is fetched and the bytes equal the whole; a small multipart with no whole still assembles.
+
+**Deferred / found elsewhere:** nothing deferred. `bio-plane/dist/bio-plane.bundled.mjs` (and the other bundles holding `bytesOf`) are stale until rebuilt, not edited. Callers of `bytesOf` in other modules (extraction's re-read, `index.mjs` line 1337 here) are unchanged and get the new behaviour. No census op is owned by this change.
+
+**Tests and checks:**
+- module + d606, tier2-wire, pdf-worker-binding: `tests 153, pass 153, fail 0`.
+- users (`modules.json` uses): extraction + events `tests 290, pass 290, fail 0`; content `tests 142, pass 142, fail 0`. (`impact.mjs origin/tranche/T51 HEAD` names 108 modules, 1686 files; I ran the three direct users.)
+- `format.mjs`: 0 failures; `architecture.mjs reading-pipeline`: 0 failures; `coverage.mjs reading-pipeline`: `35 of 35 live requirement ids named by a test; 0 failures`; `words.mjs reading-pipeline`: 0 failures; `ownership.mjs reading-pipeline tranche/T51`: `3 files changed ...; 0 failures`.
+
+Size (session_016qGyozq8Rczq8BoW6LAp4C): test runs 8, module lines 1860
+
+## J7 · COMPLETE · re B7
+
+COMPLETE (B7, fix round 5, E1; E2's half stated below with the one thing it needs). `tranche/T51` merged into the branch first. Pushed at the branch tip.
+
+**E1 root cause, confirmed in the code (file:line, `bio-plane/src/reading-pipeline/index.mjs`):** `readInner` took the format from the recorded profile alone (was :1537, `fmt = profile.format.format`). An upload held in parts is profiled from no byte, so that format is `undetermined`; `entry` was null, `wireable` false, and `textRead` required `!multipart`, so a multipart document always reached the last branch and was written `final` "not read as text (multipart)". Why the tests missed it: every multipart case in this module's tests carried a recorded `pdf`/`html` format or a stub entry, and none asserted words in `text_units` for an upload recorded `undetermined`.
+
+**Change.** `readInner` (:1546, :1566-1574): after the bytes are held, a recorded format that is `undetermined` or none is detected again with `detectFormat(bytes, profile.source_content_type || ct)` (the recorded profile is never trusted over bytes held; a single part recorded `undetermined` is re-detected too). New helpers at :1528-1533 (`TEXT_TYPE`, the same text types acquisition's `profilesAsText` judges, and `utf8TextOf`): a multipart document whose format is still `undetermined`, whose profile's `source_content_type` is a text type, and whose bytes are strict UTF-8 without a NUL, is read as text (R32's path, R1's reader, units, chain, words). `bytesOf` and the R37 ceiling are untouched: a 30 MB document is still stated `final` with its size before any byte is loaded.
+
+**Failing-first** (`test/m/reading-pipeline/undetermined.test.mjs`, new, 7 tests; each asserts the words are in `text_units`, R-STOP; run on the unchanged code: `tests 7, pass 3, fail 4`; the 4 red were the E1 cases, the 3 green were controls):
+- red→green: a 10 MB text-layer PDF in two parts, recorded `undetermined`: read through the pdf entry (40 pages, tier 1, units hold the PDF's words). The same with no recorded format at all. A 12 MB UTF-8 text file declared `text/plain` in two parts: read as text, its first unit holds the first sentence, `text_container` "text". A single-part PDF recorded `undetermined`: read, units equal the same PDF recorded `pdf`.
+- controls (green before and after): a 30 MB PDF recorded `undetermined` still states the ceiling, `failure: "final"`, basis equal to `word("reading-pipeline.why.capture_bytes_parts", ...)` with its size and 24 MiB; prose declared no type, and a NUL-bearing file declared `text/plain`, in parts, are still not read as text; two reads of the same upload are identical.
+After the change: `tests 7, pass 7, fail 0`.
+
+**Platform (rule 4), local workerd, `workerd-ceiling.probe.mjs`** (now takes `PROBE_BUDGET=<bytes>`, default unchanged; the units budget given to `read`; here the index bound 2,097,152). Smallest V8 old space in which `read` completes, plus the file's bytes (object limit 128):
+| file | pages | MB | old space | heap + bytes |
+|---|---|---|---|---|
+| BUDGET-2025-BUD | 188 | 2.4 | 33 | 35 |
+| BUDGET-2025-PER | 295 | 8.4 | 42 | 50 |
+| BUDGET-2024-APP | 1,354 | 15.2 | 83 | 98 |
+| synthetic text pages, 120 lines | 1,000 | 4.8 | 56 | 61 |
+| synthetic text pages, 120 lines | 2,000 | 9.6 | 88 | 98 |
+| synthetic, 21 MB | 1,300 | 20.1 | 65 | 85 |
+| synthetic, 22 MiB (E1's size, one object) | 300 | 22.0 | 37 | 59 |
+A 22 MiB upload held in parts adds the assembled copy beside its parts (about +22 MB), so about 81 MB at worst, under 128. No deploy.
+
+**E2 (R42 re-measured at the index bound): the table above is the baseline on the tranche's pdf-reader as of now (the rule's recorded figures 35/50/98 and 66/98 for the same files stand within 5 MB at the 2 MiB bound, so the index bound costs this module nothing it did not already cost). pdf-reader (merge 1) is still WORKING and has not merged, so the numbers after its object-table bound cannot exist yet.** The smallest thing I need: tell me by CHANGE when pdf-reader has merged into `tranche/T51`; I merge it, re-run the same seven files at `PROBE_BUDGET=2097152` and post the table. Nothing else of E2 is mine (`pdfstructure.mjs` R42's constants are pdf-reader's; `readHeld`'s budget is extraction's).
+
+**Requirement lines I propose, for BOB to write in `build/requirements/reading-pipeline.md`:**
+- append to R2: "(T51 fix round 5, E1; K4530) **Bytes over the recorded profile.** A capture whose recorded format is `undetermined`, or none, has its format detected again from the bytes the reader holds (`format-registry.detectFormat`, the declared type only where the bytes say nothing) before the format is chosen; a capture held in parts, profiled from no byte, is read through the entry that detection finds. Test: a 10 MB text-layer PDF in two parts recorded `undetermined` is read, its words in `text_units`; control: a 30 MB PDF still states R37's ceiling."
+- append to R32: "(T51 fix round 5, E1) A capture held in parts whose format stays `undetermined`, whose profile's `source_content_type` is a text type and whose bytes are UTF-8 without a NUL is read as text, as a single part is. Test: a 12 MB file declared `text/plain` in two parts has text units; controls: no declared type, or a NUL, is not read as text."
+- the R32 text "(R1: a textual type, a single part, within the profile's text bound)" now also covers this multipart case.
+
+**Tests and checks (all on the job branch tip):**
+- `node --test --test-force-exit test/m/reading-pipeline/*.test.mjs test/d606-perpage-ocr.test.mjs test/tier2-wire.test.mjs test/system/pdf-worker-binding.test.mjs`: `tests 193, pass 193, fail 0`; `test/tier-pagewise.probe.mjs` exit 0.
+- users: `test/m/extraction/` + `test/m/content/`: `tests 377, pass 376, fail 1`: the one is `c5b-memory` (E2's, extraction's job; red with the other suites running beside it, passes alone: `pass 1, fail 0`; the plan lists it as a margin-bound defect on the tranche tip, not caused by this change); `test/m/events/`: `tests 93, pass 93, fail 0`.
+- `checks/run.mjs`: format `176 modules, 176 requirements files; 0 failures`; architecture `4160 product files, 14216 relative imports; 0 failures`; coverage `6605 of 6605 live requirement ids named by a test; 0 failures`; channels 0 failures; words `0 failures` (reading-pipeline: `0 failures`, inline/plain/testcopy/missingkey 0).
+- `checks/ownership.mjs /home/user/bio reading-pipeline tranche/T51 job/T51/reading-pipeline`: `4 files changed by reading-pipeline ...; 0 failures`.
+
+**Found elsewhere / stale artifacts:** none in another module. `bio-plane/dist/bio-plane.bundled.mjs` (the plane bundles `read`) is stale until BOB rebuilds it at the layer close; not edited. No census op owned. R-OLD: this fixes new reads; an older stored "(multipart)" reading is repaired by extraction's `readHeld` replacing it once (extraction's entry in the plan), not here.
+
+Size (session_01SnD31Lo4LuZRr5JLS6rug9): test runs 11, module lines 2183
+
+## J8 · COMPLETE · re B8
+
+COMPLETE (B8, E2: R42 re-measured at the index bound with the merged reader). `tranche/T51` merged into the branch (pdf-reader's d071cdc9ec: object table bound, ASCII85/Hex, R42 density term `READ_BASE_DENSE_MB` 29 / `READ_PAGE_DENSE_MB` 0.001). E1 stands as posted in J7.
+
+Local workerd, `workerd-ceiling.probe.mjs` with `PROBE_BUDGET=2097152` (the index bound), smallest V8 old space in which `read` completes, plus the file's bytes (object limit 128), before the merge (J7) and after it:
+| file | pages | MB | old space before / after | heap + bytes before / after |
+|---|---|---|---|---|
+| BUDGET-2025-BUD | 188 | 2.4 | 33 / 33 | 35 / 35 |
+| BUDGET-2025-PER | 295 | 8.4 | 42 / 42 | 50 / 50 |
+| BUDGET-2024-APP | 1,354 | 15.2 | 83 / 83 | 98 / 98 |
+| text pages, 120 lines | 1,000 | 4.8 | 56 / 56 | 61 / 61 |
+| text pages, 120 lines | 2,000 | 9.6 | 88 / 88 | 98 / 98 |
+| synthetic 21 MB | 1,300 | 20.1 | 65 / 65 | 85 / 85 |
+| synthetic 22 MiB | 300 | 22.0 | 37 / 37 | 59 / 59 |
+| text pages, 120 lines | 3,500 | 17.6 | refused by R42 (`TOO_LARGE_TO_READ`), as before; the probe prints "does not complete" for a refusal |
+So the merged reader changes none of these seven figures: the index bound and the object-table bound cost this module's read nothing more, and R42's rule (needs 61 / 97 / 150 for 1,000 / 2,000 / 3,500 text pages; 33 / 43 / 82 for the govinfo volumes) still sits within 16 MB of the measured need (the largest gap: BUDGET-2024-APP, rule 82 against 98 measured, as pdf-reader's R42 text already states). Whether the rule's constants move for dense pages is pdf-reader's (its density term was measured on its own files); nothing here argues for a change.
+
+Tests after the merge: module + d606 + tier2-wire + pdf-worker-binding `tests 193, pass 193, fail 0`; `checks/ownership.mjs ... job/T51/reading-pipeline`: `0 failures`. No file changed in this entry other than the merge.
+
+Size (session_01SnD31Lo4LuZRr5JLS6rug9): test runs 12, module lines 2183
+
+## J9 · QUESTION
+
+QUESTION (G6, R39; best reading given; I carry on with it)
+
+`read` now refuses a bare digest stub (no parts, no `capture.bytes`, no `retrieved`, no profile) with `{refused: {code: "BARE_DIGEST", why}}` and NO `reading` key (R39). Failing-first seen red, then green.
+
+**This breaks one consumer test outside my module, by design of the entry:** `bio-plane/test/m/extraction/r80.test.mjs:60` ("R80 R31 R32: after the repair the OCR re-read ... runs"): `readHeld` of a WHOLE digest registered by parts only finds no stored document (`#storedDocument`, index.mjs:679) and hands `read` the stub `{capture:{sha256: digest}}`; `read` now refuses, and `writeReading` (index.mjs:871) throws on `out.reading` undefined. The same stub is built at extraction/index.mjs:1506. `read` cannot tell a part digest from a whole one (the 8 MiB part and a real 8 MiB whole look alike), so a stub can only be refused.
+
+**What extraction's G6 job must therefore do (my reading of "extraction: resolve a part digest to its document or refuse, write nothing for a bare part"):** (a) never hand `read` a stub: for a WHOLE it reads, build the document with at least `capture.bytes` (the size `ev.head` answers, or the register's `total`), so it is no stub; (b) treat `out.refused` as "write nothing" (`left("BARE_DIGEST")`), never reach `writeReading` with no reading; (c) r80.test.mjs:60 and any test that reads a whole through a stub change with it. Until that job merges, extraction's R80 repair test is red on my branch; this is the only red I found in the direct users (extraction 35 files, content, events): 474 of 475.
+
+Contract extraction can rely on (to be R39): a stub answers exactly `{refused: {code: "BARE_DIGEST", why}}`; `refused` is absent from every other answer except R40's.
+
+If you want a different contract (for example the refusal also carrying a failed `reading` marked `transient` so an old caller never crashes), say so; I would then add it. Waiting on nothing: I continue with G13.
+
+## J10 · QUESTION
+
+QUESTION (G15, sheet row blocks; best reading given; I carry on with it)
+
+Splitting a sheet into row-range units needs each text line's ROW NUMBER, and no reader emits it: a sheet's `text` is its non-empty rows tab-joined, one line each, EMPTY ROWS SKIPPED (`csv-reader/index.mjs:769` `if (vals.length) lines.push(...)`; xlsx and ods the same), and a streamed CSV (the large case) has `cells: null`, so the line index is not the row. I cannot name a true A1 range from the text.
+
+**Smallest thing I need:** csv-reader, formats-xlsx (`formats-xlsx.mjs:1038`) and odf (`odf.mjs:1858`) each emit on every sheet `lineRows`: an array, one 1-based row number per line of `sheet.text`, same length as its lines (a few hundred KB for a 1 MB CSV; optional, absent = unknown). Owners of those modules would add it in this round.
+
+**What I build now regardless:** a sheet whose text is over the 128 Ki unit cap is split into blocks of whole lines, each unit's text = the sheet's first line (header) repeated + the block's lines; with `lineRows` the extent is `sheet-range` `A{first}:{lastcol}{last}` of the block's data rows; WITHOUT `lineRows` the extent is the sheet's whole used range (honest, ambiguous but each block is a distinct searchable unit with its own seq, and NONE is cut). A long line/paragraph of a text is split into runs (`doc-para` extent `run: 0,1,..`), never cut. pdf-page and slide units over the cap (a page of > 128 Ki characters) keep today's cut, flagged `truncated`, because their extents have no run to name.
+
+**G13 cursor, as BOB #253 gave it:** `cursor` option string (opaque), answer top-level `more`, `cursor`, `read_through`, `total` (bytes of text); mode is on whenever the `cursor` key is passed (null = first piece); without the key `read` is today's. I also answer `piece: {units, words, units_total}` (units_total on the first piece only).
+
+## J11 · COMPLETE
+
+COMPLETE: G6 (provider), G13 (provider), G14 (provider), G15 (owner), fix round 6, reading-pipeline #22. Pushed on job/T51/reading-pipeline (tranche/T51 merged in).
+
+**What changed** (`bio-plane/src/reading-pipeline/index.mjs`, 1792 -> 2117 lines)
+- **G6 / R39.** `isBareStub` and the refusal at the top of `read` (new section "A reading in pieces", ~:1190-1400; `read` ~:1795). Root cause: extraction `readHeld` substitutes `{capture:{sha256}}` for a part digest (extraction:679, :1506), and `readInner` (old :1770-1773, :1444) read the 8 MiB part as a whole: "non-textual or too large", no size, `at: null`, stored `final`. A document with no parts, no `capture.bytes`, no `retrieved` and no profile answers exactly `{refused: {code: "BARE_DIGEST", why}}`, no `reading` key, before anything is loaded. Missed because fixtures register one part and every fixture document carried a size. Contract as BOB #253 accepted (K4577).
+- **G13 / R40, G14.** `read(document, {cursor, unitsBudget, maxUnits})`. Mode is on when the `cursor` key is passed (`null` = first piece); without it `read` is as before. Answer adds top-level `more`, `cursor` (opaque string, null when `more` is false), `read_through`, `total` (bytes of text), and `piece: {units, words, units_total (first piece only)}`. `seq` and `para` are global to the capture. The first piece is the reading with its units and the whole text's `words_total`; a later piece is `{text_units, more, cursor, read_through, total, piece}` with no `reading`, and for a text it skips the recognisers and parse (a 12 MB continuation costs ~70 ms). **Every format:** a capture read through a format entry (PDF, DOCX, sheets, slides) is paged by unit index with a cursor naming digest and unit count (`pieceUnitsOf`, `listPiece`); a continuation re-runs the entry (and tiers 2-3 for a PDF, which is deterministic) and answers units alone. A cursor that fits neither the digest, the shape nor the bytes in hand answers `{refused: {code: "CURSOR_MISMATCH"}}`; a cursor for a capture that cannot be read in pieces `NOT_PIECEWISE`. A piece holds at least one unit.
+- **G14, unclosed head** (`dropHead`, before `visibleTextOfHtml`). My reading of the HTML parsing rules: `<head>` is implicitly closed by the first start tag that is not head content (title, meta, link, base, style, script, noscript, template) or by the first non-whitespace text, so an unclosed head drops only up to there and the body's text is read. An unclosed `script`, `style` or `template` is raw text to the end of the document (the script data state), so those drop to the end as before; BOB's "only if no later text exists" is the same thing. Old data: new reads only.
+- **G15 / R41** (in pieces mode). A line or paragraph over `CAPTURE_TEXT_UNIT_CAP` is carried whole as consecutive `doc-para` units, extent `run` 0, 1, ... (split at the last space in the final eighth), never cut. A sheet whose text is over the cap is carried as blocks of whole lines, the first line (header) repeated at the head of each later block; with the reader's `lineRows` (B12, wave 2) the extent is `sheet-range` `A{first}:{lastcol}{last}`, without it the sheet's whole range, none cut. A pdf-page or slide unit over the cap stays cut and is flagged `truncated` (observation-log counts it partial in wave 2). No-cursor reads cut as before.
+- No census op is owned (pure module). R-OLD: nothing stored is touched; new reads only.
+
+**Failing-first, seen red then green**
+- `bare-stub.test.mjs` (R39), before the code: 3 of 4 red ("a stub is not read: no reading is composed", actual: the old "non-textual or too large" failed reading); after: 4 of 4.
+- `text-pieces.test.mjs` (R40, R41), before the code: 6 of 7 red (the first at "1 pieces": no cursor support); after: green. The 12,000,060 B text (120,000 lines of 100 B, last line ENDMARKER) read in 30 pieces equals the whole read once (sha of the units' JSON equal), every line once, last piece `more:false` and `cursor:null`, ENDMARKER in `text_units`, `words_total` equal; held only in parts the same; 7 cursor mismatches refused; controls: a text that fits is one piece with the units of today's read, paragraphs/HTML/one line unchanged, a tiny budget still moves, no cursor cuts and names as before.
+- `pieces-formats.test.mjs` (R40 every format, R41 sheets, R32 head): a 6,000-paragraph document (cut with its tail named today; in pieces its tail reaches `text_units`), a 300-page dense PDF, a 9,000-row sheet in blocks with and without `lineRows`, and the head cases: green. Written with the code, not seen red separately.
+
+**Platform L** (`text-pieces.probe.mjs`, local workerd with the bytes behind a disk service, V8 old-space bisected; wall time outside the isolate): 12 MB text (12,582,912 B): first piece completes from 39 MB old space (heap + bytes ~51 MB of 128), 1.7 s wall incl. workerd start; a middle and a last piece from 35 MB (~47 MB), 70 ms. 24 MiB (25,165,824 B, the ceiling): first piece from 49 MB (~73 MB), 3.4 s; middle and last from 46 MB (~70 MB), 120 ms. One piece per tick is well inside the object. Not measured: the 300-page PDF's continuation in workerd (it re-reads the PDF; R36's memory test covers the read itself).
+
+**Suites.** reading-pipeline `test/m/reading-pipeline/*.test.mjs` + `extraction/read.test.mjs`: 211 of 211; d606, tier2-wire, pdf-worker-binding and `tier-pagewise.probe` pass. Memory test "R2 R11 R15 R36 BUDGET-2024-APP under 64 MB" alone: 4 of 4 pass (63 s). Users (`impact.mjs`, 1,669 files, two at a time): 12,355 of 12,381 test cases pass at the first run; the 12 reds, against `tranche/T51` run the same way: 8 are red there too (journey-check `pseudo` R29 x7, plane `release` R24); `R31 (E8)` passes alone (load); the other three are mine and named: (1) `extraction/r80.test.mjs:60` and (2) `plane/fix4-seam.test.mjs:41` (R75 R4 seam): extraction's `readHeld` reads a whole through a stub, refused by R39; accepted by name until EXTRACTION #34 merges (K4577); (3) `agent-worker/test/requirements.test.mjs` R45: `bio-plane/src/reading-pipeline/index.mjs` is in agent-worker's bundle and its committed bundle is now stale; regenerate at the round's close (manifest order).
+**Checks.** `checks/run.mjs`: format 0, architecture 0, coverage 6632 of 6632, words 18421 -> 18421 (no row added), 0 failures; ownership 6 files, 0 failures.
+
+**Words (stand-ins, rows owed for UX-DESIGN).** The three refusal sentences use held rows: `reading-pipeline.index.bytes_not_held` (BARE_DIGEST, CURSOR_MISMATCH) and `.non_textual_large` (NOT_PIECEWISE). Owed: `reading-pipeline.index.bare_digest`, `.cursor_mismatch`, `.not_piecewise`. The code is the answer; the sentence is for the log.
+
+**Requirement lines I propose** (BOB writes `build/requirements/reading-pipeline.md`; the tests name R39-R41):
+- **R39** (fix round 6, G6; K4570, K4577) A document that states nothing of its object but a digest (no `parts`, no finite `capture.bytes`, no `retrieved`, no profile) is no document: `read` answers exactly `{refused: {code: "BARE_DIGEST", why}}`, loads nothing and composes no reading. `refused` is absent from every other answer except R40's. A document with no digest stays a failed reading (R24).
+- **R40** (fix round 6, G13, G14; K4571, K4577, K4578) A reading is read whole in pieces by a cursor. With `cursor` passed to `read` (null: the first piece), the answer carries `more`, `cursor` (an opaque string, null when `more` is false), `read_through` and `total` (bytes of text) and `piece = {units, words, units_total?}`; `seq` and `para` continue across pieces; a piece holds the units `unitsBudget` bytes and `maxUnits` (default 4096) allow, and at least one. It applies to a capture read as text (R32, R33: line, paragraph or HTML grain unchanged) and to a capture read through a format entry. The first piece is the reading with its units and the whole text's words; a later piece is its units alone. The units of all pieces are the units of one read with no bound, each once; no piece names skipped units. A cursor that does not fit the digest, the shape or the bytes in hand answers `{refused: {code: "CURSOR_MISMATCH"}}`, one for a capture that cannot be read in pieces `NOT_PIECEWISE`. Without `cursor`, `read` is as R15 states.
+- **R41** (fix round 6, G15; K4578) With `cursor` passed, a line or paragraph over `CAPTURE_TEXT_UNIT_CAP` is carried whole as consecutive `doc-para` units with `run` 0, 1, ...; a sheet whose text is over the cap is carried as blocks of whole lines, its first line repeated at the head of each later block, the extent `sheet-range` naming the block's rows when the sheet states `lineRows` (one 1-based row per line of its text), else the sheet's range. Nothing is cut; a page or slide over the cap is cut and flagged `truncated` as R15 states.
+- **R32** amended (G14): an unclosed `<head>` ends at the first start tag that is not head content or the first text; the body's text is read; an unclosed script, style or template is raw text to the end.
+
+Size (session_01AG4YHRj238neiSnHE1cvQ4): test runs 31, module lines 2117
+
+## J12 · QUESTION
+
+QUESTION (G26 seam, READING-PIPELINE #23). I have read the plan sections, the diagnosis, my requirements and `reading-pipeline/index.mjs` whole. Two things decide what I build; the first blocks me.
+
+1. **The provider does not exist yet.** pdf-reader's job (B8 START, PDF-READER #11) has only just started: `pdfstructure.mjs` has `openPdf` (:4255, a `PdfDoc` after the whole xref/object-stream load) and `extractPdfStructure(bytes)` (whole document), and the `pdf` format entry is `structure: (bytes) => extractPdfStructure(bytes)` (`formats.mjs:201`). No range entry. What I need, as my best reading of "cursor = page": a service on the pdf format entry (so I stay behind `getFormat`, not importing `pdfstructure.mjs`) such as `entry.structureRange(bytes, {from, count})` -> `{ok, pages: <total>, text: {pages: [{page, text, undetermined}], undetermined, counts}, ...}` for pages `[from, from+count)` only, the cross-reference parsed once per call (about 1 s) and the page structures dropped on return. Please tell me the real name and shape pdf-reader will deliver (or tell pdf-reader mine), and when it merges. Until then I write the failing-first test (it needs no provider) and the cursor/piece code against that shape.
+
+2. **What a range-read PDF's first piece carries.** Today the first piece (R40) is the reading over the WHOLE text: `text_sha256` and `text_chars` of the provenance (R14, R18), `words_total` (R35), the R17 counts, tier 2's escalation test (`needsTier2` counts undetermined markers over the whole text), tier 3's selection (`tier3Pages` over all pages), and `readText`'s determination. A range cannot give those. My best reading, to keep it small (Bob: alpha, nothing more): in pieces mode a PDF is read range by range; the first piece's reading is the reading of its range (page_count from the xref, so exact; `words_total`/`text_*`/provenance digest over the pages read so far, `words_total: null` until `more` is false), tiers 2 and 3 run per range on that range's pages only (their markers are per page; the OCR `owe` cursor stays page-based), each later piece is units alone as R40 says, and the reading is NOT re-written at the end (extraction stores the first piece's reading; `read_through`/`total` count pages for a PDF, `piece` carries `pages`). A PDF read without `cursor` is exactly as today (the door's acquire path, bounded by the 24 MiB ceiling and pdf-reader's R42 need rule). The alternative, a final summing piece that returns the whole-text reading, costs one extra pass or holding all units, which is what kills 0111.
+
+If you want the reading to be whole-text-true (digest over all pages), say so and I will carry a running SHA-256 state in the cursor instead; that costs nothing in memory but the digest then names the text as pieces joined, which I would state in the reading's provenance.
+
+Next on your word. I carry on with the failing-first test meanwhile.
+
+## G26 work in progress (READING-PIPELINE #23, session_01EELF7tdeuCRAdwEDTmo1ya)
+
+BOB's ANSWER B14 (K4606) adopted: seam `getFormat("pdf").structureRange(bytes, {from, count})` (pdf-reader, unmerged); first piece = reading of its range, `words_total` null, `provenance.text_scope = {pages:[from,to]}`.
+
+Written so far (`reading-pipeline/index.mjs`): `PDF_RANGE_PAGES` (150), `rangeCursorIn`, `rangePieceAnswer`, a ranged branch in `readInner` (pieces mode + an entry with `structureRange`; tiers 2/3 per range; later pieces units alone, `owe` still called; cursor `{k:"p", n, i}`; `seq` = page). Without a cursor, or an entry with no `structureRange`, `read` is as before.
+
+Failing-first, seen red then green:
+- `pdf-ranges.test.mjs` (4 tests, stub `structureRange`): red with the source stashed (the whole `structure` is parsed), green with it.
+- `pdf-pieces.test.mjs` (seam, real 15.2 MiB BUDGET-2024-APP, child at `--max-old-space-size=112`, pieces < 10 s, < 1.5 parses): RED BY NAME until pdf-reader merges: "1 pieces, slowest 18819 ms ... over 10 s" (one whole parse, peak 128.2 MB). Then I merge `tranche/T51` and run it.
+Module suite meanwhile: 216 tests, 215 pass, the 1 fail is that seam test.
+
+## G26 · COMPLETE (READING-PIPELINE #23, session_01EELF7tdeuCRAdwEDTmo1ya; B14 ANSWER, B15 CHANGE)
+
+**Root cause (1), file:line.** `readInner` read a PDF in pieces mode through `entry.structure(bytes)` (whole parse of every page) and then `listPieceAnswer(pieceUnitsOf(i2text))`, so each of about 7 pieces re-parsed all 1,354 pages (old `index.mjs:1978`, `:2035-2041`); the cursor branch for text (`:1872`) never applied to a PDF. **(2) Why the tests missed it:** `memory.test.mjs` read one piece in a heap of idle + 64 MB outside the plane; every piece fixture used a stub `structure` on fake bytes (extraction `round6-pieces` R91 included), so no test parsed a real PDF in pieces nor timed a piece. Gap fixed: `pdf-pieces.test.mjs` reads the real 15.2 MiB volume piece by piece, as extraction asks (2 MiB, 4,096 units), with a per-piece time and a total-versus-one-parse bar, in a child at 128 less the file's bytes (no "idle +").
+
+**What changed.** `bio-plane/src/reading-pipeline/index.mjs`: import of pdf-reader's `extractPdfRange` (R43, B15); `PDF_RANGE_PAGES` = 200 (`:1215`); `rangeCursorIn` and `rangePieceAnswer` (before `textPieceAnswer`); `read` takes `rangePages`; the ranged branch of `readInner` (pieces mode, `fmt === "pdf"`): cursor `{v:1, s, k:"p", n:total pages, i:next page}`; the range's text goes through tiers 2, 3, 4 and `readText` as a whole text does (tier 2 merges by page, so a whole-document answer touches only the range's pages); units are `allUnitsOf` with `seq` = page (as a whole read numbers them), within `unitsBudget`/`maxUnits`, and the cursor moves to the first page not carried when the budget cuts a range; a later piece is units alone and still calls `owe` for OCR pages left; the first piece's reading has `words_total: null`, `words_read` = its words, `page_count` the document's, and `provenance.text_scope = {pages: [from, to]}`; `read_through`/`total` count pages, `piece.pages = [from, to]`. Fallbacks that keep every other path as it was: no cursor; a range answer that is not ok or has 0 pages (bytes the range reader does not open: the entry's `structure` reads them whole); a list cursor (`k:"u"`) is continued as a list. Unchanged: R39, R41, the text path.
+
+**Failing-first, red then green.**
+- `pdf-ranges.test.mjs` (4 tests, real small PDFs from `bigpdf.mjs`): red with the source stashed (before the B15 change, against a stub; the whole `structure` was parsed), green after: 4 of 4.
+- `pdf-pieces.test.mjs` (seam, real BUDGET-2024-APP, 1,354 pages, child `--max-old-space-size=112`): RED before pdf-reader's range: "1 pieces, slowest 18819 ms, peak 128.2 MB" (one whole parse, over 10 s). GREEN with `extractPdfRange`: 7 pieces, slowest 3.0-3.3 s, total 17.1-17.8 s against one parse 12.1-12.8 s (ratio 1.39-1.45; at 150 pages a piece it was 1.34-1.51 and flaked, so 200), peak 104-112 MB of the 112 cap, four runs alone all pass. It is a heavy file: run it alone (in the whole-suite run beside others its ratio crosses 1.5 under load; it passes alone), as memory.test.mjs is.
+
+**Platform check (L), `pdf-pieces.probe.mjs`** (raw workerd, esbuild bundle of `read`, bytes behind a disk service, V8 old space bisected, all 7 pieces in one request): BUDGET-2024-APP 15.2 MB, no ballast: completes from 35 MB of old space (heap + bytes ~50 MB of 128); with a 60 MB live-heap ballast standing in for the plane's modules (the plane idles at 73-103 MB): from 77 MB (~92 MB with the bytes). The plane cannot be imported by this module (architecture), so the run over the real `plane/register.mjs` at N <= 100 is the plane job's L run. Per-tick time outside the isolate: not taken in workerd (frozen clock, R-CLOCK); node: slowest piece 3.3 s of 10.
+
+**Suites.** reading-pipeline `test/m/reading-pipeline/*.test.mjs` + `extraction/read.test.mjs` + d606 + tier2-wire + pdf-worker-binding: all pass (211 of 212 in a parallel run, the seam test alone failing under load; 4 of 4 alone). Users: extraction 287 of 287 (before and after: baseline 0 fail on the tranche; first attempt 35 fails because stub PDFs have fake bytes, fixed by the three fallbacks above, not by editing extraction's tests); events, observation-log, content, retrieval-browse 374 of 374. `pieces-formats.test.mjs`'s 300-page PDF case now builds a real PDF (the stub it used cannot be ranged). Checks: `checks/run.mjs`: format 0, architecture 0, coverage 6665 of 6665, channels 0, words 18421 -> 18421 (no row added), 0 failures; ownership: 5 files, 0 failures.
+
+**Notes for BOB.** (1) The first piece's reading of a range-read PDF digests the first range only (`text_scope` states it); extraction stores that reading (no rewrite at the end), as B14 ruled. (2) Tier 2 (`pdf-worker`) and tier 3 (OCR) members still take the capture's sha and read the whole file on their side; per piece they are asked only when that range's text is essentially empty (a scan), so a long scan asks them once per range: the plane's ledger/OCR rows (R37 `owe`) pace this as before. (3) Words: no new sentence. (4) No census op owned. R-OLD: nothing stored is touched; new reads only; a record read before keeps its reading.
+
+**Requirement lines proposed** (BOB writes `build/requirements/reading-pipeline.md`):
+- **R40** gains: *A PDF read in pieces is read by page ranges.* With `cursor` passed, a capture read as a PDF is read `PDF_RANGE_PAGES` (200) pages a piece through pdf-reader's `extractPdfRange` (R43), the cursor a page (opaque; a cursor for another digest, shape or page count answers `CURSOR_MISMATCH`); each piece holds the units of its pages within `unitsBudget` and `maxUnits` (the cursor moves to the first page not carried), `seq` the page, `read_through` and `total` count pages and `piece.pages` is `[from, to)`. The first piece is the reading of its range: `page_count` the document's, `words_total` null, `words_read` its words, tiers 2 to 4 run on the range's pages, and `provenance.text_scope = {pages: [from, to)}` says its `text_sha256` and `text_chars` cover those pages; a later piece is units alone, and the reading is not rewritten. A document the range reader does not open as a PDF with pages is read whole by its entry as before; without `cursor` a PDF is read exactly as R2 states. Test: the real 1,354-page volume in 128 MB less its bytes: every piece under 10 s, every page once, the pieces under 1.5 parses of the whole.
+- **R14/R18** (provenance): `text_scope` is present only for a reading read in ranges. **R35**: `words_total` is null for a reading read in ranges.
+
+Size (session_01EELF7tdeuCRAdwEDTmo1ya): test runs 24, module lines 2290
+
+## J13 · COMPLETE
+
+COMPLETE G26 (READING-PIPELINE #23): a PDF in pieces mode is read by page ranges (pdf-reader extractPdfRange, 200 pages a piece, cursor = page). Seam test green on the real 15.2 MiB volume at 112 MB (7 pieces, slowest 3.3 s, 1.4 parses; workerd probe: 35 MB old space beside the bytes, 77 with a 60 MB ballast). Checks 0 failures, words 18421 unchanged, extraction 287/287. Details, notes (first piece digests its range only; run pdf-pieces.test.mjs alone) and proposed R40/R14/R35 lines in my record, section 'G26 · COMPLETE'.
+
+## G37 work in progress (READING-PIPELINE #24, session_01EihK7Mkuc9VE8VdK74jysx; B16 START)
+
+**Root cause (1).** A read of a CSV (or any `profiled_from_text` capture with a format entry) classified the whole intake decode at `index.mjs:1916-1918` (`identify` + `doctypeFor`, every registered `detect` over the text) and then `docprofile.readText` classified the entry's text again (`index.mjs:2125` → `readtext.mjs:273-274`): twice over the whole text, the recognisers allocating in proportion to it (roster-reader's cost, its job). The 1918 classification served only the failure branches and the text-read-as-text reading. A PDF's 1918 classification ran over an empty text; its one real classification is `readText`'s.
+
+**What changed (`bio-plane/src/reading-pipeline/index.mjs`).** `classify()` (`:1922`), memoised, asks `identify`/`doctypeFor` over the same context only where a reading is made from it: the text read as text (`:1939`), the `!bytes` failure, and the failed readings (`:2151`, `:2179`, `:2184`; `readingFromWire` is handed the type only when the wire is undetermined). A read through an entry now classifies once, in `readText`; the verdicts are the same calls on the same context, asked later. `PDF_RANGE_PAGES` 200 → 100 (`:1216`), measured below.
+
+**(2) Why the tests missed it.** No test counted classifications; no read ran at the plane's cap. Gap fixed: `classify-once.test.mjs` counts the calls a registered type's `detect` receives over non-empty text at `read`'s interface.
+
+**(3) Failing-first.** `classify-once.test.mjs` (5 tests): the CSV test RED before the change ("one classification is 2 detect calls over text, a CSV read made 4"), GREEN after; text and PDF reads classify once (green throughout, the control that a count equals one classification); two controls: a failed reading still takes its content type from the intake's text (`probe-marked`), a text capture's reading is as it was.
+
+**Measured at the plane's shape (E3 harness, each run alone, roster-reader NOT yet merged, so the recognisers' own cost stands):**
+- `g26.probe.mjs` (BUDGET-2024-APP, cap 112): tick 1 was 12.4 s; 200 pages a piece 8.8 s (ticks 4.4-4.8 s, 7 ticks, 35.0 s); **100 pages a piece 5.7 s (ticks ~2.1 s, 14 ticks, 32.6 s)**, so 100. `pdf-pieces.test.mjs` alone at 100: 14 pieces, slowest 1.73 s, 19.1 s against one parse 13.7 s (1.40; two runs 1.40, 1.41), peak 101.6-106.7 MB. Peak heap + buffers in the plane 126-130 MB at either size (the plane's idle and the bytes; not the range's). Its `op=reading` still kills the child: G38 (extraction's), not this cause.
+- `g13.probe.mjs 25165824:104` (24 MiB text): tick 1 14.0 s → 12.2-12.3 s. CPU profile of tick 1: `classify` 8.3 s of 12.2 s, of it roster-reader (`lines.mjs` `tidy`/`words`/`isUnitLine`/`eachLine`, `staff-roster.mjs:123-128`, `org-chart.mjs:50-56`) 6.5 s; this module's own share (`totalsOfText`, `glyphCount`) about 1 s. So the rest of the bar waits on ROSTER-READER #5.
+- `g15.probe.mjs 127` (1 MB CSV): still dies at the cap (the one classification still allocates 129 MB: roster-reader's).
+
+**Waiting on:** ROSTER-READER #5's merge (B5 START in progress); then the three probes re-run alone, numbers here.
+
+Suites so far: reading-pipeline + `extraction/read.test.mjs` 221 tests, 220 pass; the 1 is `pdf-pieces.test.mjs` failing in the parallel run (its 1.5-parse ratio under load, as #23 noted) and green alone (3 runs). extraction 287/287; events, observation-log, content, retrieval-browse 374/374. Checks: format, architecture 0; coverage 41 of 41 (this module), 6668 of 6668 (run.mjs); words 18421 → 18421; ownership 0 failures (3 files).
+
+## J14 · REPORT
+
+REPORT G37 (READING-PIPELINE #24): the once-per-read change is built and tested (classify-once.test.mjs: CSV red 4 calls vs 2, green); PDF_RANGE_PAGES set to 100 by measurement (g26 tick 1 12.4 s -> 5.7 s; pdf-pieces 1.40 parses). Not yet complete: the 24 MiB text (tick 1 12.2 s) and the 1 MB CSV (dies at 127) still wait on roster-reader's recogniser cost (profile: 6.5 s of 12.2 s in roster-reader lines.mjs/staff-roster/org-chart; this module's share ~1 s). I will re-run the three probes alone when you send CHANGE after ROSTER-READER #5 merges. Details in my record, section 'G37 work in progress'.
+
+## G37 · COMPLETE except G15's memory (READING-PIPELINE #24, session_01EihK7Mkuc9VE8VdK74jysx; B16 START, B17 CHANGE)
+
+**(1) Root cause, file:line.** A read through a format entry classified the intake decode at `index.mjs:1916-1918` (old numbering) and `docprofile.readText` classified the entry's text again (`index.mjs:2125` → `readtext.mjs:273-274`): twice over the whole text, the recognisers' cost growing with the text (roster-reader's `lines.mjs`, `staff-roster.mjs:123-128`, `org-chart.mjs:50-56`: its fix merged, B17). **What changed:** `classify()` (`index.mjs:1922`), memoised, asked only where a reading is made from it (text read as text; the `!bytes` and failed readings); `PDF_RANGE_PAGES` stays 200 (measured, `:1216` comment).
+**(2) Why the tests missed it, gap fixed.** No test counted classifications or ran a read at the plane's cap: `classify-once.test.mjs` counts the `detect` calls of a registered type at `read`'s interface; the shape probes are plane's.
+**(3) Failing-first.** `classify-once.test.mjs`: CSV RED before ("one classification is 2 detect calls over text, a CSV read made 4"), GREEN after; the text and PDF reads (one classification) and two controls (a failed reading takes its content type from the intake text; a text capture's reading as it was) green throughout.
+**(4) Platform check, each probe alone, after ROSTER-READER #5 merged and this branch merged `tranche/T51` (G38's paging too):**
+
+| probe | before | now |
+|---|---|---|
+| `g13.probe.mjs` 24 MiB text, cap 104 | tick 1 14.0 s (16.6) | **tick 1 7.2 s**, 62 ticks, 27.8 s, ENDMARKER found, peak 119.4 MB |
+| `g13` 12,000,060 B, cap 116 | tick 1 6.9 s | tick 1 3.6 s, 30 ticks, peak 103.3 MB |
+| `g26.probe.mjs` BUDGET-2024-APP, cap 112 | tick 1 12.4 s | **tick 1 8.2 s** at 200 pages (5.2 s at 100, 6.5 s at 150), 7 ticks, 33.6 s, `op=reading` now answers (G38) |
+| `g15.probe.mjs 127` 1 MB CSV | dies | **still dies at 127, 128, 129, 130; survives 133** (tick 1 1.7 s, peak 121.7 MB, 33.8 above the 87.9 idle); dies for memory, not time |
+
+`PDF_RANGE_PAGES`, by measurement after the recogniser fix (`pdf-pieces.test.mjs` bar: pieces under 1.5 parses; tick bar 10 s at the shape): 100 pages: tick 1 5.2 s, ratio 1.40-1.51 (a run over the bar); 150: 6.5 s, 1.45-1.47; **200: 8.2 s, 1.40-1.42** (three runs), kept.
+
+**G15's remaining cost, profile and owners (not this module).** Needing about 6 MB under what the object gives (39.4 MB above the plane's idle; the tick needs ~45). Live heap at the cap (a near-limit snapshot of the child): strings 110 MB of 160 MB, of them **an 11.3 MB JSON string of the stored reading** and the entry's output. Stage by stage (`csvstages.mjs`, outside the plane): the csv entry's `text()` output alone retains **+18.3 MB for a 1 MB file** (`sheets[0].cells`, 72,392 cell objects, and `lineRows`; the reading carries them as R28 states); this module's own stages add 1 MB (units 0.1, `readText` 0.9, provenance 0.1) and the intake's 1 MB decode. **Owners:** `extraction` serialises the whole reading, cells included, four times in one store (`extraction/index.mjs:658`, `:999`, `:1064` as `JSON.parse(JSON.stringify(reading))`, `:1086`), the 11.3 MB string; `csv-reader` / `format-registry` (the csv entry) for a cell as an object of ~155 B in JSON and far more in heap. The smallest fix inside this module would be to stop carrying `cells` (R28) and that is BOB's to decide, not mine. I ask BOB: the owner of `extraction/index.mjs:1064` (drop the deep copy) and, if still short, the csv entry's cell shape.
+Also seen: `words_read` 162,906 exceeds `words_total` 162,878 on that CSV (words.test-style counts differ between the units' words and the sheet's); not G37; reported for BOB.
+
+**Suites:** reading-pipeline (less `pdf-pieces`) + `extraction/read.test.mjs`: 220 tests, 220 pass; `pdf-pieces.test.mjs` alone 3 of 3 pass at 200 (ratio 1.40-1.42); extraction 292/292. Checks: `run.mjs`: format, architecture, channels 0; coverage 6670 of 6670; words 18421 → 18421; ownership: 3 files, 0 failures.
+
+**Requirement lines proposed (BOB writes them):**
+- **R42** (fix round 6, G37; K4615) **A read classifies its text once.** The recognisers (`docprofile.doctypeFor`) run over the capture's text once per `read`: over the intake's decode for a capture read as text (R1, R32), and for a read through a format entry only over that entry's text, inside `docprofile.readText` (R11); the intake's decode is classified for such a read only when its failure names a content type (R24, R11's failed branch), then once. The content type of any reading, and of a failed one, is the one that classification gives. Test: a registered type's `detect` receives, over non-empty text, the calls one classification costs, for a text, a CSV and a PDF read; a failed reading still names the type the intake's text gives.
+- **R40**: `PDF_RANGE_PAGES` is 200, measured at the plane's shape (first piece 8.2 s of 10).
+- Nothing else changes: no new sentence (words 18421), no census op owned (K4208), no stored data touched (R-OLD: new reads only).
+
+Size (session_01EihK7Mkuc9VE8VdK74jysx): test runs 22, module lines 2221
+
+## J15 · COMPLETE
+
+COMPLETE G37 (READING-PIPELINE #24) except G15's memory. A read classifies once (classify-once.test.mjs: CSV red 4 calls vs 2, green); PDF_RANGE_PAGES stays 200 (measured: 100 flakes the 1.5-parse bar, 150 thin, 200 gives tick 1 8.2 s and 1.40-1.42). Probes alone after ROSTER-READER merge: g13 24 MiB tick 1 14.0 s -> 7.2 s (62 ticks, ENDMARKER found); g26 tick 1 12.4 s -> 8.2 s, op=reading answers; g15 127 STILL DIES (survives 133): needs ~6 MB; not this module's: the csv entry's text() retains +18.3 MB for a 1 MB file (72,392 cell objects), and extraction serialises the whole reading (cells included) four times (extraction/index.mjs:658, :999, :1064 JSON.parse(JSON.stringify(reading)), :1086), an 11.3 MB string live at the cap. I ask: extraction to drop the deep copy at :1064 (and the repeated stringify), else the csv entry's cell shape. Also seen: words_read 162906 > words_total 162878 on that CSV. Proposed R42 and R40 lines, suites (220/220, extraction 292/292), checks (0 failures, words 18421) and Size line are in my record, section 'G37 · COMPLETE'.
+
+## J16 · REPORT
+
+REPORT (READING-PIPELINE #25, G40 R35) — root cause, measured, not yet fixed.
+
+Cause: the two sides of R35 count different texts in pieces mode. `words_total` is the words of the entry's text once (`textWordsFor`, index.mjs:925-932 over `allUnitsOf`, :849; or `totalsOfText`, :1326-1332 over whole runs). `piece.words`, which extraction adds up as `words_read` (extraction/index.mjs:1250), is `wordsIn` over each carried unit's text, summed at index.mjs:1431 (`rangePieceAnswer`), :1450 (`textPieceAnswer`) and :1466 (`listPieceAnswer`). Two things make a carried unit hold words the text has once: (1) `sheetBlocks` (:1348) repeats the sheet's first line at the head of every later block (R41), so each later block counts the header's words again; (2) `chunksOf` (:1247) cuts a run over the cap at the cap when no space is near, so a word split across two chunks counts as two words.
+Evidence (new test `words-pieces.test.mjs`, red on today's code): 1 MB CSV: pieces sum 177,619 over total 177,539 (+80 = header words x later blocks); 9,000-row sheet: 72,007 over 71,995, with and without lineRows (+12 = 4 header words x 3 later blocks... the header is "Fund Amount Note" plus block count); a text with one 266,000-char word: 11 over 9.
+Why the tests missed it: R35's tests read pages and small texts whole; R41's test checked units and extents, never counts, and no test added the pieces' words up.
+Fix (this module only): each carried unit's own words (a repeated header and the second half of a split word excluded) are counted once, by one helper used at all three piece sites; totals unchanged. New reads only. Doing it now.
+
+## J17 · COMPLETE
+
+COMPLETE G40 R35 (READING-PIPELINE #25), with one failing test I did not cause (below).
+
+Cause (J16): `words_total` counts the text's words once (`textWordsFor`, index.mjs:925-932; `totalsOfText`, :1326-1332); `piece.words`, which extraction adds up as `words_read` (extraction/index.mjs:1250), summed `wordsIn` over each carried unit (:1431, :1450, :1466). A carried unit can hold words the text has once: `sheetBlocks` (:1348) repeats the header at the head of each later block (R41), and `chunksOf` (:1247) can cut a word in two. (Correction to J16: the 9,000-row sheet's +12 is its 3 header words x 4 later blocks.)
+Why the tests missed it: R35's tests read pages and small texts whole; R41's test checked units and extents, never counts; no test added the pieces' words up. Gap fixed: `words-pieces.test.mjs`.
+Changed (index.mjs, 21 insertions): a unit's own words, `ownWords` WeakMap with `wordsOfUnit`, `withOwnWords`, `continuesWord` (:921-935); set where a unit is made (`textPiece`, `pieceUnitsOf`: a later sheet block less its repeated header, a run chunk less a continued word); used by `textWordsFor` and the three piece sums. Units' shape, totals and stored data unchanged: new reads only. No new sentence; no census op changes (K4208).
+Failing-first, through `read` (words-pieces.test.mjs). Red before the fix: 1 MB CSV (the E3 probe's shape) pieces sum 177,619 over total 177,539; 9,000-row sheet with and without lineRows 72,007 over 71,995; one word cut by chunking 11 over 9. Green after: sum == total in all, every running sum <= total. Controls: a text read whole answers 6/6/6; a unit cut to its cap answers fewer read than total; the picture with an unreadable part (words.test.mjs) still answers 4 of 9.
+Suites: new test 4/4; reading-pipeline less pdf-pieces 220 tests, 219 pass, 1 fail (below); pdf-pieces alone 1 of 1 pass; extraction c17, round5, round6, round6-pieces, words, r82 61/61; extraction read 4/4; plane round6-extraction 3/3. impact.mjs names 108 modules (shared table); I ran those that read words_read. Checks: format, architecture, channels 0 failures; coverage 6672 of 6672; words 18524 with inline 0, plain 0, testcopy 0 (I added no string); ownership 3 files, 0 failures.
+THE ONE FAILURE, not from this change: memory.test.mjs (R36) BUDGET-2024-APP "did not complete in a 87 MB heap (SIGABRT)", a whole read without cursor. It fails identically with my change stashed, on tranche/T51 as merged (J15 recorded 220/220 on an earlier tip); the other three volumes pass. I did not touch that path. Smallest thing I need: BOB to say whether that failure is known on tranche/T51 or this module should diagnose it; I stand ready on a CHANGE.
+Requirement line proposed (BOB writes it), R35: "(fix round 6, G40; K4622) A reading read in pieces counts each word of the text once: `piece.words` is the words a piece's units hold of the text, a header a sheet's later block repeats (R41) and the tail of a word a hard cut splits being no words; the pieces' words add up to `words_total`, never past it, and exactly to it when the whole text was read. Test: a 1 MB CSV, a 9,000-row sheet with and without `lineRows` and a text with one word over the cap, each read whole in pieces, answer a sum equal to `words_total`."
+Size (session_019VpajmgG3BFzWYz8moVQRC): test runs 12, module lines 2223
+
+## J18 · COMPLETE
+
+COMPLETE G40, both halves (READING-PIPELINE #25; answers B19). Supersedes J17's open item.
+
+1. R43 (B19): `ReadHooks.wants(captureClass)` added in `hooks.mjs`, true exactly when a registered hook's classes include the class, false for null, a non-string, an empty string, or a class no hook holds; it runs and changes nothing. Test `hooks.test.mjs` "R43: ..." red first (`h.wants is not a function`), then green: events-style registration (`minutes`, `agenda` true; `generic`, null, undefined, 42, an array, "" false), empty registry false, a refused registration holds no class, nothing ran, `readHooksOf` registry too. Merged `tranche/T51` first (R43's wording is there).
+2. R35 (J16, J17): unchanged from J17: pieces' words sum to `words_total`, never past it (index.mjs `ownWords`/`wordsOfUnit`; words-pieces.test.mjs red then green).
+
+The failure J17 reported (memory.test.mjs BUDGET-2024-APP, 87 MB heap) did not recur after merging the tranche tip: the whole module suite is 221 of 221 (less pdf-pieces, which passed alone before this merge; I did not re-run it, nothing it reads changed). I never found its cause; it passed on the earlier tip and failed identically on a stashed tree in my container, so treat it as environment-sensitive, not mine.
+Checks: format, architecture, channels 0 failures; coverage 6673 of 6673; words 18524, inline 0, plain 0, testcopy 0 (unchanged); ownership 5 files, 0 failures. Pushed.
+Requirement lines proposed: R35 as in J17; R43 stands as written. K4208: no census op changes. No new sentence.
+Size (session_019VpajmgG3BFzWYz8moVQRC): test runs 16, module lines 2230
+
+## J19 · BLOCKED
+
+BLOCKED, cause: providers not merged (needs BOB to merge them to tranche/T51; not a Bob decision).
+
+B20 START says csv-reader #3 and office-readers #15 are merged and TEST-SUPPORT #9's shim is on tranche/T51. After merging origin/tranche/T51 (c7ee6ccfc2 on my branch) none of the three is there:
+- no 'cellsIn' and no INLINE_CELLS_MAX_BYTES anywhere in bio-plane/src (grep over the merged tree finds them only in build/ notes, rulings and mailboxes);
+- bio-plane/test/platform-sqlite.mjs does not exist;
+- origin/job/T51/csv-reader (6fecaae76a), origin/job/T51/office-readers (1ec121a9d9) and origin/job/T51/test-support (e1b7913b6d) are not ancestors of my branch.
+Without the entries' cellsIn I cannot write the failing-first g41-held test through the real merged entries (rule 3), and cannot pass inlineCellsMax at the entry call (D2 part 0). I have changed nothing. Please merge those three jobs into tranche/T51 and ring me; I then merge tranche/T51 and do the whole entry (D2 parts 0 to 3). I did the start fix from B20's FIRST paragraph (stale local branch moved to stale/ and re-checked out; mail start pushed).
+
+## J20 · QUESTION
+
+QUESTION (best reading below; I carry on with it): where does the inline cap's number come from?
+B20 says to pass {inlineCellsMax: INLINE_CELLS_MAX_BYTES} at the entry call and that 'the entries export it'. But (1) neither csv-reader's nor office-readers' branch has it yet, so an import of it would fail to link until both merge; (2) my modules.json 'uses' holds neither csv-reader nor office-readers (only format-registry), so architecture.mjs will flag an import of either; modules.json is yours, not mine.
+Best reading: reading-pipeline exports its own INLINE_CELLS_MAX_BYTES = 512 * 1024 (K4642's number) and passes it as {inlineCellsMax} at the entry call, to every entry (an entry without the option ignores it); no new edge. If a provider's measure ends at another number, BOB tells me and I change one line. If you prefer the entries own it, add csv-reader and office-readers to my uses and tell me which file exports it; I then import it after they merge.
+Nothing else is blocked: I write the g41-held test (red by name for the seam), cellsInRange, emittedFieldsOf' cells_held, and the opt-in call now.
+
+## J21 · REPORT
+
+REPORT (K4645, K4646, K4647): the module is built to the contract; its seam tests are red by name until csv-reader #3 and office-readers #15 merge. Not COMPLETE: the four seam tests need those providers, and BOB's CHANGE for each brings me back (merge `tranche/T51`, re-run, COMPLETE).
+
+**What changed** (`bio-plane/src/reading-pipeline/index.mjs`; one test file added, `bio-plane/test/m/reading-pipeline/g41-held.test.mjs`):
+- `INLINE_CELLS_MAX_BYTES = 512 * 1024` exported (:59; B22: owned here, K4646) and passed as `{inlineCellsMax}` to every entry at the one call `entry.text(parts, {inlineCellsMax})` (:2080). An entry called by any other caller is unchanged.
+- `emittedFieldsOf` (:1738-1752): a sheet with `cells_held === true` and no cell list is named in `cells_held` (list of sheet names), absent when none; `cells` stays `{sheet: null}` for it; a sheet with a list, or with `cells` null and no marker (over an entry's own guard), is not named; the reading carries it through the existing assembly at :2231 (no other change there).
+- `cellsInRange(evidence, doc, {format, sheet, fromRow, toRow, fromCol, toCol, maxCells})` exported (:2247): `bytesOf` (whole object, or parts), `getFormat(format).cellsIn(bytes, ask)`, the entry's answer returned as it is. `{ok: false, reason: "cells_not_interpretable"}` for an entry without the slot, an unknown or absent format, a throwing entry or a non-answer; `{ok: false, reason: "bytes_not_held", failure: "transient"}` for bytes the store does not hold (a store that throws, no store, an absent document included; a whole over WHOLE_READ_MAX carries `failure: "final"` and `why`). Never throws. Parameters not given are not passed. `CELLS_NOT_INTERPRETABLE` and `BYTES_NOT_HELD` exported. The pieces path (`sheetBlocks`, `pieceUnitsOf`, `listPieceAnswer`) is not touched: every row's text is still indexed in pieces; R35 holds.
+
+**Failing-first, seen red then green** (`g41-held.test.mjs`, 11 tests, under the shim copied from `origin/job/T51/test-support` to a path outside the tree):
+- Red on `tranche/T51`'s source: the file does not load: `SyntaxError: The requested module '../../../src/reading-pipeline/index.mjs' does not provide an export named 'INLINE_CELLS_MAX_BYTES'` (no `cellsInRange` either).
+- Green now (7): the entry is asked with `{inlineCellsMax: 524288}` and nothing else changed; `cells_held` names exactly the held sheets (mixed workbook, none, an entry-guarded null sheet, a nameless sheet, a non-`true` marker); a held 9,000-row sheet keeps every row in the pieces' units and `words_read` sum = `words_total` (R35, R-STOP); `cellsInRange` passes bytes (whole and parts) and the range, answers the entry's answer, passes no parameter not given; both reasons, the unknown-format, no-store, throwing-store, absent-document, throwing-entry, non-answer and an entry's own refusal.
+- Controls (green): a 3-row CSV lists its 6 cells and has no `cells_held`; a 50-row (200-cell) workbook lists its cells and has none.
+- Seam, RED BY NAME until the provider merges (4): "seam csv-reader #3" x2 (a 1 MB CSV: `cells_held` + `cells` null + every row in units + words add up; `cellsInRange` of the last rows, row 1, column bounds, `maxCells`/`next_row`) fails today with "its cells are not listed (71200 cells are)" and "cells_not_interpretable"; "seam office-readers #15" x2 (the 5,000-row x 4-cell workbook) fail today with "its cells are not listed (20000 cells are)" and "cells_not_interpretable". They assert K4647's numbering at both ends (row 1, the last row; column 1 = A; bounds inclusive; `next_row` the first row not returned and absent when the range was answered whole). An assertion that failed on the 71,200-cell list by `deepEqual` ran the node process out of memory while writing the diff, so these assert booleans (a gap fixed in the test).
+- A bound I could not make red here: R-OLD does not apply (the module stores nothing); R-CLOCK (no timing asserted).
+
+**Run (summary lines):**
+- `node --import <shim> --test --test-force-exit test/m/reading-pipeline/*.test.mjs test/m/extraction/read.test.mjs`: tests 237, pass 232, fail 5 = my 4 seam tests (red by name) + `pdf-pieces.test.mjs` (R40 R36, the BUDGET volume at 112 MB, which R40 says to run alone and which fails when run beside the others for time, 45.6 s); `pdf-pieces.test.mjs` alone: pass 1 of 1 (29.1 s).
+- `d606-perpage-ocr`, `tier2-wire`, `system/pdf-worker-binding` under the shim: pass 3 of 3; `tier-pagewise.probe.mjs`: exit 0.
+- Direct callers (`extraction` is the only one besides `member-roster/order.mjs`): `test/m/extraction/*.test.mjs` + `test/m/member-roster/*.test.mjs` WITHOUT the shim: tests 505, pass 505. Under the shim, `test/m/extraction/*.test.mjs`: tests 299, pass 292, fail 7: the seven are `g38`/`g40` 1 MB CSV reads whose reading `extraction` stores whole (`SQLITE_TOOBIG`, `string or blob too big`): the cause G41 is, extraction #38's red by its own D3; none is in my files.
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD` names 174 of 176 modules (it includes the whole tree through `format-registry`'s edge); I ran the module that calls my services (extraction, member-roster) as above.
+- `format.mjs`: 176 modules, 176 requirements files; 0 failures. `architecture.mjs reading-pipeline`: 51 product files, 147 relative imports; 0 failures. `coverage.mjs reading-pipeline`: 43 of 43 live requirement ids named by a test; 0 failures. `ownership.mjs reading-pipeline origin/tranche/T51`: 0 failures. `checks/run.mjs`: all 0 failures; words 18524 words, `unkeyed 1982`, `dev 268`, the same figures as on `tranche/T51`'s source (this change adds no sentence; the two reasons are codes).
+- `g15.probe.mjs` alone at its cap 127 MB: before (tranche source) peak 128.5 MB, 1,113 ms tick, units 8, `LASTROWMARK` found; after peak 129.3 MB, 1,124 ms, same units, found, child survived; green both (the csv entry is unchanged until csv-reader #3 merges, so the numbers are the same shape; I run it again after it merges).
+
+**Proposed requirement lines (BOB writes them):**
+- **R28 amended:** after "over the entry's size guard a sheet's cells are null": "(fix round 6, G41; K4636, K4642) A sheet whose typed cells the entry holds in the file, not in the reading (its `cells` null and `cells_held` true, emitted when the entry was called with `inlineCellsMax` and the workbook's or CSV's cells together pass it), is named in the reading's `cells_held`, a list of sheet names present only when there is one; its `cells` stays null. Test: a held sheet and a listed sheet in one workbook: `cells_held` names the first only; control: no held sheet, no key."
+- **R44 new:** "(fix round 6, G41; K4636, K4639, K4642, K4647) **A held sheet's cells are made from the held file for a range.** `INLINE_CELLS_MAX_BYTES` (512 KiB) is passed by `read` as `{inlineCellsMax}` where it calls an entry for text, and nowhere else. `cellsInRange(evidence, doc, {format, sheet, fromRow, toRow, fromCol, toCol, maxCells})` (async; the parameters pass to the format's `cellsIn`, those not given are not passed) reads the bytes as `bytesOf` does and answers the entry's `{ok, cells, rows, next_row?}`; rows and columns 1-based, bounds inclusive, `next_row` the first row not returned and absent when the range was answered whole, `maxCells` counting in-extent cells (K4647). It answers `{ok: false, reason}` and never throws: `cells_not_interpretable` for an entry without `cellsIn`, an unknown or absent format, or an entry that throws; `bytes_not_held` with `failure: "transient"` for bytes the store does not hold (`failure: "final"` and `why` for a whole over WHOLE_READ_MAX). Every row's text stays indexed in pieces (R40, R41; R35 holds). Test: `g41-held.test.mjs`."
+- **R23:** add `cellsInRange`, `INLINE_CELLS_MAX_BYTES` to the exported pieces; **Uses:** `format-registry`: `getFormat` (cellsIn slot, R44). **Seam for extraction #38 (call shape):** `await cellsInRange(evidence, document, {format: reading.text_container, sheet, fromRow, toRow, fromCol, toCol, maxCells})` with `evidence` the store `read` is given, `document` the capture's acquire document (`capture.sha256`, `parts`), `format` the reading's `text_container` (`"csv"`, `"xlsx"`); the answer `{ok: true, cells, rows, next_row?}` or `{ok: false, reason, failure?, why?}`.
+
+**Deferred:** none. **Found in another module:** none. **Seam tests still red by name:** the four above; two wait on csv-reader #3, two on office-readers #15 (the marker, the cap, `cellsIn`).
+
+Size (session_01NKjBP2CpqyAaDcRx7TcMRK): test runs 14, module lines 2661
+
+## J22 · REPORT
+
+REPORT (re B24, K4654): csv-reader #3 merged into my branch (`tranche/T51` merged). Its two seam tests are green: a 1 MB CSV names its sheet in `cells_held`, `cells` null, every row in the units, words add up; `cellsInRange` of its last rows, row 1, column bounds, `maxCells` and `next_row` equal the fixture's cells (K4647 numbering). Module suite under the shim: tests 233, pass 230, fail 3 = the two office-readers #15 seam tests (red by name) and `pdf-pieces.test.mjs` (run alone: passes). `g15.probe.mjs` alone at 127 MB: green, peak 105 MB (was 129.3 MB), 718 ms, units 8, `LASTROWMARK` found.
+Two notes on csv-reader's provider, for its owner, not blocking me: (1) `csvEntry.cellsIn` answers its own refusals as `{ok: false, why: "no_such_sheet"|"bad_range"}`, with `why`, where the seam says `{ok: false, reason}`; `cellsInRange` passes an entry's answer as it is, so extraction #38 sees `why` for those two and `reason` for mine. (2) A cell's `source` is an object `{kind: "sheet-cell", ref, sheet, cell}`, not a string; consumers must read `source.cell`. `maxCells` gives whole rows only (stops before the row that would pass it), so a call with fewer than one row's cells returns the first row whole; my test asserts that.
+Still waiting on office-readers #15 for the other two seam tests; then COMPLETE.
+
+## J23 · COMPLETE
+
+COMPLETE (G41, reading-pipeline D2; B20, B22 K4646, B23 K4647, B24 K4654, B25 K4655, B26 K4656). Branch `job/T51/reading-pipeline` pushed; `tranche/T51` merged in (both readers in).
+
+**What changed** (`bio-plane/src/reading-pipeline/index.mjs`, test `bio-plane/test/m/reading-pipeline/g41-held.test.mjs`): `INLINE_CELLS_MAX_BYTES = 512 * 1024` exported (:59), passed as `{inlineCellsMax}` at the one entry call `entry.text(parts, {...})` (:2080); `emittedFieldsOf` (:1738-1752) names held sheets in `cells_held` (absent when none; `cells` `{sheet: null}`); `cellsInRange` (:2247, exported, async, never throws): `bytesOf` then the format's `cellsIn`, `cells_not_interpretable` / `bytes_not_held` (transient; a whole over WHOLE_READ_MAX `final` with `why`), and one refusal shape `{ok: false, reason, why?}` with `reason` set from an entry's `why` (K4656). Pieces path untouched: every row still indexed, R35 holds.
+
+**Failing-first, red then green** (12 tests, shim): red on `tranche/T51`'s source: the file does not load (`does not provide an export named 'INLINE_CELLS_MAX_BYTES'`, no `cellsInRange`); the real-entry tests were red by name before the providers ("its cells are not listed (71200 cells are)" for the 1 MB CSV, "(20000 cells are)" for the 5,000-row workbook, `cells_not_interpretable`); the K4656 test red with the normalisation removed. Now 12 of 12 green: both seam pairs (1 MB CSV, 5,000-row workbook: `cells_held`, `cells` null, every row in the units, words add up; `cellsInRange` of the last rows, row 1, column bounds inclusive, `maxCells` whole rows with `next_row` the first row not returned and absent when whole), controls (3-row CSV, 200-cell workbook list their cells and carry no marker), the opt-in call, `cells_held` mixed/none/guarded/nameless, a held 9,000-row sheet in pieces, `cellsInRange`'s reasons and one refusal shape for scripted entries and for both real readers.
+
+**Measures:** `g15.probe.mjs` alone at 127 MB: before (tranche source, providers unmerged) peak 128.5 MB, tick 1,113 ms; after both merges peak 110 MB, tick 658 ms, units 8, `LASTROWMARK` found, child survived; green both.
+
+**Run (summary lines):** reading-pipeline + `extraction/read.test.mjs` under the shim: tests 238, pass 237, fail 1 = `pdf-pieces.test.mjs` (R40 says run alone: alone it passes, pass 1 of 1). d606, tier2-wire, pdf-worker-binding: pass 3 of 3. Users: `extraction` + `member-roster` suites WITHOUT the shim: tests 505, pass 500, fail 5. The five are extraction's own `g38.test.mjs:95` (`op=reading` of the 1 MB CSV expects `cells` listed and "under 2 MB in pages") and `g40.test.mjs` x4 ("the reading is large (1921 characters)": they used the CSV's 11 MB of cells as their large reading; the reading is now 1.9 KB because the cells are held). Not in my files or mine to change: extraction #38 rewrites them (its D3 guard needs another large fixture). Under the shim `extraction/*.test.mjs`: tests 299, pass 294, fail 5 (the same five). `format.mjs`: 176 modules, 0 failures; `architecture.mjs reading-pipeline`: 52 product files, 149 relative imports, 0 failures; `coverage.mjs reading-pipeline`: 43 of 43 live requirement ids named; 0 failures; `ownership.mjs reading-pipeline origin/tranche/T51`: 0 failures; `run.mjs`: all 0 failures, words 18524 / unkeyed 1982 / dev 268, unchanged from the tranche.
+
+**Seam tests still red by name:** none of mine. **Red outside my module caused by the providers merging (for BOB):** the five extraction tests above, which wait for EXTRACTION #38.
+
+**Requirement lines I propose:** as in J21 (R28 amended, R44 new, R23 and Uses, the call shape for extraction #38), with R44 gaining K4656: "an entry's refusal is answered `{ok: false, reason, why?}`, `reason` from the entry's `why` when that is all it gives". Notes from J22 stand: a cell's `source` is the object the reader gives, passed as is.
+
+**Deferred:** none. **Found in another module:** none beyond the five extraction tests named.
+
+Size (session_01NKjBP2CpqyAaDcRx7TcMRK): test runs 22, module lines 2282
+
+## J24 · REPORT
+
+Correction to J23's Size line: module lines are 2665 (wc -l of bio-plane/src/reading-pipeline/*.mjs), not 2282. Size (session_01NKjBP2CpqyAaDcRx7TcMRK): test runs 22, module lines 2665

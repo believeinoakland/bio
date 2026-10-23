@@ -19,7 +19,10 @@ function materialsOfLeg(leg, io) {
     ? io.rows(`SELECT capture_sha, bundle_id, authored FROM register WHERE capture_sha=?`, cap.capture_sha)
     : io.rows(`SELECT capture_sha, bundle_id, authored FROM register WHERE bundle_id=? ORDER BY capture_sha`, leg.target_id);
   if (cap && cap.capture_sha && !regs.length) return [{ ref: leg.target_id, kind: "document", sha: cap.capture_sha }];
-  return regs.map((r) => ({ ref: r.bundle_id, kind: Number(r.authored) === 1 ? "observation" : "document",
+  /* R34: a capture held in parts is one material, its whole (provenance R73's marks); its parts' rows are files of it. */
+  const parts = !cap && typeof io.registeredFor === "function"
+    ? new Set(io.registeredFor(leg.target_id).filter((r) => r.part_of).map((r) => r.capture_sha)) : new Set();
+  return regs.filter((r) => !parts.has(r.capture_sha)).map((r) => ({ ref: r.bundle_id, kind: Number(r.authored) === 1 ? "observation" : "document",
                             sha: r.capture_sha }));
 }
 
@@ -27,14 +30,19 @@ function materialsOfLeg(leg, io) {
  *  register's `(bundle_id, path)` exists, inline or by blob (`publishCase` is synchronous, `case-authoring` R18, and so is every service here, R23, so object storage is not
  *  asked). A document's extracted text is `case-grammar.extractedTextOf` over `extraction.unitsOf`'s units (its R17;
  *  K1315), held whole only when the index is `whole` and no unit was cut; `text_sha` is its SHA-256. An
- *  observation's text is its own bytes, so it has no separate text (`text_sha` null). Answers `{bytes, text, text_sha,
+ *  observation's text is its own bytes, so it has no separate text (`text_sha` null). (R34) A capture held in parts
+ *  (provenance R72: its register row is marked `whole`, no file of the bundle) holds its bytes through its parts: each part
+ *  `provenance.partsNamed` names is a file of the bundle. Answers `{bytes, text, text_sha,
  *  whole, missing}`, `missing` naming what is not held. */
 export function materialHeld(m, io) {
-  const reg = io.one(`SELECT bundle_id, path FROM register WHERE capture_sha=?`, m.sha);
+  const reg = io.one(`SELECT bundle_id, path, whole FROM register WHERE capture_sha=?`, m.sha);
+  const fileHeld = (b, p) => { const f = io.readFile(b, p); return !!(f && (typeof f.text === "string" || f.blobSha)); };
   let bytes = false;
   try {
-    const f = reg ? io.readFile(reg.bundle_id, reg.path) : null;
-    bytes = !!(f && (typeof f.text === "string" || f.blobSha));
+    if (reg && Number(reg.whole) === 1 && typeof io.partsNamed === "function") {
+      const named = io.partsNamed(reg.bundle_id, m.sha);
+      bytes = !!(named && named.state === "named" && named.parts.length && named.parts.every((p) => fileHeld(reg.bundle_id, p.file)));
+    } else bytes = reg ? fileHeld(reg.bundle_id, reg.path) : false;
   } catch { bytes = false; }
   if (m.kind === "observation")
     return { bytes, text: bytes, text_sha: null, whole: bytes, missing: bytes ? [] : ["text"] };
@@ -53,7 +61,9 @@ export function materialHeld(m, io) {
  *  `{copy, label, kind}` for a member document, `kind` case-carriage's marker as R6 handed it (R32; T47, N953), so the
  *  signed edition records which kind of copy it carries; R6's `label_key` is the reader's surface's and is not written. Its
  *  fingerprints, origin and archived copy stay the original's. `facts(sha)` is R2's read of a capture (grade,
- *  co-attestation, signed accounts), `origin(sha)` its earliest captured address, `registered(sha)` its register row,
+ *  co-attestation, signed accounts), `origin(sha)` its earliest captured address, `title(m)` the document's title as its
+ *  capture holds it (T51 fix round 4, C47; K4438: `null` when it holds none, and an observation's row is `null` without
+ *  asking), `registered(sha)` its register row,
  *  `member(m)` the attesting member's row or rows as R10 states them, `group` the producing group's slug. Rows, in the
  *  materials' order:
  *   - the attesting member's (`member`): the capturing member's signed accounts, or an observation's author, as their
@@ -61,29 +71,39 @@ export function materialHeld(m, io) {
  *   - its co-attestation (`co_attestation`), a timestamp and a co-archive, each where held (R2);
  *   - the project's (`project`): the register row holding it in the project's record, `recorded_in` its bundle;
  *   - the group's (`group`): one row whose signature is the literal `case`, the case document's own.
+ *  Where the same `ref` is on two or more of `materials` (captures of one source), each of its attestations also states its
+ *  capture's `sha` (G47; K4669), the join a reader makes; with one material to a `ref` none does.
  *  No new table and no new act holds the project's or the group's attestation. */
-export function materialRows(materials, { project, group, at, facts, origin, registered, member }) {
+export function materialRows(materials, { project, group, at, facts, origin, registered, member, title = () => null }) {
   const rows = [], attestations = [];
+  /* G47 (K4669, K4671, K4672): k captures of one source are k materials of one `ref`. Each of their attestations then
+     states its capture's `sha`, so a reader joins it to its own material and not to all k; a `ref` that occurs once
+     states none, and its document is byte for byte what it was. Counted over all the materials of this call: the body
+     and the front matter share that one array, and no reader counts. */
+  const perRef = new Map();
+  for (const m of materials) perRef.set(m.ref, (perRef.get(m.ref) || 0) + 1);
+  const shared = (m) => (perRef.get(m.ref) > 1 ? { sha: m.sha } : {});
   for (const m of materials) {
     const f = m.kind === "document" ? facts(m.sha) : null;
     rows.push({ ref: m.ref, kind: m.kind, sha: m.sha, text_sha: m.held.text_sha, origin: origin(m.sha),
                 archived_copy: f ? f.co_archive ?? null : null, included: m.included, rests_under: m.rests_under,
+                title: m.kind === "document" ? title(m) : null,
                 obscured: m.obscured ? { copy: m.obscured.copy, label: m.obscured.label,
                                          ...(typeof m.obscured.marked === "boolean" ? { marked: m.obscured.marked } : {}),
                                          kind: m.obscured.kind ?? null }
                   : null });
-    attestations.push(...member(m, f).map((x) => ({ ref: m.ref, by_kind: "member", recorded_in: null, ...x })));
+    attestations.push(...member(m, f).map((x) => ({ ref: m.ref, by_kind: "member", recorded_in: null, ...x, ...shared(m) })));
     if (f && f.timestamp_at)
       attestations.push({ ref: m.ref, by_kind: "co_attestation", by: "timestamp", level: null, at: f.timestamp_at,
-                          signature: null, recorded_in: null });
+                          signature: null, recorded_in: null, ...shared(m) });
     if (f && f.co_archive)
       attestations.push({ ref: m.ref, by_kind: "co_attestation", by: f.co_archive, level: null, at: null,
-                          signature: null, recorded_in: null });
+                          signature: null, recorded_in: null, ...shared(m) });
     const reg = registered(m.sha);
     if (reg)
       attestations.push({ ref: m.ref, by_kind: "project", by: project, level: null, at: reg.registered ?? null,
-                          signature: null, recorded_in: reg.bundle_id });
-    attestations.push({ ref: m.ref, by_kind: "group", by: group, level: null, at, signature: "case", recorded_in: null });
+                          signature: null, recorded_in: reg.bundle_id, ...shared(m) });
+    attestations.push({ ref: m.ref, by_kind: "group", by: group, level: null, at, signature: "case", recorded_in: null, ...shared(m) });
   }
   return { rows, attestations };
 }

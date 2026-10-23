@@ -2,9 +2,12 @@
  * a scripted plane. Every expectation is a word read by key (R44). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { registerDeclaredOps as registerOps } from "../../../src/op-declarations/index.mjs";
 import { ok, refusedIn } from "../interface-shell/harness.mjs";
 import { open, main, actsIn, button, fill, press, rawKeys, inquiryMd, INQUIRY_REFS, LEGS, BASIS, plane, says, section, lead, word, day, POLICY,
   SCREENS, P, Q, D } from "./fixtures.mjs";
+
+/* K4245 (test-support R17): every owner's declarations registered once, before the first read, by the one registrar */
 
 const at = "/app/question/" + Q;
 /* the inquiry with its partition held (state a): the policy a part of its own */
@@ -242,10 +245,10 @@ test("R35 R41 R50 conclude is offered once a passage is cited, on a reading that
   const form = section(p, "screen.question.concluding.head").querySelector('[data-conclude="form"]');
   assert.ok(form.hasAttribute("open"), "a reading stands: Conclude opens by itself");
   for (const k of ["question.conclude.reading", "question.conclude.falsifier", "question.conclude.nofalsifier", "question.conclude.commentary"]) assert.ok(says(form, k), k);
-  fill(p, { "question-conclude-falsifier": "inspection records showing repair", "question-conclude-commentary": "the counts agree" });
+  fill(p, { "question-conclude-falsifier": "inspection records showing repair", "question-conclude-reason": "both counts agree", "question-conclude-commentary": "the counts agree" });
   await press(p, "conclude");
   const q = p.byOp("conclude")[0].query;
-  assert.deepEqual([q.target, q.project, q.version, q.falsifier, q.commentary], [Q, P, "main", "inspection records showing repair", "the counts agree"]);
+  assert.deepEqual([q.target, q.project, q.version, q.falsifier, q.commentary, q.reason], [Q, P, "main", "inspection records showing repair", "the counts agree", "both counts agree"]);
   assert.ok(!("reading" in q), "an accepted reading sends version, never reading");
   for (const r of p.requests) for (const k of ["by", "author", "viewer", "assist", "draft"])
     assert.ok(!(k in (r.query || {})) && !(r.body && typeof r.body === "object" && k in r.body), `${r.op} sends ${k}`);
@@ -253,7 +256,7 @@ test("R35 R41 R50 conclude is offered once a passage is cited, on a reading that
 
 test("R41 conclude's controls: an empty falsifier with the box unticked sends nothing; ticked, it sends no_falsifier", async () => {
   const p = await open(at, { ...A, plane: { conclude: ok({ ok: true }) } });
-  fill(p, { "question-conclude-falsifier": "", "question-conclude-commentary": "why" });
+  fill(p, { "question-conclude-falsifier": "", "question-conclude-reason": "why" });
   await press(p, "conclude");
   assert.equal(p.byOp("conclude").length, 0);
   p.doc.getElementById("question-conclude-none-0").checked = true;
@@ -349,14 +352,13 @@ test("R41 state g: concluded over a project is drawn from the read that names th
   assert.equal(w.root().querySelector("#state-g"), null);
 });
 
-test("R36 after planopen, the question links its plan by name; control: no plan, no link", async () => {
+test("R36 C63 after planopen, the question opens its plan page (fix round 3; it no longer stays to link it); control: a refused press opens none", async () => {
   const p = await open(at, { ...A, plane: { planopen: ok({ ok: true, id: "PLAN-2026-0003", title: "Ask the committee" }) } });
   assert.equal(main(p).querySelector("[data-plan]"), null);
   fill(p, { "question-plan": "Ask the committee" });
   await press(p, "planopen");
   assert.deepEqual(p.byOp("planopen")[0].body, { project: P, title: "Ask the committee", subjects: [{ kind: "inquiry", inquiry: Q }] });
-  const link = main(p).querySelector('[data-plan="PLAN-2026-0003"]');
-  assert.ok(link.textContent.includes("Ask the committee") && link.textContent.includes(lead("question.plan.link")));
+  assert.equal(p.location.pathname, "/app/plan/PLAN-2026-0003", "the plan page is opened with the plan as subject");
 });
 
 test("R31 Read in my language sends the question as subject, the answer drawn in place and labeled, the original back by one press", async () => {
@@ -395,12 +397,10 @@ test("R39 no heading is a record id; a question with no words or title draws und
 
 test("R2 the other acts send what their owners take", async () => {
   const p = await open(at, { ...A, plane: { narrow: ok({ ok: true }), hypothesishold: ok({ ok: true }), checkrequest: ok({ ok: true }), heldrestore: ok({ ok: true }) } });
-  fill(p, { "question-narrow-name": "Reported in 2026", "question-narrow-description": "the record covers 2026 only" });
-  await press(p, "narrow");
-  assert.deepEqual(p.byOp("narrow")[0].body, { target: Q, version: "main", name: "Reported in 2026", description: "the record covers 2026 only" });
+  /* R87: Narrow is exercised in fr28-question.test.mjs (it reads the proposed parts first) */
   fill(p, { "question-hunch": "Inspections close them.", "question-hunch-kind": "flow" });
   await press(p, "hypothesishold");
-  assert.deepEqual(p.byOp("hypothesishold")[0].body, { inquiry: Q, kind: "flow", statement: "Inspections close them." });
+  assert.deepEqual(p.byOp("hypothesishold")[0].body, { inquiry: Q, kind: "flow", statement: "Inspections close them.", about: { from: D, to: Q } });
   fill(p, { "question-check": "engineering", "question-check-note": "the crew reports" });
   await press(p, "checkrequest");
   assert.deepEqual(p.byOp("checkrequest")[0].body, { target: Q, label: "engineering", note: "the crew reports" });
@@ -421,7 +421,6 @@ test("R2 controls: a hunch, a check and a narrowing with nothing written are ref
   const p = await open(at, { ...A, plane: { hypothesishold: refusedIn("SOME_REFUSAL", "Write the hunch.") } });
   assert.ok(says(await press(p, "hypothesishold"), "screen.question.hunch.empty"));
   assert.ok(says(await press(p, "checkrequest"), "screen.question.check.empty"));
-  assert.ok(says(await press(p, "narrow"), "screen.question.narrow.empty"));
   assert.equal(p.byOp("hypothesishold").length + p.byOp("checkrequest").length + p.byOp("narrow").length, 0);
   fill(p, { "question-hunch": "x" });
   const slot = await press(p, "hypothesishold");
@@ -433,9 +432,9 @@ test("R12 sever is drawn on each live leg (confirmed or proposed) and reinstate 
   const p = await open(at, A);
   const sup = section(p, "screen.question.supports.head"), cut = section(p, "screen.question.against.head");
   const rowOf = (sec, target) => sec.querySelectorAll(".cs-row").find((r) => r.querySelector(`a.cs-ref[href="/app/document/${target}"]`));
-  assert.deepEqual(actsIn(rowOf(sup, D)), ["sever"], "a confirmed leg");
+  assert.deepEqual(actsIn(rowOf(sup, D)), ["sever", "narrow"], "a confirmed leg (R87: and Narrow)");
   assert.deepEqual(actsIn(rowOf(sup, "INFO-2026-0005")), ["reinstate"], "a severed leg, still under Supports");
-  assert.deepEqual(actsIn(rowOf(cut, "INFO-2026-0006")), ["sever"], "a proposed leg");
+  assert.deepEqual(actsIn(rowOf(cut, "INFO-2026-0006")), ["sever", "narrow"], "a proposed leg");
   /* control: a leg the inquiry holds no reference to is offered neither */
   const bare = await open(at, { images: { [Q]: { "bundle.md": grouped().replace(/  - target: INFO-2026-0004\n    rel: cites\n    status: confirmed\n/, "") } } });
   assert.deepEqual(actsIn(section(bare, "screen.question.supports.head").querySelectorAll(".cs-row").find((r) => r.querySelector(`a.cs-ref[href="/app/document/${D}"]`))), []);
@@ -470,7 +469,9 @@ test("R2 R39 (K3402) the question says who opened it, by handle from the record'
   assert.doesNotMatch(main(p).textContent, /\{name\}/);
   assert.ok(main(p).textContent.includes("The 2026 performance report"), "the document's title");
   for (const el of main(p).querySelectorAll("a.cs-ref, .rec, .mk-ev")) assert.doesNotMatch(el.textContent, /INFO-2026-0002-2026-118/, "never the record id");
-  /* control: a record that names no opener draws undetermined, never the placeholder */
+  /* control: a record that names no opener draws `screen.project.opened.date`, never an undetermined name and never the placeholder
+     (changed in fix round 3: R2, C44 now says so; it drew "Opened by" with an undetermined name) */
   const none = await open(at, { images: { [Q]: { "bundle.md": md } }, plane: { basisversions: ok({ ok: true, inquiry: Q, versions: [] }) } });
-  assert.ok(main(none).querySelector(".mk-sub").textContent.includes(lead("screen.question.opened") + word("state.undetermined", { reason: "" }).trim()));
+  assert.ok(main(none).querySelector(".mk-sub").textContent.includes(word("screen.project.opened.date", { date: day("2026-10-03") }).trim()));
+  assert.doesNotMatch(main(none).querySelector(".mk-sub").textContent, /\{name\}/);
 });

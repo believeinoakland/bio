@@ -1,6 +1,6 @@
 # BOB to admission (T51)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -19,3 +19,9 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio admission tranche/T51 job/T51/admission`. Your Size line counts only your module's own code (K2513).
+
+## B2 · CHANGE
+
+CHANGE (K4245): ADMISSION, depth 2 (BOB #235 is depth 1). Your branch is at the tranche's tip.
+Entry: the founder's session reaches `export`. `export` is now in `SESSION_OPS.admin` (op-declarations R83; screens-settings R66: "Take a copy of the record" is the founder's act, DEC-376 C30), but your gate answers a session's `export` `ROOT_OF_TRUST_REQUIRED` (C-38.4) before it reads the session sets, so the founder's press is refused. Canon: the root of trust has two forms, the ADMIN_TOKEN holder's bearer and the founder's session, "the one the claim made from that token" (Membership v2 §4.6, and §4.9's `governorconfig` ruling, which keeps an op to exactly those two). So: `export` is admitted to the root-of-trust bearer and to the founder's session (session kind `admin`), and refused `ROOT_OF_TRUST_REQUIRED` to every other credential and session, an enrolled administrator's session included. Re-pin the tests that used `export` as the op a session cannot reach (`admission.test.mjs` R8 :42, :48, the order test :66-70, :209, R14; `invariants.test.mjs` :22, :26) to an op no session set holds, read from the tables, never hand-listed. Tests: the founder's session reaches `export`; controls: an administrator's session that is not the founder's, a member's session and the member bearer are refused `ROOT_OF_TRUST_REQUIRED`. Requirement lines (the amended R ids) for BOB in your COMPLETE. CONTROL-PLANE's job re-pins its R28 test after you merge.
+Before tests: node_modules (K4113). Reading (K3678). Words (K3930). Model sonnet, medium effort; workers sonnet medium for reading, haiku low for mechanical edits.

@@ -83,6 +83,8 @@ test("R1 R3 R33 (N891): RUNGS is a closed partition — every op it ranks is one
   /* R38, R40, R41 (T48) */
   want.reversible.push("actionreplyquoting", "updatelater", "updatestart", "planask");
   want.reasoned.push("updateskip", "stepsource", "stepsourcewithdraw");
+  /* K4323 (fix round 2; contradiction R61): a member's flag of two documents, reasoned (FLAG_NO_REASON) */
+  want.reasoned.push("contradictionflag");
   /* R45, R47 (T50) */
   for (const [op, r] of Object.entries(T50_RUNGS)) want[r].push(op);
   for (const [a, op] of Object.entries(OP_ALIASES)) if (Object.hasOwn(RUNGS, op)) want[RUNGS[op]].push(a);
@@ -272,7 +274,7 @@ test("R2 R5 (N891): every read row of NON_ACTS writes nothing and takes no grade
    + "library's, publishschedule, notes, and every T33 read; the public reads take no grade", () => {
   const rows = readRows(NON_ACTS);
   assert.ok(rows.length > 250);
-  /* R39 grades `securitymap` caller-owned (an administrator's own read); no other read has a grade */
+  /* R39 grades translationdraft caller-owned; no read has a grade: groupdescriptiondraft and securitymap are reads (K4210, K4247) */
   const GRADED = tickedAll(reqText(39));
   for (const op of rows) if (!GRADED.includes(op)) assert.ok(ungraded(op), op);
   /* the reads whose sentence ends on its closing words: they write nothing */

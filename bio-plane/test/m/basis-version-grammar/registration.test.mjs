@@ -48,6 +48,11 @@ test("R6: the registrant is the `module` argument — new at T51-148 — and a r
     "inquiry-grammar's own registration first is idempotent");
 });
 
+/* The golden findings are the catalogue's, from before R11 added `legs` to the partition finding (R6 compares check,
+   severity, message, repairs and code); `legs` is dropped here, and only the partition finding may carry it. */
+const golden = (list) => JSON.parse(JSON.stringify(list, (k, v) => (k === "legs" ? undefined : v)));
+const legsOnlyOnPartition = (list) => list.every((f) => f.legs === undefined || f.code === "VERSION_PARTITION_INCOMPLETE");
+
 test("R6: for every bundle of the corpus under every registry variant, checkBundle given record.grammars() answers the catalogue's findings before the move, identical in content and in order; each version finding is the one the catalogue's call added", async () => {
   const record = fresh();
   registerBasisVersionGrammar(record);
@@ -58,13 +63,14 @@ test("R6: for every bundle of the corpus under every registry variant, checkBund
     const fm = parseFrontmatter(typeof md === "string" ? md : new TextDecoder().decode(md)).data;
     for (const v of VARIANTS) {
       const got = await judge(id, v, record.grammars());
-      assert.deepEqual(got, GOLDEN.bundles[id][v], `${id} (${v})`);
-      for (const x of want) assert.ok(got.some((y) => JSON.stringify(y) === JSON.stringify(x)), `${id}: ${x.message}`);
+      assert.deepEqual(golden(got), GOLDEN.bundles[id][v], `${id} (${v})`);
+      for (const x of want) assert.ok(golden(got).some((y) => JSON.stringify(y) === JSON.stringify(x)), `${id}: ${x.message}`);
+      assert.ok(legsOnlyOnPartition(got), `${id}: legs only on the partition finding`);
       bundles++;
     }
     if (fm && /^(inquiry|problem|focus)$/.test(String(fm.object_type))) {
       const own = []; basisVersionFindings(fm, own);
-      assert.deepEqual(JSON.parse(JSON.stringify(own)), want, `${id}: basisVersionFindings alone`);
+      assert.deepEqual(golden(own), want, `${id}: basisVersionFindings alone`);
       direct++;
     }
     versions += want.length;

@@ -1,6 +1,6 @@
 # installer-steps (T51)
 
-**Status** · session_01VEWBEJY1ZxJS6YBjqLUfxF · depth 2 · COMPLETE · handled B9
+**Status** · session_012UZ8UWTtyM4aTQWpqvLqwq · depth 2 · COMPLETE · handled B14
 
 ## J1 · QUESTION
 
@@ -173,3 +173,65 @@ CHANGE B9 applied (K4132); pushed on `job/T51/installer-steps` at 2b0d3e3e2b, `t
 - Coverage: 35 of 37 live ids named by a test; R26 and R31 uncovered by design.
 
 Size (session_01VEWBEJY1ZxJS6YBjqLUfxF): test runs 2, module lines 1944
+
+## J12 · COMPLETE
+
+FR-38 (R38, K4176 (1) steps half) applied; pushed on `job/T51/installer-steps`, `tranche/T51` merged in first. I wrote the requirement line myself in `build/requirements/installer-steps.md` (B11): **R38**, met, with R14's wording amended to point at it.
+
+**Entries applied.**
+- `steps/bytes.mjs`: an incremental `Sha256` (64-byte block, equals the whole-buffer hash for every length 0–200 and uneven chunking), `hashStream(stream)` and `hashPart(stream, boundary)` (finds the `index.mjs` part as chunks arrive, delimiters split anywhere, a part cut by the stream's end hashed as far as it goes, as before). `multipartPart` is removed.
+- `steps/readback.mjs`: `scriptHash` hashes `r.body` as a stream (raw or multipart part); `releaseSha` hashes `release.blob.stream()`. No `arrayBuffer()` is left in the read-back.
+- The upload already carried `release.blob` as it is (`uploadForm`); R38's test shows it for the install and the update (a 29 MB Blob whose text/arrayBuffer/bytes are refused sends all its bytes). `members.mjs` builds its Blobs from the member's own (small, one-at-a-time, R18) bytes: unchanged.
+- One finding of mine fixed on the way: `hashPart` does not await `reader.cancel()` (it never settles on one branch of a teed/cloned response).
+
+**Tests** (`newgroup/test/steps/plane.test.mjs`, four R38 tests, plus R14's multipartPart line now `hashPart`): 29 MB read-back raw and multipart through a response that refuses every whole-body method, chunks at most 64 KB, equals the whole-buffer hash; control, one different byte gives another hash and is named with both; chunking 1…whole; no-index part, other boundary, cut stream; the upload; the SHA-256 lengths. Seen failing before the change (the exports did not exist, and the read-back called arrayBuffer).
+
+**Memory (`R33_REPORT=1`, installer's real-size child, `newgroup/test/realsize.test.mjs`).** Peak live before: 143 MB (baseline 75); after: 143 MB. The read-back's own copy is gone from the trace (the second `arrayBuffer 29` + `digest` are no longer there), but the peak is set elsewhere, all installer's: `src/index.mjs`:97 `fetchRepoAsset` holds `bytes` and then the `Blob` at once (`Blob 29` at 134–135 MB) and the child's fake account serialises the upload body whole (`arrayBuffer 29` at 143, the test double). So the 112 MB budget needs `installer` to stream `fetchRepoAsset` (hash the response as it arrives into a Blob, never `bytes` beside the Blob; `steps` now exports `hashStream` for it) and the child's serialisation to stop holding the body. `newgroup/dist/newgroup.bundled.mjs` is stale (it still holds `multipartPart` and the old read-back): BOB regenerates it.
+
+**Deferred.** R26 and R31 (unbuilt by design, K3718 (2)). Nothing else.
+
+**Found in another module.** installer's `newgroup/test/requirements.test.mjs`:363 "R11 `fleet`" fails with and without my change (the result says "All 6 helper programs installed and verified" where the test expects the left-out paragraph for pdf-worker); not mine, not edited.
+
+**Tests and checks.**
+- Steps suite: `node --test test/steps/`: all pass (92 before the SHA test, 93 with it).
+- Installer's `newgroup/test`: 204 run, 195 pass, 4 fail: the three R33 real-size tests (installer's, FR-33) and R11 `fleet` above.
+- Format: 175 modules, 175 requirements files; 0 failures. Architecture: 24 product files, 91 relative imports; 0 failures. Words: 0 failures (inline 0, plain 0, missingkey 0).
+- Ownership (`tranche/T51` to `job/T51/installer-steps`): 5 files changed; 1 failure, `build/requirements/installer-steps.md`, the one file B11 accepts at the merge.
+- Coverage: 36 of 38 live ids named by a test; R26 and R31 uncovered by design.
+
+Size (session_01TxbyRGeKMTnkx1teB7ykax): test runs 14, module lines 2017
+
+## J13 · QUESTION
+
+G1 (installer-steps provider) is built and green in my suites (steps: 101 pass, 0 fail; 2 skipped R26/R31 by design); one consequence lands on `installer`, which I may not edit, and I need your answer to the three points below before COMPLETE (R-NOTMET).
+
+**What changed.** `uploadInstall` and `uploadUpdate` (steps/uploads.mjs) now read the plane's cron from the signed bundle's statement `bio-plane-crons/1 <five fields>` (streamed from `release.blob`, before anything is uploaded; reader `planeCrons`/`planeCronsOfStream` beside `planeLimits`) and PUT the plane's schedules after the script upload. A refusal throws Cloudflare's message (the installer's existing stop sentences carry it); a bundle with no statement, two different ones or an unreadable one throws `installer.fleet.why.program` (stand-in; row owed `installer-steps.plane.crons`) and uploads nothing. `newgroup/src/index.mjs` needs no edit.
+
+**Consequence for `installer` (impact run, tranche/T51 vs HEAD).** `newgroup/test` fails 61 of 107 (baseline on tranche/T51: 0 fail) because every plane source in `newgroup/test/fixture.mjs` (`CAPABLE_SRC` :152, `PRE116_SRC` :153, `UNSTATED_SRC` :155) and `wizard.test.mjs`:254 (`curSrc`) states limits but no schedule, so the install and update now stop by design. I proved this: with one `bio-plane-crons/1 */5 * * * *` string appended to those four sources (working tree only, reverted) it falls to 8 failures, and those 8 (R8 `rel`, R11 `fleet`, R20, R44, R55 newer-than-built-in, R61, R71, and wizard.test.mjs as a file) all use the installer's built-in release (`newgroup/test/release-text.mjs` `RELEASE_SOURCE`, the plane bytes it carries), which has no statement until control-plane emits it and the bundles are regenerated.
+
+**Questions (my best reading in each).**
+1. Please CHANGE the `installer` job (or tell me to) to add the statement to its four fixture sources; the built-in release then follows your regeneration after control-plane's literal merges, and those 8 stay red by name until then. I have not touched installer's files.
+2. A release published before this one states no schedule, so this installer will no longer install or update to it ("a bundle without the statement stops", your START). Best reading: intended (the watchdog is not optional), and the release choice already passes over a release that states no limits; whether the choice (`installer`'s `selectRelease`) should pass over one that states no schedule, with a word row, as it does for limits, instead of stopping the act at the upload, is `installer`'s and yours.
+3. A copy whose plane is already as the release wants it (`planeInSync` true, index.mjs:802) makes neither upload, so its schedule is set by the next release's upload or by bundler's `deploy.mjs` (G1 bundler half), not by that run. I did not add a schedules read to `planeInSync` (it would also need a GET in every fake account, installer's included). Best reading: acceptable for the alpha; say if you want the in-sync path to read the schedules and fall through to the update.
+
+## J14 · COMPLETE
+
+G1 provider (fix round 6; START B13, answered B14) applied and pushed on `job/T51/installer-steps`; `tranche/T51` merged in.
+
+**Changed.** `newgroup/src/steps/statements.mjs`: `planeCrons(source)` (text or bytes) and `planeCronsOfStream(stream)` read the signed statement `bio-plane-crons/1 <five fields>` (exactly one distinct statement; `none` / `unreadable`), beside `planeLimits`. `newgroup/src/steps/uploads.mjs`: `uploadInstall` and `uploadUpdate` read the crons from `release.blob.stream()` before any upload (a release with none or an unreadable one throws `installer.fleet.why.program`, nothing uploaded) and PUT the plane's schedules after the script upload through `setSchedules`; a refusal throws Cloudflare's message and stops the act; `newgroup/src/index.mjs` needs no edit. Root cause: no cron was ever set for the plane (uploads.mjs sent none). Why missed: no cron existed; no test of the platform's schedule shapes.
+
+**Failing-first** (`newgroup/test/steps/schedule.test.mjs`, 8 tests R39, via the real `uploadInstall`/`uploadUpdate` on the fake account): red before (8 failures on behaviour: no schedule set, a refusal not stopping, a bundle without the statement accepted), green after. Includes a 29 MB release whose Blob refuses text/arrayBuffer/bytes (R38). `world.mjs` `CAPABLE_SRC` carries the statement; `plane.test.mjs` R38's 29 MB module carries it and the sequences give the schedule reply.
+
+**Words.** Stand-in `installer.fleet.why.program` for a missing or unreadable statement; row owed: `installer-steps.plane.crons` ("this release does not say when the plane's watchdog runs"). Refusals use Cloudflare's text inside the installer's existing stop sentences.
+
+**Tests and checks.** Steps suite: 103 run, 101 pass, 0 fail, 2 skipped (R26, R31 by design). Installer's `newgroup/test` (corpus, embed, requirements, t47, t48, t50, t51, wizard): baseline 107 run, 0 fail; with this change 61 fail because installer's fixture plane sources state no schedule; with the statement appended to them (working tree only, reverted) 8 fail. **Named reds, accepted by BOB (B14):** the fixture sources (`fixture.mjs`:152, 153, 155; `wizard.test.mjs`:254) are fixed by BOB after the merge (K4297 (2)); the 8 that remain use the built-in release (`release-text.mjs`) and stay red until the round-end regeneration: R8 `rel`, R11 `fleet`, R20, R44, R55 (newer-than-built-in), R61, R71, and `wizard.test.mjs` as a file. journey-check's `account-installer.test.mjs` not run by me (BOB's impact lists it). checks/run.mjs: format 1 failure in `build/plan/next.md:38` (not mine); architecture, coverage (38 of 38), channels, words 0 failures (words count not raised). Ownership: 6 files, 0 failures.
+
+**Proposed requirement R39** (T51 G1; K4566; amends R12, R13): *The plane's schedule.* `planeCrons(source)` and `planeCronsOfStream(stream)` read, from the release's verified bytes, exactly one distinct quoted statement `bio-plane-crons/1 <five space-separated cron fields>` (`{ok, crons}`; `none`, or `unreadable` for two different, a malformed one). `uploadInstall` and `uploadUpdate` read it from `release.blob` as a stream before uploading and, after the script upload, set the plane script's schedules to it; the installer holds no schedule of its own. A release stating none or unreadably is refused with nothing uploaded; the platform's refusal of the schedule stops the act. Test: both acts set the stated cron after the upload; another stated cron is the one set; a refused PUT stops both; no/two/malformed statements stop both with nothing uploaded; found across any chunking; a 29 MB Blob read only as a stream.
+
+**Deferred / in other modules.** The in-sync path (`planeInSync` true) makes no upload so sets no schedule (B14 accepted). Nothing else.
+
+Size (session_012UZ8UWTtyM4aTQWpqvLqwq): test runs 13, module lines 2076
+
+## J15 · COMPLETE
+
+COMPLETE (J14): G1 provider done; see record section J14. Named reds accepted at B14.

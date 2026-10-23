@@ -1,6 +1,6 @@
 # BOB to bundler (T51)
 
-**Read** · handled J10
+**Read** · handled J14
 
 ## B1 · START
 
@@ -90,3 +90,57 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio bundler tranche/T51 job/T51/bundler`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B9 · CHANGE
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/bundler tranche/T51 && git branch -m job/T51/bundler stale/bundler-local && git checkout -b job/T51/bundler origin/job/T51/bundler`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+CHANGE · BUNDLER #25 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #238 is depth 1; K4286)
+
+Mail with `--module bundler`; record `build/jobs/T51/bundler.md`. Model claude-haiku-5-5, medium effort; workers haiku low. **Tests only**: no source file changes, no requirement line changes. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`. Words (K3810): a test never copies a sentence people read; it asserts the key. A test never hand-lists another module's ops, rows or words (K3268).
+
+You are the module job for `bundler`, one entry, tests only (K4286). **bundler R25 (K4094)** is red at `bio-plane/test/m/bundler/bundler.test.mjs:866-867`: since 9055bb0502 (agent-runner FR-14) agent-runner's `wrangler.jsonc` declares migration v2 (`RemoteSession`), and `workerPart` reports it correctly; the test expects only v1. Bring the expectation to what R25 says: each member's Worker part states the Durable Objects and migrations its configuration owns. Prefer reading the expected migrations from the member's own configuration over a hand list (K3268); if that is not possible at R25's interface, add `{tag:"v2", classes:["RemoteSession"]}`.
+
+Read in full: bundler R25 and the test around :840-880. Run `bio-plane/test/m/bundler/` (0 fail) and `node /home/user/civicos-process/checks/run.mjs /home/user/bio`. COMPLETE with the count and the `Size` line.
+
+## B10 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/bundler tranche/T51 && git branch -m job/T51/bundler stale/bundler-local && git checkout -b job/T51/bundler origin/job/T51/bundler`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · BUNDLER #26 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #252 is depth 1; fix round 6, job 1 of 20; K4570, K4571)
+
+Mail with `--module bundler`; record `build/jobs/T51/bundler.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). You are the module job (P8, mechanics §6) for `bundler`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first.
+
+**Read in full:** `build/plan/fix-round-6-T51.md` (section 0's rules bind you; section 2 gives each cause you own or provide with its four fields; section 3 the merge order), `build/plan/diagnosis-R6-watchdog.md` (sections 2, 3, 4), your requirements (both parts), the used services your entries touch, and your code. The plan's file:line evidence is your starting point, never a substitute for reading the code.
+
+**Rules** (plan section 0; K4426-K4428): (1) root cause stated with file:line, else a diagnosis posted as a QUESTION before any fix; (2) why the tests missed it, and the test-gap fix; (3) a failing-first test on the walker's case (quoted below), through the real entry path (press the act or call the op, never the done function), seen red in your record, then green; (4) where the platform matters (the object's 128 MB, the CPU limit, `waitUntil` cut ~30 s after the response, the door's 25 s, the clock frozen during synchronous work), a local workerd check with real sizes, numbers in your record; no deploy. R-SEAM: the seam owner's test runs the whole path with the real merged providers and inputs made by the member's own acts, never a hand-written answer shape; a seam test whose provider is unmerged is written first and stays red by name (merge `tranche/T51` again when BOB says it merged). R-STOP: a "reading follows" test asserts the words are in `text_units`. R-CLOCK: no test asserts a compute time from the object's clock. R-NOTMET: no "not met", deferred, REPORT or open QUESTION at COMPLETE: name the smallest thing you need and ask BOB now. R-OLD: stored-data fixes say "new data only" or carry a repair. Wording waits for T52 (K4269): a new sentence uses the nearest held row as stand-in (a drawn-screen module never adds `localize`), the row owed named in your record. Declare every census op you own (K4208). Bob's focus: an alpha release deployed as efficiently as possible: do what the entries need, nothing more.
+
+**Your entry (G1, provider; owner plane).** `bio-plane/scripts/deploy.mjs` is a raw script PUT (:237-250, :399-424) that never sets the cron schedule, and whether a plain script PUT keeps or clears schedules is unconfirmed. Fix: after every PUT, `PUT .../workers/scripts/<script>/schedules` with the crons of `bio-plane/wrangler.jsonc` (`triggers.crons`, `*/5 * * * *`), then read them back (GET) and REFUSE success on a failure or a mismatch, never a note; `--dry-run` prints the step and refuses the same way. Token scope is Workers Scripts Write (already used for the PUT). Failing-first (`test/m/bundler`, `stubfetch.mjs`): the PUT is followed by the schedules PUT; a read-back that lacks the cron, differs, or fails makes the deploy refuse; dry-run parity. Why missed: the tests verify bytes and limits only. Platform: the first add can take up to 15 min to propagate (the smoke waits). Plane's test, not yours, ties the cron to control-plane's signed literal.
+
+Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio bundler tranche/T51 job/T51/bundler`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B11 · ANSWER · re J12
+
+ANSWER (BOB #253): J12 read; you merge first. Your proposed R18, R34, R40 lines are written at the merge. Stay available until the layer closes.
+
+## B12 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/bundler tranche/T51 && git branch -m job/T51/bundler stale/bundler-local && git checkout -b job/T51/bundler origin/job/T51/bundler`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · BUNDLER #27 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #255 is depth 1; fix round 6, wave 6; K4616) · reading set per mechanics §6 step 2 (your other tests are run, not read)
+
+Mail with `--module bundler`; record `build/jobs/T51/bundler.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). You are the module job (P8, mechanics §6) for `bundler`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first.
+
+**Read in full:** `build/plan/fix-round-6-T51.md` section 0 (its rules bind you) and G39 (its four fields, as amended after the independent review), `build/plan/diagnosis-R6-idle.md` (both sections; the workerd measurement and its commands), the manifest's "Generated artifacts" section (`build/manifest.md`), your requirements (both parts), and your code (`bio-plane/scripts/fleet-bundle.mjs`, `build-plane.mjs`).
+
+**Bob (K4426):** "We need to be rigorous about truely understanding the issues we're experiencing, understanding (and fixing) why they weren't caught in the fixtures, and be confident that we do understand, can properly tes, and have really fixed every issue before we do another deployment." Each defect has (1) its root cause with evidence, (2) why the tests missed it and that gap fixed, (3) a test on the walker's exact case through its real entry path, seen failing then passing, (4) a check at the live platform's real shape where it depends on it. **Bob's focus: an alpha release as quickly and efficiently as possible: do what the entry needs, nothing more.**
+
+**Rules** (plan section 0; K4426-K4428): (1) root cause with file:line; (2) why the tests missed it, and the gap fixed; (3) a failing-first test past the bound, through the module's real entry (the op or the provided service, never an inner helper), seen red in your record, then green; (4) the platform check named in the cause (most are N). R-NOTMET: no "not met", deferred, REPORT or open QUESTION at COMPLETE: name the smallest thing you need and ask BOB now. R-OLD: stored data: "new data only" or a repair. A new sentence a member reads uses a stand-in (a drawn-screen module uses the nearest held row; any other module `localize(id, en)`), the row owed named in your record (BOB's HANDOFF B485 asks the design). Declare every census op you own whose accepted keys change (K4208).
+
+**Your entry (G39, owner).** Make every fleet bundle pure ASCII: comments stripped (licence banners kept, checked against `third-party.json`), template literals lowered, every remaining non-ASCII character escaped by a token-aware pass that never edits an unlowered template's raw text; the standalone case checker (`case-checker/build-program.mjs` through `buildMember`) opts out and keeps its form; the new options recorded in `manifestFrom`'s recipe and checked by `verifyStatic`'s `want`. Failing-first exactly as G39 (3) lists, each seen red then green, numbers in your record; the workerd bisect as `diagnosis-R6-idle.md`'s commands do it. You change the build only: do not commit regenerated bundles of other modules (BOB regenerates every artifact at the round end, manifest order); your test may build into a scratch directory. Propose the requirement lines (BOB writes them).
+
+Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names (the users of what you changed; when it names hundreds because of a shared table, run the modules that call your changed service); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio bundler tranche/T51 job/T51/bundler`. COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B13 · ANSWER · re J13
+
+ANSWER re J13 (BOB #255, K4617). Both readings adopted. (1) bundler provides the pass as exported services (`asciiOutput`, `asciiOptions`) applied inside `buildMember` for the plane and every fleet member; your test covers those; newgroup is the installer's to call them (an INSTALLER job after you merge, BOB's). (2) The case checker's default opt-out as you describe, with the explicit `bundle.ascii` override. Carry on to COMPLETE.

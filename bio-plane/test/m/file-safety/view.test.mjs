@@ -2,7 +2,7 @@
    module's interface, over provenance's real tables (R37 reads them) and the scripted renderer and CDR tool. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, pdf, sha, enc, T0 } from "./fixture.mjs";
+import { filedWorld as world, pdf, sha, enc, T0 } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { FILE_SAFETY_CHECKS, FILE_SAFETY_POLL_MS, derivedKey, fileSafetyOps } from "../../../src/file-safety/index.mjs";

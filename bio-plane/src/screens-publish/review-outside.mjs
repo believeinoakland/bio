@@ -26,8 +26,9 @@ export const REVIEW_OUTSIDE = Object.freeze({
     const c = copy && copy.case ? copy.case : {};
     const gi = view.data.group && view.data.group.state === "ok" ? view.data.group.value : null;
     const group = gi ? gi.display_name || gi.group || "" : "";
-    out.push(cs.title(group ? P.plain(cs.w("screen.review-outside.heading", { group: group })) : null, { thing: "case" }));
+    out.push(cs.title(P.titleOf2(cs, copy, group ? P.plain(cs.w("screen.review-outside.heading", { group: group })) : null), { thing: "case" }));
     if (!copy) { out.push(cs.state("copy", function () { return ""; })); return out.join(""); }
+    out.push(P.noCase(cs, copy));
     const g = copy.grant || {};
     const until = typeof g.until === "string" && g.until ? g.until : null; // R18: the recipient's own grant part
     // R18, R27 (K3295): the end day in the team's zone, its date, time and zone as the copy's grant part carries them (`review`
@@ -40,7 +41,7 @@ export const REVIEW_OUTSIDE = Object.freeze({
     const draftTitle = { fills: { case: c.identity || "", edition: String(c.edition || "") } };
     out.push(P.sec(cs, "screen.review-outside.draft", (a.scope ? '<p class="rec">' + cs.esc(a.scope) + "</p>" : "")
       + (Array.isArray(copy.findings) && copy.findings.length ? cs.sheet(copy.findings.map(function (f) {
-        return cs.row("", '<span class="rec">' + cs.esc(f.text || f.detail || f.target || "") + "</span>", "");
+        return cs.row("", P.findingWords(cs, f), ""); // R61 (L15), C46: the finding by its title and in its own words, never the raw file text
       }).join("")) : ""), draftTitle));
     // R23 (N1094; DEC-240 (C2)): what the case says it does not cover, the reader's note and "Acknowledge it"; a copy with
     // no statement draws no section.
@@ -58,7 +59,7 @@ export const REVIEW_OUTSIDE = Object.freeze({
   acts: [
     {
       // R17: "Send your comment": the comment and the secret in the body, never in the address.
-      op: "reviewcomment", label: "act.reviewcomment.label.review-outside",
+      op: "reviewcomment", label: "act.reviewcomment.label.review-outside", rereads: ["copy"],
       send: function (view, el, cs) {
         const copy = view.data.copy && view.data.copy.state === "ok" ? view.data.copy.value : null;
         const text = String(cs.value("ro-comment") || "").trim();
@@ -76,7 +77,7 @@ export const REVIEW_OUTSIDE = Object.freeze({
     {
       // R23: "Acknowledge it": the draft, the reader's note as the reason, and the secret in the body only, as `reviewcomment`
       // sends it; an empty note sends nothing.
-      op: "statementack", label: "act.statementack.label.review-outside", reasonField: "reason",
+      op: "statementack", label: "act.statementack.label.review-outside", rereads: ["copy"], reasonField: "reason",
       send: function (view, el, cs) {
         const copy = view.data.copy && view.data.copy.state === "ok" ? view.data.copy.value : null;
         if (!copy || !view.ui.secret) return null;

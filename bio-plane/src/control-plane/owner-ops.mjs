@@ -5,7 +5,37 @@
 
    `plane` spreads this map into its route map (R5) beside the owners' own, handing it each owner's one instance through
    `of`, a set of getters (`of.aiUse()`, `of.aiRuns()`, `of.caseAccount()`, `of.review()`, `of.legEarning()`,
-   `of.capture()`, `of.steps()`, `of.investigation()`, `of.questionExplorer()`, since T47 `of.actionClocks()` and since T51 `of.filings()` and `of.actionPlans()`), each asked only when its op is served. */
+   `of.capture()`, `of.steps()`, `of.investigation()`, `of.questionExplorer()`, since T47 `of.actionClocks()` and since T51 `of.filings()`, `of.actionPlans()`, `of.extraction()` (R117) and `of.projectRoster()` (R118)), each asked only when its op is served. */
+
+import { localize } from "../setup-words/index.mjs";
+
+/* control-plane R112 (T51; K4206, K4210; op-declarations R80, op-grades R49): the ops this door's own map serves and no owner
+   declares, declared here beside the map. Each row's classes, machineClasses, mutating, stamps and needs are the hand rows'
+   (`op-declarations` and `control-plane`'s stamps); its weight is the grade's ground or rung, its description the grade's
+   sentence as a word key; its fields are what the arm reads (accepts) and what a refusal names when absent (requires). */
+export const DECLARED_OPS = Object.freeze({
+  captureupload: { classes: ["admin", "member"], machineClasses: [], mutating: true, stamps: ["viewer", "by"], needs: "contribute",
+    weight: "undetermined", description: localize("control-plane.declared.captureupload", "upload-directed: a member's bytes held as a capture under their digest, in her own name, with its receipt; reached from the upload, never beside a bundle"),
+    fields: { accepts: ["statement", "name", "type", "step"], requires: ["statement"] } },
+  accountdrafts: { classes: ["admin", "member"], machineClasses: [], mutating: false, stamps: ["viewer"], needs: null,
+    weight: "read", description: localize("control-plane.declared.accountdrafts", "read: a case's drafts of its account, each labeled machine work; writes nothing"),
+    fields: { accepts: ["case"], requires: ["case"] } },
+  accountpropose: { classes: ["admin", "member"], machineClasses: [], mutating: true, stamps: ["viewer", "by"], needs: "contribute",
+    weight: "undetermined", description: localize("control-plane.declared.accountpropose", "case-directed: keyed by a case, reached from its account; the system's draft of the account, labeled machine work, never the published account until a member writes it"),
+    fields: { accepts: ["case", "kind", "framing", "text", "flags", "run"], requires: ["case", "framing", "text", "run"] } },
+  clockpropose: { classes: ["admin", "member", "probe"], mutating: true, stamps: ["viewer", "proposer"], needs: "contribute",
+    weight: "reversible", description: localize("control-plane.declared.clockpropose", "action-directed: keyed by (action, rule, proposer); a proposal stored apart, never a clock entry until a member adopts it"),
+    fields: { accepts: ["target", "rule"], requires: ["target", "rule"] } },
+  subscriptionsignin: { classes: ["admin", "member"], machineClasses: [], mutating: true, stamps: ["viewer", "by"], needs: null,
+    weight: "credential", description: localize("control-plane.declared.subscriptionsignin", "credential: a member's own sign-in to their own Claude subscription, in their own runner; no login held here; moves no bundle"),
+    fields: { accepts: ["step", "code", "attempt"], requires: ["step"] } },
+  /* R116 (fix round 2, C15; K4317): `interfacewords` is `translations`' arm (R66), which declares the screens' four acts and not this
+     read; the shell sends it with `v`, the release version the door keys the answer's cache on (R116). `viewer` is the door's stamp,
+     never a field a caller sends; with no `language` the viewer's own is read, so nothing is required. */
+  interfacewords: { classes: ["admin", "member"], machineClasses: [], mutating: false, stamps: ["viewer"], needs: null,
+    weight: "read", description: localize("control-plane.declared.interfacewords", "read: every interface word in a language, the group's shown translation or the English, never blank, with the English beside it; writes nothing"),
+    fields: { accepts: ["language", "v"], requires: [] } },
+});
 
 /* The `by` stamp is the actor in the viewer's form (`member:<id>`, the founder's `admin`, a machine `class:<cls>`); the
    owners that compare a bare member id with their roster are handed the bare id, and a machine stamp unchanged, so the
@@ -65,6 +95,20 @@ export function controlPlaneOwnerOps(of, url, body) {
        caller hands, never a request's field, so one in the address reaches nothing. */
     captureupload: () => of.capture().uploadCapture({ bytes: body, statement: q("statement"), name: q("name"), by: q("by"),
                                                                    ...(q("type") !== null ? { type: q("type") } : {}) }),
+    /* R117 (fix round 3, C5, C17; extraction R80): STORE-INTERNAL, no spec, so no caller reaches it (R2): the door asks extraction to
+       read a home that has no reading once its bytes are held whole. The act is extraction's in-process `readHeld`, answered as
+       it answers (`{ok, read, why?}`); `sha` and `store` are the door's, from the capture's answer and the namespace it landed in.
+       The arm exists once the plane hands the getter `of.extraction` (a door without it routes no `readheldfor`). */
+    ...(typeof of?.extraction === "function" ? {
+      /* named apart from extraction's member op `readheld` (R80 as amended), which is the one the plane serves under that name */
+      readheldfor: () => of.extraction().readHeld({ sha: q("sha"), storeName: q("store") || "bio" }) } : {}),
+    /* R118 (fix round 3, C14, P2.2; project-roster R42, review R43): `projectlist` is project-roster's read, handed the reader of
+       the drafts shared for review, review's `sharedDraftsByProject({projectIds, viewer})`, as its `sharedDraftsOf`; project-roster
+       calls it once for the page's projects. It replaces the roster's own arm (the one that reads `env.sharedDraftsOf`, which the
+       door never holds), with the same request fields. Present once the plane hands the getter `of.projectRoster`. */
+    ...(typeof of?.projectRoster === "function" ? {
+      projectlist: () => of.projectRoster().projectList({ viewer: q("viewer"), limit: q("limit"), after: q("after"),
+        sharedDraftsOf: (asked) => of.review().sharedDraftsByProject(asked) }) } : {}),
     /* R71 (steps R9): STORE-INTERNAL, no spec, so no caller reaches it (R2): the door ties a member's landed capture to
        the step she named, `recordProduct` asked only for a step she may see; one she may not is answered as steps
        answers an unseen step. */

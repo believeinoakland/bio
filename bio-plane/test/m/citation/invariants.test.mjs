@@ -140,6 +140,7 @@ test("R11: each check moved here with its number, code and translation unchanged
     ["SEVERED_EDGE", "C-33.19", "src/citation/index.mjs cite > is-cite-severed"],
     ["RETIRED_NOT_CITABLE", "C-33.39", "src/citation/index.mjs cite > is-cite-retired"],
     ["NO_SUCH_QUESTION", "C-33.52", "src/citation/index.mjs cite > is-cite-question"],
+    ["BAD_GROUND", "C-33.58", "src/citation/index.mjs cite > is-cite-ground"],
     ["NOT_AN_INQUIRY", "C-33.53", "src/citation/index.mjs cite > is-cite-question"],
   ]);
   assert.deepEqual(Object.entries(CITE_EXTENT_CHECKS).map(([k, r]) => [k, r.check, r.where]), [
@@ -171,29 +172,31 @@ test("R11: each check moved here with its number, code and translation unchanged
     assert.deepEqual(homes.filter((h) => h.code === code || h.check === row.check), [], `${code} (${row.check}) is held only here`);
 });
 
-test("K3, R1, R7, R14: the op routes — the control plane's stamps are read from the query, the part arrives whole as a bag, a found match as one JSON parameter with the optional question, and no weight is read from the caller", async () => {
+test("K3, R1, R7, R14: the op routes — the control plane's stamps are read from the query and `cite`'s fields from the body, the part arrives whole as a bag, a found match as one JSON value with the optional question, and no weight is read from the caller", async () => {
   const calls = [];
   const fake = new Proxy({}, { get: (_, act) => (a) => { calls.push([act, a]); return { ok: true, act }; } });
   const url = new URL("http://x/?project=P&handle=H&viewer=member:ann&owner=o&note=n&author=member:ann&identity=member:ann"
     + "&role=supports&weight=refuse&extent_kind=pdf-page&extent_page=2&content_id=&other=1&reason=why");
-  const ops = citationOps(fake, url);
-  assert.deepEqual(Object.keys(ops).sort(), ["cite", "drawquestion", "reinstate", "sever"]);
+  /* C31: `cite` reads its fields from the body; the address carries the door's stamps only. */
+  const body = { project: "P", handle: "H", note: "n", role: "supports", weight: "refuse", extent_kind: "pdf-page", extent_page: 2, content_id: "", other: 1 };
+  const ops = citationOps(fake, url, body);
+  assert.deepEqual(Object.keys(ops).sort(), ["cite", "citeimported", "drawquestion", "reinstate", "sever", "withdrawimported"]);
   ops.cite(); ops.sever(); ops.reinstate();
   assert.deepEqual(calls[0], ["cite", { project: "P", handle: "H", viewer: "member:ann", owner: "o", note: "n", author: "member:ann",
-    identity: "member:ann", role: "supports", extent: { extent_kind: "pdf-page", extent_page: "2", content_id: "" },
+    identity: "member:ann", role: "supports", ground: null, extent: { extent_kind: "pdf-page", extent_page: "2", content_id: "" },
     found: null, question: null }]);
   const edgeArgs = { project: "P", handle: "H", viewer: "member:ann", owner: "o", reason: "why", author: "member:ann", identity: "member:ann" };
   assert.deepEqual(calls[1], ["sever", edgeArgs]);
   assert.deepEqual(calls[2], ["reinstate", edgeArgs]);
-  const bare = citationOps(fake, new URL("http://x/?project=P"));
+  const bare = citationOps(fake, new URL("http://x/?project=P"), { project: "P" });
   bare.cite(); bare.sever();
   assert.deepEqual([calls[3][1].note, calls[3][1].extent, calls[3][1].role, calls[3][1].found, calls[3][1].question, calls[4][1].reason],
                    ["", {}, null, null, null, ""]);
   /* A found match arrives parsed, whole; one that does not parse arrives as sent, for FOUND_MALFORMED to name. */
   const m = { kind: "term", words: "w", capture_sha: "a".repeat(64), extent: { kind: "pdf-page", page: 0 }, origin: "search" };
-  citationOps(fake, new URL(`http://x/?project=P&question=INQ-1&found=${encodeURIComponent(JSON.stringify(m))}`)).cite();
+  citationOps(fake, new URL("http://x/"), { project: "P", question: "INQ-1", found: JSON.stringify(m) }).cite();
   assert.deepEqual([calls[5][1].found, calls[5][1].question, calls[5][1].handle], [m, "INQ-1", null]);
-  citationOps(fake, new URL("http://x/?project=P&found=%7Bnot-json")).cite();
+  citationOps(fake, new URL("http://x/"), { project: "P", found: "{not-json" }).cite();
   assert.equal(calls[6][1].found, "{not-json");
   /* R14: `drawquestion` reads the case, the question, the note and the stamps; no selection, no weight, no document. */
   citationOps(fake, url).drawquestion();
@@ -207,7 +210,7 @@ test("K3, R1, R7, R14: the op routes — the control plane's stamps are read fro
   w.info("INFO-2026-0001");
   const p = w.project();
   const h = await w.select(["INFO-2026-0001"]);
-  const r = citationOps(w.cit, new URL(`http://x/?project=${p}&handle=${h}&viewer=member:ann&owner=o&identity=member:ann&weight=refuse`)).cite();
+  const r = citationOps(w.cit, new URL("http://x/?viewer=member:ann&owner=o&identity=member:ann&weight=refuse"), { project: p, handle: h, weight: "refuse" }).cite();
   assert.deepEqual([r.ok, r.weight, r.cited], [true, "report", ["INFO-2026-0001"]]);
 });
 

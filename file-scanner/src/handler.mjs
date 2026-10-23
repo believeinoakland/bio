@@ -2,7 +2,7 @@
  * the request and the member's dependencies (the bucket, the two images, the network, the clock), so the tests drive
  * it as the Worker does. */
 import { BOUNDS } from './limits.mjs';
-import { scan, mirror, signatureState } from './clamav.mjs';
+import { scan, mirror, mirrorAsync, mirrorTick, signatureState } from './clamav.mjs';
 import { render } from './render.mjs';
 import { providerScan, sandboxSubmit, sandboxResult, providerCdr, providerReputation, providerRefresh, providerForward,
   providerTest, providersList } from './providers/routes.mjs';
@@ -34,11 +34,14 @@ const POSTS = {
   '/provider/refresh': providerRefresh, '/provider/forward': providerForward, '/provider/test': providerTest,
 };
 
+/** R6: the scheduled trigger's act (every ten minutes). */
+export const scheduled = (deps) => mirrorTick(deps);
+
 export async function handle(request, deps) {
-  const { pathname } = new URL(request.url);
+  const { pathname, searchParams } = new URL(request.url);
   if (request.method === 'GET' && pathname === '/version') return version(deps);
   if (request.method === 'GET' && pathname === '/providers') return providersList();
-  if (request.method === 'POST' && pathname === '/mirror') return mirror(deps);
+  if (request.method === 'POST' && pathname === '/mirror') return searchParams.get('async') === '1' ? mirrorAsync(deps) : mirror(deps);
   const route = request.method === 'POST' && Object.hasOwn(POSTS, pathname) ? POSTS[pathname] : null;
   if (!route) return UNKNOWN();
   let body = null;

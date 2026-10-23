@@ -49,6 +49,13 @@ test("R47 progressions declares instance: its requires alone raise no refusal na
     refusedNaming: named({"key":["NO_KEY"],"id":["NO_ENTITY"]}, true), values: {"key":"meeting","id":"ENT-2026-0001-clerk"}, same: sameCode });
 });
 
+test("R48 progressions declares progressions: it is a read with no required field, accepts limit and after, and drops or refuses a field outside them", async () => {
+  assert.equal(DECLARED_OPS["progressions"].weight, "read");
+  assert.equal(DECLARED_OPS["progressions"].mutating, false);
+  await declaredOpHolds({ op: "progressions", declaration: DECLARED_OPS["progressions"], call: mk("progressions", {"viewer":"member:alice"}),
+    refusedNaming: named({}, true), same: sameCode });
+});
+
 test("R47 progressions declares captureprogressions: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
   await declaredOpHolds({ op: "captureprogressions", declaration: DECLARED_OPS["captureprogressions"], call: mk("captureprogressions", {}),
     refusedNaming: named({"sha256":["NO_SHA"]}, true), same: sameCode });

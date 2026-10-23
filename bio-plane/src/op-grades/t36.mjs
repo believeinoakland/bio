@@ -9,6 +9,8 @@
  * (`MEMBER_ACT_ONLY`), `file-safety` (`MACHINE_CANNOT_RELEASE_HOLD`) and `credentials` (`NOT_AN_ADMIN`) refuse a machine
  * themselves. `securitycount` is a store-internal route with no spec (`op-declarations` R6) and takes no grade (R25). */
 
+import { word } from "../setup-words/index.mjs";
+
 const R = (s) => `read: ${s}; writes nothing`;
 const STANDARD_THROUGH = "standard-directed: keyed by a standard's version, reached from the standard; records what a "
   + "checked source shows, with who, when and why; moves no bundle";
@@ -103,8 +105,7 @@ export const T36_NON_ACTS = {
   securitytoolevents: R("each security tool's adds, tests, removals and switches off, naming no file, to an "
     + "administrator"),
   /* R25 */
-  aikeepaway: "setting: whether the group keeps its material away from every assistant, an administrator's act with a "
-    + "reason; moves no bundle",
+  aikeepaway: word("ai-accounts.declared.aikeepaway"),
   aikeepawaystate: R("whether the group keeps its material away from every assistant, with the reason, who set it and "
     + "when"),
 };

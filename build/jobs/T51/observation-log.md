@@ -1,6 +1,6 @@
 # observation-log (T51)
 
-**Status** · session_017p9yDiKdDPqfnyWK37NQsk · depth 2 · COMPLETE · handled B3
+**Status** · session_01N9utw85aeGstUGpxK1qCWr · depth 2 · COMPLETE · handled B5
 
 ## J1 · COMPLETE
 
@@ -116,3 +116,36 @@ Checks after the change: format 0 failures; architecture 0 failures; coverage 38
 Commits on job/T51/observation-log: 37ccba91f7 (the conversion), f6c5cef3ae (merge of tranche/T51 at 940517d41e), ecb70f9274 (B3). Pushed.
 
 Size (session_017p9yDiKdDPqfnyWK37NQsk): test runs 4, module lines 3105
+
+## J5 · QUESTION
+
+B4 asks for a new read op=leads, but op=leadlist already is that read (R20, since D-681): the leads the viewer may read by leadReach (the same reach leadread applies), each once, newest first, with lead_id, author, words, locator, at, latest state, looked_at, looks, bounded by limit (default/max constants) with truncated, and an empty-answer for a viewer who reaches none. It is routed in observationLogOps and op-declarations/op-grades list it. What is missing is its entry in DECLARED_OPS (R39 lists only lead, leadlook, leadshare, leadread), which is why the leads screen cannot send it; SCREENS-INTAKE's comment 'the plane lists no leads' is out of date. My best reading: add NO duplicate op; add leadlist to DECLARED_OPS (classes admin/member/probe, read, accepts [limit], requires []) with its declaredOpHolds test and a reach-control test, and report that screens-intake should send op=leadlist. A new op name op=leads would also need routing in control-plane/op-declarations/op-grades, which are not my module. Proceeding on this reading; tell me if you want op=leads as a second name.
+
+## J6 · COMPLETE
+
+B4 (K4240): no new op. op=leadlist already is the read asked for (R20, see J5): the leads the viewer may read by leadReach, newest first, each with lead_id, author, words, locator, at, state, looked_at, looks, bounded by limit with truncated. The gap was that it was not declared, so I added leadlist to DECLARED_OPS (classes admin/member/probe, read, accepts [limit], requires []), its description the op-grades row's, id observation-log.declared.leadlist. Tests (declared-ops.test.mjs, naming R39/R20): declaredOpHolds for leadlist, and a reach control (a lead the viewer may not read is absent). Behaviour unchanged. For BOB: (1) requirement line, R39 to read 'lead, leadlook, leadshare, leadread, leadlist'. (2) screens-intake should send op=leadlist; its comment in screens-intake/leads.mjs ('The plane lists no leads') is stale. (3) If op=leads as a second name is still wanted, it needs routing in control-plane, op-declarations and op-grades, which are not mine. Tests: node --test bio-plane/test/m/observation-log/ 84 pass 0 fail. Checks: format 0 failures; architecture 0; coverage 39 of 39 ids named, 0; words 0; ownership 0 failures. Commit on job/T51/observation-log (pushed). Size (session_01WPbhxZPiQAyS8UNV84uKH4): test runs 2, module lines 3122
+
+## J7 · COMPLETE
+
+G15 (K4571, fix round 6, wave 2): done. A unit stored cut to the per-unit cap now makes the content axis `partial`.
+
+**Cause (1).** `observeIndexed` (`bio-plane/src/observation-log/index.mjs`, the chain at :451-465 before) reached `partial` only on `over_bound > 0`; a cut unit (`truncated > 0`, none over bound) fell to the `written > 0` branch, so `PRESENT`, with the cut only appended to the detail.
+**Why the tests missed it (2).** Two tests recorded the wrong behaviour as right: the R7 index-notice test asserted `PRESENT` for `truncated: 1` (writers.test.mjs), and the R7 unit test for `truncated: 2` asserted only the detail text, never the state. Both now assert `partial`; the control (uncut stays `PRESENT`) is in the notice test.
+**Change (file:line).** `index.mjs`: a new branch before the `PRESENT` branch, `r.truncated > 0 && r.written > 0` gives state `partial`, bound = the per-unit cap naming how many units were cut, detail = the units-indexed sentence (the cut sentence is still appended after). The R7 comment updated. The result is the reading (capture) as for over-bound `partial`.
+**Failing-first (3).** Through the real index notice (`w.ex.fireIndexed`, extraction's R62 entry) and the direct writer:
+- `indexed({offered:1, written:1, truncated:1})` -> state `partial`: RED before (actual `PRESENT`, expected `partial`), GREEN after.
+- `observeIndexed(... truncated:2, unaddressable:1)` -> `partial`: RED, GREEN.
+- Control `truncated:0` stays `PRESENT`: green throughout.
+**Platform (4).** N.
+**R-OLD.** New data only: rows already written as `PRESENT` over a cut unit are not rewritten.
+**Census ops (K4208).** None of my ops' accepted keys changed.
+**Stand-in sentence owed.** New member-readable sentence `localize("observation-log.index.per_unit_cut_bound", "the per-unit text cap: {truncated} unit(s) were stored cut, so the record holds only the start of their text")`. Row owed in setup-words (BOB regenerates `setup-words/rows.mjs` at the layer close; the words check passes, count unchanged at 18421).
+
+**Tests.** observation-log 84 pass, 0 fail. Users that read the axis: retrieval 183/183, extraction 247/247, duties 75/75 (impact.mjs names 89 modules because of the shared table; I ran the three that call the changed service).
+**Checks** (`checks/run.mjs`): format 0, architecture 0, coverage 6623 of 6623, channels 0, words 0 failures, 18421 words (not risen). Ownership: 3 files changed, 0 failures.
+
+**Requirement line proposed (R7, BOB writes it):** "...The row is `PRESENT` when every unit was stored whole, `partial` with the bound that stopped it when units were over the bound or any unit was stored cut to the per-unit cap, `LOOKED_ABSENT`..." Test: a unit cut with none over bound writes `partial` naming the per-unit cap; control: an uncut index writes `PRESENT`.
+
+Nothing deferred. No flaw found in another module.
+
+Size (session_01N9utw85aeGstUGpxK1qCWr): test runs 8, module lines 3122

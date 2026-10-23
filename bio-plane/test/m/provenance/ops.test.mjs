@@ -4,7 +4,8 @@
    arm and the three route arms are `attestation`'s and `provenance-routes`' since N512. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, sha, evidence, V } from "./fixture.mjs";
+import { world, sha, evidence, V, infoMd } from "./fixture.mjs";
+import { PROVENANCE_ACT_CHECKS } from "../../../src/provenance/index.mjs";
 import * as OPS from "../../../src/provenance/ops.mjs";
 
 const { registerAuditOp, provenanceOps } = OPS;
@@ -55,15 +56,15 @@ test("R8, R9: op=registeraudit probes each unresolved row in the working bucket 
 const ops = (w, query = "", body = null, opts) => provenanceOps(w.prov, new URL(`http://do/?${query}`), body, opts);
 const qs = (o) => new URLSearchParams(o).toString();
 
-test("R53: six route arms, each a function of no arguments, keyed by op name; the route arms and op=attest are not this module's", () => {
+test("R53: eight route arms, each a function of no arguments, keyed by op name; the route arms and op=attest are not this module's", () => {
   const w = world();
   const map = ops(w);
-  assert.deepEqual(Object.keys(map).sort(), ["homecensus", "recordcapturedlocator", "registeraudit", "registerholds",
+  assert.deepEqual(Object.keys(map).sort(), ["declareorigin", "homecensus", "origins", "recordcapturedlocator", "registeraudit", "registerholds",
     "testify", "versionchain"]);
   /* N512: `provenancechain`, `provenanceroute` and `provenanceroutes` are provenance-routes' map, and op=attest's
      Worker arm attestation's; this module's ops export the map and op=registeraudit's arm (the attestOp copy was
      deleted in T26, N516). */
-  assert.deepEqual(Object.keys(OPS).sort(), ["provenanceOps", "registerAuditOp"]);
+  assert.deepEqual(Object.keys(OPS).sort(), ["DECLARED_OPS", "provenanceOps", "registerAuditOp"]);
   for (const [k, f] of Object.entries(map)) assert.deepEqual([typeof f, f.length], ["function", 0], k);
   /* Building the map runs nothing. */
   const before = w.snapshot();
@@ -148,4 +149,100 @@ test("R53: recordcapturedlocator takes the listeners' context out of the body an
   assert.deepEqual(ops(w, "", { captureSha: sha("x") }, { observer: "observation-log" }).recordcapturedlocator(), { recorded: false });
   assert.deepEqual(ops(w, "", null, { observer: "observation-log" }).recordcapturedlocator(), { recorded: false });
   assert.equal(w.count("captured_locators"), n);
+});
+
+/* ===================================================================== R64: declareorigin */
+
+test("R64: declareorigin is served as the door calls it: bundleId and system from the body, else the query; the author and viewer from the stamps", () => {
+  const w = world({ now: "2026-09-27T02:00:00.000Z" });
+  w.promoteInfo("INFO-2026-0001-a", { captures: [w.cap("a")] });
+  const stamps = (author, viewer = V("ruth")) => qs({ author, viewer });
+  const first = ops(w, stamps(V("ruth")), { bundleId: "INFO-2026-0001-a", system: "  The  clerk's agenda system " }).declareorigin();
+  assert.deepEqual(first, { ok: true, bundleId: "INFO-2026-0001-a", system: "The clerk's agenda system", by: V("ruth"),
+                            at: "2026-09-27T02:00:00Z", seq: 1 });
+  assert.deepEqual(w.prov.originOf("INFO-2026-0001-a"), { system: "The clerk's agenda system", by: V("ruth"), at: "2026-09-27T02:00:00Z" });
+  /* The query carries the fields when the body does not; a second declaration appends and the latest stands (R30). */
+  w.clock.now = "2026-09-27T03:00:00.000Z";
+  const second = ops(w, qs({ author: V("sam"), viewer: V("sam"), bundleId: "INFO-2026-0001-a", system: "The records portal" }), null).declareorigin();
+  assert.deepEqual([second.ok, second.seq, second.by], [true, 2, V("sam")]);
+  assert.equal(w.count("origin_declarations"), 2, "append-only: the first stays");
+  assert.deepEqual(w.prov.originOf("INFO-2026-0001-a"), { system: "The records portal", by: V("sam"), at: "2026-09-27T03:00:00Z" });
+  /* The author is the stamp, never a field the caller sends: a body's `by` or `author` changes nothing. */
+  const forged = ops(w, stamps(V("ruth")), { bundleId: "INFO-2026-0001-a", system: "Third", by: V("mallory"), author: V("mallory") }).declareorigin();
+  assert.equal(forged.by, V("ruth"));
+});
+
+test("R64: its refusals are R29's, each with its catalogue row where it has one, and a machine author writes nothing (control)", () => {
+  const w = world();
+  w.promoteInfo("INFO-2026-0001-a", { captures: [w.cap("a")] });
+  const call = (body, author = V("ruth"), viewer = V("ruth")) => ops(w, qs({ author, viewer }), body).declareorigin();
+  const row = (r, code) => assert.deepEqual([r.ok, r.reason, r.check, r.translation],
+    [false, code, PROVENANCE_ACT_CHECKS[code].check, PROVENANCE_ACT_CHECKS[code].translation], code);
+  for (const who of ["class:ai", "class:admin", "token:member"]) row(call({ bundleId: "INFO-2026-0001-a", system: "x" }, who), "ORIGIN_NOT_A_MEMBER");
+  row(ops(w, qs({ viewer: V("ruth") }), { bundleId: "INFO-2026-0001-a", system: "x" }).declareorigin(), "ORIGIN_NOT_A_MEMBER");
+  row(call({ system: "x" }), "NO_BUNDLE");
+  row(call(null), "NO_BUNDLE");
+  assert.equal(call({ bundleId: "INFO-2026-0404-x", system: "x" }).reason, "NO_SUCH_BUNDLE");
+  assert.equal(call({ bundleId: "INFO-2026-0001-a", system: "x" }, V("ruth"), "stranger").reason, "NO_SUCH_BUNDLE", "unseen answers as absent");
+  row(call({ bundleId: "INFO-2026-0001-a", system: " " }), "ORIGIN_NO_SYSTEM");
+  row(call({ bundleId: "INFO-2026-0001-a" }), "ORIGIN_NO_SYSTEM");
+  row(call({ bundleId: "INFO-2026-0001-a", system: "x".repeat(201) }), "ORIGIN_NO_SYSTEM");
+  w.record.transact(() => w.record.commit({ bundleId: "INQ-2026-0001-q", type: "inquiry", title: "Q", project: null, snapKey: "q",
+    kind: "promotion", base: "", author: V("r"), writer: null, operation: null,
+    files: [{ path: "bundle.md", text: infoMd("INQ-2026-0001-q"), sha256: sha(infoMd("INQ-2026-0001-q")), bytes: 1 }],
+    state: "open", priorState: null, group: "g", created: "2026-09-27T00:00:00Z", lastUpdated: "2026-09-27T00:00:00Z", criticality: null,
+    at: "2026-09-27T00:00:00Z" }));
+  row(call({ bundleId: "INQ-2026-0001-q", system: "x" }), "ORIGIN_NOT_A_DOCUMENT");
+  assert.equal(w.count("origin_declarations"), 0, "no refusal wrote a declaration");
+  /* Control: the same well-formed call by a member writes. */
+  assert.equal(call({ bundleId: "INFO-2026-0001-a", system: "x" }).ok, true);
+  assert.equal(w.count("origin_declarations"), 1);
+});
+
+/* ===================================================================== R70: origins */
+
+test("R70: origins answers every declaration of a document in seq order {seq, system, by, at}, the first still readable beside the latest", () => {
+  const w = world({ now: "2026-09-27T02:00:00.000Z" });
+  w.promoteInfo("INFO-2026-0001-a", { captures: [w.cap("a")] });
+  const read = (bundleId, viewer = V("ruth")) => ops(w, qs({ viewer }), { bundleId }).origins();
+  /* a document nobody has declared an origin for answers an empty list, not a refusal */
+  assert.deepEqual(read("INFO-2026-0001-a"), { ok: true, bundleId: "INFO-2026-0001-a", origins: [] });
+  ops(w, qs({ author: V("ruth"), viewer: V("ruth") }), { bundleId: "INFO-2026-0001-a", system: "The clerk's agenda system" }).declareorigin();
+  w.clock.now = "2026-09-27T03:00:00.000Z";
+  ops(w, qs({ author: V("sam"), viewer: V("sam") }), { bundleId: "INFO-2026-0001-a", system: "The records portal" }).declareorigin();
+  assert.deepEqual(read("INFO-2026-0001-a"), { ok: true, bundleId: "INFO-2026-0001-a", origins: [
+    { seq: 1, system: "The clerk's agenda system", by: V("ruth"), at: "2026-09-27T02:00:00Z" },
+    { seq: 2, system: "The records portal", by: V("sam"), at: "2026-09-27T03:00:00Z" } ] });
+  /* the standing declaration (R30) is the last of the list */
+  assert.equal(w.prov.originOf("INFO-2026-0001-a").system, "The records portal");
+  /* the bundle id is read from the query when the body names none, as declareorigin's is (R64) */
+  assert.equal(ops(w, qs({ viewer: V("ruth"), bundleId: "INFO-2026-0001-a" }), null).origins().origins.length, 2);
+  /* it writes nothing */
+  const before = w.snapshot();
+  read("INFO-2026-0001-a");
+  assert.deepEqual(w.snapshot(), before);
+});
+
+test("R70: origins refuses as R64 does: no bundle, an unseen or absent one alike, a record that is no document; control: an unseen document is refused as an absent one", () => {
+  const w = world();
+  w.promoteInfo("INFO-2026-0001-a", { captures: [w.cap("a")] });
+  ops(w, qs({ author: V("ruth"), viewer: V("ruth") }), { bundleId: "INFO-2026-0001-a", system: "x" }).declareorigin();
+  const call = (body, viewer = V("ruth")) => ops(w, qs({ viewer }), body).origins();
+  assert.equal(call({}).reason, "NO_BUNDLE");
+  assert.equal(call(null).reason, "NO_BUNDLE");
+  const absent = call({ bundleId: "INFO-2026-0404-x" });
+  const unseen = call({ bundleId: "INFO-2026-0001-a" }, "stranger");
+  assert.deepEqual([absent.ok, absent.reason], [false, "NO_SUCH_BUNDLE"]);
+  assert.deepEqual([unseen.ok, unseen.reason, unseen.detail], [false, "NO_SUCH_BUNDLE", absent.detail], "unseen answers as absent");
+  assert.equal("origins" in unseen, false, "an unseen document's declarations are not read out");
+  assert.equal(ops(w, "", { bundleId: "INFO-2026-0001-a" }).origins().reason, "NO_SUCH_BUNDLE", "no viewer stamped sees nothing");
+  w.record.transact(() => w.record.commit({ bundleId: "INQ-2026-0001-q", type: "inquiry", title: "Q", project: null, snapKey: "q",
+    kind: "promotion", base: "", author: V("r"), writer: null, operation: null,
+    files: [{ path: "bundle.md", text: infoMd("INQ-2026-0001-q"), sha256: sha(infoMd("INQ-2026-0001-q")), bytes: 1 }],
+    state: "open", priorState: null, group: "g", created: "2026-09-27T00:00:00Z", lastUpdated: "2026-09-27T00:00:00Z", criticality: null,
+    at: "2026-09-27T00:00:00Z" }));
+  const notDoc = call({ bundleId: "INQ-2026-0001-q" });
+  assert.deepEqual([notDoc.ok, notDoc.reason, notDoc.check], [false, "ORIGIN_NOT_A_DOCUMENT", PROVENANCE_ACT_CHECKS.ORIGIN_NOT_A_DOCUMENT.check]);
+  /* control: the same call by a viewer who may see the document reads it */
+  assert.equal(call({ bundleId: "INFO-2026-0001-a" }).origins.length, 1);
 });

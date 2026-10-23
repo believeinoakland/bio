@@ -5,7 +5,7 @@ import { seeded, sha, MACHINE, ANN } from "./fixture.mjs";
 import { moneyOps, MONEY_KINDS, PHASES, STAGES, BASES, PRECISIONS, SET_PURPOSES, FUND_TYPES, BALANCE_FAMILIES,
   CONNECTION_WORD } from "../../../src/money/index.mjs";
 
-const OPS = ["moneyrecord", "moneywithdraw", "money", "moneyof", "moneysummable", "moneyreconcile", "moneysetcreate", "moneyset",
+const OPS = ["moneyrecord", "moneywithdraw", "money", "moneyof", "moneysummable", "moneyreconcile", "moneysetcreate", "moneyset", "moneysets",
   "moneysetinclude", "moneysetexclude", "moneysetpropose", "moneyfundtype", "committedagainstpaid", "authoritychain"];
 const url = (q) => new URL(`https://do.invalid/?${new URLSearchParams(q)}`);
 const strip = (x) => JSON.parse(JSON.stringify(x, (k, v) => (k === "fact_id" || k === "at" ? undefined : v)));

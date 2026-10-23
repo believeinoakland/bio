@@ -1,9 +1,12 @@
 /* screens-publish R6 (the published case), R7 (another group's case), R8 and R16 (the docket) and R9 (the doorbell), on
  * interface-shell's served page: the two public pages drawn with no session and no credential, the imported case's
  * recreation and acts, the docket's entries, filing and posting signed with the member's key. */
+import { registerDeclared } from "../../declared-ops.mjs";
+import { registerDeclaredOps } from "../../../src/op-declarations/index.mjs";
+await registerDeclared(new URL("../../../../", import.meta.url).pathname, registerDeclaredOps);
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open, main, text, tipOf, drew, drewIn, day, word, ops, press, fill, last, ok, refused, refusedIn, bytes, keptKey, answerSign, choose, plane, P, C, SHA, E1, B1, DIGEST } from "./fixtures.mjs";
+import { open, main, text, tipOf, drew, drewIn, day, word, ops, press, fill, last, ok, refused, refusedIn, bytes, keptKey, answerSign, choose, plane, PUBLISHED_CASE, P, C, SHA, E1, B1, DIGEST } from "./fixtures.mjs";
 
 const carries = (body, want) => { for (const [k, v] of Object.entries(want)) assert.deepEqual(body[k], v, k); };
 const R = "because";
@@ -42,7 +45,7 @@ test("R6 \"Check the signature\" (verify, the manifest's sha) and \"Read the cas
   assert.ok(drew(q, "screen.published.verify.no"));
 });
 
-const publishedWith = (captures, o = {}) => ({ publishedcase: ok({ ...plane().publishedcase.json.result, captures }), ...o });
+const publishedWith = (captures, o = {}) => ({ publishedcase: ok({ ...PUBLISHED_CASE, captures }), ...o });
 const opens = (p) => main(p).querySelectorAll('button[data-act="publishedcase"]').filter((b) => b.textContent.includes(word("screen.published.evidence.open")));
 
 test("R19 each evidence row with a full SHA-256 opens its bytes through publishedbytes by that hash, as a public op with no Authorization header", async () => {
@@ -107,7 +110,7 @@ test("R19 a refused download says why and saves nothing; an edition with no mani
   await p.settle();
   assert.equal(p.files.length, 0);
   assert.match(text(p), /A part of the case file is missing\./);
-  const q = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { publishedcase: ok({ ...plane().publishedcase.json.result, manifest_sha: "" }) } });
+  const q = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { publishedcase: ok({ ...PUBLISHED_CASE, manifest_sha: "" }) } });
   assert.equal(download(q), undefined);
   const silent = await open(`/app/published/${C}`, { boot: PUBLIC, plane: { publishedbytes: ok(null) } });
   await silent.click(download(silent));
@@ -132,7 +135,7 @@ test("R7 another group's case: each finding recreated, in part or not, read-only
   const r = main(p).querySelectorAll("[data-r]").map((x) => x.getAttribute("data-r"));
   assert.deepEqual(r, ["yes", "part", "no"]);
   for (const k of ["yes", "part", "no"]) assert.ok(drew(p, `screen.imported.result.${k}`), k);
-  assert.deepEqual(ops(p).sort(), ["caseimport", "importaccept", "importflag", "importwatch"]);
+  assert.deepEqual(ops(p).sort(), ["caseimport", "importaccept", "importflag", "importregrade", "importwatch", "rerunstart"]);
   await press(p, "importaccept", { values: { "im-checked": "Each document's hash against theirs.", "im-reason": "It recreated whole." } });
   carries(last(p, "importaccept").body, { import: "IMP-2026-0001", edition: 2, findings: ["FND-W-1"], checked: "Each document's hash against theirs.", reason: "It recreated whole." });
   await press(p, "importflag", { values: { "im-issue": "Their arrears figure double-counts March." }, reason: R });
@@ -159,8 +162,20 @@ test("R8 the docket's entries, each drafted or posted; \"File a docket entry\" w
   assert.ok(t.includes(`${word("screen.docket.kind.edition")} · Edition 2 published, superseding Edition 1`) && drew(p, "screen.docket.posted"));
   assert.ok(t.includes(`${word("screen.docket.kind.court-order")} · Order of 20 November: seal exhibit 4`) && drew(p, "screen.docket.drafted"));
   assert.equal(last(p, "docketprepare").query.entry, "2", "the draft entry is prepared for its post");
-  await press(p, "docketfile", { values: { "dk-kind": "response", "dk-from": "Port of Oakland", "dk-summary": "The Port disputes finding 1.", "dk-proposed": "public", "dk-reason": "It answers a published finding." } });
-  carries(last(p, "docketfile").body, { case: C, kind: "response", from: { kind: "other", name: "Port of Oakland" }, summary: "The Port disputes finding 1.", proposed: "public", reason: "It answers a published finding." });
+  /* B420 2 (DEC-387): the form is drawn whole: the edition it answers (one per ratified edition, the latest first and chosen), the captured
+     document it rests on (the project's captures), and the door to capture it first */
+  assert.equal(last(p, "heldcaptures").query.project, P);
+  const ed = p.doc.getElementById("dk-edition"), cap = p.doc.getElementById("dk-capture");
+  assert.ok(ed && cap, "both choices are drawn");
+  assert.deepEqual([...ed.querySelectorAll("option")].map((o) => o.getAttribute("value")), ["2", "1"], "the latest edition first");
+  assert.equal(ed.value, "2");
+  assert.ok(drew(p, "screen.docket.capture.add") && drew(p, "screen.docket.edition.label") && drew(p, "screen.docket.capture.label"));
+  await press(p, "docketfile", { values: { "dk-kind": "response", "dk-edition": "1", "dk-capture": E1, "dk-from": "Port of Oakland", "dk-summary": "The Port disputes finding 1.", "dk-proposed": "public", "dk-reason": "It answers a published finding." } });
+  carries(last(p, "docketfile").body, { case: C, edition: 1, capture: E1, kind: "response", from: { kind: "other", name: "Port of Oakland" }, summary: "The Port disputes finding 1.", proposed: "public", reason: "It answers a published finding." });
+  /* control: with no document chosen nothing is sent */
+  const q = await open(`/app/docket/${P}/${C}`, { plane: { heldcaptures: ok({ held: [] }) } });
+  await press(q, "docketfile", { values: { "dk-from": "Port of Oakland", "dk-summary": "The Port disputes finding 1.", "dk-reason": "It answers a published finding." } });
+  assert.equal(q.byOp("docketfile").length, 0, "no captured document, nothing sent");
 });
 
 test("R8 R16 \"Post it, signed\": docketStatement in NS_DOCKET through the signer kit, posted with its digest; declined, nothing is sent", async () => {
@@ -235,7 +250,7 @@ test("R9 the knock's refusals are drawn by their words; nothing chosen sends not
    `verify` says whether a hash is published; `publishedcase` read by a finding's pinned hash names its case and finding, and
    answers a file's hash (evidence) `NOT_PUBLISHED`, so the edition's own parts name the finding for a file. */
 const FIND = "FND-2026-0031";
-const EDITION = () => plane().publishedcase.json.result;
+const EDITION = () => PUBLISHED_CASE;
 const checkButton = (p) => main(p).querySelectorAll('button[data-act="verify"]').find((b) => b.getAttribute("data-check") === "1");
 const checkIt = (p, typed) => press(p, "verify", { nth: 1, values: { "pb-sha": typed } });
 const published = (pins, o = {}) => ({

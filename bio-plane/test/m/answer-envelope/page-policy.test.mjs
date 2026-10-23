@@ -212,3 +212,40 @@ test("R6, R5: an HTML body that cannot be read is answered PLANE_INTERNAL_ERROR 
   assert.equal(logged.length, 1);
   assert.equal(JSON.parse(logged[0]).correlation, j.correlation);
 });
+
+/* R6 (fix round 3, C15, P2.4; K4359): the interface page carries no inline script, so its policy names the shell's versioned script by its
+   hash and carries no nonce; other HTML keeps its nonce. */
+import { createHash } from "node:crypto";
+const SHELL_JS = "(function(){ window.cs = 1; })();";
+const HASH = "sha256-" + createHash("sha256").update(SHELL_JS).digest("base64");
+const hashPage = `<!doctype html><html lang="en"><head><link rel="stylesheet" href="/app/assets/civicsmith.css"><style>.cs{margin:0}</style></head><body class="cs"><div id="cs-root"></div><script src="/app/shell-1.js" integrity="${HASH}"></script></body></html>`;
+const HASH_SOURCE = /^'(sha256-[A-Za-z0-9+/]{43}=)'$/;
+
+test("R6 (K4359) a page with no inline script and the script's hash handed in is answered `script-src 'self'` with that hash and no nonce, the bytes of the page unchanged; the script's bytes hash to the policy's hash; no other origin, 'unsafe-inline' or 'unsafe-eval'", async () => {
+  for (let i = 0; i < 2; i++) {
+    const r = await M.withPagePolicy(html(hashPage, { headers: { "cache-control": "no-store" } }), { scriptHashes: [HASH] });
+    assert.equal(r.headers.get("cache-control"), "no-store");
+    const header = r.headers.get("content-security-policy");
+    const p = parse(header);
+    assert.deepEqual(p["script-src"].slice(0, 1), ["'self'"]);
+    const named = p["script-src"].slice(1).map((s) => HASH_SOURCE.exec(s)[1]);
+    assert.deepEqual(named, [HASH]);
+    assert.equal(/nonce/.test(header), false, "no nonce");
+    assert.equal(createHash("sha256").update(SHELL_JS).digest("base64"), named[0].slice(7), "the script's bytes hash to it");
+    assert.equal(await r.text(), hashPage, "the page is byte for byte as shipped");
+    for (const [name, sources] of Object.entries(p)) if (name !== "img-src") assert.equal(sources.some((s) => /unsafe-eval|\*|https?:/.test(s)), false, name);
+    assert.equal(p["script-src"].includes("'unsafe-inline'"), false);
+    for (const d of ["style-src", "font-src", "connect-src", "object-src"]) assert.ok(ownOnly(sourcesFor(p, d)), d);
+  }
+});
+
+test("R6 (K4359) control: another HTML route keeps its nonce; a page that still carries an inline script keeps it even when a hash is handed in; no hashes, or a malformed one, keep it", async () => {
+  const inline = '<!doctype html><script>x()</script>';
+  for (const [page, opts] of [[inline, { scriptHashes: [HASH] }], [hashPage, {}], [hashPage, { scriptHashes: [] }], [hashPage, { scriptHashes: ["sha256-short"] }],
+                              [hashPage, { scriptHashes: [HASH, "nope"] }], [`<!doctype html><script nonce="${M.NONCE_SLOT}" src="/a.js"></script>`, { scriptHashes: [HASH] }]]) {
+    const r = await M.withPagePolicy(html(page), opts);
+    const body = await r.text();
+    const { nonce } = judge(r.headers.get("content-security-policy"), body, "control");
+    assert.ok(nonce);
+  }
+});

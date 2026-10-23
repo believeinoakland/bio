@@ -2443,6 +2443,8 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["id","plan","reason","note"], requires: [["id","plan"],"reason"] } },
   optionadd: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("action-plans.declared.optionadd", "plan-directed: a member adds an option to a plan, keyed by plan; writes an option row"),
     fields: { accepts: ["plan","summary","detail","category","subjects","addressee","dates","tier","lobbying","enforces"], requires: ["plan","summary","category","subjects"] } },
+  optionadopt: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("action-plans.declared.optionadopt", "proposal-directed: a member adopts a proposal as an option, keyed by proposal; at most once"),
+    fields: { accepts: ["proposal","offer","plan","summary","detail","category","subjects","addressee","dates","tier","lobbying","enforces"], requires: [["proposal","offer"]] } },
   optiondispose: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("action-plans.declared.optiondispose", "option-directed: a member disposes of one or more options (open, chosen, declined, done, blocked), keyed by (plan, options); every change kept in the option's history"),
     fields: { accepts: ["plan","options","disposition","reason","reminders"], requires: ["plan","options","disposition"] } },
   scenarioset: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("action-plans.declared.scenarioset", "plan-directed: a member sets one of a plan's scenarios whole, keyed by (plan, scenario); the earlier version kept in history"),

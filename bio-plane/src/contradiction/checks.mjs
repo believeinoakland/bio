@@ -248,4 +248,20 @@ export const CONTRADICTION_CANDIDATE_CHECKS = {
     where: 'src/contradiction/index.mjs #disclosureRefusal > is-disclosure-not-yours',
     translation: word('refusal.DISCLOSURE_NOT_YOURS'),
   },
+  /* R61 (T51 fix round 2; UC-155; DEC-394 (3e)): a member flags two documents as contradicting. */
+  FLAG_NO_PASSAGE: {
+    check: 'C-93.40',
+    where: 'src/contradiction/index.mjs #flagPassage > is-flag-no-passage',
+    translation: localize('contradiction.checks.flag_no_passage', 'Setting two documents side by side as a contradiction names a passage in each, as a document and the part of it. One of them is missing, is not held here, or is not one you can see; which of the two is named. Nothing was written.'),
+  },
+  FLAG_SAME_DOCUMENT: {
+    check: 'C-93.41',
+    where: 'src/contradiction/index.mjs flag > is-flag-same-document',
+    translation: localize('contradiction.checks.flag_same_document', 'A contradiction is between two documents, and both passages are in the same one. Name a passage in a different document. Nothing was written.'),
+  },
+  FLAG_NO_REASON: {
+    check: 'C-93.42',
+    where: 'src/contradiction/index.mjs flag > is-flag-no-reason',
+    translation: localize('contradiction.checks.flag_no_reason', 'Saying two documents contradict is a kept decision, and a kept decision says why. Give the reason in your own words. Nothing was written.'),
+  },
 };

@@ -8,11 +8,12 @@ import { DECLARED_OPS, contradictionOps } from "../../../src/contradiction/index
 import { world, sha, MACHINE } from "./fixture.mjs";
 import { RUN } from "./seed.mjs";
 import { seeded, cand } from "./seed.mjs";
+import { flagWorld, HERE, OTHER, WHY } from "./flag-seed.mjs";
 const sameCode = (x, y) => x && y && x.ok === y.ok && (x.code ?? x.reason) === (y.code ?? y.reason);
 const M1 = "member:m1";
 /* a seeded world with one candidate (and, for a resolution, the question taken up from it); their ids stand for the sample ones */
 const seedEnv = (key, label, takeUp = false) => async () => {
-  const w = seeded();
+  const w = seeded({ strictConclude: takeUp });
   w.id = cand(w, key, label);
   if (takeUp) w.inq = w.c.takeUp({ candidate: w.id, question: "Q?", frame: "a", viewer: M1, author: M1 }).inquiry;
   return w;
@@ -70,7 +71,7 @@ const mk = (op, stamps = {}, setup = null, invoke = null, adapt = null) => async
 
 test("R60 contradiction declares contradictionresolve: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
   await declaredOpHolds({ op: "contradictionresolve", declaration: DECLARED_OPS["contradictionresolve"], call: mk("contradictionresolve", {"viewer":"member:m1","author":"member:m1"}, async () => (seedEnv("K2", "record", true)()), null, (fields, env) => (real(fields, env))),
-    refusedNaming: named({"inquiry":["NOT_A_CONTRADICTION_INQUIRY"],"resolution":[{"code":"BASIS_REFUSED","whyHas":"`resolution`"}],"conclusion":[{"code":"BASIS_REFUSED","whyHas":"non-empty conclusion"}]}, true), values: {"resolution":{"kind":"dissolved","coordinates":["scope"],"qualifiers":{"a":"base","b":"total"}},"conclusion":"two fees"}, same: sameCode });
+    refusedNaming: named({"inquiry":["NOT_A_CONTRADICTION_INQUIRY"],"resolution":[{"code":"BASIS_REFUSED","whyHas":"`resolution`"}],"conclusion":["BAD_READING"]}, true), values: {"resolution":{"kind":"dissolved","coordinates":["scope"],"qualifiers":{"a":"base","b":"total"}},"conclusion":"two fees, two bases"}, same: sameCode });
 });
 
 test("R60 contradiction declares contradictiondismiss: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
@@ -96,4 +97,9 @@ test("R60 contradiction declares contradictionoptin: its requires alone raise no
 test("R60 contradiction declares contradictionrespond: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
   await declaredOpHolds({ op: "contradictionrespond", declaration: DECLARED_OPS["contradictionrespond"], call: mk("contradictionrespond", {"viewer":"member:m2","author":"member:m2"}, async () => (optedIn()), null, (fields, env) => (real(fields, env))),
     refusedNaming: named({"candidate":["NO_CANDIDATE","NO_SUCH_CANDIDATE"],"project":["NO_SUCH_PROJECT"],"text":["RESPONSE_NO_TEXT"]}, true), values: { project: PA, text: "our minutes are the adopted text" }, same: sameCode });
+});
+
+test("R61 contradiction declares contradictionflag as its owner's op: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "contradictionflag", declaration: DECLARED_OPS["contradictionflag"], call: mk("contradictionflag", {"viewer":"member:m1","author":"member:m1"}, async () => flagWorld()),
+    refusedNaming: named({"here":["FLAG_NO_PASSAGE"],"other":["FLAG_NO_PASSAGE"],"reason":["FLAG_NO_REASON"]}, true), values: { here: HERE, other: OTHER, reason: WHY }, same: sameCode });
 });

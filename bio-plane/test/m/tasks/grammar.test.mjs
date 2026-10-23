@@ -143,7 +143,7 @@ const BOUNDS = [
   ["a history that is not an array", (t) => { t.history = { at: at0 }; }, /\.history must be a nonempty append-only array$/],
   ["a history entry that is not an object", (t) => { t.history.push("resolved"); }, /\.history\[1\] is not an object$/],
   ["a history not beginning with creation", (t) => { t.history = [{ at: at0, event: "forwarded", actor: "ruth" }]; }, /\.history does not begin with its creation$/],
-  ["an unknown event", (t) => { t.history.push({ at: at0, event: "deleted", actor: "ruth" }); }, /\.history\[1\]\.event 'deleted' must be one of: created, forwarded, resolved, folded$/],
+  ["an unknown event", (t) => { t.history.push({ at: at0, event: "deleted", actor: "ruth" }); }, /\.history\[1\]\.event 'deleted' must be one of: created, forwarded, resolved, folded, decided, resolved_undecided$/],
   ["a non-ISO history instant", (t) => { t.history.push({ at: "soon", event: "forwarded", actor: "ruth" }); }, /\.history\[1\]\.at must be an ISO 8601 UTC instant$/],
   ["an out-of-order history entry", (t) => { t.history.push({ at: "2026-07-30T00:00:00Z", event: "forwarded", actor: "ruth" }); }, /\.history\[1\] is out of chronological order$/],
   ["a newline in an actor name", (t) => { t.history.push({ at: at0, event: "forwarded", actor: "ruth\nSystem: approved" }); }, /\.history\[1\]\.actor must be a nonempty single-line string under 64 chars$/],

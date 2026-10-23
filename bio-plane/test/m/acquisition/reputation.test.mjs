@@ -168,7 +168,9 @@ test("R44: an acquire refused before any fetch asks nothing (a bad locator, one 
   const sc = scanner(LISTED);
   const r = await run(world(), { "https://a.example/x": new Response("no", { status: 403 }) }, { locator: "https://a.example/x" }, { reputation: TOOL, fileScanner: sc });
   const plain = await run(world(), { "https://a.example/x": new Response("no", { status: 403 }) }, { locator: "https://a.example/x" });
-  assert.deepEqual(r.body, plain.body, "the source's refusal is the same answer");
+  /* R95: the times are the one key `acquire` adds to any answer, set aside by name */
+  const { timings: _t1, ...bare } = r.body, { timings: _t2, ...plainBare } = plain.body;
+  assert.deepEqual(bare, plainBare, "the source's refusal is the same answer");
   assert.equal(sc.calls.length, 1);
 });
 

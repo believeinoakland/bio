@@ -2,10 +2,12 @@
    compares each op request's field names with the `fields` its owner declares for that op, throws `FieldMismatch` for a field
    the op does not accept or a required one missing (the shell shows "no answer" and the test that pressed the act fails), lets an
    op with no declaration through and counts it, and prints `declared N of M ops` over every act of the nine screen modules. */
+import "./register.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { boot, FieldMismatch, fieldMismatches, collectOwnerRows, collectedDuplicates, undeclaredOps } from "./harness.mjs";
 import { browserActs } from "../../../src/interface-shell/index.mjs";
+import { OPS } from "../../../src/op-declarations/index.mjs";
 
 /* a stand-in screen on a real registry id whose one act, `promote` (it runs on press), sends the body its button carries */
 const SENDER = {
@@ -117,4 +119,23 @@ test("R104 B18 the reason the shell adds to a Reasoned act is a shell mark, not 
   await page.click(page.root().querySelector('[data-shell="reason-send"]'));
   assert.equal(page.byOp("memberadd").length, 1);
   assert.equal(page.byOp("memberadd")[0].body.reason, "because");
+});
+
+test("R104 B19 control: against the owners' real declarations a stand-in sending an undeclared field still fails the guard, and one sending what the owner declares passes", async () => {
+  const bad = { id: "doorbell", words: [], reads: () => ({}), acts: [{ op: "knock", send: () => ({ body: { text: "a memo" } }) }], render: (cs) => cs.act("knock") };
+  const good = { ...bad, acts: [{ op: "knock", send: () => ({ body: { content: "a memo" } }) }] };
+  const a = await boot({ screens: [bad], path: "/app/doorbell", session: null });
+  await assert.rejects(() => a.click('button[data-act="knock"]'), (e) => e instanceof FieldMismatch && e.op === "knock" && e.mismatches.some((m) => m.kind === "unknown" && m.field === "text"));
+  const b = await boot({ screens: [good], path: "/app/doorbell", session: null });
+  await b.click('button[data-act="knock"]');
+  assert.equal(b.byOp("knock").length, 1);
+});
+
+test("R104 the harness registers every owner's declarations through test-support's registerDeclared (K4245), so the real SCREENS compose over the tables as the plane builds them: every op an owner declares is in OPS; control: an op nobody declares is not", () => {
+  const rows = collectOwnerRows();
+  const declared = Object.keys(rows);
+  assert.ok(declared.length > 0, "owners declare ops");
+  const missing = declared.filter((op) => !Object.hasOwn(OPS, op));
+  assert.deepEqual(missing, [], "every declared op is served by OPS");
+  assert.ok(!Object.hasOwn(OPS, "nonesuchop"));
 });

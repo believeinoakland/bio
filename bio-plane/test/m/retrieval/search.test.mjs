@@ -27,7 +27,7 @@ test("R6: mode page (default), ids or count; the answer carries query, gate {sco
   assert.equal(s.gate.applied, 1 + 1 + 1, "count, page and the facet scan each ran through the gate");
   assert.deepEqual(s.hits.map((h) => h.bundle_id).sort(), ["INFO-1", "INFO-2"]);
   for (const h of s.hits) {
-    assert.deepEqual(Object.keys(h), [...PROVENANCE_COLS.map((c) => String(c).replace(/^b\./, "").split(/\s+AS\s+/i).pop()), "snippet", "snippet_from"]);   /* query-language R14/R33 (T50): the page shape also carries snippet_from */
+    assert.deepEqual(Object.keys(h), [...PROVENANCE_COLS.map((c) => String(c).replace(/^b\./, "").split(/\s+AS\s+/i).pop()), "snippet", "snippet_from", "document"]);   /* query-language R14/R33 (T50): the page shape also carries snippet_from; R92: and the hit's document */
     assert.equal(typeof h.snippet, "string");
     assert.equal(h.snippet_from, "text");
     assert.equal(Object.keys(h).some((k) => /score|rank|bm25/i.test(k)), false, "no score is published");

@@ -33,11 +33,12 @@ const get = async (q, token = null) => {
   return { status: r.status, body: await r.json() };
 };
 
-test("R6: the Worker's module exports `default { fetch }` and `Store`, and nothing else", () => {
+test("R6 R79: the Worker's module exports `default { fetch, scheduled }` and `Store`, and nothing else", () => {
   assert.deepEqual(Object.keys(entry).sort(), ["Store", "default"]);
   assert.equal(entry.Store, PlaneStore, "the class is R1's");
-  assert.deepEqual(Object.keys(entry.default), ["fetch"]);
+  assert.deepEqual(Object.keys(entry.default), ["fetch", "scheduled"]);
   assert.equal(typeof entry.default.fetch, "function");
+  assert.equal(typeof entry.default.scheduled, "function", "the watchdog's cron (R79)");
   assert.equal(entry.default.fetch.limits, PLANE_LIMITS, "the fetch is control-plane's door (`makeFetch`)");
 });
 

@@ -1,6 +1,6 @@
 # action-holds (T51)
 
-**Status** · session_01PfgbWdpc9FTqQ5aXw1t7zj · depth 2 · COMPLETE · handled B1
+**Status** · session_01GPpK8aEgiACMQLKJc5vFkV · depth 2 · COMPLETE · handled B3
 
 ## Completion
 
@@ -26,3 +26,53 @@ Size (session_01PfgbWdpc9FTqQ5aXw1t7zj): test runs 14, module lines 1251
 ## J1 · COMPLETE
 
 T51-90 applied: R18 (hold on every pressureFor row; facts/label/facts_why with an action), R19 (op=holdsdue; holdsOf {docket_entry}), the R106 reds green, words 0 findings. Two readings and two cross-module findings (op-declarations: no spec for holdsdue, no op serving holdsOf) are in my record. Tests 44 pass; checks clean.
+
+## Completion (FR-60, K4206; B2 START, B3 CHANGE)
+
+**Entries applied (K4206, one entry).**
+- `DECLARED_OPS` (`bio-plane/src/action-holds/index.mjs`) gains `actionpressure` and `pressurerecord`, beside the three the declaration pass declared (`actionhold`, `actionholdrelease`, `holdnoticesent`), which stand unchanged. The pass left these two to judgment because a mark is `pressure` or the pair `pressure_kind`/`pressure_note`; the judgment is in the fields below.
+- Rows copied, not chosen: `actionpressure` classes and mutating from `op-declarations` (admin, member, probe; mutating); `pressurerecord` classes and machine classes from `holdnoticesent`'s row, the family's actor for both being the member (`op-declarations/t45.mjs`); weight `undetermined` for both, their `op-grades` ground; descriptions the registry keys `act.actionpressure.does` and `act.pressurerecord.does` (held by `setup-words`).
+- Fields, read from the arms whole. `actionpressure` accepts `target, ord, pressure, pressure_kind, pressure_note` and requires `target, ord` and one of `pressure | pressure_kind`. `pressurerecord` accepts `project, pressure, pressure_kind, pressure_note, artifact_sha, account, at` and requires `project, at`, one of `account | artifact_sha`, and one of `pressure | pressure_kind`.
+- The mark: a missing or malformed mark is refused `PRESSURE_REFUSED`, R1's shape refusal, which both ops share on purpose; it names the mark by its code, so `requires` lists the alternatives and nothing finer. The capture-or-account refusal is `action-records` R16's (`CAPTURE_AND_TESTIMONY` / `NEITHER_CAPTURE_NOR_TESTIMONY`) for both alternatives, as R20 states.
+- P8 fix in the arm: `actionpressure` with no `ord` was refused `PRESSURE_NO_ENTRY` without naming `ord`. It now carries `field: "ord"` when `ord` is absent (R21). The code, the detail and every other refusal are unchanged; with `ord` the same call marks the entry.
+- Requirements (`build/requirements/action-holds.md`): R20 amended to the five ops and the alternatives; R21 new. Both are named by tests, so their not-yet-met marks are removed.
+
+**Tests (declared-ops.test.mjs).** Written first and seen failing: `actionpressure` and `pressurerecord` had no `DECLARED_OPS` row (the helper refused "no fields.accepts and fields.requires arrays"); the R21 test failed on `field`. Now: R20 for `actionpressure` and `pressurerecord` (requires alone, each missing one named, a field outside accepts), and R21 with its control (no `ord` names `ord`; `ord: 0` marks the entry). 6 of 6 pass.
+
+**Ran.**
+- `node --test test/m/action-holds/`: 50 pass, 0 fail (44 before, plus the 6).
+- Dependents (`node --test` on each module's test directory): filings 154 pass, 0 fail; action-producers 53 pass, 0 fail; plan-work 51 pass, 0 fail; op-declarations 237 pass, 5 fail; affordances 279 pass, 1 fail; screens-action 133 pass, 1 fail. None of the failures names an action-holds op: they are case-import's and wizard-scripts' rows (op-declarations R14, R16, R19, R51, R73; affordances and screens-action on `case-import`'s ops and `writinghelp` missing from the plan screen's acts). Those are other modules' and are reported to BOB in `REPORT`.
+- Checks from the process repository: `checks/run.mjs /home/user/bio`: format 0 failures; architecture 0 failures; coverage has 5 failures, none in action-holds (agent-harness, agent-runner, installer-steps, journey-check, link-sweep); words: 16 failures, none in action-holds; `checks/coverage.mjs … action-holds`: 21 of 21 live ids named; `checks/ownership.mjs … action-holds tranche/T51 job/T51/action-holds`: 1 failure, `build/requirements/action-holds.md`, outside the module's paths; B3 accepts that one file's listing at this merge (the requirement lines are written there, as B3 asks). The module's code and tests are inside its paths.
+
+**Deferred.** None.
+
+**Found in other modules.** (a) `wizard-scripts`: `writinghelp` is missing from the plan screen's acts list (screens-action, interface-shell R21); a declaration owner question for BOB. (b) `case-import`'s op map: its ops' spec and table checks fail in op-declarations and affordances (R14, R16, R19, R51, R73 in op-declarations). Not this module's.
+
+**Words.** No new sentence: the descriptions are keys, the refusal adds a field, no detail changed.
+
+**Size.** Module lines: `bio-plane/src/action-holds/*.mjs`, 1267 lines (wc -l).
+
+Size (session_01GPpK8aEgiACMQLKJc5vFkV): test runs 16, module lines 1267
+
+## J2 · REPORT
+
+Found in other modules while running FR-60 (action-holds), none changed by this job:
+(a) wizard-scripts: `writinghelp` is missing from the plan screen's acts list (screens-action test "R1–R6 (interface-shell R21, R38)"). A declaration owner question for BOB.
+(b) case-import: its op map's spec and table checks fail in op-declarations (R14, R16, R19, R51, R73) and affordances (R1 R4 R12 R19 R24).
+(c) Repository-wide checks (checks/run.mjs): coverage has 5 failures (agent-harness R17, agent-runner R37 R38 R40, installer-steps R26 R31, journey-check R19, link-sweep R13 R14 R15); words has 16 failures (inline in strength/method.mjs:349; testcopy in op-grades). None names action-holds.
+
+## J3 · COMPLETE
+
+FR-60 (K4206) applied and pushed as 9f1e6b9897 on job/T51/action-holds.
+- DECLARED_OPS gains actionpressure and pressurerecord (the two the pass left to judgment); the three the pass declared stand.
+- The arm's PRESSURE_NO_ENTRY refusal names ord (field "ord") when ord is absent (R21, P8). Behaviour otherwise unchanged.
+- Requirements: R20 amended to five ops and the alternatives; R21 new. Both named by tests and marks removed.
+- Tests: declared-ops.test.mjs, 6 of 6 pass; written first and seen failing. Module suite 50 pass, 0 fail.
+- Dependents: filings, action-producers, plan-work pass; op-declarations, affordances, screens-action have failures in case-import / wizard-scripts ids only (see REPORT).
+- Checks: format, architecture, ownership, coverage and words show 0 findings for action-holds.
+- Readings: the mark is R1's shape refusal (PRESSURE_REFUSED) for both ops, deliberately uniform, so requires lists the alternatives. The capture-or-account refusal is action-records R16's for both alternatives.
+- Commit attribution: the Claude-Session line only; no model identifier, per the system rule on commit messages.
+Size line and full record are in build/jobs/T51/action-holds.md.
+
+---
+_Generated by [Claude Code](https://claude.ai/code)_

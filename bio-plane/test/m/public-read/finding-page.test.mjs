@@ -62,8 +62,8 @@ test("R39 the finding's entry names its identity and signing, its frozen pair wi
   const f = c.findings.find((x) => x.bundle_id === F);
   assert.deepEqual([f.title, f.edition, f.bundle_sha, f.version_sha, f.role, f.ratified_at, f.gate_version],
                    ["Finding F", 1, pin, pin, "load_bearing", T1, "plane-gate/test"]);
-  assert.deepEqual(f.attestor, { member: "olive", key_b64: KEY });
-  assert.deepEqual(f.delivered_by, { kind: "member", member: "olive" }, "the deliverer is a fact apart from the signer (R12)");
+  assert.deepEqual(f.attestor, { member: "h_olive", key_b64: KEY }, "the signer, named by her handle (R41)");
+  assert.deepEqual(f.delivered_by, { kind: "member", member: "h_olive" }, "the deliverer is a fact apart from the signer (R12)");
   assert.deepEqual(f.strength.map((a) => [a.axis, a.grade]), [["capture", "B"], ["connection", "C"]], "its frozen pair, per axis");
   assert.ok(f.standing != null && typeof f.standing === "object", "its standing (R22)");
   assert.equal(f.tensions, null, "its tensions as R3 states them: none disclosed in a /5 document");
@@ -121,7 +121,7 @@ test("R39 each leg of the signed bytes is a basis entry: served only where its t
   const f = (await (await call(w, env, { id: F })).json()).findings[0];
   assert.deepEqual(f.basis.map((l) => [l.target, l.served]), [[DOC_WORK, false], [DOC_PUB, true]]);
   for (const l of f.basis)
-    assert.deepEqual(Object.keys(l).sort(), ["cited_edition", "detail", "grade", "grade_axis", "grade_source", "role", "served", "target", "target_edition"]);
+    assert.deepEqual(Object.keys(l).sort(), ["cited_edition", "detail", "document", "grade", "grade_axis", "grade_source", "role", "served", "target", "target_edition"]);
   const [named, served] = f.basis;
   assert.equal(named.cited_edition, null, "nothing of a named leg is handed over");
   assert.deepEqual(Object.keys(served.cited_edition).sort(), ["bundle_sha", "capture", "case_id", "connection", "edition", "ratified_at", "title"]);

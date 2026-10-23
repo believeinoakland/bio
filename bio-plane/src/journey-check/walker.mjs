@@ -48,7 +48,7 @@ export function documentKind(html) {
 /* R8 (D29): the refusals an answer carries, anywhere in it: `[{code, how, at}]`, `at` the path to the object that
    carries it ("" at the top). A refusal is an object holding `ok: false`, `started: false`, `dispatched: false` or
    `found: false`, or a non-empty `withheld`; its code is its own `code` or `reason`, else what it says. Each object
-   counts once, under its first sign. */
+   counts once, under its first sign. A reading's own `found` (whether the reader found entities) is not one (K4486). */
 export const REFUSAL_FLAGS = Object.freeze(["ok", "started", "dispatched", "found"]);
 export function refusalsIn(body) {
   const out = [];
@@ -57,7 +57,10 @@ export function refusalsIn(body) {
     if (!v || typeof v !== "object" || depth > 64 || seen.has(v)) return;
     seen.add(v);
     if (Array.isArray(v)) { v.forEach((x, i) => visit(x, `${at}[${i}]`, depth + 1)); return; }
-    const flag = REFUSAL_FLAGS.find((k) => v[k] === false);
+    /* K4486: inside a reading (`{content_type, reader_version, found, entities, …}`), `found` is the reader's statement of whether it
+       found entities: data, never a refusal. Elsewhere `found: false` says the op found no subject. */
+    const reading = v.reader_version !== undefined && Array.isArray(v.entities);
+    const flag = REFUSAL_FLAGS.find((k) => v[k] === false && !(reading && k === "found"));
     const w = v.withheld;
     const withheld = w === true || (Array.isArray(w) && w.length > 0) || (w && typeof w === "object" && !Array.isArray(w) && Object.keys(w).length > 0)
       || (typeof w === "string" && w.length > 0);
@@ -114,11 +117,17 @@ export class Walk {
   /* Watch one page (each browser context's pages are watched as they open). */
   watch(page) {
     page.on("pageerror", (e) => this.fail(FAIL.SCRIPT, `${this.redact(page.url())}: ${e.message}`));
-    page.on("response", (res) => this.pending.push(this.#onResponse(res).catch(() => {})));
+    /* answers are judged in the order they arrive: a reading's pending state (`#pendingReadings`) is learned from the answer before it */
+    page.on("response", (res) => { const p = this.#answers.then(() => this.#onResponse(res)).catch(() => {}); this.#answers = p; this.pending.push(p); });
     /* JOURNEY_DEBUG=1 prints each request's method, address and status, never a body or a header */
     if (process.env.JOURNEY_DEBUG) page.on("response", (res) => process.stderr.write(this.redact(`${res.status()} ${res.request().method()} ${res.url().replace(/#.*$/, "")}`) + "\n"));
     return page;
   }
+
+  /* K4473 (RC-R1): the digests of captures the walk made whose answer stated the reading pending (`reading_pending: true`), until a
+     reading of the digest is read; `op=reading`'s `found: false` for one of these is not a refusal. */
+  #pendingReadings = new Set();
+  #answers = Promise.resolve();
 
   async #onResponse(res) {
     const url = new URL(res.url());
@@ -135,7 +144,16 @@ export class Walk {
     if (url.searchParams.get("op") === "whoami" && body && body.ok === true && body.result && body.result.session) this.whoami = body.result;
     /* R8: every refusal the answer carries, at any depth, whatever its status. One the step expects is excused by its
        code wherever it sits, and excuses the answer's status; each other is one failure, naming where it sits. */
-    const refusals = refusalsIn(body);
+    const op = url.searchParams.get("op");
+    const inner = body && typeof body === "object" && body.result && typeof body.result === "object" ? body.result : body;
+    if (inner && inner.reading_pending === true) {
+      const sha = inner.document?.capture?.sha256 ?? inner.capture?.sha256;
+      if (typeof sha === "string" && /^[0-9a-f]{64}$/.test(sha)) this.#pendingReadings.add(sha);
+    }
+    const readSha = op === "reading" ? url.searchParams.get("sha256") : null;
+    const pendingRead = readSha !== null && this.#pendingReadings.has(readSha);
+    if (pendingRead && inner && (inner.found === true || inner.reading?.found === true)) this.#pendingReadings.delete(readSha);
+    const refusals = refusalsIn(body).filter((r) => !(pendingRead && r.how === "found: false"));
     const matches = (e, code) => (e instanceof RegExp ? e.test(code) : e === code);
     /* an expectation is a code (a string or a pattern), or `{at, code}`: that code where its path matches `at` */
     const expected = (r) => expect.some((e) => (e && typeof e === "object" && !(e instanceof RegExp)

@@ -98,13 +98,13 @@ test("R2, R4 (K1210; scheduler R5): the scheduler's `gathering-sweep` owner reac
 
 test("R5 (N506; link-sweep R9): `op=sweeps` is link-sweep's in the route map, at monitoring's place, and answers through control-plane's door what link-sweep's own map answers called directly", async () => {
   const u = new URL("http://do/sweeps?viewer=class:admin");
-  assert.deepEqual(Object.keys(linkSweepOps(null, u)), ["sweeps"]);
+  assert.deepEqual(Object.keys(linkSweepOps(null, u)), ["sweeps", "sweepset", "sweepratify"]);
   assert.equal(Object.hasOwn(monitoringOps(null, u, null), "sweeps"), false, "monitoring's map no longer holds it");
   const x = await store(), twin = await store();
   const map = Object.keys(x.s.routes(u, null));
   const i = (op) => map.indexOf(op);
   assert.ok(i("sweeps") !== -1, "the route map holds sweeps");
-  assert.equal(i("addressfrequencyset") + 1, i("sweeps"), "directly after monitoring's ops");
+  assert.equal(i(Object.keys(monitoringOps(null, u, null)).at(-1)) + 1, i("sweeps"), "directly after monitoring's ops");
   const res = await json(await x.fetch("/sweeps?viewer=class:admin"));
   const direct = JSON.parse(JSON.stringify(await linkSweepOps(linkSweepOf(twin.ctx), u).sweeps()));
   assert.equal(res.status, 200);

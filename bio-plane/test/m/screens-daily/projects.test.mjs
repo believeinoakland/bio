@@ -9,9 +9,9 @@ import { open, ok, refused, text, ops, button, press, beside, last, main, settle
 const LIST = ok({ ok: true, count: 2, limit: 200, truncated: false, projects: [
   { id: "PROJ-1", name: "The Coliseum lease", stage: "investigating", owner: { member: "M-1", handle: "dev" },
     members: [{ member: "M-1", handle: "dev" }, { member: "M-2", handle: "rosa" }, { member: "M-3", handle: "teo" }],
-    activity: [3, 5, 4, 6, 8, 7, 9, 11], lastChange: "2026-10-12T15:00:00Z" },
+    activity: [3, 5, 4, 6, 8, 7, 9, 11], lastChange: "2026-10-12T15:00:00Z", question_count: 2 },
   { id: "PROJ-2", name: "Sewer fund transfers", stage: "closed", owner: null, members: [{ member: "M-4", handle: "ana" }],
-    activity: [0, 0, 0, 0, 0, 0, 0, 0], lastChange: null },
+    activity: [0, 0, 0, 0, 0, 0, 0, 0], lastChange: null, question_count: 0 },
 ] });
 const QUESTIONS = (req) => ok({ ok: true, project: req.query.project, items: req.query.project === "PROJ-1" ? [{ inquiry: "INQ-1" }, { inquiry: "INQ-2" }] : [], cursor: null });
 const PLANE = { projectlist: LIST, projectquestions: QUESTIONS };
@@ -32,21 +32,15 @@ test("R10: projects reads projectlist and draws each project as a reference open
   assert.equal(ladders[1].querySelector("[aria-current]").textContent, word("screen.projects.stage.closed"));
 });
 
-test("R10, R25: each project's question count from projectquestions, paged to its end, picking the singular or plural key", async () => {
-  const p = await open("/app/projects", { ...PLANE, projectquestions: (req) => ok({ ok: true, items: [{ inquiry: "Q" }], cursor: req.query.after ? null : "Q" }) });
+test("R10, R25 (fix round 3, C14): each project's question count is its roster row's, picking the singular or plural key; none is read project by project", async () => {
+  const p = await open("/app/projects", PLANE);
   await settle();
-  assert.deepEqual(p.byOp("projectquestions").map((r) => `${r.query.project}:${r.query.after || ""}`).sort(), ["PROJ-1:", "PROJ-1:Q", "PROJ-2:", "PROJ-2:Q"]);
-  assert.ok(text(p, rows(p)[0]).includes(word("screen.projects.questions.many", { n: "2" })));
-  const one = await open("/app/projects", PLANE);
-  await settle();
-  assert.ok(text(one, rows(one)[0]).includes("The Coliseum lease" + word("screen.projects.questions.many", { n: "2" })));
-  assert.doesNotMatch(text(one, rows(one)[1]), /\d+ questions?/, "R21: no count at zero");
-  const single = await open("/app/projects", { ...PLANE, projectquestions: () => ok({ ok: true, items: [{ inquiry: "Q" }], cursor: null }) });
+  assert.equal(p.byOp("projectquestions").length, 0, "no per-project read (project-roster R42)");
+  assert.ok(text(p, rows(p)[0]).includes("The Coliseum lease" + word("screen.projects.questions.many", { n: "2" })));
+  assert.doesNotMatch(text(p, rows(p)[1]), /\d+ questions?/, "R21: no count at zero");
+  const single = await open("/app/projects", { projectlist: ok({ ok: true, projects: [{ id: "PROJ-1", name: "Solo", stage: "forming", question_count: 1 }] }) });
   await settle();
   assert.ok(text(single, rows(single)[0]).includes(word("screen.projects.questions.one")), "one question: the singular key");
-  const failed = await open("/app/projects", { ...PLANE, projectquestions: refused("STORE_DID_NOT_ANSWER", null, 502) });
-  await settle();
-  assert.equal(main(failed).querySelectorAll('.cs-row [data-state="failed"]').length, 2, "a failed count is drawn failed, never as none");
 });
 
 test("R10 (DEC-214 (3); project-roster R28): each row draws its members (cs.initials), its activity over eight weeks (cs.activity) with the word the bars say, and its last change", async () => {
@@ -80,9 +74,9 @@ test("R10 (DEC-201 (8); project-roster R27): each row draws its owner by handle,
   assert.ok(text(p, a).includes(word("screen.projects.owner", { handle: "" }).trim() + " dev") || text(p, a).includes(word("screen.projects.owner", { handle: "dev" })));
   assert.ok(a.querySelectorAll(".cs-card, a.cs-ref").some((e) => e.textContent === "dev"));
   assert.ok(text(p, b).includes(word("screen.projects.owner.none")));
-  // An owner answered with no handle (project-roster R27's form when the handle is unknown) is drawn by its member id.
+  // An owner answered with no handle (project-roster R27's form when the handle is unknown) is named as R85 (C94) says: never by her member id.
   const nohandle = await open("/app/projects", { ...PLANE, projectlist: ok({ ok: true, projects: [{ id: "PROJ-8", name: "N", stage: "forming", owner: { member: "M-7", handle: null } }] }) });
-  assert.ok(text(nohandle, rows(nohandle)[0]).includes("M-7"));
+  assert.ok(!text(nohandle, rows(nohandle)[0]).includes("M-7") && text(nohandle, rows(nohandle)[0]).includes(word("shell.card.member")));
   assert.ok(!text(nohandle).includes(word("screen.projects.owner.none")));
   // Control: a row answering no owner says nothing of one.
   const bare = await open("/app/projects", { ...PLANE, projectlist: ok({ ok: true, projects: [{ id: "PROJ-9", name: "Bare", stage: "forming" }] }) });
@@ -129,7 +123,7 @@ test("R10, R25: \"Start a project\" sends promote with the member's title, writt
   const b = await press(p, "promote", { values: { "projects-title": " " } });
   assert.equal(p.byOp("promote").length, 0);
   assert.equal(beside(p, b), word("screen.projects.title.needed"));
-  await press(p, "promote", { values: { "projects-title": " Park bond oversight " } });
+  await press(p, "promote", { values: { "projects-visibility-hidden": true, "projects-title": " Park bond oversight " } });
   const body = last(p, "promote").body;
   assert.deepEqual([body.base, body.meta.object_type, body.meta.title, body.meta.current_state], [null, "project", "Park bond oversight", "forming"]);
   assert.match(body.files[0].text, /^---\nobject_type: project\ntitle: "Park bond oversight"\nobjective: "Park bond oversight"\ncurrent_state: forming\n/);
@@ -138,22 +132,26 @@ test("R10, R25: \"Start a project\" sends promote with the member's title, writt
   assert.deepEqual(ops(await open("/app/projects", { ...PLANE, whoami: ok({ ...MEMBER, capabilities: [] }) })), [], "drawn only to a session that may contribute");
 });
 
-test("R30: the form asks the title and who can find it; hidden is preselected and an untouched form sends it; choosing findable sends discoverable; refusals by their words", async () => {
+test("R30, R80: the form asks the title and who can find it; neither is preselected, none chosen sends nothing; choosing findable sends discoverable; refusals by their words", async () => {
   const p = await open("/app/projects", { ...PLANE, ...CREATOR, promote: ok({ ok: true, bundleId: "PROJ-77" }) });
   const start = main(p).querySelector('details[data-start="project"]');
   assert.ok(start.querySelector("label[for=projects-title]").textContent.includes(word("project.start.title")));
   assert.ok(start.textContent.includes(word("project.start.title.help")) && start.textContent.includes(word("project.visibility.start.later")));
   const sel = start.querySelector("#projects-visibility");
-  assert.deepEqual(sel.querySelectorAll("option").map((o) => o.textContent), [word("project.visibility.start.hidden"), word("project.visibility.start.discoverable")]);
-  assert.equal(sel.value, "hidden");
-  await press(p, "promote", { values: { "projects-title": "Parks" } });
-  assert.equal(last(p, "promote").body.visibility, "hidden", "control: an untouched form sends hidden");
+  assert.deepEqual(sel.querySelectorAll("input[type=radio]").map((o) => o.parentNode.textContent.trim()), [word("project.visibility.start.hidden"), word("project.visibility.start.discoverable")]);
+  assert.equal(sel.querySelectorAll("input[type=radio]").filter((o) => o.checked).length, 0, "R80: nothing is chosen for the member");
+  const refusedBtn = await press(p, "promote", { values: { "projects-title": "Parks" } });
+  assert.equal(p.byOp("promote").length, 0, "R80: Start with neither chosen sends nothing");
+  assert.ok(beside(p, refusedBtn).includes(word("project.visibility.start.required")), "R80: refused in place with the required key");
   const q = await open("/app/projects", { ...PLANE, ...CREATOR, promote: ok({ ok: true, bundleId: "PROJ-78" }) });
-  await press(q, "promote", { values: { "projects-title": "Parks", "projects-visibility": "discoverable" } });
+  await press(q, "promote", { values: { "projects-title": "Parks", "projects-visibility-discoverable": true } });
   assert.equal(last(q, "promote").body.visibility, "discoverable");
+  const h = await open("/app/projects", { ...PLANE, ...CREATOR, promote: ok({ ok: true, bundleId: "PROJ-79" }) });
+  await press(h, "promote", { values: { "projects-title": "Parks", "projects-visibility-hidden": true } });
+  assert.equal(last(h, "promote").body.visibility, "hidden", "control: hidden, once chosen, is sent");
   for (const code of ["PROJECT_VISIBILITY_NO_OWNER", "NAME_TAKEN"]) {
     const t = await open("/app/projects", { ...PLANE, ...CREATOR, promote: refused(code, null, 409) });
-    const c = await press(t, "promote", { values: { "projects-title": "Parks" } });
+    const c = await press(t, "promote", { values: { "projects-title": "Parks", "projects-visibility-hidden": true } });
     assert.equal(beside(t, c).replace(/\s+/g, " "), word(`refusal.${code}`), code);
   }
 });
@@ -246,4 +244,14 @@ test("R63: projects draws a search by name and a filter (all, in, own), narrowin
   assert.ok(text(p).includes(word("projects.empty.sub")), "a search finding none says so with the empty-list sentence");
   assert.deepEqual(p.requests.slice(before).filter((r) => r.op === "projectlist"), [], "it sends no read of the list again and no act");
   assert.equal(p.requests.slice(before).filter((r) => r.method !== "GET").length, 0);
+});
+
+test("R72: a project whose row says rescue_open is marked and opens the project; a row without is unchanged", async () => {
+  const stranded = { id: "PROJ-9", name: "Library hours", rescue_open: true, stage: null, owner: null, participation: null, scope: null, lastChange: null, members: [], activity: [0, 0, 0, 0, 0, 0, 0, 0], mine: { in: false, owner: false } };
+  const plane = { projectlist: ok({ ok: true, count: 2, limit: 200, truncated: false, projects: [stranded, { id: "PROJ-1", name: "The Coliseum lease", stage: "investigating", rescue_open: false }] }), projectquestions: QUESTIONS };
+  const p = await open("/app/projects", plane, { screens: withScreens("project") });
+  const rowOf = (name) => rows(p).find((r) => r.querySelectorAll("a.cs-ref").some((a) => a.textContent === name));
+  assert.equal(rowOf("Library hours").querySelectorAll("a.cs-ref").find((a) => a.textContent === "Library hours").getAttribute("href"), "/app/project/PROJ-9", "the row opens the project, where the rescue is");
+  assert.ok(text(p, rowOf("Library hours")).includes(word("project.rescue.title.nodate")), "the stranded project is marked");
+  assert.ok(!text(p, rowOf("The Coliseum lease")).includes(word("project.rescue.title.nodate")), "control: a row without rescue_open is not marked");
 });

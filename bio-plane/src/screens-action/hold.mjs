@@ -39,7 +39,8 @@ export const hold = Object.freeze({
       if (ar.pressure) return { project: m.project, from: { pressure: ar.pressure } };
       return null;
     },
-    who: function (by) { const b = by && typeof by === "object" ? by.handle || by.member : by; return String(b || "").replace(/^member:/, ""); },
+    // C94 (R56): the member who marked it, by her handle
+    who: function (cs, by) { const b = by && typeof by === "object" ? by.handle || by.member : by; const id = String(b || "").replace(/^member:/, ""); return id ? cs.memberName(id) : ""; },
   },
 
   render: function (cs, view) {
@@ -57,9 +58,9 @@ export const hold = Object.freeze({
       // where the pressure arrived: a reply, a docket entry, pressure recorded outside any action, and the counsel matters
       const line = function (m) {
         const ar = m.arrived || {};
-        const first = ar.action ? cs.w("screen.hold.reply") : ar.docket_entry ? cs.w("screen.hold.marked", { member: P.who(m.marked_by) }) : cs.w("screen.hold.outside");
+        const first = ar.action ? cs.w("screen.hold.reply") : ar.docket_entry ? cs.w("screen.hold.marked", { member: P.who(cs, m.marked_by) }) : cs.w("screen.hold.outside");
         return cs.row("", first + (m.note ? " · " + cs.esc(m.note) : "") + '<span class="meta">' + (m.marked_at ? cs.date(m.marked_at) + " · " : "")
-          + (ar.action ? cs.w("screen.hold.marked", { member: P.who(m.marked_by) }) + " · " : "") + cs.w("screen.hold.nohold") + "</span>", "", "");
+          + (ar.action ? cs.w("screen.hold.marked", { member: P.who(cs, m.marked_by) }) + " · " : "") + cs.w("screen.hold.nohold") + "</span>", "", "");
       };
       const counselLine = function (p) {
         return cs.row("", cs.esc(p.name || p.id) + '<span class="meta">' + cs.w("screen.hold.counsel.row") + "</span>", "", "");

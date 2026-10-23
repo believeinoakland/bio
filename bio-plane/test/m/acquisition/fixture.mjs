@@ -40,28 +40,39 @@ export function storage() {
   return s;
 }
 
-/* An evidence bucket stand-in (the R2 binding's shape), recording every call. */
+/* An evidence bucket stand-in (the R2 binding's shape), recording every call. As R2 does, an object put with a `sha256` is
+   reported by `head` and `get` with the checksum it was verified by (`checksums.sha256`, bytes), unless a test sets
+   `checksums = false` to stand for a store that gives none. */
 export function bucket() {
-  const held = new Map(), calls = [];
-  const obj = (k) => { const b = held.get(k); return { key: k, size: b.length, body: b,
-    arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) }; };
+  const held = new Map(), sums = new Map(), calls = [];
+  const obj = (k, b) => { const sum = b.checksums !== false && sums.get(k); return { key: k, size: held.get(k).length, body: held.get(k),
+    ...(sum && b.checksums !== false ? { checksums: { sha256: sum } } : {}),
+    arrayBuffer: async () => held.get(k).buffer.slice(held.get(k).byteOffset, held.get(k).byteOffset + held.get(k).length) }; };
   return {
-    calls, held, failPut: false,
-    async head(k) { calls.push(["head", k]); return held.has(k) ? { key: k, size: held.get(k).length } : null; },
-    async get(k) { calls.push(["get", k]); return held.has(k) ? obj(k) : null; },
-    async put(k, bytes, opts) { calls.push(["put", k, opts]); if (this.failPut) throw new Error("bucket refused"); held.set(k, new Uint8Array(bytes)); return { key: k }; },
-    async delete(k) { calls.push(["delete", k]); held.delete(k); },
+    calls, held, failPut: false, checksums: true,
+    async head(k) { calls.push(["head", k]); if (!held.has(k)) return null; const o = obj(k, this); return { key: k, size: o.size, ...(o.checksums ? { checksums: o.checksums } : {}) }; },
+    async get(k, o) { calls.push(o ? ["get", k, o] : ["get", k]); if (!held.has(k)) return null;
+      const full = obj(k, this);
+      if (o && o.range) { const part = held.get(k).slice(o.range.offset, o.range.offset + o.range.length); return { ...full, body: part, arrayBuffer: async () => part.buffer.slice(part.byteOffset, part.byteOffset + part.length) }; }
+      return full; },
+    async put(k, bytes, opts) { calls.push(["put", k, opts]); if (this.failPut) throw new Error("bucket refused"); held.set(k, new Uint8Array(bytes));
+      if (opts && typeof opts.sha256 === "string" && /^[0-9a-f]{64}$/.test(opts.sha256)) sums.set(k, Uint8Array.from(Buffer.from(opts.sha256, "hex")).buffer); else sums.delete(k);
+      return { key: k }; },
+    async delete(k) { calls.push(["delete", k]); held.delete(k); sums.delete(k); },
   };
 }
 
 /* host-governor's R1–R14 as the store reaches them, each call recorded; `refuse` names hosts to refuse and `held`
    hosts cooling off. */
 export function governor({ refuse = [], held = [] } = {}) {
-  const calls = [];
+  const calls = [], granted = {};
   return {
-    calls, configured: [],
-    governorAdmit({ host }) { calls.push(["admit", host]); return refuse.includes(host)
-      ? { admitted: false, reason: "cooling_off", retry_in_ms: 5000 } : { admitted: true, wait_ms: 0, appetite_per_min: 12 }; },
+    calls, granted, configured: [],
+    /* R29: a `peek` answers as the admission would and writes nothing; any other admission that is granted books one grant */
+    governorAdmit({ host, peek = false }) { calls.push([peek === true ? "peek" : "admit", host]);
+      if (refuse.includes(host)) return { admitted: false, reason: "cooling_off", retry_in_ms: 5000 };
+      if (peek !== true) granted[host] = (granted[host] || 0) + 1;
+      return { admitted: true, wait_ms: 0, appetite_per_min: 12 }; },
     governorReport(r) { calls.push(["report", r.host, r.status, r.retry_after_ms]); return { recorded: true }; },
     governorConfig(c) { this.configured.push(c); return { configured: true, ...c }; },
     isHeld(host) { calls.push(["isHeld", host]); return held.includes(host); },
@@ -128,7 +139,7 @@ export function captureStore({ core, env = {}, gov = null, prov = null, failures
   const state = { outcomes: [], reach: new Map(), sessions: new Map(), day: null, render: { spent_ms: 0, reserved_ms: 0, renders: 0, deferred: 0 },
                   slots: new Map(), admits: [], spends: [], validators: new Map(), actors: [], events: [], limits: new Map(),
                   assets: new Map(), siteRecords: [], links: [], emitted: [], sessionSaves: [], sessionDrops: [],
-                  captured: [], clockMs: null, recordFails: false };
+                  captured: [], late: [], clockMs: null, recordFails: false };
   const today = (at) => (at || stamp()).slice(0, 10);
   const dayOf = (at) => { const d = today(at); if (state.day !== d) { state.day = d; state.render = { spent_ms: 0, reserved_ms: 0, renders: 0, deferred: 0 }; } return state.render; };
   return {
@@ -174,7 +185,10 @@ export function captureStore({ core, env = {}, gov = null, prov = null, failures
       if (!state.captured.some((c) => c.captureSha === captureSha && c.question === question && c.by === by)) state.captured.push({ captureSha, question, by, at });
       return { recorded: true };
     },
-    loadCaptureSession({ session }) { const s = state.sessions.get(session);
+    /* as capture's does (R22): a session past its hour is pruned on the way past, so it is not found */
+    loadCaptureSession({ session }) { const now = stamp(state.clockMs ?? Date.now());
+      for (const [k, x] of state.sessions) if (x.expires < now) state.sessions.delete(k);
+      const s = state.sessions.get(session);
       return s ? { session, found: true, locator: s.locator, primarySha: s.primarySha, primaryFile: s.primaryFile, base: s.base, ticks: s.ticks, state: s.state }
                : { session, found: false, note: word("capture.note.capture_session_either") }; },
     dropCaptureSession({ session }) { state.sessionDrops.push(session); state.sessions.delete(session); return { session, dropped: true }; },
@@ -209,6 +223,8 @@ export function captureStore({ core, env = {}, gov = null, prov = null, failures
       return v && (v.etag || v.lastModified) ? { etag: v.etag, lastModified: v.lastModified } : null; },
     /* capture R69 */
     recordCaptureActor(a) { state.actors.push(a); return { recorded: true }; },
+    /* capture R68 (T51; C12): a co-attestation that ended after the capture was answered, recorded when it ends */
+    recordLateAttestations(a) { state.late.push({ ...a, recordedAt: Date.now() }); return { recorded: true }; },
     /* capture R15: one event per (kind, capture). */
     async taskEnqueue(e) {
       if (!state.events.some((x) => x.kind === e.kind && x.captureSha === e.captureSha)) state.events.push(e);
@@ -274,11 +290,25 @@ export function network(routes) {
   return { seen, attest, restore() { globalThis.fetch = orig; } };
 }
 
-/* One acquisition over a scripted network; a member session unless `o` says otherwise. */
+/* One acquisition over a scripted network; a member session unless `o` says otherwise. R20 (fix round 3, C12): the answer does
+   not wait for co-attestation, which goes on after it, so the scripted network stays up until the attempt a pending answer names
+   has been recorded against the capture (capture R68), unless `o.settle` is false: then the answer carries `settled()`, which a
+   test that times the answer awaits when it is done. The other keys of `o` are `acquire`'s. */
 export async function run(w, routes, body, o = {}) {
+  const { settle = true, ...opts } = o;
   const net = network(routes);
-  try { const r = await acquire(w.store, body, { cls: "member", member: true, sessMember: "m1", storeName: "bio", ...o }); return { ...r, net }; }
-  finally { net.restore(); }
+  const had = w.store.state.late.length;
+  try {
+    const r = await acquire(w.store, body, { cls: "member", member: true, sessMember: "m1", storeName: "bio", ...opts });
+    const pending = !!(r.body && r.body.document && Array.isArray(r.body.document.attestation_attempts)
+      && r.body.document.attestation_attempts.some((a) => a && a.pending === true));
+    const settled = async () => {
+      for (let i = 0; pending && i < 3000 && w.store.state.late.length === had; i++) await new Promise((x) => setTimeout(x, 10));
+      net.restore();
+    };
+    if (settle) { await settled(); return { ...r, net }; }
+    return { ...r, net, settled };
+  } catch (e) { net.restore(); throw e; }
 }
 export async function lookup(w, routes, args) {
   const net = network(routes);

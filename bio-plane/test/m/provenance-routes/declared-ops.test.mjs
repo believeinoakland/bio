@@ -28,3 +28,8 @@ test("R14 provenance-routes declares provenanceroute: its requires alone raise n
   await declaredOpHolds({ op: "provenanceroute", declaration: DECLARED_OPS["provenanceroute"], call: mk("provenanceroute", {"viewer":"member:ruth","author":"member:ruth"}),
     refusedNaming: named({"bundleId":["ROUTE_MARK_NO_BUNDLE"]}) });
 });
+
+test("R14 provenance-routes declares provenanceroutes: it requires nothing, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "provenanceroutes", declaration: DECLARED_OPS["provenanceroutes"], call: mk("provenanceroutes", {"viewer":"member:ruth"}),
+    refusedNaming: named({}) });
+});

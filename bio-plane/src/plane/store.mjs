@@ -4,6 +4,7 @@
    no table, no row, no refusal, no op (R9); its own stats sight is `stats.mjs`' (R10). Moved from
    `store.mjs`' constructor, `#migrate`, `alarm`, `onAlarm`, `#nowMs`, `#ownNamespace` and `routes`, and from
    `control-plane/dispatch.mjs`' `Store` (control-plane R35, now this module's R1), with their behaviour unchanged. */
+import "./register.mjs";   /* R68 (T51; K4168): the owners' op declarations registered, before any table either registration keeps is read */
 import { DurableObject } from "cloudflare:workers";
 import { actionsOf, actionsOps } from "../actions/index.mjs";
 import { actionClocksOf, actionClocksOps } from "../action-clocks/index.mjs";
@@ -12,7 +13,7 @@ import { actionRepliesOf, actionRepliesOps } from "../action-replies/index.mjs";
 import { planWorkOf, planWorkOps } from "../plan-work/index.mjs";
 import { caseCheckOf, caseCheckOps } from "../case-check/index.mjs";
 import { localFactsOf, localFactsOps } from "../local-facts/index.mjs";
-import { caseInputsOf, caseInputsOps } from "../case-inputs/index.mjs";
+import { caseInputsOf, caseInputsOps, registerCaseInputsPublicReads } from "../case-inputs/index.mjs";
 import { signinDoorOps } from "../signin-door/ops.mjs";
 import { actionRecordsOf, actionRecordsOps } from "../action-records/index.mjs";
 import { filingTemplatesOf, filingTemplatesOps } from "../filing-templates/index.mjs";
@@ -39,6 +40,16 @@ import { registerInquiryGrammar } from "../inquiry-grammar/index.mjs";
 import { governorOf, governorRoutes } from "../host-governor/index.mjs";
 import { acquisitionOf } from "../acquisition/index.mjs";
 import { captureOf, captureOps } from "../capture/index.mjs";
+import { acquireHandlerParts, acquireTimingsOps, traceStamped, ACQUIRE_STAGES_DDL } from "./acquire-timings.mjs";
+import { pendingOf, pendingOps } from "./pending.mjs";
+
+/** R78 (K4530, B34; fix round 6, G12e): the response header `server-timing: object;dur=<ms>`, the milliseconds of I/O time the object spent on a
+ *  route; control-plane reads it and adds `in-<route>` beside its `do-<route>`. It is I/O time and nothing more: workerd freezes `Date.now()` during
+ *  synchronous work (runtime-limits' `cpu.mjs`), so no clock in the object counts compute. Compute is `do-<route>` minus `in-<route>` minus the hop
+ *  to the object (about 115 to 160 ms); a heavy read whose `in-` is small beside its `do-` was computing, not waiting. */
+export const OBJECT_TIMING_HEADER = "server-timing";
+const objectTiming = (t0) => `object;dur=${Math.max(0, Date.now() - t0)}`;
+import { deliverOwedRender } from "../control-plane/index.mjs";
 import { doorbellOf, doorbellOps } from "../doorbell/index.mjs";
 import { fileSafetyOf, fileSafetyOps } from "../file-safety/index.mjs";
 import { monitoringOf, monitoringOps } from "../monitoring/index.mjs";
@@ -78,8 +89,10 @@ import { stepsOf } from "../steps/index.mjs";
 import { readingGuidesOf, readingGuidesOps } from "../reading-guides/index.mjs";
 import { questionExplorerOf } from "../question-explorer/index.mjs";
 import { investigationOf } from "../investigation/index.mjs";
+import { investigationOps } from "../investigation/ops.mjs";
 import { publishScheduleOps } from "../publish-schedule/index.mjs";
 import { controlPlaneOwnerOps } from "../control-plane/owner-ops.mjs";
+import { ownerGettersOf } from "./owners.mjs";
 import { contentOf, contentOps } from "../content/index.mjs";
 import { retrievalOf, retrievalRoutes } from "../retrieval/index.mjs";
 import { queueOf, Queue } from "../queue/index.mjs";
@@ -115,6 +128,7 @@ import { archiveUnpackConsumer } from "./unpack.mjs";
 import { transcriberOf } from "./transcribe.mjs";
 import { rosterSource } from "../../../roster-reader/index.mjs";
 import { credentialsOf as captureCredentialsOf } from "../capture-sources/credentials.mjs";
+import { captureSourcesOps } from "../capture-sources/ops.mjs";
 import { registerReaders, rosterReads, ownHostsOf, officePorts, dutiesFactOf, retrievalTerms, sheetRecompute,
          ratificationWorker, frontDoorFinder, frontDoorPointer, projectReachReaders } from "./wiring.mjs";
 
@@ -362,6 +376,10 @@ export class Store extends DurableObject {
        running run's principal reaches `planPropose` and `claimFindStep`'s run arm. */
     investigationOf(ctx, { promotion }).registerRunHolder("ai-runs", (by, run) => aiRunsOf(ctx, env).runHolder(by, run));
     caseAuthoringOf(ctx, { publishSchedule });   /* R18: its disclosures, with their attestation, are case-disclosures' (built above) */
+    /* R17 (K4221; case-inputs R24): case-inputs' public read `casedetailspublic`, registered once at start with public-read, over the
+       instance case-authoring's creation made (with its record, membership and clock: a factory reads its deps on its first call
+       only), so case-inputs keeps its place after case-import and case-checker's registration keeps its own. */
+    registerCaseInputsPublicReads(ctx, { publicRead: publicReadOf(ctx) });
     /* R39 (T45; K2839): case-check, last in layer 8 (after review), the one instance per host, over case-authoring,
        publication and case-carriage on this host; at creation it makes and declares its table (its R4). */
     const caseCheck = caseCheckOf(ctx);
@@ -396,6 +414,17 @@ export class Store extends DurableObject {
        actions R95), once each. following's watch reader is registered with it when following is built (below). */
     planWorkOf(ctx, { actionHolds, aiRuns: aiRunsOf(ctx, env) });
     const capture = captureOf(ctx, { env, attestation });   /* the acquisition act signs its receipt through `cap.attestation` */
+    /* R75 (T51 fix round 4; C5c; K4429; acquisition R96, control-plane R120): what a request left pending, finished by this object's
+       own alarm. `keeps_pending` and `acquire_stages` are the plane's two operational tables, declared to purge as a whole-store
+       clear (record-core K23). Acquisition reads `cap.keepLater` as it reads `cap.waitUntil`: a keep that will not end inside the
+       door's bound is written down here and put by the alarm, never left to a promise nothing keeps alive. */
+    const pending = pendingOf(ctx, { env, store: () => this.#ownNamespace() || "bio", deliver: deliverOwedRender });
+    recordOf(ctx).declarePurge("plane", ["keeps_pending", "acquire_stages"]);
+    capture.keepLater = (a) => pending.keepLater(a);
+    capture.owedLater = (a) => pending.owedLater(a);   /* R77, acquisition R100: the ledger's `subresources` and `unpack` entries, registered the same way */
+    /* R83 (fix round 6, G8, G13; extraction R89): the same ledger handed to extraction, which owes it the repair of an old reading and the restart of a partial text at start; guarded, as extraction's own merge is later than this line */
+    const extraction = extractionOf(ctx);
+    if (typeof extraction.registerOwe === "function") extraction.registerOwe((a) => pending.owedLater(a));
     /* R37 (T42; N826; K2607 rule 3, K2629, K2630; doorbell R25): doorbell, directly after capture in the modules' order,
        the one instance per host (actions' factory may have reached it first for its hold reader, actions R55); it takes no
        `env` of its own and reads capture's at each use, the instance above. */
@@ -461,6 +490,7 @@ export class Store extends DurableObject {
        build it. R30 (K2571; scheduler R26): question-explorer handed the same way, for its `question-explore` consumer;
        the scheduler never builds it. */
     schedulerOf(ctx, env, { fileSafety, questionExplorer });
+    schedulerOf(ctx, env).register("plane", pending.consumer());   /* R75: `pending-work`, before the scheduler's start so its alarm is re-derived at a restart (scheduler R11) */
     /* R3: the migration pass, then scheduler's start. */
     ctx.blockConcurrencyWhile(async () => this.#migrate());
     ctx.blockConcurrencyWhile(async () => schedulerOf(ctx, env).start());
@@ -631,6 +661,8 @@ export class Store extends DurableObject {
     planWorkOf(this.ctx).migrate();
     wizardScriptsOf(this.ctx).migrate();   /* R19: its tables, in the modules' order (first in layer 11) */
     translationsOf(this.ctx).migrate();   /* R61: its seven tables, in the modules' order (before instance-setup; idempotent) */
+    pendingOf(this.ctx).migrate();   /* R75: `keeps_pending` and the stage record's table, the plane's own */
+    this.sql.exec(ACQUIRE_STAGES_DDL);
 
     addColumns();   /* REC-143: the second pass */
     retrievalOf(this.ctx).migrate();   /* retrieval's projection columns, text index and selections, and its backfill */
@@ -678,6 +710,8 @@ export class Store extends DurableObject {
   /* R4: scheduler's. */
   async alarm() { await schedulerOf(this.ctx, this.env).alarm(); }
   async onAlarm(now) { return await schedulerOf(this.ctx, this.env).onAlarm(now); }
+  /* R79 (fix round 6, G1; scheduler R29): the Worker's cron asks this once a cycle, over the object's RPC (`watchdog.mjs`): the scheduler's `watch(at)`. */
+  async watchdog(at) { return await schedulerOf(this.ctx, this.env).watch(at); }
   /* scheduler's alarm read (its R13), reached over the object's RPC by scheduler's plane test. */
   async schedAlarmAt() { return await schedulerOf(this.ctx, this.env).alarmAt(); }
 
@@ -685,7 +719,16 @@ export class Store extends DurableObject {
      object's namespace, R2's own name (`bio` or `scratch`, else `bio`, so an object whose name is unknown is the real
      record's and fails closed), and `action-holds`' `purgeHeld` (its R9, was `actions` R60; T45, K2781 (1)) on the one
      instance R39 builds, each asked at the purge only. */
-  async fetch(req) {
+  async fetch(req0) {
+    const t0 = Date.now();
+    const req = await traceStamped(req0);   /* R73: `acquire`'s trace, from the header capture sends */
+    const res = await this.#dispatch(req);
+    /* R78 (fix round 5, E10; K4530; fix round 6, G12e): the I/O time this object spent on the route, to its response (a stream's, to its first
+       byte), whole milliseconds, as `server-timing: object;dur=<ms>`, which the door reads; compute is not in it. The object sets it; a value carried in is replaced. */
+    try { res.headers.set(OBJECT_TIMING_HEADER, objectTiming(t0)); return res; }
+    catch { const headers = new Headers(res.headers); headers.set(OBJECT_TIMING_HEADER, objectTiming(t0)); return new Response(res.body, { status: res.status, statusText: res.statusText, headers }); }
+  }
+  #dispatch(req) {
     return dispatch(req, { routes: (url, body, grant) => this.routes(url, body, grant), membership: () => membershipOf(this.ctx),
       namespace: () => this.#ownNamespace() || "bio", purgeHeld: (q) => actionHoldsOf(this.ctx).purgeHeld(q),
       /* B5 (K1685; answers R1, R2): a read served under a grant is recorded in this object's read log, scrubbed. R33
@@ -755,7 +798,13 @@ export class Store extends DurableObject {
          host, at acquisition's place before capture's map; `by` is the door's stamp. */
       coarchiveset: () => acquisitionOf(ctx).coArchiveSet({ on: body ? body.on : undefined, by: url.searchParams.get("by") }),
       coarchivestate: () => acquisitionOf(ctx).coArchiveState(),
-      ...captureOps(captureOf(ctx), url, body, env),
+      /* R73 (K4231, K4234): `acquiretimings`, acquisition's stage times of a call still running (its R95), at acquisition's place with the co-archive pair; `acquire` below is handed the timings object it fills, held under the door's `trace`. */
+      ...acquireTimingsOps(ctx, url),
+      /* R75: the door's deferred reading (control-plane R120), registered for the alarm; store-internal, no caller's own */
+      ...pendingOps(pendingOf(ctx), url, { health: () => schedulerOf(ctx, env).health(),
+        /* R80: an administrator is the root of trust's credential (`class:admin`) or a member membership R64 names (the founder, an active member of role `admin`) */
+        administers: (v) => v === "class:admin" || (typeof v === "string" && v.startsWith("member:") && membershipOf(ctx).isAdministrator(v.slice(7))) }),
+      ...captureOps(captureOf(ctx), url, body, env, acquireHandlerParts(ctx, url)),
       /* R37 (N826; K2630): doorbell's nine routes, directly after capture's map, each answered by doorbell's instance
          (capture's copy deleted in T43, N849). */
       ...doorbellOps(doorbellOf(ctx), url, body),
@@ -769,7 +818,7 @@ export class Store extends DurableObject {
       /* K1619: `basis`, `restson`, `earnedbasis` are leg-earning's, after inquiry's delegating entries so its own win. */
       ...legEarningOps(legEarningOf(ctx), url),
       ...hypothesesOps(hypothesesOf(ctx), url, body),   /* K1607 */
-      ...citationOps(citationOf(ctx), url),
+      ...citationOps(citationOf(ctx), url, body),
       ...observationLogOps(observationLogOf(ctx), url, body),
       ...runProductionsOps(runProductionsOf(ctx), url, body),
       ...entitiesOps(entitiesOf(ctx), url, body),
@@ -827,6 +876,9 @@ export class Store extends DurableObject {
       ...provenanceRouteOps(provenanceRoutesOf(ctx), url, body),
       ...contentOps(contentOf(ctx), url, body),
       ...captureRequestsOps(captureRequestsOf(ctx), url, body),
+      /* R69, R70 (T51; K4213): capture-sources' credential ops (over the instance start builds with the seal key and the own hosts) and investigation's `projectclose`, after capture-requests' map. */
+      ...captureSourcesOps(captureCredentialsOf(ctx), url, body),
+      ...investigationOps(investigationOf(ctx), url, body),
       /* R35 (K2567): reading-guides' ops, after capture-requests' map, its place in the modules' order. steps',
          investigation's and question-explorer's ops are control-plane R71's own map (K2560), not routed here. */
       ...readingGuidesOps(readingGuidesOf(ctx), url, body),
@@ -860,7 +912,7 @@ export class Store extends DurableObject {
       ...planWorkOps(planWorkOf(ctx), url, body),   /* R39 (T45): plan-work's ops, directly after action-plans' */
       ...escalationOps(escalationOf(ctx), url, body),
       ...monitoringOps(monitoringOf(ctx), url, body),
-      ...linkSweepOps(linkSweepOf(ctx), url),   /* `sweeps` (link-sweep R9), at the place monitoring's map held it (N506) */
+      ...linkSweepOps(linkSweepOf(ctx), url, body),   /* `sweeps` (link-sweep R9), at the place monitoring's map held it (N506) */
       ...followingOps(followingOf(ctx), url, body),   /* R21 (T33-79) */
       ...reviewOps(reviewOf(ctx), url, body),
       /* R39 (T45; K2839): case-check's `publishcheck` (graded as publish) and `casecheck`, after review's map. */
@@ -877,14 +929,7 @@ export class Store extends DurableObject {
          each owner's one instance on this storage through getters, each asked only when its op is served. */
       /* (T42; N839; K2656) `caseAccount`, the plane's one case-account instance (R38), for control-plane R71's account
          ops; never case-authoring's pass-through. */
-      ...controlPlaneOwnerOps({ aiUse: () => aiUseOf(ctx), aiRuns: () => aiRunsOf(ctx, env), caseAccount: () => caseAccountOf(ctx),
-                                review: () => reviewOf(ctx), legEarning: () => legEarningOf(ctx), capture: () => captureOf(ctx),
-                                steps: () => stepsOf(ctx), investigation: () => investigationOf(ctx),
-                                questionExplorer: () => questionExplorerOf(ctx),
-                                /* (T47; K3150; control-plane R71) `clockpropose`, served through action-clocks' one instance */
-                                actionClocks: () => actionClocksOf(ctx),
-                                /* (T51; K4098; control-plane R110) `approvedunsent` (filings R53) and `checkpointsdue` (action-plans R17) */
-                                filings: () => filingsOf(ctx), actionPlans: () => actionPlansOf(ctx) }, url, body),
+      ...controlPlaneOwnerOps(ownerGettersOf(ctx, env), url, body),   /* the getters are owners.mjs' (K4435) */
       /* store-door's map (its R1); the grant its door read from the header is handed on (its R11, K2041) */
       ...controlPlaneRoutes(ctx, url, body, grant),
     };

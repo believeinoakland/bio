@@ -48,3 +48,8 @@ test("R56 content declares transcriptionattest: its requires alone raise no refu
   await declaredOpHolds({ op: "transcriptionattest", declaration: DECLARED_OPS["transcriptionattest"], call: mk("transcriptionattest", {"attestor":"member:zed","viewer":"member:zed"}, async () => (mkTyped()), null, (fields, env) => (("contentId" in fields ? { ...fields, contentId: env.typedId } : fields))),
     refusedNaming: named({"contentId":["TRANSCRIPTION_NOT_FOUND"],"note":["ATTEST_NO_NOTE"]}, true), values: {"note":"Compared the typed line with page one of the scan."}, same: sameCode });
 });
+
+test("R56 content declares transcriptions: its requires alone raise no refusal naming a field, the missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "transcriptions", declaration: DECLARED_OPS["transcriptions"], call: mk("transcriptions", {"viewer":"member:ty"}, async () => (mkTyped())),
+    refusedNaming: named({"bundleId":["NO_TARGET"]}, true), values: {"bundleId":"INFO-2026-0001-a"}, same: sameCode });
+});

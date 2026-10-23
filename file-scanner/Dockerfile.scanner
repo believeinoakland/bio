@@ -17,7 +17,8 @@ RUN mkdir -p /etc/ssl/certs \
       clamav-freshclam=1.4.3+dfsg-1~deb12u2 libclamav12=1.4.3+dfsg-1~deb12u2 \
  && rm -rf /var/lib/apt/lists/* /var/lib/clamav/* \
  && mkdir -p /var/lib/file-scanner/sigs && chown -R node:node /var/lib/file-scanner
-# freshclam is never run: the image has no network (R12); the only signatures are the mirror's, handed in by the Worker (R4).
+# freshclam is run only by the signature-updater instance, which the Worker starts with internet (R6, R12, R34); the
+# scanning instance has no network, and its only signatures are the mirror's, handed in by the Worker (R4).
 ENV NODE_ENV=production PORT=8080 FILE_SCANNER_SIGS=/var/lib/file-scanner/sigs
 WORKDIR /app
 COPY container/common.mjs container/scanner.mjs ./container/

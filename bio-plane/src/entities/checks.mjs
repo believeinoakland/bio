@@ -6,7 +6,7 @@
  * R25 (N6, K1): the translations name no local system, office or example value; the spaces and their forms come
  * from the active jurisdiction profiles, and the answer beside a refusal lists them. DEC-149 (T34-78): a translation
  * a member reads names the group's own profiles ("your group's"), never "this instance". */
-import { word } from "../setup-words/index.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 
 /* T50 (N1116; K3366, K3368; DEC-257, DEC-258): a refusal row's `translation` is the words of its key, `refusal.<CODE>`
    (`setup-words`' `word`), and this module holds none of the English. */
@@ -97,5 +97,20 @@ export const ENTITY_CHECKS = Object.freeze({
     check: 'C-91.9',
     where: 'src/entities/index.mjs notAProceeding > is-proceeding-kind',
     translation: rowWord("NOT_A_PROCEEDING"),
+  }),
+  /* R64 (T51 fix round 3; C64; K4364): an administrator's confirm of an office a member named is asked of something that is
+     not an office. Not `duties`' `NOT_AN_OFFICE` (a different condition and sentence), so its own code. The next of C-91.
+     STAND-IN sentence (a localize default under the key the design will write, `refusal.CONFIRM_NOT_AN_OFFICE`). */
+  CONFIRM_NOT_AN_OFFICE: Object.freeze({
+    check: 'C-91.10',
+    where: 'src/entities/index.mjs confirmOffice > is-confirmed-an-office',
+    translation: localize("refusal.CONFIRM_NOT_AN_OFFICE", "Only an office a member named can be confirmed, and this subject is not an office. Nothing was changed."),
+  }),
+  /* R64: the office was not named by a member (an administrator registered it, or it was already confirmed and a repeat is
+     `already`), so there is nothing to confirm. The next of C-91. STAND-IN sentence under `refusal.NOT_NAMED_BY_A_MEMBER`. */
+  NOT_NAMED_BY_A_MEMBER: Object.freeze({
+    check: 'C-91.11',
+    where: 'src/entities/index.mjs confirmOffice > is-named-by-a-member',
+    translation: localize("refusal.NOT_NAMED_BY_A_MEMBER", "This office was not named by a member, so there is nothing to confirm. Nothing was changed."),
   }),
 });

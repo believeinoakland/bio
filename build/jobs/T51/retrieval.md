@@ -1,6 +1,6 @@
 # retrieval (T51)
 
-**Status** · session_01D1NsgDVLk2pmKxqnUVzQKz · depth 2 · COMPLETE · handled B6
+**Status** · session_01LrQ9js5UiMGt6HCSH7ugeW · depth 2 · COMPLETE · handled B8
 
 ## Work notes (RETRIEVAL #20)
 
@@ -115,3 +115,70 @@ B6 applied (K4002). Localized: the refusal details at index.mjs 1248, 1252, 1257
 Tests: retrieval 167 of 167 pass; citation recorded.test 12 of 12. Checks: words for retrieval shows only the five registration sentences; architecture 0 failures; format 0; coverage 79 of 79; setup-words --check names no retrieval refusal; ownership 0 failures. Pushed to job/T51/retrieval, record Completion (B6, K4002).
 
 Size (session_01D1NsgDVLk2pmKxqnUVzQKz): test runs 9, module lines 2924
+
+## J7 · COMPLETE
+
+**Entries applied.** B7 (K4243): `list` declared in `DECLARED_OPS` (`bio-plane/src/retrieval/index.mjs`), under R91. Row: `classes` admin, member, probe; `mutating` false; `weight` "read" (as `findin` and `search`); `description` through `localize("retrieval.declared.list", …)`, English: "read: the bundles the viewer may see, in id order, each with its standing route; writes nothing" (`localize` falls back to that English until BOB's rows are regenerated). `fields`: `accepts` `type`, `state`, `after`, `limit` (read from the arm whole); `requires` none; `viewer` is the control plane's stamp, not an accept. No behaviour change. Test: `declared-ops.test.mjs`, "R91 retrieval declares list …", through `declaredOpHolds` (only requires, without each required, a field outside accepts). No other module declares a `list` op.
+
+**Deferred.** None.
+
+**Found in other modules.** None.
+
+**Tests and checks** (from `/home/user/bio`):
+- `node --test bio-plane/test/m/retrieval/declared-ops.test.mjs`: 6 of 6 pass.
+- `node --test bio-plane/test/m/retrieval/`: 173 of 173 pass, 0 fail.
+- `checks/format.mjs /home/user/bio`: 0 failures.
+- `checks/architecture.mjs /home/user/bio retrieval`: 0 failures.
+- `checks/coverage.mjs /home/user/bio retrieval`: 80 of 80 live ids named, 0 failures.
+- `checks/ownership.mjs /home/user/bio retrieval tranche/T51`: 0 failures.
+
+**For BOB (requirements, not edited here).** R91's list of declared ops (`findin`, `select`, `selectionrelease`, `frontier`, `search`) should now read `list` too. Commit `53847cb8f1` on `job/T51/retrieval`.
+
+Size (session_0184iZt7rYVPmAExGqQUio3H): test runs 3, module lines 2941
+
+## J8 · QUESTION
+
+C21 has no requirement id in build/requirements/retrieval.md. I built to this proposed line, tested as R92 (t51-fix2.test.mjs); please write it (or reword) and I re-name the tests if the id differs. **R92** (T51 fix round 2; C21) Every hit names its document and a question's excerpt is its own words. `search`'s page hits and `meaningRows`' `rows=passage` rows each carry `document {bundle_id, title}` (the bundle holding the hit or the unit; the title as the record holds it), added before R78's decorations, which cannot replace it. A hit whose object type is an inquiry and whose `snippet_from` is `text` has its `snippet` cut from the question's title and frontmatter conclusion (same brackets, ellipsis and word bound as R6's snippet), never from `bundle.md`; a passage snippet and a document's text snippet are unchanged. Test: a question hit's snippet holds no heading, INQ- id, hash or log text; a passage hit and a passage row carry the document title; control: a document hit's snippet is unchanged. Note for the screen (wave 2): rows carry `document.title` and the screen already reads that. No words needed.
+
+## J9 · COMPLETE
+
+**C21 met** (retrieval's part), as proposed R92 (see my QUESTION J8; no requirement line existed): each `search` page hit and each `meaningRows` `rows=passage` row carries `document {bundle_id, title}` (before R78's decorations, which cannot replace it); a question hit's text snippet is cut from its title and conclusion (frontmatter via bundle_projection.fm_json), never bundle.md; passage snippets, document snippets and other arms' rows unchanged (the content arm's key list is untouched). Tests: new `t51-fix2.test.mjs` (5, seen failing first: question excerpt clean and marked; title-only question; document-hit control; every hit and a passage hit named, decoration cannot replace; passage rows named, no viewer names nothing); `search.test.mjs`:30 gained `document` in the hit's key list. Suites: retrieval 178/178; answers 67, following 116, queue 206, question-explorer 46, retrieval-browse 51, citation 122, all pass. Checks (process repo): format 1 failure, build/rulings.md:4298 K4301 (not mine); architecture 0 failures; coverage: none of its 10 failures is retrieval (R92 is not a live id until you write it); words 0 failures; ownership retrieval 0 failures. Reported to BOB: the missing requirement line (QUESTION J8). Nothing deferred; no flaw found in another module. Wave 2 note: screens-daily already reads `r.document.title` for passage rows and `h.document.title` for hits. Size (session_01AcNMBgnQLd3Vea5jBvd9Lg): test runs 12, module lines 3000
+
+## Completion (T51-F3, RETRIEVAL #25)
+
+**Entries applied.** R93 (C16 P3; SCREENS-INQUIRY #19's finding (a)): each row `list` (`listBundles`) answers carries the bundle's `project` (`COALESCE(b.project, '')`, the empty text for a project-less bundle), read in the same statement as the rest of the row. Change: `bio-plane/src/retrieval/index.mjs` `listBundles` (one SELECT column, one comment line). The row's `project` cannot reveal a project the viewer could not already see: membership R43 admits a project's bundle only when the viewer would see that project, so the gate already ensures it.
+
+**Test first.** `bio-plane/test/m/retrieval/roster.test.mjs`, `R93: each row listBundles answers carries the bundle's project …`, written first and seen failing (each row lacked `project`). Controls: a project-less bundle answers `""`; a viewer who may not see the project is not answered its question, nor the project's name on any row. The R63 row key list (`ROW_KEYS`, and the `own` comparison in the first R63 test) gains `project`, which is the same change, not a weakening.
+
+**Requirements.** Nothing edited here. R93 is still marked `(not yet met: T51)` in `build/requirements/retrieval.md`; it is met by this job, for BOB to mark it.
+
+**Deferred.** None.
+
+**Found in other modules.** None caused by this change. Red on the tranche tip (not mine, not fixed):
+- `op-declarations` `t50.test.mjs` `R73, R21` (registry acts with no declaration: `alertconnect`, `exploreall`, `explorepath`, …) fails identically at the parent commit `6dcc00f622` (the tranche merge), checked in a worktree before my commit.
+- `checks/run.mjs`: architecture 2 failures (`screens-inquiry` `fr4-project.test.mjs`, `phone.mjs`); coverage 8 modules, none retrieval (`agent-harness`, `agent-runner`, `control-plane`, `entities`, `installer-steps`, `journey-check`, `op-grades`, `screens-publish`); words 5 failures (`op-grades` t33 and t51, `screens-inquiry` fr4-document). `format`: 0 failures.
+
+**Tests and checks** (from `/home/user/bio`):
+- `node --test --test-force-exit --test-concurrency=2 bio-plane/test/m/retrieval/`: 179 of 179 pass, 0 fail.
+- Consumers of `op=list` rows, each run: `m/provenance-routes/table`, `m/store-door/pull`, `m/control-plane/doorbell`, `m/control-plane/inbox-door`, `m/control-plane/t50-door`, `m/op-declarations/t35`, `t51`: 84 of 85 pass; the one failure is `op-declarations/t50` `R73, R21`, the pre-existing red above. `mk6-bundle-names-no-author.test.mjs`: 1 of 1 pass.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD` names 79 modules and 1,225 affected test files. I ran the retrieval suite and the list-consumer suites above, not all 1,225; the change adds one key to each list row, and no other module's tests read that key set beyond those named here.
+- `checks/ownership.mjs /home/user/bio retrieval tranche/T51 job/T51/retrieval`: 0 failures (3 files changed by retrieval).
+- Coverage for retrieval: not in the failing list (its 80 live ids are named; R93 is named by its test).
+
+**For BOB (not edited here).** Mark R93 met in `build/requirements/retrieval.md` (drop `(not yet met: T51)`). The `list` row shape in R63's text gains `project`; R93 is the requirement for it. The `op-declarations` t50 red and the check reds above are other modules' and need their owners.
+
+Size (session_01LrQ9js5UiMGt6HCSH7ugeW): test runs 7, module lines 3002
+
+## J10 · COMPLETE
+
+R93 met (C16 P3, SCREENS-INQUIRY #19's finding (a)): each row `list` (`listBundles`) answers carries the bundle's `project` (the empty text for a project-less bundle), read in the same statement. Change: `bio-plane/src/retrieval/index.mjs` `listBundles` (one SELECT column). Test first, seen failing: `roster.test.mjs` `R93: each row listBundles answers carries the bundle's project …`; controls: a project-less bundle answers "", and a viewer who may not see the project gets neither the question nor the project's name. The R63 row key list gains `project` (same change, not a weakening). Requirement text unchanged here: R93 still reads "(not yet met: T51)" in build/requirements/retrieval.md; please mark it met.
+
+Tests: `bio-plane/test/m/retrieval/`: 179 of 179 pass. List-consumer suites (provenance-routes table, store-door pull, control-plane doorbell/inbox-door/t50-door, op-declarations t35/t51): 84 of 85 pass; the one red is op-declarations t50 `R73, R21` (undeclared registry acts), which fails identically at the parent commit 6dcc00f622, so it predates this change. mk6-bundle-names-no-author: 1 of 1 pass. Impact names 79 modules and 1,225 test files; I ran the retrieval and list-consumer suites, not all of them.
+
+Checks: ownership retrieval 0 failures; format 0 failures; architecture 2 failures and words 5 failures and coverage 8 modules, none in retrieval (screens-inquiry, op-grades, agent-harness, agent-runner, control-plane, entities, installer-steps, journey-check, op-grades, screens-publish).
+
+Found in other modules: none caused by this change. Named, not fixed: the op-declarations t50 red and the check reds above.
+
+Deferred: none.
+
+Size (session_01LrQ9js5UiMGt6HCSH7ugeW): test runs 7, module lines 3002

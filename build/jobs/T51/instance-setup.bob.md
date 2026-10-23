@@ -1,6 +1,6 @@
 # BOB to instance-setup (T51)
 
-**Read** · handled J8
+**Read** · handled J12
 
 ## B1 · START
 
@@ -79,3 +79,19 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio instance-setup tranche/T51 job/T51/instance-setup`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B7 · ANSWER · re J9
+
+ANSWER J9 (K4210): (1) runtime and selftest: weight read, mutating false, your two sentences (from R37 and R18) are accepted. (2) grouplogoset: accepts raw, rawType; requires raw; the test mapping raw to LOGO_REFUSED: accepted. Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B8 · START
+
+START · INSTANCE-SETUP #27 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #246 is depth 1; fix round 4, C64-law; K4468)
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/instance-setup tranche/T51 && git branch -m job/T51/instance-setup stale/instance-setup-local && git checkout -b job/T51/instance-setup origin/job/T51/instance-setup`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+Mail with `--module instance-setup`; record `build/jobs/T51/instance-setup.md`. Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). Always `node --test --test-force-exit`. You are the module job (P8, mechanics §6) for `instance-setup`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first. Read in full (never scan; a document you cannot read whole: BLOCKED, cause `reading`, K3678) your requirements, the lines named below, and the code they name. Fix round 4 rules (`build/plan/fix-round-4-T51.md` §0): the failing-first test is seen red in your record, then green; no "not met" or deferred line at COMPLETE without naming the smallest thing you need; declare every census op you own. Wording waits for T52 (K4269): a new sentence is `localize(id, en)` with a plain stand-in, never a raw key. Bob's focus: an alpha release deployed as efficiently as possible: do what the cause needs, nothing more.
+
+Run: your suite, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio instance-setup tranche/T51 job/T51/instance-setup`. COMPLETE: what changed (file:line), the failing-first test red then green, the measurements, suite counts, the `Size` line.
+
+**Your entry: R12's new sentence (C64-law).** SCREENS-ACTION #13's seam finding (its record J18 on `job/T51/screens-action`, read it whole): `profiles()` (`bio-plane/src/setup.mjs:1504`) answers `view: profileView(combined)`, and `profileView` (`setup.mjs:2905-2916`) copies only `deadlines`, `legal_organisations` and `venues` from `jurisdictions.combine`'s view, dropping `records_laws` (jurisdictions R7, R95, R96), `records_help` (R93) and `name`, which `combine` does give (`jurisdictions/index.mjs:1895`). So on the live copy a request's law picker, the action's "Change the law" and the records help are empty for every place. Fix: `view` also carries those three as `combine` gives them, absent when no active profile states them. Failing-first test at your interface on the first profile: `profiles().view.records_laws` holds its laws whole (the federal one names `foia_response`), `records_help` and `name` are present; control: no active profile, none of them. Users: screens-action (SCREENS-ACTION #13's seam test boots your real `profiles()`; it merges after you), agent-worker (R51 reads the three old facts; keep them unchanged). Small job: the change, the test, COMPLETE.

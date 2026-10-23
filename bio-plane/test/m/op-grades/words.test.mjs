@@ -6,18 +6,28 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import * as G from "../../../src/op-grades/index.mjs";
 import { CONSEQUENCE_STATEMENTS, IRREVERSIBLE_CORRECTION_KEY, IRREVERSIBLE_WEIGHT, RUNGS } from "../../../src/op-grades/index.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
 
 const READS = JSON.parse(readFileSync(fileURLToPath(
   new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url)), "utf8")).modules["op-grades"].reads;
 const KEYS = [...Object.values(CONSEQUENCE_STATEMENTS).map((e) => e.key), IRREVERSIBLE_CORRECTION_KEY];
+/* every string the module's maps hold: a consequence entry holds its key, a rung or a non-act its sentence (K3268: the
+   test reads the list, never a written count, so the list may grow as its owners draw more words) */
+const LEAVES = new Set([IRREVERSIBLE_CORRECTION_KEY]);
+const walk = (v) => { if (typeof v === "string") LEAVES.add(v); else if (v && typeof v === "object") Object.values(v).forEach(walk); };
+Object.values(G).forEach(walk);
 
-test("R44: the keys this module publishes are exactly its `reads` list, 11 of them, each asserted with hasWord", () => {
-  assert.equal(READS.length, 11);
-  assert.deepEqual([...KEYS].sort(), [...READS].sort());
+test("R44: the keys this module publishes are exactly its `reads` list, each asserted with hasWord", () => {
+  assert.ok(READS.length > 0);
+  assert.deepEqual(KEYS.filter((k) => !READS.includes(k)), [], "every key a consequence entry names is in the list");
   assert.equal(new Set(KEYS).size, KEYS.length, "no key twice");
-  for (const k of KEYS) assert.equal(hasWord(k), true, k);
+  for (const k of READS) assert.equal(hasWord(k), true, k);
+  /* the list is what the module publishes: each key is held by a map, as itself or as the sentence it draws */
+  for (const k of READS) assert.ok(LEAVES.has(k) || LEAVES.has(word(k)), k);
+  /* and each word a map holds as a key is in the list */
+  assert.deepEqual([...LEAVES].filter((s) => hasWord(s) && !READS.includes(s)), []);
   /* controls: a key the list does not hold, and a sentence in place of a key, are not words */
   assert.equal(hasWord("consequence.nosuchop"), false);
   assert.equal(hasWord("Publishing makes this edition permanent and public."), false);

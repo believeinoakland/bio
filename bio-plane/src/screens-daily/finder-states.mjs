@@ -45,7 +45,7 @@ export function finderStates() {
   };
 
   /* ---- R55: the whole record as one sortable table ---- */
-  const table = function (cs, ui, browse, screenOf, kindWord) {
+  const table = function (cs, ui, browse, screenOf, kindWord, pickBox) {
     const COLS = ["item", "kind", "state", "updated"];
     const sort = ui["sort:finder"] && typeof ui["sort:finder"] === "object" ? ui["sort:finder"] : null;
     const valueOf = function (it, col) {
@@ -64,13 +64,40 @@ export function finderStates() {
     const body = items.map(function (it) {
       const id = String(it.id);
       const sc = screenOf(it.kind, id);
-      return "<tr><td>" + cs.ref(sc, id, String(it.title || ""), []) + "</td><td>" + kindWord(it, sc) + "</td><td>" + chip(cs, sc === "document" ? "document" : sc === "question" ? "question" : sc === "action" ? "action" : sc === "plan" ? "plan" : "entity", it.state) + '</td><td data-sort="'
+      return "<tr><td>" + pickBox(id, String(it.title || "")) + cs.ref(sc, id, String(it.title || ""), []) + "</td><td>" + kindWord(it, sc) + "</td><td>" + chip(cs, sc === "document" ? "document" : sc === "question" ? "question" : sc === "action" ? "action" : sc === "plan" ? "plan" : "entity", it.state) + '</td><td data-sort="'
         + cs.esc(String(it.last_changed || "")) + '">' + (it.last_changed ? cs.date(String(it.last_changed)) : "") + "</td></tr>";
     }).join("");
     return '<p class="mk-small">' + cs.w("screen.finder.table.intro") + '</p><p class="mk-small"><b>' + count + "</b></p>"
       + '<div class="tw"><table class="mk-table"><thead><tr>' + head + "</tr></thead><tbody>" + body + "</tbody></table></div>"
       + '<p class="mk-note">' + cs.w("screen.finder.table.sorting") + "</p>"
       + (browse.truncated && browse.next ? '<p class="mk-note">' + cs.w("find.browse.more") + '</p><span class="mk-acts">' + cs.act("search", { label: "find.browse.showmore", data: { more: String(browse.next) } }) + "</span>" : "");
+  };
+
+  /* ---- G16 (fix round 6): a route past its page continues by its op's own cursor ---- */
+  // What a route has shown and holds: `search` and `meaningrows` page by `offset` (rows shown against the query's `total`), `subjectsnamed`
+  // by `after` (its `next`). `rest(r)` is the query of the next page, or null when the route is whole.
+  const LISTS = { fields: "hits", passages: "rows", subjects: "subjects" };
+  const rest = function (route, r) {
+    if (!r || r.state !== "ok" || !r.value || !r.query) return null;
+    const v = r.value;
+    const shown = Array.isArray(v[LISTS[route]]) ? v[LISTS[route]].length : 0;
+    if (route === "subjects") return v.truncated && v.next ? Object.assign({}, r.query, { after: String(v.next) }) : null;
+    const at = (Number(v.offset) || 0) + shown;
+    return shown > 0 && typeof v.total === "number" && at < v.total ? Object.assign({}, r.query, { offset: String(at) }) : null;
+  };
+  // "Show more" on a route: the next page by the cursor, added below what is drawn; the totals stay the first answer's (the query's own).
+  const more = function (view, route, cs) {
+    const r = mine(view, route);
+    const query = rest(route, r);
+    if (!query) return null;
+    return cs.call(r.op, { query: query }).then(function (a) {
+      const b = bodyOf(a);
+      if (!b || b.ok === false || !Array.isArray(b[LISTS[route]])) return { refuse: "state.failed", fills: { reason: "" } };
+      const merged = Object.assign({}, b, r.value, { [LISTS[route]]: r.value[LISTS[route]].concat(b[LISTS[route]]) });
+      if (route === "subjects") { merged.truncated = !!b.truncated; merged.next = b.next || null; }
+      cs.set("route:" + route, Object.assign({}, r, { value: merged }));
+      return null;
+    }, function () { return { refuse: "state.failed", fills: { reason: "" } }; });
   };
 
   /* ---- R56: the three routes, each read apart and counted apart ---- */
@@ -89,7 +116,7 @@ export function finderStates() {
       const one = function (a) {
         const r = bodyOf(a);
         if (r === null) return { key: key, state: "failed", code: null, value: null };
-        return r.ok === false ? { key: key, state: "failed", code: String(r.code || r.reason || ""), value: r } : { key: key, state: "ok", code: null, value: r };
+        return r.ok === false ? { key: key, state: "failed", code: String(r.code || r.reason || ""), value: r } : { key: key, state: "ok", code: null, value: r, op: op, query: query };
       };
       cs.call(op, { query: query }).then(function (a) { cs.set("route:" + route, one(a)); }, function () { cs.set("route:" + route, { key: key, state: "failed", code: null, value: null }); });
     };
@@ -122,13 +149,19 @@ export function finderStates() {
     };
     const fieldRows = cs.sheet(hs.map(function (h) {
       const id = String(h.bundle_id);
-      const title = String(h.title || "");
+      // R78: the document's title heads the hit, never its file part or id; one with no title says so.
+      const title = typeof h.title === "string" && h.title.trim() ? h.title : h.document && typeof h.document.title === "string" && h.document.title.trim() ? h.document.title
+        : cs.w("queue.source.untitled", { date: { html: cs.date(String(h.last_updated || h.captured || "")) } });
       const grade = h.grade ? cs.grade("capture", String(h.grade)) + " " : "";
       const where = h.snippet ? excerpt(h.snippet) : "";
       return cs.row(pickBox(id, title), cs.ref(screenOf(h.object_type, id), id, title, []) + '<span class="meta">' + grade + cs.mark("origin", "search") + (where ? " <span>" + where + "</span>" : "") + "</span>", "", "");
     }).join(""));
+    // G16: a route past its page says so and continues by its cursor (a held row's nearest stand-in: the browse's).
+    const moreOf = function (route, r) {
+      return rest(route, r) ? '<p class="mk-note">' + cs.w("find.browse.more") + '</p><span class="mk-acts">' + cs.act("search", { label: "find.browse.showmore", data: { route: route } }) + "</span>" : "";
+    };
     const fieldsSec = f && f.state === "ok" && ftotal > 0
-      ? cs.sec("screen.finder.route.fields", '<p class="mk-small">' + (ftotal === 1 ? cs.w("screen.finder.route.fields.holds.one") : cs.w("screen.finder.route.fields.holds.other", { n: String(ftotal) })) + "</p>" + fieldRows) : failedRoute(f);
+      ? cs.sec("screen.finder.route.fields", '<p class="mk-small">' + (ftotal === 1 ? cs.w("screen.finder.route.fields.holds.one") : cs.w("screen.finder.route.fields.holds.other", { n: String(ftotal) })) + "</p>" + fieldRows + moreOf("fields", f)) : failedRoute(f);
 
     // Passages: "In what the documents say".
     const prows = p && p.state === "ok" && Array.isArray(p.value.rows) ? p.value.rows : [];
@@ -137,15 +170,21 @@ export function finderStates() {
     prows.forEach(function (r) { docsIn[String(r.bundle_id || r.capture_sha || r.document || "")] = true; });
     const pdocs = Object.keys(docsIn).length;
     const passageRows = cs.sheet(prows.map(function (r) {
-      const id = String(r.bundle_id || r.document_id || "");
-      const t = typeof r.title === "string" && r.title.trim() ? r.title : r.document && typeof r.document.title === "string" ? r.document.title : "";
+      // R83: the row names its document, by the `document` the plane gives it (retrieval R92); one with no title by the kit's plain word, never its id.
+      const d = r.document && typeof r.document === "object" ? r.document : {};
+      const id = String(d.bundle_id || r.bundle_id || r.document_id || "");
+      const t = typeof d.title === "string" && d.title.trim() ? d.title : typeof r.title === "string" && r.title.trim() ? r.title : cs.w("shell.card.document");
       const ex = r.extent && typeof r.extent === "object" ? r.extent : {};
       const place = ex.passage !== undefined ? ex.passage : ex.paragraph;
       return cs.row(cs.mark("origin", "search"), '<span class="rec">' + (r.snippet ? excerpt(r.snippet) : "") + '</span><span class="meta">' + cs.w("find.row.kind.passage") + (r.grade ? " · " + cs.grade("capture", String(r.grade)) : "")
-        + (t ? " · " + cs.ref(id ? "document" : "document", id, t, []) : "") + (place !== undefined ? " · " + cs.w("screen.find-in.passage", { n: String(place) }) : "") + "</span>", "", "");
+        + (id ? " · " + cs.ref("document", id, t, []) : "") + (place !== undefined ? " · " + cs.w("screen.find-in.passage", { n: String(place) }) : "") + "</span>", "", "");
     }).join(""));
+    // The documents the matches lie in are counted from the rows loaded, so they are said only once every row is: before that the sentence
+    // says how many of the matches are shown (the query's own total against the rows loaded), never a document count of a part.
+    const pwhole = !rest("passages", p);
     const passagesSec = p && p.state === "ok" && ptotal > 0
-      ? cs.sec("screen.finder.route.passages", '<p class="mk-small">' + (ptotal === 1 ? cs.w("screen.finder.route.passages.holds.one") : cs.w("screen.finder.route.passages.holds.other", { n: String(ptotal), m: String(Math.max(pdocs, 1)) })) + "</p>" + passageRows) : failedRoute(p);
+      ? cs.sec("screen.finder.route.passages", '<p class="mk-small">' + (pwhole ? (ptotal === 1 ? cs.w("screen.finder.route.passages.holds.one") : cs.w("screen.finder.route.passages.holds.other", { n: String(ptotal), m: String(Math.max(pdocs, 1)) }))
+        : cs.w("screen.held.archivemore", { shown: String(prows.length), total: String(ptotal) })) + "</p>" + passageRows + moreOf("passages", p)) : failedRoute(p);
 
     // Subjects: "Subjects named".
     const srows = s && s.state === "ok" && Array.isArray(s.value.subjects) ? s.value.subjects : [];
@@ -158,7 +197,7 @@ export function finderStates() {
         + (n === 1 ? cs.w("screen.finder.named.nodoc.one") : cs.w("screen.finder.named.nodoc", { n: String(n) })) + "</span>", "", "");
     }).join(""));
     const subjectsSec = s && s.state === "ok" && scount > 0
-      ? cs.sec("screen.finder.subjects.heading", '<p class="mk-small">' + (scount === 1 ? cs.w("screen.finder.route.subjects.holds.one") : cs.w("screen.finder.route.subjects.holds.other", { n: String(scount) })) + "</p>" + subjectRows, { help: "screen.finder.subjects.help" })
+      ? cs.sec("screen.finder.subjects.heading", '<p class="mk-small">' + (scount === 1 ? cs.w("screen.finder.route.subjects.holds.one") : cs.w("screen.finder.route.subjects.holds.other", { n: String(scount) })) + "</p>" + subjectRows + moreOf("subjects", s), { help: "screen.finder.subjects.help" })
       : failedRoute(s);
 
     if (loading) return scopes + cs.state({ state: "loading" }, null) + cross;
@@ -166,10 +205,12 @@ export function finderStates() {
     const nothing = answeredAll && !ftotal && !ptotal && !scount;
     if (nothing) {
       // R12: no result: the words searched, what search covers, and "Capture it".
+      // R78: when the wider reading finds documents (`widen.total` above 0) the partial match is told apart from "nothing matches".
       const widen = f && f.value && f.value.widen;
-      return scopes + '<div class="mk-note" data-state="empty"><p><b>' + cs.w("screen.finder.noresult", { q: q }) + "</b> " + cs.w("screen.finder.covers") + "</p>"
+      const wider = widen && typeof widen.total === "number" && widen.total > 0;
+      return scopes + '<div class="mk-note" data-state="empty"><p><b>' + (wider ? cs.w("screen.finder.noresult.partial", { q: q }) : cs.w("screen.finder.noresult", { q: q })) + "</b> " + cs.w("screen.finder.covers") + "</p>"
         + '<p class="mk-acts"><a class="cs-btn" data-tone="quiet" data-nav href="/app/capture">' + cs.w("screen.finder.captureit") + "</a></p></div>"
-        + (widen && typeof widen.total === "number" && widen.total > 0 ? '<p class="mk-note">' + cs.w("screen.finder.widen", { n: String(widen.total) }) + "</p>" : "");
+        + (wider ? '<h3 class="mk-h2">' + cs.w("screen.finder.partial.head") + '</h3><p class="mk-note">' + cs.w("screen.finder.widen", { n: String(widen.total) }) + "</p>" : "");
     }
     const total = f && f.state === "ok" ? "" : "";
     return scopes + fieldsSec + passagesSec + subjectsSec + total + (drawn.length > 1 || plain ? '<p class="mk-small muted">' + cs.w("screen.finder.route.apart") + "</p>" : "") + cross;
@@ -183,10 +224,11 @@ export function finderStates() {
     if (!src) return "";
     const sc = src.value.scope;
     const levels = src.value.levels && typeof src.value.levels === "object" ? src.value.levels : {};
-    const reason = levels.meaning && typeof levels.meaning === "object" ? String(levels.meaning.reason || levels.meaning.says || "") : "";
+    // R76: the plane answers the reason as `why` (`retrieval/levels.mjs`); with none the row would end in a stub, so it is not drawn.
+    const reason = levels.meaning && typeof levels.meaning === "object" && typeof levels.meaning.why === "string" ? levels.meaning.why.trim() : "";
     const existence = Array.isArray(sc.existence_only_projects) ? sc.existence_only_projects.length : typeof sc.existence_only_projects === "number" ? sc.existence_only_projects : typeof sc.existence_only_count === "number" ? sc.existence_only_count : 0;
     const rows = [];
-    rows.push(cs.row(cs.icon("finding"), "<b>" + cs.w("screen.finder.covered.rests") + '</b><span class="meta">' + cs.w("state.undetermined", { reason: reason }) + "</span>", "", ""));
+    if (reason) rows.push(cs.row(cs.icon("finding"), "<b>" + cs.w("screen.finder.covered.rests") + '</b><span class="meta">' + cs.w("state.undetermined", { reason: reason }) + "</span>", "", ""));
     if (typeof sc.documents === "number") {
       const rest = typeof sc.documents_without_rows === "number" ? sc.documents_without_rows : Math.max(0, sc.documents - (Number(sc.documents_with_rows) || 0));
       const read = typeof sc.documents_with_rows === "number" ? sc.documents_with_rows : sc.documents - rest;
@@ -195,8 +237,113 @@ export function finderStates() {
       rows.push(cs.row(cs.icon("capture"), "<b>" + cs.w("screen.finder.covered.docs") + '</b><span class="meta">'
         + (existence === 1 ? cs.w("screen.finder.covered.docs.says.one", { n: String(sc.documents) }) : cs.w("screen.finder.covered.docs.says.other", { n: String(sc.documents), p: String(existence) })) + "</span>", "", ""));
     }
+    // G16: the content-axis tally (`captures_counted` of the captures in scope, by state): the documents only partly searchable are counted, and a
+    // tally that covers only its first captures says so (stand-ins: the log's own words for a partial look, the browse's "more").
+    const vocab = src.value.content_axis && src.value.content_axis.vocabulary && typeof src.value.content_axis.vocabulary === "object" ? Object.keys(src.value.content_axis.vocabulary) : [];
+    const partly = vocab.length > 1 ? Number(sc[vocab[1]]) || 0 : 0;
+    if (partly > 0 || sc.captures_truncated === true) {
+      rows.push(cs.row(cs.icon("capture"), '<span class="meta">' + (partly > 0 ? "<b>" + cs.esc(String(partly)) + "</b> " + cs.w("observation-log.partial.looked_got_part") : "")
+        + (sc.captures_truncated === true ? (partly > 0 ? " · " : "") + cs.w("find.browse.more") : "") + "</span>", "", ""));
+    }
     rows.push(cs.row(cs.icon("nobody"), "<b>" + cs.w("screen.finder.covered.looked") + "</b>", "", "") + nobody);
     return cs.sec("screen.finder.covered.heading", '<p class="mk-small">' + cs.w("screen.finder.covered.levels") + "</p>" + cs.sheet(rows.join("")));
+  };
+
+  /* ---- R67, R77: the frontier at four levels ---- */
+  // One row for each level `frontier` answered: the places nobody looked at (`never_looked_count`), else what its `tally` says was
+  // looked at; a level this reader does not read (`built: false`) is undetermined with the answer's note, a failed read is failed.
+  // "Somebody has looked everywhere" (R77) is said only when every level answered, was read and has no place left unlooked.
+  const frontier = function (cs, view) {
+    const LEVELS = ["document", "content", "meaning", "internet"];
+    const STATES = ["LOOKED_FOUND", "LOOKED_ABSENT", "LOOKED_INDETERMINATE", "partial"];
+    let everywhere = true;
+    let answered = 0;
+    const ui = view.ui || {};
+    // A place's own words: not a digest, and not the id of the document it lies in. A reference (the meaning level's `kind:key`, the
+    // identifier its source gave: `legislation:26-0788`) is named kind then key, never with the colon; an entity by what it is.
+    const referenceOf = function (x) {
+      const m = x && typeof x === "object" && x.subject_kind === "reference" && typeof x.subject === "string" ? /^([A-Za-z][\w-]*):(\S.*)$/.exec(x.subject.trim()) : null;
+      return m ? m[1] + " " + m[2] : "";
+    };
+    const ownName = function (x) {
+      const ref = referenceOf(x);
+      if (ref) return ref;
+      const named = x && typeof x === "object" ? (x.title || x.name || x.label || x.referent || x.detail || x.subject || "") : String(x);
+      const label = String(named).trim();
+      return label && !/^[0-9a-f]{12,}$/i.test(label) && label !== String(x && x.bundle_id || "") && !(x && x.subject_kind === "entity" && label === String(x.subject)) ? label : "";
+    };
+    // The places that name nothing themselves but lie in a document: their documents' titles, asked for once for all the levels
+    // (`search` over `id:` terms), kept in the page's memory under the ids asked, drawn on arrival.
+    const wanted = [];
+    LEVELS.forEach(function (level) {
+      const r = view.data["frontier_" + level];
+      const v = r && r.state === "ok" && r.value && typeof r.value === "object" ? r.value : null;
+      (v && Array.isArray(v.never_looked) ? v.never_looked : []).forEach(function (x) {
+        const id = x && typeof x === "object" && x.bundle_id ? String(x.bundle_id) : "";
+        if (id && !ownName(x) && wanted.indexOf(id) < 0) wanted.push(id);
+      });
+    });
+    const key = wanted.slice().sort().join(" ");
+    if (wanted.length && (!ui.placeTitles || ui.placeTitles.key !== key)) {
+      ui.placeTitles = { key: key, map: {} };
+      cs.call("search", { query: { q: wanted.map(function (id) { return "id:" + id; }).join(" OR "), limit: String(wanted.length) } }).then(function (a) {
+        const b = a && typeof a === "object" && a.result && typeof a.result === "object" ? a.result : a;
+        const map = {};
+        (b && b.ok !== false && Array.isArray(b.hits) ? b.hits : []).forEach(function (h) { if (h && h.bundle_id && h.title) map[String(h.bundle_id)] = String(h.title); });
+        cs.set("placeTitles", { key: key, map: map });
+      }, function () { cs.set("placeTitles", { key: key, map: {} }); });
+    }
+    const titleOf = function (id) { return ui.placeTitles && ui.placeTitles.key === key && ui.placeTitles.map[id] ? ui.placeTitles.map[id] : ""; };
+    const rows = LEVELS.map(function (level) {
+      const r = view.data["frontier_" + level];
+      if (!r || r.state === "loading") { everywhere = false; return ""; }
+      if (r.state === "failed") { everywhere = false; answered++; return cs.row(cs.icon("nobody"), "<b>" + cs.w("screen.answers.level." + level) + "</b>" + cs.state("frontier_" + level, null), "", ""); }
+      const v = r.value && typeof r.value === "object" ? r.value : null;
+      if (!v) { everywhere = false; return ""; }
+      answered++;
+      const name = "<b>" + cs.w("screen.answers.level." + level) + "</b>";
+      if (v.built === false || v.found === false) {
+        everywhere = false;
+        return cs.row(cs.icon("nobody"), name + '<span class="meta">' + cs.w("state.undetermined", { reason: String(v.note || "") }) + "</span>", "", "");
+      }
+      const n = typeof v.never_looked_count === "number" ? v.never_looked_count : (Array.isArray(v.never_looked) ? v.never_looked.length : 0);
+      if (n > 0) {
+        everywhere = false;
+        // C22: every place the level counts is named, never left out and never by a digest or an id: by its own words (its title, name, label,
+        // referent or detail, else its subject when that reads as words), else by its document's title (`titleOf`, read once for all the
+        // levels), else by the plain word for a document.
+        const items = (Array.isArray(v.never_looked) ? v.never_looked : []).map(function (x) {
+          const label = ownName(x);
+          const id = x && typeof x === "object" && x.bundle_id ? String(x.bundle_id) : "";
+          if (label || (id && titleOf(id))) return "<li>" + cs.esc(label || titleOf(id)) + "</li>";
+          // A place that is an entity is named for what it is; a document with no title is named by the day it came in, the one thing
+          // that tells it from the next (`registered` at the content level, `entered` at the meaning level), else by the plain word.
+          if (x && typeof x === "object" && x.subject_kind === "entity") return "<li>" + cs.w("shell.card.person") + "</li>";
+          const day = x && typeof x === "object" ? String(x.registered || x.entered || "") : "";
+          return "<li>" + (day && /^\d{4}-\d{2}-\d{2}/.test(day) ? cs.w("queue.source.untitled", { date: { html: cs.date(day) } }) : cs.w("shell.card.document")) + "</li>";
+        }).join("");
+        return cs.row(cs.icon("nobody"), name + '<span class="meta">' + cs.mark("gap", "nobody") + " " + (n === 1 ? cs.w("screen.finder.nobody.one") : cs.w("screen.finder.nobody", { n: String(n) })) + "</span>"
+          + (items ? '<ul class="mk-list">' + items + "</ul>" : ""), "", "");
+      }
+      // Nothing left unlooked: the states its tally names (a count apiece), each by its word. The log's `PRESENT` is "looked, found" (as
+      // `LOOKED_FOUND` is, the two counted together); a look that could not tell is told by the log's own held word; a state with no
+      // word held is not drawn as its code (BOB: `screen.answers.state.LOOKED_INDETERMINATE` for the design lane).
+      const tally = v.tally && typeof v.tally === "object" ? v.tally : {};
+      const counts = {};
+      Object.keys(tally).forEach(function (s) {
+        const key = s === "PRESENT" || s === "LOOKED_FOUND" ? "LOOKED_FOUND" : s;
+        counts[key] = (counts[key] || 0) + (Number(tally[s]) || 0);
+      });
+      // G16 (S4): a look that got part of what it looked at is not "looked everywhere": it is said, and it blocks that sentence.
+      if (counts.partial > 0) everywhere = false;
+      const said = Object.keys(counts).filter(function (s) { return counts[s] > 0 && STATES.indexOf(s) >= 0; }).map(function (s) {
+        const state = s === "LOOKED_INDETERMINATE" ? cs.w("refusal.LOOKED_INDETERMINATE") : s === "partial" ? cs.w("observation-log.partial.looked_got_part") : cs.w("screen.answers.state." + s);
+        return (s === "LOOKED_INDETERMINATE" || s === "partial" ? state : cs.w("screen.answers.look", { level: { html: cs.w("screen.answers.level." + level) }, state: { html: state } })) + " (" + cs.esc(String(counts[s])) + ")";
+      });
+      return cs.row(cs.icon("nobody"), name + (said.length ? '<span class="meta">' + said.join(" · ") + "</span>" : ""), "", "");
+    }).filter(Boolean);
+    const all = everywhere && answered === LEVELS.length;
+    return (rows.length ? cs.sheet(rows.join("")) : "") + (all ? '<p class="mk-note">' + cs.w("screen.finder.nobody.none") + "</p>" : "");
   };
 
   /* ---- R57: citing the whole held set ---- */
@@ -260,5 +407,5 @@ export function finderStates() {
     return { query: { handle: el.dataset.handle, project: q, role: role }, body: {} };
   };
 
-  return { hits: hits, keyOf: keyOf, table: table, routes: routes, covered: covered, cite: cite, citeSend: citeSend, chip: chip };
+  return { hits: hits, keyOf: keyOf, table: table, routes: routes, more: more, covered: covered, frontier: frontier, cite: cite, citeSend: citeSend, chip: chip };
 }

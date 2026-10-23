@@ -14,177 +14,14 @@
  * be spent on purpose. The driver's own polling and CDP timeouts still use real timers. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { renderWithBinding, browserBindingRenderer, RENDER_BLOCKED_REASONS } from "../../../src/browserrender.mjs";
+import { renderWithBinding, browserBindingRenderer, RENDER_BLOCKED_REASONS, BODY_CONCURRENCY } from "../../../src/browserrender.mjs";
+import { HOST, scaled, later, fakeBinding } from "./fake-binding.mjs";
 import { SUBRESOURCE_CAP, SUBRESOURCE_MAX } from "../../../src/subresources.mjs";
 import { renderBlock } from "../../../src/render.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 
-const HOST = "portal.example.gov";
-const SCALE = 20;
-const scaled = () => { const t0 = Date.now(); return () => t0 + (Date.now() - t0) * SCALE; };
 /* A clock at scale that jumps forward by `by` ms when `jump()` is called. */
 const jumping = () => { const base = scaled(); let extra = 0; const now = () => base() + extra; now.jump = (by) => { extra += by; }; return now; };
-const later = (fakeMs, fn) => setTimeout(fn, Math.max(0, fakeMs / SCALE));
-
-/* The fake browser. `pages` maps a pathname to what the page does; `mode` bends the
-   browser's own behaviour. `stats` counts sessions and closes; `on` lets a test act at
-   a named CDP call (to jump a clock). */
-function fakeBinding(pages, mode = {}, on = {}) {
-  const stats = { acquires: 0, upgrades: 0, closeTargets: 0, browserCloses: 0, socketCloses: 0, lateCloses: 0, calls: [], asked: {},
-                  sent: [], held: {}, resumed: [] };
-  const socket = () => {
-    const ls = { message: [], close: [] };
-    let closed = false, page = null, key = null;
-    const timers = [];
-    const deliver = (obj) => setImmediate(() => { if (!closed) for (const f of ls.message) f({ data: JSON.stringify(obj) }); });
-    const ev = (method, params, sessionId = "S1") => deliver({ method, params, sessionId });
-    /* R64: the browser's hold. `fetchOn` and `socketsBlocked` are per session; a request on a session with
-       interception on is PAUSED until the driver answers it, and only one let go reaches `stats.sent`. */
-    const fetchOn = new Set(), socketsBlocked = new Set(), pauses = new Map();
-    let pauseN = 0;
-    const hold = (sid, url, type, networkId, frameId = "F1") => new Promise((resolve) => {
-      if (!fetchOn.has(sid)) { stats.sent.push(url); return resolve(true); }
-      const id = "I" + pauseN++;
-      pauses.set(id, (go) => { if (go) stats.sent.push(url); resolve(go); });
-      ev("Fetch.requestPaused", { requestId: id, request: { url }, resourceType: type || "Other", networkId, frameId }, sid);
-    });
-    const runRequests = (rs, sid, prefix) => rs.forEach((r, i) => timers.push(later(r.startAfterMs || 0, async () => {
-      const id = prefix + i;
-      ev("Network.requestWillBeSent", { requestId: id, request: { url: r.url }, type: r.type, frameId: r.frameId || "F1" }, sid);
-      const blocked = () => ev("Network.loadingFailed", { requestId: id, errorText: "net::ERR_BLOCKED_BY_CLIENT" }, sid);
-      if (!(await hold(sid, r.url, r.type, id, r.frameId))) return blocked();
-      if (r.end === "redirect") {
-        ev("Network.requestWillBeSent", { requestId: id, request: { url: r.to }, type: r.type, frameId: "F1", redirectResponse: { status: r.status } }, sid);
-        if (!(await hold(sid, r.to, r.type, id))) return blocked();
-        ev("Network.responseReceived", { requestId: id, type: r.type, frameId: "F1", response: { status: r.toStatus } }, sid);
-        ev("Network.loadingFinished", { requestId: id }, sid);
-        return;
-      }
-      const end = () => {
-        if (typeof r.status === "number") ev("Network.responseReceived", { requestId: id, type: r.type, frameId: r.frameId || "F1", response: { status: r.status } }, sid);
-        if (r.end === "finished") ev("Network.loadingFinished", { requestId: id }, sid);
-        if (r.end === "failed") ev("Network.loadingFailed", { requestId: id, errorText: "net::ERR_FAILED" }, sid);
-        if (r.end === "blocked") ev("Network.loadingFailed", { requestId: id, blockedReason: r.blockedReason }, sid);
-      };
-      if (r.lifeMs) timers.push(later(r.lifeMs, end)); else end();
-    })));
-    const openSockets = (urls, sid, prefix) => urls.forEach((url, i) => {
-      ev("Network.webSocketCreated", { requestId: prefix + i, url }, sid);
-      if (!socketsBlocked.has(sid)) stats.sent.push(url);
-    });
-    const ws = {
-      accept() {},
-      addEventListener(t, f) { ls[t].push(f); },
-      close() { if (closed) return; closed = true; stats.socketCloses++; timers.forEach(clearTimeout); for (const f of ls.close) f({}); },
-      send(raw) {
-        const m = JSON.parse(raw);
-        stats.calls.push(m.method);
-        if (on[m.method]) on[m.method](m);
-        const ok = (result) => deliver({ id: m.id, result });
-        const err = (message) => deliver({ id: m.id, error: { message } });
-        const sid = m.sessionId || null;
-        const refuse = (mode.refuse || []).includes(m.method) || ((mode.refuseOn || {})[sid] || []).includes(m.method);
-        switch (m.method) {
-          case "Fetch.enable":
-            stats.held[sid] = { ...(stats.held[sid] || {}), fetch: m.params.patterns };
-            if (refuse) return err("Fetch.enable unavailable");
-            fetchOn.add(sid); return ok({});
-          case "Network.setBlockedURLs":
-            stats.held[sid] = { ...(stats.held[sid] || {}), blockedURLs: m.params.urls };
-            if (refuse) return err("setBlockedURLs unavailable");
-            if ((m.params.urls || []).includes("ws://*") && (m.params.urls || []).includes("wss://*")) socketsBlocked.add(sid);
-            return ok({});
-          case "Target.setAutoAttach":
-            stats.held[sid] = { ...(stats.held[sid] || {}), autoAttach: m.params };
-            return refuse ? err("setAutoAttach unavailable") : ok({});
-          case "Fetch.continueRequest": case "Fetch.failRequest": {
-            const go = pauses.get(m.params.requestId);
-            if (!go) return err("Invalid InterceptionId.");
-            pauses.delete(m.params.requestId);
-            if (m.method === "Fetch.failRequest") stats.asked.failReason = m.params.errorReason;
-            go(m.method === "Fetch.continueRequest");
-            return ok({});
-          }
-          case "Runtime.runIfWaitingForDebugger": {
-            stats.resumed.push(sid);
-            const child = page && page.child;
-            if (child && sid === "S2") { runRequests(child.requests || [], "S2", "K"); openSockets(child.sockets || [], "S2", "KW"); }
-            return ok({});
-          }
-          case "Browser.getVersion": return refuse ? err("no version") : ok({ product: mode.product ?? "HeadlessChrome/124.0.6367.207" });
-          case "Target.getTargets": return ok({ targetInfos: mode.notargets ? [] : [{ targetId: "T1", type: "page" }] });
-          case "Target.createTarget": stats.asked.createTarget = true; return ok({ targetId: "T-made" });
-          case "Target.attachToTarget": return ok({ sessionId: "S1" });
-          case "Emulation.setDeviceMetricsOverride": case "Emulation.setLocaleOverride": case "Emulation.setTimezoneOverride":
-            stats.asked[m.method] = m.params; return refuse ? err("override refused") : ok({});
-          case "Network.enable": case "Page.enable": case "Debugger.enable": return refuse ? err(`${m.method} unavailable`) : ok({});
-          case "Page.navigate": return (async () => {
-            key = new URL(m.params.url).pathname; page = pages[key] || { requests: [], scripts: [] };
-            if (page.navHang) return;
-            /* The navigation is a request too: held, and refused as the browser refuses one (R64). Its redirect
-               hop, when the page has one, is held again. */
-            if (!(await hold("S1", m.params.url, "Document", "NAV"))) return ok({ frameId: "F1", errorText: "net::ERR_BLOCKED_BY_CLIENT" });
-            if (page.navRedirect && !(await hold("S1", page.navRedirect, "Document", "NAV"))) return ok({ frameId: "F1", errorText: "net::ERR_BLOCKED_BY_CLIENT" });
-            if (page.navError) return ok({ frameId: "F1", errorText: page.navError });
-            ok({ frameId: "F1", loaderId: "L1" });
-            runRequests(page.requests || [], "S1", "R");
-            openSockets(page.sockets || [], "S1", "W");
-            /* A frame the page starts, auto-attached and waiting for the driver to resume it. */
-            if (page.child) ev("Target.attachedToTarget", { sessionId: "S2", targetInfo: { targetId: "T2", type: "iframe" }, waitingForDebugger: true });
-            /* A page that keeps starting short requests: never quiet. */
-            if (page.churn) {
-              let n = 0;
-              const tick = () => { const id = "C" + n++; ev("Network.requestWillBeSent", { requestId: id, request: { url: `https://${HOST}/poll?${n}` }, type: "XHR", frameId: "F1" });
-                timers.push(later(page.churn.lifeMs, () => ev("Network.loadingFinished", { requestId: id }))); timers.push(later(page.churn.everyMs, tick)); };
-              timers.push(later(page.churn.startAfterMs || 0, tick));
-            }
-            for (const s of page.scripts || []) ev("Debugger.scriptParsed", { url: s.url, scriptId: "s" });
-            if (!page.noLoad) timers.push(later(page.loadAfterMs || 0, () => ev("Page.loadEventFired", { timestamp: 1 })));
-          })();
-          case "Network.getResponseBody": {
-            if (page && page.bodyHang) return;
-            const r = page && (page.requests || [])[Number(String(m.params.requestId).slice(1))];
-            if (!r || r.evicted || (r.bodyText === undefined && r.bodyB64 === undefined)) return err("No resource with given identifier found");
-            return r.bodyB64 !== undefined ? ok({ body: r.bodyB64, base64Encoded: true }) : ok({ body: r.bodyText, base64Encoded: false });
-          }
-          case "Runtime.evaluate": {
-            if (page && page.noHtml) return ok({ result: { value: undefined } });
-            const document = { doctype: page && page.doctype === null ? null : { name: (page && page.doctype) || "html" },
-                               documentElement: { outerHTML: `<html><body><main>Rendered ${key}</main></body></html>` } };
-            const location = { href: `https://${HOST}${(page && page.landed) || key}` };
-            // eslint-disable-next-line no-new-func
-            return ok({ result: { value: new Function("document", "location", `return ${m.params.expression}`)(document, location) } });
-          }
-          case "Target.closeTarget": stats.closeTargets++; return ok({});
-          case "Browser.close": stats.browserCloses++; return ok({});
-          default: return err("unknown method " + m.method);
-        }
-      },
-    };
-    return ws;
-  };
-  return {
-    stats,
-    async fetch(url, init = {}) {
-      const u = new URL(url);
-      if (mode.throws) throw new Error("binding exploded");
-      if ((init.headers || {}).Upgrade === "websocket") {
-        if (mode.noupgrade) return { status: 200 };
-        stats.upgrades++;
-        stats.upgradePath = u.pathname;
-        const ws = socket();
-        if (mode.slowUpgradeMs) { await new Promise((r) => setTimeout(r, mode.slowUpgradeMs)); const c = ws.close; ws.close = () => { stats.lateCloses++; c(); }; }
-        return { status: 101, webSocket: ws };
-      }
-      if (init.method === "POST" && u.pathname === "/v1/devtools/browser") {
-        stats.acquires++;
-        if (mode.noacquire) return { status: 503, text: async () => "no capacity", json: async () => ({}) };
-        return { status: 200, json: async () => (mode.nosessionid ? { ok: true } : { sessionId: "sess-" + stats.acquires }), text: async () => "" };
-      }
-      return { status: 404, text: async () => "unexpected" };
-    },
-  };
-}
 
 const PAGES = {
   "/same": {
@@ -230,7 +67,7 @@ test("R19: a session is opened over the binding's two calls and the answer is R1
   const a = await render("/same", {}, { binding: b });
   assert.equal(a.ok, true);
   assert.deepEqual(Object.keys(a).sort(), ["dpr", "elapsed_ms", "engine", "engine_version", "html", "locale", "navigated_to", "ok",
-    "requests", "scripts", "status", "timezone", "viewport", "wait"]);
+    "phases_ms", "requests", "scripts", "status", "timezone", "viewport", "wait"]);
   assert.deepEqual([b.stats.acquires, b.stats.upgrades, b.stats.upgradePath], [1, 1, "/v1/devtools/browser/sess-1"]);
   assert.equal(typeof a.elapsed_ms, "number");
   const via = await browserBindingRenderer(fakeBinding(PAGES)).render({ url: `https://${HOST}/same`, wait: { timeout_ms: 1000 } });
@@ -368,14 +205,14 @@ test("R25: each completed load's body is collected or its absence stated, nothin
   const over = await render("/big", {}, { binding: fakeBinding({ "/big": big }) });
   assert.match(over.requests[0].body_unavailable, new RegExp(`over the ${SUBRESOURCE_MAX}-byte ceiling`));
 
-  /* The time bounds: the collection's own 10,000 ms, and the render's reserved bound. */
-  const two = { requests: [0, 1, 2].map((i) => ({ url: `https://${HOST}/t${i}`, type: "XHR", status: 200, end: "finished", bodyText: "z" })) };
-  const now = jumping();
-  const own = await render("/two", {}, { binding: fakeBinding({ "/two": two }, {}, { "Network.getResponseBody": () => now.jump(11000) }), now });
+  /* The time bounds: the collection's own 10,000 ms, and the render's reserved bound. A body still outstanding when
+     the phase ends is stated, with the sentence, and the bodies that finished are kept (R68). */
+  const stuck = { requests: [0, 1, 2].map((i) => ({ url: `https://${HOST}/t${i}`, type: "XHR", status: 200, end: "finished", bodyText: "z", ...(i === 2 ? { bodyHang: true } : {}) })) };
+  const own = await render("/stuck", {}, { binding: fakeBinding({ "/stuck": stuck }) });
+  assert.deepEqual(own.requests.map((r) => r.body_text), ["z", "z", undefined]);
   assert.equal(own.requests.at(-1).body_unavailable, "the 10000 ms body-collection bound was spent");
-  const now2 = jumping();
-  const reserved = await render("/two", { navigation_timeout_ms: 1000, wait: { until: "networkidle", timeout_ms: 1000 } },
-    { binding: fakeBinding({ "/two": two }, {}, { "Network.getResponseBody": () => now2.jump(30000) }), now: now2 });
+  const reserved = await render("/stuck", { navigation_timeout_ms: 1000, wait: { until: "networkidle", timeout_ms: 1000 } }, { binding: fakeBinding({ "/stuck": stuck }) });
+  assert.deepEqual(reserved.requests.map((r) => r.body_text), ["z", "z", undefined]);
   assert.equal(reserved.requests.at(-1).body_unavailable, word("browserrender.text.render_reserved_bound"));
 
   /* Closed on the succeeding path and on the failing ones. */
@@ -523,4 +360,87 @@ test("R64: a refused navigation fails naming the address; a render whose hold ca
   assert.equal(ca.ok, true);
   assert.deepEqual(c.stats.resumed, []);
   assert.ok(!c.stats.sent.includes("https://frames.example.com/f"));
+});
+
+/* R68 (fix round 3, C13, P5): the page of twenty sub-resources that each take a second to give their body. */
+const SLOW = (n, over = {}) => ({ requests: [
+  { url: `https://${HOST}/slow`, type: "Document", status: 200, end: "finished", bodyText: "<html>shell</html>" },
+  ...Array.from({ length: n }, (_, i) => ({ url: `https://${HOST}/s${i}.js`, type: "Script", status: 200, end: "finished", bodyText: `s${i}`, bodyMs: 1000 })),
+], loadAfterMs: 2000, ...over });
+
+test("R68: the bodies of twenty slow sub-resources are collected several at a time and from the start of the load, inside the bound", async () => {
+  const b = fakeBinding({ "/slow": SLOW(20) });
+  const a = await render("/slow", { navigation_timeout_ms: 10000, wait: { until: "networkidle", timeout_ms: 15000 } }, { binding: b });
+  assert.equal(a.ok, true);
+  /* Every body was kept; none is missing, none filled. */
+  assert.equal(a.requests.filter((r) => typeof r.body_text === "string").length, 21);
+  assert.ok(a.requests.every((r) => !("body_unavailable" in r)));
+  /* Several at a time, never past the handful the module names. */
+  assert.ok(b.stats.maxBodyActive >= 2 && b.stats.maxBodyActive <= BODY_CONCURRENCY, String(b.stats.maxBodyActive));
+  /* From the start of the load: the first body was asked for before the document was taken. */
+  assert.ok(b.stats.calls.indexOf("Network.getResponseBody") < b.stats.calls.indexOf("Runtime.evaluate"));
+  /* The body phase took less than the sum of the bodies' times (20 s of the test's clock), the render ends inside
+     navMs + timeoutMs, and the four phases are stated as whole milliseconds. */
+  const p = a.phases_ms;
+  assert.deepEqual(Object.keys(p), ["session", "load", "quiet", "bodies"]);
+  assert.ok(Object.values(p).every((v) => Number.isInteger(v) && v >= 0), JSON.stringify(p));
+  assert.ok(p.bodies < 20000 / 2, JSON.stringify(p));
+  assert.ok(a.elapsed_ms < 25000, String(a.elapsed_ms));
+  assert.ok(p.load >= 2000 - 100, JSON.stringify(p)); /* the load event was fired 2 s after the navigation */
+  assert.ok(p.session + p.load + p.quiet + p.bodies <= a.elapsed_ms + 50, JSON.stringify(p));
+});
+
+test("R68: a body still outstanding at the cap is body_unavailable with its sentence, the bodies that finished are kept, and a phase not reached is null", async () => {
+  /* Three bodies that never come, among ones that do: the phase ends at the bound and says so, once. */
+  const page = SLOW(4);
+  page.requests[2].bodyHang = true; page.requests[3].bodyHang = true;
+  const a = await render("/slow2", { navigation_timeout_ms: 1000, wait: { until: "load", timeout_ms: 3000 } }, { binding: fakeBinding({ "/slow2": page }) });
+  assert.equal(a.ok, true);
+  const by = Object.fromEntries(a.requests.map((r) => [r.url, r]));
+  assert.equal(by[`https://${HOST}/s0.js`].body_text, "s0");
+  for (const u of ["s1", "s2"]) {
+    assert.equal(by[`https://${HOST}/${u}.js`].body_text, undefined);
+    assert.equal(by[`https://${HOST}/${u}.js`].body_unavailable, word("browserrender.text.render_reserved_bound"));
+  }
+  assert.ok(a.elapsed_ms <= 1000 + 3000 + 500, String(a.elapsed_ms));
+  /* A load event that never fired: the load phase ran to the end of the wait, and the quiet wait was not reached. */
+  const none = await render("/noload", { wait: { until: "networkidle", timeout_ms: 1000 } });
+  assert.equal(none.phases_ms.quiet, null);
+  assert.ok(none.phases_ms.load >= 900, JSON.stringify(none.phases_ms));
+});
+
+test("R68 control: a page with no sub-resources states the four phases, a zero body phase, and every other field as before", async () => {
+  const a = await render("/quirks");
+  assert.equal(a.ok, true);
+  assert.deepEqual(Object.keys(a.phases_ms), ["session", "load", "quiet", "bodies"]);
+  assert.equal(a.phases_ms.bodies, 0);
+  assert.ok(Number.isInteger(a.phases_ms.quiet));
+  assert.deepEqual(a.requests, []);
+  assert.equal(a.html, "<html><body><main>Rendered /quirks</main></body></html>");
+  assert.equal(a.wait.fired, "networkidle");
+  assert.ok(a.elapsed_ms < 5000);
+  /* The ceilings are held in the order the loads completed whatever the concurrency. */
+  const many = { requests: Array.from({ length: SUBRESOURCE_CAP + 10 }, (_, i) => ({ url: `https://${HOST}/m${i}`, type: "Image", status: 200, end: "finished", bodyText: "x", bodyMs: i < 50 ? 100 : 0 })) };
+  const cap = await render("/many", {}, { binding: fakeBinding({ "/many": many }) });
+  assert.equal(cap.requests.filter((r) => r.body_text === "x").length, SUBRESOURCE_CAP);
+  assert.equal(cap.requests.filter((r) => typeof r.body_unavailable === "string").length, 10);
+});
+
+test("R68 R8 (C13a, P7): a page of 33 bodies rendered by the real driver and kept by keepRenderBodies against a store charging 0.27 s a trip: the bodies are collected and kept in under 6 s, each digest in its request's place", async () => {
+  const { keepRenderBodies } = await import("../../../src/render.mjs");
+  const { createHash } = await import("node:crypto");
+  const page = { requests: Array.from({ length: 33 }, (_, i) => ({ url: `https://${HOST}/s${i}.js`, type: "Script", status: 200, end: "finished", bodyText: `body ${i} `.padEnd(2000, "x") })) };
+  const held = new Map();
+  const trip = () => new Promise((r) => setTimeout(r, 270));
+  const t0 = Date.now();
+  const a = await render("/zion", {}, { binding: fakeBinding({ "/zion": page }) });
+  const out = await keepRenderBodies(a, {
+    sha256: async (b) => createHash("sha256").update(b).digest("hex"),
+    put: async (d, b) => { await trip(); if (held.has(d)) return; await trip(); held.set(d, b); } });
+  const took = Date.now() - t0;
+  assert.ok(took < 6000, `${took} ms`);
+  a.requests.forEach((r, i) => {
+    assert.equal(out[i].sha256, createHash("sha256").update(r.body_text).digest("hex"), `request ${i}`);
+    assert.ok(held.has(out[i].sha256));
+  });
 });

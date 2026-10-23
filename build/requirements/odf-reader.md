@@ -1,6 +1,6 @@
 # odf-reader — requirements
 
-**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Last changed T35 (T35-76: R47; K1903); every requirement met (K1919). Last changed T47 (T47-5: R47 moved from Private to Provides, `file-safety`'s use, wording unchanged, N942); met (K3029).
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Last changed T35 (T35-76: R47; K1903); every requirement met (K1919). Last changed T47 (T47-5: R47 moved from Private to Provides, `file-safety`'s use, wording unchanged, N942); met (K3029). Last changed T51 fix round 6 (G15; K4571, K4579): R19 amended, `lineRows`.
 
 ## Public
 
@@ -122,7 +122,7 @@ counts:{chars, cells, formulas, undetermined}}`; `images` is added (R30).**
   (accumulated over the cells, so a padding run of empty repeats never counts); `range` is
   `usedSheetRange(name, usedRows, usedCols)` (from `office-readers`), or `null` when nothing
   was used.
-- **R19** A sheet's `text` is its non-empty rows, each row's cells tab-joined by their
+- **R19** A sheet's `text` is its non-empty rows, each row's cells tab-joined by their (T51 fix round 6, G15; K4571, K4579) `odsEntry.text()`'s every sheet also carries `lineRows`: one 1-based row number per line of the sheet's `text` (the row as a spreadsheet shows it, `table:number-rows-repeated` counted; a cell of several paragraphs or line breaks gives each of its lines that cell's row), the same length as `text.split("\n")`, and `[]` when the sheet has no text. It is the sheet's own rows, never the used range. Over the size guard or repeat bound with no readable body, `sheets` is `[]` and no sheet carries it. Computed from the bytes at each read: a stored reading made before this has none, and a consumer reads absent as unknown.
   displayed value (never their formula), rows newline-joined; a hidden sheet's text IS
   extracted, flagged only by `hidden`. `document` is the non-empty sheets' text, newline-
   joined. `cells` counts every cell with a non-empty value; `formulas` counts every cell
@@ -232,6 +232,8 @@ evidentiary, basis} | {determined:false, flavour, evidentiary:null, basis}>`**
   BeanShell or JavaScript macros; K1917); `{kind:"launch", part, event}` for each
   `presentation:event-listener` whose `presentation:action` is `execute`; `{kind:"unread", part, why}` for a
   part it could not read for this list. A file with none answers `[]`.
+
+- **R48** (fix round 4b, F7; K4489, K4504) **Large content is stated, not read.** A `content.xml` over `MEASURED_OOXML_TEXT_BOUND_BYTES` is not read in pieces (one string re-walked by the reader) and is stated with its size: `parts().guard`, R10, R13, R20 and R27's marker and the envelope's `guard` carry `sizeGuard`'s marker plus `final: true`; R45 and R34 unchanged. Test: `large.test.mjs`.
 
 ## Private
 

@@ -258,14 +258,51 @@ test("R36: resolve — machine, not a contradiction inquiry (absent, invisible, 
   assert.equal(w.count("contradiction_acts"), 1);
   w.bv.concludeRefusal = null;
   const ok = w.c.resolve({ inquiry: up.inquiry, resolution: { kind: "dissolved", coordinates: ["scope"], qualifiers: { a: "base", b: "total" } },
-                          conclusion: "two fees", viewer: M1, author: M1 });
+                          conclusion: "two fees, two bases", viewer: M1, author: M1 });
   assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 600));
   assert.deepEqual([ok.kind, ok.family, ok.state], ["dissolved", "DISSOLVED", "resolved"]);
   const call = w.bv.concludeCalls.at(-1);
-  assert.deepEqual([call.target, call.project, call.author, call.conclusion], [up.inquiry, undefined, M1, "two fees"]);
+  assert.deepEqual([call.target, call.project, call.author, call.conclusion], [up.inquiry, undefined, M1, "two fees, two bases"]);
   assert.deepEqual(w.k.contradictionLink(up.inquiry).resolution, { kind: "dissolved", coordinates: ["scope"], qualifiers: { a: "base", b: "total" } });
   assert.deepEqual(ok.act.acceptance, { scope: { basis: "unaided" } });
   assert.equal(shown(w, duty).resolution.kind, "dissolved");
+});
+
+test("R36 (T51, B5): resolve on a freshly taken-up question concludes in one act on the member's own words (reading), its BAD_READING reaching the member; a named accepted version still adopts that claim", () => {
+  const w = seeded({ strictConclude: true });
+  const fresh = (key = "K2") => w.c.takeUp({ candidate: cand(w, key, "record"), question: "Q?", frame: "a", viewer: M1, author: M1 });
+  const resolve = (up, extra) => w.c.resolve({ inquiry: up.inquiry, resolution: { kind: "irreconcilable" }, viewer: M1, author: M1, ...extra });
+  const words = "both fees are in the record";
+  /* no version: the conclusion's words are the reading, and the call succeeds */
+  const up = fresh();
+  const ok = resolve(up, { conclusion: words });
+  assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 600));
+  assert.equal(ok.state, "resolved");
+  const call = w.bv.concludeCalls.at(-1);
+  assert.deepEqual([call.reading, call.version, call.conclusion], [words, "", words]);
+  assert.equal(shown(w, w.k.contradictionLink(up.inquiry).candidate).state, "resolved");
+  /* a blank or whitespace version is no version */
+  const blank = fresh("K4");
+  assert.equal(resolve(blank, { conclusion: words, version: "   " }).ok, true);
+  /* BAD_READING reaches the member (12 to 500 characters), and nothing lands */
+  const bad = fresh("K1");
+  const before = [w.record.head(bad.inquiry).bundleSha, w.count("contradiction_acts")];
+  for (const conclusion of ["too short", "x".repeat(501), "", null]) {
+    const r = resolve(bad, { conclusion });
+    assert.equal(r.ok, false, String(conclusion).slice(0, 20));
+    assert.equal(r.code, "BAD_READING", String(conclusion).slice(0, 20));
+    assert.deepEqual([w.record.head(bad.inquiry).bundleSha, w.count("contradiction_acts")], before);
+  }
+  /* control: a version it does not carry is still NO_CLAIM, relayed whole, and no reading is sent with it */
+  const nope = resolve(bad, { conclusion: words, version: "nope" });
+  assert.equal(nope.code, "NO_CLAIM");
+  assert.equal(w.bv.concludeCalls.at(-1).reading, undefined);
+  /* control: a named accepted version adopts that claim, whatever the conclusion's length */
+  w.bv.accepted.add(`${bad.inquiry}|v1`);
+  const adopted = resolve(bad, { conclusion: "short", version: "v1" });
+  assert.equal(adopted.ok, true, JSON.stringify(adopted).slice(0, 600));
+  const c2 = w.bv.concludeCalls.at(-1);
+  assert.deepEqual([c2.version, c2.reading], ["v1", undefined]);
 });
 
 test("R36: a conclusion reached by basis-versions' own door carries its resolution the same way, and records no acceptance basis", () => {

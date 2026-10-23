@@ -100,3 +100,8 @@ test("R36 ai-accounts declares aikeepaway: its requires alone raise no refusal n
   await declaredOpHolds({ op: "aikeepaway", declaration: DECLARED_OPS["aikeepaway"], call: mk("aikeepaway", {"by":"ann","viewer":"member:ann"}),
     refusedNaming: named({}, true), same: sameCode });
 });
+
+test("R37 ai-accounts declares accountusesset: its requires alone raise no refusal naming a field, each missing one is refused naming it, and a field outside accepts is dropped or refused", async () => {
+  await declaredOpHolds({ op: "accountusesset", declaration: DECLARED_OPS["accountusesset"], call: mk("accountusesset", {"by":"ann","viewer":"member:ann"}),
+    refusedNaming: named({}), values: { owner: "member:ann", switch: "ask", on: true }, same: sameCode });
+});

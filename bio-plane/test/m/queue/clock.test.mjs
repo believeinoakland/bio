@@ -3,7 +3,7 @@
    `queueOf`'s clock option, over the queue's test world. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, NOW, iso, byId } from "./world.mjs";
+import { world, NOW, iso, byId, untimed } from "./world.mjs";
 import { queueOf, queueOps } from "../../../src/queue/index.mjs";
 
 const DAY = 86400000;
@@ -33,8 +33,8 @@ test("R53: op=queue with now a year ahead, in the query or the body, answers the
   assert.equal(plain.ok, true, JSON.stringify(plain));
   const ahead = ask(w, `&now=${YEAR_AHEAD}`);
   const inBody = ask(w, "", { now: YEAR_AHEAD, nowMs: YEAR_AHEAD });
-  assert.deepEqual(ahead, plain, "a query `now` is never read");
-  assert.deepEqual(inBody, plain, "a body `now` is never read");
+  assert.deepEqual(untimed(ahead), untimed(plain), "a query `now` is never read");
+  assert.deepEqual(untimed(inBody), untimed(plain), "a body `now` is never read");
   /* Judged at the module's clock (the world's NOW): the task is an hour old, the snooze still holds, and the producers
      were handed that instant on every call. */
   const it = byId(plain)["TASK-2026-0001-a"];

@@ -79,7 +79,7 @@ export const TASK_EVENT_KIND = 'authority-undetermined';
 const TASK_KIND_ENUM = [TASK_EVENT_KIND];
 const TASK_ROLE_ENUM = ['project-manager', 'group-admin', 'member'];
 const TASK_STATUS_ENUM = ['open', 'resolved', 'forwarded'];
-const TASK_EVENT_ENUM = ['created', 'forwarded', 'resolved', 'folded'];
+const TASK_EVENT_ENUM = ['created', 'forwarded', 'resolved', 'folded', 'decided', 'resolved_undecided'];
 const MEMBER_ID_RE = /^[a-z0-9][a-z0-9-]{1,40}$/;
 
 /** C-19.1 (error): data/inbox.json task grammar (D-98, INBOX-GRAMMAR.md).
@@ -246,4 +246,10 @@ export const CHECK_REQUEST_CHECKS = Object.freeze({
     word('refusal.MACHINE_CANNOT_ASK_SIGN')),
   SIGN_ALREADY_ASKED: checkRow(17, "signRequest", "is-sign-asked",
     word('refusal.SIGN_ALREADY_ASKED')),
+  /* (T51; K4169, UC-046; R20) Deciding an authority task adds two refusals of its own. The others it answers are R3's
+     (`NO_ACTOR`, `NO_SUCH_TASK`, `TASK_NOT_YOURS`) and provenance's `declareAuthority`, carried with their own rows. */
+  MACHINE_CANNOT_DECIDE: checkRow(18, "taskDecide", "is-machine-decide",
+    localize('tasks.checks.machine_cannot_decide', 'Deciding who issued a document says what the record stands on, and that is a named member\'s judgement. The credential that asked here is an automated one: it can surface the question and prepare what is needed to answer it, and cannot answer it. Sign in as a member to decide.')),
+  TASK_NOT_AN_AUTHORITY_TASK: checkRow(19, "taskDecide", "is-authority-task",
+    localize('tasks.checks.task_not_an_authority_task', 'That task is not a question about who issued a document, so it has no decision to record. Open the task and use the action it offers. Nothing was changed.')),
 });

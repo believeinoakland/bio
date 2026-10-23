@@ -19,7 +19,6 @@ import { deliveringPrincipal, delivererOf } from "../deliverer.mjs";
 /* K651, K691: the case container's one assembly (public-read R6), read here rather than handed in by the door; the file
    is public-read's since publication's merge (K697). */
 import { assembleCaseContainer as assembleContainer } from "../publication/worker.mjs";
-import { withRegisterChecks } from "../provenance/index.mjs";
 import { parseFrontmatter, isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { rowOf, withCaseMemberChecks } from "./checks.mjs";
 import { findingFactsRefusal, findingShas, findingPublishArgs, copyFinding, reuseCheck, casesToAssemble,
@@ -508,8 +507,7 @@ export async function prepareFinding({ bundleId, expectedSha, sig }, stub, ctx,
   const partedRows = new Map(Array.isArray(parted) ? parted : []);
   /* The C-18 register arms run after the catalogue, over the same image (provenance R42–R46, K72 (4)), and bias's
      C-26.1–C-26.7 over it too (bias R9, K146); R9: C-2.8's case-member arm joins after it over the same image. */
-  const gate = withCaseMemberChecks(image, withBiasChecks(image, withRegisterChecks(image, registerGate)),
-                                    parseFrontmatter);
+  const gate = withCaseMemberChecks(image, withBiasChecks(image, registerGate), parseFrontmatter);
   if (!gate.ok)
     return refuse({ ok: false, reason: "GATE_REFUSED", gateVersion: gate.gateVersion, findings: gate.findings }, 409);
   const { shas, partShaSet } = await findingShas(image, partedRows, facts.registers);

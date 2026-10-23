@@ -12,7 +12,7 @@
  *
  * T33's, T34's, T35's, T36's, T37's, T38's, T41's, T42's, T45's, T46's, T47's and T48's ops are graded in `./t33.mjs`,
  * `./t34.mjs`, `./t35.mjs`, `./t36.mjs`, `./t37.mjs`, `./t38.mjs`, `./t41.mjs`, `./t42.mjs`, `./t45.mjs`, `./t46.mjs`,
- * `./t47.mjs`, `./t48.mjs`, `./t49.mjs` and `./t50.mjs`, spread into the tables below; each of those files imports nothing, so the spread closes no cycle. */
+ * `./t47.mjs`, `./t48.mjs`, `./t49.mjs` and `./t50.mjs`, spread into the tables below; each of those files imports nothing (t34, t35, t41 and t45 only `word` from `setup-words`), so the spread closes no cycle. */
 
 /* R13 (T33-85): the grades and reasons of every op T33 adds, spread into RUNGS, RUNG_ABSENT and NON_ACTS below. */
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "./t33.mjs";
@@ -44,9 +44,10 @@ import { T49_RUNG_ABSENT, T49_NON_ACTS } from "./t49.mjs";
 /* R45, R47 (T50; DEC-300 (5)): T50's new ops, graded from their owners, and the four acts DEC-300 (5) weighs Reversible. */
 import { T50_RUNGS, T50_RUNG_ABSENT, T50_NON_ACTS } from "./t50.mjs";
 /* R48 (T51; DEC-340): the three reads the design's new screens add, stated absent as reads. */
-import { T51_NON_ACTS } from "./t51.mjs";
+import { T51_NON_ACTS, T51_RUNGS, T51_RUNG_ABSENT, T51_ACT_NON_ACTS } from "./t51.mjs";
 /* R49, R50 (T51 fix round; K4168): the owners' op declarations, taken into the tables above (`registerDeclaredOps`). */
 import { createDeclaredOps } from "./declared.mjs";
+import { word, localize } from "../setup-words/index.mjs";
 export { OP_ALIASES, aliased } from "./t34.mjs";
 /* R42 (T48): the design's weight for each rungless act a registered screen lists; it grades nothing. */
 export { MARKS, MARK_SOURCES } from "./marks.mjs";
@@ -153,6 +154,8 @@ export const JUSTIFICATION_REFUSALS = [
      a lead's reason for being set aside (one of three, never blank), an explanation of how the sides differ, the
      reason a side is wrong, and the question a taken-up conflict asks. */
   "DISMISSAL_REASON_UNKNOWN", "CLARIFY_NO_EXPLANATION", "WRONG_SIDE_NO_REASON", "TAKE_UP_NO_QUESTION",
+  /* K4323 (contradiction R61): the member's own flag of two documents, refused without the reason it is kept for (C-93.42). */
+  "FLAG_NO_REASON",
   /* N364 (R1): the source acts' account is their evidence (sources R2, R6, R7), refused absent as C-121.3. */
   "NO_EVIDENCE",
   /* K727 (T18): action-plans' one reason rule (its R4), the member's account in its word for it, at the plan's acts that
@@ -436,6 +439,9 @@ const RUNGS_DATA = {
   contradictiondismiss: "reasoned", // DISMISSAL_REASON_UNKNOWN (contradiction R31: a lead is set aside for a stated reason)
   contradictionclarify: "reasoned", // CLARIFY_NO_EXPLANATION, WRONG_SIDE_NO_REASON (contradiction R32, R33)
   contradictiontakeup:  "reasoned", // TAKE_UP_NO_QUESTION (contradiction R35: the member's own question)
+  /* K4323 (fix round 2; DEC-394 (3e); contradiction R61): a member's own flag of two documents as contradicting says why, refused
+     FLAG_NO_REASON (C-93.42); the candidate it records is settled as any (R31–R36) and nothing it writes is erased. */
+  contradictionflag:    "reasoned", // FLAG_NO_REASON (contradiction R61: the member's reason for the flag)
   contradictionresolve: "reasoned", // NO_CONCLUSION (contradiction R36, through basis-versions' conclude)
   resolutiondefect:     "reasoned", // NO_REASON (entities R38: a defect is reported with why)
   /* N364 (R1), on R3's rule: a member's act on a source's history, each asking its evidence (R1's "or evidence",
@@ -634,6 +640,7 @@ const RUNGS_DATA = {
   ...T47_RUNGS,
   ...T48_RUNGS,
   ...T50_RUNGS,
+  ...T51_RUNGS,
 };
 
 
@@ -776,7 +783,7 @@ const RUNG_ABSENT_DATA = {
   communicationprepare: { ground: "undetermined", is: "a machine or a member prepares a draft message, briefing or statement for an action, stored apart and labeled as its preparer's; never sent until a member approves it (filings R23)" },
   templatesave:         { ground: "undetermined", is: "a member starts a template draft (or a draft of a new version of a named template) from an approved filing draft, handed to the template library's draft act; no machine writes one (filings R32)" },
   actioncreate:         { ground: "undetermined", is: "a member creates an action, the same write as promoting an action document (actions R47)" },
-  actionpressure:       { ground: "undetermined", is: "a member marks a received correspondence entry as pressure directed at the group, appended to a table of its own and never rewritten; an entry is marked once (action-holds R1, was actions R48)" },
+  actionpressure:       { ground: "undetermined", is: word("act.actionpressure.does") },
   /* K727 (T18), on R3's rule: action-plans' acts that ask no authored reason and that no published act takes back —
      opening a plan, adding, proposing and adopting an option, a checkpoint's judgement (its note optional, never
      re-judged) and starting an option as an action (`actioncreate`'s ground). DEC-88 left all six `undetermined`. */
@@ -845,6 +852,7 @@ const RUNG_ABSENT_DATA = {
   ...T48_RUNG_ABSENT,
   ...T49_RUNG_ABSENT,
   ...T50_RUNG_ABSENT,
+  ...T51_RUNG_ABSENT,
 };
 
 /* D-311 · THE ACTS A MACHINE CREDENTIAL'S CLASS IS REFUSED BY NAME, each with the code its store
@@ -936,6 +944,8 @@ const NON_ACTS_DATA = {
   capture: "substrate: byte movement, content-addressed",
   acquire: "substrate: the fetch layer (M2')",
   linkproject: "substrate: admits an observed link as an edge, keyed by capture",
+  /* K4279 (R5): an administrator-session act, not object-directed; the sentence is corpus-export's declared row, word for word (R50 (b)). */
+  export: "writes an export manifest of what is already there",
   /* Capture-directed: their subject is a capture sha, not a bundle's state.
      REC-38: NOT acts here, and their member-facing METADATA is published all
      the same — `affordances`' CAPTURE_ACTS carries the label, decorateAct adds the
@@ -991,6 +1001,10 @@ const NON_ACTS_DATA = {
   contradictiondismiss: "candidate-directed: keyed by a candidate, reached where its sides are shown; sets a lead aside for one of three stated reasons, kept, never deleted",
   contradictionclarify: "candidate-directed: keyed by a candidate, reached where its sides are shown; records how the sides differ, or which is wrong and why, and never edits a side",
   contradictiontakeup: "candidate-directed: keyed by a candidate, reached where its sides are shown; opens one contradiction inquiry framed around one side",
+  /* K4323 (R51): the owner's declared word. Its id is contradiction's own, which the design's words.json does not key (it keys the
+     owed act as `act.owed_contradictionflag.does`, another sentence), so `word` would refuse it; `localize` answers the row the list
+     holds for that id, whatever English is given here, so a word changed there changes this reason with it. */
+  contradictionflag: localize("contradiction.declared.contradictionflag", "document-directed: keyed by a passage in each of two documents the member may see, reached from either document; sets them side by side as a contradiction for the project to settle, with the member's reason, and changes neither document"),
   contradictionrecommend: "run-directed: a run's recommendation of the respects in which a candidate's sides may differ, keyed by (run, candidate); the run is the subject and no bundle state offers it",
   resolutiondefect: "registry correction, keyed by a resolution: reports with a reason that a recogniser's resolution paired a reference with the wrong entity, and changes no resolution",
   contradictioncandidates: "read: the contradictions shown on an inquiry, a passage, an entity, a bundle, a project or one candidate, each with its sides, label, weight and state; writes nothing",
@@ -1139,7 +1153,7 @@ const NON_ACTS_DATA = {
      of which a surface can see in advance. The act the SURFACE offers is
      `op=publish`; this is the signature that act asks for next, and op=publish's
      own answer names it in `next:`. */
-  caseratify: "case publication: its subject is a case edition keyed (case_id, edition) rather than a bundle in a state, and its refusals turn on gate state and signature verification a surface cannot see — op=publish's answer names it in `next:`",
+  caseratify: word("act.caseratify.does"),
   /* REC-126 / DEC-31: THE REVIEW COPY's three authoring acts. Their subject is a
      DRAFT CASE (keyed draft_id) or a GRANT (keyed grant_id) — neither is a bundle
      in a state, so no object's affordance block can publish them, and their
@@ -1374,8 +1388,8 @@ const NON_ACTS_DATA = {
   goallink: "goal-directed: the author's dated claim that a project's objective serves a goal, keyed by (goal, project)",
   goalclose: "goal-directed: a member closes a goal with its reason, keyed by goal id",
   goal: "read: one goal by id, with its objectives and, once closed, its reason",
-  aspirationdeclare: "aspiration-directed: a member declares an aspiration of the group, a project or a member, keyed by its scope",
-  aspirationdepart: "aspiration-directed: a project records its departure from a held group aspiration with a reason, keyed by (project, aspiration)",
+  aspirationdeclare: word("intent.declared.aspirationdeclare"),
+  aspirationdepart: word("intent.declared.aspirationdepart"),
   aspirationdeadend: "aspiration-directed: a dead end appended to an aspiration's pursuit record, keyed by aspiration id",
   aspirationretire: "aspiration-directed: a member retires an aspiration with what pursuing it taught, keyed by aspiration id",
   aspirations: "read: the aspirations of a project or a member, keyed by scope",
@@ -1520,16 +1534,16 @@ const NON_ACTS_DATA = {
   /* R11 (DEC-120, DEC-121; N528): `wizard-scripts`' ops. A script and its versions are rows of that module's own, never a
      bundle state `affordanceFacts` describes; each act is reached from the library or a screen's mark. The reads write
      nothing; `wizardcheck` answers any credential, an assistant planning a wizard included (its R12). */
-  wizarddraft: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
-  wizardrevise: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
+  wizarddraft: word("act.wizarddraft.does"),
+  wizardrevise: word("act.wizardrevise.does"),
   wizardpropose: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
-  wizardsubmit: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
-  wizardapprove: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
-  wizardretire: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
+  wizardsubmit: word("act.wizardsubmit.does"),
+  wizardapprove: word("act.wizardapprove.does"),
+  wizardretire: word("act.wizardretire.does"),
   wizardeditorgrant: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
   wizardeditorrevoke: "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's mark; writes this module's rows and moves no bundle",
   wizardprogress: "tally: unattributed, keyed by a script's version; names no member",
-  wizards: "read: the wizard scripts the viewer may see, offered versions by default or those in a named state, each with its state, attribution, breaks and use; writes nothing",
+  wizards: word("act.wizards.does"),
   wizardread: "read: one wizard script version with its steps and its whole attribution; writes nothing",
   wizardsat: "read: the offered wizard scripts that start on one screen, with the caller's own drafts marked; needs no machine credential and no key, and writes nothing",
   wizarduse: "read: a script's unattributed daily use tallies by version and day, to its project's owners and its version's author; writes nothing",
@@ -1543,9 +1557,10 @@ const NON_ACTS_DATA = {
   publishatmove: "case-directed: keyed by a case edition waiting to be published, reached from the case and the owner's queue; an owner's act until the set time",
   publishatcancel: "case-directed: keyed by a case edition waiting to be published, reached from the case and the owner's queue; an owner's act until the set time",
   publishschedule: "read: the case editions signed to publish at a set time, waiting, published, stopped or cancelled, each with its set time and who set it; writes nothing",
-  /* R16 (DEC-152, DEC-153; K1364, K1837): the assistant's two labelled drafts write nothing, so neither takes a rung. */
-  groupdescriptiondraft: "draft: answers a labeled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
-  writinghelp: "draft: answers a labeled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
+  /* R16 (DEC-152, DEC-153; K1364, K1837): the assistant's two labelled drafts write nothing, so neither takes a rung.
+     K4247, B28 (DEC-390): store-door's declared word for this read is keyed, so the row reads it (R51). */
+  groupdescriptiondraft: word("store-door.declared.groupdescriptiondraft"),
+  writinghelp: word("act.writinghelp.does"),
   /* R13 (T33-85): T33's ops, their reasons in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs,
      T36's in ./t36.mjs, T37's in ./t37.mjs, T38's in ./t38.mjs, T41's in ./t41.mjs, T42's in ./t42.mjs, T45's in
      ./t45.mjs, T46's in ./t46.mjs and T47's in ./t47.mjs. */
@@ -1564,6 +1579,7 @@ const NON_ACTS_DATA = {
   ...T49_NON_ACTS,
   ...T50_NON_ACTS,
   ...T51_NON_ACTS,
+  ...T51_ACT_NON_ACTS,
 };
 
 /* R21 (N657, DEC-143): THE IRREVERSIBLE WEIGHT. An act that can never be undone shows the Irreversible weight on its
@@ -1597,6 +1613,12 @@ export const RUNG_ABSENT = declared.guard(RUNG_ABSENT_DATA);
 export const MACHINE_REFUSALS = declared.guard(MACHINE_REFUSALS_DATA);
 export const NON_ACTS = declared.guard(NON_ACTS_DATA);
 export const registerDeclaredOps = declared.register;
+
+/* fix round 3 (C64; `entities` R63; K4356, K4364): THE ACTS A MEMBER WHO DOES NOT ADMINISTER MAY DO ON ONE SCREEN ONLY. An office named from a
+ * request is a member's act on `request` and on no other screen: `entitycreate` keeps its grade (Reasoned) and is admitted there to
+ * a member; on another screen it is as it was. `memberMayDo(op, screen)` answers whether `screen` is one of the op's. Data only. */
+export const MEMBER_SCREEN_ACTS = Object.freeze({ entitycreate: Object.freeze(["request"]) });
+export const memberMayDo = (op, screen) => Object.hasOwn(MEMBER_SCREEN_ACTS, op) && MEMBER_SCREEN_ACTS[op].includes(screen);
 
 /* R18 (DEC-122 (1); K1363 B5): the advisory phone flag — false at the rungs `terminal`, `attested` and `irreversible`,
  * for an absence on the `credential` ground, (T37; DEC-181) for every op in `IRREVERSIBLE_WEIGHT`, read from that set at

@@ -1,6 +1,6 @@
 # BOB to progressions (T51)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -36,3 +36,16 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B3 · CHANGE
 
 CHANGE (K3991), before I merge: `NOT_A_DISPOSITION_DETAIL` is a refusal `detail`, a sentence a member can read wherever it travels (K3982), so R13 binds it whatever the check counts: read it by `localize("progressions.checks.<slug>", en)` with the English unchanged; R35's one fixed sentence stays one fixed sentence (the table now holds it). Tests compare by equality. Merge `tranche/T51`, run tests and the words check, COMPLETE again.
+
+## B4 · CHANGE
+
+CHANGE (K4259): PROGRESSIONS, depth 2 (BOB #236 is depth 1). Your branch is at the tranche's tip. Model: claude-sonnet-5-5, medium effort (one model up if it blocks on tests).
+Why: no read lists the progression definitions (`progression_defs`, `schema.mjs:28`; the ops at `index.mjs:1601-1613` read one by key), so the `objective` screen asks for typed ids. A screen of this round needs it (screens-inquiry J11's report, confirmed by BOB's reading worker against the code, K4259). Requirement lines (amended or a NEW R, next free id) in your COMPLETE for BOB.
+Entries:
+1. A read op listing the definitions `{key, label, current version, stages}` (paged if your store can be large), with its `DECLARED_OPS` row (`weight: "read"`). Test; control: `progression` by key unchanged.
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio progressions tranche/T51 job/T51/progressions`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).

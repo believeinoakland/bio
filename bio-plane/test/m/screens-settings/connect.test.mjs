@@ -205,12 +205,14 @@ test("R24 the state as the plane holds it: connected since when and until when; 
   has(none, "screen.connect.signin.whole");
 });
 
-test("R5 an API key: accountreferenceset with the key in the body only (and the member it is for), never drawn again", async () => {
+test("R5, R76 an API key: accountreferenceset with the key in the body only, and no member (the door stamps whose it is, ai-accounts R35), never drawn again", async () => {
   const a = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none") });
   await a.choose("mc-way", "apikey");
   const KEY = "sk-ant-api03-SENTINEL-OWN";
   const r = await a.press("accountreferenceset", { values: { "mc-key0": KEY } });
-  assert.deepEqual([r.sent[0].query, r.sent[0].body], [{}, { member: "member:dev", kind: "apikey", secret: KEY }]);
+  assert.deepEqual([r.sent[0].query, r.sent[0].body], [{}, { kind: "apikey", secret: KEY }]);
+  assert.equal(r.sent[0].headers.Authorization, "Bearer tok-1", "it is set for the signed-in member: by her session, not by a field of the body");
+  assert.ok(r.sent.some((x) => x.op === "accountreference"), "the reference is read again");
   assert.ok(!a.html.includes(KEY));
   assert.equal(a.p.all.filter((x) => JSON.stringify(x).includes(KEY)).length, 1, "sent once, never again");
   assert.deepEqual((await a.press("accountreferenceset", { values: { "mc-key0": " " } })).sent, []);
@@ -222,7 +224,10 @@ test("R5 disconnect: a subscription by subscriptiondisconnect, an API key by acc
   assert.deepEqual((await sub.press("subscriptiondisconnect")).sent[0].body, {});
   const own = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "own") });
   assert.deepEqual(ops(own), ["accountreferenceremove", "accountusesset", "ailimitset"]);
-  assert.deepEqual((await own.press("accountreferenceremove")).sent[0].body, { member: "member:dev" });
+  const rm = await own.press("accountreferenceremove");
+  assert.deepEqual(rm.sent[0].body, {}, "R76: no member, the door stamps it");
+  assert.equal(rm.sent[0].headers.Authorization, "Bearer tok-1", "removed for the signed-in member");
+  assert.ok(rm.sent.some((x) => x.op === "accountreference"), "the reference is read again");
   // the member's own account: what it may do (one style of checkbox, saved by one act), a limit, her use; no exploring (group level only), no changes (the team's)
   const o = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "own") });
   for (const k of ["screen.connect.part.uses", "screen.connect.part.limit", "screen.connect.part.use"]) has(o, k);

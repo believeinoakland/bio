@@ -17,13 +17,18 @@ import { DERIVED_KINDS, CAPTURE_ONLY_KINDS } from "./legs.mjs";
  *  T33 the calculation, standard and occurrence legs of R36–R38). It changes whenever any of them changes, and whenever
  *  the words of the method do (T51-54: "team" for the group that holds the case); a case states it (`case-grammar` R11)
  *  and a checker recomputes at it. */
-export const GRADING_METHOD_VERSION = "bio-grading/3";
+export const GRADING_METHOD_VERSION = "bio-grading/4";
 /* The version T28 published: R1–R5, R29–R34, with no calculation, standard or occurrence leg. */
 const V1 = "bio-grading/1";
 /* The version T33 published: V1 with the calculation, standard and occurrence legs; its words say "group". */
 const V2 = "bio-grading/2";
+/* The version T51-54 published: V2 with the team named "team". */
+const V3 = "bio-grading/3";
 /** R32: every version this module has published, oldest first; `recomputePair` answers for each. */
-export const GRADING_METHOD_VERSIONS = Object.freeze([V1, V2, GRADING_METHOD_VERSION]);
+export const GRADING_METHOD_VERSIONS = Object.freeze([V1, V2, V3, GRADING_METHOD_VERSION]);
+/* R42 (K4213): the versions published before a cutting leg was kept out of the parts. Their arithmetic still counts it,
+   so `recomputePair` at these versions counts it, as the version was published to. */
+const BEFORE_CUTTING_LEGS = Object.freeze([V1, V2, V3]);
 
 /** R29 (DEC-102): the credit levels a caller may state; the first two credit anonymously. */
 export const CREDIT_LEVELS = Object.freeze(["group", "project", "cover", "name"]);
@@ -73,14 +78,21 @@ const GRADE_LETTERS = new Set(["A", "B", "C", "D"]);
  *                           `{stopped: why}` when its derivation is undetermined
  *    anonymous              Map of leg index → `{corroborated, kind}` (R29, R34)
  *    bound                  the depth bound stated in the answer
+ *    cuttingFolds           R42: true to count a leg that cuts against the finding as the versions before
+ *                           `bio-grading/4` did; false (the default) to keep it out of the parts and report it beside them
  *  Answers `{capture, connection, testimony}`, each `axisResult`. */
 export function levelPair(bundleId, legs, { kindOf, capCapture = () => null, inherit, derive = () => null,
-                                             anonymous = new Map(), bound = DEPTH_BOUND }) {
+                                             anonymous = new Map(), bound = DEPTH_BOUND, cuttingFolds = false }) {
   const members = Object.fromEntries(STRENGTH_AXES.map((a) => [a, []]));
   const exhausted = Object.fromEntries(STRENGTH_AXES.map((a) => [a, []]));
+  /* R42 (K4213): a leg that cuts against the finding is in no part; its members and undetermined entries are kept here,
+     and reported beside the axis, unless `cuttingFolds` (the versions before `bio-grading/4`) counts it as it did. */
+  const cut = { members: Object.fromEntries(STRENGTH_AXES.map((a) => [a, []])),
+                exhausted: Object.fromEntries(STRENGTH_AXES.map((a) => [a, []])) };
   for (const [i, leg] of legs.entries()) {
     const kind = kindOf(leg);
     const inherits = inheritsAnswer(kind);
+    const pool = !cuttingFolds && leg.role === "cuts_against" ? cut : { members, exhausted };
     /* REC-42: the leg's ground travels on every member it produces, its own and the pair it inherits. */
     const site = { bundle_id: bundleId, ord: leg.ord, target_id: leg.target_id,
                    role: leg.role, grade_source: leg.grade_source ?? null, ground: leg.ground ?? null };
@@ -89,7 +101,7 @@ export function levelPair(bundleId, legs, { kindOf, capCapture = () => null, inh
     const anon = anonymous.get(i);
     /* R36–R38: a calculation, a held standard or a duty occurrence counts on the capture axis only. */
     if (CAPTURE_ONLY_KINDS.includes(kind)) {
-      captureOnly(leg, kind, site, hunch, { capCapture, derive }, members, exhausted);
+      captureOnly(leg, kind, site, hunch, { capCapture, derive }, pool.members, pool.exhausted);
       continue;
     }
     for (const axis of STRENGTH_AXES) {
@@ -98,10 +110,10 @@ export function levelPair(bundleId, legs, { kindOf, capCapture = () => null, inh
          another group's finding) has no referent; history is append-only, so it is named rather than thrown. */
       const noReferent = DOCUMENT_AXES.includes(axis) && inherits;
       if (noReferent && !onAxis) continue;
-      if (hunch) { members[axis].push({ ...site, via: "leg", grade: null, why: HUNCH_WHY }); continue; }
+      if (hunch) { pool.members[axis].push({ ...site, via: "leg", grade: null, why: HUNCH_WHY }); continue; }
       /* R29, R34: an anonymous leg nothing independent bears out is inert on its own axis, as R3's ungraded member. */
       if (onAxis && anon && !anon.corroborated) {
-        members[axis].push({ ...site, via: "leg", grade: null,
+        pool.members[axis].push({ ...site, via: "leg", grade: null,
                              why: anon.kind === "evidence" ? UNCORROBORATED_EVIDENCE_WHY : UNCORROBORATED_WHY });
         continue;
       }
@@ -113,7 +125,7 @@ export function levelPair(bundleId, legs, { kindOf, capCapture = () => null, inh
         ? { grade: TESTIMONY_GRADE,
             why: word("strength.why.leg_carries_testimony", { stated, testimony_grade: TESTIMONY_GRADE }) }
         : null;
-      members[axis].push({ ...site, via: "leg",
+      pool.members[axis].push({ ...site, via: "leg",
         grade: resolved ? resolved.grade : stated,
         why: noReferent
           ? word(kind === "imported" ? "strength.why.target_group_finding" : "strength.why.target_inquiry_document", { axis })
@@ -128,7 +140,7 @@ export function levelPair(bundleId, legs, { kindOf, capCapture = () => null, inh
     const got = inherit(leg) || { stopped: word("strength.stopped.establishes_leg_rests"), unknown: true };
     if (got.stopped) {
       for (const axis of STRENGTH_AXES)
-        exhausted[axis].push({ ...site, via: "inherited", grade: null, why: got.stopped,
+        pool.exhausted[axis].push({ ...site, via: "inherited", grade: null, why: got.stopped,
                                ...(got.unknown ? { unknown: true } : {}) });
       continue;
     }
@@ -139,7 +151,7 @@ export function levelPair(bundleId, legs, { kindOf, capCapture = () => null, inh
       if (s.state === "undetermined") {
         const allUnknown = Array.isArray(s.undetermined_at) && s.undetermined_at.length
           && s.undetermined_at.every((e) => e.unknown);
-        exhausted[axis].push({ ...site, via, grade: null,
+        pool.exhausted[axis].push({ ...site, via, grade: null,
           ...(got.another_groups ? { another_groups: got.another_groups } : {}),
           why: got.another_groups
             ? word("strength.why.edition_publishes_undetermined", { another_groups: anotherGroupsWords(got.another_groups), axis })
@@ -147,7 +159,7 @@ export function levelPair(bundleId, legs, { kindOf, capCapture = () => null, inh
           ...(got.another_groups || allUnknown ? { unknown: true } : {}) });
         continue;
       }
-      members[axis].push({ ...site, via, grade: s.grade,
+      pool.members[axis].push({ ...site, via, grade: s.grade,
         inherited_from: from,
         ...(got.another_groups ? { another_groups: got.another_groups } : {}),
         /* The actual leg, however deep: a weakest that was itself inherited already names it. R33: nothing past
@@ -160,7 +172,8 @@ export function levelPair(bundleId, legs, { kindOf, capCapture = () => null, inh
           : s.grade == null ? word("strength.why.unrated_load_bearing", { from, axis }) : null });
     }
   }
-  return Object.fromEntries(STRENGTH_AXES.map((axis) => [axis, axisResult(axis, members[axis], exhausted[axis], bound)]));
+  return Object.fromEntries(STRENGTH_AXES.map((axis) => [axis, axisResult(axis, members[axis], exhausted[axis], bound,
+    [...cut.members[axis], ...cut.exhausted[axis]])]));
 }
 
 /* The sentence for a graded leg that counts on another axis than the one asked about; a leg that states no axis at all
@@ -327,14 +340,20 @@ const V2_LEGS = [
 ];
 /* Version 3 (T51-54): version 2's words with the team named "team" wherever the words name the group that holds a case
    (the credit level's code is still "group"; the words are the member's). Version 2 and version 1 keep their words. */
-const withLegs = (lines) => {
-  const named = lines.pop().replace(/^8\. /, "11. ");
-  return [...lines, ...V2_LEGS, named].join("\n");
+const withLegs = (lines, more = []) => {
+  const named = lines.pop().replace(/^8\. /, `${11 + more.length}. `);
+  return [...lines, ...V2_LEGS, ...more, named].join("\n");
 };
+/* Version 4 (K4213, R42): version 3's words, and the rule that a leg which cuts against the finding is no part of any
+   set of reasons and is listed with its own strength. Inserted after the three legs, before "What is named". */
+const V4_CUTTING = "11. Legs that cut against the finding. A leg that cuts against the finding is not one of the sets of "
+  + "reasons that carry it, and is never counted toward its strength. It is listed beside the strength, with the strength "
+  + "it has on its own, worked out the same way as any other leg's.";
 const METHOD_TEXT = Object.freeze({
   [V1]: (product) => V1_LINES(product, V1).join("\n"),
   [V2]: (product) => withLegs(V1_LINES(product, V2)),
-  [GRADING_METHOD_VERSION]: (product) => withLegs(V1_LINES(product, GRADING_METHOD_VERSION, "team")),
+  [V3]: (product) => withLegs(V1_LINES(product, V3, "team")),
+  [GRADING_METHOD_VERSION]: (product) => withLegs(V1_LINES(product, GRADING_METHOD_VERSION, "team"), [V4_CUTTING]),
 });
 
 /** R31: the method of `version` in plain words, complete enough to recompute a grade by hand, naming the product by
@@ -404,7 +423,7 @@ export function recomputePair({ legs = [], levels = null, version = null } = {})
         : l.grade ? { grade: l.grade, why: word("strength.why.capture_strength_case") }
         : { stopped: word("strength.stopped.case_file_states_capture") }),
       capCapture: (l) => (l.kind === "standard" && l.undetermined ? { grade: null, why: l.undetermined } : null),
-      anonymous });
+      anonymous, cuttingFolds: BEFORE_CUTTING_LEGS.includes(version) });
     return { ok: true, version, depth_bound: DEPTH_BOUND,
              capture: pair.capture, connection: pair.connection, testimony: pair.testimony,
              hunches_left_out: walkLegs.filter((l) => l.grade_source === "hunch").length, ...(lv ? { levels: lv } : {}) };

@@ -1,6 +1,6 @@
 # file-safety (T51)
 
-**Status** · session_01CjpPbnVFWqVsrNKA5TJg3t · depth 2 · COMPLETE · handled B6
+**Status** · session_01Bx8AYz89obuQALgywrmCmP · depth 2 · COMPLETE · handled B14
 
 ## Completion (T51-183, words)
 
@@ -162,3 +162,165 @@ Test-only; nothing outside `bio-plane/test/m/file-safety/` changed. Ready to fin
 - `node checks/ownership.mjs /home/user/bio file-safety tranche/T51 job/T51/file-safety`: "3 files changed by file-safety … 0 failures".
 
 **Size (session_01CjpPbnVFWqVsrNKA5TJg3t):** test runs 3, module lines 2342
+
+## J7 · QUESTION
+
+QUESTION (replaces none). Entry 3, `securitytooladd`'s `fields.requires`.
+
+The arm refuses without `providerId` (PROVIDER_UNKNOWN) and without `handlingDigest` (HANDLING_NOT_SHOWN) for every service. It refuses without `credentials` (CREDENTIALS_MISSING) and without `config` fields (CONFIG_MISSING) only for the services whose catalogue entry names them: `icap` and `syslog-tls` name no credentials, `joe-sandbox` and `metadefender-cloud` name no config, and a `host` or `region` comes from `config` or the template. A declaration cannot state a condition that depends on the chosen service.
+
+My best reading, which I am building on: `accepts` = providerId, template, config, credentials, handlingDigest, confirmRetention, use, monthlyLimit; `requires` = providerId, handlingDigest only (what is refused for every service). The test for the requires supplies `credentials` through its call adapter for a service that names them, so the success path is reached. The guard then counts a screen that sends `credentials` or `config` as declared, and never flags one that omits them for a service that does not name them.
+
+If you want `credentials` and `config` in `requires` (the screens always send them), say so; it is a one-line change. Everything else in entry 3 is copied from the op rows with no judgment.
+
+Also, for your note: the requirement lines for R46 to R48 go in my job record for you, not in `build/requirements/file-safety.md` (JOB.md: I write only my paths, tests and record; the ownership check enforces it). Tests carry the ids R46, R47 and R48 in their titles.
+
+## Completion (FR-12: B8, T51)
+
+**Entries applied.**
+
+1. **FR-SCAN (R46).** `scanStatus` (`index.mjs`, `#noSignatures`): when the scanner answers `/version` and holds no signatures (no published set), the answer carries `no_signatures: {since, reason, key, words, reason_key, reason_words}`. `since` is the instant of this module's first `not_scanned` note for want of signatures (`SIGNATURES_ABSENT`), else the scanner's last attempt, else null; `reason` is the scanner's own `last_error` (for example `REFUSED:main.cvd:403`), else `SIGNATURES_ABSENT`; the sentences are `localize` ids `file-safety.index.no_signatures_since` (`no_signatures` when no date is known), and `signatures_refused` (with the status), `signatures_failed` or `signatures_not_fetched`, each answered with its key. With signatures obtained, a scanner that did not answer, or no scanner bound, the answer has no `no_signatures` key, so R5's keys are unchanged in those cases. Test: `signatures.test.mjs`.
+2. **L25 (R47).** `#writeNote` (`#sameNotScanned`): a `not_scanned` verdict of kind `scan`, `sandbox` or `copy` is not written again when the newest note of that file, kind, tool and engine is the same `not_scanned` for the same reason; the earlier note's id answers (a safe copy keeps pointing at it). Another reason, or a real verdict between, writes a new note. The files stay due (`#due` is unchanged) and every answer (`scanBatch`'s `not_scanned` count, an opening's `NOT_SCANNED` with its reason) is as before. Rows already written stay (R3). Test: `signatures.test.mjs`.
+3. **K4202 (R48).** `DECLARED_OPS` exported beside the ops map, the eight ops: `deepercheck`, `openoriginal`, `openwithwarning`, `releasescanhold`, `safeview`, `securitytooladd`, `securitytoolremove`, `securitytooltest`. Classes, machine classes, mutating, weight and description copied from `op-declarations` and `op-grades`; `registerDeclaredOps` of `op-grades` answers all eight as `agreed` with the hand rows. Fields read from the arms: `capture` or `captureSha` (alternatives) for the file ops, `override` / `warned` / `reason` where the arm reads its own, `providerId`, `template`, `config`, `credentials`, `handlingDigest`, `confirmRetention`, `use`, `monthlyLimit` for the add (requires `providerId`, `handlingDigest` only: the QUESTION J7), `toolId` or `tool` for the test and the removal. Test: `declared-ops.test.mjs`.
+
+**Requirement lines for BOB** (not written in `build/requirements/file-safety.md`: JOB.md allows a job only its paths, tests and record; ids as the START gave them).
+
+- **R46** *(not yet met: T51)* (T51; K4182; FR-12; amends R5) **The safety state says what is true of a scanner with no signatures.** When `file-scanner` answers its state and holds no signatures (no set published), `scanStatus` carries `no_signatures: {since, reason, key, words, reason_key, reason_words}`: `since` the instant of this module's first `not_scanned` note for want of signatures (`SIGNATURES_ABSENT`), else the scanner's last attempt, else null; `reason` the scanner's own last error (`REFUSED:main.cvd:403`), else `SIGNATURES_ABSENT`; `words` and `reason_words` members' words read by `key` and `reason_key` (never "waiting"). Where signatures are obtained, the scanner did not answer or none is bound, the answer carries no `no_signatures`. Test: a stub reporting no signatures, a refusal and a date: both are carried by key; control: with signatures obtained, an unreachable and an unbound scanner, neither is carried.
+- **R47** *(not yet met: T51)* (T51; L25, K4194; amends R46 and R3) **A `not_scanned` verdict is recorded once for a file and reason.** A `scan`, `sandbox` or `copy` verdict `not_scanned` writes no note when the newest note of that file, kind, tool and engine is a `not_scanned` for the same reason (`scanBatch`, the scan before first opening, a deeper check and a safe copy alike); another reason, or a real verdict, writes a note. The file stays due (R4) and every answer is as before. Test: a stub answering `not_scanned` for one reason on three passes and two openings leaves one note per file, one for a safe copy asked again; control: a changed reason, or a real verdict, writes a new note.
+- **R48** *(not yet met: T51)* (T51; K4168, K4202; op-declarations R80, op-grades R49; test-support R15) **The module declares the ops it serves that the screens send.** `DECLARED_OPS` is exported beside the ops map: `deepercheck`, `openoriginal`, `openwithwarning`, `releasescanhold`, `safeview`, `securitytooladd`, `securitytoolremove`, `securitytooltest`, each row's class, weight and description copied from the op's existing rows and its fields read from the arm. Test: `declaredOpHolds` for each (`declared-ops.test.mjs`).
+
+**Deferred.** None.
+
+**Found in another module (REPORT to BOB).**
+- `screens-settings` (`security.mjs`, the `scan` read): the Security screen draws only `queued` and `held` from `scanstatus`; to say "no signatures since <date>" and the reason it must draw `scan.no_signatures` (`words` and `reason_words`, or its own words by `key` and `reason_key`). Its entry would be added.
+- `screens-intake` (Opening a file): draws the raw word `not_scanned` (UX-DESIGN's, as the START says); this job leaves the answer's `not_scanned` field as it was.
+- Inherited reds, not caused here (the same three fail on the tranche before this job's changes): `op-grades` R42, R46 and `op-declarations` R73/R21 (MARKS and the registry-act gap).
+- `file-scanner` (FR-06, not merged when this job ran): `/version`'s `signatures` has no "no signatures since" instant of its own, only `last_attempt` and `last_error`; R46 takes the date from this module's notes first. If FR-06 adds one, `#noSignatures` reads it with a one-line change.
+- Whole-product `checks/run.mjs`: architecture, coverage and words reds are other modules' (words testcopy 6; coverage 7 ids); none names file-safety.
+
+**Tests and checks run (summary lines).**
+- `node --test test/m/file-safety/*.test.mjs` (bio-plane): "tests 75, pass 75, fail 0" (before the new tests: 64; new: `signatures.test.mjs` 3 — seen failing first — and `declared-ops.test.mjs` 8, a mutated declaration seen refused).
+- `node checks/format.mjs /home/user/bio`: "175 modules, 175 requirements files; 0 failures".
+- `node checks/architecture.mjs /home/user/bio file-safety`: "20 product files, 88 relative imports …; 0 failures".
+- `node checks/coverage.mjs /home/user/bio file-safety`: "45 of 45 live requirement ids named by a test; 0 failures".
+- `node checks/words.mjs /home/user/bio file-safety`: "inline 0, plain 0, testcopy 0, missingkey 0, handlist 0 … 0 failures".
+- `node bio-plane/src/setup-words/build.mjs --check`: rows.mjs stale, naming the new ids (`file-safety.index.no_signatures_since` and the other `file-safety.index.*` and `file-safety.declared.*` ids); expected until BOB regenerates; no refusal naming this module.
+- `node checks/ownership.mjs /home/user/bio file-safety tranche/T51 job/T51/file-safety`: see the closing line of this job's COMPLETE.
+
+**Size (session_01T8Ec2n7sMP4hLAcphL7HNL):** test runs 9, module lines 2405
+
+## J8 · COMPLETE
+
+FR-12 (B8) done; your B9 answer applied (requires providerId, handlingDigest only). Details and Size line: build/jobs/T51/file-safety.md, "Completion (FR-12: B8, T51)". The requirement lines R46, R47, R48 are in my record, not in build/requirements/file-safety.md (either is fine, B9); each is marked not yet met: T51 and named by tests.
+
+- R46: `scanStatus` carries `no_signatures: {since, reason, key, words, reason_key, reason_words}` when the scanner holds none, by key, never "waiting"; absent (control) with signatures, an unreachable scanner or none bound.
+- R47: a `not_scanned` verdict (scan, sandbox, copy) is recorded once per file, tool, engine and reason until the reason changes; the files stay due, every answer is as before.
+- R48: `DECLARED_OPS` for the eight ops; `op-grades` registerDeclaredOps answers all eight agreed.
+
+REPORT for you: `screens-settings`' `security` screen must change to draw it. It reads `scanstatus` for `queued` and `held` only; it must draw `scan.no_signatures` (its entry would be added). The three reds in op-grades (R42, R46) and op-declarations (R73/R21) fail on the tranche without my changes too. `rows.mjs` is stale for the new ids (expected; yours to regenerate).
+
+Merged tranche/T51 (437339a938). Module tests 75/75 (new: signatures 3, declared-ops 8); words, architecture, coverage (45 of 45) and ownership 0 failures for file-safety; format 0.
+
+## Completion (fix round 3, wave 1: C84 your part, C83; session_013rwPMgEDrWmt84TRnUfgec)
+
+**Entries applied.**
+- **C84 (door and self-start), file-safety R49, R50, amending R4, R5.** `scanMirror({viewer, at})` (`op=scanmirror`, administrators) asks `file-scanner` for `POST /mirror?async=1` through the binding and answers `{ok: true, state: "started"}`. It refuses a member or machine (`NOT_AN_ADMIN`), no scanner (`SCANNER_ABSENT`), a scanner that does not answer 202 (`SCANNER_UNREACHABLE`), and an attempt under 15 minutes old with the new row `SIGNATURES_RUN_RECENT` (C-140.44, `attempted_at` says when). An "attempt" is the later of `/version` `signatures.last_attempt` and the run this module last started (kept in `fs_wakes` key `mirror`), because a started run has not yet written its own attempt. `scanBatch` reads `/version` once per batch and, when no set is published and the newest attempt is null or over 6 hours old, starts one run the same way. It never changes the batch's answer, and a state it cannot read or a start the scanner refuses starts nothing. `scanStatus` starts nothing. `scanmirror` is declared in `DECLARED_OPS` (classes admin and member, viewer stamp, no capability, weight substrate).
+- **C83, R46 amended.** `#noSignatures` parses `MIRROR_REFUSED:exit N: …` as well as `REFUSED:<db>:<status>`. A status is named only when the text holds one as an HTTP answer ("error code 403", "status 403", "HTTP 403", "(403)"), never the exit code, a version or a count; an error with none is worded as the service having refused (stand-in key below); an unknown text still answers the generic unfinished-download words.
+
+**Tests (each seen failing first on the code before the change, passing after; controls named in each).** `mirror.test.mjs` (R49: started once with `?async=1`, 14 minutes refused with the scanner not asked, 16 minutes starts, double press, member, machine, unbound, scanner not accepting; R50: one run for no set and no attempt, none an hour later, one at 7 hours, an administrator's run counts, controls: published set, attempt under 6 hours, unbound, state unreadable, `scanStatus` starts nothing), `signatures.test.mjs` (R46 both forms), `declared-ops.test.mjs` (`scanmirror`), `fixture.mjs` (the scripted scanner answers `/mirror`, default 202), `rows.test.mjs` (a row without a word row must be a named stand-in).
+
+**Stand-ins (no word row yet; the design stream writes them).** `refusal.SIGNATURES_RUN_RECENT` (the new row's translation); `file-safety.index.signatures_refused_unnumbered` (the reason line for a refusal with no status); the acts and details `file-safety.index.checking_for_new_signatures`, `file-safety.index.no_scanner_so_no_run_started`, `file-safety.index.a_run_was_started_lately`, `file-safety.index.the_scanner_did_not_start`. `WORD_KEYS` lists only rows that hold a word, so the row joins it when its word lands.
+
+**Provider merged.** file-scanner R6's `mirrorAsync` (`POST /mirror?async=1` → 202 `{ok, started: true}`) was merged to `tranche/T51` while I worked; I merged it into the branch before COMPLETE and the fixture's default answer is exactly its shape. The suite was re-run after the merge (tests 80, pass 80).
+
+**Deferred.** None in this module.
+
+**Found in other modules (REPORT).**
+1. A new op in the route map breaks four tests of other modules that count file-safety's ops (23 expected, 24 now): `op-declarations/t36.test.mjs` (R32, R6: OPS holds a spec for each op), `control-plane/t36-door.test.mjs` (R61, R29), `plane/t36.test.mjs` (two: the door has no store route for `scanmirror`, "Cannot read properties of null (reading 'store')"). `op-declarations` needs `scanmirror` in the file-safety family (`ops`: administrator kind, like `securitytooladd`) and the plane its store route; those tests' count becomes 24.
+2. Generated artifacts made stale by this change: `bio-plane/dist/bio-plane.bundled.mjs`, `release/bio-plane.bundled.mjs`, `agent-worker/dist/agent-worker.bundled.mjs`, `release/agent-worker.bundled.mjs`, `setup-words/rows.mjs`, `words-reads.json` (stand-ins above).
+3. screens-settings (wave 2) draws the button and calls `op=scanmirror` (answers `state: "started"`, or the row `SIGNATURES_RUN_RECENT` with `attempted_at`).
+4. Reds also on the tranche tip, named and not fixed: format (build/rulings.md:4346), coverage of other modules, and in the suites run for impact the same ten failures with and without this change (op-grades R17, screens words R24 and R29).
+
+**Tests and checks run.**
+- `node --test --test-force-exit bio-plane/test/m/file-safety/`: tests 80, pass 80, fail 0.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: 12 modules, 171 test files; 4 new failures, all item 1 above; the rest equal the tranche tip's.
+- `checks/run.mjs`: words 0 failures; architecture 0; coverage: file-safety 50 of 50 (the 15 failures are other modules'); format 1 failure, `build/rulings.md`, not mine.
+- `checks/ownership.mjs … file-safety tranche/T51 job/T51/file-safety`: 8 files changed by file-safety; 0 failures.
+
+Size (session_013rwPMgEDrWmt84TRnUfgec): test runs 9, module lines 2474
+
+## J9 · QUESTION
+
+Words needed (K3810; I used stand-ins with plain localize defaults, named in my record): refusal.SIGNATURES_RUN_RECENT (new row C-140.44: a check for signatures was made under 15 minutes ago, no run started; the answer also carries attempted_at), file-safety.index.signatures_refused_unnumbered (the reason line when the scanner states MIRROR_REFUSED with no status number), file-safety.index.checking_for_new_signatures, file-safety.index.no_scanner_so_no_run_started, file-safety.index.a_run_was_started_lately, file-safety.index.the_scanner_did_not_start. Please have the design stream write the first two; the other four are acts and details. Nothing waits on this.
+
+## J10 · COMPLETE
+
+Fix round 3 wave 1, file-safety: C84 my part (R49 scanMirror, op=scanmirror, declared; R50 the scan batch's self-start once in 6 h) and C83 (R46: MIRROR_REFUSED:exit N: … parsed beside REFUSED:<db>:<status>). Merged tranche/T51 incl. file-scanner R6 mirrorAsync. Suite 80/80. Checks: words 0, architecture 0, ownership 0, coverage file-safety 50/50 (format red is rulings.md:4346, on the tip). REPORT: adding the op breaks four other-module tests that count file-safety's ops (23, now 24): op-declarations/t36.test.mjs, control-plane/t36-door.test.mjs, plane/t36.test.mjs (two; the plane has no store route for scanmirror). op-declarations needs scanmirror in the file-safety family (administrator kind like securitytooladd) and the plane its route. Stale generated: both plane and agent-worker bundles, setup-words rows.mjs, words-reads.json. screens-settings (wave 2) draws the button and sends op=scanmirror. Words stand-ins in my QUESTION. Details and Size line in build/jobs/T51/file-safety.md.
+
+## J11 · QUESTION
+
+QUESTION (C84, R46/R50 amendments; step 3). I carry on with the best readings below; please confirm or correct.
+
+1. Fields. file-scanner R6 (RC-R6) names `signatures.last_error = RUN_STARTED` and `signatures.stage` (`seed|download|stage|verify`) but not the instant of the stage, nor how `/version` shows an open request. I read `signatures.stage_at` (ISO instant of the latest stage write; where it is absent I use `last_attempt`) and `signatures.request` (truthy while `clamav/request.json` is open; I also accept `requested_at`). Please have file-scanner's R8/R6 state both fields by those names, or give me the real ones; my tests script the scanner with exactly these until its job merges.
+2. Contradiction in R50's amendment. Its rule says a run is dead when older than 15 minutes with no later stage, alive (second press refused as under way) when its stage is under 15 minutes old; its test says "a press 14 minutes after a run that shows RUN_STARTED and no later stage is allowed". 14 minutes is under 15, so the rule refuses it. I follow the rule: alive < 15 min (refused as under way), dead >= 15 min (allowed), and write the test with 16 minutes allowed and 14 minutes refused as under way. Reply only if you want the other reading.
+3. Own note. I remove this module's `mirror.started` note altogether (the guard and the six-hour self-start read only the scanner's state, per R50). The cost: two presses within the few milliseconds before the scanner writes its run's start both reach `POST /mirror?async=1`; file-scanner's request file is what absorbs that.
+4. Words. Two new refusal/word stand-ins (`refusal.SIGNATURES_RUN_UNDER_WAY`, row C-140.45, and `file-safety.index.*` sentences for the stages and the stopped run) are read by `localize`; the design stream's rows are owed.
+
+## Fix round 4, wave 1 (FILE-SAFETY #15; C84; RC-R7; B11)
+
+BOB's answer B12 (K4438): `signatures.stage_at` and `signatures.request` (an instant) are file-scanner R6's; R50's test line corrected (16 minutes allowed, 14 refused as under way); the `mirror.started` note removed; stand-in keys named below for the word batch.
+
+**Entries applied.** RC-R7: R46 (an unfinished run is worded as one) and R50 (the guard and the six-hour self-start read the scanner's state). Plus K4435's `WORD_KEYS` fix.
+
+**C84.**
+1. Root cause: `scanMirror` (old `index.mjs:1008-1022`) and `#lastAttempt` read this module's own `mirror.started` note, so a run the scanner never wrote still blocked the next press ("checked a few minutes ago"), and `#noSignatures` drew the stale stored refusal. Now `#runOf` reads the scanner's `RUN_STARTED`/`stage`/`stage_at`; the note is gone; an unfinished run is worded by stage, or as stopped.
+2. Why the tests missed it: the double wrote nothing at a run's start, so the note was all a second press could see. Test-gap fix merged: `fixture.mjs` `runTrace` (the scanner's start trace, then cancelled: only `binding.stage`/`end` move it) and four new tests; the R49/R50 tests now run on that trace.
+3. Failing-first test on the walker's row, through the route map (`fileSafetyOps` `scanmirror`, `scanstatus`): "R46, R50 (C84, the walker's row)" in `mirror.test.mjs`. Red against the previous source (all four new tests failed; the walker's row failed at `scanstatus` after the press: the stale `REFUSED` still drawn), green after. Controls in the same file: a run that ended (`REFUSED:main.cvd:403`, `MIRROR_REFUSED:exit 1: … 403`) worded as before, 14 minutes after its end refused as R49 says, 16 allowed; a quiet scanner blocks nothing; a batch leaves a live run and an open request to the cron, starts a stopped one after 6 hours.
+4. Platform check: N for this module (pure plane code). The scanner's own L and P checks (cancel after the response, cron, 200 MB) are file-scanner's. LIVE-CHECK of the smoke copy not run: it needs the redeploy's scanner to show anything new, and the stored 04:17 string is the old one (new data only: the first new run overwrites it). The interface test against the real merged handler is not possible yet: file-scanner's job is not merged (its branch holds its start commit), so the scanner is the scripted double above, reading file-scanner R6's stated fields. The seam test (press to words, real scanner and file-safety) is screens-settings' (S, wave 2).
+
+**K4435's red.** `rows.test.mjs` R24 was red (the stand-in `refusal.SIGNATURES_RUN_RECENT` counted as read); `WORD_KEYS` now filters by the row's design source. Red first, green after; its (1) and (2) as BOB wrote them.
+
+**Stand-in keys for the word batch (design rows owed):** `refusal.SIGNATURES_RUN_UNDER_WAY` (row C-140.45, new; promotion stamps it); `file-safety.index.a_run_is_under_way`, `signatures_run_seed`, `signatures_run_download`, `signatures_run_stage`, `signatures_run_verify`, `signatures_run_under_way`, `signatures_run_stopped`.
+
+**Requirement ids met.** R46, R50 (the amendments), R49 (guard now by the scanner's state); coverage 50 of 50.
+
+**Found in another module.** None.
+
+**Tests and checks.** `node --test --test-force-exit bio-plane/test/m/file-safety/`: 84 tests, 84 pass, 0 fail. Users: notice-producers and scheduler 265 pass; op-declarations and affordances 527 of 528 (R34 `capturecredentiallist`, on the tranche tip, accepted); queue and screens-settings 452 of 453 (R15 C84, the stale test of suite-reds-753ea4db8a, screens-settings'); control-plane 355 of 356 (t47-e2e R81, on the tranche tip, a stale test). Checks: format 0 failures; architecture 0; coverage 0 (50 of 50); words for file-safety 0 (testcopy 0); ownership 0 (6 files); `setup-words/build.mjs --check`: stale-rows note only (the new stand-ins), as expected.
+
+Size (session_01Puie49xQXkuYPiR7ZSPHMk): test runs 12, module lines 2515
+
+## J12 · COMPLETE
+
+COMPLETE: C84 (RC-R7: R46, R50) and K4435's WORD_KEYS red, in build/jobs/T51/file-safety.md. Suite 84/84; checks 0 failures for file-safety; users' reds are the tranche tip's named ones. The scanner is the scripted double (file-scanner not yet merged); the real-handler seam test is screens-settings'. Stand-in keys listed in the record. Re-merge after file-scanner merges on request.
+
+## Completion (fix round 4b, entry 5: R51; D6, F3a, F3b, F10; FILE-SAFETY #17, session_01Bx8AYz89obuQALgywrmCmP)
+
+**Root cause (1).** `index.mjs` `#held` (was :266-274): `if (home && gate.scope !== "member" && …)` skipped the sight check when `provenance.homeOf` was null, and a multipart capture is registered by its parts alone, so its whole digest has no home: any non-denied member was served it (`openoriginal`, safe view). F3a's scan side: `#target` has no parts without a home, so the scanner answered `not_scanned: NOT_FOUND` and `#due` re-sent the file at every batch. F3b: `#render` set `failed/NOT_FOUND` for good when the keep had not landed. F10: `#lookAt`/`#bytes` loaded any whole (up to 256 MiB) for a PDF/container.
+
+**Why the tests missed it (2).** Suites registered one row per capture, filed or not, and none built the parts-only register; scan/render tests ran one batch. Test-gap fix: `fail-closed.test.mjs` builds the 16+16+4 MiB capture as the screen leaves it (parts in the store, bundle naming them, register of parts only, and with provenance D1's whole row), and drives the ops and batches over time. file-safety's tests now run in `filedWorld` (captures filed, as the screen files them); the plain `world` keeps unfiled captures for other modules' tests.
+
+**Changes.** `index.mjs`: `#held(…, {serves})` refuses a member viewer for a capture with no home in `openOriginal`, `originalState`, `safeView`, `requestSafeCopy`, `safeCopy` (not in notes/grade/findings/deeper: those serve no bytes); `#noteScanWait`, `#due`, `scanBatch` (scan waits, checked hourly by heads, sent when whole or all parts are held); `#render` (`waiting`), `#releaseRenderWaits`, `renderWake`, `safeView` (`SAFE_VIEW_PENDING` while queued/waiting); `#wholeHeld`, `#sizeOf`, `#bytes`, `#lookAt`, `#grade`, `#structureCheck` (GRADE_READ_MAX gate); `#repairWaits` in `migrate` (R-OLD: files whose newest ClamAV note is NOT_FOUND, views failed NOT_FOUND). `schema.mjs`: columns `scan_wait_at`, `render_wait_at` (additive). B13: `checks.mjs` SIGNATURES_RUN_RECENT by `rowWord`; dropped from STAND_INS.
+
+**Failing-first (3).** `fail-closed.test.mjs` test 1, through the `openoriginal`/`safeview`/`openwithwarning` ops: on the tranche code (src stashed) red: "FILE_NOT_HELD: it was served"; green now. Tests 2-6 cover the D1 shape and parts target, the NOT_FOUND wait, R-OLD, the render wait, the grade gate.
+
+**Measurement (4).** Local workerd does not enforce 128 MB (a 110 MB PDF read there), so it proves nothing; measured as extraction's c5b does, a node child with `--expose-gc` and a constrained heap, `readActive("pdf")` on page-heavy synthetic PDFs: 19.1 MB: +38 MB work above its bytes (57 MB with bytes; unconstrained +87); 27.7 MB: +49 (77 with bytes; fails at a 48 MB heap). Within K4478's 64/96 bounds at 20 MiB, so GRADE_READ_MAX = 20 MiB (= reading-pipeline's MULTIPART_READ_MAX). If cause-reading-4's step 0 sets another ceiling, change the constant.
+
+**Wording.** No new `localize`. New details are plain English stand-ins of nearest held sentences ("The safe view is queued."); nothing owed beyond T52's pass.
+
+**Tests and checks.**
+- `node --test --test-force-exit test/m/file-safety/*.test.mjs`: all pass but R24 (`rows.test.mjs`): the design's `words-reads.json` lacks `refusal.SIGNATURES_RUN_RECENT` (B13's note): the design's, not weakened.
+- Users (`impact.mjs origin/tranche/T51 HEAD`, 11 modules, 114 files) plus file-safety: 919 pass, 21 fail, all baseline on the tranche tip (journey-check/pseudo, plane/release, store-door/declared-ops) or the R24 above.
+- format 0 failures; architecture 0; coverage 51 of 51 ids named, 0; ownership 0; words (file-safety) 0.
+
+**Proposed requirement lines (BOB writes).** R51 (met): "`openOriginal`, `originalState`, `safeView`, `requestSafeCopy` and `safeCopy` refuse a member viewer, as `FILE_NOT_HELD`, for a capture whose home is not found. The scan target is the parts the home names. A ClamAV `not_scanned: NOT_FOUND` writes one note (R47) and the file waits: it is looked at again once an hour (`WAITING_RECHECK_MS` 3,600,000) and sent when its whole or all its parts are held; a safe view whose render finds no bytes waits likewise, answering `SAFE_VIEW_PENDING`, and is queued again when they are held. The grade, structure check and spreadsheet cells load no capture above `GRADE_READ_MAX` (20 MiB): it is graded by its start, high, `unread`; its structure check is `not_scanned TOO_LARGE`; its cells are `SAFE_VIEW_FAILED TOO_LARGE`." R21: add both constants. R39: a waiting file is due at its wait instant; `renderWake` includes waiting views' earliest instant.
+
+**Found in another module.** `acquisition/unpack.mjs:833` has F3a's shape (audit). Decision for BOB, made on my best reading: fail closed applies only where bytes are served; `threatOf`, `verdictNotes`, `scanFindings`, deeper check still answer a homeless capture to a non-denied member (metadata only), because notice-producers/scheduler tests rely on it. Until provenance D1 merges, the owner is also refused a multipart capture's bytes.
+
+**Deferred.** None.
+
+**Size (session_01Bx8AYz89obuQALgywrmCmP):** test runs 16, module lines 2642
+
+## J13 · COMPLETE
+
+COMPLETE (B14, entry 5, R51). Fail closed where bytes are served; scan and safe view wait for unheld bytes (hourly heads); grade never loads over 20 MiB (measured). Failing-first red on tranche code ('it was served'), green now. File-safety suite green except R24 (design's words-reads.json lacks refusal.SIGNATURES_RUN_RECENT, B13 applied); users 919 pass, 21 baseline fails; checks 0 failures. Details, proposed R51/R21/R39 lines and the choice to limit fail-closed to byte-serving services: record build/jobs/T51/file-safety.md.

@@ -1,6 +1,6 @@
 # public-read (T51)
 
-**Status** · session_01FPRrUF9Cu3BMKX1o1aFaK6 · depth 2 · COMPLETE · handled B6
+**Status** · session_01SctGfdzcWmRNmq49hMahxN · depth 2 · COMPLETE · handled B15
 
 ## J1 · QUESTION
 
@@ -91,3 +91,106 @@ Size (session_01FPRrUF9Cu3BMKX1o1aFaK6): test runs 4, module lines 3663
 Tests and checks: `node --test test/m/public-read/`: 227 pass, 0 fail. format: 0 failures. architecture public-read: 0 failures. words public-read: inline 5 (the 4 manifest constants and 1 registration detail, all accepted by name in B6), plain 2 (the registration details), testcopy 0.
 
 Size (session_01FPRrUF9Cu3BMKX1o1aFaK6): test runs 5, module lines 3663
+
+## J9 · COMPLETE
+
+**C2 met (public-read R39, R3).** A published finding's `body.conclusion` and `body.falsifies` now carry the words, never a heading: the signed case document's `case_conclusions` claim and falsifier first, the front matter's authored words next, the section's own words (heading removed) last, `null` when there are none. `authored` is unchanged.
+- `publication/worker.mjs`: `sectionWords` strips the heading `sectionText` keeps (record-grammar R36 untouched); `body.conclusion`/`falsifies` read `fnd.case_words`, then `fm`, then the section.
+- `public-read/index.mjs`: `publishedCase` adds `case_words: {claim, falsifier} | null` to each `findings` entry, read from the signed document's `case_conclusions` (`caseWordsOf`), never live.
+- Test `finding-words.test.mjs` (4, written first and seen failing): concluded finding (front matter only) answers its words; signed claim before authored; control: section words answer without heading; none -> null.
+
+**For BOB (requirement text):** R39's `findings` entry list and its `body` line do not yet state the order claim -> authored -> section, nor the new `case_words` field on the entry (R3's findings). Please add them at the fold; the field is public-read's own and I kept it as the one carrier from the store to the Worker.
+
+Reading taken: where a signed claim and authored words both exist, the signed claim wins (as your START says); a section's words come after authored.
+
+Tests: `test/m/public-read/` 232 pass, 0 fail; publication 150 pass, 0 fail (1 skipped); screens-publish, plane worker, ratification converted-d, network-notices, mk6 test: 281 pass, 0 fail. checks: format 1 failure (`build/rulings.md:4298`, not mine); architecture public-read 0; coverage public-read 40 of 40, 0; words 0 findings; ownership 0 failures (4 files).
+Nothing deferred. Nothing found in other modules.
+
+Size (session_01YFbwaESicnaBkDk7GZ5Su5): test runs 7, module lines 3706
+
+## J10 · QUESTION
+
+Two readings for R41, built on my best judgement; I carry on and will change on your answer.
+
+1. **Handles (R41 (3)).** `public-read` has no way to turn a member id into a handle: neither `member-roster` (`memberFacts(id).handle`, its R68; the founder's through its R76/`founderHandle`) nor `membership` (which delegates to it) is in my `uses`. Best reading: `publishedCase` reads the handle through `membership.memberFacts(id)` at the call (a dep `members`, default `membershipOf(host)`, reached at the read as `record` and `roster` are), and names by handle every value of the keys that hold a member (`member`, `author`, `statement_by`, `by`, `acknowledged_by`) that resolves to a member: the completeness writer and publisher, the acknowledgements, each `attestor` and `delivered_by`, the case document's. A founder who holds no handle is named by the design's word `member.founder.unnamed`; a member with a row and no handle by `shell.card.member`; a value that resolves to no member (`undetermined`, a review grant's id) stays as it is. **Please add `membership` (or `member-roster`) to public-read's `uses` in `build/modules.json`**; until then `checks/architecture.mjs` will show the one import, and the handle tests run on the real `membership` of the fixture world. `publishedFrozen` (R38) names signers by `member` too; R41 does not cover it, so I leave it and report it here for you to decide.
+
+2. **`document: {name, place}` (R41 (1)).** The signed case states no document title. What it states for a document leg: the `grading_facts:` row (`kind` `document`, its `captures`), the `passages:` row (`content_id`, `capture_sha`, `extent`) and the `materials:` row (`ref`, `sha`, `origin`). Best reading: `name` is the material row's `origin` as signed (its `ref` when the origin is not stated), `place` is the passage's `extent` exactly as signed (e.g. `{kind: "pdf-page", page: 2}`; the screen words it), `null` when the leg cites the whole document; a leg whose grading fact is not a captured document, or a document that states no grading facts (before `/6`, or withheld), carries `document: null`. If you want a human title, `case-grammar` R12 and `case-disclosures` R7 would have to sign one; that is for those modules and the design, not this job.
+
+## J11 · COMPLETE
+
+**Fix round 3 (B8): C47 and C94 met (public-read R41, amending R39, R3, R38).**
+- **C47.** Each `basis` entry of `op=publishedcase`'s per-finding answer carries `document: {name, place}`, read from the signed case document (`public-read/legs.mjs`, `legReaderOf`; `publication/worker.mjs`): `name` the material row's `origin` (else `ref`), `place` the passage's signed `extent`, `null` for a leg on working material or where the document states no grading facts; nothing of the document's bytes is served. The finding carries `falsifier` beside `case_words` (its published bytes' falsifier, `null` when none or unreadable).
+- **C94.** `publishedCase` names every member by handle (completeness writer and publisher, acknowledgements, each `attestor` and `delivered_by`, the case document's, who acknowledged a tension); `publishedFrozen`'s signers likewise (BOB's J10 answer, B9). The signed text, the manifest and as-signed blocks are untouched. Handles come through `membership.memberFacts` (dep `members`); founder with none: `member.founder.unnamed`; member with none or an unreadable roster: `shell.card.member`; a non-member value stays.
+- Tests (written first, seen failing): `evidence-names.test.mjs` (6, with controls). Updated to handles: convert-deliverer, convert-publishedcase, finding-page (basis keys gain `document`), frozen, published, sampling (R13 shape unchanged, `by` is a handle), tensions.
+
+Tests: public-read 238 pass, 0 fail. Downstream (publication, ratification, network-notices, plane, control-plane, review, filings, case-import, case-checker, screens-publish, screens-inquiry, op-declarations, capture): 2712 tests, 2709 pass, 3 fail, none in my files and none touching my diff: `plane/release.test.mjs:74` (screen.objective.purpose held by the words list) and case-checker R13, R25 (committed `program.mjs` is not the build); I did not fix them.
+Checks: architecture 0 failures; words 0; coverage public-read 0 (other modules' R-ids unnamed, not mine); format 1 failure (`build/rulings.md`, not mine); ownership 0 failures (13 files).
+Deferred / for BOB: as-signed blocks (`captures[].member` and acknowledgement, `lens`) name members as signed and are left so; a cover-level attribution must not be turned into a handle. `publishedEditions`/`publishedList` still name signers by id (R2, outside R41).
+
+Size (session_01LwWDy5JCBriNttXnEF6fAW): test runs 9, module lines 3836
+
+## J12 · COMPLETE
+
+COMPLETE (B8, fix round 3): C47 and C94 met, R41. Details, suites, checks and Size line in my record's J11. Public-read 238 pass; downstream 3 reds not mine (plane release.test:74, case-checker R13/R25).
+
+Ringing BOB failed (its session is archived); the pushed J12 is the message (mechanics §13).
+
+## J13 · COMPLETE
+
+**Applied CHANGE B10 (K4369).** `publishedList` and `publishedEditions` now name signers by handle too: `attestor_member`, `delivered_by.member`, and in `publishedEditions` the `completeness` writer, publisher and readers; the same `membership.memberFacts` and fallbacks, as-signed blocks untouched. Test (`evidence-names.test.mjs`, "the public list and a finding's editions…", with the founder control); `convert-deliverer`, `published`, `sampling` updated to handles.
+Tests: public-read 239 pass, 0 fail. Downstream (ratification, publication, network-notices, filings, plane, control-plane, screens-publish, screens-inquiry, review): 1996 tests, 1995 pass; only `plane/release.test.mjs:74` R24 fails, inherited and not mine. Checks: architecture 0, words 0, ownership 0 failures.
+Size (session_01LwWDy5JCBriNttXnEF6fAW): test runs 12, module lines 3860
+
+## J14 · COMPLETE
+
+COMPLETE (B10): publishedList and publishedEditions name signers by handle; details in J13.
+
+## J15 · QUESTION
+
+QUESTION 1 (C47: where the document's title comes from). C48's half is done: R42 `publishedAddress` is built and tested red then green (commit on my branch). C47 I cannot build inside public-read, and the START's "R41 as it stands" does not give the walker's result.
+
+Fact. R41 (1) as it stands says the entry's `name` is the signed material row's `origin` (else `ref`), which is why the page lists "https://www.foia.gov/faq.html". The signed case's `materials:` row (case-grammar R12: `{ref, kind, sha, text_sha, origin, archived_copy, included, rests_under}`; written by case-disclosures `materials.mjs:69`) carries NO title. public-read reads the published projection and the signed case only (R10, R14: answers must be identical with or without working material), so it cannot read the document's title from the register without breaking R10. The place ("Paragraph 4") already travels in `document.place` as the passage's signed `extent`; wording it ("Paragraph 4") and the "Relied on ·" dot are screens-publish's (R80).
+
+Options.
+ A (recommended): add the title to the signed material row: case-grammar R12 gains `title` (the document's title as the capture holds it, `null` when it has none), case-disclosures `materialRows` writes it, and R41 (1) becomes "name = the signed row's `title`, else `origin`, else `ref`". New case documents only (R-OLD: an older signed case keeps its address; a signed document is never rewritten). My part is then a few lines in legs.mjs plus the test on CASE-2026-4783's chain; case-grammar and case-disclosures are other modules' jobs, so BOB writes those two lines and they merge before me.
+ B: keep the address as the name (no change to signed data) and have screens-publish word the place only; the walker's MINOR "title" stays open and is recorded as such.
+ C: serve the title from the register at read time. Rejected: it makes the published answer depend on working material (R10/R14).
+
+What I need: A or B. Until answered I carry on with the rest (checks, record); for A I will build legs.mjs and its test once case-grammar R12 and case-disclosures carry `title`.
+
+## J16 · REPORT
+
+REPORT (public-read, after B12). Built and pushed; not COMPLETE only because one test waits on a merge, named below.
+
+C48 / R42 (my part): (1) CERTAIN: `PublicRead.publishedAddress({case, edition})` (index.mjs, before `publishedFrozen`), `/app/published/` + encodeURIComponent("<case>/<n>"); null for unpublished/unnamed. case-authoring:1702 composes `/app/published/${id}/${n}` unencoded and ceremony.mjs:134 its own: both to be replaced by the builder (their jobs). (2) the old tests never asked for the address; the new test uses the shell's route form as oracle. (3) published-address.test.mjs, 3 tests, red ("publishedAddress is not a function") then green, incl. the edition 2 control. (4) N.
+
+C47 / R41 (my part): legs.mjs now names an entry by the row's `title`, else `origin`, else `ref`. Test: evidence-names.test.mjs "R41 (1), C47 ..." with controls (null, absent, blank title keep the address). Seen RED: actual name is the address. It stays RED BY NAME until case-grammar R12 carries `title` (CASE-GRAMMAR #19): its `materialsOf` reader (case-grammar/materials.mjs MATERIAL_FIELDS, :86, :131) drops `title` today. Nothing else of mine is open. (2) tested on a scripted entry; the fixture now signs a titled row through the real case document writer. (4) N.
+
+Suites: public-read 242 pass before the C47 test, 1 red now by the above. Checks: ownership 0, format 0, architecture 0; coverage and words findings are other modules' (installer-steps, interface-shell, pdf-reader, queue, screens-*, op-grades t33/t51), none public-read.
+
+Need: ring me (RESUME) once case-grammar's R12 `title` is on tranche/T51; I merge, rerun the suite and checks, and COMPLETE with the Size line.
+
+## J17 · COMPLETE
+
+COMPLETE (B14 RESUME applied; replaces my REPORT J16). Merged tranche/T51 (case-grammar #19 in).
+
+C47 (R41): (1) legs.mjs:53 names an entry by the row's `title`, else `origin`, else `ref`; the place is the passage's signed extent, unchanged. (2) tests used a scripted entry with no title; evidence-names.test.mjs now signs a titled row through the real case-document writer (`caseDoc`), with controls (null, absent, blank title keep the address). (3) "R41 (1), C47 ...": RED (name was the address), red again after my edit until case-grammar's reader kept `title`, GREEN after the merge. (4) N. Said plainly: case-disclosures (the writer of `title`, #16) has not merged yet (no `title` in its materials.mjs), so the test hands a row with `title` to the real case-document writer and reader; the full path from a capture is the seam owner's (screens-publish) once #16 merges. "Paragraph 4" wording and the "Relied on ·" dot are screens-publish R80's.
+
+C48 (R42): (1) PublicRead.publishedAddress, index.mjs; case-authoring:1702 and ceremony.mjs:134 compose their own and are to use it (their jobs). (2) the address was never asserted against the route; the oracle is the shell's route form. (3) published-address.test.mjs, red ("not a function") then green, with the edition 2 control. (4) N.
+
+Requirement ids met: R41, R42. Suites: public-read 243 pass 0 fail. Downstream (impact): plane 5 fail and control-plane 1 fail are identical on origin/tranche/T51 (278/5 and 355/1 there too: route-map R5/R9, R24 release words, Home R81), not mine. Checks: ownership 0, format 0, architecture 0; coverage/words findings are other modules'. QUESTIONS: J15 answered (B12), none open.
+Size (session_01RJ9Po6vVrCTxSZ695UZtwZ): test runs 9, module lines 2800
+
+## J18 · COMPLETE
+
+COMPLETE (B15 START applied; C47 seam, R43). Merged tranche/T51 first.
+
+**What changed.** `bio-plane/src/public-read/legs.mjs`:22-26 new `extentOf` (the object as signed, or the canonical JSON text parsed; text that does not parse to an object gives null, never a throw); `legs.mjs`:59 reads the passage's extent through it. Header comment restated (R43). Nothing else in the module; no new `localize`/word sentence.
+
+**Failing-first.** `evidence-names.test.mjs` fixture now hands the string the chain signs (`canonicalJson(extent)`): red (`place: null`, the R41 titled test too). `screens-publish/c47-seam.test.mjs` red ("the place is the passage's signed extent", `[null, null]`). After the fix both green. New test "R43 …" (evidence-names.test.mjs:209): canonical text, object, and five non-extents (`not json {`, empty, a JSON string, an array, `null`) give `place: null`.
+
+**Suites.** public-read 244 pass 0 fail; screens-publish 255 pass 0 fail (c47-seam 1/1). Checks: format 0; architecture 0; coverage public-read 43 of 43 named, 0 failures; ownership 0 (3 files). `checks/run.mjs`: one failure, `machinery-producers` R16 (another module, not mine); words: inline 0, plain 0, testcopy 0, unkeyed 1982 (unchanged by me).
+
+**R43 line proposed (met):** drop "*(not yet met: T51)*"; test: `public-read/evidence-names.test.mjs` "R43 …" and `screens-publish/c47-seam.test.mjs`.
+
+Size (session_01SctGfdzcWmRNmq49hMahxN): test runs 7, module lines 2800

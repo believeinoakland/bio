@@ -1,6 +1,6 @@
 # BOB to strength (T51)
 
-**Read** · handled J6
+**Read** · handled J14
 
 ## B1 · START
 
@@ -61,3 +61,78 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio strength tranche/T51 job/T51/strength`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B7 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B8 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B9 · CHANGE
+
+CHANGE (K4213; inquiry J4, K4194 L9): a question's strength is its supporting legs': `axisResult` (and every path that builds the population) leaves a leg whose `role` is `cuts_against` out of the members and out of the implicit AND part, so `[supports A in g1, cuts_against C unlabelled]` reads A. A cutting leg keeps its own strength by the same computation where the module reports one (Case Making §3, invariant 7: "a finding that cuts against the case has the same strength computation as one that supports it"), never folded into the supported answer's. Write the requirement line yourself (K4210), with the test and a control (the same pair before the change read C). `inquiry` (FR-45) leaves cutting legs unlabelled since `inquiry-grammar` R68.
+
+## B10 · ANSWER · re J8
+
+ANSWER J8 (K4218): your four choices stand (`bio-grading/4`; `/1`–`/3` recompute as published; the `cutting` list; `role` in `graded`). Rule 11's signed text stays code: BOB asks UX-DESIGN to add it to the unkeyed list (HANDOFF); strength's one words finding is accepted red by name until that merges. Merged (K4218).
+
+## B11 · CHANGE
+
+CHANGE (K4258): STRENGTH, depth 2 (BOB #236 is depth 1). Your branch is at the tranche's tip. Model: claude-haiku-5-5 (one model up if it blocks on tests).
+Why: op-declarations (J18, confirmed by BOB at `bio-plane/src/strength/index.mjs:1683`, `:1697`) found that your `DECLARED_OPS` declares `strengthbarset` while your ops map serves only `strengthbar`: since K4254 dropped the alias, no arm answers `strengthbarset`, the op `screens-settings` sends (`group.mjs:322`), and `op-declarations` R6 (no spec without a handler) is unmet.
+Entries:
+1. Your ops map serves `strengthbarset` with the arm `strengthbar` has (`strengthBarSet` with `author` from the query); `strengthbar` stays served (op-capabilities and case-catalogue still name it until the round's hand-row deletion). Test: `strengthbarset` through the ops map as the door calls it sets the bar and reads back by `strengthbarof`; control: an unknown op is still refused.
+2. `DECLARED_OPS.strengthbarset` gains `needs: "publish"` (the capability `strengthbar`'s hand row carries, op-capabilities). Its honesty test (`declaredOpHolds`) stays green.
+Requirement lines for BOB in your COMPLETE.
+
+Reading (mechanics §6 step 2, K3271): read whole your requirements (both parts), your entries here, your layer's contract in `build/layers.md`, your own code, the used services your entries touch and the tests that name a requirement your entries change; run your other tests without reading them. A job that scans stops (K3678): if you would read a document of your reading set only in part, stop at once, post `BLOCKED` with cause `reading`, and wait for BOB.
+Words (K3810, K3930): a sentence a member reads is read by key through `word` or written once with `localize(id, en)`; a test asserts the key or reads the text from the word table, never copies it. Every new id needs an explicit test naming it (K874); every refusal a control.
+Tests: one for each entry, written first and seen failing, at the module's interface through the real path (the module's ops map called as the door calls it, with `url` and `body`, over a real fixture of its neighbours; a screen's through interface-shell's harness), with the control that shows the fix is the cause. A test never hand-lists another module's ops, rows or words (K3268).
+Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
+Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
+Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio strength tranche/T51 job/T51/strength`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B12 · CHANGE
+
+CHANGE (K4259), with B11: `inquirystrength` (`inquiryStrength`, `index.mjs:692-693`) has no top-level `ungraded` (only `versionStrength` does, `:983`), so the question screen falls back to each axis's `not_load_bearing`. Add `ungraded` (the distinct targets in the three axes' `not_load_bearing`, after the `keep` redaction, with their count). Test with a withheld member; control: a fully graded inquiry answers an empty `ungraded`. R6's amended line for BOB.
+
+## B13 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/strength tranche/T51 && git branch -m job/T51/strength stale/strength-local && git checkout -b job/T51/strength origin/job/T51/strength`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · STRENGTH #20 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #239 is depth 1; fix round 2, wave 1)
+
+Mail with `--module strength`; record `build/jobs/T51/strength.md`. Model claude-sonnet-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`.
+
+You are the **module job** (P8, mechanics §6) for `strength`. Your diff touches only that module's paths and tests and your record.
+This is fix round 2 of T51, planned whole in `build/plan/fix-round-2-T51.md` (K-numbers there). The walk of the T51 build on biosmoke8 is diagnosed in `build/plan/walk-T51-build/CAUSES.md` (C-numbers below are its; read the entries of yours whole). Nothing found here waits for the next tranche (K3915, P19). Merge `tranche/T51` into your branch first.
+
+**Your causes** (each: what is wrong, the source, the requirement to meet, the test; an implementation named is a suggestion only, the requirement is what you meet; where a cause has "Your part", the requirement and test cover the whole cause and you meet and prove your part, the other job's half being merged before or after you):
+1. **C38** (MAJOR) A removed (severed) citation is still counted in the partition and named in the strength sentence ("Not counted yet: …foia.gov"). **Your part: strength's part: strength and the partition over live legs only.** Source: `strength/index.mjs:788-874`; `screens-inquiry/question.mjs:539` already skips `severed` for the row. Requirement: Strength and the partition are computed over live legs only (strength R11, R12). Unconfirmed which module counts it: if it is `inquiry`'s read or `basis-versions`, QUESTION to BOB. Test: strength: an inquiry with a severed leg answers strength and partition without it; control: the same leg live counts.
+
+Read in full (never in part): `strength` R11, R12 and the lines on the partition and the "not counted yet" sentence; for each cause above, the code files named in its source, whole, and the tests that name the requirement ids you meet; your layer's contract in `build/layers.md`. Other tests are run, not read. A job about to read a document of its reading set only in part stops (BLOCKED, cause reading) (K3678). Where a cause needs a requirement line that is not written, or a module you do not hold, post a QUESTION to BOB with your best reading and carry on with the rest (mechanics §6 step 3); a flaw in another module goes to BOB (P9).
+Tests: for each cause one test written first and seen failing, at the module's interface through the real path, with the control that shows the fix is the cause; a test names the requirement id it proves (K874). Words (K3810): a sentence a member reads is read by key or written once with `localize`; a test asserts the key, never copies a sentence, and never hand-lists another module's ops, rows or words (K3268). A new member-facing sentence on a drawn screen is a word-table row the design stream writes first: use the row if one exists (`docs/development/ux-substrate/screens/words.json`, `setup-words`); if none, list the keys you need in your record and post one QUESTION to BOB naming them, and carry on with the rest; never invent a sentence. Declare every census op you own (K4208). Never edit a generated artifact (manifest §14); report one you make stale.
+Run: your suite (`node --test --test-force-exit bio-plane/test/m/strength/`), then the suites of the modules that use what you changed: `node build/plan/impact.mjs tranche/T51 HEAD` names them. Then `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (format, architecture, coverage, words: 0 findings for your files) and `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio strength tranche/T51 job/T51/strength`.
+COMPLETE with the causes met (C-numbers and the requirement ids), the suites' counts, what you reported to BOB, and the `Size` line (`Size (<session id>): test runs <n>, module lines <n>`, K2513: your held modules' own code only).
+
+## B14 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/strength tranche/T51 && git branch -m job/T51/strength stale/strength-local && git checkout -b job/T51/strength origin/job/T51/strength`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · STRENGTH #21 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #252 is depth 1; fix round 6, job 6 of 20; K4570, K4571)
+
+Mail with `--module strength`; record `build/jobs/T51/strength.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). You are the module job (P8, mechanics §6) for `strength`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first.
+
+**Read in full:** `build/plan/fix-round-6-T51.md` (section 0's rules bind you; section 2 gives each cause you own or provide with its four fields; section 3 the merge order), `build/plan/diagnosis-R6-speed.md` (item 4), your requirements (both parts), the used services your entries touch, and your code. The plan's file:line evidence is your starting point, never a substitute for reading the code.
+
+**Rules** (plan section 0; K4426-K4428): (1) root cause stated with file:line, else a diagnosis posted as a QUESTION before any fix; (2) why the tests missed it, and the test-gap fix; (3) a failing-first test on the walker's case (quoted below), through the real entry path (press the act or call the op, never the done function), seen red in your record, then green; (4) where the platform matters (the object's 128 MB, the CPU limit, `waitUntil` cut ~30 s after the response, the door's 25 s, the clock frozen during synchronous work), a local workerd check with real sizes, numbers in your record; no deploy. R-SEAM: the seam owner's test runs the whole path with the real merged providers and inputs made by the member's own acts, never a hand-written answer shape; a seam test whose provider is unmerged is written first and stays red by name (merge `tranche/T51` again when BOB says it merged). R-STOP: a "reading follows" test asserts the words are in `text_units`. R-CLOCK: no test asserts a compute time from the object's clock. R-NOTMET: no "not met", deferred, REPORT or open QUESTION at COMPLETE: name the smallest thing you need and ask BOB now. R-OLD: stored-data fixes say "new data only" or carry a repair. Wording waits for T52 (K4269): a new sentence uses the nearest held row as stand-in (a drawn-screen module never adds `localize`), the row owed named in your record. Declare every census op you own (K4208). Bob's focus: an alpha release deployed as efficiently as possible: do what the entries need, nothing more.
+
+**Your entry (G12c provider; owner screens-inquiry).** Walker: Project and Question issue one `inquirystrength` per question (`screens-inquiry/project.mjs:313`). `inquirystrength` (index.mjs:687, ops :1716) reads one `id`. Fix: it also accepts `ids` (a list, at most 50) and answers one result per id in one call; each id is gated exactly as the single read (an inquiry the viewer may not see is withheld whole as today, never revealed by omission); declare the new accepted key (K4208). store-door's batch fence and screens-inquiry's use are others' jobs. Failing-first: a batch of 5 ids equals the 5 single answers, and a hidden id is withheld as the single read withholds it. Why missed: no batch read exists or is ruled. Expected: Project/Question -0.3 to -0.6 s.
+
+Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio strength tranche/T51 job/T51/strength`. COMPLETE: what changed (file:line), each failing-first test red then green, measurements, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B15 · ANSWER · re J14
+
+ANSWER (BOB #253): J13/J14 read. R44 and R41's amendment are written at your merge. SCREENS-INQUIRY #21 is told the shape (`ids`, `results`), STORE-DOOR #16 already fences `ids`, CONTROL-PLANE #48 forwards it. Stay available until the layer closes.

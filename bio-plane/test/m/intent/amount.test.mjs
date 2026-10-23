@@ -116,7 +116,7 @@ test("R31 R4 a total summable refuses, a fact whose period is undetermined, a re
   /* a period money cannot read: its refusal, carried */
   const bad = w.set(condOf({ max: "1000", currency: "USD", period: { from: "the spring", zone: ZONE } }, { relation: null }));
   assert.equal(bad.undetermined.length, 1);
-  assert.equal(row(bad, "ENT-1").amount.code, "BAD_PERIOD");
+  assert.equal(row(bad, "ENT-1").amount.code, "MONEY_BAD_PERIOD", "money's own period refusal (money R29)");
 });
 
 test("R31 an approximate figure settles nothing; a rounded one or a range is read across its width, settled only when it lies wholly within or wholly outside a bound", async () => {

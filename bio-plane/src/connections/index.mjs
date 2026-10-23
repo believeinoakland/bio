@@ -453,9 +453,10 @@ export class Connections {
 
   /* ================================================================ reads (R4–R6) */
 
-  /** R4, R5, R6, R12, R33 (`op=connections&id=`, `&sha256=`; `&content=` is R7's). Ordered by grade, bounded, with
+  /** R4, R5, R6, R12, R33, R70 (`op=connections&id=`, `&sha256=`; `&content=` is R7's). Ordered by grade, bounded, with
    *  `truncated` measured by reading one more. Each end's bundle id, and a member's choice on it, is withheld from a
-   *  viewer who may not see that end; the connection itself (the evidence) stays visible (K102). */
+   *  viewer who may not see that end; the connection itself (the evidence) stays visible (K102). On the capture arm
+   *  each row also lists the subject's mentions in that document (R70), for the choice of the one on point. */
   read({ entityId = null, captureSha = null, contentId = null, limit = null, viewer = null } = {}) {
     if (typeof contentId === "string" && contentId.trim()) return this.portionGrade({ contentId, limit, viewer });
     const cap = clamp(limit, CONNECTIONS_LIMIT_DEFAULT, CONNECTIONS_LIMIT_MAX);
@@ -473,6 +474,7 @@ export class Connections {
     const rows = truncated ? scan.slice(0, cap) : scan;
     const keep = this.redactor(viewer);
     const derivation = entityId ? this.derivationStatement(entityId) : undefined;
+    const mentionMemo = new Map();
     return { ok: true, entity_id: entityId, capture_sha: captureSha, count: rows.length,
              connections: rows.map((r) => {
                const st = this.#pairChoiceStates(r);
@@ -480,9 +482,15 @@ export class Connections {
                /* R33: a choice is an act written into its end's document; a hidden end's is withheld with it. */
                const seen = { a: a ? st.a : null, b: b ? st.b : null };
                const view = this.#view(r, seen);
+               /* R70: on the capture arm, the mentions of the subject in the document asked about, withheld with a hidden end. */
+               const own = captureSha && !entityId ? (r.a_capture_sha === captureSha ? a : b) : null;
+               if (own && !mentionMemo.has(r.entity_id))
+                 mentionMemo.set(r.entity_id, this.#mentionsRead(captureSha, r.entity_id, OCCURRENCES_PER_REF));
+               const listed = own ? mentionMemo.get(r.entity_id) : null;
                return { ...view, a_bundle_id: a, b_bundle_id: b,
                         ...((seen.a || seen.b) ? { on_point: { a: Connections.#onPointView(seen.a),
-                                                               b: Connections.#onPointView(seen.b) } } : {}) };
+                                                               b: Connections.#onPointView(seen.b) } } : {}),
+                        ...(listed ? { mentions: listed.mentions, mentions_truncated: listed.cut } : {}) };
              }),
              limit: cap, truncated, ...(derivation ? { derivation } : {}) };
   }
@@ -589,6 +597,21 @@ export class Connections {
       `SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, stale FROM content WHERE content_id=?`, id);
   }
 
+  /* The mentions of `entityId` in one capture (R8, R70): each resolved reference with each place the reading kept it,
+     ordered by reference and then in the reading's order; at most `bound`, `cut` saying one more was there. */
+  #mentionsRead(captureSha, entityId, bound) {
+    const ms = this.#rows(
+      `SELECT r.ref AS ref, r.grade AS grade, rp.pos_kind AS pos_kind, rp.pos AS pos, rp.pos_ref AS pos_ref,
+              rp.occurrence AS occurrence
+         FROM resolutions r LEFT JOIN reading_refs rp ON rp.capture_sha=r.capture_sha AND rp.ref=r.ref
+        WHERE r.capture_sha=? AND r.entity_id=? ORDER BY r.ref, rp.seq LIMIT ?`,
+      captureSha, entityId, bound + 1);
+    const cut = ms.length > bound;
+    return { cut, mentions: (cut ? ms.slice(0, bound) : ms).map((m) => ({
+      ref: m.ref, occurrence: m.occurrence ?? null, grade: m.grade,
+      position: readingSourceFromColumns(m.pos_kind, m.pos, m.pos_ref) })) };
+  }
+
   /* R8–R11: sort one row's connections into reaching, undetermined and outside, and take the strongest reaching grade.
      A `document` extent is reached by every connection (5.3). A member's standing choice on the cited end answers
      instead of the machine's pair (R9); a lapsed one is stated and the pair read as unchosen. */
@@ -598,19 +621,8 @@ export class Connections {
     const reaching = [], undetermined = [], outside = [];
     const mentionCache = new Map();
     const mentionsOf = (entityId) => {
-      if (mentionCache.has(entityId)) return mentionCache.get(entityId);
-      const ms = this.#rows(
-        `SELECT r.ref AS ref, r.grade AS grade, rp.pos_kind AS pos_kind, rp.pos AS pos, rp.pos_ref AS pos_ref,
-                rp.occurrence AS occurrence
-           FROM resolutions r LEFT JOIN reading_refs rp ON rp.capture_sha=r.capture_sha AND rp.ref=r.ref
-          WHERE r.capture_sha=? AND r.entity_id=? ORDER BY r.ref, rp.seq LIMIT ?`,
-        row.capture_sha, entityId, CONNECTIONS_LIMIT_MAX + 1);
-      const cutRead = ms.length > CONNECTIONS_LIMIT_MAX;
-      const got = { cut: cutRead, mentions: (cutRead ? ms.slice(0, CONNECTIONS_LIMIT_MAX) : ms).map((m) => ({
-        ref: m.ref, occurrence: m.occurrence ?? null, grade: m.grade,
-        position: readingSourceFromColumns(m.pos_kind, m.pos, m.pos_ref) })) };
-      mentionCache.set(entityId, got);
-      return got;
+      if (!mentionCache.has(entityId)) mentionCache.set(entityId, this.#mentionsRead(row.capture_sha, entityId, CONNECTIONS_LIMIT_MAX));
+      return mentionCache.get(entityId);
     };
     for (const c of conns) {
       const side = c.a_capture_sha === row.capture_sha ? "a" : "b";
@@ -1491,3 +1503,29 @@ export function connectionsOps(k, url, body, env) {
                                     administer: q("administer") }),
   };
 }
+
+/* R71 (T51; K4168, K4202; op-declarations R80, op-grades R49): the ops this module serves that the screens send, declared by
+   their owner beside the ops map: each row's classes, weight and description are the op's existing rows', its fields are what
+   the arm reads from the address and the body. `assertedBy` is not listed on `connect`: the door sets it to `system` (R38). */
+export const DECLARED_OPS = Object.freeze({
+  connect: { classes: ["admin","member","probe"], mutating: true, weight: "substrate", description: localize("connections.declared.connect", "connection derivation, keyed by entity"),
+    fields: { accepts: ["id","entityId","limit"], requires: [["entityId","id"]] } },
+  connectionassert: { classes: ["admin","member","probe"], mutating: true, weight: "reasoned", description: localize("connections.declared.connectionassert", "connection-directed: a member asserts a connection between two held documents with a stated basis, keyed by the document pair; writes an asserted-connection row, grade D, apart from derived ones"),
+    fields: { accepts: ["a","b","basis"], requires: ["a","b","basis"] } },
+  connectionchoose: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("connections.declared.connectionchoose", "connection-directed: records which mention is on point on ONE end of ONE connection, keyed by (capture, other capture, entity); writes a choice row beside the machine's pair and moves nothing existing"),
+    fields: { accepts: ["capture","other","entity","ref","occurrence"], requires: ["capture","other","entity","ref"] } },
+  stepsource: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("connections.declared.stepsource", "relation-directed: keyed by a declared relation and a held capture's passage; a member's cited backing of a declared step, withdrawn only by a reasoned act and never erased; moves no bundle"),
+    fields: { accepts: ["relation","captureSha","extent","basis"], requires: ["relation","captureSha","extent","basis"] } },
+  stepsourcewithdraw: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "reasoned", description: localize("connections.declared.stepsourcewithdraw", "relation-directed: keyed by a declared relation and a held capture's passage; a member's cited backing of a declared step, withdrawn only by a reasoned act and never erased; moves no bundle"),
+    fields: { accepts: ["id","reason"], requires: ["id","reason"] } },
+  themedeclare: { classes: ["admin","member"], mutating: true, weight: "reversible", description: localize("connections.declared.themedeclare", "member-directed: a member declares a theme (an idea and its test) keyed by nothing the record holds; writes a `themes` row, no edge and no entity, and is never evidence"),
+    fields: { accepts: ["name","test"], requires: ["name","test"] } },
+  themeplace: { classes: ["admin","member"], mutating: true, weight: "reversible", description: localize("connections.declared.themeplace", "theme-directed: a member places a document or a passage in a theme, keyed by (theme id, target); writes a `theme_placements` row as membership and no edge"),
+    fields: { accepts: ["theme","target","note"], requires: ["theme","target"] } },
+  themepropose: { classes: ["admin","member","probe"], mutating: true, weight: "reversible", description: localize("connections.declared.themepropose", "theme-directed: a member or a machine proposes a placement, keyed by (theme id, target); writes a `theme_placements` row as a hunch that is never membership"),
+    fields: { accepts: ["theme","target","note"], requires: ["theme","target"] } },
+  themeread: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("connections.declared.themeread", "read: one theme by id — its idea, its test, its declarer, its members and its hunches apart, each placement gated by the viewer's sight of the document — or the themes, searchable by a phrase"),
+    fields: { accepts: ["id","q","limit"], requires: [] } },
+  themewithdraw: { classes: ["admin","member"], mutating: true, weight: "reasoned", description: localize("connections.declared.themewithdraw", "theme-directed: a member withdraws a placement or rejects a hunch in a theme with a reason, keyed by (theme id, target); the placement is kept, shown as withdrawn"),
+    fields: { accepts: ["theme","target","reason"], requires: ["theme","target","reason"] } },
+});

@@ -54,7 +54,8 @@ test("R1 recordpersonfact: a fact read from the passage the member names, citing
   await press(p, "recordpersonfact");
   assert.deepEqual(p.byOp("recordpersonfact")[0].body, { person: ENT, kind: "locality", value: "Lakeshore", valid: { from: "2024-01-01", to: null },
     citation: { captureSha: SHA, extent: { kind: "document" } } });
-  const q = await open(at);
+  /* control: with no document held there is no passage to cite (the first document held is the one drawn and chosen, C59) */
+  const q = await open(at, { plane: { heldcaptures: ok({ ok: true, held: [] }) } });
   fill(q, { "person-fact-value": "Lakeshore" });
   await press(q, "recordpersonfact");
   assert.equal(q.byOp("recordpersonfact").length, 0);

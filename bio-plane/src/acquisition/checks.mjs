@@ -354,6 +354,18 @@ export const ARCHIVE_CHECKS = Object.freeze({
   }),
 });
 
+/* R10, R96 (C5; K4370): a capture of several parts the store could not keep whole. Nothing is filed and the parts are named by
+   no document. The sentence is the design's (`refusal.CAPTURE_NOT_KEPT`), read by key. `check` is the next free number in the
+   catalogue's series (C-154, unused at T51; BOB confirms it at the close). The detail the answer carries is unchanged
+   (index.mjs `notKept`). */
+export const CAPTURE_KEEP_CHECKS = Object.freeze({
+  CAPTURE_NOT_KEPT: Object.freeze({
+    check: 'C-154.1',
+    where: at('is-capture-kept'),
+    translation: word("refusal.CAPTURE_NOT_KEPT"),
+  }),
+});
+
 /** R29: every row this module holds, keyed by code, for a reader that looks one up by the code an answer carries. */
 export const ACQUISITION_CHECKS = Object.freeze({ ...CAPTURE_REQUEST_ARM_CHECKS, ...RENDER_CAPTURE_CHECKS, ...DRIVE_CAPTURE_CHECKS,
-                                                  ...INSTALLATION_CHECKS, ...SWEEP_SCOPE_CHECKS, ...ARCHIVE_CHECKS });
+                                                  ...INSTALLATION_CHECKS, ...SWEEP_SCOPE_CHECKS, ...ARCHIVE_CHECKS, ...CAPTURE_KEEP_CHECKS });

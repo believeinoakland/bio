@@ -1,6 +1,6 @@
 # BOB to installer (T51)
 
-**Read** · handled J13
+**Read** · handled J16
 
 ## B1 · START
 
@@ -112,3 +112,29 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio installer tranche/T51 job/T51/installer`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B15 · ANSWER · re J14
+
+ANSWER J14 (K4210): (1) the compressed embed (gzip, base64, expanded once by DecompressionStream into the one Blob, hash checked against the manifest) is approved. newgroup-bundle-fresh.test.mjs is in your own tests (modules.json): edit it as yours. R33's text amended to 29 MB: write it in build/requirements/installer.md. Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B16 · CHANGE
+
+CHANGE (K4234), for INSTALLER #22: installer-steps is merged (R38: the read-back streams; `hashStream` exported). Its R33 real-size measurement: peak 143 MB (budget 112) is set in your module: `src/index.mjs`:97 `fetchRepoAsset` holds `bytes` and then the `Blob` at once; stream it (hash as it arrives into the Blob, using steps' `hashStream`, never `bytes` beside the Blob), and the real-size child's fake account serialises the upload body whole (a test double: make it stream or count without holding). Also `requirements.test.mjs`:363 "R11 fleet" is red with and without installer-steps (the result says all 6 helpers installed where the test expects pdf-worker's left-out paragraph): R11 is your entry. `newgroup/dist/newgroup.bundled.mjs` is stale; BOB regenerates it at the round's end.
+
+## B17 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/installer tranche/T51 && git branch -m job/T51/installer stale/installer-local && git checkout -b job/T51/installer origin/job/T51/installer`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · INSTALLER #23 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #256 is depth 1; fix round 6, wave 6; K4616, K4617) · reading set per mechanics §6 step 2 (your other tests are run, not read)
+
+Mail with `--module installer`; record `build/jobs/T51/installer.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis (K3518). Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once; always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). You are the module job (P8, mechanics §6) for `installer`: your diff touches only that module's paths, tests and your record. Merge `tranche/T51` first.
+
+**Read in full:** `build/plan/fix-round-6-T51.md` section 0 (its rules bind you) and G39 (its four fields, as amended after the independent review), the manifest's "Generated artifacts" section (`build/manifest.md`), your requirements (both parts), bundler's Purpose and its Provides for the ASCII pass (`asciiOutput`, `asciiOptions`; R-ids as BOB wrote them at BUNDLER #27's merge), and your build (`newgroup/scripts/build.mjs`) with the tests that name it (`bio-plane/test/system/newgroup-bundle-fresh.test.mjs`).
+
+**Bob (K4426):** "We need to be rigorous about truely understanding the issues we're experiencing, understanding (and fixing) why they weren't caught in the fixtures, and be confident that we do understand, can properly tes, and have really fixed every issue before we do another deployment." Each defect has (1) its root cause with evidence, (2) why the tests missed it and that gap fixed, (3) a test on the walker's exact case through its real entry path, seen failing then passing, (4) a check at the live platform's real shape where it depends on it. **Bob's focus: an alpha release as quickly and efficiently as possible: do what the entry needs, nothing more.**
+
+**Rules** (plan section 0; K4426-K4428): (1) root cause with file:line; (2) why the tests missed it, and the gap fixed; (3) a failing-first test past the bound, through the module's real entry (the op or the provided service, never an inner helper), seen red in your record, then green; (4) the platform check named in the cause (most are N). R-NOTMET: no "not met", deferred, REPORT or open QUESTION at COMPLETE: name the smallest thing you need and ask BOB now. R-OLD: stored data: "new data only" or a repair. A new sentence a member reads uses a stand-in (a drawn-screen module uses the nearest held row; any other module `localize(id, en)`), the row owed named in your record (BOB's HANDOFF B485 asks the design). Declare every census op you own whose accepted keys change (K4208).
+
+**Your entry (G39's newgroup half, owner; K4617).** bundler now makes every fleet bundle pure ASCII through its provided pass, applied inside `buildMember`; newgroup is built by its own `scripts/build.mjs` (`bundleOptions`/`bundleText`), so it calls bundler's pass itself: the same options (comments stripped, licence banners kept and checked against `third-party.json`, templates lowered, remaining non-ASCII escaped by the token-aware pass) and the same recipe recorded where the fresh-bundle check reads it. Failing-first: `newgroup/dist/newgroup.bundled.mjs` built by `npm run build` holds no byte over 0x7F (346 today: red), the bundle still runs the installer's own tests unchanged, and `newgroup-bundle-fresh` verifies with the new options. You change the build only; do not commit the regenerated bundle (BOB regenerates every artifact at the round end, newgroup last). Propose the requirement lines (BOB writes them).
+
+Run: your suite (`newgroup/`), `node --test --test-force-exit bio-plane/test/system/newgroup-bundle-fresh.test.mjs` against a scratch build, `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio installer tranche/T51 job/T51/installer`. COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the requirement lines you propose, and the `Size` line.

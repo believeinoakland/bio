@@ -70,8 +70,8 @@ test("R2: captureFacts states the capture's grade (provenance.captureGrade), co_
   const { w, a, b } = setup();
   account(w, a);
   const fa = w.cd.captureFacts(a), g = w.prov.captureGrade(a);
-  assert.deepEqual(fa, { capture: a, grade: g.grade, grade_basis: g.basis, grade_why: g.why, co_attested: true,
-    timestamp_at: fa.timestamp_at, co_archive: "https://archive.example/web/x", late: false,
+  assert.deepEqual(fa, { capture: a, grade: g.grade, grade_basis: g.basis, grade_why: g.why, co_attested: true, missing: [],
+    timestamp_at: fa.timestamp_at, co_archive: "https://archive.example/web/x", late: false, timestamp_late: false, late_words: null,
     accounts_read: [{ by: "alice", at: "2026-09-27T12:00:00Z", text: "I saved it myself.", signature: "SIG-of-alice-7f3" }] });
   assert.equal(fa.grade, "B");
   assert.deepEqual([w.cd.captureFacts(b).co_attested, w.cd.captureFacts(b).timestamp_at, w.cd.captureFacts(b).co_archive], [false, null, null]);
@@ -104,12 +104,35 @@ test("R2: a timestamp or co-archive obtained late (capture.lateAttestationsOf) c
   assert.deepEqual([f.co_attested, f.late, f.timestamp_at, f.co_archive], [true, true, "2026-09-28T00:00:00Z", "https://archive.example/web/late2"]);
 });
 
+test("R2 (C40): after reattest the pre-flight counts a late timestamp as the attempt it is, marked late with when it proves the bytes existed, and says the co-archive is still missing; controls: no attempt misses both, a failed late attempt counts nothing, a timestamp made at capture is not late", () => {
+  const { w, a, b } = setup();
+  const none = w.cd.captureFacts(b);
+  assert.deepEqual([none.missing, none.timestamp_late, none.late_words], [["timestamp", "co_archive"], false, null]);
+  lateRow(w, b, 1, { kind: "timestamp", service: "tsa.example", ok: false, at: "2026-09-28T00:00:00Z" });
+  const failed = w.cd.captureFacts(b);
+  assert.deepEqual([failed.missing, failed.timestamp_late, failed.late_words, failed.timestamp_at], [["timestamp", "co_archive"], false, null, null]);
+  lateRow(w, b, 2, { kind: "timestamp", service: "tsa.example", ok: true, at: "2026-09-28T00:05:00Z" });
+  const f = w.cd.captureFacts(b);
+  assert.deepEqual([f.co_attested, f.missing, f.timestamp_at, f.co_archive, f.timestamp_late, f.late],
+    [false, ["co_archive"], "2026-09-28T00:05:00Z", null, true, true]);
+  assert.equal(f.late_words, localize("case-disclosures.index.late_proves", "late: proves the bytes existed by {at}, not at capture", { at: "2026-09-28T00:05:00Z" }));
+  /* the gate and the rows the pre-flight lists carry the same marks */
+  const { j } = judge(w, [Q], []);
+  const u = j.refusals[0].unacknowledged[0];
+  assert.deepEqual([u.capture, u.missing, u.timestamp_at, u.timestamp_late, u.late_words], [b, ["co_archive"], f.timestamp_at, true, f.late_words]);
+  const rows = w.cd.disclosureBlocks({ resting: w.cd.restingCaptures(w.prepared([Q])), facts: new Map() }).captures;
+  const row = rows.find((r) => r.capture === b);
+  assert.deepEqual([row.missing, row.timestamp_at, row.timestamp_late, row.late_words], [["co_archive"], f.timestamp_at, true, f.late_words]);
+  const atCapture = w.cd.captureFacts(a);
+  assert.deepEqual([atCapture.timestamp_late, atCapture.late_words, atCapture.late], [false, null, false]);
+});
+
 test("R2, R23: captureFacts never throws — a failed grade, attestation, late or account read states less, never more", () => {
   const boom = () => { throw new Error("down"); };
   const w = world({ deps: { provenance: { captureGrade: boom }, attestation: { attestationsOf: boom },
                             capture: { lateAttestationsOf: boom, captureAccountsOf: boom } } });
   assert.deepEqual(w.cd.captureFacts("e".repeat(64)), { capture: "e".repeat(64), grade: null, grade_basis: null, grade_why: null,
-    co_attested: false, timestamp_at: null, co_archive: null, late: false, accounts_read: [] });
+    co_attested: false, missing: ["timestamp", "co_archive"], timestamp_at: null, co_archive: null, late: false, timestamp_late: false, late_words: null, accounts_read: [] });
 });
 
 test("R2 (C-120.4): a load-bearing Grade B capture not co-attested and not listed is CO_ATTESTATION_UNACKNOWLEDGED, naming each with its members; listed with a reason, nothing refuses; a supporting member's needs none — the case is never refused because a capture is not co-attested", () => {
@@ -118,7 +141,7 @@ test("R2 (C-120.4): a load-bearing Grade B capture not co-attested and not liste
   const { j } = judge(w, [Q], null);
   assert.equal(j.refusals.length, 1);
   refused(j.refusals[0], "CO_ATTESTATION_UNACKNOWLEDGED");
-  assert.deepEqual(j.refusals[0].unacknowledged, [{ capture: b, members: [Q], grade: "B", timestamp_at: null, co_archive: null }]);
+  assert.deepEqual(j.refusals[0].unacknowledged, [{ capture: b, members: [Q], grade: "B", timestamp_at: null, co_archive: null, missing: ["timestamp", "co_archive"], timestamp_late: false, late_words: null }]);
   assert.ok(j.refusals[0].detail.includes(b), "the document is named");
   assert.deepEqual(w.snapshot(), before, "nothing written");
   const ok = judge(w, [Q], [{ capture: b, reason: REASON }]).j;
@@ -279,4 +302,45 @@ test("R11: a capture a named member made, a load-bearing self-attested Grade B o
   assert.deepEqual([row.self_attested_only, row.accounts[0].by, row.accounts[0].signature], [true, "alice", "SIG-of-alice-7f3"]);
   assert.deepEqual(blocks.materials.attestations.find((x) => x.by_kind === "member"),
     { ref: DOC, by_kind: "member", by: "alice", level: "name", at: "2026-09-27T12:00:00Z", signature: "SIG-of-alice-7f3", recorded_in: null });
+});
+
+test("R2 (C39): restingCaptures reads live legs only — a leg whose citation the member severed rests on no capture for the gate; control: the live leg is named", () => {
+  const w = world();
+  w.member("alice");
+  const live = graded(w, DOC), cut = graded(w, DOC2);
+  w.finding(Q, [{ target: DOC }, { target: DOC2 }], { severed: [DOC2] });
+  assert.deepEqual(w.cd.restingCaptures(w.prepared([Q])), [{ member: Q, capture: live }]);
+  const { j } = judge(w, [Q], []);
+  assert.deepEqual(j.refusals.map((r) => r.reason), ["CO_ATTESTATION_UNACKNOWLEDGED"]);
+  assert.deepEqual(j.refusals[0].unacknowledged.map((u) => u.capture), [live], "only the live leg is named");
+  assert.ok(!JSON.stringify(j).includes(cut), "the severed leg's capture is named nowhere");
+  /* the same finding with the citation live names both */
+  w.finding(Q2, [{ target: DOC }, { target: DOC2 }]);
+  assert.deepEqual(w.cd.restingCaptures(w.prepared([Q2])), [{ member: Q2, capture: live }, { member: Q2, capture: cut }]);
+});
+
+test("R16 (C39): hunchDebt reads live legs only — a hunch on a severed leg is no debt; control: the same hunch on a live leg is", () => {
+  const w = world();
+  w.member("alice");
+  graded(w, DOC);
+  const hunch = { grade: "B", grade_axis: "connection", grade_source: "hunch", author: "member:alice", date: "2026-09-27" };
+  w.finding(Q, [{ target: DOC, ...hunch }], { severed: [DOC] });
+  assert.equal(w.cd.hunchDebt(w.prepared([Q])), null);
+  w.finding(Q2, [{ target: DOC, ...hunch }]);
+  assert.equal(w.cd.hunchDebt(w.prepared([Q2])).reason, "UNCLEARED_HUNCH");
+});
+
+test("R2 (C40): CO_ATTESTATION_UNACKNOWLEDGED names which of the timestamp and the co-archive each capture lacks; control: a capture with both is not named", () => {
+  const w = world();
+  w.member("alice");
+  const none = graded(w, DOC), tsOnly = graded(w, DOC2, { attestations: CO_ATTESTED.attestations }),
+        caOnly = graded(w, DOC3, { co_archive: CO_ATTESTED.co_archive }), both = graded(w, "INFO-2026-0004-d", CO_ATTESTED);
+  w.finding(Q, [{ target: DOC }, { target: DOC2 }, { target: DOC3 }, { target: "INFO-2026-0004-d" }]);
+  const { j } = judge(w, [Q], []);
+  const named = new Map(j.refusals[0].unacknowledged.map((u) => [u.capture, u.missing]));
+  assert.deepEqual([...named.keys()].sort(), [none, tsOnly, caOnly].sort());
+  assert.deepEqual(named.get(none), ["timestamp", "co_archive"]);
+  assert.deepEqual(named.get(tsOnly), ["co_archive"]);
+  assert.deepEqual(named.get(caOnly), ["timestamp"]);
+  assert.ok(!named.has(both));
 });

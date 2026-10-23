@@ -6,6 +6,9 @@ import assert from "node:assert/strict";
 import { ok, refusedIn, MEMBER } from "../interface-shell/harness.mjs";
 import { open, main, actsIn, button, fill, press, rawKeys, plane, says, section, word, day, SCREENS, P } from "./fixtures.mjs";
 
+/* every owner's declarations, registered once before the first read (test-support R17, K4245): the served screens name ops their owners declare */
+
+
 const at = "/app/projectai/" + P;
 const OWNER = "project:" + P;
 /* the notice as the plane answers it: the words row it is made from, read by `word` */

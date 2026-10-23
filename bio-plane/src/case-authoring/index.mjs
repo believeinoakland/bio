@@ -76,6 +76,7 @@
 import { recordOf, stampInstant, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, noSuchProject } from "../membership/index.mjs";
 import { observationLogOf } from "../observation-log/index.mjs";
+import { provenanceOf } from "../provenance/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { strengthOf, STRENGTH_AXES } from "../strength/index.mjs";
@@ -88,12 +89,17 @@ import { projectRosterOf } from "../project-roster/index.mjs";
    third split. */
 import { publishScheduleOf } from "../publish-schedule/index.mjs";
 import { caseTensionsOf } from "../case-tensions/index.mjs";
+/* R85 (fix round 6, G9; K4573): `case-carriage`, the one instance on the host, whose `copyNow` makes a small member
+   document's publication copy inside `op=publish`. */
+import { caseCarriageOf } from "../case-carriage/index.mjs";
 import { ratificationOf, SUBJECT_POSITIONS, completenessFields } from "../ratification/index.mjs";
 import { networkNoticesOf } from "../network-notices/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, OBJECT_TYPES, BASIS_GRADES,
          isPublicHttpsLocator, idPattern } from "../record-grammar/index.mjs";
 /* R63, R69 (N839, K2608): the account's machinery is `case-account`'s, asked in R69's order. */
 import { caseAccountOf } from "../case-account/index.mjs";
+/* B10 (K4240): `capture`, the one instance on the host, which records the members who captured each capture (its R69). */
+import { captureOf } from "../capture/index.mjs";
 /* R56, R57 (T33): case-grammar's `calculationsLines` and `timelineLines` (its R18, R20), the one spelling of each block. */
 import { calculationsLines, timelineLines, materialsOf, passagesOf } from "../case-grammar/index.mjs";
 /* R63, R68 (T41; D56, D60): case-grammar's account and approval blocks (its R23, R26), the one spelling of each, and the
@@ -160,6 +166,11 @@ const LENS_PAGE = 2000;
 /** R40: publication R12's `publishedTargets` reads at most 200 ids a call. */
 const PUBLISHED_TARGETS_CHUNK = 200;
 
+/** R85 (fix round 6, G9; K4573): the largest member document `op=publish` makes the copy of in the act itself, in bytes;
+ *  a larger one keeps the scheduler's alarm path. */
+export const COPY_NOW_MAX_BYTES = 2 * 1024 * 1024;
+const HEX64 = /^[0-9a-f]{64}$/;
+
 /** R65 (D57, D63): the authored fields of `op=publish`, exactly: the four statements, the scope, the bias acknowledgement
  *  and the account (R63), with the statements' citations (R63, K2533). A story, context or human-interest passage has
  *  no field. */
@@ -171,6 +182,14 @@ export const AUTHORED_FIELDS = Object.freeze(["statement", "subjectJustification
 export const ACT_FIELDS = Object.freeze(["target", "targets", "project", "roles", "caseId", "newCase", "draft",
   "subjectPosition", "tensionsDisclosed", "selfAttested", "flagsDisclosed", "calculationsDisclosed", "peopleBases",
   "tieAttested", "accountDraft", "reviewComments", "viewer", "author"]);
+/** R78 (T51; C1; K4165): the fields a draft keeps, which `review` reads for its draft act (its R4): the authored and the act's
+ *  fields without the stamps (`viewer`, `author`), the `project` (the draft's own column), `draft` (a draft does not name a
+ *  draft) and `tieAttested` (the signer's confirmation is made in the act, R76). */
+export const DRAFT_FIELDS = Object.freeze([...new Set([...AUTHORED_FIELDS, ...ACT_FIELDS])]
+  .filter((f) => !["viewer", "author", "project", "draft", "tieAttested"].includes(f)));
+/** R78: the pairs of `DRAFT_FIELDS` that state one thing between them (the roster; the case's identity), so a call that
+ *  sends either keeps the draft's other out, rather than a call and a draft each naming a half. */
+const DRAFT_PAIRS = Object.freeze([["targets", "target"], ["caseId", "newCase"]]);
 const str = (v) => String(v ?? "").trim();
 /** R56: what a `calculations:` row's `disclosed` states when the publisher listed a calculation that needed disclosure
  *  and gave no words of their own (case-grammar R18: null would read as "none was needed"). */
@@ -236,18 +255,20 @@ export class CaseAuthoring {
   constructor({ storage, record, membership, host = null, inquiry = null, basisVersions = null, strength = null,
                 bias = null, observations = null, reevaluation = null, publication = null, publishSchedule = null,
                 ratification = null, account = null, inputs = null, networkNotices = null, disclosures = null, calculations = null,
-                workbooks = null, events = null, caseTensions = null, projectRoster = null, now = null } = {}) {
+                workbooks = null, events = null, caseTensions = null, projectRoster = null, caseCarriage = null,
+                now = null } = {}) {
     this.sql = storage.sql;
     this.storage = storage;
     this.record = record;
     this.membership = membership;
     this.#deps = { host, inquiry, basisVersions, strength, bias, observations, reevaluation, publication, publishSchedule,
                    ratification, account, inputs, networkNotices, disclosures, calculations, workbooks, events, caseTensions,
-                   projectRoster };
+                   projectRoster, caseCarriage };
     this.now = typeof now === "function" ? now : (precision) => stampInstant(precision);
   }
 
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
+  get provenance() { return this.#deps.provenance ||= provenanceOf(this.#deps.host); }
   get inquiry() { return this.#deps.inquiry ||= inquiryOf(this.#deps.host); }
   get basisVersions() { return this.#deps.basisVersions ||= basisVersionsOf(this.#deps.host); }
   get strength() { return this.#deps.strength ||= strengthOf(this.#deps.host); }
@@ -261,6 +282,8 @@ export class CaseAuthoring {
   /* R69 (N839, K2608): `case-account`, the one instance on this host, asked in R69's order; created at this module's
      creation (`caseAuthoringOf`), so its tables exist and are declared at every boot (its R12). */
   get account() { return this.#deps.account ||= caseAccountOf(this.#deps.host); }
+  /* B10 (K4240): `capture`, the one instance on this host (`captureOf`), read for who captured what the pre-flight lists. */
+  get capture() { return this.#deps.capture ||= captureOf(this.#deps.host); }
   /* R14, R34, R38, R74 (T47; N908; K2982): `case-inputs`, the one instance on this host, which holds what other acts
      record about a case (the statement's acknowledgements and writer, the drafts of what changed, the open requests, the
      outcomes carried); created at this module's creation (`caseAuthoringOf`), so its tables exist and are declared at
@@ -279,6 +302,8 @@ export class CaseAuthoring {
   get workbooks() { return this.#deps.workbooks ||= workbooksOf(this.#deps.host); }
   /* R57: the timeline of the members' subjects and the events their legs cite (events R28–R30). */
   get events() { return this.#deps.events ||= eventsOf(this.#deps.host); }
+  /* R85 (fix round 6, G9): the one `case-carriage` instance on this host, read for `copyNow` only. */
+  get caseCarriage() { return this.#deps.caseCarriage ||= caseCarriageOf(this.#deps.host); }
   /* R72 (T45; N892): `projectScope` (project-roster R23), asking no viewer. */
   get projectRoster() { return this.#deps.projectRoster ||= projectRosterOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   /* R8, R55 (T33-62): `caseRelation` and `attributionStatements` are `case-tensions`' (its R1, R5): its one instance on
@@ -301,11 +326,13 @@ export class CaseAuthoring {
 
   /* R77 (T51; DEC-340): the sign step's minutes comparisons, read once from the same case and pins through
      `case-inputs.minutesComparisonsOn` (its R19), each row with its `minutesLine`; a source unreadable, or the case not
-     yet known, is `{undetermined: true}` and no rows, never `[]`. It carries no sentence of its own. */
+     yet known, or the door unbound, throwing or answering anything but its rows, is `{undetermined: true}` and no rows,
+     never `[]` and never a row filled in (fix round 3, K4332, K4356). It carries no sentence of its own. */
   #minutesStep(at, viewer) {
     if (!at) return { undetermined: true };
-    const r = this.inputs.minutesComparisonsOn({ case: at.case, members: at.members, viewer });
-    if (!r.ok) return { undetermined: true };
+    let r = null;
+    try { r = this.inputs.minutesComparisonsOn({ case: at.case, members: at.members, viewer }); } catch { r = null; }
+    if (!r || r.ok !== true || !Array.isArray(r.rows)) return { undetermined: true };
     return r.rows.map((row) => ({ ...row, ...minutesLine(row) }));
   }
 
@@ -335,7 +362,53 @@ export class CaseAuthoring {
    * back (R18: the review copy's dry run).
    * ========================================================================================================== */
   publishCase(args = {}, calculationFacts = null) {
-    return this.record.transact(() => this.#publishCase(args, { calculationFacts }));
+    return this.record.transact(() => this.#publishCase(this.#withDraft(args), { calculationFacts }));
+  }
+
+  /** R85 (fix round 6, G9; K4573; amends R18): `op=publish`'s act. It gathers the calculations (R56), runs `publishCase`, and,
+   *  when that refuses `DOCUMENT_COPY_PENDING` (case-disclosures R6), awaits `case-carriage.copyNow` for the documents the
+   *  refusal names, at most `COPY_NOW_MAX_BYTES` each, and runs `publishCase` once more over the same facts. `publishCase`
+   *  itself stays synchronous (R18): the copy is made here, between the two runs. A copy not made (a larger document, no
+   *  `copyNow`, one that throws or rejects) leaves the first refusal as it was, and the alarm path makes it. */
+  async publishAct(args = {}) {
+    const facts = await this.calculationsAtPublication(args);
+    const first = this.publishCase(args, facts);
+    if (!first || first.ok !== false || first.code !== "DOCUMENT_COPY_PENDING") return first;
+    const shas = [...new Set((Array.isArray(first.pending) ? first.pending : [])
+      .flatMap((m) => (Array.isArray(m && m.materials) ? m.materials : []).map((x) => str(x && x.sha))).filter((x) => HEX64.test(x)))];
+    if (!shas.length) return first;
+    try {
+      const cc = this.caseCarriage;
+      if (!cc || typeof cc.copyNow !== "function") return first;
+      await cc.copyNow({ shas, maxBytes: COPY_NOW_MAX_BYTES });
+    } catch { return first; }
+    return this.publishCase(args, facts);
+  }
+
+  /* R78 (T51; C1; K4165; amends R9): THE DRAFT A CALL NAMES SUPPLIES WHAT THE CALL DID NOT SEND. The screens send the draft,
+     the project and the signer's confirmation; the authored fields are the draft's (`review` R4). When `draft` names a
+     draft the viewer may read (the review provider's door) and that belongs to `project`, each of `DRAFT_FIELDS` its
+     `params` hold that the call does not itself send (absent or null; a pair of `DRAFT_PAIRS` counts as one) is taken
+     from it, the call's own winning. A draft not held, or of another project, leaves the call as sent: R9 refuses it. It
+     writes nothing, and `args` is not changed. */
+  #withDraft(args) {
+    const a = args && typeof args === "object" ? args : {};
+    const named = str(a.draft), proj = str(a.project);
+    if (!named || !proj) return a;
+    const stamp = a.viewer && typeof a.viewer === "object" ? a.viewer.stamp ?? null : a.viewer ?? null;
+    let d = null, params = null;
+    try {
+      d = this.#review().draftForMember(named, stamp);
+      params = d && d.project_id === proj ? JSON.parse(d.params) : null;
+    } catch { params = null; }
+    if (!params || typeof params !== "object" || Array.isArray(params)) return a;
+    const sent = (k) => a[k] !== undefined && a[k] !== null;
+    const taken = {};
+    for (const k of DRAFT_FIELDS) {
+      const pair = DRAFT_PAIRS.find((g) => g.includes(k));
+      if (params[k] !== undefined && params[k] !== null && !(pair ? pair.some(sent) : sent(k))) taken[k] = params[k];
+    }
+    return { ...a, ...taken };
   }
 
   /* ==========================================================================================================
@@ -350,7 +423,7 @@ export class CaseAuthoring {
    *  inputs, or both empty when R1, R2 or R4 would refuse first (the act then answers that refusal). Never throws for a
    *  calculation or workbook it cannot read: what it could not read is carried as it answered, and judged so. */
   async calculationsAtPublication(args = {}) {
-    const a = args && typeof args === "object" ? args : {};
+    const a = this.#withDraft(args);
     const empty = { calculations: [], workbooks: [] };
     const who = str(a.author);
     if (!who || isMachineIdentity(who)) return empty;
@@ -594,7 +667,7 @@ export class CaseAuthoring {
               : target ? [target] : [];
     const members = set.map((s) => str(s)).filter(Boolean);
     if (!members.length)
-      return { ok: false, reason: "NO_TARGET",
+      return { ok: false, reason: "PUBLISH_NO_FINDING", code: "PUBLISH_NO_FINDING",
                detail: localize("case-authoring.index.a_published_case_is_a_container", "a published case is a CONTAINER over ONE OR MORE FINDINGS, scoped to the question that brought them together: pass targets=[<inquiry id>, ...]. One finding is legal and is the degenerate case (DEC-44); what is not legal is publishing nothing.") };
     {
       const seen = new Set();
@@ -1051,7 +1124,7 @@ export class CaseAuthoring {
     /* R40 — DEC-103: the lens it was produced under, every statement of the manifest frozen above, read at this act. */
     const lensStatements = lensRead;
     /* R16 — REC-219 / D-579(a): the project's citation edges, with the version each was made against. */
-    const citations = this.#caseCitations(proj);
+    const citations = this.#caseCitations(proj, members, resting);
     /* R14 (`case-inputs` R3) — REC-212 / §3 rule 13: WHO WROTE THE SENTENCE, established before the list is read, because it decides what
        the list may contain (a reading by the writer is not a second reading). */
     const writer = this.inputs.statementWriter(proj, theCase, edition, stmt, who, namedDraftRow);
@@ -1439,8 +1512,9 @@ export class CaseAuthoring {
   /** R32: the candidates `op=publish` would require this act to disclose (R55), read by `case-disclosures`' `tensionsRead`
    *  exactly as `publishCase` reads them (its R1). R2's refusals, then R4's per member, then C-120.3, its
    *  `tensionsUndetermined` when this read itself throws. Writes nothing and never throws. */
-  tensionsToDisclose({ project = null, targets = null, target = null, viewer = null, author = null } = {}) {
+  tensionsToDisclose(args = {}) {
     try {
+      const { project = null, targets = null, target = null, viewer = null, author = null } = this.#withDraft(args);
       const who = str(author);
       const auth = this.#authority(project, viewer, who);
       if (auth.ok === false) return auth;
@@ -1491,7 +1565,7 @@ export class CaseAuthoring {
   publishPreflight(args = {}, calculationFacts = null) {
     const given = args && typeof args === "object" ? args : {};
     const carried = given.viewer && typeof given.viewer === "object" ? given.viewer : null;
-    const a = carried ? { ...given, viewer: carried.stamp ?? null } : given;
+    const a = this.#withDraft(carried ? { ...given, viewer: carried.stamp ?? null } : given);
     const seen = {};
     let answer = null, text = null;
     try {
@@ -1513,7 +1587,8 @@ export class CaseAuthoring {
     const found = [];
     const who = str(a.author);
     const auth = who && !isMachineIdentity(who) ? this.#authority(a.project ?? null, a.viewer ?? null, who) : null;
-    let judged = null, partition = null, tensions = null, rests = null, accountRead = null;
+    let judged = null, partition = null, tensions = null, rests = null, accountRead = null, capturesRead = null;
+    let stoodAt = null;
     /* R34: IT WRITES NOTHING. These reads reach the two writes `case-disclosures` makes inside its caller's transaction
        (its R23: a source id's minting, and a member document's copy queued by `case-carriage.documentCopy`, its R16;
        T39, N806), so they run inside a transaction this pre-flight rolls back, as the act's own run above does. */
@@ -1524,6 +1599,8 @@ export class CaseAuthoring {
                     : typeof a.targets === "string" && a.targets.trim() ? a.targets.split(",") : a.target ? [a.target] : [];
           const members = [...new Set(set.map((x) => str(x)).filter(Boolean))];
           judged = members.length ? this.#judgeMembers(members, auth.proj, a.viewer ?? null, auth.gate) : null;
+          /* R83: the case identity the call stands at, told without the act so a refused call states it too. */
+          stoodAt = this.#caseStood(members, a.caseId, a.newCase, judged);
           if (judged && judged.ok !== false) {
             partition = this.#rolesOf(judged.prepared, a.roles ?? null, members);
             if (partition.ok !== false) found.push(...this.#barJudged(auth.proj, partition.loadBearing).shortfalls);
@@ -1534,7 +1611,12 @@ export class CaseAuthoring {
             if (partition.ok !== false) {
               const resting = D.restingCaptures(judged.prepared);
               const facts = new Map([...new Set(resting.map((r) => r.capture))].map((sha) => [sha, D.captureFacts(sha)]));
-              found.push(...D.selfAttestedJudged(resting, facts, partition.memberRoles, a.selfAttested ?? null).refusals);
+              const selfJ = D.selfAttestedJudged(resting, facts, partition.memberRoles, a.selfAttested ?? null);
+              found.push(...selfJ.refusals);
+              /* R82 (C3; K4303): the captures the case rests on are known here whether or not op=publish refused, so step three
+                 lists them from this read when the act's own run did not reach its rows. */
+              capturesRead = D.disclosureBlocks({ resting, facts, selfAttested: selfJ, project: auth.proj, author: who,
+                                                  at: this.#when("second") }).captures;
               /* its R6, then R53: its R13's acceptances and R14's flags, read as op=publish reads them. */
               const reached = D.materialsJudged(judged.prepared, partition.memberRoles, a.viewer ?? null);
               found.push(...reached.refusals);
@@ -1606,10 +1688,59 @@ export class CaseAuthoring {
     /* R42: whether the project has a notice, asked only of a project the act's own authority fences let through. */
     const notice = auth && auth.ok !== false ? this.#workingOn(auth.proj) : null;
     /* R42 says so whenever the project has a notice: whatever reference R41 would write. */
-    const steps = this.#preflightSteps(a, answer, seen, ratify, notice, rests, account);
+    const steps = this.#preflightSteps(a, answer, seen, ratify, notice, rests && capturesRead ? { ...rests, captures: capturesRead } : rests, account);
     /* Ready only when nothing refuses AND ratification's list was read: a list not reached is not a list that is empty. */
-    return { ok: true, wrote: false, ready: !first && !blockers.length && ratify.reached, first, blockers, steps };
+    /* R83 (fix round 3, C48, C50; K4356): what the record holds prepared and published for the case the call stands at;
+       the act's own run is rolled back, so a minted case (which the record does not hold) states neither. */
+    /* A draft that asks for a new case (`newCase`) stands at no case until it is prepared, and a second ask of it is refused as
+       a case member already: the document its own preparation made is found by the draft that made it (publication R40). */
+    const editions = this.draftEditions({ caseId: answer && answer.ok === true ? (answer.minted ? null : answer.caseId) : stoodAt,
+                                          draft: str(a.draft) || null });
+    return { ok: true, wrote: false, ready: !first && !blockers.length && ratify.reached, first, blockers, steps, editions };
   }
+
+  /* R83 (R7, R9): the case identity a call stands at, told from the record without the act: the one named, else the one
+     published case the members serve, else the case their unsigned preparation names; `newCase` stands at none. */
+  #caseStood(members, caseId, newCase, judged) {
+    if (newCase) return null;
+    if (str(caseId)) return str(caseId);
+    const served = this.#caseOfMembers(members, null);
+    if (served) return served;
+    const named = judged && judged.ok !== false ? [...new Set(judged.prepared.map((p) => p.preparedIn).filter(Boolean))] : [];
+    return named.length === 1 ? named[0] : null;
+  }
+
+  /** R83 (K4363): `draftEditions({caseId, draft})` answers `{prepared, published}` for the case identity a draft stands at,
+   *  as the record holds them (publication R40's `case_documents` and `published_cases`), the one read the pre-flight and
+   *  `review` R19's draft rows share: `prepared` the edition number of the unsigned preparation, else null; `published`
+   *  `{edition, address}` for the latest ratified edition, else null. `caseId` is the case the draft's identity names; with
+   *  none, the case the draft's own preparation produced (publication R40: a document names the draft that made it,
+   *  `draft` an id or a row), else neither is stated. (fix round 4, C48; K4467) `case` is that case id when the record holds
+   *  a preparation or a published edition of it, else null, so a reloaded page reads the prepared document by it even for a
+   *  draft that asks for a new case. Reads only and never throws. The address is the case page's,
+   *  `/app/published/<case>/<edition>`, as the screens link it. */
+  draftEditions({ caseId = null, draft = null } = {}) {
+    try {
+      let id = str(caseId);
+      if (!id && draft) {
+        const row = typeof draft === "object" ? draft : null;
+        id = str(row && (row.case_id ?? row.caseId));
+        if (!id) {
+          const made = this.#one(`SELECT case_id FROM case_documents WHERE draft_id=? ORDER BY edition DESC LIMIT 1`,
+                                 str(row ? row.draft_id : draft));
+          id = made ? made.case_id : "";
+        }
+      }
+      if (!id) return { case: null, prepared: null, published: null };
+      const prep = this.#one(`SELECT edition FROM case_documents WHERE case_id=? AND sig_armored IS NULL
+                              ORDER BY edition DESC LIMIT 1`, id);
+      const pub = this.#one(`SELECT MAX(edition) AS m FROM published_cases WHERE case_id=? AND ratified_at IS NOT NULL`, id);
+      const published = pub && pub.m != null ? Number(pub.m) : null;
+      return { case: prep || published !== null ? id : null, prepared: prep ? Number(prep.edition) : null,
+               published: published === null ? null : { edition: published, address: `/app/published/${id}/${published}` } };
+    } catch { return { case: null, prepared: null, published: null }; }
+  }
+
 
   /* R34: ratification R18 over the text op=publish would store, with `signer` the act's author, folded into
      `{reached, refusals, why?}`. With no pre-flight offered, that is stated, never read as none. */
@@ -1629,6 +1760,28 @@ export class CaseAuthoring {
     return { reached: false, refusals: [undetermined], why: undetermined.detail ?? word("case-authoring.why.ratification_pre_flight") };
   }
 
+  /* B10 (K4240; screens-publish J9 (3)): each capture the case rests on that is not co-attested, with the member the record
+     holds as capturing it (`capture`'s R69 actors, the first by time, the `member:` tag dropped; a machine is no member, so
+     `by` is null when none) and the findings resting on it, each once. */
+  #notCoAttested(captures) {
+    const rows = new Map();
+    for (const c of captures) {
+      if (c.co_attested) continue;
+      if (!rows.has(c.capture)) {
+        const actors = this.capture.captureAccountsOf(c.capture).actors || [];
+        const first = actors.find((x) => typeof x.actor === "string" && /^member:./.test(x.actor) && !isMachineIdentity(x.actor));
+        /* C40 (K4365): the facts the capture row already carries, so the screen can say which proof exists late and which is
+           missing (case-disclosures R2). */
+        rows.set(c.capture, { capture: c.capture, by: first ? first.actor.replace(/^member:/, "") : null, findings: [],
+                              timestamp_at: c.timestamp_at ?? null, co_archive: c.co_archive ?? null, missing: c.missing ?? [],
+                              late: !!c.late, timestamp_late: !!c.timestamp_late, late_words: c.late_words ?? null });
+      }
+      const row = rows.get(c.capture);
+      if (!row.findings.includes(c.member)) row.findings.push(c.member);
+    }
+    return [...rows.values()];
+  }
+
   /* R34: the six steps (DEC-80 item 2; the Photos step, DEC-180 (3)), each read from the rolled-back run when it
      published, and each part it could not reach stated as not reached, never filled. Step three carries R32's read as
      the ceremony shows it. */
@@ -1637,6 +1790,10 @@ export class CaseAuthoring {
     const notReached = ok ? null : localize("case-authoring.index.not_reached_op_publish_refuses_first", "not reached: op=publish refuses first ({reason})", { reason: String(answer ? answer.reason : localize("case-authoring.index.no_answer", "no answer")) });
     const tensions = this.tensionsToDisclose({ project: a.project ?? null, targets: a.targets ?? null,
                                                target: a.target ?? null, viewer: a.viewer ?? null, author: a.author ?? null });
+    const capturesListed = (captures) => ({
+      self_attested: captures.filter((c) => c.self_attested_only)
+        .map((c) => ({ capture: c.capture, member: c.member, reason: c.acknowledgement.reason, sentence: SELF_ATTESTED_SENTENCE })),
+      not_co_attested: this.#notCoAttested(captures) });
     return [
       { step: 1, name: word("case-authoring.name.becomes_permanent"),
         says: localize("case-authoring.index.signing_publishes_this_case_edition", "Signing publishes this case edition, and each finding in it at the version pinned here. A published edition is never withdrawn or edited: it is corrected only by a later edition.")
@@ -1667,14 +1824,13 @@ export class CaseAuthoring {
               count: rests.flags.open.length, says: FLAGS_SAY },
         ...(ok ? { excluded: seen.excluded, searched: seen.searched, bias: { acknowledgement: seen.bias,
                                                                               manifest: seen.manifest },
-                   self_attested: seen.captures.filter((c) => c.self_attested_only)
-                     .map((c) => ({ capture: c.capture, member: c.member, reason: c.acknowledgement.reason,
-                                    sentence: SELF_ATTESTED_SENTENCE })),
-                   not_co_attested: [...new Set(seen.captures.filter((c) => !c.co_attested).map((c) => c.capture))],
+                   ...capturesListed(seen.captures),
                    sources: seen.sources,
                    /* R34 (DEC-112 (5)): each source the case shows as "Withheld" (`case-disclosures` R4). */
                    withheld: seen.sources.filter((x) => x.basis === null) }
-               : { stated: notReached }) },
+               : { stated: notReached,
+                   /* R82 (C3; K4303): the captures are listed when known, though op=publish refused; a refusal stays in `first`. */
+                   ...(rests && rests.captures ? capturesListed(rests.captures) : {}) }) },
       /* R34 (N757; DEC-180 (3); K2206): each photo the case relies on, its marks and state, and how many are unchecked
          (`case-disclosures` R29). (T38; DEC-183 (1)) An unchecked photo never travels and blocks signing: its
          refusal, `PHOTO_UNCHECKED`, is `first` or among `blockers` (R34), its words R29's. */
@@ -1772,36 +1928,77 @@ export class CaseAuthoring {
    *  `references[]` entries of `rel: cites` that are not severed, in the document's order, each classified from its
    *  own bytes first: an `extent_capture` on the edge is the pin. Without one, what the record can say depends on how
    *  many captures it holds of the document NOW: one (`only_capture`), several (`undetermined`, never back-filled),
-   *  none (`no_capture`). A question has no bytes (`no_bytes`). Set-based: one grouped count per chunk of targets
-   *  (provenance R48's `register`, extraction R58's `readings`), never one read per edge. */
-  #caseCitations(project) {
+   *  none (`no_capture`). A question has no bytes (`no_bytes`); a finding that is not a member of this case is not cited
+   *  (C67; R16). Set-based: one grouped count per chunk of targets
+   *  (provenance R48's `register`, extraction R58's `readings`), never one read per edge, except a document with a capture
+   *  held in parts, which is counted by identity (R84). (G29, R86) After the project's own edges come the documents the
+   *  members' findings rest on (`resting`, `case-disclosures` R2: either role, one level deep), each once and none the
+   *  project already cites, classified the same way; a capture the findings name alone, of a document holding several, is
+   *  its pin. A case prepared from a question holds one edge, to the question, so these are the evidence's only rows.
+   *  (K4609) Every document row, `undetermined` included, also carries `bundle_sha`, the document's head at this act. */
+  #caseCitations(project, members, resting = []) {
     const text = this.#liveText(project);
     const refs = text !== null ? (parseFrontmatter(text).data?.references || []) : [];
+    /* C67 (T51; K4303): the project cites the findings of all its drafts; this case cites its own. An edge to a finding
+       (an inquiry) stays only when that finding is a member of this case; a document's edge stays as before. */
+    const isFinding = (t) => normalizeType(OBJECT_TYPES[t.split("-")[0]]) === "inquiry";
     const edges = (Array.isArray(refs) ? refs : []).filter((r) => r && typeof r === "object" && r.rel === "cites"
-      && r.status !== "severed" && typeof r.target === "string" && r.target.trim());
+      && r.status !== "severed" && typeof r.target === "string" && r.target.trim()
+      && (!isFinding(r.target.trim()) || (members || []).includes(r.target.trim())));
     const isDocument = (t) => normalizeType(OBJECT_TYPES[t.split("-")[0]]) === "information";
-    const docs = [...new Set(edges.map((r) => r.target.trim()).filter(isDocument))];
+    /* R86: the documents the findings rest on, found by the captures `case-disclosures.restingCaptures` names among the
+       registered captures of the documents the members' legs cite. */
+    const cited = new Set(edges.map((r) => r.target.trim()));
+    const restingDocs = new Map();
+    const caps = [...new Set((resting || []).map((x) => x.capture))];
+    const legTargets = (members || []).length ? new Set(this.#rows(
+      `SELECT DISTINCT target_id AS t FROM inquiry_basis WHERE bundle_id IN (${(members || []).map(() => "?").join(",")})`,
+      ...members).map((r) => r.t)) : new Set();
+    for (let i = 0; i < caps.length; i += SELECTION_ID_CHUNK) {
+      const part = caps.slice(i, i + SELECTION_ID_CHUNK);
+      for (const r of this.#rows(`SELECT bundle_id, capture_sha FROM register WHERE capture_sha IN (${part.map(() => "?").join(",")})
+                                  ORDER BY bundle_id, capture_sha`, ...part)) {
+        if (!legTargets.has(r.bundle_id) || !isDocument(r.bundle_id) || cited.has(r.bundle_id)) continue;
+        if (!restingDocs.has(r.bundle_id)) restingDocs.set(r.bundle_id, new Set());
+        restingDocs.get(r.bundle_id).add(r.capture_sha);
+      }
+    }
+    const docs = [...new Set([...edges.map((r) => r.target.trim()), ...restingDocs.keys()].filter(isDocument))];
     const held = new Map();
     const half = Math.floor(SELECTION_ID_CHUNK / 2);
     for (let i = 0; i < docs.length; i += half) {
       const part = docs.slice(i, i + half), qs = part.map(() => "?").join(",");
       for (const r of this.#rows(
-        `SELECT bundle_id AS t, COUNT(DISTINCT capture_sha) AS n, MIN(capture_sha) AS one FROM (
-           SELECT bundle_id, capture_sha FROM register WHERE bundle_id IN (${qs})
+        `SELECT bundle_id AS t, COUNT(DISTINCT capture_sha) AS n, MIN(capture_sha) AS one, MAX(whole) AS whole FROM (
+           SELECT bundle_id, capture_sha, whole FROM register WHERE bundle_id IN (${qs})
            UNION ALL
-           SELECT bundle_id, capture_sha FROM readings WHERE bundle_id IN (${qs}))
-         GROUP BY bundle_id`, ...part, ...part)) held.set(r.t, { n: r.n, one: r.one });
+           SELECT bundle_id, capture_sha, 0 AS whole FROM readings WHERE bundle_id IN (${qs}))
+         GROUP BY bundle_id`, ...part, ...part)) held.set(r.t, { n: r.n, one: r.one, whole: Number(r.whole) === 1 });
     }
-    return edges.map((r) => {
+    /* R84: a document holding a capture in parts counts that capture once, by its whole (provenance R73): a part's row is
+       a file of it. Only a bundle with a whole's row is asked again, so the batch above stays one read for the rest. */
+    for (const [t, h] of held) {
+      if (!h.whole) continue;
+      const idents = new Set(this.provenance.capturesOf(t).map((c) => c.capture_sha));
+      for (const r of this.#rows(`SELECT DISTINCT capture_sha FROM readings WHERE bundle_id=?`, t)) idents.add(r.capture_sha);
+      held.set(t, { n: idents.size, one: [...idents].sort()[0] });
+    }
+    /* The findings' documents follow as edges of their own: pinned when the findings name one capture of several. */
+    const found = [...restingDocs].map(([target, shas]) => ({ target,
+      extent_capture: shas.size === 1 && (held.get(target)?.n ?? 0) > 1 ? [...shas][0] : null }));
+    return [...edges, ...found].map((r) => {
       const t = r.target.trim();
       const pin = typeof r.extent_capture === "string" && /^[0-9a-f]{64}$/.test(r.extent_capture.trim())
         ? r.extent_capture.trim() : null;
       if (!isDocument(t)) return { target: t, version: "no_bytes", capture: null };
-      if (pin) return { target: t, version: "pinned", capture: pin };
+      /* K4609: a document's row also names the head the ceremony's evidence signature is over (ratification R4's
+         `expectedSha`, the sha256 of its `bundle.md`), as it stands at this act; a capture's sha is not that head. */
+      const bundle_sha = this.record.head(t)?.bundleSha ?? null;
+      if (pin) return { target: t, version: "pinned", capture: pin, bundle_sha };
       const h = held.get(t);
-      if (!h || !h.n) return { target: t, version: "no_capture", capture: null };
-      return h.n === 1 ? { target: t, version: "only_capture", capture: h.one }
-                       : { target: t, version: "undetermined", capture: null };
+      if (!h || !h.n) return { target: t, version: "no_capture", capture: null, bundle_sha };
+      return h.n === 1 ? { target: t, version: "only_capture", capture: h.one, bundle_sha }
+                       : { target: t, version: "undetermined", capture: null, bundle_sha };
     });
   }
 
@@ -2008,6 +2205,35 @@ async function gathered(c, args, act) {
   return act(args, await c.calculationsAtPublication(args));
 }
 
+/* R7, R78: `newCase` from the query or the body, its string forms spelled out so `newCase=false` means false; absent
+   stays absent (undefined), so a draft's own `newCase` is not overruled by a default the call never sent. */
+function newCaseOf(q, b) {
+  const v = q("newCase") != null ? q("newCase") : b.newCase;
+  return v == null ? undefined : v === true || v === "true" || v === "1" || v === "yes";
+}
+
+/** R81 (T51; K4168, K4202; `op-declarations` R80, `op-grades` R49): the ops this module serves that the screens send,
+ *  declared beside the ops map. Class, mutating, weight and description are the op's existing rows' (`op-declarations`,
+ *  `op-grades`: the hand row's class and `mutating`; `publish`'s rung and `act.publish.does`; the two reads' `NON_ACTS`
+ *  reasons, copied). `accepts` is `AUTHORED_FIELDS` and `ACT_FIELDS` less the stamps, so it cannot drift from what R65
+ *  refuses; `requires` is the project and, of each field the act refuses without, that field or the draft that holds it
+ *  (R78), and, for `publish`, the signer's confirmation (R76). `publishtensions` requires the project alone: for no finding
+ *  it answers an empty list (R32). The stamps `viewer`, `author` and the door's `aiCred` are no fields. */
+const ACCEPTED = Object.freeze([...new Set([...AUTHORED_FIELDS, ...ACT_FIELDS])].filter((f) => f !== "viewer" && f !== "author"));
+const WORDS_OR_DRAFT = Object.freeze([["targets", "target", "draft"], ["roles", "draft"], ["statement", "draft"],
+  ["subjectPosition", "draft"], ["subjectJustification", "draft"], ["excluded", "draft"], ["scope", "draft"],
+  ["biasAcknowledgement", "draft"]]);
+export const DECLARED_OPS = Object.freeze({
+  publish: { classes: ["admin", "member", "probe"], mutating: true, weight: "terminal", description: "act.publish.does",
+    fields: { accepts: ACCEPTED, requires: ["project", ...WORDS_OR_DRAFT, "tieAttested"] } },
+  publishpreflight: { classes: ["admin", "member", "probe"], mutating: false, weight: "read",
+    description: localize("case-authoring.declared.publishpreflight", "read: the publication ceremony's dry run — op=publish's first refusal, every other refusal reachable, and whether the case is ready, over the same arguments, rolled back; writes nothing"),
+    fields: { accepts: ACCEPTED, requires: ["project", ...WORDS_OR_DRAFT] } },
+  publishtensions: { classes: ["admin", "member", "probe"], mutating: false, weight: "read",
+    description: localize("case-authoring.declared.publishtensions", "read: the contradictions a case must disclose before it is published, each side the publisher cannot see highlighted and withheld; writes nothing"),
+    fields: { accepts: ACCEPTED, requires: ["project"] } },
+});
+
 /** The module's ops (K3), as entries of the plane's op map (`plane/store.mjs`). `viewer` and `author` are the control plane's stamps,
  *  read from the query and spread AFTER the body, so a caller's own copy is overwritten, never honoured. */
 export function caseAuthoringOps(c, url, body) {
@@ -2017,18 +2243,15 @@ export function caseAuthoringOps(c, url, body) {
     /* R1–R18. The BODY carries the authored material (an exclusion list and the roles map are what a query string
        cannot express honestly); `targets`, `caseId`, `project` and `draft` also arrive on the query as the one-line
        form a probe can reach, and `newCase` from either, its string forms spelled out so `newCase=false` means false. */
-    publishcase: () => gathered(c, { ...b,
+    publishcase: () => c.publishAct({ ...b,
       target: q("target") || b.target,
       targets: b.targets || q("targets") || null,
       caseId: q("caseId") || b.caseId || null,
-      newCase: (() => {
-        const v = q("newCase") != null ? q("newCase") : b.newCase;
-        return v === true || v === "true" || v === "1" || v === "yes";
-      })(),
+      newCase: newCaseOf(q, b),
       project: q("project") || b.project || null,
       draft: q("draft") || b.draft || null,
       viewer: q("viewer"),
-      author: q("author") }, (a, f) => c.publishCase(a, f)),
+      author: q("author") }),
     /* R32 (N345): the ceremony's read before op=publish; `viewer` and `author` are the stamps, as op=publish's. */
     publishtensions: () => c.tensionsToDisclose({ ...b,
       target: q("target") || b.target,
@@ -2043,10 +2266,7 @@ export function caseAuthoringOps(c, url, body) {
       target: q("target") || b.target,
       targets: b.targets || q("targets") || null,
       caseId: q("caseId") || b.caseId || null,
-      newCase: (() => {
-        const v = q("newCase") != null ? q("newCase") : b.newCase;
-        return v === true || v === "true" || v === "1" || v === "yes";
-      })(),
+      newCase: newCaseOf(q, b),
       project: q("project") || b.project || null,
       draft: q("draft") || b.draft || null,
       viewer: q("aiCred") ? { stamp: q("viewer"), aiCred: (() => {

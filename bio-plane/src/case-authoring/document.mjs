@@ -143,7 +143,8 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     ...citations.flatMap((x) => [
       `  - target: ${x.target}`,
       `    version: ${x.version}`,
-      `    capture: ${x.capture ?? "null"}`]),
+      `    capture: ${x.capture ?? "null"}`,
+      ...("bundle_sha" in x ? [`    bundle_sha: ${x.bundle_sha ?? "null"}`] : [])]),
     `case_findings: [${roster.join(", ")}]`,
     "case_roles:",
     ...roster.flatMap((m) => [
@@ -418,7 +419,8 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
       ? [word("case-authoring.body.case_cites_version"),
          "",
          ...citations.map((x) => `- ${x.target}: ${CASE_CITATION_WORDS[x.version] ?? x.version}`
-           + (x.capture ? ` ${x.capture}` : ""))]
+           + (x.capture ? ` ${x.capture}` : "")
+           + (x.bundle_sha ? localize("case-authoring.document.head_of_the_document", " (head {sha})", { sha: String(x.bundle_sha) }) : ""))]
       : [word("case-authoring.body.case_project_cited")]),
     "",
     /* R69 (D61): the reviewers' comments the publisher chose to carry, and how many were left out (`case-account` R7). */

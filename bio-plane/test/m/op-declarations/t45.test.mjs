@@ -3,6 +3,7 @@
    session set, stamp and list compared whole at the exported tables, each stamp driven through its owner's own ops map
    (so a stamp named at a site the owner does not read is seen), and each owner's map checked whole against the tables.
    Each comparison has a negative control (K874). */
+import "./register-owners.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";

@@ -525,7 +525,10 @@ export class Ratification {
         return { present: false, bytes: 0, ...(held && held.acquired === true ? { heldInParts: true } : {}) };
       },
     });
-    return { ...gate, parted };
+    /* B5 (T51; K4219; provenance R66): the C-18 register arms run here, where this host's provenance is, with its resolver,
+       so a member's recorded decision on a capture's authority is read before the document's own. The Worker holds no
+       provenance and runs no register arm of its own. */
+    return { ...withRegisterChecks(image || {}, gate, this.provenance.containerResolver()), parted };
   }
 
   /* ---- R2: the case document's catalogue, on the promotion instance (K233) ----
@@ -1390,7 +1393,7 @@ export class Ratification {
       registers: facts.registers, publishedRegistry: facts.publishedRegistry,
       publishedCaseRegistry: facts.publishedCaseRegistry, earnedRegistry: facts.earnedRegistry });
     const partedRows = new Map(Array.isArray(parted) ? parted : []);
-    const gate = withCaseMemberChecks(image, withRegisterChecks(image, registerGate), parseFrontmatter);
+    const gate = withCaseMemberChecks(image, registerGate, parseFrontmatter);
     if (!gate.ok) return stop({ reason: "GATE_REFUSED", findings: gate.findings });
     const { shas, partShaSet } = await findingShas(image, partedRows, facts.registers);
     return { prepared: { shas, partShaSet, partedRows,
@@ -1677,4 +1680,8 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["handle","acknowledgment","mitigation"], requires: ["handle","acknowledgment","mitigation"] } },
   retire: { classes: ["admin","member","probe"], mutating: true, weight: "terminal", description: "act.retire.does",
     fields: { accepts: ["handle","reason"], requires: ["handle","reason"] } },
+  /* R54 (T51; K4206): the case ceremony's door op, its Worker half (`caseRatifyOp`) and its store half (`caseratify`). Its
+     `publish` is case-authoring's (its own row, the state act); this module's `publish` arm is the store's internal committer. */
+  caseratify: { classes: ["admin","member","probe"], mutating: true, weight: "attested", description: "act.caseratify.does",
+    fields: { accepts: ["caseId","edition","expectedSha","sig","members"], requires: ["caseId","edition","expectedSha","sig"] } },
 });

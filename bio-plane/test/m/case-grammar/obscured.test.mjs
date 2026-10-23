@@ -35,7 +35,7 @@ test("R12 (T37) a document row stating obscured is written flat as obscured_copy
     const fm = fmOf(text);
     assert.deepEqual(Object.keys(fm.materials[0]), [...CG.MATERIAL_FIELDS, ...CG.MATERIAL_OBSCURED_FIELDS], "one flat row");
     const [row] = CG.materialsOf(fm).materials;
-    assert.deepEqual(row, { ...PHOTO_ROW, included: false, obscured: { copy: COPY, label: OBSCURED_LABEL, marked: true, kind: null } }, format);
+    assert.deepEqual(row, { ...PHOTO_ROW, included: false, title: null, obscured: { copy: COPY, label: OBSCURED_LABEL, marked: true, kind: null } }, format);
     assert.equal(row.sha, sha(PHOTO_BYTES), "the original's fingerprint is kept");
   }
   /* in the document's order, beside rows that state none */
@@ -221,7 +221,7 @@ test("R12 (T38) an unmarked photo is stated obscured too: its row written includ
     const text = doc(format, [...lines, "material_attestations: []"]);
     clean(text);
     const [row] = CG.materialsOf(fmOf(text)).materials;
-    assert.deepEqual(row, { ...PLAIN_PHOTO_ROW, included: false, obscured: { copy: PLAIN_COPY, label: null, marked: false, kind: null } }, format);
+    assert.deepEqual(row, { ...PLAIN_PHOTO_ROW, included: false, title: null, obscured: { copy: PLAIN_COPY, label: null, marked: false, kind: null } }, format);
     assert.equal(row.sha, sha(PLAIN_PHOTO_BYTES), "the original's fingerprint is kept");
   }
   /* a copy handed with no label, a null one or a blank one is written with the label null: a copy with nothing covered */
@@ -298,7 +298,7 @@ test("R12 (T39) a member document's cleaned copy row: written flat as obscured_c
     const fm = fmOf(text);
     assert.deepEqual(Object.keys(fm.materials[0]), [...CG.MATERIAL_FIELDS, ...CG.MATERIAL_OBSCURED_FIELDS], "one flat row");
     const [row] = CG.materialsOf(fm).materials;
-    assert.deepEqual(row, { ...MEMBER_DOC_ROW, included: false, obscured: { copy: DOC_COPY, label: COPY_CLEANED_LABEL, marked: true, kind: null } }, format);
+    assert.deepEqual(row, { ...MEMBER_DOC_ROW, included: false, title: null, obscured: { copy: DOC_COPY, label: COPY_CLEANED_LABEL, marked: true, kind: null } }, format);
     assert.equal(row.sha, sha(MEMBER_DOC_BYTES), "the original's fingerprint is kept");
   }
   /* no new block or field: the case file is still /3 (the format written is /8, R33, which changes words only) */

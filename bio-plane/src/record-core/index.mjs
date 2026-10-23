@@ -1,7 +1,7 @@
 /* record-core — the record's storage (layer 2): id allocation, leases, the append-only history and
    manifest of every promotion, the instance's settings, the evidence store, and purge. It holds no
    member, capability or fence (membership's) and decides nothing about what may be committed
-   (promotion's). Requirements: build/requirements/record-core.md (R1–R84).
+   (promotion's). Requirements: build/requirements/record-core.md (R1–R88).
 
    REACHED THROUGH `recordOf(ctx)`: one instance per Durable Object storage, so every module in the
    object shares one transaction depth, one purge declaration list and one evidence binding. The
@@ -514,6 +514,22 @@ export class RecordCore {
    *  prefix that merely begins with a gated one's letters (`PROJECTX`) keys a different scope. The
    *  refusal echoes only what the caller sent. */
   allocIdOp(prefix, year) {
+    /* R86 (T51; B2, K4259): an id is for a named prefix and year; a call that names neither allocates nothing. Absent
+       is no value at all (a query parameter not sent), so an empty or numeric value still reaches the gate (R4). */
+    /* DEC-49 REGION is-allocid-input-present */
+    if (prefix === undefined || prefix === null) {
+      const row = RECORD_CORE_CHECKS.ALLOCID_PREFIX_REQUIRED;
+      return { ok: false, reason: "ALLOCID_PREFIX_REQUIRED", code: "ALLOCID_PREFIX_REQUIRED", check: row.check,
+               translation: row.translation,
+               detail: localize("record-core.index.allocid_needs_a_prefix", "op=allocid needs a prefix, the kind of object the id is for. Nothing was allocated.") };
+    }
+    if (year === undefined || year === null) {
+      const row = RECORD_CORE_CHECKS.ALLOCID_YEAR_REQUIRED;
+      return { ok: false, reason: "ALLOCID_YEAR_REQUIRED", code: "ALLOCID_YEAR_REQUIRED", check: row.check,
+               translation: row.translation,
+               detail: localize("record-core.index.allocid_needs_a_year", "op=allocid needs a year, the year the id is for. Nothing was allocated.") };
+    }
+    /* END DEC-49 REGION is-allocid-input-present */
     const scope = `${prefix}-${year}`;
     const gated = RecordCore.GATED_ID_PREFIXES.find((g) => scope.startsWith(`${g}-`));
     /* DEC-49 REGION is-allocid-prefix-gated */
@@ -1844,18 +1860,81 @@ export class RecordCore {
 
   /** R38: the instance's evidence bucket, addressed by digest; the object key of a digest is fixed
    *  here (the prefix R39's `evidencePrefix` gives, then the digest). `put` hands the bucket the digest, so it verifies the bytes.
-   *  Null when no bucket is bound. */
+   *  R88 (fix round 4, P10 (c); K4447): `get(digest, {range: {offset, length}})` asks the bucket for those bytes alone (R2's
+   *  `range` option), so a look at the head of a large object transfers the head and not the object; with no range the bucket
+   *  is asked as before and answers the whole. Null when no bucket is bound. */
   evidenceStore() {
     const bucket = this.#evidence;
     if (!bucket) return null;
     const prefix = typeof this.#evidencePrefix === "function" ? this.#evidencePrefix() : this.#evidencePrefix;
     const key = (digest) => `${prefix ?? ""}${String(digest)}`;
-    return {
+    const store = {
       head: (digest) => bucket.head(key(digest)),
-      get: (digest) => bucket.get(key(digest)),
+      get: (digest, options) => {
+        const range = rangeOf(options);
+        return range ? bucket.get(key(digest), { range }) : bucket.get(key(digest));
+      },
       put: (digest, bytes) => bucket.put(key(digest), bytes, { sha256: String(digest) }),
     };
+    /* R87: offered only by a bucket that has R2's multipart upload, so a caller feature-detects it */
+    if (typeof bucket.createMultipartUpload === "function")
+      store.putFromParts = (digest, partDigests) => putFromParts(bucket, key, digest, partDigests);
+    return store;
   }
+}
+
+/* ---- the evidence store's whole object from parts (R87) ---- */
+
+const DIGEST = /^[0-9a-f]{64}$/;
+
+/** R88: the range a `get` asks of the bucket, `{offset, length}` copied as whole numbers (offset from 0, length at least 1),
+ *  or null when the options name none (the whole object is read, as R38 states). A range that is named but is not such a pair
+ *  would otherwise read the whole object, which R88 never does, so it is the caller's defect: a TypeError, the bucket unasked. */
+function rangeOf(options) {
+  if (options === undefined || options === null || options.range === undefined) return null;
+  const r = options.range;
+  if (!r || typeof r !== "object" || !Number.isSafeInteger(r.offset) || r.offset < 0 || !Number.isSafeInteger(r.length) || r.length < 1)
+    throw new TypeError("get: a range is {offset, length}, whole numbers, the offset from 0 and the length at least 1 (R88)");
+  return { offset: r.offset, length: r.length };
+}
+
+/** R87 (fix round 3, C5; K4363): the object under `digest`, made by the bucket's own multipart upload from the parts it holds
+ *  under `partDigests`, each read in order and handed on as one upload part, so one part is in memory at a time. The upload
+ *  completes only when every part was read and the bytes' SHA-256 is `digest`; otherwise it is aborted and nothing is
+ *  written. A digest already held answers `{ok: true, already: true}`. Never throws. */
+async function putFromParts(bucket, key, digest, partDigests) {
+  /* DEC-49 REGION is-evidence-parts-refused */
+  if (typeof digest !== "string" || !DIGEST.test(digest) || !Array.isArray(partDigests) || partDigests.length === 0
+      || !partDigests.every((d) => typeof d === "string" && DIGEST.test(d)))
+    return rowRefusal("EVIDENCE_PARTS_MALFORMED", localize("record-core.index.a_whole_document_is_named", "A whole document is named by its fingerprint and the fingerprints of its parts, in order, and at least one part. Nothing was kept."));
+  try { if (await bucket.head(key(digest))) return { ok: true, already: true }; } catch { /* a head that fails is told below, by the upload */ }
+  let upload = null;
+  const stop = async () => { try { if (upload) await upload.abort(); } catch { /* an upload that cannot be aborted holds no object */ } };
+  try {
+    upload = await bucket.createMultipartUpload(key(digest));
+    const sha = createSha256(), done = []; let size = 0;
+    for (let i = 0; i < partDigests.length; i++) {
+      const o = await bucket.get(key(partDigests[i]));
+      if (!o) {
+        await stop();
+        return rowRefusal("EVIDENCE_PART_MISSING", localize("record-core.index.a_part_of_the_document", "Part {n} of {parts} of the document was not held. Nothing was kept.", { n: String(i + 1), parts: String(partDigests.length) }), { part: i + 1 });
+      }
+      let bytes = new Uint8Array(await o.arrayBuffer());
+      sha.update(bytes); size += bytes.length;
+      done.push(await upload.uploadPart(i + 1, bytes));
+      bytes = null;
+    }
+    if (sha.hex() !== digest) {
+      await stop();
+      return rowRefusal("EVIDENCE_DIGEST_MISMATCH", localize("record-core.index.the_parts_do_not_hash", "The parts, read in order, do not hash to the document's fingerprint. Nothing was kept."));
+    }
+    await upload.complete(done);
+    return { ok: true, size };
+  } catch (e) {
+    await stop();
+    return rowRefusal("EVIDENCE_STORE_REFUSED", localize("record-core.index.the_store_would_not_take", "The store would not take the document whole ({why}). Nothing was kept.", { why: String(e && e.message || e).slice(0, 160) }));
+  }
+  /* END DEC-49 REGION is-evidence-parts-refused */
 }
 
 /* ---- the routes (R72, R73) ---- */
@@ -1897,6 +1976,15 @@ export function recordCoreOps(record, url, body, { sight = null } = {}) {
     },
   };
 }
+
+/* R85 (T51; B2, K4259; op-declarations R80, op-grades R49): the op this module serves that the screens send, declared by
+   its owner beside the ops map: its class, weight and description are the op's existing rows', its fields what the arm
+   reads (R86: both are required, and a call without one is refused naming it). */
+export const DECLARED_OPS = Object.freeze({
+  allocid: { classes: ["admin", "member", "probe"], mutating: true, weight: "substrate", needs: "contribute",
+    description: localize("record-core.declared.allocid", "substrate: id allocation"),
+    fields: { accepts: ["prefix", "year"], requires: ["prefix", "year"] } },
+});
 
 /* R73: today's sweep, gated by the caller's sight. `visible(id)` asks, once per id the page names, whether the bundle
    passes `sight(viewer)`; references still resolve against the whole corpus (R19). An absent or unknown viewer, a sight

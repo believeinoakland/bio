@@ -161,7 +161,9 @@
  * BEFORE inflation. For ODF the text part is `content.xml` alone. Over the
  * bound the container walk and discrimination still run and text extraction
  * is refused as a STATED text-undetermined carrying the guard's own marker
- * verbatim — the docx.mjs pattern, never a silent truncation. Under it, the
+ * verbatim (with its size, and `final: true`: R35 reads the other four
+ * formats' text in pieces, and ODF is the one it does not, K4489) — the
+ * docx.mjs pattern, never a silent truncation. Under it, the
  * REPEATS content.xml compresses are expanded within a second bound,
  * `ODF_REPEAT_EXPANSION_MAX` (R45; see the meter below), and a read that
  * would cross it is answered the same way with its own marker.
@@ -678,7 +680,11 @@ async function odfPartsUnguarded(row, bytes) {
    * OpenDocument there is exactly one: content.xml. */
   const declared = declaredTextBytes(container, (n) => n === CONTENT_PART);
   const guardR = sizeGuard(declared.total);
-  const guard = guardR.ok ? null : guardR;
+  /* R35 (F7; BOB K4489): a content.xml over the bound is NOT read in pieces, and is
+   * stated as it always was, with its size, and now as `final`: this reader
+   * holds the part as one string that about fifteen walks slice and re-walk,
+   * and R45's own bound stops a sheet of that size whatever is done. */
+  const guard = guardR.ok ? null : { ...guardR, final: true };
 
   let contentXml = null;
   if (!guard) {
@@ -1797,6 +1803,7 @@ function odsText(parts) {
   for (const sheet of odsSheets) {
     const walked = walkSheet(sheet.xml);
     const lines = [];
+    const lineRows = [];
     for (const row of walked.rows) {
       const vals = [];
       for (const c of row.cells) {
@@ -1808,7 +1815,13 @@ function odsText(parts) {
         cellCount++;
         vals.push(v);
       }
-      if (vals.length) lines.push(vals.join("\t"));
+      if (vals.length) {
+        const line = vals.join("\t");
+        lines.push(line);
+        /* A cell holding several paragraphs puts several lines of `text` on
+           one row: each carries that row's number. */
+        for (let k = line.split("\n").length; k > 0; k--) lineRows.push(row.r);
+      }
     }
     const text = lines.join("\n");
     /* A HIDDEN sheet's text IS extracted — the record holds what the file
@@ -1851,6 +1864,10 @@ function odsText(parts) {
       /* FW-19 / IC-124: the sheet as a `sheet-range` unit, or NULL. */
       range: usedSheetRange(sheet.name, usedRows, usedCols),
       text, undetermined: [],
+      /* R19: one 1-based sheet row per line of `text` (the row as a
+         spreadsheet shows it, repeated rows counted), so a block of lines
+         names its true rows; [] when the sheet has no text. */
+      lineRows,
       /* R46: the typed cells, `office-readers` R30's contract field for field. */
       cells: typedCells(sheet.name, walked.rows) });
   }

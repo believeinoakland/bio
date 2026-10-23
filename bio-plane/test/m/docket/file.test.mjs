@@ -3,8 +3,8 @@
    control: the same call with only that condition put right is accepted. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { seeded, world, file, V, MACHINE, CASE, SUBJECT, OTHER_SUBJECT, RESPONSE, OUTCOME, post } from "./fixture.mjs";
-import { DOCKET_CHECKS, FOUND_BY, PRESSURE_KINDS } from "../../../src/docket/index.mjs";
+import { seeded, world, file, V, MACHINE, CASE, SUBJECT, OTHER_SUBJECT, RESPONSE, OUTCOME, post, NOT_JOINED, notJoinedOk } from "./fixture.mjs";
+import { DOCKET_CHECKS, FOUND_BY, PRESSURE_KINDS, docketOps } from "../../../src/docket/index.mjs";
 
 const rowOk = (r, code) => {
   assert.equal(r.ok, false, JSON.stringify(r).slice(0, 200));
@@ -14,10 +14,12 @@ const rowOk = (r, code) => {
   assert.equal(r.translation, DOCKET_CHECKS[code].translation);
 };
 /* Refused with nothing written anywhere; then the control, accepted. */
-function refusedThenAccepted(w, bad, good, code) {
+function refusedThenAccepted(w, bad, good, code, act = "docketfile") {
   const before = w.snapshot();
   const r = bad();
-  if (code === "NO_SUCH_CASE") assert.equal(r.reason, code); else rowOk(r, code);
+  if (code === "NO_SUCH_CASE") assert.equal(r.reason, code);
+  else if (code === NOT_JOINED) notJoinedOk(r, act);
+  else rowOk(r, code);
   assert.deepEqual(w.snapshot(), before, `${code}: nothing written`);
   const ok = good();
   assert.equal(ok.ok, true, `${code}'s control: ${JSON.stringify(ok).slice(0, 300)}`);
@@ -45,13 +47,57 @@ test("R1 a case absent, with no ratified edition, or whose project the viewer do
   refusedThenAccepted(w, () => file(w, {}, "dave"), () => file(w, {}, "bob"), "NO_SUCH_CASE");
 });
 
-test("R1 `author` not a joined participant of the project is DOCKET_NOT_A_PARTICIPANT", () => {
+test("R1 `author` not a joined participant of the project is membership's PROJECT_ACT_NOT_A_PARTICIPANT (K4557, K231)", () => {
   const w = seeded();
   /* carol is invited, sees the project in full, and has not joined: the arm itself, writing nothing; bob, joined, files */
-  refusedThenAccepted(w, () => file(w, {}, "carol"), () => file(w, {}, "bob"), "DOCKET_NOT_A_PARTICIPANT");
+  refusedThenAccepted(w, () => file(w, {}, "carol"), () => file(w, {}, "bob"), NOT_JOINED);
   /* a member who sees it as the viewer but files as a non-participant is refused the same */
-  refusedThenAccepted(w, () => file(w, { author: V("carol"), viewer: V("bob") }), () => file(w), "DOCKET_NOT_A_PARTICIPANT");
-  refusedThenAccepted(w, () => file(w, { author: V("dave"), viewer: V("bob") }), () => file(w, {}, "alice"), "DOCKET_NOT_A_PARTICIPANT");
+  refusedThenAccepted(w, () => file(w, { author: V("carol"), viewer: V("bob") }), () => file(w), NOT_JOINED);
+  refusedThenAccepted(w, () => file(w, { author: V("dave"), viewer: V("bob") }), () => file(w, {}, "alice"), NOT_JOINED);
+});
+
+/* K4557 (E9), the walker's case: a member invited to the project and not yet joined, through the real entry path (the ops
+   map the control plane routes, the member's own session stamps). Seen red before the change: `docketpressure` marked for her
+   (it asked no participation) and `docketfile` answered the module's own DOCKET_NOT_A_PARTICIPANT. */
+test("R2 K4557 an invited member who has not joined cannot mark a record entry: membership's PROJECT_ACT_NOT_A_PARTICIPANT, nothing written", () => {
+  const w = seeded();
+  const url = (q) => new URL(`https://x/?${new URLSearchParams(q)}`);
+  const as = (who, entry, pressure = { kind: "legal", note: "A letter from counsel." }) =>
+    docketOps(w.docket, url({ author: V(who), viewer: V(who) }), { entry, pressure }).docketpressure();
+  const e = file(w).entry;
+  /* carol is invited, sees the project in full, has not joined; dave has no part in it and sees nothing of it */
+  const before = w.snapshot();
+  notJoinedOk(as("carol", e), "docketpressure");
+  assert.deepEqual(w.snapshot(), before, "nothing written");
+  assert.equal(w.docket.docketPressureMarks({}).marks.length, 0, "no mark reaches the plane's reads");
+  assert.equal(as("dave", e).reason, "NO_SUCH_DOCKET_ENTRY", "sight first: one who sees nothing is told nothing of it");
+  /* the order: sight, then the joined test, then the entry's own conditions */
+  notJoinedOk(as("carol", e, { kind: "rude" }), "docketpressure");
+  assert.equal(as("carol", "DKT-2026-9999").reason, "NO_SUCH_DOCKET_ENTRY", "an absent entry is answered before it");
+  /* controls: bob, joined, marks; her refusal then stands over a marked entry as over an unmarked one */
+  const ok = as("bob", e);
+  assert.equal(ok.ok, true);
+  notJoinedOk(as("carol", e), "docketpressure");
+  /* the same member once she joins marks another entry; a member leaving still counts as joined, as membership R54 reads it */
+  const e2 = file(w).entry, e3 = file(w).entry;
+  w.join(w.P, "carol", "joined");
+  assert.equal(as("carol", e2).ok, true);
+  w.join(w.P, "carol", "leaving");
+  assert.equal(as("carol", e3).ok, true);
+});
+
+test("R1 K4557 docketfile by an invited member answers membership's code, through the ops map, one code for the one condition (K231)", () => {
+  const w = seeded();
+  const url = (q) => new URL(`https://x/?${new URLSearchParams(q)}`);
+  const as = (who) => docketOps(w.docket, url({ author: V(who), viewer: V(who) }),
+    { case: CASE, edition: 1, kind: "response", from: { kind: "subject", entity: SUBJECT }, capture: w.cap.sha, proposed: "both",
+      reason: "The subject's reply to edition 1." }).docketfile();
+  const before = w.snapshot();
+  notJoinedOk(as("carol"), "docketfile");
+  assert.deepEqual(w.snapshot(), before, "nothing written");
+  assert.equal(as("bob").ok, true, "control: a joined member files");
+  w.join(w.P, "carol", "joined");
+  assert.equal(as("carol").ok, true, "control: she files once she has joined");
 });
 
 test("R1 the form checks, each refused with nothing written, each with its control", () => {
@@ -88,7 +134,7 @@ test("R1 refusals come in R1's order: a call breaking several conditions is answ
   const all = { edition: 9, from: null, capture: "x", kind: "rumour", proposed: "maybe", reason: "" };
   rowOk(file(w, { ...all, author: MACHINE, viewer: MACHINE }), "MACHINE_CANNOT_FILE_DOCKET");
   assert.equal(file(w, { ...all, case: "CASE-2026-9999" }).reason, "NO_SUCH_CASE");
-  rowOk(file(w, { ...all, author: V("dave"), viewer: V("bob") }), "DOCKET_NOT_A_PARTICIPANT");
+  notJoinedOk(file(w, { ...all, author: V("dave"), viewer: V("bob") }), "docketfile");
   const steps = [["DOCKET_NO_EDITION", { edition: 1 }], ["DOCKET_NOT_ATTRIBUTED", { from: { kind: "subject", entity: OTHER_SUBJECT } }],
                  ["DOCKET_NOT_THE_SUBJECT", { from: { kind: "subject", entity: SUBJECT } }], ["DOCKET_NO_CAPTURE", { capture: w.cap.sha }],
                  ["DOCKET_KIND_UNKNOWN", { kind: "response" }], ["DOCKET_NO_REASON", { proposed: "both", reason: "why" }]];
@@ -185,7 +231,7 @@ test("R11 a record entry is taken back by a later record act with a reason, and 
                                                              author: V(who), viewer: V(who), ...x });
   rowOk(back({ author: MACHINE, viewer: MACHINE }), "MACHINE_CANNOT_FILE_DOCKET");
   assert.equal(back({}, "dave").reason, "NO_SUCH_CASE");
-  rowOk(back({ author: V("dave"), viewer: V("bob") }), "DOCKET_NOT_A_PARTICIPANT");
+  notJoinedOk(back({ author: V("dave"), viewer: V("bob") }), "docketfile");
   refusedThenAccepted(w, () => back({ takesBack: "DKT-2026-9999" }), () => ({ ok: true }), "NO_SUCH_DOCKET_ENTRY");
   for (const reason of ["", null, "r".repeat(2001)]) refusedThenAccepted(w, () => back({ reason }), () => ({ ok: true }), "DOCKET_NO_REASON");
   const r = back();

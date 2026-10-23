@@ -16,7 +16,13 @@ CREATE TABLE IF NOT EXISTS entities (
   declared_by TEXT,
   at          TEXT,
   sector      TEXT,
-  forum_kind  TEXT
+  forum_kind  TEXT,
+  named_by_member INTEGER,
+  confirmed_by    TEXT,
+  confirmed_at    TEXT,
+  contact_kind    TEXT,
+  contact_value   TEXT,
+  law             TEXT
 );
 CREATE INDEX IF NOT EXISTS entities_kind ON entities(kind);
 -- ALIASES are FIRST-CLASS and per entity (safeguard 4). The canonical label is also an alias (canonical=1).
@@ -185,6 +191,17 @@ export const SECTOR_COLUMN = Object.freeze(["entities", "sector"]);
 /* R54 (T50; N1190): the forum kind a `body` or `institution` may carry, NULL for every entity that carries none; a store
    written before T50 lacks the column and its entities read none. */
 export const FORUM_KIND_COLUMN = Object.freeze(["entities", "forum_kind"]);
+
+/* R63, R64 (T51 fix round 3; C64; DEC-401, DEC-402): an office a member named from a request is marked `named_by_member`
+   (1) until an administrator confirms it, who confirming it and when are kept; NULL for every other entity and for an
+   office registered before the mark (it reads unmarked). A store written before it lacks the columns. */
+export const OFFICE_MARK_COLUMNS = Object.freeze([
+  ["entities", "named_by_member", "INTEGER"], ["entities", "confirmed_by", "TEXT"], ["entities", "confirmed_at", "TEXT"],
+  /* R63 (K4364; DEC-402): where requests to an office go and the law they go under, NULL when not stated. */
+  ["entities", "contact_kind", "TEXT"], ["entities", "contact_value", "TEXT"], ["entities", "law", "TEXT"],
+]);
+/* R63 (K4364): the three ways an office's contact is stated. */
+export const CONTACT_KINDS = Object.freeze(["address", "email", "portal"]);
 
 /* R8: the columns a store written before K106 lacks. */
 export const WITHDRAWAL_COLUMNS = Object.freeze([

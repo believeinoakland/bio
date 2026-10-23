@@ -19,7 +19,7 @@ import { instanceSetupOf } from "../../../src/setup.mjs";
 import { askOp, assistantGateOf } from "../../../src/plane/ask.mjs";
 import { projectReachReaders } from "../../../src/plane/wiring.mjs";
 
-const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>");
+const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>").replace(/"(ms|feeds_ms)":[\d.]+/g, '"$1":"<n>"');
 
 /* ===== R58: the 15 ops op-declarations R73 declares, each in its owner's map ===== */
 

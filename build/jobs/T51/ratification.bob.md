@@ -1,6 +1,6 @@
 # BOB to ratification (T51)
 
-**Read** · handled J3
+**Read** · handled J7
 
 ## B1 · START
 
@@ -39,3 +39,29 @@ Tests: one for each entry, written first and seen failing, at the module's inter
 Before any test run (K4113): every directory with a tracked `package-lock.json` has its `node_modules` (`for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`); a suite run without them fails for the container, not the code.
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (architecture and words must show 0 findings for your files) and `node checks/ownership.mjs /home/user/bio ratification tranche/T51 job/T51/ratification`. Your Size line counts only your module's own code (K2513). Never edit a generated artifact (manifest §14); report one you make stale. Deal with any flaw you find in your module in this job (P8); report flaws in other modules to BOB (P9); nothing found here waits for the next tranche (K3915).
+
+## B4 · CHANGE
+
+Requirement lines (K4210, for every wave-2 job): write your NEW and amended requirement lines yourself in build/requirements/<your module>.md, each marked *(not yet met: T51)* until your tests name it; the ownership check's listing of that one file is accepted at your merge. If you have already put them in your record instead, either is fine: say which in your COMPLETE.
+
+## B5 · CHANGE
+
+CHANGE (K4219; provenance J5, R66): `withRegisterChecks` (`ratification/index.mjs`:1393, `ops.mjs`:511) passes no resolver, so the ratify gate reads a document's own authority and never a member's decision. Pass `provenance.containerResolver()`; test that a recorded decision changes the gate (control: none recorded).
+
+## B6 · START
+
+START · RATIFICATION #30 · tranche T51 · product believeinoakland/bio · depth 2 (BOB #245 is depth 1; fix round 4, wave 2; K4445)
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/ratification tranche/T51 && git branch -m job/T51/ratification stale/ratification-local && git checkout -b job/T51/ratification origin/job/T51/ratification`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+Mail with `--module ratification`; record `build/jobs/T51/ratification.md`. Model claude-sonnet-5-5, medium effort; workers haiku low. Before tests: every lockfile directory has `node_modules` (K4113). At most two suites at once (K4272); always `node --test --test-force-exit`. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678).
+
+You are the **module job** (P8, mechanics §6) for `ratification`. Your diff touches only that module's paths, tests and your record. Fix round 4 of T51 (`build/plan/fix-round-4-T51.md`, K4429): read its section 0 (R-FOUR, R-SEAM, R-NOTMET, R-OLD, R-ONE). Merge `tranche/T51` first.
+
+**Your cause: P10 (d)** (found by CAPTURE #45, K4445), verbatim from its COMPLETE: "The examination, `ratification.examineMember` (`release.mjs`:170), asks `contradiction.candidatesFor({on: {bundle}})` once for each of `CONTESTED_STATES` (open, explained_not_shown, taken_up), and each call re-runs `#candidatesNaming` (`contradiction/index.mjs`:1515), a scan of `contradiction_candidates` with `json_extract` in four columns, the state filter applied after the scan. Three identical scans per document, synchronous, so no lane overlaps them. I could not time it alone on the copy ... it is the likely remainder of the 60-85 ms a row." The Held screen's full rows cost 60-85 ms each over a 0.25 s floor on the smoke copy.
+
+(1) **Root cause unknown (a hypothesis): step 0 is a measurement reported to BOB as a QUESTION before any fix (K4426, K4427 (4)).** Measure `examineMember` per document on a live-sized fixture (27 documents, a `contradiction_candidates` table of the copy's size or larger, read-only probe of the smoke copy for its row count if you can), timing the three `candidatesFor` calls apart from the rest of the examination; report the numbers and what share of 60-85 ms they are. BOB releases the fix. (2) The tests never stated the examination's cost. (3) If released: one read that answers whether any contested candidate names the document (for example `candidatesFor` with no state and no limit, filtered to the contested states here; ratification may not change `contradiction`), the same refusals as before (an unread or cut-short read counts as contested, R22); failing-first: a test that counts the store reads per examined document (three before, one after), with a control that a document with a standing `explained_not_shown` candidate is still `CONTESTED_IN_BATCH`. (4) L: the fixture's timings before and after.
+
+Do not change `contradiction`; a change there goes to BOB (P9). Declare every census op you own (K4208); words by key (K3810). No generated artifact edited (manifest §14).
+Run: your suite, then `node build/plan/impact.mjs tranche/T51 HEAD`'s users (capture among them); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (0 findings for your files); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio ratification tranche/T51 job/T51/ratification`.
+COMPLETE lists the four fields, requirement ids met (propose any line), suite counts, users run, no QUESTION open, and the `Size` line.

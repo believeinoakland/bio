@@ -1,6 +1,6 @@
 /* R33 at the release's real size, in its own Node process (run by `realsize.test.mjs`; not a test itself).
  *
- * The installer's built bundle (the file a Worker would run: ASCII source, the 21 MB release as one literal) is imported
+ * The installer's built bundle (the file a Worker would run: ASCII source, the release packed in one literal) is imported
  * into a process that stands for a Worker's 128 MB, and one install or update is driven end to end against a lean stand-in
  * for the account: it keeps no script in memory (each uploaded module is written to disk and read back from disk, as the
  * account keeps it), so what is measured is the installer's own memory, not the fake's.
@@ -65,16 +65,23 @@ const fileOf = (name) => join(cfg.dir, name + ".mjs");
 for (const name of cfg.pre || []) scripts.set(name, { bindings: [{ type: "secret_text", name: "ACCOUNT_SEAL_SECRET" }, { type: "secret_text", name: "ADMIN_TOKEN" }], put: false });
 let uploads = 0, reads = 0;
 const members = new Map();
+/* The Durable Object classes each uploaded script holds (its migrations) and the Containers applications made for them: the
+   release's container members are placed on a class's namespace, so the stand-in answers both as the account does. */
+const classes = new Map(), apps = [];
 
 async function putScript(name, init) {
-  /* `fetch` buffers a FormData body whole; do the same, hold it while sampling, then drop it. */
-  let whole = await new Response(init.body).arrayBuffer();
-  sample("upload body serialised " + name);
-  whole = null;
+  /* The body is counted as it streams, never held (the stand-in is not the installer, and a real account does not hold it either);
+     sampled once it has all gone by, so the installer's own Blob is what stands in the live set. */
+  let sent = 0;
+  for await (const chunk of new Response(init.body).body) sent += chunk.length;
+  sample("upload body streamed " + name + " " + Math.round(sent / MB));
   const meta = JSON.parse(await init.body.get("metadata").text());
   const file = init.body.get("index.mjs");
   await pipeline(Readable.fromWeb(file.stream()), createWriteStream(fileOf(name)));
   scripts.set(name, { bindings: meta.bindings || [], put: true });
+  const mig = meta.migrations || {};
+  classes.set(name, [...new Set([...(classes.get(name) || []), ...(mig.new_sqlite_classes || []), ...(mig.new_classes || []),
+    ...(mig.steps || []).flatMap((st) => [...(st.new_sqlite_classes || []), ...(st.new_classes || [])])])]);
   if (name === slug) { uploads++; version = (meta.bindings || []).find((b) => b.name === "VERSION")?.text ?? version; }
   else if (name.endsWith("-" + slug)) members.set(name.slice(0, -slug.length - 1), (meta.bindings || []).find((b) => b.name === "VERSION")?.text ?? null);
   return ok({ id: name });
@@ -103,8 +110,15 @@ const rules = [
   } },
   { m: (u, mth) => u.endsWith("/workers/scripts") && mth === "GET", f: () => ok([...scripts.keys()].map((id) => ({ id }))) },
   { m: (u, mth) => u.endsWith("/r2/buckets") && mth === "GET", f: () => ok({ buckets: [...buckets].map((name) => ({ name })) }) },
-  { m: (u, mth) => u.includes("/workers/durable_objects/namespaces") && mth === "GET", f: () => ok([]) },
-  { m: (u) => u.includes("/containers/applications"), f: () => ok([]) },
+  { m: (u, mth) => u.includes("/workers/durable_objects/namespaces") && mth === "GET",
+    f: () => ok([...classes].flatMap(([script, cs]) => cs.map((c) => ({ id: `ns-${script}-${c}`, script, class: c })))) },
+  { m: (u) => u.includes("/containers/applications"), f: (u, init = {}) => {
+    const mth = (init.method || "GET").toUpperCase(), one = /\/containers\/applications\/([^/]+)(\/rollouts(\/[^/]+)?)?$/.exec(u);
+    if (one && one[2]) return mth === "GET" ? ok({ id: "r1", status: "completed" }) : ok({ id: "r1" });
+    if (one) return ok({ ...apps.find((a) => a.id === one[1]), health: { instances: { active: 0, failed: 0, starting: 0 } } });
+    if (mth === "POST") { apps.push({ id: "app" + (apps.length + 1), ...JSON.parse(init.body) }); return ok(apps.at(-1)); }
+    return ok(apps);
+  } },
   { m: (u, mth) => /\/workers\/scripts\/[^/]+\/secrets$/.test(u) && mth === "PUT", f: () => ok({}) },
   { m: (u, mth) => /\/workers\/scripts\/bio-install-lock$/.test(u) && mth === "DELETE", f: () => { scripts.delete("bio-install-lock"); return ok({}); } },
   { m: (u) => u.startsWith(CFG.RELEASE_LATEST + "/"), f: (u) => {

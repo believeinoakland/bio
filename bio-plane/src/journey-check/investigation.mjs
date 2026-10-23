@@ -8,7 +8,7 @@
 import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { settle, StepFailed } from "./walker.mjs";
-import { act, control, type, open, requireDrawn } from "./journeys.mjs";
+import { act, control, type, open, requireDrawn, reveal } from "./journeys.mjs";
 import { requireWord, requireAnyWord, byWord, wordPattern, word, drawsWord } from "./words.mjs";
 import { developerWords } from "./design.mjs";
 import { NOTICE_ADDRESS, NOTICE_PASSAGE, HEAT_ADDRESS, HEAT_PASSAGE } from "./city.mjs";
@@ -78,12 +78,18 @@ export async function connectSubscription(walk, page, base, { password, codeOf =
   }, { expect: ["REAUTH_DUE"] });
 }
 
+/* "Start a project" asks who can find the project and chooses neither (`screens-daily` `start-project.mjs`); the walk chooses hidden. */
+export const START_PROJECT_VISIBILITY = "#projects-visibility-hidden";
+
 /* Steps 2 and 3: a project with a title, opened; a question in it, opened. Answers the project's and question's
    addresses. */
 async function projectAndQuestion(walk, page, base, { title, question }) {
   let project = null, q = null;
   await walk.step(page, "2 · start a project with a title, and open it", async (p) => {
     await open(walk, p, base, "/app/projects", "projects");
+    const visibility = p.locator(START_PROJECT_VISIBILITY);
+    await reveal(visibility);
+    await visibility.check();
     await act(p, "promote", { fields: { "projects-title": title }, reason: "Tenants of 14 Lakeshore Row report water coming in." });
     if (!/^\/app\/project\//.test(where(p))) await p.locator("#cs-main a").filter({ hasText: title }).first().click();
     await settle(p);
@@ -248,6 +254,9 @@ async function openDock(page) {
   await settle(page);
 }
 
+/* The conclusion form's fields: a falsifier, the reason (the page refuses to conclude with its box empty, `question.conclude.reason.needed`) and a commentary. */
+export const concludeFields = (falsifier, commentary) => ({ "question-conclude-falsifier": falsifier, "question-conclude-reason": "The notice answers the question.", "question-conclude-commentary": commentary });
+
 /* Step 12: the proposed reading accepted, stood on for the project, and concluded. */
 async function concludeOn(walk, page, { question, project }) {
   await walk.step(page, "12 · accept a reading, stand on it for the project, and conclude", async (p) => {
@@ -256,8 +265,8 @@ async function concludeOn(walk, page, { question, project }) {
        level" (`level-empty-…`, which states no claim and so cannot be concluded on) */
     await act(p, "versionaccept", { which: ':not([data-version^="level-empty"])', reason: "I read the notice; it says the repair was ordered." });
     await act(p, "versioncurrent", { which: ':not([data-version^="level-empty"])', reason: "The project stands on the city's own order." });
-    await act(p, "conclude", { fields: { "question-conclude-falsifier": "The city withdrawing or amending notice 2026-118",
-      "question-conclude-commentary": "The city's notice orders the landlord to repair the roof within 28 days." },
+    await act(p, "conclude", { fields: concludeFields("The city withdrawing or amending notice 2026-118",
+      "The city's notice orders the landlord to repair the roof within 28 days."),
     reason: "The notice answers the question." });
     await requireWord(p, "question.concluded.by", { within: "#cs-main" });
   });
@@ -317,7 +326,7 @@ async function concludeOwn(walk, page, { label, question, reading, falsifier, co
     await requireWord(p, "question.conclude.own.field", { within: "#cs-main" });
     await requireWord(p, "question.conclude.own.help", { within: "#cs-main" });
     await form.getByLabel(wordPattern("question.conclude.own.field")).first().fill(reading);
-    await act(p, "conclude", { fields: { "question-conclude-falsifier": falsifier, "question-conclude-commentary": commentary }, reason: "The notice answers the question." });
+    await act(p, "conclude", { fields: concludeFields(falsifier, commentary), reason: "The notice answers the question." });
     await requireWord(p, "question.concluded.by", { within: "#cs-main" });
     await requireWord(p, "question.reading.by.member", { within: "#cs-main" });
   });

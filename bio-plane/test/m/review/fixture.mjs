@@ -60,7 +60,9 @@ export function storage() {
 /* publication's read contract (R3, R5): only the columns this module reads, and a table the dry run writes. */
 const PUBLICATION_DDL = `
 CREATE TABLE cases (case_id TEXT PRIMARY KEY, project_id TEXT);
-CREATE TABLE published_cases (case_id TEXT NOT NULL, edition INTEGER NOT NULL, PRIMARY KEY (case_id, edition));
+CREATE TABLE published_cases (case_id TEXT NOT NULL, edition INTEGER NOT NULL, scope TEXT, ratified_at TEXT, PRIMARY KEY (case_id, edition));
+CREATE TABLE published_case_members (case_id TEXT NOT NULL, edition INTEGER NOT NULL, ord INTEGER NOT NULL, bundle_id TEXT NOT NULL,
+                                     version_sha TEXT, role TEXT, PRIMARY KEY (case_id, edition, bundle_id));
 CREATE TABLE case_documents (case_id TEXT NOT NULL, edition INTEGER NOT NULL, text TEXT, doc_sha TEXT, draft_id TEXT,
                              sig_armored TEXT, PRIMARY KEY (case_id, edition));
 `;
@@ -80,13 +82,16 @@ export function world({ now = NOW, injectClock = true, localFacts, combine = () 
   /* case-authoring's side: `publishCase` answers what `gate` returns for the arguments, and writes a case document
      first (so a dry run that did not roll back would leave a row). */
   const calls = { publish: [], acks: [], acksViaCaseAuthoring: [], reach: [], attribution: [],
-                  attributionViaPublication: [] };
-  const ca = { gate: () => ({ ok: true, caseId: "CASE-2026-0001" }), acks: [], throws: null };
+                  attributionViaPublication: [], editions: [] };
+  /* `editions`: a scripted double of case-authoring's `draftEditions` (its R83, K4363) until that module merges. */
+  const ca = { gate: () => ({ ok: true, caseId: "CASE-2026-0001" }), acks: [], throws: null,
+               editions: () => ({ prepared: null, published: null }) };
   const caseAuthoring = {
     /* its pass-through to case-account until T43 (N850): R33 registers with case-account, never here, so this list
        stays empty (the negative control) */
     reviewComments: [],
     registerReviewComments(fn) { this.reviewComments.push(fn); return { ok: true }; },
+    draftEditions(args) { calls.editions.push(args); return ca.editions(args); },
     publishCase(args) {
       calls.publish.push(args);
       st.sql.exec(`INSERT INTO case_documents (case_id, edition, text) VALUES (?, ?, ?)`,
@@ -228,10 +233,13 @@ export function world({ now = NOW, injectClock = true, localFacts, combine = () 
       return approvalSubjectSha(text);
     },
     /** A case owned by `project`, published at editions 1..`editions` (publication's rows). */
-    publishedCase(caseId, project, editions = 1) {
+    publishedCase(caseId, project, editions = 1, { scope = null, members = [] } = {}) {
       st.sql.exec(`INSERT OR IGNORE INTO cases (case_id, project_id) VALUES (?, ?)`, caseId, project);
-      for (let e = 1; e <= editions; e++)
-        st.sql.exec(`INSERT OR IGNORE INTO published_cases (case_id, edition) VALUES (?, ?)`, caseId, e);
+      for (let e = 1; e <= editions; e++) {
+        st.sql.exec(`INSERT OR IGNORE INTO published_cases (case_id, edition, scope, ratified_at) VALUES (?, ?, ?, ?)`, caseId, e, scope, clock.now);
+        members.forEach(([id, role], i) => st.sql.exec(`INSERT OR IGNORE INTO published_case_members
+          (case_id, edition, ord, bundle_id, role) VALUES (?, ?, ?, ?, ?)`, caseId, e, i + 1, id, role ?? null));
+      }
     },
   };
   return w;

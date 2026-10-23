@@ -5,7 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { acts, all, day, has, lacks, open, said, textOf } from "./kit.mjs";
 import { hasWord } from "../../../src/setup-words/index.mjs";
-import { ADMIN, MEMBER, GROUP_RULES, DOC_SHA, env, refuse, grouprulesTable } from "./fixtures.mjs";
+import { ADMIN, MEMBER, GROUP_RULES, DOC_SHA, VOUCHED_DOC, env, refuse, grouprulesTable } from "./fixtures.mjs";
 
 const item = (o, rule) => all(o.tree, (e) => e.tag === "li" && e.attrs["data-rule"] === rule)[0];
 const btn = (n, op) => acts(n).filter((b) => b.attrs["data-act"] === op);
@@ -105,7 +105,7 @@ test("R61 the draft form draws the design's fields: the kinds of action by their
   assert.deepEqual(kinds, [["claim", said("screen.grouprules.app.claim")], ["request_for_comment", said("screen.action.kind.request_for_comment")], ["public_comment", said("screen.action.kind.public_comment")], ["party_participation", said("screen.action.kind.party_participation")]]);
   assert.ok(a.p.requests.some((r) => r.op === "rulefields" && r.query.section === "deadlines"));
   const docs = all(all(a.tree, (e) => e.attrs.id === "gr-doc")[0], (e) => e.tag === "option").map((o) => o.attrs.value);
-  assert.deepEqual(docs, [DOC_SHA, "e".repeat(64)]);
+  assert.deepEqual(docs, [DOC_SHA, "e".repeat(64), VOUCHED_DOC.capture.sha256], "the held documents and, R70, the vouched one");
   // writing help: only under What it says, only while the assistant is reachable
   assert.equal(btn(a.tree, "writinghelp").length, 1);
   assert.ok(a.html.indexOf('data-act="writinghelp"') > a.html.indexOf('id="gr-statement"') && a.html.indexOf('data-act="writinghelp"') < a.html.indexOf('id="gr-bears"'));
@@ -160,4 +160,137 @@ test("R61 writinghelp under What it says fills the draft into that field, labell
   assert.equal(r.sent.find((x) => x.op === "writinghelp").body.field, "statement");
   assert.equal(a.b.doc.getElementById("gr-statement").value, "Speakers register by noon.");
   has(a, "screen.group-identity.draft.label", { handle: "dev" });
+});
+
+/* ---- T51 FR-25: L2 (R70) ---- */
+
+test("R70 the 'Which document' picker is read with state held_and_vouched: with one held and one vouched document it offers both, and a vouched one is chosen and drafted from; asked without that state it would list only the held (control)", async () => {
+  const held = { title: "Held rules", capture: { sha256: "1".repeat(64) } }, vouched = { title: "Vouched rules", capture: { sha256: "2".repeat(64) } };
+  // the owner's answer by the state asked (capture R77, R88): the documents at collected, and with held_and_vouched those a member vouched for too
+  const table = grouprulesTable({ heldcaptures: (q) => env({ ok: true, held: q.state === "held_and_vouched" ? [held, vouched] : [held] }) });
+  const a = await open("grouprules", { me: MEMBER, table });
+  const asked = a.p.requests.filter((r) => r.op === "heldcaptures");
+  assert.equal(asked.length, 1);
+  assert.equal(asked[0].query.state, "held_and_vouched");
+  const docs = all(all(a.tree, (e) => e.attrs.id === "gr-doc")[0], (e) => e.tag === "option").map((o) => [o.attrs.value, textOf(o)]);
+  assert.deepEqual(docs, [[held.capture.sha256, held.title], [vouched.capture.sha256, vouched.title]]);
+  // a vouched document can be drafted from: its sha is the one the draft names
+  const r = await a.press("ruledraft", { values: { ...FORM, "gr-doc": vouched.capture.sha256 }, choose: PICK });
+  const draft = r.sent.find((x) => x.op === "ruledraft");
+  assert.equal(draft.body.source.captureSha, vouched.capture.sha256);
+  // control: an owner that lists only the held documents (the state not asked) would leave the vouched one out
+  const only = await open("grouprules", { me: MEMBER, table: grouprulesTable({ heldcaptures: (q) => env({ ok: true, held: q.state === "held_and_vouched" ? [held] : [] }) }) });
+  assert.deepEqual(all(all(only.tree, (e) => e.attrs.id === "gr-doc")[0], (e) => e.tag === "option").map((o) => o.attrs.value), [held.capture.sha256]);
+});
+
+/* ---- T51 fix round 2: C14, C87, C94 ---- */
+
+test("R70 C14: the picker is read once when the screen opens, by the cheap picker read (fields picker), and no act reads the whole list again; the picker rows are the cheap ones", async () => {
+  const held = { bundle_id: "INFO-1", title: "Held rules", project: null, capture: { sha256: "1".repeat(64) }, standing: "collected" }, vouched = { bundle_id: "INFO-2", title: "Vouched rules", project: null, capture: { sha256: "2".repeat(64) }, standing: "verified" };
+  // the owner answers by the fields asked (capture R77, R88): the picker rows carry the document, title, project, digest and standing and nothing else
+  const table = grouprulesTable({ heldcaptures: (q) => env({ ok: true, held: q.fields === "picker" ? [held, vouched] : [{ ...held, examination: { slow: true } }], state: q.state }) });
+  const a = await open("grouprules", { me: MEMBER, table });
+  const asked = () => a.p.requests.filter((r) => r.op === "heldcaptures");
+  assert.equal(asked().length, 1, "one read of the held documents for the screen");
+  assert.deepEqual([asked()[0].query.fields, asked()[0].query.state], ["picker", "held_and_vouched"]);
+  assert.deepEqual(all(all(a.tree, (e) => e.attrs.id === "gr-doc")[0], (e) => e.tag === "option").map((o) => [o.attrs.value, textOf(o)]), [["1".repeat(64), "Held rules"], ["2".repeat(64), "Vouched rules"]]);
+  // the acts do not read the list again
+  await a.press("ruledraft", { values: { ...FORM, "gr-doc": "2".repeat(64) }, choose: PICK });
+  await a.press("ruleconfirm", { data: { rule: "GR-0001" }, reason: "I read the source and the rule matches it" });
+  assert.equal(asked().length, 1, "still the one read");
+});
+
+/* ---- T51 fix round 6: G20 (K4571) ---- */
+
+/* the owner's paging, as capture R77 answers it: `limit` rows from the cursor `after`, `truncated` and `next` while more remain */
+const sha = (i) => i.toString(16).padStart(64, "0");
+const heldPaged = (total) => (q) => {
+  const from = q.after ? Number(q.after) : 0, n = Math.min(Number(q.limit) || 200, 1000);
+  const held = [];
+  for (let i = from; i < Math.min(total, from + n); i++) held.push({ bundle_id: "INFO-2026-" + String(i + 1).padStart(4, "0"), title: "Document " + (i + 1), capture: { sha256: sha(i + 1) } });
+  const more = from + n < total;
+  return env({ ok: true, held, state: q.state, limit: n, truncated: more, next: more ? String(from + n) : null });
+};
+const options = (o) => all(all(o.tree, (e) => e.attrs.id === "gr-doc")[0], (e) => e.tag === "option").map((x) => [x.attrs.value, textOf(x)]);
+
+test("R70 G20: with 250 documents held the picker reaches the 250th, reading on by the cursor, and a draft names it; control: 150 documents are read once and nothing is said of more", async () => {
+  const a = await open("grouprules", { me: MEMBER, table: grouprulesTable({ heldcaptures: heldPaged(250) }) });
+  a.redraw();
+  const docs = options(a);
+  assert.equal(docs.length, 250, "every document is offered, not the first 200");
+  assert.deepEqual(docs[249], [sha(250), "Document 250"]);
+  assert.ok(!a.text.includes(said("screen.people.more", { n: "200" })), "nothing left out, nothing said");
+  const asked = a.p.requests.filter((r) => r.op === "heldcaptures");
+  assert.equal(asked.length, 2, "the first page and the one the cursor names");
+  assert.ok(asked.every((r) => r.query.state === "held_and_vouched" && r.query.fields === "picker"));
+  assert.equal(asked[1].query.after, "200");
+  const r = await a.press("ruledraft", { values: { ...FORM, "gr-doc": sha(250) }, choose: PICK });
+  assert.equal(r.sent.find((x) => x.op === "ruledraft").body.source.captureSha, sha(250), "the 250th is drafted from");
+  const few = await open("grouprules", { me: MEMBER, table: grouprulesTable({ heldcaptures: heldPaged(150) }) });
+  few.redraw();
+  assert.equal(options(few).length, 150);
+  assert.equal(few.p.requests.filter((r) => r.op === "heldcaptures").length, 1, "a list that fits its page is read once");
+  assert.ok(!few.text.includes(said("screen.people.more", { n: "150" })));
+});
+
+test("R70 G20: past the bound it keeps (the first page and two more) the picker says how many it shows and a search narrows by title; control: the search reads nothing more", async () => {
+  const a = await open("grouprules", { me: MEMBER, table: grouprulesTable({ heldcaptures: heldPaged(2500) }) });
+  a.redraw();
+  assert.equal(options(a).length, 2200, "200, then 1000 and 1000 by the cursor");
+  has(a, "screen.people.more", { n: "2200" });
+  const before = a.p.requests.filter((r) => r.op === "heldcaptures").length;
+  assert.equal(before, 3);
+  const q = a.b.doc.getElementById("gr-doc-q");
+  assert.ok(q, "a search box narrows the choice");
+  q.value = "Document 2199";
+  a.b.fire(q, "input");
+  await a.b.clock.tick(1000); await a.b.settle();
+  a.redraw();
+  assert.deepEqual(options(a), [[sha(2199), "Document 2199"]]);
+  assert.equal(a.p.requests.filter((r) => r.op === "heldcaptures").length, before, "narrowing reads nothing more");
+  const q2 = a.b.doc.getElementById("gr-doc-q");
+  q2.value = "no such title";
+  a.b.fire(q2, "input");
+  await a.b.clock.tick(1000); await a.b.settle();
+  a.redraw();
+  has(a, "form.choose.search.none");
+});
+
+test("R70 G20: a page the cursor names that cannot be read leaves the first page offered and says it is the first rows shown, never a picker that looks whole", async () => {
+  const paged = heldPaged(250);
+  const a = await open("grouprules", { me: MEMBER, table: grouprulesTable({ heldcaptures: (q) => (q.after ? refuse("TOO_SLOW", 504) : paged(q)) }) });
+  a.redraw();
+  assert.equal(options(a).length, 200, "what was read stays offered");
+  has(a, "screen.people.more", { n: "200" });
+});
+
+test("R61 C87: Draft the rule with a required box empty sends nothing and names the box; filled, it sends (control)", async () => {
+  const a = await open("grouprules", { me: MEMBER, table: grouprulesTable() });
+  const named = (label) => said("shell.field.needed", { field: label });
+  const sent = (r) => r.sent.filter((x) => x.op === "ruledraft");
+  for (const [box, label] of [["gr-name", "screen.grouprules.name.label"], ["gr-amount", "screen.grouprules.amount.label"], ["gr-cite", "screen.grouprules.cite.label"], ["gr-eff", "screen.grouprules.eff.label"], ["gr-pass", "screen.grouprules.pass.label"], ["gr-why", "screen.grouprules.why.label"]]) {
+    const r = await a.press("ruledraft", { values: { ...FORM, [box]: "  " }, choose: PICK });
+    assert.deepEqual(sent(r), [], box + " empty sends nothing");
+    assert.equal(a.refused && a.refused.text, named(said(label)), box + " is named: " + (a.refused && a.refused.text));
+  }
+  // a legal fact names what it says
+  const f = await a.press("ruledraft", { values: { ...FORM, "gr-kind": "fact", "gr-statement": "" }, choose: { "gr-shown": "pending_measure_or_candidate" } });
+  assert.deepEqual(sent(f), []);
+  assert.equal(a.refused.text, named(said("screen.grouprules.statement.label")));
+  // control: filled sends
+  assert.equal(sent(await a.press("ruledraft", { values: FORM, choose: PICK })).length, 1);
+});
+
+test("R61 C94: a rule's drafter and confirmer are named by memberName: a member with no handle by the fallback word, a member the roster does not hold by it too, the founder by hers or the unnamed word, never an id; a member with a handle by it (control)", async () => {
+  const mk = (n, over) => ({ rule: "GR-01" + n, section: "deadlines", state: "drafted", entry: { rule: "Rule " + n, starts: "hearing", citation: "x", effective_from: "2026-01-01" }, source: { captureSha: "a".repeat(64), extent: "p1" }, reason: "r", applies_to: "request_for_comment", tier: 1, drafter: "ana", drafted_at: "2026-10-09T00:00:00Z", confirmer: null, confirmed_at: null, ...over });
+  const rules = [mk("1", { drafter: "mai-k" }), mk("2", { drafter: "ghost-7" }), mk("3", { drafter: "admin" }), mk("4", { state: "confirmed", drafter: "ana", confirmer: "ghost-7", confirmed_at: "2026-10-10T00:00:00Z" })];
+  const a = await open("grouprules", { me: MEMBER, table: grouprulesTable({ grouprules: env({ ok: true, rules, count: rules.length }) }) });
+  const line = (n) => textOf(item(a, "GR-01" + n));
+  const date = day("2026-10-09T00:00:00Z");
+  assert.ok(line("1").includes(said("screen.grouprules.drafted", { member: said("shell.card.member"), date })), "no handle: the fallback word");
+  assert.ok(line("2").includes(said("screen.grouprules.drafted", { member: said("shell.card.member"), date })), "unknown: the fallback word");
+  assert.ok(line("3").includes(said("screen.grouprules.drafted", { member: said("member.founder.unnamed"), date })), "the founder with no handle: the unnamed word");
+  assert.ok(line("4").includes(said("screen.grouprules.confirmed", { member: said("shell.card.member"), date: day("2026-10-10T00:00:00Z") })));
+  assert.ok(line("4").includes(said("screen.grouprules.drafted", { member: "ana", date })), "control: a member with a handle by it");
+  for (const id of ["mai-k", "ghost-7"]) assert.ok(!a.text.includes(id), id + " is not drawn");
 });

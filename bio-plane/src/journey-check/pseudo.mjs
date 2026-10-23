@@ -113,23 +113,38 @@ function sentences() {
     if (!names.length) { if (/\S\s+\S/.test(en)) exact.set(en, pseudo(en)); continue; }
     const literal = en.split(SIMPLE);
     if (literal.join("").trim().length < 8) continue;
-    patterns.push({ re: new RegExp("^" + literal.map(esc).join("(.+?)") + "$", "s"), names, made: pseudo(en), size: literal.join("").length });
+    patterns.push({ re: new RegExp("^" + literal.map(esc).join("(.+?)") + "$", "s"), names, made: pseudo(en), size: literal.join("").length,
+      parts: literal.filter(Boolean), first: literal[0], last: literal[literal.length - 1] });
   }
   patterns.sort((a, b) => b.size - a.size);
   return (known = { exact, patterns });
 }
 
-/* A string of an answer made pseudo when it is a sentence of the list, filled or not; any other string is as it was. */
+/* The list's sentence patterns, longest first: each `{re, names, made, size, parts, first, last}`. */
+export const sentencePatterns = () => sentences().patterns;
+
+/* What each string was made into (R30): the shell reads the whole list on every page, so a string recurs, and the answer of
+   a string is the same each time. */
+const made = new Map();
+
+/* A string of an answer made pseudo when it is a sentence of the list, filled or not; any other string is as it was. A
+   pattern is tried only by a string that starts with its first literal part, ends with its last and holds every other
+   (R30: the expression cannot match otherwise, so the result is the one of trying every pattern). No length bounds a
+   sentence: the list's longest are over 900 characters, and the cost is bounded by the pattern tries, not the length. */
 export function pseudoString(s) {
-  if (typeof s !== "string" || s.length < 5 || s.length > 600 || s.startsWith("[")) return s;
+  if (typeof s !== "string" || s.length < 5 || s.startsWith("[")) return s;
   const { exact, patterns } = sentences();
   if (exact.has(s)) return exact.get(s);
   if (!/\S\s+\S/.test(s)) return s;
+  if (made.has(s)) return made.get(s);
+  let answer = s;
   for (const p of patterns) {
+    if (!s.startsWith(p.first) || !s.endsWith(p.last) || !p.parts.every((x) => s.includes(x))) continue;
     const m = p.re.exec(s);
-    if (m) return p.made.replace(SIMPLE, (ph) => m[1 + p.names.indexOf(ph.slice(1, -1))] ?? ph);
+    if (m) { answer = p.made.replace(SIMPLE, (ph) => m[1 + p.names.indexOf(ph.slice(1, -1))] ?? ph); break; }
   }
-  return s;
+  made.set(s, answer);
+  return answer;
 }
 
 /* A JSON value with each of its strings that is a keyed sentence made pseudo (R29 (a)): the answer of an op a screen fetches. */
@@ -158,8 +173,9 @@ export async function pseudoBody(body) {
   });
 }
 
-/* Routes a browser context's documents and fetches of `host` through `fetchCopy` and answers them with pseudo words (R29 (a)): a
-   document's word pairs, and the JSON a screen fetches; all else falls back to the routes before it. */
+/* Routes a browser context's documents, scripts and fetches of `host` through `fetchCopy` and answers them with pseudo words (R29 (a)):
+   the word pairs of a document or of the shell's own script (the page's words stand in that script since interface-shell's fix
+   round 3, R1: the page carries no words itself), and the JSON a screen fetches; all else falls back to the routes before it. */
 export async function pseudoRoute(context, { host, fetchCopy }) {
   await context.route("**/*", async (r) => {
     const req = r.request();
@@ -167,8 +183,10 @@ export async function pseudoRoute(context, { host, fetchCopy }) {
     const type = req.resourceType();
     if (u.host !== host) return r.fallback();
     const doc = type === "document" && req.method() === "GET";
-    if (!doc && type !== "fetch" && type !== "xhr") return r.fallback();
-    const init = { method: req.method(), headers: req.headers() };
+    const script = type === "script" && req.method() === "GET";
+    if (!doc && !script && type !== "fetch" && type !== "xhr") return r.fallback();
+    const { "accept-encoding": _ignored, ...asked } = req.headers();   /* no compression asked of the copy: the answer is read and rewritten here */
+    const init = { method: req.method(), headers: asked };
     const sent = req.postDataBuffer();
     if (sent && !["GET", "HEAD"].includes(req.method())) init.body = sent;
     const res = await fetchCopy(new Request(req.url(), init));
@@ -178,7 +196,9 @@ export async function pseudoRoute(context, { host, fetchCopy }) {
     const cookies = res.headers.getSetCookie ? res.headers.getSetCookie() : [];
     if (cookies.length) headers["set-cookie"] = cookies.join("\n");
     let body = Buffer.from(await res.arrayBuffer());
-    if (doc && /html/.test(ct)) body = Buffer.from(await pseudoBody(body.toString("utf8")));
+    /* the page names its script by the hash of the English one (`integrity`); the pseudo script has another, which a browser refuses */
+    if (doc && /html/.test(ct)) body = Buffer.from((await pseudoBody(body.toString("utf8"))).replace(/(<script\b[^>]*?)\s+integrity="[^"]*"/g, "$1"));
+    else if (script && /javascript|ecmascript/.test(ct)) body = Buffer.from(await pseudoBody(body.toString("utf8")));
     else if (/json/.test(ct)) body = Buffer.from(pseudoJson(body.toString("utf8")));
     await r.fulfill({ status: res.status, headers, body });
   });

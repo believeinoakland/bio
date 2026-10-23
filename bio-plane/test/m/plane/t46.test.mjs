@@ -353,7 +353,7 @@ test("R36 (T46; N886; K2940; extraction R75; agent-worker R72): a refusal agent-
 
 /* ===== R39 (T46; N935) and R5 (T46): the route map ===== */
 
-const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>");
+const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>").replace(/"(ms|feeds_ms)":[\d.]+/g, '"$1":"<n>"');
 
 test("R39 (T46; N935; case-account R15, local-facts R15): case-account's and local-facts' own ops maps are spread whole into the route map at their places, so advocacycheck, advocacychecks and grouprules each answer through the door what the owner's own map answers called directly; the plane names no entry of either", async () => {
   const u = new URL("http://do/");

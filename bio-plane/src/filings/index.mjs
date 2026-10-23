@@ -381,6 +381,30 @@ export class Filings {
     return b ? str(b.project) : null;
   }
 
+  /* R1, R6, R7, R8, R23, R36, R42, R47 (K4557; E9): a project's weighty filing acts need a member who has joined the project:
+     a member invited and not yet joined has view rights only (membership §7.5). The one question every such act asks, after
+     its sight check and before any write, of the stamped member: `membership.projectAuthority(project, identity, "joined",
+     act)`, whose refusal (PROJECT_ACT_NOT_A_PARTICIPANT, which tells the member to join) is relayed as it came. A machine
+     credential or an absent identity is not asked (membership's rule); a filing with no project is untouched, and so is
+     any act where no membership module answers (nothing else in this module could have read the project's sight either). */
+  #joinedBar(project, identity, act) {
+    const p = str(project);
+    const m = p ? this.membership : null;
+    return m && typeof m.projectAuthority === "function" ? m.projectAuthority(p, identity, "joined", act) : null;
+  }
+
+  /* The project of a filing about to be prepared: the action's own, else the project of the determination it rests on, as
+     the preparer reads it: the one the draft's basis will record (`#basisOf`), so a preparer who may not see the
+     determination prepares a draft that names no project, and the draft is not associated with one. */
+  #prepProject(a, viewer) {
+    return a.project || (this.#restsOn(a, viewer).det || {}).project || null;
+  }
+
+  /* The project of a draft: the action's, else the one its basis records (as R42 reads it). */
+  #draftProject(d) {
+    return this.#bundleProject(d.action_id) || (parse(d.basis) || {}).project || null;
+  }
+
   /* R24: the premise override an action carries (actions R8, shown in its read, R25: `{reason, by, at}`; R74 (T45): its
      `ground`); null when it carries none. */
   static #override(o) {
@@ -743,6 +767,8 @@ export class Filings {
     if (!who) return { ok: false, reason: "FILING_NO_PREPARER", detail: localize("filings.index.no_stamped_preparer_a_draft_names", "no stamped preparer: a draft names who prepared it") };
     const a = this.#action(action, viewer);
     if (!a) return this.#noAction(action);
+    const bar = this.#joinedBar(this.#prepProject(a, viewer), who, "filingprepare");
+    if (bar) return bar;
     const closed = this.#closed(a);
     if (closed) return closed;
     const v = this.#view();
@@ -885,6 +911,8 @@ export class Filings {
     if (!who) return { ok: false, reason: "COMMUNICATION_NO_PREPARER", detail: localize("filings.index.no_stamped_preparer_a_draft_names", "no stamped preparer: a draft names who prepared it") };
     const a = this.#action(action, viewer);
     if (!a) return this.#noAction(action);
+    const bar = this.#joinedBar(this.#prepProject(a, viewer), who, "communicationprepare");
+    if (bar) return bar;
     const closed = this.#closed(a);
     if (closed) return closed;
     if (!assembled && (typeof text !== "string" || !text.trim() || WELL_FORMED.test(text) || utf8(text) > FILING_TEXT_MAX))
@@ -1443,6 +1471,8 @@ export class Filings {
                            : localize("filings.index.no_member_is_named_as_the_one", "no member is named as the one approving") };
     const d = this.#draft(filing, viewer);
     if (!d) return this.#noFiling(filing);
+    const bar = this.#joinedBar(this.#draftProject(d), who, "filingapprove");
+    if (bar) return bar;
     const self = Filings.#notTheGroups(d);
     if (self) return self;
     const held = this.#alreadyApproved(d.filing_id);
@@ -1504,8 +1534,8 @@ export class Filings {
 
   /** R59 (T48; N1034, K3145): one prepared draft or communication as it was stored, so a reload between preparing and
    *  approving loses nothing: its text, blanks with their sources, unfilled blanks with why, the member's own fills
-   *  (R55, each labelled the member's), template (R29), advisory and offers (R4, R58), notices, label (R5) and action,
-   *  beside its approval (R6), second approval (R42) and sending (R7) when recorded. Nothing is filled again from the
+   *  (R55, each labelled the member's), template (R29), exhibits and venue standard (R25), advisory and offers (R4, R58),
+   *  notices, label (R5) and action, beside its approval (R6), second approval (R42) and sending (R7) when recorded. Nothing is filled again from the
    *  record and nothing is written; a draft that is absent, or whose action or basis the viewer may not see (R13, R27),
    *  is `NO_SUCH_FILING`, one answer. */
   filingRead({ filing = null, viewer = null } = {}) {
@@ -1525,6 +1555,7 @@ export class Filings {
       ...(comm ? { purpose: d.purpose } : { tier: d.tier, venue: parse(d.venue) }),
       text: d.text, blanks, unfilled: comm ? [] : (parse(d.unfilled) || []), fills: blanks.filter(own),
       template: comm ? null : parse(d.template),
+      exhibits: comm ? [] : (parse(d.exhibits) ?? []), venue_standard: comm ? null : (parse(d.venue_standard) ?? null),
       ...(!comm && d.tier === 2 ? { advisory: d.advisory ?? null, offers: COUNSEL_OFFER } : {}),
       disclosure: d.disclosure ?? null, notices,
       outward: checked,
@@ -1556,6 +1587,8 @@ export class Filings {
                            : localize("filings.index.no_member_is_named_as_the_one_who_sent", "no member is named as the one who sent it") };
     const d = this.#draft(filing, viewer);
     if (!d) return this.#noFiling(filing);
+    const bar = this.#joinedBar(this.#draftProject(d), who, "filingsent");
+    if (bar) return bar;
     const self = Filings.#notTheGroups(d);
     if (self) return self;
     if (!this.#one(`SELECT 1 AS x FROM filing_approvals WHERE filing_id=?`, d.filing_id))
@@ -1657,6 +1690,8 @@ export class Filings {
                detail: who ? localize("filings.index.who_is_a_machine_identity_a_member", "'{who}' is a machine identity: a member approves", { who: who.slice(0, 60) }) : localize("filings.index.no_member_is_named_as_the_one", "no member is named as the one approving") };
     const d = this.#draft(filing, viewer);
     if (!d) return this.#noFiling(filing);
+    const bar = this.#joinedBar(this.#draftProject(d), who, "filingsecondapprove");
+    if (bar) return bar;
     const ap = this.#one(`SELECT approved_by FROM filing_approvals WHERE filing_id=?`, d.filing_id);
     if (!ap) return { ok: false, reason: "NOT_APPROVED", filing: d.filing_id, detail: localize("filings.index.a_member_approves_the_draft_before_a_second", "a member approves the draft before a second member does") };
     if (ap.approved_by === who)
@@ -1690,6 +1725,8 @@ export class Filings {
                detail: who ? localize("filings.index.who_is_a_machine_identity_a_member_records", "'{who}' is a machine identity: a member records a partner's signature", { who: who.slice(0, 60) }) : localize("filings.index.no_member_is_named", "no member is named") };
     const d = this.#draft(filing, viewer);
     if (!d) return this.#noFiling(filing);
+    const bar = this.#joinedBar(this.#draftProject(d), who, "jointsignatory");
+    if (bar) return bar;
     const ap = this.#one(`SELECT sha, body_sha FROM filing_approvals WHERE filing_id=?`, d.filing_id);
     if (!ap) return { ok: false, reason: "NOT_APPROVED", filing: d.filing_id, detail: localize("filings.index.a_joint_text_is_approved_here_before", "a joint text is approved here before a partner's signature is recorded") };
     const a = this.#action(d.action_id, viewer);
@@ -1733,6 +1770,9 @@ export class Filings {
       return { ...holdNotInPlace(p), why: word("filings.why.module_answers_holds") };
     const r = this.#call(() => h.holdsOf({ ...p, viewer }));
     if (!r || r.ok === false) return r || { ...holdNotInPlace(p), why: word("filings.why.hold_read") };
+    /* K4557: the notice speaks for the team, so it is the project's: the place's own, else its target's (an action's) */
+    const bar = this.#joinedBar(p.project || this.#bundleProject(p.target), who, "holdnoticeprepare");
+    if (bar) return bar;
     const list = Array.isArray(r.statements) ? r.statements : Array.isArray(r.holds) ? r.holds : Array.isArray(r.items) ? r.items : [];
     const latest = list.length ? list[list.length - 1] : null;
     if (!latest || latest.hold !== "in_place")
@@ -2416,6 +2456,8 @@ export class Filings {
                  : localize("filings.index.the_reason_is_n_characters_over", "the reason is {chars} characters, over the {max} a packet's reason is kept to; refused rather than cut", { chars, max: PACKET_REASON_MAX }) };
     const a = this.#action(action, viewer);
     if (!a) return this.#noAction(action);
+    const bar = this.#joinedBar(this.#prepProject(a, viewer), who, "counselpacket");
+    if (bar) return bar;
     /* R8 (K924): a packet at every governing tier; counsel is required at Tier 3 or an undetermined tier (never read as
        1, D-182), optional below it, and one given is named by both a name and an organisation. */
     const gov = this.governingTier(a);
@@ -2830,7 +2872,7 @@ export class Filings {
 
   /** R32 (K922 (1)): a member starts a template draft from an approved filing draft (R6), or a draft of a new version of a
    *  named template, by handing the approved text and `from: {filing, sha}` to `filing-templates.templateDraft` (its R3)
-   *  and answering its answer. A new template's `project` defaults to the project the draft drew on, its `kind` to the
+   *  and answering its answer. A new template's `project` is the one the request names, else the action's, else the project the draft drew on (C65), its `kind` to the
    *  action's, its `use` to `file` and its `profiles` to those that give the action's kind (else `general`); the R26
    *  library is gone (K921), and its rows are `filing-templates`' to migrate (K927). */
   templateSave({ filing = null, template = null, project = null, name = null, kind = null, use = null, profiles = null,
@@ -2847,13 +2889,29 @@ export class Filings {
       return templatesRow({ ok: false, reason: "NO_SUCH_TEMPLATE", template: str(template),
                             detail: localize("filings.index.no_module_answers_the_templates_drafted", "no module answers the team's templates here, so no template can be drafted") });
     const named = template != null && template !== "";
+    /* R67 (T51; DEC-377; R17): a filing that needs counsel first (the action's governing tier, now, is 3) is kept as a
+       template only as a brief. `filing-templates` judges the kind's tier in the profiles (its R1); this judges the
+       action's, which the draft's own tier (1 or 2 when it was prepared) no longer says once the action's was raised.
+       The refusal is that module's own row for it (`TEMPLATE_TIER3_FILE`, its R1), answered as it gives it. A new
+       template keeps the `use` it is asked for (`file` by default); a new version keeps its template's. */
+    const act = this.#action(d.action_id, viewer);
+    if (act && this.governingTier(act).tier === 3) {
+      const read = named ? this.#call(() => t.templateRead({ template, viewer })) : null;
+      const kept = named ? (read && read.ok !== false && read.template ? read.template.use : null) : use ?? "file";
+      if (kept === "file")
+        return templatesRow({ ok: false, reason: "TEMPLATE_TIER3_FILE", filing: d.filing_id, kind: d.kind || act.kind || null,
+                              detail: localize("filings.index.a_filing_that_needs_counsel_first_is_kept_only_as_a_brief",
+                                "this filing needs counsel first (the governing tier is 3): it is kept as a template only as a brief (use: brief)") });
+    }
     const defaults = {};
     if (!named) {
       const v = this.#view();
       const actionKind = d.kind || (this.#action(d.action_id, viewer) || {}).kind || null;
       const entry = v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === (kind ?? actionKind)) : null;
       const givers = entry ? [entry.profile, ...(Array.isArray(entry.bases) ? entry.bases.map((b) => b.profile) : [])].filter(Boolean) : [];
-      defaults.project = project ?? (parse(d.basis) || {}).project ?? null;
+      /* C65 (T51): the project the request names, else the action's, else the basis's, as the module's other acts take it
+         (`a.project || basis.project`): an action resting on no determination has none in its basis */
+      defaults.project = str(project) || str(act && act.project) || str((parse(d.basis) || {}).project) || null;
       defaults.kind = kind ?? actionKind;
       defaults.use = use ?? "file";
       defaults.profiles = profiles ?? (givers.length ? [...new Set(givers)] : "general");
@@ -3029,3 +3087,38 @@ export function filingsOps(f, url, body) {
     availableactions: () => f.availableActions({ determination: q("determination"), viewer: q("viewer") }),
   };
 }
+
+/* R68 (T51; K4168, K4202; op-declarations R80, R81; op-grades R49; test-support R15): the ops this module serves that the screens
+   send, declared by their owner beside the ops map: each row's class, weight and description are the op's existing rows', its
+   fields are what the arm reads. `filingrecordsent` is the name the screens send; the door resolves it to the arm `filingsent`
+   (`OP_ALIASES`). What an arm refuses only in some cases (the words of a communication when its purpose names none to
+   assemble; counsel at a governing tier of 3; the project of a template whose draft rested on no determination) is not
+   a field it refuses without, so it is accepted and not required. */
+const MEMBER_ACTS = ["admin", "member", "probe"];
+const MARKS = ["voice", "audience", "language", "own_doing", "names_pending", "textcheck"];
+export const DECLARED_OPS = Object.freeze({
+  filingprepare: { classes: MEMBER_ACTS, mutating: true, weight: "reversible", description: "act.filingprepare.does",
+    fields: { accepts: ["action", "template", "text", "fills", ...MARKS], requires: ["action"] } },
+  communicationprepare: { classes: MEMBER_ACTS, mutating: true, weight: "undetermined",
+    description: localize("filings.declared.communicationprepare", "a machine or a member prepares a draft message, briefing or statement for an action, stored apart and labeled as its preparer's; never sent until a member approves it (filings R23)"),
+    fields: { accepts: ["action", "text", "purpose", "from", "fills", ...MARKS], requires: ["action", "purpose"] } },
+  filingapprove: { classes: MEMBER_ACTS, mutating: true, weight: "terminal", description: "act.filingapprove.does",
+    fields: { accepts: ["filing", "text", "release", "resolutions", "textcheck"], requires: ["filing"] } },
+  filingrecordsent: { classes: MEMBER_ACTS, mutating: true, weight: "reasoned", description: "act.filingrecordsent.does",
+    fields: { accepts: ["filing", "at", "medium", "artifact_sha", "artifactSha", "account", "reference"],
+              requires: ["filing", "at", ["account", "artifact_sha", "artifactSha"]] } },
+  filingsecondapprove: { classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "terminal",
+    description: localize("filings.declared.filingsecondapprove", "filing-directed: keyed by filing id; a member other than the approver records the second approval a project's setting asks, at most once; moves no bundle"),
+    fields: { accepts: ["filing"], requires: ["filing"] } },
+  jointsignatory: { classes: ["admin", "member"], machineClasses: [], mutating: true, weight: "undetermined",
+    description: localize("filings.declared.jointsignatory", "filing-directed: keyed by (filing, partner organisation); a member records that the partner approved the same text by its own act; no shared plan is made; moves no bundle"),
+    fields: { accepts: ["filing", "organisation", "body_sha", "account"], requires: ["filing", "organisation", "body_sha", "account"] } },
+  counselpacket: { classes: MEMBER_ACTS, mutating: true, weight: "reasoned", description: "act.counselpacket.does",
+    fields: { accepts: ["action", "counsel", "template", "reason", "purpose", "challenged"], requires: ["action", "reason"] } },
+  holdnoticeprepare: { classes: MEMBER_ACTS, mutating: true, weight: "undetermined",
+    description: localize("filings.declared.holdnoticeprepare", "a member prepares a plain notice telling members what to keep outside Civicsmith for a hold in place, assembled from the record and labeled as a draft; a member sends it by her own hand (filings R47)"),
+    fields: { accepts: ["place"], requires: ["place"] } },
+  templatesave: { classes: MEMBER_ACTS, mutating: true, weight: "undetermined",
+    description: localize("filings.declared.templatesave", "draft-directed: a member starts a template draft from an approved filing draft, keyed by the draft; writes the template library's rows and moves no bundle"),
+    fields: { accepts: ["filing", "template", "project", "name", "kind", "use", "profiles", "notes"], requires: ["filing", ["name", "template"]] } },
+});

@@ -4,11 +4,13 @@
    compared whole at the exported tables, each stamp is driven through its owner's own map so a stamp named at a site
    the owner does not read is seen, and R6's totality is read from each owner's map. Each comparison has a negative
    control. */
+import "./register-owners.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as O from "../../../src/op-declarations/index.mjs";
 import { explained } from "./help.mjs";
 import * as AFF from "../../../src/affordances.mjs";
+import { T51_DESIGN_OPS } from "../../../src/affordances/act-help.mjs";
 import { AI_GRANT_OPS, credentialsOps } from "../../../src/credentials/index.mjs";
 import { aiAccountsOps } from "../../../src/ai-accounts/index.mjs";
 import { fileSafetyOps } from "../../../src/file-safety/index.mjs";
@@ -128,29 +130,34 @@ const R32 = {
   releasescanhold: { spec: { classes: SESSION, machineClasses: [], mutating: true }, needs: "contribute", stamps: ["by", "viewer"], sets: "both" },
   scanstatus: ADMIN_READ, securitytools: ADMIN_READ, securitytoolcatalogue: ADMIN_READ, securitytoolevents: ADMIN_READ,
   securitytooladd: ADMIN_ACT, securitytooltest: ADMIN_ACT, securitytoolremove: ADMIN_ACT,
+  /* T51 fix round 3 (K4371; file-safety R49; B27): the administrator's signature run, in file-safety's map and declared by it (R80) */
+  scanmirror: { owner: true, spec: { classes: ["admin", "member"], machineClasses: [], mutating: true }, needs: null, stamps: ["viewer"], sets: "both" },
   scanbatch: WAKE, renderbatch: WAKE, deeperbatch: WAKE, securityforward: WAKE,
 };
 
-test("R32, R6: OPS holds a spec for each of the 23 ops file-safety serves — exactly its map's keys — and no other file-safety op (negative control: an op added to the map without a spec is seen)", () => {
+test("R32, R6: OPS holds a spec for each of the ops file-safety serves (its registered declarations, R80) — exactly its map's keys — and no other file-safety op (negative control: an op added to the map without a spec is seen)", () => {
   const served = keysOf(fileSafetyOps);
-  assert.equal(served.length, 23);
   assert.deepEqual([...served].sort(), Object.keys(R32).sort());
   for (const op of served) assert.ok(Object.hasOwn(OPS, op), `${op} has no spec`);
+  /* T51 fix round 3 (K4371; B27): scanmirror is file-safety's declaration (R80), not a map op: specced by its owner's row */
+  assert.ok(Object.hasOwn(OPS, "scanmirror") && OPS.scanmirror.mutating === true && OPS.scanmirror.classes.includes("admin"));
   /* the family is the 19 a session reaches; the four wakes are declared in OPS apart */
-  assert.deepEqual(Object.keys(OP_FAMILIES["file-safety"].kinds).sort(), served.filter((op) => R32[op].sets === "both").sort());
+  assert.deepEqual(Object.keys(OP_FAMILIES["file-safety"].kinds).sort(), served.filter((op) => R32[op].sets === "both" && !R32[op].owner).sort());
   /* negative control */
   assert.deepEqual([...served, "scanforget"].filter((op) => !Object.hasOwn(OPS, op)), ["scanforget"]);
 });
 
 test("R32, R2–R4: each file-safety op's spec, NEEDS row, session sets and stamps are R32's — the sight reads admin, member, probe, viewer stamped, findingkind stamped nothing; the openings, the deeper check and the safe copy a member session's (machineClasses []), mutating, the viewer alone stamped; releasescanhold a member's, contribute, by stamped; the administrators' reads and acts a session's (machineClasses []), viewer or by stamped; the four wakes binding credentials only, in no session set — none in a bearer fence, on AI_GRANT_OPS, in a plan run's scope or in an act list (negative control: a drifted spec is seen)", () => {
   for (const [op, w] of Object.entries(R32)) {
-    assert.deepEqual(plain(OPS[op]), w.spec, op);
+    /* an owner's declaration (R80) also carries its description and fields: its class, machine and mutation are compared */
+    assert.deepEqual(w.owner ? { classes: OPS[op].classes, machineClasses: OPS[op].machineClasses, mutating: OPS[op].mutating } : plain(OPS[op]), w.spec, op);
     assert.ok(Object.isFrozen(OPS[op]), op);
     assert.ok(Object.hasOwn(NEEDS, op) && NEEDS[op] === w.needs, `${op}: NEEDS`);
     assert.deepEqual(stamps(op), w.stamps, op);
     if (w.sets === "both") {
       assert.ok(both(op) && ACT_GATE.mode(op) === "session", op);
-      assert.equal(familyOf(op), "file-safety", op);
+      /* an owner's declared op (R80) is in both sets but in no family */
+      assert.equal(familyOf(op), w.owner ? null : "file-safety", op);
       assert.ok(!Object.hasOwn(UNATTENDED_BY_DECISION, op), op);
     } else {
       assert.ok(neither(op) && ACT_GATE.mode(op) === "machine", op);
@@ -196,7 +203,7 @@ test("R32, R4: each file-safety stamp reaches file-safety where it reads it, thr
     }
     assert.equal(await reaches(fileSafetyOps, op, { query: { nosuchstamp: SENT } }), false, `${op}: any key reaches`);
   }
-  assert.equal(checked, 18, `${checked} stamps driven`);
+  assert.equal(checked, 19, `${checked} stamps driven (scanmirror's viewer, T51 fix round 3)`);
   /* the body fields the requirement names */
   assert.ok(await reaches(fileSafetyOps, "openwithwarning", { body: { warned: { own_device: SENT } } }));
   assert.ok((await drive(fileSafetyOps, "openoriginal", { body: { override: true } })).includes('"override":true'));
@@ -320,6 +327,21 @@ test("R34 (affordances R48): every op in SESSION_OPS.member has an explanation i
   const dropped = [...absent][0];
   assert.ok(member.filter((op) => !explained(op) && !absent.has(op) && op !== dropped).length === 0
     && !explained(dropped) && member.includes(dropped));
+});
+
+test("R34 (K4254; affordances R48, T51_DESIGN_OPS): ACT_HELP_ABSENT names no op affordances' ACT_HELP holds — read from affordances' exported T51_DESIGN_OPS and its ACT_HELP, never a hand list (K3268) — among them accountdrafts and accountpropose, and every op of T51_DESIGN_OPS that a member session reaches is explained (negative control: an op the design has not explained, projectownervotes, stays under its ground)", () => {
+  const absent = new Set(Object.values(ACT_HELP_ABSENT).flatMap((g) => [...g.ops]));
+  const designed = [...T51_DESIGN_OPS, "accountdrafts", "accountpropose"];
+  assert.ok(designed.length >= 66);
+  for (const op of designed) {
+    assert.ok(Object.hasOwn(AFF.ACT_HELP, op), `${op}: affordances holds no text`);
+    assert.ok(!absent.has(op), `${op}: explained by affordances and named in ACT_HELP_ABSENT`);
+  }
+  for (const op of designed.filter((o) => SESSION_OPS.member.has(o))) assert.ok(explained(op), op);
+  /* every op ACT_HELP holds is named under no ground */
+  assert.deepEqual([...absent].filter((op) => Object.hasOwn(AFF.ACT_HELP, op)), []);
+  /* negative control */
+  assert.ok(absent.has("projectownervotes") && !Object.hasOwn(AFF.ACT_HELP, "projectownervotes"));
 });
 
 test("R5, R7: ACT_HELP_ABSENT is frozen to its leaves, the same on a second load, and names no place", async () => {

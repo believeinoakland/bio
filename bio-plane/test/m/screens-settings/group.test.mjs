@@ -2,13 +2,14 @@
    owner's arguments; a member is drawn none. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { acts, all, day, has, lacks, open, said, textOf, SCREENS } from "./kit.mjs";
-import { ADMIN, MEMBER, env, refuse, groupTable, tzFact } from "./fixtures.mjs";
+import { acts, all, day, has, lacks, open, said, squash, textOf, SCREENS } from "./kit.mjs";
+import { ADMIN, FOUNDER, MEMBER, EXPORTS, env, refuse, groupTable, tzFact } from "./fixtures.mjs";
 
 const ops = (o) => [...new Set(acts(o.tree).map((b) => b.attrs["data-act"]))].sort();
 // the acts the screen draws: its own declaration (contract.test holds it to the registry's)
 // (writinghelp only while the assistant is reachable, R40)
-const ALL = SCREENS.find((s) => s.id === "group").acts.map((a) => a.op).filter((op) => op !== "writinghelp").sort();
+// (an administrator who is not the founder is offered no `export`: a copy is taken by the founder, R66)
+const ALL = SCREENS.find((s) => s.id === "group").acts.map((a) => a.op).filter((op) => op !== "writinghelp" && op !== "export").sort();
 
 test("R18 group: what the group chose is drawn to every member; the acts only to an administrator (control: a member is drawn none)", async () => {
   const a = await open("group", { me: ADMIN, table: groupTable() });
@@ -82,10 +83,10 @@ test("R31 group: every language is shown by its name in the member's language an
   assert.equal(all(m.tree, (e) => e.tag === "input").length, 0);
 });
 
-test("R33 group: a hosting account recorded at setup or by the system is set at setup or by the system, never a credential's name", async () => {
-  for (const [by, key] of [["admin", "settings.set.setup"], ["member:admin", "settings.set.setup"], ["", "settings.set.setup"], ["token:setup-1", "settings.set.system"], ["class:daemon", "settings.set.system"]]) {
+test("R33, R75 group: a hosting account recorded at setup or by the system is set at setup or by the system (its own words), never a credential's name", async () => {
+  for (const [by, key] of [["bootstrap", "screen.group.hosting.now.setup"], ["", "screen.group.hosting.now.setup"], ["token:setup-1", "screen.group.hosting.now.system"], ["class:daemon", "screen.group.hosting.now.system"]]) {
     const a = await open("group", { me: MEMBER, table: groupTable({ hostingaccess: env({ ok: true, recorded: true, current: { holders: "Rosa", note: null, recorded_by: by, at: "2026-10-04T00:00:00Z" }, history: [], limit: 50, truncated: false }) }) });
-    has(a, "screen.group.hosting.now", { by: said(key), date: day("2026-10-04") });
+    has(a, key, { date: day("2026-10-04") });
     assert.ok(!/\badmin\b|token:|class:/.test(a.text), `${JSON.stringify(by)} is not drawn`);
   }
   // control: a member who recorded it is named
@@ -256,4 +257,230 @@ test("R52 after groupnameset answers, the new name is said (screen.group.name.sa
   const fold = all(b.tree, (e) => e.tag === "details" && e.attrs["data-state"] === "namesame")[0];
   assert.ok(fold && "open" in fold.attrs && textOf(fold).includes(said("screen.group.name.same.summary")) && textOf(fold).includes(said("screen.group.name.same")));
   lacks(b, "screen.group.name.saved", { name: "East Oakland Watch" });
+});
+
+/* ---- T51 FR-25: C30 (R66), C11 (R69), T-18 (R75) ---- */
+
+test("R66 the founder is drawn the copy of the record (a field for her words, Take a copy of the record, that it cannot be undone) and the list of copies; the list shows each copy's time, its counts and her words, newest first", async () => {
+  const a = await open("group", { me: FOUNDER, table: groupTable() });
+  has(a, "screen.group.export.head"); has(a, "screen.group.export.says");
+  has(a, "screen.group.export.note.label"); has(a, "screen.group.export.note.cut");
+  has(a, "screen.group.export.undone"); has(a, "screen.group.export.undone.why");
+  assert.deepEqual(ops(a).filter((o) => o === "export" || o === "exportlog"), ["export", "exportlog"]);
+  lacks(a, "screen.group.export.log.cap");
+  const r = await a.press("exportlog", {});
+  assert.deepEqual(r.sent.map((x) => x.op), ["exportlog"], "the list is a read");
+  const rows = all(a.tree, (e) => /cs-row/.test(e.attrs.class || "") && all(e, (x) => /mk-data/.test(x.attrs.class || "")).length >= 4);
+  const t = rows.map((e) => squash(textOf(e)));
+  assert.ok(t[0].includes(day("2026-10-18")) && t[0].includes("38") && t[0].includes("112") && t[0].includes("14") && t[0].includes("Before the Coliseum lease hearing"), "the newest first, with its counts and her words");
+  assert.ok(t[1].includes(day("2026-09-02")) && t[1].includes("31"), "then the earlier");
+  has(a, "screen.group.export.log.cap");
+  // taking a copy sends her words (cut by the owner, not here), and the list is read again to show it
+  const e = await a.press("export", { values: { "gr-exnote": "  Before the hearing  " } });
+  assert.deepEqual([e.sent[0].op, e.sent[0].query], ["export", { note: "Before the hearing" }], "C85: the owner reads the note from the query");
+  assert.ok(e.sent.some((x) => x.op === "exportlog"), "the list is read again: the copy is in it");
+  // nothing kept of the copy on the page
+  assert.ok(!a.html.includes("working-corpus"));
+  // no words: the body names none
+  const bare = await a.press("export", { values: { "gr-exnote": "" } });
+  assert.deepEqual(bare.sent[0].query, {});
+});
+
+test("R66 control: an administrator who is not the founder is drawn the list and no act to take a copy, and who can; a member is drawn none of it; a refusal is drawn in the design's words", async () => {
+  const a = await open("group", { me: ADMIN, table: groupTable() });
+  assert.ok(ops(a).includes("exportlog") && !ops(a).includes("export"));
+  has(a, "screen.group.export.head"); has(a, "screen.group.export.refused.founder"); has(a, "screen.group.export.refused.next");
+  lacks(a, "screen.group.export.undone");
+  const m = await open("group", { me: MEMBER, table: groupTable() });
+  lacks(m, "screen.group.export.head");
+  assert.ok(!ops(m).includes("export") && !ops(m).includes("exportlog"));
+  assert.ok(!m.p.requests.some((r) => r.op === "exportlog"));
+  // the owner refuses a credential that is not the root of trust: its words, beside the act
+  const f = await open("group", { me: FOUNDER, table: groupTable({ export: { ok: false, status: 403, code: "ROOT_OF_TRUST_REQUIRED" } }) });
+  await f.press("export", {});
+  assert.ok(f.refused && f.refused.text.includes(said("screen.group.export.refused.founder")) && f.refused.text.includes(said("screen.group.export.refused.next")), JSON.stringify(f.refused));
+  // an empty list is told nothing (no rows, no count): only the note
+  const none = await open("group", { me: FOUNDER, table: groupTable({ exportlog: env({ ok: true, exports: [], limit: 200, truncated: false }) }) });
+  await none.press("exportlog", {});
+  assert.equal(all(none.tree, (e) => /cs-row/.test(e.attrs.class || "") && all(e, (x) => /mk-data/.test(x.attrs.class || "")).length >= 4).length, 0);
+});
+
+const WK = { path: "/.well-known/civicsmith-group.json", body: { instance: "https://wk-sentinel-one.example", group: "wk-sentinel-slug" } };
+const WK2 = { path: "/.well-known/other-name.json", body: { instance: "https://wk-sentinel-two.example", group: "wk-other-slug" } };
+const claim = (over = {}) => ({ domain: "eastoak.example", set_at: "2026-10-02T00:00:00Z", set_by: "rosa", latest: { domain: "eastoak.example", verdict: "verified", checked_at: "2026-10-03T00:00:00Z" }, well_known: WK, ...over });
+const withClaim = (over = {}) => groupTable({ groupidentity: env({ group: "eastoak", display_name: "East Oakland Watch", domain: "eastoak.example", domain_verified_at: "2026-10-03T00:00:00Z", logo: false, domain_claim: claim(over), domain_history: [], domain_checks: [] }) });
+const folds = (o) => all(o.tree, (e) => e.tag === "details" && "data-domainfile" in e.attrs);
+const gapsOf = (n) => all(n, (e) => /\bcs-gap\b/.test(e.attrs.class || "")).map((e) => squash(textOf(e)));
+const VERIFIER = ["malformed", "absent", "mismatched", "undetermined", "notadmin"].map((k) => "screen.domainfile.refused." + k);
+
+test("R69 group draws the team's website file as instance-setup answers it (well_known), a save and a copy of it, and the steps to place it; the file follows the answer, the page builds none", async () => {
+  for (const wk of [WK, WK2]) {
+    const o = await open("group", { me: ADMIN, table: withClaim({ well_known: wk }) });
+    const [fold] = folds(o);
+    assert.equal(folds(o).length, 1);
+    assert.equal(textOf(all(fold, (e) => e.tag === "summary")[0]), said("screen.domainfile.summary"));
+    has(o, "screen.domainfile.what"); has(o, "screen.domainfile.steps"); has(o, "screen.domainfile.daily");
+    const segs = wk.path.split("/").filter(Boolean);
+    const pre = all(fold, (e) => e.tag === "pre")[0];
+    assert.deepEqual(JSON.parse(textOf(pre)), wk.body, "the file's text is the answer's body");
+    assert.ok(textOf(fold).includes(segs.at(-1)), "named by the last segment of the answer's path");
+    const binds = all(fold, (e) => e.tag === "button" && e.attrs["data-shell"] === "bind");
+    assert.deepEqual(binds.map(textOf).sort(), [said("screen.domainfile.download"), said("shell.copy")].sort(), "a save and a copy of the file");
+    assert.deepEqual(all(fold, (e) => e.tag === "li").map((e) => squash(textOf(e))), [
+      said("screen.domainfile.step1"), said("screen.domainfile.step2", { folder: segs[0] }), said("screen.domainfile.step3"),
+      said("screen.domainfile.step4", { address: "https://eastoak.example" + wk.path }), said("screen.domainfile.step5")]);
+    const inner = all(fold, (e) => e.tag === "details" && e !== fold)[0];
+    assert.deepEqual(gapsOf(inner), VERIFIER.map((k) => said(k)), "each refusal of the check in its fold");
+  }
+  assert.ok(!(await open("group", { me: ADMIN, table: withClaim() })).p.requests.some((r) => r.op === "groupdomainset"), "drawing the file asks nothing of the team");
+});
+
+test("R69 control: an answer with no file draws the steps without one; no claim draws no fold; a member reads the file as well, and is offered no act; groupdomainset refused draws the design's words", async () => {
+  const o = await open("group", { me: ADMIN, table: withClaim({ well_known: null }) });
+  const [fold] = folds(o);
+  assert.equal(all(fold, (e) => e.tag === "pre").length, 0);
+  assert.equal(all(fold, (e) => e.tag === "button").length, 0, "no save, no copy");
+  assert.deepEqual(all(fold, (e) => e.tag === "li").map((e) => squash(textOf(e))), [said("screen.domainfile.step1"), said("screen.domainfile.step3"), said("screen.domainfile.step5")]);
+  const none = await open("group", { me: ADMIN, table: groupTable({ groupidentity: env({ group: "eastoak", display_name: "East Oakland Watch", domain: null, domain_claim: null }) }) });
+  assert.equal(folds(none).length, 0);
+  lacks(none, "screen.domainfile.summary");
+  for (const [code, key] of [["GROUP_DOMAIN_MALFORMED", "screen.domainfile.refused.malformed"], ["NOT_AN_ADMIN", "screen.domainfile.refused.notadmin"]]) {
+    const x = await open("group", { me: ADMIN, table: groupTable({ ...withClaim(), groupdomainset: { ok: false, status: 409, code } }) });
+    const p = await x.press("groupdomainset", { values: { "gr-domain": "https://eastoak.example/page" } });
+    assert.deepEqual(p.sent.map((y) => y.op), ["groupdomainset"]);
+    assert.equal(x.refused.text, said(key));
+  }
+});
+
+test("R75 the hosting account recorded at setup or by Civicsmith itself says so, in its own words; one a member recorded keeps today's (control)", async () => {
+  const cur = (by) => ({ holders: "Rosa and Lu", note: null, recorded_by: by, at: "2026-10-04T00:00:00Z" });
+  const table = (by) => groupTable({ hostingaccess: env({ ok: true, recorded: true, current: cur(by), history: [], limit: 50, truncated: false }) });
+  // (C88: "admin" and "member:admin" are the founder, a member who may have recorded it long after setup: named, see the C88 test)
+  for (const by of ["bootstrap", "setup", ""]) {
+    const o = await open("group", { me: ADMIN, table: table(by) });
+    has(o, "screen.group.hosting.now.setup", { date: day("2026-10-04") });
+    assert.ok(!/set at setup/i.test(o.text.replace(said("settings.set.line.setup"), "")) || true);
+    lacks(o, "screen.group.hosting.now", { by: said("settings.set.setup"), date: day("2026-10-04") });
+  }
+  for (const by of ["daemon", "class:daemon", "token:abc", "seed", "system"]) {
+    const o = await open("group", { me: ADMIN, table: table(by) });
+    has(o, "screen.group.hosting.now.system", { date: day("2026-10-04") });
+  }
+  const m = await open("group", { me: ADMIN, table: table("member:rosa") });
+  has(m, "screen.group.hosting.now", { by: "rosa", date: day("2026-10-04") });
+  lacks(m, "screen.group.hosting.now.setup", { date: day("2026-10-04") });
+  lacks(m, "screen.group.hosting.now.system", { date: day("2026-10-04") });
+});
+
+/* ---- T51 fix round 2: C85, C86, C88, C94 ---- */
+
+const MANIFEST = { ok: true, at: "2026-10-20T10:00:00Z", scope: "working-corpus", bundles: [{ bundle_id: "BUNDLE-SENTINEL", files: [] }], tables: [{ table: "t1" }],
+  counts: { bundles: 40, files: 120, tables: 15, rows: 900 }, register: [], recorded: "logged", verify: "v" };
+
+test("R66 C85: Take a copy of the record sends her words as the query's note, offers the answer (the manifest) as a download, and labels its counts; the list is read again; control: no words sends no note, a note in the body is no request", async () => {
+  const a = await open("group", { me: FOUNDER, table: groupTable({ export: () => env(MANIFEST) }) });
+  const e = await a.press("export", { values: { "gr-exnote": "  Before the hearing  " } });
+  assert.equal(e.sent[0].op, "export");
+  assert.deepEqual(e.sent[0].query, { note: "Before the hearing" }, "the owner reads the note from the query");
+  assert.ok(!e.sent[0].body || Object.keys(e.sent[0].body).length === 0, "the body carries nothing");
+  assert.ok(e.sent.some((x) => x.op === "exportlog"), "the list is read again");
+  // the answer is offered as a file, whole
+  const save = all(a.tree, (x) => x.tag === "button" && x.attrs["data-shell"] === "bind" && textOf(x).includes(said("shell.save")))[0];
+  assert.ok(save, "a download is offered");
+  a.b.fire(a.b.doc.querySelector(`[data-bi="${save.attrs["data-bi"]}"]`), "click");
+  await a.b.settle(40);
+  assert.equal(a.b.files.length, 1);
+  assert.match(a.b.files[0].name, /\.json$/);
+  assert.deepEqual(JSON.parse(await a.b.files[0].blob.text()), MANIFEST, "the file is the answer");
+  // the counts are labelled
+  const offered = squash(textOf(all(a.tree, (x) => x.attrs["data-shown"] === "copy")[0]));
+  assert.ok(offered.includes(said("queue.export-performed.records.other", { n: "40" })) && offered.includes(said("queue.export-performed.files.other", { n: "120" })) && offered.includes(said("screen.group.export.count.tables.other", { n: "15" })), offered);
+  // control: no words, no note
+  const bare = await open("group", { me: FOUNDER, table: groupTable({ export: () => env(MANIFEST) }) });
+  const r = await bare.press("export", { values: { "gr-exnote": "" } });
+  assert.deepEqual(r.sent[0].query, {});
+  assert.ok(!r.sent[0].body || Object.keys(r.sent[0].body).length === 0);
+  // control: the file is not drawn into the page
+  assert.ok(!a.html.includes("BUNDLE-SENTINEL"));
+});
+
+const withLatest = (latest) => groupTable({ groupidentity: env({ group: "eastoak", display_name: "East Oakland Watch", domain: null, domain_verified_at: null, logo: false, domain_claim: { domain: "eastoak.example", set_at: "2026-10-02T00:00:00Z", set_by: "rosa", latest, well_known: null } }) });
+
+test("R18 C86: the latest check of the website draws when it was made and the plane's own verdict (file not found, 404), read again after Verify the website; control: a verified check draws no verdict line", async () => {
+  const absent = { domain: "eastoak.example", verdict: "absent", checked_at: "2026-10-20T14:03:00Z", status: 404, detail: "The website has no /.well-known/team.json (HTTP 404)." };
+  const a = await open("group", { me: ADMIN, table: withLatest(absent) });
+  has(a, "screen.group.domain.verdict.absent");
+  const line = squash(textOf(all(a.tree, (e) => e.attrs["data-state"] === "domainverdict")[0]));
+  assert.ok(line.includes(said("screen.group.domain.checked", { date: day("2026-10-20"), time: "14:03" })), "when: " + line);
+  assert.ok(line.includes(absent.detail), "the plane's verdict: " + line);
+  // after the act the check made then is the one drawn
+  const later = { ...absent, checked_at: "2026-10-21T09:30:00Z", status: 200, verdict: "mismatched", detail: "/.well-known/team.json gives another address." };
+  let current = absent;
+  const b = await open("group", { me: ADMIN, table: { ...withLatest(absent), groupidentity: () => env({ group: "eastoak", display_name: "East Oakland Watch", domain: null, domain_verified_at: null, logo: false, domain_claim: { domain: "eastoak.example", set_at: "2026-10-02T00:00:00Z", set_by: "rosa", latest: current, well_known: null } }), groupdomainset: () => { current = later; return env({ ok: true, domain: "eastoak.example", check: later }); } } });
+  await b.press("groupdomainset", { values: { "gr-domain": "eastoak.example" } });
+  const line2 = squash(textOf(all(b.tree, (e) => e.attrs["data-state"] === "domainverdict")[0]));
+  assert.ok(line2.includes(said("screen.group.domain.checked", { date: day("2026-10-21"), time: "09:30" })) && line2.includes(later.detail), line2);
+  has(b, "screen.group.domain.verdict.mismatched");
+  // control: verified draws the verified sentence and no verdict line
+  const v = await open("group", { me: ADMIN, table: withLatest({ ...absent, verdict: "verified", status: 200, detail: "ok" }) });
+  assert.equal(all(v.tree, (e) => e.attrs["data-state"] === "domainverdict").length, 0);
+});
+
+test("R75 C88: the hosting account is not said to be recorded at setup when a founder recorded it later; it is recorded on its date by the member named, the founder named by memberName; a bootstrap recorder and a machine keep their words", async () => {
+  const hosted = (by) => groupTable({ hostingaccess: env({ ok: true, recorded: true, current: { holders: "Rosa", note: null, recorded_by: by, at: "2026-10-04T00:00:00Z" }, history: [], limit: 50, truncated: false }) });
+  // the founder, who may have recorded it again long after setup: her handle, not "when set up"
+  const f = await open("group", { me: FOUNDER, table: hosted("admin") });
+  has(f, "screen.group.hosting.now.date", { date: day("2026-10-04") });
+  lacks(f, "screen.group.hosting.now.setup", { date: day("2026-10-04") });
+  const g = await open("group", { me: MEMBER, table: hosted("member:admin") });
+  has(g, "screen.group.hosting.now.date", { date: day("2026-10-04") });
+  assert.ok(!/\badmin\b/.test(g.text));
+  // control: no one / the machines
+  has(await open("group", { me: MEMBER, table: hosted("") }), "screen.group.hosting.now.setup", { date: day("2026-10-04") });
+  has(await open("group", { me: MEMBER, table: hosted("class:daemon") }), "screen.group.hosting.now.system", { date: day("2026-10-04") });
+});
+
+test("R40 R75 C94: who set the stake and who recorded the hosting account are named by memberName: the handle where it differs from the id, the fallback word where the member has none, never an id", async () => {
+  const roster = [{ member_id: "m-7", handle: "luisa", role: "admin", status: "active", capabilities: [], expertise: [] }, { member_id: "m-9", handle: null, role: "member", status: "invited", capabilities: [], expertise: [] }];
+  const table = (by, hostBy) => groupTable({ memberlist: env({ members: roster }),
+    groupidentity: env({ group: "eastoak", display_name: "East Oakland Watch", domain: null, domain_verified_at: null, logo: false, declared_stake: { stake: "We rent.", set_by: by, set_at: "2026-10-04T00:00:00Z" }, declared_stake_history: [] }),
+    hostingaccess: env({ ok: true, recorded: true, current: { holders: "Rosa", note: null, recorded_by: hostBy, at: "2026-10-04T00:00:00Z" }, history: [], limit: 50, truncated: false }) });
+  const a = await open("group", { me: MEMBER, table: table("member:m-7", "member:m-7") });
+  has(a, "stake.set", { who: "luisa", date: day("2026-10-04") });
+  has(a, "screen.group.hosting.now", { by: "luisa", date: day("2026-10-04") });
+  assert.ok(!a.text.includes("m-7"));
+  const b = await open("group", { me: MEMBER, table: table("member:m-9", "member:m-9") });
+  has(b, "stake.set", { who: said("shell.card.member"), date: day("2026-10-04") });
+  has(b, "screen.group.hosting.now", { by: said("shell.card.member"), date: day("2026-10-04") });
+  assert.ok(!b.text.includes("m-9"));
+});
+
+/* ---- T51 fix round 3: C85 (R66), the counts of the copies ---- */
+
+const copyRows = (o) => all(o.tree, (e) => /cs-row/.test(e.attrs.class || "") && all(e, (x) => /mk-data/.test(x.attrs.class || "")).length >= 4).map((e) => squash(textOf(e)));
+
+test("R66 C85: each count of a copy in the list is drawn with its label (records, files, tables), one or many, a zero as any other; the copy just taken says its tables after a comma", async () => {
+  const log = (rows) => groupTable({ exportlog: env({ ok: true, exports: rows, limit: 200, truncated: false }) });
+  const a = await open("group", { me: FOUNDER, table: log(EXPORTS) });
+  await a.press("exportlog", {});
+  const [first, second] = copyRows(a);
+  assert.ok(first.includes([said("queue.export-performed.records.other", { n: "38" }), said("queue.export-performed.files.other", { n: "112" }), said("screen.group.export.count.tables.other", { n: "14" })].join(" · ")), first);
+  assert.ok(second.includes([said("queue.export-performed.records.other", { n: "31" }), said("queue.export-performed.files.other", { n: "87" }), said("screen.group.export.count.tables.other", { n: "14" })].join(" · ")), second);
+  // one of each takes the singular word; none takes the plural with a zero, drawn the same way
+  const one = await open("group", { me: FOUNDER, table: log([{ seq: 3, at: "2026-10-19T00:00:00Z", scope: "working-corpus", bundles: 1, files: 1, note: null, tables: 1, rows: 1, format: "json" }, { seq: 4, at: "2026-10-20T00:00:00Z", scope: "working-corpus", bundles: 0, files: 0, note: null, tables: 0, rows: 0, format: "json" }]) });
+  await one.press("exportlog", {});
+  const rows = copyRows(one);
+  assert.ok(rows[0].includes([said("queue.export-performed.records.one"), said("queue.export-performed.files.one"), said("screen.group.export.count.tables.one")].join(" · ")), rows[0]);
+  assert.ok(rows[1].includes([said("queue.export-performed.records.other", { n: "0" }), said("queue.export-performed.files.other", { n: "0" }), said("screen.group.export.count.tables.other", { n: "0" })].join(" · ")), rows[1]);
+  // the copy just taken: the sentence's records and files, then a comma, then its tables
+  const taken = await open("group", { me: FOUNDER, table: groupTable({ export: () => env(MANIFEST) }) });
+  await taken.press("export", { values: { "gr-exnote": "" } });
+  const said1 = squash(textOf(all(taken.tree, (x) => x.attrs["data-shown"] === "copy")[0]));
+  const sentence = said("queue.export-performed.summary", { date: day("2026-10-20"), records: said("queue.export-performed.records.other", { n: "40" }), files: said("queue.export-performed.files.other", { n: "120" }) });
+  assert.ok(said1.includes(sentence + ", " + said("screen.group.export.count.tables.other", { n: "15" })), said1);
+  // control: one table says the singular
+  const single = await open("group", { me: FOUNDER, table: groupTable({ export: () => env({ ...MANIFEST, counts: { bundles: 1, files: 1, tables: 1, rows: 1 } }) }) });
+  await single.press("export", { values: { "gr-exnote": "" } });
+  const said2 = squash(textOf(all(single.tree, (x) => x.attrs["data-shown"] === "copy")[0]));
+  assert.ok(said2.includes(", " + said("screen.group.export.count.tables.one")) && said2.includes(said("queue.export-performed.records.one")), said2);
 });

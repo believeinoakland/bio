@@ -70,6 +70,31 @@ test("R50: refusals in order — the existence answer, no such project, a viewer
   assert.equal(np.check, MEMBERSHIP_CHECKS.NOT_A_PARTICIPANT.check);
 });
 
+test("R50, R25 (K4233): the founder's session is the bare viewer `admin`; joined to a project it is answered that project's notices, invited only it is refused NOT_A_PARTICIPANT, and an ordinary member's answers are as before", () => {
+  const w = twoHidden();
+  w.participant(PA, "admin", { state: "joined" });
+  const told = notices(w, PA, "admin");
+  assert.equal(told.ok, true);
+  assert.equal(told.notices.length, 1);
+  assert.equal(told.notices[0].candidate, w.id);
+  assert.equal(notices(w, PA, "member:admin").notices.length, 1);            /* the other spelling of the same member */
+  /* R25's project reach: the founder, joined, is told the unseen half of the conflict */
+  assert.deepEqual(w.c.tensionsOn({ referents: [{ ref: HA, version: "capHA" }], viewer: "admin" }).referents[0].marks,
+                   [{ mark: "unseen_conflict", candidate: w.id, weight: "duty", project: PA }]);
+  /* invited only: seen as a participant, not joined: refused */
+  const v = twoHidden();
+  v.participant(PA, "admin", { state: "invited" });
+  const np = notices(v, PA, "admin");
+  assert.equal(np.code, "NOT_A_PARTICIPANT");
+  assert.equal(np.check, MEMBERSHIP_CHECKS.NOT_A_PARTICIPANT.check);
+  /* control: an ordinary member, joined (answered) and invited (refused), as ever */
+  assert.equal(notices(w, PA, M2).notices.length, 1);
+  w.participant(PA, "outsider", { state: "invited" });
+  assert.equal(notices(w, PA, OUT).code, "NOT_A_PARTICIPANT");
+  /* control: a machine credential has no member and is refused */
+  assert.equal(notices(w, PA, MACHINE).code, "NOT_A_PARTICIPANT");
+});
+
 test("R50, R55: a notice carries the seen side verbatim and the fixed sentence, and withholds the other side, the key, the machine's reason and the party count", () => {
   const w = twoHidden();
   const n = notices(w, PA, M2).notices[0];
