@@ -3165,10 +3165,10 @@ export async function groupLogoAsset(env, storeName, io) {
  *  R95 (T51): to a credentialed `caller` only (`{cls: "admin"}` for an admin-class token, `{administrator: true}` for an
  *  administrator's signed-in session, as the control plane resolved it) it adds the seven flat facts of the copy, read from
  *  the store's own `bootstrapfacts` route; a caller with none, or of another class, is answered exactly R132's key set. */
-export async function bootstrapReport(env, fp, { members = false, stub, json, storeSilent, doAnswer, storeRefusal, caller = null, timing = null, now = () => Date.now() }) {
-  /* R104: `timing(name, ms)`, when the door hands one, is told `fleet` (the time of the parts' ask, 0 when kept) and `facts` (the
+export async function bootstrapReport(env, fp, { members = false, stub, json, storeSilent, doAnswer, storeRefusal, caller = null, stateTiming = null, now = () => Date.now() }) {
+  /* R104: `stateTiming(name, ms)`, when the door hands one, is told `fleet` (the time of the parts' ask, 0 when kept) and `facts` (the
      time of this report's hops to the store), which the door states in `Server-Timing` (`fleet;dur`, `facts;dur`). */
-  const tell = (name, ms) => { try { if (typeof timing === "function") timing(name, Math.max(0, Math.round(ms))); } catch { /* a sink never fails the report */ } };
+  const tell = (name, ms) => { try { if (typeof stateTiming === "function") stateTiming(name, Math.max(0, Math.round(ms))); } catch { /* a sink never fails the report */ } };
   let storeMs = 0;
   const hop = async (f) => { const t = now(); try { return await f(); } finally { storeMs += now() - t; } };
   const out = await hop(() => doAnswer(stub.fetch(new Request(`http://do/bootstrap?fp=${fp}`))));
@@ -3416,7 +3416,7 @@ export async function instanceSetupOp(op, url, env, storeName, { cls = null, vie
  *  bootstrap flag and NOTHING the store knows — an instance answering "here is what I am" while unable to say
  *  anything about itself. The installer and `newgroup` both read this op, so the false success reached a caller
  *  deciding whether an instance was ready. `members=1` adds each member's own build. */
-export function bootstrapOp(url, env, fp, { stub, json, storeSilent, storeRefusal, doAnswer, caller = null, timing = null }) {
+export function bootstrapOp(url, env, fp, { stub, json, storeSilent, storeRefusal, doAnswer, caller = null, stateTiming = null }) {
   return bootstrapReport(env, fp, { members: url.searchParams.get("members") === "1", stub, json, storeSilent,
-                                    storeRefusal, doAnswer, caller, timing });
+                                    storeRefusal, doAnswer, caller, stateTiming });
 }

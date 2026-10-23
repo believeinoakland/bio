@@ -86,27 +86,27 @@ test("R104 the parts of a read given its versions (members=1) are the versions i
   assert.equal(f.calls.FILE_SCANNER, 2);
 });
 
-test("R104 bootstrap states fleet;dur (0 when kept) and facts;dur (the store hops) through the door's timing sink, each a whole number of ms, in every outcome", async () => {
+test("R104 bootstrap states fleet;dur (0 when kept) and facts;dur (the store hops) through the door's stateTiming sink, each a whole number of ms, in every outcome", async () => {
   const { stub } = await counted();
   const f = fleet();
   const env = f.env();
   const entries = [];
-  const timing = (name, ms) => entries.push([name, ms]);
+  const stateTiming = (name, ms) => entries.push([name, ms]);
   const now = clockAt(Date.parse("2026-10-23T10:00:00Z"));
-  await ask(env, stub, { timing, now });
+  await ask(env, stub, { stateTiming, now });
   assert.deepEqual(entries.map(([n]) => n).sort(), ["facts", "fleet"]);
   for (const [, ms] of entries) assert.ok(Number.isInteger(ms) && ms >= 0);
   entries.length = 0;
-  await ask(env, stub, { timing, now });
+  await ask(env, stub, { stateTiming, now });
   assert.equal(entries.find(([n]) => n === "fleet")[1], 0, "kept: fleet;dur is 0");
   assert.ok(entries.some(([n]) => n === "facts"));
   /* a store that does not answer still states facts; a sink that throws never fails the report */
   entries.length = 0;
   const silent = { fetch: async () => new Response("boom", { status: 500 }) };
-  const r = await bootstrapReport(env, "fp", { stub: silent, ...io, timing });
+  const r = await bootstrapReport(env, "fp", { stub: silent, ...io, stateTiming });
   assert.equal(r.status, 502);
   assert.ok(entries.some(([n]) => n === "facts"));
-  const ok = await bootstrapOp(new URL("http://x/?op=bootstrap"), env, "fp", { stub, ...io, timing: () => { throw new Error("sink"); } });
+  const ok = await bootstrapOp(new URL("http://x/?op=bootstrap"), env, "fp", { stub, ...io, stateTiming: () => { throw new Error("sink"); } });
   assert.equal(ok.status, 200);
   /* no sink: nothing to call */
   assert.equal((await ask(env, stub)).ok, true);
