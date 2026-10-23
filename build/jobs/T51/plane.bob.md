@@ -649,3 +649,7 @@ Mail with `--module plane`; record `build/jobs/T51/plane.md` (append a new secti
 ## B73 · CHANGE
 
 CHANGE (K4825), two more small items for your R96 job. (1) bootstrap (instance-setup R103, R104; INSTANCE-SETUP #29 COMPLETE, merging now): plane/door.mjs:55 calls bootstrapOp(url, env, fp, {stub, json, storeSilent, storeRefusal, doAnswer, caller}); pass the signed-in member's viewer in caller (caller.viewer, the session's viewer form as the door stamps it elsewhere; absent without a session) and the door's stateTiming in that io object, as you do for the other handlers. A test: a member's bootstrap through the door carries language and words_version; without a session neither. (2) A stale plane test from queue R94 (QUEUE #34): test/m/plane/compose.test.mjs:105 (R11) swaps three providers' answers between two reads with no row written, so the second read is now the kept derivation; fix the test to write a row between the reads (test only). Merge tranche/T51 into your branch first (queue and instance-setup land on it shortly; BOB rings you again then).
+
+## B74 · CHANGE
+
+CHANGE (K4826): admission is merged. Also: plane's 'R84 G41' test failed once under a concurrent run and passes alone (ADMISSION #17's report). K4787: make it assert work or a same-run control, never a wall time, in this job (test only).
