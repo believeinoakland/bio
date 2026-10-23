@@ -346,3 +346,34 @@ test("record-grammar.bundle and record-grammar.frontmatter: the repairs and mess
   assert.equal(new Set(IDS).size, 29);
   for (const id of IDS) assert.match(id, /^record-grammar\.(bundle|frontmatter)\.[a-z0-9_]+$/, id);
 });
+
+/* G59 (fix round 7): a snapshot's copy sits at `_history/<dir><name>_<key><ext>` (record-core's derivation): the key goes
+   in the file's name before its LAST dot, or at the end of a name with no dot, and the dot is looked for in the name
+   after the last `/`, not in the whole path. The expected paths below are written out, so the test pins the layout the
+   writers store. */
+const SNAP_KEY = "20260101T000000Z_aaaaaaaa";
+const UPLOAD = `snapshots/upload-${"0123456789abcdef".repeat(4)}`;
+const historyBundle = (names, copies) => {
+  const base = fixtures()["clean information"];
+  const files = new Map(base.files);
+  files.set("_history/manifest.json", JSON.stringify({ entries: [{ key: SNAP_KEY, kind: "edit", created: "2026-01-01T00:00:00Z", files: [], snapshotted: names }] }));
+  for (const p of copies) files.set(p, "x");
+  return { ...base, files };
+};
+const c122 = async (b) => (await checkBundle(b, {})).findings.filter((f) => f.check === "C-12.2");
+
+test("R40 G59 C-12.2: a snapshot of a dotless name, one in a subfolder and one in a dotted directory is found at its stored copy and raises no finding", async () => {
+  const names = ["bundle.md", "data/x.json", UPLOAD, "a/b/c", "a.b/c", "a.b/c.d"];
+  const copies = [`_history/bundle_${SNAP_KEY}.md`, `_history/data/x_${SNAP_KEY}.json`, `_history/${UPLOAD}_${SNAP_KEY}`,
+    `_history/a/b/c_${SNAP_KEY}`, `_history/a.b/c_${SNAP_KEY}`, `_history/a.b/c_${SNAP_KEY}.d`];
+  assert.deepEqual(await c122(historyBundle(names, copies)), []);
+  /* Each copy is needed: take one away and exactly that snapshot is missing, named by its stored path. */
+  for (let i = 0; i < copies.length; i++) {
+    const found = await c122(historyBundle(names, copies.filter((_, j) => j !== i)));
+    assert.equal(found.length, 1, copies[i]);
+    assert.ok(found.some((f) => f.message === localize("record-grammar.bundle.snapshot_snappath_recorded_in_manifest", "snapshot '{snapPath}' recorded in manifest entry '{key}' is missing", { snapPath: copies[i], key: SNAP_KEY })), copies[i]);
+  }
+  /* The old formula's path (the last character of the name moved after the key) is no copy of anything. */
+  const wrong = `_history/${UPLOAD.slice(0, -1)}_${SNAP_KEY}${UPLOAD.slice(-1)}`;
+  assert.ok((await c122(historyBundle(names, [...copies, wrong]))).length > 0);
+});
