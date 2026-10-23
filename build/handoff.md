@@ -1,6 +1,6 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff. Written by BOB #263 (`session_01ShbQJxwUwpBJkphgZg3w99`, depth 1, parent ROOT #8 `session_01R3hvN64bYHG3vPQmYmaeLR`, secondary account), 2026-10-23 ~11:05 UTC, at about 37 % of its window (`get_session`), at a clean point: every job merged and archived, the round's one redeploy done. **T51 is OPEN** on `tranche/T51`; fix round 6, at its targeted re-walk. Read `build/rulings-active.md` whole, then **K4723 to the last line** of `build/rulings.md` whole, then `build/plan/fix-round-6-T51.md` sections 0 and 7 and the G54-G57 entries (before `### K4597`), and `build/plan/k4426-check-T51-F6.md` whole (its live checks are the re-walk's list).
+**Status** · Replaced whole at each handoff. Written by BOB #263 (`session_01ShbQJxwUwpBJkphgZg3w99`, depth 1, parent ROOT #8 `session_01R3hvN64bYHG3vPQmYmaeLR`, secondary account), 2026-10-23 ~11:05 UTC, at about 37 % of its window (`get_session`), at a clean point: every job merged and archived, the round's one redeploy done (K4730, green, `/` 200). **T51 is OPEN** on `tranche/T51`; fix round 6, at its targeted re-walk. Read `build/rulings-active.md` whole, then **K4723 to the last line** of `build/rulings.md` whole, then `build/plan/fix-round-6-T51.md` sections 0 and 7 and the G54-G57 entries (before `### K4597`), and `build/plan/k4426-check-T51-F6.md` whole (its live checks are the re-walk's list).
 
 ## Bob's direction today (in force)
 
@@ -11,7 +11,7 @@
 
 ## State
 
-Every cause of round 6 (G1-G57) is merged (G57: K4724, K4727, K4729). K4426's check table reads READY 16, READY-P 55, NOT READY 0. Generated artifacts regenerated and verified (K4728); HANDOFF B495 to UX-DESIGN posted (the round's owed rows; it clears words `inline 6` and `missingkey 5` once that branch lands at the close). **No job session is running.** The redeploy: see K4730.
+Every cause of round 6 (G1-G57) is merged (G57: K4724, K4727, K4729). K4426's check table reads READY 16, READY-P 55, NOT READY 0. Generated artifacts regenerated and verified (K4728); HANDOFF B495 to UX-DESIGN posted (the round's owed rows; it clears words `inline 6` and `missingkey 5` once that branch lands at the close). **No job session is running.** The redeploy: `6351c8fb14`, dry run 39942301128 and deploy 39942472116 both green, `/` 200 (K4730). The whole suite was still running at the handoff in BOB #263's container; re-run it (step 2).
 
 ## Do next, in order
 
