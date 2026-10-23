@@ -43,31 +43,36 @@ function* sheetChunks(rows) {
 /** the declared byte length of the sheet's XML (counted by a pass, nothing kept) */
 export function xlsxSheetBytes(rows) { let n = 0; for (const c of sheetChunks(rows)) n += c.length; return n; }
 
-/** the workbook as zip bytes, a stream of Buffers. Entries use bit 3 (sizes and CRC after the data), as streaming writers do. */
-export async function* xlsxChunks(rows) {
+/** a zip as a stream of Buffers from `entries`: `{name, text}` (deflated whole) or `{name, chunks}` (an iterable of Buffers, deflated as they go). Entries use bit 3
+ *  (sizes and CRC after the data), as streaming writers do. */
+export async function* zipChunks(entries) {
   const central = []; let offset = 0;
-  const local = (name, flagged) => Buffer.concat([u32(0x04034b50), u16(20), u16(0x0808), u16(8), u16(DOS_TIME), u16(DOS_DATE), u32(0), u32(0), u32(0), u16(Buffer.byteLength(name)), u16(0), Buffer.from(name)]);
+  const local = (name) => Buffer.concat([u32(0x04034b50), u16(20), u16(0x0808), u16(8), u16(DOS_TIME), u16(DOS_DATE), u32(0), u32(0), u32(0), u16(Buffer.byteLength(name)), u16(0), Buffer.from(name)]);
   const finish = (name, startAt, crc, csize, usize) => {
     central.push(Buffer.concat([u32(0x02014b50), u16(20), u16(20), u16(0x0808), u16(8), u16(DOS_TIME), u16(DOS_DATE), u32(crc), u32(csize), u32(usize), u16(Buffer.byteLength(name)), u16(0), u16(0), u16(0), u16(0), u32(0), u32(startAt), Buffer.from(name)]));
     return Buffer.concat([u32(0x08074b50), u32(crc), u32(csize), u32(usize)]);
   };
-  for (const [name, text] of Object.entries(small)) {
-    const raw = Buffer.from(text), z = deflateRawSync(raw), head = local(name), start = offset;
-    const tail = finish(name, start, crc32(raw), z.length, raw.length);
-    offset += head.length + z.length + tail.length;
-    yield head; yield z; yield tail;
+  for (const { name, text, chunks } of entries) {
+    const head = local(name), start = offset;
+    if (text !== undefined) {
+      const raw = Buffer.from(text), z = deflateRawSync(raw), tail = finish(name, start, crc32(raw), z.length, raw.length);
+      offset += head.length + z.length + tail.length;
+      yield head; yield z; yield tail;
+      continue;
+    }
+    yield head; offset += head.length;
+    let crc = 0, usize = 0, csize = 0;
+    const src = Readable.from((function* () { for (const c of chunks) { crc = crc32(c, crc); usize += c.length; yield c; } })(), { objectMode: false });
+    for await (const z of src.pipe(createDeflateRaw())) { csize += z.length; offset += z.length; yield z; }
+    const tail = finish(name, start, crc, csize, usize); offset += tail.length; yield tail;
   }
-  const name = "xl/worksheets/sheet1.xml", head = local(name), start = offset;
-  yield head; offset += head.length;
-  let crc = 0, usize = 0, csize = 0;
-  const src = Readable.from((function* () { for (const c of sheetChunks(rows)) { crc = crc32(c, crc); usize += c.length; yield c; } })(), { objectMode: false });
-  const deflate = src.pipe(createDeflateRaw());
-  for await (const z of deflate) { csize += z.length; offset += z.length; yield z; }
-  const tail = finish(name, start, crc, csize, usize); offset += tail.length; yield tail;
   const cdStart = offset; let cdSize = 0;
   for (const c of central) { cdSize += c.length; yield c; }
   yield Buffer.concat([u32(0x06054b50), u16(0), u16(0), u16(central.length), u16(central.length), u32(cdSize), u32(cdStart), u16(0)]);
 }
+
+/** the G41 workbook (one sheet, `rows` rows) as zip bytes, a stream of Buffers */
+export const xlsxChunks = (rows) => zipChunks([...Object.entries(small).map(([name, text]) => ({ name, text })), { name: "xl/worksheets/sheet1.xml", chunks: sheetChunks(rows) }]);
 
 /** the file's byte length (a counting pass; nothing is kept) */
 export async function xlsxFileBytes(rows) { let n = 0; for await (const c of xlsxChunks(rows)) n += c.length; return n; }

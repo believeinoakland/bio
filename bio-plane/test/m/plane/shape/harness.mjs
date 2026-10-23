@@ -17,7 +17,7 @@
  *   report(label, r)  the run as text, one line a tick
  *   r.fed         // { sha, bytes, parts, keep_pending, uploadMs, idleMB, ... } (the feed, before the first tick)
  * SPEC (G41 adds `readingEachTick: true` (the member's `readingFor` stated at every tick), `cellsOf: true` (extraction's `cellsOf` of the last row, the generator's cells expected); the child runs under TEST-SUPPORT #9's
- *        preload (`SHIM`, env BIO_PLATFORM_SHIM overrides), so a bound value over 2,098,176 B throws as on the platform, and `r.largestStored` / `r.overBound` say the largest stored value against 1 MiB; `xlsxDoc(rows)` is a streamed workbook):
+ *        preload (`SHIM`, env BIO_PLATFORM_SHIM overrides), so a bound value over 2,098,176 B throws as on the platform, and `r.largestStored` / `r.overBound` say the largest stored value against 1 MiB; `xlsxRowsDoc(rows)` is a streamed workbook):
  *        { doc, feed: "upload" (default; uploadCapture) | "held" (bytes put directly, as l77-size-child), fault: null | {remote:true},
  *         keepLater: "ledger" (the whole is not made inside the request, so a file over 32 MiB leaves a `keep` row for the ledger), maxTicks: 120, search: ["term", ...], marks: ["term", ...] (fts terms to count at the end) }.
  *   textDoc(bytes)   a no-blank-line text of 100-byte lines ending ENDMARKER, exactly `bytes` long (12,000,060 is the walker's)
@@ -36,6 +36,7 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { statSync, existsSync } from "node:fs";
 import { xlsxChunks, xlsxFileBytes, xlsxInfo, XLSX_SHEET } from "./xlsx-gen.mjs";
+import { g44Plan, xlsxFile, odsFile, bytesOfStream } from "./g44-gen.mjs";
 
 const SELF = fileURLToPath(import.meta.url);
 export const OBJECT_MB = 128;
@@ -44,7 +45,15 @@ export const capFor = (heldMiB) => Math.floor(OBJECT_MB - heldMiB);
 export const textDoc = (bytes) => ({ kind: "text", bytes, name: "log.txt", type: "text/plain", marks: ["ENDMARKER"] });
 export const csvDoc = (bytes) => ({ kind: "csv", bytes, name: "table.csv", type: "text/csv", marks: ["FIRSTROWMARK", "MIDROWMARK", "LASTROWMARK"] });
 /** a one-sheet workbook of `rows` rows of 3 short cells, streamed (xlsx-gen.mjs); `bytes` is the file's (deflated) length, counted by a pass here */
-export const xlsxDoc = async (rows) => ({ kind: "xlsx", rows, bytes: await xlsxFileBytes(rows), name: "table.xlsx", type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", marks: ["FIRSTROWMARK", "MIDROWMARK", "LASTROWMARK"], info: xlsxInfo(rows) });
+export const xlsxRowsDoc = async (rows) => ({ kind: "xlsx", rows, bytes: await xlsxFileBytes(rows), name: "table.xlsx", type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", marks: ["FIRSTROWMARK", "MIDROWMARK", "LASTROWMARK"], info: xlsxInfo(rows) });
+/* G44's files, fed HELD (the bytes put in the evidence store directly, as the PDF's are; no reading is run) and asked of the real door (`spec.ops`): a short-row workbook of `declaredMiB` MiB of declared
+   sheet text (`g44Plan`), an ODS of the same rows, and a CSV of about `bytes`; `bytes` is the file's length, counted by a pass here. */
+const heldDoc = async (kind, plan, name, type, format, bytes) => ({ kind, held: true, plan, bytes, name, type, format });
+export const xlsxDoc = async (declaredMiB, opts = {}) => { const plan = g44Plan(declaredMiB, opts); let n = 0; for await (const c of xlsxFile(plan)) n += c.length;
+  return heldDoc("held-xlsx", plan, "workbook.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "xlsx", n); };
+export const odsDoc = async (declaredMiB) => { const plan = g44Plan(declaredMiB); let n = 0; for await (const c of odsFile(plan)) n += c.length;
+  return heldDoc("held-ods", plan, "table.ods", "application/vnd.oasis.opendocument.spreadsheet", "ods", n); };
+export const heldCsvDoc = (bytes) => heldDoc("held-csv", null, "table.csv", "text/csv", "csv", bytes);
 /** the platform's bound for one stored value (G41, K4639): 1 MiB, under the 2,098,176 B the object's SQLite takes; a run with one over it fails */
 export const STORED_VALUE_BOUND = 1048576;
 /** TEST-SUPPORT #9's preload, the platform's single-value limit (2,098,176 B) in the child as it is in the object */
@@ -67,7 +76,7 @@ export function shapeRun(spec, { capMB = null, semiMB = 2, timeoutMs = 1_800_000
       const fatal = err.split("\n").find((l) => /FATAL|heap out of memory|Allocation failed/.test(l)) || err.split("\n").filter(Boolean).slice(0, 2).join(" | ");
       const stored = [done && done.largest, ...ev.filter((e) => e.ev === "tick").map((t) => t.largest)].filter(Boolean);
       const largestStored = stored.length ? Math.max(...stored.flatMap((l) => [l.readings, l.history, l.text].map((n) => n || 0))) : null;
-      resolve({ capMB, shim: SHIM, largestStored, overBound: largestStored != null && largestStored > STORED_VALUE_BOUND, cells: ev.find((e) => e.ev === "cells") || null,
+      resolve({ capMB, shim: SHIM, ops: ev.filter((e) => e.ev === "op"), largestStored, overBound: largestStored != null && largestStored > STORED_VALUE_BOUND, cells: ev.find((e) => e.ev === "cells") || null,
                 died: !done, readingDied: !!done && staged && !reading, reading, code, signal, timedOut: killed, stderr: fatal.slice(0, 300), fed: ev.find((e) => e.ev === "fed") || null,
                 ticks: ev.filter((e) => e.ev === "tick"), done, pages: ev.find((e) => e.ev === "pages") || null,
                 pagingDied: !!reading && reading.next != null && !ev.some((e) => e.ev === "pages"), error: (ev.find((e) => e.ev === "error") || {}).message || null });
@@ -83,6 +92,7 @@ export function report(label, r) {
   if (r.fed) L.push(`  fed: ${r.fed.bytes} B in ${r.fed.parts} part(s), upload ${r.fed.uploadMs} ms, keep_pending ${r.fed.keep_pending}, idle heap ${r.fed.idleMB} MB, ledger [${r.fed.ledger}], stubs ${r.fed.door.stubs}, stub faults ${r.fed.door.threw}`);
   for (const t of r.ticks) L.push(`  tick ${t.n}: ${t.ms} ms, peak heap+buffers ${t.peakMB} MB (${t.aboveBaseMB} above base), rows [${t.rows.map((x) => `${x.kind} att ${x.attempts} int ${x.interrupted}${x.final_why ? " final: " + x.final_why : ""}`)}], units ${t.units}${t.readingFor ? `, readingFor ${JSON.stringify(t.readingFor)}` : ""}`);
   if (r.done) { const d = r.done; L.push(`  done: ${d.ticks} ticks, ${d.totalMs} ms, max tick ${Math.max(0, ...r.ticks.map((t) => t.ms))} ms, peak ${d.peakMB} MB, units ${d.units}, state ${JSON.stringify(d.state)}, found ${JSON.stringify(d.found)}, search ${JSON.stringify(d.search)}, extents ${JSON.stringify(d.extents)}, left [${d.left}]`); }
+  for (const o of r.ops || []) L.push(`  op ${o.label}: status ${o.status}${o.err ? " ERR " + o.err : ""}, ${o.ms} ms, peak ${o.peakMB} MB, answer ${o.answerBytes} B, ok ${o.ok}${o.reason ? " " + o.reason : ""}${o.kind ? " kind " + o.kind : ""}${o.cells != null && typeof o.cells === "number" ? " cells " + o.cells : ""}${o.bound_cells != null ? " bound_cells " + o.bound_cells : ""}${o.size != null ? " size " + o.size : ""}${o.bound != null ? " bound " + o.bound : ""}${o.renderer_reason ? " " + o.renderer_reason : ""}${o.sheets ? " sheets " + JSON.stringify(o.sheets) : ""}${o.sheets_total != null ? " sheets_total " + o.sheets_total : ""} | ${o.head}`);
   if (r.done && r.done.largest) L.push(`  largest stored value: ${r.largestStored} B (readings ${r.done.largest.readings}, reading_history ${r.done.largest.history}, capture_text ${r.done.largest.text}); bound ${STORED_VALUE_BOUND} B: ${r.overBound ? "OVER" : "within"}; shim ${r.shim}`);
   if (r.cells) L.push(`  cellsOf last row ${r.cells.lastRow}: ${r.cells.error ? "ERROR " + r.cells.error : `${r.cells.values.length} cells in ${r.cells.ms} ms, peak ${r.cells.peakMB} MB, equal to the generator's ${JSON.stringify(r.cells.values) === JSON.stringify(r.cells.expected)}, interpreted ${JSON.stringify(r.cells.interpreted)}, next_row ${r.cells.next_row}${r.cells.answer ? ", answer " + r.cells.answer : ""}`}`);
   if (r.reading) { const g = r.reading; L.push(`  op=reading answer: ${g.unitsInAnswer} units, ${g.answerBytes} B, ${g.ms} ms, peak ${g.peakMB} MB, next ${g.next}, more ${g.more}, read_through ${g.read_through}/${g.total}, unread_pages ${g.unread_pages ? g.unread_pages.length : "absent"}, completeness ${JSON.stringify(g.completeness && { state: g.completeness.state, why: g.completeness.why })}, basis \"${String(g.basis || "").slice(0, 170)}\"`); }
@@ -155,7 +165,7 @@ async function child(spec) {
     gen.lastRow = i + 2; gen.lastCells = ["LASTROWMARK", "last name", "1.00", "the final row of the sheet"];
     yield Buffer.from(buf.join(""));
   }
-  const source = doc.kind === "text" ? textChunks(doc.bytes) : doc.kind === "csv" ? csvChunks(doc.bytes) : doc.kind === "xlsx" ? xlsxChunks(doc.rows) : createReadStream(doc.path, { highWaterMark: 1 << 20 });
+  const source = doc.kind === "text" ? textChunks(doc.bytes) : doc.kind === "csv" ? csvChunks(doc.bytes) : doc.kind === "xlsx" ? xlsxChunks(doc.rows) : doc.held ? null : createReadStream(doc.path, { highWaterMark: 1 << 20 });
   if (doc.kind === "xlsx") Object.assign(gen, doc.info);
 
   /* the door's stub, with the fault: the first call on the first stub throws `{remote:true}` and that stub stays broken */
@@ -171,22 +181,35 @@ async function child(spec) {
   const t0 = Date.now();
   if (spec.feed === "held") {
     const { readFileSync } = await import("node:fs");
-    const b = new Uint8Array(readFileSync(doc.path)); sha = hex(b); bytes = b.length; bucket.held.set(`bio/captures/${sha}`, b);
-    document = { file: "big.pdf", locator: "https://example.org/big.pdf", retrieved: "2026-10-22T00:00:00Z", profile: { format: { format: "pdf", confidence: "certain", signals: [] } },
+    const b = doc.held ? new Uint8Array(doc.kind === "held-xlsx" ? await bytesOfStream(xlsxFile(doc.plan)) : doc.kind === "held-ods" ? await bytesOfStream(odsFile(doc.plan))
+                                           : await bytesOfStream(csvChunks(doc.bytes))) : new Uint8Array(readFileSync(doc.path));
+    sha = hex(b); bytes = b.length; bucket.held.set(`bio/captures/${sha}`, b);
+    const fmt = doc.format || "pdf", file = doc.name || "big.pdf", ctype = doc.type || "application/pdf";
+    document = { file, locator: "https://example.org/" + file, retrieved: "2026-10-22T00:00:00Z", profile: { format: { format: fmt, confidence: "certain", signals: [] } },
       authority_state: "undetermined", authority_basis: "held", origin: { kind: "named_request" },
-      capture: { sha256: sha, bytes, content_type: "application/pdf", method: "upload", grade: "C", actor_class: "member", encoding: "binary" } };
+      capture: { sha256: sha, bytes, content_type: ctype, method: "upload", grade: "C", actor_class: "member", encoding: "binary" } };
   } else {
     const up = await captureOf(ctx).uploadCapture({ bytes: source, statement: "the shape harness's file", name: doc.name, type: doc.type, by: "member:ann", boundMs: 1 });
     if (!up || up.ok !== true) { emit({ ev: "error", message: "the upload was refused: " + JSON.stringify(up).slice(0, 300) }); process.exit(4); }
     sha = up.capture.sha256; bytes = up.capture.bytes; document = up.document; keepPending = up.keep_pending === true; parts = (document.parts || []).length || 1;
   }
   uploadMs = Date.now() - t0; gate.refuse = false;
-  const now = "2026-10-22T00:00:00Z", id = recordOf(ctx).allocId("INFO", "2026").id, title = doc.name;
+  const now = "2026-10-22T00:00:00Z", title = doc.name;
+  /* spec.project: a project `member:ann` owns, the document filed in it (workbooks and the safe view are asked in a project) */
+  let projectId = null;
+  if (spec.project) {
+    const pm = ["---", "object_type: project", "schema: project@1", `title: "Rates"`, "current_state: forming", "prior_state: null", `created: "${now}"`, `last_updated: "${now}"`, `objective: "Find out."`, "references: []", "state_history: []", "---", "", "## Objective", "", "Find out.", ""].join("\n");
+    const pr = promotionOf(ctx).promote({ base: null, snapKey: "20261022T000000_proj0001", author: "ann", ownerMemberId: "ann", actorMemberId: "ann", actorIdentity: "member:ann", actorViewer: "member:ann",
+      files: [{ path: "bundle.md", text: pm, bytes: len(pm), sha256: hex(pm) }], meta: { object_type: "project", title: "Rates", current_state: "forming", created: now, last_updated: now } });
+    if (!pr || pr.ok !== true) { emit({ ev: "error", message: "the project was refused: " + JSON.stringify(pr).slice(0, 300) }); process.exit(4); }
+    projectId = pr.bundleId;
+  }
+  const id = recordOf(ctx).allocId("INFO", "2026").id;
   const wholeFirst = document.parts && !document.parts.some((p) => p.sha256 === sha) ? [{ sha256: sha, path: document.file, encoding: "binary", bytes }] : [];
   const text = ["---", "id: " + id, "object_type: information", "schema: information@2", "title: " + JSON.stringify(title), "current_state: collected", "prior_state: null", "created: " + now, "last_updated: " + now,
     "produced_by:", "  mode: assisted", "  capability_tier: session", "references: []", "state_history: []", "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
     "criticality: supporting", "source_status: unchanged", "content_hash: sha256:" + hex(title), "source:", "  locator: " + JSON.stringify(document.locator), "  authority: member-entered", "  retrieved: " + now,
-    "monitoring:", "  enabled: false", "  frequency: none", "---", "", "## Summary", "", title, "", "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+    "monitoring:", "  enabled: false", "  frequency: none", ...(projectId ? ["project: " + projectId] : []), "---", "", "## Summary", "", title, "", "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
   const prov = JSON.stringify({ documents: [document] }, null, 1);
   const dataset = JSON.stringify({ documents: [{ bytes, locator: document.locator, sha256: sha }] });
   const files = [{ path: "bundle.md", text, bytes: len(text), sha256: hex(text) }, { path: "data/provenance.json", text: prov, bytes: len(prov), sha256: hex(prov) },
@@ -196,9 +219,9 @@ async function child(spec) {
                                                       : [{ sha256: sha, path: document.file, encoding: "binary", bytes }])];
   promotionOf(ctx).promote({ bundleId: id, base: null, snapKey: "20261022T000000_" + hex(id).slice(0, 8),
     meta: { object_type: "information", title, current_state: "collected", created: now, last_updated: now }, files, register,
-    author: "ann", actorMemberId: "ann", actorIdentity: "member:ann", actorViewer: "member:ann" });
+    ...(projectId ? { project: projectId } : {}), author: "ann", actorMemberId: "ann", actorIdentity: "member:ann", actorViewer: "member:ann" });
   /* the door's owed reading (a keep's own owner enters the reading it owes), through the door's stub */
-  if (!open().some((r) => r.kind === "keep")) { const r = await call(`http://do/pendingadd?kind=reading&sha=${sha}&store=bio`, { method: "POST" }); if (r.status !== 200) { emit({ ev: "error", message: "pendingadd " + r.status }); process.exit(4); } }
+  if (!spec.noReading && !open().some((r) => r.kind === "keep")) { const r = await call(`http://do/pendingadd?kind=reading&sha=${sha}&store=bio`, { method: "POST" }); if (r.status !== 200) { emit({ ev: "error", message: "pendingadd " + r.status }); process.exit(4); } }
   global.gc(); global.gc();
   const base = used(), idle = v8.getHeapStatistics().used_heap_size;
   emit({ ev: "fed", sha, bytes, parts, keep_pending: keepPending, uploadMs, baseMB: mb(base), idleMB: mb(idle), ledger: rows().map((r) => r.kind), door, fault: !!spec.fault, format: document.profile && document.profile.format, held: [...bucket.held].map(([k, v]) => [k.slice(-12), v.byteLength, v.length]) });
@@ -214,6 +237,26 @@ async function child(spec) {
   let peak = base, peakRss = 0, peakAll = base;
   const sample = () => { const u = used(); if (u > peak) peak = u; if (u > peakAll) peakAll = u; const r = process.memoryUsage().rss; if (r > peakRss) peakRss = r; };
   const timer = setInterval(sample, 2);
+  clearInterval(timer);
+  /* G44: the ops asked of the real door (the object's own `fetch`, as the frame does) on the held file, without the reading pipeline's ticks (spec.ops: [{op, path, body}], "$SHA" and "$PROJECT" filled in) */
+  if (spec.ops) {
+    const fill = (v) => JSON.parse(JSON.stringify(v).replaceAll("$SHA", sha).replaceAll("$PROJECT", projectId || ""));
+    let peakOp = base; const timerOp = setInterval(() => { const u = used(); if (u > peakOp) peakOp = u; }, 2);
+    for (const o of spec.ops) {
+      peakOp = used(); const t = Date.now(); let status = null, text = "", err = null;
+      try { const r = await call("http://do" + fill(o.path), { method: "POST", body: JSON.stringify(fill(o.body ?? null)) }); status = r.status; text = await r.text(); } catch (e) { err = String(e && e.message || e).slice(0, 300); }
+      const ms = Date.now() - t; let j = null; try { j = JSON.parse(text); } catch { /* not json */ }
+      const res = j && j.result !== undefined ? j.result : j;
+      emit({ ev: "op", op: o.op, label: o.label || o.op, status, err, ms, peakMB: mb(peakOp), answerBytes: text.length, ok: res && res.ok, reason: res && res.reason, kind: res && res.kind, code: res && res.code,
+             cells: res && res.cells, bound_cells: res && res.bound_cells, size: res && res.size, bound: res && res.bound, renderer_reason: res && res.renderer_reason, format: res && res.format,
+             sheets: res && Array.isArray(res.sheets) ? res.sheets.map((x) => ({ name: x.name, n: Array.isArray(x.cells) ? x.cells.length : null, rows: x.rows, total_rows: x.total_rows, truncated: x.truncated, next_row: x.next_row, reason: x.reason })) : undefined,
+             sheets_total: res && res.sheets_total, sheets_truncated: res && res.sheets_truncated, head: text.slice(0, 240), largest: largest(true) });
+    }
+    clearInterval(timerOp);
+    const wbRows = (() => { try { return { workbooks: sql(`SELECT count(*) AS n FROM workbooks`)[0].n, cells: sql(`SELECT count(*) AS n FROM workbook_cells`)[0].n }; } catch { return null; } })();
+    emit({ ev: "done", wbRows, ticks: 0, totalMs: 0, left: [], rows: [], units: 0, state: null, extents: [], last: null, found: {}, search: {}, largest: largest(true), gen, baseMB: mb(base), peakMB: mb(peakOp), peakRssMB: 0, door });
+    process.exit(0);
+  }
   const T0 = Date.now(); let at = Date.now() + 1000, n = 0;
   while (open().length && n < (spec.maxTicks || 120)) {
     peak = used(); const t = Date.now();
