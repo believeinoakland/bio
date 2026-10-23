@@ -325,11 +325,53 @@ export async function reuseCheck({ env, ask, bundleId, silentReason, silentDetai
   };
 }
 
+/** R6, R57 (G54): whether a case edition's state says its case file is still owed: complete, and either no manifest was
+ *  recorded or publication's ledger (`casefile_state`) says an attempt did not end `built` (a manifest recorded whose bytes
+ *  were never stored is owed too). A state that carries no ledger field is judged by its manifest alone, as it was. */
+export const owesCaseFile = (cs) => !!(cs && cs.complete
+  && (!cs.manifest_sha || (cs.casefile_state && cs.casefile_state !== "built")));
+
 /** R6: the case editions a finding's commit answers complete and not yet assembled (`pub.case`, or, for a sha several
  *  cases pin, `pub.containerCases`; D-442, IC-74). */
 export function casesToAssemble(pub) {
-  if (pub && pub.case && pub.case.complete && !pub.case.manifest_sha) return [pub.case];
-  return Array.isArray(pub?.containerCases) ? pub.containerCases.filter((cs) => cs && cs.complete && !cs.manifest_sha) : [];
+  if (pub && pub.case && owesCaseFile(pub.case)) return [pub.case];
+  return Array.isArray(pub?.containerCases) ? pub.containerCases.filter((cs) => owesCaseFile(cs)) : [];
+}
+
+/** R57 (G54): an error as the record states it, its message cut, never its stack. */
+export const errorText = (e) => String((e && e.message) || e).slice(0, 160);
+
+/** R57 (G54): a copy that threw (the published bucket refused or the store did not answer) stated where it would have
+ *  counted: nothing copied is claimed, and the answer says why. */
+export const failedCopy = (e) => ({ copied: 0, present: 0, r2state: "COPY_FAILED", partsPublished: null,
+                                    failed: { reason: "COPY_FAILED", detail: errorText(e) } });
+
+/** R57 (G54): what the caller's own copy knew when it reached the assembly, `{materials_missing, copy_error}`: the materials
+ *  `copyMaterials` could not copy (shas), and the copy that threw (its text), else null. */
+export const priorOf = ({ missing = [], copyError = null } = {}) =>
+  ({ materials_missing: [...missing], copy_error: copyError ? errorText(copyError) : null });
+
+/** R6, R57 (G54): the assembly of one case edition's case file, after the commit, whoever calls it, and never a throw:
+ *  `assemble` is public-read's one assembly (its R6), which records the attempt itself and answers a statement; should it
+ *  throw all the same, the failure is recorded here through public-read's `recordFailure` (step `build`, the assembly's
+ *  own) and the statement is `ASSEMBLY_FAILED`. The recording never changes the answer and never throws. */
+export async function assembleEdition({ assemble, recordFailure, env, stub, storeName, cs, via, prior }) {
+  try {
+    return await assemble({ env, stub, storeName, cs, via, prior });
+  } catch (e) {
+    return recordedFailure({ recordFailure, stub, cs, via, step: "build", error: e });
+  }
+}
+
+/** R57 (G54): a failure the caller met before the assembly was reached (`step` `copy`) or inside it (`build`), recorded
+ *  for the edition through public-read's `recordCaseFileFailure`; answers the statement for the act's answer. A recorder
+ *  that is absent, throws or does not answer changes nothing: the statement stands, and the sweep owes the edition. */
+export async function recordedFailure({ recordFailure, stub, cs, via, step, error }) {
+  let recorded = null;
+  try { if (typeof recordFailure === "function") recorded = await recordFailure({ stub, cs, via, step, error }); }
+  catch { recorded = null; }
+  return { ok: false, reason: step === "copy" ? "COPY_FAILED" : "ASSEMBLY_FAILED", detail: errorText(error),
+           ...(recorded && typeof recorded === "object" && recorded.code ? { code: recorded.code } : {}) };
 }
 
 /** R4–R6: `op=ratify`'s answer for a committed finding, without the envelope's `store` and `tokenClass`. */
@@ -380,6 +422,7 @@ export function findingAnswer({ bundleId, expectedSha, pub, container, attestorM
               wrote nothing; the record keeps its first deliverer). */
            deliveredBy,
            published: { shas: shaCount, copied: copy.copied, alreadyPresent: copy.present, r2: copy.r2state,
+                        ...(copy.failed ? copy.failed : {}),
                         ...(copy.partsPublished ? { parts: copy.partsPublished } : {}) },
            ...(reuseReport ? { reuse: reuseReport } : {}) };
 }
@@ -394,7 +437,7 @@ export const statedIn = (attr) => new Set((attr && Array.isArray(attr.stated) ? 
 export function editionsToAssemble(completedCase, commits) {
   const byEdition = new Map();
   for (const cs of [completedCase, ...(commits || []).flatMap((c) => casesToAssemble(c.pub))])
-    if (cs && cs.complete && !cs.manifest_sha) byEdition.set(`${cs.case_id ?? cs.caseId ?? ""}#${cs.edition}`, cs);
+    if (owesCaseFile(cs)) byEdition.set(`${cs.case_id ?? cs.caseId ?? ""}#${cs.edition}`, cs);
   return [...byEdition.values()];
 }
 

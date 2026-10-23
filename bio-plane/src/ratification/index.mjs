@@ -76,9 +76,10 @@ import { checkedOf, checkedDiffers, scheduleUncheckableRefusal, scheduledStop, r
          unreadableStop } from "./schedule.mjs";
 import { copyMaterials } from "./ops.mjs";
 import { findingFactsRefusal, findingShas, findingPublishArgs, copyFinding, reuseCheck, statedIn,
-         editionsToAssemble } from "./finding.mjs";
+         editionsToAssemble, owesCaseFile, assembleEdition, priorOf, errorText } from "./finding.mjs";
+import { sweepCaseFiles, wakeOfCaseFiles, outcomeOf } from "./casefile.mjs";
 import { verifySshsig, caseRatifyStatement, ratifyStatement, NS_RATIFY } from "../sshsig.mjs";
-import { assembleCaseContainer } from "../publication/worker.mjs";
+import * as casefile from "../publication/worker.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 
@@ -86,6 +87,8 @@ export * from "./checks.mjs";
 export { RELEASE_ACK_MAX, CLASS_REASONS } from "./release.mjs";
 export { EDGE_REASON_MAX } from "./retire.mjs";
 export { CHECKED_PARTS, keyFingerprint } from "./schedule.mjs";
+export { CASEFILE_SWEEP_EDITIONS, CASEFILE_SWEEP_FILES, CASEFILE_SWEEP_BYTES, CASEFILE_TOO_LARGE_FILES,
+         CASEFILE_MISSING_MAX_ATTEMPTS } from "./casefile.mjs";
 
 /* The viewer stamp membership mints for an organisation-scoped agent credential (`aiCredentialMint`'s principal). */
 const AGENT_ORGANISATION_STAMP = `${MACHINE_CLASS_PREFIX}ai`;
@@ -835,13 +838,41 @@ export class Ratification {
              detail: localize("ratification.index.case_id_edition_ed_is", "case {id} edition {ed} is signed and waits to be published at its set time. To publish it now, an owner cancels the set time (op=publishatcancel) and signs again. Nothing was written.", { id: String(id), ed: String(ed) }) };
   }
 
-  /* R6 for a retry: a complete edition whose container was never assembled (R42's commit without the Worker). */
+  /* R6, R57 for a retry: a complete edition whose case file is still owed (its container never assembled, as after R42's
+     commit without the Worker, or an attempt that did not end built). */
   #completedCase(id, ed) {
-    let st = null;
-    try { st = typeof this.publication.caseEditionState === "function" ? this.publication.caseEditionState(id, ed) : null; }
-    catch { st = null; }
-    return st && st.complete && !st.manifest_sha ? { completedCase: st } : {};
+    const st = this.#editionState(id, ed);
+    return owesCaseFile(st) ? { completedCase: st } : {};
   }
+
+  /* An edition's state as the commit answers it, which names the publishing group: the `group` field of the first roster
+     member's bytes at its pin (publication R22). The assembly writes it into the case file's manifest, so a state read
+     any other way would build a manifest of another group. Null when the edition is unknown or unreadable. */
+  #editionState(id, ed) {
+    try {
+      if (typeof this.publication.caseEditionState !== "function") return null;
+      const doc = this.#caseDocumentRow(id, ed);
+      const fm = doc ? parseFrontmatter(doc.text).data || {} : {};
+      const first = (Array.isArray(fm.case_findings) ? fm.case_findings : []).map((x) => String(x ?? "").trim()).find(Boolean);
+      const row = (Array.isArray(fm.case_roles) ? fm.case_roles : [])
+        .find((r) => r && typeof r === "object" && String(r.target ?? "").trim() === first);
+      const text = first ? this.record.textAtSha(first, row && typeof row.version_sha === "string" ? row.version_sha : null) : null;
+      return this.publication.caseEditionState(id, ed, text ? (parseFrontmatter(text).data || {}).group ?? null : null);
+    } catch { return null; }
+  }
+
+  /** R57 (G54): one tick of the case-file sweep at `now` (ms): the oldest owed editions, up to the tick's bound, each
+   *  copied and assembled (`./casefile.mjs`). Answers what it did; never throws. */
+  async caseFileSweep(now) {
+    const w = this.#deps.worker;
+    return sweepCaseFiles({ publication: this.publication, stateOf: (id, ed) => this.#editionState(id, ed),
+      materialsOf: (id, ed) => copiedMaterials(this.publication.heldMaterialsOf?.(id, ed)), worker: w, now,
+      assemble: (w && w.assembleCaseContainer) || casefile.assembleCaseContainer,
+      recordFailure: (w && w.recordCaseFileFailure) || casefile.recordCaseFileFailure });
+  }
+
+  /** R57 (G54): when the sweep next has work, in ms, or null; see `./casefile.mjs`. */
+  caseFileWake(now) { return wakeOfCaseFiles({ publication: this.publication, worker: this.#deps.worker, now }); }
 
   /** R40: `op=publishat`'s store half. Every refusal R3 answers before its commit writes, in R3's order; then every
    *  refusal publication's commit would answer for the document now (the commit is made and rolled back, so the answer
@@ -995,8 +1026,10 @@ export class Ratification {
     /* R6 after R52: the case editions complete now, the case's own or one its members' commits completed */
     const toAssemble = editionsToAssemble(out.completedCase, commits);
     if (w && w.env && w.storeName) {
+      /* R57 (G54): a copy that throws is stated in `after` and handed to the assembly (`prior`), which records the attempt */
+      let copyError = null;
       try { after.materials_copied = await copyMaterials(w.env, w.storeName, out.evidenceMaterials || []); }
-      catch (e) { after.materials_copied = { ok: false, reason: "COPY_FAILED", detail: String((e && e.message) || e).slice(0, 160) }; }
+      catch (e) { copyError = e; after.materials_copied = { ok: false, reason: "COPY_FAILED", detail: errorText(e) }; }
       /* R52: each member's bytes copied and its reused parts re-fetched as op=ratify does (R6) */
       if (commits.length) {
         after.members = [];
@@ -1005,7 +1038,7 @@ export class Ratification {
           try { const cp = await copyFinding(w.env, w.storeName, members[i]);
                 row.published = { shas: members[i].shas.length, copied: cp.copied, alreadyPresent: cp.present, r2: cp.r2state,
                                   ...(cp.partsPublished ? { parts: cp.partsPublished } : {}) }; }
-          catch (e) { row.published = { ok: false, reason: "COPY_FAILED", detail: String((e && e.message) || e).slice(0, 160) }; }
+          catch (e) { copyError ??= e; row.published = { ok: false, reason: "COPY_FAILED", detail: errorText(e) }; }
           if (w.stub) {
             const rep = await reuseCheck({ env: w.env, ask: askDoor(w.stub), bundleId: c.bundleId,
                                            silentReason: "STORE_DID_NOT_ANSWER", silentDetail: "the store did not answer" })
@@ -1015,16 +1048,29 @@ export class Ratification {
           after.members.push(row);
         }
       }
-      if (toAssemble.length && w.stub)
-        for (const cs of toAssemble)
-          try { after.container = await assembleCaseContainer({ env: w.env, stub: w.stub, storeName: w.storeName,
-                                                                cs, via: "publishscheduled" }); }
-          catch (e) { after.container = { ok: false, reason: "ASSEMBLY_FAILED", detail: String((e && e.message) || e).slice(0, 160) }; }
-    } else
+      /* R6, R57 (G54): every edition this commit completed is assembled and every outcome kept, in `after.containers` (one
+         `{case, edition, built, code?}` each, for `publish-schedule` R2 to state at settle); `after.container` stays the last
+         one's statement. An edition not reached here is owed in publication's ledger and the sweep builds it. */
+      if (toAssemble.length) {
+        after.containers = [];
+        for (const cs of toAssemble) {
+          if (w.stub) {
+            after.container = await assembleEdition({ assemble: w.assembleCaseContainer || casefile.assembleCaseContainer,
+              recordFailure: w.recordCaseFileFailure || casefile.recordCaseFileFailure, env: w.env, stub: w.stub,
+              storeName: w.storeName, cs, via: "publishscheduled",
+              prior: priorOf({ missing: after.materials_copied && Array.isArray(after.materials_copied.missing)
+                                 ? after.materials_copied.missing : [], copyError }) });
+            after.containers.push(outcomeOf(cs, after.container));
+          } else after.containers.push(outcomeOf(cs, null));
+        }
+      }
+    } else {
+      if (toAssemble.length) after.containers = toAssemble.map((cs) => outcomeOf(cs, null));
       after.not_done = { materials: (out.evidenceMaterials || []).length, container: toAssemble.length > 0,
         ...(commits.length ? { members: commits.map((c) => c.bundleId) } : {}),
         detail: localize("ratification.index.the_published_bucket_is_not", "the published bucket is not reachable from here, so the materials held in the evidence store were not copied and a complete edition's container was not assembled; a re-sent op=caseratify with the same signature does both (R39, R6). The edition is published and this answer stands.{v1}", { v1: String(commits.length ? " The members committed with it were not copied either; re-sending each one's "
                                   + "op=ratify with the same signature copies it (R6)." : "") }) };
+    }
     return { published: true, published_at: out.ratified_at, caseId: id, edition: ed, after };
   }
 
