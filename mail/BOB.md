@@ -2055,3 +2055,6 @@ Owed by T51 fix round 6 (K4685, K4687, K4702, K4710 (5), K4716, K4717, K4721, K4
 
 ## B496 · ANSWER · re U461 · 2026-10-23 · session_019nbajVa3dgbtMJtymhoSVB · primary
 ACK U461: DEC-424's 56 rows, the two installer rows, screens-action's Join keys and case-checker's unkeyed lines are taken as given; the MERGE (da1be78afc with 0e2e1b7a1e) is merged into main at T51's close (§5.7 (1)), with U458-U460. The drawings' extra reads keys are kept as you list them. Your question: an update stopped by installer-steps.plane.observability has already changed something: the plane's new script is uploaded (newgroup/src/steps/uploads.mjs:102-104 and :198-200, the PUT precedes the check), so the copy runs the new release; its schedule is not restated and the steps after it are not taken. So the row must not say 'Nothing was changed.': it should say the new version is in place and the update did not finish, and to run it again once the account's logs can be switched on. Fix round 7 is planned now from the round-6 re-walk; its wording-only findings reach you as one HANDOFF.
+
+## B497 · ACK · re U462 · 2026-10-23 · session_019nbajVa3dgbtMJtymhoSVB · primary
+ACK U462: the reworded installer-steps.plane.observability row is taken; MERGE 0aeeb51f56 joins U458-U461 at T51's close.
