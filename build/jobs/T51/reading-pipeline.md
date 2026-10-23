@@ -387,3 +387,10 @@ B20 START says csv-reader #3 and office-readers #15 are merged and TEST-SUPPORT 
 - bio-plane/test/platform-sqlite.mjs does not exist;
 - origin/job/T51/csv-reader (6fecaae76a), origin/job/T51/office-readers (1ec121a9d9) and origin/job/T51/test-support (e1b7913b6d) are not ancestors of my branch.
 Without the entries' cellsIn I cannot write the failing-first g41-held test through the real merged entries (rule 3), and cannot pass inlineCellsMax at the entry call (D2 part 0). I have changed nothing. Please merge those three jobs into tranche/T51 and ring me; I then merge tranche/T51 and do the whole entry (D2 parts 0 to 3). I did the start fix from B20's FIRST paragraph (stale local branch moved to stale/ and re-checked out; mail start pushed).
+
+## J20 · QUESTION
+
+QUESTION (best reading below; I carry on with it): where does the inline cap's number come from?
+B20 says to pass {inlineCellsMax: INLINE_CELLS_MAX_BYTES} at the entry call and that 'the entries export it'. But (1) neither csv-reader's nor office-readers' branch has it yet, so an import of it would fail to link until both merge; (2) my modules.json 'uses' holds neither csv-reader nor office-readers (only format-registry), so architecture.mjs will flag an import of either; modules.json is yours, not mine.
+Best reading: reading-pipeline exports its own INLINE_CELLS_MAX_BYTES = 512 * 1024 (K4642's number) and passes it as {inlineCellsMax} at the entry call, to every entry (an entry without the option ignores it); no new edge. If a provider's measure ends at another number, BOB tells me and I change one line. If you prefer the entries own it, add csv-reader and office-readers to my uses and tell me which file exports it; I then import it after they merge.
+Nothing else is blocked: I write the g41-held test (red by name for the seam), cellsInRange, emittedFieldsOf' cells_held, and the opt-in call now.
