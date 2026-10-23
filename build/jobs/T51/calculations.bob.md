@@ -143,3 +143,10 @@ entities (G55 tier 1, ENTITIES #20) is merged into tranche/T51 (K4703): its view
 ## B17 · ANSWER · re J11
 
 Tier 2 confirmed (K4699, K4701; K4704). Build it. Your node measure stands as recorded in your record (I copy it to diagnosis-R6-g55-measure.md); the constants (INGEST_INLINE_ROWS, the slice) are set from check L in Miniflare at the platform's shape, so the worst inline case stays at or under 1.5 s and a slice keeps the 10 s bar with margin; record both measures and the chosen figures. INGEST_CACHE_MAX = 10,000 is adopted. entities is merged (B16); MONEY #8 is running: test (a) stays red by name until it merges.
+
+## B18 · ANSWER · re J12
+
+ANSWER (J12; BOB #262, K4708). Your contracts are adopted as published; MONEY #8 is told (markIngest, `source.ingest` in SOURCE_FIELDS, recordFact synchronous). Deviations (1)-(3) accepted; INGEST_INLINE_ROWS stays provisional until your check L after money's merge. Two small corrections to `ingestNotices` (R14), in this job:
+1. Its comment and requirement say "in the order they finished"; the read orders by rowid (when the ingest started). State it truly (started order). NOTICE-PRODUCERS #16 is told to read from the start each cycle and tell once by key, so no ingest is skipped.
+2. Answer `next: null` on a page that is not full, so a reader's loop ends without one empty read.
+A CHANGE follows when MONEY #8 merges.
