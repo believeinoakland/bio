@@ -113,7 +113,9 @@ test("R28: health is stale when work has been owed for two cycles with no firing
   assert.deepEqual([h.oldest_overdue, h.stale], [null, false], "nothing owed");
   ({ s, st } = mk(NOW - 3 * cycle));
   await s.onAlarm(NOW - 3 * cycle + 1);              // a firing records its instant, durably
-  assert.deepEqual(st.beat.get("sched_beat"), { last_run: NOW - 3 * cycle + 1, running_since: null, watchdog_seen: null });
+  const { scheduled_for, started, ended, next_set_for, gap_ms, ...beat } = st.beat.get("sched_beat");   // G70's per-firing fields are r7-pace.test.mjs's
+  assert.deepEqual(beat, { last_run: NOW - 3 * cycle + 1, running_since: null, watchdog_seen: null });
+  assert.equal(started, NOW - 3 * cycle + 1);
   ({ s, st } = mk(NOW - 3 * cycle));
   st.beat.set("sched_beat", { last_run: NOW - cycle });        // the last firing was a cycle ago, work has been owed longer
   h = await s.health(NOW);
@@ -189,7 +191,9 @@ test("R29: a firing sets running_since when it starts and clears it when it ends
   s.register("scheduler-test", consumer("ledger", { key: "ledger", due: NOW, wake: NOW + 90e3, tick: () => { during = { ...st.beat.get("sched_beat") }; return {}; } }));
   await s.onAlarm(NOW);
   assert.equal(during.running_since, NOW, "set before any tick");
-  assert.deepEqual(st.beat.get("sched_beat"), { last_run: NOW, running_since: null, watchdog_seen: null });
+  const { scheduled_for, started, ended, next_set_for, gap_ms, ...beat } = st.beat.get("sched_beat");   // G70's per-firing fields are r7-pace.test.mjs's
+  assert.deepEqual(beat, { last_run: NOW, running_since: null, watchdog_seen: null });
+  assert.equal(started, NOW);
   const bad = world();
   bad.s.register("scheduler-test", consumer("ledger", { key: "ledger", due: NOW, wake: NOW + 90e3 }));
   bad.st.setAlarm = async () => { throw new Error("storage broke"); };

@@ -1,6 +1,6 @@
 # site-profiles (T51)
 
-**Status** · session_01Vx6mozLj24u5RtmqPLSGFL · depth 2 · COMPLETE · handled B1
+**Status** · session_01A2MMvEgG7LXVhZmak6geHZ · depth 2 · COMPLETE · handled B1
 
 ## J1 · COMPLETE
 
@@ -32,3 +32,26 @@ T51-253 is applied. The 17 `plain` findings (K3957) are now read through `locali
 - `node --test site-profiles/test/`: 35 pass, 0 fail (19 before, 16 new).
 
 **Size (session_01Vx6mozLj24u5RtmqPLSGFL):** test runs 3, module lines 1642 (source 925, tests 717)
+
+## Fix round 7 (session_01A2MMvEgG7LXVhZmak6geHZ, depth 2, handled B2) · G76
+
+**Cause (R-FOUR 1).** `site-profiles/handlers/client-rendered.mjs`: the `NO_PROSE` signal (body over 2000 characters, no anchors, at most one `<p`) fired on any non-HTML text, and one signal returns POSSIBLE, so a CSV or plain text was profiled a client-rendered shell with the "empty frame" warning.
+**Fix.** `NO_PROSE` is pushed only where `hasMarkup(text)`: an `<html` or `<body`, or at least ten tags. No handler claims plain text.
+**Why tests missed it (2) and the gap fixed.** Handler tests used HTML shells only; new `site-profiles/test/r7-plain-text.test.mjs` hands CSV and prose at 20 KB, 1 MB and 9 MB, with `text/csv`, `text/plain` and no type, through `identify` and `profileRecord`, plus a control that HTML shells and dense tag runs without prose still match at CERTAIN.
+**Failing first (3).** Seen red (`size 20480 type text/csv`: handler `client_rendered`) before the fix; green after.
+**Platform check (4).** N for the handler.
+**Not mine, for extraction.** The re-profile migration of held CSV/text records is extraction's (profile-only pass).
+
+**Found in another module (docprofile; for BOB).** Three docprofile tests encode the old shell answer for text without markup and now fail on the fix, being the same defect pinned as expected output; docprofile's job should re-record them (expected stack: conservative, confidence none, no `kind`):
+- `R38 R19 readText of every fixture reading equals the answer recorded on the tip, with no classified_over`
+- `R38 the stack is read from the whole text, and a matched type's parse is handed the whole text`
+- `R38 readText over a 13.6 M character text adds under 16 MB, hands the type its pages, and answers as it did`
+Their recorded `stack` is `{confidence: 'possible', kind: 'shell', ...}`; with the fix it is `{handler: conservative, confidence: 'none', why: 'no handler recognised...'}`. doctypes: 60 pass, 0 fail.
+
+**Checks.** `node --test --test-force-exit site-profiles/test/`: 37 pass, 0 fail. format 0 failures; architecture 0; coverage 19 of 19 ids, 0; words 0 (plain 0, testcopy 0, missingkey 0, inline 0); ownership 0 failures (3 files).
+
+Size (session_01A2MMvEgG7LXVhZmak6geHZ): test runs 4, module lines 1720
+
+## J2 · COMPLETE
+
+G76 applied: NO_PROSE counts only where markup exists (site-profiles/handlers/client-rendered.mjs), so CSV and plain text are never client_rendered; failing-first test r7-plain-text.test.mjs seen red then green; site-profiles 37 pass, checks all 0. For docprofile's job: three docprofile R38 tests pin the old shell answer for markup-free text and now fail (named in my record); they need re-recording as conservative/none. Extraction owns the held-record re-profile. Details in build/jobs/T51/site-profiles.md.

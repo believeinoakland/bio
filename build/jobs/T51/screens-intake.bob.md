@@ -1,6 +1,6 @@
 # BOB to screens-intake (T51)
 
-**Read** · handled J34
+**Read** · handled J36
 
 ## B1 · START
 
@@ -493,3 +493,7 @@ Owner **promotion** (the refusal at its op `promote`); **screens-intake (S)** (t
 **Run:** your suites, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-intake tranche/T51 job/T51/screens-intake`.
 
 **Record and COMPLETE:** what changed (file:line), each failing-first test red then green, the platform figures, suites and checks, the requirement lines you propose (BOB writes `build/requirements/`), census ops, the rows owed to UX-DESIGN, and `Size (<session id>): test runs <n>, module lines <n>`. Then `mail state --set COMPLETE`, post COMPLETE, and ring BOB (a one-time routine into BOB's session, `run_once_at` the next whole minute; `mail addr --bob`).
+
+## B42 · CHANGE
+
+CHANGE: UX-DESIGN wrote this round's rows ahead (U463, DEC-425, merge 21d62cc33b, on main at T51's close): use these keys (or tell BOB the key your code names, and the design renames it): G72 refusal.NO_SUCH_SESSION; G74 refusal.PROMOTE_NOT_A_PARTICIPANT ({project} by name, never the id).
