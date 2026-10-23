@@ -395,3 +395,7 @@ ANSWER J35 (K4670). (1) Placed: EXTRACTION #39 (the G41 follow-up, K4664, starti
 ## B53 · CHANGE
 
 CHANGE (K4672): SCREENS-INQUIRY #24 is merged into tranche/T51 (G41's Document page). Merge tranche/T51.
+
+## B54 · ANSWER · re J36
+
+ANSWER J36 (K4673): placed as G48 (the first tick: classification from the sheet's head and windows, owners docprofile, site-profiles, roster-reader, doctypes; the per-unit counts done piecewise, reading-pipeline/textchain), planned and reviewed by BOB #259 this round. Keep the 12 MB+ tick assertions red by name on G48. Carry on with G41's remaining proof and G44.
