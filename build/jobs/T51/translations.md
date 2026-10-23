@@ -1,6 +1,6 @@
 # translations (T51)
 
-**Status** · session_01D3PnCpi1vCRCeUDnt7Sw8P · depth 2 · COMPLETE · handled B2
+**Status** · session_0127cgdteY6TNWkhQcKQFfuz · depth 2 · WORKING · handled B2
 
 ## Completion, fix round 7, G84 (TRANSLATIONS #2, session_01D3PnCpi1vCRCeUDnt7Sw8P, START B2)
 
