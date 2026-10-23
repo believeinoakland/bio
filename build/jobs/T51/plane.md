@@ -802,3 +802,7 @@ COMPLETE (PLANE #54, B71). Merged tranche/T51 (store-place.mjs now tracked; my u
 **Proposed requirement wording.** Mark R96 met; add that the entry is `object-age;dur` in the same `server-timing` value as `object;dur`, and that the door accepts the hook as an optional `stateTiming` field of `publicOp` and `gatedOp`'s arguments.
 
 Size (session_015vZsp754WjWKhCj8FmnyQQ): test runs 6, module lines 52
+
+## J50 · COMPLETE
+
+COMPLETE (PLANE #55, B72: R96). Door: publicOp/gatedOp take an optional stateTiming and put it in every handler context (absent when not handed). Store: every answer states 'object;dur=<ms>, object-age;dur=<ms>' (age from the instant of construction). Test r8-timing-hook.test.mjs (R96): seen RED (captureOp receives stateTiming: undefined; object-age;dur absent) then green; control none handed; fix5-r77 R78 shape updated. Plane suite 436: only accepted reds (release R24, l77-size R77 L x2). impact: plane only. Checks: format, architecture, coverage 96/96, words, ownership 0 failures. Stale artifact: bio-plane/dist/bio-plane.bundled.mjs (+manifest). Proposed R96 wording in record. Size (session_015vZsp754WjWKhCj8FmnyQQ): test runs 6, module lines 52.
