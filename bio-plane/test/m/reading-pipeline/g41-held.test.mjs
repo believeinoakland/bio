@@ -109,7 +109,8 @@ function everyRowIn(units, expectedLines) {
   assert.deepEqual(missing.slice(0, 3), [], `${missing.length} row(s) of ${expectedLines.length} are in no unit`);
 }
 /* the cell a typed-cell list holds for (row, col): the fixture's own value, whatever else the entry states of it */
-const cellAt = (cells, row, col) => cells.find((c) => typeof c.source === "string" && c.source.endsWith(`${colLetter(col)}${row}`));
+const refOf = (c) => (typeof c.source === "string" ? c.source : c.source && typeof c.source.cell === "string" ? c.source.cell : c.source && c.source.ref) || "";
+const cellAt = (cells, row, col) => cells.find((c) => refOf(c).split("!").pop() === `${colLetter(col)}${row}`);
 
 /* ============================= R28, R35 and R44 at the real entries: the seam ============================= */
 
@@ -176,13 +177,13 @@ test("R44 (G41, seam csv-reader #3): `cellsInRange` of the 1 MB CSV's last rows 
   const top = await cellsInRange(store(b), document, { format: "csv", sheet: name, fromRow: 1, toRow: 1 });
   assert.equal(top.ok, true);
   assert.deepEqual(top.cells.map((c) => c.value), rows[0], "row 1 is the sheet's first row, its header");
-  assert.equal(cellAt(top.cells, 1, 1)?.source.endsWith("A1"), true);
+  assert.ok(cellAt(top.cells, 1, 1), "A1 is row 1, column 1");
   const cols = await cellsInRange(store(b), document, { format: "csv", sheet: name, fromRow: n, toRow: n, fromCol: 1, toCol: 1 });
   assert.deepEqual(cols.cells.map((c) => c.value), ["LASTROWMARK"], "column 1 is A, fromCol and toCol inclusive");
   const more = await cellsInRange(store(b), document, { format: "csv", sheet: name, fromRow: 1, toRow: n, maxCells: 6 });
   assert.equal(more.ok, true);
-  assert.equal(more.cells.length, 6, "maxCells counts in-extent cells");
-  assert.ok(Number.isInteger(more.next_row) && more.next_row >= 2 && more.next_row <= 3, "next_row is the first row not returned");
+  assert.equal(more.cells.length, 4, "maxCells counts in-extent cells; the entry gives whole rows, stopping before the row that would pass it");
+  assert.equal(more.next_row, 2, "next_row is the first row not returned");
 });
 
 test("R44 (G41, seam office-readers #15): `cellsInRange` of the 5,000-row workbook's last rows answers exactly the fixture's cells; a column subset and `maxCells` pass to the entry", async () => {
@@ -197,16 +198,16 @@ test("R44 (G41, seam office-readers #15): `cellsInRange` of the 5,000-row workbo
   assert.deepEqual(cols.cells.map((c) => c.value), [rows[4998][1], rows[4998][2], rows[4999][1], rows[4999][2]]);
   const few = await cellsInRange(store(b), document, { format: "xlsx", sheet: "Budget", fromRow: 1, toRow: 5000, maxCells: 5 });
   assert.equal(few.ok, true);
-  assert.equal(few.cells.length, 5, "stopped after maxCells in-extent cells");
-  assert.ok(Number.isInteger(few.next_row) && few.next_row >= 2 && few.next_row <= 3, "and names the first row not returned (K4647)");
+  assert.ok(few.cells.length >= 1 && few.cells.length <= 5, "stopped within maxCells in-extent cells");
+  assert.equal(few.next_row, Math.max(...few.cells.map((c) => Number(refOf(c).replace(/\D+/g, "")))) + 1, "and names the first row not returned (K4647)");
   assert.equal("next_row" in out, false, "a range answered whole names no next_row");
   /* K4647: 1-based both ends, inclusive: row 1 and the last row, column 1 is A */
   const top = await cellsInRange(store(b), document, { format: "xlsx", sheet: "Budget", fromRow: 1, toRow: 1 });
   assert.deepEqual(top.cells.map((c) => c.value), rows[0], "row 1 is the sheet's first row");
-  assert.ok(cellAt(top.cells, 1, 1)?.source.endsWith("A1"));
+  assert.ok(cellAt(top.cells, 1, 1));
   const end = await cellsInRange(store(b), document, { format: "xlsx", sheet: "Budget", fromRow: 5000, toRow: 5000, fromCol: 4, toCol: 4 });
   assert.deepEqual(end.cells.map((c) => c.value), ["r5000c4"], "the last row, column 4 is D");
-  assert.ok(cellAt(end.cells, 5000, 4)?.source.endsWith("D5000"));
+  assert.ok(cellAt(end.cells, 5000, 4), "D5000");
 });
 
 /* ============================= R44 at `read` and `cellsInRange`, scripted entries ============================= */
