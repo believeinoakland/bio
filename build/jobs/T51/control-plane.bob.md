@@ -865,3 +865,7 @@ CHANGE (K4827): acquisition (R110 member matching and the delivering mark; R111 
 ## B65 · CHANGE
 
 CHANGE (K4830): plane is merged into tranche/T51 (R96: the door forwards stateTiming to module handlers, object-age;dur; B73 bootstrapOp gets caller.viewer). Every provider of yours is now merged except record-core (G115, still running). Merge tranche/T51 into your branch. Owed by plan §3 and not yet on your branch: the seam file bio-plane/test/m/control-plane/t51-round8-seam.test.mjs with §A, A2 (and A1b) for G103-G105 (acquisition is merged) and the alarm-delivered halves of G108/G109 (acquisition, screens-intake merged); the Queue count section (G115/G116) stays red by name until record-core merges. Record each door test's red-then-green in your COMPLETE.
+
+## B66 · CHANGE
+
+CHANGE (K4832): record-core is merged into tranche/T51 (G115, R91: writeCount() leaves bookkeeping tables' rows out; the key-value heartbeat moves it once per scheduler firing, accepted). Every provider of yours is now merged: merge tranche/T51 into your branch and turn the seam file's Queue count section (G115/G116) green, with the rest of B65. Then COMPLETE; you merge last.

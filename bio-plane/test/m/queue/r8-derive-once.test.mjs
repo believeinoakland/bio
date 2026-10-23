@@ -81,8 +81,12 @@ test("R94 (G116): the figures of a miss are the runtime's own row counters, summ
   w.sql.exec = (q, ...a) => { const c = real(q, ...a); c.rowsRead = 3; c.rowsWritten = /^\s*(INSERT|UPDATE|DELETE)/i.test(q) ? 1 : 0; handed.push(q); return c; };
   const decorated = w.sql.exec;
   const miss = w.q.queueFeed({ ...alice, count: true });
-  /* one statement came before the derivation (the record's write counter, which the signature reads) and is not its own */
-  assert.equal(miss.derivation.rows_read, (handed.length - 1) * 3, "every read of the derivation was counted");
+  /* the record's write counter, which the signature reads, makes its own statements before the derivation (its total, and since
+     record-core R91 its bookkeeping tally and the triggers it sets on a first reading); they are not the derivation's */
+  const counter = /total_changes\(\)|bookkeeping_tally|sqlite_master|CREATE TRIGGER/i;
+  const own = handed.filter((q) => !counter.test(q)).length;
+  assert.ok(handed.length > own, "the signature's counter statements were made");
+  assert.equal(miss.derivation.rows_read, own * 3, "every read of the derivation was counted");
   assert.ok(miss.derivation.rows_read > 0);
   assert.equal(miss.derivation.rows_written, 0, "a derivation writes nothing");
   assert.equal(w.sql.exec, decorated, "the storage's exec is put back as it was");

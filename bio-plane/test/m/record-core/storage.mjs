@@ -33,8 +33,8 @@ export function patternsOf(q, args) {
   return [...literal, ...bound];
 }
 
-export function storage({ schema = true } = {}) {
-  const db = new DatabaseSync(":memory:");
+export function storage({ schema = true, file = ":memory:" } = {}) {
+  const db = new DatabaseSync(file);
   let n = 0;
   const sql = {
     exec(q, ...args) {
