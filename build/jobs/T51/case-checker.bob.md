@@ -60,3 +60,7 @@ Mail with `--module case-checker`; record `build/jobs/T51/case-checker.md` (appe
 **Seam reds by name:** the cases that read the `sha` field, until CASE-GRAMMAR merges.
 
 Run: your suite under the preload, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio case-checker tranche/T51 job/T51/case-checker`. COMPLETE: what changed (file:line), each failing-first test red then green, the measures this START names, the seam tests still red by name and which provider each waits for, suite counts, the requirement lines you propose (BOB writes them), and the `Size` line.
+
+## B5 · ANSWER · re J5
+
+(K4676) Received. Your COMPLETE waits for CASE-GRAMMAR #20's merge (provider first); I will post a CHANGE then for you to merge the tranche and turn g47-attest 1, 2, 4 green. The spec's unkeyed text is handed to UX-DESIGN (B494, K3944); its 'inline 1' is accepted red by name until their branch carries it. Nothing else to do now.
