@@ -11,11 +11,11 @@ import { recordOf } from "../../../src/record-core/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { list as heldProfiles } from "../../../../jurisdictions/index.mjs";
 import { Translations, translationsOf, TRANSLATION_TABLES, TRANSLATION_TABLE_DECLARATIONS,
-         INTERFACE_WORDS } from "../../../src/translations/index.mjs";
+         interfaceWords } from "../../../src/translations/index.mjs";
 import { TRANSLATIONS_CHECKS } from "../../../src/translations/checks.mjs";
 
-const ORDINARY = INTERFACE_WORDS.find((w) => !w.protected && !/\{/.test(w.en));
-const PROTECTED = INTERFACE_WORDS.find((w) => w.protected && !/\{/.test(w.en));
+const ORDINARY = interfaceWords().find((w) => !w.protected && !/\{/.test(w.en));
+const PROTECTED = interfaceWords().find((w) => w.protected && !/\{/.test(w.en));
 const call = async (m, path, body) => (await frame(m, new Request(`http://do/${path}`,
   body === undefined ? undefined : { method: "POST", body: JSON.stringify(body) }))).json();
 const RETIRED = /\b(?:copy|copies|instance|plane|server)\b/i;
@@ -164,8 +164,8 @@ test("R15 every member-facing string this module answers is read by key and hold
     w.m.translationAdopt({ language: "es", key: ORDINARY.key, text: "x", draft: 99, by: "ruth" }),
     await w.m.translationConfirm({ language: "es", key: ORDINARY.key, by: "ruth" }), await w.m.translationConfirm({ language: "es", key: PROTECTED.key, by: "ruth" }),
     await w.m.translationConfirm({ language: "es", key: PROTECTED.key, by: "admin" }),
-    w.m.translationRevert({ language: "es", key: INTERFACE_WORDS[3].key, by: "admin" }), w.m.translationRevert({ language: "es", key: ORDINARY.key, by: "ruth" }),
-    w.m.translationMark({ language: "es", key: INTERFACE_WORDS[3].key, by: "tom" }), w.m.translationMark({ language: "es", key: ORDINARY.key, note: "x".repeat(501), by: "tom" }),
+    w.m.translationRevert({ language: "es", key: interfaceWords()[3].key, by: "admin" }), w.m.translationRevert({ language: "es", key: ORDINARY.key, by: "ruth" }),
+    w.m.translationMark({ language: "es", key: interfaceWords()[3].key, by: "tom" }), w.m.translationMark({ language: "es", key: ORDINARY.key, note: "x".repeat(501), by: "tom" }),
     w.m.translationMark({ language: "es", key: ORDINARY.key, by: "nobody" }), w.m.translations({ language: "es", viewer: "tom" }),
     w.m.readingLanguage({ member: "tom" }), w.m.readingLanguage({ language: "bad tag" }),
     { ...w.m.interfaceWords({ language: "bad tag" }) }, rec, reading,

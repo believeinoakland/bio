@@ -17,15 +17,15 @@ import { list as jList, get as jGet, combine as jCombine } from "../../../../jur
 import { proposalLabel } from "../../../src/record-grammar/index.mjs";
 import { noSuchMember } from "../../../src/membership/index.mjs";
 import { word as wordOf } from "../../../src/setup-words/index.mjs";
-import { TRANSLATION_TABLES, TRANSLATION_TABLE_DECLARATIONS, INTERFACE_WORDS,
+import { TRANSLATION_TABLES, TRANSLATION_TABLE_DECLARATIONS, interfaceWords,
          TRANSLATION_DRAFT_MAX } from "../../../src/translations/index.mjs";
 import { TRANSLATIONS_CHECKS } from "../../../src/translations/checks.mjs";
 
 const TABLES = [...TRANSLATION_TABLES];
-const word = (k) => INTERFACE_WORDS.find((w) => w.key === k);
-const ORDINARY = INTERFACE_WORDS.find((w) => !w.protected && !/\{/.test(w.en));
-const PROTECTED = INTERFACE_WORDS.find((w) => w.protected && !/\{/.test(w.en));
-const PLACEHOLDER = INTERFACE_WORDS.find((w) => /\{[a-z]+\}/.test(w.en));
+const word = (k) => interfaceWords().find((w) => w.key === k);
+const ORDINARY = interfaceWords().find((w) => !w.protected && !/\{/.test(w.en));
+const PROTECTED = interfaceWords().find((w) => w.protected && !/\{/.test(w.en));
+const PLACEHOLDER = interfaceWords().find((w) => /\{[a-z]+\}/.test(w.en));
 const sha = (t) => createHash("sha256").update(t).digest("hex");
 /* A translation that keeps the English's placeholders. */
 const es = (w) => `ES ${w.en}`;
@@ -121,7 +121,7 @@ test("R1 translationdraft to_language: refusals in order (TRANSLATION_DIRECTION_
   const w = await world();
   w.m.translationGrant({ member: "ruth", language: "es", by: "admin" });
   const before = counts(w);
-  const many = INTERFACE_WORDS.slice(0, TRANSLATION_DRAFT_MAX + 1).map((x) => x.key);
+  const many = interfaceWords().slice(0, TRANSLATION_DRAFT_MAX + 1).map((x) => x.key);
   for (const [args, code] of [
     [{ language: "bad tag", direction: "sideways", by: "class:ai" }, "TRANSLATION_DIRECTION_UNKNOWN"],
     [{ language: "bad tag", by: "class:ai" }, "TRANSLATION_DIRECTION_UNKNOWN"],
@@ -143,18 +143,18 @@ test("R1 translationdraft to_language: refusals in order (TRANSLATION_DIRECTION_
   const r = w.m.translationDraft({ language: "es", direction: "to_language", by: "ruth" });
   /* K2238: past every refusal, as the other two drafts do, the signal the door drafts on, carrying the words */
   assert.deepEqual([r.ok, r.reason, r.direction, r.language], [false, "ASSISTANT_DRAFT_UNAVAILABLE", "to_language", "es"]);
-  assert.deepEqual(r.words, INTERFACE_WORDS.slice(0, 100).map(({ key, en, note, means, protected: p }) => ({ key, en, note, means, protected: p })));
+  assert.deepEqual(r.words, interfaceWords().slice(0, 100).map(({ key, en, note, means, protected: p }) => ({ key, en, note, means, protected: p })));
   assert.deepEqual(r.offered_official, []);
   assert.equal(counts(w), before, "the request writes nothing");
   /* a word kept is no longer missing: asked by name it is refused, and it leaves the default list */
-  const first = INTERFACE_WORDS[0];
+  const first = interfaceWords()[0];
   w.m.translationAdopt({ language: "es", key: first.key, text: es(first), by: "ruth" });
   const notMissing = w.m.translationDraft({ language: "es", direction: "to_language", keys: [first.key], by: "ruth" });
   assert.equal(notMissing.reason, "TRANSLATION_NOT_MISSING");
   const next = w.m.translationDraft({ language: "es", direction: "to_language", by: "ruth" });
-  assert.deepEqual(next.words.map((x) => x.key), INTERFACE_WORDS.slice(1, 101).map((x) => x.key));
+  assert.deepEqual(next.words.map((x) => x.key), interfaceWords().slice(1, 101).map((x) => x.key));
   /* the keys asked, as asked; an administrator needs no grant */
-  const other = INTERFACE_WORDS.find((x) => x.protected && x.key !== first.key);
+  const other = interfaceWords().find((x) => x.protected && x.key !== first.key);
   const two = w.m.translationDraft({ language: "es", direction: "to_language", keys: [other.key, PLACEHOLDER.key], by: "second" });
   assert.deepEqual(two.words.map((x) => x.key), [other.key, PLACEHOLDER.key]);
   assert.equal(two.words[0].protected, true);
@@ -319,7 +319,7 @@ test("R4 translationAdopt: refusals in order (MACHINE_CANNOT_TRANSLATE, LANGUAGE
   assert.deepEqual([p2.state, p2.replaced], ["awaiting", es(PROTECTED)]);
   assert.deepEqual([shown(PROTECTED.key).text, shown(PROTECTED.key).fallback], [PROTECTED.en, true]);
   /* protected, typed without a draft: awaiting */
-  const other = INTERFACE_WORDS.find((x) => x.protected && x.key !== PROTECTED.key && !/\{/.test(x.en));
+  const other = interfaceWords().find((x) => x.protected && x.key !== PROTECTED.key && !/\{/.test(x.en));
   assert.equal(w.m.translationAdopt({ language: "es", key: other.key, text: "Escrito", by: "ruth" }).state, "awaiting");
   /* placeholders kept: accepted */
   assert.equal(w.m.translationAdopt({ language: "es", key: PLACEHOLDER.key, text: es(PLACEHOLDER), by: "ruth" }).ok, true);
@@ -471,9 +471,9 @@ test("R8 translations: to a granted speaker of the language (MACHINE_CANNOT_TRAN
   const r = w.m.translations({ language: "es", viewer: "ruth" });
   assert.equal(counts(w), before);
   assert.equal(r.ok, true);
-  assert.deepEqual(r.words.map((x) => x.key), INTERFACE_WORDS.map((x) => x.key));
+  assert.deepEqual(r.words.map((x) => x.key), interfaceWords().map((x) => x.key));
   /* counted from the list as it stands (setup-words R1), the two words kept here set apart */
-  assert.deepEqual(r.counts, { missing: INTERFACE_WORDS.length - 2, shown: 1, awaiting: 1 });
+  assert.deepEqual(r.counts, { missing: interfaceWords().length - 2, shown: 1, awaiting: 1 });
   const o = r.words.find((x) => x.key === ORDINARY.key);
   assert.deepEqual([o.en, o.note, o.means, o.protected, o.state, o.text, o.adopted_by, o.english_changed],
                    [ORDINARY.en, ORDINARY.note, ORDINARY.means, false, "shown", "Algo más", "ruth", false]);
@@ -505,7 +505,7 @@ test("R8 interfaceWords: for the language asked, by default the viewer's own (`i
   const none = w.m.interfaceWords({ viewer: "tom" });
   assert.equal(none.language, null);
   assert.ok(none.words.every((x) => x.fallback && x.text === x.en && x.text));
-  assert.deepEqual(none.words.map((x) => x.key), INTERFACE_WORDS.map((x) => x.key));
+  assert.deepEqual(none.words.map((x) => x.key), interfaceWords().map((x) => x.key));
   w.say("tom", "pt-BR");
   const own = w.m.interfaceWords({ viewer: "tom" });
   assert.equal(own.language, "pt-BR");
