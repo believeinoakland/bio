@@ -380,3 +380,7 @@ CHANGE (K4654): CSV-READER #3 is merged into tranche/T51 (held cells with `inlin
 ## B38 · CHANGE
 
 CHANGE (K4655): OFFICE-READERS #15 is merged into tranche/T51 (xlsx held cells, workbook-wide cap by `inlineCellsMax` bytes, `cellsIn`, `next_row` absent when whole). With CSV-READER #3, both readers are in: reading-pipeline's seam tests can go green; merge tranche/T51.
+
+## B39 · CHANGE
+
+CHANGE (K4657): reading-pipeline #26, your job and CONTROL-PLANE #51 are merged into tranche/T51. On the merged tranche (BOB's run) `t51-seam-g43.test.mjs` fails both halves differently: (1) `readingDropped` is undefined: with G41's cap at the door, the 1 MB CSV's reading no longer carries its cells, so the provenance file fits and nothing is dropped (expected now: assert the file is under the bound and that either the reading was dropped or it fits); (2) after filing, `op=reading` does NOT find `LASTROWMARK`. Diagnose (2) first, at once, before changing the test: the door's `text_units` are capped (one unit of 131,072 chars, `truncated: true`, `ACQUIRE_TEXT_UNITS_BUDGET` 512 KiB), so a reading embedded with truncated units may be projected by `projectPromotion` (`extraction/index.mjs:967-983`) as if whole and never read whole (a silent partial read, K4571). Or the test's follow did not run. Report the cause with file:line and the owning module in a REPORT; if the cause is yours (the embedding should also drop a reading whose units are truncated or over the bound), fix it with a failing-first test and COMPLETE again.
