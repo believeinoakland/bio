@@ -382,3 +382,7 @@ CHANGE (K4655): OFFICE-READERS #15 is merged into tranche/T51 (xlsx held cells, 
 ## B40 · CHANGE
 
 CHANGE (K4656): `cellsInRange` (reading-pipeline) answers refusals as `{ok: false, reason, why?}` for every entry; read `reason`. A cell's `source` is an object `{kind: "sheet-cell", ref, sheet, cell}`; `maxCells` gives whole rows (a first row over it is given whole).
+
+## B41 · CHANGE
+
+CHANGE (K4657): READING-PIPELINE #26 is merged into tranche/T51 (`cellsInRange`, `cells_held`, the cap passed at the entry call; refusals `{ok:false, reason, why?}`), with both readers. Extraction's `cellsOf` seam can go green now; merge tranche/T51.
