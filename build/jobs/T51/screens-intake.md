@@ -614,3 +614,7 @@ COMPLETE · B41 (fix round 7: G72, G73, G74, G75). Record section 'B41 · fix ro
 
 ## B42 CHANGE applied (U463, DEC-425)
 Merged `tranche/T51`. G72: `refusal.NO_SUCH_SESSION` was already the key the closed line reads (stand-in until its row lands); no change. G74: the Add screen's refusal now reads `refusal.PROMOTE_NOT_A_PARTICIPANT` with `{project}` by name (`notMemberWords`, `capture.mjs`; the list's name, never the id), falling back to `project.notmember` where the row is absent or the project's name is unknown. The key is in the capture reads list, so the two R26 tests ("every key the capture screen reads is a word of the list") are red by name until BOB regenerates `rows.mjs` with the design's rows; nothing else. Suite 319: 317 pass, those 2 red. words check 0 failures.
+
+## J36 · COMPLETE
+
+COMPLETE · B42 applied: G74 reads refusal.PROMOTE_NOT_A_PARTICIPANT ({project} by name, fallback project.notmember); G72 key unchanged. Seam reds by name until rows.mjs is regenerated with the design's rows: R26 'every key the capture screen reads is a word of the list' and the shell R5 per-screen test, both naming refusal.PROMOTE_NOT_A_PARTICIPANT. Suite 319, 317 pass. Record section B42.
