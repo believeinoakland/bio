@@ -526,3 +526,16 @@ Done so far: branch checked out and fast-forwarded, `tranche/T51` merged in, `ma
 **Red on the pre-G41 tip** (`tranche/T51` before csv-reader merged, shim copy): `g41.probe.mjs csv4`, the 4 MB CSV at cap 163: `CHILD DIED (SIGABRT): FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory`; a 2 MB CSV at cap 165 never ends (the ledger still owes `reading` after 600 ticks). Green: owed until the providers merge.
 
 Size so far: not yet final.
+
+## J35 · REPORT
+
+REPORT with two asks (G41 shape proof, run on tranche/T51 with csv-reader, office-readers, reading-pipeline, extraction, content, retrieval-browse merged; the shim from a copy). Pushed on job/T51/plane (c912847df5).
+
+PASS at the real shape: 4 MB CSV (cap 163, 2 ticks, max 3.5 s, peak 130 MB) and the 200,000-row xlsx (cap 163, 2 ticks, max 9.0 s, peak 153 MB; cellsOf of row 200000 gives the 3 cells in 421 ms); child alive, first/middle/last row in the index and found by op=search, largest stored value 131,071 B (under 1 MiB), readingFor states its state at every tick.
+Red before the providers: the 4 MB CSV at cap 163 died (heap out of memory, SIGABRT).
+
+1. CELLS OF A FILE OVER ONE PART (8 MB and 17 MiB CSV): the text is read whole and found (all three markers, 60 and 128 units, peaks 125 and 148 MB, alive at caps 159 and 150), but `cellsOf` of the last row answers `cells_not_interpretable`. Cause, measured: an upload over one 8 MiB part is stored with `capture_format` "undetermined" (capture's text rule R92/R93 sniffs "within one part"; the profile says "no content type was declared" although the upload declared text/csv), so `readings.capture_format` is "undetermined" and reading-pipeline `cellsInRange` finds no entry (`getFormat("undetermined")`), while the ledger read it as csv text (sheet-range units). The 4 MB (one part) CSV has format csv and works. Smallest thing needed, BOB's to place: either extraction's `cellsOf` (`extraction/index.mjs:1650`) falls back to the reading's `text_container` when `capture_format` is null or "undetermined" (as `#unreadOf` does for pictures), or capture profiles a multipart upload from its declared type or name. Until then my 8 MB and 17 MiB cases are red by name on this.
+
+2. TICK TIME on this machine (node child, wall clock, nothing else running): the first tick, which starts the read, is the long one: 8 MB 7.2 s, 12 MB 10.5 s, 16 MB 14.2 s, 17 MiB (16,663,800 B stated bound) 15.0 s, every later tick about 3.4 s. The START's pass is every tick under 10 s, so as the criterion stands the largest CSV that passes is between 8 and 12 MB (6 MB and 8 MB pass at caps 161 and 159); the memory fits at 17 MiB (peak 147.6 MB at cap 150). Smallest thing needed: BOB's choice between (a) csv-reader/reading-pipeline shorten the first tick (what it does before the first piece is cut), or (b) the bound for this round is the largest N under 10 s and csv-reader lowers `MEASURED_CSV_TEXT_BOUND_BYTES` with a stated-refusal test at N+1 (K1881), or (c) the 10 s criterion is relaxed to the platform's 30 s CPU limit, R-CLOCK saying node wall time is not the object's CPU. I keep the 10 s assertion in the suite until you answer.
+
+I carry on with the rest (merge of the tranche with the shim and CALCULATIONS; G44 after).
