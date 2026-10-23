@@ -1,6 +1,6 @@
 # csv-reader (T51)
 
-**Status** · session_015f6Az85H4GFawFsXC3ch9y · depth 2 · WORKING · handled B3
+**Status** · session_015f6Az85H4GFawFsXC3ch9y · depth 2 · WORKING · handled B6
 
 ## Completion
 
