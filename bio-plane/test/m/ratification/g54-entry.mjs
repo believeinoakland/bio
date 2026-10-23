@@ -51,13 +51,15 @@ function faulty(bucket, state) {
       const text = value instanceof Uint8Array ? new TextDecoder().decode(value.slice(0, 80)) : "";
       const isManifest = text.trimStart().startsWith("{") && text.includes("\"format\"");
       if (state.fault === "put_throws" || (state.fault === "manifest_put_throws" && isManifest)) throw new Error("bucket refused (injected)");
+      /* G57: a put that throws once, or at the n-th put since the fault was set (a heal killed part-way) */
+      if (state.fault === "put_throws_once" || (state.fault === "put_throws_nth" && ++state.seen === state.nth)) { state.fault = "none"; throw new Error("bucket refused (injected)"); }
       return t.put(key, value, opts);
     };
     if (k === "get" || k === "head") return async (...a) => { state.counts[k]++; const r = await t[k](...a); if (k === "get" && r && r.size) state.counts.bytes += r.size; return r; };
     return v.bind(t);
   } });
 }
-const newState = () => ({ fault: "none", counts: { get: 0, head: 0, put: 0, bytes: 0, door: 0 } });
+const newState = () => ({ fault: "none", seen: 0, nth: 0, counts: { get: 0, head: 0, put: 0, bytes: 0, door: 0 } });
 
 const projMd = (title) => ["---", "object_type: project", "schema: project@1", `title: "${title}"`, "current_state: forming",
   "prior_state: null", `created: "2026-09-27T00:00:00Z"`, `last_updated: "2026-09-27T00:00:00Z"`,
@@ -73,6 +75,7 @@ const caseDocText = (caseId, edition, project, target, pin, materials = []) => [
   "method:", '  grading: "grading/1"', '  checks: "1.0.0"', ...materialsLines(materials), ...materialAttestationLines([]), "---", "",
   "## Scope", "", "The question.", "", "## What This Excludes", "", "Nothing else.", "", "## What Was Searched", "", "Everything.", ""].join("\n");
 
+export const KEY_B64 = KEY;
 export class G54Held {
   fault = newState();
   constructor(ctx, env) {
@@ -90,8 +93,8 @@ export class G54Held {
     registerInquiryGrammar(record);
     const promotion = promotionOf(host, { record, membership, now: () => NOW });
     promotion.registerFact("producingGroup", "instance-setup", () => "test-group");
-    st.sql.exec(`CREATE TABLE inquiry_basis (bundle_id TEXT NOT NULL, ord INTEGER NOT NULL, target_id TEXT NOT NULL)`);
-    st.sql.exec(`CREATE TABLE refs (bundle_id TEXT NOT NULL, target_id TEXT NOT NULL, kind TEXT NOT NULL DEFAULT '',
+    st.sql.exec(`CREATE TABLE IF NOT EXISTS inquiry_basis (bundle_id TEXT NOT NULL, ord INTEGER NOT NULL, target_id TEXT NOT NULL)`);
+    st.sql.exec(`CREATE TABLE IF NOT EXISTS refs (bundle_id TEXT NOT NULL, target_id TEXT NOT NULL, kind TEXT NOT NULL DEFAULT '',
                                    PRIMARY KEY (bundle_id, target_id, kind))`);
     const none = { self: [], via: [] };
     const publication = publicationOf(host, { storage: st, record, membership, promotion, now: () => new Date().toISOString(),

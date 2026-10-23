@@ -868,7 +868,8 @@ export class Ratification {
     return sweepCaseFiles({ publication: this.publication, stateOf: (id, ed) => this.#editionState(id, ed),
       materialsOf: (id, ed) => copiedMaterials(this.publication.heldMaterialsOf?.(id, ed)), worker: w, now,
       assemble: (w && w.assembleCaseContainer) || casefile.assembleCaseContainer,
-      recordFailure: (w && w.recordCaseFileFailure) || casefile.recordCaseFileFailure });
+      recordFailure: (w && w.recordCaseFileFailure) || casefile.recordCaseFileFailure,
+      textAt: typeof this.record.textAtSha === "function" ? (b, h) => this.record.textAtSha(b, h) : undefined });
   }
 
   /** R57 (G54): when the sweep next has work, in ms, or null; see `./casefile.mjs`. */
