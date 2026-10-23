@@ -184,3 +184,9 @@ Size (session_01XeesuXwbodLb8B9vNN8tcd): test runs 9, module lines 2447
 Merged tranche/T51 (case-grammar, public-read, case-checker merged). `g50-acts.test.mjs` is GREEN against the real providers (both variants). case-disclosures 115/115. Users: case-authoring 244, case-account 48, case-inputs 73, case-tensions 26, all pass. checks/run.mjs: format, architecture, coverage, channels 0; words failures are in other modules (installer-steps `installer.fleet.logsunconfirmed`, case-checker spec inline), none in case-disclosures. ownership 0. No code change.
 
 Size (session_01XeesuXwbodLb8B9vNN8tcd): test runs 7, module lines 2447
+
+## J12 · COMPLETE
+
+COMPLETE · B10. tranche/T51 merged; g50-acts.test.mjs is green against the real merged providers (both variants). case-disclosures 115/115; users case-authoring 244, case-account 48, case-inputs 73, case-tensions 26 all pass. checks: format/architecture/coverage/channels 0; the words failures are other modules' (installer-steps logsunconfirmed, case-checker spec inline), none in mine; ownership 0. No code change.
+
+Size (session_01XeesuXwbodLb8B9vNN8tcd): test runs 7, module lines 2447
