@@ -39,18 +39,29 @@
  * keeps the ones held is unconfirmed). Needs the token scope the upload already uses (Workers Scripts Write). The first add
  * can take up to 15 minutes to propagate to the cron runner; the smoke waits.
  *
- * usage (bundler R17, R18, R34, R40), from bio-plane/:
+ * usage (bundler R17, R18, R34, R40, R41), from bio-plane/:
  *   CF_TOKEN=... CF_ACCT=... node scripts/deploy.mjs <slug> <version> <asset> [--test-instance] [--dry-run]
+ *     [--store-location <hint>] [--store-generation <n>]
  */
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { resolveVersion } from "./resolve-version.mjs";
 
-const [slug, version, assetPath] = process.argv.slice(2).filter((a) => !a.startsWith("--"));
+/* G83 (R41): two flags take a value. A value is the next argument unless that is another flag or there is none, which is
+   then no value at all (refused below, by name), so a flag's value is never taken for a positional argument. */
+const ARGS = process.argv.slice(2), FLAG_VALUES = {}, VALUE_AT = new Set();
+for (const flag of ["--store-location", "--store-generation"]) {
+  const i = ARGS.indexOf(flag);
+  if (i < 0) continue;
+  const v = ARGS[i + 1];
+  FLAG_VALUES[flag] = v === undefined || v.startsWith("--") ? null : v;
+  if (FLAG_VALUES[flag] !== null) VALUE_AT.add(i + 1);
+}
+const [slug, version, assetPath] = ARGS.filter((a, i) => !a.startsWith("--") && !VALUE_AT.has(i));
 const TEST = process.argv.includes("--test-instance"), DRY = process.argv.includes("--dry-run");
 const TOKEN = process.env.CF_TOKEN, ACCT = process.env.CF_ACCT;
 if (!slug || !version || !assetPath || !TOKEN || !ACCT) {
-  console.error("usage: CF_TOKEN=... CF_ACCT=... node scripts/deploy.mjs <slug> <version> <asset> [--test-instance] [--dry-run]");
+  console.error("usage: CF_TOKEN=... CF_ACCT=... node scripts/deploy.mjs <slug> <version> <asset> [--test-instance] [--dry-run] [--store-location <hint>] [--store-generation <n>]");
   process.exit(2);
 }
 
@@ -217,6 +228,16 @@ async function confirmServing(want) {
   console.log("");
 }
 
+/* R42 (G84; K4753, K4755): the script's start-up time, as Cloudflare's upload answer states it. Source: Cloudflare API
+   reference, Workers > Scripts > "Upload Worker Module" (PUT /accounts/{account_id}/workers/scripts/{script_name},
+   https://developers.cloudflare.com/api/resources/workers/subresources/scripts/methods/update/): the answer is
+   `{ success, result: { ..., startup_time_ms: number } }`; wrangler reads `result.startup_time_ms` from the same upload
+   and prints "Worker Startup Time". An answer without a finite number there is "unreported". */
+function startupOf(answer) {
+  const ms = answer && answer.result && typeof answer.result === "object" ? answer.result.startup_time_ms : undefined;
+  return typeof ms === "number" && Number.isFinite(ms) && ms >= 0 ? `${ms} ms` : "unreported";
+}
+
 const source = readFileSync(assetPath, "utf8");
 const want = createHash("sha256").update(readFileSync(assetPath)).digest("hex");
 const api = `https://api.cloudflare.com/client/v4/accounts/${ACCT}/workers/scripts/${slug}`;
@@ -239,10 +260,15 @@ const api = `https://api.cloudflare.com/client/v4/accounts/${ACCT}/workers/scrip
    monitor cadence and CAP-3's archive fallback on the deployed instance, and
    the fleet bindings arm the plane's Tier-3 paths. The targets are
    pre-flighted below so a missing worker is OUR refusal, not code 10143. */
-import { deriveBindings, serviceTargets, deriveLimits, limitsReadBack, deriveCrons, schedulesReadBack, deriveObservability, observabilityReadBack } from "./derive-bindings.mjs";
+import { deriveStorePlace, deriveBindings, serviceTargets, deriveLimits, limitsReadBack, deriveCrons, schedulesReadBack, deriveObservability, observabilityReadBack } from "./derive-bindings.mjs";
 import { parseJsonc } from "./jsonc.mjs";   /* R11: the module's one reader */
 const wranglerCfg = parseJsonc(
   readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8"), "bio-plane/wrangler.jsonc");
+/* G83 (R41): where the team's room runs, from the flags, validated before anything is requested. The hint list is
+   runtime-limits' (`STORE_HINTS`), read only when a hint is given. */
+const storePlace = deriveStorePlace(
+  { location: FLAG_VALUES["--store-location"], generation: FLAG_VALUES["--store-generation"] },
+  "--store-location" in FLAG_VALUES ? (await import("../src/store-place.mjs")).STORE_HINTS : []);
 const meta = {
   main_module: "index.mjs",
   compatibility_date: wranglerCfg.compatibility_date,
@@ -263,6 +289,7 @@ const meta = {
      anything is uploaded. */
   observability: deriveObservability(wranglerCfg),
 };
+meta.bindings.push(...storePlace.bindings);
 /* G1: the cron schedule rides no metadata field, so it is set by its own call after the upload (below). An invalid list
    is refused here, before any request, as a config without a subrequest ceiling is. */
 const crons = deriveCrons(wranglerCfg);
@@ -431,11 +458,16 @@ if (onScript.unreadable !== undefined) {
   process.exit(1);
 }
 const derivedNames = new Set(meta.bindings.map((b) => b.name));
-const kept = onScript.bindings.filter((b) => b && b.type === "plain_text" && !derivedNames.has(b.name))
+const kept = onScript.bindings.filter((b) => b && b.type === "plain_text" && !derivedNames.has(b.name) && !storePlace.remove.includes(b.name))
   .map((b) => ({ type: "plain_text", name: b.name, text: b.text }));
 meta.bindings.push(...kept);
 if (kept.length) console.log(`kept: ${kept.length} plain_text binding(s) on the script that this deploy does not derive, sent unchanged — ${kept.map((b) => b.name).join(", ")}`);
 const differences = bindingDifferences(meta.bindings, onScript.bindings);
+/* R41: a held binding the flags remove (`--store-generation 1`, the rollback) is a difference until it is gone. */
+for (const name of storePlace.remove)
+  if (onScript.bindings.some((b) => b && b.type === "plain_text" && b.name === name)) differences.push(`plain_text ${name} is held and is removed`);
+if (storePlace.bindings.length || storePlace.remove.length)
+  console.log(`store place: ${[...storePlace.bindings.map((b) => `${b.name}=${b.text}`), ...storePlace.remove.map((n) => `${n} removed`)].join(", ")}`);
 
 const before = await deployed();
 console.log(`before: ${before ? before.slice(0, 16) + "\u2026" : "(unreadable)"}`);
@@ -508,7 +540,7 @@ for (let attempt = 1; attempt <= 4; attempt++) {
   const fd = new FormData();
   fd.append("metadata", new Blob([JSON.stringify(meta)], { type: "application/json" }));
   fd.append("index.mjs", new Blob([source], { type: "application/javascript+module" }), "index.mjs");
-  let r = null, text = "";
+  let r = null, text = "", answer = null;
   try { r = await fetch(api, { method: "PUT", headers: { authorization: `Bearer ${TOKEN}` }, body: fd }); text = await r.text(); }
   catch (e) { console.log(`attempt ${attempt}: the upload request failed (${(e && e.message) || e})`); }
   const ct = r ? r.headers.get("content-type") || "" : "";
@@ -516,6 +548,7 @@ for (let attempt = 1; attempt <= 4; attempt++) {
   if (!r) { /* said above */ }
   else if (ct.includes("json")) {
     let j = null; try { j = JSON.parse(text); } catch { /* claimed JSON, was not */ }
+    answer = j;
     console.log(`attempt ${attempt}: http ${r.status}, api says ${j ? j.success : "unparseable"}`
       + (j && !j.success ? " " + JSON.stringify(j.errors).slice(0, 200) : ""));
   } else {
@@ -526,6 +559,10 @@ for (let attempt = 1; attempt <= 4; attempt++) {
   const now = await deployed();
   if (now === want) {
     console.log(`verified: deployed bytes are hash-identical to the signed asset`);
+    /* R42: Cloudflare's start-up figure, printed from the upload's answer. It is only printed, never believed for state
+       (this file's header), and never fails a deploy. Like R40's other lines it belongs to a test deploy: without
+       --test-instance a deploy prints no `test deploy:` line (R40's control). */
+    if (TEST) console.log(`test deploy: startup ${startupOf(answer)}`);
     /* D-54: the limit is read back, never believed from the PUT. A value that is
        not ours refuses success; a settings answer that does not state it is
        UNDETERMINED and said so, never counted as a match. */

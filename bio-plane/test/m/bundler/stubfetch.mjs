@@ -7,7 +7,8 @@
  *             put: "accept" | "ignore", settingsAfterPut?: object, serving: { <name>: string },
  *             servingAfterPut?: "version" | "never", unreachable?: [<substring>], containers?: <status>,
  *             schedulesPut?: "accept" | "ignore" | "reject", schedulesStored?: [<cron>], schedulesGet?: <status>,
- *             scriptPutClearsSchedules?: boolean, observabilityAfterPut?: object, settingsUnreadableAfterPut?: boolean }
+ *             scriptPutClearsSchedules?: boolean, observabilityAfterPut?: object, settingsUnreadableAfterPut?: boolean,
+ *             startupTimeMs?: number | "none" (G84: the upload's answer carries `result.startup_time_ms`, as Cloudflare's documented answer does; "none" leaves the field out) }
  * A script's cron schedules are `scripts.<name>.schedules` (an array of cron strings). Its schedules endpoint (G1) answers
  * PUT by storing what was sent (`schedulesPut` "ignore" answers 200 and stores nothing, "reject" answers 403, and
  * `schedulesStored` stores that list instead of what was sent) and GET with the stored list (`schedulesGet` names a status
@@ -100,7 +101,7 @@ globalThis.fetch = async (input, init = {}) => {
         const v = metadata.bindings.find((b) => b.name === "VERSION");
         if (S.servingAfterPut !== "never" && v) S.serving[name] = v.text;
       }
-      return json(200, { success: true });
+      return json(200, { success: true, result: { id: name, ...(S.startupTimeMs !== undefined && S.startupTimeMs !== "none" ? { startup_time_ms: S.startupTimeMs } : {}) } });
     }
     log(entry);
     const s = S.scripts[name];
