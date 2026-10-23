@@ -13,6 +13,7 @@ import { Miniflare } from "miniflare";
 import { OPS } from "../../../src/op-declarations/index.mjs";
 import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
 import { boot } from "../interface-shell/harness.mjs";
+import { hasWord } from "../../../src/setup-words/index.mjs";
 import { SCREENS, main, actsIn, press, fill, word } from "./fixtures.mjs";
 
 const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));
@@ -82,7 +83,7 @@ test("R96 R129 G6 (the real plane) the walker's 40 MB upload, filed by the scree
   const p = await boot({ screens: SCREENS, plane: forwarded(auth), path: "/app/document/" + filed.bundleId });
   await until(p, () => !!main(p).querySelector("[data-text-state]"));
   const m = main(p);
-  assert.ok(String(m.textContent).includes(stored.reading.basis), "the statement is drawn in the plane's words");
+  assert.ok(String(m.textContent).includes(hasWord("screen.document.reading.stated") ? word("screen.document.reading.stated", { size: word("size.mb", { n: (stored.bytes / 1048576).toFixed(1) }) }) : stored.reading.basis), "the statement is drawn: the design's row when held, else the plane's words");
   assert.ok(String(m.textContent).includes(word("size.mb", { n: (stored.bytes / 1048576).toFixed(1) })), "with the file's size");
   assert.ok(!String(m.textContent).includes(word("state.empty")), "never 'Nothing here'");
   assert.ok(!actsIn(m).includes("pdfstructure") && !actsIn(m).includes("readheld"), "no act is offered after it");
