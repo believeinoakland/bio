@@ -762,3 +762,11 @@ Size (session_01DVeYe6wF7P8CpLfVhfSwSK): test runs 15, module lines 4695
 ## J44 · COMPLETE
 
 G83 done (5 sites via storeStub, t51-g83-location 13/13, 7 red before). Control-plane dir 476 tests, 473 pass; red by name per K4764: round-6 G7 (PLANE #54), G58 (plane), G62 (screens-publish; actual value in J43). Checks: format 0, ownership 0, no architecture/coverage/words finding names control-plane. Record updated.
+
+## B58 (CHANGE, K4765): G62's seam test rebuilt
+
+The G62 test was stale: since B46 the ceremony sends `tieAttested: true` once the Ties step is confirmed. `t51-round7-seam.test.mjs` now builds the pre-flight body with the ceremony's own `PARTS.caseArgs(copy, draft)` from the draft's real `reviewcopy`, the declared bias, and `tieAttested: true` exactly when the edition is prepared. Test 1 (prepared): `publish_at` is `{offered: true, zone: "America/Los_Angeles"}` with a `source` (local-facts or profiles): green. Control (a draft not yet prepared): `TIE_ATTESTATION_MISSING`, `publish_at` null with `publish_at_stated`: green. The old "tie attested" companion is folded into test 1.
+
+Control-plane directory: 476 tests, 474 pass, 2 red by name: round-6 G7 (until PLANE #54) and round-7 G58 (plane). Checks as at J44.
+
+Size (session_01DVeYe6wF7P8CpLfVhfSwSK): test runs 17, module lines 4695

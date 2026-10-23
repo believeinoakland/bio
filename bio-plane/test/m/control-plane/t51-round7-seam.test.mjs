@@ -347,7 +347,7 @@ async function questionOf(auth, project, question) {
 /* the owner's own chain to a prepared case edition: a text uploaded and filed in her project, vouched or not, one sentence of it cited in a question she opened and
    concluded, the case drafted in the editor and prepared by the ceremony's `publish` (src/screens-publish/case-editor.mjs, ceremony.mjs) */
 const BIAS = "This group holds that contracts should be adopted in public session.";
-async function preparedEdition(handle, tag, { vouch }) {
+async function preparedEdition(handle, tag, { vouch, prepare = true }) {
   const { auth, password } = await ownerOf(handle);
   const cs = screenCall(auth);
   const project = await projectOf(auth, `Round seven ${tag} project`);
@@ -385,6 +385,7 @@ async function preparedEdition(handle, tag, { vouch }) {
     statement: "This case covers the stamp only; it leaves out the later amendments.", subjectPosition: "sought_and_answered",
     subjectJustification: "We put the question to the Clerk and printed the answer.", roles: { [question]: "load_bearing" }, excluded: [] } }));
   assert.ok(draft.draftId, "a draft: " + JSON.stringify(draft).slice(0, 300));
+  if (!prepare) return { auth, password, cs, project, question, bundle, draft: draft.draftId, prepared: null };
   const prepared = R(await cs.call("publish", { body: { draft: draft.draftId, project, tieAttested: true, biasAcknowledgement: BIAS } }));
   assert.equal(prepared.ok, true, "the edition is prepared: " + JSON.stringify(prepared).slice(0, 600));
   return { auth, password, cs, project, question, bundle, draft: draft.draftId, prepared };
@@ -444,26 +445,35 @@ async function profileSet(ids) {
 /* what the ceremony's Sign step reads: `publishpreflight`'s step that carries `publish_at` (ceremony.mjs `stepWith("publish_at")`) */
 const signStepOf = (answer) => (R(answer).steps || []).find((x) => x && typeof x === "object" && "publish_at" in x) || {};
 
-test("R105 (G62): with the instance's profile `oakland-alameda` chosen, the Sign step's pre-flight, asked as the ceremony asks it once the edition is prepared (draft, project, the declared bias), offers a publishing time in `America/Los_Angeles`, never 'the zone is not set'", { timeout: 600000 }, async () => {
+/* the Sign step's pre-flight body as the ceremony builds it (ceremony.mjs: `P.caseArgs(copy, draft)` from the draft's `reviewcopy`, the declared bias the member attested, and
+   `tieAttested: true` once the Ties step is confirmed, that is once the edition is prepared) */
+async function ceremonyPreflight(e, { tied }) {
+  const copy = R(await e.cs.call("reviewcopy", { query: { draft: e.draft } }));
+  assert.ok(copy && copy.case, "the draft's copy: " + JSON.stringify(copy).slice(0, 300));
+  const body = Object.assign({}, PARTS.caseArgs(copy, e.draft), { biasAcknowledgement: BIAS }, tied ? { tieAttested: true } : {});
+  return e.cs.call("publishpreflight", { body });
+}
+
+test("R105 (G62): with the instance's profile `oakland-alameda` chosen and the Ties step confirmed (the edition prepared), the Sign step's pre-flight, its body built as the ceremony builds it, offers a publishing time in `America/Los_Angeles` and states its source", { timeout: 600000 }, async () => {
   await profileSet(["oakland-alameda"]);
   const e = await preparedEdition("g62-cy", "g62a", { vouch: false });
-  const asked = await e.cs.call("publishpreflight", { body: { draft: e.draft, project: e.project, biasAcknowledgement: BIAS } });
+  const asked = await ceremonyPreflight(e, { tied: true });
   const step = signStepOf(asked);
   assert.ok("publish_at" in step, "the Sign step is in the answer: " + JSON.stringify(R(asked).steps).slice(0, 600));
   assert.ok(step.publish_at, `the Sign step states the time it offers (null reads as no zone: ${JSON.stringify(step.publish_at_stated || null)}; first: ${JSON.stringify(R(asked).first).slice(0, 200)})`);
   assert.equal(step.publish_at.offered, true, JSON.stringify(step.publish_at));
   assert.equal(step.publish_at.zone, "America/Los_Angeles", JSON.stringify(step.publish_at));
+  assert.ok(["local-facts", "profiles"].includes(step.publish_at.source), `publish_at states where the zone came from (local-facts | profiles): ${JSON.stringify(step.publish_at)}`);
 });
 
-test("R105 (G62, tie attested): the same pre-flight with the Ties step's `tieAttested` reaches the Sign step: `publish_at` is `{offered: true, zone: America/Los_Angeles}`; and it states its `source` (red until ratification's provider merges)", { timeout: 600000 }, async () => {
+test("R105 (G62 control): before the Ties step is confirmed (a draft not yet prepared) the same pre-flight reaches only `TIE_ATTESTATION_MISSING` and the Sign step's `publish_at` is null with the reason stated", { timeout: 600000 }, async () => {
   await profileSet(["oakland-alameda"]);
-  const e = await preparedEdition("g62-dee", "g62b", { vouch: false });
-  const asked = await e.cs.call("publishpreflight", { body: { draft: e.draft, project: e.project, biasAcknowledgement: BIAS, tieAttested: true } });
-  const pa = signStepOf(asked).publish_at;
-  assert.ok(pa, "the Sign step is reached: " + JSON.stringify(signStepOf(asked)).slice(0, 500));
-  assert.equal(pa.offered, true, JSON.stringify(pa));
-  assert.equal(pa.zone, "America/Los_Angeles", JSON.stringify(pa));
-  assert.ok(["local-facts", "profiles"].includes(pa.source), `publish_at states where the zone came from (local-facts | profiles): ${JSON.stringify(pa)}`);
+  const e = await preparedEdition("g62-dee", "g62b", { vouch: false, prepare: false });
+  const asked = await ceremonyPreflight(e, { tied: false });
+  assert.equal(R(asked).first && R(asked).first.reason, "TIE_ATTESTATION_MISSING", JSON.stringify(R(asked).first).slice(0, 300));
+  const step = signStepOf(asked);
+  assert.equal(step.publish_at, null, JSON.stringify(step).slice(0, 400));
+  assert.ok(typeof step.publish_at_stated === "string" && step.publish_at_stated.length > 0, "the reason is stated, never silence");
 });
 
 /* ---- helpers from the round-6 file ---- */
