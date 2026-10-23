@@ -1,6 +1,6 @@
 # extraction (T51)
 
-**Status** · session_01EEMpAQRdm5Ju5HajHRvsLv · depth 2 · WORKING · handled B44
+**Status** · session_01EEMpAQRdm5Ju5HajHRvsLv · depth 2 · WAITING ON BOB (J31) · handled B44
 
 ## J1 · REPORT
 
