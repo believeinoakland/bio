@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J40
+**Read** · handled J41
 
 ## B1 · START
 
@@ -600,3 +600,11 @@ CHANGE · fix round 7 adds cause G83 to your job (K4746, K4747, K4752, K4754): f
 The provider `runtime-limits` (RUNTIME-LIMITS #6) starts now: write against R27/R28; BOB posts a CHANGE when it merges; never COMPLETE red on it.
 
 **Rules (plan §0, in short):** R-FOUR, R-SEAM, R-ONE, R-NOTMET, R-OLD, R-CLOCK, R-PROXY as `build/plan/fix-round-7-T51.md` §0 states them: read §0 whole. Read `build/plan/fix-round-7-T51-added.md` sections "Adopted revisions" (it wins) and "G83" whole. Read your reading set whole (your requirements both parts, your own code in your `paths`, the tests naming the ids your entries change; `runtime-limits`' Provides R27, R28): if you would have to read a document only in part, stop at once with BLOCKED cause `reading` (K3678). Declare every census op you own (K4208). Before any test run, every directory with a tracked `package-lock.json` has its `node_modules` (K4113: `for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`). A command handing `node --test` a computed file list checks it is non-empty first (K4741). Workers: haiku low for mechanical work, sonnet medium for reading and diagnosis, never above your own model; any act a safety or permission check refuses is never worked around, split, rephrased or retried (K4696): record it and go on. Never edit a generated artifact; name in your record any you make stale (BOB regenerates at the round end). Never contact biosmoke8 or any live deployment. Propose any requirement wording change in your record; BOB writes it. Run your module's tests, then `node build/plan/impact.mjs tranche/T51 HEAD` and the users it names that your change touches, then format, architecture, coverage, words and ownership before COMPLETE.
+
+## B55 · CHANGE
+
+CHANGE (K4757): runtime-limits is merged into tranche/T51 (`bio-plane/src/store-place.mjs`, R27, R28). Merge `tranche/T51` into your branch now, run your tests and impact set, and COMPLETE when green.
+
+## B56 · ANSWER · re J41
+
+ANSWER (K4760): runtime-limits is merged (B55): merge tranche/T51 again now. Do not amend the round-6 assertions. G7 is red by name until PLANE #54 merges (its B68 carries G79's plane half: after a keep the plane's keep owner owes a reading row only when a home exists, NO_HOME's is the filing's promotion; K4742 (2), K4748). G2 ('R105, R124') was green on the tranche at the queue merge (K4756: fetch-done in the catalogue): re-run it after merging. G61 x2 should be green now that queue is merged (K4756). G58 waits for plane. G62 x2: ratification, retrieval and screens-publish are all merged (K4744): after merging, if G62 is still red, REPORT the failing assertion and its actual value so I can route it; that is a finding, not a test to amend. COMPLETE when only G7 and G58 (plane) are red by name.

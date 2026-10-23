@@ -74,6 +74,13 @@ export const QUEUE_CONDITION_KINDS = Object.freeze({
      A fact about our own reading, never about the publisher, so a CONDITION a member quiets for themselves; queue's to add
      for action-clock-overdue's reason (no look carries it). Its producer is `queue-producers`' (its R35). */
   "cited-docket-unreadable":    "a docket you follow could not be read (DEC-101, DEC-116) — LIVE: queue-producers R35",
+  /* R1 (T51 fix round 7, G61): three more producers' CONDITIONs the catalogue did not name, so the mint (R11) refused the
+     whole feed for a member they were raised to. Each is a fact about our own machinery or a step left undone, quieted by
+     its recipient. Code-origin stand-ins; the words members see are the design stream's (rows owed, T52). */
+  "edition-scheduled":          "a case edition is signed to publish at a set time and is waiting; move the time or "
+                              + "cancel it — LIVE: queue-producers R37",
+  "place-profile-arrived":      "a place profile arrived on this copy; choose it under Places — LIVE: queue-producers R38",
+  "request-unsent":             "a request was approved and has not been recorded sent — LIVE: action-producers R25",
 });
 
 /* Every OTHER kind the catalogue names, with the class it belongs to — so a
@@ -388,6 +395,25 @@ export const QUEUE_FINDING_KINDS = {
      (as `standing-answer` is), so no project decides it and its recipient quiets it for themselves. */
   "watched-changed":            "something you watch changed; open it to see what changed (DEC-304) "
                               + "— LIVE: notice-producers R24",
+  /* T51 fix round 7 (R1; G61; B.md:22; K4562; notice-producers R27, R28): a large capture's background fetch was delivered,
+     and a money ingest run in the background finished or was stopped, each told once to the member who started it and
+     disposed of by its recipient. They were minted by their producers and named nowhere here, so the opener's whole Queue
+     was refused `NO_SUCH_KIND`. Code-origin stand-ins; the words members see are the design stream's (rows owed, T52). */
+  "fetch-done":                 "a large capture you opened was fetched in the background and is filed "
+                              + "— LIVE: notice-producers R27",
+  "ingest-done":                "a money ingest you started in the background finished; open it to see the rows taken in "
+                              + "— LIVE: notice-producers R28",
+  "ingest-stopped":             "a money ingest you started in the background was stopped before it finished "
+                              + "— LIVE: notice-producers R28",
+  /* T51 fix round 7 (R1; G61; queue-producers R37, R39): what the scheduled edition did, and a wizard script's base that
+     moved under a copy; each told once and disposed of by its recipient. */
+  "edition-published-as-scheduled":
+                                "a case edition signed to publish at a set time was published as scheduled "
+                              + "— LIVE: queue-producers R37",
+  "scheduled-edition-stopped":  "a case edition signed to publish at a set time was stopped and nothing was published; "
+                              + "publishing needs a new signing — LIVE: queue-producers R37",
+  "wizard-base-updated":        "the wizard script your copy is based on has a new version; read what changed, or bring it "
+                              + "across — LIVE: queue-producers R39",
 };
 
 /* THE N-NUMBERS — the catalogue's STABLE IDS, allocated when a generator is built and not before

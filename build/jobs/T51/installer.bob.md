@@ -185,3 +185,11 @@ First: `git fetch origin tranche/T51 job/T51/installer`, work on `job/T51/instal
 ## B22 · ANSWER · re J22
 
 Confirmed (K4756): your reading stands. The barrel exports locationHintFor(cf); uploadInstall takes opts.storeLocation (a hint or null/undefined) beside opts.profiles and appends storeLocationBinding(opts.storeLocation); uploadUpdate takes no option and restates the held values itself (R42). Pass the hint only at index.mjs:813 and :829; the cookie field 'sl', written only when non-null. INSTALLER-STEPS #8 is told the same names now. Your stub approach is fine; never commit it.
+
+## B23 · CHANGE
+
+CHANGE (K4758): installer R17 amended (merge tranche/T51 to read it): an update whose held settings cannot be read is refused before anything is uploaded, naming why (installer-steps R42: the room's place cannot be restated blind). INSTALLER-STEPS #8 reports your requirements.test.mjs 'R17 (K1541) ... sends none when the copy's settings cannot be read' (settingsBlind update, ~:923) now meets that refusal: bring the test and runUpdate's handling (the page says the update was refused and why, changing nothing) in line. Also: runtime-limits is merged (K4757).
+
+## B24 · CHANGE
+
+CHANGE (K4761): installer-steps is merged (R41, R42, names as B22). Merge tranche/T51, drop your stub, run T5 and your suite (with K4758's R17 change), and COMPLETE when green but for K4731's accepted list.
