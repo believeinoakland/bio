@@ -1,6 +1,6 @@
 # BOB to money (T51)
 
-**Read** · handled J8
+**Read** · handled J10
 
 ## B1 · START
 
@@ -74,3 +74,41 @@ ANSWER to J6 (BOB #244; K4438). Question A: (a). Every period refusal of money's
 ## B6 · ANSWER · re J7
 
 ANSWER to J7 (BOB #245; K4444). Question C: the census is narrowed. R29 is rewritten on tranche/T51 (merge it): the census asserts only that no money act answers BAD_PERIOD. A generic code naming the same condition in every module (NO_REASON, NO_SHA, NO_PERIOD, MEMBER_ACT_ONLY and the rest of your 16) stays shared; rename nothing else; money-checks is out of scope. The intent test amount.test.mjs:119 is stale under R29: BOB fixes it at your merge, test file only; do not touch intent; name it in COMPLETE. Re-run your impact set on the current build, name each red and whether it is red on the tranche tip, then COMPLETE.
+
+## B7 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/money tranche/T51 && git branch -m job/T51/money stale/money-local && git checkout -b job/T51/money origin/job/T51/money`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · MONEY #8 · tranche T51 · product believeinoakland/bio · depth 2 (fix round 6, G55; K4701) · reading set per mechanics §6 step 2. If you would read a document of your reading set only in part, stop at once: post BLOCKED, cause `reading` (K3678).
+
+Mail with `--module money`; record `build/jobs/T51/money.md` (append a new section; earlier sections are history). On COMPLETE: `mail state --set COMPLETE`, post COMPLETE with `Size (<session id>): test runs <n>, module lines <n>`, and ring BOB (a one-time routine into BOB's session, `run_once_at` the next whole minute; `mail addr --bob`).
+
+**Reds you inherit (accepted by name; run them only as users):** plane `release` R24 and `l77-size` R77 L; file-safety R24; promotion row-census; case-checker R13, R25 (stale `program.mjs`); `fleetbundles` section 10, agent-worker `requirements`, ocr-worker, `newgroup-bundle-fresh` arms (C)/(D); newgroup R8, R11, R20, R33, R44, R55, R61, R71, `wizard.test.mjs`; screens-action `contract.test.mjs:34` (G52, held until G53 merges); G50's red-by-name tests (public-read `g50-copies`, case-checker `g50-path`, case-import `g50-import`, case-disclosures `g50-acts`); plane `g26.probe.mjs` 10 s; words `inline 1` at `case-checker/spec.mjs:11`. A failure not on this list is yours or a bug to report.
+
+Your entry: G55 in `build/plan/fix-round-6-T51.md` (read the entry whole, and the plan's section 0). Model: claude-sonnet-5-5, medium effort, unless the notes below say otherwise. Merge order is `modules.json` order (providers first); a seam test whose provider has not merged stays red by name.
+Your requirements: `build/requirements/money.md` (read whole); amendments outside your paths are proposed as text in your record and written by BOB at your merge.
+BOB's notes for this job:
+Depth 2. Your entry: `build/plan/fix-round-6-T51.md` (T51), fix round 6, layer 5, money: **G55**. Model: claude-sonnet-5-5, medium effort.
+Your requirements: `build/requirements/money.md` (read whole). Amend it for the held view, `viewBuilds()`, and (tier 2) the partial marker.
+BOB's notes for this job:
+1. `#view()` (`index.mjs:217`) holds its last view as entities does (same key, same deep freeze, a private field, `viewBuilds()`).
+2. `record.transact` nests (savepoint, `record-core/index.mjs:429-434`): confirm by test that `recordFact` inside an outer transaction commits and rolls back with it, and that a fact can be written twice for one `(table, row, binding)` source; no change to money for either.
+3. Tier 2 (starts when BOB sends the word): `recordFact` accepts the ingest key in `source`; money owns a table of open ingest keys with `markIngest(key, open)`; every money read that answers facts answers those of an open or stopped ingest with `partial: true`, the key and `localize('money.ingest.partial', ...)`; old facts carry no key (R-OLD).
+4. Tests `test/m/money/g55-view.test.mjs`, per the entry's (4), seen red; every fact byte for byte as before.
+*Rules of section 0 hold* (`build/plan/fix-round-6-T51.md`): R-FOUR (cause with file:line; why tests missed it and the gap fixed; a failing-first test through the real entry path, seen red; the platform check), R-SEAM / R-ONE, R-NOTMET / R-OLD / R-LIVE, R-STOP, R-CLOCK. *Reading* (mechanics §6 step 2): read whole your requirements (both parts), your entry (your entry of `build/plan/fix-round-6-T51.md`, whole), your layer's contract in `build/layers.md`, your own code, the used services your entry touches, and the tests that name a requirement your entry changes; **a job that would read a document of its reading set only in part stops at once, posts `BLOCKED` with cause `reading`, and waits for BOB** (K3678). *Before any test:* every lockfile directory has `node_modules` (K4113); run one test process at a time, `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <file>` from the repository root, then your suite's impact set (`node build/plan/impact.mjs tranche/T51 HEAD`). *Workers:* haiku low for mechanical work, sonnet medium for reading and diagnosis, never opus, never above your own model (K3518); a command refused by a safety check is never retried, split or worked around: stop and post BLOCKED naming it. *Declarations:* declare every census op you own (K4208); say in your completion which changed. *Words rule* (K3930, K3943): a sentence people read is `localize('<module>.<area>.<name>', en)` with literal arguments; a test never holds a sentence (K3810); `rows.mjs` and `words-unreviewed.json` are never edited. Merge `tranche/T51` into your branch, never rebase or reset (K1991). Never edit another module's generated artifact (manifest §14): report what you made stale. Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (format, architecture, coverage 0 failures; words shows no finding in your module, by its own failure count), and `node checks/ownership.mjs /home/user/bio <module> tranche/T51 job/T51/<module>`. Your Size line counts only your module's own code (K2513). Report flaws in other modules to BOB (P9).
+
+## B8 · CHANGE
+
+entities (G55 tier 1, ENTITIES #20) is merged into tranche/T51 (K4703): its view is held while the jurisdiction setting is unchanged, deep-frozen, with viewBuilds(). Merge tranche/T51 into your branch (never rebase) and continue; a seam test waiting on entities should now pass.
+
+## B9 · CHANGE
+
+Tier 1 is merged (K4705). Tier 2 is confirmed (K4699, K4701): build money's part now in this session (the partial marker, markIngest: facts of an open or stopped ingest marked partial in the reads the G55 entry names), against the calculations tier-2 contract the entry states; CALCULATIONS #9 is building its side. Merge tranche/T51 first. Complete again when done.
+
+## B10 · CHANGE
+
+CHANGE (BOB #262, K4708): CALCULATIONS #9's tier-2 contract for money (its J12), to build to in this session with B9:
+- `markIngest(key, open)`, called synchronously inside calculations' slice transaction (open in the start transaction, closed in the last slice's, never closed for a stopped ingest);
+- each fact of a background run carries `source.ingest = <key>`, passed only when money offers `markIngest`: add `ingest` to SOURCE_FIELDS (today it refuses an unknown field);
+- `recordFact` stays synchronous (a slice is one record.transact).
+If you spell any of these otherwise, say so in your COMPLETE. Complete when done.
