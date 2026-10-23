@@ -66,6 +66,9 @@ export const INGEST_METHOD = "table_binding";
  *  reads no application), and the engines whose agreement is recorded as measured: none yet. */
 export const FILE_ENGINE = word("calculations.file_spreadsheet_program");
 export const MEASURED_ENGINES = Object.freeze([]);
+/** R9: the mark of an input whose cells could not be read to say whether an engine computed them (a failed or truncated
+ *  `content.cellsAt`): an explicit undetermined engine, never null. */
+const UNDETERMINED_ENGINE = Object.freeze({ name: "undetermined", version: null });
 /** R9: the derivation step a third-party engine's value takes (K1447 (ii); strength R36). */
 export const ENGINE_STEP = "third-party engine";
 /** R32: the most uses one frozen table holds (R1's cell bound over its sixteen columns). */
@@ -264,6 +267,7 @@ export class Calculations {
   #inputListeners = [];     // R11: {module, fn}
   #patternListeners = [];   // R23: {module, fn}
   #tableCache = new Map();  // sha → held table (`textTable`), the last few read, within TABLE_CACHE_CHARS
+  #engines = new Map();     // content id → the engine mark `#engineFor` last made (R9); the synchronous reads (R19, R30) read it
 
   constructor({ storage, record, membership, content, provenance, combine = combineProfiles, now = null,
                 clock = null, host = null, registry = defaultRegistry, ...upstream } = {}) {
@@ -324,18 +328,71 @@ export class Calculations {
 
   /* R9 (N676, K1799): the third-party engine that computed a content row's value: a sheet range or cell any of whose
      cells is a formula, its value the file's cached result (content R52). `{name, version}` or null. */
+  async #engineFor(row) {
+    if (!row || (row.extent_kind !== "sheet-range" && row.extent_kind !== "sheet-cell")) return null;
+    let engine;
+    try {
+      const got = await this.content.cellsAt(row.content_id);
+      if (got && (got.cells_truncated === true || got.reason === "cells_truncated")) engine = UNDETERMINED_ENGINE;
+      else {
+        const cells = got && Array.isArray(got.cells) ? got.cells : [];
+        engine = cells.some((c) => plain(c) && typeof c.formula === "string" && c.formula !== "") ? { name: FILE_ENGINE, version: null } : null;
+      }
+    } catch { engine = UNDETERMINED_ENGINE; }
+    this.#engines.set(row.content_id, engine);
+    return engine;
+  }
+
+  /* The same mark for the synchronous reads (R19, R30), which cannot wait on `content.cellsAt`: what the last
+     asynchronous entry that graded this row made; a sheet row not yet made is undetermined, never null. */
   #engineOf(row) {
     if (!row || (row.extent_kind !== "sheet-range" && row.extent_kind !== "sheet-cell")) return null;
-    let got = null;
-    try { got = this.content.cellsAt(row.content_id); } catch { got = null; }
-    const cells = got && Array.isArray(got.cells) ? got.cells : [];
-    return cells.some((c) => plain(c) && typeof c.formula === "string" && c.formula !== "") ? { name: FILE_ENGINE, version: null } : null;
+    return this.#engines.has(row.content_id) ? this.#engines.get(row.content_id) : UNDETERMINED_ENGINE;
+  }
+
+  /* R9: a figure input's mark as the create stored it (the synchronous reads, R19 and R30, read it; an object restart
+     loses nothing): the explicit undetermined engine for a row stored before, until a read makes it. */
+  #figureEngine(calcId, inp) {
+    const r = this.#one(`SELECT engine_json FROM calc_inputs WHERE calc_id=? AND input_name=? AND ref=?`, calcId, inp.name, inp.figure);
+    if (!r || r.engine_json == null) return UNDETERMINED_ENGINE;
+    const m = parse(r.engine_json);
+    return m && m.name === UNDETERMINED_ENGINE.name ? UNDETERMINED_ENGINE : m && typeof m.name === "string" ? { name: m.name, version: m.version ?? null } : null;
+  }
+
+  /* Make the marks of a calculation's inputs (a figure's row; a table whose source records none) before a grade is read. */
+  async #warmEngines(c) {
+    for (const inp of parse(c.inputs_json) || []) {
+      if (!plain(inp)) continue;
+      if (inp.figure !== undefined) {
+        const row = this.content.contentRow(inp.figure);
+        const mark = await this.#engineFor(row);
+        /* R-OLD: a row stored before holds no mark, or an undetermined one a failed cellsAt made: written now */
+        const have = this.#one(`SELECT engine_json FROM calc_inputs WHERE calc_id=? AND input_name=? AND ref=?`, c.calc_id, inp.name, inp.figure);
+        const stored = have && have.engine_json != null ? parse(have.engine_json) : undefined;
+        const mine = row ? json(mark ?? null) : null;
+        if (have && mine !== null && (stored === undefined || (stored && stored.name === UNDETERMINED_ENGINE.name && mark !== UNDETERMINED_ENGINE)))
+          this.sql.exec(`UPDATE calc_inputs SET engine_json=? WHERE calc_id=? AND input_name=? AND ref=?`, mine, c.calc_id, inp.name, inp.figure);
+      }
+      else if (inp.table !== undefined) await this.#warmTable(this.#one(`SELECT sha, source_json FROM calc_tables WHERE sha=?`, inp.table));
+      else if (inp.calculation !== undefined) {
+        const o = this.#one(`SELECT * FROM calculations WHERE calc_id=?`, inp.calculation);
+        if (o) await this.#warmEngines(o);
+      }
+    }
+  }
+
+  async #warmTable(r) {
+    const src = r ? parse(r.source_json) || {} : {};
+    if (src.kind !== "uses" && src.engine === undefined && src.content_id) await this.#engineFor(this.content.contentRow(src.content_id));
   }
 
   /* R9: a grade with its engine marks: a value a third-party engine computed is undetermined until that engine's
      agreement is recorded as measured, the derivation step "third-party engine"; every other input `engine: null`. */
   #withEngine(g, engine) {
     if (!engine) return { ...g, engine: null, engine_measured: null };
+    if (engine === UNDETERMINED_ENGINE)
+      return { grade: null, why: localize("calculations.index.its_cells_could_not_be", "its cells could not be read to say whether a third-party engine computed them, so its grade is undetermined"),
+        engine: UNDETERMINED_ENGINE.name, engine_measured: false, derivation_step: ENGINE_STEP };
     const name = engine.version ? `${engine.name} ${engine.version}` : engine.name;
     const measured = MEASURED_ENGINES.includes(name);
     if (measured) return { ...g, engine: name, engine_measured: true, derivation_step: ENGINE_STEP };
@@ -377,7 +434,9 @@ export class Calculations {
   /* R1: the source's rows: a sheet range's typed cells, a passage's text read as CSV, or a whole document's bytes. */
   async #sourceRows(row) {
     if (row.extent_kind === "sheet-range" || row.extent_kind === "sheet-cell") {
-      const got = this.content.cellsAt(row.content_id);
+      let got = null;
+      try { got = await this.content.cellsAt(row.content_id); } catch { got = null; }
+      if (got && (got.cells_truncated === true || got.reason === "cells_truncated")) return { fault: word("calculations.range_cells_held", { got: "cells_truncated" }) };
       if (!got || !Array.isArray(got.cells)) return { fault: word("calculations.range_cells_held", { got: String(got && got.reason ? got.reason : "unread") }) };
       const byRow = new Map();
       for (const c of got.cells) {
@@ -541,6 +600,7 @@ export class Calculations {
     const crow = src ? this.content.contentRow(src.content_id) : null;
     let cg = null;
     try { cg = crow ? this.provenance.captureGrade(crow.capture_sha) : null; } catch { cg = null; }
+    await this.#warmTable(r);
     const g = this.#tableGrade(r);
     return { ok: true, found: true, ...this.#tableAnswer(r),
       table: { sha: r.sha, fields: parse(r.schema_json).fields, rows,
@@ -666,6 +726,7 @@ export class Calculations {
         if (!r || !this.#seesTable(r, viewer)) { missing(inp.name, String(ref)); break; }
         const t = await this.#heldTable(r.sha);
         if (!t) { missing(inp.name, r.sha); break; }
+        await this.#warmTable(r);
         const g = this.#tableGrade(r);
         /* R1, R4: bound as calc-grammar's streamed table (its R22), its bytes the table's own canonical CSV */
         bound[inp.name] = t.streamed(); hashes[inp.name] = r.sha; refs.push({ name: inp.name, kind, ref: r.sha });
@@ -685,13 +746,14 @@ export class Calculations {
         const row = typeof ref === "string" ? this.content.contentRow(ref) : null;
         if (!row || !this.#sees(row.bundle_id, viewer)) { missing(inp.name, String(ref)); break; }
         let text = null;
-        if (row.extent_kind === "sheet-cell") { const c = this.content.cellsAt(ref); text = c && Array.isArray(c.cells) && c.cells.length === 1 ? String(c.cells[0].value ?? "") : null; }
+        if (row.extent_kind === "sheet-cell") { let c = null; try { c = await this.content.cellsAt(ref); } catch { c = null; } text = c && !c.cells_truncated && Array.isArray(c.cells) && c.cells.length === 1 ? String(c.cells[0].value ?? "") : null; }
         else { try { text = this.content.passageText(ref); } catch { text = null; } }
+        const mark = await this.#engineFor(row);
         const f = typeof text === "string" ? parseFigure(text) : { refused: "FIGURE_INVALID", why: word("calculations.why.passage_text_held") };
         if (f.refused) { refused = no("FIGURE_NOT_READ", `the input "${inp.name}" cites a passage that does not read as one figure: ${f.why}. Nothing was written.`, { input: inp.name, ref }); break; }
         const fig = { ...f }; delete fig.as_read;
         const g = this.#contentGrade(row);
-        bound[inp.name] = fig; held(inp.name, { content: ref, figure: fig }); refs.push({ name: inp.name, kind, ref });
+        bound[inp.name] = fig; held(inp.name, { content: ref, figure: fig }); refs.push({ name: inp.name, kind, ref, engine: mark });
         described.push({ name: inp.name, kind, ref, as_read: f.as_read, grade: g.grade, why: g.why });
       } else if (kind === "value") {
         const f = typeof ref === "string" ? parseFigure(ref) : { refused: "FIGURE_INVALID", why: word("calculations.why.typed_figure_text") };
@@ -710,6 +772,7 @@ export class Calculations {
         else if (plain(v) && plain(v.value) && v.numerator !== undefined) b = v.value;
         else if (plain(v) && (typeof v.value === "string" || typeof v.low === "string" || v.undetermined)) b = v;
         if (!b) { refused = no("FIGURE_NOT_READ", `the calculation "${ref}" answers no figure or table an input can take. Nothing was written.`, { input: inp.name, ref }); break; }
+        await this.#warmEngines(c);
         const axis = this.#gradeFacts(c);
         /* its bytes: the canonical JSON its result key is the SHA-256 of (calc-grammar R15), from its own inputs' hashes */
         const pre = parse(c.input_shas_json);
@@ -1175,8 +1238,8 @@ export class Calculations {
         c.threshold ? json(c.threshold) : null, METHOD, str(methodNote) || null, evidences ? json(evidences) : null,
         c.result_key, json(c.results), at, by, at, json(c.hashes));
       for (const ref of c.refs)
-        this.sql.exec(`INSERT OR IGNORE INTO calc_inputs (calc_id, project, input_name, input_kind, ref) VALUES (?,?,?,?,?)`,
-          calcId, project ? str(project) : null, ref.name, ref.kind, ref.ref);
+        this.sql.exec(`INSERT OR IGNORE INTO calc_inputs (calc_id, project, input_name, input_kind, ref, engine_json) VALUES (?,?,?,?,?,?)`,
+          calcId, project ? str(project) : null, ref.name, ref.kind, ref.ref, ref.kind === "figure" ? json(ref.engine ?? null) : null);
       if (c.threshold && c.threshold.content)
         this.sql.exec(`INSERT OR IGNORE INTO calc_inputs (calc_id, project, input_name, input_kind, ref) VALUES (?,?,?,?,?)`,
           calcId, project ? str(project) : null, "threshold", "figure", c.threshold.content);
@@ -1336,7 +1399,7 @@ export class Calculations {
       }
       if (inp.figure !== undefined) {
         const row = this.content.contentRow(inp.figure);
-        const g = row ? this.#withEngine(this.#contentGrade(row), this.#engineOf(row)) : { grade: null, why: word("calculations.why.cited_passage_held"), engine: null, engine_measured: null };
+        const g = row ? this.#withEngine(this.#contentGrade(row), this.#figureEngine(c.calc_id, inp)) : { grade: null, why: word("calculations.why.cited_passage_held"), engine: null, engine_measured: null };
         per.push({ name: inp.name, kind: "figure", ref: inp.figure, ...g }); continue;
       }
       if (inp.money !== undefined) {
@@ -1385,6 +1448,7 @@ export class Calculations {
     if (!str(calcId)) return no("NO_CALC", "a calculation is read by its id.");
     const c = this.#one(`SELECT * FROM calculations WHERE calc_id=?`, str(calcId));
     if (!c || !this.#visible(c, viewer)) return { ok: true, found: false, calc_id: str(calcId) };
+    await this.#warmEngines(c);
     const results = parse(c.results_json);
     /* R9: each input's SHA-256 of its canonical bytes as the calculation was computed over them (a table's is its sha;
        a calculation created before T34 recorded no other, so it answers null) */
