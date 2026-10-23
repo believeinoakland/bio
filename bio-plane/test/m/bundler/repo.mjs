@@ -198,7 +198,7 @@ const parseCfg = (p) => JSON.parse(readFileSync(p, "utf8").split("\n").slice(1).
 
 /** The plane's configuration, as a parsed object, for a fixture or a function test. */
 export const PLANE_CRON = "*/5 * * * *";
-export function planeConfig({ version = VERSION, services = [{ binding: "SELF", service: "bio-plane" }], triggers = { crons: [PLANE_CRON] } } = {}) {
+export function planeConfig({ version = VERSION, services = [{ binding: "SELF", service: "bio-plane" }], triggers = { crons: [PLANE_CRON] }, observability = { enabled: true } } = {}) {
   return {
     name: "bio-plane", account_id: ACCOUNT, main: "src/plane/index.mjs",
     compatibility_date: "2026-07-01", compatibility_flags: ["nodejs_compat"],
@@ -207,6 +207,7 @@ export function planeConfig({ version = VERSION, services = [{ binding: "SELF", 
     r2_buckets: [{ binding: "CAPTURES", bucket_name: "c" }, { binding: "PUBLISHED", bucket_name: "p" }],
     services, browser: { binding: "BROWSER" }, limits: { subrequests: 500, cpu_ms: 30000 },
     ...(triggers ? { triggers } : {}),
+    ...(observability !== null ? { observability } : {}),   /* G54: Workers Logs on, as the real wrangler.jsonc states it; null declares none */
   };
 }
 
