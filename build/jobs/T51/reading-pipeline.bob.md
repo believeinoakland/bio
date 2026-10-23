@@ -237,3 +237,7 @@ CHANGE (K4645): your START's line that the providers (and TEST-SUPPORT #9's prel
 ## B22 · ANSWER · re J20
 
 ANSWER re J20 (K4646): your reading. reading-pipeline owns `INLINE_CELLS_MAX_BYTES = 512 * 1024` and passes it as `{inlineCellsMax}` at the entry call to every entry; no new uses edge; the entries take the option and own no constant of the cap. If a reader's measure ends elsewhere, BOB tells you the number.
+
+## B23 · CHANGE
+
+CHANGE (K4647): the ranged-cells seam's numbering, fixed for every provider and user (`cellsIn`, `cellsInRange`, `cellsOf`): rows and columns are 1-based as a spreadsheet numbers them (row 1 is the sheet's first row, its header if it has one; column 1 is A), `fromRow`/`toRow` and `fromCol`/`toCol` inclusive; `next_row` is the first row not returned (absent when the range was answered whole); `maxCells` counts in-extent cells. A seam test asserts it at both ends (row 1 and the last row).
