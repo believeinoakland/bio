@@ -1449,53 +1449,53 @@ export class NoticeProducers {
 
   /* ================================================================== R28 · a background ingest finished or was stopped
    * (calculations' `ingestNotices`, G55; K4562: the member who ingested a table over the inline threshold "is told when it is
-   * done"). One FINDING per ingest `calculations` answers this viewer as `done` or `stopped`, to the member who ingested alone
-   * while active, keyed `FINDING::ingest-done::<ingest>` or `FINDING::ingest-stopped::<ingest>` so queue mints it once and a
-   * later cycle answers the same item; an ingest still running is never told, nor one this viewer cannot see (calculations
-   * answers only what the act's own visibility allows). The read is the window's, as R27's: 90 days, pages of 200 following
-   * `next` to at most the bound. It names the counts and no other member. */
+   * done"). One FINDING per ingest `calculations` answers this viewer as `done` or `stopped` (only the viewer's own ingests it
+   * sees; it names no other member), to the viewer alone while active, keyed `FINDING::ingest-done::<ingest>` or
+   * `FINDING::ingest-stopped::<ingest>` so queue mints it once and a later cycle answers the same item. Its order is the order
+   * the ingests were started, not finished, so no `next` is kept between cycles: each read starts at `after` 0 and pages by `next`
+   * to at most the bound. The window is 90 days of `finished_at`. A stopped ingest adds the reason's `says`. */
   #ingestNotices(me, viewer, now) {
     if (!this.#active(me)) return { items: [], facts: {} };
     const since = now - INGEST_NOTICE_DAYS * DAY_MS;
     const done = [];
-    let after = null, read = 0, truncated = false;
+    let after = 0, truncated = false;
     for (;;) {
-      if (read >= INGEST_NOTICE_MAX) { truncated = true; break; }
-      const r = this.#calculations.ingestNotices({ after, limit: Math.min(INGEST_NOTICE_PAGE, INGEST_NOTICE_MAX - read), viewer });
-      if (!r || r.ok !== true || !Array.isArray(r.ingests)) throw failure("calculations");
-      read += r.ingests.length;
-      done.push(...r.ingests);
-      if (r.truncated !== true || r.next === null || r.next === undefined || r.next === after) break;
+      if (done.length >= INGEST_NOTICE_MAX) { truncated = true; break; }
+      const r = this.#calculations.ingestNotices({ after, limit: Math.min(INGEST_NOTICE_PAGE, INGEST_NOTICE_MAX - done.length), viewer });
+      if (!r || r.ok !== true || !Array.isArray(r.items)) throw failure("calculations");
+      done.push(...r.items);
+      if (r.next === null || r.next === undefined || r.next === after || r.items.length === 0) break;
       after = r.next;
     }
     const items = [];
     const seen = new Set();
     for (const g of done) {
-      if (!g || !filled(g.ingest) || !INGEST_STATES.includes(g.state) || bare(g.by) !== me || seen.has(g.ingest)) continue;
-      const when = Date.parse(g.at);
+      if (!g || !filled(g.ingest) || !INGEST_STATES.includes(g.state) || seen.has(g.ingest)) continue;
+      const when = Date.parse(g.finished_at);
       if (!(Number.isFinite(when) && when >= since)) continue;      /* the window is the item's life, as R27's */
       seen.add(g.ingest);
       const kind = `ingest-${g.state}`;
       const count = (v) => (Number.isSafeInteger(v) && v >= 0 ? v : 0);
       const fills = { written: String(count(g.written_count)), not_written: String(count(g.not_written_count)), rows: String(count(g.rows_total)) };
+      const says = g.state === "stopped" && g.stopped && filled(g.stopped.says) ? g.stopped.says.trim() : "";
+      const sentence = g.state === "done"
+        ? localize("notice-producers.ingest.done", "Your table has been ingested: {written} of {rows} rows were written as money facts, {not_written} were not.", fills)
+        : localize("notice-producers.ingest.stopped", "Your table's ingest was stopped after {written} of {rows} rows were written; the rest were not.", fills);
       items.push({
         id: `FINDING::${kind}::${g.ingest}`, class: "FINDING", kind,
         label: NOTICED_LABEL, by: localize("notice-producers.group_civicsmith", "the team's Civicsmith"),
-        case: filled(g.project) ? this.#homesAt([g.project], viewer) : this.#homesOf([]),
-        subject: { kind: "ingest", id: g.ingest, binding: g.binding ?? null, project: g.project ?? null, state: g.state },
-        summary: g.state === "done"
-          ? localize("notice-producers.ingest.done", "Your table has been ingested: {written} of {rows} rows were written as money facts, {not_written} were not.", fills)
-          : localize("notice-producers.ingest.stopped", "Your table's ingest was stopped after {written} of {rows} rows were written; the rest were not.", fills),
-        detail: g.state === "done"
-          ? localize("notice-producers.ingest.done", "Your table has been ingested: {written} of {rows} rows were written as money facts, {not_written} were not.", fills)
-          : localize("notice-producers.ingest.stopped", "Your table's ingest was stopped after {written} of {rows} rows were written; the rest were not.", fills),
+        case: this.#homesOf([]),
+        subject: { kind: "ingest", id: g.ingest, binding: g.binding ?? null, state: g.state },
+        summary: sentence,
+        detail: says ? `${sentence} ${says}` : sentence,
         fills,
-        basis: { source: "calculations.ingestNotices", ingest: g.ingest, binding: g.binding ?? null, state: g.state, at: g.at ?? null,
+        basis: { source: "calculations.ingestNotices", ingest: g.ingest, binding: g.binding ?? null, state: g.state, finished_at: g.finished_at ?? null,
+                 reason: g.state === "stopped" && g.stopped ? g.stopped.reason ?? null : null,
                  detail: localize("notice-producers.index.an_ingests_end_is_calculations", "an ingest's end is calculations' (its R14): told once, to the member who ingested, when a background run is done or was stopped, and to nobody else.") },
-        age: ageFrom(g.at, now, "no_ingest_instant"),
+        age: ageFrom(g.finished_at, now, "no_ingest_instant"),
         assignee: null, assignee_role: null,
         recipients: [me],
-        options: this.#optionsOf(filled(g.project) ? [g.project] : []),
+        options: this.#optionsOf([]),
       });
     }
     return { items, facts: { truncated } };

@@ -32,7 +32,7 @@ export const NONE = Object.freeze({
   /* R27 (G2): capture's fetch_done records */
   capture: { fetchesDone: () => ({ ok: true, fetches: [], limit: 200, truncated: false, next: null }) },
   /* R28 (G55): calculations' finished or stopped background ingests */
-  calculations: { ingestNotices: () => ({ ok: true, ingests: [], limit: 200, truncated: false, next: null }) },
+  calculations: { ingestNotices: () => ({ ok: true, items: [], next: null }) },
   /* R16 (ai-use R5, R9; ai-accounts R13), R17 (steps, question-explorer, investigation, review), T41 */
   aiUse: { exploreAsksPending: () => ({ ok: true, asks: [] }), limitsReached: () => ({ ok: true, reached: [] }) },
   steps: { laterFound: () => ({ ok: true, found: [] }), stepsDue: () => ({ ok: true, due: [] }),

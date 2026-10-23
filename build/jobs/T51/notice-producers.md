@@ -81,3 +81,11 @@ Notice: two kinds, FINDING `ingest-done` and FINDING `ingest-stopped`, keyed `FI
 
 **Platform check.** Not applicable: a read of two small lists, no new object work (R-FOUR's platform clause: no size, CPU or `waitUntil` involved).
 Waiting on BOB: the answer to J6 and the `modules.json` edge.
+
+## G55 · after B6 (read to the provider's shape)
+Merged `tranche/T51` (the `calculations` edge is in; architecture 0). The earlier stand-in shape in J6 is replaced by BOB's published one: `ingestNotices({after = 0, limit, viewer}) → {ok, items: [{ingest, binding, state, rows_total, written_count, not_written_count, finished_at, stopped?: {reason, says}}], next}`. `#ingestNotices` (`index.mjs`) reads from `after` 0 every cycle (no cursor kept; order is by start, not finish), pages by `next` to 1,000, 90 days of `finished_at`; the subject is the ingest and its binding (no project, no `by`: the viewer is its member); a stop's `says` follows the sentence in the detail. Words `notice-producers.ingest.done` / `.stopped` (localize); row owed to the design: the same pair (T52).
+Tests: `g55-ingest.test.mjs` (7), red on the base (no producer), green after, except the seam over the real calculations, red by name (`calculations has not published ingestNotices`) until CALCULATIONS #9 merges. Added a test that two cycles both read from 0.
+Results: module 143 tests, 142 pass, 1 red by name (the seam). format 0, architecture 0, coverage 27/27, words 0, ownership 0 failures. Impact users: queue `noticed.test.mjs:288` is red for the same cause (`facts.failed` gains `calculations` while the real calculations lacks `ingestNotices`); it clears at calculations' merge (as `capture` did). Other impact users: store-door 6/6; control-plane and plane are not read by this producer.
+Proposed requirement line (BOB writes): R28 (G55, K4562): FINDINGs `ingest-done` / `ingest-stopped`, one per ingest `calculations.ingestNotices` answers the viewer, keyed `FINDING::ingest-<state>::<ingest>`, told to the viewer alone while active; each cycle reads from the start, pages by `next` to 1,000, window 90 days of `finished_at`; `facts.ingest`; a failing read named `calculations` in `facts.failed`; Uses gain `calculations`.
+Census ops owned: none changed.
+Size (session_01CVXguWMv2q1pfSMTRFJZDM): test runs 8, module lines 1561
