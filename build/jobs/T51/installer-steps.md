@@ -264,3 +264,7 @@ Decided by the requirements: installer R17 ("sends nothing, naming why, when the
 Scratch tree (my branch + `origin/job/T51/installer`, removed after): `requirements`, `t50`, `t51`, `wizard` tests: 89 tests, 7 reds, all allowed: R8, R11, R20, R44, R61, R71, wizard. The R17 (K1541) red is gone.
 
 Size (session_01WaNWPB8W8wmgcuybTWiVtm): test runs 9, module lines 2102
+
+## J17 · COMPLETE
+
+B16 done. The observability read-back refuses only when settings are read (state bindings) and observability.enabled is not true; an unreadable answer continues and calls opts.note(localize installer-steps.plane.logsunconfirmed) (row owed). approveAgain/lasting rethrown as heldBindings. INSTALLER must pass opts.note in its uploadInstall/uploadUpdate calls (index.mjs :807 :810 :825 :826 :1207) for the sentence to show; nothing breaks without it. Scratch tree with job/T51/installer merged: requirements/t50/t51/wizard tests 89, reds only R8 R11 R20 R44 R61 R71 wizard (R17 K1541 green). Steps suite 108 tests, 106 pass. Size (session_01WaNWPB8W8wmgcuybTWiVtm): test runs 9, module lines 2102
