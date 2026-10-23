@@ -7,7 +7,7 @@
  * (project-roster R26, R34: `participation` `joined`, `leaving`, `invited` or null). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { open as openPage, main, text, fill, press, says, ok, refused, DOCUMENT_STUB } from "./page.mjs";
+import { open as openPage, main, text, fill, press, says, word, hasWord, ok, refused, DOCUMENT_STUB } from "./page.mjs";
 import { SCREENS } from "../../../src/screens-intake/index.mjs";
 
 const PROJ = "PROJ-2026-0007";
@@ -27,17 +27,19 @@ const plane = ({ image, projects }) => ({ projectlist: ok({ projects, truncated:
 const open = (path, p) => openPage(path, { plane: plane(p), screens: [...SCREENS, DOCUMENT_STUB] });
 const upload = async (p) => { fill(p, { "ci-file": FILE, "ci-how-made": true, "ci-where": "City hall", "ci-what": "The packet." }); await press(p, "captureupload"); };
 const capture = async (p) => { fill(p, { "ci-address": ADDRESS }); await press(p, "acquire"); };
+/* the sentence: U463/DEC-425's `refusal.PROMOTE_NOT_A_PARTICIPANT` ({project} by name) where the row exists and the list names the project, else the nearest held row */
+const refusal = (name) => (name && hasWord("refusal.PROMOTE_NOT_A_PARTICIPANT") ? word("refusal.PROMOTE_NOT_A_PARTICIPANT", { project: name }) : word("project.notmember"));
 const sent = (p) => ["heldat", "acquire", "captureupload", "allocid", "promote"].flatMap((op) => p.byOp(op).map(() => op));
 
 test("R22 R35 (G74) Add on a project the member is neither in nor invited to says so, never names it by its id, and an address capture sends nothing", async () => {
-  for (const projects of [[], [row({ participation: null, mine: { in: false, owner: false } })]]) {
+  for (const [projects, name] of [[[], ""], [[row({ participation: null, mine: { in: false, owner: false } })], "Yosemite"]]) {
     const p = await open(`/app/capture/address/${PROJ}`, { image: false, projects });
     assert.equal(main(p).querySelectorAll("[data-notmember]").length, 1, "the page says it before anything is pressed");
-    assert.ok(says(p, "project.notmember"));
+    assert.ok(text(p).includes(refusal(name)));
     assert.equal(text(p).includes(PROJ), false, "the project's id is never drawn");
     await capture(p);
     assert.deepEqual(sent(p), [], "no look, no fetch, nothing filed");
-    assert.ok(says(p, "project.notmember"), "the refusal beside the act is the same sentence");
+    assert.ok(text(p).includes(refusal(name)), "the refusal beside the act is the same sentence");
   }
 });
 
@@ -45,7 +47,7 @@ test("R22 R35 (G74) the same for a file: its bytes are not sent for a project th
   const p = await open(`/app/capture/file/${PROJ}`, { image: false, projects: [] });
   await upload(p);
   assert.deepEqual(sent(p), [], "nothing is sent, so nothing is stored under a project she cannot see");
-  assert.ok(says(p, "project.notmember"));
+  assert.ok(text(p).includes(refusal("")));
   assert.equal(text(p).includes(PROJ), false);
 });
 

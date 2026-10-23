@@ -70,7 +70,14 @@ async function projectOf(cs, id) {
     after = v.next;
   }
   const mine = !!(row && ["joined", "leaving", "invited"].includes(row.participation));
-  return { id: project, title: mine && typeof row.name === "string" ? row.name : "", question, member: mine };
+  return { id: project, title: row && typeof row.name === "string" ? row.name : "", question, member: mine };
+}
+
+/* G74 (U463, DEC-425): the words for a project the member may not file into: `refusal.PROMOTE_NOT_A_PARTICIPANT` with `{project}` by name where the
+ * name is known and the row exists, else the nearest held row (`project.notmember`). Answers `{key, fills}`. */
+function notMemberWords(cs, f) {
+  const key = "refusal." + "PROMOTE_NOT_A_PARTICIPANT";
+  return f && f.title && cs.w(key) !== key ? { key, fills: { project: f.title } } : { key: "project.notmember", fills: {} };
 }
 
 /* G75 (fix round 7): a held row's name where it stored none: the chain a delivery names a document by (R54), from what the row gives: its own
@@ -269,7 +276,7 @@ function renderCapture(cs, view) {
     if (m) forqNote = said("screen.capture.forq", { project: m.title, question: `\u201C${m.question}\u201D` });
     /* G74 (fix round 7): Add opened for a project (or a question's project) the member is neither in nor invited to says so first, in the nearest held row's words
        (`project.notmember`; owed: its own row), and offers nothing to file there; the project is never named by its id */
-    else if (U.forq.state === "ok" && U.forq.value && U.forq.value.id && U.forq.value.member === false) forqNote = `<p class="cs-state" data-state="failed" role="alert" data-notmember>${cs.w("project.notmember")}</p>`;
+    else if (U.forq.state === "ok" && U.forq.value && U.forq.value.id && U.forq.value.member === false) { const nm = view.parts.notMemberWords(cs, U.forq.value); forqNote = `<p class="cs-state" data-state="failed" role="alert" data-notmember>${cs.w(nm.key, nm.fills)}</p>`; }
   }
   let body = "";
   if (tab === "address") {
@@ -565,7 +572,7 @@ async function sendAcquire(view, el, cs) {
   if (chosen) {
     const f = await view.parts.filedFor(view, cs);
     /* G74 (fix round 7): a project the member is neither in nor invited to takes nothing from her: no look, no fetch, nothing filed */
-    if (f && f.id && f.member === false) return { refuse: "project.notmember" };
+    if (f && f.id && f.member === false) { const nm = view.parts.notMemberWords(cs, f); return { refuse: nm.key, fills: nm.fills }; }
     if (f && f.id) body.project = f.id;
   }
   /* R45: the page as a visitor saw it is asked for only when that is chosen; the site's own copy sends no `render` */
@@ -690,7 +697,7 @@ async function doneAcquire(view, answer, cs) {
   }
   const filed = await view.parts.filedFor(view, cs);
   if (filed === null) { cs.set("promoteRefused", { tab: "address", html: "" }); return; }
-  if (filed.member === false) { cs.set("promoteRefused", { tab: "address", html: cs.w("project.notmember") }); return; }
+  if (filed.member === false) { cs.set("promoteRefused", { tab: "address", html: (() => { const nm = view.parts.notMemberWords(cs, filed); return cs.w(nm.key, nm.fills); })() }); return; }
   const made = await view.parts.promoteDocument(cs, { doc, title, locator: address, project: filed.id });
   if (made.refused !== undefined) { cs.set("promoteRefused", { tab: "address", html: await view.parts.refusedHtml(view, cs, made.refused) }); return; }
   cs.set("captured", { title, address, bundleId: made.bundleId, filed, sha, ...pend, ...(finished ? { finish: "done" } : {}), ...(waiting || (made.readingPending && !view.parts.readingOf(a, doc).read) ? { readingPending: true } : {}) });
@@ -883,7 +890,7 @@ async function sendUpload(view, el, cs) {
     .join("\n").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
   if (Array.from(statement).length > 2000) return { refuse: "screen.capture.file.toolong", fills: { count: Array.from(statement).length } };
   /* G74 (fix round 7): the same for a file: bytes are not sent for a project the member is neither in nor invited to */
-  if (view.parts.forOf(view).id) { const f = await view.parts.filedFor(view, cs); if (f && f.id && f.member === false) return { refuse: "project.notmember" }; }
+  if (view.parts.forOf(view).id) { const f = await view.parts.filedFor(view, cs); if (f && f.id && f.member === false) { const nm = view.parts.notMemberWords(cs, f); return { refuse: nm.key, fills: nm.fills }; } }
   /* R27 (control-plane R100): the file's declared media type rides beside `statement` and `name`; an empty type sends none */
   const query = { statement, name: file.name };
   if (typeof file.type === "string" && file.type) query.type = file.type;
@@ -917,7 +924,7 @@ async function doneUpload(view, answer, cs) {
   }
   const filed = await view.parts.filedFor(view, cs);
   if (filed === null) { cs.set("promoteRefused", { tab: "file", html: "" }); return; }
-  if (filed.member === false) { cs.set("promoteRefused", { tab: "file", html: cs.w("project.notmember") }); return; }
+  if (filed.member === false) { cs.set("promoteRefused", { tab: "file", html: (() => { const nm = view.parts.notMemberWords(cs, filed); return cs.w(nm.key, nm.fills); })() }); return; }
   /* R54: an upload is named by its file's name, or by the reading's title when the answer carries one and the file is a page */
   const isPage = /html/i.test(String(sent.type || "")) || /\.html?$/i.test(name);
   const title = view.parts.titleOf(cs, { reading: isPage ? a.reading : null, doc: {}, address: "", fileName: name || String((doc && doc.name_stated && doc.name_stated.text) || "") });
@@ -1051,7 +1058,7 @@ export const CAPTURE_SCREEN = Object.freeze({
   id: "capture",
   reads: captureReads,
   render: renderCapture,
-  parts: Object.freeze({ bundleFor, checkOutcome, copyOf, filedFor, filedHeld, forOf, heldTitle, homeOf, projectOf, promoteDocument, readingOf, refusalHtml, refusedHtml, repairedReading, titleOf, watchFetch }),
+  parts: Object.freeze({ bundleFor, checkOutcome, copyOf, filedFor, filedHeld, forOf, heldTitle, homeOf, notMemberWords, projectOf, promoteDocument, readingOf, refusalHtml, refusedHtml, repairedReading, titleOf, watchFetch }),
   acts: Object.freeze([
     Object.freeze({ op: "acquire", label: "act.acquire.label.capture", send: sendAcquire, done: doneAcquire, failed: failedAcquire, rereads: Object.freeze(["open"]),
                     /* G72: a session the plane no longer holds is the end of that capture, not a failure: `done` draws it (its line is the screen's own, so the note beside the act is empty) */

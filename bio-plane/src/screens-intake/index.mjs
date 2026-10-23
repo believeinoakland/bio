@@ -81,7 +81,7 @@ export const SCREEN_KEYS = Object.freeze({
     /* R38, R31 (fix round 5, E7, E8; K4530): a held copy's reading asked for by the press, and what "Finish it" was answered; the nearest held rows stand in (K4269) */
     "transcribe.why.evidenceabsent", "refusal.CAPTURE_NOT_HELD", "acquisition.index.render_pending_note", "acquisition.note.continuation_files_new",
     /* G72, G74 (fix round 7; K4269): the nearest held rows stand in: a closed capture, and a project the member is not in (owed: refusal.NO_SUCH_SESSION, a row for the second) */
-    "acquisition.index.no_such_session", "project.notmember",
+    "acquisition.index.no_such_session", "project.notmember", "refusal.PROMOTE_NOT_A_PARTICIPANT", "refusal.NO_SUCH_SESSION",
   ]),
   held: Object.freeze([
     "act.heldcaptures.label.held", "act.heldrestore.label.held", "act.heldsetaside.label.held",
