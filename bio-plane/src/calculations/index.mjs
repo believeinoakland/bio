@@ -111,7 +111,7 @@ export const INGEST_ROWS_MAX = 100000;
  *  heap being the platform's: a payer past it is looked up each time, as before). */
 export const INGEST_CACHE_MAX = 10000;
 /** R14 (G55, K4562): an act over this many rows is ingested in the background, in slices; at or under it the act runs whole and answers whole. */
-export const INGEST_INLINE_ROWS = 3000;
+export const INGEST_INLINE_ROWS = 10000;
 /** R14 (G55): one slice judges at most this many rows, or writes at most INGEST_SLICE_FACTS facts, whichever comes first (counts, never time:
  *  the object's clock is frozen). A slice is one transaction. */
 export const INGEST_SLICE_ROWS = 20000;
@@ -1943,6 +1943,7 @@ export class Calculations {
    *  `complete` (false while running or stopped). An ingest the viewer may not see, as the act's `#sees`, answers as an absent one. */
   ingestRead({ ingest = null, kind = "state", after = 0, limit = 100, viewer = null } = {}) {
     const absent = { ok: true, found: false };
+    if (!str(ingest)) return no("NO_INGEST", localize("calculations.ingest.no_ingest", "an ingest is read by its key."));
     try {
       const r = typeof ingest === "string" && stamped(viewer) ? this.#one(`SELECT * FROM calc_ingests WHERE ingest_key=?`, ingest) : null;
       if (!r || !this.#sees(r.bundle_id, viewer)) return absent;
@@ -2613,6 +2614,8 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["source","schema","header","roles","vintage"], requires: ["source","schema","header"] } },
   calculationcreate: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("calculations.declared.calculationcreate", "calculation-directed: keyed by a new CALC- id; writes calculations' rows and moves no bundle"),
     fields: { accepts: ["question","terms","period","inputs","recipe","kind","threshold","methodNote","evidences","project"], requires: ["question","period","inputs","kind"] } },
+  moneyingestread: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("calculations.declared.moneyingestread", "read: a money ingest's stored lists, a page at a time, with true counts and whether the ingest is complete (`calculations` R14); writes nothing"),
+    fields: { accepts: ["ingest","kind","after","limit"], requires: ["ingest"] } },
   calculationaccept: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("calculations.declared.calculationaccept", "calculation-directed: keyed by calculation; a member's acceptance after an agreeing recompute"),
     fields: { accepts: ["id","calcId"], requires: [["id","calcId"]] } },
   calculationdraw: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("calculations.declared.calculationdraw", "set-directed: keyed by (set, seed, size, method); records a reproducible draw and moves no bundle"),

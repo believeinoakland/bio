@@ -192,12 +192,11 @@ test("R14 (G55 d) the cache is bounded: past INGEST_CACHE_MAX answers a payer is
 
 /* ---- tier 2 (K4562): an act over INGEST_INLINE_ROWS runs in the background, in slices ---- */
 
-/* money's partial marker (G55 tier 2, MONEY #8) is a seam: until it merges the test holds its own `markIngest` and keeps the tag it carries
-   in the facts' source (`source.ingest`) from the real money, which does not yet take it; the real marker is the seam test below */
+/* a spy on money's marker: every call is kept and passed on to the real module */
 function marked(w) {
   const marks = [];
-  w.money.markIngest = (key, open) => { marks.push([key, open]); };
-  w.money.recordFact = (f) => { w.money.calls.push(f); const { ingest: _tag, ...source } = f.source; return w.money.real.recordFact({ ...f, source }); };
+  const through = w.money.markIngest;
+  w.money.markIngest = (key, open) => { marks.push([key, open]); return through(key, open); };
   return marks;
 }
 const resolving = (rows) => setup(rows, () => "P001");
@@ -207,7 +206,7 @@ test("R14 (G55 pins) the constants of the slice, pinned by measure and by this t
   assert.equal(INGEST_SLICE_ROWS, 20000);
   assert.equal(INGEST_SLICE_FACTS, 2000);
   assert.equal(INGEST_MAX_ATTEMPTS, 3);
-  assert.ok(INGEST_INLINE_ROWS >= 3000 && INGEST_INLINE_ROWS <= 5000, "the inline threshold, set from the platform measure");
+  assert.equal(INGEST_INLINE_ROWS, 10000, "the inline threshold, set by check L (Miniflare): 10,000 resolving rows run in 1.26-1.28 s, the worst inline case");
 });
 
 test("R14 (G55 d) start: INGEST_INLINE_ROWS + 1 rows answer started with true counts and a sentence, write no fact in the act, tell the work listener once and open money's marker; a second act on the binding is ALREADY_INGESTING", async () => {
