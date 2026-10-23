@@ -724,3 +724,11 @@ Size (session_01DVeYe6wF7P8CpLfVhfSwSK): test runs 9, module lines 4680
 ## J39 · COMPLETE
 
 Round 7 seam file t51-round7-seam.test.mjs pushed: 16 tests, 7 green, 9 red by name for their providers (G58, G61 + fetch-done twin, G64, G59, G62 x2, G74, G75). No source change. Five findings differing from the plan are in the record (J-round7 section): G64 comma control red too (reading text not comma), fetch-done never minted for a member, G62 ceremony never sends tieAttested, G75 title is '[object Object]' from the delivery's cs date (my module; fix on CHANGE), G66 same-second tie. Checks: format/architecture 0, ownership 0.
+
+## B53 (CHANGE): G75 fixed
+
+The delivery's `cs` (`control-plane/index.mjs` ~:795) now unwraps `{html}` variables for `word` and formats `date` as a UTC "October 23, 2026" (it returned the ISO string, and `word` printed the `{html}` object): the held row and the filed bundle read "A page from www.example.gov, captured October 23, 2026". §G75's seam test (red before) is green; its small-PDF control stays green. G66's same-second tie accepted (B53); `reauth` before `caseratify` is right.
+
+Control-plane directory after merging tranche/T51: tests 463, pass 457, fail 6. The six are the seam sections red by name for providers not merged: G58, G61 (ingest-done), G61 twin (fetch-done, BOB diagnosing), G64 (calculations CHANGE), G62 x2 (screens-publish CHANGE). G59 and G74 now pass (their providers have merged).
+
+Size (session_01DVeYe6wF7P8CpLfVhfSwSK): test runs 11, module lines 4690
