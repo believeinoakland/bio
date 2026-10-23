@@ -27,6 +27,7 @@ import { askOp, actionDraftOp, ACTION_DRAFT_OPS } from "./ask.mjs";
 import { json, doAnswer, storeSilent, storeRefusal, STORE_SILENT_REASON, STORE_SILENT_DETAIL,
          requiredArgument } from "../answer-envelope/index.mjs";
 import { SCRATCH, sha256Hex, caseReader, captureKey, storageAbsent } from "../control-plane/index.mjs";
+import { storeStub } from "../store-place.mjs";
 
 /* The public ops: each owner's handler asked in turn; the bootstrap report answers any other. */
 /* K2062 (control-plane's door, admission R20, R21): the hook is handed the caller's presented `credential` (read from the
@@ -57,7 +58,7 @@ export async function publicOp({ req, url, env, op, stub, fp, presentedAi, crede
 /* The admitted ops whose handler is a module's door; undefined for control-plane's generic forward. */
 export async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer, sessIdentity, sessRights,
                                 sessCaps, aiCred, storeName, stub, grantMember, trace = null, memberRef = null, timings = null, deferReading = null }) {
-  const store = () => env.STORE.get(env.STORE.idFromName(storeName));
+  const store = () => storeStub(env, storeName);
   /* The stamps, from the authenticated caller: a session's member, viewer and identity; an `ai` credential's principal
      as its viewer and identity, and `class:ai/<tokenId>` as its author (control-plane R17, as its generic forward stamps
      it; REC-134; N866): no arm below that takes `author` records the `token:` form for an `ai` caller; (T44; N874)
