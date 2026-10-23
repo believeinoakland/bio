@@ -1,0 +1,154 @@
+<title>Reading Research Findings</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one reading column; a summary band, then one section per file family, then the questions. */
+:root {
+  --bg: #fbfaf7; --surface: #f1efe8; --fg: #1d2126; --muted: #5b6168; --line: #d9d5ca;
+  --accent: #1f5f8b; --bad: #a1392b; --good: #2f6b3a;
+  --display: "Fraunces", Georgia, serif; --body: "Atkinson Hyperlegible", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #15181c; --surface: #1e2329; --fg: #e8e6e1; --muted: #a2a7ad; --line: #343a41;
+  --accent: #7db6e0; --bad: #e8897b; --good: #8cc79a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #15181c; --surface: #1e2329; --fg: #e8e6e1; --muted: #a2a7ad; --line: #343a41;
+  --accent: #7db6e0; --bad: #e8897b; --good: #8cc79a; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font: 16px/1.6 var(--body); }
+.wrap { max-width: 46rem; margin: 0 auto; padding-block: 2.5rem 4rem;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; text-wrap: balance; line-height: 1.2; }
+h1 { font-size: 2.1rem; margin: 0 0 .5rem; }
+h2 { font-size: 1.5rem; margin: 2.75rem 0 .75rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
+h3 { font-size: 1.1rem; margin: 1.5rem 0 .4rem; }
+p, li { max-width: 65ch; }
+.eyebrow { font: 500 .75rem var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: 1.1rem; color: var(--muted); }
+.band { background: var(--surface); border-radius: 6px; padding: 1rem 1.25rem; margin: 1.5rem 0; }
+.band p { margin: .4rem 0; }
+ul { padding-left: 1.2rem; } li { margin: .35rem 0; }
+.fail li::marker { color: var(--bad); } .ok li::marker { color: var(--good); }
+.tag { font: 500 .7rem var(--mono); color: var(--muted); }
+.wrapt { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .95rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 700; color: var(--muted); font-size: .85rem; }
+td.gap { color: var(--bad); font-weight: 700; }
+.q { border-left: 3px solid var(--accent); padding-left: .9rem; margin: .9rem 0; }
+.q b { display: block; }
+.q span { color: var(--muted); font-size: .95rem; }
+a { color: var(--accent); }
+</style>
+
+<div class="wrap">
+<p class="eyebrow">Civicsmith · T51 · prepared by BOB #270 · 23 October 2026</p>
+<h1>What we learned about reading files</h1>
+<p class="lede">You asked (K4798) for every major kind of file to be researched the way PDF was. Five research reports are done. This page summarises all of them in plain words.</p>
+
+<div class="band">
+<p><b>Where this stands.</b> The research is finished. The step you asked for next (K4812) is under way: one architecture designed for all file types, with options and a recommendation for you. That work runs in its own session, READING-ARCHITECTURE, and has written the first of its five deliverables (the reading requirements gathered in one place). Its page of options and questions for you comes after it has also studied Cloudflare's limits and the causes of failure. Nothing about reading is being fixed piecemeal meanwhile.</p>
+<p><b>What this page is not.</b> It is not yet the recommendation. The reports' own suggestions are listed, but several conflict with your file standard (K4628, K4630). The architecture work is designing to meet your standard, not to shrink it.</p>
+</div>
+
+<h2>The finding common to every file type</h2>
+<p>No requirement ever stated what reading a given kind of file must handle: how large, how many pages or rows, which variants, which languages and encodings. So each fix was proven on one tidy example file, and the same kind of problem kept coming back in a new form. Four failure patterns appear in every family:</p>
+<ul class="fail">
+<li><b>Silent partial reads.</b> A file is called "read whole" when pages, rows or parts were never read. You ruled this must never happen (K4571).</li>
+<li><b>Size limits that disagree.</b> The same file meets up to nine different ceilings (2, 3, 8, 20, 24, 32, 64 and 256 MB) in different parts of the system. None matches your standard, and a file between them is often kept but never read.</li>
+<li><b>Whole-file work in a small memory.</b> Each team's record runs in 128 MB of memory. Many readers load or re-read the entire file every step, so a large or unusual file can crash the reader, and the crash is then retried forever.</li>
+<li><b>Lost reasons.</b> When a file cannot be read, the member usually sees a vague "non-textual or too large" or "declined" rather than the real reason.</li>
+</ul>
+<p>The reports agree on the direction of the cure: read every kind of file from storage in bounded pieces, carry the position forward between pieces, and state honestly what has and has not been read. That is the architecture now being designed.</p>
+
+<h2>PDF</h2>
+<p class="tag">pdf-envelope-T51.md and pdf-architecture-T51.md</p>
+<h3>How it works today</h3>
+<p>A small PDF (about 2 MB or less) is read during the upload. A larger one is read in the background, about 100 pages per step, until the end. Plain text is read first, a heavier reader takes over when the text is unclear, and scanned pages go to text recognition (OCR), 24 pages per step. A PDF over 24 MiB is kept but not read.</p>
+<h3>What works</h3>
+<ul class="ok"><li>The 1,354-page budget volume reads to the end and can be searched and paged through.</li><li>Ordinary text PDFs, links, page sizes and titles are read reliably. Unfinished work survives a restart.</li></ul>
+<h3>What fails</h3>
+<ul class="fail">
+<li>An encrypted PDF shows "being read" forever.</li>
+<li>A 30-page scan stopped at page 24, and the other 6 pages were never read and never scheduled.</li>
+<li>A damaged or cut-off file reads the pages it finds and says nothing about the rest.</li>
+<li>Text in common fonts that lack a built-in character map comes out empty, and falls to the slow reader.</li>
+<li>A 204 KB file can expand to 200 MB in memory, and a very dense page can exhaust memory.</li>
+<li>PDFs edited after saving can show the old text, and some structural variants drop or blank pages.</li>
+<li>A temporary failure after the first step ends the read as partial instead of retrying.</li>
+</ul>
+
+<h2>Scans and images</h2>
+<p class="tag">envelope-scans-T51.md</p>
+<h3>How it works today</h3>
+<p>Only JPEG, PNG and scanned PDFs are actually read, by OCR, one page at a time. TIFF (the usual office-scanner output), GIF, WebP, HEIC and BMP are accepted and stored but no reader exists for them. Pictures inside web pages are kept but never read.</p>
+<h3>What works</h3>
+<ul class="ok"><li>JPEG and PNG decoding is exact. A large scanned PDF read in the background does finish (60 of 60 pages in re-walk 6). The OCR service is well tested.</li></ul>
+<h3>What fails</h3>
+<ul class="fail">
+<li>Pages go missing silently, and the record still says "whole" (6 of 30 unread in one case, 102 of 250 in another).</li>
+<li>Most image types are labelled "too large" and show buttons that do nothing.</li>
+<li>Tiny hostile files exhaust memory: 8 KB used 2.3 GB, and 170 bytes can claim 7.7 GB.</li>
+<li>A file that crashes the OCR service is retried about hourly, forever.</li>
+<li>A sideways picture is stored as fluent nonsense and reported as read.</li>
+<li>Four kinds of image come back "ok" with wrong pixels, and the specific reason for a refusal is lost on its way to the member.</li>
+<li>Only English is read, and nothing says so.</li>
+</ul>
+
+<h2>Spreadsheets and tables</h2>
+<p class="tag">envelope-sheets-T51.md</p>
+<h3>How it works today</h3>
+<p>CSV, Excel (XLSX) and OpenDocument (ODS, also every Google Sheet captured) are turned into searchable text, with the original kept so exact cells can be cited. Large files are read in slices. The CSV reader is the most mature. The Excel reader re-reads the whole file at every step, and the ODS reader is the weakest.</p>
+<h3>What works</h3>
+<ul class="ok"><li>CSV files up to about 17 MB read whole. A 200,000-row Excel file reads in two steps. Zip tricks and files that misstate their size are caught and stated, and size limits on the preview are stated.</li></ul>
+<h3>What fails</h3>
+<ul class="fail">
+<li>Accented letters, curly quotes, dashes, Chinese, Japanese and Korean, and emoji vanish from UTF-8 CSV cells.</li>
+<li>Any ODS over about 6,500 cells loses its search index entirely.</li>
+<li>A table made from a large CSV gets extra rows (18,100 for 18,098), because it is built from the search text instead of the file.</li>
+<li>One stray quote mark can make a 500,000-row file read as 62 rows, with no warning.</li>
+<li>Excel's default "CSV" format (Windows-1252) loses every accented word.</li>
+<li>Dates in Excel are searched as serial numbers, and merged cells in ODS shift citations to the wrong cell.</li>
+</ul>
+
+<h2>Documents, presentations, web pages and archives</h2>
+<p class="tag">envelope-docs-T51.md</p>
+<h3>How it works today</h3>
+<p>Word, PowerPoint, OpenDocument, plain text, web pages and ZIP archives share one reading machine. Plain text is read in windows. The other kinds are re-opened and re-read in full on every step. Archives are opened only when the app fetches them from the web. None of the nine walks so far used a Word, PowerPoint, OpenDocument, RTF, email or ZIP file.</p>
+<h3>What works</h3>
+<ul class="ok"><li>UTF-8 plain text is solid: a 12 MB text reached its last line. Opening ZIP-style containers is sound, and macro and hidden-slide detection work. Rendering a page as a visitor saw it has well-stated time limits.</li></ul>
+<h3>What fails</h3>
+<ul class="fail">
+<li>A 45 to 70 KB Word file can crash the reader.</li>
+<li>A Word table of about 1,500 rows makes the whole document unsearchable, while the read is called final.</li>
+<li>A 953-byte hostile Word file took 8 seconds to read.</li>
+<li>Text in other encodings (Latin-1, Windows-1252, UTF-16) is shown garbled and called complete.</li>
+<li>RTF, email and old <code>.doc</code> files have no reader.</li>
+<li>Footnotes, headers, comments, tracked changes and speaker notes are skipped, yet the read is called whole.</li>
+<li>An uploaded ZIP is never opened, and password-protected files are marked "clean" by the safety scan.</li>
+</ul>
+
+<h2>Your standard against today</h2>
+<div class="wrapt"><table>
+<tr><th>Kind</th><th>Your standard (K4628)</th><th>Today</th></tr>
+<tr><td>Documents (PDF, Word and similar)</td><td>100 MB or 5,000 pages, read whole</td><td class="gap">24 MiB; 1,354 pages is the largest proven</td></tr>
+<tr><td>Scans</td><td>100 MB or 5,000 pages</td><td class="gap">24 MiB; pages lost past 24 on the upload path</td></tr>
+<tr><td>Images</td><td>50 MB</td><td class="gap">24 MiB read; JPEG and PNG only</td></tr>
+<tr><td>Spreadsheets</td><td>50 MB or about 1 million rows</td><td class="gap">CSV 17 MB; Excel about 120,000 rows; ODS about 6,500 cells searchable</td></tr>
+<tr><td>Archives</td><td>500 MB</td><td class="gap">256 MB; ZIP only, and only when fetched from the web</td></tr>
+<tr><td>Never silently partial (K4571)</td><td>Always</td><td class="gap">Broken in every family</td></tr>
+</table></div>
+<p>Several reports recommend keeping 24 MiB because the 128 MB memory cannot hold more at once. You have already ruled that files within your standard are read whole in pieces, never refused (K4630). I read those size questions as answered by you, and reaching the figures as engineering for the architecture to solve. They come back to you only if measurement shows the platform cannot do it.</p>
+
+<h2>Questions coming to you</h2>
+<p>The reports raised about 30 questions. The architecture session is sorting them: questions your rulings already answer are dropped, duplicates merged, and the rest come to you on one page, each with options and a recommendation. These are the ones that look to be yours:</p>
+<div class="q"><b>Which image types are read</b><span>Recommended: JPEG, PNG, TIFF and GIF; WebP, HEIC, BMP and SVG kept and stated as not read.</span></div>
+<div class="q"><b>Which languages and text encodings</b><span>Today English only for OCR and UTF-8 only for text. Recommended: say "read as English" now; read Windows-1252 and UTF-16 text and show the encoding assumed.</span></div>
+<div class="q"><b>A promised time to finish reading</b><span>The reports differ: one suggests no promise and an honest "read X of Y", others 15 minutes for the largest text file and hours for the largest scan.</span></div>
+<div class="q"><b>Password-protected files</b><span>Recommended: read those that open with an empty password; state the rest as needing a password. Typing a password in would be a new capability.</span></div>
+<div class="q"><b>Pages that are sideways, blurry or faint</b><span>Recommended: turn pages upright first; store nothing below a legibility floor; mark partly legible pages.</span></div>
+<div class="q"><b>Search in Chinese, Japanese and Thai</b><span>Recommended: out of scope for the alpha, stated as a limit.</span></div>
+<div class="q"><b>Which parts of a document count as its text</b><span>Footnotes, comments, headers, tracked changes and speaker notes. Reading them changes what a member can cite.</span></div>
+<div class="q"><b>Whether a safety hold stops reading</b><span>Today a file is searchable before its safety scan finishes.</span></div>
+<div class="q"><b>Formats with no reader yet</b><span>RTF, email, old <code>.doc</code> and <code>.xls</code>, archives other than ZIP: build readers, or state them as unread until real files need them.</span></div>
+<p>Nothing is needed from you yet. The architecture session's page will put these to you properly.</p>
+</div>
