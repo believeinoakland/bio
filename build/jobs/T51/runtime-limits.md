@@ -22,3 +22,7 @@
 **Run.** `node --test bio-plane/test/m/runtime-limits/`: 32 tests, 32 pass, 0 fail, 0 skipped. `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 0 of 176 (no existing file changed). Checks from the process repository: format `176 modules, 176 requirements files; 0 failures`; architecture `4 product files, 6 relative imports (1 naming no tracked file, not judged); 0 failures`; coverage `26 of 26 live requirement ids named by a test; 0 failures`; ownership `1 files changed by runtime-limits between tranche/T51 and HEAD; 0 failures`.
 
 Size (session_01Ha6MYafmZ1NtDAwR8FeQEx): test runs 4, module lines 36
+
+## J1 · COMPLETE
+
+R27 and R28 met in bio-plane/src/store-place.mjs (new; add to runtime-limits paths in modules.json). 32 module tests pass, format/architecture/coverage/ownership 0 failures, impact 0 of 176. Notes in my record: setup-words build --check is stale from calculations' new word (not mine).
