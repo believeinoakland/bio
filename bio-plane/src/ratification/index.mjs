@@ -672,20 +672,35 @@ export class Ratification {
   /* R44 (DEC-147; T50, N1203): whether the ceremony's last step offers "Publish at…", and in which zone: the group's
      governing zone as `publish-schedule` R1 reads it, which is `retrieval` R69's (`local-facts`' governing value of
      `time_zone` first, else the active profiles' through `jurisdictions.combine`). Should retrieval be unreadable, the
-     profiles alone answer, as before. No zone held offers only "Publish now"; the time is never read as UTC. */
+     profiles alone answer, as before. No zone held offers only "Publish now"; the time is never read as UTC.
+     R58 (T51 fix round 7, G62; K4736): the answer also says where an offered zone came from (`source`: retrieval's
+     `local-facts` or `profiles`, `profiles` also when retrieval was unreadable) and, when none is offered, why (`source`
+     `none`, `why` retrieval's own, or `UNREADABLE`); one structured log line says the same, never the zone's text. A
+     zone retrieval answers none for is final: two profiles that govern different zones govern none, and `publish-schedule`
+     R1 would refuse a time offered in one of them. */
   #publishAtOffer() {
-    let zone = null;
+    let got = null, unreadable = false;
     try {
-      zone = this.retrieval.zone();
+      got = this.retrieval.zone({ why: true });
     } catch {
+      unreadable = true;
+    }
+    if (!unreadable && !(got && typeof got === "object")) got = { zone: got, source: null, why: null };
+    let zone = unreadable ? null : got.zone, source = unreadable ? null : got.source, why = unreadable ? "UNREADABLE" : got.why;
+    if (unreadable) {
       try {
         const list = this.record.getSetting("jurisdiction_profiles");
         const c = combineProfiles(Array.isArray(list) ? list : []);
         zone = c && c.ok && c.view && c.view.time_zone ? c.view.time_zone.value : null;
+        if (typeof zone === "string" && zone) { source = "profiles"; why = null; }
       } catch { zone = null; }
     }
     zone = typeof zone === "string" && zone ? zone : null;
-    return zone ? { offered: true, zone } : { offered: false, zone: null, reason: "PUBLISH_AT_NO_ZONE" };
+    source = zone ? (typeof source === "string" && source ? source : null) : "none";
+    why = typeof why === "string" && why ? why : null;
+    try { console.log(JSON.stringify({ event: "publish_at", offered: !!zone, source, why })); } catch { /* a log changes nothing */ }
+    return zone ? { offered: true, zone, source }
+                : { offered: false, zone: null, reason: "PUBLISH_AT_NO_ZONE", source, why };
   }
 
   /* R35 (DEC-102 items 1, 2; K1074): each roster member's testimony legs on an observation whose level in force for
