@@ -169,3 +169,21 @@ Size (session_01RUnq4fs9yS6fvUi9DZjnt9): test runs 160, module lines 1496
 COMPLETE again, after B8 (CHANGE): merged tranche/T51 (entities' G55 tier 1 in) into job/T51/money, pushed. Money suite 98 of 98 pass; coverage 29 of 29; ownership 0 failures (3 files). Nothing in money waited on entities. Tier 1 stands as in J9; tier 2 still waits for BOB's word.
 
 Size (session_01RUnq4fs9yS6fvUi9DZjnt9): test runs 162, module lines 1496
+
+## J11 · COMPLETE
+
+COMPLETE, G55 tier 2 (money), after B9 and B10. tranche/T51 merged; pushed.
+
+**Built to B10's contract, spelled the same.** `markIngest(key, open)` is synchronous, joins the caller's transaction (tested: a throw after it leaves no marker and no fact), idempotent; refuses `NO_INGEST` for an empty or over-200-character key or a non-boolean. A table-row source accepts `ingest: <key>` (`SOURCE_FIELDS`); on any other source, or empty/over-long, `UNKNOWN_FIELD` (field `ingest`). `recordFact` stays synchronous. Facts store the key in new column `source_ingest` (added to existing stores by `migrate`); money owns table `money_ingests (ingest_key, open, opened_at, closed_at)`, declared (group sight) and in the purge list.
+
+**Partial.** A fact whose key is open in `money_ingests` (opened and not closed, so a stopped ingest stays marked) is answered `{partial: true, ingest, partial_says}` by `readFact`, `moneyOf`, the sides of `committedAgainstPaid`, `neighbours` items, `recordedBy` items, a trail row and its adjustments. `summable` and `reconcile` answer ids, so they carry `partial: true, ingests: [keys]` only when a fact named is partial. Closing removes it; reopening restores it; a key never opened, and every old fact (no key), is unmarked (R-OLD). Answers for facts without a marker are byte for byte as before. The sentence is `localize("money.ingest.partial", …)`; its row in setup-words is not yet generated (BOB regenerates; words check shows no finding in money).
+
+**Proposed requirement text (BOB writes).** R30 as in J9. R31 (G55; K4562, K4571): "A source that is a table row may carry `ingest`, the key of the background ingest reading it. `markIngest(key, open)` (synchronous, in the caller's transaction) opens or closes a key; money holds the open keys. Every read that answers a fact of an open key, one never closed (a stopped ingest) included, answers `partial: true`, the key and `localize('money.ingest.partial')`; summable and reconcile answer `partial` and `ingests`; a fact with no key, or whose key was never opened, is unmarked. Refusals: `NO_INGEST`; `UNKNOWN_FIELD` for `ingest` on another source." R2's source forms gain `ingest`. R21: `money_ingests` declared.
+
+**Tests.** `g55-view.test.mjs` 12 tests (6 tier 1, 6 tier 2: every read partial with key and sentence; close, stopped, reopen; unopened key and old fact; transaction; refusals; field for field with and without a key). Seen red on the base (no `markIngest`, no `viewBuilds`). `record.test.mjs` R21's declared-table list gained `money_ingests`. Money 104 of 104 pass.
+
+**Ran.** Direct users of money (155 files, each alone) plus plane `migrate-released`: all `fail 0`. format, architecture (money), coverage 29 of 29, ownership 0 failures (5 files); `checks/run.mjs`: only the inherited `case-checker/spec.mjs:11`. Declarations: no census op changed (no new op).
+
+**Made stale (not edited, P9):** `bio-plane/dist/bio-plane.bundled.mjs` embeds money's source; BOB regenerates it at the layer close.
+
+Size (session_01RUnq4fs9yS6fvUi9DZjnt9): test runs 330, module lines 1566
