@@ -112,3 +112,7 @@ Size (session_01G1CAemApraurD9bkv8qb3W): test runs 1, module lines 1365
 - Uses (private): `extraction`'s reading field `cells_held` (reading-pipeline R28, as emitted).
 
 Size (session_01DRhBLuRPVD8G3hWpq1rxBR): test runs 9, module lines 2025
+
+## J5 · BLOCKED
+
+BLOCKED (cause: tests; waits on providers, not a defect of mine). G41 code is done and pushed: findin.mjs reads the reading's cells_held; a held sheet has no list, term hits name sheet + unit range, cells null, held-sheet cells_why; money/dates read its text. Hand-reading tests red->green; module suite 59/61; format, architecture, coverage, words (unchanged 18524), ownership all 0 failures. The 2 tests through the op over the real extraction on the 1 MB CSV stay red: your START says extraction #38 and content #18 are merged, but none of test-support, csv-reader, office-readers, reading-pipeline, extraction, content is on tranche/T51 (0eecd0dbbd), cells_held is in none of their source there, and bio-plane/test/platform-sqlite.mjs is absent. Smallest thing I need: merge those providers (shim first, then csv-reader, office-readers, reading-pipeline, extraction) into tranche/T51 and tell me; I then merge tranche/T51, run the two tests under the shim and COMPLETE. Detail in my record.
