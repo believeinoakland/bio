@@ -11,7 +11,7 @@
   "handle": 7,
   "ai": 174,
   "date": 14,
-  "queue": 494,
+  "queue": 497,
   "transcribe": 19,
   "capture": 71,
   "document": 77,
@@ -22,7 +22,7 @@
   "label": 231,
   "project": 56,
   "grouprule": 1,
-  "refusal": 2586,
+  "refusal": 2588,
   "signing": 23,
   "case": 18,
   "docket": 7,
@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7653,
+  "screen": 7658,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -235,7 +235,7 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19066,
+  "total": 19076,
   "protected": 1156
  },
  "words": [
@@ -80881,6 +80881,76 @@
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-424: B495 notice-producers R27: the fetch-done item's door; the same words as notice.fetch.done.door (DEC-418)"
+  },
+  {
+   "key": "refusal.NO_SUCH_SESSION",
+   "en": "This capture has ended, so there is nothing left to finish. Start it again from Add. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-425: B498 G72 screens-intake: \"Finish it\" on a capture whose session the ledger closed; the screen also reads its open captures again so the Unfinished line leaves"
+  },
+  {
+   "key": "queue.kind.ingest-done",
+   "en": "Tables you asked to be read into money facts, now read",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-425: B498 G61 queue: the kind's one-line meaning (the style of queue.kind.capture-completed-unattended)"
+  },
+  {
+   "key": "queue.kind.ingest-stopped",
+   "en": "Tables whose reading into money facts was stopped",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-425: B498 G61 queue: the kind's one-line meaning"
+  },
+  {
+   "key": "queue.kind.fetch-done",
+   "en": "Large files you captured, now fetched and filed",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-425: B498 G61 queue: the kind's one-line meaning"
+  },
+  {
+   "key": "screen.ceremony.gate.head",
+   "en": "What Civicsmith's checks found",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-425: B498 G60 screens-publish: the heading over the findings a GATE_REFUSED signing lists, under refusal.GATE_REFUSED; each finding drawn with its message, its check named in plain words, and its repairs. Proposed key: the job names its own if it differs"
+  },
+  {
+   "key": "screen.ceremony.gate.check",
+   "en": "Check: {check}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-425: B498 G60: the line naming a finding's check under its message; {check} the check's plain name where the record holds one, else its number"
+  },
+  {
+   "key": "screen.ceremony.publishat.nozone",
+   "en": "Your team's Civicsmith holds no time zone to count a publishing time in, so only \"Sign and publish now\" is offered.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-425: B498 G62 screens-publish: reason (i), no zone held; replaces refusal.PUBLISH_AT_NO_ZONE's \"isn't set … under Settings\" on the Sign step. Proposed key"
+  },
+  {
+   "key": "screen.ceremony.publishat.notreached",
+   "en": "Publishing at a set time isn't offered for this edition yet: {reason} Only \"Sign and publish now\" is offered for now.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-425: B498 G62: reason (ii), the ratification check not reached; {reason} the sentence publish_at_stated gives. Proposed key"
+  },
+  {
+   "key": "screen.ceremony.publishat.nooffer",
+   "en": "Publishing at a set time came without a time zone, so it can't be scheduled safely, and only \"Sign and publish now\" is offered. This is a fault in Civicsmith: tell an administrator.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-425: B498 G62: reason (iii), an offer with an empty zone. Proposed key"
+  },
+  {
+   "key": "refusal.PROMOTE_NOT_A_PARTICIPANT",
+   "en": "Only the members of {project}, and those invited to it, can file documents into it. Nothing was filed. Ask an owner of the project to invite you, or file it into a project you are in.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-425: B498 G74 promotion: BOB's P17 decision after K4557; DEC-83's pattern, the sentence then the remedy; {project} the project's name, never its id. Proposed key: the job names its own if it differs"
   },
   {
    "key": "refusal.GROUP_SLUG_MALFORMED",

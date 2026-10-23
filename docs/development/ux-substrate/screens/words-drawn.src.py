@@ -7845,6 +7845,20 @@ w424('notice-producers.index.fetch_done_detail', "The large page you asked for i
 w424('notice-producers.index.machine_work_from_your_standing', "Machine work, from your standing question. {v1}{v2}. You are told about this once.", "notice-producers: the standing-answer item's line; {v1} 'N new finds' or 'New finds are held', {v2} empty or '; the assistant did not answer, because ...'")
 w424('notice-producers.index.open_the_document', "Open the document", "notice-producers R27: the fetch-done item's door; the same words as notice.fetch.done.door (DEC-418)")
 
+# DEC-425: fix round 7's rows, written ahead of the round's end (B498; K4736; G60, G61, G62, G72, G74)
+def w425(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-425: B498 ' + note))
+w425('refusal.NO_SUCH_SESSION', "This capture has ended, so there is nothing left to finish. Start it again from Add. Nothing was changed.", "G72 screens-intake: \"Finish it\" on a capture whose session the ledger closed; the screen also reads its open captures again so the Unfinished line leaves")
+w425('queue.kind.ingest-done', 'Tables you asked to be read into money facts, now read', "G61 queue: the kind's one-line meaning (the style of queue.kind.capture-completed-unattended)")
+w425('queue.kind.ingest-stopped', 'Tables whose reading into money facts was stopped', "G61 queue: the kind's one-line meaning")
+w425('queue.kind.fetch-done', 'Large files you captured, now fetched and filed', "G61 queue: the kind's one-line meaning")
+w425('screen.ceremony.gate.head', 'What Civicsmith\'s checks found', "G60 screens-publish: the heading over the findings a GATE_REFUSED signing lists, under refusal.GATE_REFUSED; each finding drawn with its message, its check named in plain words, and its repairs. Proposed key: the job names its own if it differs")
+w425('screen.ceremony.gate.check', 'Check: {check}', "G60: the line naming a finding's check under its message; {check} the check's plain name where the record holds one, else its number")
+w425('screen.ceremony.publishat.nozone', 'Your team\'s Civicsmith holds no time zone to count a publishing time in, so only "Sign and publish now" is offered.', "G62 screens-publish: reason (i), no zone held; replaces refusal.PUBLISH_AT_NO_ZONE's \"isn't set … under Settings\" on the Sign step. Proposed key")
+w425('screen.ceremony.publishat.notreached', 'Publishing at a set time isn\'t offered for this edition yet: {reason} Only "Sign and publish now" is offered for now.', "G62: reason (ii), the ratification check not reached; {reason} the sentence publish_at_stated gives. Proposed key")
+w425('screen.ceremony.publishat.nooffer', 'Publishing at a set time came without a time zone, so it can\'t be scheduled safely, and only "Sign and publish now" is offered. This is a fault in Civicsmith: tell an administrator.', "G62: reason (iii), an offer with an empty zone. Proposed key")
+w425('refusal.PROMOTE_NOT_A_PARTICIPANT', 'Only the members of {project}, and those invited to it, can file documents into it. Nothing was filed. Ask an owner of the project to invite you, or file it into a project you are in.', "G74 promotion: BOB's P17 decision after K4557; DEC-83's pattern, the sentence then the remedy; {project} the project's name, never its id. Proposed key: the job names its own if it differs")
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

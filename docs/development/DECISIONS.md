@@ -6550,3 +6550,18 @@ the design: 56 rows (block "DEC-424" in `screens/words-drawn.src.py`), same keys
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-424"); `screens/words-reads-handoffs.json`.
 owed: BOB: the keys read with these fills, or a QUESTION naming any that differ; whether an update stopped by `installer-steps.plane.observability` leaves anything changed (the row says no "Nothing was changed." until it is known).
 amended: 2026-10-23 (B496): an update stopped by `installer-steps.plane.observability` has already put the new version in place (the upload precedes the check) and has not finished; the row says so: "The new version of your team's Civicsmith is in place, but your Cloudflare account did not switch on its logs (Workers Logs), so the update stopped before it finished. … then run the update again to finish it."
+
+### DEC-425 · answered
+raised: 2026-10-23 · the UX design session with Bob, on his secondary account with BOB (session_01DvXHQqV1arHFoxUeFp1nmG) (BOB's B498: fix round 7's wording, K4736; B497 read)
+for: design (T51 for the five rows the round's code needs; the other wording lines stay T52's in later-ux.md, none stops an operation)
+question: The rows fix round 7's jobs draw as stand-ins, written before the round ends so the jobs can use them.
+why it is Bob's: it is not (P17).
+provisional: as below.
+alternative: waiting for the round's end HANDOFF with the exact keys; not taken: writing now lets the jobs key the sentences directly, and any key that differs is renamed in one line.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-23 · the design session (P17)
+the design: 10 rows (block "DEC-425"): `refusal.NO_SUCH_SESSION` (G72, "This capture has ended, so there is nothing left to finish. Start it again from Add. Nothing was changed."); `queue.kind.ingest-done`, `.ingest-stopped`, `.fetch-done` (G61, one line each); `screen.ceremony.gate.head` "What Civicsmith's checks found" and `.gate.check` (G60); the Sign step's three reasons (G62) `screen.ceremony.publishat.nozone`, `.notreached` ({reason} as `publish_at_stated` gives it), `.nooffer` (a fault: tell an administrator), never "isn't set … under Settings" where that is not the cause; `refusal.PROMOTE_NOT_A_PARTICIPANT` (G74, BOB's P17 decision after K4557, DEC-83's pattern, {project} by name). Keys not yet named by the code are proposed.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-425").
+owed: BOB: the jobs' keys where they differ from the proposed ones (renamed here in one line); each check's plain name for G60, if the record holds none; the wording-only lines of round 7 at T52 (later-ux.md).
