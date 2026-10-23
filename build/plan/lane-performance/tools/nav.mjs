@@ -10,7 +10,7 @@ const BASE = process.env.BASE || "https://biosmoke8.believeinoakland.workers.dev
 const [role, width] = process.argv.slice(2);
 const PR = "PROJ-2026-5304-walk-085-project", Q = "INQ-2026-0001-how-many-pothole-reports-did-the-city-cl", DOC = "INFO-2026-0001-walk085-sample-txt";
 const SCREENS = [["Home", "/app"], ["Project", `/app/project/${PR}`], ["Question", `/app/question/${Q}/${PR}`], ["Document", `/app/document/${DOC}`], ["Timeline", `/app/timeline/${PR}`], ["Held", "/app/held"]];
-const b = await chromium.launch({ args: ["--no-proxy-server"], ...(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {}) });
+const b = await chromium.launch({ proxy: { server: process.env.HTTPS_PROXY }, ...(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {}) });
 const page = await (await b.newContext({ viewport: { width: +width, height: 900 } })).newPage();
 let log = [], docs = 0;
 page.on("framenavigated", (f) => { if (f === page.mainFrame()) docs++; });

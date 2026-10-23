@@ -1,0 +1,9 @@
+{ viewer { accounts(filter:{accountTag:"ACCOUNT"}) {
+  durableObjectsInvocationsAdaptiveGroups(limit:50, filter:{datetime_geq:"2026-10-23T11:01:00Z", datetime_leq:"2026-10-23T14:00:00Z"}) {
+    dimensions { scriptName namespaceId status }
+    sum { requests errors responseBodySize }
+    quantiles { cpuTimeP50 cpuTimeP99 wallTimeP50 wallTimeP99 }
+  }
+  durableObjectsStorageGroups(limit:20, filter:{date_geq:"2026-10-20"}) { dimensions { date } max { storedBytes } }
+  durableObjectsPeriodicGroups(limit:20, filter:{date_geq:"2026-10-22"}) { dimensions { date namespaceId } sum { activeTime cpuTime storageReadUnits storageWriteUnits rowsRead rowsWritten } max { activeWebsocketConnections } }
+} } }

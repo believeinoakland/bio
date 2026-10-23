@@ -237,6 +237,9 @@ export class Scheduler {
   #beat = null;
   /* R27: the registered consumers held, by name, at the wake that did not advance (see `#holding`). */
   #held = new Map();
+  /* G70: the instant this instance last set the alarm for (null once deleted, undefined before any), so the next firing can say what it was scheduled for;
+     the heartbeat's `next_set_for` answers it after a restart, when the alarm is no longer readable (the platform clears it while the handler runs). */
+  #alarmFor;
 
   /** `storage` is the Durable Object's storage (its alarm, and the probe seam's and the daily consumers' values);
    *  `owners` answers each consumer's owner (`retrieval`, `monitoring`, `connections`, `progressions`, `aiRuns`,
@@ -572,6 +575,9 @@ export class Scheduler {
 
   async onAlarm(now = Date.now()) {
     const probe = await this.#probeState(now, true);
+    const before = await this.#beatRead();
+    const scheduledFor = this.#alarmFor !== undefined ? this.#alarmFor : before.next_set_for ?? null;   /* G70 */
+    const previousEnd = Number.isFinite(before.ended) ? before.ended : null;
     await this.#beatWrite({ running_since: now });   /* R29: getAlarm() is null while this runs */
     await this.#loadDaily();
     const reg = this.registry(probe);
@@ -597,7 +603,13 @@ export class Scheduler {
     /* Reconciled over the FULL registry, not only the consumers that ticked, and authoritatively: a fired alarm is
        spent, so the fresh earliest wake is set outright (R1, R16). */
     const nextAt = await this.#reconcile(now, reg, true, answers);
-    await this.#beatWrite({ last_run: now, running_since: null });   /* R28 */
+    /* G70 (K4428): what the walker saw as 28-64 s between ticks, said by the platform's own firing: when the alarm was
+       scheduled for, when this firing started and ended, what it set next, and the gap since the previous firing ended.
+       Kept in the heartbeat (one put, as before) and as one structured line. No pace is changed: this only records. */
+    const ended = Math.max(Date.now(), now);
+    const alarm = { scheduled_for: scheduledFor, started: now, ended, next_set_for: nextAt, gap_ms: previousEnd === null ? null : now - previousEnd };
+    await this.#beatWrite({ last_run: now, running_since: null, ...alarm });   /* R28 */
+    try { console.log(JSON.stringify({ scheduler_alarm: alarm })); } catch { /* logged where it can be */ }
     if (probe) await this.#storage.put(PROBE_KEY, probe);
     if (this.#daily && DAILY.some((n) => reg.some((c) => c.name === n)) && typeof this.#storage.put === "function") {
       /* a storage that cannot hold the value keeps it for this instance alone; the firing still answers */
@@ -642,13 +654,14 @@ export class Scheduler {
       try { w = await c.wake(now); } catch (e) { if (errors) errors[c.key] = { error: message(e) }; continue; }
       if (w !== null && w !== undefined && Number.isFinite(w)) wants.push(w);
     }
-    if (!wants.length) { await this.#storage.deleteAlarm(); return null; }
+    if (!wants.length) { await this.#storage.deleteAlarm(); this.#alarmFor = null; return null; }
     const want = Math.min(...wants);
-    if (exact) { await this.#storage.setAlarm(want); return want; }
-    if (force) { const fresh = Math.max(want, now); await this.#storage.setAlarm(fresh); return fresh; }   /* R29 */
+    const set = async (t) => { await this.#storage.setAlarm(t); this.#alarmFor = t; return t; };
+    if (exact) return await set(want);
+    if (force) return await set(Math.max(want, now));   /* R29 */
     const at = await this.#storage.getAlarm();
-    if (at === null || at === undefined || at > want) { await this.#storage.setAlarm(want); return want; }
-    if (!this.#firing && at < now - SPENT_ALARM_MS) { const fresh = Math.max(want, now); await this.#storage.setAlarm(fresh); return fresh; }   /* R4, R11 */
+    if (at === null || at === undefined || at > want) return await set(want);
+    if (!this.#firing && at < now - SPENT_ALARM_MS) return await set(Math.max(want, now));   /* R4, R11 */
     return at;
   }
 
