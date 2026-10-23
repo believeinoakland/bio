@@ -1,6 +1,6 @@
 # record-core (T51)
 
-**Status** · session_01XjGQ7KjpogoaVW83PPQsQX · depth 2 · RUNNING until 2026-10-23T14:48:13Z (users sweep: node --test over the 2032 impact files, two at a time) · handled B4
+**Status** · session_01XjGQ7KjpogoaVW83PPQsQX · depth 2 · WORKING · handled B4
 
 ## Completion (T51-177)
 
