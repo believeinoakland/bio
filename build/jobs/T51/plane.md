@@ -516,3 +516,13 @@ My START (B43) says every G41 provider is merged and TEST-SUPPORT #9's preload i
 - The job branches of CSV-READER #3, OFFICE-READERS #15, READING-PIPELINE #26, EXTRACTION #38, CONTENT #19, RETRIEVAL-BROWSE #4, CALCULATIONS #8 and SCREENS-INQUIRY #24 have each only had their START (the plan lines name their sessions; no `merge job/T51/<module>` for them is on `tranche/T51`). My probe and test (failing-first red on the tranche before the providers, green after) need them merged.
 
 Done so far: branch checked out and fast-forwarded, `tranche/T51` merged in, `mail start` pushed, reading set identified. Nothing changed in module code. I will resume on a RESUME or a ring after the merges.
+
+## Record: B43/B44/B45/B46 (PLANE #52), G41 the shape proof, built ahead of the providers
+
+**Merged** `tranche/T51` (CSV-READER #3, OFFICE-READERS #15 in). Still to merge before green: READING-PIPELINE, EXTRACTION, CONTENT, RETRIEVAL-BROWSE, CALCULATIONS, SCREENS-INQUIRY, and `bio-plane/test/platform-sqlite.mjs` (runs use a copy outside the tree through `BIO_PLATFORM_SHIM`).
+
+**Built** (tests only, `bio-plane/test/m/plane/`): `shape/harness.mjs` (child `args` carry `--import SHIM`, default `bio-plane/test/platform-sqlite.mjs`; `largest` stored value over `readings`, `reading_history`, `capture_text` per tick and at the end, `r.largestStored`/`r.overBound` against `STORED_VALUE_BOUND` 1 MiB; `xlsxDoc(rows)`; `csvDoc` marks FIRSTROWMARK/MIDROWMARK/LASTROWMARK; `readingEachTick`; `cellsOf` of the last row through `extractionOf(ctx).cellsOf`; `unread_pages` in the reading event); `shape/xlsx-gen.mjs` (streamed zip, 200,000 rows = 30,512,306 B of declared sheet text, a 3,163,243 B file, read by `xlsxEntry.text`); `shape/g41.probe.mjs` (cap `128 + 39 - N`, `failures()`, prints the largest CSV that fits on a failure); `g41-shape.test.mjs` (R84 proposed; heavy, run alone); `shape/g26.probe.mjs` check is units + `unread_pages` = 1,354.
+
+**Red on the pre-G41 tip** (`tranche/T51` before csv-reader merged, shim copy): `g41.probe.mjs csv4`, the 4 MB CSV at cap 163: `CHILD DIED (SIGABRT): FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory`; a 2 MB CSV at cap 165 never ends (the ledger still owes `reading` after 600 ticks). Green: owed until the providers merge.
+
+Size so far: not yet final.
