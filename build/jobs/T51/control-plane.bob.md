@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J41
+**Read** · handled J44
 
 ## B1 · START
 
@@ -608,3 +608,11 @@ CHANGE (K4757): runtime-limits is merged into tranche/T51 (`bio-plane/src/store-
 ## B56 · ANSWER · re J41
 
 ANSWER (K4760): runtime-limits is merged (B55): merge tranche/T51 again now. Do not amend the round-6 assertions. G7 is red by name until PLANE #54 merges (its B68 carries G79's plane half: after a keep the plane's keep owner owes a reading row only when a home exists, NO_HOME's is the filing's promotion; K4742 (2), K4748). G2 ('R105, R124') was green on the tranche at the queue merge (K4756: fetch-done in the catalogue): re-run it after merging. G61 x2 should be green now that queue is merged (K4756). G58 waits for plane. G62 x2: ratification, retrieval and screens-publish are all merged (K4744): after merging, if G62 is still red, REPORT the failing assertion and its actual value so I can route it; that is a finding, not a test to amend. COMPLETE when only G7 and G58 (plane) are red by name.
+
+## B57 · ANSWER · re J42
+
+ANSWER (K4764): do not amend G7. A stated-final upload owes no row: PLANE #54's B68 (K4742 (2)) makes the plane's keep owner owe a reading row only when a home exists, NO_HOME owing nothing there; that is the row the test sees ('why NO_HOME'). G7 clears when plane merges, which is after you. COMPLETE now with G7, G58 (plane) and G62 (screens-publish's seam: if still red once plane merges, I route it) red by name.
+
+## B58 · CHANGE
+
+CHANGE (K4765), G62: your seam test is the stale part, not screens-publish. Since B46 (K4744) the ceremony sends `tieAttested: true` in its pre-flight once the Ties step is confirmed: `bio-plane/src/screens-publish/ceremony.mjs:95-98` (the Sign step's `later` pre-flight, `tied ? {...args, tieAttested: true}`) and `:469` (`view.ui.prepared ? { tieAttested: true }`). Your test at t51-round7-seam.test.mjs ~:453 asks publishpreflight without it. Drive it as the member does (confirm the Ties step, then the Sign step's pre-flight, generating the body from ceremony.mjs's own builder, never hand-written, R-SEAM), assert publish_at from the oakland-alameda profile, and keep the control: without the Ties confirmation the reason TIE_ATTESTATION_MISSING and publish_at null. Then COMPLETE with only G7 and G58 (plane) red by name.

@@ -33,10 +33,13 @@ export { TRANSLATION_TABLES, TRANSLATION_TABLE_DECLARATIONS, TRANSLATIONS_SCHEMA
  * R2 (DEC-179; K2200 (4); N807): THE INTERFACE'S WORD LIST, setup-words' `WORD_ROWS` in its order, each exported as a
  * frozen `{key, en, note, means, protected}`; this module holds no copy of the list.
  * ===================================================================== */
-export const INTERFACE_WORDS = Object.freeze(WORD_ROWS.map(([key, en, note, means, prot]) =>
-  Object.freeze({ key, en, note, means, protected: prot })));
+/* Built once, at the first call, never at import (fix round 7 G84, K4753: the plane's top level is budgeted). */
+let wordList = null;
+export const interfaceWords = () => (wordList ??= Object.freeze(WORD_ROWS.map(([key, en, note, means, prot]) =>
+  Object.freeze({ key, en, note, means, protected: prot }))));
 export const INTERFACE_WORDS_COMMIT = WORDS_COMMIT;
-const WORD_BY_KEY = new Map(INTERFACE_WORDS.map((w) => [w.key, w]));
+let byKey = null;
+const wordByKey = () => (byKey ??= new Map(interfaceWords().map((w) => [w.key, w])));
 /* R1 (K2201): at most this many words a draft; R4: a kept word's bounds; R7: a mark's note. */
 export const TRANSLATION_DRAFT_MAX = 100;
 export const TRANSLATION_TEXT_MAX = 2000;
@@ -229,7 +232,7 @@ export class Translations {
   /* R2: a word of the list by its key, or NO_SUCH_WORD. */
   #translationWord(key) {
     const k = typeof key === "string" ? key.trim() : "";
-    const w = WORD_BY_KEY.get(k);
+    const w = wordByKey().get(k);
     /* DEC-49 REGION is-translation-word */
     if (!w)
       return { refused: refusal("NO_SUCH_WORD", k
@@ -398,7 +401,7 @@ export class Translations {
         asked.push(w.word);
       }
     } else {
-      asked = INTERFACE_WORDS.filter((w) => !shown.has(w.key));
+      asked = interfaceWords().filter((w) => !shown.has(w.key));
     }
     const names = this.#localNames(tag);
     const offered_official = [], words = [];
@@ -679,7 +682,7 @@ export class Translations {
       if (speaker) return speaker;
       const hist = new Map(this.#languageHistories(tag).map((h) => [h.key, h]));
       const counts = { missing: 0, shown: 0, awaiting: 0 };
-      const words = INTERFACE_WORDS.map((w) => {
+      const words = interfaceWords().map((w) => {
         const g = hist.get(w.key) || { adoptions: [], undos: [], confirmations: [], drafts: [], marks: [] };
         const c = Translations.#current(g.adoptions, g.undos, new Set(g.confirmations.map((r) => r.adoption)));
         counts[c.state] += 1;
@@ -727,11 +730,11 @@ export class Translations {
           const c = Translations.#current(g.adoptions, g.undos, new Set(g.confirmations.map((r) => r.adoption)));
           if (c.state === "shown") shown.set(g.key, c.adoption.text);
         }
-      return { ok: true, language: tag, words: INTERFACE_WORDS.map((w) => (shown.has(w.key)
+      return { ok: true, language: tag, words: interfaceWords().map((w) => (shown.has(w.key)
         ? { key: w.key, text: shown.get(w.key), en: w.en, fallback: false }
         : { key: w.key, text: w.en, en: w.en, fallback: true })) };
     } catch {
-      return { ok: true, language: null, words: INTERFACE_WORDS.map((w) => ({ key: w.key, text: w.en, en: w.en, fallback: true })),
+      return { ok: true, language: null, words: interfaceWords().map((w) => ({ key: w.key, text: w.en, en: w.en, fallback: true })),
                detail: localize("translations.index.the_teams_translations_could_not", "the team's translations could not be read, so every word is shown in English.") };
     }
   }

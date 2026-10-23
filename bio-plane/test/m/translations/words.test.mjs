@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 import { boot } from "./fixture.mjs";
 import { world as aiAccountsWorld } from "../ai-accounts/fixture.mjs";
 import { word, hasWord } from "../../../src/setup-words/index.mjs";
-import { INTERFACE_WORDS, TRANSLATION_TEXT_MAX } from "../../../src/translations/index.mjs";
+import { interfaceWords, TRANSLATION_TEXT_MAX } from "../../../src/translations/index.mjs";
 import { keysRead } from "../../../src/translations/words.mjs";
 
 const READS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words-reads.json", import.meta.url), "utf8"))
@@ -17,8 +17,8 @@ test("R17 a draft hand-back answers not_drafted as {key, why} with why a word ke
   await c.group("ruth", "sam", "tom");
   const w = boot({ more: { membership: c.m, aiAccounts: c.a } });
   w.m.translationGrant({ member: "ruth", language: "es", by: "admin" });
-  const plain = INTERFACE_WORDS.filter((x) => !/\{/.test(x.en) && !x.protected);
-  const withPlaceholder = INTERFACE_WORDS.find((x) => /\{[a-z]+\}/.test(x.en));
+  const plain = interfaceWords().filter((x) => !/\{/.test(x.en) && !x.protected);
+  const withPlaceholder = interfaceWords().find((x) => /\{[a-z]+\}/.test(x.en));
   const [good, leftOut, twoLines, reported] = [plain[0], plain[1], plain[2], plain[3]];
   const keys = [good.key, leftOut.key, twoLines.key, withPlaceholder.key, reported.key];
   const asked = w.m.translationDraft({ language: "es", direction: "to_language", keys, by: "ruth" });
