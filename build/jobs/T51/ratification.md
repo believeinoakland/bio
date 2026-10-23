@@ -1,6 +1,6 @@
 # ratification (T51)
 
-**Status** · session_01Aitu5ptyoRC1Hw82dyhsuk · depth 2 · WORKING · handled B12
+**Status** · session_01Aitu5ptyoRC1Hw82dyhsuk · depth 2 · WORKING · handled B14
 
 ## J1 · REPORT
 
