@@ -18,7 +18,7 @@
  * reassures people about things it has not understood. With no type recognising a
  * document, the registered fallback reports change without describing it, which is
  * noisy and honest; with no fallback registered at all, NO_TYPE below says so. */
-import { makeRegistry, CONFIDENCE } from "../../site-profiles/index.mjs";
+import { makeRegistry, CONFIDENCE, confidenceRank } from "../../site-profiles/index.mjs";
 import { CONTRACT } from "./index.mjs";
 import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
@@ -83,13 +83,57 @@ export function doctypes() { return types.all(); }
  *  A type whose `detect` THROWS is reported as such rather than silently dropped: a
  *  recogniser that cannot answer is a different fact from one that answered no. */
 export function doctypeFor(ctx) {
-  const r = types.recognise(ctx);
+  const g = walk(ctx);
+  let s = g.next();
+  while (!s.done) s = g.next();
+  return s.value;
+}
+
+/** THE LONG TEXT (R39; fix round 7, G88). Over this many characters of `ctx.text`, `doctypeForYielding` gives the thread back
+ *  before each type's `detect`: a long text read in pieces is classified whole (a type may rest on any page, so it is never
+ *  sampled), and the walk over every registered type is about a second of one synchronous stretch at 12 MB. */
+export const CLASSIFY_YIELD_AT_CHARS = 256 * 1024;
+
+/** `doctypeFor`, giving the thread back (R39). The same answer as `doctypeFor`, because it is the same walk: `walk` below
+ *  yields a marker before each `detect`, `doctypeFor` drives it straight through and this awaits `yieldNow()` at each marker
+ *  once `ctx.text` is longer than `CLASSIFY_YIELD_AT_CHARS`. A `yieldNow` that is not a function is no yield; one that throws
+ *  or rejects is ignored (the answer is the same); with none, or on a text that is not long, nothing is awaited. A `detect`
+ *  that throws in the main walk rejects the call, as it throws from `doctypeFor`. One `detect` is still one stretch. */
+export async function doctypeForYielding(ctx, opts) {
+  const yieldNow = opts && typeof opts.yieldNow === "function" ? opts.yieldNow : null;
+  const long = !!ctx && typeof ctx.text === "string" && ctx.text.length > CLASSIFY_YIELD_AT_CHARS;
+  const g = walk(ctx);
+  let s = g.next();
+  while (!s.done) {
+    if (yieldNow && long) { try { await yieldNow(); } catch { /* no yield; the answer is the same */ } }
+    s = g.next();
+  }
+  return s.value;
+}
+
+/* The one walk behind `doctypeFor` and `doctypeForYielding`: the engine's `recognise` (site-profiles, whose exported
+   `CONFIDENCE` and `confidenceRank` this spells out, unchanged) and then `alsoWalk`'s asking, each yielding a marker just before
+   every `detect` it runs. A throw from a `detect` in the main walk leaves the generator, as it left `recognise`; one in the
+   `also` pass is recorded, as `askAll` records it. The members are those registered when the walk starts. */
+function* walk(ctx) {
   const all = types.all();
-  /* The shared engine's last resort is the LAST member when none is a fallback; here
-     an unrecognised document is never read as a type that did not recognise it. */
-  if (!r.matched) r.member = all.find((m) => m.fallback === true) || NO_TYPE;
+  const considered = [];
+  let best = null;
+  for (const m of all) {
+    yield m;
+    const d = m.detect(ctx) || { match: false };
+    if (!d.match) continue;
+    considered.push({ key: m.key, confidence: d.confidence, signals: d.signals || [] });
+    if (!best || confidenceRank(d.confidence) > confidenceRank(best.confidence)) best = { member: m, ...d };
+    if (d.confidence === CONFIDENCE.CERTAIN) break;
+  }
+  const r = best
+    ? { member: best.member, confidence: best.confidence, signals: best.signals || [], considered, matched: true }
+    /* The engine's last resort is the LAST member when none is a fallback; here
+       an unrecognised document is never read as a type that did not recognise it. */
+    : { member: all.find((m) => m.fallback === true) || NO_TYPE, confidence: CONFIDENCE.NONE, signals: [], considered, matched: false };
   const out = { type: r.member, confidence: r.confidence, signals: r.signals, considered: r.considered,
-                also: alsoOf(ctx, r, all) };
+                also: yield* alsoWalk(ctx, r, all) };
   /* A "no" says which no (R35): nothing recognised, and so the registered fallback's reading. */
   if (r.member === NO_TYPE)
     out.why = localize("docprofile.registry.no_content_type_is_registered_to_recognise", "no content type is registered to recognise documents, so this one is not read as any type: nothing is read from it and what changes in it is not described");
@@ -104,12 +148,21 @@ export function doctypeFor(ctx) {
    winner that stopped the walk are left to ask. A winner chosen by rank, and no winner, mean every member was asked. The
    result is `alsoFor(ctx, winner.key)`'s, entry for entry and in registration order; `alsoFor` below stays as the independent
    spelling the suite compares it to. */
-function alsoOf(ctx, r, all) {
+function* alsoWalk(ctx, r, all) {
   const fallback = new Set(all.filter((m) => m.fallback === true).map((m) => m.key));
   const out = r.considered.filter((c) => c.key !== r.member.key && !fallback.has(c.key));
   if (!r.matched || r.confidence !== CONFIDENCE.CERTAIN) return out;
   const after = all.findIndex((m) => m.key === r.member.key) + 1;
-  return [...out, ...askAll(ctx, all.slice(after), r.member.key)];
+  const rest = [];
+  for (const m of all.slice(after)) {
+    if (m.key === r.member.key || m.fallback === true) continue;
+    yield m;
+    let d;
+    try { d = m.detect(ctx) || { match: false }; }
+    catch (e) { rest.push({ key: m.key, confidence: null, signals: [], error: String((e && e.message) || e) }); continue; }
+    if (d.match) rest.push({ key: m.key, confidence: d.confidence, signals: d.signals || [] });
+  }
+  return [...out, ...rest];
 }
 
 /** Every registered type OTHER than `selfKey` whose own `detect` matches this text.

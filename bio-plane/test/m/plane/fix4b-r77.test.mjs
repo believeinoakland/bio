@@ -49,7 +49,7 @@ test("R77 (F1): a reading the door deferred, whose home appears after twenty min
   assert.deepEqual(rows(x), []);
 });
 
-test("R77 (F1): a 40 MB capture in three parts, kept by the alarm at 15 s and promoted at 90 s, is read after the promotion (the keep's NO_HOME no longer ends its reading)", async () => {
+test("R77 (F1): a 40 MB capture in three parts, kept by the alarm at 15 s and promoted at 90 s, owes no reading while it has no home (G79), and is read once the promotion owes it through the door", async () => {
   const bucket = multipartBucket();
   const x = await world({ CAPTURES: bucket });
   const parts = [], bytes = [];
@@ -63,8 +63,9 @@ test("R77 (F1): a 40 MB capture in three parts, kept by the alarm at 15 s and pr
   await captureOf(x.ctx).keepLater({ sha: digest, parts });
   await x.s.onAlarm(t0 + 15_000);
   assert.ok(await recordOf(x.ctx).evidenceStore().head(digest), "the whole is held after the alarm at 15 s");
-  assert.deepEqual(rows(x).map((r) => [r.kind, r.sha]), [["reading", digest]], "its reading stays owed with no home yet");
-  x.state.home = true;   /* the member promotes at 90 s */
+  assert.deepEqual(rows(x), [], "the keep ends owing nothing while there is no home");
+  x.state.home = true;   /* the member promotes at 90 s; the promotion owes the reading through the door (control-plane's `unreadDocuments`) */
+  await x.call(`/pendingadd?kind=reading&sha=${digest}`);
   await x.s.onAlarm(t0 + 90_000 + PENDING_RETRY_MAX_MS);
   assert.equal(x.state.asked.at(-1).sha, digest);
   assert.deepEqual(rows(x), []);

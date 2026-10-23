@@ -33,6 +33,7 @@ import { credentialsOf } from "../credentials/index.mjs";
 import { aiAccountsOf } from "../ai-accounts/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { sha256hex, instanceAiCredential } from "../tokens.mjs";
+import { storeId, storeStub } from "../store-place.mjs";
 import { aiUseOf } from "../ai-use/index.mjs";
 import { stepsOf, WORK_MAX } from "../steps/index.mjs";
 /* The run's vocabulary, pure rules, deployment order and rows are `run-rules`' (K617, K649 (1)); read there, never
@@ -2103,7 +2104,7 @@ export class AiRuns {
     const ns = this.env && this.env.STORE;
     if (!ns || typeof ns.idFromName !== "function" || !this.ctx.id || typeof this.ctx.id.equals !== "function")
       return null;
-    for (const name of ["bio", "scratch"]) if (this.ctx.id.equals(ns.idFromName(name))) return name;
+    for (const name of ["bio", "scratch"]) if (this.ctx.id.equals(storeId(this.env, name))) return name;
     return null;
   }
 
@@ -2151,8 +2152,7 @@ export class AiRuns {
       try { return credentialsOf(this.ctx).aiCredentialLook({ secretSha: sha }); } catch { return null; }
     }
     try {
-      const env = this.env || {};
-      const res = await env.STORE.get(env.STORE.idFromName("bio")).fetch(`http://do/aicredentiallook?sha=${sha}`);
+      const res = await storeStub(this.env || {}, "bio").fetch(`http://do/aicredentiallook?sha=${sha}`);
       const out = await res.json().catch(() => null);
       return out && out.ok === true ? out.result : null;
     } catch { return null; }

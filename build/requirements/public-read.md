@@ -109,6 +109,11 @@ Terms are `publication`'s (a case, an edition, the case document, a pin, the pub
 
 - **R43** (fix round 4, C47 seam; K4511; amends R41; case-grammar R17, case-disclosures R7) **A signed extent is read in its canonical form.** R41's `place` is read from the passage's signed `extent` whether it crosses as an object or as `content`'s canonical JSON text (the form case-grammar R17 signs and case-disclosures carries); text that does not parse to an extent gives `place: null`, never a throw. Test: `screens-publish/c47-seam.test.mjs` (the whole chain: the published page names "Paragraph 4" and "Paragraph 2"), and public-read's own fixture handing the string.
 
+
+#### T51 fix round 8 (K4817; `build/plan/fix-round-8-T51.md`)
+
+- **R44** (fix round 8, G121; K4817) **The case file is assembled in groups.** The case file's `head` and `put` of its files, and its reads of materials, run in groups of 8; the same objects are written. Test: over 12 files, peak concurrency at least 6 and the same keys written. *(not yet met: T51)*
+
 ## Private
 
 ### Uses

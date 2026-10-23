@@ -31,6 +31,10 @@
  * attestation that ended after its capture was answered (R68); a page of held rows is read for the whole page at once and `fields:
  * "picker"` is the cheap read for a list to choose among (R77, R88); `heldAt` judges change on the determined substance digest (R96).
  *
+ * T51 fix round 7 (the walk's G79, G78, G75, G73). An upload held in parts is answered once its parts are stored: the buffers of its parts are handed to
+ * `keepWhole` (no part is read back), and a keep past `MULTIPART_KEEP_MAX` goes to the plane's ledger at once (R103); a draw of held captures asks the
+ * evidence store no more for an object this instance has seen held (R77); `heldAt`'s compared copy names its document's `title` (R96).
+ *
  * T51 (T51-21). R77's rows also answer `actor`, `retrieved` and `bytes`; R88's `held_and_vouched` lists the viewer's
  * vouched documents beside the held ones (`standing`, `vouched`); R96 `heldAt` (`op=heldat`) says whether the record
  * already holds an address or a digest and whether the source has since changed. The basis sentences of R88's vouched
@@ -247,6 +251,9 @@ export const HELD_PAGE_WAIT_MS = 5000;
 /* R91: how many rows of a page are answered at once. Work is begun only while the page's wait has not run out, so a page
    that cannot be answered in time asks no more of the evidence store than it can wait for. */
 const HELD_PAGE_LANES = 8;
+/** R77 (fix round 7; G78): the most digests this instance remembers as proven held, for a draw not to ask the evidence store again; CHOSEN, not
+ *  measured: a digest is 64 characters, so the set is under half a megabyte; past it the set is emptied and fills again. */
+export const HELD_PROVEN_MAX = 5000;
 /* R88 (T51): a vouched row is not asked of R78's examination, so its eligibility reads undetermined with this basis. A
    builder's diagnostic: screens draw `standing` and `vouched`, not this sentence. */
 const VOUCHED_BASIS = localize("capture.index.vouched_basis", "this document is already vouched for, so whether it could be vouched for in a batch is not asked");
@@ -357,7 +364,7 @@ function registerFigures(c) {
 
 export class Capture {
   #sql; #storage; #listeners = new Map(); #readers = new Map(); #declared = false; #acquisition = null; #acquisitionHost = null;
-  #reputationReader = null; #fileScanner = null; #hasWhole = null;
+  #reputationReader = null; #fileScanner = null; #hasWhole = null; #provenHeld = new Set();
 
   constructor(storage, { record, env = {}, governor = null, provenance = null, attestation = null, credentials = null,
                          acquisition = null, acquisitionHost = null, ownHosts = [], reputation = null, fileScanner = null,
@@ -706,6 +713,9 @@ export class Capture {
     /* R107: the first `UPLOAD_HEAD` bytes of the file, kept as they arrive, so a file held in parts is also judged as text from its head. */
     const head = new Uint8Array(UPLOAD_HEAD);
     let headLen = 0;
+    /* R103 (fix round 7; G79): the buffers of the parts as they are stored, while the file can still be kept whole by this module
+       (up to `MULTIPART_KEEP_MAX`), so `keepWhole` puts the whole from them and reads no part back; dropped once the file is larger. */
+    let partBytes = [];
     const flush = async (all) => {
       while (heldBytes >= UPLOAD_PART || (all && heldBytes > 0)) {
         const n = Math.min(UPLOAD_PART, heldBytes);
@@ -720,6 +730,7 @@ export class Capture {
         const psha = hexOf(await crypto.subtle.digest("SHA-256", buf));
         if (!(await ev.head(psha))) await ev.put(psha, buf);
         parts.push({ sha256: psha, bytes: n });
+        if (partBytes) partBytes.push(buf);
       }
     };
     try {
@@ -734,6 +745,7 @@ export class Capture {
                    detail: localize("capture.index.file_too_large", "the file exceeds what this surface will capture even in parts; nothing was written") };
         }
         whole.update(value);
+        if (partBytes && total > MULTIPART_KEEP_MAX) partBytes = null;
         if (headLen < UPLOAD_HEAD) { const k = Math.min(value.length, UPLOAD_HEAD - headLen); head.set(value.subarray(0, k), headLen); headLen += k; }
         held.push(value); heldBytes += value.length;
         if (heldBytes >= UPLOAD_PART) await flush(false);
@@ -750,17 +762,27 @@ export class Capture {
     if (!multipart && parts[0].sha256 !== sha)
       return { ok: false, reason: "HASH_DISAGREEMENT", status: 500, detail: "the incremental hash and the block hash of the same bytes differ" };
     /* R86 (T51; `acquisition` R10, C5): a file held in parts is also kept whole under its own digest, as a fetched one is, so its
-       reading, its vouch box and OCR find it; where it cannot be kept the upload is refused and nothing is written. */
-    if (multipart && !(await keepWhole(ev, { sha, parts, total })).ok)
+       reading, its vouch box and OCR find it; where it cannot be kept the upload is refused and nothing is written. R103 (fix round 7;
+       G79): the buffers of the parts just stored are handed to `keepWhole`, so no part is read back or hashed again: the whole is put
+       once. */
+    if (multipart && !(await keepWhole(ev, { sha, parts, total, bytes: partBytes })).ok)
       return { ok: false, reason: "UPLOAD_NOT_STORED", status: 502,
                detail: localize("capture.index.file_bytes_unreadable", "the file's bytes could not be read whole or held under their own digest, so nothing was written") };
-    /* R103 (fix round 4b, F2): past `MULTIPART_KEEP_MAX` the whole is made from the stored parts by the store itself and this call
-       AWAITS it within what is left of the door's bound: a promise nothing keeps alive after the answer is not a keep. One that has
-       not ended by then is handed to the plane (`keepLater`, its owed-work ledger, finished by its alarm) and the answer says
-       `keep_pending`; the file is filed in its parts either way, never refused for it. */
+    partBytes = null;
+    /* R103 (fix round 4b, F2; fix round 7, G79): past `MULTIPART_KEEP_MAX` the whole is made from the stored parts by the store itself
+       (`putFromParts`). The plane's owed-work ledger keeps it alive after the answer (`keepLater`, finished by its alarm), so the answer
+       is not held for it: the keep is handed over at once and the answer says `keep_pending`. With no ledger (or one that declines)
+       this call AWAITS the keep within what is left of the door's bound, as a promise nothing keeps alive is not a keep; one that has
+       not ended by then is handed over then. The file is filed in its parts either way, never refused for it. */
     let keepPending = false;
-    if (multipart && total > MULTIPART_KEEP_MAX)
-      keepPending = (await keepPast(this, ev, { sha, parts, boundMs: boundMs ?? undefined, elapsedMs: Date.now() - startedAt, keepLater })).keep_pending;
+    if (multipart && total > MULTIPART_KEEP_MAX) {
+      const later = typeof keepLater === "function" ? keepLater : typeof this.keepLater === "function" ? (k) => this.keepLater(k) : null;
+      if (later && typeof ev.putFromParts === "function") {
+        try { const r = await later({ sha, parts: parts.map((p) => p.sha256) }); keepPending = !!(r && r.ok === true); } catch { keepPending = false; }
+      }
+      if (!keepPending)
+        keepPending = (await keepPast(this, ev, { sha, parts, boundMs: boundMs ?? undefined, elapsedMs: Date.now() - startedAt, keepLater })).keep_pending;
+    }
     const pending = keepPending ? { keep_pending: true } : {};
     let holds = null;
     try { holds = await this.provenance?.registerHolds?.({ sha }); } catch { holds = null; }
@@ -802,7 +824,8 @@ export class Capture {
       ct = textTypeOf({ bytes: withoutCutCodePoint(head.subarray(0, headLen)), type, name });
     }
     const profile = await profileOf({ ev, sha, ct, total, multipart, headers: {}, locator: address, view: profileView(this.core),
-                                      retrieved: when, origin: "member", parts: multipart ? parts : null });
+                                      retrieved: when, origin: "member", parts: multipart ? parts : null,
+                                      firstPart: multipart ? head.subarray(0, headLen) : null });
     if (typeof type === "string" && type !== "") { profile.source_content_type = type; profile.declared_by = "uploader"; }
     else if (ct) profile.source_content_type = null;
     const document = this.#uploadedDocument({ sha, total, parts, by, at: when, statement, name, profile });
@@ -1431,7 +1454,7 @@ export class Capture {
       `SELECT address_norm, address, via, retrieval_locator, last_retrieved FROM captured_locators
         WHERE capture_sha = ? ${address ? "AND address_norm = ?" : ""}
         ORDER BY julianday(last_retrieved) DESC, via, address_norm LIMIT 1`, sha, ...(address ? [addressNorm] : []));
-    const home = this.#one(`SELECT r.bundle_id, b.project FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id WHERE r.capture_sha = ?`, sha);
+    const home = this.#one(`SELECT r.bundle_id, b.project, b.title FROM register r JOIN bundles b ON b.bundle_id = r.bundle_id WHERE r.capture_sha = ?`, sha);
     const regDoc = this.#registerDocOf(home.bundle_id, sha);
     const first = this.#one(`SELECT first_retrieved AS at FROM captured_locators WHERE capture_sha = ?
                               ORDER BY julianday(first_retrieved), first_retrieved LIMIT 1`, sha)?.at;
@@ -1456,7 +1479,7 @@ export class Capture {
       try { plain = !receipt.retrieval_locator || normalizeAddress(receipt.retrieval_locator) === receipt.address_norm; } catch { plain = false; }
     }
     return {
-      copy: { sha256: sha, document: home.bundle_id, project: home.project || null, retrieved: at(first),
+      copy: { sha256: sha, document: home.bundle_id, project: home.project || null, title: typeof home.title === "string" && home.title.trim() ? home.title : null, retrieved: at(first),
               actor: typeof actor === "string" && actor ? actor : null, grade, address: receipt ? receipt.address : null,
               as_of: receipt ? at(receipt.last_retrieved) : null },
       receipt: receipt ? { ...receipt, plain_address: plain } : { via: null, plain_address: false },
@@ -1697,18 +1720,31 @@ export class Capture {
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     for (const s of distinct) out.set(s, null);
     if (!ev || typeof ev.head !== "function") return out;
+    /* R77 (fix round 7; G78): an object this instance has seen held is held (a stored object is immutable and never removed), so it is not
+       asked again; the register is never the source, and an answer of false or unknown is asked again at every draw. */
+    const ask = distinct.filter((s) => { if (this.#provenHeld.has(s)) { out.set(s, true); return false; } return true; });
+    if (!ask.length) return out;
     const wait = Capture.#pageWait(HELD_PAGE_WAIT_MS);
+    const began = Date.now();
+    let heads = 0;
     try {
       let next = 0;
       const lane = async () => {
-        while (next < distinct.length && !wait.over()) {
-          const s = distinct[next++];
+        while (next < ask.length && !wait.over()) {
+          const s = ask[next++];
+          heads++;
           const got = await wait.within((async () => { try { return !!(await ev.head(s)); } catch { return null; } })());
           out.set(s, got === TOO_LATE ? null : got);
+          if (got === true) {
+            if (this.#provenHeld.size >= HELD_PROVEN_MAX) this.#provenHeld.clear();
+            this.#provenHeld.add(s);
+          }
         }
       };
-      await Promise.all(Array.from({ length: Math.min(HELD_PAGE_LANES, distinct.length) }, lane));
+      await Promise.all(Array.from({ length: Math.min(HELD_PAGE_LANES, ask.length) }, lane));
     } finally { wait.stop(); }
+    /* G78 (rides the deploy): what a draw cost the store, so a slow one can be named: the heads asked and the time they took altogether */
+    try { console.log(JSON.stringify({ capture: "heldcaptures", heads, head_ms: Date.now() - began, remembered: distinct.length - ask.length })); } catch { /* a log that cannot be written */ }
     return out;
   }
 

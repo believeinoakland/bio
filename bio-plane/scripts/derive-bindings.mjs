@@ -241,3 +241,30 @@ export function observabilityReadBack(settings, want) {
   if (got.enabled !== want.enabled) return { verdict: "MISMATCH", why: `settings say observability.enabled ${JSON.stringify(got.enabled ?? null)}, the config sent ${want.enabled}` };
   return { verdict: "MATCH", why: `observability.enabled ${got.enabled} read back` };
 }
+
+/* ---- G83 (K4752): WHERE THE TEAM'S ROOM RUNS is chosen at a deploy ----
+ *
+ * `--store-location <hint>` and `--store-generation <n>` become the plane's `plain_text` bindings STORE_LOCATION and
+ * STORE_GENERATION (runtime-limits R27/R28 read them). A room never moves, so a new generation is how a copy gets a new
+ * room; `1` is the first room, so it sends no STORE_GENERATION and removes a held one (the rollback). The hint list is
+ * runtime-limits' own (`STORE_HINTS`), passed in, so this file keeps no second copy. Nothing is defaulted: a flag that is
+ * not given sends nothing and a held binding is kept by deploy.mjs's rule (R34). */
+export const STORE_GENERATION_PATTERN = /^[1-9][0-9]*$/;
+
+/** `{ bindings, remove }` for the flags: `bindings` the plain_text bindings to send, `remove` the names a held binding of
+ *  which must NOT be kept. A value that is not valid is refused by name before anything is uploaded. */
+export function deriveStorePlace({ location, generation } = {}, hints = []) {
+  const bindings = [], remove = [];
+  if (location !== undefined) {
+    if (typeof location !== "string" || !hints.includes(location))
+      throw new Error(`REFUSED [BAD_STORE_LOCATION]: ${JSON.stringify(location ?? null)} is not one of Cloudflare's location hints (${hints.join(", ")}).`);
+    bindings.push({ type: "plain_text", name: "STORE_LOCATION", text: location });
+  }
+  if (generation !== undefined) {
+    if (typeof generation !== "string" || !STORE_GENERATION_PATTERN.test(generation))
+      throw new Error(`REFUSED [BAD_STORE_GENERATION]: ${JSON.stringify(generation ?? null)} is not a whole number of 1 or more written without a sign, a leading zero or a space.`);
+    if (generation === "1") remove.push("STORE_GENERATION");
+    else bindings.push({ type: "plain_text", name: "STORE_GENERATION", text: generation });
+  }
+  return { bindings, remove };
+}

@@ -52,6 +52,7 @@
    asked (R29); the viewer of an `ai` credential minted in a project carries that project (R30); the key list R28 reads
    is the design's regenerated one (R31). */
 import { liveToken, sha256hex } from "../tokens.mjs";
+import { storeStub } from "../store-place.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { OPS, SESSION_OPS, NEEDS, UNATTENDED_BY_DECISION, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS, CUSTODIAL_ACTIONS,
@@ -306,7 +307,9 @@ export async function classify(token, env) {
    that did not resolve" and "a session that did not resolve" stay two answers. */
 export const AI_TOKEN_SHAPE = /^aik-[0-9a-f]{64}$/;
 const SESSION_TOKEN_SHAPE = /^[0-9a-f]{64}$/;
-const bioStore = (env) => env.STORE.get(env.STORE.idFromName("bio"));
+/* G83 (K4746, K4747; runtime-limits R28): the team's room is obtained through the one helper, which passes its location
+   hint and names it by its generation, so every store call of this module reaches the same room. */
+const bioStore = (env) => storeStub(env, "bio");
 
 /* R6, R20 (K2038) — HOW A LOOKUP REACHES THE STORE: in a header, never the address. `x-bio-session` carries the token
    `session` resolves, `x-bio-credential-sha` the digest `aicredentiallook` resolves; `store-door` hands each to

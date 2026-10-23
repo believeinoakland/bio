@@ -69,6 +69,7 @@ import { AiRuns } from "../ai-runs/index.mjs";
 import { word, hasWord } from "../setup-words/index.mjs";
 import { machineFences, renderPack } from "../skillpack.mjs";
 import { liveToken } from "../tokens.mjs";
+import { storeStub } from "../store-place.mjs";
 import { instanceGroupOp, groupIdentityOp, groupLogoAsset } from "../setup.mjs";
 import { inbandQuartet } from "../inband.mjs";   /* REC-148: DEC-31's in-band quartet, one function */
 /* R45 (DEC-111, K1170): a registered public read is served by public-read's door read (its R18). */
@@ -622,7 +623,7 @@ const SESSION_HEADER = "x-bio-session";
 async function grantAdmit(env, url, op, spec, token) {
   const own = GRANT_OWN_OPS.includes(op);
   if (!own && !AI_GRANT_OPS.includes(op)) return {};
-  const out = await doAnswer(env.STORE.get(env.STORE.idFromName("bio")).fetch(new Request("http://do/aigrantadmit", {
+  const out = await doAnswer(storeStub(env, "bio").fetch(new Request("http://do/aigrantadmit", {
     method: "POST", body: JSON.stringify({ token, op: own ? AI_GRANT_OPS[0] : op, write: own ? false : spec.mutating }) })));
   if (!out.answered) return { silent: { op: "aigrantadmit", correlation: out.correlation } };
   const g = out.result || {};
@@ -793,7 +794,8 @@ export async function deliverOwedRender({ ctx, env, storeName = "bio", answer, s
       } catch { project = ""; }
     }
     const record = recordOf(ctx), promotion = promotionOf(ctx);
-    const cs = { now: () => Date.now(), digest: async (t) => sha256Hex(t), w: (k, v) => word(k, v), date: (d) => d,
+    const cs = { now: () => Date.now(), digest: async (t) => sha256Hex(t), w: (k, v) => word(k, v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([n, x]) => [n, x && typeof x === "object" && "html" in x ? x.html : x])) : v),
+      date: (d) => { const t = new Date(d); return Number.isNaN(t.getTime()) ? String(d) : t.toLocaleDateString("en-US", { timeZone: "UTC", year: "numeric", month: "long", day: "numeric" }); },
       call: async (op, { query = {}, body } = {}) => {
         if (op === "allocid") return { ok: true, ...record.allocId(query.prefix, query.year) };
         if (op === "promote") return promotion.promote({ ...body, ...who });
@@ -816,7 +818,7 @@ export async function deliverOwedRender({ ctx, env, storeName = "bio", answer, s
       if (!(held && (held.read === true || held.why === "READING_HELD")) || held.more === true) {
         pending = true;
         try {
-          const stub = env.STORE.get(env.STORE.idFromName(storeName));
+          const stub = storeStub(env, storeName);
           await doAnswer(stub.fetch(new Request(`http://do/pendingadd?kind=reading&sha=${sha}&store=${encodeURIComponent(storeName)}`, { method: "POST" })));
         } catch { /* the alarm's ledger is the reading's second chance, never the delivery's gate */ }
       }
@@ -1042,7 +1044,7 @@ export function makeFetch(hooks = {}) {
       const country = countryOf(req);
       const doorStamps = new URLSearchParams({ ...(source ? { source } : {}), ...(country ? { country } : {}) }).toString();
       const fp = await fingerprint(env.ADMIN_TOKEN);
-      const stub = env.STORE.get(env.STORE.idFromName("bio"));
+      const stub = storeStub(env, "bio");
       /* Claiming and logging in are pinned to `bio` above, because an instance
          has ONE identity and there is nothing to claim in a scratch namespace.
          The INVITATION ops are different: the token IS the authority and it
@@ -1054,7 +1056,7 @@ export function makeFetch(hooks = {}) {
          rehearsing the member surface. Found against the deployed plane while
          closing D-41, not by the suite. */
       const invStub = url.searchParams.get("store") === SCRATCH
-        ? env.STORE.get(env.STORE.idFromName(SCRATCH)) : stub;
+        ? storeStub(env, SCRATCH) : stub;
       if (op === "claim") {
         const body = await req.json().catch(() => ({}));
         /* DEC-49 REGION is-bootstrap-claim
@@ -1311,7 +1313,7 @@ export function makeFetch(hooks = {}) {
       }, store: storeName, tokenClass: cls }, 200);
     }
 
-    const stub = env.STORE.get(env.STORE.idFromName(storeName));
+    const stub = storeStub(env, storeName);
     /* R50: from here on, a refusal answered to a member's session is counted (`tallySessionRefusal`, in its namespace). */
     if (viaSession) seen.session = { op: askedOp, stub };
 

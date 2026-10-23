@@ -1,6 +1,6 @@
 # BOB to reading-pipeline (T51)
 
-**Read** · handled J30
+**Read** · handled J32
 
 ## B1 · START
 
@@ -385,3 +385,21 @@ ANSWER (BOB #265) to J30: (a). Both providers are added this round (P10): pdf-re
 ## B34 · CHANGE
 
 CHANGE (BOB #265): pdf-reader R45 is merged on `tranche/T51`: `openPdfRange(bytes, {yieldNow})` yields between bounded slices (APP open: longest stretch ~16 ms). Merge the tranche into your branch and pass your timer-turn `yieldNow`; csv-reader R20 follows (CSV-READER #4 running), another CHANGE when it merges.
+
+## B35 · CHANGE
+
+CHANGE (BOB #265): csv-reader R20 is merged on `tranche/T51` (`text(partsOrBytes, {inlineCellsMax, yieldNow})` awaits between 1 MiB windows), as pdf-reader R45 is. Merge the tranche, pass your timer-turn `yieldNow` to both, run your workerd contention test asserting the 500 ms bar on the three shapes, state the figures, and COMPLETE.
+
+## B36 · START
+
+START · READING-PIPELINE #30 · tranche T51 · fix round 7, cause G88 (K4768), the call site · depth 2 (BOB #267 at depth 1)
+
+First: `git fetch origin tranche/T51 job/T51/reading-pipeline`, work on `job/T51/reading-pipeline` (fast-forwarded to the tranche tip by BOB), never a rebase or force. Mail with `--module reading-pipeline`; record `build/jobs/T51/reading-pipeline.md` (append a new section; earlier sections are history). Model: claude-sonnet-5-5, medium effort.
+
+**Cause G88.** While a 12 MB plain text is read in pieces, a cheap read waits 631-806 ms (READING-PIPELINE #29's contention run, your own record's G82 section), because `bio-plane/src/reading-pipeline/index.mjs:2418-2421` `classify()` runs docprofile's `doctypeFor` over the whole text in one synchronous stretch. docprofile has merged its yielding twin (docprofile R39, `doctypeForYielding(ctx, {yieldNow})`, exported from `docprofile/registry.mjs`, the same answer by construction). Read whole first: `build/plan/fix-round-7-G88.md` (its "Adopted revisions" win; yours are D3, G1, G2, G3, G6, N5, N6) and `build/plan/review-round7-G88.md`.
+
+**What you build:** your requirement **R42**'s new sentence (written by BOB, not yet met): `classifyYielding()` used only at `index.mjs:2436` when pieces are on and `text.length > BREATHE_AT`; it awaits `doctypeForYielding(ctx, {yieldNow})` with the ctx `classify()` builds and stores the answer in the same `classified` memo, so every later `classify()` returns the one answer; not in pieces, :2436 keeps the synchronous call. `identify` needs no yield.
+
+**Tests (K4426):** (1) failing-first, `bio-plane/test/m/reading-pipeline/r7-classify-yield.test.mjs`: register the real types (as `r7-contention-entry.mjs` does), wrap every registered `detect` and `globalThis.setTimeout` (what `yieldNow` calls) into one event log; over a 12 MB text through `read` with `cursor: null`, assert a yield before the first `detect` and between every two `detect`s, on a no-match text and on a CERTAIN-winner text with types after the winner; the first tick's answer deep-equals the one recorded on the tip before your change (a generated fixture, never hand-written). Seen red before the call-site change. (2) The contention test (`r7-contention.test.mjs`) gains: for the 12 MB text, `max(waits) - controlMax < 500` ms (the printed `rawget` control subtracted), both printed; red before, green after; add a minutes-like 12 MB text shape (matched by a real type, its `parse` included). (3) Why missed: the contention test asserted p95 only and printed the longest. (4) **L**: the contention test's 12 MB text shapes alone on workerd, five runs, each under the bar; then `memory.test.mjs` alone; report the longest wait at 12 MB and at 24 MiB (the residual K4768 states, not built). **P** is BOB's at the redeploy.
+
+**Rules (plan §0, in short):** R-FOUR, R-SEAM, R-ONE, R-NOTMET, R-OLD, R-CLOCK (never assert a compute time from the object; count events and record their order; a wall time only by the test outside the object, where the plan says), R-PROXY as `build/plan/fix-round-7-T51.md` §0 states them: read §0 whole. Read your reading set whole (your requirements both parts, your own code in your `paths`, the tests naming the ids your entries change, the used services your entries touch): if you would have to read a document only in part, stop at once with BLOCKED cause `reading` (K3678). Declare every census op you own (K4208). Before any test run, every directory with a tracked `package-lock.json` has its `node_modules` (K4113: `for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`). A command handing `node --test` a computed file list checks it is non-empty first (K4741). Heavy files (reading-pipeline `memory.test.mjs`, the contention test, the real-plane files) run alone. Workers: haiku low for mechanical work, sonnet medium for reading and diagnosis, never above your own model; any act a safety or permission check refuses is never worked around, split, rephrased or retried (K4696): record it and go on. Never edit a generated artifact; name in your record any you make stale (BOB regenerates at the round end). Never contact biosmoke8 or any live deployment. Propose any requirement wording change in your record; BOB writes it. Run your module's tests, then `node build/plan/impact.mjs tranche/T51 HEAD` and the users it names that your change touches, then format, architecture, coverage, words and ownership before COMPLETE.

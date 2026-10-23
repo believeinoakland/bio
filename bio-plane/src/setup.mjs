@@ -39,6 +39,9 @@ import { checkDraft, WIZARD_SCRIPTS_CHECKS } from "./wizard-scripts/index.mjs";
 import { word, localize } from "./setup-words/index.mjs";
 import { cpuProbe } from "./cpu.mjs";
 import { liveToken } from "./tokens.mjs";
+/* R102 (fix round 7 G83; runtime-limits R27, R28): the team's room is obtained only through the one helper, which passes the
+   configured location hint and names the room by its generation. */
+import { storeStub, storeHint, storeGeneration } from "./store-place.mjs";
 import { livefire } from "./livefire.mjs";
 import { GROUP_SLUG_RE, FLEET_BINDINGS, HOSTING_CONTROL, hostingControlBlock } from "./setup-fleet.mjs";
 /* A machine is told apart by record-grammar's one predicate, never by a reading of this module's own. */
@@ -58,7 +61,7 @@ import { AiRuns } from "./ai-runs/index.mjs";
 /* R47, R83: the words on who controls the group's Civicsmith, held once in the leaf the installer imports, re-exported for
    the screens that show them (`screens-entry`). */
 export { HOSTING_CONTROL, hostingControlBlock };
-export { INTERFACE_WORDS } from "./translations/index.mjs";
+export { interfaceWords } from "./translations/index.mjs";
 
 /* ============================================================================================================
  * THE INSTANCE: WHAT A GROUP'S CIVICSMITH IS AND WHOSE IT IS (instance-setup R1–R42). The module's own store-side and
@@ -3082,7 +3085,7 @@ export const PUBLIC_GROUP_PROJECTIONS = Object.freeze(["instancegrouppublic", "g
 export async function publicInstanceGroup(env, storeName, projection = "instancegrouppublic", doAnswer) {
   if (!PUBLIC_GROUP_PROJECTIONS.includes(projection)) return { answered: false, result: undefined };
   let stub = null;
-  try { stub = env.STORE.get(env.STORE.idFromName(storeName)); } catch { stub = null; }
+  try { stub = storeStub(env, storeName); } catch { stub = null; }
   if (!stub) return { answered: false, result: undefined };
   return doAnswer(stub.fetch(`http://do/${projection}`));
 }
@@ -3092,7 +3095,7 @@ export async function publicInstanceGroup(env, storeName, projection = "instance
 export async function instanceGroupOp(env, storeName, { viewer = null, cls = null } = {}, io) {
   const { json, doAnswer } = io;
   if (viewer) {
-    const out = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName)).fetch("http://do/instancegroup"));
+    const out = await doAnswer(storeStub(env, storeName).fetch("http://do/instancegroup"));
     if (!out.answered) return notAnswered(out, "instancegroup", io);
     return json({ ok: true, result: out.result, store: storeName, tokenClass: cls }, 200);
   }
@@ -3104,7 +3107,7 @@ export async function instanceGroupOp(env, storeName, { viewer = null, cls = nul
 /** R10, R11 over the wire: the credentialed read (R11) or the public projection (R10). */
 export async function groupIdentityOp(env, storeName, { viewer = null, cls = null } = {}, io) {
   const { json, doAnswer } = io;
-  const out = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName))
+  const out = await doAnswer(storeStub(env, storeName)
     .fetch(viewer ? "http://do/groupidentity" : "http://do/groupidentitypublic"));
   if (!out.answered) return notAnswered(out, "groupidentity", io);
   return json({ ok: true, result: out.result, store: storeName, ...(viewer ? { tokenClass: cls } : {}) }, 200);
@@ -3115,7 +3118,7 @@ export async function groupIdentityOp(env, storeName, { viewer = null, cls = nul
  *  is a silence (R43). */
 export async function groupLogoAsset(env, storeName, io) {
   let res = null;
-  try { res = await env.STORE.get(env.STORE.idFromName(storeName)).fetch("http://do/grouplogo"); } catch { res = null; }
+  try { res = await storeStub(env, storeName).fetch("http://do/grouplogo"); } catch { res = null; }
   const type = res ? String(res.headers.get("content-type") || "").split(";")[0].trim() : "";
   if (res && res.status === 200 && GROUP_LOGO_TYPES.some((t) => t.type === type))
     return new Response(res.body, { status: 200, headers: { "content-type": type, "cache-control": "no-store",
@@ -3190,6 +3193,12 @@ export async function selftest(env, storeName, { cls = null, viewer = "", scratc
         ? await liveToken(env.DAEMON_TOKEN) : "not configured",
     },
     r2Configured,
+    /* R102: what this copy is configured with for its team's room: the location hint it asks the platform for when the room is
+       first created (`null` when none is configured) and the generation of the room it uses. Configuration only, never where
+       the room runs, and never a secret. */
+    store_location: storeHint(env),
+    store_generation: storeGeneration(env),
+    store_place_note: localize("instance-setup.selftest.store_place_note", "store_location and store_generation are what this copy is configured with for where its team's room is first created and which room it uses. They do not say where the room runs."),
   };
   /* Half a fence is a defect, not an option. */
   if ((typeof env.CAPTURES?.get === "function") !== (typeof env.PUBLISHED?.get === "function")) {
@@ -3198,7 +3207,7 @@ export async function selftest(env, storeName, { cls = null, viewer = "", scratc
   }
   try {
     /* REC-52: a store that answered `ok:false`, or did not answer, is a failure of the health check, never healthy. */
-    const sOut = await doAnswer(env.STORE.get(env.STORE.idFromName(storeName))
+    const sOut = await doAnswer(storeStub(env, storeName)
       .fetch(`http://x/stats?capacity=${cls === "admin" ? "1" : "0"}&viewer=${encodeURIComponent(viewer ?? "")}`));
     if (!sOut.answered) { out.ok = false; out.store = "ERR the store did not answer /stats"; }
     else out.store = sOut.result;
@@ -3304,7 +3313,7 @@ export const INSTANCE_SETUP_OPS = Object.freeze(["selftest", "livefire", "runtim
 export async function instanceSetupOp(op, url, env, storeName, { cls = null, viewer = "", scratch = "scratch", json,
                                                                   doAnswer, storeSilent, storeRefusal } = {}) {
   const io = { json, doAnswer, storeSilent, storeRefusal };
-  const store = () => env.STORE.get(env.STORE.idFromName(storeName));
+  const store = () => storeStub(env, storeName);
   /* selftest reports deployment health as JSON, so "did the deploy work" is a
      link rather than a command. It asserts every binding is present and that
      the store answers, and it never returns a secret. */

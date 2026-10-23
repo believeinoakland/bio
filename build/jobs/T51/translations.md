@@ -1,6 +1,27 @@
 # translations (T51)
 
-**Status** · session_01XjFJQ53dT8DEubR4duSRf2 · depth 2 · COMPLETE · handled B1
+**Status** · session_01D3PnCpi1vCRCeUDnt7Sw8P · depth 2 · COMPLETE · handled B2
+
+## Completion, fix round 7, G84 (TRANSLATIONS #2, session_01D3PnCpi1vCRCeUDnt7Sw8P, START B2)
+
+**Applied: R2 as BOB rewrote it.** `INTERFACE_WORDS` is now `interfaceWords()` (`bio-plane/src/translations/index.mjs:37`), built at its first call and the same frozen array after; the key map (`wordByKey()`) is lazy likewise; `INTERFACE_WORDS_COMMIT` stays a constant. Every use inside the module and the seven test files that read the constant is re-pointed.
+
+**Who else imports the old name** (`git grep -n INTERFACE_WORDS`, outside `build/`, `release/` and the generated bundle): `bio-plane/src/setup.mjs:61` (a re-export) and `bio-plane/test/m/instance-setup/t50.test.mjs:12,14,19,54,119`. Both are `instance-setup`'s, for INSTANCE-SETUP #28 to re-point. **Until it does, `setup.mjs` does not link** ("does not provide an export named 'INTERFACE_WORDS'"), so `instance-setup`, `answer-envelope`, `store-door` and `signin-door` tests (38 in all) fail at import, and so does anything that loads the plane from source. That is the planned order (B2); it is not a defect in this module. The bundle `bio-plane/dist/bio-plane.bundled.mjs` is stale (it holds the old constant); BOB regenerates it.
+
+**Tests (K4426).** (1) `interface-words.test.mjs`: "R2 importing the module does no pass over the word list": a child process wraps 15 array methods and the array iterator, counts calls on `WORD_ROWS` made from this module's files, imports the module (0), then calls `interfaceWords()` (counter above 0, the control). Seen red against the old code (1 pass at import). "R2 interfaceWords() deep-equals the list of the old constant over the real table and answers the same frozen array on every call". (2) Why missed: `bundler` R31 only warns and no test bounded load-time work; the first test now bounds this module's. (3)-(4) **N**.
+
+**L.** The count: 0 passes by this module at import (1 before). `measureStart` of the plane was not taken: the plane no longer links from source until `instance-setup` re-points (above) and its bundle is a generated artifact I do not write; BOB measures at the round end.
+
+**Found in another module.** `record-grammar/document.mjs:22` calls `word()` at load, which builds `setup-words`' key table (`rowsByKey`, `setup-words/index.mjs:9`), one `WORD_ROWS.map` at import (about the size of the passes G84 removes). My test does not count it, since it is not this module's; BOB may want it lazy or off the load path.
+
+**Declared ops.** Unchanged (`DECLARED_OPS`: translationgrant, translationadopt, translationconfirm, translationrevert); no op added.
+
+**Ran.**
+- `node --test bio-plane/test/m/translations/`: 38 tests, 38 pass, 0 fail.
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected `translations` 7/7, `instance-setup` 25/25, `answer-envelope` 5/5, `store-door` 6/6, `signin-door` 2/2, `screens-action` 2/30, `control-plane` 69/85, `plane` 54/66. Of those I ran `instance-setup`, `answer-envelope`, `store-door`, `signin-door`: all fail at import for the `setup.mjs` re-export above and for no other reason; `control-plane`, `plane` and `screens-action` load the same chain and were not run.
+- `checks/format.mjs`: 0 failures. `architecture` 0. `coverage` 18 of 18 live ids, 0. `words` 0. `ownership` (9 files) 0.
+
+Size (session_01D3PnCpi1vCRCeUDnt7Sw8P): test runs 6, module lines 1004
 
 ## Completion (TRANSLATIONS #2, T51-105)
 
@@ -37,3 +58,7 @@ Size (session_01XjFJQ53dT8DEubR4duSRf2): test runs 8, module lines 988
 ## J1 · COMPLETE
 
 T51-105 applied: R17 (not_drafted[].why as {key, vars}), words.mjs, all 12 words findings and 7 plain ones converted to localize (no REPORT needed). Tests 32/32, format/architecture/coverage/ownership/words 0 failures for translations. Found elsewhere: screens-settings 2 tests red at the tip without my changes (interface-shell R38 registry test; R39 words by key); screens-settings reads why as {key, vars} now. Details in build/jobs/T51/translations.md.
+
+## J2 · COMPLETE
+
+G84 / R2 applied: INTERFACE_WORDS is now interfaceWords(), lazy and frozen, key map lazy; 0 passes over WORD_ROWS by this module at import (1 before; failing-first test seen red). translations 38/38; format, architecture, coverage (18 of 18), words, ownership 0 failures. Only other users: instance-setup's setup.mjs:61 and test/m/instance-setup/t50.test.mjs; until INSTANCE-SETUP #28 re-points them setup.mjs does not link, so instance-setup, answer-envelope, store-door, signin-door (and chains through the plane) fail at import. Plane measureStart not taken (that chain does not link from source; bundle is yours to regenerate). Found elsewhere: record-grammar/document.mjs:22 calls word() at load, building setup-words' key table (one WORD_ROWS.map at import). Details: build/jobs/T51/translations.md.

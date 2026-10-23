@@ -536,7 +536,14 @@ function csvSignatures(bytes) {
   return { ok: true, b, enc, body, delim: delimiterSignature(headText) };
 }
 
-async function csvParts(bytes) {
+/** R20: let the caller's turn pass. A `yieldNow` that is not a function is no yield; one that throws or rejects is
+ *  ignored (R13: this module never throws), so the answer is the same with it or without. */
+async function letPass(yieldNow) {
+  if (typeof yieldNow !== "function") return;
+  try { await yieldNow(); } catch { /* a yield that fails is no yield */ }
+}
+
+async function csvParts(bytes, yieldNow) {
   const sig = csvSignatures(bytes);
   if (!sig.ok) return sig;
   const { b, enc, body, delim } = sig;
@@ -572,7 +579,7 @@ async function csvParts(bytes) {
      windows, because the decode that tells it must see the whole body). */
   let records = null, transport = false, invalidUtf16 = false;
   if (windowed) {
-    if (utf16) invalidUtf16 = !validUtf16(body, enc.encoding);
+    if (utf16) invalidUtf16 = !(await validUtf16(body, enc.encoding, yieldNow));
     else transport = true;
   } else if (!guard) {
     let text;
@@ -594,10 +601,11 @@ async function csvParts(bytes) {
 }
 
 /** Is this UTF-16 body valid, decided in windows so no decoded copy of the body is held? */
-function validUtf16(body, encoding) {
+async function validUtf16(body, encoding, yieldNow) {
   const decoder = new TextDecoder(encoding, { fatal: true, ignoreBOM: true });
   try {
     for (let at = 0; at < body.length; at += CSV_WINDOW_BYTES) {
+      if (at > 0) await letPass(yieldNow);
       decoder.decode(body.subarray(at, at + CSV_WINDOW_BYTES), { stream: at + CSV_WINDOW_BYTES < body.length });
     }
     return true;
@@ -606,8 +614,8 @@ function validUtf16(body, encoding) {
 
 /** Every record of the body in order, to `onRecord(fields)`: the list `parts()` kept for a small body, else a walk in
  *  windows that keeps none. `stopped()`, asked after each record of a list and each window, ends the walk early; a walk
- *  that ends early does not flush the record it was in the middle of. */
-function forEachRecord(parts, onRecord, stopped = () => false) {
+ *  that ends early does not flush the record it was in the middle of. With `yieldNow` (R20) it awaits it between windows. */
+async function forEachRecord(parts, onRecord, stopped = () => false, yieldNow) {
   if (parts.records) {
     for (const record of parts.records) { if (stopped()) return; onRecord(record); }
     return;
@@ -616,6 +624,7 @@ function forEachRecord(parts, onRecord, stopped = () => false) {
   const decoder = parts.utf16 ? new TextDecoder(parts.encoding.encoding, { fatal: !parts.invalidUtf16, ignoreBOM: true }) : BYTE_TRANSPORT;
   const { body } = parts;
   for (let at = 0; at < body.length; at += CSV_WINDOW_BYTES) {
+    if (at > 0) await letPass(yieldNow);
     const last = at + CSV_WINDOW_BYTES >= body.length;
     walk.feed(decoder.decode(body.subarray(at, at + CSV_WINDOW_BYTES), parts.utf16 ? { stream: !last } : undefined));
     if (stopped()) return;
@@ -748,7 +757,7 @@ function fieldValue(field, parts) {
   return { why: "not_us_ascii" };
 }
 
-function csvText(parts, opts) {
+async function csvText(parts, opts) {
   if (!parts || !parts.ok) {
     return { ok: false, container: "csv", reason: parts?.why ?? "PARTS_ABSENT" };
   }
@@ -848,7 +857,7 @@ function csvText(parts, opts) {
       for (let n = 1 + countLineBreaks(line); n > 0; n--) lineRows.push(row);
     }
   };
-  forEachRecord(parts, addRecord);
+  await forEachRecord(parts, addRecord, undefined, opts?.yieldNow);
 
   if (lines.length) chunks.push(lines.join("\n"));
   const text = chunks.length === 1 ? chunks[0] : chunks.join("\n");
@@ -900,7 +909,7 @@ async function csvCellsIn(partsOrBytes, query) {
 
   const cells = [];
   let row = 0, nextRow = null, done = false;
-  forEachRecord(parts, (record) => {
+  await forEachRecord(parts, (record) => {
     if (done) return;
     row++;
     if (row < fromRow) return;
@@ -977,12 +986,13 @@ export const csvEntry = {
     return csvStructure(parts);
   },
   /* `opts.inlineCellsMax` (bytes; R17) is the caller's opt-in to holding the
-     sheet's cells back: without it every cell is listed, as before. */
+     sheet's cells back: without it every cell is listed, as before. `opts.yieldNow` (R20) is awaited between the
+     1 MiB windows of a long read, and changes nothing in the answer. */
   text: async (partsOrBytes, opts) => {
     const parts = isBytes(partsOrBytes)
-      ? await csvParts(partsOrBytes)
+      ? await csvParts(partsOrBytes, opts?.yieldNow)
       : partsOrBytes;
-    return csvText(parts, opts);
+    return await csvText(parts, opts);
   },
   /* G41 (R18): the OPTIONAL `cellsIn` slot, as `dialect` is one: the typed cells
      of a range, made from the held body when a member opens or cites it. */

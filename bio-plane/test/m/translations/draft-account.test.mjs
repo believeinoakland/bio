@@ -8,7 +8,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { boot } from "./fixture.mjs";
 import { world as aiAccountsWorld } from "../ai-accounts/fixture.mjs";
-import { INTERFACE_WORDS } from "../../../src/translations/index.mjs";
+import { interfaceWords } from "../../../src/translations/index.mjs";
 import { TRANSLATIONS_CHECKS } from "../../../src/translations/checks.mjs";
 import { WIZARD_SCRIPTS_CHECKS } from "../../../src/wizard-scripts/index.mjs";
 
@@ -35,7 +35,7 @@ test("R1 (T40: N812, K2373) store-door R10's NO_ACCOUNT (credentials', K2577; or
     assert.equal(Object.hasOwn(WIZARD_SCRIPTS_CHECKS, code), false, `${code}: not the draft rows' either`);
   }
   const w = await translationWorld();
-  const PROTECTED = INTERFACE_WORDS.find((x) => x.protected && !/\{/.test(x.en));
+  const PROTECTED = interfaceWords().find((x) => x.protected && !/\{/.test(x.en));
   w.m.translationAdopt({ language: "es", key: PROTECTED.key, text: "Escrito", by: "ruth" });
   const seen = new Set();
   const note = (r) => { seen.add(r === null ? "null" : r.reason ?? "ok"); return r; };
@@ -75,11 +75,11 @@ test("R1 (T40) a translation draft carries no project: a project's account hande
   assert.equal(writes(w), mark, "nothing written");
   /* negative controls: the words to draft, on the group's key or the member's own account; none names a project */
   for (const account of [GROUP, { kind: "signin", level: "member", member: "ruth" }, { ...GROUP, project: null }]) {
-    const r = w.m.translationDraft({ language: "es", direction: "to_language", keys: [INTERFACE_WORDS[0].key], by: "ruth", assistant: { on: true, account } });
-    assert.deepEqual([r.reason, r.words.map((x) => x.key)], ["ASSISTANT_DRAFT_UNAVAILABLE", [INTERFACE_WORDS[0].key]]);
+    const r = w.m.translationDraft({ language: "es", direction: "to_language", keys: [interfaceWords()[0].key], by: "ruth", assistant: { on: true, account } });
+    assert.deepEqual([r.reason, r.words.map((x) => x.key)], ["ASSISTANT_DRAFT_UNAVAILABLE", [interfaceWords()[0].key]]);
     assert.equal(names(r), false);
   }
-  const first = INTERFACE_WORDS[0];
+  const first = interfaceWords()[0];
   const asked = w.m.translationDraft({ language: "es", direction: "to_language", keys: [first.key], by: "ruth", assistant: { on: true, account: GROUP } });
   const rec = await w.m.translationDraftRecord({ language: "es", direction: "to_language", keys: [first.key], words: asked.words,
                                                  draft: { words: [{ key: first.key, text: `ES ${first.en}` }] }, by: "ruth" });

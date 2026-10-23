@@ -1,6 +1,6 @@
 # BOB to ai-runs (T51)
 
-**Read** · handled J3
+**Read** · handled J5
 
 ## B1 · START
 
@@ -21,3 +21,24 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · CHANGE
 
 CHANGE (K4015): the words check now judges a sentence written as string literals joined only by `+` as one sentence at the chain's first line (civicos-process `main` @ d424c32; `git -C /home/user/civicos-process pull`). Before your COMPLETE (or now, if you are already complete): pull it, run `node checks/words.mjs /home/user/bio <your module>`, and fix every finding the words rule covers (a member-read sentence by `localize` or `word`, a copy of a row by `word`, a test copy by equality); list any you judge no person reads in your record for the design's unkeyed list. Merge tranche/T51 first. Then COMPLETE (again).
+
+## B3 · START
+
+START · AI-RUNS #27 · tranche T51 · fix round 7, cause G83 (K4746, K4747, K4752) · depth 2 (BOB #266 at depth 1)
+
+First: `git fetch origin tranche/T51 job/T51/ai-runs`, work on `job/T51/ai-runs`, never a rebase or force. Model: claude-haiku-5-5 (a mechanical re-point with one unit test), medium effort.
+
+**Cause G83.** A team's record object ("room") is created by Cloudflare wherever its first `get()` runs (biosmoke8's landed in Frankfurt, its team and files in western North America; PERFORMANCE P19). Bob ruled (K4746, K4747) that a team's room is created near the team: every site obtains the room through `runtime-limits`' one helper, which passes Cloudflare's `locationHint` from the binding `STORE_LOCATION` and names the room by its generation (`STORE_GENERATION`; absent for every existing team, so names are unchanged).
+
+**What you change:** `bio-plane/src/ai-runs/index.mjs:2155` (inside the `scratch` object, obtaining `bio`) becomes `runtime-limits.storeStub(env, "bio")`, and the id comparison at `:2098-2106` uses `storeId(env, name)` in place of `ns.idFromName(name)`. No other change; no new requirement id (your behaviour is unchanged when no binding is set).
+
+**Tests (K4426):** (1) failing-first: a unit test with a recording `env.STORE` (records `idFromName` and `get` arguments) driving the code path at `:2155`: with `STORE_LOCATION: "wnam"` the `get` carries `{locationHint: "wnam"}`; with `STORE_GENERATION: "2"` the name is `bio~g2` and the comparison at `:2098-2106` still recognises the object; with neither, the calls are exactly today's. Red before your change. (2) Why missed: this site runs inside the `scratch` object, which plane's T2 recording `env` does not reach (review G1); this test is the gap's fix. (3)-(4) **N** beyond it (plane's T2 and BOB's P read cover the rest).
+**Rules (plan §0, in short):** R-FOUR, R-SEAM, R-ONE, R-NOTMET, R-OLD, R-CLOCK, R-PROXY as `build/plan/fix-round-7-T51.md` §0 states them: read §0 whole. Read `build/plan/fix-round-7-T51-added.md` sections "Adopted revisions" (it wins) and "G83" whole. Read your reading set whole (your requirements both parts, your own code in your `paths`, the tests naming the ids your entries change; `runtime-limits`' Provides R27, R28): if you would have to read a document only in part, stop at once with BLOCKED cause `reading` (K3678). Declare every census op you own (K4208). Before any test run, every directory with a tracked `package-lock.json` has its `node_modules` (K4113: `for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`). A command handing `node --test` a computed file list checks it is non-empty first (K4741). Workers: haiku low for mechanical work, sonnet medium for reading and diagnosis, never above your own model; any act a safety or permission check refuses is never worked around, split, rephrased or retried (K4696): record it and go on. Never edit a generated artifact; name in your record any you make stale (BOB regenerates at the round end). Never contact biosmoke8 or any live deployment. Propose any requirement wording change in your record; BOB writes it. Run your module's tests, then `node build/plan/impact.mjs tranche/T51 HEAD` and the users it names that your change touches, then format, architecture, coverage, words and ownership before COMPLETE.
+
+**The provider.** `runtime-limits` (RUNTIME-LIMITS #6, started with you) builds `bio-plane/src/store-place.mjs` (R27, R28: `STORE_HINTS`, `storeHint`, `storeGeneration`, `storeId`, `storeStub`). Write against R27/R28 as written; BOB posts a CHANGE when it is merged: then merge `tranche/T51` into your branch and run your tests. Until then your tests that need it may be red; never COMPLETE red on it.
+
+**Added by the second review (K4754):** the comparison at `:2098-2106` loops over the logical names (`bio`, `scratch`) and compares with `storeId(env, name)`, answering the logical name (`"bio"` in the room `bio~g2`); test that.
+
+## B4 · CHANGE
+
+CHANGE (K4757): runtime-limits is merged into tranche/T51 (`bio-plane/src/store-place.mjs`, R27, R28). Merge `tranche/T51` into your branch now, run your tests and impact set, and COMPLETE when green.

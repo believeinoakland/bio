@@ -20,6 +20,7 @@ import { answersOf } from "../answers/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { membershipOf, noSuchProject } from "../membership/index.mjs";
 import { word } from "../setup-words/index.mjs";
+import { storeStub } from "../store-place.mjs";
 import { deployedModesFor, draftKindDeployed, draftMayRead, partRefusal, AI_RUN_OPEN_CHECKS, ASK_MODE,
          DRAFT_MODE } from "../run-rules/index.mjs";
 
@@ -67,7 +68,7 @@ export async function askOp({ req, url, env, viaSession, sessMember, grantMember
                  session: viaSession ? presentedToken(req, url, body) : null,
                  grant: viaSession ? null : presentedToken(req, url, body),
                  ...(trace ? { trace } : {}), ...(memberRef ? { memberRef } : {}) };
-  return env.STORE.get(env.STORE.idFromName("bio")).ask(args);
+  return storeStub(env, "bio").ask(args);
 }
 
 /** R41 (T45; K2824, K2881; op-declarations R49): the two action drafts whose door the plane builds. */
@@ -88,7 +89,7 @@ export async function actionDraftOp({ req, url, env, op, viaSession, sessMember,
   const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
   const args = op === "infractiondraft" ? { matter: b.matter ?? null, audience: b.audience ?? null }
     : { action: b.action ?? null, reply: b.reply ?? null };
-  const stub = env.STORE.get(env.STORE.idFromName("bio"));
+  const stub = storeStub(env, "bio");
   let drafted = null, status = 502;
   try {
     const res = await stub.draft({ op, member: sessMember, session: presentedToken(req, url, b), ...args,

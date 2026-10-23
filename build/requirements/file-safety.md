@@ -97,6 +97,8 @@ Keeps every captured file safe to open without touching its bytes, digest or gra
 **Its declared ops** (T51; K4168, K4202)
 - **R48** (T51; K4168, K4202; op-declarations R80, op-grades R49; test-support R15) **The module declares the ops it serves that the screens send.** `DECLARED_OPS` is exported beside the ops map: `deepercheck`, `openoriginal`, `openwithwarning`, `releasescanhold`, `safeview`, `securitytooladd`, `securitytoolremove`, `securitytooltest`, each row's class, weight and description copied from the op's existing rows and its fields read from the arm. Test: `declaredOpHolds` for each (`declared-ops.test.mjs`).
 
+- **R52** (fix round 7 G84; K4753; `plane` R43) Importing the module passes over `setup-words`' `WORD_ROWS` at most once (the keys whose row is the design's gathered in one pass), and `WORD_KEYS` is unchanged in content and order.
+
 ## Private
 
 ### Uses
