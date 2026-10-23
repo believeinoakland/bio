@@ -186,6 +186,22 @@ test("R1 (G41, seam: waits for CSV-READER, OFFICE-READERS, READING-PIPELINE, EXT
   assert.equal(read.table.rows[0].id, body[0].split(",")[0]);
 });
 
+test("R1 (G41, seam): the ranged cells are numbered as a spreadsheet numbers them (K4647): row 1 of the 1 MB CSV is its header row, column 1 is A; the last row is row `lines`", async () => {
+  const { w, t, lines, d } = await csvWorld();
+  const first = w.content.mint({ bundleId: doc1Bundle(w, d), captureSha: d, extent: { kind: "sheet-range", sheet: "csv", range: "A1:D3" }, mintedBy: V("bob") });
+  assert.equal(first.ok, true, JSON.stringify(first).slice(0, 300));
+  const F4 = [{ name: "c1", type: "string" }, { name: "c2", type: "string" }, { name: "c3", type: "string" }, { name: "c4", type: "string" }];
+  const r = await w.c.declareTable({ source: first.content_id, schema: { fields: F4 }, header: ["c1", "c2", "c3", "c4"], by: V("bob") });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  const read = await w.c.readTable({ sha: r.sha, viewer: V("bob") });
+  assert.deepEqual(read.page.rows[0], ["id", "name", "amount", "note"], "row 1 is the header row, columns A to D");
+  assert.equal(read.page.rows.length, 3);
+  const last = w.content.mint({ bundleId: doc1Bundle(w, d), captureSha: d, extent: { kind: "sheet-range", sheet: "csv", range: `A${lines}:D${lines}` }, mintedBy: V("bob") });
+  const r2 = await w.c.declareTable({ source: last.content_id, schema: { fields: F4 }, header: ["c1", "c2", "c3", "c4"], by: V("bob") });
+  assert.equal(r2.ok, true, JSON.stringify(r2).slice(0, 300));
+  assert.equal((await w.c.readTable({ sha: r2.sha, viewer: V("bob") })).page.rows[0][0], "LASTROWMARK", "the last row is row `lines`");
+});
+
 test("R1 R52 (G41, seam): a sheet-cell figure of the last row of the 1 MB CSV is read as its value (parseFigure)", async () => {
   const { w, lines, d } = await csvWorld();
   const m = w.content.mint({ bundleId: doc1Bundle(w, d), captureSha: d, extent: { kind: "sheet-cell", sheet: "csv", cell: `C${lines}` }, mintedBy: V("bob") });
