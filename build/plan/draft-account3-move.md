@@ -28,5 +28,5 @@
 2. Re-walk 7's results into the fix round they need (planned whole, K4426, reviewed); its jobs; one redeploy; a targeted re-walk.
 3. PERFORMANCE #2's quiet re-time (R-QUIET).
 4. The room's re-creation (`deploy-test/biosmoke8/wnam-g2/deploy`), Bob's claim, the member made by script.
-5. The final pass in substance (K4781-K4783): coverage map `walk-coverage-T51.md`, offline through the door, then live at everyday load (5 until Bob names a figure).
+5. The final pass in substance (K4781-K4783): the coverage map `walk-coverage-T51.md` completed first (K4784: its sources read whole by helpers, then BOB's review), offline through the door, then live at everyday load (5 until Bob names a figure).
 6. G90's 0.87.0 release, then T51's close (§5.7).
