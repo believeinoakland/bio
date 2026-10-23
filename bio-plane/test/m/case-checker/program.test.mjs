@@ -79,7 +79,7 @@ test("R13 R16 R20 R22: run offline from an empty directory, the program prints e
     assert.equal(v2out.format, "bio-case-file/2");
     assert.equal(canonicalJson(v2out), canonicalJson(await CC.checkCaseFile({ parts: v2.parts })));
     assert.deepEqual(v2out.standards_use.unjudged.map((u) => [u.standard, u.check]), [["STD-2026-0001-x", "COPYRIGHTED_TEXT_CARRIED"]]);
-    assert.match(P.text.split("\n")[0], /^\/\/ Civicsmith case checker \(bio-case-file\/1, bio-case-file\/2, bio-case-file\/3\)\./);
+    assert.match(P.text.split("\n")[0], /^\/\/ Civicsmith case checker \(bio-case-file\/1, bio-case-file\/2, bio-case-file\/3, bio-case-file\/4\)\./);
     assert.equal(run("part1.zip", "part2.zip").split("\n")[0], `${A}: ${word("screen.imported.result.part")}`);
     assert.equal(JSON.parse(run("part1.zip", "part2.zip").replace(/^[^{]*/s, "")).calculations[0].result, "agrees");
     /* a file it cannot read: exit status 2, saying so */
