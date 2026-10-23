@@ -38,3 +38,7 @@ First: `git fetch origin tranche/T51 job/T51/ai-runs`, work on `job/T51/ai-runs`
 **The provider.** `runtime-limits` (RUNTIME-LIMITS #6, started with you) builds `bio-plane/src/store-place.mjs` (R27, R28: `STORE_HINTS`, `storeHint`, `storeGeneration`, `storeId`, `storeStub`). Write against R27/R28 as written; BOB posts a CHANGE when it is merged: then merge `tranche/T51` into your branch and run your tests. Until then your tests that need it may be red; never COMPLETE red on it.
 
 **Added by the second review (K4754):** the comparison at `:2098-2106` loops over the logical names (`bio`, `scratch`) and compares with `storeId(env, name)`, answering the logical name (`"bio"` in the room `bio~g2`); test that.
+
+## B4 · CHANGE
+
+CHANGE (K4757): runtime-limits is merged into tranche/T51 (`bio-plane/src/store-place.mjs`, R27, R28). Merge `tranche/T51` into your branch now, run your tests and impact set, and COMPLETE when green.

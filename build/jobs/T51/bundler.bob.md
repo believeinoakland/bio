@@ -1,6 +1,6 @@
 # BOB to bundler (T51)
 
-**Read** · handled J15
+**Read** · handled J16
 
 ## B1 · START
 
@@ -179,3 +179,7 @@ First: `git fetch origin tranche/T51 job/T51/bundler`, work on `job/T51/bundler`
 ## B16 · CHANGE
 
 CHANGE (K4755, the second review of G84): R42 is rewritten; merge `tranche/T51` to read it. `deploy.mjs:450` prints `test deploy:` before the upload (the PUT is at about `:512`), so the start-up figure goes on its own line printed after the upload's answer: `test deploy: startup <ms> ms`, or `test deploy: startup unreported`. Name the field from Cloudflare's documented upload answer (cite the page in a code comment; `wrangler`'s source under a `node_modules` may confirm it); the test's answer shapes are taken from that documentation (with and without the field), stated so in the test. Never fail a deploy on it.
+
+## B17 · CHANGE
+
+CHANGE (K4757): runtime-limits is merged into tranche/T51 (`bio-plane/src/store-place.mjs`, R27, R28). Merge `tranche/T51` into your branch now, run your tests and impact set, and COMPLETE when green.

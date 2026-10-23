@@ -1,6 +1,6 @@
 # BOB to installer-steps (T51)
 
-**Read** · handled J19
+**Read** · handled J20
 
 ## B1 · START
 
@@ -180,3 +180,7 @@ Your user is `installer` (INSTALLER #25, started with you), which merges after y
 ## B20 · CHANGE
 
 Names (K4756), agreed with INSTALLER #25 who builds against them: the barrel newgroup/src/steps/index.mjs exports locationHintFor(cf) and storeLocationBinding(h); uploadInstall(token, acct, slug, secrets, release, opts) takes opts.storeLocation (a hint or null/undefined) beside opts.profiles and appends storeLocationBinding(opts.storeLocation); uploadUpdate takes no new option and restates the held STORE_LOCATION and STORE_GENERATION itself (R42), refusing when the held settings cannot be read. If you must differ, say so at once in a REPORT.
+
+## B21 · CHANGE
+
+CHANGE (K4757): runtime-limits is merged into tranche/T51 (`bio-plane/src/store-place.mjs`, R27, R28). Merge `tranche/T51` into your branch now, run your tests and impact set, and COMPLETE when green.

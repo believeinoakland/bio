@@ -86,6 +86,8 @@ const clampLimit = (limit, dflt, max) => {
 
 export class Queue {
   #host; #deps; #env; #clock;
+  /* R94 (T51 fix round 7, G80): the counts asked, by viewer, and this module's own writes (its mutes, snoozes and decisions). */
+  #counts = new Map(); #ownWrites = 0;
   constructor({ host, storage, deps = {} } = {}) {
     this.#host = host;
     this.sql = storage.sql;
@@ -170,6 +172,24 @@ export class Queue {
    *  that supplies one; `queueOf` refuses a different one before calling this. */
   get clock() { return this.#clock; }
   adoptClock(fn) { if (this.#clock === null && typeof fn === "function") this.#clock = fn; }
+
+  /** R94 (G80): the number of writes this module made itself (a mute, a snooze, a decision), which the record's write counter
+   *  does not see: they are kept in this module's own tables. Part of the count cache's key beside record-core's counter. */
+  #wrote() { this.#ownWrites += 1; }
+  /** R94: a count is reused for the same viewer while the record's write counter, this module's own writes and the
+   *  clock's bucket are all unchanged; the bucket bounds how stale a to-do list that depends on the clock (a date
+   *  that passed, a snooze that lapsed) can be. */
+  static QUEUE_COUNT_BUCKET_MS = 5000;
+  /** R94: viewers whose last count is kept; past it the kept counts are dropped whole (a cache, never a record). */
+  static QUEUE_COUNT_VIEWERS_MAX = 256;
+  /** R94: the signature a count was made under, or null when the record states no write counter (record-core R90): with
+   *  none, nothing is reused, never guessed. */
+  #countSignature(now) {
+    let w;
+    try { w = typeof this.#record.writeCount === "function" ? this.#record.writeCount() : null; } catch { w = null; }
+    if (!Number.isInteger(w) || w < 0) return null;
+    return `${w}|${this.#ownWrites}|${Math.floor(now / Queue.QUEUE_COUNT_BUCKET_MS)}`;
+  }
 
   /** The instant this read or act is at: an in-plane caller's (ms), else this module's clock (R53: the clock a caller of
    *  `queueOf` gave, else the instance binding `BIO_NOW_MS`, else the wall clock). A request never supplies the first:
@@ -1107,6 +1127,14 @@ export class Queue {
        spelled in the viewer grammar. A machine credential stamps no member and keeps
        the fallback to its viewer, byte-unchanged. */
     const identity = me ? `member:${me}` : null;
+    /* R94 (T51 fix round 7, G80): a count asked again for the same viewer with no write to the record or to this module's
+       own tables since, in the same bucket of the clock, is the answer already made; nothing is recomputed. */
+    const countKey = flag(count) ? JSON.stringify([me, viewer ?? null]) : null;
+    const countSig = countKey === null ? null : this.#countSignature(now);
+    if (countSig !== null) {
+      const kept = this.#counts.get(countKey);
+      if (kept && kept.sig === countSig) return { ...kept.answer };
+    }
     const items = [];
     /* R91 (L13): what this ask has already read, for its walks and its option derivations (nothing is written in an ask). */
     const memo = { edges: new Map(), rows: new Map(), homes: new Map(), acts: new Map() };
@@ -1414,7 +1442,14 @@ export class Queue {
 
     /* R93 (T51 fix round 4, P9; K4429): the number of open items the list would hold (after the mutes and the project
        decisions, before the limit's cut), without the list, so the frame's bell and sidebar do not read the whole feed. */
-    if (flag(count)) return { ok: true, member: me, count: items.length };
+    if (flag(count)) {
+      const answer = { ok: true, member: me, count: items.length };
+      if (countSig !== null) {
+        if (!this.#counts.has(countKey) && this.#counts.size >= Queue.QUEUE_COUNT_VIEWERS_MAX) this.#counts.clear();
+        this.#counts.set(countKey, { sig: countSig, answer });
+      }
+      return { ...answer };
+    }
 
     /* R40 (DEC-10 (a)): a snoozed case's items are MARKED, never withheld: a surface may hold them back until the
        instant, and the plane keeps reporting them (a snooze defers re-notification; it removes nothing). */
@@ -2043,6 +2078,7 @@ export class Queue {
       const cls = subjects[0].cls;
       const had = !!this.#one(
         `SELECT item_id FROM queue_item_mutes WHERE member_id=? AND item_id=?`, me, itemId);
+      this.#wrote();
       if (unmute) this.sql.exec(
         `DELETE FROM queue_item_mutes WHERE member_id=? AND item_id=?`, me, itemId);
       else {
@@ -2081,6 +2117,7 @@ export class Queue {
     const ats = parseMutedAt(row ? row.muted_at : null);
     const keptAt = Object.fromEntries(next.map((k) => [k, ats[k] ?? (had.includes(k) ? undefined : stamp)])
       .filter(([, v]) => v !== undefined));
+    this.#wrote();
     this.sql.exec(
       `INSERT INTO queue_state (member_id, case_id, muted_kinds, snoozed_until, last_seen, muted_at)
        VALUES (?, ?, ?, ?, ?, ?)
@@ -2166,6 +2203,7 @@ export class Queue {
     }
     const row = this.#one(
       `SELECT muted_kinds FROM queue_state WHERE member_id=? AND case_id=?`, me, c.id);
+    this.#wrote();
     this.sql.exec(
       `INSERT INTO queue_state (member_id, case_id, muted_kinds, snoozed_until, last_seen, snoozed_at)
        VALUES (?, ?, ?, ?, ?, ?)
@@ -2414,6 +2452,7 @@ export class Queue {
       if (denied) return denied;
       const atS = stampInstant("millisecond", this.#nowMs(null));
       const kd = typeof kind === "string" && kind.trim() ? kind.trim().slice(0, 120) : null;
+      this.#wrote();
       this.sql.exec(
         `INSERT INTO finding_dispositions (project_id,finding_id,kind,state,reason,decided_by,at)
          VALUES (?,?,?,?,?,?,?)
