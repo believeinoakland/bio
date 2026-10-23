@@ -265,3 +265,7 @@ Nothing deferred. Nothing found in another module beyond the provider above.
 Tests and checks: `node --test` ratification: tests 324, pass 324, fail 0. Plane/public-read/case-authoring/mk6 tests naming caseratify: 50 of 50. impact.mjs: 45 modules affected (transitive); the direct users run above. format 0 failures; architecture 0; coverage 59 of 59, 0; words 0 failures; ownership: 6 files, 1 failure = the requirements file B4 accepts.
 
 Size (session_01Aitu5ptyoRC1Hw82dyhsuk): test runs 9, module lines 3711
+
+## J15 · COMPLETE
+
+COMPLETE · G120 done, record section 'Fix round 8' pushed on job/T51/ratification. R60 amended by me in build/requirements/ratification.md (the one file ownership lists). ratification tests 324/324; format, architecture, coverage (59/59), words 0 failures; ownership: only the requirements file listed. The three independent reads are together, the material copy in groups of 8, phases via ctx.stateTiming (B14). Call budget 25 re-derived in the record. Two existing tests (R49 approvals, R17 relays) pinned the old call order and now assert the invariant (commit not asked, nothing written, same bytes). Needs from others: the door count test and the stateTiming forwarding (PLANE #55, control-plane).
