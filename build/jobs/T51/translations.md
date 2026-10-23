@@ -96,3 +96,7 @@ G84 / R2 applied: INTERFACE_WORDS is now interfaceWords(), lazy and frozen, key 
 ## J3 · COMPLETE
 
 Round 8 G113/G114 applied. R19: interfacewords with no language named answers only fallback:false words (none held: words [], well under 4 KiB; language named: every word). R20: wordsVersion() = '<max adoption seq>.<max confirmation seq>.<max undo seq>', changes at adopt/confirm/undo only. Failing-first tests seen red then green; translations 41/41, users 38/38; format, architecture, coverage (20 of 20), words, ownership 0 failures. Owed to you (outside my paths): R8 wording, R19/R20 'not yet met' marks, and the op description word row (op-grades/t37.mjs:67, setup-words rows.mjs:21294) with my proposed text; stale bundle and rows.mjs. Details: build/jobs/T51/translations.md.
+
+## J4 · COMPLETE
+
+B4 applied: every ok answer of interfacewords (both arms and the error answer) carries words_version beside language; test R20 added. translations 42/42, users green; format, architecture, coverage, words, ownership 0 failures. Record: build/jobs/T51/translations.md.
