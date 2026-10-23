@@ -2033,3 +2033,22 @@ U459 received (K4675). The MERGE of a4f84a510b (DEC-423) is merged into main at 
 
 ## B494 · HANDOFF · 2026-10-23 · session_01D6tzT1sfFkRzsLoBFom349 · primary
 One unkeyed entry to refresh (K3944; G47, K4672): docs/development/ux-substrate/screens/words-reads.json, modules.case-checker.unkeyed, the entry for bio-plane/src/case-checker/spec.mjs line 11 (the public specification of bio-case-file/1, a format text judged unread). CASE-CHECKER #16 amended it for G47 (the optional attestation sha and bio-case-document/9, sections 4 and 7 item 2). Replace that entry's text with the spec literal as it stands at commit 6f09a211e3 on job/T51/case-checker (it reaches tranche/T51 at CASE-CHECKER's merge, then main at T51's close). Until your branch carries it, the words check counts it 'inline 1' on the tranche; it is accepted red by name, and T51's close needs it before the PR to main, so please send it with your next MERGE.
+
+## B495 · HANDOFF · 2026-10-23 · session_01ShbQJxwUwpBJkphgZg3w99 · primary
+Owed by T51 fix round 6 (K4685, K4687, K4702, K4710 (5), K4716, K4717, K4721, K4728): rows and list entries for sentences the round's jobs drew as stand-ins (K3930: the code's English stands until your row lands; each is an operation members need, K4269). All are on tranche/T51 at 583d8072dd, which reaches main at T51's close.
+
+(1) Rows for the code-origin stand-ins now in bio-plane/src/setup-words/words-unreviewed.json (please review and write each):
+- Published case page, the case file's state (G54): screen.published.casefile.{being_prepared, retrying, stopped, waiting_on_members} and screen.published.casefile.code.{NO_BUCKET, STORE_SILENT, MATERIAL_MISSING, FINDING_MISSING, BUCKET_FAILED, NOT_RECORDED, INTERRUPTED, TOO_LARGE, UNKNOWN}. Drawn where the download button is not, and as the verify press's answer, when a complete edition has no built case file. "stopped" says plainly the edition is complete and signed and its case file cannot be built because a material is no longer held.
+- Money, large ingests in the background (G55): calculations.ingest.{started, already, stopped_attempts, stopped_table, bad_kind, no_ingest}, calculations.index.{one_act_reads_at_most, a_reason_is_at_most}, calculations.declared.moneyingestread; notice-producers.ingest.{done, stopped}; money.ingest.partial (a fact of an ingest not finished, or stopped).
+- Case document too large (G47): case-authoring.index.{case_document_too_large, case_document_not_stored}, case-authoring.checks.case_document_too_large.
+- Case file format checks (G50): case-grammar.casefile.{format, format-accepted, format-unused, path-format, capture-missing, capture-needless, capture-unnamed}.
+- Reading a large sheet (G48): reading-pipeline.index.classified_over_sample, docprofile.readtext.the_sheet_is_over_the_bound_so_its_type_was_judged_from_a_view.
+- Internal descriptions also listed there (money.index.*, notice-producers.index.*): judge read or unread as you do.
+
+(2) Keys with no row at all (the words check counts them `missingkey 5` until your branch carries them): installer.fleet.logsunconfirmed (the installer's note when the plane's logs setting could not be read back after an install or update; the run continues) and installer-steps.plane.observability (the refusal when the plane upload would leave Workers Logs off).
+
+(3) Your reads list, screens-action (G52, the in-place Join): screen.projectact.invited.head, refusal.PROJECT_ACT_NOT_A_PARTICIPANT.invited, act.projectjoin.label.{start-send, request, action}, act.projectjoin.does.
+
+(4) The `unkeyed` list, case-checker (G50, as B494 for :11): bio-plane/src/case-checker/spec.mjs lines 251, 262, 278, 282 and 292, five new strings of the public specification of bio-case-file/4 (a format text judged unread), beside the :11 entry B494 asked you to refresh. Take their text from spec.mjs at 583d8072dd. Until your branch carries them the words check counts `inline 6`; T51's close needs them before its PR to main, so please send them with your next MERGE.
+
+(5) C-136.9 (B491's family): the case document's size refusal's sentence is (1)'s case-authoring keys.
