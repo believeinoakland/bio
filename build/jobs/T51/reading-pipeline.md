@@ -453,3 +453,7 @@ COMPLETE (G41, reading-pipeline D2; B20, B22 K4646, B23 K4647, B24 K4654, B25 K4
 **Deferred:** none. **Found in another module:** none beyond the five extraction tests named.
 
 Size (session_01NKjBP2CpqyAaDcRx7TcMRK): test runs 22, module lines 2282
+
+## J24 · REPORT
+
+Correction to J23's Size line: module lines are 2665 (wc -l of bio-plane/src/reading-pipeline/*.mjs), not 2282. Size (session_01NKjBP2CpqyAaDcRx7TcMRK): test runs 22, module lines 2665
