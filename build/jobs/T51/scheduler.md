@@ -110,3 +110,31 @@ Fix round 6, G35: a same-instant stall in the scheduler. `tranche/T51` merged fi
 **Proposed requirement line** (BOB writes it), append to R27: "A tick whose answer states rows ended (`finished` or `final` above zero, under the consumer's key or at the top of the answer) does not set the hold, so a ledger whose rows share one instant runs one row for each firing. Test: three rows with one `due_at`, one ended for each firing; control: a tick that ends none, with the wake unchanged and in the past, is held."
 
 Size (session_01XZXdT5nUD7u924MLb4BPh1): test runs 14, module lines 905
+
+## J6 · COMPLETE
+
+Fix round 6, G55 tier 2: the consumer `ingest` (START B6). `tranche/T51` merged first (origin/tranche/T51 @ 9e487bb01d).
+
+**What changed** (`bio-plane/src/scheduler/index.mjs`)
+- `ingest` closes the registry after `question-explore` (`SCHEDULER_ORDER`), answers under the key `ingest` (`SCHEDULER_KEYS`); not ranked, not daily, not always due. Its `due(now)` is `calculations.ingestDue(now)` (`true` = now, or an instant), its `wake(now)` is `ingestWake(now)` (ms or null), its `tick(now)` is `ingestTick(now)`, each asked afresh every time (R11), nothing kept here and no slice size, attempt count or interval of this module's (R7, R18). An owner that does not offer the services wants nothing (no `{error}` on every firing while calculations is unmerged).
+- `schedulerOf`'s default owners gain `calculations: () => calculationsOf(ctx)`; `listenTo` takes `calculations` and registers once with `calculations.onIngestWork("scheduler", fn)`; the call arms the alarm at once (R9) except inside a firing (the firing's reconcile stands, R1), as `onCopyWork`'s. A refusal is a start-up fault (`faults()`).
+- Failure never spins (R3): a throwing tick is answered `{error}` under `ingest` and every other consumer still ticks; the stop after three failed attempts is calculations' (its record leaves `ingestDue`/`ingestWake` null), so the alarm is deleted (R15). The consumer is an own consumer, so R27's hold does not wrap it.
+
+**Tests** (`test/m/scheduler/g55-ingest.test.mjs`, 10 tests; `fixture.mjs` gains the `calculations` stand-in and `world(..., {ingest})`). Failing-first: on tranche/T51's `index.mjs` all 10 fail; with the change 8 pass. The 2 seam tests drive the REAL calculations and are RED BY NAME until calculations' G55 tier 2 merges: "R24, R7, R9 (seam: calculations R14 not merged)" (asserts `ingestDue`, `ingestWake`, `ingestTick`, `onIngestWork` are offered and the registration takes) and "R24, R9, R11, R15 (seam: ...)" (asserts `INGEST_INLINE_ROWS` is exported, an ingest of that many rows + 1 arms the alarm at once, a fresh scheduler over the store re-arms at start, the firings run the slices to the end and the alarm is then deleted). The second is written against calculations' START and cannot run until the provider exists; its field names beyond the four services and `INGEST_INLINE_ROWS`/`state: "ingesting"` are not assumed. Amended to the rule they meant (no assertion weakened): the registry's list now ends with `ingest` in `registry.test.mjs` (R5 list and the two counts), `files.test.mjs:31` and `explore.test.mjs:15`.
+
+**Results**
+- scheduler suite: ℹ tests 161, ℹ pass 159, ℹ fail 2 (the two seam reds above; was 151).
+- users of `impact.mjs origin/tranche/T51 HEAD` (201 files, 10 other modules: tasks, queue, instance-setup, op-declarations, answer-envelope, store-door, signin-door, screens-action, control-plane, plane; one process at a time): pass 1429, fail 1: `plane/release.test.mjs` R24 (accepted inherited red).
+- format: 176 modules, 176 requirements files; 0 failures. coverage (scheduler): 29 of 29 live requirement ids named by a test; 0 failures. ownership (scheduler, tranche/T51, job/T51/scheduler): 7 files changed by scheduler; 0 failures. words: no finding in scheduler (1 failure, `case-checker/spec.mjs:11`, accepted).
+- **architecture (scheduler): 3 failures, all one cause, BOB's edge not yet in `build/modules.json`**: `scheduler.uses` must gain `calculations` (index.mjs imports `calculationsOf`; the seam test imports calculations' index and its test fixture). I may not edit `modules.json`. They clear when BOB records the edge.
+
+**Needs from BOB / for the merge**
+- The edge `scheduler.uses` += `calculations` (above), and `member-roster`'s `order.mjs` regenerates from `modules.json` (manifest §14) once it is in.
+- ASSUMPTION to confirm: `onIngestWork(module, fn)` as every other notice here (`onCopyWork`, `onFileWork`). Calculations' START words it `onIngestWork(fn)`. I call it `onIngestWork("scheduler", fn)`; if calculations offers `(fn)` alone the seam test goes red by name and one line changes.
+- Proposed requirement lines (BOB writes `build/requirements/scheduler.md`):
+  - R24, append: "(G55; K4562) The consumer `ingest` closes the registry after `question-explore`, calling `calculations` (its R14), its answer under the key `ingest` (R2): `due(now)` is `ingestDue(now)`, `wake(now)` is `ingestWake(now)`, `tick(now)` is `ingestTick(now)`, asked afresh at every firing, `arm` and start, so a restarted instance re-derives them from calculations' tables (R11). Due only while a record is `ingesting`; the slice size, the failed attempts and the stop after the third are calculations' (R7), the stopped record leaving neither due nor wake, so a failing tick never spins (R3) and the alarm is deleted (R15). At start it registers once with `calculations.onIngestWork`, as R9's notice: each call runs `arm` (R4) at once, except inside a firing; a refused registration is a start-up fault, as R23's. No call names a member or a table."
+  - R5/R7: the registry text ends "…`document-copy` (R25), `question-explore` (R26) and `ingest` (R24)".
+- Generated artifacts: `bio-plane/dist/bio-plane.bundled.mjs` and `agent-worker`'s bundle carry scheduler source; stale after this; BOB regenerates at the layer close (I changed none).
+- Census ops: none declared or changed by scheduler.
+
+Size (session_018N7Bmi8XF4uXxoG5G6hHKL): test runs 12, module lines 928
