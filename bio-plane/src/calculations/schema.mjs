@@ -57,6 +57,16 @@ CREATE TABLE IF NOT EXISTS calc_ingests (
   asked_by      TEXT NOT NULL,
   at            TEXT NOT NULL
 );
+-- R14 (G45): the pieces of a value of calc_ingests that passes INGEST_INLINE_MAX, in chunks of at most 256 Ki characters;
+-- the column then holds the marker {parts, bytes, count}. kind is rows, written or not_written.
+CREATE TABLE IF NOT EXISTS calc_ingest_parts (
+  ingest_key    TEXT NOT NULL,
+  kind          TEXT NOT NULL,
+  seq           INTEGER NOT NULL,
+  bundle_id     TEXT,
+  chunk         TEXT NOT NULL,
+  PRIMARY KEY (ingest_key, kind, seq)
+);
 -- R4–R11: one row per calculation.
 CREATE TABLE IF NOT EXISTS calculations (
   calc_id       TEXT PRIMARY KEY,
@@ -218,6 +228,7 @@ export const CALCULATIONS_TABLES = Object.freeze([
   cls("calc_table_bytes", { export: "never", sight: "source", keys: ["bundle_id"] }),
   cls("calc_bindings", { export: "yes", sight: "source", keys: ["bundle_id"] }),
   cls("calc_ingests", { export: "yes", sight: "source", keys: ["bundle_id"] }),
+  cls("calc_ingest_parts", { export: "yes", sight: "source", keys: ["bundle_id"] }),
   cls("calculations", { export: "yes", sight: "bundle", keys: ["project"] }),
   cls("calc_inputs", { export: "yes", sight: "bundle", keys: ["project"] }),
   cls("calc_recomputes", { export: "yes", sight: "bundle", keys: ["project"], version_chain: true }),

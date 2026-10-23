@@ -97,6 +97,13 @@ const CALC_RE = idPattern("CALC");
 const MONEY_RE = idPattern("MNY");
 const READ_LIMIT_MAX = 1000;
 const TABLE_CACHE_CHARS = 24 * 1024 * 1024;   /* the held tables' text kept at hand, at most (R1: one 20 MiB table fits) */
+/** R14 (G45): a value of an ingest's record (`rows`, `written`, `not_written`) stays in `calc_ingests` while its UTF-8 length is at most
+ *  this; above it the column holds the marker `{parts, bytes, count}` and the text is in `calc_ingest_parts`, in chunks of at most
+ *  `INGEST_CHUNK` characters (768 KiB of UTF-8), so no bound value passes the platform's single-value limit. */
+export const INGEST_INLINE_MAX = 524288;
+export const INGEST_CHUNK = 256 * 1024;
+/** R14: the most characters of an ingest's stated reason (a protective bound; the statement's sum stays under the platform's). */
+export const INGEST_REASON_MAX = 2000;
 const TEXT_CHUNK = 512 * 1024;   /* characters per row of calc_table_bytes, under a Durable Object row's 2 MB */
 
 const str = (v) => (typeof v === "string" ? v.trim() : "");
@@ -104,6 +111,25 @@ const plain = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const json = (v) => (v === undefined ? null : JSON.stringify(v));
 const parse = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 const sha = (v) => sha256HexSync(canonicalJson(v));
+/* G45: chunks of at most `size` characters that never split a surrogate pair (a lone surrogate bound as text is stored as U+FFFD) */
+function chunksOf(text, size = INGEST_CHUNK) {
+  const out = [];
+  for (let i = 0; i < text.length;) {
+    let end = Math.min(i + size, text.length);
+    if (end < text.length) { const c = text.charCodeAt(end); if (c >= 0xdc00 && c <= 0xdfff) end--; }
+    out.push(text.slice(i, end));
+    i = end;
+  }
+  return out;
+}
+/* G45: what one value of an ingest's record binds: its JSON in the column while at most INGEST_INLINE_MAX bytes (as before), else a marker and chunks */
+function ingestStored(kind, value) {
+  const text = JSON.stringify(value);
+  const bytes = new TextEncoder().encode(text).byteLength;
+  if (bytes <= INGEST_INLINE_MAX) return { kind, column: text, chunks: [] };
+  const chunks = chunksOf(text);
+  return { kind, column: JSON.stringify({ parts: chunks.length, bytes, count: Array.isArray(value) ? value.length : 1 }), chunks };
+}
 const no = (reason, detail, extra = {}) => ({ ok: false, reason, detail, ...extra });
 const weaker = (a, b) => (GRADES.indexOf(a) >= GRADES.indexOf(b) ? a : b);
 const isGrade = (g) => GRADES.includes(g);
@@ -1623,6 +1649,8 @@ export class Calculations {
    *  through an identifier. `rows` lists row numbers (0-based); every row only with `rows: "all"` and a reason. */
   async ingestMoney({ binding = null, rows = null, reason = null, by = null } = {}) {
     if (!stamped(by) || isMachine(by)) return no("MEMBER_ACT_ONLY", localize("calculations.index.money_facts_are_read_from", "money facts are read from a table only at a member's request (K1468). Nothing was written."));
+    if (typeof reason === "string" && [...reason].length > INGEST_REASON_MAX)
+      return no("BAD_REASON", localize("calculations.index.a_reason_is_at_most", "a reason is at most {max} characters; shorten it. Nothing was written.", { max: String(INGEST_REASON_MAX) }), { max: INGEST_REASON_MAX });
     const b = typeof binding === "string" ? this.#one(`SELECT * FROM calc_bindings WHERE binding_key=?`, binding) : null;
     if (!b || !this.#sees(b.bundle_id, by)) return no("NO_SUCH_BINDING", "no adopted binding answers to that key here, or it is not one you may see. Nothing was written.");
     const t = await this.#heldTable(b.table_sha);
@@ -1680,13 +1708,35 @@ export class Calculations {
     }
     const at = this.now();
     const key = sha({ binding: b.binding_key, rows: picked, by, at });
+    /* G45: each of the three values is stored whole in the row while it is at most INGEST_INLINE_MAX bytes, else in pieces,
+       the row and its pieces in the one transaction */
+    const values = [["rows", rows === "all" ? "all" : picked], ["written", written], ["not_written", notWritten]]
+      .map(([kind, v]) => ingestStored(kind, v));
     this.record.transact(() => {
       this.sql.exec(`INSERT OR IGNORE INTO calc_ingests (ingest_key, binding_key, bundle_id, rows_json, reason, written_json, not_written_json, asked_by, at)
-                     VALUES (?,?,?,?,?,?,?,?,?)`, key, b.binding_key, b.bundle_id ?? null, json(rows === "all" ? "all" : picked),
-        str(reason) || null, json(written), json(notWritten), by, at);
+                     VALUES (?,?,?,?,?,?,?,?,?)`, key, b.binding_key, b.bundle_id ?? null, values[0].column,
+        str(reason) || null, values[1].column, values[2].column, by, at);
+      for (const v of values)
+        v.chunks.forEach((chunk, seq) => this.sql.exec(`INSERT OR IGNORE INTO calc_ingest_parts (ingest_key, kind, seq, bundle_id, chunk) VALUES (?,?,?,?,?)`,
+          key, v.kind, seq, b.bundle_id ?? null, chunk));
       return { ok: true };
     });
     return { ok: true, ingest: key, binding: b.binding_key, written, not_written: notWritten, by: INGEST_STAMP, asked_by: by };
+  }
+
+  /** R14 (G45): `ingestOf(key)`, synchronously: an ingest as it was recorded, `{ingest, binding, bundle_id, rows, reason, written,
+   *  not_written, asked_by, at}`, each value joined from its pieces exactly as `json` made it; null when none is held. Cut nowhere. */
+  ingestOf(key) {
+    const r = typeof key === "string" ? this.#one(`SELECT * FROM calc_ingests WHERE ingest_key=?`, key) : null;
+    if (!r) return null;
+    const value = (kind, column) => {
+      const v = parse(column);
+      if (!plain(v) || typeof v.parts !== "number") return v;
+      const text = this.#rows(`SELECT chunk FROM calc_ingest_parts WHERE ingest_key=? AND kind=? ORDER BY seq`, key, kind).map((c) => c.chunk).join("");
+      return parse(text);
+    };
+    return { ingest: r.ingest_key, binding: r.binding_key, bundle_id: r.bundle_id ?? null, rows: value("rows", r.rows_json), reason: r.reason ?? null,
+      written: value("written", r.written_json), not_written: value("not_written", r.not_written_json), asked_by: r.asked_by, at: r.at };
   }
 
   /* ===================================================================== *
