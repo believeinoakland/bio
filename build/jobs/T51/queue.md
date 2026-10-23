@@ -249,3 +249,13 @@ Size (session_0193vawNA3pryumn3wcVVBRD): test runs 6, module lines 3438
 **Checks** (civicos-process `checks/`, each read by its failure count): format 176 modules, 0 failures; architecture 41 product files, 0 failures; coverage queue 55 of 55 ids, 0 failures; words queue, 0 failures; ownership 10 files, 0 failures. Impact set (`build/plan/impact.mjs`: queue 32, store-door 6, control-plane 17, plane 59 files): 547 tests, 545 pass, 2 fail (the two above). Census ops: none new.
 
 Size (session_011pqGr91RHciRQowMDqiftF): test runs 14, module lines 2948
+
+## J13 · COMPLETE
+
+QUEUE #34 (session_011pqGr91RHciRQowMDqiftF), T51 fix round 8, G116 (R94). Complete on `job/T51/queue`; the record's last section has the four fields, the control-plane contract and the wording.
+
+**Built.** One derivation per (member, viewer, signature) serves the list, the count and the bridge's feed reads; every answer is made from a copy; the item-mute path counts its write again after the insert. A miss states `derivation: {served: "miss", rows_read, rows_written, items_by_producer}` and logs one `queue_derive` line; a hit states `{served: "hit"}`. Control-plane carries them as `queue-count;desc=` and `rows-queue` (the muted, answered and aside lists make no derivation and state none).
+
+**Failing-first:** `r8-derive-once.test.mjs` RED `3 !== 1` against the previous code (6 of 7 red), green after; `r7-count-cache.test.mjs` rewritten to R94 with the stale-list control. Queue suite 229 of 229 (also on one core); format, architecture, coverage, words, ownership 0 failures.
+
+**For you:** (1) `plane` `test/m/plane/compose.test.mjs:105` (R11) swaps three providers' answers between two reads with no row written, so its second read is now the kept derivation: a plane test fix (write a row between), not mine. `plane/release.test.mjs` R24 fails on the tranche tip too. (2) record-core's `writeCount()` on `tranche/T51` is still the total_changes version; G115's exclusion is unmerged, so case 3 holds and cases 1-2 wait, as the START states. (3) Behaviour notes and the proposed R94 wording are in the record (tasks read fixed at 1000; a hit's ages are at most one bucket old).
