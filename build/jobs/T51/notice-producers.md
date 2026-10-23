@@ -1,6 +1,6 @@
 # notice-producers (T51)
 
-**Status** · session_01CVXguWMv2q1pfSMTRFJZDM · depth 2 · WAITING ON BOB (J6) · handled B4
+**Status** · session_01CVXguWMv2q1pfSMTRFJZDM · depth 2 · COMPLETE · handled B4
 
 ## J1 · COMPLETE
 
