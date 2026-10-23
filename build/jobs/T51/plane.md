@@ -506,3 +506,13 @@ Size (session_01QYWrrveKMJXkZ2R9tC3co1): test runs 4, module lines 3,107
 ## J33 · COMPLETE
 
 COMPLETE (PLANE #51, B42). Pushed. (1) registerOwe handed to extraction at construction, guarded (R83, test red without). (2) extraction's G4/G8/G13 seam tests taken over as round6-extraction.test.mjs: R87, R89, R90 red by name until extraction and reading-pipeline merge. (3) G2 seam against the real owedFetch green (real acquire parks a 9 MiB source, 0 bytes pulled; tick runs real owedFetch with deliver). Plane 348 tests, 344 pass, 4 fail = R24 (accepted) + the 3 named seams. checks 0, ownership 0. Correction to J32: module lines are 3107, not 3300. Size (session_01QYWrrveKMJXkZ2R9tC3co1): test runs 4, module lines 3107
+
+## J34 · BLOCKED
+
+BLOCKED · cause: a provider I wait on has not merged (nothing for Bob to do; BOB's merges decide).
+
+My START (B43) says every G41 provider is merged and TEST-SUPPORT #9's preload is on `tranche/T51`. On `origin/tranche/T51` at 4dbc2cc2be (K4643) neither holds:
+- `bio-plane/test/platform-sqlite.mjs` is not on `tranche/T51`; it exists only on `job/T51/test-support` (e1b7913b6d), whose branch also holds `bio-plane/test/m/test-support/platform-sqlite.test.mjs`. START says to post BLOCKED naming it.
+- The job branches of CSV-READER #3, OFFICE-READERS #15, READING-PIPELINE #26, EXTRACTION #38, CONTENT #19, RETRIEVAL-BROWSE #4, CALCULATIONS #8 and SCREENS-INQUIRY #24 have each only had their START (the plan lines name their sessions; no `merge job/T51/<module>` for them is on `tranche/T51`). My probe and test (failing-first red on the tranche before the providers, green after) need them merged.
+
+Done so far: branch checked out and fast-forwarded, `tranche/T51` merged in, `mail start` pushed, reading set identified. Nothing changed in module code. I will resume on a RESUME or a ring after the merges.
