@@ -497,3 +497,10 @@ Proposed R14 lines and the Size line are in the record.
 **Suite.** `bio-plane/test/m/case-authoring/` under the preload: 249 tests, 249 pass. Users that name the pre-flight (27 files in case-check, affordances, op-declarations, screens-inquiry, screens-publish, control-plane per `impact.mjs origin/tranche/T51 HEAD`): 359 tests, 0 fail. Checks: format 176 modules 0 failures; architecture 45 files 0 failures; coverage 58 of 58 ids named, 0 failures; ownership 4 files 0 failures; words 13 failures, none in this module (case-checker inline 6, installer-steps and screens-intake missingkey 7).
 
 **Size (session_01URrv3YW1ZfSL7VBw6RGXev): test runs 9, module lines 3086** (`bio-plane/src/case-authoring/*.mjs`).
+
+## J25 · COMPLETE
+
+COMPLETE for G112 (B29 START). Record: build/jobs/T51/case-authoring.md, 'Fix round 8, G112: completion record', pushed.
+Changed: index.mjs publishPreflight hands its rolled-back publishCase tieAttested true when the call sends none and the case's unsigned preparation holds this author's attestation row (new #tieAttestedInPreparation; reads only, never reaches op=publish). First, blockers and the sign step's publish_at then answer as for the confirmed call.
+Tests: new r8-prepared-preflight.test.mjs (5 tests, R34/R75/R76/R78): red on the old source (first TIE_ATTESTATION_MISSING, publish_at null), green now; controls (unprepared, publishCase without tieAttested, published-only) green before and after. signing.test.mjs R75's literal updated for ratification R58's source/why fields (red on the tranche before my change). Module suite 249/249 under the preload; 27 user files that name the pre-flight: 359 tests, 0 fail. format 0, architecture 0, coverage 58/58, ownership 0; words 13 failures, none in this module.
+Reds remaining: none of mine. No new words, no census-op change, no generated artifact made stale. Proposed R34/R76 lines are in the record. Seam section F (control-plane) should now confirm through the door.
