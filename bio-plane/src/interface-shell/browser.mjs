@@ -2638,13 +2638,39 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   }
 
   /* ---------- start ---------- */
-  async function loadWords() {
-    /* R5 (fix round 3, C15, P1): asked for by the release version the served page names (`<meta name="cs-version">`, put in at serve time,
-       so it is in hand when the shell asks; the release is the version), so the answer can be kept for that release; a page that
-       names none sends none */
+  /* R128 (fix round 8, G114; K4814 (1), K4817): the words request names the release, the viewer's language and the team's adoptions stamp in
+     `v` (`<release>~<language>~<stamp>`; the language an empty part when the viewer has none; never a `language` field, which asks every word).
+     `loadWords` is sent at `whoami`'s answer, before `bootstrap`, which carries the language and the stamp (`instance-setup` R103) and goes after
+     the screen's first reads (R122); so a load names the release alone until the device holds the member's note of them (`cs-words:<member>`,
+     written when `bootstrap` answers, a device convenience as `cs-group` is; never the tab's one key, R24). When `bootstrap` answers with
+     a note other than the one the last load named, the words are asked once more with the full `v`, so that fetch is the one the browser
+     keeps. A stale note is asked and answered without the year, with the viewer's current words (the door's). */
+  let WORDS_SENT = null;
+  const wordsNoteKey = () => (ME && ME.member ? "cs-words:" + String(ME.member) : null);
+  function wordsNote() {
+    const k = wordsNoteKey();
+    let o = null;
+    try { o = k ? JSON.parse(local.get(k) || "null") : null; } catch { o = null; }
+    return o && typeof o === "object" && typeof o.s === "string" && o.s && typeof o.l === "string" ? { l: o.l, s: o.s } : null;
+  }
+  function wordsRelease() {
     const meta = doc.querySelector ? doc.querySelector('meta[name="cs-version"]') : null;
     const named = meta && meta.getAttribute ? meta.getAttribute("content") : null;
-    const v = typeof named === "string" && named ? named : null;
+    return typeof named === "string" && named ? named : null;
+  }
+  const wordsV = () => { const r = wordsRelease(), n = wordsNote(); return r && n ? r + "~" + n.l + "~" + n.s : r; };
+  /* `bootstrap`'s answer, kept for the loads that follow; the words asked again when the full `v` is not the one the last load named */
+  function noteWords(b) {
+    const k = wordsNoteKey();
+    if (!k || !S || !b || typeof b !== "object" || typeof b.words_version !== "string" || !b.words_version) return;
+    const next = { l: typeof b.language === "string" ? b.language : "", s: b.words_version };
+    const had = wordsNote();
+    if (!had || had.l !== next.l || had.s !== next.s) local.set(k, JSON.stringify(next));
+    if (wordsRelease() && WORDS_SENT !== wordsV()) loadWords();
+  }
+  async function loadWords() {
+    const v = wordsV();
+    WORDS_SENT = v;
     const a = await call("interfacewords", v ? { query: { v } } : {});
     if (a.kind !== "ok" || !a.value || !Array.isArray(a.value.words)) return;
     wordsRead = true;
@@ -2847,7 +2873,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   function startBoot() {
     if (BOOT_CALL || !BOOT_ARGS) return BOOT_CALL;
     BOOT_CALL = call("bootstrap", BOOT_ARGS);
-    BOOT_CALL.then((b) => { if (b.kind === "ok" && b.value && typeof b.value === "object") { BOOT = b.value; BOOT_READ = true; testBand(); } });
+    BOOT_CALL.then((b) => { if (b.kind === "ok" && b.value && typeof b.value === "object") { BOOT = b.value; BOOT_READ = true; testBand(); noteWords(b.value); } });
     return BOOT_CALL;
   }
   return { start, state: () => ({ ME, ROUTE, LEVEL, THEME, RAILW, REACHABLE, DOCK, TODO, GROUP, MAIN, DOCKI, LOCKED, S: !!S }), absorb, date, w };
