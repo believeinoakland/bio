@@ -71,9 +71,18 @@ export function materialHeld(m, io) {
  *   - its co-attestation (`co_attestation`), a timestamp and a co-archive, each where held (R2);
  *   - the project's (`project`): the register row holding it in the project's record, `recorded_in` its bundle;
  *   - the group's (`group`): one row whose signature is the literal `case`, the case document's own.
+ *  Where the same `ref` is on two or more of `materials` (captures of one source), each of its attestations also states its
+ *  capture's `sha` (G47; K4669), the join a reader makes; with one material to a `ref` none does.
  *  No new table and no new act holds the project's or the group's attestation. */
 export function materialRows(materials, { project, group, at, facts, origin, registered, member, title = () => null }) {
   const rows = [], attestations = [];
+  /* G47 (K4669, K4671, K4672): k captures of one source are k materials of one `ref`. Each of their attestations then
+     states its capture's `sha`, so a reader joins it to its own material and not to all k; a `ref` that occurs once
+     states none, and its document is byte for byte what it was. Counted over all the materials of this call: the body
+     and the front matter share that one array, and no reader counts. */
+  const perRef = new Map();
+  for (const m of materials) perRef.set(m.ref, (perRef.get(m.ref) || 0) + 1);
+  const shared = (m) => (perRef.get(m.ref) > 1 ? { sha: m.sha } : {});
   for (const m of materials) {
     const f = m.kind === "document" ? facts(m.sha) : null;
     rows.push({ ref: m.ref, kind: m.kind, sha: m.sha, text_sha: m.held.text_sha, origin: origin(m.sha),
@@ -83,18 +92,18 @@ export function materialRows(materials, { project, group, at, facts, origin, reg
                                          ...(typeof m.obscured.marked === "boolean" ? { marked: m.obscured.marked } : {}),
                                          kind: m.obscured.kind ?? null }
                   : null });
-    attestations.push(...member(m, f).map((x) => ({ ref: m.ref, by_kind: "member", recorded_in: null, ...x })));
+    attestations.push(...member(m, f).map((x) => ({ ref: m.ref, by_kind: "member", recorded_in: null, ...x, ...shared(m) })));
     if (f && f.timestamp_at)
       attestations.push({ ref: m.ref, by_kind: "co_attestation", by: "timestamp", level: null, at: f.timestamp_at,
-                          signature: null, recorded_in: null });
+                          signature: null, recorded_in: null, ...shared(m) });
     if (f && f.co_archive)
       attestations.push({ ref: m.ref, by_kind: "co_attestation", by: f.co_archive, level: null, at: null,
-                          signature: null, recorded_in: null });
+                          signature: null, recorded_in: null, ...shared(m) });
     const reg = registered(m.sha);
     if (reg)
       attestations.push({ ref: m.ref, by_kind: "project", by: project, level: null, at: reg.registered ?? null,
-                          signature: null, recorded_in: reg.bundle_id });
-    attestations.push({ ref: m.ref, by_kind: "group", by: group, level: null, at, signature: "case", recorded_in: null });
+                          signature: null, recorded_in: reg.bundle_id, ...shared(m) });
+    attestations.push({ ref: m.ref, by_kind: "group", by: group, level: null, at, signature: "case", recorded_in: null, ...shared(m) });
   }
   return { rows, attestations };
 }
