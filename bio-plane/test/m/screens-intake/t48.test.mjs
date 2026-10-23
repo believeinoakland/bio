@@ -60,7 +60,7 @@ test("R17 every screen drawn over an empty fixture shows no empty section and no
   }
   const e = await open("/app/held", { plane: { ...FULL, ...EMPTY } });
   assert.ok(!says(e, "screen.held.setaside"), "an empty held screen draws its one empty state only");
-  const f = await open("/app/held", { plane: { heldcaptures: refused("STORE_SILENT", "The record did not answer.") } });
+  const f = await open("/app/held", { plane: { heldcaptures: refused("STORE_SILENT", "store silent (test fixture)") } });
   assert.ok(main(f).querySelector('[data-state="failed"]'), "a failed read is drawn failed");
 });
 

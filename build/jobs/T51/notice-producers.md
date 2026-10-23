@@ -1,6 +1,6 @@
 # notice-producers (T51)
 
-**Status** · session_01SbR9Bp7b1UDZG4sWc5dbrm · depth 2 · COMPLETE · handled B4
+**Status** · session_01CVXguWMv2q1pfSMTRFJZDM · depth 2 · COMPLETE · handled B4
 
 ## J1 · COMPLETE
 
@@ -64,3 +64,33 @@ Size (session_01SbR9Bp7b1UDZG4sWc5dbrm): test runs 14, module lines 1497 (index.
 ## J5 · COMPLETE
 
 COMPLETE again (re B4): merged tranche/T51 at capture's merge; fetch.test.mjs seam over the real capture (recordFetchDone, told once, other member none) green; queue/noticed.test.mjs:288 green. 148 pass, 0 fail; format, architecture, coverage 6632/6632, words, ownership all 0 failures. No red, nothing deferred. Owed rows: notice.fetch.done, notice.fetch.done.door. Size line in my record.
+
+## J6 · QUESTION
+
+QUESTION (re B5 START, G55). calculations has not published the read of a finished or stopped ingest, and I cannot read it without a name (the entry says only "as that module's contract asks for notice facts"). My best reading, which I build to now:
+`calculationsOf(host).ingestNotices({ after, limit, viewer })` -> `{ ok: true, ingests: [{ ingest, binding, project, state: "done"|"stopped", by, rows_total, written_count, not_written_count, at, cursor }], limit, truncated, next }`, oldest first by (`at`, `ingest`), `limit` default 200 (1..1000), `after` the `cursor` of an earlier row, `by` as `member:<id>`; only ingests the viewer sees (visibility as the act), never `ingesting`; never throws.
+Notice: two kinds, FINDING `ingest-done` and FINDING `ingest-stopped`, keyed `FINDING::ingest-done::<ingest>` / `FINDING::ingest-stopped::<ingest>`, to `by` alone while active, told once by the key; window 90 days, bound 1000, pages of 200 (as R27); subject the ingest, home set the project. Words (localize ids, as BOB's START names): `notice-producers.ingest.done`, `notice-producers.ingest.stopped`, filling the counts. `uses` needs `calculations` (your edge: modules.json lacks it on tranche/T51 today; checks/architecture.mjs fails on my import until it is added). Please tell CALCULATIONS #9 to publish exactly this read, or tell me the name and shape it publishes. Until it merges my seam test with the real calculations stays red by name and my failing-first tests use a stand-in `calculations` of this shape.
+
+## Fix round 6 · G55 (session_01CVXguWMv2q1pfSMTRFJZDM, NOTICE-PRODUCERS #16, depth 2): the ingest notices
+
+**Entry applied (to the shape in J6, awaiting BOB's answer).** `bio-plane/src/notice-producers/index.mjs`: producer `#ingestNotices` (R28, proposed), kinds `ingest-done` and `ingest-stopped` (FINDING), keys `FINDING::ingest-done::<ingest>` / `FINDING::ingest-stopped::<ingest>`, to the record's `by` alone while active; reads `calculationsOf(host).ingestNotices({after, limit, viewer})` (stand-in shape in J6), pages of 200 to at most 1,000 (`INGEST_NOTICE_PAGE`, `INGEST_NOTICE_MAX`), 90 days (`INGEST_NOTICE_DAYS`); an ingest still `ingesting`, another member's, a machine's or nobody's raises none; `facts.ingest`; a read that throws or refuses is named `calculations` in `facts.failed`. Words (localize ids BOB named): `notice-producers.ingest.done`, `notice-producers.ingest.stopped`, filling `{written}`, `{rows}`, `{not_written}`; the row owed to the design is the same pair, T52.
+
+**Tests** (`g55-ingest.test.mjs`, new; `fixture.mjs` NONE gains a `calculations` stand-in; `read.test.mjs` R1 facts gain `ingest`). Seen red on the base (file fails at import: no producer), green after: one notice per done and per stopped ingest for its member and the same keys on a second cycle; the words by id and the counts; running / other member / machine / nobody none; revoked none; older than 90 days none; paging by `next`; throw / refuse named. **Seam test with the real calculations** (`R27`-style, last test of the file) is red by name: `calculations has not published ingestNotices`, until CALCULATIONS #9 merges and BOB CHANGEs me.
+
+**Results.** Module: 143 tests, 142 pass, 1 red by name (the seam). format 0; coverage 27 of 27; words 0 failures; ownership 0 failures. **architecture: 1 failure, named: `imports calculations/index.mjs ... does not declare in uses`; BOB's edge (modules.json `notice-producers.uses` gains `calculations`), asked in J6.** Not run yet: the impact users (queue), after calculations merges.
+
+**Platform check.** Not applicable: a read of two small lists, no new object work (R-FOUR's platform clause: no size, CPU or `waitUntil` involved).
+Waiting on BOB: the answer to J6 and the `modules.json` edge.
+
+## G55 · after B6 (read to the provider's shape)
+Merged `tranche/T51` (the `calculations` edge is in; architecture 0). The earlier stand-in shape in J6 is replaced by BOB's published one: `ingestNotices({after = 0, limit, viewer}) → {ok, items: [{ingest, binding, state, rows_total, written_count, not_written_count, finished_at, stopped?: {reason, says}}], next}`. `#ingestNotices` (`index.mjs`) reads from `after` 0 every cycle (no cursor kept; order is by start, not finish), pages by `next` to 1,000, 90 days of `finished_at`; the subject is the ingest and its binding (no project, no `by`: the viewer is its member); a stop's `says` follows the sentence in the detail. Words `notice-producers.ingest.done` / `.stopped` (localize); row owed to the design: the same pair (T52).
+Tests: `g55-ingest.test.mjs` (7), red on the base (no producer), green after, except the seam over the real calculations, red by name (`calculations has not published ingestNotices`) until CALCULATIONS #9 merges. Added a test that two cycles both read from 0.
+Results: module 143 tests, 142 pass, 1 red by name (the seam). format 0, architecture 0, coverage 27/27, words 0, ownership 0 failures. Impact users: queue `noticed.test.mjs:288` is red for the same cause (`facts.failed` gains `calculations` while the real calculations lacks `ingestNotices`); it clears at calculations' merge (as `capture` did). Other impact users: store-door 6/6; control-plane and plane are not read by this producer.
+Proposed requirement line (BOB writes): R28 (G55, K4562): FINDINGs `ingest-done` / `ingest-stopped`, one per ingest `calculations.ingestNotices` answers the viewer, keyed `FINDING::ingest-<state>::<ingest>`, told to the viewer alone while active; each cycle reads from the start, pages by `next` to 1,000, window 90 days of `finished_at`; `facts.ingest`; a failing read named `calculations` in `facts.failed`; Uses gain `calculations`.
+Census ops owned: none changed.
+Size (session_01CVXguWMv2q1pfSMTRFJZDM): test runs 8, module lines 1561
+
+## J7 · COMPLETE
+
+COMPLETE (G55, R28 proposed): ingest-done and ingest-stopped notices built to calculations' published ingestNotices shape (B6). Module 143 tests, 142 pass; the one red is the seam over the real calculations, red by name until CALCULATIONS #9 merges, and queue/noticed.test.mjs:288 for the same cause (facts.failed gains calculations). format, architecture, coverage 27/27, words, ownership: 0 failures. Rows owed to the design: notice-producers.ingest.done, notice-producers.ingest.stopped (localize). CHANGE me at calculations' merge and I re-run both. Details in my record.
+Size (session_01CVXguWMv2q1pfSMTRFJZDM): test runs 8, module lines 1561

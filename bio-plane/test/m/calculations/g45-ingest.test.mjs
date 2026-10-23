@@ -7,7 +7,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { seeded, V } from "./fixture.mjs";
-import { INGEST_INLINE_MAX, INGEST_CHUNK, INGEST_REASON_MAX, INGEST_ROWS_MAX, calculationsOps } from "../../../src/calculations/index.mjs";
+import { INGEST_INLINE_MAX, INGEST_INLINE_ROWS, INGEST_CHUNK, INGEST_REASON_MAX, INGEST_ROWS_MAX, calculationsOps } from "../../../src/calculations/index.mjs";
 
 const FIELDS = [{ name: "payer", type: "string" }, { name: "payee", type: "string" }, { name: "amount", type: "number" }];
 const ROLES = { payer: { role: "payer", scheme: "ellery_person" }, payee: { role: "payee", scheme: "ellery_person" }, amount: { role: "amount" } };
@@ -30,31 +30,33 @@ async function setup(rows, payers, { project = null } = {}) {
   return { w, t, b };
 }
 const act = (w, b, extra = {}) => w.c.ingestMoney({ binding: b.binding, rows: "all", reason: "the whole ledger is the request's subject", by: V("bob"), ...extra });
+/* G55: an act over INGEST_INLINE_ROWS answers started; its slices run until it is done */
+async function drain(w, key) {
+  for (let k = 0; k < 50; k++) { const t = await w.c.ingestTick(); assert.equal(t.ok, true, JSON.stringify(t)); if (w.c.ingestOf(key).state === "done") return; }
+  assert.fail("the ingest did not finish");
+}
 const largest = (w) => Math.max(...w.rows(`SELECT length(CAST(rows_json AS BLOB)) a, length(CAST(written_json AS BLOB)) b, length(CAST(not_written_json AS BLOB)) c, length(CAST(reason AS BLOB)) d FROM calc_ingests`)
   .flatMap((r) => [r.a, r.b, r.c, r.d]), ...w.rows(`SELECT length(CAST(chunk AS BLOB)) a FROM calc_ingest_parts`).map((r) => r.a), 0);
 
-test("R14 (G45 a): rows \"all\" over 18,098 rows, most payers not identified and 300 written, is recorded whole: the answer lists every row, no stored value passes 1 MiB, ingestOf joins the pieces byte for byte, the record's written equals the facts written", async () => {
+test("R14 (G45 a, G55): rows \"all\" over 18,098 rows, most payers not identified and 300 written, is recorded whole: the act answers started, its slices keep every row, no stored value passes 1 MiB, ingestOf joins the pieces, the record's written equal the facts written", async () => {
   const { w, b } = await setup(18098, (i) => (i % 60 === 0 ? "P001" : `U${String(i).padStart(6, "0")}`));
-  const r = await act(w, b);
-  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
-  assert.equal(r.written.length, 302);
-  assert.equal(r.not_written.length, 18098 - 302, "the answer lists every row, cut nowhere");
-  assert.ok(r.not_written.every((x) => x.reason === "PAYER_NOT_IDENTIFIED"));
-  assert.ok(bytes(JSON.stringify(r.not_written)) > 2_000_000, "the value that threw is over 2 MB");
+  const s = await act(w, b);
+  assert.equal(s.ok, true, JSON.stringify(s).slice(0, 300));
+  assert.equal(s.state, "ingesting");
+  assert.equal(s.rows_total, 18098);
+  assert.equal(w.money.calls.length, 0, "the act itself writes no fact");
+  await drain(w, s.ingest);
+  const kept = w.c.ingestOf(s.ingest);
+  assert.equal(kept.written.length, 302);
+  assert.equal(kept.not_written.length, 18098 - 302, "every row is listed, cut nowhere");
+  assert.ok(kept.not_written.every((x) => x.reason === "PAYER_NOT_IDENTIFIED"));
+  assert.deepEqual(kept.not_written.map((x) => x.row), Array.from({ length: 18098 }, (_, i) => i).filter((i) => i % 60 !== 0), "in row order");
   assert.ok(largest(w) < 1024 * 1024, `the largest bound value is ${largest(w)} B`);
   assert.ok(largest(w) < LIMIT);
-  const kept = w.c.ingestOf(r.ingest);
-  assert.deepEqual(kept.not_written, r.not_written);
-  assert.deepEqual(kept.written, r.written);
   assert.deepEqual(kept.rows, "all");
   assert.equal(kept.asked_by, V("bob"));
-  const stored = w.rows(`SELECT chunk FROM calc_ingest_parts WHERE kind='not_written' ORDER BY seq`).map((x) => x.chunk).join("");
-  assert.equal(sha1(stored), sha1(JSON.stringify(r.not_written)), "the stored text is the JSON the answer's list makes, byte for byte");
   assert.equal(w.money.calls.length, 302, "the facts written equal the record's written");
   assert.deepEqual(kept.written.map((x) => x.row), w.money.calls.map((c) => c.source.row));
-  const row = w.rows(`SELECT * FROM calc_ingests`)[0];
-  assert.match(row.not_written_json, /^\{"parts":\d+,"bytes":\d+,"count":17796\}$/, "the column holds the marker");
-  assert.equal(JSON.parse(row.written_json).length, 302, "a value under the inline max stays in the row");
 });
 
 test("R14 (G45 b): controls: 200 rows, and about 3,000 unwritten rows (under the inline max), are stored in calc_ingests alone, byte for byte as before, with no piece", async () => {
@@ -85,25 +87,26 @@ test("R14 (G45 c): a not_written value of INGEST_INLINE_MAX bytes is inline, one
   assert.equal(INGEST_INLINE_MAX, 524288);
   assert.equal(INGEST_CHUNK, 262144);
   /* find a table whose not_written JSON is exactly INGEST_INLINE_MAX bytes: all payers 30 characters, adjust the last rows' lengths by the difference */
-  const guess = await sized(3400, () => 30);
-  const n = Math.floor(3400 * INGEST_INLINE_MAX / guess.size) - 1;
-  const lens = new Array(n).fill(30);
+  const guess = await sized(2600, () => 60);
+  const n = Math.floor(2600 * INGEST_INLINE_MAX / guess.size) - 1;
+  assert.ok(n <= INGEST_INLINE_ROWS, "the case stays an inline act");
+  const lens = new Array(n).fill(60);
   const first = await sized(n, (i) => lens[i]);
   let delta = INGEST_INLINE_MAX - first.size;
-  assert.ok(Math.abs(delta) < 200 * 25, `a difference of ${delta} B can be spread over the last rows (each 30 +- 25 characters)`);
-  for (let i = n - 1; delta !== 0; i--) { const d = Math.max(-25, Math.min(25, delta)); lens[i] += d; delta -= d; }
+  assert.ok(Math.abs(delta) < 200 * 4, `a difference of ${delta} B can be spread over the last rows (each 60 +- 4 characters)`);
+  for (let i = n - 1; delta !== 0; i--) { const d = Math.max(-4, Math.min(4, delta)); lens[i] += d; delta -= d; }
   const at = await sized(n, (i) => lens[i]);
   assert.equal(at.size, INGEST_INLINE_MAX);
   assert.equal(at.w.count("calc_ingest_parts"), 0, "exactly the inline max stays in the row");
   assert.equal(at.stored, JSON.stringify(at.r.not_written));
-  lens[n - 1] += 1;
+  lens[lens.findIndex((l) => l < 64)] += 1;
   const over = await sized(n, (i) => lens[i]);
   assert.equal(over.size, INGEST_INLINE_MAX + 1);
   assert.ok(over.w.count("calc_ingest_parts") >= 1, "one byte more is in pieces");
   assert.deepEqual(over.w.c.ingestOf(over.r.ingest).not_written, over.r.not_written);
   /* a payer value of non-ASCII characters and an astral pair, at every edge of a chunk */
-  const wild = (i) => `Ü${"😀".repeat(8)}${i}`;
-  const { w, b } = await setup(5200, (i) => wild(i));
+  const wild = (i) => `Ü${"😀".repeat(20)}${i}`;
+  const { w, b } = await setup(3000, (i) => wild(i));
   const r = await act(w, b);
   assert.equal(r.ok, true);
   const parts = w.rows(`SELECT chunk FROM calc_ingest_parts WHERE kind='not_written' ORDER BY seq`).map((x) => x.chunk);
@@ -117,7 +120,7 @@ test("R14 (G45 c2): a text whose 262,144th character is the low half of a pair i
   /* a payer of 3 characters so each row is the same width, an astral character placed so a chunk edge lands inside a pair: found by scanning n */
   let found = false;
   for (const pad of [0, 1]) {
-    const { w, b } = await setup(4200, (i) => `${"x".repeat(pad)}😀${i % 10}`);
+    const { w, b } = await setup(3000, (i) => `${"x".repeat(55 + pad)}😀${i % 10}`);
     const r = await act(w, b);
     assert.equal(r.ok, true);
     const parts = w.rows(`SELECT chunk FROM calc_ingest_parts WHERE kind='not_written' ORDER BY seq`).map((x) => x.chunk);
@@ -130,7 +133,7 @@ test("R14 (G45 c2): a text whose 262,144th character is the low half of a pair i
 });
 
 test("R14 (G45 d): a repeat of the same call writes no second row and no second piece", async () => {
-  const { w, b } = await setup(5200, (i) => `U${String(i).padStart(5, "0")}`);
+  const { w, b } = await setup(3000, (i) => `U${String(i).padStart(63, "0")}`);
   const a = await act(w, b);
   const rowsBefore = w.count("calc_ingests"), partsBefore = w.count("calc_ingest_parts");
   assert.ok(partsBefore >= 1);
@@ -140,14 +143,16 @@ test("R14 (G45 d): a repeat of the same call writes no second row and no second 
   assert.equal(w.count("calc_ingest_parts"), partsBefore);
 });
 
-test("R14 (G45 e): the listed-rows form with 90,000 explicit rows stores rows_json in pieces and ingestOf returns the list", async () => {
+test("R14 (G45 e, G55): the listed-rows form with 90,000 explicit rows stores rows_json in pieces, runs in slices, and ingestOf returns the list and every row", async () => {
   const n = 90000;
   const { w, b } = await setup(5, (i) => `U${i}`);   /* the rows beyond the table are listed not written NO_SUCH_ROW, cheaply */
   const rows = Array.from({ length: n }, (_, i) => i);
   const r = await w.c.ingestMoney({ binding: b.binding, rows, by: V("bob") });
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 200));
-  assert.equal(r.not_written.length, n);
+  assert.equal(r.state, "ingesting");
   assert.ok(bytes(JSON.stringify(rows)) > INGEST_INLINE_MAX, "the list itself passes the inline max");
+  assert.deepEqual(w.rows(`SELECT DISTINCT kind FROM calc_ingest_parts ORDER BY kind`).map((x) => x.kind), ["rows"]);
+  await drain(w, r.ingest);
   assert.deepEqual(w.rows(`SELECT DISTINCT kind FROM calc_ingest_parts ORDER BY kind`).map((x) => x.kind), ["not_written", "rows"]);
   assert.ok(largest(w) < 1024 * 1024);
   const kept = w.c.ingestOf(r.ingest);
@@ -156,7 +161,7 @@ test("R14 (G45 e): the listed-rows form with 90,000 explicit rows stores rows_js
 });
 
 test("R14 R29 (G45 f): a purge of the bundle removes the pieces with the row", async () => {
-  const { w, b } = await setup(5200, (i) => `U${String(i).padStart(5, "0")}`);
+  const { w, b } = await setup(3000, (i) => `U${String(i).padStart(63, "0")}`);
   const r = await act(w, b);
   assert.ok(w.count("calc_ingest_parts") >= 1);
   const bundle = w.rows(`SELECT bundle_id FROM calc_ingests WHERE ingest_key=?`, r.ingest)[0].bundle_id;
@@ -168,7 +173,7 @@ test("R14 R29 (G45 f): a purge of the bundle removes the pieces with the row", a
 });
 
 test("R14 (G45 h): a throw while the second piece is written leaves no calc_ingests row and no piece; the money facts the act wrote stay, true facts with no ingest row", async () => {
-  const { w, b } = await setup(5200, (i) => (i % 400 === 0 ? "P001" : `U${String(i).padStart(5, "0")}`));
+  const { w, b } = await setup(3000, (i) => (i % 400 === 0 ? "P001" : `U${String(i).padStart(63, "0")}`));
   const exec = w.st.sql.exec.bind(w.st.sql);
   let pieces = 0;
   w.st.sql.exec = (q, ...args) => {
@@ -183,7 +188,7 @@ test("R14 (G45 h): a throw while the second piece is written leaves no calc_inge
   assert.equal(w.count("calc_ingest_parts"), 0);
   const after = w.snapshot();
   for (const t of Object.keys(before)) if (t !== "facts" && !/^money|^fact|^entit|^ids|^minted/.test(t)) assert.deepEqual(after[t], before[t], t);
-  assert.equal(w.money.calls.length, 13, "the facts money recorded before the throw remain (rows 0, 400, ... 4,800 resolve): true facts, no ingest row invented");
+  assert.equal(w.money.calls.length, 8, "the facts money recorded before the throw remain (rows 0, 400, ... 2,800 resolve): true facts, no ingest row invented");
 });
 
 test("R14 (G45 i): a reason of 2,001 characters is refused BAD_REASON before any fact is written, and one of 2,000 is stored whole", async () => {
@@ -225,6 +230,6 @@ test("R14 (G45 g): an act of more than INGEST_ROWS_MAX rows is refused INGEST_TO
   /* the rows beyond the 30 held are listed not written, cheaply */
   const at = await w.c.ingestMoney({ binding: b.binding, rows: Array.from({ length: INGEST_ROWS_MAX }, (_, i) => i), by: V("bob") });
   assert.equal(at.ok, true, JSON.stringify(at).slice(0, 200));
-  assert.equal(at.written.length + at.not_written.length, INGEST_ROWS_MAX);
+  assert.equal(at.rows_total, INGEST_ROWS_MAX, "exactly the bound is accepted and runs in the background");
   assert.ok(largest(w) < 1024 * 1024);
 });

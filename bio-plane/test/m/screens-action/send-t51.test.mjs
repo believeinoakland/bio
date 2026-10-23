@@ -365,7 +365,7 @@ test("R49 (filings R59, R25): after a reload the exhibits and the venue's standa
 
 test("R3, R41: start-send's acts are exactly its registry acts; writing help is drawn beside the own-words fields only while the assistant is reachable and sends the declared names", async () => {
   const mine = SCREENS.find((s) => s.id === "start-send").acts.map((a) => a.op).sort();
-  const want = ["optionstartpreview", "optionstart", "communicationprepare", "filingprepare", "filingapprove", "filingrecordsent", "filingsecondapprove", "templatesave", "writinghelp",
+  const want = ["optionstartpreview", "optionstart", "communicationprepare", "filingprepare", "filingapprove", "filingrecordsent", "filingsecondapprove", "templatesave", "writinghelp", "projectjoin",
     ...(Object.hasOwn(OPS, "actionstake") ? ["actionstake"] : [])].sort();
   assert.deepEqual(mine, want);
   const off = await open(STEP2, DATA_PLANE);

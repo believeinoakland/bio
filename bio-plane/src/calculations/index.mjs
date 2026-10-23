@@ -107,6 +107,18 @@ export const INGEST_REASON_MAX = 2000;
 /** R14 (G45): the most rows one act reads, set by measure (the largest count whose act survives the object's memory at the real shape:
  *  100,000 rows survive, 150,000 do not; a protective bound, K1881). Above it the act is refused INGEST_TOO_LARGE before any fact is written. */
 export const INGEST_ROWS_MAX = 100000;
+/** R14 (G55): the most party resolutions one ingest act keeps (the cache dies with the act; a protective bound on its memory, the act's
+ *  heap being the platform's: a payer past it is looked up each time, as before). */
+export const INGEST_CACHE_MAX = 10000;
+/** R14 (G55, K4562): an act over this many rows is ingested in the background, in slices; at or under it the act runs whole and answers whole. */
+export const INGEST_INLINE_ROWS = 10000;
+/** R14 (G55): one slice judges at most this many rows, or writes at most INGEST_SLICE_FACTS facts, whichever comes first (counts, never time:
+ *  the object's clock is frozen). A slice is one transaction. */
+export const INGEST_SLICE_ROWS = 20000;
+export const INGEST_SLICE_FACTS = 2000;
+/** R14 (G55): consecutive failed slices after which the ingest is stopped. */
+export const INGEST_MAX_ATTEMPTS = 3;
+const INGEST_PART_ITEMS = 1000;   /* items in one stored piece of a background ingest's lists */
 const TEXT_CHUNK = 512 * 1024;   /* characters per row of calc_table_bytes, under a Durable Object row's 2 MB */
 
 const str = (v) => (typeof v === "string" ? v.trim() : "");
@@ -296,6 +308,7 @@ export class Calculations {
   #inputListeners = [];     // R11: {module, fn}
   #patternListeners = [];   // R23: {module, fn}
   #tableCache = new Map();  // sha → held table (`textTable`), the last few read, within TABLE_CACHE_CHARS
+  #ingestListeners = [];    // R14 (G55): {module, fn}, told when an ingest starts
   #engines = new Map();     // content id → the engine mark `#engineFor` last made (R9); the synchronous reads (R19, R30) read it
 
   constructor({ storage, record, membership, content, provenance, combine = combineProfiles, now = null,
@@ -1624,38 +1637,97 @@ export class Calculations {
       adopted_by: b.adopted_by, adopted_at: b.adopted_at };
   }
 
-  /* A party value resolved to an entity through its column's identifier: an entity scheme or a captured crosswalk. */
-  #resolveParty(spec, value) {
+  /* A party value resolved to an entity through its column's identifier: an entity scheme or a captured crosswalk.
+     G55: `cache` is the one act's (a Map `ingestMoney` makes at its start and drops at its end): an answer is kept under its column's
+     way to resolve and the trimmed value, so a payer repeated down a table is looked up once. A lookup that threw, or answered a
+     promise, is not an answer and is never kept (a kept null would read as "not registered" for every later row of that payer).
+     At most INGEST_CACHE_MAX answers are kept; a value past it is looked up each time, as before. */
+  #resolveParty(spec, value, cache = null) {
     if (!value || !String(value).trim()) return { why: word("calculations.why.cell_empty") };
     const entities = this.dep("entities");
+    const at = String(value).trim();
     if (spec.scheme) {
-      let e = null;
-      try { e = entities ? entities.entityByIdentifier({ scheme: spec.scheme, id: String(value).trim() }) : null; } catch { e = null; }
-      if (e && typeof e.then === "function") e = null;
-      if (plain(e) && e.undetermined) return { why: word("calculations.why.through_scheme_undetermined", { value: String(String(value).slice(0, 64)), scheme: String(spec.scheme), why: String(e.why || word("calculations.why.entity")) }) };
-      const id = typeof e === "string" ? e : plain(e) ? (e.entity_id ?? e.entityId ?? null) : null;
-      return id ? { entity: id } : { why: word("calculations.why.resolves_registered_entity", { value: String(String(value).slice(0, 64)), scheme: String(spec.scheme) }) };
+      const key = cache ? `s\u0000${spec.scheme}\u0000${at}` : null;
+      if (key !== null && cache.has(key)) return cache.get(key);
+      let e = null, answered = true;
+      try { e = entities ? entities.entityByIdentifier({ scheme: spec.scheme, id: at }) : null; } catch { e = null; answered = false; }
+      if (e && typeof e.then === "function") { e = null; answered = false; }
+      let out;
+      if (plain(e) && e.undetermined) out = { why: word("calculations.why.through_scheme_undetermined", { value: String(String(value).slice(0, 64)), scheme: String(spec.scheme), why: String(e.why || word("calculations.why.entity")) }) };
+      else {
+        const id = typeof e === "string" ? e : plain(e) ? (e.entity_id ?? e.entityId ?? null) : null;
+        out = id ? { entity: id } : { why: word("calculations.why.resolves_registered_entity", { value: String(String(value).slice(0, 64)), scheme: String(spec.scheme) }) };
+      }
+      if (key !== null && answered && cache.size < INGEST_CACHE_MAX) cache.set(key, out);
+      return out;
     }
     if (spec.crosswalk) {
+      const key = cache ? `c\u0000${spec.crosswalk.table}\u0000${spec.crosswalk.from}\u0000${spec.crosswalk.to}\u0000${at}` : null;
+      if (key !== null && cache.has(key)) return cache.get(key);
       const t = this.#heldTableSync(spec.crosswalk.table);
       const hit = [];
-      if (t) for (const r of t.objects()) if (String(r[spec.crosswalk.from]).trim() === String(value).trim()) hit.push(String(r[spec.crosswalk.to]).trim());
+      if (t) for (const r of t.objects()) if (String(r[spec.crosswalk.from]).trim() === at) hit.push(String(r[spec.crosswalk.to]).trim());
       const ids = [...new Set(hit)];
-      if (ids.length === 1 && idPattern("ENT").test(ids[0])) return { entity: ids[0] };
-      return { why: ids.length > 1 ? word("calculations.why.maps_entities_crosswalk", { value: String(String(value).slice(0, 64)), ids: String(ids.length) }) : word("calculations.why.crosswalk_maps_entity", { value: String(String(value).slice(0, 64)) }) };
+      const out = ids.length === 1 && idPattern("ENT").test(ids[0]) ? { entity: ids[0] }
+        : { why: ids.length > 1 ? word("calculations.why.maps_entities_crosswalk", { value: String(String(value).slice(0, 64)), ids: String(ids.length) }) : word("calculations.why.crosswalk_maps_entity", { value: String(String(value).slice(0, 64)) }) };
+      /* a crosswalk table not held is not an answer about the value */
+      if (key !== null && t && cache.size < INGEST_CACHE_MAX) cache.set(key, out);
+      return out;
     }
     return { why: localize("calculations.index.an_id_space_normalises", "an id space normalises a value but names no entity; declare the column's entity scheme or a captured crosswalk") };
   }
 
+  /* R14: what one row asks of money, or why it is not written: `{notWritten}` or `{fact}` (a fact money has not yet recorded). */
+  #judgeRow(ctx, i, row, ingest = null) {
+    const { b, roles, declared, resolved } = ctx;
+    const val = (r, role) => (typeof roles[role] === "string" ? String(r[roles[role]] ?? "").trim() : roles[role] ? roles[role].value : null);
+    const payer = this.#resolveParty(declared[roles.payer] || {}, row[roles.payer], resolved);
+    if (!payer.entity) return { notWritten: { row: i, reason: "PAYER_NOT_IDENTIFIED", detail: payer.why } };
+    const payee = this.#resolveParty(declared[roles.payee] || {}, row[roles.payee], resolved);
+    if (!payee.entity) return { notWritten: { row: i, reason: "PAYEE_NOT_IDENTIFIED", detail: payee.why } };
+    let fund = null;
+    if (typeof roles.fund === "string" && String(row[roles.fund] ?? "").trim()) {
+      const spec = declared[roles.fund] || {};
+      const raw = String(row[roles.fund]).trim();
+      const r = spec.scheme || spec.crosswalk ? this.#resolveParty(spec, raw, resolved)
+        : idPattern("ENT").test(raw) ? { entity: raw } : { why: word("calculations.why.names_registered_fund", { raw: String(raw.slice(0, 64)) }) };
+      if (!r.entity) return { notWritten: { row: i, reason: "FUND_NOT_IDENTIFIED", detail: r.why } };
+      fund = r.entity;
+    }
+    const asRead = String(row[roles.amount] ?? "");
+    const f = parseFigure(asRead);
+    if (f.refused) return { notWritten: { row: i, reason: "AMOUNT_NOT_READ", detail: f.why } };
+    const currency = val(row, "currency") || f.currency || null;
+    const unsigned = (d) => String(d).replace(/^-/, "");
+    const range = f.precision === "range" ? (f.sign === "-" ? { low: unsigned(f.high), high: unsigned(f.low) } : { low: f.low, high: f.high }) : null;
+    return { fact: { amount: range || f.value, as_read: asRead, currency, sign: f.sign, precision: f.precision,
+      kind: val(row, "kind"), phase: val(row, "phase"), ...(val(row, "stage") ? { stage: val(row, "stage") } : {}),
+      basis: val(row, "basis"), period: moneyPeriod(val(row, "period")),
+      from: { entity: payer.entity, as_written: String(row[roles.payer]), ...(fund ? { fund } : {}),
+        ...(roles.account ? { account: val(row, "account") } : {}) },
+      to: { entity: payee.entity, as_written: String(row[roles.payee]) },
+      source: { table: b.table_sha, row: i, binding: b.binding_key, ...(ingest ? { ingest } : {}) }, method: INGEST_METHOD, by: INGEST_STAMP } };
+  }
+
+  #ingestCtx(b) {
+    const t = this.#one(`SELECT roles_json FROM calc_tables WHERE sha=?`, b.table_sha);
+    return { b, roles: parse(b.roles_json), declared: parse(t && t.roles_json) || {}, resolved: new Map() };   /* resolved: this act's (or slice's) cache */
+  }
+
   /** R14: `ingestMoney({binding, rows, reason?, by})`: money facts written through `money.recordFact`, machine-attributed,
    *  only at a member's request, only from an adopted binding, and only for rows whose payer and payee each resolve
-   *  through an identifier. `rows` lists row numbers (0-based); every row only with `rows: "all"` and a reason. */
+   *  through an identifier. `rows` lists row numbers (0-based); every row only with `rows: "all"` and a reason.
+   *  (G55) Over INGEST_INLINE_ROWS rows the act stores its record, answers started, and `ingestTick` writes the facts in slices. */
   async ingestMoney({ binding = null, rows = null, reason = null, by = null } = {}) {
     if (!stamped(by) || isMachine(by)) return no("MEMBER_ACT_ONLY", localize("calculations.index.money_facts_are_read_from", "money facts are read from a table only at a member's request (K1468). Nothing was written."));
     if (typeof reason === "string" && [...reason].length > INGEST_REASON_MAX)
       return no("BAD_REASON", localize("calculations.index.a_reason_is_at_most", "a reason is at most {max} characters; shorten it. Nothing was written.", { max: String(INGEST_REASON_MAX) }), { max: INGEST_REASON_MAX });
     const b = typeof binding === "string" ? this.#one(`SELECT * FROM calc_bindings WHERE binding_key=?`, binding) : null;
     if (!b || !this.#sees(b.bundle_id, by)) return no("NO_SUCH_BINDING", "no adopted binding answers to that key here, or it is not one you may see. Nothing was written.");
+    /* money is not idempotent by source: one running ingest to a binding */
+    const running = this.#one(`SELECT ingest_key FROM calc_ingests WHERE binding_key=? AND state='ingesting'`, b.binding_key);
+    if (running)
+      return no("ALREADY_INGESTING", localize("calculations.ingest.already", "this table is already being ingested in the background; wait for it to finish (you will be told), then ask again. Nothing was written."), { ingest: running.ingest_key });
     const t = await this.#heldTable(b.table_sha);
     if (!t) return no("NO_SUCH_TABLE", "the binding's table bytes are not held. Nothing was written.");
     let picked;
@@ -1668,9 +1740,8 @@ export class Calculations {
       return no("INGEST_TOO_LARGE", localize("calculations.index.one_act_reads_at_most", "one act reads at most {bound_rows} rows and this asks for {rows}; list the rows in windows of at most {bound_rows} (rows: [..]). Nothing was written.", { rows: String(picked.length), bound_rows: String(INGEST_ROWS_MAX) }), { rows: picked.length, bound_rows: INGEST_ROWS_MAX });
     const money = this.dep("money");
     if (!money || typeof money.recordFact !== "function") return no("MONEY_NOT_REACHABLE", "the money module is not reachable here. Nothing was written.");
-    const roles = parse(b.roles_json);
-    const declared = parse(this.#one(`SELECT roles_json FROM calc_tables WHERE sha=?`, b.table_sha).roles_json) || {};
-    const val = (row, role) => (typeof roles[role] === "string" ? String(row[roles[role]] ?? "").trim() : roles[role] ? roles[role].value : null);
+    if (picked.length > INGEST_INLINE_ROWS) return this.#startIngest({ b, picked, rows, reason, by, money });
+    const ctx = this.#ingestCtx(b);
     const written = [], notWritten = [];
     /* the picked rows, read in one pass over the held table (ascending, as picked is) */
     const want = new Set(picked);
@@ -1680,34 +1751,10 @@ export class Calculations {
     for (const i of picked) {
       const row = rowAt.get(i);
       if (!row) { notWritten.push({ row: i, reason: "NO_SUCH_ROW", detail: "the table holds no such row" }); continue; }
-      const payer = this.#resolveParty(declared[roles.payer] || {}, row[roles.payer]);
-      if (!payer.entity) { notWritten.push({ row: i, reason: "PAYER_NOT_IDENTIFIED", detail: payer.why }); continue; }
-      const payee = this.#resolveParty(declared[roles.payee] || {}, row[roles.payee]);
-      if (!payee.entity) { notWritten.push({ row: i, reason: "PAYEE_NOT_IDENTIFIED", detail: payee.why }); continue; }
-      let fund = null;
-      if (typeof roles.fund === "string" && String(row[roles.fund] ?? "").trim()) {
-        const spec = declared[roles.fund] || {};
-        const raw = String(row[roles.fund]).trim();
-        const r = spec.scheme || spec.crosswalk ? this.#resolveParty(spec, raw)
-          : idPattern("ENT").test(raw) ? { entity: raw } : { why: word("calculations.why.names_registered_fund", { raw: String(raw.slice(0, 64)) }) };
-        if (!r.entity) { notWritten.push({ row: i, reason: "FUND_NOT_IDENTIFIED", detail: r.why }); continue; }
-        fund = r.entity;
-      }
-      const asRead = String(row[roles.amount] ?? "");
-      const f = parseFigure(asRead);
-      if (f.refused) { notWritten.push({ row: i, reason: "AMOUNT_NOT_READ", detail: f.why }); continue; }
-      const currency = val(row, "currency") || f.currency || null;
-      const unsigned = (d) => String(d).replace(/^-/, "");
-      const range = f.precision === "range" ? (f.sign === "-" ? { low: unsigned(f.high), high: unsigned(f.low) } : { low: f.low, high: f.high }) : null;
-      const fact = { amount: range || f.value, as_read: asRead, currency, sign: f.sign, precision: f.precision,
-        kind: val(row, "kind"), phase: val(row, "phase"), ...(val(row, "stage") ? { stage: val(row, "stage") } : {}),
-        basis: val(row, "basis"), period: moneyPeriod(val(row, "period")),
-        from: { entity: payer.entity, as_written: String(row[roles.payer]), ...(fund ? { fund } : {}),
-          ...(roles.account ? { account: val(row, "account") } : {}) },
-        to: { entity: payee.entity, as_written: String(row[roles.payee]) },
-        source: { table: b.table_sha, row: i, binding: b.binding_key }, method: INGEST_METHOD, by: INGEST_STAMP };
+      const j = this.#judgeRow(ctx, i, row);
+      if (j.notWritten) { notWritten.push(j.notWritten); continue; }
       let r;
-      try { r = await money.recordFact(fact); } catch (e) { r = { ok: false, reason: "MONEY_THREW", detail: String(e && e.message || e).slice(0, 200) }; }
+      try { r = await money.recordFact(j.fact); } catch (e) { r = { ok: false, reason: "MONEY_THREW", detail: String(e && e.message || e).slice(0, 200) }; }
       if (r && r.ok !== false && (r.fact_id || r.factId)) written.push({ row: i, fact_id: r.fact_id ?? r.factId });
       else notWritten.push({ row: i, reason: r && r.reason ? r.reason : "NOT_RECORDED", detail: r && r.detail ? r.detail : "money did not record the fact" });
     }
@@ -1729,19 +1776,218 @@ export class Calculations {
     return { ok: true, ingest: key, binding: b.binding_key, written, not_written: notWritten, by: INGEST_STAMP, asked_by: by };
   }
 
-  /** R14 (G45): `ingestOf(key)`, synchronously: an ingest as it was recorded, `{ingest, binding, bundle_id, rows, reason, written,
-   *  not_written, asked_by, at}`, each value joined from its pieces exactly as `json` made it; null when none is held. Cut nowhere. */
+  /* R14 (G55): store the record of an ingest over INGEST_INLINE_ROWS rows, open money's marker for it, and answer started; no fact is written here. */
+  #startIngest({ b, picked, rows, reason, by, money }) {
+    const at = this.now();
+    const key = sha({ binding: b.binding_key, rows: picked, by, at });
+    const stored = ingestStored("rows", rows === "all" ? "all" : picked);
+    const out = this.record.transact(() => {
+      this.sql.exec(`INSERT OR IGNORE INTO calc_ingests (ingest_key, binding_key, bundle_id, rows_json, reason, written_json, not_written_json, asked_by, at,
+                       state, next_row, attempts, rows_total, written_count, not_written_count, table_sha)
+                     VALUES (?,?,?,?,?,'[]','[]',?,?,'ingesting',0,0,?,0,0,?)`, key, b.binding_key, b.bundle_id ?? null, stored.column,
+        str(reason) || null, by, at, picked.length, b.table_sha);
+      stored.chunks.forEach((chunk, seq) => this.sql.exec(`INSERT OR IGNORE INTO calc_ingest_parts (ingest_key, kind, seq, bundle_id, chunk) VALUES (?,?,?,?,?)`,
+        key, "rows", seq, b.bundle_id ?? null, chunk));
+      if (typeof money.markIngest === "function") money.markIngest(key, true);
+      this.record.afterCommit(() => {
+        for (const l of this.#ingestListeners) { try { const r = l.fn({ at: this.now() }); if (r && typeof r.catch === "function") r.catch(() => {}); } catch { /* the act's, not the listener's */ } }
+      });
+      return { ok: true };
+    });
+    if (!out.ok) return out;
+    return { ok: true, ingest: key, binding: b.binding_key, state: "ingesting", complete: false, rows_total: picked.length, rows_done: 0,
+      written_count: 0, not_written_count: 0, by: INGEST_STAMP, asked_by: by,
+      says: localize("calculations.ingest.started", "{rows} rows are being ingested in the background; you will be told when it is done, and the facts it writes are marked as not yet complete until then.", { rows: String(picked.length) }) };
+  }
+
+  /** R14 (G55): `onIngestWork(module, fn)`, one registration per module (membership's `listenerRefusal`): told `{at}` after the commit of an act that
+   *  starts a background ingest, as `file-safety` tells its consumers (`onFileWork`). */
+  onIngestWork(module, fn) {
+    const r = listenerRefusal(this.#ingestListeners, module, fn);
+    if (r) return r;
+    this.#ingestListeners.push({ module, fn });
+    return { ok: true, module };
+  }
+
+  /* the oldest ingest with a slice to run */
+  #nextIngest() {
+    return this.#one(`SELECT * FROM calc_ingests WHERE state='ingesting' AND COALESCE(attempts,0) < ? ORDER BY at, rowid LIMIT 1`, INGEST_MAX_ATTEMPTS);
+  }
+  /** R14 (G55): whether an ingest has a slice to run. Synchronous; never throws. */
+  ingestDue() { try { return !!this.#nextIngest(); } catch { return false; } }
+  /** R14 (G55): the instant (ms) the next slice is due: `now` while one is, else null. Never throws. */
+  ingestWake(now) {
+    try {
+      const n = typeof now === "number" ? now : Date.parse(now);
+      return Number.isFinite(n) && this.#nextIngest() ? n : null;
+    } catch { return null; }
+  }
+
+  /* stop an ingest for good: its facts stay marked partial in money (the marker is not closed) */
+  #stopIngest(key, why) {
+    this.record.transact(() => {
+      this.sql.exec(`UPDATE calc_ingests SET state='stopped', stop_reason=?, finished_at=? WHERE ingest_key=? AND state='ingesting'`, why, this.now(), key);
+      return { ok: true };
+    });
+  }
+
+  /* the rows an ingest asked for, as it recorded them: "all" or the sorted list */
+  #ingestRows(r) {
+    const v = parse(r.rows_json);
+    if (!plain(v) || typeof v.parts !== "number") return v;
+    return parse(this.#rows(`SELECT chunk FROM calc_ingest_parts WHERE ingest_key=? AND kind='rows' ORDER BY seq`, r.ingest_key).map((c) => c.chunk).join(""));
+  }
+
+  /** R14 (G55): `ingestTick(now)`: one slice of the oldest running ingest: it judges at most INGEST_SLICE_ROWS rows and writes at most
+   *  INGEST_SLICE_FACTS facts, all in one transaction with the pieces of its lists and the advanced cursor, so a throw writes none of it and a
+   *  re-run from the stored cursor writes no fact twice. A slice that throws counts one failed attempt (its own transaction); after
+   *  INGEST_MAX_ATTEMPTS in a row the ingest is stopped. Answers `{ok, ran, ingest?, state?, judged?, written?, failed?}`; never throws. */
+  async ingestTick() {
+    let r = null;
+    try {
+      r = this.#nextIngest();
+      if (!r) return { ok: true, ran: false };
+      const b = this.#one(`SELECT * FROM calc_bindings WHERE binding_key=?`, r.binding_key);
+      const t = b && b.table_sha === r.table_sha ? await this.#heldTable(r.table_sha) : null;
+      if (!t) { this.#stopIngest(r.ingest_key, "TABLE_CHANGED"); return { ok: true, ran: true, ingest: r.ingest_key, state: "stopped" }; }
+      const money = this.dep("money");
+      if (!money || typeof money.recordFact !== "function") throw new Error("the money module is not reachable");
+      const spec = this.#ingestRows(r);
+      const total = r.rows_total, start = r.next_row ?? 0, end = Math.min(start + INGEST_SLICE_ROWS, total);
+      const at = (p) => (spec === "all" ? p : spec[p]);
+      const need = new Set();
+      for (let p = start; p < end; p++) need.add(at(p));
+      const last = need.size ? Math.max(...need) : -1;
+      const rowAt = new Map();
+      let n = 0;
+      for (const o of t.objects()) { if (n > last) break; if (need.has(n)) rowAt.set(n, o); n++; }
+      const tagged = typeof money.markIngest === "function" ? r.ingest_key : null;
+      const out = this.record.transact(() => {
+        const ctx = this.#ingestCtx(b);
+        const written = [], notWritten = [];
+        let p = start;
+        for (; p < end; p++) {
+          if (written.length >= INGEST_SLICE_FACTS) break;
+          const i = at(p), row = rowAt.get(i);
+          if (!row) { notWritten.push({ row: i, reason: "NO_SUCH_ROW", detail: "the table holds no such row" }); continue; }
+          const j = this.#judgeRow(ctx, i, row, tagged);
+          if (j.notWritten) { notWritten.push(j.notWritten); continue; }
+          const m = money.recordFact(j.fact);   /* a throw leaves the slice: it is not a property of the row */
+          if (m && typeof m.then === "function") throw new Error("money answered a fact asynchronously");
+          if (m && m.ok !== false && (m.fact_id || m.factId)) written.push({ row: i, fact_id: m.fact_id ?? m.factId });
+          else notWritten.push({ row: i, reason: m && m.reason ? m.reason : "NOT_RECORDED", detail: m && m.detail ? m.detail : "money did not record the fact" });
+        }
+        for (const [kind, list] of [["written", written], ["not_written", notWritten]]) {
+          let seq = this.#one(`SELECT COALESCE(MAX(seq), -1) + 1 AS n FROM calc_ingest_parts WHERE ingest_key=? AND kind=?`, r.ingest_key, kind).n;
+          for (let k = 0; k < list.length; k += INGEST_PART_ITEMS)
+            this.sql.exec(`INSERT INTO calc_ingest_parts (ingest_key, kind, seq, bundle_id, chunk) VALUES (?,?,?,?,?)`,
+              r.ingest_key, kind, seq++, r.bundle_id ?? null, JSON.stringify(list.slice(k, k + INGEST_PART_ITEMS)));
+        }
+        const done = p >= total;
+        this.sql.exec(`UPDATE calc_ingests SET next_row=?, attempts=0, written_count=COALESCE(written_count,0)+?, not_written_count=COALESCE(not_written_count,0)+?,
+                         state=?, finished_at=? WHERE ingest_key=?`, p, written.length, notWritten.length, done ? "done" : "ingesting", done ? this.now() : null, r.ingest_key);
+        if (done && typeof money.markIngest === "function") money.markIngest(r.ingest_key, false);
+        return { ok: true, judged: p - start, written: written.length, state: done ? "done" : "ingesting" };
+      });
+      if (!out.ok) throw new Error(String(out.detail || out.reason || "the slice was refused"));
+      return { ok: true, ran: true, ingest: r.ingest_key, ...out };
+    } catch (e) {
+      if (!r) return { ok: false, ran: false };
+      /* the slice rolled back whole: one failed attempt, counted on its own */
+      try {
+        this.record.transact(() => {
+          const attempts = (this.#one(`SELECT COALESCE(attempts, 0) AS a FROM calc_ingests WHERE ingest_key=?`, r.ingest_key).a) + 1;
+          if (attempts >= INGEST_MAX_ATTEMPTS)
+            this.sql.exec(`UPDATE calc_ingests SET attempts=?, state='stopped', stop_reason='ATTEMPTS', finished_at=? WHERE ingest_key=?`, attempts, this.now(), r.ingest_key);
+          else this.sql.exec(`UPDATE calc_ingests SET attempts=? WHERE ingest_key=?`, attempts, r.ingest_key);
+          return { ok: true };
+        });
+      } catch { /* the attempt could not be counted: the next tick tries again */ }
+      return { ok: false, ran: true, ingest: r.ingest_key, failed: String(e && e.message || e).slice(0, 200) };
+    }
+  }
+
+  /** R14 (G55, G45): `ingestOf(key)`, synchronously: an ingest as it was recorded, `{ingest, binding, bundle_id, rows, reason, written,
+   *  not_written, asked_by, at, state}`, each value joined from its pieces exactly as `json` made it (a background ingest's lists from its
+   *  pieces, in row order); null when none is held. Cut nowhere. A row stored before reads as `done`. */
   ingestOf(key) {
     const r = typeof key === "string" ? this.#one(`SELECT * FROM calc_ingests WHERE ingest_key=?`, key) : null;
     if (!r) return null;
     const value = (kind, column) => {
+      if (r.state != null && kind !== "rows") return this.#ingestItems(r, kind, 0, Infinity);
       const v = parse(column);
       if (!plain(v) || typeof v.parts !== "number") return v;
       const text = this.#rows(`SELECT chunk FROM calc_ingest_parts WHERE ingest_key=? AND kind=? ORDER BY seq`, key, kind).map((c) => c.chunk).join("");
       return parse(text);
     };
     return { ingest: r.ingest_key, binding: r.binding_key, bundle_id: r.bundle_id ?? null, rows: value("rows", r.rows_json), reason: r.reason ?? null,
-      written: value("written", r.written_json), not_written: value("not_written", r.not_written_json), asked_by: r.asked_by, at: r.at };
+      written: value("written", r.written_json), not_written: value("not_written", r.not_written_json), asked_by: r.asked_by, at: r.at,
+      state: r.state ?? "done" };
+  }
+
+  /* a background ingest's list items from `from`, at most `count`, joined from its pieces in order */
+  #ingestItems(r, kind, from, count) {
+    const out = [];
+    let seen = 0;
+    for (const c of this.#rows(`SELECT chunk FROM calc_ingest_parts WHERE ingest_key=? AND kind=? ORDER BY seq`, r.ingest_key, kind)) {
+      const items = parse(c.chunk) || [];
+      if (seen + items.length > from) out.push(...items.slice(Math.max(0, from - seen), Math.max(0, from - seen) + (count - out.length)));
+      seen += items.length;
+      if (out.length >= count) break;
+    }
+    return out;
+  }
+
+  /** R14 (G55): `ingestRead({ingest, kind, after, limit, viewer})` (`op=moneyingestread`): the state of an ingest (`kind: "state"`), or a page of its
+   *  `written` or `not_written` rows in row order from `after` (an item count), at most 1,000 an answer, with the true counts and an explicit
+   *  `complete` (false while running or stopped). An ingest the viewer may not see, as the act's `#sees`, answers as an absent one. */
+  ingestRead({ ingest = null, kind = "state", after = 0, limit = 100, viewer = null } = {}) {
+    const absent = { ok: true, found: false };
+    if (!str(ingest)) return no("NO_INGEST", localize("calculations.ingest.no_ingest", "an ingest is read by its key."));
+    try {
+      const r = typeof ingest === "string" && stamped(viewer) ? this.#one(`SELECT * FROM calc_ingests WHERE ingest_key=?`, ingest) : null;
+      if (!r || !this.#sees(r.bundle_id, viewer)) return absent;
+      if (!["state", "written", "not_written"].includes(kind)) return no("BAD_KIND", localize("calculations.ingest.bad_kind", "read an ingest's state, its written rows or its not-written rows."));
+      const state = r.state ?? "done";
+      const old = r.state == null ? this.ingestOf(ingest) : null;
+      const written = old ? old.written.length : r.written_count ?? 0, notWritten = old ? old.not_written.length : r.not_written_count ?? 0;
+      const head = { ok: true, found: true, ingest, binding: r.binding_key, state, complete: state === "done", rows_total: r.rows_total ?? written + notWritten,
+        rows_done: state === "done" ? (r.rows_total ?? written + notWritten) : r.next_row ?? 0, written_count: written, not_written_count: notWritten,
+        asked_by: r.asked_by, at: r.at, finished_at: r.finished_at ?? null, ...(state === "stopped" ? { stopped: this.#stopSays(r.stop_reason) } : {}) };
+      if (kind === "state") return head;
+      const lim = Math.max(1, Math.min(READ_LIMIT_MAX, Number.isInteger(Number(limit)) ? Number(limit) : 100));
+      const from = Math.max(0, Number.isInteger(Number(after)) ? Number(after) : 0);
+      const total = kind === "written" ? written : notWritten;
+      const items = old ? old[kind].slice(from, from + lim) : this.#ingestItems(r, kind, from, lim);
+      return { ...head, kind, after: from, limit: lim, items, next: from + items.length < total ? from + items.length : null };
+    } catch { return absent; }
+  }
+
+  #stopSays(code) {
+    return code === "TABLE_CHANGED"
+      ? { reason: "TABLE_CHANGED", says: localize("calculations.ingest.stopped_table", "the table this ingest reads is no longer the one it was asked for, so it was stopped; the facts already written stay, marked as not complete.") }
+      : { reason: "ATTEMPTS", says: localize("calculations.ingest.stopped_attempts", "this ingest failed three times in a row and was stopped; the facts already written stay, marked as not complete.") };
+  }
+
+  /** R14 (G55): `ingestNotices({after, limit, viewer})`: the ingests the viewer asked for that are `done` or `stopped`, in the order they were started
+   *  (by row, not by when they finished), for the notice path to tell once each by key (`notice-producers` reads from the start each cycle). `next` is
+   *  null on the last page, else the cursor to pass as `after`. Never throws. */
+  ingestNotices({ after = 0, limit = 100, viewer = null } = {}) {
+    try {
+      if (!stamped(viewer)) return { ok: true, items: [], next: null };
+      const lim = Math.max(1, Math.min(READ_LIMIT_MAX, Number.isInteger(Number(limit)) ? Number(limit) : 100));
+      const from = Number.isInteger(Number(after)) ? Number(after) : 0;
+      const items = [];
+      let next = null, more = false;
+      for (const r of this.#rows(`SELECT rowid AS rid, * FROM calc_ingests WHERE state IN ('done','stopped') AND rowid > ? ORDER BY rowid`, from)) {
+        if (!this.#sees(r.bundle_id, viewer) || !sameMember(r.asked_by, viewer)) continue;
+        if (items.length >= lim) { more = true; break; }
+        items.push({ ingest: r.ingest_key, binding: r.binding_key, state: r.state, rows_total: r.rows_total, written_count: r.written_count ?? 0,
+          not_written_count: r.not_written_count ?? 0, finished_at: r.finished_at ?? null, ...(r.state === "stopped" ? { stopped: this.#stopSays(r.stop_reason) } : {}) });
+        next = r.rid;
+      }
+      return { ok: true, items, next: more ? next : null };
+    } catch { return { ok: true, items: [], next: null }; }
   }
 
   /* ===================================================================== *
@@ -2344,6 +2590,7 @@ export function calculationsOps(c, url, body) {
     tablesat: () => c.tablesAt({ key: q(url, "key") ?? b.key, at: q(url, "at") ?? b.at, viewer }),
     bindingadopt: () => c.adoptBinding({ ...strip(b), by }),
     moneyingest: () => c.ingestMoney({ ...strip(b), by }),
+    moneyingestread: () => c.ingestRead({ ingest: q(url, "ingest") ?? b.ingest, kind: q(url, "kind") ?? b.kind ?? "state", after: q(url, "after") ?? b.after ?? 0, limit: q(url, "limit") ?? b.limit ?? 100, viewer }),
     calculationcreate: () => c.create({ ...strip(b), by }),
     calculationevaluate: () => c.evaluate({ ...strip(b), viewer }),
     calculationaccept: () => c.accept({ calcId: q(url, "id") ?? b.calcId, by }),
@@ -2367,6 +2614,8 @@ export const DECLARED_OPS = Object.freeze({
     fields: { accepts: ["source","schema","header","roles","vintage"], requires: ["source","schema","header"] } },
   calculationcreate: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("calculations.declared.calculationcreate", "calculation-directed: keyed by a new CALC- id; writes calculations' rows and moves no bundle"),
     fields: { accepts: ["question","terms","period","inputs","recipe","kind","threshold","methodNote","evidences","project"], requires: ["question","period","inputs","kind"] } },
+  moneyingestread: { classes: ["admin","member","probe"], mutating: false, weight: "read", description: localize("calculations.declared.moneyingestread", "read: a money ingest's stored lists, a page at a time, with true counts and whether the ingest is complete (`calculations` R14); writes nothing"),
+    fields: { accepts: ["ingest","kind","after","limit"], requires: ["ingest"] } },
   calculationaccept: { classes: ["admin","member"], machineClasses: [], mutating: true, weight: "undetermined", description: localize("calculations.declared.calculationaccept", "calculation-directed: keyed by calculation; a member's acceptance after an agreeing recompute"),
     fields: { accepts: ["id","calcId"], requires: [["id","calcId"]] } },
   calculationdraw: { classes: ["admin","member","probe"], mutating: true, weight: "undetermined", description: localize("calculations.declared.calculationdraw", "set-directed: keyed by (set, seed, size, method); records a reproducible draw and moves no bundle"),

@@ -38,8 +38,9 @@ const DOC = "INFO-2026-0001-minutes", ANNEX = "INFO-2026-0002-annex", GONE = "IN
 const UNITS = [{ seq: 0, extent: { kind: "document" }, ref: "¶1", text: "The minutes say so.", truncated: false }];
 
 /* A /6 edition of CASE: F (load-bearing) rests on DOC and on G (a finding its chain reaches, not a member); OBS, an
-   observation, is included; ANNEX is listed but not included; GONE is included and this copy never captured it. */
-function publishedCase() {
+   observation, is included; ANNEX is listed but not included. (GONE, an included material this copy never captured, is the
+   next-to-last test's: from G54 no case file is recorded while a material is missing.) */
+function publishedCase(extraMaterials = null) {
   const w = world();
   w.member("olive"); w.member("ann");
   const proj = w.project("Parks", "olive");
@@ -58,8 +59,7 @@ function publishedCase() {
       rests_under: "load_bearing" },
     { ref: ANNEX, kind: "document", sha: capOf(ANNEX), text_sha: null, origin: null, archived_copy: null, included: false,
       rests_under: "supporting" },
-    { ref: GONE, kind: "document", sha: sha("never captured"), text_sha: null, origin: null, archived_copy: null,
-      included: true, rests_under: "supporting" }];
+    ];
   const attestations = [
     { ref: DOC, by_kind: "group", by: "parks-group", level: null, at: NOW, signature: "case", recorded_in: null },
     { ref: DOC, by_kind: "project", by: proj, level: null, at: NOW, signature: null, recorded_in: DOC },
@@ -71,7 +71,7 @@ function publishedCase() {
   const grading = [leg(F, 0, DOC, "document"), leg(F, 1, G, "inquiry", { target_edition: 1 }), leg(G, 0, DOC, "document")];
   const passages = [{ finding: F, ord: 0, content_id: "c-1", capture_sha: docSha, extent: { kind: "document" },
                       chain: null, quoted: "The minutes say so." }];
-  const text = caseDoc(CASE, 1, { project: proj, method: { grading: "bio-grading/1", checks: "1.57.0" }, materials,
+  const text = caseDoc(CASE, 1, { project: proj, method: { grading: "bio-grading/1", checks: "1.57.0" }, materials: [...materials, ...(extraMaterials || [])],
     attestations, roles: [{ target: F, version_sha: pins[F], role: "load_bearing" }],
     strength: [{ target: F, axis: "capture", grade: "B" }, { target: F, axis: "connection", grade: "C" }] });
   const lines = text.split("\n");
@@ -123,9 +123,9 @@ test("R23 the case file carries, from the published projection only, the signed 
     [`findings/${G}/grading-facts.json`, "grading_facts"], [`findings/${G}/passages.json`, "passages"],
     [`materials/${DOC}/document`, "document"], [`materials/${DOC}/extracted.txt`, "extracted_text"],
     [`materials/${obs}/observation.md`, "observation"]],
-    "G, reached through F's chain, is carried; ANNEX (not included) is not; GONE (never held) is not, and is named; the "
+    "G, reached through F's chain, is carried; ANNEX (not included) is not; the "
     + "edition's criteria (none of its members targets a standard: []) travel once (R33)");
-  assert.deepEqual(out.unheld.map((u) => [u.ref, u.what]), [[GONE, "bytes"], [GONE, "extracted_text"]]);
+  assert.deepEqual(out.unheld.map((u) => [u.ref, u.what]), [], "every included material is held");
   assert.deepEqual(m.keys, [{ key: keyLine(KEY), fingerprint: await keyFingerprint(KEY) }],
                    "one signing key (the document's and both findings' signer), on one line, with its fingerprint");
   assert.ok(m.keys[0].key.endsWith(` ${KEY}`) || m.keys[0].key === KEY);
@@ -299,4 +299,17 @@ test("R23 a co-attestation row carries each timestamp token publication held for
   assert.deepEqual(stamped.held, [{ sha256: sha(token), bytes_b64: Buffer.from(token).toString("base64") }]);
   assert.equal(dec(Buffer.from(stamped.held[0].bytes_b64, "base64")), token, "the token, whole");
   assert.deepEqual(JSON.parse(dec(await p.read(`attestations/${DOC}/1-co_attestation.json`))).held, [], "nothing held, nothing carried");
+});
+
+test("R23 R6 G54 a case file lists an included material this copy never captured: it is named in unheld by the build, and no case file is recorded while it is missing (the edition stays owed, stated MATERIAL_MISSING)", async () => {
+  const gone = { ref: GONE, kind: "document", sha: sha("never captured"), text_sha: null, origin: null, archived_copy: null,
+                 included: true, rests_under: "supporting" };
+  const { w, env } = publishedCase([gone]);
+  const facts = await w.read("casefilefacts", { caseId: CASE, edition: 1 });
+  const read = async (s) => { const o = await env.PUBLISHED.get(`bio/published/${s}`); return o ? new Uint8Array(await o.arrayBuffer()) : null; };
+  const built = await buildCaseFile({ facts, group: "parks-group", read });
+  assert.deepEqual(built.unheld.map((u) => [u.ref, u.what]), [[GONE, "bytes"], [GONE, "extracted_text"]], "the build still names what it could not carry");
+  const out = await assemble(w, env);
+  assert.deepEqual([out.ok, out.reason, out.code, out.step], [false, "CASE_FILE_NOT_BUILT", "MATERIAL_MISSING", "materials"]);
+  assert.equal(w.row(`SELECT manifest_sha FROM published_cases WHERE case_id=?`, CASE).manifest_sha, null, "no manifest while a material is missing");
 });

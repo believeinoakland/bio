@@ -48,6 +48,12 @@
  *  `exploreDue` counts any question due, its wake `exploreWake`, its tick `exploreTick`; every cadence, including an
  *  Ask's re-check, is question-explorer's (R7). `investigation`'s quiet check (its R18) is read by `notice-producers`
  *  when it asks; it offers this module no due, wake or tick, so no consumer of investigation's is registered here.
+ *
+ *  G55 (R7, R24; K4562): `ingest` closes the registry, calling `calculations` (its R14): a money ingest over the
+ *  inline threshold runs in the background, one slice for each firing. Due while `ingestDue(now)` says a record is
+ *  `ingesting`, its wake `ingestWake(now)`, its tick `ingestTick(now)`; the slice sizes, the attempts and the stop are
+ *  calculations' (R7). This module builds `calculations` itself (`schedulerOf`'s default owners) and registers once
+ *  with `calculations.onIngestWork`, whose call arms the alarm (R9) when a record starts.
  * ========================================================================= */
 import { retrievalOf } from "../retrieval/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
@@ -72,6 +78,7 @@ import { inquiryOf } from "../inquiry/index.mjs";
 import { followingOf } from "../following/index.mjs";
 import { publishScheduleOf } from "../publish-schedule/index.mjs";
 import { caseCarriageOf } from "../case-carriage/index.mjs";
+import { calculationsOf } from "../calculations/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { localDay, dayRange } from "../civil-time/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
@@ -93,6 +100,7 @@ export const SCHEDULER_ORDER = Object.freeze([
   "group-domain-recheck", "bias-debt", "intent-age", "notice-sweep", "deadline-recheck", "scheduled-publish", "working-on-seal",
   "working-on-attest", "follow", "duty-transitions", "interest-checks", "money-detectors", "standing-questions",
   "dated-waits", "file-scan", "file-render", "file-deeper", "file-forward", "file-reputation", "document-copy", "question-explore",
+  "ingest",
 ]);
 
 /** R2: each consumer's key in `onAlarm`'s answer. The task drain's counts are spread into the answer's own fields. */
@@ -106,7 +114,7 @@ export const SCHEDULER_KEYS = Object.freeze({
   "duty-transitions": "dutytransitions", "interest-checks": "interestchecks", "money-detectors": "moneydetectors",
   "standing-questions": "standingquestions", "dated-waits": "datedwaits",
   "file-scan": "filescan", "file-render": "filerender", "file-deeper": "filedeeper", "file-forward": "fileforward",
-  "file-reputation": "filereputation", "document-copy": "doccopy", "question-explore": "explore",
+  "file-reputation": "filereputation", "document-copy": "doccopy", "question-explore": "explore", "ingest": "ingest",
 });
 
 /** R6: due at every firing. Every other consumer is due only when its owner says so. */
@@ -447,6 +455,17 @@ export class Scheduler {
       due: async (now) => counted(await o("questionExplorer").exploreDue(now), now),
       wake: async (now) => msOf(await o("questionExplorer").exploreWake(now)),
       tick: async (now) => ({ explore: await o("questionExplorer").exploreTick(now) }) };
+    /* G55 (R7, R24): calculations R14's background ingest. Due while a record is `ingesting` (`ingestDue`), its wake
+       `ingestWake`, both asked afresh every time from calculations' own tables, so a restarted instance re-derives them
+       (R11) and nothing is kept here (R7, R18). A tick that fails is calculations' to count: after its third failed
+       attempt the record is stopped and neither due nor wake is any more, so the consumer never spins (R3). An owner
+       that does not offer the services wants nothing. */
+    if (this.#owners.calculations) {
+      const ask = (m, now) => { const k = o("calculations"); return k && typeof k[m] === "function" ? k[m](now) : null; };
+      c["ingest"] = {
+        due: (now) => dueOf(ask("ingestDue", now), now), wake: (now) => msOf(ask("ingestWake", now)),
+        tick: async (now) => ({ ingest: await o("calculations").ingestTick(now) }) };
+    }
     return c;
   }
 
@@ -788,7 +807,7 @@ export class Scheduler {
    *  Whether monitoring is configured is asked of the `monitoring` owner when a notice arrives. Answers each
    *  registration's answer by notice; a refused one is also kept as a start-up fault (`faults()`) and logged. */
   listenTo({ retrieval, bias, promotion, capture, progressions, calibration, aiRuns, captureRequests, entities, inquiry, following,
-             publishSchedule, answers, duties, people, moneyChecks, caseCarriage } = {}) {
+             publishSchedule, answers, duties, people, moneyChecks, caseCarriage, calculations } = {}) {
     const arm = () => this.arm();
     /* A notice its owner tells without awaiting: the arm runs, and a storage that fails it is never an unhandled
        rejection (the act stands, its owner's R27, R71). */
@@ -858,6 +877,10 @@ export class Scheduler {
     /* R25 (case-carriage R17): a member document queued, told after the act commits; arms at once, except inside a
        firing, whose own reconcile stands (R1). */
     if (caseCarriage) out.caseCarriage = caseCarriage.onCopyWork("scheduler", () => (this.#firing ? null : told()));
+    /* G55 (calculations R14): a background ingest started, told after the act commits; arms at once, except inside a firing,
+       whose own reconcile stands (R1). An owner that does not offer the notice is not registered with. */
+    if (calculations && typeof calculations.onIngestWork === "function")
+      out.calculations = calculations.onIngestWork("scheduler", () => (this.#firing ? null : told()));
     for (const [notice, r] of Object.entries(out)) this.#fault(notice, r);
     return out;
   }
@@ -886,7 +909,7 @@ export function schedulerOf(ctx, env = null, deps = {}) {
       networkNotices: () => networkNoticesOf(ctx, { env: e }), linkSweep: () => linkSweepOf(ctx),
       duties: () => dutiesOf(ctx), people: () => peopleOf(ctx), moneyChecks: () => moneyChecksOf(ctx),
       answers: () => answersOf(ctx), inquiry: () => inquiryOf(ctx), following: () => followingOf(ctx),
-      publishSchedule: () => publishScheduleOf(ctx), caseCarriage: () => caseCarriageOf(ctx),
+      publishSchedule: () => publishScheduleOf(ctx), caseCarriage: () => caseCarriageOf(ctx), calculations: () => calculationsOf(ctx),
     };
     const zone = deps.zone || (() => viewZone(recordOf(ctx)));
     s = new Scheduler({ storage: deps.storage || ctx.storage, env: e, owners, zone });
@@ -897,7 +920,7 @@ export function schedulerOf(ctx, env = null, deps = {}) {
                    captureRequests: captureRequestsOf(ctx), entities: entitiesOf(ctx), inquiry: inquiryOf(ctx),
                    following: followingOf(ctx), publishSchedule: publishScheduleOf(ctx), answers: answersOf(ctx),
                    duties: dutiesOf(ctx), people: peopleOf(ctx), moneyChecks: moneyChecksOf(ctx),
-                   caseCarriage: caseCarriageOf(ctx) });
+                   caseCarriage: caseCarriageOf(ctx), calculations: calculationsOf(ctx) });
   }
   if (deps.fileSafety) s.hand({ fileSafety: deps.fileSafety });
   if (deps.questionExplorer) s.hand({ questionExplorer: deps.questionExplorer });

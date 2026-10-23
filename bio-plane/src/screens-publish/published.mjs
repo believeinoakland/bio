@@ -163,7 +163,8 @@ export const PUBLISHED = Object.freeze({
 
     out.push('<div class="mk-acts">' + cs.act("verify", { data: { sha: String(e.manifest_sha || "") } }) + cs.act("publishedcase")
       + (/^[0-9a-f]{64}$/.test(String(e.manifest_sha || "")) ? cs.act("publishedcase", { label: "screen.published.download", data: { download: "1", manifest: String(e.manifest_sha) } }) : "")
-      + (findings.length ? cs.act("pubprint") : "") + "</div>" + P.said(view, "verify") + P.said(view, "download"));
+      + (findings.length ? cs.act("pubprint") : "") + "</div>" + P.said(view, "verify") + P.said(view, "download")
+      + (P.casefileSaid(cs, e) ? '<p class="mk-note" role="status" data-casefile-state>' + P.casefileSaid(cs, e) + "</p>" : ""));
     // R38: a minimum strength to read it at, when there is a finding to hold to one
     if (findings.length) out.push(P.minimum(cs, view));
 
@@ -227,7 +228,11 @@ export const PUBLISHED = Object.freeze({
           view.ui.checking = typed;
           return { query: { sha256: typed } };
         }
-        return /^[0-9a-f]{64}$/.test(el.dataset.sha || "") ? { query: { sha256: el.dataset.sha } } : { refuse: "screen.published.verify.none" };
+        if (/^[0-9a-f]{64}$/.test(el.dataset.sha || "")) return { query: { sha256: el.dataset.sha } };
+        // G54: an edition with no case file says why, in place of "nothing to check"; nothing is sent
+        const why = view.parts.casefileSaid(cs, view.parts.answer(view));
+        if (why) { view.parts.say(cs, view, "verify", why, false); return null; }
+        return { refuse: "screen.published.verify.none" };
       },
       done: async function (view, answer, cs) {
         const P = view.parts, typed = view.ui.checking || "";

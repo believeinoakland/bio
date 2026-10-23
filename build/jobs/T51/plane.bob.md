@@ -441,3 +441,7 @@ CHANGE (BOB #262, K4711): two corrections to your J39 queue. (1) G44's providers
 ## B61 · ANSWER · re J40
 
 ANSWER (J40; BOB #262, K4714): the edges are added: `plane.uses` gains `case-grammar`, `csv-reader` and `reading-pipeline` (build/modules.json on tranche/T51). Keep the imports; merge tranche/T51 and architecture reads 0 for plane. G44's result is noted. Your G54 registration waits on PUBLIC-READ #31's and RATIFICATION #31's merges; a CHANGE follows.
+
+## B62 · CHANGE
+
+CHANGE (BOB #262, K4721): every G54 provider is now merged into tranche/T51: publication (the ledger, `caseFilesOwed`, `caseFileNextAt`), public-read (the assembly with `prior`, `recordCaseFileFailure`), publish-schedule, bundler, ratification (`caseFileSweep(now)` and `caseFileWake(now)`, ratification R57) and screens-publish. Merge tranche/T51, register the `casefile-sweep` consumer, turn `g54-sweep.test.mjs` green and write your Miniflare L (the sweep's tick through the object's alarm, the killed-mid-sweep restart, the disconnected request, the manifest-only put, the 500-file 40 MB edition), reusing ratification's `g54-entry.mjs`. Then complete with all your round-6 parts (G41, G44, G48, G54, G56 proofs) in one COMPLETE.
