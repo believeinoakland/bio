@@ -691,6 +691,16 @@ class Promotion {
         /* END DEC-49 REGION is-promoted-field-unstated */
       }
 
+      /* R53 (G74; BOB's decision, P17, from K4557): a member files a document into a project only when she is its member
+         or invited to it (gathering stays open to an invited member who has not joined). Only a session's member is
+         asked (`actorMemberId`, the control plane's stamp: a machine credential holds none) and never a replay. A project
+         that is absent answers as one she is not in, so the refusal tells a stranger nothing of which projects exist.
+         Membership's one answer (its R87); its served sentence carries the remedy. Nothing is written. */
+      const filedInto = projectOf(sentFm, promotedType);
+      const filer = typeof pkg.actorMemberId === "string" && pkg.actorMemberId ? pkg.actorMemberId : null;
+      if (!replay && filer && filedInto && !membership.participation(filedInto, filer))
+        return notAParticipant(filedInto, filer, { act: "promote" });
+
       /* R56 (N456, form (b)): a project's stage is computed, never written; a creation is written at `forming` or
          `closed` only. A revision's move is R15's, below, over the declared table. */
       /* DEC-49 REGION is-project-stage-computed */
