@@ -1,7 +1,7 @@
 /* record-core — the record's storage (layer 2): id allocation, leases, the append-only history and
    manifest of every promotion, the instance's settings, the evidence store, and purge. It holds no
    member, capability or fence (membership's) and decides nothing about what may be committed
-   (promotion's). Requirements: build/requirements/record-core.md (R1–R90).
+   (promotion's). Requirements: build/requirements/record-core.md (R1–R91).
 
    REACHED THROUGH `recordOf(ctx)`: one instance per Durable Object storage, so every module in the
    object shares one transaction depth, one purge declaration list and one evidence binding. The
@@ -23,7 +23,7 @@
    strict `getSetting` tells an unreadable setting (`SETTING_UNREADABLE`) from an unset one (R83). T47 (T47-6; N939):
    `setSetting` refuses a value that does not round-trip through JSON, `SETTING_NOT_JSON` under its own row (R84). T48
    (T48-8; N1018, K3112): `WCD` and `OUTC`, `case-inputs`' opaque prefixes, each named by its own sentence (R62). Fix round 7
-   (G80; K4736): the record's write counter (R89, R90). */
+   (G80; K4736): the record's write counter (R89, R90). Fix round 8 (G115; K4811): bookkeeping tables left out of it (R91). */
 import { checkBundle, createSha256, EXTENSION_ARMS, LEGACY_TYPE_ALIASES, ID_TABLE } from "../record-grammar/index.mjs";
 import { RECORD_SCHEMA } from "./schema.mjs";
 import { RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "./checks.mjs";
@@ -300,6 +300,16 @@ function jsonText(value) {
   try { const t = JSON.stringify(value); return typeof t === "string" ? t : null; } catch { return null; }
 }
 
+/** R91 (fix round 8, G115; K4811 (1)): THE BOOKKEEPING LIST, the tables a request writes whatever it asks, none of them part of
+ *  the record: the sessions (`last_active`), the door window (the source and session windows), the owed-work ledger (its pending
+ *  and last-run tables) and the doorbell's and the acquisition's tallies and stage timings. A row changed in one does not move
+ *  `writeCount()`. The list is this module's; a module whose table belongs here is added by a requirement change. */
+export const BOOKKEEPING_TABLES = Object.freeze(["sessions", "admission_door_window", "admission_session_window", "keeps_pending",
+  "keeps_last", "knock_rate", "doorbell_tally", "doorbell_limit_last", "acquire_stages"]);
+/* R91: the tally of the connection's start, per storage connection (a second instance over the same storage shares it): the
+   bookkeeping rows tallied before this object began are not this object's to subtract. */
+const BASELINES = new WeakMap();
+
 const instances = new WeakMap();
 /* The storage's SQL of an instance, for this module's own route arms (R73's sight gate) and nothing outside it. */
 let sqlOf;
@@ -330,7 +340,7 @@ export class RecordCore {
 
   /** This module's own tables, declared to purge by it (R21), and those purge never clears (R23). */
   static OWN_TABLES = Object.freeze(["files", "history", "manifest", "leases", "bundles"]);
-  static EXEMPT_TABLES = Object.freeze(["seq", "minted_ids", "settings", "tombstones", "derived_stale"]);
+  static EXEMPT_TABLES = Object.freeze(["seq", "minted_ids", "settings", "tombstones", "derived_stale", "bookkeeping_tally"]);
 
   /** R21 (T33-19): the classes of this module's own tables, declared by it explicitly (R79's tombstones and R77's stale
    *  marks are exempt from purge: an expunge's record outlives every purge, and a mark that outlives its row still
@@ -349,11 +359,14 @@ export class RecordCore {
       own("settings", { ...kept, export: "admin-only", version_chain: true }),
       own("tombstones", { ...kept, export: "yes", version_chain: true }),   /* R79: a removal reaches future exports */
       own("derived_stale", { ...kept, export: "never" }),
+      own("bookkeeping_tally", { ...kept, export: "never" }),        /* R91: the bookkeeping rows' tally, read by no route */
     ]);
   })();
 
   static { sqlOf = (rc) => rc.#sql; }
 
+  #watched = new Set();   // R91: the bookkeeping tables already given their triggers
+  #base = 0;              // R91: the tally when this connection began
   #storage; #sql; #declared = new Map(); #order = []; #evidence; #evidencePrefix; #firstBoot;
   #gates = new Map();     // R78: table → {module, checks}, one registration per table
   #held = [];             // R66: one list per open `transact`, outermost first, of what `afterCommit` held
@@ -368,6 +381,14 @@ export class RecordCore {
   constructor(storage, { evidence = null, evidencePrefix = "bio/captures/" } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
+    /* R91: the tally when this connection began, one for every instance over the same `sql`; a storage stand-in that holds no
+       object for `sql` has its own. */
+    const shared = this.#sql !== null && (typeof this.#sql === "object" || typeof this.#sql === "function");
+    if (shared && BASELINES.has(this.#sql)) this.#base = BASELINES.get(this.#sql);
+    else {
+      try { this.#base = this.#tally(); } catch { this.#base = 0; }     /* no tally table yet: this store has never counted one */
+      if (shared) BASELINES.set(this.#sql, this.#base);
+    }
     /* R54, D-436: THE STORE'S FIRST BOOT, witnessed here, when the instance is made — before the store's schema
        pass or `migrate` creates or alters a table — since storage that has never held the record's schema has no
        `bundles` table. Asked through `PRAGMA table_info`, the form every boot already runs, never a catalogue read
@@ -427,17 +448,53 @@ export class RecordCore {
 
   /* ---- the write counter (R89, R90) ---- */
 
-  /** R89, R90 (fix round 7, G80; K4736): THE RECORD'S WRITE COUNTER, a whole number that rises by at least one for every row
-   *  any statement on this object's storage inserts, updates or deletes, and by nothing else. It is SQLite's own
-   *  `total_changes()` for the connection the object holds, so it sees every writer by every path: this module's services,
-   *  and the plain SQL of the modules that own the tables `queue` derives its feed from (its mutes, a question, a deadline, a
-   *  notice), declared or not, and it adds no table, no trigger and no row a snapshot of the store could read, no write
-   *  cost, and no I/O beyond the storage. A read changes nothing, so two answers with no write between are equal; a write
-   *  that rolls back may still be counted (the counter then rises for a change that was not kept, which a cache keyed on it
-   *  only meets as one recomputation). It counts from the object's start and is 0 for a record nothing has written since;
-   *  the object's memory, where a cache keyed on it lives, starts again with it. DDL moves no row and is not counted. */
+  /** R89, R90, R91 (fix rounds 7 and 8, G80, G115; K4736, K4807, K4811): THE RECORD'S WRITE COUNTER, a whole number that rises
+   *  by at least one for every row any statement on this object's storage inserts, updates or deletes in a table that is not
+   *  bookkeeping, and by nothing else. It is SQLite's own `total_changes()` for the connection the object holds, so it sees
+   *  every writer by every path: this module's services, and the plain SQL of the modules that own the tables `queue` derives
+   *  its feed from (its mutes, a question, a deadline, a notice), declared or not, and no I/O beyond the storage.
+   *  R91 BOOKKEEPING IS LEFT OUT, BY A MECHANISM THIS MODULE OWNS ALONE: every foreground request writes a session's
+   *  `last_active`, the door window and, with a tick, the ledger, and a counter that counted them would move on every request
+   *  and be no key for a cache. This module cannot see another module's statements (`credentials`, `admission` and the ledger
+   *  hold the storage's `sql` themselves, and are not changed), so it asks SQLite to tally them: on each table of
+   *  `BOOKKEEPING_TABLES` that exists it keeps three triggers (insert, update, delete), each stepping the one row of
+   *  `bookkeeping_tally`. A bookkeeping row then costs `total_changes()` exactly two (its own row and the tally's) and the
+   *  tally one, so the counter is `total_changes() - 2 * (tally - the tally when this connection began)`. (A TEMP tally would
+   *  need no baseline, and workerd refuses TEMP schema: `SQLITE_AUTH`, measured.) The tables are looked for at each reading
+   *  until every one on the list has been found (a module makes its table after this one migrates), and a table made after
+   *  the first reading is watched from the next. A bookkeeping row written before its table was first watched is counted as a
+   *  record row, once; one whose transaction rolls back is counted twice (the tally rolls back with it, the changes are still
+   *  counted), which R89 allows: a change that rolls back may still be counted, and the counter never falls. If the platform
+   *  refuses the triggers the counter falls back to `total_changes()` whole: the cache it keys then recomputes more often and
+   *  is never wrong. A read changes nothing, so two answers with no write between are equal; the first reading may make the
+   *  triggers, which move no row. It counts from the object's start and is 0 for a record nothing has written since. DDL moves
+   *  no row and is not counted. */
   writeCount() {
-    return Number(this.#one(`SELECT total_changes() AS n`).n);
+    this.#watchBookkeeping();
+    const total = Number(this.#one(`SELECT total_changes() AS n`).n);
+    try { return Math.max(0, total - 2 * Math.max(0, this.#tally() - this.#base)); }
+    catch { return total; }
+  }
+
+  /* R91: the bookkeeping tally now. */
+  #tally() { return Number(this.#one(`SELECT COALESCE(SUM(n), 0) AS n FROM bookkeeping_tally`).n); }
+
+  /* R91: a trigger set on each bookkeeping table now present and not yet watched. Never throws: a platform that refuses leaves
+     the counter whole. A table seen inside a transaction is not marked watched, since the transaction may roll its triggers
+     back. `CREATE TRIGGER IF NOT EXISTS` changes nothing when the trigger is already there (a restarted object). */
+  #watchBookkeeping() {
+    const missing = BOOKKEEPING_TABLES.filter((t) => !this.#watched.has(t));
+    if (!missing.length) return;
+    try {
+      const here = new Set(this.#rows(`SELECT name FROM sqlite_master WHERE type='table' AND name IN (${missing.map(() => "?").join(",")})`, ...missing)
+        .map((r) => r.name));
+      for (const t of missing) {
+        if (!here.has(t)) continue;
+        for (const ev of ["INSERT", "UPDATE", "DELETE"])
+          this.#sql.exec(`CREATE TRIGGER IF NOT EXISTS bookkeeping_${t}_${ev.toLowerCase()} AFTER ${ev} ON ${t} BEGIN UPDATE bookkeeping_tally SET n = n + 1; END`);
+        if (!this.#held.length) this.#watched.add(t);
+      }
+    } catch { /* the counter then counts every table, as R89 states */ }
   }
 
   /* ---- transactions (R32, R66) ---- */
