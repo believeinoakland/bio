@@ -241,3 +241,7 @@ COMPLETE · fix round 7, G62 (ratification side) and G59 (parity test), B12. Rea
 **For BOB:** when retrieval's and record-grammar's G62/G59 are merged on the tranche, merge it into this branch and the six red tests turn green with no further change of mine; send a CHANGE if any stays red. Also: screens-publish should read `publish_at.source`/`why` (and `publish_at_stated` for the not-reached case, which is case-authoring's).
 
 Size (session_011tm6afKMQNi7iG6sqa1TmS): test runs 8, module lines 3987
+
+## J14 · QUESTION
+
+QUESTION (G120, the phase entries `gate;dur`, `commit;dur`, `copy;dur`, `assemble;dur`, `reuse;dur`). The Worker half gets its `ctx` from `plane/door.mjs:116`, which hands no clock, and `phase-clock.mjs` accepts no module-stated entries yet (control-plane's job). My best reading, which I build now: `caseCeremony` calls an optional `ctx.stateTiming(name, ms)` once per phase, a no-op when absent (so nothing breaks before control-plane merges), and my r8-chain test asserts the five calls with a stub. For the entries to reach `Server-Timing`, plane/door.mjs must pass `stateTiming` into this ctx and the clock must take them. Please give control-plane (or plane) that provider with exactly this name and signature, or tell me the name you chose and I rename. I carry on meanwhile.
