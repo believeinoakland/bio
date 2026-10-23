@@ -2,6 +2,24 @@
 
 **Status** · session_01SGNnL5vz8PKJ45aKQbLD7g · depth 2 · WORKING · handled B14
 
+## Record (BUNDLER #30, B15/B16: G83 R41, G84 R42)
+
+**Entries applied**
+- **R41 (`--store-location`, `--store-generation`).** `derive-bindings.mjs` `deriveStorePlace({location, generation}, hints)` (pure): the hint must be in the list passed in, the generation must match `/^[1-9][0-9]*$/`; refusals `[BAD_STORE_LOCATION]`, `[BAD_STORE_GENERATION]`; `1` sends no binding and names `STORE_GENERATION` for removal. `deploy.mjs`: a flag's value is parsed so it is never taken as a positional argument (a flag with no value is refused by name); validation runs before the first request; the bindings are `plain_text` appended to the derived ones, so a held `STORE_LOCATION`/`STORE_GENERATION` without a flag is kept by R34's rule, and a flag that differs from the held value is a metadata deploy; a held `STORE_GENERATION` that `--store-generation 1` removes is a difference (metadata deploy) and is not kept. The hint list is runtime-limits' `STORE_HINTS` (R27), read with a dynamic `import("../src/store-place.mjs")` only when `--store-location` is given, so no other deploy depends on the provider's file.
+- **R42 (start-up figure).** `deploy.mjs` `startupOf(answer)` reads `result.startup_time_ms` of the upload's JSON answer (Cloudflare API reference, Workers > Scripts > "Upload Worker Module", `PUT /accounts/{id}/workers/scripts/{name}`, response `result.startup_time_ms: number`, read 2026-10-23; wrangler 4.114 reads the same field in `deploy` and prints "Worker Startup Time"). It prints `test deploy: startup <ms> ms`, or `test deploy: startup unreported` for an answer without a finite non-negative number, on its own line after the upload is verified (after the upload's answer), only printed, never believed for state, never failing. **Reading to confirm:** the line is printed only in a test deploy (`--test-instance`), because R40's control says a deploy without the flag prints no `test deploy:` line (`release.test.mjs` R40 went red when I printed it always; the workflow deploys with the flag). Proposed R42 wording: add "in a test deploy (R40)".
+- **Answer shape (R-SEAM):** the stub's answer shape is the documentation's (with and without the field), not a recorded real answer; the real figure is BOB's read of the workflow log at the redeploy. Not this round: workerd measure, data modules, hard stop (K4753).
+- Test files: `bio-plane/test/m/bundler/g83-g84.test.mjs` (9 tests; R41 and R42 named), `stubfetch.mjs` (`startupTimeMs` scenario; the upload answers `result`), `repo.mjs` (copies `src/store-place.mjs` into the fixture when present).
+
+**Failing first:** with `deploy.mjs` as it was: `g83-g84.test.mjs` 9 tests, 2 pass, 7 fail. With the change and a temporary stand-in for the provider's file (removed, never committed): 9 pass; `bio-plane/test/m/bundler/` plus `deploybindings.test.mjs`: tests 166, pass 166, fail 0.
+
+**Red by name until runtime-limits merges (R-SEAM):** three tests need the real `bio-plane/src/store-place.mjs` (runtime-limits R27): "R41: runtime-limits' STORE_HINTS exists…", "R41: --store-location and --store-generation are sent…", "R41: every hint of runtime-limits' list is accepted…". On this branch without it: tests 168, pass 165, fail 3, exactly those. When BOB's CHANGE says it has merged: merge `tranche/T51`, rerun.
+
+**Platform check (R-FOUR 4):** L: the stub account only (no deploy is run by a session). P: BOB reads the `test deploy: startup` line in the workflow log at the redeploy. `unreported` means the real answer lacked the field (the plan's G2 rule applies).
+**Why the tests missed it (R-FOUR 2):** neither flag nor start-up figure existed; the tests are the new ones. **R-CLOCK / R-OLD / census ops:** none (no stored data, no op, no timing assertion).
+**Stale generated artifacts:** none. **Deferred:** none. **Found in other modules:** none. `deploy-test.yml` dispatch inputs are BOB's (K4754).
+
+Size (session_01SGNnL5vz8PKJ45aKQbLD7g): test runs 6, module lines 4580
+
 ## Record (BUNDLER #27, B12: G39, pure-ASCII fleet bundles)
 
 **Entry applied (B12, G39; owner bundler)**
