@@ -2315,7 +2315,7 @@ export class Reevaluation {
     /* R26: the case half runs once the legs are read to their end, with what is left of this batch's limit. */
     const cases = truncated ? null : this.#caseHalf(inCases ? aft.slice(CASE_CURSOR.length) : "", cap - legs.length, memo);
     const when = this.#when();
-    const raised = [];
+    const raised = [], regraded = [];
     let examined = 0, unread = 0;
     this.record.transact(() => {
       for (const l of legs) {
@@ -2330,7 +2330,17 @@ export class Reevaluation {
         /* A chain that could not be read raises nothing along it (K102); R36's other addresses are read apart. */
         const chained = !!n && n.state !== "chain_unread";
         if (!chained) unread++;
+        /* R41: the notices of this leg still open, by the newer capture each waits on. */
+        const open = new Map(this.#rows(
+          `SELECT notice_id, newer_capture, grade, affects FROM reevaluation_notices
+            WHERE holder=? AND ord=? AND content_id=? AND state='open'`, l.holder, l.ord, l.content_id)
+          .map((o) => [o.newer_capture, o]));
         for (const c of [...(chained ? n.candidates || [] : []), ...across.of(row)]) {
+          const cur = open.get(c.capture_sha);
+          if (cur) {
+            this.#regrade("reevaluation_notices", cur, c, regraded);
+            continue;
+          }
           if (!RAISED_ON.includes(c.affects)) continue;
           const id = `RN-${sha256HexSync(`${l.holder}\u0000${l.ord}\u0000${l.content_id}\u0000${c.capture_sha}`).slice(0, 24)}`;
           if (this.#one(`SELECT 1 AS x FROM reevaluation_notices WHERE notice_id=?`, id)) continue;
@@ -2349,7 +2359,16 @@ export class Reevaluation {
         examined++;
         const n = p.notice;
         if (!n || n.state === "chain_unread") { unread++; continue; }
+        const open = new Map(this.#rows(
+          `SELECT notice_id, newer_capture, grade, affects FROM reevaluation_case_notices
+            WHERE case_id=? AND part=? AND capture_sha=? AND state='open'`, p.case, p.part, p.capture_sha)
+          .map((o) => [o.newer_capture, o]));
         for (const c of n.candidates || []) {
+          const cur = open.get(c.capture_sha);
+          if (cur) {
+            this.#regrade("reevaluation_case_notices", cur, c, regraded);
+            continue;
+          }
           if (!RAISED_ON.includes(c.affects)) continue;
           const id = `RC-${sha256HexSync(`${p.case}\u0000${p.part}\u0000${p.capture_sha}\u0000${c.capture_sha}`).slice(0, 24)}`;
           if (this.#one(`SELECT 1 AS x FROM reevaluation_case_notices WHERE notice_id=?`, id)) continue;
@@ -2369,7 +2388,7 @@ export class Reevaluation {
     const last = legs.length ? legs[legs.length - 1] : null;
     let cursor = truncated && last ? `${last.holder}#${last.ord}` : null;
     if (cases && cases.cursor !== null) { truncated = true; cursor = `${CASE_CURSOR}${cases.cursor}`; }
-    const out = { ok: true, examined, chain_unread: unread, raised, count: raised.length, limit: cap, truncated, cursor,
+    const out = { ok: true, examined, chain_unread: unread, raised, count: raised.length, regraded, limit: cap, truncated, cursor,
                   ...(across.read() ? {} : { standards_read: false, standards_why: STANDARDS_UNREAD }),
                   ...(cases && cases.absent ? { case_parts_absent: true, case_parts_why: localize("reevaluation.index.case_parts_no_owner_told", "no module has registered the cited parts of a case edition, so no case's owners were told of a newer version of what it cites; that is not the same as none") } : {}),
                   says: localize("reevaluation.index.notices_says", "a notice is raised once per question, leg and newer capture, and once per case, cited part and newer capture to that case's owners, only where the newer version affects the passage or whether it does is undetermined; nothing was moved, and only a member's act moves a reference") };
@@ -2396,6 +2415,18 @@ export class Reevaluation {
       this.#tellAfterCommit(told, out);
     }
     return out;
+  }
+
+  /* R41: an OPEN notice follows the sweep's newest reading of the newer capture it waits on: its stored grade and
+     `affects` become `content`'s answer for that reading, in the same tick, whatever they now are (an unchanged reading
+     writes nothing). It stays open and is not told again (R8: one telling per raise); only a member's act closes it
+     (R15). A settled notice is never in `cur`, so it keeps the grade it was settled with. */
+  #regrade(table, cur, c, regraded) {
+    const grade = c.grade ?? null;
+    if ((cur.grade ?? null) === grade && cur.affects === c.affects) return;
+    this.sql.exec(`UPDATE ${table} SET grade=?, affects=? WHERE notice_id=? AND state='open'`, grade, c.affects, cur.notice_id);
+    regraded.push({ notice: cur.notice_id, newer_capture: c.capture_sha, grade_before: cur.grade ?? null,
+                    affects_before: cur.affects, grade, affects: c.affects });
   }
 
   /** R36 (X73, K1446; N589, N590): R14's notice across addresses, for one sweep batch. A reference pinned to a held
@@ -2637,6 +2668,34 @@ export class Reevaluation {
                    ON CONFLICT(id) DO UPDATE SET receipt_seq = receipt_seq + 1`);
   }
 
+  /* R41, R25: whether an open notice raised undetermined now reads otherwise: the copy it waits on has been read since, which
+     is neither a receipt nor a filing. Asked of content as the sweep asks it (a machine viewer), once per passage, only for
+     the open undetermined leg notices (at most one page of them); an unread chain or an unchanged grade is not owed. Reads
+     only. */
+  #regradeOwed() {
+    const open = this.#rows(`SELECT content_id, newer_capture, grade FROM reevaluation_notices
+                              WHERE state='open' AND affects='undetermined' AND across IS NULL ORDER BY notice_id LIMIT ?`,
+                            NOTICE_SWEEP_MAX);
+    if (!open.length) return false;
+    const ids = [...new Set(open.map((o) => o.content_id))];
+    const rows = new Map(this.#rows(`SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, cited_as FROM content
+                                      WHERE content_id IN (SELECT value FROM json_each(?)) LIMIT ?`, JSON.stringify(ids), ids.length)
+      .map((r) => [r.content_id, r]));
+    const memo = new Map(), noticeMemo = new Map();
+    for (const o of open) {
+      const row = rows.get(o.content_id);
+      if (!row) continue;
+      let n = noticeMemo.get(o.content_id);
+      if (n === undefined) {
+        try { n = this.content.noticeForRow(row, MACHINE_ADMIN, memo); } catch { n = null; }
+        noticeMemo.set(o.content_id, n);
+      }
+      const c = n && n.state !== "chain_unread" ? (n.candidates || []).find((x) => x.capture_sha === o.newer_capture) : null;
+      if (c && (c.affects !== "undetermined" || (c.grade ?? null) !== (o.grade ?? null))) return true;
+    }
+    return false;
+  }
+
   /* R25: pending while a pass is part-way, when a receipt was counted or a document was filed (G66: a register row
      written or purged) since the last complete pass began, or, with no pass yet complete, when any basis leg rests on a passage. A
      pass written before the filing mark existed holds none, which reads as one pass owed. */
@@ -2644,7 +2703,7 @@ export class Reevaluation {
     if (row.pass_began !== null) return true;
     if (row.complete_began !== null)
       return Number(row.receipt_seq) > Number(row.complete_seq ?? 0)
-        || row.complete_mark === null || this.#filingMark() !== Number(row.complete_mark);
+        || row.complete_mark === null || this.#filingMark() !== Number(row.complete_mark) || this.#regradeOwed();
     return !!this.#one(`SELECT 1 AS x FROM inquiry_basis WHERE content_id IS NOT NULL AND content_id <> '' LIMIT 1`);
   }
 
