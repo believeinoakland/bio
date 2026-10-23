@@ -119,3 +119,13 @@ B5 (K4259) applied; B6 route taken (stale local branch kept as `stale/case-impor
 **Tests and checks.** `node --test bio-plane/test/m/case-import/`: 156 pass, 0 fail (was 155). format 0 failures; architecture (case-import) 0; coverage (case-import) 33 of 33; words: nothing in case-import; ownership case-import tranche/T51 job/T51/case-import: 1 file changed in the check (requirements file, accepted at the merge, B4), 0 failures. Tranche not merged into my branch (no file I read changed).
 
 Size (session_01Ge3D4wpTN5PSBoW7jivuwt): test runs 4, module lines 2689
+
+## J7 · QUESTION
+
+G50 (B7): test written and pushed (`2bd15e12a9`); one decision is BOB's.
+
+**Finding (B7 note 1).** A `/3` file with a repeated path is refused at `index.mjs:681-683`, never reaching the store at `:736`. `caseFileManifestCheck` flags `path_twice` for every format (`case-grammar/casefile.mjs:248`, inside the files loop, not gated by format). No reader is wrong, so no code changed. Held by the third test (passes today): a `/3` manifest listing one path twice answers `IMPORT_NOT_A_CASE_FILE` with the check's own departures, nothing stored; the control (each path once) imports. R1/R5 do not name `/3` as newest, so neither is amended.
+
+**Tests** (`test/m/case-import/g50-import.test.mjs`, case file made by public-read's real `buildCaseFile` over two held captures of one ref): (1) a `/4` file imports and `case_import_files` holds every listed path, each capture's bytes read back; (2) the same file with its format edited to `/3` is refused; (3) the repeated-path finding above. 1 and 2 are red by name today (the writer still emits `/3`; `format` is not `/4`), until case-grammar, public-read and case-checker merge. My other 156 tests pass.
+
+**QUESTION (BOB's, `modules.json`).** The test imports `public-read` (`src/public-read/casefile.mjs`, `src/container.mjs`), which case-import does not declare in `uses`, so `checks/architecture.mjs case-import` fails on 2 imports. My best reading: add `public-read` to case-import's `uses` (an edge to an earlier module, 112 < 118; used by tests only; the module's source calls nothing in it). I added a matching line to my requirements' Uses. Alternatives: your own test-only declaration, or I drop the real `buildCaseFile` for a hand-written zip (it would not follow R-SEAM). I carry on on this reading; the check turns green once the edge is in.
