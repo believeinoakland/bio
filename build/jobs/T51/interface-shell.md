@@ -1,6 +1,6 @@
 # interface-shell (T51)
 
-**Status** · session_01GuYhDBuwX3wYXyAxnpXWHF · depth 2 · COMPLETE · handled B37
+**Status** · session_011BwEvapbBvrGVu6SVZhniz · depth 2 · COMPLETE · handled B39
 
 ## J1 · BLOCKED
 
@@ -423,3 +423,39 @@ The build (compose, class check, one hash) is paid once per release by the first
 Words: none added (no member-facing string). R-OLD: new data only (no stored data). Census ops owned: none (the shell declares no op). Deferred: none. REPORT/QUESTION: none open.
 
 Size (session_01GuYhDBuwX3wYXyAxnpXWHF): test runs 20, module lines 3347
+
+## J26 · COMPLETE
+
+**G53 · `RE_POINTS` drops the two re-points the design's registry now lists (K4699; `interface-shell/index.mjs:151-158`).**
+
+*Root cause (file:line).* `bio-plane/src/interface-shell/index.mjs` `RE_POINTS` held `security: ["scanmirror"]` and `places: ["officeconfirm"]`. R117 (fix round 3, C84, C64) added them because the generated screen registry did not yet list the ops. DEC-419's design file (`docs/development/ux-substrate/screens/registry.json`, on the tranche at `f72b2f8a4c`) now lists `scanmirror` on `security` and `officeconfirm` on `places`, so R73's rule (a re-point leaves the table once the registry lists it) applies to both. The generated copy the shell reads is still at `43379a1a44` (wizard-scripts' re-take, 44a).
+
+*Why the tests missed it, and the gap fixed.* `t50.test.mjs` (R73) and `design.test.mjs` (R55) pin the object and check each entry against `SCREEN_REGISTRY`, the generated copy. That copy lagged the design file, so the check passed vacuously and both tests stayed green. Gap fixed: a new test in `fixround4.test.mjs` (`G53 R117`) reads the design's `registry.json` on the tranche and fails on any `RE_POINTS` entry it lists, with a control that the file does list the two ops R117 named. The generated-copy side is wizard-scripts' commit-equality test (44a).
+
+*Change.* `index.mjs:151-158`: `RE_POINTS` is `{ explore: ["stepsourcewithdraw"], document: ["readheld"] }`; the `security` and `places` entries and their R117 comment go, replaced by a G53 comment. `t50.test.mjs:34` and `design.test.mjs:80` now assert the new object (`t50.test.mjs:33` comment amended). `fixround3.test.mjs:108-113` and `fixround4.test.mjs:13` are unchanged.
+
+*Failing-first.* Scratch tree (a detached worktree, never committed): `bio-plane/test/m/wizard-scripts/source/registry.json` set to the `f72b2f8a4c` file, `SOURCES.registry.commit` set to `f72b2f8a4c`, `build-data.mjs` run (84 screens, `security` and `places` list the two ops).
+- Before the change: `t50` R73 red (`security scanmirror is listed by the registry, so it must leave RE_POINTS`); `fixround4` R73/R117 red (`security: scanmirror is listed by the registry, so it is no re-point`).
+- After the change, same scratch tree: `t50` 18 of 18, `fixround4` 3 of 3, `fixround3` 9 of 9, `design` 14 of 14 pass.
+- The new gap test, on this branch before the change: red (`security: scanmirror is listed by the design's registry.json, so it is no re-point`); after: green.
+
+*On this branch, before wizard-scripts 44a merges (generated registry still at `43379a1a44`).* `t50` R73 and `fixround3` R117 (its `security`/`places` controls) are red by name until 44a merges; `fixround4` and `design` are green. This is the state BOB's START expected.
+
+*Platform check.* N (a table; no platform shape).
+
+**Suites and checks**
+- Module `bio-plane/test/m/interface-shell/*.test.mjs`, in the scratch tree with the re-taken registry: 33 files, 349 tests, 349 pass, 0 fail (348 before; +1 `G53` test).
+- Users (`impact.mjs origin/tranche/T51 HEAD` names 13 modules and 377 files; not all run here). Run in the scratch tree with the re-taken registry: `screens-settings` 23 files, all pass; the page composition suites `screens-wizards` (page, walk), `screens-inquiry` (common, t48), `screens-daily` (common-line, contract), `screens-entry` (page), `plane` (t47), `control-plane` (t46-app, t46-door, t46-e2e), `journey-check` pseudo and pseudo-route: all pass.
+  - `screens-action/contract.test.mjs:34`: 1 red, `start-send` (the Join act, `projectjoin`, is G52's and not yet merged). Held by name in the round's list.
+  - `journey-check`: see the note below.
+- `checks/format.mjs`, `checks/architecture.mjs interface-shell`, `checks/coverage.mjs interface-shell`: 0 failures (coverage 122 of 122 ids). `checks/run.mjs /home/user/bio`: format 0, architecture 0, coverage 6686 of 6686, channels 0; words 1 failure, the inherited `inline 1` at `bio-plane/src/case-checker/spec.mjs:11` (named in the round's list; not in this module, no words finding in `interface-shell`).
+- `checks/ownership.mjs /home/user/bio interface-shell tranche/T51 job/T51/interface-shell`: 5 files changed by interface-shell, 0 failures.
+
+**Requirement lines for BOB** (R117 is amended by G53; BOB writes `build/requirements/`):
+- R117 amended (G53; K4699): "`scanmirror` (`security`) and `officeconfirm` (`places`) leave the re-points: DEC-419's registry lists both, so the registry admits them. `RE_POINTS` holds `stepsourcewithdraw` on `explore` and `readheld` on `document` only. Test: `fixround4` G53 test, against the design's `registry.json`; control: `fixround3`'s R117 test, against the generated registry."
+
+**Census.** This module owns no census op, and G53 changes no op's accepted keys. **Words.** None added. **Stored data.** None. **Deferred.** None. **Found in another module.** None new. The generated-copy side of G53 is wizard-scripts' (44a); `op-declarations` (44b) is not touched by this job.
+
+**journey-check (the 24 files, scratch tree, re-taken registry, `npm ci` run in `bio-plane/src/journey-check`).** 17 files pass, 5 fail: `account-installer` 3, `group` 1, `journey` 13 (the live step "connect an assistant by her own Claude subscription"), `live` 4, `plane-cron` 2. Those are environment reds (a Docker image, an external subscription, the live plane). Run once with my change and once with the four files put back to `4004df1ff0`: the same counts both times, so none is from G53. Not run: a fix of those environment reds (not this module's).
+
+Size (session_011BwEvapbBvrGVu6SVZhniz): test runs 122, module lines 3346

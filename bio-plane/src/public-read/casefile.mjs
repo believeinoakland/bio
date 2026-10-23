@@ -7,9 +7,11 @@
  * `../publication/worker.mjs`), from what the published projection holds (`PublicRead.caseFileFacts`) and the published
  * bucket; served part by part (`op=publishedbytes&sha256=<manifest>&format=zip&part=<n>`).
  *
- * THE FORMAT IS `case-grammar`'s (its R13, `CASE_FILE_FORMAT`; a stored `bio-case-file/1` is served as written): every path is `caseFilePath`'s, the manifest is
+ * THE FORMAT IS `case-grammar`'s (its R13, `CASE_FILE_FORMAT`; a stored `bio-case-file/1`, `/2` or `/3` is served as written): every path is `caseFilePath`'s, the manifest is
  * `CASE_FILE_MANIFEST_PATH` at each part's root, the files are listed in path order and each part's digest is
- * `casePartDigest`'s; this file writes the format and decides nothing it states. What is this module's (K1315, reported):
+ * `casePartDigest`'s; this file writes the format and decides nothing it states. A `ref` on two or more rows of the case document
+ * names each of its files by the row's capture (`materials/<ref>/<sha>/<leaf>`), and a case file with such a path states
+ * `bio-case-file/4` (G50; `caseFileFormatFor`); every other keeps `/3`. What is this module's (K1315, reported):
  * each file sits at its path directly under the part's root; an attestation is named `<n>-<by_kind>.json` under its
  * material's ref, `n` its place among that material's rows; a key is written on one line as `<type> <base64>`.
  *
@@ -21,8 +23,9 @@
 
 import { word, localize } from "../setup-words/index.mjs";
 import { canonicalJson } from "../record-grammar/index.mjs";
-import { CASE_FILE_FORMAT, CASE_FILE_FORMATS_ACCEPTED, CASE_FILE_MANIFEST_PATH, caseFilePath, casePartDigest, completeEditionOf, calculationFileText,
-         provOf } from "../case-grammar/index.mjs";
+import { CASE_FILE_FORMAT, CASE_FILE_FORMATS_ACCEPTED, CASE_FILE_MANIFEST_PATH, caseFilePath, caseFileEntryOf, casePartDigest, completeEditionOf,
+         calculationFileText, provOf } from "../case-grammar/index.mjs";
+import * as grammar from "../case-grammar/index.mjs";
 import { CONTAINER_MAX_BYTES } from "../container.mjs";
 
 const enc = new TextEncoder();
@@ -76,8 +79,12 @@ const entryCost = (name, bytes) => bytes + utf8(name).length * 2 + 76;
  *  (R5). */
 export async function buildCaseFile({ facts, group = null, read, maxBytes = CONTAINER_MAX_BYTES }) {
   const files = [];
+  /* G50 (B): one file at one path is listed once (a shared archive two captures reach, the same copy two rows name); a
+     second file at the same path with other bytes is kept, and the case file's own check then states the repeated path. */
   const add = async (path, kind, content) => {
-    files.push({ path, kind, sha256: await sha256Hex(content), bytes: content.length, content });
+    const sha256 = await sha256Hex(content);
+    if (typeof path === "string" && files.some((f) => f.path === path && f.sha256 === sha256)) return;
+    files.push({ path, kind, sha256, bytes: content.length, content });
   };
   const docBytes = utf8(facts.document.text);
   if ((await sha256Hex(docBytes)) !== facts.document.doc_sha)
@@ -110,18 +117,22 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
     const bytes = inline != null ? utf8(inline) : await read(sha);
     return bytes && (await sha256Hex(bytes)) === sha ? bytes : null;
   };
+  /* G50 (B): the key a material's files are spelled by: the `ref`, or `[ref, capture]` for a `ref` on several rows (`facts`
+     states the row's `capture`); a row whose capture is not a sha (`capture_invalid`) has none to spell, so none of its files
+     is carried at a plain path: each is named in `unheld`. */
+  const keyOf = (m) => (m.capture ? [m.ref, m.capture] : m.ref);
   for (const m of facts.materials) {
     const kind = m.kind === "observation" ? "observation" : "document";
     /* R23 (T37): bytes a material carried as its copy shares are its original's, which never travel. */
     if (m.original_of_copy) { unheld.push({ ref: m.ref, sha: m.sha ?? null, what: kind === "observation" ? "text" : "bytes",
                                             why: ORIGINAL_NOT_CARRIED }); continue; }
-    const bytes = await held(m.sha, m.bytes_text);
+    const bytes = m.capture_invalid ? null : await held(m.sha, m.bytes_text);
     if (!bytes) unheld.push({ ref: m.ref, sha: m.sha ?? null, what: kind === "observation" ? "text" : "bytes" });
-    else await add(caseFilePath(kind, m.ref), kind, bytes);
+    else await add(caseFilePath(kind, keyOf(m)), kind, bytes);
     if (kind === "document") {
-      const tb = await held(m.text_sha, m.extracted_text);
+      const tb = m.capture_invalid ? null : await held(m.text_sha, m.extracted_text);
       if (!tb) unheld.push({ ref: m.ref, sha: m.text_sha ?? null, what: "extracted_text" });
-      else await add(caseFilePath("extracted_text", m.ref), "extracted_text", tb);
+      else await add(caseFilePath("extracted_text", keyOf(m)), "extracted_text", tb);
     }
     /* R32 (N717; K2004): a member document carried whole brings its `container` record and its archive, outward to the
        outermost, each under the material's ref (an archive named by its own SHA-256, a record by its member's, `case-grammar`
@@ -140,9 +151,9 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
      under that ref; never the original's bytes, its extracted text, or an archive or container record of it. A copy
      not registered, or whose bytes do not hash to that digest, is not carried and is named in `unheld`. */
   for (const o of facts.obscured || []) {
-    const bytes = o.registered ? await held(o.copy) : null;
+    const bytes = o.registered && !o.capture_invalid ? await held(o.copy) : null;
     if (!bytes) unheld.push({ ref: o.ref, sha: o.copy ?? null, what: "obscured" });
-    else await add(caseFilePath("obscured", o.ref), "obscured", bytes);
+    else await add(caseFilePath("obscured", keyOf(o)), "obscured", bytes);
   }
   /* R33 (K2129): the edition's criteria rows exactly as R31 answers them, once, in canonical JSON; none for an edition
      whose criteria were not recorded (committed before T35). */
@@ -188,7 +199,9 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
     if (typeof k !== "string" || !k || keys.some((x) => x.b64 === k)) continue;
     keys.push({ b64: k, key: keyLine(k), fingerprint: await keyFingerprint(k) });
   }
-  const head = { format: CASE_FILE_FORMAT, group, case: facts.case, edition: facts.edition,
+  /* G50 (B): `bio-case-file/4` is declared only by a case file with a path that states a capture; every other keeps `/3`. */
+  const discriminated = files.some((f) => typeof f.path === "string" && caseFileEntryOf(f.path)?.capture);
+  const head = { format: discriminated ? grammar.caseFileFormatFor(files.map((f) => f.path)) : CASE_FILE_FORMAT, group, case: facts.case, edition: facts.edition,
                  case_document_sha: facts.document.doc_sha,
                  keys: keys.map((k) => ({ key: k.key, fingerprint: k.fingerprint })) };
 

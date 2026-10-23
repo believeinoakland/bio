@@ -11,7 +11,7 @@ import { REGISTERED } from "./register-owners.mjs";
 import { composeNeeds } from "../../../src/op-declarations/compose.mjs";
 import { explained } from "./help.mjs";
 import { T51_SHARES, T51_FAMILIES } from "../../../src/op-declarations/t51.mjs";
-import { browserActs, OWED_BY_FIX_ROUND } from "./browser.mjs";
+import { browserActs, OWED_BY_FIX_ROUND_AT_43379A1A44 } from "./browser.mjs";
 import * as AFF from "../../../src/affordances.mjs";
 import { AI_GRANT_OPS } from "../../../src/credentials/index.mjs";
 import { checkScript } from "../../../src/wizard-scripts/index.mjs";
@@ -141,7 +141,7 @@ test("R76: a browser act is not an op — no spec in OPS, no row in NEEDS, no pl
 test("R76, R21: the totality — every act the registry marks owed is exactly one of (a) read as served (an op declared under its name), (b) a browser act whose `registry` string equals the row's `owed:<act> DEC-330`, or (c) still owed, named: the registry's owed acts split with nothing in two classes and nothing left over (negative control: an owed act in no class is seen)", () => {
   const owedRows = registry.screens.flatMap((s) => s.acts).filter((a) => a.status === "owed").map((a) => a.op);
   const nameOf = (row) => row.replace(/^owed:/, "").split(" ")[0];
-  const STILL_OWED = ["installalongside", "installremove", "installremoveconfirm", "installupdate", ...OWED_BY_FIX_ROUND];   /* the installer's own routes, no plane op (R21), and the acts this round's owners declare (DEC-378) */
+  const STILL_OWED = ["installalongside", "installremove", "installremoveconfirm", "installupdate", ...OWED_BY_FIX_ROUND_AT_43379A1A44];   /* the installer's own routes, no plane op (R21), and the acts this round's owners declare (DEC-378) */
   const classOf = (row) => {
     const act = nameOf(row);
     const a = Object.hasOwn(OPS, act) && !Object.hasOwn(BROWSER_ACTS, act);
@@ -374,4 +374,23 @@ test("R83 (T51 fix round; K4237; screens-settings C30): export, the copy of the 
   for (const op of ["exportpage"]) assert.ok(!SESSION_OPS.admin.has(op) && !SESSION_OPS.member.has(op), op);
   assert.ok(!SESSION_OPS.member.has("export") && ACT_GATE.mode("exportlog") !== "admin-session");
   assert.ok(!ground("export").length, "export is not a member op: R34's partition does not run over it");
+});
+
+test("R19, R2, R3, R4, R34 (T51 fix round 6, G55; K4208): moneyingestread is calculations' read beside moneyingest — in calculations' family as a read, so its spec, NEEDS row, session sets and viewer stamp are those of calculations' other reads (table), its request fields ingest, kind, after and limit are no stamp, it is named under the read ground alone, and moneyingest stays a member's act with its spec, row and ground (negative control: the act is not a read and the read is not mutating)", () => {
+  assert.deepEqual(familyOf("moneyingestread"), ["calculations"]);
+  assert.equal(OP_FAMILIES.calculations.kinds.moneyingestread, "read");
+  assert.deepEqual(plain(OPS.moneyingestread), plain(OPS.table));
+  assert.equal(OPS.moneyingestread.mutating, false);
+  assert.equal(NEEDS.moneyingestread, NEEDS.table);
+  assert.ok(Object.hasOwn(NEEDS, "moneyingestread") && NEEDS.moneyingestread === null);
+  assert.equal(both("moneyingestread"), both("table"));
+  assert.deepEqual(stamps("moneyingestread"), stamps("table"));
+  assert.deepEqual(stamps("moneyingestread"), ["viewer"]);
+  for (const field of ["ingest", "kind", "after", "limit"]) assert.ok(!(stamps("moneyingestread") ?? []).includes(field), field);
+  assert.deepEqual(ground("moneyingestread"), ["read"]);
+  /* the act is unchanged */
+  assert.equal(OP_FAMILIES.calculations.kinds.moneyingest, "member");
+  assert.equal(OPS.moneyingest.mutating, true);
+  assert.deepEqual(ground("moneyingest"), ["unexplained"]);
+  assert.notDeepEqual(plain(OPS.moneyingestread), plain(OPS.moneyingest));
 });
