@@ -1,6 +1,6 @@
 # affordances (T51)
 
-**Status** · session_017j6mNDmHH2Noig5Jps6KXP · depth 2 · COMPLETE · handled B18
+**Status** · session_015vmccEdn9WywiaxqonRTPj · depth 2 · COMPLETE · handled B20
 
 ## J1 · QUESTION
 
@@ -309,3 +309,21 @@ Suites: affordances 273 pass 0 fail; users: queue 210/0, screens-investigate 236
 Requirement lines proposed (BOB writes): R39: "A vocabulary whose owner registers only in the Durable Object (events) is composed there and carried to the door by the store's `affordancevocab` answer (`events_vocabularies`), so the door's answer holds it whichever isolate composes it. Test: the door's answer, composed where events has not started, holds the five."
 
 Size (session_017j6mNDmHH2Noig5Jps6KXP): test runs 8, module lines 2828
+
+## J8 · COMPLETE
+
+COMPLETE (G49, re B20 · START, fix round 6). Merged tranche/T51 first (no conflicts).
+
+What changed (`bio-plane/src/affordances/act-help.mjs`): `capturerequests` and `casedrafts` added to `T51_DESIGN_OPS` in the reads list's order, each read by `word("act.<op>.does")`; `readheld` moved from `T51_STANDIN_*` to `T51_DESIGN_OPS` (carried once in `ACT_HELP_OPS` and `HELD`); `T51_STANDIN_HELP` / `T51_STANDIN_OPS` kept exported as empty frozen `{}` / `[]`; the unused `localize` import dropped; header and docblocks updated. The reads list now also gives all ten `T51_LIST_ONLY_OPS` ops (contradictionflag, origins, inboxlist, transcriptions, progressions, remindersfor, moneysets, captureseenin, scanmirror, officeconfirm): t36's arithmetic (456 held keys vs 466 expected) was red until they were held as design ops, so they moved into `T51_DESIGN_OPS` (same keys, same texts) and `T51_LIST_ONLY_OPS` is an empty frozen `[]`. `T51_DESIGN_OPS` is in the reads list's order (81 ops).
+
+Failing-first: t36 "R48 R53 … ACT_HELP", "R62 R65 keys" and "B12 strengthbarset" were red on the tranche (seen at the START; after the first edit the arithmetic test was still red, 456 vs 466, until the ten moved); all green now. Control: ACT_HELP dumped before and after: no key's text changed, two keys added (capturerequests, casedrafts), none removed.
+
+Tests/checks: bio-plane `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/affordances/`: 280 pass, 0 fail. Users (impact set): op-declarations 245/0, control-plane 447/0, store-door 56/0, tasks 128/0, admission 58/0, queue 210/0, interface-shell 348/0 (fail count 0 each). checks/run.mjs: format, architecture, coverage (6686 of 6686), channels, words all 0 failures. ownership affordances tranche/T51 job/T51/affordances: 2 files changed by affordances; 0 failures.
+
+Proposed R48 line: no change (its text holds: exactly the ops the reads list explains). Deferred: none. Found in other modules: none.
+
+Size (session_015vmccEdn9WywiaxqonRTPj): test runs 8, module lines 2721
+
+## J23 · COMPLETE
+
+COMPLETE (G49, B20). act-help.mjs holds capturerequests, casedrafts and readheld as design ops, plus the ten list-only ops the reads list now gives (t36 arithmetic); no existing text changed. Affordances 280/0; users op-declarations, control-plane, store-door, tasks, admission, queue, interface-shell 0 fail; checks/run.mjs and ownership 0 failures. See record J8.
