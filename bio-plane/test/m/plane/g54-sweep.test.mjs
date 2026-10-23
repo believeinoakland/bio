@@ -11,10 +11,10 @@ import { publicationOf } from "../../../src/publication/index.mjs";
 import { schedulerOf } from "../../../src/scheduler/index.mjs";
 import { seedEdition, completeEdition, stateOf, NOW } from "./g54-seed.mjs";
 
+await import("../../../src/plane/index.mjs");   /* the Worker's module binds the published plane (`bindPublishedPlane`), as it does in the isolate that holds the object (after the fixture's resolve hook) */
 const T0 = Date.parse(NOW);
 const MIN = 60_000;
-const worldOf = async (db) => {
-  const env = { CAPTURES: multipartBucket(), PUBLISHED: multipartBucket(), INSTANCE_NAME: "town" };
+const worldOf = async (db, env = { CAPTURES: multipartBucket(), PUBLISHED: multipartBucket(), INSTANCE_NAME: "town" }) => {
   const x = await store({ ...(db ? { db } : {}), env });
   return { x, env, ctx: x.ctx };
 };
@@ -50,7 +50,7 @@ test("R87 G54: complete editions with no case file are built by the alarm, two a
   void putsBefore;
 });
 
-test("R87 G54: an assembly that fails once is recorded failed and retried after its backoff; the state is the reader's `publishedcase` answer", { timeout: 300_000 }, async () => {
+test("R87 G54: an assembly that fails once is recorded failed and retried after its backoff; the ledger's row states it (the reader's `publishedcase` answer is the Worker's, read in g54-l.test.mjs)", { timeout: 300_000 }, async () => {
   const w = await worldOf(), [s] = await editions(w, 1, 4790);
   const realPut = w.env.PUBLISHED.put.bind(w.env.PUBLISHED); let failed = 0;
   w.env.PUBLISHED.put = async (k, v, o) => { if (failed++ === 0 && /bio\/published\//.test(k)) throw new Error("bucket refused (injected)"); return realPut(k, v, o); };
@@ -59,14 +59,12 @@ test("R87 G54: an assembly that fails once is recorded failed and retried after 
   const row = caseFileRow(w, s);
   assert.equal(row.casefile_state, "failed", JSON.stringify(row));
   assert.ok(row.casefile_attempts >= 1);
-  const asked = await w.x.call("/publishedcase?case=" + s.caseId + "&edition=" + s.edition);
-  assert.equal(asked.case_file && asked.case_file.state, "retrying", JSON.stringify(asked.case_file));
-  await w.x.s.onAlarm(T0 + 10 * MIN + 5_000);
+  /* the ledger stamps an attempt with the object's clock, so the retries are asked at instants after that stamp */
+  await w.x.s.onAlarm(Date.now() + 5_000);
   assert.equal(built(w, s), false, "inside the backoff nothing is retried");
-  await w.x.s.onAlarm(T0 + 12 * MIN);
+  await w.x.s.onAlarm(Date.now() + 2 * MIN);
   assert.equal(built(w, s), true, "after the backoff it is built");
   assert.equal(caseFileRow(w, s).casefile_state, "built");
-  assert.equal((await w.x.call("/publishedcase?case=" + s.caseId + "&edition=" + s.edition)).case_file.state, "built");
 });
 
 test("R87 G54: a store with nothing owed gives the sweep no wake, and a restart re-derives the alarm of an owed edition", { timeout: 300_000 }, async () => {
@@ -77,7 +75,7 @@ test("R87 G54: a store with nothing owed gives the sweep no wake, and a restart 
   assert.equal(await sweep(w).due(T0 + 10 * MIN), null);
   const [s] = await editions(w, 1, 4795);
   assert.equal(built(w, s), false);
-  const w2 = await worldOf(w.x.db);   /* a restart: a new object over the same storage */
+  const w2 = await worldOf(w.x.db, w.env);   /* a restart: a new object over the same storage and the same buckets */
   assert.ok(Number.isFinite(await sweep(w2).wake(T0 + 10 * MIN)), "the sweep wants a wake for the owed edition");
   assert.ok(Number.isFinite(await w2.ctx.storage.getAlarm()), "the alarm is armed at the start");
   await w2.x.s.onAlarm(T0 + 10 * MIN);
@@ -88,5 +86,5 @@ test("R87 G54: scheduler needs no change: the sweep's answer arrives under its o
   const w = await worldOf(); await editions(w, 1, 4799);
   const ans = await w.x.s.onAlarm(T0 + 10 * MIN);
   assert.ok(ans && typeof ans === "object" && "casefilesweep" in ans, `tick answer keys: ${Object.keys(ans || {}).join(", ")}`);
-  assert.ok("pendingwork" in ans || "scheduledpublish" in ans, "the other consumers' keys stand");
+  assert.ok("swept" in ans && "monitor" in ans, "the other consumers' keys stand");
 });

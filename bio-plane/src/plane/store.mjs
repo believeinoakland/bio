@@ -70,6 +70,7 @@ import { reevaluationOf, reevaluationOps } from "../reevaluation/index.mjs";
 import { reviewOf, reviewOps } from "../review/index.mjs";
 import { caseAuthoringOf, caseAuthoringOps } from "../case-authoring/index.mjs";
 import { ratificationOf, ratificationOps } from "../ratification/index.mjs";
+import { casefileSweepConsumer } from "./casesweep.mjs";
 import { publicationOf, publicationOps } from "../publication/index.mjs";
 import { docketOf, docketOps } from "../docket/index.mjs";
 import { acceptedWorkOf } from "../accepted-work/index.mjs";
@@ -491,6 +492,8 @@ export class Store extends DurableObject {
        the scheduler never builds it. */
     schedulerOf(ctx, env, { fileSafety, questionExplorer });
     schedulerOf(ctx, env).register("plane", pending.consumer());   /* R75: `pending-work`, before the scheduler's start so its alarm is re-derived at a restart (scheduler R11) */
+    /* R87 (fix round 6, G54): the case-file sweep, ratification's, a second consumer of the plane's, registered at the same place so a restart re-derives its alarm */
+    schedulerOf(ctx, env).register("plane", casefileSweepConsumer(ratificationOf(ctx)));
     /* R3: the migration pass, then scheduler's start. */
     ctx.blockConcurrencyWhile(async () => this.#migrate());
     ctx.blockConcurrencyWhile(async () => schedulerOf(ctx, env).start());
