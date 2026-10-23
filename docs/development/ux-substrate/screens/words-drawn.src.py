@@ -7763,6 +7763,16 @@ w422('screen.document.sheet.rows', 'Cells read as figures and dates for rows {fr
 w422('screen.document.sheet.none', 'No cells read as figures and dates yet.', '(2) G41: before any row is opened or cited')
 w422('screen.document.sheet.fold', 'When the document is a spreadsheet', "(2) G41: the drawing's fold only (mockup)")
 
+# DEC-423: the stated too-large reading (B492; K4645; fix round 6 G41, extraction R97)
+def w423(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-423: B492 ' + note))
+w423('screen.document.reading.too_large', 'Civicsmith read this document, but what it read is too large to keep: {size}, most of it in {key}. The document itself is kept whole, and you can open it.', "screens-inquiry (G41; extraction R97): a reading over 1 MiB stated with its size and its largest part; replaces the code-origin stand-in. {size} as extraction.index.reading_size gives it; {key} must reach the member as a plain name (its text, its pages, its cells, the names and dates found in it), never a field name: owed by BOB, the keys that can occur. Not screen.document.reading.toolarge (DEC-419: a file too large to read at all)")
+w423('screen.document.reading.part.text', 'its text', 'G41: the {key} fill of screen.document.reading.too_large when the largest part is the text')
+w423('screen.document.reading.part.pages', 'its pages', 'G41: the {key} fill when the largest part is the pages')
+w423('screen.document.reading.part.cells', 'its cells', 'G41: the {key} fill when the largest part is the cells')
+w423('screen.document.reading.part.entities', 'the names and dates found in it', 'G41: the {key} fill when the largest part is the entities')
+w423('screen.document.reading.part.other', 'one part of what was read', 'G41: the {key} fill for any other key')
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)

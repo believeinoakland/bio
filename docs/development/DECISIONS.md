@@ -6518,3 +6518,18 @@ decided: 2026-10-23 · the design session (P17)
 the design: 12 rows (block "DEC-422" in `screens/words-drawn.src.py`). Settings, above the team's section, administrators only: "How full your team's record is", "{used} of {limit} ({pct}%)", what the record holds, the 70% warning ("Nothing has stopped yet. Plan now, with the four things below."), the 90% warning ("When it is full, nothing new can be saved: no document, note or change. Act now."), the size not measured, and Bob's four factors in one sentence, shown with the gauge and each warning. Document page of a sheet: "Every line of this sheet is read, and can be searched and cited. Its cells are read as figures and dates only for the rows a member opens or cites.", "Cells read as figures and dates for rows {from} to {to}." (BOB's "interpreted" said plainly), and none yet.
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-422").
 owed: BOB: the keys read with these fills ({used}, {limit}, {pct}, {from}, {to}), or a QUESTION naming any that differ.
+
+### DEC-423 · answered
+raised: 2026-10-23 · the UX design session with Bob, on his secondary account with BOB (session_01DvXHQqV1arHFoxUeFp1nmG) (BOB's B492: the row owed for the stated too-large reading, fix round 6 G41, K4645, extraction R97)
+for: design (T51)
+question: The sentence for a document whose reading is over 1 MiB and is stated with its size and its largest part.
+why it is Bob's: it is not (P17).
+provisional: as below.
+alternative: the code's stand-in ("This document's reading is too large to keep whole: {size}; the largest part is {key}."); not taken: it shows a field name to a member and does not say the document itself is kept and can be opened.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-23 · the design session (P17)
+the design: `screen.document.reading.too_large` "Civicsmith read this document, but what it read is too large to keep: {size}, most of it in {key}. The document itself is kept whole, and you can open it."; {key} filled by a plain name, `screen.document.reading.part.text` "its text", `.pages` "its pages", `.cells` "its cells", `.entities` "the names and dates found in it", `.other` "one part of what was read". Distinct from DEC-419's `screen.document.reading.toolarge` (a file too large to read at all).
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-423").
+owed: BOB: the reading's keys that can be largest, so each has a plain name (any not listed takes `.other`); whether this document's words stay searchable and citable when its reading is stated so, so a second sentence can say so.

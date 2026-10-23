@@ -41861,6 +41861,42 @@
    "en": "When the document is a spreadsheet",
    "protected": false,
    "note": "DEC-422: B491 (2) G41: the drawing's fold only (mockup)"
+  },
+  {
+   "key": "screen.document.reading.too_large",
+   "en": "Civicsmith read this document, but what it read is too large to keep: {size}, most of it in {key}. The document itself is kept whole, and you can open it.",
+   "protected": false,
+   "note": "DEC-423: B492 screens-inquiry (G41; extraction R97): a reading over 1 MiB stated with its size and its largest part; replaces the code-origin stand-in. {size} as extraction.index.reading_size gives it; {key} must reach the member as a plain name (its text, its pages, its cells, the names and dates found in it), never a field name: owed by BOB, the keys that can occur. Not screen.document.reading.toolarge (DEC-419: a file too large to read at all)"
+  },
+  {
+   "key": "screen.document.reading.part.text",
+   "en": "its text",
+   "protected": false,
+   "note": "DEC-423: B492 G41: the {key} fill of screen.document.reading.too_large when the largest part is the text"
+  },
+  {
+   "key": "screen.document.reading.part.pages",
+   "en": "its pages",
+   "protected": false,
+   "note": "DEC-423: B492 G41: the {key} fill when the largest part is the pages"
+  },
+  {
+   "key": "screen.document.reading.part.cells",
+   "en": "its cells",
+   "protected": false,
+   "note": "DEC-423: B492 G41: the {key} fill when the largest part is the cells"
+  },
+  {
+   "key": "screen.document.reading.part.entities",
+   "en": "the names and dates found in it",
+   "protected": false,
+   "note": "DEC-423: B492 G41: the {key} fill when the largest part is the entities"
+  },
+  {
+   "key": "screen.document.reading.part.other",
+   "en": "one part of what was read",
+   "protected": false,
+   "note": "DEC-423: B492 G41: the {key} fill for any other key"
   }
  ],
  "rewrite": {
