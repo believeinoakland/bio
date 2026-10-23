@@ -148,3 +148,17 @@ G80 provider half done: R89/R90 as RecordCore.writeCount() = SQLite total_change
 **Tests and checks.** From `bio-plane/`: record-core's 13 files run one by one, 0 failures each (a combined run reports a fluctuating count, 207 to 219, with 0 failures: the runner's `--test-force-exit` truncates the report; per-file counts add to 195); `corpus-export` 222/222, `queue` 35/35, `capture` and `plane` and `credentials`, `admission`, `scheduler` as above; the whole `test/m` tree except this module (151 directories, two at a time) run once before the fix and the 11 directories with a difference run again after: `basis-version-grammar`, `inquiry-grammar`, `explore` back to 0 failures. `node checks/run.mjs /home/user/bio`: format 0 failures, architecture 0 failures, coverage 0 failures for record-core (8 failures, other modules: acquisition, admission, control-plane, instance-setup, interface-shell, public-read, queue R94, translations), words no finding in record-core. `node checks/ownership.mjs /home/user/bio record-core tranche/T51 job/T51/record-core`: 0 failures. `setup-words/build.mjs --check`: stale-rows note only.
 
 Size (session_01JW6vYMw9VE4YLAc84eswpM): test runs 21, module lines 2505
+
+## J6 · QUESTION
+
+QUESTION (G115, R91). Everything of R91 is built and green except one part its text names: "the scheduler's alarm and heartbeat rows".
+
+Measured on workerd (Miniflare): the scheduler's heartbeat is `storage.put("sched_beat", ...)` (scheduler/index.mjs:642), a row of the platform's key-value table `_cf_KV`. A trigger on that table is refused (SQLITE_AUTH) and one `put` raises `total_changes()` by 1 (two puts: counter 0 to 2). Record-core cannot see or subtract it by any mechanism it owns (it would need to wrap `ctx.storage`, which is a change to the plane and the scheduler). All SQL bookkeeping tables are excluded (sessions, the door window's two tables, the ledger's two tables, doorbell rate and tally, acquire stages), proven on node:sqlite and on workerd.
+
+Effect if accepted: each scheduler firing moves the count once (every 5 s at most while work is owed, otherwise rare), never per request; the Queue's 5 s bucket already allows one recompute per 5 s, so a request-driven foreground burst (A.md:34) is cured and a tick adds at most the one recompute it already caused. The seam's "no tick running" cases are unaffected.
+
+My best reading, and what I will do unless you say otherwise: accept. R91's text is amended to "SQL bookkeeping tables; the key-value heartbeat moves the counter once per firing" (the line is in my record, "Requirement lines proposed"), and I post COMPLETE.
+
+Option B (not recommended): the scheduler job moves its heartbeat into a SQL table on the list (a CHANGE to scheduler, P10; its heartbeat tests change), then the tick would not move the count at all.
+
+My branch job/T51/record-core is pushed with the code, the tests and the record's Completion section; nothing else is owed.
