@@ -622,3 +622,7 @@ B45 read. Merged tranche/T51 (suite unchanged). The rows named in B45 (screen.ce
 - B45's design keys are still not in the word table here (see J40); stand-ins stand.
 
 Size (session_01D28pDd4hME17u4TLcoQx9s): test runs 9, module lines 3716
+
+## J41 · COMPLETE · re B46
+
+COMPLETE (B46): the ceremony's pre-flight now carries tieAttested: true once the edition is prepared (this page's publish, or the draft's editions.prepared on reload), nothing else added; before it the not-reached sentence stands. Red first (r7-tie.test.mjs), now green; suite 286 tests, 284 pass, 0 fail, 2 todo; format, architecture, ownership, words clean for this module. publish_at.source/why not on tranche/T51 yet: data-source/data-why carried only. B45's design keys still not in the word table (J40). Size (session_01D28pDd4hME17u4TLcoQx9s): test runs 9, module lines 3716
