@@ -156,3 +156,17 @@ REPORT: G50 note 2, a finding on reachability (file:line), and the seam test wri
 4. Still needed from you: J9 (public-read in uses). The test imports public-read's fixture and publication/worker.mjs (public-read's paths). architecture shows exactly those two failures, nothing else.
 
 I wait on J9; nothing else is open.
+
+## Fix round 6 · G50 (CASE-DISCLOSURES #18, session_01XeesuXwbodLb8B9vNN8tcd, START B8)
+
+Test-only job; the module's code is unchanged. No census op of mine changes. No new word id.
+
+- Added `bio-plane/test/m/case-disclosures/g50-acts.test.mjs` (names R6, R7): two variants, two photos marked through the real case-carriage (each with its own copy) and two included documents (each with a direct receipt so it is carried whole). It runs `materialsJudged`, `disclosureBlocks` (`materialRows`), the real `holdMaterials`, then publication's real `assembleCaseContainer` over a public-read world carrying the case document and the held files (registered as publication R57 and ratification R39 do, as public-read's own tests stand them in), and asserts: two rows of one ref, two files held, manifest `/4`, `caseFileManifestCheck` `[]`, no path twice, zip served.
+- Fixture: `captures` gained an `ext` option; `w.bucket` is exposed.
+- Seen red today, as planned: the case file is `/3`, the check answers `path_twice` (`obscured`; `document` and `extracted.txt`), the zip part answers 409. Red by name until case-grammar, public-read, case-checker and case-import merge.
+- Reachability (J10): one leg without `content_id` reaches ONE capture, because `inquiry/index.mjs:870-880` mints a content row over the one capture content resolves. The test uses a leg over each capture's passage (G47's route); the collision is reachable that way.
+- Needed `public-read` in uses (J9, answered B9).
+- Suites: case-disclosures 115 tests, 113 pass, the 2 are the seam tests above. checks/run.mjs: format 0, architecture 0, coverage 0, channels 0, words only the accepted `inline 1` at case-checker/spec.mjs:11. ownership 0 failures. setup-words `--check`: stale-rows note only (expected).
+- Generated artifacts made stale: none.
+
+Size (session_01XeesuXwbodLb8B9vNN8tcd): test runs 9, module lines 2447
