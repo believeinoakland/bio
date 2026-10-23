@@ -1,4 +1,4 @@
-/* acquisition — THE ACQUISITION ACT (R1–R47, R95–R98, its archives R38–R41, R45 and R48 in `unpack.mjs`; `build/requirements/acquisition.md`), split from `capture` (K617, K649 (1))
+/* acquisition — THE ACQUISITION ACT (R1–R47, R95–R98, R110–R112, its archives R38–R41, R45 and R48 in `unpack.mjs`; `build/requirements/acquisition.md`), split from `capture` (K617, K649 (1))
  * by copy of `capture/acquire.mjs` (K624 (1)), whose Rs it implements with their meaning unchanged: capture R1–R7, R9–R14,
  * R16–R20, R33–R36, R41, R42 and R60–R62 are this module's R1–R23 and R25–R28. It is reached in process (K72 (11)):
  * `capture`'s `acquire` and `archiveLookup` hand their own store in as `cap`, and the capture-request drain calls it
@@ -33,6 +33,10 @@
  * Fix round 6 (G27, G32): a render that returns after its request has ended is kept in the evidence store at once and its reply dropped (`keepReply`, R5);
  * a caller in process hands the held capture's digest as `opts.heldSha` and the fetch is conditional for a member too (R22).
  *
+ * T51 fix round 8 (the fourth walk's G103, G104, G105, G107): a member's open captures are matched by the member, in the door's form or her bare id, and a fetch made and not
+ * yet delivered is still listed (`openCaptures`, R110); a delivery refused for a code no later try changes ends in words (`DELIVERY_FINAL`, R111); the render's keep of the
+ * bodies its page loaded is inside the render's share of the bar (R112).
+ *
  * Every refusal is an answer `{status, body}`, never a throw. The comments carried from the legacy handler keep the
  * reasoning beside the code it explains. */
 import { isPublicHttpsLocator, createSha256, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE, ISO_TS_RE, isMachineIdentity } from "../record-grammar/index.mjs";
@@ -59,6 +63,7 @@ import { word, localize } from "../setup-words/index.mjs";
 import { unpack, coArchiveStateOf, partsSource } from "./unpack.mjs";
 import { titleOfBytes, cleanedTitle } from "./title.mjs";
 import * as pdfReader from "../pdfstructure.mjs";
+import { baseViewer, viewerMember } from "../member-roster/index.mjs";
 
 /* R24, R29, R33: the one user agent, the one first hop's `who`, and this module's rows, for every module that sends,
    writes or judges them. The pre-rename aliases are gone (R34, N539). */
@@ -532,6 +537,19 @@ export const RENDER_WAIT_MS = 10000;
    `opts.promoteReserveMs`. */
 export const ACQUIRE_BAR_MS = 15000;
 export const PROMOTE_RESERVE_MS = 3500;
+/* R5, R112 (fix round 8, G107): THE RENDER'S KEEP IS PART OF ITS SHARE OF THE BAR. After the renderer returns, the bodies its page loaded are kept in the evidence store
+   (a trip each for `head` and `put`, eight at a time) before the receipt and the profile can follow; the keep is awaited only as long as the bar leaves less the room
+   those stages need, `KEEP_FOLLOWING_MS` (a profile reads the page back, a receipt is written: a trip or two). Bodies the keep has not reached in it leave the render
+   pending (R5), the keep going on from the record. A caller may hand its own as `opts.postKeepMs`. CHOSEN, not measured (the live copy's trip is ~0.27 s); recorded by BOB. */
+export const KEEP_FOLLOWING_MS = 1000;
+/** R112: the milliseconds the keep of the bodies a render loaded is awaited, `elapsedMs` into the call: what the bar leaves for the render (`renderWaitFor`) less the room the
+ *  stages after the keep need, `followingMs` else `KEEP_FOLLOWING_MS` at most a quarter of the share (so a smaller bar is a proportionally smaller room); 0 with nothing left,
+ *  never negative. Pure; never throws. */
+export function keepWaitFor(elapsedMs, { barMs = ACQUIRE_BAR_MS, reserveMs = PROMOTE_RESERVE_MS, followingMs = undefined } = {}) {
+  const bar = Number.isFinite(barMs) ? barMs : ACQUIRE_BAR_MS, room = Number.isFinite(reserveMs) ? reserveMs : PROMOTE_RESERVE_MS;
+  const following = Number.isFinite(followingMs) ? followingMs : Math.min(KEEP_FOLLOWING_MS, Math.floor(Math.max(0, bar - room) / 4));
+  return Math.max(0, renderWaitFor(elapsedMs, { barMs: bar, reserveMs: room }) - following);
+}
 /** R5 (G79): the milliseconds the render is waited, `elapsedMs` into the call: `RENDER_WAIT_MS` at most, less what the bar leaves after the room for
  *  promotion; 0 with nothing left, never negative; an elapsed time that is not a number leaves the full wait. Pure; never throws. */
 export function renderWaitFor(elapsedMs, { barMs = ACQUIRE_BAR_MS, reserveMs = PROMOTE_RESERVE_MS } = {}) {
@@ -1456,7 +1474,7 @@ async function acquireRun(cap, body0, opts, t) {
 
   /* R6, D-64 — THE RENDER ARM, THE PAIR. From here on `sha`, `total` and `ct` name the RENDERED document, the
      bundle's primary; the shell survives as `shell` and `render.of`. */
-  let renderRecorded = null, shellRecorded = null, renderedAuth = null, renderDeferred = null, renderedBytes = null;
+  let renderRecorded = null, shellRecorded = null, renderedAuth = null, renderDeferred = null, renderedBytes = null, keptNow = null;
   if (renderAsked) {
     const pageUrl = resolvedUrl || locator;
     let answerR = null, rbytes = null, rb = null;
@@ -1488,7 +1506,19 @@ async function acquireRun(cap, body0, opts, t) {
       })();
       const got = await timed(t, "render", () => within(run, captureRequest ? Infinity
         : (renderWaitMs ?? renderWaitFor(clockNow() - t.start, { barMs: acquireBarMs, reserveMs: promoteReserveMs }))));
-      if (got.done) answerR = got.value;
+      if (got.done) {
+        answerR = got.value;
+        /* R112 (G107): the page and the bodies it loaded are kept in the record now, within what the bar leaves; past it the render is left pending, the keep going on.
+           Not bounded where no door's bound runs (the capture-request arm) or where the caller named its own wait (`renderWaitMs`); a render begun afresh is final. */
+        if (!captureRequest && renderWaitMs === undefined && !opts.renderFinal && answerR && answerR.ok === true && answerR.kept !== true
+            && typeof answerR.html === "string" && answerR.html.length > 0) {
+          const left = keepWaitFor(clockNow() - t.start, { barMs: acquireBarMs, reserveMs: promoteReserveMs, followingMs: opts.postKeepMs });
+          const keeping = keepReply(ev, answerR);
+          const kept1 = await timed(t, "render", () => within(keeping, left));
+          if (kept1.done) { if (kept1.value && kept1.value.kept === true) keptNow = kept1.value; }
+          else renderDeferred = { run: keeping, pageUrl };
+        }
+      }
       else if (opts.renderFinal) answerR = { ok: false, error: localize("acquisition.index.render_did_not_return", "the page as a visitor saw it did not come back in time") };   // R99: a render begun afresh is final
       else renderDeferred = { run: run.then((a) => keepReply(ev, a)), pageUrl };   // R5 (G27): the reply is kept in the record when it returns, not held
     }
@@ -1497,8 +1527,8 @@ async function acquireRun(cap, body0, opts, t) {
     const asked = { ...RENDER_DEFAULTS, locale: renderLocale(pv.view) };
     /* R5 (G27): a render that returned after its request had ended was kept in the record at once (`keepReply`); its page is read back, its
        bodies are the digests it recorded, and it is filed as a render waited for is. */
-    const kept = answerR && answerR.kept === true ? answerR : null;
-    if (kept) answerR = await replyOfKept(ev, kept);
+    const kept = answerR && answerR.kept === true ? answerR : keptNow;
+    if (kept && answerR.kept === true) answerR = await replyOfKept(ev, kept);   // R112: a keep made in this call leaves the page in memory, not read back
     rb = renderBlock(answerR, { pageUrl, shellSha: sha, asked, at: retrieved });
     if (rb.ok) rbytes = new TextEncoder().encode(answerR.html);
     if (!rb.ok || rbytes.length > MAX) {
@@ -2269,7 +2299,12 @@ export async function owedRun(cap, entry, opts = {}) {
         if (!filed) {
           if (typeof opts.deliver !== "function") return { ok: true, done: false, outstanding: 1, reason: "DELIVERY_NOT_HANDED" };
           const given = await opts.deliver({ answer: { ok: true, document: done.document }, session: entry.session });
-          if (!(given && given.ok === true)) return { ok: true, done: false, outstanding: 1, reason: "DELIVERY_REFUSED" };
+          if (!(given && given.ok === true)) {
+            /* R111 (G105): a refusal no later try changes ends the copy's entry, stated; any other goes again */
+            const why = refusalOf(given);
+            if (DELIVERY_FINAL.includes(why)) { try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ } return { ok: true, done: true, final: true, reason: why }; }
+            return { ok: true, done: false, outstanding: 1, reason: why };
+          }
         }
         try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ }
         return { ok: true, done: true };
@@ -2287,7 +2322,12 @@ export async function owedRun(cap, entry, opts = {}) {
         }
         if (!b.document) return { ok: true, done: false, outstanding: 1, reason: "RENDER_PENDING" };
         const given = await opts.deliver({ answer: b, session: entry.session });
-        if (!(given && given.ok === true)) return { ok: true, done: false, outstanding: 1, reason: "DELIVERY_REFUSED" };
+        if (!(given && given.ok === true)) {
+          /* R111 (G105): as for a finished copy above */
+          const why = refusalOf(given);
+          if (DELIVERY_FINAL.includes(why)) { try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ } return { ok: true, done: true, final: true, reason: why }; }
+          return { ok: true, done: false, outstanding: 1, reason: why };
+        }
         try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ }
         return { ok: true, done: true };
       }
@@ -2321,6 +2361,17 @@ export async function owedRun(cap, entry, opts = {}) {
  *  refused), `{ok: true, done: true, final: true, reason}` for a refusal no later try changes (the source refused it, it is over what
  *  this surface captures): the session then stays, stating `fetch_pending.failed`, for the member to read. A throw is `{ok: false,
  *  reason}`: the entry stays. */
+/* R111 (fix round 8, G105): THE REFUSALS OF A DELIVERY NO LATER TRY CHANGES. The delivery (control-plane's `deliverOwedRender`) answers `{ok: false, reason}` with the
+   code of the record's refusal. These end the entry final and are stated (the session's `fetch_pending.failed`, the ledger row's `why`): the bytes are held under a
+   document the member cannot see (`CAPTURE_HELD_BY_ANOTHER_BUNDLE`, provenance R2), the document is over what a promotion takes (`OVERSIZE_INLINE`, `TOO_LARGE`) or
+   the member is no participant of the project it is filed under (`PROMOTE_NOT_A_PARTICIPANT`). Any other refusal, an unnamed one included, is tried again with the
+   ledger's back-off. The set is BOB's to amend (a requirement, R111); CHOSEN from the refusals the record's promotion answers, not measured. */
+export const DELIVERY_FINAL = Object.freeze(["CAPTURE_HELD_BY_ANOTHER_BUNDLE", "OVERSIZE_INLINE", "TOO_LARGE", "PROMOTE_NOT_A_PARTICIPANT"]);
+/* R111: the code a refused delivery carried (`reason`, else `code`), at most 80 characters; "DELIVERY_REFUSED" when it named none. Pure; never throws. */
+const refusalOf = (given) => {
+  const c = given && typeof given === "object" ? given.reason ?? given.code : null;
+  return typeof c === "string" && c !== "" ? c.slice(0, 80) : "DELIVERY_REFUSED";
+};
 const FETCH_RETRY = Object.freeze(["HOST_COOLING_OFF", "FETCH_FAILED", "ACQUIRE_FAILED", "CAPTURE_NOT_KEPT", "ARCHIVE_UNREACHABLE", "EVIDENCE_STORAGE_NOT_CONFIGURED"]);
 export async function owedFetch(cap, entry, opts = {}) {
   try {
@@ -2361,7 +2412,22 @@ export async function owedFetch(cap, entry, opts = {}) {
       } catch { /* delivered below; a failed delivery then fetches again */ }
     }
     const given = await opts.deliver({ answer: made.answer, session: entry.session });
-    if (!(given && given.ok === true)) return { ok: true, done: false, outstanding: 1, reason: "DELIVERY_REFUSED" };
+    if (!(given && given.ok === true)) {
+      /* R111 (G105): a refusal no later try changes (the bytes are held under a document the member cannot see, a size over the bound) ends the entry final with its
+         code, which the session states for the member to read (`fetch_pending.failed`); it is saved in the shape of a fetch that ended before it was made (the queue
+         owes the fetch, no `fetch_done`), so it is listed as ended and never as delivering. Any other refusal is tried again with the ledger's back-off, its reason kept. */
+      const why = refusalOf(given);
+      if (DELIVERY_FINAL.includes(why)) {
+        try {
+          cap.saveCaptureSession({ session: entry.session, locator: ld.locator, primarySha: ld.primarySha, primaryFile: ld.primaryFile, base: ld.base,
+            state: { queue: [{ fetch: true }], opened_by: opener, ...(typeof st.project === "string" ? { project: st.project } : {}), cls: st.cls, store: st.store,
+                     fetch_pending: { ...(st.fetch_pending && typeof st.fetch_pending === "object" ? st.fetch_pending : {}), failed: why } },
+            ttlMs: OWED_SESSION_TTL_MS });
+        } catch { /* the entry still ends, stated */ }
+        return final(why);
+      }
+      return { ok: true, done: false, outstanding: 1, reason: why };
+    }
     try { cap.dropCaptureSession({ session: entry.session }); } catch { /* harmless */ }
     return { ok: true, done: true };
   } catch (e) { return { ok: false, reason: "OWED_FETCH_FAILED", detail: String(e && e.message || e).slice(0, 200) }; }
@@ -2373,10 +2439,21 @@ export const OPEN_CAPTURES_MAX = 50;
 /** R46: `openCaptures(store, {by, now}) → {ok: true, captures, truncated}` lists, newest started first, at most
  *  `OPEN_CAPTURES_MAX`, each capture session (capture R22) that has not expired at `now` and was begun by `by`:
  *  `{session, locator, primary_sha, started, updated, expires, outstanding}`. A session is begun by the member whose member
- *  session called `acquire` when R19 parked it (`state.opened_by`); one parked by any other caller, or before this
+ *  session called `acquire` when R19 parked it (`state.opened_by`; R110: matched with `by` as the member, the viewer's form `member:<id>` and the bare id
+ *  naming one, and a fetch made and not yet delivered listed with `fetch_pending.delivering`); one parked by any other caller, or before this
  *  requirement, has no member and is listed for no one, and one whose state cannot be read is not listed. A `by` that is
  *  absent, not a string, blank or a machine identity answers `captures: []`. It lists nothing of another member's, writes
  *  nothing and never throws; a store that cannot answer gives `captures: []`. */
+/* R110 (fix round 8, G103): THE MEMBER A SPELLING NAMES, for matching a session's opener with the viewer who asks. The door stamps every declared `by` with the
+   viewer's form (`member:<id>`; the founder's is `admin`), while a session stores the id the `acquire` was made for (`opened_by: "<id>"`); both name one member, so
+   each is read through member-roster's one viewer predicate (`viewerMember`, the carried project dropped by `baseViewer`) and compared as the member. A spelling it
+   does not read as a viewer (the bare id; the founder's bare `admin`) is the member as it stands. Pure; never throws. */
+const memberOfSpelling = (v) => {
+  if (typeof v !== "string") return null;
+  const base = baseViewer(v);
+  return viewerMember(base) ?? base;
+};
+
 export function openCaptures(store, { by = null, now = undefined } = {}) {
   const none = { ok: true, captures: [], truncated: false };
   try {
@@ -2385,15 +2462,22 @@ export function openCaptures(store, { by = null, now = undefined } = {}) {
     const live = store.liveCaptureSessions(stampSecond(nowMs));
     if (!Array.isArray(live)) return none;
     const mine = [];
+    const asking = memberOfSpelling(by);
     for (const s of live) {
       const st = s && s.state;
-      if (!st || typeof st !== "object" || st.opened_by !== by) continue;
-      const outstanding = Array.isArray(st.queue) ? st.queue.length : 0;
+      if (!st || typeof st !== "object" || typeof st.opened_by !== "string" || memberOfSpelling(st.opened_by) !== asking) continue;
+      const queued = Array.isArray(st.queue) ? st.queue.length : 0;
+      /* R110 (G104): a fetch the alarm has made and not yet delivered (queue empty, `fetch_done` present) is still owed: listed, as `fetch_pending` marked
+         `delivering`, until the delivery drops the session */
+      const delivering = queued < 1 && !!st.fetch_done && typeof st.fetch_done === "object";
+      const outstanding = delivering ? 1 : queued;
       const expires = Date.parse(s.expires);
       if (outstanding < 1 || !(Number.isFinite(expires) && expires > nowMs) || typeof s.session !== "string") continue;
       /* R105: a capture parked as an owed fetch is listed as such (`fetch_pending`: when it began, its declared size, why it is owed, and
          `failed` once the owed fetch ended with a stated refusal), and has no primary yet: its screen words it, and offers no "Finish it" */
-      const fetching = st.fetch_pending && typeof st.fetch_pending === "object" ? { fetch_pending: st.fetch_pending } : null;
+      const pending = st.fetch_pending && typeof st.fetch_pending === "object" ? st.fetch_pending
+        : delivering ? { since: st.fetch_done.since ?? null, declared_bytes: null, why: null } : null;
+      const fetching = pending ? { fetch_pending: delivering ? { ...pending, delivering: true } : pending } : null;
       mine.push({ session: s.session, locator: s.locator ?? null, primary_sha: fetching ? null : s.primarySha ?? null, started: s.created ?? null,
                   updated: s.updated ?? null, expires: s.expires, outstanding, ...(fetching || {}) });
     }
