@@ -8,6 +8,7 @@ import { world, byId, NOW, iso } from "./world.mjs";
 import { viewerPredicate } from "../../../src/membership/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import { busy, everyKind, IMP } from "./every.mjs";
+import { VERSION_NOTICE_GRADES } from "../../../src/content/index.mjs";
 
 test("R8: every producer's items, homed through homesOf and offered optionsOf; no disposition, no catalogue_id; the facts beside them", () => {
   let feeds = 0;
@@ -318,4 +319,26 @@ test("R2 (T33-81; K1481, K1491): the FINDING kinds T33 adds are notice-producers
     assert.ok(!r.items.some((i) => theirs.some((k) => i.id.includes(`::${k}::`))), "and no id of one");
   }
   assert.deepEqual(Object.keys(w.p).filter((k) => /notice|interest|money|standing|temporal/i.test(k)), [], "no service of theirs here");
+});
+
+test("R43 (G65): a newer-capture notice whose grade is NOT_FOUND, as content emits it, reads the word for it and never a hole after \"was read as\"", () => {
+  const w = busy({ reevaluation: { notices: () => ({ ok: true, limit: 1000, truncated: false, notices: [
+      { notice: "RN-NF", holder: "INQ-S", target: "INF-T", grade: "NOT_FOUND", affects: VERSION_NOTICE_GRADES.NOT_FOUND.affects, raised_at: iso(NOW), state: "open" }] }),
+    docketDependents: () => ({ ok: true, entries: [], truncated: false, cursor: null }),
+    citedCaseDependents: () => ({ ok: true, entries: [], truncated: false, cursor: null }) } });
+  const item = byId(w.read("alice"))["FINDING::newer-capture-affects-reference::RN-NF"];
+  assert.ok(item, "the item is raised");
+  assert.ok(item.detail.includes(word("queue.fill.grade.notfound")), "the grade's word is in the sentence");
+  assert.ok(!/read as\s*\./.test(item.detail), "no hole after 'was read as'");
+});
+
+test("R43 (G65): every grade content can emit has a word row under the spelling queue-producers looks up", () => {
+  for (const g of Object.keys(VERSION_NOTICE_GRADES)) {
+    const w = busy({ reevaluation: { notices: () => ({ ok: true, limit: 1000, truncated: false, notices: [
+        { notice: "RN-G", holder: "INQ-S", target: "INF-T", grade: g, affects: VERSION_NOTICE_GRADES[g].affects, raised_at: iso(NOW), state: "open" }] }),
+      docketDependents: () => ({ ok: true, entries: [], truncated: false, cursor: null }),
+      citedCaseDependents: () => ({ ok: true, entries: [], truncated: false, cursor: null }) } });
+    const item = byId(w.read("alice"))["FINDING::newer-capture-affects-reference::RN-G"];
+    assert.ok(item && !/read as\s*\./.test(item.detail), `grade ${g} leaves no hole`);
+  }
 });
