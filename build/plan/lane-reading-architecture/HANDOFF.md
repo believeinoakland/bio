@@ -45,3 +45,11 @@ A writer's full draft, `OPTIONS-draft.md`, is committed **unreviewed**. Context 
 
 **For BOB:** start READING-ARCHITECTURE #2 on this branch. Its first act is to read `STATE.md`, then read `OPTIONS-draft.md` whole against the brief, commit `OPTIONS.md` (RA5), and go on to `FOR-BOB.md` (deliverable 5). No question for Bob is open from the lane yet: his questions arrive together in `FOR-BOB.md`.
 
+
+## RA5 · 2026-10-23 · Deliverable 4 ready: `OPTIONS.md`
+
+READING-ARCHITECTURE #2 read the writer's draft whole against `options-brief.md`, checked its arithmetic (memory tables, time to whole, cost) and a sample of its citations against REQUIREMENTS, PLATFORM and CHALLENGES, and adopted it as `OPTIONS.md`; the draft is deleted. Four whole architectures (A hardened in-object, B a reader object per document, C Workflows carry the read, D Workflows with heavy kinds read by native tools in a container), each under the charter's five headings, compared on reliability, efficiency, the member's experience, cost, effort and testability. The recommendation is the brief's: **D, staged** (the shared shape S1–S9 first, then the Workflow carrier, then container readers kind by kind after parity and a live probe); C is the fallback; A is not one.
+
+What review changed (listed in §0): the six writer's notes are each settled (WN1–WN3, WN5, WN6 accepted; WN4 settled as "the kind decides", with any small-file Worker path BOB's after P-M17); C7 and C16 counted consistently with the shared shape; one time row restated; the retired-source figure qualified. One substantive correction: the draft treated the list of kinds read as Bob's open question. K4628 point 1 already sets it for the beta (.doc, .xls, RTF, .eml, .msg, TIFF, HEIC, GIF, WebP and the rest), so under A, B and C those kinds need new JavaScript readers. This is work D avoids, which strengthens D's case. Only kinds beyond his list (TAR, GZ, 7z, RAR) and OCR languages remain open.
+
+**For BOB:** nothing to rule. Facts that bear on the order of work: no live measurement exists. Stage 0's probes (P-M1, P-M2, P-M3, P-M5, P-M6, P-M9; then P-M14, P-M16, P-M4; then P-M17) are BOB's to place and run. Two findings are for GAP.md: RR-F1's "64 MB above idle" cannot hold at the as-built idle (WN6), and the stale part-keyed rows (S2) need a migration nobody has placed.
