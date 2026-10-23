@@ -523,3 +523,11 @@ What I need (smallest): a provider in pdf-reader that parses once and reads a ra
 Decision I ask of BOB: (a) add that provider to pdf-reader's job now, name the call, and I wire it in this job; or (b) rule that the PDF half of G68 waits for pdf-reader's next job, and the inherited red stays BOB's to carry until then.
 
 CSV and text I do in this job on my own: a byte-window cursor over the evidence store's ranged `get` (record-core R88), the first piece reads the whole as today and issues the cursor; every later piece reads only its window. I add no edge to another module.
+
+## J28 · BLOCKED
+
+BLOCKED (cause: needs Bob; not stopped: I carry on with everything that does not depend on it).
+
+NEEDS BOB: approve, in this session (READING-PIPELINE #29), the one act my permission check refused: a shell loop that removed a scratch directory under my scratchpad and then ran `tick-work.probe.mjs` four times (a 17,000,000-byte CSV at 112 MB and at 96 MB, a 12 MB text and a 24 MB text), because the L figures for G68 (each tick's wall time and the bytes it takes from the store, in workerd at the object's heap) are the plan's platform check (4) and I have only taken the 11.4 MiB CSV at 112 MB so far (31 ticks, the slowest the first at 1.96 s, every later tick 48-229 ms and 1-3 MiB from the store, and the pieces equal the one-piece read).
+
+I do not retry or rephrase it. If Bob prefers, the answer is to take those figures at the redeploy's P step instead, and I complete without them.
