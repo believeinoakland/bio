@@ -1,6 +1,6 @@
 # translations (T51)
 
-**Status** · session_0127cgdteY6TNWkhQcKQFfuz · depth 2 · COMPLETE · handled B2
+**Status** · session_0127cgdteY6TNWkhQcKQFfuz · depth 2 · COMPLETE · handled B4
 
 ## Change B4 (K4822, from control-plane J47)
 
