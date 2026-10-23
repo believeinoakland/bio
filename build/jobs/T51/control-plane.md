@@ -665,3 +665,7 @@ G42, control-plane's half (K4635, K4638), applied and pushed (job/T51/control-pl
 **Tests and checks.** `node --test --test-force-exit bio-plane/test/m/control-plane/`: tests 441, pass 441, fail 0. impact set (`impact.mjs origin/tranche/T51 HEAD`: record-core 1/10, control-plane 69/83, plane 50/58): record-core tests 196/196; plane tests 351, pass 349, fail 2, the same two as before my change (`l77-size.test.mjs` R77 L, `release.test.mjs` R24), recorded at J32. `checks/run.mjs`: format, architecture, coverage, channels, words all 0 failures. Ownership: as above.
 
 Size (session_01YAZZqemwaGayLxQo7ovcWS): test runs 9, module lines 4630
+
+## J35 · COMPLETE · re B49
+
+G42 control-plane half done and pushed; see record J34 (door and Miniflare L tests red then green; control-plane 441/441; one file outside my paths, record-core's stats-disclosure.test.mjs B1 arm, edited per your START: accept at merge). Proposed R40 amendment is in J34.
