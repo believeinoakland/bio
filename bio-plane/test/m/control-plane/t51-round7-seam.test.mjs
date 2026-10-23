@@ -465,3 +465,252 @@ test("R105 (G62, tie attested): the same pre-flight with the Ties step's `tieAtt
   assert.equal(pa.zone, "America/Los_Angeles", JSON.stringify(pa));
   assert.ok(["local-facts", "profiles"].includes(pa.source), `publish_at states where the zone came from (local-facts | profiles): ${JSON.stringify(pa)}`);
 });
+
+/* ---- helpers from the round-6 file ---- */
+
+const textOf = (line, megabytes) => {
+  const l = te(line + "\n"), out = new Uint8Array(Math.floor(megabytes * MB));
+  for (let at = 0; at < out.length; at += l.length) out.set(l.subarray(0, Math.min(l.length, out.length - at)), at);
+  return out;
+};
+async function uploadAndFile(auth, bytes, name, type, project = "") {
+  const t = Date.now();
+  const res = await plane(`/api/?op=captureupload&statement=${encodeURIComponent(name)}&name=${encodeURIComponent(name)}&type=${encodeURIComponent(type)}`, { method: "POST", headers: auth, body: bytes });
+  const up = await res.json();
+  const ms = Date.now() - t;
+  const a = up.result;
+  assert.equal(a.ok, true, JSON.stringify(up).slice(0, 400));
+  assert.equal(a.document.capture.sha256, sha(bytes));
+  const made = await CAPTURE_SCREEN.parts.promoteDocument(screenCall(auth), { doc: a.document, title: name, locator: a.document.locator, project });
+  assert.equal(made.refused, undefined, JSON.stringify(made).slice(0, 400));
+  return { answer: a, ms, status: res.status, made };
+}
+const readingOf = async (auth, digest) => (await get(auth, { op: "reading", sha256: digest })).result;
+
+/* ---- G74 ---- */
+
+/* the member's filing as the Add screen's file tab presses it: upload, then promote the document naming the project; answers both, refusal unmasked */
+async function uploadThenFile(auth, bytes, name, type, project) {
+  const res = await plane(`/api/?op=captureupload&statement=${encodeURIComponent(name)}&name=${encodeURIComponent(name)}&type=${encodeURIComponent(type)}`, { method: "POST", headers: auth, body: bytes });
+  const up = (await res.json()).result;
+  assert.equal(up.ok, true, "the upload: " + JSON.stringify(up).slice(0, 400));
+  const made = await CAPTURE_SCREEN.parts.promoteDocument(screenCall(auth), { doc: up.document, title: name, locator: up.document.locator, project });
+  return { up, made, digest: sha(bytes) };
+}
+const heldRows = async (auth, project) => {
+  const r = (await get(auth, { op: "heldcaptures", project })).result || {};
+  return Array.isArray(r.held) ? r.held : [];
+};
+const inRows = (rows, digest) => rows.filter((x) => JSON.stringify(x).includes(digest));
+
+test("R105 (G74): a member who is NOT in the project files a CSV naming it: `promote` is refused and no bundle is written for her upload in that project", { timeout: 300000 }, async () => {
+  const adm = await founder();
+  const project = await projectOf(adm, "G74 round seven closed project");
+  const bea = await person("g74-bea");
+  const csv = csvOfG74("G74OUT");
+  const f = await uploadThenFile(bea, csv, "g74-outsider.csv", "text/csv", project);
+  assert.notEqual(f.made.refused, undefined, `the filing into a project she is not in is refused (today it is accepted): ${JSON.stringify(f.made).slice(0, 500)}`);
+  const why = f.made.refused || {};
+  assert.ok(why.code || why.reason || why.translation || why.ok === false, `a member's refusal in the answer's own shape: ${JSON.stringify(why).slice(0, 400)}`);
+  const rows = inRows(await heldRows(adm, project), f.digest);
+  assert.equal(rows.length, 0, `no bundle holds her upload in that project: ${JSON.stringify(rows).slice(0, 400)}`);
+  assert.equal(f.made.bundleId, undefined, "no bundle id is answered");
+});
+
+test("R105 (G74 control): a member who has JOINED the project (invited by its owner, then `projectjoin`) files a CSV into it and it is held there", { timeout: 300000 }, async () => {
+  const adm = await founder();
+  const project = await projectOf(adm, "G74 round seven joined project");
+  const cal = await person("g74-cal");
+  const inv = await post(adm, "projectinvite", {}, { projectId: project, handle: "g74-cal" });
+  assert.equal(inv.status, 200, "the owner's invitation: " + JSON.stringify(inv.body).slice(0, 400));
+  assert.notEqual((inv.body.result || inv.body).ok, false, "invited: " + JSON.stringify(inv.body).slice(0, 400));
+  const join = await post(cal, "projectjoin", {}, { projectId: project });
+  assert.equal(join.status, 200, "she joins: " + JSON.stringify(join.body).slice(0, 400));
+  assert.notEqual((join.body.result || join.body).ok, false, "joined: " + JSON.stringify(join.body).slice(0, 400));
+  const f = await uploadThenFile(cal, csvOfG74("G74JOIN"), "g74-joined.csv", "text/csv", project);
+  assert.equal(f.made.refused, undefined, `a joined member's filing is accepted: ${JSON.stringify(f.made).slice(0, 400)}`);
+  assert.ok(f.made.bundleId, "a bundle");
+  const rows = inRows(await heldRows(cal, project), f.digest);
+  assert.equal(rows.length, 1, `it is held in the project: ${JSON.stringify(await heldRows(cal, project)).slice(0, 400)}`);
+});
+
+test("R105 (G74 control): a member INVITED but not yet joined also files into the project (gathering stays open, K4557)", { timeout: 300000 }, async () => {
+  const adm = await founder();
+  const project = await projectOf(adm, "G74 round seven invited project");
+  const dee = await person("g74-dee");
+  const inv = await post(adm, "projectinvite", {}, { projectId: project, handle: "g74-dee" });
+  assert.notEqual((inv.body.result || inv.body).ok, false, "invited: " + JSON.stringify(inv.body).slice(0, 400));
+  const f = await uploadThenFile(dee, csvOfG74("G74INV"), "g74-invited.csv", "text/csv", project);
+  assert.equal(f.made.refused, undefined, `an invited member's filing is accepted: ${JSON.stringify(f.made).slice(0, 400)}`);
+  assert.ok(f.made.bundleId, "a bundle");
+});
+function csvOfG74(tag) { return te(`a,b,c\n${tag}-${Date.now()}-${Math.random()},2,3\n${tag}-x,5,6\n`); }
+
+/* ---- G75 ---- */
+
+/* the title a filed document's own bundle states, read through the door's `image` (the front matter's `title:`, a JSON string as promoteDocument writes it) */
+async function bundleTitle(auth, bundleId) {
+  const img = (await get(auth, { op: "image", id: bundleId })).result || {};
+  const md = String(img["bundle.md"] || "");
+  const m = /^title:\s*(.*)$/m.exec(md);
+  assert.ok(m, `the filed bundle states a title: ${md.slice(0, 300)}`);
+  let t = m[1].trim();
+  try { t = JSON.parse(t); } catch { /* as it stands */ }
+  return t;
+}
+
+test("R105 (G75): a fetched PDF over 8 MB is delivered by the alarm; `heldcaptures` then names it by the title the delivery filed it under, not null / 'Untitled capture'", { timeout: 600000 }, async () => {
+  const adm = await founder();
+  const ann = await person("g75-ann");
+  const project = await projectOf(adm, "G75 round seven delivered title");
+  const inv = await post(adm, "projectinvite", {}, { projectId: project, handle: "g75-ann" });
+  assert.notEqual((inv.body.result || inv.body).ok, false, "invited: " + JSON.stringify(inv.body).slice(0, 300));
+  await post(ann, "projectjoin", {}, { projectId: project });
+  const name = `download${Date.now()}`; /* the address names no file: /files/download<n>?doc=17 */
+  const bytes = pdfOf(`G75 the council minutes of the budget hearing ${Date.now()}`, 9 * MB);
+  const digest = sha(bytes);
+  serve(name, bytes);
+  const first = await acquire(ann, { locator: `https://www.example.gov/files/${name}?doc=17`, project });
+  assert.equal(first.status, 200, JSON.stringify(first.body).slice(0, 400));
+  assert.ok(first.body.fetch_pending, `parked for the alarm (a fetch over 8 MB): ${JSON.stringify(first.body).slice(0, 400)}`);
+  const row = await until(async () => inRows(await heldRows(ann, project), digest)[0] || null, 300000, 3000);
+  assert.ok(row, "the delivery filed the document in the project");
+  console.log("G75 held row:", JSON.stringify(row).slice(0, 600));
+  const filedTitle = await bundleTitle(ann, row.bundle_id);
+  console.log("G75 filed bundle title:", JSON.stringify(filedTitle));
+  assert.ok(typeof filedTitle === "string" && filedTitle.length > 0, "the filed document has a title");
+  assert.ok(typeof row.title === "string" && row.title.trim() !== "", `the held row carries a title (today null): ${JSON.stringify(row.title)}`);
+  assert.notEqual(row.title, "Untitled capture", "not the untitled word");
+  assert.equal(/\[object Object\]|undefined|null/.test(row.title), false, `the title is words, no unfilled placeholder: ${JSON.stringify(row.title)}`);
+  assert.equal(row.title, filedTitle, "the held row's title is the title the delivery filed the document under");
+});
+
+test("R105 (G75 control): a small fetched PDF captured inside the request and filed as the Add screen files it is held under its filed title", { timeout: 300000 }, async () => {
+  const adm = await founder();
+  const project = await projectOf(adm, "G75 round seven inline title");
+  const name = `G75-SMALL-${Date.now()}.pdf`;
+  const bytes = pdfOf(`G75 small notice of the zoning hearing ${Date.now()}`, 6000);
+  serve(name, bytes);
+  const address = `https://www.example.gov/files/${name}`;
+  const r = await acquire(adm, { locator: address, project });
+  assert.equal(r.status, 200, JSON.stringify(r.body).slice(0, 400));
+  assert.ok(r.body.document, `captured inside the request: ${JSON.stringify(r.body).slice(0, 300)}`);
+  /* doneAcquire's own step: the screen names it (`titleOf`) and files it (`promoteDocument`) */
+  const cs = { ...screenCall(adm), w: (k, v) => word(k, v), date: (d) => d };
+  const title = CAPTURE_SCREEN.parts.titleOf(cs, { reading: r.body.reading, doc: r.body.document, address });
+  const made = await CAPTURE_SCREEN.parts.promoteDocument(cs, { doc: r.body.document, title, locator: address, project });
+  assert.equal(made.refused, undefined, JSON.stringify(made).slice(0, 300));
+  const row = inRows(await heldRows(adm, project), sha(bytes))[0];
+  console.log("G75 control held row:", JSON.stringify(row).slice(0, 400), "title named:", JSON.stringify(title));
+  assert.ok(row, "held in the project");
+  assert.equal(row.title, await bundleTitle(adm, made.bundleId));
+  assert.ok(row.title && row.title.trim() !== "", "titled");
+});
+
+/* ---- G66 ---- */
+
+const pageOf = (first) => te(`<html><head><title>Zoning notice</title></head><body><p>${first}</p><p>The commission also reviewed the harbor lease and the parking study for the east district.</p><p>Public comment closes at noon on the last day of the month.</p></body></html>`);
+/* a question as the project screen's "ask" press writes it (allocid, promote of the inquiry, then drawquestion) */
+async function askQuestion(auth, project, text) {
+  const cs = screenCall(auth);
+  const now = new Date().toISOString().split(".")[0] + "Z";
+  const minted = (await cs.call("allocid", { query: { prefix: "INQ", year: now.slice(0, 4) } })).result;
+  assert.ok(minted && minted.id, "an id: " + JSON.stringify(minted));
+  const id = minted.id + "-" + text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40).replace(/-+$/, "");
+  const lines = ["---", "id: " + id, "object_type: inquiry", "schema: inquiry@1", "title: " + JSON.stringify(text), "current_state: open", "prior_state: null",
+    "created: " + now, "last_updated: " + now, "project: " + project, "produced_by:", "  mode: assisted", "  capability_tier: session", "references: []", "state_history: []",
+    "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []", "surfaced_by: human", "recheck_triggers:",
+    "  - text: " + JSON.stringify(word("file.recheck.revisit")), "    description: " + JSON.stringify(word("file.recheck.none")), "---", ""];
+  ["## Question", word("conformance.rests"), "## Conclusion", word("conformance.falsify"), "## Session Log", "## Review Notes"].forEach((h, i) => { lines.push(h, ""); if (i === 0) lines.push(text, ""); });
+  const stamp = now.replace(/[-:]/g, "") + "_" + Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, "0");
+  const p = await cs.call("promote", { body: { bundleId: id, base: null, snapKey: stamp, meta: { object_type: "inquiry", title: text, current_state: "open", created: now, last_updated: now },
+    files: [{ path: "bundle.md", text: lines.join("\n") }] } });
+  assert.notEqual((p.result || p).ok, false, "the question is filed: " + JSON.stringify(p).slice(0, 400));
+  const drew = await post(auth, "drawquestion", {}, { project, inquiry: id, note: "" });
+  assert.notEqual((drew.body.result || drew.body).ok, false, "drawn into the project: " + JSON.stringify(drew.body).slice(0, 400));
+  return id;
+}
+/* the Add screen's acquire press, then doneAcquire's own filing step for a document that came in the answer */
+async function captureAndFile(auth, address, project) {
+  const r = await acquire(auth, { locator: address, project });
+  assert.equal(r.status, 200, JSON.stringify(r.body).slice(0, 400));
+  assert.ok(r.body.document, `captured inside the request: ${JSON.stringify(r.body).slice(0, 400)}`);
+  const cs = { ...screenCall(auth), w: (k, v) => word(k, v), date: (d) => d };
+  const title = CAPTURE_SCREEN.parts.titleOf(cs, { reading: r.body.reading, doc: r.body.document, address });
+  const made = await CAPTURE_SCREEN.parts.promoteDocument(cs, { doc: r.body.document, title, locator: address, project });
+  assert.equal(made.refused, undefined, JSON.stringify(made).slice(0, 400));
+  return { r, made, digest: r.body.document.capture.sha256 };
+}
+
+test("R105 (G66): a newer capture of a page a question cites in paragraph 0 raises a `newer-capture-affects-reference` Queue item for the question's owner (`op=queue` answers 200)", { timeout: 600000 }, async () => {
+  const adm = await founder();
+  const eve = await person("g66-eve");
+  const project = await projectOf(adm, "G66 round seven newer copy");
+  await post(adm, "projectinvite", {}, { projectId: project, handle: "g66-eve" });
+  await post(eve, "projectjoin", {}, { projectId: project });
+  const stamp = Date.now();
+  const name = "page";
+  const address = `https://www.example.gov/${name}?x=1`;
+  serve(name, pageOf(`The commission set the zoning hearing for the first Tuesday ${stamp}.`), { type: "text/html" });
+  const one = await captureAndFile(eve, address, project);
+  const question = await askQuestion(eve, project, `Did the commission set the zoning hearing ${stamp}`);
+  /* find-in over the document (a term), as document.mjs's press sends it, then cite the first hit */
+  const found = (await post(eve, "findin", { scope: { capture: one.digest }, kinds: ["term"], term: "zoning hearing" })).body.result || {};
+  const items = ((found.kinds || []).find((k) => k && k.kind === "term") || {}).items || [];
+  console.log("G66 findin items:", items.length, JSON.stringify(items[0] || found).slice(0, 500));
+  assert.ok(items.length > 0, "the find holds a passage to cite: " + JSON.stringify(found).slice(0, 400));
+  const cited = await post(eve, "cite", { project: question, role: "supports", found: items[0] });
+  console.log("G66 cite:", cited.status, JSON.stringify(cited.body).slice(0, 500));
+  assert.equal(cited.status, 200, JSON.stringify(cited.body).slice(0, 400));
+  assert.notEqual((cited.body.result || cited.body).ok, false, JSON.stringify(cited.body).slice(0, 400));
+  /* the copy changes in paragraph 0 and is captured again ("Capture the new copy": acquire with the same body) and filed */
+  await later(2500); /* a member's second press comes seconds later, never inside the first capture's own second (the chain orders captures by their retrieved stamp, whole seconds) */
+  serve(name, pageOf(`The commission moved the zoning hearing to the second Wednesday ${stamp}.`), { type: "text/html" });
+  const two = await captureAndFile(eve, address, project);
+  assert.notEqual(two.digest, one.digest, "the second copy is another capture");
+  /* the object's own alarm runs; the owner's Queue answers 200 and holds the notice */
+  let last = "";
+  const waited0 = Date.now();
+  const item = await until(async () => {
+    const q = await plane("/api/?op=queue", { headers: eve });
+    last = await q.text();
+    assert.equal(q.status, 200, "the member's Queue is not refused: " + last.slice(0, 400));
+    let feed; try { feed = JSON.parse(last).result; } catch { return null; }
+    const rows = [];
+    (function walk(v) { if (Array.isArray(v)) v.forEach(walk); else if (v && typeof v === "object") { if (v.kind === "newer-capture-affects-reference") rows.push(v); Object.values(v).forEach(walk); } })(feed);
+    const mine = rows.find((x) => JSON.stringify(x).includes(question));
+    if (mine) console.log("G66 queue item after", Date.now() - waited0, "ms:", JSON.stringify(mine).slice(0, 500));
+    return mine || null;
+  }, 240000, 5000);
+  if (!item) console.log("G66 diagnostic owedwork:", JSON.stringify((await get(adm, { op: "owedwork" })).result).slice(0, 300), "versionnotice:", JSON.stringify((await get(eve, { op: "versionnotice", target: question })).result).slice(0, 2500));
+  assert.ok(item, `a newer-capture-affects-reference item for ${question} is in the owner's Queue: ${last.slice(0, 600)}`);
+});
+
+/* ---- G79 ---- */
+
+test("R105 (G79): a 24 MiB text (three 8 MiB parts) uploaded through `captureupload` states its size and capture sha, is `existed` on a second identical upload; a 40 MB five-part upload likewise; wall times are reported, not bars (smoke)", { timeout: 240000 }, async () => {
+  const ann = await person("g79-ann");
+  const stamp = Date.now();
+  for (const [label, bytes] of [["24 MiB", textOf(`G79 the board approved the long minutes 24 ${stamp}`, 24)], ["40 MB", textOf(`G79 the board approved the long minutes 40 ${stamp}`, 40)]]) {
+    const digest = sha(bytes);
+    const t0 = Date.now();
+    const up = await uploadAndFile(ann, bytes, `g79-${label.replace(" ", "")}.txt`, "text/plain");
+    const ms = Date.now() - t0;
+    console.log(`G79 ${label}: upload answered in ${up.ms} ms (upload + filing ${ms} ms), parts ${(up.answer.document.parts || []).length}, bytes ${up.answer.document.capture.bytes}`);
+    assert.equal(up.status, 200);
+    assert.equal(up.answer.ok, true);
+    assert.equal(up.answer.document.capture.sha256, digest, "the answer carries the capture's sha");
+    assert.equal(up.answer.document.capture.bytes, bytes.length, "and the stated size");
+    assert.ok((up.answer.document.parts || []).length >= 3, `${label}: held in parts: ${(up.answer.document.parts || []).length}`);
+    const t1 = Date.now();
+    const again = (await (await plane(`/api/?op=captureupload&statement=again&name=g79.txt&type=text%2Fplain`, { method: "POST", headers: ann, body: bytes })).json()).result;
+    console.log(`G79 ${label}: second identical upload answered in ${Date.now() - t1} ms`);
+    assert.equal(again.ok, true, JSON.stringify(again).slice(0, 300));
+    assert.equal(again.existed, true, "the second identical upload is `existed`");
+    console.log(`G79 ${label}: the existed answer: ${JSON.stringify(again).slice(0, 300)}`);
+    const againSha = (again.document && again.document.capture && again.document.capture.sha256) || (again.capture && again.capture.sha256) || again.sha256 || again.sha;
+    assert.equal(againSha, digest, "the existed answer names the same capture");
+    const r = await until(async () => { const x = await readingOf(ann, digest); return x && x.found ? x : null; }, 60000, 1500);
+    assert.ok(r, "the capture reads back through the door (stated)");
+  }
+});
