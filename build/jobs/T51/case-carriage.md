@@ -113,3 +113,7 @@ Size (session_01TiUC4aAJHXVFiQ6sXRqvjg): test runs 9, module lines 1706
 
 **Words:** no new sentence. Census ops: none changes. Deferred: none. Found in another module: none. No QUESTION open.
 Size (session_01C7Ti52rsnFVf8d7G9TFirt): test runs 7, module lines 1715
+
+## J5 · COMPLETE
+
+COMPLETE (G47t, B6): every attestation token's files entry now carries capture_sha (the capture's sha, lowercase; an archive's token: the member's); null when two different captures name it (A, B, A stays null); other kinds carry no key. index.mjs holdMaterials; g47t-token.test.mjs 6 tests seen red (5 fail with the change reverted) then green; archive.test.mjs:129 accounts for the key. Suites: case-carriage 98/98, publication 157 pass 0 fail 1 todo, public-read 244/244. checks/run.mjs 0 failures; ownership 0 failures. Census ops: none changes. Proposed requirement lines are in my record. Nothing deferred, no QUESTION open.
