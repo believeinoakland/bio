@@ -1,6 +1,6 @@
 # op-declarations (T51)
 
-**Status** · session_015mbjCf96bpaBuNz4yP3orh · depth 2 · WORKING · handled B38
+**Status** · session_015mbjCf96bpaBuNz4yP3orh · depth 2 · COMPLETE · handled B38
 
 ## J1 · QUESTION
 
