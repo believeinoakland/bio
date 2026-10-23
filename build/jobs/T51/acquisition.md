@@ -475,3 +475,18 @@ COMPLETE (ACQUISITION #29, T51 fix round 6: G27 and G32; B30 CHANGE done, B31 fo
 **Proposed lines**: R22 amended; R109 new (the deferred render is kept in the record); one word stand-in owed to the design: `acquisition.index.render_page_not_read_back`. Census: no op key changed.
 
 Size (session_01Y4v2DQazrd7Uhg2kPv1nLA): test runs 14, module lines 3973
+
+## J31 · QUESTION
+
+G72 (ACQUISITION #30): one thing I need from you before COMPLETE, in a file that is not mine. I carry on with everything else on my best reading (c).
+
+Done and pushed (head on job/T51/acquisition): `owedRun` ends a visitor view whose render failed with `{ok: true, done: true, final: true, reason: "RENDER_FAILED", detail: <the render's problem, at most 200 characters, the renderer's own words, no page text>}`, and `acquire` writes one log line `{"event":"render_failed","problem":...,"ms":...}` where the render fails. The session is dropped on that end, so `opencaptures` no longer lists it (tested).
+
+The gap: the ledger row stores only the reason. `bio-plane/src/plane/pending.mjs:175` is `if (r && r.final === true && r.reason) return stop(row, at, String(r.reason).slice(0, 160))`; it never reads `r.detail`, so `op=owedwork` still shows "RENDER_FAILED" with no why. That file is the plane's.
+
+Options, smallest first:
+(a) the plane's job passes `r.detail` into the row (its change; I change nothing more);
+(b) I put the detail inside `reason` ("RENDER_FAILED: <problem>", cut to 160); the row would then carry it, but anything that compares the stored reason to "RENDER_FAILED" exactly would stop matching (I found none in src; tests in screens-intake/t51-fix5 read the code, which I have not changed);
+(c) the log line alone is enough for K4428 (the one redeploy names the cause from the render log) and the row stays as it is.
+
+Best reading: (c) is enough for the plan's own words ("the render log names the cause on the one redeploy, K4428"); add (a) only if you want the why in `op=owedwork`. Please answer with a, b or c.
