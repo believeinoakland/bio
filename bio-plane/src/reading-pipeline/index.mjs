@@ -16,6 +16,7 @@ import { getFormat, readingDialect, detectFormat } from "../formats.mjs";
 import { identify, doctypeFor, readText } from "../../../docprofile/registry.mjs";
 import { driveConvertStep } from "../drive.mjs";
 import { extractPdfRange } from "../pdfstructure.mjs";
+import * as pdfReader from "../pdfstructure.mjs";   /* by namespace: `openPdfRange` (pdf-reader R44) is read where it is used, and its absence is the old way (G68) */
 import { readingProvenance, describePages } from "./readingprov.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 
@@ -1867,6 +1868,17 @@ async function windowTick(evidence, sha, c, ask) {
   return mismatch();
 }
 
+/* --- a PDF -------------------------------------------------------------------------------------------------------------- */
+
+/* G68 (fix round 7): a PDF read in page ranges is opened ONCE for its pieces. pdf-reader's `openPdfRange(bytes)` (R44) does the
+   whole-file read (the objects scanned, the object streams decoded, the page index built) a range needs, and answers
+   `{ok, pages, range({from, count, maxBytes})}`, each range exactly what `extractPdfRange` answers. The open document is kept here
+   between the pieces of one digest, for the next tick of the object that ran this one: one entry, replaced when another digest is
+   opened, dropped when the last piece is read or a range fails. A tick that finds its digest open does not read the object. Without
+   `openPdfRange` (an older pdf-reader) each tick reads and parses the object, as it did. */
+let openedPdf = null;   /* {sha, opened} */
+const HELD_OPEN = new Uint8Array(0);   /* stands for the bytes of a document that is open: they are not read again */
+
 /* ===================================================================== *
  * A reading's title (R34).
  * ===================================================================== */
@@ -2309,7 +2321,11 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       return { ...(w.units.length ? { text_units: w.units } : {}), ...w.fields, piece: w.piece };
     }
   }
-  const got = await bytesOf(evidence, doc).catch(() => ({ bytes: null, failure: FAILURE_TRANSIENT, why: word("acquisition.why.evidence_store_read") }));
+  /* G68: the PDF the last piece of this digest opened is read again from its open document, not from the store */
+  const heldCursor = piecesOn && openedPdf !== null && openedPdf.sha === sha && (pieceAsk.cursor === null || (unb64(pieceAsk.cursor) || {}).k === "p");
+  const held = heldCursor ? openedPdf : null;
+  if (held) fmt = "pdf";
+  const got = held ? { bytes: HELD_OPEN } : await bytesOf(evidence, doc).catch(() => ({ bytes: null, failure: FAILURE_TRANSIENT, why: word("acquisition.why.evidence_store_read") }));
   let bytes = got.bytes;
   const objLen = bytes ? bytes.length : 0;
   got.bytes = null;
@@ -2317,7 +2333,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
      parts is profiled from no byte, so an upload's recorded format is `undetermined` (or none): it is detected again from
      the held bytes, the declared type only where they say nothing. Bytes still undetermined are text when the profile's
      declared type is a text type and they are UTF-8 without a NUL, even in parts (R32). */
-  if (bytes && (fmt === null || fmt === "undetermined"))
+  if (bytes && !held && (fmt === null || fmt === "undetermined"))
     fmt = detectFormat(bytes, profile.source_content_type || ct || null).format;
   let textRead = !multipart && profile.profiled_from_text === true && bytes;
   let text = textRead ? new TextDecoder("utf-8", { fatal: false }).decode(bytes) : "";
@@ -2445,9 +2461,19 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     try {
       let st = null;
       if (ranged) {
-        st = await extractPdfRange(bytes, { from: ranged.from, count: pieceAsk.rangePages, maxBytes: PDF_RANGE_BYTES });
+        const ask = { from: ranged.from, count: pieceAsk.rangePages, maxBytes: PDF_RANGE_BYTES };
+        let open = held;
+        if (!open && typeof pdfReader.openPdfRange === "function") {
+          openedPdf = null;   /* one open document at a time: the last digest's is let go before this one is parsed */
+          const opened = await pdfReader.openPdfRange(bytes);
+          if (opened && opened.ok === true && typeof opened.range === "function") open = { sha, opened };
+        }
+        st = open ? await open.opened.range(ask) : await extractPdfRange(bytes, ask);
         /* bytes the range reader does not open as a PDF with pages are the format entry's to judge, as a whole read judges them */
-        if (!st.ok || !(st.pages > 0)) ranged = null;
+        if (!st.ok || !(st.pages > 0)) {
+          if (held) throw new Error("the PDF kept open gave no range");
+          ranged = null;
+        } else if (open) openedPdf = open;
       }
       if (ranged) {
         bytes = null;
@@ -2544,6 +2570,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       if (rangeScope) {
         /* G26: this range's units; the pages from `next` on are the next piece's. */
         const p = rangePieceAnswer(i2text, { sha, from: rangeScope.from, count: rangeScope.count, total: rangeScope.total, ...pieceAsk });
+        if (!p.fields.more && openedPdf !== null && openedPdf.sha === sha) openedPdf = null;   /* the last piece: the document is let go */
         textUnits = p.units.length ? p.units : null;
         pieceInfo = { ...p.fields, piece: p.piece };
         rangeScope = { ...rangeScope, to: p.next };
@@ -2618,6 +2645,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
       reading.page_boxes = pageBoxes;
       reading.container_extent = extent;
     } catch (e) {
+      if (openedPdf !== null && openedPdf.sha === sha) openedPdf = null;
       reading = failed(doc, classify().docType, localize("reading-pipeline.index.entry_not_read_bytes", "the {fmt} entry could not read these bytes ({detail}), so nothing is claimed about its text", { fmt: String(fmt), detail: String(String(e && e.message || e).slice(0, 200)) }), { failure: FAILURE_TRANSIENT, page_count: null, page_boxes: null, container_extent: null });
       textUnits = null; textUnitsOverBound = 0; textUnitsSkipped = null; classifiedText = null; emitted = null; heldCounts = null; joinedDropped = false;
     }
