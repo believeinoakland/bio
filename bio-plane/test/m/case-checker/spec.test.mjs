@@ -68,7 +68,7 @@ for (const v of [V1, V2, V3]) test(`R14 R20: the specification of ${v} states ev
   for (const h of ["Integrity", "Signatures", "Passages", "Grades", "The bar", "Publication checks", "Presentability", "Completion",
                    "The complete edition", "Another team's work", "Calculations"]) assert.match(SPEC, new RegExp(`\\n\\d+\\. ${h}\\.`), h);
   /* the case document formats it reads, and the product name the complete edition renders by format (DEC-124) */
-  for (const w of ["bio-case-document/8", "bio-case-document/7", "bio-case-document/6", "CivicOS", "Civicsmith"]) assert.ok(named(w), w);
+  for (const w of ["bio-case-document/9", "bio-case-document/8", "bio-case-document/7", "bio-case-document/6", "CivicOS", "Civicsmith"]) assert.ok(named(w), w);
   assert.match(SPEC, /`bio-case-document\/6` document, or an earlier one, renders `CivicOS`, and a `bio-case-document\/7` document renders `Civicsmith`/);
 });
 

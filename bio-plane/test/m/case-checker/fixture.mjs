@@ -211,7 +211,7 @@ export function caseFiles(opts = {}) {
   for (const row of calculations) put("calculation", row.calc, CG.calculationFileText(row));
   if (calculations.length) put("calculation", "prov", CG.provOf(calculations));
   if (calculations.length && !opts.dropCalcInput) texts.set(calcInputPath(CALC, opts.calcInputSha ?? CALC_INPUT_SHA), opts.calcInput ?? CALC_INPUT);
-  const materials = [
+  const materials0 = [
     { ref: MINUTES, kind: "document", sha: MINUTES_SHA, text_sha: sha(extracted(MINUTES_UNITS)), origin: "https://records.example/minutes.pdf",
       archived_copy: "https://archive.example/minutes", included: true, rests_under: "load_bearing" },
     { ref: MEMO, kind: "document", sha: MEMO_SHA, text_sha: sha(extracted(MEMO_UNITS)), origin: "Withheld: the source did not consent to be named",
@@ -219,6 +219,7 @@ export function caseFiles(opts = {}) {
       ...(opts.obscureMemo ? { obscured: { copy: COPY_SHA, label: OBSCURED_LABEL } } : {}) },
     { ref: OBS, kind: "observation", sha: OBS_SHA, text_sha: null, origin: "a member's observation", archived_copy: null, included: true,
       rests_under: "supporting" }];
+  const materials = opts.materialRows ? opts.materialRows(materials0) : materials0;
   const accounts0 = [
     { capture: MINUTES_SHA, by: "alice", at: NOW, text_b64: Buffer.from(ACCOUNT).toString("base64"),
       signature_b64: Buffer.from(sign("alice", accountMessage(MINUTES_SHA, ACCOUNT))).toString("base64") },

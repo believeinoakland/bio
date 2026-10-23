@@ -1,6 +1,6 @@
 # case-checker (T51)
 
-**Status** · session_01RjcMuJkFFXXgMBSzDnp7iA · depth 2 · COMPLETE · handled B3
+**Status** · session_01RPHamJS9k22iJs3Y7dJ4XG · depth 2 · COMPLETE · handled B6
 
 ## Completion (T51-142)
 
@@ -50,3 +50,43 @@ T51-151 done: the checker's ~110 sentences are read by key (66 design rows by wo
 ## J4 · COMPLETE · re B3
 
 CHANGE B3 processed: tranche/T51 was already merged. No says-words.mjs is needed: the program bundles the word table and case-grammar's 45 casefile ids are read through setup-words like mine, so it carries their words. New test in words.test.mjs checks the program carries every case-grammar.casefile.* sentence and answers a manifest fault offline with the library's exact departures. Module tests 95, only R13/R25 red (stale program.mjs, yours). Pushed.
+
+## Completion (G47, fix round 6; START B4)
+
+**Providers' state.** CASE-GRAMMAR #20 is not merged (checked `origin/tranche/T51` and `origin/job/T51/case-grammar` at this job's start: no `sha` in `MATERIAL_ATTESTATION_FIELDS`, no `bio-case-document/9`); PUBLICATION, CASE-TENSIONS, PUBLIC-READ not merged either. The seam cases below stay red by name until CASE-GRAMMAR's `sha` merges; I proved the checker's side by patching `case-grammar/materials.mjs` locally (the field added to `MATERIAL_ATTESTATION_FIELDS` and to `attestationRow`), running the tests, and restoring the file (working tree clean, nothing of it committed).
+
+**What changed.**
+- `check.mjs:421-428` `materialsOfLeg` (was `materialOfLeg`): a leg that names `captures` reaches the materials of its `ref` whose `sha` it names (all of them), else the first material of its `ref` as before, else the first by `captures`. Needed so a finding resting on capture B has B in its chain at all; rows and legs of a single capture behave as before. This is wider than the entry's two places; named here so BOB can strike it.
+- `check.mjs:451-470` the attestations: `attestKey(ref, sha)` (`ref` when the row states no `sha`, else `ref` and `sha`); a row with `sha` finds its material by `ref` and `sha` (a row naming a pair no material has fails as an unlisted material), a row without finds the first material of its `ref`; failures and gaps are keyed by that key and carry `sha256: <sha>` when the row states one; the answer's attestation row carries `sha` only when the document's row does. `attestationsOf(map, mat)` (:450) reads both keys, ref-only rows first, and replaces the two `mat.ref` reads (:692-693, :713-714).
+- `spec.mjs:56, :63, :109` document the optional attestation `sha`, the version `bio-case-document/9` (a document is `/9` when any attestation row carries a `sha`, else it keeps `/8`), the join by capture, and that a failed row with a `sha` differs only for the finding reaching that capture.
+- Tests: `g47-attest.test.mjs` (new; four cases), `fixture.mjs` (`materialRows` option), `spec.test.mjs` (names `/9`).
+
+**Failing-first, red then green.** Red before the change (seen, with the provider's field patched in locally and the old `check.mjs`): "only capture B's attestation fails" (failure map) and "only B's is not carried" (gap map) stop at their first assertion, the answer's attestation rows state no `sha` (the old join ignores the field); I did not separately run the old code through the later assertions on A's entries. Green with the provider's `sha` present (local patch): both pass, the entry for B alone with `sha256` = B's capture, none under A's capture and none for finding B (which rests on A's capture). Case 3, rows without `sha` verify as before, is green now and without the patch. Case 4, a `bio-case-document/9` document is accepted and recreates, is the seam: red until CASE-GRAMMAR merges (its `/9` words and the `sha` field).
+
+**Seam tests red by name, waiting for CASE-GRAMMAR #20:** `g47-attest.test.mjs` cases 1, 2, 4 (the document's `sha` field is not written or read until then).
+
+**Requirement line proposed (R3 amended; BOB writes it).** "Each `material_attestations:` row (`case-grammar` R12) is checked by its kind. ... A row that states a capture's `sha` (`bio-case-document/9`) belongs to the material of its `ref` and `sha`; a row without one belongs to the materials of its `ref`. A failed row, or one whose bytes are not carried, is a `differs` (a `missing`) entry for each finding whose chain reaches that material, and its entry carries the `sha` it names; a row with a `sha` reaches only the finding whose chain reaches that capture. A leg that names captures reaches those captures of its `ref`." Also R14: the specification names `bio-case-document/9` and the optional `sha`.
+
+**Needs BOB (the one thing):** `checks/words.mjs case-checker` now shows `inline 1` (`spec.mjs:11`, the `/1` specification literal) where it showed 0 failures: the design's `unkeyed` list (`docs/development/ux-substrate/screens/words-reads.json`, `modules.case-checker.unkeyed`) holds that literal's text, and I changed three sentences of it as the entry says. That file is the design stream's, outside my paths. Replace the entry's `text` with the new `V1` text (K3944); `unkeyed` goes from 26 back to 27 and the failure clears. Nothing else changes in the words count.
+
+**Generated artifacts made stale:** `bio-plane/src/case-checker/program.mjs` (regenerate at the round end, K1540); then the plane bundle. R13 and R25 stay the inherited red until then. **Census ops:** none changes its accepted keys (the module owns no op). **Protective bounds:** none. **Deferred:** none. **Found in other modules:** none new; case-authoring `document.test.mjs` R17 is the named inherited red.
+
+**Ran.** Module under the preload: tests 99, pass 94, fail 5: three seam (above), R13 and R25 (inherited, stale `program.mjs`); with the local `sha` patch the two G47 cases pass (the /9 case still waits on case-grammar's version). Users: case-import 156/156, case-account 48/48, case-check 34/34, filings 164/164, case-disclosures 109/109, case-inputs 71/71, case-authoring 240/241 (R17, inherited). `checks/run.mjs`: format, architecture, coverage (27 of 27 for the module), channels 0 failures; words 1 failure (the item above). `checks/ownership.mjs`: 6 files, 0 failures.
+
+Size (session_01RPHamJS9k22iJs3Y7dJ4XG): test runs 14, module lines 2179
+
+## J5 · COMPLETE
+
+G47 done on the checker's side. check.mjs: attestations joined and keyed by (ref, sha) when the row states a sha, by ref as before otherwise; a leg that names captures now reaches those captures (wider than the entry's two places, named in my record so you can strike it). spec.mjs documents the optional sha and bio-case-document/9. New g47-attest.test.mjs: failing first (seen red with the provider's field patched in locally), green with it; case 3 (rows without sha as before) green now. SEAM RED BY NAME, waiting for CASE-GRAMMAR #20: g47-attest cases 1, 2, 4 (the sha field and /9). Module 99 tests: 94 pass, 5 red = those three + R13/R25 (stale program.mjs, yours). Users all pass (case-import, case-account, case-check, filings, case-disclosures, case-inputs; case-authoring only its inherited R17). format/architecture/coverage/ownership: 0 failures. NEEDS BOB (one thing): checks/words.mjs shows inline 1 for case-checker (spec.mjs:11): the design's unkeyed list (docs/development/ux-substrate/screens/words-reads.json, modules.case-checker.unkeyed) holds the old text of the spec literal I changed as the entry says; that file is the design stream's. Replace that entry's text with the new V1 text (K3944). Requirement line proposed (R3 amended, R14): in my record. Details: build/jobs/T51/case-checker.md.
+
+## Completion (G47, CHANGE B6)
+
+Merged `tranche/T51` (CASE-GRAMMAR #20's `sha` and `bio-case-document/9`, PUBLICATION #36, CASE-CARRIAGE #15, CASE-DISCLOSURES #17 are on it). All four `g47-attest.test.mjs` cases are green with no local patch; the seam is closed. Requirement lines proposed as in the section above.
+
+**Ran.** Module under the preload: tests 99, pass 97, fail 2 (R13, R25: the stale generated `program.mjs`, BOB regenerates at the round end). Users: case-import 156/156, case-account 48/48, case-check 34/34, filings 164/164, case-disclosures 113/113, case-inputs 73/73; case-authoring 238/241, its three R55 reds (case-disclosures R4/R7/R11 seams) fail identically on a clean checkout of `origin/tranche/T51`, so they are not this job's (CASE-AUTHORING is last in the merge order). `checks/run.mjs`: format, architecture, coverage 0 failures (27 of 27 module ids); words: the one `inline 1` at `spec.mjs:11`, handed to UX-DESIGN (B5). `checks/ownership.mjs`: 6 files, 0 failures.
+
+Size (session_01RPHamJS9k22iJs3Y7dJ4XG): test runs 22, module lines 2179
+
+## J6 · COMPLETE
+
+G47 COMPLETE after CHANGE B6: tranche merged, g47-attest all 4 cases green (seam closed). Module 99 tests: 97 pass, 2 red = R13/R25 (stale program.mjs, yours). Users pass (case-import, case-account, case-check, filings, case-disclosures, case-inputs); case-authoring's 3 R55 reds fail identically on clean tranche/T51 (not mine). format/architecture/coverage/ownership 0 failures; words only the inline 1 at spec.mjs:11 (UX-DESIGN, B5). Record: build/jobs/T51/case-checker.md.

@@ -418,8 +418,15 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
     }
   }
   /* The materials a finding's chain reaches, through the findings it rests on (cycle-safe), and the imported legs. */
-  const materialOfLeg = (leg) => materials.find((x) => x.ref === leg.target)
-    || materials.find((x) => Array.isArray(leg.captures) && leg.captures.includes(x.sha)) || null;
+  /* G47: with several captures of one source (all of one `ref`), a leg that names captures reaches those, not the first
+     material of the ref; a leg that names none of them reaches the first material of its ref, as before. */
+  const materialsOfLeg = (leg) => {
+    const ofRef = materials.filter((x) => x.ref === leg.target);
+    const named = ofRef.filter((x) => Array.isArray(leg.captures) && leg.captures.includes(x.sha));
+    if (named.length) return named;
+    if (ofRef.length) return ofRef.slice(0, 1);
+    return materials.filter((x) => Array.isArray(leg.captures) && leg.captures.includes(x.sha)).slice(0, 1);
+  };
   function chainOf(id, seen = new Set()) {
     if (seen.has(id)) return { mats: [], refs: [], unlisted: [], calcs: [] };
     seen.add(id);
@@ -430,8 +437,8 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
       if (leg.kind === "inquiry") { const c = chainOf(String(leg.target ?? ""), seen); out.mats.push(...c.mats); out.refs.push(...c.refs); out.unlisted.push(...c.unlisted); out.calcs.push(...c.calcs); continue; }
       if (leg.kind === "calculation") { const t = String(leg.target ?? ""); if (!out.calcs.includes(t)) out.calcs.push(t); continue; }   /* R20 */
       if (leg.kind === "document" || leg.kind === "observation") {
-        const mat = materialOfLeg(leg);
-        if (mat) { if (!out.mats.includes(mat)) out.mats.push(mat); }
+        const mats = materialsOfLeg(leg);
+        if (mats.length) { for (const mat of mats) if (!out.mats.includes(mat)) out.mats.push(mat); }
         else out.unlisted.push({ from: id, target: String(leg.target ?? ""), kind: leg.kind });
       }
     }
@@ -441,14 +448,21 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
   /* ---------------------------------------------------------- R3: the attestations, by kind */
   const accountRows = fm && Array.isArray(fm.capture_accounts) ? fm.capture_accounts.filter(isObj) : [];
   const attestationAnswers = [];
-  const attestationFails = new Map();   // material ref → [entry]
+  /* R3 (G47): a row that states a capture's `sha` is joined to that capture's material and keyed by (ref, sha), so with
+     several captures of one source a failure of one is reported against it alone; a row without `sha` (an earlier
+     document) is joined and keyed by `ref` as before, and reaches every material of that ref. */
+  const attestKey = (ref, sha) => (sha ? `${ref}\u0000${sha}` : ref);
+  const attestationFails = new Map();   // attestKey → [entry]
   const attestationGaps = new Map();
+  const attestationsOf = (map, mat) => [...(map.get(mat.ref) || []), ...(mat.sha ? map.get(attestKey(mat.ref, mat.sha)) || [] : [])];
   for (const row of attestations) {
     const ref = str(row.ref) || "";
-    const mat = materials.find((x) => x.ref === ref) || null;
-    const a = { ref, by_kind: str(row.by_kind), by: row.level === "group" || row.level === "project" ? null : str(row.by), state: "checked", detail: null };
-    const fail = (detail) => { a.state = "fails"; a.detail = detail; attestationFails.set(ref, [...(attestationFails.get(ref) || []), entry("signature", ref, detail)]); };
-    const gap = (detail) => { a.state = "not_carried"; a.detail = detail; attestationGaps.set(ref, [...(attestationGaps.get(ref) || []), entry("signature", ref, detail)]); };
+    const rowSha = str(row.sha);
+    const key = attestKey(ref, rowSha);
+    const mat = (rowSha ? materials.find((x) => x.ref === ref && x.sha === rowSha) : materials.find((x) => x.ref === ref)) || null;
+    const a = { ref, ...(rowSha ? { sha: rowSha } : {}), by_kind: str(row.by_kind), by: row.level === "group" || row.level === "project" ? null : str(row.by), state: "checked", detail: null };
+    const fail = (detail) => { a.state = "fails"; a.detail = detail; attestationFails.set(key, [...(attestationFails.get(key) || []), entry("signature", ref, detail, rowSha ? { sha256: rowSha } : {})]); };
+    const gap = (detail) => { a.state = "not_carried"; a.detail = detail; attestationGaps.set(key, [...(attestationGaps.get(key) || []), entry("signature", ref, detail, rowSha ? { sha256: rowSha } : {})]); };
     if (!mat) fail(localize("case-checker.check.attestation_names_material", "an attestation names material {ref}, which the case document's materials do not list", { ref }));
     else if (row.by_kind === "member") {
       if (row.signature == null || row.signature === "") { a.state = "unsigned"; a.detail = word("case-checker.detail.member_attestation_carries"); }
@@ -682,8 +696,8 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
         if (f && f.entry) differs.push(f.entry);
         else if (!f || !f.content)
           missing.push(entry(lb ? "presentability" : "integrity", id, localize("case-checker.check.copy_not_carried_fetch", "the copy of {what} carried in its place (a photo with its marked areas obscured, or a member document cleaned) is not carried; fetch the file whose SHA-256 is {sha}", { what, sha: ob.copy }), { sha256: ob.copy, copy: ob.copy }));
-        for (const e of attestationFails.get(mat.ref) || []) differs.push({ ...e, about: id });
-        for (const e of attestationGaps.get(mat.ref) || []) missing.push({ ...e, about: id });
+        for (const e of attestationsOf(attestationFails, mat)) differs.push({ ...e, about: id });
+        for (const e of attestationsOf(attestationGaps, mat)) missing.push({ ...e, about: id });
         continue;
       }
       const fetch = fetchMaterial(mat, mat.kind);
@@ -703,8 +717,8 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
             subject: kind === "extracted_text" ? localize("case-checker.check.extracted_text_of", "{what}'s extracted text", { what }) : what, fetch }),
             { sha256: f ? f.sha256 : mat.sha, ...(mat.origin ? { origin: mat.origin } : {}) }));
       }
-      for (const e of attestationFails.get(mat.ref) || []) differs.push({ ...e, about: id });
-      for (const e of attestationGaps.get(mat.ref) || []) missing.push({ ...e, about: id });
+      for (const e of attestationsOf(attestationFails, mat)) differs.push({ ...e, about: id });
+      for (const e of attestationsOf(attestationGaps, mat)) missing.push({ ...e, about: id });
     }
     /* R20, R11: a calculation its chain rests on gives it that calculation's entries. */
     for (const calc of chain.calcs) {
