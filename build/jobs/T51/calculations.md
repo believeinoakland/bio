@@ -297,3 +297,15 @@ Change (small, no regret, in the entry's own gate): `ingestMoney` (`index.mjs`, 
 Census ops: none of mine changes its accepted keys. Deferred: none. Found in other modules: none.
 
 Size (session_01LHEUrW5gHDpiRBNPpspztm): test runs 9, module lines 3848
+
+## J15 · COMPLETE
+
+COMPLETE · CALCULATIONS · answers B21 · no code change.
+
+I ran control-plane's seam file (`origin/job/T51/control-plane`, `t51-round7-seam.test.mjs`) in a scratch worktree of my branch (job/T51/calculations at 4bcdf41-era HEAD, the J14 commit), through Miniflare, as you asked: G64 PASSES (comma control 120 rows, tab, semicolon and pipe 120 data rows with 3 columns, the one-cell-per-line file refused naming the delimiter), 1 of 1 in 35 s; G63 PASSES (moneyingest over 12,000 rows after a plane restart answered in 33 ms by the test's clock, beside a trivial member act at 376 ms), 1 of 1 in 56 s.
+
+So the door's input is read correctly by the code of J14: the reading text the door hands `declareTable` (the document's reading, not comma-separated) is tab-joined, and csv-reader's delimiter signature finds that delimiter, which J14's `declareTable` now uses. CONTROL-PLANE #52's red was taken against a tranche without my J14 commit (the comma control read 121 rows because the scan was comma-only on that text). It was not a second cause, so no further change, and my failing-first tests stay as J14 stated them (`r7-delimiter.test.mjs` through the real `declareTable`; `r7-g63-started.test.mjs`). I did not hand-write the door's shape: the door's own acts are the seam file's, and it is green.
+
+If CONTROL-PLANE #52 still sees red after merging job/T51/calculations into its run, send me the exact answer it got and I will diagnose the input it hands me.
+
+Size (session_01LHEUrW5gHDpiRBNPpspztm): test runs 11, module lines 3848
