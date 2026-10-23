@@ -480,6 +480,11 @@ function parseDict(buf, s, pos) {
 /** R44's proof of "parsed once": how many times a document was scanned for its objects, how many object streams the open
  *  decoded (`loadObjectStreams`), and how many times an object stream was decoded again on demand to read one object
  *  (`_innerBytes`, the few-held cache of R41). A count and nothing else: no answer reads it. */
+/** R45: the most one step of an opening does before it gives the thread back: objects placed, or bytes scanned, or
+ *  object-stream entries placed. A count, never a time (the platform's clock does not move while a step runs). */
+const SLICE_OBJECTS = 2000;
+const SLICE_BYTES = 1 << 20;
+const SLICE_STREAMS = 16;
 const WORK = { scans: 0, objectStreamLoads: 0, innerDecodes: 0 };
 export function pdfWork() { return { ...WORK }; }
 
@@ -700,9 +705,17 @@ export class PdfDoc {
    *  finds the same matches in the same order from the bytes (`\s` as
    *  JavaScript means it: the PDF whitespace bytes, and 0x0B and 0xA0). */
   scanTopLevel() {
+    for (const _ of this._scanSteps()); // eslint-disable-line no-unused-vars
+  }
+
+  /** `scanTopLevel` as steps (R45): it yields after about SLICE_OBJECTS objects or SLICE_BYTES bytes, so a caller that
+   *  wants the thread back between slices drains it with an await between steps; `scanTopLevel` drains it with none. */
+  *_scanSteps() {
     WORK.scans++;
     const b = this._b;
+    let sliceAt = 0, objects = 0;
     for (let j = b.indexOf(0x6a); j !== -1; j = b.indexOf(0x6a, j + 1)) {
+      if (j - sliceAt >= SLICE_BYTES || objects >= SLICE_OBJECTS) { sliceAt = j; objects = 0; yield; }
       if (j < 2 || b[j - 1] !== 0x62 || b[j - 2] !== 0x6f || isWordByte(b[j + 1])) continue; // "obj", then a boundary
       let p = j - 3;
       if (!(p >= 0 && isJsSpaceByte(b[p]))) continue;
@@ -720,6 +733,7 @@ export class PdfDoc {
       const bodyStart = j + 1;
       const r = parseWindow(b, bodyStart);
       if (r) this._objs.put(num, bodyStart, r.len + 64, -1, parseInt(binaryString(b.subarray(genStart, genEnd)), 10), r.value);
+      objects++;
     }
   }
 
@@ -883,9 +897,11 @@ export class PdfDoc {
    *  compressed definitions of one number should not coexist; if they do, the
    *  uncompressed one is the safer read). Each is parsed once here, to know it
    *  parses and what it is, and read again from the decoded stream when asked for (R41). */
-  async loadObjectStreams() {
+  async loadObjectStreams(tick = null) {
     const streams = this._objs.nums(2, "ObjStm");
+    let sinceTick = 0;
     for (const stm of streams) {
+      if (tick && ++sinceTick >= SLICE_STREAMS) { sinceTick = 0; await tick(); }
       const st = this._objs.get(stm);
       if (!st || st.t !== "stream") continue;
       /* The decoded bytes live in this block alone: the second decode below is
@@ -910,6 +926,7 @@ export class PdfDoc {
         const nextAbove = (at) => { let lo = 0, hi = offs.length; while (lo < hi) { const m = (lo + hi) >> 1; if (offs[m] <= at) lo = m + 1; else hi = m; } return lo < offs.length ? offs[lo] : data.length; };
         let added = 0;
         for (let i = 0; i < n; i++) {
+          if (tick && i && i % SLICE_OBJECTS === 0) await tick();
           const objNum = header[i * 2];
           const off = header[i * 2 + 1];
           if (!Number.isFinite(objNum) || !Number.isFinite(off)) continue;
@@ -944,25 +961,32 @@ export class PdfDoc {
   /** Locate the catalog and order the pages. Falls back to every /Type /Page in
    *  object-number order if the tree cannot be walked (leniency). */
   buildPageIndex() {
+    for (const _ of this._pageIndexSteps()); // eslint-disable-line no-unused-vars
+  }
+
+  /** `buildPageIndex` as steps (R45): the tree walk yields every SLICE_OBJECTS nodes it visits. */
+  *_pageIndexSteps() {
     let root = null;
     const cat = this._objs.nums(1, "Catalog")[0];
     if (cat !== undefined) { this._objs.pin(cat); root = this._objs.get(cat).map; }
     this.root = root;
-    const walkRef = (num, seen) => {
-      const map = this.dictOf({ t: "ref", n: num });
+    let visited = 0;
+    const walkRef = function* (self, num, seen) {
+      if (++visited % SLICE_OBJECTS === 0) yield;
+      const map = self.dictOf({ t: "ref", n: num });
       if (!map) return;
       const type = map.Type;
-      if (type && type.t === "name" && type.v === "Page") { this._registerPage(num); return; }
-      const kids = this.resolve(map.Kids);
+      if (type && type.t === "name" && type.v === "Page") { self._registerPage(num); return; }
+      const kids = self.resolve(map.Kids);
       if (kids && kids.t === "arr") {
         for (const kid of kids.items) {
-          if (kid && kid.t === "ref" && !seen.has(kid.n)) { seen.add(kid.n); walkRef(kid.n, seen); }
+          if (kid && kid.t === "ref" && !seen.has(kid.n)) { seen.add(kid.n); yield* walkRef(self, kid.n, seen); }
         }
       }
     };
 
     if (root && root.Pages && root.Pages.t === "ref") {
-      walkRef(root.Pages.n, new Set([root.Pages.n]));
+      yield* walkRef(this, root.Pages.n, new Set([root.Pages.n]));
     }
     if (this.pageIndexByObj.size === 0) {
       // Fallback: every /Type /Page, by object number.
@@ -4258,6 +4282,20 @@ async function loadPdf(bytes) {
   return doc;
 }
 
+/** `loadPdf` that gives the thread back (R45): `yieldNow()` is awaited between the three phases and between the slices
+ *  inside each; a `yieldNow` that throws or rejects is ignored (the open goes on, and its answer is the same). */
+async function loadPdfYielding(bytes, yieldNow) {
+  const tick = async () => { try { await yieldNow(); } catch { /* the answer does not depend on it */ } };
+  const doc = new PdfDoc(bytes);
+  for (const _ of doc._scanSteps()) await tick(); // eslint-disable-line no-unused-vars
+  await tick();
+  await doc.loadObjectStreams(tick);
+  await tick();
+  for (const _ of doc._pageIndexSteps()) await tick(); // eslint-disable-line no-unused-vars
+  await tick();
+  return doc;
+}
+
 /** Open a PDF for reading (R30): a `PdfDoc` that has run R8's whole read, or
  *  null when `bytes` is not a Uint8Array or carries no `%PDF-` signature in its
  *  first 1024 bytes. Never throws. */
@@ -4451,11 +4489,18 @@ function refusalOf(bytes) {
  * caller passed in. Nothing a `range` call builds is kept: its fonts and its pages' structures are the call's own, and
  * its notes (informational, no answer carries them) are dropped at the call's start, so fourteen calls leave the document
  * as one left it. A caller that holds the opened document between calls (reading-pipeline, per digest) holds that. Bytes
- * that are not a PDF answer as `extractPdfRange` does, with no `range`. */
-export async function openPdfRange(bytes) {
+ * that are not a PDF answer as `extractPdfRange` does, with no `range`.
+ *
+ * R45 (G82; K4743): `openPdfRange(bytes, {yieldNow})` with a function `yieldNow` awaits it between the opening's phases and
+ * between slices inside each (SLICE_OBJECTS, SLICE_BYTES, SLICE_STREAMS), so on a platform that runs one thing at a time the
+ * opening of a large file does not hold the thread for its whole length; the open's answer and every `range` are the same
+ * as without it. The page index's last step (the numbered fallback over every page object) and the Info/trailer reads are
+ * not sliced: they are one pass over typed arrays or a few objects. */
+export async function openPdfRange(bytes, opts) {
   const refused = refusalOf(bytes);
   if (refused) return refused;
-  const doc = await loadPdf(bytes);
+  const yieldNow = opts && typeof opts.yieldNow === "function" ? opts.yieldNow : null;
+  const doc = yieldNow ? await loadPdfYielding(bytes, yieldNow) : await loadPdf(bytes);
   return { ok: true, pages: doc.pageCount, range: (range) => readRange(doc, bytes, range) };
 }
 
