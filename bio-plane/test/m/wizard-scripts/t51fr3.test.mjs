@@ -26,10 +26,10 @@ const acts = file.screens.flatMap((s) => s.acts);
 const count = (status) => acts.filter((a) => a.status === status).length;
 
 test("R49 (T51 fix round 3; C64; DEC-401, DEC-402; K4356; amends R47, R48) the registry is re-taken at 43379a1a44: SCREEN_REGISTRY_SOURCE names that commit and the file's sha256, with 83 screens and 564 acts (435 declared, 83 function, 46 owed; 42 owed ops); request registers entitycreate; build-data.mjs --check passes on the committed files", () => {
-  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "43379a1a44", path: "docs/development/ux-substrate/screens/registry.json", sha256: sha("registry.json") });
-  assert.equal(SOURCES.registry.commit, "43379a1a44");
-  assert.deepEqual([wz.SCREEN_REGISTRY.length, acts.length, count("declared"), count("function"), count("owed")], [83, 564, 435, 83, 46]);
-  assert.equal(new Set(acts.filter((a) => a.status === "owed").map((a) => a.op)).size, 42, "the owed ops are unchanged: DEC-402 adds a declared act");
+  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "f72b2f8a4c", path: "docs/development/ux-substrate/screens/registry.json", sha256: sha("registry.json") });
+  assert.equal(SOURCES.registry.commit, "f72b2f8a4c");
+  assert.deepEqual([wz.SCREEN_REGISTRY.length, acts.length, count("declared"), count("function"), count("owed")], [84, 609, 448, 83, 78]);
+  assert.equal(new Set(acts.filter((a) => a.status === "owed").map((a) => a.op)).size, 62, "the owed ops at f72b2f8a4c (42 at 43379a1a44)");
   const request = wz.SCREEN_REGISTRY.find((s) => s.id === "request");
   assert.ok(request.acts.includes("entitycreate"), "DEC-402: a member names a federal office from the records request");
   assert.equal(run("--check").status, 0, "the carried generated files are what their sources give");
@@ -37,7 +37,7 @@ test("R49 (T51 fix round 3; C64; DEC-401, DEC-402; K4356; amends R47, R48) the r
 
 test("R49 control: the earlier registry, kept whole beside the carried one at 654a735535, lacks entitycreate on request; every act request had is still registered; a one-byte change to the generated registry fails --check", () => {
   const earlier = at("registry-654a735535.json");
-  assert.equal(earlier.screens.length, 83);
+  assert.equal(earlier.screens.length, 83, "the kept file at 654a735535");
   const before = earlier.screens.find((s) => s.id === "request").acts.map((a) => a.op);
   assert.ok(!before.includes("entitycreate") || earlier.screens.find((s) => s.id === "request").acts.find((a) => a.op === "entitycreate").status === "owed",
     "control: the earlier file did not draw the act on request");
@@ -49,7 +49,7 @@ test("R49 control: the earlier registry, kept whole beside the carried one at 65
     for (const f of GENERATED) copyFileSync(join(GEN_DIR, f), join(dir, f));
     assert.equal(run("--check", "--out", dir).status, 0, "the copies of the carried files pass");
     const path = join(dir, "screen-registry.mjs");
-    writeFileSync(path, readFileSync(path, "utf8").replace("43379a1a44", "43379a1a45"));
+    writeFileSync(path, readFileSync(path, "utf8").replace("f72b2f8a4c", "43379a1a45"));
     const r = run("--check", "--out", dir);
     assert.equal(r.status, 1, "a one-byte change to the generated registry fails --check");
     assert.match(r.stderr, /screen-registry\.mjs is stale/);

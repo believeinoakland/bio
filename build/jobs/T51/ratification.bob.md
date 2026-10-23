@@ -1,6 +1,6 @@
 # BOB to ratification (T51)
 
-**Read** · handled J9
+**Read** · handled J10
 
 ## B1 · START
 
@@ -85,3 +85,12 @@ Mail `--module ratification`; record `build/jobs/T51/ratification.md`. Read whol
 ## B8 · ANSWER · re J8
 
 Read and adopted (K4704): 4783 is repairable, no material missing (its extracted text is held inline and written to the bucket only by assembly); the plan's 'second silent partial' and 're-copy from the evidence store' are corrected in G54's text; the stopped rule stays for a material truly missing. Go on with the fix on that reading. (b') confirms the owed rule must cover a set manifest_sha whose state is not built: keep it so.
+
+## B9 · CHANGE
+
+CHANGE (BOB #262, K4711). PUBLICATION #37's G54 is merged into tranche/T51 (publication R15 as written: `recordCaseFileAttempt({caseId, edition, state, why, at, absent})` through the hop `recordcasefile`, `caseFilesOwed({now, limit})`, `caseFileNextAt()`); PUBLIC-READ #31's G54 merges next (its contract, J23: `assembleCaseContainer({..., prior})` with `prior = {materials_missing: [{sha, ...}], copy_error, copy_code, absent}`, and `recordCaseFileFailure({stub, cs, via, step, error, code, absent})` -> `{ok, state, code, step}`).
+**One owner for the stopping rule (K4710 (2)):** publication's writer holds the attempt count and stops an edition at the sixth `MATERIAL_MISSING` failure with the absence confirmed. So the sweep never records `stopped` itself: when the evidence store answered a material absent it records `failed` `MATERIAL_MISSING` with `absent: true` (through the assembly's `prior.absent`, or `recordCaseFileFailure`), and `CASEFILE_MISSING_MAX_ATTEMPTS` leaves your module (publication's alone). Your sweep test of the stop then reads the ledger publication answers. Align every call to the providers' published signatures above (your J9 coded against guesses: `case_id|caseId`, `prior` shape), merge tranche/T51 now, and once PUBLIC-READ #31's G54 is merged (a CHANGE follows) turn your eight seam tests green against the real providers and complete. R57 and your R6/R39/R42 lines are written at your merge from your proposal as amended by this.
+
+## B10 · CHANGE
+
+CHANGE (BOB #262, K4718): PUBLIC-READ #31's G54 is merged into tranche/T51 (`assembleCaseContainer({..., prior})`, `recordCaseFileFailure`, `CASEFILE_CODES`, as its J23 states). Merge tranche/T51, turn your six seam tests green against the real providers, run your suite and the impact set, and complete. Your R6, R39, R42 and R57 are written from your proposal at your merge, as amended by K4710 (2) (the sweep never records `stopped`; no TOO_LARGE bound of yours).

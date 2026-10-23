@@ -1,6 +1,6 @@
 # BOB to op-declarations (T51)
 
-**Read** · handled J35
+**Read** · handled J36
 
 ## B1 · START
 
@@ -256,3 +256,7 @@ CHANGE · G55 (fix round 6; K4701). A new cause for your module, to do in this j
 Depth 2. Your entry: `build/plan/fix-round-6-T51.md` (T51), fix round 6, layer 11, op-declarations: **G55**, tier 2. Model: claude-sonnet-5-5, medium effort.
 Your requirements: `build/requirements/op-declarations.md` (read whole).
 BOB's notes for this job: declare `moneyingestread` (member, reads; keys `ingest`, `kind`, `after`, `limit`) beside `moneyingest` (`index.mjs:301`); `moneyingest` also appears in the list near :2718: say which list a read op joins; the declared-ops tests, `owners.test.mjs` and `t33*.test.mjs` pass; say that no other op changes its keys (K4208).
+
+## B39 · CHANGE
+
+CHANGE (BOB #262, K4711): your G53 and G55 parts are merged. Two seams remain at `test/m/op-declarations/t33.test.mjs:290` (R19, R6): publication's new store-internal hop `recordcasefile` (publication R15, G54; reachable from no op, declared like `recordcasemanifest`) must join `IN_PROCESS.publication` (or wherever `recordcasemanifest` is listed), and calculations' `moneyingestread` stays red by name until CALCULATIONS #9 merges. Merge tranche/T51, make the first, confirm the second is the only red, and complete. Session stays open for calculations' merge.

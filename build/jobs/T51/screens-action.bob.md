@@ -1,6 +1,6 @@
 # BOB to screens-action (T51)
 
-**Read** · handled J25
+**Read** · handled J26
 
 ## B1 · START
 
@@ -351,3 +351,7 @@ Mail with `--module screens-action`; record `build/jobs/T51/screens-action.md` (
 ## B30 · ANSWER · re J25
 
 ANSWER: you are right; BOB's START missed the generated registry. Planned as G53 (K4691): a WIZARD-SCRIPTS job re-takes `screen-registry.mjs` at `f72b2f8a4c` and merges before you. Do not merge as is. Hold your branch as it stands (state WAITING ON BOB); when wizard-scripts is merged BOB sends a CHANGE: then merge tranche/T51, re-run suite, impact set and checks, and post COMPLETE. Your proposed R3 line and the five word keys are noted for the merge and the HANDOFF to UX-DESIGN.
+
+## B31 · CHANGE
+
+CHANGE (BOB #262, K4711): G53 is merged into tranche/T51 (WIZARD-SCRIPTS #24's registry re-taken at `f72b2f8a4c`, OP-DECLARATIONS #36, INTERFACE-SHELL #19). Merge tranche/T51 into your branch; `contract.test.mjs:34` (your G52 Join on `start-send`, `request`, `action`) should now go green against the real registry. Run your suite and the impact set and complete.

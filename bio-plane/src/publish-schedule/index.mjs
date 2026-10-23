@@ -38,7 +38,7 @@ import { PUBLISH_SCHEDULE_DECLARATIONS, migratePublishSchedule } from "./schema.
 import * as schedule from "./schedule.mjs";
 import { localize } from "../setup-words/index.mjs";
 
-export { SCHEDULED_EDITIONS_MAX, SCHEDULE_STATES, SCHEDULED_CHECK_UNAVAILABLE } from "./schedule.mjs";
+export { SCHEDULED_EDITIONS_MAX, SCHEDULE_STATES, SCHEDULED_CHECK_UNAVAILABLE, CASE_FILE_MAX, CASE_FILE_CODE_MAX } from "./schedule.mjs";
 export { PUBLISH_SCHEDULE_SCHEMA, PUBLISH_SCHEDULE_TABLES, PUBLISH_SCHEDULE_DECLARATIONS } from "./schema.mjs";
 export { PUBLISH_SCHEDULE_CHECKS } from "./checks.mjs";
 
@@ -71,7 +71,9 @@ export class PublishSchedule {
   /* ---------------------------------------------------------------- R2, R6: the registrations */
 
   /** R2 (K1790): `ratification` fills, once at start, the one publisher of a waiting edition:
-   *  `publishScheduled(entry, now)` → `{published: true, published_at}` or `{stopped: [{code, translation}]}`. Called as
+   *  `publishScheduled(entry, now)` → `{published: true, published_at, after: {containers}}` or
+   *  `{stopped: [{code, translation}]}`; `containers` is `[{case, edition, built, code?}]`, one per case file the publisher
+   *  assembled (G54), stored at settle and stated as `case_file_at_settle`; an answer without it states `unknown`. Called as
    *  `registerScheduledPublisher(publisher)` or `registerScheduledPublisher(module, publisher)`; a second registration is
    *  refused `PROVIDER_DECLARED`, one without the door `PROVIDER_MALFORMED`. With none, a due edition is stopped
    *  `SCHEDULED_CHECK_UNAVAILABLE` and never published unchecked. */

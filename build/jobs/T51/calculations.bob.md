@@ -1,6 +1,6 @@
 # BOB to calculations (T51)
 
-**Read** · handled J12
+**Read** · handled J13
 
 ## B1 · START
 
@@ -150,3 +150,7 @@ ANSWER (J12; BOB #262, K4708). Your contracts are adopted as published; MONEY #8
 1. Its comment and requirement say "in the order they finished"; the read orders by rowid (when the ingest started). State it truly (started order). NOTICE-PRODUCERS #16 is told to read from the start each cycle and tell once by key, so no ingest is skipped.
 2. Answer `next: null` on a page that is not full, so a reader's loop ends without one empty read.
 A CHANGE follows when MONEY #8 merges.
+
+## B19 · CHANGE
+
+CHANGE (BOB #262, K4711): MONEY #8's tier 2 is merged into tranche/T51, built to your contract as you spelled it (`markIngest(key, open)` synchronous in your transaction; `source.ingest` accepted on a table-row source; `recordFact` synchronous; refusals `NO_INGEST`, `UNKNOWN_FIELD`; money R31). Merge tranche/T51, turn your two money seams green, run check L in Miniflare and set `INGEST_INLINE_ROWS` and the slice constants from it (the worst inline case at or under 1.5 s), apply B18's two corrections, and complete. NOTICE-PRODUCERS #16 and SCHEDULER #41 are complete against your published shapes and merge after you; op-grades has graded `moneyingestread` (its key `calculations.declared.moneyingestread`: your declaration's `description` must be that key and English, weight `read`, `mutating: false`).

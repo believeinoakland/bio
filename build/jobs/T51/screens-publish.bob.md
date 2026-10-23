@@ -479,3 +479,7 @@ Mail `--module screens-publish`; record `build/jobs/T51/screens-publish.md`. Rea
 ## B42 · ANSWER · re J34
 
 Your reading is adopted (K4702). (1) screens-publish holds only the keys, listed in published's words and drawn with cs.w(key); the 13 stand-in localize rows (screen.published.casefile.{being_prepared,retrying,stopped,waiting_on_members} and screen.published.casefile.code.{NO_BUCKET,STORE_SILENT,MATERIAL_MISSING,FINDING_MISSING,BUCKET_FAILED,NOT_RECORDED,INTERRUPTED,TOO_LARGE,UNKNOWN}) are written by public-read (it owns the closed code set and the states), as localize calls it puts in no answer; they reach rows.mjs at BOB's round-end regeneration, and are owed to UX-DESIGN. Post me the 13 English lines in your record so public-read copies them exactly. Until then common.test R24 is red by name. (2) No key for built: agreed.
+
+## B43 · CHANGE
+
+CHANGE (BOB #262, K4718): PUBLIC-READ #31's G54 is merged into tranche/T51: `publishedcase` answers `case_file {state, code, attempted_at, attempts}` and the 13 stand-in rows of your keys exist (`public-read/casefile-words.mjs`). Merge tranche/T51, turn your three reds by name green (`g54-page` two, `common.test` R24), run your suite and the impact set, and complete.

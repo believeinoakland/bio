@@ -270,3 +270,47 @@ test("R69 R33 a progress stream that ends, or goes quiet, with neither a panel n
   e.p.step("fleet", "Step five"); e.load(); e.p.done("<p>y</p>");
   assert.equal(e.el("#fail").hidden, true, "a late panel takes the stop away");
 });
+
+/* ------------------------------------------------------------------------------------------------ G54 (fix round 6) */
+
+/* The deploy of the plane must leave Workers Logs on: a script upload that does not send `observability` turns them off (the
+ * 10-20 upload did, on biosmoke8), and then nothing the plane logs can be queried. So both uploads of the plane state
+ * `observability: {enabled: true}` and the account's settings are read back for it. Through the real install and update runs. */
+test("G54 the install and the update upload the plane with observability {enabled: true}, and a run whose account does not state it afterwards is not confirmed; control: an upload without it leaves the account stating none", async () => {
+  armWith(SIGNER.line);
+  const rel = await release({ version: NEXT });
+  const slug = "g54-obs";
+  const inst = await run({ slug, rel });
+  assert.deepEqual(inst.planePuts.at(-1).meta.observability, { enabled: true }, "the install's metadata");
+  const upd = await run({ slug: "g54-upd", mode: "update", rel, pre: { "g54-upd": planeBase("g54-upd") } });
+  assert.deepEqual(upd.planePuts.at(-1).meta.observability, { enabled: true }, "the update's metadata");
+  /* The read-back: the account states none after the upload, so neither run may end as done. */
+  for (const w of [await run({ slug: "g54-lost-i", rel, observabilityDropped: true }),
+    await run({ slug: "g54-lost-u", mode: "update", rel, pre: { "g54-lost-u": planeBase("g54-lost-u") }, observabilityDropped: true })]) {
+    assert.ok(w.page.failed, "the run stops");
+    assert.equal(w.page.done, null, "and is not reported done");
+  }
+  /* Control: the fake states what the upload sent, so a PUT without it states none (the shape the platform showed). */
+  assert.equal((await run({ slug: "g54-ctl", rel })).page.failed ?? null, null, "an account that states it is not refused");
+});
+
+/* G54 (installer-steps J17): the read-back of the logs continues when the plane's settings cannot be read, and says so through
+ * `opts.note`; the installer shows that sentence among the run's other notes. By key, through the real install and update. */
+test("G54 an unreadable settings read-back shows the step's note on the install's and the update's page and the run continues; control: a read-back stating enabled shows none", async () => {
+  armWith(SIGNER.line);
+  const rel = await release({ version: NEXT });
+  /* The sentence is installer-steps' (read by its own key); this run holds none of it: the page gains one notice the control page lacks. */
+  const notices = (w) => new Set(w.page.done.match(/<div class="notice">[\s\S]*?<\/div>/g) || []);
+  const extra = (w, c) => [...notices(w)].filter((n) => !notices(c).has(n));
+  const cleanI = await run({ slug: "g54-note-i", rel });
+  const inst = await run({ slug: "g54-note-i", rel, observabilityUnreadable: true });
+  assert.equal(inst.page.failed ?? null, null, "the install goes on");
+  assert.equal(extra(inst, cleanI).length, 1, "the install's page shows the note");
+  assert.equal(extra(cleanI, inst).length, 0, "control: the page that read enabled shows none");
+  const pre = { "g54-note-u": planeBase("g54-note-u") };
+  const cleanU = await run({ slug: "g54-note-u", mode: "update", rel, pre });
+  const upd = await run({ slug: "g54-note-u", mode: "update", rel, pre, observabilityUnreadable: true });
+  assert.equal(upd.page.failed ?? null, null, "the update goes on");
+  assert.equal(extra(upd, cleanU).length, 1, "the update's page shows the note");
+  assert.equal(extra(cleanU, upd).length, 0, "control: the page that read enabled shows none");
+});

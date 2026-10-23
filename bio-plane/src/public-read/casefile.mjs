@@ -127,11 +127,11 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
     if (m.original_of_copy) { unheld.push({ ref: m.ref, sha: m.sha ?? null, what: kind === "observation" ? "text" : "bytes",
                                             why: ORIGINAL_NOT_CARRIED }); continue; }
     const bytes = m.capture_invalid ? null : await held(m.sha, m.bytes_text);
-    if (!bytes) unheld.push({ ref: m.ref, sha: m.sha ?? null, what: kind === "observation" ? "text" : "bytes" });
+    if (!bytes) unheld.push({ ref: m.ref, sha: m.sha ?? null, what: kind === "observation" ? "text" : "bytes", ...(m.capture_invalid ? { unspellable: true } : {}) });
     else await add(caseFilePath(kind, keyOf(m)), kind, bytes);
     if (kind === "document") {
       const tb = m.capture_invalid ? null : await held(m.text_sha, m.extracted_text);
-      if (!tb) unheld.push({ ref: m.ref, sha: m.text_sha ?? null, what: "extracted_text" });
+      if (!tb) unheld.push({ ref: m.ref, sha: m.text_sha ?? null, what: "extracted_text", ...(m.capture_invalid ? { unspellable: true } : {}) });
       else await add(caseFilePath("extracted_text", keyOf(m)), "extracted_text", tb);
     }
     /* R32 (N717; K2004): a member document carried whole brings its `container` record and its archive, outward to the
@@ -141,7 +141,10 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
        named there too. The archive's tokens travel as today, in the material's attestation rows. */
     if (kind === "document" && bytes) for (const a of m.archives || []) {
       const ab = a.registered === false ? null : await held(a.sha, a.text);
-      if (!ab) unheld.push({ ref: m.ref, sha: a.sha ?? null, what: a.kind, ...(a.holds_original ? { why: ARCHIVE_HOLDS_ORIGINAL } : {}) });
+      /* an archive the commit did not register (`case-carriage` R8 holds none that holds an image) is named but is not a material
+         that went missing: `unregistered`, which no retry heals */
+      if (!ab) unheld.push({ ref: m.ref, sha: a.sha ?? null, what: a.kind, ...(a.holds_original ? { why: ARCHIVE_HOLDS_ORIGINAL } : {}),
+                            ...(a.registered === false && !a.holds_original ? { unregistered: true } : {}) });
       else await add(caseFilePath(a.kind, [m.ref, a.kind === "container" ? a.member : a.sha]), a.kind, ab);
     }
   }
@@ -152,7 +155,7 @@ export async function buildCaseFile({ facts, group = null, read, maxBytes = CONT
      not registered, or whose bytes do not hash to that digest, is not carried and is named in `unheld`. */
   for (const o of facts.obscured || []) {
     const bytes = o.registered && !o.capture_invalid ? await held(o.copy) : null;
-    if (!bytes) unheld.push({ ref: o.ref, sha: o.copy ?? null, what: "obscured" });
+    if (!bytes) unheld.push({ ref: o.ref, sha: o.copy ?? null, what: "obscured", ...(o.capture_invalid ? { unspellable: true } : {}) });
     else await add(caseFilePath("obscured", keyOf(o)), "obscured", bytes);
   }
   /* R33 (K2129): the edition's criteria rows exactly as R31 answers them, once, in canonical JSON; none for an edition
@@ -255,3 +258,32 @@ export function caseFilePartLayout(manifest, index) {
 
 /** R5: the parts a case file's manifest lists, by index. */
 export const caseFileParts = (manifest) => (Array.isArray(manifest.parts) ? manifest.parts.map((p) => Number(p.index)) : []);
+
+/* G54 (K4426, K4565, K4566, K4571): THE CASE FILE'S STATE AS THE PUBLIC READ STATES IT. The closed set of codes a failed attempt
+   is stated by, the one mapping from what `publication` stored to the state and code `publishedcase` answers, and nothing
+   else of the attempt: no sentence, no `step`, no `error`, no `detail` (the op is public; those stay in the row and the log).
+   The reader's sentences, by state and code, are `screens-publish`'s. */
+export const CASEFILE_CODES = Object.freeze(["NO_BUCKET", "STORE_SILENT", "MATERIAL_MISSING", "FINDING_MISSING", "BUCKET_FAILED",
+  "NOT_RECORDED", "INTERRUPTED", "TOO_LARGE", "UNKNOWN"]);
+export const CASEFILE_PUBLIC_STATES = Object.freeze(["built", "being_prepared", "retrying", "stopped", "waiting_on_members"]);
+/** A `building` older than this is an attempt that was interrupted (`publication`'s `CASEFILE_BUILDING_WAIT_MS`). */
+export const CASEFILE_BUILDING_STALE_MS = 120000;
+const codeOf = (why) => (why && CASEFILE_CODES.includes(why.code) ? why.code : "UNKNOWN");
+/** `{state, code, attempted_at, attempts}` for one case edition: `complete`, the `manifest_sha` it records, and the ledger as
+ *  `publication` stores it (`casefile_state`, `casefile_attempts`, `casefile_attempted_at`, `casefile_why` as JSON text or
+ *  null); `now` in milliseconds. An edition with a manifest and no ledger state (every edition before G54) is `built`. */
+export function caseFileStateOf({ complete, manifest_sha = null, state = null, attempts = null, attempted_at = null, why = null }, now = Date.now()) {
+  let parsed = null;
+  try { parsed = typeof why === "string" && why ? JSON.parse(why) : why && typeof why === "object" ? why : null; } catch { parsed = null; }
+  const n = Number(attempts) || 0;
+  const out = (st, code) => ({ state: st, code, attempted_at: attempted_at ?? null, attempts: n });
+  if (!complete) return out("waiting_on_members", null);
+  if (state === "stopped") return out("stopped", codeOf(parsed));
+  if (state === "failed") return out("retrying", codeOf(parsed));
+  if (state === "building") {
+    const t = Date.parse(attempted_at ?? "");
+    return out("being_prepared", Number.isFinite(t) && now - t > CASEFILE_BUILDING_STALE_MS ? "INTERRUPTED" : null);
+  }
+  if (state === "built" || (state == null && manifest_sha)) return out("built", null);
+  return out("being_prepared", null);
+}

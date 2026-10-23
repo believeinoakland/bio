@@ -189,7 +189,7 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
   }
   const team = { zone: "America/Los_Angeles" };
   const w = {
-    team, lens, marks, carriage, evidence, cover, clean, imports, checks, st, host, record, membership, promotion, prov, content, inquiry, strength, contradiction, runs, clock,
+    team, lens, marks, carriage, evidence, bucket, cover, clean, imports, checks, st, host, record, membership, promotion, prov, content, inquiry, strength, contradiction, runs, clock,
     capture, acquisition, sources, attestation, extraction: ex, entities, events, lines, money, people,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
@@ -243,8 +243,8 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
     /** An information bundle registering `count` captures of one source (G47: the same `ref` on `n` materials), each with
      *  its own bytes, its text indexed whole, registered at its own instant (`registered` = `at(i)`), so each capture's
      *  attestation lines are its own. Answers the captures' shas in order. */
-    captures(id, count, { at = (i) => `2026-09-27T${String(1 + (i % 20)).padStart(2, "0")}:${String(i % 60).padStart(2, "0")}:00Z` } = {}) {
-      const cs = Array.from({ length: count }, (_, i) => { const text = `bytes ${i} of ${id}`; return { path: `snapshots/c${i}.txt`, text, sha: sha(text) }; });
+    captures(id, count, { ext = "txt", at = (i) => `2026-09-27T${String(1 + (i % 20)).padStart(2, "0")}:${String(i % 60).padStart(2, "0")}:00Z` } = {}) {
+      const cs = Array.from({ length: count }, (_, i) => { const text = `bytes ${i} of ${id}`; return { path: `snapshots/c${i}.${ext}`, text, sha: sha(text) }; });
       const r = promotion.promote({ bundleId: id, base: null, snapKey: `k${++n}`, author: V("alice"),
         files: [{ path: "bundle.md", text: infoMd(id) }, ...cs.map((c) => ({ path: c.path, text: c.text })),
                 { path: "data/provenance.json", text: JSON.stringify({ documents: cs.map((c) => provDoc(c)) }) }],
