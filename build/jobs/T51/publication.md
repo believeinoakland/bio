@@ -135,3 +135,11 @@ Size (session_01QheArVvjbWvvMPvEMfwKVF): test runs 17, module lines 2503
 ## J7 · COMPLETE
 
 G47t (CHANGE B6): complete, one seam red by name. published_shas.capture_sha added (CREATE + ADDITIVE_COLUMNS, never back-filled); kind attestation files inserted with it through ATTESTATION_SHA_UPSERT (differing stored capture -> NULL, stored NULL never filled, same capture unchanged); every other kind and writer unchanged. g47t-registry.test.mjs: 4 of 6 red on unfixed source, now 5 green (k=2, later editions, R-OLD migration, declaration unchanged, one-capture control). SEAM RED BY NAME: 'R57 R40 seam, over the real case-carriage' waits for CASE-CARRIAGE #15 (holdMaterials does not yet answer capture_sha); tell me to merge tranche/T51 when it lands. L: g47t-miniflare.test.mjs passes in a real DO SQLite (ALTER ADD COLUMN, 7-col insert, DO UPDATE). Publication suite 165 (163 pass, 1 seam fail, 1 todo); public-read 244/244; format/architecture/coverage/words/ownership 0 failures. No census op changes. Proposed R40/R57 lines in my record (section G47t).
+
+## G47t · re-completion (CHANGE B7, K4678)
+
+CASE-CARRIAGE #15 is merged; `tranche/T51` merged into my branch (a merge, not a rebase). The seam test "R57 R40 seam, over the real case-carriage" is now green: no seam red remains. Publication suite under the preload: `tests 165, pass 164, fail 0, todo 1`; public-read: `244/244`. Checks: format, architecture, coverage, words, ownership `0 failures` (as run just after the merge). Nothing in the code changed.
+
+**Requirement lines proposed (BOB writes them)**, as in the section above: R40: `published_shas` gains `capture_sha` (TEXT, nullable): set only for kind `attestation`, the sha of the one capture the token stamps; NULL for rows written before, every other kind, and a token two different captures name; read by `public-read`. R57: "a kind `attestation` file is registered with its `capture_sha`; a stored capture that differs from the new one is cleared to NULL, a stored NULL is never rewritten to a value, the same capture again changes nothing." Plus G47's R21 line (the byte bound) from the first section.
+
+Size (session_01QheArVvjbWvvMPvEMfwKVF): test runs 19, module lines 2503
