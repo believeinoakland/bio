@@ -685,6 +685,8 @@ const BODY_ACTOR = Object.freeze(Object.fromEntries(Object.values(OP_FAMILIES).f
 ])));
 const BODY_ACTOR_KEYS = Object.freeze([...new Set(Object.values(BODY_ACTOR))]);
 
+/* G42 (K4638): the grain, in bytes, of the record's size an administering member is shown. */
+const STATS_GRAIN = 100_000_000;
 /* R61, R62: A BYTE ANSWER, AS ITS OWNER GAVE IT. A served file (an answer at 200 or 206 carrying its owner's digest header,
    which no JSON answer carries; a file's own content type may be anything, JSON or text included) is relayed whole
    — its bytes, content type, length and digest header (`x-capture-sha256` for an original, `x-derived-sha256` for a view
@@ -1914,7 +1916,11 @@ export function makeFetch(hooks = {}) {
        the SERVER from the class that authenticated, AFTER the caller's parameters were copied, so a
        caller's `capacity=1` is overwritten. `admin` is the ADMIN_TOKEN class and the ROOT-admin
        session; an admin-ROLE member signs in as class `member` and does not receive it. */
-    if (op === "stats") inner.searchParams.set("capacity", cls === "admin" ? "1" : "0");
+    /* G42 (K4635, K4638): an administering member's session is stamped capacity as well, and is answered `dbBytes` floored
+       to a whole STATS_GRAIN (below, at the answer): no single write, a lead's included, is visible at that grain, which is
+       the residue the paragraph above guarded against. ADMIN_TOKEN and the founder (class `admin`) keep the exact figure. */
+    if (op === "stats")
+      inner.searchParams.set("capacity", cls === "admin" || (viaSession && sessRights.administer) ? "1" : "0");
     if (op === "memberlist")
       inner.searchParams.set("administer",
         (viaSession ? !!sessRights.administer : cls === "admin") ? "1" : "0");
@@ -3835,6 +3841,10 @@ export function makeFetch(hooks = {}) {
     if (out.refused) return storeRefusal(out, { store: storeName, tokenClass: cls });
     if (!out.answered) return storeSilent(op, out.correlation);
     const { body, status } = out.reply;
+    if (op === "stats" && cls !== "admin" && viaSession && sessRights.administer && body.result
+        && typeof body.result.dbBytes === "number")
+      return json({ ...body, result: { ...body.result, dbBytes: Math.floor(body.result.dbBytes / STATS_GRAIN) * STATS_GRAIN },
+                    store: storeName, tokenClass: cls }, status);
     /* (signin-door R1, R4; credentials R16): a member who is revoked is signed out of their own runner, after the act
        and whatever the runner answers; the act's answer is unchanged. */
     const leaver = leaverOf(op, reqBody, body.result, stampOf.by);
