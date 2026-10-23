@@ -85,12 +85,18 @@ test("R127 (G114): a translation kept mid-release changes the stamp bootstrap st
   await act(auth, "memberlanguageset", { language: "es" });
   const before = await bootstrap(auth);
   const listed = (await plain(await words(auth, { language: "es" }))).json();
-  const word = listed.result.words.find((w) => typeof w.en === "string" && !w.en.includes("{") && w.en.trim() && [...w.en].length < 60);
-  assert.ok(word, "a word with no placeholder to translate");
   const granted = await act(auth, "translationgrant", { member: "admin", language: "es" });
   assert.ok(granted.ok !== false, JSON.stringify(granted).slice(0, 300));
-  const kept = await act(auth, "translationadopt", { language: "es", key: word.key, text: `${word.en} (es)` });
-  assert.equal((kept.result || kept).ok, true, "a translation kept: " + JSON.stringify(kept).slice(0, 400));
+  /* the first word that is shown once kept: a protected word waits for a confirmation (translations R4), so the speaker's own confirmation follows each adoption */
+  let word = null;
+  for (const w of listed.result.words.filter((x) => typeof x.en === "string" && !x.en.includes("{") && x.en.trim() && [...x.en].length < 60).slice(0, 40)) {
+    const kept = await act(auth, "translationadopt", { language: "es", key: w.key, text: `${w.en} (es)` });
+    assert.equal((kept.result || kept).ok, true, "a translation kept: " + JSON.stringify(kept).slice(0, 400));
+    if ((kept.result || kept).state !== "shown") await act(auth, "translationconfirm", { language: "es", key: w.key });
+    const now = (await plain(await words(auth, { language: "es" }))).json();
+    if (now.result.words.some((x) => x.key === w.key && x.fallback === false)) { word = w; break; }
+  }
+  assert.ok(word, "a word kept and shown");
   const after = await bootstrap(auth);
   assert.notEqual(after.words_version, before.words_version, "the stamp changes at an adoption");
   const oldKey = `${VERSION}~es~${before.words_version}`, newKey = `${VERSION}~es~${after.words_version}`;

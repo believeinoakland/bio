@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 /* control-plane R121 (fix round 4, C5a, P9; K4429, K4428; amends R105, R115): THE DOOR'S CLOCK. The object keeps the stages of an `acquire`
    in its own memory, which a restart loses (plane R73), so the door clocks what it can see from its own isolate: each call it makes to the
    object (`Server-Timing`, one metric per route, the op as the first) and the three phases of an `acquire` (`acquire`, `reading`, `promote`).
@@ -163,18 +164,30 @@ function clockedStub(stub, clock) {
   });
 }
 
-/** The environment as the door and the hooks it calls see it: `STORE.get` answers a clocked stub, everything else is the environment's own. */
+/* The request whose clock the object's calls are told on. The environment the hooks see must be ONE object for the isolate's life, not a new one for each request: a module that keeps
+   what it learned per environment (instance-setup's fleet versions, kept 60 s per `env`, G118) would otherwise never find its own entry. So the clocked environment is made once for an
+   `env` and reads the request's clock from the request's async context (`withClock`). */
+const current = new AsyncLocalStorage();
+const NO_CLOCK = Object.freeze({ begin() {}, end() {}, call() {}, within() {}, state() {}, bodyRead() {} });
+export const withClock = (clock, fn) => current.run(clock, fn);
+const clockedEnvs = new WeakMap();
+
+/** The environment as the door and the hooks it calls see it: `STORE.get` answers a clocked stub, everything else is the environment's own. The same object for the same `env`. */
 export function clockedEnv(env, clock) {
   const store = env && env.STORE;
   if (!store || typeof store.get !== "function") return env;
+  const kept = clockedEnvs.get(env);
+  if (kept) return kept;
   const ns = new Proxy(store, {
     get(target, key) {
       const v = target[key];
-      if (key === "get" && typeof v === "function") return (...a) => clockedStub(v.apply(target, a), clock);
+      if (key === "get" && typeof v === "function") return (...a) => clockedStub(v.apply(target, a), current.getStore() ?? NO_CLOCK);
       return typeof v === "function" ? (...a) => v.apply(target, a) : v;
     },
   });
-  return new Proxy(env, { get(target, key) { return key === "STORE" ? ns : target[key]; } });
+  const made = new Proxy(env, { get(target, key) { return key === "STORE" ? ns : target[key]; } });
+  clockedEnvs.set(env, made);
+  return made;
 }
 
 /** `res` with the header; a response whose headers are fixed is made again with the same status and body. */

@@ -43,7 +43,7 @@ import { appRouteOf, appPage, appAsset, appScript, logoAsked, addressPageOf } fr
 /* R116 (fix round 2; C15): the interface words kept for the release and compressed */
 import { interfaceWordsCache } from "./words-cache.mjs";
 /* R121 (fix round 4, C5a, P9): the door's clock, in its own isolate */
-import { makeClock, clockedEnv, withServerTiming } from "./phase-clock.mjs";
+import { makeClock, clockedEnv, withClock, withServerTiming } from "./phase-clock.mjs";
 import { interfacePage, interfaceScript, interfaceScriptHash, pageWork } from "../interface-shell/index.mjs";
 import { ASSET_FILES } from "../interface-assets/index.mjs";
 import { SCREENS as ENTRY_SCREENS } from "../screens-entry/index.mjs";
@@ -152,6 +152,18 @@ async function tallySessionRefusal(res, session) {
       method: "POST", headers: { "content-type": "application/json" },
       body: JSON.stringify({ op: session.op, code }) })));
   } catch { /* the tally is status, never a gate */ }
+}
+
+/* R128 (fix round 8, G116; queue R94): the Queue runs in the object and cannot hand the door a hook, so its answer states what its marks carry (`derivation`: `served`, and for a
+   miss the rows read); the door states them: `queue-count;desc=hit|miss`, and `rows-queue;dur=<rows read>` for a miss. The answer is returned as it came. */
+async function liftDerivation(res, clock) {
+  try {
+    if (!res || !/application\/json/i.test(res.headers.get("content-type") || "")) return res;
+    const d = (await res.clone().json())?.result?.derivation;
+    if (!d || (d.served !== "hit" && d.served !== "miss")) return res;
+    clock.state([{ name: "queue-count", desc: d.served }, ...(d.served === "miss" && Number.isFinite(d.rows_read) ? [{ name: "rows-queue", dur: String(Math.round(d.rows_read)) }] : [])]);
+  } catch { /* a measure is status, never a gate */ }
+  return res;
 }
 
 /* R59 (admission R20, R22; F1, N703; K2044): ON THE WAY OUT. A refusal the door gives or relays, at either of the two
@@ -888,11 +900,12 @@ export function makeFetch(hooks = {}) {
     const seen = { session: null, credential: null, cred: null, op: null, trace: null, scriptHashes: undefined, clock };
     let res;
     /* R121: the object is reached through the clocked environment, so each call to it is timed and the phases of an `acquire` are told */
-    try { res = await fetch(req, clockedEnv(env, clock), seen); } catch (e) { res = planeInternalError(e, req); }
+    try { res = await withClock(clock, () => fetch(req, clockedEnv(env, clock), seen)); } catch (e) { res = planeInternalError(e, req); }
     res = await withTrace(res, seen.trace);
     /* R116, R127 (fix round 8, G114): the words answer is read once, for its key, before the tallies; an answer that is the words holds no refusal, so
        the tallies, which look for one, do not read it again (a refusal this op gives is read and tallied as every answer's is) */
     if (seen.op === "interfacewords") { const kept = await interfaceWordsCache(res, req, env); res = kept.res; seen.table = kept.table; }
+    if (seen.op === "queue") res = await liftDerivation(res, clock);
     if (!seen.table) await tallySessionRefusal(res, seen.session);
     if (!seen.table) res = await tallyOnTheWayOut(res, seen, req, env);
     /* R75 (fix round 3, C15): a page of the interface leaves with the policy that names its script by hash, in place of a nonce */

@@ -93,7 +93,7 @@ export function sections(kit, counting) {
     assert.equal(comma.ok, true, "the comma file is declared: " + JSON.stringify(comma).slice(0, 400));
     assert.equal(tab.ok, true, "the tab file is declared: " + JSON.stringify(tab).slice(0, 400));
     assert.equal(comma.rows, ROWS, `the comma file's table holds its ${ROWS} data rows, not the index's (the walker's was 18,100): ${facts}`);
-    assert.equal(comma.undetermined.count, 0, `no cell reads the header text as data (the walker's: 2, at the reading's windows): ${facts}; first ${JSON.stringify(comma.undetermined.cells && comma.undetermined.cells[0]).slice(0, 200)}`);
+    assert.equal(comma.undetermined.count, 0, `no cell reads the header text as data (the walker's: 2, at the reading's windows): ${facts}; first ${String(JSON.stringify(comma.undetermined.cells && comma.undetermined.cells[0])).slice(0, 200)}`);
     assert.equal(tab.rows, ROWS, `the tab file's table holds its ${ROWS} data rows: ${facts}`);
     assert.equal(tab.undetermined.count, 0, `no cell reads the header text as data in the tab table: ${facts}`);
     assert.equal(comma.sha, tab.sha, `the same rows declared from the comma file and from the tab file are the one table: ${facts}`);
@@ -179,12 +179,19 @@ export function sections(kit, counting) {
 
   test("R8 (G115/G116): a recompute states its mark `miss` with the `rows-queue` entry, and a background count asked at once after it states `hit`", { timeout: 900000 }, async () => {
     const auth = await viewerWith("r8q-four");
+    /* her list was just derived (viewerWith read it): a count at the same signature is that derivation's (R94), a hit; a to-do made since moves the signature, so the count is a recompute */
+    const shared = await ask(auth, COUNT);
+    assert.equal(countOf(shared), 2);
+    if (shared.mark !== null) assert.equal(shared.mark, "hit", "the count at the list's own signature is served from the list's derivation");
+    const project = R((await ask(auth, { op: "projectlist" })).body).projects?.[0]?.id ?? R((await ask(auth, { op: "projectlist" })).body).items?.[0]?.id;
+    const made = await counting.post(auth, "checkrequest", { target: project, member: "r8q-four", note: "check three" });
+    assert.equal(R(made.body).ok, true, "a third check is asked: " + JSON.stringify(made.body).slice(0, 300));
     const first = await ask(auth, COUNT);
-    assert.equal(countOf(first), 2);
-    assert.equal(first.mark, "miss", `a member's count after her tasks were made is a recompute: mark ${first.mark} (${NO_MARK("this one")})`);
+    assert.equal(countOf(first), 3);
+    assert.equal(first.mark, "miss", `a member's count after a to-do was made is a recompute: mark ${first.mark} (${NO_MARK("this one")})`);
     assert.equal(first.rows, true, "a recompute carries the `rows-queue` entry: " + timing(first.res).slice(0, 300));
     const again = await ask(auth, { ...COUNT, background: "1" });
-    assert.equal(countOf(again), 2);
+    assert.equal(countOf(again), 3);
     assert.equal(again.mark, "hit", `a background count writes nothing, so it is served from the count just made: mark ${again.mark}`);
   });
 

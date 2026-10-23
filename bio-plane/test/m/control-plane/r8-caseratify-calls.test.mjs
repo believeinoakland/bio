@@ -27,6 +27,7 @@ test("R8 (G120, G121): a vouched case signed in one sitting is signed in few awa
   const events = readEvents({ headers: res.headers });
   assert.ok(events.length > 0, "the request listed its calls: " + [...res.headers].map(([k]) => k).join(","));
   const total = events.length;
+  if (process.env.R8_DEBUG) console.log("EVENTS " + events.map((x) => `${x.name}[${x.start}-${x.end}]`).join(" "));
   const worker = (x) => x.kind === "do" || x.kind === "r2";
   console.log(`G120/G121: caseratify made ${total} awaited calls (${doCalls(calls)} to the object, ${r2Calls({ do: {}, r2: calls.r2, object: {} })} to R2 from the Worker, ${r2Calls({ do: {}, r2: {}, object: calls.object })} in the object); longest chain ${depth(events, worker)}; case file heads/puts in flight at most ${peak(events, (x) => /^PUBLISHED\.(head|put)$/.test(x.name))}`);
   /* (b) the independent reads before the signature check are issued together, or folded into one call */
