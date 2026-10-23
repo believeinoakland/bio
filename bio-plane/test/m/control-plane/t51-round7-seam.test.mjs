@@ -9,11 +9,13 @@
 import "../../sandbox.mjs";
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
+import { createHash, webcrypto } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { Miniflare } from "miniflare";
 import { CAPTURE_SCREEN } from "../../../src/screens-intake/capture.mjs";
+import { PARTS } from "../../../src/screens-publish/parts.mjs";
+import { word } from "../../../src/setup-words/index.mjs";
 
 const SRC = fileURLToPath(new URL("../../../src/plane/index.mjs", import.meta.url));
 const MB = 1024 * 1024;
@@ -282,4 +284,184 @@ test("R105, R124 (G61 twin): a large capture opened by an enrolled member and fi
     return last.includes("fetch-done") ? true : null;
   }, 180000, 5000);
   assert.ok(told, `the opener is told, by the item's kind (fetch-done): ${last.slice(0, 600)}`);
+});
+
+/* ---- the owner's chain: project, upload, vouch, question, citation, conclusion, case edition ---- */
+
+/* a member who may create projects and publish (the vocabulary the whoami lists), made as `person` makes one */
+const owners = new Map();
+async function ownerOf(handle) {
+  if (owners.has(handle)) return owners.get(handle);
+  const adm = await founder();
+  const added = await post(adm, "memberadd", { memberId: handle, cover: `cover of ${handle}`, role: "member", capabilities: ["contribute", "publish", "create_projects"] });
+  const invite = added.body.result && (added.body.result.invite || (added.body.result.invitation && added.body.result.invitation.invite));
+  assert.ok(invite, "an invitation: " + JSON.stringify(added.body).slice(0, 400));
+  const pw = `${handle}-long-passphrase-r7`;
+  const enrolled = await post({}, "enroll", { invite, handle, password: pw });
+  assert.equal(enrolled.body.ok, true, "enrolled: " + JSON.stringify(enrolled.body).slice(0, 400));
+  const signed = await post({}, "login", { handle, password: pw, device: "own" });
+  assert.equal(signed.body.ok, true, "signed in: " + JSON.stringify(signed.body).slice(0, 400));
+  const auth = { authorization: `Bearer ${signed.body.result.token}` };
+  owners.set(handle, { auth, password: pw });
+  return owners.get(handle);
+}
+/* an Ed25519 SSH signer (PROTOCOL.sshsig), as the signer kit signs a sitting; as test/m/ratification/fixture.mjs makes one */
+const u8 = (...parts) => { const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0)); let o = 0; for (const p of parts) { out.set(p, o); o += p.length; } return out; };
+const u32 = (n) => new Uint8Array([(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255]);
+const sstr = (v) => { const b = typeof v === "string" ? te(v) : v; return u8(u32(b.length), b); };
+const armor = (blob) => `-----BEGIN SSH SIGNATURE-----\n${Buffer.from(blob).toString("base64").replace(/(.{70})/g, "$1\n")}\n-----END SSH SIGNATURE-----\n`;
+async function newKey() {
+  const kp = await webcrypto.subtle.generateKey({ name: "Ed25519" }, true, ["sign", "verify"]);
+  const raw = new Uint8Array(await webcrypto.subtle.exportKey("raw", kp.publicKey));
+  return { priv: kp.privateKey, raw, keyB64: Buffer.from(u8(sstr("ssh-ed25519"), sstr(raw))).toString("base64") };
+}
+async function signText(key, message, namespace) {
+  const h = new Uint8Array(await webcrypto.subtle.digest("SHA-512", te(message)));
+  const sig = new Uint8Array(await webcrypto.subtle.sign("Ed25519", key.priv, u8(te("SSHSIG"), sstr(namespace), sstr(new Uint8Array(0)), sstr("sha512"), sstr(h))));
+  return armor(u8(te("SSHSIG"), u32(1), sstr(u8(sstr("ssh-ed25519"), sstr(key.raw))), sstr(namespace), sstr(new Uint8Array(0)), sstr("sha512"), sstr(u8(sstr("ssh-ed25519"), sstr(sig)))));
+}
+const R = (a) => (a && a.result !== undefined ? a.result : a);
+
+/* "Open a question" on the project page: `allocid`, `promote` of the inquiry document, then `drawquestion` (src/screens-inquiry/project.mjs `promote`) */
+async function questionOf(auth, project, question) {
+  const cs = screenCall(auth);
+  const title = question.replace(/\s+/g, " ").slice(0, 120);
+  const now = new Date().toISOString().split(".")[0] + "Z";
+  const a = R(await cs.call("allocid", { query: { prefix: "INQ", year: String(new Date().getUTCFullYear()) } }));
+  assert.ok(a && a.id, "an id: " + JSON.stringify(a));
+  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40).replace(/-+$/, "");
+  const id = a.id + (slug ? "-" + slug : "");
+  const lines = ["---", "id: " + id, "object_type: inquiry", "schema: inquiry@1", "title: " + JSON.stringify(title), "current_state: open", "prior_state: null",
+    "created: " + now, "last_updated: " + now, "project: " + project, "produced_by:", "  mode: assisted", "  capability_tier: session", "references: []", "state_history: []",
+    "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []", "surfaced_by: human", "recheck_triggers:",
+    "  - text: " + JSON.stringify(word("file.recheck.revisit")), "    description: " + JSON.stringify(word("file.recheck.none")), "---", ""];
+  ["## Question", word("conformance.rests"), "## Conclusion", word("conformance.falsify"), "## Session Log", "## Review Notes"].forEach((h, i) => { lines.push(h, ""); if (i === 0) lines.push(question, ""); });
+  const stamp = now.replace(/[-:]/g, "") + "_" + Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, "0");
+  const p = await cs.call("promote", { body: { bundleId: id, base: null, snapKey: stamp, meta: { object_type: "inquiry", title, current_state: "open", created: now, last_updated: now }, files: [{ path: "bundle.md", text: lines.join("\n") }] } });
+  assert.ok(p.ok !== false && R(p).ok !== false, "the question is filed: " + JSON.stringify(p).slice(0, 400));
+  const d = await cs.call("drawquestion", { query: { project, inquiry: id, note: "" } });
+  assert.ok(d.ok !== false && R(d).ok !== false, "the project draws on it: " + JSON.stringify(d).slice(0, 400));
+  return id;
+}
+
+/* the owner's own chain to a prepared case edition: a text uploaded and filed in her project, vouched or not, one sentence of it cited in a question she opened and
+   concluded, the case drafted in the editor and prepared by the ceremony's `publish` (src/screens-publish/case-editor.mjs, ceremony.mjs) */
+const BIAS = "This group holds that contracts should be adopted in public session.";
+async function preparedEdition(handle, tag, { vouch }) {
+  const { auth, password } = await ownerOf(handle);
+  const cs = screenCall(auth);
+  const project = await projectOf(auth, `Round seven ${tag} project`);
+  /* a 356-byte text, two paragraphs, made distinct by the tag (its upload's own snapshot file is `snapshots/upload-<sha>`, dotless) */
+  const first = "The clerk stamped the amended contract RECEIVED before the council voted on it.";
+  const body = [first, `The minutes of the meeting were filed on Tuesday morning, and the register ${tag} was signed by the deputy clerk, the city attorney and the chair of the council.`];
+  let text = body.join("\n\n");
+  text += " ".repeat(Math.max(0, 356 - te(text).length));
+  const bytes = te(text);
+  const up = (await (await plane(`/api/?op=captureupload&statement=${encodeURIComponent(tag)}&name=${encodeURIComponent(tag + "-minutes")}&type=text%2Fplain`, { method: "POST", headers: auth, body: bytes })).json()).result;
+  assert.equal(up.ok, true, JSON.stringify(up).slice(0, 400));
+  assert.equal(up.document.file, "snapshots/upload-" + sha(bytes), "the upload's own snapshot file is dotless");
+  const filed = await CAPTURE_SCREEN.parts.promoteDocument(cs, { doc: up.document, title: `${tag}-minutes`, locator: up.document.locator, project });
+  assert.equal(filed.refused, undefined, JSON.stringify(filed).slice(0, 400));
+  const bundle = filed.bundleId;
+  if (vouch) {
+    /* the Document screen's "Confirm": `select` the document, then `release` with the handle, her acknowledgment and her mitigation (document.mjs `release`) */
+    const sel = R(await cs.call("select", { body: { ids: [bundle] } }));
+    assert.ok(sel && sel.handle, "a selection: " + JSON.stringify(sel).slice(0, 300));
+    const rel = await cs.call("release", { query: { handle: sel.handle, acknowledgment: "I checked this file is the minutes as filed.", mitigation: "Nothing in it names a private person." } });
+    assert.ok(rel.ok !== false && R(rel).ok !== false && R(rel).released.includes(bundle), "vouched: " + JSON.stringify(rel).slice(0, 400));
+  }
+  const question = await questionOf(auth, project, "Did the clerk stamp the contract before the vote?");
+  /* Find in this document (a term), then "Cite in the question" the one sentence found (document.mjs `cite`: project = the question, role, found) */
+  const found = R(await cs.call("findin", { body: { scope: { capture: sha(bytes) }, kinds: ["term"], term: "stamped the amended contract" } }));
+  const item = found.kinds[0].items[0];
+  assert.equal(item.words, first, "one sentence of the document is found: " + JSON.stringify(item).slice(0, 300));
+  const cited = R(await cs.call("cite", { body: { project: question, role: "supports", found: item } }));
+  assert.deepEqual(cited.cited, [bundle], "the question rests on the document: " + JSON.stringify(cited).slice(0, 300));
+  const concl = R(await cs.call("conclude", { query: { target: question, project, reading: "The clerk stamped the contract before the vote.",
+    falsifier: "A received-log showing a later stamp would overturn this.", reason: "The minutes say so." } }));
+  assert.equal(concl.ok, true, "concluded: " + JSON.stringify(concl).slice(0, 400));
+  /* the case editor's "Prepare the draft", then the ceremony's Ties step: `publish` with `tieAttested` */
+  const draft = R(await cs.call("casedraft", { body: { project, targets: [question], scope: "Whether the contract was stamped before the vote, on the documents in hand.",
+    statement: "This case covers the stamp only; it leaves out the later amendments.", subjectPosition: "sought_and_answered",
+    subjectJustification: "We put the question to the Clerk and printed the answer.", roles: { [question]: "load_bearing" }, excluded: [] } }));
+  assert.ok(draft.draftId, "a draft: " + JSON.stringify(draft).slice(0, 300));
+  const prepared = R(await cs.call("publish", { body: { draft: draft.draftId, project, tieAttested: true, biasAcknowledgement: BIAS } }));
+  assert.equal(prepared.ok, true, "the edition is prepared: " + JSON.stringify(prepared).slice(0, 600));
+  return { auth, password, cs, project, question, bundle, draft: draft.draftId, prepared };
+}
+
+/* the Sign step's sitting, as the ceremony's `caseratify` send makes it: `casedocument`, the sitting list (`PARTS.sitting`), one signature a statement by her own key */
+async function sitAndSign(e) {
+  const { cs, prepared: p } = e;
+  const key = await newKey();
+  const reg = R(await cs.call("signerregisterown", { body: { keyB64: key.keyB64 } }));
+  assert.equal(reg.ok, true, "her signing key is registered: " + JSON.stringify(reg).slice(0, 300));
+  const doc = R(await cs.call("casedocument", { query: { case: p.caseId, edition: String(p.edition) } }));
+  const list = PARTS.sitting(doc, { findings: p.findings.map((f) => ({ target: f.target, bundleSha: f.bundleSha })) });
+  assert.ok(list && list.length >= 2, "a sitting: " + JSON.stringify(doc).slice(0, 300));
+  const sigs = [];
+  for (const x of list) sigs.push(await signText(key, x.text, x.namespace));
+  /* the password again, as the ceremony asks it before a signature */
+  const ra = R(await cs.call("reauth", { body: { password: e.password } }));
+  assert.equal(ra.ok, true, "re-authenticated: " + JSON.stringify(ra).slice(0, 200));
+  const res = await post(e.auth, "caseratify", { caseId: p.caseId, edition: Number(p.edition), expectedSha: doc.doc_sha, sig: sigs[0],
+    members: list.slice(1).map((x, i) => ({ id: x.id, sha: x.sha, signature: sigs[i + 1] })) });
+  return { res, list, doc };
+}
+const gateLine = (res) => `${res.status} ${JSON.stringify(res.body).slice(0, 700)}`;
+
+/* ---- G59 ---- */
+
+test("R105 (G59): a case citing one sentence of a VOUCHED upload (356 bytes, a dotless snapshot file) is signed: `caseratify` answers 200, the case is published, with its finding and complete", { timeout: 600000 }, async () => {
+  const e = await preparedEdition("g59-ann", "g59a", { vouch: true });
+  const { res } = await sitAndSign(e);
+  assert.equal(res.status, 200, `the vouched upload does not stop the signing (C-12.2 on its history snapshot): ${gateLine(res)}`);
+  assert.equal(res.body.ok, true, gateLine(res));
+  const pub = R(await get(e.auth, { op: "publishedcase", id: e.prepared.caseId }));
+  assert.equal(pub.caseId, e.prepared.caseId, "the case is published: " + JSON.stringify(pub).slice(0, 300));
+  assert.ok(Array.isArray(pub.findings) && pub.findings.length >= 1, "its finding is published: " + JSON.stringify(Object.keys(pub)));
+  assert.equal(pub.complete, true, "complete: " + JSON.stringify({ complete: pub.complete, awaiting: pub.awaiting }));
+});
+
+test("R105 (G59 control): the same case citing the same kind of upload NOT vouched is signed: 200, published, its finding, complete", { timeout: 600000 }, async () => {
+  const e = await preparedEdition("g59-bea", "g59b", { vouch: false });
+  const { res } = await sitAndSign(e);
+  assert.equal(res.status, 200, gateLine(res));
+  assert.equal(res.body.ok, true, gateLine(res));
+  const pub = R(await get(e.auth, { op: "publishedcase", id: e.prepared.caseId }));
+  assert.equal(pub.caseId, e.prepared.caseId, "the case is published: " + JSON.stringify(pub).slice(0, 300));
+  assert.ok(Array.isArray(pub.findings) && pub.findings.length >= 1, "its finding is published: " + JSON.stringify(Object.keys(pub)));
+  assert.equal(pub.complete, true, "complete: " + JSON.stringify({ complete: pub.complete, awaiting: pub.awaiting }));
+});
+
+/* ---- G62 ---- */
+
+/* the instance's active profiles, set the way instance setup sets them (`profilesset`, the administrator's act) */
+async function profileSet(ids) {
+  const set = await post(await founder(), "profilesset", { profiles: ids });
+  assert.equal(R(set.body).ok, true, "the profile is chosen: " + JSON.stringify(set.body).slice(0, 300));
+}
+/* what the ceremony's Sign step reads: `publishpreflight`'s step that carries `publish_at` (ceremony.mjs `stepWith("publish_at")`) */
+const signStepOf = (answer) => (R(answer).steps || []).find((x) => x && typeof x === "object" && "publish_at" in x) || {};
+
+test("R105 (G62): with the instance's profile `oakland-alameda` chosen, the Sign step's pre-flight, asked as the ceremony asks it once the edition is prepared (draft, project, the declared bias), offers a publishing time in `America/Los_Angeles`, never 'the zone is not set'", { timeout: 600000 }, async () => {
+  await profileSet(["oakland-alameda"]);
+  const e = await preparedEdition("g62-cy", "g62a", { vouch: false });
+  const asked = await e.cs.call("publishpreflight", { body: { draft: e.draft, project: e.project, biasAcknowledgement: BIAS } });
+  const step = signStepOf(asked);
+  assert.ok("publish_at" in step, "the Sign step is in the answer: " + JSON.stringify(R(asked).steps).slice(0, 600));
+  assert.ok(step.publish_at, `the Sign step states the time it offers (null reads as no zone: ${JSON.stringify(step.publish_at_stated || null)}; first: ${JSON.stringify(R(asked).first).slice(0, 200)})`);
+  assert.equal(step.publish_at.offered, true, JSON.stringify(step.publish_at));
+  assert.equal(step.publish_at.zone, "America/Los_Angeles", JSON.stringify(step.publish_at));
+});
+
+test("R105 (G62, tie attested): the same pre-flight with the Ties step's `tieAttested` reaches the Sign step: `publish_at` is `{offered: true, zone: America/Los_Angeles}`; and it states its `source` (red until ratification's provider merges)", { timeout: 600000 }, async () => {
+  await profileSet(["oakland-alameda"]);
+  const e = await preparedEdition("g62-dee", "g62b", { vouch: false });
+  const asked = await e.cs.call("publishpreflight", { body: { draft: e.draft, project: e.project, biasAcknowledgement: BIAS, tieAttested: true } });
+  const pa = signStepOf(asked).publish_at;
+  assert.ok(pa, "the Sign step is reached: " + JSON.stringify(signStepOf(asked)).slice(0, 500));
+  assert.equal(pa.offered, true, JSON.stringify(pa));
+  assert.equal(pa.zone, "America/Los_Angeles", JSON.stringify(pa));
+  assert.ok(["local-facts", "profiles"].includes(pa.source), `publish_at states where the zone came from (local-facts | profiles): ${JSON.stringify(pa)}`);
 });
