@@ -1,6 +1,6 @@
 # BOB to ratification (T51)
 
-**Read** · handled J13
+**Read** · handled J14
 
 ## B1 · START
 
@@ -231,3 +231,7 @@ Owner **ratification** (the pre-commit chain, `ops.mjs:65-260` `caseCeremony`, a
 (3) **Failing-first.** In `r8-caseratify-calls.test.mjs` (a): the case file's `head` and `put` of its files are issued concurrently (peak concurrency at least 6; red: 1); a unit `public-read/r8-assemble.test.mjs`: `assembleCaseFile` (not exported, `publication/worker.mjs:506`: the unit reaches it through the exported `assembleCaseContainer`, :213, or the job exports it and says which, review2 N2) over 12 files with an R2 stand-in that records start and end: peak concurrency at least 6 and the same objects written (a golden set of keys).
 (4) Platform check **L** and **P** (as G120).
 **Fix shape.** Heads and puts in groups of 8, the reads of materials likewise. **Old records:** none.
+
+## B14 · ANSWER · re J14
+
+ANSWER J14 (K4822): confirmed exactly as you build it: ctx.stateTiming(name, ms), optional, a no-op when absent, called once per phase with gate, commit, copy, assemble, reuse. The plane's door forwards it into your ctx (PLANE #55, started now, plane R96) and control-plane hands it to the door; BOB posts a CHANGE when they merge.
