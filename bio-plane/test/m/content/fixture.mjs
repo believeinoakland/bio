@@ -76,8 +76,24 @@ export function bucket(objects = {}) {
 /** The readings extraction would provide: `readings[sha] = {chain, pageCount, containerExtent, textContainer,
  *  captureFormat, pageBoxes}`, `units[sha] = {units, state}`; `onReading` records listeners. */
 export function readings() {
-  const r = { readings: {}, units: {}, listeners: [], readFor: {} };
+  const r = { readings: {}, units: {}, listeners: [], readFor: {}, heldSheets: {}, cellsRangeMax: 20000, cellsOfCalls: [] };
+  /* `cellsOf` as extraction answers it (its ranged read of a held sheet, G41): `r.heldSheets[sha][sheet]` is the sheet's
+     whole typed cell list, standing for the held file; rows are 1-based as A1 is, the box is inclusive, and a call stops at
+     `r.cellsRangeMax` in-extent cells, naming the row it stopped before as `next_row`. */
+  const cellsOf = async (sha, sheet, { fromRow, toRow, fromCol = 1, toCol = Infinity } = {}) => {
+    r.cellsOfCalls.push({ sha, sheet, fromRow, toRow, fromCol, toCol });
+    const all = r.heldSheets[sha] && r.heldSheets[sha][sheet];
+    if (!Array.isArray(all)) return { cells: null, reason: "cells_not_held", why: "stand-in: no such held sheet" };
+    const at = (c) => { const m = /^([A-Z]+)(\d+)$/.exec(c.source.cell); return { col: [...m[1]].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0), row: Number(m[2]) }; };
+    const inBox = all.filter((c) => { const p = at(c); return p.row >= fromRow && p.row <= toRow && p.col >= fromCol && p.col <= toCol; })
+      .sort((a, b) => (at(a).row - at(b).row) || (at(a).col - at(b).col));
+    if (inBox.length <= r.cellsRangeMax) return { cells: inBox, interpreted: { sheet, from_row: fromRow, to_row: Math.min(toRow, Math.max(...all.map((c) => at(c).row))) }, next_row: null };
+    const kept = inBox.slice(0, r.cellsRangeMax), lastRow = at(kept[kept.length - 1]).row;
+    const whole = kept.filter((c) => at(c).row < lastRow);
+    return { cells: whole, interpreted: { sheet, from_row: fromRow, to_row: lastRow - 1 }, next_row: lastRow };
+  };
   r.provider = {
+    cellsOf,
     readingOf: (s) => (r.readings[s] ? { reading: { page_boxes: r.readings[s].pageBoxes ?? null }, chain: null,
       pageCount: null, textContainer: null, captureFormat: null, ...r.readings[s] } : null),
     unitsOf: (s) => r.units[s] || { units: [], state: null },
