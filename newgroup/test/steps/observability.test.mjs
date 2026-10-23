@@ -60,7 +60,9 @@ test("R40: a settings answer that states observability disabled is refused as on
 
 test("R40: settings that cannot be read do not stop the act: it continues and says the logs could not be confirmed (a lasting failure is rethrown, as heldBindings does)", async () => {
   for (const [name, act, pre] of ACTS) {
-    for (const blind of [{ settingsBlind: true }]) {
+    /* R42: an update refuses a script whose settings it cannot read before uploading, so the unreadable read-back is the one
+       AFTER the upload (`blindAfterPut`); the install reads no held settings, so it is blind from the start as before. */
+    for (const blind of [{ blindAfterPut: true }]) {
       const w = account({ pre, ...blind });
       const said = [];
       await act(await bundle(), { note: (t) => said.push(t) });
@@ -78,7 +80,7 @@ test("R40: settings that cannot be read do not stop the act: it continues and sa
 
 test("R40: the act finishes whether or not the row of the unconfirmed-logs note is in the word table: the note is said when the row exists and skipped when it does not", async () => {
   for (const [name, act, pre] of ACTS) {
-    const w = account({ pre, settingsBlind: true });
+    const w = account({ pre, blindAfterPut: true });
     const said = [];
     await act(await bundle(), { note: (t) => said.push(t) });
     assert.deepEqual(said, hasWord("installer.fleet.logsunconfirmed") ? [word("installer.fleet.logsunconfirmed")] : [], name);

@@ -5,7 +5,7 @@ import { scriptHash, releaseSha } from "./readback.mjs";
 import { planeCronsOfStream } from "./statements.mjs";
 import { setSchedules } from "./containers.mjs";
 import { word, hasWord } from "../../../bio-plane/src/setup-words/index.mjs";
-import { selfBinding, BROWSER_BINDING, memberBindings, instanceAiBinding, sealBinding, profilesBinding, ownHostsBinding, SEAL_BINDING, PROFILES_BINDING } from "./bindings.mjs";
+import { selfBinding, BROWSER_BINDING, memberBindings, instanceAiBinding, sealBinding, profilesBinding, ownHostsBinding, storeLocationBinding, heldPlace, SEAL_BINDING, PROFILES_BINDING } from "./bindings.mjs";
 
 /* R39 (K4566; fix round 6, G1) — THE PLANE'S SCHEDULE. The plane's one cron is the watchdog that heals a stalled object, and
    nothing in the account sets it but this: a script's upload carries no schedule. It is read from the signed bundle's own
@@ -86,6 +86,8 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
       ...sealBinding(secrets.seal),
       /* R21: the chosen jurisdiction profiles, only when some were chosen. */
       ...profilesBinding(opts.profiles),
+      /* R42: where the team's room is created, only when the caller was given a hint (the founder's `cf`); none, none. */
+      ...storeLocationBinding(opts.storeLocation),
       { type: "r2_bucket", name: "CAPTURES", bucket_name: names.captures },
       { type: "r2_bucket", name: "PUBLISHED", bucket_name: names.published },
       ...(opts.noSelf ? [] : [selfBinding(slug)]),
@@ -115,6 +117,8 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
 async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
   const names = opts.names;
   const crons = await cronsOf(release);
+  /* R42: the place the script holds is read here, by this function, before anything is uploaded; unreadable refuses the act. */
+  const place = await heldPlace(token, acct, slug);
   /* When the account's storage is available the update binds it explicitly,
      which quietly completes any copy installed before storage became a
      requirement. When it is not, the update proceeds the old way, keeping
@@ -185,6 +189,8 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
       /* R47: the copy's own hosts, restated on every upload of this shape that knows them (an install's last upload,
          after its address is enabled; an update, from the address it found). */
       ...ownHostsBinding(opts.ownHosts),
+      /* R42: the room's place, restated as held (a plain text is not in keep_bindings below); never invented. */
+      ...place,
     ],
     /* `service` is deliberately NOT in keep_bindings: the line above binds it
        explicitly, and an explicit binding is what heals the older copies that
@@ -205,7 +211,8 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
 /* R67 — IS THE PLANE ALREADY AS THIS RELEASE WANTS IT? "Already done" is judged by the whole deployed state: the bytes the
    account holds hash to the release's, the VERSION is the release's, and every binding the install would send is there with
    the kind it would send; any one missing and the plane is uploaded, bytes identical or not (S7). Secrets cannot be read, so a
-   secret counts by its name. */
+   secret counts by its name. R42: a room never moves, so `STORE_LOCATION` and `STORE_GENERATION` are not compared: a held
+   value that differs from what an install would send, or none, never makes the plane out of sync. */
 async function planeInSync(token, acct, slug, release, held, { names, members, profiles }) {
   const have = new Map(held.map((b) => [b.name, b]));
   const wants = [["STORE", "durable_object_namespace"], ["VERSION", "plain_text"], ["INSTANCE_NAME", "plain_text"], ["ADMIN_TOKEN", "secret_text"],
