@@ -248,4 +248,4 @@ Size (session_0193vawNA3pryumn3wcVVBRD): test runs 6, module lines 3438
 
 **Checks** (civicos-process `checks/`, each read by its failure count): format 176 modules, 0 failures; architecture 41 product files, 0 failures; coverage queue 55 of 55 ids, 0 failures; words queue, 0 failures; ownership 10 files, 0 failures. Impact set (`build/plan/impact.mjs`: queue 32, store-door 6, control-plane 17, plane 59 files): 547 tests, 545 pass, 2 fail (the two above). Census ops: none new.
 
-Size (session_011pqGr91RHciRQowMDqiftF): test runs 14, module lines 3592
+Size (session_011pqGr91RHciRQowMDqiftF): test runs 14, module lines 2948
