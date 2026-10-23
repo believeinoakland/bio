@@ -136,4 +136,4 @@ REPORT: B7 (K4650) applied and pushed. A figure input's engine mark is persisted
 
 **Found in another module.** `bio-plane/test/platform-sqlite.mjs:44`, the words check's "plain" hit for the string "string or blob too big" (test-support): needs a `localize` id or a dev tag, TEST-SUPPORT's.
 
-Size (session_015P7YZfAbM7iah2fh9UyBGM): test runs 20, module lines 3,566
+Size (session_015P7YZfAbM7iah2fh9UyBGM): test runs 20, module lines 3,495
