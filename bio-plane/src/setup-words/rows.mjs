@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (18524 design words, 1112 protected; SHA-256
-   24f0ffdeb236000f948540c221752da2e833674406dba6c952a7a2a67abe2c5b) followed by 7230 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   24f0ffdeb236000f948540c221752da2e833674406dba6c952a7a2a67abe2c5b) followed by 7232 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -19783,6 +19783,7 @@ export const WORD_ROWS = Object.freeze([
   ["calculations.index.a_table_is_declared_by","a table is declared by a member; a machine may not declare one (K1468). Nothing was written.",null,null,false,"code"],
   ["calculations.index.an_id_space_normalises","an id space normalises a value but names no entity; declare the column's entity scheme or a captured crosswalk",null,null,false,"code"],
   ["calculations.index.an_organisation_and_a_date","an organisation and a date are needed",null,null,false,"code"],
+  ["calculations.index.its_cells_could_not_be","its cells could not be read to say whether a third-party engine computed them, so its grade is undetermined",null,null,false,"code"],
   ["calculations.index.its_values_were_computed_by","its values were computed by a third-party engine ({name}) whose agreement is not recorded as measured, so its grade is undetermined (K1447 (ii)){v1}",null,null,false,"code"],
   ["calculations.index.money_facts_are_read_from","money facts are read from a table only at a member's request (K1468). Nothing was written.",null,null,false,"code"],
   ["calculations.index.taking_every_row_of_a","taking every row of a table is the rare case; state the reason (K1468). Nothing was written.",null,null,false,"code"],
@@ -24972,6 +24973,7 @@ export const WORD_ROWS = Object.freeze([
   ["retrieval-browse.find.term_missing","the kind term finds a name or term as written, and none was given",null,null,false,"code"],
   ["retrieval-browse.find.this_find_needs_missing_from","this find needs {missing} from the host, and the module was not handed it",null,null,false,"code"],
   ["retrieval-browse.find.viewer_missing","a find answers only to a stamped viewer, and this request carries none",null,null,false,"code"],
+  ["retrieval-browse.findin.cells_held_why","this sheet's text is read whole and searchable; its cells are interpreted for a range when the sheet is opened or cited, so no row of cells is named here",null,null,false,"code"],
   ["retrieval-browse.findin.no_cells_named","the reading holds no typed cells for this sheet, or the words found run across cells, so no row of cells is named",null,null,false,"code"],
   ["retrieval-browse.findin.no_matcher_for_lang_yet","no matcher for {lang} yet",null,null,false,"code"],
   ["retrieval-browse.findin.no_matcher_unstated","no matcher for this capture's language yet: neither its reading nor the active profiles state a language",null,null,false,"code"],
