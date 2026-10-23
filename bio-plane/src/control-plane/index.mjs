@@ -793,7 +793,8 @@ export async function deliverOwedRender({ ctx, env, storeName = "bio", answer, s
       } catch { project = ""; }
     }
     const record = recordOf(ctx), promotion = promotionOf(ctx);
-    const cs = { now: () => Date.now(), digest: async (t) => sha256Hex(t), w: (k, v) => word(k, v), date: (d) => d,
+    const cs = { now: () => Date.now(), digest: async (t) => sha256Hex(t), w: (k, v) => word(k, v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([n, x]) => [n, x && typeof x === "object" && "html" in x ? x.html : x])) : v),
+      date: (d) => { const t = new Date(d); return Number.isNaN(t.getTime()) ? String(d) : t.toLocaleDateString("en-US", { timeZone: "UTC", year: "numeric", month: "long", day: "numeric" }); },
       call: async (op, { query = {}, body } = {}) => {
         if (op === "allocid") return { ok: true, ...record.allocId(query.prefix, query.year) };
         if (op === "promote") return promotion.promote({ ...body, ...who });
