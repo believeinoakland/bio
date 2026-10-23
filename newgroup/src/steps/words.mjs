@@ -42,6 +42,7 @@ export const STEP_KEYS = Object.freeze([
   "installer.fleet.why.planunknown",
   "installer.fleet.why.program",
   "installer.fleet.why.pullfailed",
+  "installer.fleet.logsunconfirmed",
   "installer.fleet.why.refetch",
   "installer.fleet.why.unpinned",
   "installer.fleet.why.unpullable",

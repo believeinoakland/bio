@@ -1,5 +1,5 @@
 /* R12, R13, R15: the plane's two uploads, whether it is already as the release wants it, and its secrets. */
-import { cf } from "./api.mjs";
+import { cf, special } from "./api.mjs";
 import { rand, uploadForm } from "./bytes.mjs";
 import { scriptHash, releaseSha } from "./readback.mjs";
 import { planeCronsOfStream } from "./statements.mjs";
@@ -21,6 +21,27 @@ async function cronsOf(release) {
   return r.crons;
 }
 const setPlaneSchedules = (token, acct, slug, crons) => setSchedules(token, acct, slug, crons);
+
+/* R40 (G54, K4702) — THE PLANE'S WORKERS LOGS. A script upload that states no `observability` leaves the logs off, so both
+   metadata objects carry this one setting (the installer's constant, pinned by a test to the plane's `wrangler.jsonc`), and
+   the account's settings are read back once the script is there: a plane that does not hold `enabled: true` stops the act.
+   Stand-in for the sentence: `installer.fleet.why.program`; the row owed is `installer-steps.plane.observability`, one line
+   for "your Cloudflare account did not switch on the plane's logs". */
+export const OBSERVABILITY = Object.freeze({ enabled: true });
+/* Refused only when the settings ARE read (they state their bindings) and the setting is not enabled. A read that fails, or
+   answers nothing readable, is unknown, never "off" (as `heldBindings`): the act continues and `opts.note` is told, in words,
+   that the logs could not be confirmed (row `installer.fleet.logsunconfirmed`, written by `installer`); an approval or a lasting wait is
+   rethrown as everywhere. */
+async function observabilityHeld(token, acct, slug, note) {
+  let s;
+  try { s = await cf(token, `/accounts/${acct}/workers/scripts/${slug}/settings`); }
+  catch (e) { if (special(e)) throw e; s = null; }
+  if (!s || !Array.isArray(s.bindings)) {
+    if (typeof note === "function") note(word("installer.fleet.logsunconfirmed"));
+    return;
+  }
+  if (s.observability?.enabled !== true) throw new Error(word("installer.fleet.why.program"));
+}
 
 /* `opts.noSelf` exists for ONE reason: an install PUT names a service binding to
    the script the same PUT creates, and nothing here can prove Cloudflare accepts
@@ -73,11 +94,13 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
       /* DIST-6: the members this account already holds (none on a fresh account — see BINDING_OF). */
       ...memberBindings(opts.members, names),
     ],
+    observability: { ...OBSERVABILITY },
     /* SQLite backend is the irreversible choice, made correctly, once. */
     migrations: { new_tag: "v1", new_sqlite_classes: ["Store"] },
   };
   const put = await cf(token, `/accounts/${acct}/workers/scripts/${slug}`,
     { method: "PUT", body: uploadForm(meta, release.blob) });
+  await observabilityHeld(token, acct, slug, opts.note);
   await setPlaneSchedules(token, acct, slug, crons);
   return put;
 }
@@ -169,9 +192,11 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
        added here in the same change, or an update will silently DELETE the
        binding from a working instance and re-inert its monitoring. */
     keep_bindings: ["secret_text", "durable_object_namespace", ...(withR2 ? [] : ["r2_bucket"])],
+    observability: { ...OBSERVABILITY },
   };
   const put = await cf(token, `/accounts/${acct}/workers/scripts/${slug}`,
     { method: "PUT", body: uploadForm(meta, release.blob) });
+  await observabilityHeld(token, acct, slug, opts.note);
   await setPlaneSchedules(token, acct, slug, crons);
   return put;
 }

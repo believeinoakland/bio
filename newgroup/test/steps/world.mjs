@@ -151,11 +151,13 @@ export async function chosen(rel, extra = {}) {
 export function account({ slug = "grp", plan = "paid", probeDelete = "ok", r2 = "ok", subdomain = "grp", taken = [], subdomainPut = "ok",
   enableFail = false, pre = {}, preBuckets = [], preClasses = {}, preApps = [], preSources = {}, preTags = {}, readBack = "raw",
   rel = null, sourceFlaky = 0, sourceDown = false, sourceChange = null, containers = "ok", rolloutKeepsImage = false,
-  refuseSelf = false, refuseAllPlane = false, refuseRePut = false, refuseVpc = false, refuseSchedules = false, logpush = [],
+  refuseSelf = false, refuseAllPlane = false, refuseRePut = false, refuseVpc = false, refuseSchedules = false, dropObservability = false, logpush = [],
   lookupFail = [], settingsBlind = false, copy = {}, wakeAfter = 0, silentAddress = false, objects = {}, refuseDelete = [],
   expireAfter = null, cfFlaky = null, refuseSecretDelete = false,
   pullFails = false, startingFor = 0, memberServes = null } = {}) {
   const scripts = new Map(Object.entries(pre));
+  /* G54: what the account holds of each script's `observability`: the upload's own, unless `dropObservability` (a platform that ignores it). */
+  const observed = new Map();
   const buckets = new Set([...(r2 === "exists" ? [`bio-captures-${slug}`] : []), ...preBuckets]);
   const sources = new Map(Object.entries(preSources));
   const tags = new Map(Object.entries(preTags));
@@ -209,6 +211,7 @@ export function account({ slug = "grp", plan = "paid", probeDelete = "ok", r2 = 
     }
     const kept = (scripts.get(name) || []).filter((b) => (meta.keep_bindings || []).includes(b.type) && !explicit.some((x) => x.name === b.name));
     scripts.set(name, [...explicit, ...kept]);
+    observed.set(name, dropObservability ? undefined : meta.observability);
     sources.set(name, body);
     if (name === slug) state.planePuts.push({ meta, bindings: scripts.get(slug), source: body, form: init.body });
     return cfok({ id: name });
@@ -320,7 +323,8 @@ export function account({ slug = "grp", plan = "paid", probeDelete = "ok", r2 = 
     { m: (u, mth) => /\/workers\/scripts\/[^/]+\/settings$/.test(u) && mth === "GET", f: (u) => {
       const name = u.split("/workers/scripts/")[1].split("/")[0];
       if (lookupFail.includes(name)) return cferr("upstream trouble", 500);
-      return scripts.has(name) ? cfok(settingsBlind ? {} : { bindings: (scripts.get(name) || []).map(({ text, ...b }) => (b.type === "plain_text" ? { ...b, text } : b)) })
+      return scripts.has(name) ? cfok(settingsBlind ? {} : { bindings: (scripts.get(name) || []).map(({ text, ...b }) => (b.type === "plain_text" ? { ...b, text } : b)),
+        ...(observed.get(name) ? { observability: observed.get(name) } : {}) })
         : cferr("not found", 404);
     } },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+$/.test(u) && mth === "PUT", f: putScript },
