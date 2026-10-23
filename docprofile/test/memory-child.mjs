@@ -19,7 +19,7 @@ if (isMainThread) {
   w.on("message", async (m) => {
     if (m.base) {
       base = await heap();
-      (async () => { while (!stop) { const v = (await heap()) - base; samples++; if (v > peak) peak = v; } })();
+      (async () => { while (!stop) { let v; try { v = (await heap()) - base; } catch { break; } /* the worker ended under a poll in flight */ samples++; if (v > peak) peak = v; } })();
       w.postMessage("go");
     } else if (m.idle) {
       console.log(JSON.stringify({ baseMB: (await heap()) / MB })); w.terminate();
