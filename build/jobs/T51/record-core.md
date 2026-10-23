@@ -162,3 +162,7 @@ My best reading, and what I will do unless you say otherwise: accept. R91's text
 Option B (not recommended): the scheduler job moves its heartbeat into a SQL table on the list (a CHANGE to scheduler, P10; its heartbeat tests change), then the tick would not move the count at all.
 
 My branch job/T51/record-core is pushed with the code, the tests and the record's Completion section; nothing else is owed.
+
+## J7 · COMPLETE
+
+COMPLETE (G115, R91). Per B7: the key-value heartbeat moving the counter once per firing is accepted; R91's wording is BOB's at the merge (my proposed lines, R91 and new R92, R21's own-table list gaining bookkeeping_tally, R90 "no row written", are in my record's Completion section). Code, tests and the record are pushed on job/T51/record-core. Tests: record-core's 13 files 0 failures each, r8-bookkeeping 10/10 (seen RED first), workerd R91 test green. Checks: format, architecture, ownership 0 failures; coverage and words show nothing for record-core. Stale generated artifacts: setup-words words-unreviewed.json, case-checker program.mjs, bundles including record-core (BOB regenerates). Reds not mine are listed in the record. Size (session_01JW6vYMw9VE4YLAc84eswpM): test runs 21, module lines 2505.
