@@ -62,13 +62,13 @@ import { parse as parseLegistar, KEY as LEGISTAR_KEY } from "../../../legistar-r
 import { FOLLOWING_TABLES, migrateFollowing } from "./schema.mjs";
 import { legistarBodyId, eventsAddress, itemsAddress, votesAddress, mattersAddress, matterAddress, enactmentOf } from "./legistar.mjs";
 import { noticeRule, meetingsOf, dueBefore } from "./meetings.mjs";
-import { portalKey, readDataset, diffRows } from "./snapshot.mjs";
+import { portalKey, readDataset, diffRows, storedRows } from "./snapshot.mjs";
 import { followRefusal } from "./checks.mjs";
 
 export { FOLLOWING_SCHEMA, FOLLOWING_TABLES, migrateFollowing } from "./schema.mjs";
 export { legistarSystems, bodySchemes, legistarBodyId } from "./legistar.mjs";
 export { noticeRule, meetingsOf, dueBefore, MEETING_HORIZON_MONTHS } from "./meetings.mjs";
-export { portalKey, readDataset, diffRows } from "./snapshot.mjs";
+export { portalKey, readDataset, diffRows, storedRows, PORTAL_ROWS_INLINE_MAX, PORTAL_PART_CHARS } from "./snapshot.mjs";
 export { FOLLOWING_CHECKS, followRefusal } from "./checks.mjs";
 
 export const FOLLOWING_MODULE = "following";
@@ -78,15 +78,11 @@ export const FOLLOW_CONSUMER = "following";
 export const FOLLOW_TICK_BATCH = 50;
 /** R2: fetches one body's read makes in one tick (its events, items, votes and matters), beyond which it says so. */
 export const BODY_READ_FETCHES = 200;
-/** R10 (G46): a portal snapshot's rows JSON up to this many bytes is stored whole in `portal_snapshots.rows`; above it the
- *  text lies in `portal_snapshot_parts` and `rows` holds `{parts, bytes, rows}`. A stored value stays under 1 MiB (K4639). */
-export const PORTAL_ROWS_INLINE_MAX = 524288;
-/** R10 (G46): characters in one piece (256 Ki; at most 3 bytes each, so a piece is under 1 MiB), never splitting a surrogate pair. */
-export const PORTAL_PART_CHARS = 262144;
 /** R10 (G46, K1881): the capture size above which a portal's answer is not parsed into a snapshot: the tick holds the decoded
  *  text, the parsed rows and their JSON at once, and the diff two snapshots' rows, in one object. The snapshot is written with
- *  no rows and a stated reason; the capture is held whole and cited. */
-export const PORTAL_PARSE_MAX_BYTES = 8 * 1024 * 1024;
+ *  no rows and a stated reason; the capture is held whole and cited. Set by measure: a 4 MiB capture of 62-byte rows ticks and diffs
+ *  at a node cap of 134 MB (x1.2 = 161, under the object's 163 at that size); 5 MiB needs 184 and 8 MiB 246. */
+export const PORTAL_PARSE_MAX_BYTES = 4 * 1024 * 1024;
 /** R12: the cadences a follow may name: daily (the default) or longer, from monitoring's intervals (its R14). */
 export const FOLLOW_CADENCES = Object.freeze(["daily", "weekly", "monthly"]);
 export const FOLLOW_KINDS = Object.freeze(["body", "register", "person-query", "portal", "policy"]);
@@ -853,26 +849,15 @@ export class Following {
       ds = { why: localize("following.index.snapshot_over_parse_bound", "this answer is {size} MB ({bytes} bytes), above the {bound} MB a snapshot can be compared at; the capture holds all of it",
                            { size: (bytes.length / 1048576).toFixed(2), bytes: String(bytes.length), bound: String(PORTAL_PARSE_MAX_BYTES / 1048576) }) };
     else ds = readDataset(new TextDecoder("utf-8", { fatal: false }).decode(bytes));
-    const text = ds.rows ? JSON.stringify(ds.rows) : null;
     const at = instant(nowMs);
+    const stored = ds.rows ? storedRows(ds.rows) : { value: null, pieces: [] };
     /* the snapshot row and its pieces are one write: a throw leaves neither (G46) */
     const write = () => {
       const seq = Number(this.#one(`SELECT COALESCE(max(seq), 0) + 1 AS n FROM portal_snapshots WHERE follow_id=?`, f.follow_id).n);
-      const size = text === null ? 0 : new TextEncoder().encode(text).length;
-      const whole = text === null || size <= PORTAL_ROWS_INLINE_MAX;
-      const pieces = [];
-      if (!whole) for (let i = 0; i < text.length;) {
-        let end = Math.min(i + PORTAL_PART_CHARS, text.length);
-        const last = text.charCodeAt(end - 1);
-        if (end < text.length && last >= 0xD800 && last <= 0xDBFF) end--;
-        pieces.push(text.slice(i, end));
-        i = end;
-      }
       this.#sql.exec(`INSERT INTO portal_snapshots (follow_id, seq, capture_sha, bundle_id, at, rows, why) VALUES (?,?,?,?,?,?,?)`,
-                     f.follow_id, seq, t.sha, t.bundle, at,
-                     whole ? text : JSON.stringify({ parts: pieces.length, bytes: size, rows: ds.rows.length }), ds.why || null);
-      pieces.forEach((chunk, part) => this.#sql.exec(`INSERT INTO portal_snapshot_parts (follow_id, seq, part, bundle_id, chunk) VALUES (?,?,?,?,?)`,
-                                                     f.follow_id, seq, part, t.bundle, chunk));
+                     f.follow_id, seq, t.sha, t.bundle, at, stored.value, ds.why || null);
+      stored.pieces.forEach((chunk, part) => this.#sql.exec(`INSERT INTO portal_snapshot_parts (follow_id, seq, part, bundle_id, chunk) VALUES (?,?,?,?,?)`,
+                                                            f.follow_id, seq, part, t.bundle, chunk));
       return seq;
     };
     const seq = typeof this.record.transact === "function" ? this.record.transact(write) : write();
