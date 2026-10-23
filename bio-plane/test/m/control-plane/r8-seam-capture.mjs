@@ -38,6 +38,10 @@ export function sections(kit) {
   function served(label, size, rate) {
     const name = `R8-${label}-${stamp()}.pdf`;
     const bytes = pdfOf(`R8 ${label} the budget volume the clerk read ${stamp()}`, size);
+    /* the kit's filler is the same for every file of a size; a delivery of a second file whose filler is the same is refused by the record (found at the first run), so each
+       file's filler is made its own: 20000 bytes of the filler's stream, none of the pages' */
+    let x = (Date.now() % 1000003) + Math.floor(Math.random() * 1e6) + 7;
+    for (let i = 0; i < 20000; i++) { x = (x * 1664525 + 1013904223) >>> 0; bytes[3000 + (x % (bytes.length - 6000))] = 0x41 + ((x >>> 24) % 26); }
     serve(name, bytes, { rate });
     return { name, bytes, locator: `https://www.example.gov/files/${name}`, sha: sha(bytes) };
   }
@@ -233,7 +237,7 @@ export function sections(kit) {
     assert.ok(mine.fetch_pending && typeof mine.fetch_pending === "object", "listed as fetch_pending: " + JSON.stringify(mine).slice(0, 300));
     assert.equal(mine.fetch_pending.failed, HELD_ELSEWHERE, "fetch_pending.failed states the code: " + JSON.stringify(mine.fetch_pending));
     /* the watch ends in that code's words */
-    assert.ok(await w.ended(), "the watch ended");
+    assert.ok(await w.ended(), "the watch ended: it asks opencaptures and finds " + JSON.stringify(mine) + ", and the screen reads the refusal from the listed session's top-level failed (watchFetch, the Unfinished line), not from fetch_pending.failed");
     const words = CAPTURE_SCREEN.parts.refusalHtml(w.cs, { code: HELD_ELSEWHERE });
     assert.ok(words, "the refusal has words");
     assert.ok(w.state.promoteRefused, "the watch ended in a refusal");
