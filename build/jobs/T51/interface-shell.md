@@ -473,3 +473,14 @@ Size (session_01Up6JyxDqREE6g4kR9CVELS): test runs 24, module lines 3355
 ## J27 · COMPLETE
 
 COMPLETE, fix round 7 (G77, G81); record section 'Fix round 7'. G77: no restore into a data-redraw group; red then green, and real Chromium (L) red/green. G81: groupidentity and infolevel kept for a day, the other four asked once per load, four characterization tests. Module suite 364/364; users' suites pass (intake/investigate/publish pass alone; two-at-once runs timed out). REPORT: the plan's 'id the radio by its value' was built and withdrawn because it breaks ~58 tests of five screen modules that name boxes by place; the restore rule alone fixes the case. Say if you want ids by value, with a CHANGE to those modules' tests first.
+
+## J28 · QUESTION
+
+QUESTION for `interface-shell` (G114, R128): the shape of `v`, which control-plane must parse. My best reading, built on unless you say otherwise.
+
+**Order found (K4817).** `loadWords` is sent at `whoami`'s answer; `bootstrap` goes after the screen's first reads and the marks request (R122). So `loadWords` runs first and cannot read `bootstrap`'s `language`/`words_version` on a first load.
+
+**My build.**
+1. `v` is ONE string, three parts joined by `~`: `<release>~<language>~<stamp>`. Release is `cs-version` verbatim (the release may hold dots or dashes, never `~`); `language` is `bootstrap`'s `language` verbatim, empty when it is `null`; `stamp` is `words_version` verbatim. The request never names `language` (a `language` field asks translations for every word, G113). control-plane splits on `~` and compares each part with the current release, the viewer's language and the current stamp. Please pass this form to CONTROL-PLANE and INSTANCE-SETUP, or give me the one you want.
+2. Before `bootstrap` has answered, the load names the release alone (`v=<release>`, today's form; answered `private, no-cache`, one round trip). When `bootstrap` answers with a `words_version`, the shell keeps `{language, stamp}` in the device's `localStorage` under `cs-words:<member>` (a device convenience like `cs-group`; `sessionStorage` still holds R124's one key only, R24) and, if the load it made named something else, asks `interfacewords` once more with the full `v`, so that fetch is the one the browser keeps for the year. Every later load in that browser (a second sign-in, a new page) names the full `v` from the note at once. A stale note is harmless: the door answers a `v` that is not current without the year, with the viewer's current words.
+3. Known bound, no extra request built: a sign-in made at `front` in a page opened with no session record has no stamp until a page load that holds the record asks `bootstrap`; that first sign-in names the release alone (no-cache). If you want the stamp learned at that sign-in instead, it costs one authenticated `bootstrap` per sign-in and touches R122/R127's counts: say so and I build it.
