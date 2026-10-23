@@ -476,9 +476,10 @@ export async function keepWhole(ev, { sha, parts, total, bytes = null, compose =
          (`putFromParts`, record-core R87), and this module reads no part back, hashes nothing again and puts no whole; the store verifies the whole against
          its digest. A store that offers none, or refuses, is read back, as without `compose`. */
       if (!held && compose === true && typeof ev.putFromParts === "function") {
-        const r = await ev.putFromParts(sha, parts.map((p) => p.sha256));
-        return r && r.ok === true ? { ok: true, kept: true }
-          : fail(localize("acquisition.index.keep_store_refused", "the store would not take it ({detail})", { detail: String(r && (r.reason || r.detail || r.code) || "refused").slice(0, 120) }));
+        let r = null;
+        try { r = await ev.putFromParts(sha, parts.map((p) => p.sha256)); } catch { r = null; }
+        if (r && r.ok === true) return { ok: true, kept: true };
+        /* a store that would not compose it (no multipart upload offered, a refusal) leaves the parts to be read back below, which says which part is wrong if one is */
       }
       const whole = new Uint8Array(total);
       let at = 0;
