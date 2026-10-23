@@ -497,3 +497,28 @@ Proposed requirement lines (R13): the sitting's evidence lines are the document 
 Row owed to UX-DESIGN: the unsignable-documents sentence (stand-in `screen.published.rests.on.the.council.minutes`).
 
 Size (session_018p3RDUFnhwwhQG5CBJrBfi): test runs 9, module lines 3638
+
+## J33 · COMPLETE
+
+COMPLETE (G51, B40). Commit 056d60ade8 on job/T51/screens-publish, pushed.
+
+**Entries applied.** G51: the eight keys the design's reads list gives the module are now listed in `bio-plane/src/screens-publish/keys.mjs`, each by the screen that draws it (checked against the drawing code, not only the diagnosis):
+- `ceremony`: `refusal.NO_CASE_DOCUMENT` (a failed `casedocument` read is drawn by `cs.state`, ceremony.mjs:347, :363); `screen.ceremony.conf.row.done`, `.row.missing.co_archive`, `.row.missing.timestamp` (ceremony.mjs:229); `screen.ceremony.registering` (ceremony.mjs:612); `shell.keyfile.none` (the key-file field `ce-keyfile` drawn at ceremony.mjs:383).
+- `published`: `refusal.NO_PUBLISHED_EDITION`. A failed `publishedcase` read is drawn by `cs.state` at published.mjs:48 (only `NOT_PUBLISHED` and `NO_SUCH_*` are special-cased there). The ceremony does not draw it: ceremony.mjs:104 treats that code as not a gone edition, so it is not drawn at :140.
+- `case-editor` and `review-outside`: `review.index.not_concluded_yet`, which `P.findingWords` draws (case-editor.mjs:115, review-outside.mjs:44). Not the ceremony list, as G51 allowed: the ceremony does not call `findingWords`.
+
+**Deviations from the diagnosis, recorded.** G51 named the ceremony list for all eight. Two keys are listed by other screens because those screens draw them (above). `refusal.NO_CASE_DOCUMENT` is not listed by case-editor: case-editor.mjs:308 keeps that code from being drawn. No code changed other than the list; no test, requirement, or word row changed.
+
+**Red then green.** `common.test.mjs` R24 ("every key it reads ... is listed by a screen that may draw it") red before, with the eight keys unlisted; green after (23/23 in that file). The other tests of the module unchanged.
+
+**Suites (bio-plane, `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/screens-publish/`).** 271 tests: 269 pass, 0 fail, 2 todo (the two R35 press tests, held by K3717, B13). Every `node_modules` installed first (K4113): agent-runner, bio-plane/src/journey-check, file-scanner, sheet-worker, site (newgroup, ocr-worker, pdf-worker, bio-plane were present).
+
+**Impact set as users** (`node build/plan/impact.mjs origin/tranche/T51 HEAD`, run after the commit): screens-publish 22/22, control-plane 72/85, plane 51/59; 3 modules, 145 test files. I ran the 123 test files of control-plane and plane (`node --test` over the affected list): 740 pass, 1 fail. The fail is `test/m/plane/release.test.mjs:78` (R24, DEC-149): "screen.objective.purpose is held by the words list" (`objective` is not a screens-publish screen). That is plane `release` R24, an inherited red named in my START; I did not touch it.
+
+**Checks (`node checks/run.mjs /home/user/bio`, process repo pulled first).** format 0 failures (176 modules); architecture 0; coverage 6686 of 6686 live ids named, 0 failures; channels 0; words: 1 failure, `inline 1` at `bio-plane/src/case-checker/spec.mjs:11`, the inherited red named in my START (not screens-publish). Ownership (`checks/ownership.mjs /home/user/bio screens-publish tranche/T51 job/T51/screens-publish`): 1 file changed by screens-publish, 0 failures.
+
+**Found in another module.** None new. Only the inherited reds above.
+
+**Not done.** No requirement text changed, so no proposed requirement line. No word key needed beyond the design's list. No census op changed (K4208). Nothing deferred.
+
+Size (session_01TAAJFf7btHo6fZZ7TSeWfZ): test runs 5, module lines 3639
