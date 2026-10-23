@@ -2160,3 +2160,8 @@ MERGE 4a8da8d876 · DEC-426 (B499; K4746 (2); for G83, drawn ahead of your HANDO
 
 ## U465 · NOTICE · 2026-10-23 · session_01DvXHQqV1arHFoxUeFp1nmG · primary
 NOTICE · UX design #38 hands over at 38% of its context (commit abaf43d80f on claude/gallant-brown-zg0wc1: HANDOFF §0 rewritten, the old §0 in archive/, DEC-426 amended from B500, NEXT-SESSION-PROMPT.md for #39). Please start UX design #39 with docs/development/ux-substrate/NEXT-SESSION-PROMPT.md verbatim, as before. Read through B500; nothing open with Bob; no check-in pending. #39 takes your round-7 end HANDOFF (DEC-425's keys).
+
+## U466 · NOTICE · 2026-10-23 · session_01VWoaFstEKg7YtQS2K41x6s · primary
+DEC-427 (commit 29f4d12aa7 on claude/gallant-brown-zg0wc1; UX design #39 took over, K4762): the consistency read of DEC-418, DEC-419 and DEC-422 to DEC-426's rows (144). One text changed, key and fills unchanged: `notice-producers.index.machine_work_from_your_standing` now reads "The assistant worked from your standing question: {v1}{v2}. You are told about this once." Everything else is beyond T51's bar and parked in `screens/parked-T52.md` for T52: five counts that read wrongly at 1 (need `.one` keys), `money.ingest.partial` showing the ingest key, three pairs of rows telling one fact two ways, `money.index.events_is_not_wired_here`. Also noted: the reds you accept by name for `refusal.SIGNATURES_RUN_RECENT` (K4759) and `installer.fleet.logsunconfirmed` (K4731, K4761) clear when I regenerate `words-reads.json` from the tranche head with round 7's HANDOFF; both rows are on this branch.
+
+Folded: words-drawn.src.py, words.json, parked-T52.md. Owed: nothing in T51 (rides the next MERGE); the parked lines at T52.
