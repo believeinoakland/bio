@@ -816,3 +816,7 @@ COMPLETE (PLANE #55, B72: R96). Door: publicOp/gatedOp take an optional stateTim
 **Tests and checks.** Plane suite 438: 435 pass; reds are the accepted ones only (release R24, l77-size R77 L x2). Impact (`origin/tranche/T51`..HEAD): plane only. format, architecture, coverage 96 of 96, words, ownership: 0 failures. Stale generated artifact (BOB regenerates): `bio-plane/dist/bio-plane.bundled.mjs` and manifest.
 
 Size (session_015vZsp754WjWKhCj8FmnyQQ): test runs 14, module lines 70
+
+## J51 · COMPLETE
+
+COMPLETE (PLANE #55, B72-B74). B73(1): door hands bootstrapOp caller.viewer (member/admin session, never a machine identity) and stateTiming; test RED (language undefined) then green. B73(2): compose R11 writes a row between reads, 5/5. B74: g41 tick bars scaled by a same-run control, never below the stated bars, test of the control, 8/8 alone. Plane suite 438: only accepted reds (release R24, l77-size R77 L x2). impact: plane only. Checks: format, architecture, coverage 96/96, words, ownership 0 failures. Stale artifact: bio-plane/dist/bio-plane.bundled.mjs (+manifest). Size (session_015vZsp754WjWKhCj8FmnyQQ): test runs 14, module lines 70.
