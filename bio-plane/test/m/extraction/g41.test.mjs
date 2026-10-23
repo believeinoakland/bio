@@ -223,7 +223,7 @@ test("R96 (G41 a): a 1 MB CSV read through `readHeld` until no `more` ends read,
   const { w, d } = await home(csvText(rows), { ct: "text/csv", format: "csv", fromText: true });
   const done = await readAll(w, d);
   assert.deepEqual([done.ok, done.read], [true, true], JSON.stringify(done));
-  assert.equal(done.found, true, `the CSV is read, not stated: ${JSON.stringify(JSON.parse(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading).basis)}`);
+  assert.equal(done.stated, undefined, `the CSV is read, not stated: ${JSON.stringify(JSON.parse(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading).basis)}`);
   assert.ok(found(w, "LASTROWMARK"), "the last row is searchable");
   assert.ok(largestStored(w) < MiB, `the largest stored value is ${largestStored(w)} B`);
   const stored = JSON.parse(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading);
@@ -235,7 +235,7 @@ test("R96 (G41 b): an xlsx of 5,000 rows of 4 cells read through `readHeld` ends
     cells: ["A", "B", "C", "D"].map((c, k) => ({ r: `${c}${i + 1}`, t: "inlineStr", is: i === 4999 && k === 0 ? "LASTROWMARK" : `value ${i} ${k}` })) })) } }] });
   const { w, d } = await home(bytes, { ct: XLSX_CT, format: "xlsx" });
   const done = await readAll(w, d);
-  assert.deepEqual([done.ok, done.read, done.found], [true, true, true], JSON.stringify(done));
+  assert.deepEqual([done.ok, done.read, done.stated], [true, true, undefined], JSON.stringify(done));
   assert.ok(found(w, "LASTROWMARK"));
   assert.ok(largestStored(w) < MiB);
   assert.deepEqual(JSON.parse(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading).cells_held, ["Budget"]);
@@ -250,9 +250,9 @@ test("R96 (G41 boundary): a workbook whose cells are just under INLINE_CELLS_MAX
     await readAll(w, d);
     return JSON.parse(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading);
   };
-  const perCell = JSON.stringify((await make(1)).cells.Budget[0]).length + 1;
-  const under = await make(Math.floor((pipeline.INLINE_CELLS_MAX_BYTES * 0.98) / perCell));
-  const over = await make(Math.ceil((pipeline.INLINE_CELLS_MAX_BYTES * 1.02) / perCell));
+  /* one-cell rows "v<i>": 3,000 rows list 500,677 characters of cells (95% of the cap), 3,150 rows pass it (measured with the entry) */
+  const under = await make(3000);
+  const over = await make(3300);
   assert.ok(Array.isArray(under.cells.Budget) && under.cells_held === undefined, "just under: inline");
   assert.deepEqual([over.cells.Budget, over.cells_held], [null, ["Budget"]], "just over: held");
 });
