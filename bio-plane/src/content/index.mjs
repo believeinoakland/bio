@@ -49,7 +49,7 @@ import {
   unitChainKind,
 } from "./extent.mjs";
 import { VERSION_NOTICE_ADDRESSES_MAX, VERSION_NOTICE_STATES, VERSION_NOTICE_GRADES, extentBoundUnheld, gradeAcross,
-         affectsOf, heldTextAt, typedCellsAt } from "./notice.mjs";
+         affectsOf, heldTextAt, typedCellsAt, extentBox } from "./notice.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 
 export * from "./extent.mjs";
@@ -1268,22 +1268,28 @@ export class Content {
    * ===================================================================== */
 
   /** THE ONE READER of the typed cells and the metadata a capture's reading holds (`extraction.readingOf`'s `reading`):
-   *  `cells` the per-sheet map `{<sheet name>: cells list | null}` (null when the reading holds none), `metadata` the
-   *  office readers' object (null when none), `read` whether the capture was read at all. Never throws. */
+   *  `cells` the per-sheet map `{<sheet name>: cells list | null}` (null when the reading holds none; `null` for a sheet
+   *  whose cells are held, not listed), `held` the sheet names the reading says are held, not listed (`cells_held`),
+   *  `metadata` the office readers' object (null when none), `read` whether the capture was read at all. Never throws. */
   #officeOf(captureSha) {
     let r = null;
     try { r = typeof captureSha === "string" && captureSha ? this.extraction.readingOf(captureSha) : null; } catch { r = null; }
     const reading = r && isObj(r.reading) ? r.reading : null;
     return { read: !!r, cells: reading && isObj(reading.cells) ? reading.cells : null,
+             held: reading && Array.isArray(reading.cells_held) ? reading.cells_held.filter((n) => typeof n === "string") : [],
              metadata: reading && isObj(reading.metadata) ? reading.metadata : null };
   }
 
   /** R52: the typed cells of a held `sheet-cell` or `sheet-range` row's capture inside its extent, as the reader states
    *  them (`office-readers` R30), in row then column order: `{content_id, capture_sha, extent_kind, extent, cells}`, or
    *  `{cells: null, reason, why}` for a row not held, stale (R22), of another extent kind, or whose reading holds no
-   *  typed cells for that sheet. No viewer (R46's terms): a caller that shows them asks sight first (R37). Writes
-   *  nothing; never throws. */
-  cellsAt(contentId) {
+   *  typed cells for that sheet. A sheet the reading says it holds without listing (`cells_held`: its text is read whole,
+   *  its cells are not all interpreted at intake) has the extent's cells made from the held file by `extraction.cellsOf`
+   *  and the answer adds `interpreted: {sheet, from_row, to_row}`, the rows the cells were made for; a range over the
+   *  call's bound adds `cells_truncated: true` and `next_row`, never a silently shorter list; a failure to make them is
+   *  `reason: "not_read"`. No viewer (R46's terms): a caller that shows them asks sight first (R37). Writes nothing in
+   *  the record; never throws. */
+  async cellsAt(contentId) {
     const no = (reason, why) => ({ cells: null, reason, why });
     try {
       const id = typeof contentId === "string" ? contentId.trim() : "";
@@ -1296,12 +1302,41 @@ export class Content {
       if (r.extent_kind !== "sheet-cell" && r.extent_kind !== "sheet-range")
         return no("not_a_sheet_extent", localize("content.index.the_row_cites_a_extent", "the row cites a {extent_kind} extent, which names no cells of a sheet", { extent_kind: String(r.extent_kind) }));
       const extent = { ...(isObj(e) ? e : {}), kind: r.extent_kind };
-      const got = typedCellsAt(extent, this.#officeOf(r.capture_sha).cells);
+      const office = this.#officeOf(r.capture_sha);
+      const sheet = typeof extent.sheet === "string" ? extent.sheet.trim() : "";
+      if (office.held.includes(sheet) && !(office.cells && Array.isArray(office.cells[sheet])))
+        return await this.#heldCellsAt(r, e, extent, sheet);
+      const got = typedCellsAt(extent, office.cells);
       if (!got.cells) return no(got.reason, got.why);
       return { content_id: r.content_id, capture_sha: r.capture_sha, extent_kind: r.extent_kind, extent: e, cells: got.cells };
     } catch {
       return no("not_read", localize("content.index.row_cells_could_not", "the row's cells could not be read"));
     }
+  }
+
+  /** R52's held arm: the extent's rows and columns asked of `extraction.cellsOf` (its ranged read of the held file),
+   *  its rows passed through `typedCellsAt` so the column box and reversed corners are honoured exactly as for a listed
+   *  sheet. Never throws: a read that fails is `not_read`. */
+  async #heldCellsAt(r, e, extent, sheet) {
+    const no = (reason, why) => ({ cells: null, reason, why });
+    const notRead = () => no("not_read", localize("content.index.row_cells_could_not", "the row's cells could not be read"));
+    const box = extentBox(extent);
+    if (!box) { const bad = typedCellsAt(extent, { [sheet]: [] }); return no(bad.reason, bad.why); }
+    if (typeof this.extraction.cellsOf !== "function") return notRead();
+    let got = null;
+    try { got = await this.extraction.cellsOf(r.capture_sha, sheet, { fromRow: box.r0, toRow: box.r1, fromCol: box.c0, toCol: box.c1 }); }
+    catch { return notRead(); }
+    if (!got || !Array.isArray(got.cells))
+      return got && typeof got.reason === "string" && got.reason !== "bytes_not_held"
+        ? no(got.reason, typeof got.why === "string" ? got.why : localize("content.index.row_cells_could_not", "the row's cells could not be read"))
+        : notRead();
+    const inside = typedCellsAt(extent, { [sheet]: got.cells });
+    if (!inside.cells) return no(inside.reason, inside.why);
+    const next = Number.isInteger(got.next_row) ? got.next_row : null;
+    const rows = isObj(got.interpreted) ? got.interpreted : { sheet, from_row: box.r0, to_row: next === null ? box.r1 : next - 1 };
+    return { content_id: r.content_id, capture_sha: r.capture_sha, extent_kind: r.extent_kind, extent: e, cells: inside.cells,
+             interpreted: { sheet: rows.sheet ?? sheet, from_row: rows.from_row, to_row: rows.to_row },
+             ...(next === null ? {} : { cells_truncated: true, next_row: next }) };
   }
 
   /** R53: the metadata an office capture's reading holds (`office-readers` R31), `{capture_sha, metadata: {author,
