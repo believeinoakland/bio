@@ -38,10 +38,52 @@ import { read as readDocument, tier2Escalate, tier3Extend, tier3SeedFrom, needsT
          compareProvenance, readingProvenance, PROVENANCE_SCHEME, tier4Extend, tier4Pages,
          AI_TRANSCRIPTION_SOURCE, TRANSCRIBE_USE } from "../reading-pipeline/index.mjs";
 import { localize, word } from "../setup-words/index.mjs";
+import { SCREEN_WORDS } from "./screen-words.mjs";
 
-export { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL, CAPTURE_TEXT_UNIT_CAP, TRANSCRIBE_WORDS };
+export { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL, CAPTURE_TEXT_UNIT_CAP, TRANSCRIBE_WORDS, SCREEN_WORDS };
 
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
+
+/** (G41; R96) The UTF-8 bytes of a string, counted in slices so a large string is never encoded whole (an 11 MB reading is not copied to count it). */
+function utf8Bytes(s) {
+  let n = 0;
+  for (let at = 0; at < s.length;) {
+    let end = Math.min(at + 65536, s.length);
+    if (end < s.length) { const c = s.charCodeAt(end - 1); if (c >= 0xd800 && c <= 0xdbff) end++; }
+    n += new TextEncoder().encode(s.slice(at, end)).length;
+    at = end;
+  }
+  return n;
+}
+/** (G41; R98) A typed cell's place, `{row, col}` (both from 1), from its `source.cell` (`B7`), else the part of `source.ref` after the sheet's `!`;
+ *  null for a cell that names none. */
+export function cellAddress(c) {
+  const src = c && typeof c === "object" && c.source && typeof c.source === "object" ? c.source : null;
+  const text = src && typeof src.cell === "string" ? src.cell : src && typeof src.ref === "string" ? src.ref.slice(src.ref.lastIndexOf("!") + 1) : "";
+  const m = /^\$?([A-Za-z]{1,4})\$?([1-9][0-9]*)$/.exec(text);
+  if (!m) return null;
+  let col = 0;
+  for (const ch of m[1].toUpperCase()) col = col * 26 + (ch.charCodeAt(0) - 64);
+  return { row: Number(m[2]), col };
+}
+/** (G41; R98) An answer of `cellsOf` from cells in row then column order: at most `max` of them, ending at a row's end when it can, and `next_row`
+ *  naming the row a cut answer goes on from (the entry's own when it stopped itself). */
+function cut(cells, interpreted, ats, max, entryNext = null) {
+  let n = cells.length, next = entryNext;
+  if (n > max) {
+    const firstDropped = ats[max] ? ats[max].row : null;
+    n = max;
+    if (firstDropped !== null && ats[max - 1] && ats[max - 1].row === firstDropped) {
+      let k = max; while (k > 0 && ats[k - 1] && ats[k - 1].row === firstDropped) k--;
+      if (k > 0) n = k;
+    }
+    next = firstDropped !== null && ats[n - 1] && ats[n - 1].row === firstDropped ? firstDropped + 1 : firstDropped;
+  }
+  const to = next !== null && interpreted ? Math.min(interpreted.to_row, next - 1) : interpreted ? interpreted.to_row : null;
+  return { cells: n === cells.length ? cells : cells.slice(0, n), interpreted: interpreted ? { ...interpreted, to_row: to } : null, next_row: next };
+}
+/** (G41; R96) Whether a string is over `limit` UTF-8 bytes, answered without counting when its length decides it (a UTF-16 unit is at most three bytes). */
+const overBytes = (s, limit) => typeof s === "string" && s.length > limit / 3 && (s.length > limit || utf8Bytes(s) > limit);
 
 /* R22 (CONTENT-SEARCH-DESIGN §4.3, M-20): the index's per-capture bounds. */
 export const CAPTURE_TEXT_CAPTURE_BOUND = 2 * 1024 * 1024;
@@ -50,6 +92,16 @@ export const CAPTURE_TEXT_CAPTURE_UNIT_BOUND = 4096;
  *  on its page), and a key of the stored reading over 256 KiB (a sheet's `cells`, 11.8 MB for a 1 MB CSV) is named, never carried. */
 export const READING_PAGE_BYTES = 1048576;
 export const READING_KEY_BYTES = 262144;
+/** (fix round 6, G41; R96) The most a newly built value bound into `readings` or `reading_history` may weigh, by UTF-8 bytes: 1 MiB, half the
+ *  platform's single-value limit (2,098,176 B passed, 2,252,800 B failed: record-core/schema.mjs:30-35), the margin that file keeps. A reading
+ *  over it is not stored; a small stated reading is (R97). A protective bound, reported to Bob (K1881). */
+export const READING_ROW_MAX_BYTES = 1048576;
+/** (G41; R96) The first-write copy of a stored reading into the history (`#keepReading`) is exempt from that bound up to the platform's limit:
+ *  a 1.5 MiB reading the code before G41 stored is re-read and kept as it was. */
+export const PRIOR_READING_COPY_MAX_BYTES = 2098176;
+/** (G41; R98) The most typed cells `cellsOf` answers a call: 20,000 cells in the extent asked for, so 20,000 cells per citation is the stated
+ *  bound, the rest named by `next_row`. A protective bound, reported to Bob (K1881). */
+export const CELLS_RANGE_MAX = 20000;
 /* R29, R39, R48: the one pair of bounds for the text-source rows (REC-60/REC-70's ratchet). */
 export const TEXT_SOURCE_LIMIT_DEFAULT = 200;
 export const TEXT_SOURCE_LIMIT_MAX = 5000;
@@ -790,6 +842,8 @@ export class Extraction {
     });
     if (!wrote) return left("READING_HELD");
     await wrote.afterRead;
+    /* (fix round 6, G41; R97) a reading too large to keep whole was stored as its small statement: final, owing nothing, and no piece follows */
+    if (wrote.stated) return { ok: true, read: true, bundle_id: home.bundleId, found: false, stated: true };
     const owed = failedTransiently(out.reading) || (out.reading.tier3_candidate === true && !!e.OCR_WORKER);
     /* (fix round 6, G13; R90) the first piece of a text that has more: the ledger goes on at once (plane R77: `more`) */
     if (out.more === true) return { ok: true, read: true, bundle_id: home.bundleId, found: out.reading.found === true, more: true,
@@ -1007,7 +1061,16 @@ export class Extraction {
                  profileFormat = null, author = null, justification = null, composed = null, more = null } = {}) {
     const sha = captureSha;
     return this.core.transact(() => {
-      const ser = this.#serialOf(reading, { take: true });
+      let ser = this.#serialOf(reading, { take: true });
+      /* (fix round 6, G41; R96, R97) the row guard: a value built here that would pass READING_ROW_MAX_BYTES is not bound. The reading is
+         replaced, whole, by a small stated one (the size and the largest key in its `basis`, no cells, no units, no references), so the
+         platform's single-value limit is never met as a thrown SQLITE_TOOBIG and the read does not follow itself (`more` is dropped). */
+      let stated = null;
+      if (overBytes(ser.json, READING_ROW_MAX_BYTES)) {
+        stated = this.#statedTooLarge(reading, ser.json);
+        reading = stated.reading; ser = this.#serialOf(reading); composed = true;
+        textUnits = null; textUnitsOverBound = 0; textUnitsSkipped = null; more = null;
+      }
       /* (G40; R95) the stored reading's chain by SQL: a large stored reading is never loaded and parsed to read one field */
       const before = this.#one(`SELECT CASE WHEN json_valid(reading) AND json_type(reading)='object'
                                             THEN json_extract(reading, '$.text_source') END AS ts
@@ -1082,8 +1145,33 @@ export class Extraction {
       for (const l of this.#listeners)
         listeners[l.module] = l.fn({ bundleId, captureSha: sha, reading, chainBefore, chainAfter, unitsBefore, indexed, author });
       const afterRead = this.#holdAfterRead(sha, reading, ser.json);
-      return { kept, indexed, listeners, origin: asserted ? "asserted" : "composed", afterRead };
+      return { kept, indexed, listeners, origin: asserted ? "asserted" : "composed", afterRead,
+               ...(stated ? { stated: stated.facts, reading } : {}) };
     });
+  }
+
+  /** (fix round 6, G41; R97) The small stated reading that stands in for one too large to keep whole, in the form of reading-pipeline R38's
+   *  refusals: a failed reading marked `final` (nothing later changes the size), no entities, no cells, whose `basis` states the size and the largest
+   *  key by words, and `too_large` {bytes, key, key_bytes, limit} as data a screen can state. It keeps the reading's content type, reader
+   *  version and instant, so the row still says what was read and when. The sizes are counted in slices; only the largest key is stringified again. */
+  #statedTooLarge(reading, json) {
+    const bytes = utf8Bytes(json);
+    let key = null, keyBytes = 0;
+    for (const [k, v] of Object.entries(reading && typeof reading === "object" ? reading : {})) {
+      let s; try { s = JSON.stringify(v); } catch { s = null; }
+      const n = typeof s === "string" ? utf8Bytes(s) : 0;
+      if (n > keyBytes) { key = k; keyBytes = n; }
+    }
+    const size = `${(bytes / 1048576).toFixed(1)} MiB (${bytes} bytes)`;
+    const facts = { bytes, key, key_bytes: keyBytes, limit: READING_ROW_MAX_BYTES };
+    const basis = localize("extraction.index.reading_too_large",
+      "this document's reading is too large to keep whole: {size}; the largest part is {key}", { size, key: key ?? "none" });
+    return { facts, reading: {
+      content_type: reading && typeof reading.content_type === "string" ? reading.content_type : null,
+      reader_version: reading && Number.isInteger(reading.reader_version) ? reading.reader_version : null,
+      read_from_text: false, found: false, entities: [], facts: {},
+      at: reading && typeof reading.at === "string" ? reading.at : null,
+      basis, failure: "final", too_large: facts } };
   }
 
   /** R69 (T33-23a, K1521, K1555; reading-pipeline R26, record-core R66): held with `afterCommit`, so it runs once, just
@@ -1147,11 +1235,14 @@ export class Extraction {
     const np = provOf(reading);
     const compared = last ? compareProvenance(safeJson(last.provenance), np) : null;
     const seq = last ? last.seq + 1 : 1;
+    /* (fix round 6, G41; R96) the history row's other new values are measured as the reading is: `provenance` is part of `json`, which the writer
+       has already held under the bound, and a comparison of two provenances that passes it is named, never bound. */
+    const comparedJson = compared ? JSON.stringify(compared) : null;
     this.#sql.exec(
       `INSERT INTO reading_history (capture_sha,seq,bundle_id,reading_sha256,reading,provenance,text_sha256,compared,kept_at)
        VALUES (?,?,?,?,?,?,?,?,?)`,
       sha, seq, bundleId, digest, json, np ? JSON.stringify(np) : null, textShaOf(np),
-      compared ? JSON.stringify(compared) : null, now);
+      overBytes(comparedJson, READING_ROW_MAX_BYTES) ? JSON.stringify({ omitted: "too large", bytes: utf8Bytes(comparedJson) }) : comparedJson, now);
     return { seq, added: true, compared };
   }
 
@@ -1505,6 +1596,74 @@ export class Extraction {
                ? { pageBoxes: reading.page_boxes } : {}),
              textContainer: reading && typeof reading.text_container === "string" ? reading.text_container : null,
              captureFormat: typeof row.capture_format === "string" ? row.capture_format : null };
+  }
+
+  /** (fix round 6, G41; R98; Bob, K4636, K4639) The typed cells of rows of one sheet, in row then column order, made when a member opens or cites a
+   *  range. `{cells, interpreted, next_row}`: `interpreted` is `{sheet, from_row, to_row}`, the rows these cells cover, or null when the cells are
+   *  the reading's own (a sheet small enough to be listed in it); `next_row` the row to ask from when the answer stopped before `toRow`, else null.
+   *  A sheet the reading lists is answered from the reading; a sheet its `cells_held` names is made from the held file through
+   *  `reading-pipeline.cellsInRange` (the format the reading was written with, the stored document, the evidence store), at most CELLS_RANGE_MAX
+   *  cells in the extent a call, `fromCol`/`toCol` and the cap passed to the entry. Never throws and never answers a shorter list without saying so:
+   *  `{cells: null, reason, why}` for a capture with no reading, a sheet that is not named, a sheet whose cells are neither listed nor held, bytes
+   *  not held (`transient: true`) and a format that cannot make them. Nothing reads a whole stored cell array: the reading's cells are read only as
+   *  the one small key they are when a sheet is listed. */
+  async cellsOf(captureSha, sheet, { fromRow = null, toRow = null, fromCol = null, toCol = null, env = null } = {}) {
+    const none = (reason, why, more = {}) => ({ cells: null, reason, why, ...more });
+    const sha = typeof captureSha === "string" ? captureSha.trim().toLowerCase() : "";
+    const row = sha ? this.#one(`SELECT bundle_id, capture_format FROM readings WHERE capture_sha=?`, sha) : null;
+    if (!row) return none("no_reading", localize("extraction.index.cells_no_reading", "no reading of this document is held, so none of its cells are"));
+    if (typeof sheet !== "string" || !sheet)
+      return none("sheet_not_named", localize("extraction.index.cells_sheet_not_named", "no sheet was named, so no cells could be made"));
+    const int = (v) => (Number.isInteger(v) && v >= 1 ? v : null);
+    let [r0, r1, c0, c1] = [int(fromRow), int(toRow), int(fromCol), int(toCol)];
+    if (r0 !== null && r1 !== null && r0 > r1) [r0, r1] = [r1, r0];
+    if (c0 !== null && c1 !== null && c0 > c1) [c0, c1] = [c1, c0];
+    const facts = this.#one(
+      `SELECT CASE WHEN json_valid(reading) AND json_type(reading)='object' THEN json_extract(reading, '$.cells_held') END AS held,
+              CASE WHEN json_valid(reading) AND json_type(reading)='object' THEN json_extract(reading, '$.cells') END AS cells
+         FROM readings WHERE capture_sha=?`, sha);
+    const heldSheets = Array.isArray(safeJson(facts && facts.held)) ? safeJson(facts.held) : [];
+    const listed = safeJson(facts && facts.cells);
+    const listing = listed && typeof listed === "object" && !Array.isArray(listed) && Array.isArray(listed[sheet]) ? listed[sheet] : null;
+    if (listing) {
+      const mine = [];
+      for (const c of listing) {
+        const at = cellAddress(c);
+        if (!at) continue;
+        if ((r0 !== null && at.row < r0) || (r1 !== null && at.row > r1) || (c0 !== null && at.col < c0) || (c1 !== null && at.col > c1)) continue;
+        mine.push([at, c]);
+      }
+      mine.sort((a, b) => (a[0].row - b[0].row) || (a[0].col - b[0].col));
+      return cut(mine.map((m) => m[1]), null, mine.map((m) => m[0]), CELLS_RANGE_MAX);
+    }
+    if (!heldSheets.includes(sheet)) {
+      const named = listed && typeof listed === "object" && Object.hasOwn(listed, sheet);
+      return named
+        ? none("sheet_not_held", localize("extraction.index.cells_sheet_not_held", "this sheet's cells were not made when it was read, and its file does not hold them to make now"))
+        : none("sheet_not_named", localize("extraction.index.cells_sheet_not_named_in", "the reading names no sheet called {sheet}", { sheet }));
+    }
+    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    if (!ev || typeof pipeline.cellsInRange !== "function")
+      return none("cells_not_interpretable", localize("extraction.index.cells_not_interpretable", "this document's cells cannot be made from its file here"));
+    const format = typeof row.capture_format === "string" && row.capture_format ? row.capture_format : null;
+    const document = (row.bundle_id && this.#storedDocument(row.bundle_id, sha)) || { capture: { sha256: sha } };
+    let got;
+    try {
+      got = await pipeline.cellsInRange(ev, document, { format, sheet, fromRow: r0 ?? 1, toRow: r1 ?? undefined,
+        fromCol: c0 ?? undefined, toCol: c1 ?? undefined, maxCells: CELLS_RANGE_MAX });
+    } catch (e) {
+      return none("bytes_not_held", localize("extraction.index.cells_bytes_not_held", "the file this document was read from could not be read just now, so its cells could not be made; try again"), { transient: true });
+    }
+    if (!got || got.ok === false || !Array.isArray(got.cells)) {
+      const reason = got && typeof got.reason === "string" ? got.reason : "cells_not_interpretable";
+      return none(reason, localize("extraction.index.cells_not_made", "this document's cells could not be made ({reason})", { reason }),
+        reason === "bytes_not_held" ? { transient: true } : {});
+    }
+    const ats = got.cells.map(cellAddress);
+    const asked = { from: r0 ?? 1, to: r1 };
+    return cut(got.cells, { sheet, from_row: got.rows && Number.isInteger(got.rows.from) ? got.rows.from : asked.from,
+                            to_row: got.rows && Number.isInteger(got.rows.to) ? got.rows.to : (asked.to ?? (ats.filter(Boolean).pop() || {}).row ?? asked.from) },
+      ats, CELLS_RANGE_MAX, Number.isInteger(got.next_row) ? got.next_row : null);
   }
 
   /** (fix round 6, G38; R94) the stored reading of a capture without its bulky keys: a top-level key whose JSON is over READING_KEY_BYTES is
