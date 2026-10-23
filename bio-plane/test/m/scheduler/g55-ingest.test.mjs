@@ -201,5 +201,5 @@ test("R24, R9, R11, R15 (seam: calculations R14 not merged): an ingest over the 
   for (let i = 0; i < 50; i++) { last = await s.onAlarm(Date.now() + i); if (last.nextAt === null) break; }
   assert.equal(last.nextAt, null, "the slices ran to the end and the alarm is deleted (R15)");
   assert.equal(st.alarm, null);
-  assert.equal(w.c.ingestDue(Date.now()), null, "no record is ingesting any more");
+  assert.ok(!w.c.ingestDue(Date.now()), "no record is ingesting any more (calculations R14: `ingestDue` answers false when none is due)");
 });

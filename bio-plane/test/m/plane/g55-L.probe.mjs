@@ -2,7 +2,7 @@
    product runs in, real DO SQLite, R2), reached by the module's own services through private routes of a Store subclass (the door's
    authentication is not the cost measured and is not driven). workerd freezes the clock inside the object, so wall time is the PARENT's,
    around each fetch (R-CLOCK: reported, never asserted). Run from the repository root, one process at a time:
-     node bio-plane/test/m/calculations/g55-L.probe.mjs MODE ROWS [ROWS...]       MODE: resolving | mixed | wide (unidentified payers 190 characters wide: about 20 MiB at 100,000 rows)
+     node bio-plane/test/m/plane/g55-L.probe.mjs MODE ROWS [ROWS...]       MODE: resolving | mixed | wide (unidentified payers 190 characters wide: about 20 MiB at 100,000 rows)
    Prints one JSON line per size: the act's wall ms, its answer (inline or started), then each tick's wall ms and work counts. */
 import { Miniflare } from "miniflare";
 import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
