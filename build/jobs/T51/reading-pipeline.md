@@ -511,3 +511,15 @@ COMPLETE (G56, reading-pipeline D2, READING-PIPELINE #28; B28). Branch `job/T51/
 **Deferred:** none. **Found in another module:** none. (Information for PLANE #52: `g26.probe.mjs` prints "every page once: false" for a volume whose blank pages hold no unit; the pass is `units === 1328`.)
 
 Size (session_01DJRLAeamsyPnErwPZdGNoV): test runs 14, module lines 2764
+
+## J27 · QUESTION
+
+QUESTION (G68, the PDF half; best reading below, and I carry on with CSV and text meanwhile).
+
+What I found. pdf-reader exports exactly one way to read a page range: `extractPdfRange(bytes, {from, count, maxBytes})` (pdfstructure.mjs:4421), and it calls `loadPdf(bytes)` on every call: it scans the whole file for objects and decompresses every object stream, then builds the pages asked. `extractPageText`, `FontCache` and the page walk are not exported, and `openPdf(bytes)` returns a `PdfDoc` but nothing exported extracts a page range from one. So from reading-pipeline alone a PDF tick cannot touch less than the whole file: a cursor cannot carry a parsed index (it is at most 2,000 characters), and I cannot keep the parse between ticks, because there is no call that takes it. This is also the cause of the inherited red `pdf-pieces.test.mjs` (14 pieces, each re-parsing the 15 MB volume: 37 s against the 21.7 s bar).
+
+What I need (smallest): a provider in pdf-reader that parses once and reads a range later, for example `openPdfRange(bytes) -> {pages, range({from, count, maxBytes}) -> the same answer as extractPdfRange}` (so one parse serves many ticks), or any equivalent. With it I keep the open document between ticks of the same digest in the object (a one-entry cache keyed by digest, dropped when the digest changes or the bytes are not held), and a later tick then hands nothing to the parser. Without it the PDF tick stays a whole-file parse, the red stays red, and the test I write for "bytes handed to loadPdf" can only be written against the provider's new call.
+
+Decision I ask of BOB: (a) add that provider to pdf-reader's job now, name the call, and I wire it in this job; or (b) rule that the PDF half of G68 waits for pdf-reader's next job, and the inherited red stays BOB's to carry until then.
+
+CSV and text I do in this job on my own: a byte-window cursor over the evidence store's ranged `get` (record-core R88), the first piece reads the whole as today and issues the cursor; every later piece reads only its window. I add no edge to another module.
