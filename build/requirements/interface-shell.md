@@ -263,6 +263,11 @@ Terms. A **screen** is a registry screen (`docs/development/ux-substrate/screens
 - **R124** (T51 fix round 6, G12b; K4579; amends R7, R24) **The frame's reads are kept for the session in the tab.** The tab keeps six of the frame's reads: `groupidentity`, `infolevel`, `assistantstate`, `accountreference`, `subscriptionsignin` (state) and `groupkeystate`, only what the frame uses of each answer, in `sessionStorage` under the member and a tag of the session (key `bio-session:frame`; never the token, a route or a screen's read). A page load draws the frame from them and asks each again once, when the screen's first reads have settled (a read the screen itself had answered is not asked again); a differing answer is followed. They are cleared at sign-in, sign-out, an end and the lock; the member's own change of the level drops the kept level; storage that is unavailable, unreadable or another member's or session's is ignored and the reads go out at once as on a first load. Test: `g12b.test.mjs`. Control: a first load asks all six together.
 - **R125** (T51 fix round 6, G12b; K4579; amends R123) **The guide's marks are asked with the screen's reads.** The guide's marks (`wizardsat` for the screen) are asked at the route's start with the screen's reads and handed to `entered` when the route has settled; the answer is held for that one reader past the end of the load and the 5 seconds (R123). Test: `g12b.test.mjs`: the marks leave within 50 ms of the first read with the read still out. Control: a screen whose guide does not name `wizardsat` sends none.
 
+
+#### T51 fix round 8 (K4817; `build/plan/fix-round-8-T51.md`)
+
+- **R128** (fix round 8, G114; K4814 (1), K4817) **The words request names the release, the language and the stamp.** `loadWords` names in `v` the release (`cs-version`), the viewer's language and the `words_version` read from `bootstrap` (`instance-setup` R103), so a change of language or of the stamp changes `v`; a load made before `bootstrap` has answered names the release alone. What the shell keeps of the answer is unchanged. Test: the request names all three; a language change or a changed stamp changes `v`. *(not yet met: T51)*
+
 ## Private
 
 ### Uses

@@ -193,6 +193,13 @@ Terms. The **slug** is the producing group's short name, in `GROUP_SLUG_RE`'s gr
 
 - **R102** (fix round 7 G83; K4752; `runtime-limits` R28) Every site of this module that obtains or names the team's room (`publicInstanceGroup`, `instanceGroupOp`, `groupIdentityOp`, `groupLogoAsset`, `selftest`, `instanceSetupOp`, `livefire`) does so through `runtime-limits.storeStub`/`storeId`; `op=selftest` states `store_location` (the configured hint, or `null`) and `store_generation`, described as what is configured, never as where the room runs, and never a secret.
 
+
+#### T51 fix round 8 (K4817; `build/plan/fix-round-8-T51.md`)
+
+- **R103** (fix round 8, G114; K4817; amends R17) **`bootstrap` carries the viewer's language and the words stamp.** To a signed-in caller `op=bootstrap` also answers `language` (the viewer's screen language, R64, or `null`) and `words_version` (`translations` R20); without a session neither key is in the answer. Test: a member with Spanish set answers `es` and the stamp; after an adoption the stamp differs; control: no session, neither key. *(not yet met: T51)*
+
+- **R104** (fix round 8, G118; K4817: 60 s, BOB's figure) **The fleet's versions are asked at most once a minute.** `partsReport`'s asks of the fleet members' `/version` are kept for 60 s in the isolate: a `bootstrap` within that time answers the kept parts without asking and without waiting for them; the first after a cold start may wait as before. `bootstrap`'s `Server-Timing` states `fleet;dur` (the time of `partsReport`, 0 when kept) and `facts;dur` (the record's calls). Test: two `bootstrap` answers in 10 s ask each fleet binding once; the two entries exist. *(not yet met: T51)*
+
 ## Private
 
 ### Uses

@@ -249,6 +249,11 @@ unattended-capture producer needs)
 **T35: the words members read** (T35-13; N664, DEC-149; K1779, K1785)
 - **R82** (DEC-149, Bob's "S4: B") Every member-facing string this module answers (the `translation` of each of its rows, the `detail` of R62's `MINT_EXHAUSTED`, and R81's new ones) calls the group's own Civicsmith "your team's Civicsmith", or is reworded so it needs no name, and never "copy", "instance", "plane" or "server" for it; "whoever runs this instance" becomes "whoever hosts your team's Civicsmith". The `BUILD_FAULT` sentence reads "This is a fault in how your team's Civicsmith was built, not in the record, and nothing in the record changed.", and C-102.13 and C-102.14, which spell it inline, read the same. The sweep's rows for this module (`build/plan/draft-T35-dec149-l1-l7.md`; `bio-plane/src/record-core/` as numbered there) are `checks.mjs`:33 (`BUILD_FAULT`, which moves sixteen translations: C-102.1, .2, .15–.24, .26, .27, C-59.7, C-59.9), :38, :40–41, :45, :46–47, :51, :52, :65, :70, :82, :88, :95, :100, :107, :114, :118, :124, :129, :135, :140, :146, :151, :157, :162, :169 and `index.mjs`:129 (26 rows), each applied where it lands and named by a test. Codes, op names, field names and comments are not member-facing and stay. (T51, K3472, K3975: "team" for "group" in text people read; wording only.)
 
+
+#### T51 fix round 8 (K4817; `build/plan/fix-round-8-T51.md`)
+
+- **R91** (fix round 8, G115; K4807 (3), K4811 (1), K4817; amends R89, R90) **The write counter counts record writes, not bookkeeping.** A row inserted, updated or deleted in a bookkeeping table (the sessions' `last_active`, the door window, the scheduler's alarm and heartbeat rows, the ledger's rows; the list is this module's, exported) does not move `writeCount()`; every other row moves it as R89 states. The mechanism is this module's alone: no other module changes how it obtains its storage (if none works, the job returns to BOB). Test: at this module's interface, a write to a table on the list leaves `writeCount()` as it was and a record write moves it; through the door (control-plane's seam section), a member's session read, a `doorwindow` write and a ledger write between two Queue counts leave the count kept. *(not yet met: T51)*
+
 ## Private
 
 ### Uses
