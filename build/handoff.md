@@ -17,7 +17,7 @@
   - **CONTROL-PLANE #54** `session_01QvJL1jsWs1q3cNX7FjmWow`: the seam owner, merges LAST, after record-core and plane; CHANGEs B62-B64 sent (providers merged; its R122 test made to assert work, K4787).
 - **SUITE #1** `session_0197tVNGG82dZPFRnETvL1At`: the whole suite alone, modules 10-176 with a 20-minute cap each (bundler's hang fixed by BOB, K4828); then four isolated runs per red, its report pushed to `prep/account3-suite`: merge it, archive, write its row; its reds go into fix round 8 §4.
 - **READING-ARCHITECTURE #2** `session_017kq2bRE1EtmVj9y9wY1LTT` (default model, on `lane/reading-architecture`): reviews `OPTIONS-draft.md` into `OPTIONS.md` (RA5), then `FOR-BOB.md`. RA4: four architectures, recommended **D staged** (Workflows carry reads; heavy kinds read by native tools in a container; C the fallback). Render `FOR-BOB.md` for Bob as an Artifact when it lands, with options and BOB's recommendation; restart the lane as #3 when it stops at half its window.
-- Timers: backstop `trig_01FaBcoGyYG3u4JzXJJM5ZtB` fired 22:57 (re-armed below in K4829), WATCH #270 `trig_01P8iC2MgwX6SivtGZxsX89X` (into ROOT #9): delete both at takeover, then arm your own.
+- Timers: backstop `trig_01Pe9P5RkMXqEexk9ZFMUypf` (into me, 23:24), WATCH #270 `trig_01P8iC2MgwX6SivtGZxsX89X` (into ROOT #9): delete both at takeover, then arm your own.
 
 ## Do next, in order
 
