@@ -1504,7 +1504,7 @@ async function acquireRun(cap, body0, opts, t) {
     if (!rb.ok || rbytes.length > MAX) {
       /* R100 (fix round 7, G72): why a render fails is named on the log, one structured line with the problem (the renderer's own words, never the page) and the
          milliseconds the render stage had run; the ledger row keeps it as the entry's `detail` (`owedRun`) */
-      try { console.log(JSON.stringify({ event: "render_failed", problem: String(rb.ok ? "the rendered document is over the bound" : rb.problem).slice(0, 200),
+      try { console.log(JSON.stringify({ event: "render_failed", problem: String(rb.ok ? "RENDERED_DOCUMENT_OVER_BOUND" : rb.problem).slice(0, 200),
                                          ms: stageTimes(t).stages.render ?? 0, ...(Number.isFinite(answerR && answerR.elapsed_ms) ? { renderer_ms: answerR.elapsed_ms } : {}) })); }
       catch { /* a line that cannot be written never changes the answer */ }
       return answer(502, { ok: false, reason: "RENDER_FAILED", ...renderRow("RENDER_FAILED"), op, shell_sha256: sha, filed: false,
