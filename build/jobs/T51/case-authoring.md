@@ -466,4 +466,4 @@ QUESTION (G47, two things I need before I can finish; I carry on with the rest o
 
 **Proposed requirement lines (R14 amended).** "The document is measured as built; over `publication`'s `CASE_DOCUMENT_BYTES_MAX` the act is refused `CASE_DOCUMENT_TOO_LARGE` (C-136.9) carrying `size`, `bound`, `materials` and `members`, before any side effect, and a refusal of the store is the act's refusal, never a prepared document with no `doc_sha`. The document declares its format through `case-grammar`'s `caseDocumentFormatFor` over its attestation rows (`/9` only when a row carries a `sha`, else `/8`)."
 
-**Size (session_01MN9xdJBsqY5jNetBuRbobY): test runs 9, module lines 3,070** (`bio-plane/src/case-authoring/*.mjs`).
+**Size (session_01MN9xdJBsqY5jNetBuRbobY): test runs 9, module lines 3056** (`bio-plane/src/case-authoring/*.mjs`).
