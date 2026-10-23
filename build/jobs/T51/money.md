@@ -143,3 +143,23 @@ COMPLETE, cause C8-words (money R29). Head: b6a11c41ff on job/T51/money (pushed)
 **Open:** none held by me. The intent test and the tip check for the four red files are BOB's to settle at the merge. No QUESTION is open.
 
 **Size (session_016NRUKZLwLKyy8zbRsvcjbP): test runs 8, module lines 1482** (money's `bio-plane/src/money/*.mjs`, held code only).
+
+## J9 · COMPLETE
+
+COMPLETE, G55 tier 1 (money). Head: see the pushed branch job/T51/money; tranche/T51 merged in. Tier 2 not started (waits for BOB's word).
+
+**Cause (R-FOUR).** 1. `Money#view()` (index.mjs, was :217) ran `jurisdictions.combine` on every `recordFact`/`moneyOf` period. 2. Missed: nothing counted builds; the gap is closed by `viewBuilds()` and the test. 3. Failing-first `test/m/money/g55-view.test.mjs`, seen red (500 facts built the view 500 times), green now (at most 1). 4. Platform: L belongs to calculations.
+
+**Change.** `#view()` holds its last view with its key (JSON of the active-profiles list; null, non-list or unreadable keyed `[]`), re-reading the setting every call, deep-frozen, one private entry; `viewBuilds()` counts builds. No fact differs: a fact from the held view equals one from a fresh view field for field (test).
+
+**Item 2 confirmed by test:** `recordFact` inside an outer `record.transact` commits and rolls back with it; a fact is written twice for one (table, row, binding) source (not idempotent). No money change for either.
+
+**Proposed requirement text (BOB writes it at merge).** R30 (G55; K4562): "The module holds its last jurisdiction view, keyed by the active profiles' list as the setting reads on each call, deep-frozen, replaced when the key changes (one entry, about 145 KB); a null, non-list or unreadable setting is keyed as the empty list. `viewBuilds()` answers how many times this instance has built it. No fact, refusal or read differs." Uses: no new edge.
+
+**Deferred / not tested:** the frozen view is private, so no test at the interface can try to mutate it; if BOB wants that tested, an accessor is a requirement change. Tier 2 (partial marker, `markIngest`) not started.
+
+**Found in other modules:** none.
+
+**Ran:** money 98 of 98 pass. Direct users (money-checks, duties, people, explore, query-language, retrieval-browse, retrieval, calculations, strength, contradiction, intent, corpus-export): 155 files, each run alone, every one `fail 0`. I did not run the full 1,441-file impact set; the change adds one method and alters no answer. Checks: format 0 failures; architecture 0; coverage 6686 of 6686; ownership money 0 (3 files); `checks/run.mjs`: words shows the inherited `case-checker/spec.mjs:11` inline 1 only, none in money. Declarations: no census op changed.
+
+Size (session_01RUnq4fs9yS6fvUi9DZjnt9): test runs 160, module lines 1496
