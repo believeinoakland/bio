@@ -283,9 +283,9 @@ test("R21 sight: a fact follows its source capture's visibility, a fact on a fac
   }
   const decl = s.record.declaredTables().filter((d) => d.module === "money");
   assert.deepEqual(decl.map((d) => d.name).sort(), ["money_codes", "money_concerns", "money_facts", "money_fund_types",
-    "money_set_acts", "money_set_proposals", "money_sets", "money_withdrawals"]);
+    "money_ingests", "money_set_acts", "money_set_proposals", "money_sets", "money_withdrawals"]);
   for (const d of decl) {
-    assert.equal(d.sight, ["money_sets", "money_set_acts", "money_set_proposals", "money_fund_types"].includes(d.name) ? "group" : "source", d.name);
+    assert.equal(d.sight, ["money_sets", "money_set_acts", "money_set_proposals", "money_ingests", "money_fund_types"].includes(d.name) ? "group" : "source", d.name);
     for (const c of ["purge", "expunge", "export", "derive", "version_chain"]) assert.notEqual(d[c], undefined, `${d.name}.${c}`);
   }
   const purged = s.record.purge({ bundleId: "INFO-H" });
