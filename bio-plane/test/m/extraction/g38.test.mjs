@@ -92,7 +92,9 @@ test("R93 R94 (G38): through the op: a 1 MB CSV, read by the real reader as the 
   let a; do { a = await w.x.readHeld({ sha: d, kind: "reading", storeName: "bio", env: {} }); } while (a.more);
   let answer = viaOp(w, d), all = [...answer.text_units], guard = 0;
   assert.ok(answerBytes(answer) < 2_000_000, `the answer is ${answerBytes(answer)} B`);
-  assert.deepEqual(answer.reading_omitted.map((k) => k.key), ["cells"]);
+  /* (G41) the sheet is held: its reading lists no cells (it names the sheet in `cells_held`), so no bulky key is left out of the answer */
+  assert.deepEqual(answer.reading.cells_held, ["csv"]);
+  assert.equal(answer.reading_omitted, undefined);
   while (answer.next !== null && guard++ < 20) { answer = viaOp(w, d, answer.next); assert.ok(answerBytes(answer) < 2_000_000); all = all.concat(answer.text_units); }
   assert.ok(all.some((u) => u.text.includes("LASTROWMARK")), "the last row is on a page");
 });

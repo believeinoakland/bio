@@ -1,7 +1,7 @@
 /* screens-intake T51 fix round 6, G43 through the door (K4649, K4651; R-SEAM): a member uploads a 1,048,576 B spreadsheet by `captureupload` and the screen's own
  * promotion files it. Over the REAL plane (Miniflare, real DO and R2), loaded from its file path as `t51-seam-e7.test.mjs` does. Red before the change:
- * `data/provenance.json` held the door's whole reading (20.36 MB) and promotion refused it `OVERSIZE_INLINE`. The follow is the plane's: red by name until G41's
- * providers (extraction's cell cap, `cells_held`) and control-plane's follow on `readingDropped` merge. */
+ * `data/provenance.json` held the door's whole reading (20.36 MB) and promotion refused it `OVERSIZE_INLINE`. Since B39 (K4657): the door's reading of this sheet is small but its unit is
+ * `truncated`, so it is dropped too, and the follow (`readheld`, as the owed render sends it) reads the whole, found on the last page. */
 import "../../sandbox.mjs";
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
@@ -47,15 +47,15 @@ const screenCall = (auth, promoted) => ({ now: () => Date.now(), digest: async (
 const upload = async (auth, bytes, name, type) => (await (await door(`/api/?op=captureupload&statement=g43&name=${encodeURIComponent(name)}&type=${encodeURIComponent(type)}`,
   { method: "POST", headers: auth, body: bytes })).json()).result;
 
-/* exactly 1,048,576 B: a header and rows of fixed width, the last row `LASTROWMARK` padded to the length */
+/* exactly 1,048,576 B of ordinary rows (about 40 B each, none long), the last row `LASTROWMARK`, padded in its own short field to the length */
 function csv() {
-  const rows = ["id,name,amount"];
-  let n = 0;
-  for (let i = 0; i < 30000; i++) { const r = `${i},row number ${i},${(i * 37) % 1000}`; if (n + r.length + 14 + 20 >= INLINE_MAX) break; rows.push(r); n += r.length + 1; }
-  const head = rows.join("\n") + "\n";
-  const last = "LASTROWMARK";
-  const pad = INLINE_MAX - Buffer.byteLength(head) - last.length - 1;
-  return Buffer.from(head + "x".repeat(Math.max(0, pad)) + "," + last);
+  const out = ["id,name,amount"];
+  let n = out[0].length + 1;
+  for (let i = 0; INLINE_MAX - n > 300; i++) { const r = `${i},row number ${i},${(i * 37) % 1000}`; out.push(r); n += r.length + 1; }
+  const tail = "LASTROWMARK,";
+  out.push(tail + "x".repeat(INLINE_MAX - n - tail.length));
+  const buf = Buffer.from(out.join("\n"));
+  return buf;
 }
 
 /* one upload and one promotion for both tests (the same bytes uploaded twice answer `existed`, with no document) */
@@ -83,18 +83,19 @@ test("R61 (G43, the real plane) a 1,048,576 B spreadsheet uploaded and filed by 
   assert.equal(doc.capture.sha256, sha);
 });
 
-test("R61 (G43, the real plane; red by name until G41's providers and control-plane's follow on readingDropped merge) after the follow, op=reading finds the last row and cells_held", async () => {
+test("R61 (G43, the real plane; after the follow, whole) after the follow, op=reading finds the last row and cells_held", async () => {
   const { auth, made, sha } = await filed();
   assert.equal(made.refused, undefined, JSON.stringify(made).slice(0, 300));
   /* the follow: readheld asks for the reading the bundle was filed without, as the owed render and `followEntries` do */
   await (await door(`/api/?op=readheld&sha256=${sha}`, { method: "POST", headers: { ...auth, "content-type": "application/json" }, body: "{}" })).json();
-  let r = null;
-  for (let i = 0; i < 20; i++) {
-    r = (await (await door(`/api/?op=reading&sha256=${sha}`, { headers: auth })).json()).result;
-    if (r && r.found) break;
-    await new Promise((x) => setTimeout(x, 500));
-  }
-  assert.ok(r && r.found, "the reading is held after the follow: " + JSON.stringify(r).slice(0, 200));
-  assert.ok(JSON.stringify(r).includes("LASTROWMARK"), "the last row is found");
-  assert.ok(JSON.stringify(r).includes("cells_held"), "cells_held is set (G41)");
+  /* the reading is paged by `next`; the member's page reads every page, so the test does */
+  const page = async (after) => (await (await door(`/api/?op=reading&sha256=${sha}${after === undefined ? "" : "&after=" + after}`, { headers: auth })).json()).result;
+  let first = null;
+  for (let i = 0; i < 20; i++) { first = await page(); if (first && first.found) break; await new Promise((x) => setTimeout(x, 500)); }
+  assert.ok(first && first.found, "the reading is held after the follow: " + JSON.stringify(first).slice(0, 200));
+  assert.equal(first.completeness.state, "whole", "and it is whole, not a truncated part (K4571)");
+  let all = JSON.stringify(first), r = first;
+  for (let i = 0; i < 100 && r.next !== null && r.next !== undefined; i++) { r = await page(r.next); all += JSON.stringify(r); }
+  assert.ok(all.includes("LASTROWMARK"), "the last row is found");
+  assert.ok(all.includes("cells_held"), "cells_held is set (G41)");
 });
