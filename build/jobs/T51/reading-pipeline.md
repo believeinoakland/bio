@@ -1,6 +1,6 @@
 # reading-pipeline (T51)
 
-**Status** · session_01SNN2SB35FYPNhzC5KBpM7p · depth 2 · WORKING · handled B35
+**Status** · session_01SNN2SB35FYPNhzC5KBpM7p · depth 2 · COMPLETE · handled B35
 
 ## J1 · COMPLETE
 
