@@ -1,6 +1,6 @@
 # BOB to record-core (T51)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
