@@ -52,6 +52,14 @@ export const WHOLE_READ_MAX = 24 * 1024 * 1024;
    content, or its size, so reading it again cannot. A reading that is not a failed one carries neither. */
 export const FAILURE_TRANSIENT = "transient";
 export const FAILURE_FINAL = "final";
+/* R28, R44 (fix round 6, G41; K4636, K4642): the most a workbook's or a CSV's typed cells may weigh in the reading, as the entry's
+   own JSON of them, before the entry holds them in the file instead (`cells` null, `cells_held` true). The cap is OPT-IN: `read`
+   passes it where it calls an entry (`{inlineCellsMax}`), and an entry called without it lists every cell. 512 KiB is about
+   3,500 cells, leaving the reading's other keys room under the 1 MiB a stored reading may hold. */
+export const INLINE_CELLS_MAX_BYTES = 512 * 1024;
+/* R44: the reasons `cellsInRange` answers when it makes no cells. */
+export const CELLS_NOT_INTERPRETABLE = "cells_not_interpretable";
+export const BYTES_NOT_HELD = "bytes_not_held";
 
 /* ===================================================================== *
  * Tier 2 (R3).
@@ -1724,15 +1732,22 @@ export function containerExtentOf(i2text, { pdfPaints = null, fmt = null } = {})
    entry emitted them (office-readers R11's `tables[].cells`), nested tables under their own keys as the entry lists
    them; `{}` for a body with no tables, and null when `tables` is null (the body not read, or over its size guard),
    three facts kept apart (R21). A table with no `ref` is no key, as a sheet with no name. No text, or no entry:
-   metadata null and no `cells`; any other document: no `cells`. */
+   metadata null and no `cells`; any other document: no `cells`. (G41, R44) A sheet the entry holds the cells of in the
+   file, not in the reading (`cells` null and `cells_held` true), is named in `cells_held`, a list of sheet names, present
+   only when there is one; its `cells` stays null, as for a sheet with no list. */
 export function emittedFieldsOf(i2text) {
   const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
   const out = { metadata: isObj(i2text) && isObj(i2text.metadata) ? i2text.metadata : null };
   if (isObj(i2text) && Array.isArray(i2text.sheets)) {
-    const cells = {};
+    const cells = {}, held = [];
     for (const sh of i2text.sheets)
-      if (isObj(sh) && typeof sh.name === "string") cells[sh.name] = Array.isArray(sh.cells) ? sh.cells : null;
+      if (isObj(sh) && typeof sh.name === "string") {
+        cells[sh.name] = Array.isArray(sh.cells) ? sh.cells : null;
+        /* R44: a sheet whose typed cells the entry holds in the file says so; a sheet with a cell list never does */
+        if (sh.cells_held === true && !Array.isArray(sh.cells)) held.push(sh.name);
+      }
     out.cells = cells;
+    if (held.length) out.cells_held = held;
   } else if (isObj(i2text) && i2text.container === "docx") {
     if (!Array.isArray(i2text.tables)) out.cells = null;
     else {
@@ -2062,7 +2077,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
         }
       } else if (typeof entry.text === "function") {
         const parts = typeof entry.parts === "function" ? await entry.parts(bytes) : bytes;
-        const tt = await entry.text(parts);
+        const tt = await entry.text(parts, { inlineCellsMax: INLINE_CELLS_MAX_BYTES });   /* R44: the cap is opt-in, asked here only */
         bytes = null;
         if (tt && tt.ok !== false) { i2text = tt; wiredTier = 1; }
         else refusal = refusalOf(tt);
@@ -2221,4 +2236,29 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
            ...(textUnits ? { text_units: textUnits } : {}),
            ...(textUnitsOverBound ? { text_units_over_bound: textUnitsOverBound } : {}),
            ...(textUnitsSkipped ? { text_units_skipped: textUnitsSkipped } : {}) };
+}
+
+/* R44 (fix round 6, G41; K4636, K4642): a range of a held sheet's typed cells, made from the held file when a member opens or
+   cites it. `format` is the entry's key; `sheet`, `fromRow`, `toRow`, `fromCol`, `toCol` and `maxCells` pass to its `cellsIn`
+   (csv-reader, office-readers), and its answer `{ok, cells, rows, next_row?}` is answered as it is. `{ok: false, reason}`
+   with `cells_not_interpretable` for an entry without the slot (or none, or one that throws or answers no object), and
+   `bytes_not_held` for bytes the store does not hold (transient, as `bytesOf` states it; a whole over WHOLE_READ_MAX
+   carries `failure: "final"`). It never throws. */
+export async function cellsInRange(evidence, doc, { format, sheet, fromRow, toRow, fromCol, toCol, maxCells } = {}) {
+  try {
+    const entry = typeof format === "string" && format ? getFormat(format) : null;
+    if (!entry || typeof entry.cellsIn !== "function")
+      return { ok: false, reason: CELLS_NOT_INTERPRETABLE };
+    let got;
+    try { got = await bytesOf(evidence, doc || {}); }
+    catch { return { ok: false, reason: BYTES_NOT_HELD, failure: FAILURE_TRANSIENT }; }
+    if (!got || !got.bytes)
+      return { ok: false, reason: BYTES_NOT_HELD, failure: (got && got.failure) || FAILURE_TRANSIENT, ...(got && got.why ? { why: got.why } : {}) };
+    const ask = { sheet, fromRow, toRow, fromCol, toCol, maxCells };
+    for (const k of Object.keys(ask)) if (ask[k] === undefined) delete ask[k];
+    const out = await entry.cellsIn(got.bytes, ask);
+    return out && typeof out === "object" && typeof out.ok === "boolean" ? out : { ok: false, reason: CELLS_NOT_INTERPRETABLE };
+  } catch (e) {
+    return { ok: false, reason: CELLS_NOT_INTERPRETABLE, why: String(e && e.message || e).slice(0, 200) };
+  }
 }
