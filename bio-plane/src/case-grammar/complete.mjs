@@ -289,7 +289,10 @@ export function completeEditionOf(caseFile) {
     /* 3. the materials */
     const mats = materialsOf(fm);
     const sources = (caseDocumentBlocks(docText).sources) || [];
-    const attestOf = (ref) => ((mats && mats.attestations) || []).filter((a) => a.ref === ref);
+    /* G47 (R12): an attestation naming its capture (`sha`) belongs to the material of that capture alone; one that names
+       none (a case signed before the field) belongs to every material of its `ref`, as it always did */
+    const lowered = (v) => (typeof v === "string" ? v.toLowerCase() : null);
+    const attestOf = (x) => ((mats && mats.attestations) || []).filter((a) => (a.sha ? lowered(a.sha) === lowered(x.sha) : a.ref === x.ref));
     const materialHtml = !mats || !mats.materials
       ? [p(SENTENCES.noMaterials)]
       : mats.materials.length === 0 ? [p("No document or observation is reached by this case's findings.")]
@@ -310,7 +313,7 @@ export function completeEditionOf(caseFile) {
             li(x.rests_under === "load_bearing" ? SENTENCES.reliesOn : SENTENCES.onlySupporting),
             ...src.map((r) => li(sourceRowWithheld(r) ? `Source: ${WITHHELD_SOURCE_LABEL}: ${WITHHELD_SOURCE_REASON}.`
                                                       : `Source: ${said(r.stated)}`)),
-            ...attestOf(x.ref).map((a) => li(attestationWords(a, W))),
+            ...attestOf(x).map((a) => li(attestationWords(a, W))),
           ])}`;
         });
 
