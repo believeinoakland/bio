@@ -53,8 +53,9 @@ export const FILE_SAFETY_MODULE = "file-safety";
 /* T50 (plan rule 6; setup-words R11–R13): every key this module reads, the rows' own (`refusal.<CODE>`) and the sentences'. A row
    whose word the design stream has not yet written (a stand-in, `checks.mjs`) is not yet read by key: the list holds a stand-in
    as a row of source "code" once regenerated, so a key is read only when its row is the design's. */
-const designRow = (key) => WORD_ROWS.some((r) => r[0] === key && r[5] === "design");
-export const WORD_KEYS = Object.freeze([...Object.keys(FILE_SAFETY_CHECKS).map(rowKey).filter(designRow), ...SENTENCE_KEYS]);
+/* R52 (fix round 7 G84): the design's keys gathered in one pass over the table, not one pass per key at load. */
+const DESIGN_KEYS = new Set(WORD_ROWS.filter((r) => r[5] === "design").map((r) => r[0]));
+export const WORD_KEYS = Object.freeze([...Object.keys(FILE_SAFETY_CHECKS).map(rowKey).filter((key) => DESIGN_KEYS.has(key)), ...SENTENCE_KEYS]);
 
 /* R21: the constants, by name. `SCAN_BATCH_MAX` and `LOG_COUNT_KINDS` are `file-scanner`'s (its R16). */
 export const RESCAN_INTERVAL_MS = 604_800_000;

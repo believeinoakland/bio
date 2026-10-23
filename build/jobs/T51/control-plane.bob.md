@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J40
+**Read** · handled J41
 
 ## B1 · START
 
@@ -604,3 +604,7 @@ The provider `runtime-limits` (RUNTIME-LIMITS #6) starts now: write against R27/
 ## B55 · CHANGE
 
 CHANGE (K4757): runtime-limits is merged into tranche/T51 (`bio-plane/src/store-place.mjs`, R27, R28). Merge `tranche/T51` into your branch now, run your tests and impact set, and COMPLETE when green.
+
+## B56 · ANSWER · re J41
+
+ANSWER (K4760): runtime-limits is merged (B55): merge tranche/T51 again now. Do not amend the round-6 assertions. G7 is red by name until PLANE #54 merges (its B68 carries G79's plane half: after a keep the plane's keep owner owes a reading row only when a home exists, NO_HOME's is the filing's promotion; K4742 (2), K4748). G2 ('R105, R124') was green on the tranche at the queue merge (K4756: fetch-done in the catalogue): re-run it after merging. G61 x2 should be green now that queue is merged (K4756). G58 waits for plane. G62 x2: ratification, retrieval and screens-publish are all merged (K4744): after merging, if G62 is still red, REPORT the failing assertion and its actual value so I can route it; that is a finding, not a test to amend. COMPLETE when only G7 and G58 (plane) are red by name.

@@ -152,7 +152,7 @@ export function account({ slug = "grp", plan = "paid", probeDelete = "ok", r2 = 
   enableFail = false, pre = {}, preBuckets = [], preClasses = {}, preApps = [], preSources = {}, preTags = {}, readBack = "raw",
   rel = null, sourceFlaky = 0, sourceDown = false, sourceChange = null, containers = "ok", rolloutKeepsImage = false,
   refuseSelf = false, refuseAllPlane = false, refuseRePut = false, refuseVpc = false, refuseSchedules = false, dropObservability = false, logpush = [],
-  lookupFail = [], settingsBlind = false, copy = {}, wakeAfter = 0, silentAddress = false, objects = {}, refuseDelete = [],
+  lookupFail = [], settingsBlind = false, blindAfterPut = false, copy = {}, wakeAfter = 0, silentAddress = false, objects = {}, refuseDelete = [],
   expireAfter = null, cfFlaky = null, refuseSecretDelete = false,
   pullFails = false, startingFor = 0, memberServes = null } = {}) {
   const scripts = new Map(Object.entries(pre));
@@ -323,7 +323,7 @@ export function account({ slug = "grp", plan = "paid", probeDelete = "ok", r2 = 
     { m: (u, mth) => /\/workers\/scripts\/[^/]+\/settings$/.test(u) && mth === "GET", f: (u) => {
       const name = u.split("/workers/scripts/")[1].split("/")[0];
       if (lookupFail.includes(name)) return cferr("upstream trouble", 500);
-      return scripts.has(name) ? cfok(settingsBlind ? {} : { bindings: (scripts.get(name) || []).map(({ text, ...b }) => (b.type === "plain_text" ? { ...b, text } : b)),
+      return scripts.has(name) ? cfok(settingsBlind || (blindAfterPut && state.puts.some((p) => p.name === name)) ? {} : { bindings: (scripts.get(name) || []).map(({ text, ...b }) => (b.type === "plain_text" ? { ...b, text } : b)),
         ...(observed.get(name) ? { observability: observed.get(name) } : {}) })
         : cferr("not found", 404);
     } },
