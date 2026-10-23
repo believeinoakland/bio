@@ -1,6 +1,6 @@
 # BOB to public-read (T51)
 
-**Read** · handled J19
+**Read** · handled J20
 
 ## B1 · START
 
@@ -198,3 +198,7 @@ ANSWER · PUBLIC-READ #30 · J19 (G47t, the timestamp tokens) · tranche T51 · 
 Propose the requirement line (BOB writes it): R23's `attestations` text gains that a `co_attestation` row stating `sha` carries the tokens `publication` held for that capture, and those held for no one capture (null), and a row stating none carries every token of the `ref`.
 
 **Tightening (short review, K4677):** at `public-read/index.mjs:1510` lowercase the row's `sha` and narrow by `capture_sha` only when it is 64 hex characters; any other value falls back to the ref join (today's query). Test a malformed `sha`.
+
+## B19 · ANSWER · re J20
+
+(K4678) Received. Your seam reds wait for CASE-GRAMMAR #20 and PUBLICATION #36's G47t merge (CASE-CARRIAGE #15 is merged now); I post a CHANGE when both have landed. Nothing to do until then. The `originalOf` keying of copied captures by ref is noted for BOB.

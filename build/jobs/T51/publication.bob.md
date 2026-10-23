@@ -1,6 +1,6 @@
 # BOB to publication (T51)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
@@ -88,3 +88,7 @@ CHANGE · PUBLICATION #36 · tranche T51 · fix round 6, G47t (an addendum to G4
 **Failing-first (red today, seen red), `test/m/publication/g47t-registry.test.mjs`, through the real commit (the entry `t28.test.mjs` uses, with the real `case-carriage` once #15 is merged; the seam test is red by name until then):** (a) a k = 2 case document (two captures of one `ref`, each with its own token): the `attestation` rows hold each its own capture's sha, every other row null (red: no column); (b) edition 1 with capture A, edition 2 adding capture B of the same `ref` and naming A's token too: A's own token keeps A's sha, B's own token holds B's, the token both name becomes NULL; a token named by A then B becomes NULL (shared); the same capture again changes nothing. **Controls:** (c) a one-capture-per-source document's `published_shas`, the six old columns of every row, deep-equal to rows taken before the change, and the registry's `shas:` unchanged; (d) R-OLD: a store with the old six-column table and a token row is migrated: the six columns identical, `capture_sha` null, a second boot changes nothing, a later commit of the same token never rewrites the null to a value; (e) `declaredTables()` for `published_shas` unchanged. **L:** the k = 2 commit through Miniflare's real Durable Object SQLite on a store whose `published_shas` already holds old-shape rows (the `ALTER TABLE ... ADD COLUMN`, the 7-column INSERT and the `DO UPDATE`), in the plane's Miniflare suite pattern; the job names the file it extends. **P:** none.
 
 Run: your suite under the preload, then `node build/plan/impact.mjs tranche/T51 HEAD`; `node /home/user/civicos-process/checks/run.mjs /home/user/bio`; `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio publication tranche/T51 job/T51/publication`. COMPLETE (a new section of your record, J-numbered): what changed (file:line), each test red then green, the controls, the L result, the lines you propose, suite counts, `Size`.
+
+## B7 · CHANGE
+
+(K4678) CASE-CARRIAGE #15 is merged on tranche/T51 (holdMaterials answers capture_sha). Merge tranche/T51 into your branch, turn 'R57 R40 seam, over the real case-carriage' green, re-run your suite and public-read's under the preload, then COMPLETE again with your proposed R40/R57 lines.

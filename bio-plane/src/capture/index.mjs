@@ -97,6 +97,19 @@ const NO_DECLARATION_SEAM = Object.freeze({ ok: false, module: "capture", declar
 const RECEIVED_VIAS = Object.freeze([DOORBELL_VIA, UPLOAD_VIA]);
 /* R86: the parts an upload is held in, `acquisition` R10's form. */
 const UPLOAD_PART = 8 * 1024 * 1024;
+/** R107: the bytes of a file held in parts that are read as its head when judging it as text: 64 KiB, chosen, not measured. */
+const UPLOAD_HEAD = 64 * 1024;
+/** R107: `bytes` less a UTF-8 code point cut at their end (a lead byte and too few continuation bytes), so a head that ends inside a
+ *  character is still valid UTF-8. Bytes that are not UTF-8 are returned as they are, to be refused by the text rule. */
+function withoutCutCodePoint(bytes) {
+  for (let back = 1; back <= 3 && back <= bytes.length; back++) {
+    const b = bytes[bytes.length - back];
+    if ((b & 0xc0) === 0x80) continue;
+    const need = b >= 0xf0 ? 4 : b >= 0xe0 ? 3 : b >= 0xc0 ? 2 : 1;
+    return need > back ? bytes.subarray(0, bytes.length - back) : bytes;
+  }
+  return bytes;
+}
 /** R94: the longest question id `recordCapturedFor` records, in characters (`acquisition` R47's bound). */
 export const CAPTURED_FOR_QUESTION_MAX = 200;
 /** R100: the longest project id `recordSeenIn` records, in characters. */
@@ -690,6 +703,9 @@ export class Capture {
     const whole = createSha256();
     const parts = [];
     let held = [], heldBytes = 0, total = 0;
+    /* R107: the first `UPLOAD_HEAD` bytes of the file, kept as they arrive, so a file held in parts is also judged as text from its head. */
+    const head = new Uint8Array(UPLOAD_HEAD);
+    let headLen = 0;
     const flush = async (all) => {
       while (heldBytes >= UPLOAD_PART || (all && heldBytes > 0)) {
         const n = Math.min(UPLOAD_PART, heldBytes);
@@ -718,6 +734,7 @@ export class Capture {
                    detail: localize("capture.index.file_too_large", "the file exceeds what this surface will capture even in parts; nothing was written") };
         }
         whole.update(value);
+        if (headLen < UPLOAD_HEAD) { const k = Math.min(value.length, UPLOAD_HEAD - headLen); head.set(value.subarray(0, k), headLen); headLen += k; }
         held.push(value); heldBytes += value.length;
         if (heldBytes >= UPLOAD_PART) await flush(false);
       }
@@ -770,8 +787,10 @@ export class Capture {
       return r ? { ok: true, existed: true, capture: { sha256: sha, bytes: total }, receipt: receiptOf(r), ...pending } : notWritten;
     }
     /* R92, R93: the one rule, `acquisition`'s `textTypeOf` (E5): a declared text type, or with none a `.txt`, `.md` or `.csv` name,
-       reads the bytes as text when they are text (valid UTF-8, no NUL), within one part. Either way a declared type is recorded as
-       the uploader's declaration below, never a measured header; a name is not a declaration. */
+       reads the bytes as text when they are text (valid UTF-8, no NUL). R107: a file held in parts is judged from its head, the first
+       `UPLOAD_HEAD` bytes less a code point cut at their end, and `profileOf` then judges its format from the first part's sniff and, where
+       that names none, from this type. Either way a declared type is recorded as the uploader's declaration below, never a measured
+       header; a name is not a declaration. */
     let ct = null;
     if (!multipart) {
       try {
@@ -779,6 +798,8 @@ export class Capture {
         const raw = obj ? new Uint8Array(await obj.arrayBuffer()) : null;
         if (raw && raw.length === total) ct = textTypeOf({ bytes: raw, type, name });
       } catch { ct = null; }
+    } else {
+      ct = textTypeOf({ bytes: withoutCutCodePoint(head.subarray(0, headLen)), type, name });
     }
     const profile = await profileOf({ ev, sha, ct, total, multipart, headers: {}, locator: address, view: profileView(this.core),
                                       retrieved: when, origin: "member", parts: multipart ? parts : null });
