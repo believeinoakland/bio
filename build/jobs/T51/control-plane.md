@@ -774,3 +774,25 @@ Size (session_01DVeYe6wF7P8CpLfVhfSwSK): test runs 17, module lines 4695
 ## J45 · COMPLETE
 
 B58 done: G62 seam test now builds the pre-flight body with the ceremony's own PARTS.caseArgs + tieAttested when prepared; green (zone America/Los_Angeles with source), control TIE_ATTESTATION_MISSING green. Control-plane dir 476 tests, 474 pass; red by name only G7 (PLANE #54) and G58 (plane). Record updated.
+
+## J46 · COMPLETE · re B59
+
+control-plane T51, B59 (cause G60, K4772): the seam arm is built and pushed on `job/T51/control-plane` (0cc939a04b). Test-only: no product code changed, no door defect found.
+
+**Entry applied.** `/* ---- G60 ---- */` in `bio-plane/test/m/control-plane/t51-round7-seam.test.mjs` (two tests, naming R105):
+- The held finding is made by the member's own act. After filing and vouching her upload she revises the document through the real door under a snap key the history cannot name (`reviseUnnamed`, `promote` with `snapKey: "not-a-stamp"`, the stored bytes carried by address as the screens carry them). It is the plan's C-12.2 shape ("history file ... maps to no manifest entry"). I could not delete a stored snapshot copy: no door op or Miniflare handle removes a single history file. The case is then prepared by the ceremony's own `publish`.
+- Test 1: the real `publishpreflight` passes (`first` is null). `caseratify` through the real door answers 409 `GATE_REFUSED` with three real findings, each `C-12.2` with the gate's text and repair. The ceremony of screens-publish, given exactly that answer, draws the refusal's key (`refusal.GATE_REFUSED`), `ceremony.gate.heading`, and one line per finding with its check, its text and its repair, all from the door's data (no English asserted). Nothing is drawn signed.
+- Control: the same case with no revision signs (200, `ok`, no `findings`) and the ceremony, given that answer, draws no refusal and no finding, and draws it signed.
+- Seen red first: with the two `GATE_REFUSED: GATE_REFUSED, // G60` handler lines removed from `screens-publish/ceremony.mjs` in my working copy (restored with `git checkout`, never committed), test 1 failed at "under the heading the ceremony lists its stops by" (`actual: false, expected: true`). Green on the tranche.
+- The file now imports `./register-declared.mjs` and `../screens-publish/fixtures.mjs` (both in control-plane's `uses`, as the module's other tests already do) and `preparedEdition` takes a `spoil` option; its header lists G60.
+
+**Deferred.** None. **Found in other modules.** None. Proposed requirement wording: none.
+
+**Tests and checks.**
+- Seam file alone, five runs: 18 of 18 pass each time.
+- `node --test bio-plane/test/m/control-plane/*.test.mjs`: 478 tests, 478 pass, 0 fail.
+- `node build/plan/impact.mjs origin/tranche/T51 HEAD`: affected modules 1 of 176 (control-plane); no user to run.
+- `checks/format`: 176 modules, 0 failures. `checks/architecture control-plane`: 0 failures. `checks/coverage control-plane`: 93 of 93 live ids named. `checks/words control-plane`: 0 failures. `checks/ownership control-plane tranche/T51 job/T51/control-plane`: 0 failures.
+- Generated artifacts made stale: none.
+
+Size (session_011FKAKGkn2jfrmRFWQyLVFe): test runs 17, module lines 4,680
