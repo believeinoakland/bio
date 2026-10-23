@@ -72,3 +72,7 @@ COMPLETE, docprofile G48 (fix round 6; K4673). Pushed on job/T51/docprofile (tra
 **Deferred:** none. **Found in other modules:** none. **Not done:** nothing in the entry; the shape proof is PLANE #52's CHANGE and the basis statement is reading-pipeline's.
 
 Size (session_0175TpeWdCZgsPcC8Xw3BtqV): test runs 14, module lines 1269
+
+## J6 · REPORT
+
+REPORT (G88, for `doctypes`; nothing changed there). The residual G5 states: `doctypeForYielding` puts a yield between types, never inside one `detect`. Regulation's `detect` alone (`doctypes/regulation.mjs`, windowed, never yielding) is about 0.5-0.7 s on a 24 MiB text (`WHOLE_READ_MAX`), 0.23-0.29 s at 12 MB in node (the plan's and the review's figures; I did not re-measure, R-CLOCK forbids a timing test). I found nothing that makes it matter beyond G5's ruling; it is filed here as G5 asks. Meeting-minutes (97-169 ms at 12 MB) and meeting-agenda (56-113 ms) are the next longest single stretches. A `detect` taking an optional async `yield`, or a sampled first pass, would be doctypes' interface change, BOB's call.
