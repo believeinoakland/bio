@@ -180,4 +180,4 @@ Correction to J8: my 'architecture 0 failures' was wrong at the time (1 failure:
 - `checks/run.mjs /home/user/bio`: format 0, architecture 0 (4339 files), coverage 0 (6686 of 6686), channels 0, words 1 failure (the inherited `case-checker/spec.mjs:11` inline 1).
 - `checks/ownership.mjs /home/user/bio publication tranche/T51 job/T51/publication`: 5 files changed by publication; 0 failures.
 
-Size (session_01B2MtWpS48XnZkx7Fbo2FBa): test runs 9, module lines 2698
+Size (session_01B2MtWpS48XnZkx7Fbo2FBa): test runs 9, module lines 4645 (physical lines of src/publication/*.mjs and deliverer.mjs, comments included)
