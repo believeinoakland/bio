@@ -724,3 +724,5 @@ What I need, the smallest thing: your ruling on who owns G82's fix, so that the 
 - (Uses) `member-roster`: `ROOT_ADMIN`, `baseViewer`, `viewerMember` (already a use).
 
 **Suites and checks.** Plane suite whole (concurrency 2): 414 tests, 411 pass, 3 fail = `release` R24 and `l77-size` R77 L twice (accepted by name; `l77-size` fails identically on the merge commit's source, checked). Heavy alone: `r7-contention` 5 of 5 runs green. Users: control-plane `t51-round5-press-seam`, `t51-round5-seam`, `t51-round6-seam` 19/19.
+
+**B66 (l79 restart test).** Merged tranche/T51 (1c73a7bba7 and after). `l79.test.mjs` 5/5 green twice on the merged tree (restart test 15.2 s and 17.3 s) and once on the tranche tip's plane source (17.6 s); it does not reproduce. Cause read from the test: after a Miniflare reboot the test waits with `until(..., 30_000)` for the object's own alarm; boot plus the alarm take 15-17 s alone, so a loaded host (other suites beside it) passes 30 s. Not scheduler's code. Fixed in the plane's test: the wait bound is 90 s (the assertion is unchanged; no test skipped or weakened).

@@ -29,7 +29,7 @@ const stub = async (name = "bio") => { const ns = await mf.getDurableObjectNames
 const ask = async (path, name = "bio") => { const r = await (await stub(name)).fetch(`http://do/l79/${path}`); const t = await r.text(); assert.equal(r.status, 200, t); return JSON.parse(t); };
 const fire = async (scheduledTime = Date.now()) => (await mf.getWorker()).scheduled({ cron: "*/5 * * * *", scheduledTime: new Date(scheduledTime) });
 const owed = async (viewer) => (await (await (await stub()).fetch(`http://do/owedwork?viewer=${viewer}`)).json());
-const until = async (fn, ms = 30_000) => { const t0 = Date.now(); for (let v = await fn(); ; v = await fn()) { if (v) return Date.now() - t0; if (Date.now() - t0 > ms) throw new Error("timed out"); await new Promise((r) => setTimeout(r, 100)); } };
+const until = async (fn, ms = 90_000) => { const t0 = Date.now(); for (let v = await fn(); ; v = await fn()) { if (v) return Date.now() - t0; if (Date.now() - t0 > ms) throw new Error("timed out"); await new Promise((r) => setTimeout(r, 100)); } };
 const D = "c".repeat(64);
 
 test("R79 L: an object that owes work and has lost its alarm runs nothing on its own; the cron's call sets the alarm and the row runs, once; a second fire, and one twenty minutes late, run nothing more", async () => {
