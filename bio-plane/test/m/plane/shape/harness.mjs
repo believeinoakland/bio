@@ -61,8 +61,8 @@ export const SHIM = process.env.BIO_PLATFORM_SHIM || fileURLToPath(new URL("../.
 export const pdfDoc = (path) => ({ kind: "pdf", path, bytes: statSync(path).size, name: "doc.pdf", type: "application/pdf", marks: [] });
 
 /** Run one document through the real plane in a child capped at `capMB` (null: uncapped). Never throws; `died` says what happened. */
-export function shapeRun(spec, { capMB = null, semiMB = 2, timeoutMs = 1_800_000 } = {}) {
-  const args = ["--import", SHIM, "--expose-gc", ...(capMB ? [`--max-old-space-size=${capMB}`] : []), `--max-semi-space-size=${semiMB}`, SELF, "--child", JSON.stringify(spec)];
+export function shapeRun(spec, { capMB = null, semiMB = 2, timeoutMs = 1_800_000, traceGc = false } = {}) {
+  const args = ["--import", SHIM, "--expose-gc", ...(traceGc ? ["--trace-gc"] : []), ...(capMB ? [`--max-old-space-size=${capMB}`] : []), `--max-semi-space-size=${semiMB}`, SELF, "--child", JSON.stringify(spec)];
   return new Promise((resolve) => {
     const p = spawn(process.execPath, args, { stdio: ["ignore", "pipe", "pipe"] });
     let out = "", err = "", killed = false;
@@ -74,9 +74,15 @@ export function shapeRun(spec, { capMB = null, semiMB = 2, timeoutMs = 1_800_000
       const ev = out.split("\n").filter((l) => l.startsWith("{")).map((l) => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
       const done = ev.find((e) => e.ev === "done") || null, reading = ev.find((e) => e.ev === "reading") || null, staged = ev.some((e) => e.ev === "stage");
       const fatal = err.split("\n").find((l) => /FATAL|heap out of memory|Allocation failed/.test(l)) || err.split("\n").filter(Boolean).slice(0, 2).join(" | ");
+      /* --trace-gc lines are on stdout among the events: each belongs to the tick whose event line follows it */
+      let gcByTick = null;
+      if (traceGc) { gcByTick = []; let cur = { scavenges: 0, markCompacts: 0, ms: 0 };
+        for (const l of out.split("\n")) { const m = /(Scavenge|Mark-Compact|Mark-sweep)\b.*?,\s*([\d.]+)\s*\/\s*[\d.]+\s*ms/.exec(l);
+          if (m) { if (m[1] === "Scavenge") cur.scavenges++; else cur.markCompacts++; cur.ms += +m[2]; }
+          else if (l.startsWith('{"ev":"tick"')) { gcByTick.push({ ...cur, ms: Math.round(cur.ms) }); cur = { scavenges: 0, markCompacts: 0, ms: 0 }; } } }
       const stored = [done && done.largest, ...ev.filter((e) => e.ev === "tick").map((t) => t.largest)].filter(Boolean);
       const largestStored = stored.length ? Math.max(...stored.flatMap((l) => [l.readings, l.history, l.text].map((n) => n || 0))) : null;
-      resolve({ capMB, shim: SHIM, ops: ev.filter((e) => e.ev === "op"), largestStored, overBound: largestStored != null && largestStored > STORED_VALUE_BOUND, cells: ev.find((e) => e.ev === "cells") || null,
+      resolve({ capMB, shim: SHIM, gcByTick, ops: ev.filter((e) => e.ev === "op"), largestStored, overBound: largestStored != null && largestStored > STORED_VALUE_BOUND, cells: ev.find((e) => e.ev === "cells") || null,
                 died: !done, readingDied: !!done && staged && !reading, reading, code, signal, timedOut: killed, stderr: fatal.slice(0, 300), fed: ev.find((e) => e.ev === "fed") || null,
                 ticks: ev.filter((e) => e.ev === "tick"), done, pages: ev.find((e) => e.ev === "pages") || null,
                 pagingDied: !!reading && reading.next != null && !ev.some((e) => e.ev === "pages"), error: (ev.find((e) => e.ev === "error") || {}).message || null });

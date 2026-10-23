@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { runCase, CASES, MARKS, g41Cap } from "./shape/g41.probe.mjs";
 import { report, STORED_VALUE_BOUND } from "./shape/harness.mjs";
 
-const WHAT = { csv4: "a 4 MB CSV", csv8: "an 8 MB CSV (its cellsOf waits on EXTRACTION #39)", csv12: "a 12 MiB CSV (first tick at most 8 s, G48)", csv16: "a 16 MiB CSV (first tick at most 8 s, G48)", csvmax: "the largest CSV csv-reader takes (17 MiB; its first tick at most 8 s is G48, its cellsOf waits on EXTRACTION #39)", xlsx: "a 200,000-row xlsx of 3 short cells a row" };
+const WHAT = { csv4: "a 4 MB CSV", csv8: "an 8 MB CSV", csv12: "a 12 MiB CSV (first tick at most 8 s, G48)", csv16: "a 16 MiB CSV (first tick at most 8 s, G48)", csvmax: "the largest CSV csv-reader takes (17 MiB, the stated bound; first tick at most 8 s, G48)", xlsx: "a 200,000-row xlsx of 3 short cells a row" };
 for (const name of Object.keys(CASES)) {
   test(`R84 G41: ${WHAT[name]} is read whole at the platform's shape: alive, ticks under 10 s, readingFor stated, first, middle and last row found, the last row's cells made, no stored value over 1 MiB`,
     { timeout: 3_600_000 }, async () => {
