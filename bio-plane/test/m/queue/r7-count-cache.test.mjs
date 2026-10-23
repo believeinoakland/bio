@@ -18,13 +18,14 @@ const alice = { member: "alice", viewer: "member:alice" };
 
 /** A world whose producers' items are `state.items` and whose record-core counter is `state.writes` (a test moves either);
  *  `reads` counts the producers' read and tasks' read, which is what a recompute is. */
-function setup({ withCounter = true } = {}) {
+function setup({ withCounter = true } = {}) {   // withCounter: true (a scripted counter), false (none), "real" (record-core's own)
   const state = { items: [condition("render-deferred"), condition("text-undetermined")], writes: 0, produced: 0, tasked: 0 };
   const w = world({ producers: { feedItems: (a) => { state.produced += 1; return { facts: FACTS, items: state.items.map((it) => stub(a, { ...it, case: a.homesOf(it.subject ? [it.subject.id] : []) })) }; } } });
   w.member("alice"); w.member("bob");
   w.bundle("INF-1"); w.bundle("INF-2");
   w.task("TASK-2026-0001-a", "INF-1", { assignee: "alice" });
-  if (withCounter) w.record.writeCount = () => state.writes;
+  if (withCounter === true) w.record.writeCount = () => state.writes;
+  else if (withCounter === false) w.record.writeCount = undefined;   // (a record that states no counter, whatever record-core now provides)
   const recent = w.tasks.recentTasks.bind(w.tasks);
   w.tasks.recentTasks = (...a) => { state.tasked += 1; return recent(...a); };
   const count = (who = alice) => w.q.queueFeed({ ...who, count: true });
@@ -198,15 +199,25 @@ test("R93 (G80, control): the list, the muted list and the other readings are ne
 });
 
 test("R93 (G80, seam: record-core R89, R90): a write through the record's own paths moves the counter the cache reads", () => {
-  const { w, count } = setup({ withCounter: false });
+  const w = world();
+  w.member("alice");
+  w.bundle("INFO-2026-0001-doc"); w.bundle("INFO-2026-0002-other");
+  w.task("TASK-2026-0001-a", "INFO-2026-0001-doc", { assignee: "alice" });
+  w.task("TASK-2026-0002-b", "INFO-2026-0002-other", { assignee: "alice" });
   assert.equal(typeof w.record.writeCount, "function", "record-core provides writeCount() (R90)");
+  let asked = 0;
+  const recent = w.tasks.recentTasks.bind(w.tasks);
+  w.tasks.recentTasks = (...a) => { asked += 1; return recent(...a); };
+  const count = () => w.q.queueFeed({ ...alice, count: true }).count;
   const c0 = w.record.writeCount();
   assert.equal(w.record.writeCount(), c0, "a read of the counter does not move it");
-  assert.equal(count().count, 3);
-  assert.equal(count().count, 3);
-  // a task resolved through tasks' own path (a write the cache must see)
+  assert.equal(count(), 2); assert.equal(count(), 2);
+  assert.equal(asked, 1, "the second count was kept");
+  assert.equal(w.record.writeCount(), c0, "and asking for a count wrote nothing");
+  // a task resolved through tasks' own path: a write to a table of the record the cache must see
   const resolved = w.tasks.taskResolve({ id: "TASK-2026-0001-a", actor: "alice" });
-  assert.equal(resolved.ok, true);
+  assert.equal(resolved.ok, true, JSON.stringify(resolved));
   assert.ok(w.record.writeCount() > c0, "a write moved the counter (R89)");
-  assert.equal(count().count, 2, "the next count is recomputed and correct");
+  assert.equal(count(), 1, "the next count is recomputed and correct");
+  assert.equal(asked, 2);
 });
