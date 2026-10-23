@@ -282,6 +282,7 @@ export const T33_NON_ACTS = {
   tabledeclare: "table-directed: keyed by a table's digest; writes calculations' rows and moves no bundle",
   bindingadopt: "table-directed: keyed by (table, roles); writes calculations' rows and moves no bundle",
   moneyingest: "binding-directed: keyed by (binding, rows); money facts written as the machine's at a member's request",
+  moneyingestread: localize("calculations.declared.moneyingestread", "read: a money ingest's stored lists, a page at a time, with true counts and whether the ingest is complete (`calculations` R14); writes nothing"),   // G55 (K4562): a read, no rung
   calculationcreate: "calculation-directed: keyed by a new CALC- id; writes calculations' rows and moves no bundle",
   calculationaccept: "calculation-directed: keyed by calculation; a member's acceptance after an agreeing recompute",
   calculationdraw: "set-directed: keyed by (set, seed, size, method); records a reproducible draw and moves no bundle",

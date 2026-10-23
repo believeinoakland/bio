@@ -1,6 +1,6 @@
 # publication (T51)
 
-**Status** · session_01QheArVvjbWvvMPvEMfwKVF · depth 2 · COMPLETE · handled B7
+**Status** · session_01B2MtWpS48XnZkx7Fbo2FBa · depth 2 · COMPLETE · handled B7
 
 ## J1 · COMPLETE
 
@@ -151,3 +151,37 @@ G47t re-complete (B7): tranche/T51 merged; the seam test over the real case-carr
 ## J9 · COMPLETE
 
 Correction to J8: my 'architecture 0 failures' was wrong at the time (1 failure: g47t-miniflare.test.mjs imported test-support's sandbox.mjs, which publication does not declare). Fixed and pushed (the test owns its temp directory); now architecture 0 failures, format/coverage/words/ownership 0 failures; the Miniflare test still passes. Everything else in J8 stands: seam green, publication 165 (164 pass, 1 todo), public-read 244/244.
+
+## G54 · completion (PUBLICATION #37, session_01B2MtWpS48XnZkx7Fbo2FBa; fix round 6, START B8)
+
+**What changed.**
+- `bio-plane/src/publication/schema.mjs`: `published_cases` gains `casefile_state`, `casefile_attempts`, `casefile_attempted_at`, `casefile_why` in the `CREATE TABLE` (:249 block) and in `ADDITIVE_COLUMNS` (end of the list). Nullable, never back-filled.
+- `bio-plane/src/publication/index.mjs`: exported constants `CASEFILE_STATES`, `CASEFILE_STEPS`, `CASEFILE_MISSING_MAX_ATTEMPTS` (6), `CASEFILE_GRACE_MS` (2 min), `CASEFILE_BUILDING_WAIT_MS` (2 min), `CASEFILE_BACKOFF_FIRST_MS` (15 s), `CASEFILE_BACKOFF_MAX_MS` (1 h), `CASEFILES_OWED_MAX` (100), `CASEFILE_WHY_BYTES_MAX` (1024), `CASEFILE_TEXT_MAX` (160), pinned by `g54-casefile.test.mjs`. After `recordCaseManifest`: `recordCaseFileAttempt({caseId, edition, state, why, at, absent})`, `caseFilesOwed({now, limit})`, `caseFileNextAt()`. Dispatcher: `recordcasefile` beside `recordcasemanifest` in `publicationOps`. `recordCaseManifest` is unchanged and leaves the columns alone.
+- Writer rules: callers write `building`, `failed` or `built`. `building`/`failed` add one attempt; `built` adds none, clears `why`, and needs a recorded manifest (else `NO_MANIFEST`). `stopped` is the writer's own: a `failed` with `why.code` `MATERIAL_MISSING` and `absent: true` (the caller's probe confirmed the object gone) that is the 6th in a row (counted in `why.run`; a `building` keeps the run, another code resets it). A late `building`/`failed` never undoes a `built` or a `stopped`; a `built` is accepted over anything. `why` is reduced to `code` (`^[A-Z][A-Z0-9_]*$`), `step` (the list), cut `error`/`detail` (160 chars), `bytes`, `files`, `run`; under 1 KB. Anything else is `MALFORMED` and writes nothing. No new sentence (Words: none).
+- Owed rule (one place): complete by `caseEditionState`, not `stopped`, and (no manifest, or ledger state `building`/`failed`). Due at `ratified_at` + 2 min if never attempted, else `attempted_at` + `min(15 s * 2^(attempts-1), 1 h)` (a `building` at least 2 min). Oldest due first. A manifest with a null state is built (R-OLD). `caseFileNextAt()` is the earliest due as an ISO string, null when none.
+
+**Tests** (`test/m/publication/g54-casefile.test.mjs`, 9 tests naming R15/R40/R31; `g54-miniflare.test.mjs`, L). Red on the old tree: every behavioural test fails (no method, no hop; seen with the constants stubbed so the file loads). Green now: 9/9 and the L test. They cover the entry's list: owed after grace, incomplete never, doubling to the cap (11 steps), building 2 min and kill-loop backoff, stopped never owed and not rewritten, built never owed, recordCaseManifest leaves the columns, null state with a manifest never owed, controls (no other table or existing column changes), migration once and a second boot nothing, `declaredTables` unchanged (exempt/admin-only/none/stored/group), the real dispatcher, and no other op of the map writes the ledger.
+
+**L (real Durable Object SQLite, Miniflare).** An old-shape `published_cases` row takes the four `ALTER TABLE ... ADD COLUMN` once, reads them null, a second boot adds nothing, the writer's UPDATE and the owed query (`IS NOT`, `IN`) run on the platform. P: none.
+
+**Census.** `recordcasefile` is a store-internal hop declared like `recordcasemanifest`; no accepted key of any op changes; it is reachable from no op (test). Publication owns no `DECLARED_OPS`.
+
+**Found in another module (for BOB).** `test/m/op-declarations/t33.test.mjs` `IN_PROCESS.publication` (line ~99) lists the internal hops; it must gain `"recordcasefile"`, else "R19, R6 ... publication: recordcasefile has no spec" fails. That file is op-declarations', not mine; red by name until its job adds the hop.
+
+**Requirement lines proposed (BOB writes them).**
+- R15: add "`recordCaseManifest` leaves the case file's ledger alone. `recordCaseFileAttempt({caseId, edition, state, why, at, absent})` (store-internal hop `recordcasefile`, no caller's op) is the one writer of `published_cases.casefile_state` (`building`|`failed`|`stopped`|`built`), `casefile_attempts`, `casefile_attempted_at` and `casefile_why` (JSON `{code, step, error?, detail?, bytes?, files?, run?}`, under 1 KB). `building` and `failed` add one attempt; `built` needs a recorded manifest; `stopped` follows the 6th `MATERIAL_MISSING` failure in a row with the absence confirmed; a built or stopped edition is not rewritten by a late `building` or `failed`. `caseFilesOwed({now, limit})` answers the complete editions with no manifest or a `building`/`failed` ledger, not `stopped`, once due (never attempted: `ratified_at` + 2 minutes; else `attempted_at` + min(15 s * 2^(attempts-1), 1 h), a `building` at least 2 minutes), oldest due first; `caseFileNextAt()` the earliest due, null when none. A manifest with a null state is built."
+- R40: `published_cases` gains `casefile_state`, `casefile_attempts`, `casefile_attempted_at`, `casefile_why` (nullable, never back-filled), read by `public-read`, `publish-schedule` and `ratification` only through R15's reads and this contract.
+
+**Deferred.** None.
+
+**Tests and checks.**
+- Publication suite under the preload: `tests 175, pass 174, fail 0, todo 1` (the todo is R30, there before).
+- Impact set (`impact.mjs origin/tranche/T51 HEAD`: 56 modules, 1013 files, run one at a time): fails only the inherited reds (case-checker R13, R25; plane `release` R24; the common R24 screen-words red) plus two not on the list: op-declarations t33 R19/R6 (mine, above) and journey-check `pseudo.test.mjs` R29 (environment: `playwright-core` not installed in `src/journey-check`; unrelated to this change).
+- `checks/run.mjs /home/user/bio`: format 0, architecture 0 (4339 files), coverage 0 (6686 of 6686), channels 0, words 1 failure (the inherited `case-checker/spec.mjs:11` inline 1).
+- `checks/ownership.mjs /home/user/bio publication tranche/T51 job/T51/publication`: 5 files changed by publication; 0 failures.
+
+Size (session_01B2MtWpS48XnZkx7Fbo2FBa): test runs 9, module lines 4645 (physical lines of src/publication/*.mjs and deliverer.mjs, comments included)
+
+## J10 · COMPLETE
+
+G54 (publication) complete: four casefile_* columns on published_cases, recordCaseFileAttempt (hop recordcasefile), caseFilesOwed, caseFileNextAt. g54-casefile.test.mjs 9/9 (red on old tree), L Miniflare test green; publication 175 (174 pass, 0 fail, 1 todo); checks 0 failures except inherited words inline 1. FOUND IN OTHER MODULE: op-declarations t33.test.mjs IN_PROCESS.publication must gain 'recordcasefile' (R19/R6 red by name). journey-check pseudo R29 red is environment (playwright-core missing). Record section 'G54 · completion' holds R15/R40 lines. Size (session_01B2MtWpS48XnZkx7Fbo2FBa): test runs 9, module lines 4645.

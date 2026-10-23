@@ -1230,13 +1230,18 @@ export function textWordsOfText(text, { html = false, budget } = {}) {
    R41 (G15): in this mode a text line or paragraph over CAPTURE_TEXT_UNIT_CAP is carried whole as consecutive units
    (extent `run` 0, 1, ...), never cut; a sheet whose text is over the cap is carried as blocks of whole rows. */
 export const PIECE_UNITS_MAX = 4096;
-/* G26 (fix round 6): a PDF is read in pieces by page ranges, `PDF_RANGE_PAGES` pages a piece (pdf-reader's
-   `extractPdfRange`, R43), the cursor a page. A range's structures are dropped before the next is read, so a tick
-   holds the bytes and one range, and the whole is one parse, not one per piece. G37 (K4615), measured at the plane's shape
-   (`g26.probe.mjs`, BUDGET-2024-APP in a child of 112 MB, after roster-reader's recogniser fix) and by `pdf-pieces.test.mjs`
-   (pieces against one parse, bar 1.5): 100 pages a piece, first tick 5.2 s but 1.40-1.51 (one run over the bar); 150, 6.5 s and
-   1.45-1.47; 200, 8.2 s and 1.40-1.42 (three runs). 200 keeps both bars with a margin. */
-export const PDF_RANGE_PAGES = 200;
+/* G26 (fix round 6): a PDF is read in pieces by page ranges (pdf-reader's `extractPdfRange`, R43), the cursor a page. A range's
+   structures are dropped before the next is read, so a tick holds the bytes and one range, and the whole is one parse, not one
+   per piece. G56 (K4693, K4700): a range is sized by work as well as by pages: at most `PDF_RANGE_PAGES` pages and at most
+   `PDF_RANGE_BYTES` of file at the document's bytes a page, at least one page, the byte term applied by `extractPdfRange`
+   (`maxBytes`, passed on every tick, so one formula serves the first tick and the later ones). Measured at the plane's shape
+   (`g26.probe.mjs`, BUDGET-2024-APP, 1,354 pages, 15.2 MiB, in a child of 112 MB), the first tick is about 3 s fixed + 0.04 s a
+   page: 200 pages 11.0 s (G37, K4615, chose 200 for the parse-total bar of 1.5 and measured 8.2 s on another machine), 150 pages
+   9.5 s, 125 pages 7.3 s, 100 pages 6.4-7.5 s, 75 pages 6.0 s; 100 pages of that volume weigh about 1.2 MB, so 1.3 MB leaves its
+   pieces at 100 pages and shrinks a page-dense or scan-shaped volume's. The parse-total ratio rises with the pieces (each pays a
+   fixed cost), 1.53 at 200 and 1.57 at 100. */
+export const PDF_RANGE_PAGES = 100;
+export const PDF_RANGE_BYTES = 1_300_000;
 export const BARE_DIGEST = "BARE_DIGEST";
 export const CURSOR_MISMATCH = "CURSOR_MISMATCH";
 export const NOT_PIECEWISE = "NOT_PIECEWISE";
@@ -2134,7 +2139,7 @@ async function readInner(doc, { evidence, env, storeName, view, planeVersion, li
     try {
       let st = null;
       if (ranged) {
-        st = await extractPdfRange(bytes, { from: ranged.from, count: pieceAsk.rangePages });
+        st = await extractPdfRange(bytes, { from: ranged.from, count: pieceAsk.rangePages, maxBytes: PDF_RANGE_BYTES });
         /* bytes the range reader does not open as a PDF with pages are the format entry's to judge, as a whole read judges them */
         if (!st.ok || !(st.pages > 0)) ranged = null;
       }

@@ -1,6 +1,6 @@
 # BOB to installer-steps (T51)
 
-**Read** · handled J15
+**Read** · handled J19
 
 ## B1 · START
 
@@ -122,3 +122,38 @@ ANSWER (BOB #253, K4577) to J13.
 2. Intended. No `selectRelease` change: an older release is never chosen over the installer's built-in, which states the schedule, so the stop at the upload is not reached by a member.
 3. Accepted for the alpha: an in-sync plane's schedule is set by the next release's upload or by bundler's `deploy.mjs`.
 Record COMPLETE naming those reds.
+
+## B15 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/installer-steps tranche/T51 && git branch -m job/T51/installer-steps stale/installer-steps-local && git checkout -b job/T51/installer-steps origin/job/T51/installer-steps`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · INSTALLER-STEPS #7 · tranche T51 · product believeinoakland/bio · depth 2 (fix round 6, G54; K4702) · reading set per mechanics §6 step 2. If you would read a document of your reading set only in part, stop at once: post BLOCKED, cause `reading` (K3678).
+
+Mail with `--module installer-steps`; record `build/jobs/T51/installer-steps.md` (append a new section; earlier sections are history). On COMPLETE: `mail state --set COMPLETE`, post COMPLETE with `Size (<session id>): test runs <n>, module lines <n>`, and ring BOB (a one-time routine into BOB's session, `run_once_at` the next whole minute; `mail addr --bob`).
+
+**Reds you inherit (accepted by name; run them only as users):** plane `release` R24 and `l77-size` R77 L; file-safety R24; promotion row-census; case-checker R13, R25 (stale `program.mjs`); `fleetbundles` section 10, agent-worker `requirements`, ocr-worker, `newgroup-bundle-fresh` arms (C)/(D); newgroup R8, R11, R20, R33, R44, R55, R61, R71, `wizard.test.mjs`; screens-action `contract.test.mjs:34` (G52, held until G53 merges); G50's red-by-name tests (public-read `g50-copies`, case-checker `g50-path`, case-import `g50-import`, case-disclosures `g50-acts`); plane `g26.probe.mjs` 10 s; words `inline 1` at `case-checker/spec.mjs:11`. A failure not on this list is yours or a bug to report.
+
+Your entry: G54 in `build/plan/fix-round-6-T51.md` (read the entry whole, and the plan's section 0). Model: claude-sonnet-5-5, medium effort, unless the notes below say otherwise. Merge order is `modules.json` order (providers first); a seam test whose provider has not merged stays red by name.
+Your requirements: `build/requirements/installer-steps.md` (read whole); amendments outside your paths are proposed as text in your record and written by BOB at your merge.
+BOB's notes for this job:
+1. **The cause (G54 (3)(d), INSTALLER #24 J17, confirmed):** the installer's script uploads send no `observability`, so every install and update leaves the plane's Workers Logs off. The two metadata objects are `newgroup/src/steps/uploads.mjs:32` (install) and `:98` (update), yours.
+2. **The change (Route A, K4702):** both metadata objects carry `observability: {enabled: true}` as the installer's constant; a test pins it equal to `bio-plane/wrangler.jsonc:140`'s setting; the settings read-back after upload (`account.mjs`, the `/workers/scripts/<slug>/settings` read) refuses, stated, unless `observability.enabled` is true. No release statement is added, so an old signed release needs nothing (no R-OLD case).
+3. **Failing-first:** your own tests through the real install and update steps (the metadata sent, and a read-back lacking it refused), red before, green after. INSTALLER #24 writes the end-to-end test in `newgroup/test/`, red by name until you merge; you merge first.
+4. Census: no op's accepted keys change. Any sentence a refusal shows is a `localize` row.
+*Rules of section 0 hold* (`build/plan/fix-round-6-T51.md`): R-FOUR (cause with file:line; why tests missed it and the gap fixed; a failing-first test through the real entry path, seen red; the platform check), R-SEAM / R-ONE, R-NOTMET / R-OLD / R-LIVE, R-STOP, R-CLOCK. *Reading* (mechanics §6 step 2): read whole your requirements (both parts), your entry (your entry of `build/plan/fix-round-6-T51.md`, whole), your layer's contract in `build/layers.md`, your own code, the used services your entry touches, and the tests that name a requirement your entry changes; **a job that would read a document of its reading set only in part stops at once, posts `BLOCKED` with cause `reading`, and waits for BOB** (K3678). *Before any test:* every lockfile directory has `node_modules` (K4113); run one test process at a time, `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <file>` from the repository root, then your suite's impact set (`node build/plan/impact.mjs tranche/T51 HEAD`). *Workers:* haiku low for mechanical work, sonnet medium for reading and diagnosis, never opus, never above your own model (K3518); a command refused by a safety check is never retried, split or worked around: stop and post BLOCKED naming it. *Declarations:* declare every census op you own (K4208); say in your completion which changed. *Words rule* (K3930, K3943): a sentence people read is `localize('<module>.<area>.<name>', en)` with literal arguments; a test never holds a sentence (K3810); `rows.mjs` and `words-unreviewed.json` are never edited. Merge `tranche/T51` into your branch, never rebase or reset (K1991). Never edit another module's generated artifact (manifest §14): report what you made stale. Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (format, architecture, coverage 0 failures; words shows no finding in your module, by its own failure count), and `node checks/ownership.mjs /home/user/bio <module> tranche/T51 job/T51/<module>`. Your Size line counts only your module's own code (K2513). Report flaws in other modules to BOB (P9).
+
+## B16 · CHANGE
+
+Not merged yet (K4704): with your branch and INSTALLER #24's merged on tranche/T51, newgroup/test/requirements.test.mjs 'R17 (K1541) an update gives a copy that holds no seal secret a fresh one, keeps one it holds unrestated, and sends none when the copy's settings cannot be read, saying which' goes red (requirements.test.mjs:925: null !== 'no'); it is green on the base. Run with the fixture's settingsFail: your post-upload observability read-back now refuses when the settings cannot be read, which stops an update R17 requires to finish, sending no seal secret and saying so. Decide by the requirements: the read-back refuses only when settings ARE read and observability is not enabled; when the read itself fails, the run states that logging could not be confirmed (a localize row) and continues, as the other settings reads do (confirm by reading R17 and the existing read-back code), unless a requirement says otherwise, in which case tell me which. Run newgroup's whole requirements, t50, t51, wizard tests with INSTALLER #24's branch merged in a scratch tree: the only reds allowed are the inherited R8, R11, R20, R44, R55, R61, R71, wizard. Then COMPLETE again.
+
+## B17 · CHANGE
+
+CHANGE (BOB #262, K4709). B16's behaviour is right (newgroup on a merged scratch tree: R17 K1541 green, only the inherited reds), but the merge is held on the words check: `marker 2`, a `localize` call in a drawn-screen module (`newgroup/src/steps/uploads.mjs:40`) and in its test (`newgroup/test/steps/observability.test.mjs:67`). This module reads every sentence by key, as its other refusals do (`word("installer.fleet.why.program")`). So:
+- `observabilityHeld` calls `note(word("installer.fleet.logsunconfirmed"))`; no `localize` in `newgroup/src/steps/`.
+- The test asserts the note is the word of that key (read through `word`, never a copied sentence, never `localize`).
+- INSTALLER #24 writes that row (`localize("installer.fleet.logsunconfirmed", <your English>)`) and passes `opts.note`; until it merges the key is missing in your branch alone, which is expected: say so in your COMPLETE. The two of you merge together.
+Run `node <civicos-process>/checks/run.mjs .` and read the words line's failure count before COMPLETE. Merge tranche/T51 first.
+
+## B18 · CHANGE
+
+CHANGE (BOB #262, K4711). On the merged tree (installer-steps J18 with INSTALLER #24 J21), newgroup shows `R17 (K1541)` red again, beside the expected R36, R40 and the G54 note test: with the row `installer.fleet.logsunconfirmed` not yet in the word table (it is owed to the design and arrives only when the design's branch reaches `main` at the close, K4710 (5)), `word()` of the missing key on the unreadable path fails the update itself. The update must never depend on a sentence: guard the note so that a missing row skips the note and the run continues (e.g. `hasWord(key) && note(word(key))`, `hasWord` from `../words.mjs` as the installer imports it), with a test that the update finishes and R17 holds whether the row exists or not. Then only R36, R40 and the G54 note test stay red by name until the row exists. Merge tranche/T51 first; complete again. The merge of you and INSTALLER #24 is held until then.

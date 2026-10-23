@@ -1,6 +1,6 @@
 # BOB to notice-producers (T51)
 
-**Read** · handled J5
+**Read** · handled J7
 
 ## B1 · START
 
@@ -47,3 +47,29 @@ Capture merges third; your seam test stays red by name until then; I CHANGE you 
 ## B4 · CHANGE
 
 CHANGE (BOB #253): capture is merged into tranche/T51 (b3b6b6cf16: `fetchesDone`, `recordFetchDone`). Merge tranche/T51, run your seam `fetch.test.mjs` and `queue/noticed.test.mjs:288` against the real capture, and record COMPLETE again.
+
+## B5 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/notice-producers tranche/T51 && git branch -m job/T51/notice-producers stale/notice-producers-local && git checkout -b job/T51/notice-producers origin/job/T51/notice-producers`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · NOTICE-PRODUCERS #16 · tranche T51 · product believeinoakland/bio · depth 2 (fix round 6, G55; K4701) · reading set per mechanics §6 step 2. If you would read a document of your reading set only in part, stop at once: post BLOCKED, cause `reading` (K3678).
+
+Mail with `--module notice-producers`; record `build/jobs/T51/notice-producers.md` (append a new section; earlier sections are history). On COMPLETE: `mail state --set COMPLETE`, post COMPLETE with `Size (<session id>): test runs <n>, module lines <n>`, and ring BOB (a one-time routine into BOB's session, `run_once_at` the next whole minute; `mail addr --bob`).
+
+**Reds you inherit (accepted by name; run them only as users):** plane `release` R24 and `l77-size` R77 L; file-safety R24; promotion row-census; case-checker R13, R25 (stale `program.mjs`); `fleetbundles` section 10, agent-worker `requirements`, ocr-worker, `newgroup-bundle-fresh` arms (C)/(D); newgroup R8, R11, R20, R33, R44, R55, R61, R71, `wizard.test.mjs`; screens-action `contract.test.mjs:34` (G52, held until G53 merges); G50's red-by-name tests (public-read `g50-copies`, case-checker `g50-path`, case-import `g50-import`, case-disclosures `g50-acts`); plane `g26.probe.mjs` 10 s; words `inline 1` at `case-checker/spec.mjs:11`. A failure not on this list is yours or a bug to report.
+
+Your entry: G55 in `build/plan/fix-round-6-T51.md` (read the entry whole, and the plan's section 0). Model: claude-sonnet-5-5, medium effort, unless the notes below say otherwise. Merge order is `modules.json` order (providers first); a seam test whose provider has not merged stays red by name.
+Your requirements: `build/requirements/notice-producers.md` (read whole); amendments outside your paths are proposed as text in your record and written by BOB at your merge.
+BOB's notes for this job:
+Depth 2. Your entry: `build/plan/fix-round-6-T51.md` (T51), fix round 6, layer 11, notice-producers: **G55**, tier 2. Model: claude-sonnet-5-5, medium effort.
+Your requirements: `build/requirements/notice-producers.md` (read whole). Add the ingest `done` and `stopped` notices.
+BOB's notes for this job: ask `calculations` for the viewer's finished or stopped ingests as its contract offers them, follow this module's existing producer pattern and dedup, add the words `notice-producers.ingest.done` and `notice-producers.ingest.stopped`; `build/modules.json` `notice-producers.uses` gains `calculations` (BOB's edge); test `test/m/notice-producers/g55-ingest.test.mjs` (words found in `text_units`, an unseen ingest raises none); a seam test red by name until calculations merges.
+*Rules of section 0 hold* (`build/plan/fix-round-6-T51.md`): R-FOUR (cause with file:line; why tests missed it and the gap fixed; a failing-first test through the real entry path, seen red; the platform check), R-SEAM / R-ONE, R-NOTMET / R-OLD / R-LIVE, R-STOP, R-CLOCK. *Reading* (mechanics §6 step 2): read whole your requirements (both parts), your entry (your entry of `build/plan/fix-round-6-T51.md`, whole), your layer's contract in `build/layers.md`, your own code, the used services your entry touches, and the tests that name a requirement your entry changes; **a job that would read a document of its reading set only in part stops at once, posts `BLOCKED` with cause `reading`, and waits for BOB** (K3678). *Before any test:* every lockfile directory has `node_modules` (K4113); run one test process at a time, `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <file>` from the repository root, then your suite's impact set (`node build/plan/impact.mjs tranche/T51 HEAD`). *Workers:* haiku low for mechanical work, sonnet medium for reading and diagnosis, never opus, never above your own model (K3518); a command refused by a safety check is never retried, split or worked around: stop and post BLOCKED naming it. *Declarations:* declare every census op you own (K4208); say in your completion which changed. *Words rule* (K3930, K3943): a sentence people read is `localize('<module>.<area>.<name>', en)` with literal arguments; a test never holds a sentence (K3810); `rows.mjs` and `words-unreviewed.json` are never edited. Merge `tranche/T51` into your branch, never rebase or reset (K1991). Never edit another module's generated artifact (manifest §14): report what you made stale. Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (format, architecture, coverage 0 failures; words shows no finding in your module, by its own failure count), and `node checks/ownership.mjs /home/user/bio <module> tranche/T51 job/T51/<module>`. Your Size line counts only your module's own code (K2513). Report flaws in other modules to BOB (P9).
+
+## B6 · ANSWER · re J6
+
+ANSWER (J6; BOB #262, K4708). calculations has published its read on job/T51/calculations (R14, `index.mjs:1971-1990`); build to the provider's shape, not your stand-in:
+`calculationsOf(host).ingestNotices({ after = 0, limit = 100, viewer })` -> `{ ok: true, items: [{ ingest, binding, state: "done"|"stopped", rows_total, written_count, not_written_count, finished_at, stopped?: { reason, says } }], next }`; only the viewer's own ingests it sees; never throws; `limit` at most its READ_LIMIT_MAX.
+- Its order is by the ingest's row (when it was started), not by finishing. So never keep `next` across cycles: each cycle reads from `after = 0`, pages by `next` within the cycle up to your 1,000 bound, and tells each once by its key (an ingest started earlier can finish later than one already told). Your 90-day window reads `finished_at`; no `project` or `by` field: the subject is the ingest and the viewer is its member.
+- The edge is added: `notice-producers.uses` gains `calculations` (build/modules.json on tranche/T51). Merge tranche/T51, then architecture reads 0.
+- The seam test with the real calculations stays red by name until CALCULATIONS #9 merges; BOB sends a CHANGE then. Complete when done.

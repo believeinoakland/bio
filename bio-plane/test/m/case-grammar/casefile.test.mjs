@@ -240,7 +240,7 @@ test("R1 DEC-119 a source whose identity is withheld is stated as Withheld with 
 test("R13 K1318 the case file's format: its token, its kinds, one path per kind read back, and a part fingerprinted over its files", () => {
   assert.equal(CG.CASE_FILE_FORMAT, "bio-case-file/3");
   assert.equal(CG.CASE_FILE_FORMAT_V2, "bio-case-file/2");
-  assert.deepEqual([...CG.CASE_FILE_FORMATS_ACCEPTED], ["bio-case-file/3", "bio-case-file/2", "bio-case-file/1"]);
+  assert.deepEqual([...CG.CASE_FILE_FORMATS_ACCEPTED], ["bio-case-file/4", "bio-case-file/3", "bio-case-file/2", "bio-case-file/1"]);
   assert.deepEqual([...CG.CASE_FILE_V2_KINDS], ["archive", "container", "criteria"]);
   assert.deepEqual([...CG.CASE_FILE_V3_KINDS], ["obscured"]);
   assert.equal(CG.CASE_FILE_MANIFEST_PATH, "manifest.json");
@@ -276,7 +276,7 @@ test("R13 K1318 the case file's format: its token, its kinds, one path per kind 
   for (const [kind, key] of [["finding", "../x"], ["finding", ""], ["document", "a/b"], ["attestation", "x"], ["nope", "x"],
                              ["finding", null], ["attestation", ["a", "../b"]], ["archive", R], ["archive", [R, "ABC"]],
                              ["container", ["../x", sha("m")]], ["container", [R, sha("m"), 1]], ["obscured", "../x"],
-                             ["obscured", [R, sha("c")]]])
+                             ["obscured", [R, "c"]]])
     assert.equal(CG.caseFilePath(kind, key), null, `${kind} ${key}`);
   for (const path of ["manifest.json", "/case.md", "findings/x/other.md", "findings/../x/finding.md", "materials/r/document/x",
                       "attestations/r/../x", "case.MD", "", null, 7, "findings/.x/finding.md",
@@ -307,7 +307,7 @@ test("R13 caseFileManifestCheck names every way a manifest departs from the rule
   const file = (i, over) => ({ ...manifest, files: manifest.files.map((f, j) => (j === i ? { ...f, ...over } : f)) });
   const doc0 = manifest.files.findIndex((f) => f.kind === "case_document");
   const cases = [
-    [set("format", "bio-case-file/4"), "format:format"],
+    [set("format", "bio-case-file/5"), "format:format"],
     [set("group", "Lakeshore Tenants"), "group:group"],
     [set("case", ""), "case:case"],
     [set("edition", 0), "edition:edition"],

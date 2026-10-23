@@ -150,9 +150,8 @@ const isBrowserAct = (op, screenId) => Object.hasOwn(browserActs(), op) && brows
    session's token (`LOCKED_OPS`), not a re-point. */
 export const RE_POINTS = Object.freeze({
   explore: Object.freeze(["stepsourcewithdraw"]),
-  /* R117 (fix round 3; C84, C64): each until the registry lists the op on that screen */
-  security: Object.freeze(["scanmirror"]),
-  places: Object.freeze(["officeconfirm"]),
+  /* G53 (fix round 6; K4699): `scanmirror` (on `security`) and `officeconfirm` (on `places`), R117's two, left this table: the
+     design's registry lists both now, so the one screen-registry check admits them */
   /* B3 (K4467; screens-inquiry J21, N5): the read of a record stored unread, until the registry lists `readheld` on `document` */
   document: Object.freeze(["readheld"]),
 });

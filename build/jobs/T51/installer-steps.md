@@ -1,6 +1,6 @@
 # installer-steps (T51)
 
-**Status** · session_012UZ8UWTtyM4aTQWpqvLqwq · depth 2 · COMPLETE · handled B14
+**Status** · session_01WaNWPB8W8wmgcuybTWiVtm · depth 2 · COMPLETE · handled B18
 
 ## J1 · QUESTION
 
@@ -235,3 +235,56 @@ Size (session_012UZ8UWTtyM4aTQWpqvLqwq): test runs 13, module lines 2076
 ## J15 · COMPLETE
 
 COMPLETE (J14): G1 provider done; see record section J14. Named reds accepted at B14.
+
+## G54 (INSTALLER-STEPS #7, B15) · observability
+
+**Cause.** `uploads.mjs` `uploadInstall` and `uploadUpdate` (the two metadata objects) sent no `observability`, so every install and update turned the plane's Workers Logs off; nothing read it back. Tests missed it because no test pinned the metadata's `observability` or the settings. Gap fixed by `newgroup/test/steps/observability.test.mjs`.
+
+**Changed.** `newgroup/src/steps/uploads.mjs`: exported constant `OBSERVABILITY = {enabled: true}` sent in both metadata objects; `observabilityHeld` reads `/workers/scripts/<slug>/settings` after the upload and throws unless `observability.enabled === true`, before the schedule is set. Stand-in sentence `installer.fleet.why.program`; **row owed `installer-steps.plane.observability`** ("your Cloudflare account did not switch on the plane's logs"). No census op changes; no release statement added. Tests: `observability.test.mjs` (4; red before, 3 behaviour reds and the constant arm, green after); `world.mjs` fake keeps and returns `observability` (knob `dropObservability`); `plane.test.mjs` R12/R13/R38 expectations gain the setting and the extra settings call.
+
+**Suites.** `newgroup/test/steps/`: 107 tests, 105 pass, 0 fail (2 parked unmet). Checks: format 0 failures; architecture 0; coverage 0 (installer-steps 40 of 40); words: only the inherited `case-checker/spec.mjs:11`; ownership: 0 failures except `build/requirements/installer-steps.md`, which I reverted (B15: amendments proposed as text). 
+
+**REPORT for BOB (installer's fixture).** The read-back is the specified Route A, and `newgroup/test/fixture.mjs` (installer's) answers the settings GET (:472-476) without `observability` and does not record the upload's, so about 51 installer suite tests that were green before are now red (e.g. R10 `install`, R12 `bind`, R17 update, R38, R44, R46, R59, R67 of `newgroup/test/requirements.test.mjs`/`wizard.test.mjs`; baseline had 15 reds). Test-only fix for INSTALLER #24: in `fixture.mjs` put, remember `meta.observability` per script; in the settings GET add `...(observed ? {observability: observed} : {})`, exactly as `world.mjs` now does here (diff in this branch). Impact set: installer 17/19, journey-check 2/24.
+
+**Proposed requirement line (BOB writes it):**
+- **R40** (T51 G54, fix round 6; K4702; amends R12 and R13) **The plane's Workers Logs are switched on.** Both uploads' metadata (`uploadInstall`, R12; `uploadUpdate`, R13) carry `observability: {enabled: true}`, the exported constant `OBSERVABILITY`, which equals the setting of `bio-plane/wrangler.jsonc`; the account's settings for the plane script (`/workers/scripts/<slug>/settings`) are read back after the upload and, unless they state `observability.enabled` as true, the act stops (`installer.fleet.why.program`, a stand-in; row owed `installer-steps.plane.observability`) before the schedule is set. No release statement carries it, so an older signed release needs nothing. Test: both acts send it; the constant equals the wrangler setting; an account that holds none, or disabled, stops both with nothing after; control: an account that keeps it completes.
+
+Size (session_01WaNWPB8W8wmgcuybTWiVtm): test runs 6, module lines 2091
+
+## J16 · COMPLETE
+
+G54 provider done (R-FOUR in my record, section "G54 ... observability"). Cause: uploads.mjs uploadInstall/uploadUpdate metadata sent no observability. Change: exported OBSERVABILITY {enabled:true} in both metadata objects (pinned by a test to bio-plane/wrangler.jsonc:140); settings read-back after upload refuses unless observability.enabled is true (stand-in installer.fleet.why.program; ROW OWED installer-steps.plane.observability). Failing-first newgroup/test/steps/observability.test.mjs (red, then green); steps suite 107 tests, 105 pass, 0 fail. format/architecture/coverage 0 failures; words only the inherited case-checker inline 1; ownership 0 failures (requirements file left untouched; proposed R40 text is in my record).
+ACTION FOR BOB / INSTALLER #24: the installer's own fixture (newgroup/test/fixture.mjs:472-476) answers settings without observability, so ~51 installer wizard/requirements tests (baseline 15 reds) go red until the fixture records meta.observability and returns it, as world.mjs now does. Test-only fix, not mine to make. Census: no op changes. Generated artifacts: newgroup/dist would be stale (BOB regenerates).
+Size (session_01WaNWPB8W8wmgcuybTWiVtm): test runs 6, module lines 2091
+
+## B16 · observability read-back made lenient
+
+Decided by the requirements: installer R17 ("sends nothing, naming why, when the settings cannot be read") and `heldBindings`' rule (unknown, never off). `observabilityHeld` now refuses only when the settings ARE read (they state `bindings`) and `observability.enabled` is not true. A read that fails with a non-lasting error, or answers nothing readable (the fixture's `settingsBlind`), continues and calls `opts.note(localize("installer-steps.plane.logsunconfirmed", ...))`; `approveAgain` and `lasting` are rethrown, as `heldBindings` does. **Row owed `installer-steps.plane.logsunconfirmed`.** **For INSTALLER:** pass `note` (the step's note sink) in the opts of its `uploadInstall`/`uploadUpdate` calls (`newgroup/src/index.mjs` :807, :810, :825, :826, :1207), else the sentence is not shown; nothing else breaks without it. No requirement says otherwise. Test added to `observability.test.mjs`. Steps suite: 108 tests, 106 pass, 0 fail.
+
+Scratch tree (my branch + `origin/job/T51/installer`, removed after): `requirements`, `t50`, `t51`, `wizard` tests: 89 tests, 7 reds, all allowed: R8, R11, R20, R44, R61, R71, wizard. The R17 (K1541) red is gone.
+
+Size (session_01WaNWPB8W8wmgcuybTWiVtm): test runs 9, module lines 2102
+
+## J17 · COMPLETE
+
+B16 done. The observability read-back refuses only when settings are read (state bindings) and observability.enabled is not true; an unreadable answer continues and calls opts.note(localize installer-steps.plane.logsunconfirmed) (row owed). approveAgain/lasting rethrown as heldBindings. INSTALLER must pass opts.note in its uploadInstall/uploadUpdate calls (index.mjs :807 :810 :825 :826 :1207) for the sentence to show; nothing breaks without it. Scratch tree with job/T51/installer merged: requirements/t50/t51/wizard tests 89, reds only R8 R11 R20 R44 R61 R71 wizard (R17 K1541 green). Steps suite 108 tests, 106 pass. Size (session_01WaNWPB8W8wmgcuybTWiVtm): test runs 9, module lines 2102
+
+## B17 · note read by key
+
+\`observabilityHeld\` calls \`note(word("installer.fleet.logsunconfirmed"))\`; no \`localize\` in \`steps/\` or its tests; the test compares with \`word\` of that key; the key is added to \`STEP_KEYS\`. tranche/T51 merged. **Expected reds until INSTALLER #24 writes the row \`installer.fleet.logsunconfirmed\` and merges alongside:** words \`missingkey 2\` (\`uploads.mjs:40\`, \`observability.test.mjs:67\`; \`marker\` is 0 again; the other failure is the inherited \`case-checker/spec.mjs:11\`), and two steps tests by name: R40 (the unreadable-settings note: UNKNOWN_WORD) and R36 (each STEP_KEYS key is a row). Steps suite 108 tests, 106 expected once the row exists, 104 now. format, architecture, coverage 0 failures; ownership 0 failures.
+
+Size (session_01WaNWPB8W8wmgcuybTWiVtm): test runs 12, module lines 2102
+
+## J18 · COMPLETE
+
+B17 done: the note is word("installer.fleet.logsunconfirmed") (no localize in steps/ or its test; key added to STEP_KEYS); tranche/T51 merged. Words: marker 0; missingkey 2 (uploads.mjs:40, observability.test.mjs:67) EXPECTED until INSTALLER #24's row exists, plus the inherited case-checker inline 1. Two steps tests red by name until then: R40 (note) and R36 (each STEP_KEYS key is a row); 104 of 108 pass now, 106 once the row exists. format/architecture/coverage/ownership 0 failures. Merge together with INSTALLER #24. Size (session_01WaNWPB8W8wmgcuybTWiVtm): test runs 12, module lines 2102
+
+## B18 · the note never makes the update depend on a sentence
+
+`observabilityHeld` says the note only when \`hasWord("installer.fleet.logsunconfirmed")\`; a missing row skips it and the act goes on. Test added to \`observability.test.mjs\` (the act finishes, schedule set, and the note is said exactly when the row exists). tranche/T51 merged. Steps suite: 109 tests, 105 pass; the two reds are R36 (each STEP_KEYS key is a row) and R40 (the note's words), by name, until the row exists. Scratch tree with \`origin/job/T51/installer\` merged (requirements, t50, t51, wizard: 90 tests): R17 (K1541) green; reds are the G54 note test (by name) and the inherited R8, R11, R20, R44, R61, R71, wizard.
+
+Size (session_01WaNWPB8W8wmgcuybTWiVtm): test runs 14, module lines 2103
+
+## J19 · COMPLETE
+
+B18 done: the note is said only when hasWord(installer.fleet.logsunconfirmed); a missing row skips it and the update goes on. New test: the act finishes with the schedule set whether or not the row exists. tranche/T51 merged. Steps suite 109 tests, 105 pass; red by name until the row exists: R36 and R40 (note). Scratch merge with origin/job/T51/installer (requirements, t50, t51, wizard): R17 K1541 green; reds are the G54 note test (by name) and inherited R8 R11 R20 R44 R61 R71 wizard. Size (session_01WaNWPB8W8wmgcuybTWiVtm): test runs 14, module lines 2103

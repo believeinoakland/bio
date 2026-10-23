@@ -30,6 +30,10 @@
  * release: the bytes deployed are the file given, verified by reading them back as ever. Each step logs what it
  * deploys and the target it can return to. `--dry-run` runs every check and read and deploys nothing.
  *
+ * WORKERS LOGS (G54; K4426): the upload sends wrangler.jsonc's `observability` ({ enabled: true }), because a script PUT that
+ * sends none turns them off (biosmoke8, 2026-10-20: no line named why two case files were not built). The script's settings
+ * are read back after the bytes and the limits, and a difference, an absent key or an unreadable answer refuses success.
+ *
  * THE CRON SCHEDULE (G1; K4565, K4566, K4570): after the upload the script's schedules are PUT from wrangler.jsonc's
  * `triggers.crons` and read back, and a failure or a difference refuses success (a raw script PUT sets none, and whether it
  * keeps the ones held is unconfirmed). Needs the token scope the upload already uses (Workers Scripts Write). The first add
@@ -235,7 +239,7 @@ const api = `https://api.cloudflare.com/client/v4/accounts/${ACCT}/workers/scrip
    monitor cadence and CAP-3's archive fallback on the deployed instance, and
    the fleet bindings arm the plane's Tier-3 paths. The targets are
    pre-flighted below so a missing worker is OUR refusal, not code 10143. */
-import { deriveBindings, serviceTargets, deriveLimits, limitsReadBack, deriveCrons, schedulesReadBack } from "./derive-bindings.mjs";
+import { deriveBindings, serviceTargets, deriveLimits, limitsReadBack, deriveCrons, schedulesReadBack, deriveObservability, observabilityReadBack } from "./derive-bindings.mjs";
 import { parseJsonc } from "./jsonc.mjs";   /* R11: the module's one reader */
 const wranglerCfg = parseJsonc(
   readFileSync(new URL("../wrangler.jsonc", import.meta.url), "utf8"), "bio-plane/wrangler.jsonc");
@@ -254,6 +258,10 @@ const meta = {
      platform's default of the month. deriveLimits REFUSES a config without it,
      before anything is uploaded. */
   limits: deriveLimits(wranglerCfg),
+  /* G54 (K4426): Workers Logs. An upload that sends none turns them off on the script (biosmoke8, 2026-10-20), so the config's
+     setting is sent every time and read back below. deriveObservability REFUSES a config that does not state it, before
+     anything is uploaded. */
+  observability: deriveObservability(wranglerCfg),
 };
 /* G1: the cron schedule rides no metadata field, so it is set by its own call after the upload (below). An invalid list
    is refused here, before any request, as a config without a subrequest ceiling is. */
@@ -329,6 +337,26 @@ async function bindingsNow() {
   try { j = await r.json(); } catch { /* said below */ }
   if (!j || !j.success || !j.result || typeof j.result !== "object") return { unreadable: "an answer that is not the script's settings" };
   return { settings: j.result, bindings: Array.isArray(j.result.bindings) ? j.result.bindings : [] };
+}
+
+/* G54: Workers Logs are asked of the account, never believed from the PUT's answer (the lesson of this file's header). The
+   settings are read up to three times, because an answer can precede what it describes; success is refused when they do not
+   report `observability.enabled` as sent, or cannot be read. */
+async function confirmObservability() {
+  let last = null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const now = await bindingsNow();
+    last = now.unreadable !== undefined
+      ? { verdict: "UNREADABLE", why: `the script's settings could not be read (${now.unreadable})` }
+      : now.settings === null ? { verdict: "UNREADABLE", why: "the script was not found" }
+      : observabilityReadBack(now.settings, meta.observability);
+    if (last.verdict === "MATCH") { console.log(`verified: ${last.why}`); return; }
+    if (attempt < 3) await new Promise((s) => setTimeout(s, 3000));
+  }
+  console.error(`REFUSING TO REPORT SUCCESS [${last.verdict === "MISMATCH" ? "OBSERVABILITY_MISMATCH" : "OBSERVABILITY_UNREADABLE"}]: ${last.why}.`);
+  console.error("The bytes are deployed; the script's Workers Logs are not what the config sent, so a failure on it would leave no line to name it (G54).");
+  console.error("Nothing is verified past this line.");
+  process.exit(1);
 }
 
 /* R34: where a derived binding is not on the deployed script as derived. A secret's value is never readable back, so
@@ -414,6 +442,9 @@ console.log(`before: ${before ? before.slice(0, 16) + "\u2026" : "(unreadable)"}
 console.log(`signed: ${want.slice(0, 16)}\u2026  ${version}  ${source.length} bytes`);
 const schedNow = await schedulesNow();
 const schedMatch = !!schedNow.held && schedulesReadBack(schedNow.held, crons).verdict === "MATCH";
+/* G54: what the script reports of Workers Logs now (its settings were read above, before the upload). */
+const obsNow = onScript.settings ? observabilityReadBack(onScript.settings, meta.observability) : null;
+const obsMatch = !!obsNow && obsNow.verdict === "MATCH";
 if (TEST) {
   /* R40: what this step deploys, and where it can return to: the bytes now deployed under the copy's name. */
   console.log(`test deploy: ${slug} from ${assetPath} sha256 ${want} (a branch's built artifact: no release/ signature is read)`);
@@ -439,10 +470,13 @@ if (before === want) {
   const lim = limitsReadBack(await settingsNow(), meta.limits);
   /* R34: and so must the bindings this deploy derives, each with the same target or value. */
   /* G1: and so must the script's schedules, or a config that gains a cron is never set on a plane whose bytes did not change. */
-  if (serving === version && lim.verdict === "MATCH" && differences.length === 0 && schedMatch) {
-    console.log(`already byte-identical AND serving ${version} AND ${lim.why} AND every derived binding present AND schedules ${cronText(crons)} held; nothing to do`);
+  if (serving === version && lim.verdict === "MATCH" && differences.length === 0 && schedMatch && obsMatch) {
+    console.log(`already byte-identical AND serving ${version} AND ${lim.why} AND every derived binding present AND schedules ${cronText(crons)} held AND Workers Logs on; nothing to do`);
     process.exit(0);
   }
+  /* G54: and Workers Logs must already be on, or a config that gains them is never applied to a plane whose bytes did not change. */
+  if (serving === version && lim.verdict === "MATCH" && schedMatch && !obsMatch)
+    console.log(`bytes identical, serving ${version} and limits match, but Workers Logs are not on for the script — a METADATA deploy proceeds (the same script, observability sent again): ${obsNow ? obsNow.why : "the script's settings could not be found"}.`);
   if (serving === version && lim.verdict === "MATCH" && !schedMatch)
     console.log(`bytes identical, serving ${version} and limits match, but the schedules differ on the script — a METADATA deploy proceeds (the same script, the schedules set again): `
       + (schedNow.held ? schedulesReadBack(schedNow.held, crons).why : `they ${schedNow.absent ? "could not be found" : `could not be read (${schedNow.unreadable})`}`) + ".");
@@ -459,6 +493,8 @@ if (DRY) {
   console.log(crons.length
     ? `schedules: after the upload PUT .../schedules sets ${cronText(crons)} and reads it back; a failure or a difference refuses success`
     : "schedules: wrangler.jsonc declares no cron; after the upload PUT .../schedules sets none and reads it back; a failure or a difference refuses success");
+  console.log(`observability: the upload carries ${JSON.stringify(meta.observability)} and reads it back; a difference or an unreadable answer refuses success`);
+  console.log(`observability now: ${!onScript.settings ? "the script is not deployed, so Workers Logs are off" : obsMatch ? "on" : "off (" + obsNow.why + ")"}`);
   if (schedNow.unreadable !== undefined) {
     console.error(`REFUSED [SCHEDULES_UNREADABLE]: could not read the schedules now on "${slug}" (${schedNow.unreadable}); a deploy that cannot read them back cannot verify them.`);
     process.exit(1);
@@ -501,6 +537,8 @@ for (let attempt = 1; attempt <= 4; attempt++) {
     console.log(lim.verdict === "MATCH"
       ? `verified: ${lim.why}`
       : `limits: UNDETERMINED — ${lim.why}. The ceiling sent (${meta.limits.subrequests}) is NOT confirmed; establish it before stating it.`);
+    /* G54: and Workers Logs, which the upload turns off unless it sends them. */
+    await confirmObservability();
     /* G1: after the upload, whatever it did to the schedules. */
     await setSchedules();
     await confirmServing(version);
