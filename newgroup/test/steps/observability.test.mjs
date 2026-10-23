@@ -3,7 +3,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { uploadInstall, uploadUpdate, namesFor, OBSERVABILITY } from "../../src/steps/index.mjs";
-import { word } from "../../../bio-plane/src/setup-words/index.mjs";
+import { word, hasWord } from "../../../bio-plane/src/setup-words/index.mjs";
 import { session, immediateTimers, account, release, chosen, realFetch, CAPABLE_SRC } from "./world.mjs";
 
 let restoreTimers;
@@ -74,4 +74,15 @@ test("R40: settings that cannot be read do not stop the act: it continues and sa
   await update(await bundle(), { note: (t) => said.push(t) });
   assert.deepEqual(said, [], "readable settings say nothing");
   w.restore();
+});
+
+test("R40: the act finishes whether or not the row of the unconfirmed-logs note is in the word table: the note is said when the row exists and skipped when it does not", async () => {
+  for (const [name, act, pre] of ACTS) {
+    const w = account({ pre, settingsBlind: true });
+    const said = [];
+    await act(await bundle(), { note: (t) => said.push(t) });
+    assert.deepEqual(said, hasWord("installer.fleet.logsunconfirmed") ? [word("installer.fleet.logsunconfirmed")] : [], name);
+    assert.equal(w.schedules.size, 1, name + ": the act went on to the schedule");
+    w.restore();
+  }
 });
