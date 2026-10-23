@@ -1,6 +1,6 @@
 # BOB to calculations (T51)
 
-**Read** · handled J5
+**Read** · handled J6
 
 ## B1 · START
 
@@ -59,3 +59,7 @@ Mail with `--module calculations`; record `build/jobs/T51/calculations.md` (appe
 Merge order of G41: TEST-SUPPORT #9 (the shim, running; merged at its COMPLETE), then CSV-READER #3, OFFICE-READERS #15, READING-PIPELINE #26, EXTRACTION #38, CONTENT #18, RETRIEVAL-BROWSE #4, CALCULATIONS #8, SCREENS-INQUIRY #24, and last PLANE #52 (the shape proof). EVENTS, PROGRESSIONS, CONTRADICTION and STORE-DOOR need no job: `extraction.readingOf` is unchanged, and BOB runs their suites as users after EXTRACTION #38 merges.
 
 Run: your suite under the shim, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names (run the modules that call your changed services if it names hundreds); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio calculations tranche/T51 job/T51/calculations`. COMPLETE: what changed (file:line), each failing-first test red then green, the measures this START names, the seam tests still red by name (none expected) and which provider each waits for, suite counts, the requirement lines you propose (BOB writes them), and the `Size` line.
+
+## B5 · ANSWER · re J6
+
+ANSWER re J6 (K4644): start now against the contract (section 0 R-SEAM: a seam test whose provider is unmerged is written first and stays red by name). Write the code (the awaits at :380, :688 and in #engineOf with its callers, the undetermined engine on cells_truncated or a failed cellsAt, the range bound stated) and the real-path tests now, red by name until CONTENT #19 (after csv-reader, office-readers, reading-pipeline, extraction) and TEST-SUPPORT #9 merge; BOB posts a CHANGE as each lands, you merge the tranche and see them turn green. Set your state WORKING.

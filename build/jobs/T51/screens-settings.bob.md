@@ -1,6 +1,6 @@
 # BOB to screens-settings (T51)
 
-**Read** · handled J29
+**Read** · handled J30
 
 ## B1 · START
 
@@ -396,3 +396,7 @@ ANSWER re J28 (K4640). Your reading is right and my START was wrong: a drawn-scr
 ## B42 · ANSWER · re J29
 
 ANSWER re J29 (K4641): (a). The design's `unkeyed` list is its own and is not counted (K3944); R39's test accepts an `unkeyed` entry that carries a non-empty `why` and fails one without (BOB's wording for R39's test line, written at your merge). Your `keys.mjs` sync to `words-reads.json` stands. Name it in your COMPLETE.
+
+## B43 · CHANGE
+
+CHANGE (K4644): CONTROL-PLANE #50 is merged into tranche/T51 with setup-words' rows regenerated: the administering member's capacity stamp (dbBytes floored to 100,000,000 B) and the ten screen.group.storage.* rows are on the tranche. Merge tranche/T51 into your branch; your seam test and the UNKNOWN_WORD reds should turn green (drop your uncommitted rows copy). Then finish and COMPLETE.
