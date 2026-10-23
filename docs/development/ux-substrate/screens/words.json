@@ -80870,7 +80870,7 @@
   },
   {
    "key": "notice-producers.index.machine_work_from_your_standing",
-   "en": "Machine work, from your standing question. {v1}{v2}. You are told about this once.",
+   "en": "The assistant worked from your standing question: {v1}{v2}. You are told about this once.",
    "protected": false,
    "source": "DEC-259",
    "note": "DEC-424: B495 notice-producers: the standing-answer item's line; {v1} 'N new finds' or 'New finds are held', {v2} empty or '; the assistant did not answer, because ...'"

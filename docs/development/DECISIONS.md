@@ -6581,3 +6581,18 @@ the design: on `install`, after "Your team's places", a section "Where your team
 reasoning recorded in: this entry; `screens/mock-screens.js` (install); `screens/words-drawn.src.py` (block "DEC-426").
 owed: BOB: the keys and fills as G83's job names them, or a QUESTION; whether "chosen once" is exact (a record's place cannot change after install) and whether a FedRAMP choice is wanted.
 amended: 2026-10-23 (B500): "chosen once" is exact (Cloudflare places a record object at its first request and never moves it); in the alpha the record is placed in the founder's region with no screen (K4747); this drawing is N1273, straight after the alpha, with these keys; which legal choices sit beside the EU is brought to Bob with N1273; the three service levels have no screen in the alpha (N1271's study). Owed answered.
+
+### DEC-427 · decided
+raised: 2026-10-23 · the UX design session with Bob, on his secondary account with BOB (session_01VWoaFstEKg7YtQS2K41x6s) (the standing consistency read of DEC-418, DEC-419 and DEC-422 to DEC-426's rows, 144 rows)
+for: design (T51 words; findings beyond T51's bar parked for T52)
+question: What the consistency read of the newest rows changes now, and what waits for T52.
+why it is Bob's: it is not (P17): member words beneath his rulings.
+provisional: as below.
+alternative: change every finding now; not taken: the plural forms need new `.one` keys and code choosing them, and merging two rows changes what the code reads, both beyond T51's bar (K4269, K4270).
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-23 · the design session (P17)
+the design: one text changed, same key and fills: `notice-producers.index.machine_work_from_your_standing` now reads "The assistant worked from your standing question: {v1}{v2}. You are told about this once." (the house word, never "machine"). The published case file's bare "Civicsmith" stays: its reader may be outside the team. Parked in `screens/parked-T52.md`: five counts that read wrongly at 1; `money.ingest.partial` showing the reading's internal key; three pairs of rows that tell one fact two ways; `money.index.events_is_not_wired_here` naming no events.
+reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-424", the one row); `screens/parked-T52.md`.
+owed: BOB: nothing in T51 (the key and fills are unchanged; it lands with the branch's next MERGE); the parked lines at T52.

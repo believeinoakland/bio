@@ -7842,7 +7842,7 @@ w424('money.index.more_than_one', "more than one", "money: a fill of money.undet
 # B (judged read): the Queue's own items, where the kind has no queue.<kind> row
 w424('notice-producers.index.fetch_done_summary', "{document} has been fetched", "notice-producers R27: the Queue item's title (fetch-done); {document} its title. Beside notice.fetch.done (DEC-418), which the Queue draws only where it holds a queue.<kind> row")
 w424('notice-producers.index.fetch_done_detail', "The large page you asked for is fetched and filed. Open it to read it.", "notice-producers R27: the Queue item's line (fetch-done)")
-w424('notice-producers.index.machine_work_from_your_standing', "Machine work, from your standing question. {v1}{v2}. You are told about this once.", "notice-producers: the standing-answer item's line; {v1} 'N new finds' or 'New finds are held', {v2} empty or '; the assistant did not answer, because ...'")
+w424('notice-producers.index.machine_work_from_your_standing', "The assistant worked from your standing question: {v1}{v2}. You are told about this once.", "notice-producers: the standing-answer item's line; {v1} 'N new finds' or 'New finds are held', {v2} empty or '; the assistant did not answer, because ...'")
 w424('notice-producers.index.open_the_document', "Open the document", "notice-producers R27: the fetch-done item's door; the same words as notice.fetch.done.door (DEC-418)")
 
 # DEC-425: fix round 7's rows, written ahead of the round's end (B498; K4736; G60, G61, G62, G72, G74)
