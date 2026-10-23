@@ -219,7 +219,8 @@ test("R26 the rail's width: 184 px by default, 64 to 320, set by the keyboard (a
   await p.settle();
   assert.match(frame().getAttribute("style"), /--rail:250px/);
   assert.equal(p.local.get("cs-railw"), "250");
-  for (const r of p.requests) assert.ok(!JSON.stringify(r).includes("250") && !/railw/.test(JSON.stringify(r)));
+  /* what a request carries (its address, query, body and headers), never its timing stamp, in which "250" may occur by chance */
+  for (const r of p.requests) { const sent = JSON.stringify({ url: r.url, query: r.query, body: r.body, headers: r.headers }); assert.ok(!/\b250\b/.test(sent) && !/railw/.test(sent)); }
   assert.equal(p.root().querySelector(".cs-tabs").getAttribute("style"), null);
   const q = await boot({ screens: ALL, local: { "cs-railw": "250" } });
   assert.match(q.root().querySelector("#cs-frame").getAttribute("style"), /--rail:250px/);
