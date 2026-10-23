@@ -222,3 +222,14 @@ COMPLETE (B16 START applied, B17/B18 answered; G47 and G47t). Merged tranche/T51
 **Requirement line proposed (BOB writes it):** R23's `attestations` gains: a row states the capture it attests (`sha`) only where its `ref` has two or more captures; it then joins that capture's material and account and is listed only if that capture is included; a `co_attestation` row stating `sha` carries the tokens `publication` held for that capture and those held for no one capture (null); a row stating none joins and carries by `ref` as before, and is carried with no `sha` key. Tests: g47-attest, g47t-tokens.
 
 Size (session_01GnvpRhqTuRSK7Kr4FmJwte): test runs 9, module lines 2784
+
+## J21 · COMPLETE
+
+COMPLETE (B20 CHANGE applied; replaces J20's seam-red status). Merged tranche/T51 (case-grammar #20, case-carriage #15, publication #36, case-disclosures #17 in).
+
+**Seam tests now green:** `g47-attest.test.mjs` 3/3 and `g47t-tokens.test.mjs` 3/3 against the real providers, no stand-ins. No code change since J20; my R23 test rows already omit a null `sha` (the carried row drops it), so the deepEqual of attestation rows stands unchanged (casefile.test R23 co-attestation green).
+
+**Suites (preload).** public-read 250 pass 0 fail. Users: publication 164 pass 0 fail (165 tests); screens-publish + case-authoring 502 pass, 8 red: screens-publish's 5 (R3 x2, R4 R30, R24 x2: G10/words/photos) and case-authoring R55 x3 (case-disclosures R4/R7/R11 arms); all 8 fail identically with the tranche's own public-read `index.mjs` swapped in, so not mine; reported for BOB. Checks: `checks/run.mjs` 0 failures on all five, ownership 0 (4 files).
+
+Requirement line and deferred `originalOf` as in J20. No open QUESTION.
+Size (session_01GnvpRhqTuRSK7Kr4FmJwte): test runs 12, module lines 2784
