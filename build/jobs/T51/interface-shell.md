@@ -469,3 +469,7 @@ Size (session_011BwEvapbBvrGVu6SVZhniz): test runs 122, module lines 3346
 **Requirement lines proposed (BOB writes):** R80/R109: "A redraw puts back no check into a group of boxes that redraws on a change (`data-redraw`); the screen's own state is what is drawn." R124: "Of the six, `groupidentity` and `infolevel` kept for the tab are not asked again while the tab's copy was answered less than a day ago on the page clock (kept beside the answer); the other four are asked once per load and never kept past it."
 **Census ops:** none. **Rows owed to UX-DESIGN:** none. **Deferred:** none. **Found in other modules:** none.
 Size (session_01Up6JyxDqREE6g4kR9CVELS): test runs 24, module lines 3355
+
+## J27 · COMPLETE
+
+COMPLETE, fix round 7 (G77, G81); record section 'Fix round 7'. G77: no restore into a data-redraw group; red then green, and real Chromium (L) red/green. G81: groupidentity and infolevel kept for a day, the other four asked once per load, four characterization tests. Module suite 364/364; users' suites pass (intake/investigate/publish pass alone; two-at-once runs timed out). REPORT: the plan's 'id the radio by its value' was built and withdrawn because it breaks ~58 tests of five screen modules that name boxes by place; the restore rule alone fixes the case. Say if you want ids by value, with a CHANGE to those modules' tests first.
