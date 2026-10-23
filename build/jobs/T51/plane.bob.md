@@ -383,3 +383,7 @@ CHANGE to PLANE #52 (depth 2; fix round 6, G44; K4662, K4665). After your G41 wo
 **Seam reds by name:** every G44 assertion that needs a provider is red by name until it merges: the add refusal until WORKBOOKS, the safe view's cut and stated no-preview until FILE-SAFETY; the harness extension and the cases that fail today by dying are yours to show red first.
 
 COMPLETE for this part: what changed (file:line), each failing-first test red then green, the measures named above, the seam tests still red by name and which provider each waits for, suite counts, the requirement line you propose, and the `Size` line.
+
+## B51 · CHANGE
+
+CHANGE (K4668): CALCULATIONS #8 is merged into tranche/T51 (G41: `cellsAt` awaited, undetermined engine on a truncated read). Also on the tranche: test-support's preload `bio-plane/test/platform-sqlite.mjs` (K4666; run your tests with `node --import ./test/platform-sqlite.mjs`), now words-clean. Merge tranche/T51.
