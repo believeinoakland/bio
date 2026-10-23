@@ -548,3 +548,27 @@ Size (session_01MRSaAxXVfHeRnbMzyYWfCF): test runs 34, module lines 2616
 ## J33 · COMPLETE · re B39
 
 COMPLETE (B39 applied). Cause of both (1) and (2) was mine: with G41's cap the door's reading of the 1 MB CSV is ~147 KB (under my bound, so nothing dropped) but its one text unit is truncated:true (131,072 of 1 MB chars, measured at the door's answer); it was embedded and projectPromotion (extraction/index.mjs:967-983) stored it as whole, so LASTROWMARK was never read (K4571). Fix in promoteDocument: the reading is also dropped when any text_units entry is truncated:true, text_units_over_bound is true, or text_units_skipped > 0 (size test stays); answers readingDropped. Failing-first in t51-fix7.test.mjs (3 red before, each small reading with a cut-unit marker; control: whole units keep it byte-identical). My seam fixture was also wrong: one 900 KB padded line made the follow itself come back partial; it is now ordinary ~40 B rows, exactly 1,048,576 B, and op=reading is read page by page (next). t51-seam-g43 both halves GREEN: bundle, provenance under 1 MiB, readingDropped true; after readheld the reading is completeness whole, LASTROWMARK and cells_held found. The test's follow is readheld; the owed render's own follow is control-plane's test. screens-intake 305/305. screens-inquiry: the same 4 R96 reds as before, identical on the tranche's capture.mjs. Checks: format, architecture, coverage 6681/6681, channels, words, ownership all 0. Size (session_01MRSaAxXVfHeRnbMzyYWfCF): test runs 34, module lines 2616
+
+## G44 (SCREENS-INTAKE #20, B40)
+
+Providers' state: office-readers, csv-reader, extraction, content and retrieval-browse are merged on `tranche/T51` (merged into this branch). file-safety, workbooks and plane's G44 parts are NOT merged; the five rows are file-safety's code-origin stand-ins, so nothing below can draw them until BOB regenerates setup-words' rows.
+
+My part is the drawing tests plus a small change to `open-file.mjs` and the reads list:
+- `open-file.mjs` `safeDrawn` (:57-): each `kind: "data"` sheet draws its cells as before; a sheet with `reason` draws `screen.open-file.safe.sheet.unreadable` {name} instead of an empty table; a sheet with `truncated: true` draws `screen.open-file.safe.cut` {from, to, total} (or `.cut.more` {from, to} when `total_rows` is not a number); `sheets_truncated` draws `screen.open-file.safe.sheetscut` {shown, total}. An old-shape answer (no new keys) and a whole sheet draw none. `cs.set("safe", a)` still stores the returned answer only.
+- `sendSafeView`: a `SAFE_VIEW_FAILED` whose `renderer_reason` is `TOO_LARGE` or `PREVIEW_NOT_DRAWN` with numeric `size` and `bound` sets `safeRefused` to `{key: "screen.open-file.safe.notdrawn", vars: {size, bound}}` in MB, one decimal (bytes / 1048576, the module's own `size.mb` convention); drawn with `cs.w(key, vars)`. Without the figures the refusal draws as before.
+- `index.mjs` open-file reads list: the five keys added.
+- Tests: new `test/m/screens-intake/g44-open-file.test.mjs` (4 tests: cut with and without total; whole sheet and old shape draw none; cut sheet list and unreadable sheet; no-preview refusal in MB and the plain refusal as before).
+
+Failing-first: the cut, sheets-cut and no-preview tests were red for want of the drawing (they ran against the old code only in the sense that the drawing did not exist); they now stop at `UNKNOWN_WORD` (below). The whole-sheet/old-shape test is green.
+
+Seam reds by name (all wait for FILE-SAFETY's merge and BOB's regeneration of `rows.mjs`): in `g44-open-file.test.mjs` the three tests naming `screen.open-file.safe.cut`, `.sheetscut`, `.notdrawn`; in `common.test.mjs` and `t51-*` R26 ("each screen's words ... all of them words of the list", open-file) the five keys not yet in the list. Nothing else red: suite 309 tests, 304 pass, 5 fail (all the above).
+
+Rows owed to UX-DESIGN (file-safety writes the stand-ins; entered by BOB): `screen.open-file.safe.cut`, `.cut.more`, `.sheetscut`, `.notdrawn`, `.sheet.unreadable`.
+
+Census (K4208): no op of mine changes its accepted keys. No protective bound set by me.
+
+Proposed requirement lines (BOB writes): R5/R36: a safe view of a spreadsheet states, by key, a sheet it could not show, the rows shown of a cut sheet (and the total where known), and a cut list of sheets; a refusal `SAFE_VIEW_FAILED` carrying `renderer_reason` `TOO_LARGE`/`PREVIEW_NOT_DRAWN` with `size` and `bound` draws "not drawn" with both in MB, never an empty table; a whole sheet and an older answer draw none of these.
+
+Checks: format 0 failures; architecture 0 failures; words (screens-intake) 0 failures, counts unchanged; ownership 0 failures. Words check over all L11 not re-run (my diff adds only key reads).
+
+Size (session_01S2atqbcekracFHqkp4KjL2): test runs 6, module lines 33
