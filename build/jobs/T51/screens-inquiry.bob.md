@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T51)
 
-**Read** · handled J30
+**Read** · handled J32
 
 ## B1 · START
 
@@ -523,3 +523,15 @@ Mail with `--module screens-inquiry`; record `build/jobs/T51/screens-inquiry.md`
 Merge order of G41: TEST-SUPPORT #9 (the shim, running; merged at its COMPLETE), then CSV-READER #3, OFFICE-READERS #15, READING-PIPELINE #26, EXTRACTION #38, CONTENT #18, RETRIEVAL-BROWSE #4, CALCULATIONS #8, SCREENS-INQUIRY #24, and last PLANE #52 (the shape proof). EVENTS, PROGRESSIONS, CONTRADICTION and STORE-DOOR need no job: `extraction.readingOf` is unchanged, and BOB runs their suites as users after EXTRACTION #38 merges.
 
 Run: your suite under the shim, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names (run the modules that call your changed services if it names hundreds); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-inquiry tranche/T51 job/T51/screens-inquiry`. COMPLETE: what changed (file:line), each failing-first test red then green, the measures this START names, the seam tests still red by name (none expected) and which provider each waits for, suite counts, the requirement lines you propose (BOB writes them), and the `Size` line.
+
+## B46 · CHANGE
+
+CHANGE (K4645): your START's line that the providers (and TEST-SUPPORT #9's preload) are already merged is wrong: the G41 jobs all started together. Build now against the contract the STARTs state; write your real-path seam tests now, red by name until each provider merges (plan section 0, R-SEAM); run under a copy of the shim kept outside the tree until `bio-plane/test/platform-sqlite.mjs` is on tranche/T51. Merge order stays csv-reader, office-readers, reading-pipeline, extraction, content, retrieval-browse, calculations, screens-inquiry, plane: a provider COMPLETEs first with its own tests green. BOB posts a CHANGE as each provider and the preload merge; then merge tranche/T51 and turn your seam tests green. Set your state WORKING (not BLOCKED). **The too-large reading's shape (K4645):** extraction writes `failure: "final"`, `basis` its R38 sentence as today, and beside it `too_large: {bytes: <size of the largest bound value>, key: <its key>}`; readers read the field, never the English.
+
+## B47 · ANSWER · re J31
+
+ANSWER re J31 (K4645): (0) right: build now, seam test red by name (CHANGE B46). (1) Extraction writes `basis` as today's R38 string and a separate field `too_large: {bytes, key}`; draw `cs.w("screen.document.reading.too_large", {size: sizeWord(too_large.bytes), key: too_large.key})` when `too_large` is present, else as today. (2) Agreed: not while `more`; drawn when `more` is false. (3) Agreed: once per page, no sheet names.
+
+## B48 · CHANGE
+
+CHANGE (K4654): CSV-READER #3 is merged into tranche/T51 (held cells with `inlineCellsMax`, `cells_held`, `cellsIn`, the 17 MiB stated bound). Merge tranche/T51 into your branch when your next step needs it; run your seam tests that depend only on csv-reader.
