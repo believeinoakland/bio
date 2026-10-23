@@ -313,4 +313,4 @@ Size (session_01G4KPZ8PUsRbsiLajjUaHCP): test runs 9, module lines 5136
 
 **State.** Code and tests complete; not COMPLETE only because the merge waits on the wizard-scripts registry re-take.
 
-Size (session_015opo2yPs5rDEGC6mU3j4mb): test runs 9, module lines 4975
+Size (session_015opo2yPs5rDEGC6mU3j4mb): test runs 9, module lines 4943
