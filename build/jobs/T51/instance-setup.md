@@ -200,3 +200,7 @@ COMPLETE (re B11, B12; fix round 8, G118 and G114). R104 and R103 are built; the
 Tests and checks: instance-setup 228 pass, 0 fail. Users named by `impact.mjs` that touch bootstrap, run: control-plane `t51-bootstrap` 1/0, plane `door` 6/0, `worker` 7/0, `hosts` 4/0, op-declarations `t47` 13/0, credentials `t51` 5/0, `members` 1/0. format 0; architecture 0; coverage 76 of 76; words 0 (inline 0, plain 0, testcopy 0, missingkey 0); ownership 3 files, 0 failures.
 
 Size (session_01SPUpVJsJxBhU7hbLvsUMXD): test runs 9, module lines 3700
+
+## J17 · COMPLETE
+
+COMPLETE (re B11, B12): R103 and R104 built, record J16. 228 pass; checks 0. Door must pass caller.viewer and stateTiming to bootstrapOp. Re-run on the merged translations R20 at your CHANGE.
