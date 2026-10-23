@@ -853,3 +853,7 @@ ANSWER J47 (K4822). (1) Yes: v = <release>~<language>~<words_version>; the relea
 ## B62 · CHANGE
 
 CHANGE (K4825): translations (R19, R20; words_version on every interfacewords answer), instance-setup (R103 language and words_version on bootstrap; R104 fleet;dur and facts;dur via io.stateTiming), case-authoring (G112) and queue (R94; derivation {served, rows_read, rows_written, items_by_producer}) are merged into tranche/T51. Merge tranche/T51 into your branch and run your tests against them. The plane's door passing caller.viewer and stateTiming is PLANE #55's (B73).
+
+## B63 · CHANGE
+
+CHANGE (K4826): admission (R32, one session read per request) is merged. Also: your test 'R122 (the page's bootstrap is read once per load)' failed once under a concurrent plane run (54 s) and passes alone (ADMISSION #17's report). K4787: make it assert the work (the count of bootstrap reads) or a same-run control, never a wall time, inside this job.
