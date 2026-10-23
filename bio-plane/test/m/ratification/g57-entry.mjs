@@ -5,7 +5,9 @@
    the sweep's tick with the bucket's operations counted (get, head, put) and the door's. The default export is a Worker whose
    route (`/g57w/copyfail`) runs the Worker half's `copyFinding` with the finding's put made to throw, which is how the copy
    fails. R-CLOCK: counted, not timed. */
-import { G54Held, KEY_B64 } from "./g54-entry.mjs";
+import { G54Held } from "./g54-entry.mjs";
+// The attestor key G54Held lays (g54-entry.mjs: KEY); not exported there, since workerd reads every export of an entry module as a handler.
+const KEY_B64 = "AAAAC3NzaC1lZDI1NTE5AAAAIKEY";
 import { copyFinding } from "../../../src/ratification/finding.mjs";
 import { gradingFactsLines, materialsLines, materialAttestationLines } from "../../../src/case-grammar/index.mjs";
 

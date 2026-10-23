@@ -75,7 +75,6 @@ const caseDocText = (caseId, edition, project, target, pin, materials = []) => [
   "method:", '  grading: "grading/1"', '  checks: "1.0.0"', ...materialsLines(materials), ...materialAttestationLines([]), "---", "",
   "## Scope", "", "The question.", "", "## What This Excludes", "", "Nothing else.", "", "## What Was Searched", "", "Everything.", ""].join("\n");
 
-export const KEY_B64 = KEY;
 export class G54Held {
   fault = newState();
   constructor(ctx, env) {
