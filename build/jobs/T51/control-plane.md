@@ -736,3 +736,7 @@ Size (session_01DVeYe6wF7P8CpLfVhfSwSK): test runs 11, module lines 4690
 ## J40 · COMPLETE
 
 B53 done: G75 fixed in the delivery's cs (date formatted, html vars unwrapped); seam G75 green. Control-plane dir 463 tests, 457 pass, 6 red by name (G58, G61, G61 twin, G64, G62 x2); G59 and G74 now green. Record updated.
+
+## J41 · REPORT
+
+G83 re-point done and pushed (5 sites via storeStub; t51-g83-location.test.mjs 13 tests, 7 red before, all green with a local stand-in of runtime-limits' store-place.mjs, which is NOT committed: my branch imports ../store-place.mjs and is red until runtime-limits merges; waiting for your CHANGE, no COMPLETE). Also found, not mine and independent of G83 (same on HEAD before my change): after merging tranche/T51 two round-6 seam tests fail: t51-round6-seam G7 (40 MB five-part upload now leaves a reading row owed; the test asserts none) and G2 (15.9 MB fetch_pending flow). Likely capture/acquisition's G79 change (keep handed to the ledger / owed row) or reading-pipeline; the test pins the round-6 behaviour. Tell me whether to amend the round-6 assertions. Seam round 7: G64 and G59/G74 now pass; remaining red: G58, G61 x2, G62 x2.
