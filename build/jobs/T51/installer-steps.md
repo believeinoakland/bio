@@ -284,3 +284,7 @@ B17 done: the note is word("installer.fleet.logsunconfirmed") (no localize in st
 `observabilityHeld` says the note only when \`hasWord("installer.fleet.logsunconfirmed")\`; a missing row skips it and the act goes on. Test added to \`observability.test.mjs\` (the act finishes, schedule set, and the note is said exactly when the row exists). tranche/T51 merged. Steps suite: 109 tests, 105 pass; the two reds are R36 (each STEP_KEYS key is a row) and R40 (the note's words), by name, until the row exists. Scratch tree with \`origin/job/T51/installer\` merged (requirements, t50, t51, wizard: 90 tests): R17 (K1541) green; reds are the G54 note test (by name) and the inherited R8, R11, R20, R44, R61, R71, wizard.
 
 Size (session_01WaNWPB8W8wmgcuybTWiVtm): test runs 14, module lines 2103
+
+## J19 · COMPLETE
+
+B18 done: the note is said only when hasWord(installer.fleet.logsunconfirmed); a missing row skips it and the update goes on. New test: the act finishes with the schedule set whether or not the row exists. tranche/T51 merged. Steps suite 109 tests, 105 pass; red by name until the row exists: R36 and R40 (note). Scratch merge with origin/job/T51/installer (requirements, t50, t51, wizard): R17 K1541 green; reds are the G54 note test (by name) and inherited R8 R11 R20 R44 R61 R71 wizard. Size (session_01WaNWPB8W8wmgcuybTWiVtm): test runs 14, module lines 2103
