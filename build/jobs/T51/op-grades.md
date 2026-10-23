@@ -327,3 +327,21 @@ Size (session_01MfAJMdL1CxJq36VfSFDQdb): test runs 9, module lines 3646
 **Deferred / found elsewhere.** Nothing deferred in op-grades. Not mine: the plane's R24 and R74 reds above, and affordances R61 R62 and op-declarations R34 (ACT_HELP partition). Reported for BOB's routing.
 
 Size (session_01Q1BcrfRKSNQeK7397e6hvF): test runs 12, module lines 3679
+
+## J26 · COMPLETE
+
+**COMPLETE (B34, fix round 6, G55; K4562).** Commit `bio-plane/src/op-grades/t33.mjs:284` (+ test), on `job/T51/op-grades`, `tranche/T51` merged.
+
+**Entries applied.** `moneyingestread` is graded beside `moneyingest` in `t33.mjs`: a read, so a `NON_ACTS` row only (no rung, no ground, not in `MACHINE_REFUSALS`, no consequence statement; `phoneOf` true). Its reason is `localize("calculations.declared.moneyingestread", "read: a money ingest's stored lists, a page at a time, with true counts and whether the ingest is complete (`calculations` R14); writes nothing")`. **For calculations' declaration (R50 (b)): its `description` must be this same key and English, weight `read`, `mutating: false`.** `moneyingest` is unchanged (`reasoned`, NO_REASON). Which op-declarations list a read joins is op-declarations' (its job, 154).
+
+**R-FOUR.** (1) Cause: the op is new, so no grade existed. (2) Gap: nothing pins a new read's grade until its owner declares it; `g55.test.mjs` pins it at the interface (R13, R53 named). (3) `test/m/op-grades/g55.test.mjs` seen red on the base (row absent), green with the row. (4) N: pure data.
+
+**Red by name (seam, provider unmerged).** `control-plane/totality.test.mjs:17` lists `moneyingestread` as `stale` until op-declarations (154) merges its declaration. Not on the inherited list; it clears at that merge.
+
+**Proposed requirement text (BOB writes).** Append to R53: "(fix round 6, G55) `moneyingestread` (`calculations` R14) is a read: a hand row in `NON_ACTS` with a "read: …" reason, keyed `calculations.declared.moneyingestread`, no rung or ground; it agrees with its owner's declaration (R50)."
+
+**Tests and checks.** `test/m/op-grades/` all files: 0 fail. Impact set (`impact.mjs origin/tranche/T51 HEAD`, 522 files, one at a time): failures only `control-plane/totality` (above), `screens-action/contract` (G52, inherited), `plane/release` (inherited R24), `journey-check/pseudo` (7 fail, identical on base), and one `screens-intake/capture` failure that did not recur in 3 reruns and passed on base (transient). `checks/run.mjs`: format, architecture, coverage 0 failures; words: only inherited `inline 1` at `case-checker/spec.mjs:11`, none in op-grades. `checks/ownership.mjs … op-grades tranche/T51 job/T51/op-grades`: 0 failures.
+
+**Declarations.** op-grades owns no census op; no declaration changed. **Deferred / other modules.** Nothing.
+
+Size (session_014rNFkQLf1kdsYEby9XrVQi): test runs 560, module lines 3680
