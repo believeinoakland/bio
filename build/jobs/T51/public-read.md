@@ -194,3 +194,13 @@ COMPLETE (B15 START applied; C47 seam, R43). Merged tranche/T51 first.
 **R43 line proposed (met):** drop "*(not yet met: T51)*"; test: `public-read/evidence-names.test.mjs` "R43 …" and `screens-publish/c47-seam.test.mjs`.
 
 Size (session_01SctGfdzcWmRNmq49hMahxN): test runs 7, module lines 2800
+
+## J19 · QUESTION
+
+QUESTION (G47, the timestamp tokens; needs a provider, not mine). Join and filter are done on my side (`index.mjs` caseFileFacts: a row stating `sha` joins that capture's material and is listed only if that capture is included; a row stating none joins by `ref` as before; a null `sha` is dropped from the carried row so earlier case files keep their bytes; tests `g47-attest.test.mjs`, red by name until CASE-GRAMMAR #20 merges, green here against a local stand-in of its reader/writer, not committed).
+
+The tokens cannot be keyed per capture from what the projection holds. `case-carriage` registers each timestamp token (`hold(ref, "attestation", tokenSha, ...)`, index.mjs:231-312, from `#holdTokens(ref, home, sha...)`) in `published_shas` as (sha256 = the token's, bundle_id = the material's `ref`, path = `materials/<token sha>`, kind `attestation`): the capture it stamps is known at that call (`sha`) and not stored. My lookup (`index.mjs` caseFileFacts, the `held` read, bundle_id = `a.ref`) therefore returns every capture's tokens of that `ref` under each co-attestation row: with k = 2 captures both with tokens, capture A's row carries B's token and the reverse. They do collide; I cannot show they cannot.
+
+Smallest thing I need: a stored link from a token to the capture it stamps, written by `case-carriage`'s `hold` for kind `attestation` (it has `sha` there) and carried through publication's `published_shas` registration, e.g. a nullable column `capture_sha` on `published_shas` (set only for kind `attestation`), or a path `materials/<capture sha>/<token sha>`. Then I key the lookup by (ref, row's `sha`) when the row states one, and by ref alone otherwise (earlier documents and rows read as before). Who owns it is yours to place (case-carriage, publication; their requirements say what a registered file's row is). My recommendation: the nullable column, since it keeps every existing `path=('materials/'||sha256)` read unchanged.
+
+Until you answer I carry the tokens as before (all of the ref's, under each row), which is the misattribution the join fix removes for accounts; I have NOT hidden any. I will not COMPLETE with this open; I finish the rest (record, checks) and wait.
