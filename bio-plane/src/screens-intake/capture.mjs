@@ -55,7 +55,44 @@ async function projectOf(cs, id) {
     if (!project) return { id: "", title: "", question };
   }
   const pm = await front(project);
-  return { id: project, title: (pm && field(pm, "title")) || project, question };
+  /* G74 (fix round 7; BOB's ruling, following K4557): a member files into a project only when she is in it or invited to it. A project whose
+     front matter the read gives is hers; one it refuses is hers only when the project list names her participation in it (`joined`, `leaving`
+     or `invited`: an invited member's read is the skeleton only). `member` is that; the title is the project's own name where the read gives
+     one, else the list's, and never the id. */
+  if (pm !== null) return { id: project, title: field(pm, "title"), question, member: true };
+  let row = null, after = "";
+  for (let page = 0; page < 20 && !row; page++) {
+    const a = await cs.call("projectlist", { query: { limit: 200, ...(after ? { after } : {}) } });
+    const v = a && typeof a.result === "object" && a.result ? a.result : a;
+    const rows = v && Array.isArray(v.projects) ? v.projects : [];
+    row = rows.find((x) => x && x.id === project) || null;
+    if (row || !v || v.truncated !== true || typeof v.next !== "string" || !v.next) break;
+    after = v.next;
+  }
+  const mine = !!(row && ["joined", "leaving", "invited"].includes(row.participation));
+  return { id: project, title: row && typeof row.name === "string" ? row.name : "", question, member: mine };
+}
+
+/* G74 (U463, DEC-425): the words for a project the member may not file into: `refusal.PROMOTE_NOT_A_PARTICIPANT` with `{project}` by name where the
+ * name is known and the row exists, else the nearest held row (`project.notmember`). Answers `{key, fills}`. */
+function notMemberWords(cs, f) {
+  const key = "refusal." + "PROMOTE_NOT_A_PARTICIPANT";
+  return f && f.title && cs.w(key) !== key ? { key, fills: { project: f.title } } : { key: "project.notmember", fills: {} };
+}
+
+/* G75 (fix round 7): a held row's name where it stored none: the chain a delivery names a document by (R54), from what the row gives: its own
+ * title; else its host and the day it was captured (`document.untitled.web`, the day of its source's `retrieved`); with neither, `screen.held.untitled`.
+ * Plain text, at most 200 characters; never "Untitled capture" for a row whose host and day are known. */
+function heldTitle(cs, r) {
+  const plain = (t) => String(t).replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
+  const own = r && typeof r.title === "string" ? r.title.replace(/\s+/g, " ").trim() : "";
+  if (own) return own.slice(0, 200);
+  const s = r && r.source && typeof r.source === "object" ? r.source : {};
+  let host = "";
+  try { host = new URL(String(s.address || "")).hostname; } catch (e) { host = ""; }
+  const when = Date.parse(String(s.retrieved || ""));
+  if (!host || !Number.isFinite(when)) return plain(cs.w("screen.held.untitled")).slice(0, 200);
+  return plain(cs.w("document.untitled.web", { site: host, date: { html: cs.date(new Date(when).toISOString().split(".")[0] + "Z") } })).slice(0, 200);
 }
 
 /* R54 (C25; amends R33, R50): one rule for a document's name, the same for a web page, a PDF and an upload: its own title (the
@@ -189,7 +226,7 @@ function renderCapture(cs, view) {
   /* R49 (C9): a document held under another project's home and filed here as well says so (`screen.capture.address.filedhere`, with the home's
      name); a document filed under the page's project or question says where, as a new capture does. "" where nothing was filed. */
   const filedLine = (g) => g && g.alsoHere && g.alsoHere.home ? cs.w("screen.capture.address.filedhere", { project: g.alsoHere.home })
-    : g && g.filed && g.filed.id ? (g.filed.question ? cs.w("capture.filed.question", { project: g.filed.title, question: g.filed.question }) : cs.w("capture.filed.project", { project: g.filed.title })) : "";
+    : g && g.filed && g.filed.id && g.filed.title ? (g.filed.question ? cs.w("capture.filed.question", { project: g.filed.title, question: g.filed.question }) : cs.w("capture.filed.project", { project: g.filed.title })) : "";
   const made = (g) => g && typeof g.bundleId === "string" && g.bundleId
     ? `<p class="mk-small">${cs.ref("document", g.bundleId, g.existed ? plainText(cs.w("screen.capture.address.existed.open")) : g.title || g.bundleId, [])}`
       + (filedLine(g) ? ` ${filedLine(g)}` : "")
@@ -205,8 +242,12 @@ function renderCapture(cs, view) {
        (the counts, else the nearest held row, `screen.document.text.unread.next`, which says the rest follows); stated is the reason it was refused whole
        (a refusal's words), else `none`. Owed: screen.document.reading.partial / .stated. */
     const c = r.completeness;
+    /* G73 (fix round 7): a stated reading's `why` is the reading's own sentence ("the capture is 41502904 bytes in 5 parts, over ... so it was not read"), as
+       the Document screen draws it, escaped and whole; a bare code (`TOO_LARGE`) is a refusal's words (`refusal.<code>`). A sentence is never handed to
+       `refusalHtml` as a code: no word is found and the apology is drawn over it. */
+    const statedWhy = (why) => { const t = String(why).trim(); return /^[A-Z][A-Z0-9_]*$/.test(t) ? view.parts.refusalHtml(cs, { code: t }) : cs.esc(t); };
     if (c && c.state === "partial") return `<p class="mk-note" role="status" data-reading="partial">${cs.w("screen.document.text.label")}: ${r.wordsRead !== null && r.wordsTotal !== null ? cs.w("screen.document.text.read", { read: String(r.wordsRead), total: String(r.wordsTotal) }) : cs.w("screen.document.text.unread.next")}</p>`;
-    if (c && c.state === "stated") return `<p class="mk-note" role="status" data-reading="stated">${cs.w("screen.document.text.label")}: ${c.why ? view.parts.refusalHtml(cs, { code: String(c.why) }) : cs.w("screen.document.text.none")}</p>`;
+    if (c && c.state === "stated") return `<p class="mk-note" role="status" data-reading="stated">${cs.w("screen.document.text.label")}: ${c.why ? statedWhy(c.why) : cs.w("screen.document.text.none")}</p>`;
     const state = r.wordsRead !== null && r.wordsTotal !== null ? cs.w("screen.document.text.read", { read: String(r.wordsRead), total: String(r.wordsTotal) })
       : cs.w(r.words ? "screen.document.text.full" : "screen.document.text.none");
     return `<p class="mk-note" role="status" data-reading="read">${cs.w("screen.document.text.label")}: ${state}</p>`;
@@ -231,8 +272,11 @@ function renderCapture(cs, view) {
       U.forq = { id: at.id, state: "loading" };
       view.parts.projectOf(cs, at.id).then((r) => cs.set("forq", { id: at.id, state: "ok", value: r }), () => cs.set("forq", { id: at.id, state: "ok", value: null }));
     }
-    const m = U.forq.state === "ok" && U.forq.value && U.forq.value.id && U.forq.value.question && /^INQ-/.test(at.id) ? U.forq.value : null;
+    const m = U.forq.state === "ok" && U.forq.value && U.forq.value.id && U.forq.value.question && /^INQ-/.test(at.id) && U.forq.value.member !== false && U.forq.value.title ? U.forq.value : null;
     if (m) forqNote = said("screen.capture.forq", { project: m.title, question: `\u201C${m.question}\u201D` });
+    /* G74 (fix round 7): Add opened for a project (or a question's project) the member is neither in nor invited to says so first, in the nearest held row's words
+       (`project.notmember`; owed: its own row), and offers nothing to file there; the project is never named by its id */
+    else if (U.forq.state === "ok" && U.forq.value && U.forq.value.id && U.forq.value.member === false) { const nm = view.parts.notMemberWords(cs, U.forq.value); forqNote = `<p class="cs-state" data-state="failed" role="alert" data-notmember>${cs.w(nm.key, nm.fills)}</p>`; }
   }
   let body = "";
   if (tab === "address") {
@@ -332,7 +376,8 @@ function renderCapture(cs, view) {
       const copy = A.copy || {};
       const vouched = D.held && D.held.state === "ok" && D.held.value && Array.isArray(D.held.value.held) ? D.held.value.held : [];
       const row = vouched.find((r) => r && r.bundle_id === copy.document);
-      const title = (row && row.title) || plain(cs.w("screen.held.untitled"));
+      /* G75 (fix round 7): the compared copy's name is the row's title, else the chain a delivery names a document by (its host and the day), never "Untitled capture" for a copy whose host and day are known */
+      const title = view.parts.heldTitle(cs, row || { source: { address: copy.address || U.address || "", retrieved: copy.retrieved } });
       const who = String(copy.actor || "").replace(/^member:/, "");
       const open = cs.ref("document", copy.document, plain(cs.w("screen.capture.openit")), [plain(cs.w("screen.capture.openit.help"))]);
       const by = who && copy.retrieved ? cs.w("screen.capture.a64.captured_by", { name: { html: person(who) }, date: { html: cs.date(copy.retrieved) } }) : "";
@@ -359,6 +404,9 @@ function renderCapture(cs, view) {
       + `<details class="mk-details"><summary>${cs.w("screen.capture.archive.summary")}</summary><p class="mk-small">${cs.w("screen.capture.archive.explain1")} ${cs.w("screen.capture.archive.explain2")}</p></details>`;
     /* R50 (A1, A2): the working line from the press until the answer; the result is a status line under the button */
     const working = U.working ? `<p class="mk-note" role="status" data-working><b>${cs.w("screen.capture.address.working.head")}</b> ${cs.w("screen.capture.address.working")}</p>` : "";
+    /* G72 (fix round 7): "Finish it" on a capture the plane no longer holds (`NO_SUCH_SESSION`: finished, closed or expired) says so in a status line and the
+       Unfinished line leaves; the nearest held row (`acquisition.index.no_such_session`) stands in until `refusal.NO_SUCH_SESSION` has its own */
+    const closedLine = U.closed ? `<p class="mk-note" role="status" data-closed>${keyed("refusal.NO_SUCH_SESSION", {}, () => cs.w("acquisition.index.no_such_session"))}</p>` : "";
     /* R31 (fix round 5, E8; K4530): "Finish it" says what the continuation answered: the visitor copy still being made, its supporting files fetched
        with nothing new filed (each in the nearest held row's words, K4269), or the visitor copy filed (a new document, below) */
     const finishLine = (g) => `<p class="mk-note" role="status" data-finish="${g.finish}">${cs.w(g.finish === "pending" ? "acquisition.index.render_pending_note" : "acquisition.note.continuation_files_new")}</p>`;
@@ -439,6 +487,7 @@ function renderCapture(cs, view) {
         + cs.choice("ci-freq", "screen.capture.address.freq", freqs.map((f) => [f, `screen.capture.address.freq.${f}`]), { value: U.frequency || "weekly" }) : "")
       + `<div class="mk-acts">${cs.act("acquire", { tone: "primary" })}${cs.act("capturerequest")}${watch ? `${cs.act("monitorset")}${cs.act("monitor")}` : ""}</div>`
       + working
+      + closedLine
       + result
       + unfinished
       + a64
@@ -501,7 +550,7 @@ function renderCapture(cs, view) {
 async function sendAcquire(view, el, cs) {
   /* R31: "Finish it" resumes the session (`continue`, acquisition R12): its primary is not fetched again */
   const session = el && el.dataset ? String(el.dataset.session || "") : "";
-  const begin = () => { cs.set("captured", null); cs.set("working", true); cs.later(90000, (k, v) => { if (v && v.ui && v.ui.working) k.set("working", false); }); };
+  const begin = () => { cs.set("captured", null); cs.set("closed", false); cs.set("working", true); cs.later(90000, (k, v) => { if (v && v.ui && v.ui.working) k.set("working", false); }); };
   if (session) {
     cs.set("address", String(el.dataset.locator || ""));
     cs.set("finishing", { session, title: String(el.dataset.title || "") });
@@ -520,7 +569,12 @@ async function sendAcquire(view, el, cs) {
   const question = /^INQ-/.test(chosen) ? String(cs.value("ci-for") || chosen).trim() : "";
   const body = question ? { locator: address, for: question } : { locator: address };
   /* G2 (fix round 6; K4562): a capture too large for the request is fetched afterwards and filed under the project the page names, so the project rides */
-  if (chosen) { const f = await view.parts.filedFor(view, cs); if (f && f.id) body.project = f.id; }
+  if (chosen) {
+    const f = await view.parts.filedFor(view, cs);
+    /* G74 (fix round 7): a project the member is neither in nor invited to takes nothing from her: no look, no fetch, nothing filed */
+    if (f && f.id && f.member === false) { const nm = view.parts.notMemberWords(cs, f); return { refuse: nm.key, fills: nm.fills }; }
+    if (f && f.id) body.project = f.id;
+  }
   /* R45: the page as a visitor saw it is asked for only when that is chosen; the site's own copy sends no `render` */
   const visitor = cs.value("ci-render-1") === true;
   if (visitor) body.render = true;
@@ -571,6 +625,17 @@ function failedAcquire(view, answer, cs) { cs.set("working", false); }
  * R23's files included), filed under the project the subject names (R22). A refusal of either step is drawn on the tab. */
 async function doneAcquire(view, answer, cs) {
   const a = answer || {}, doc = a.document || {};
+  /* G72 (fix round 7): "Finish it" answered `NO_SUCH_SESSION` (the plane dropped the session when its work ended): the capture is closed. The press ends, the
+     session leaves the Unfinished line at once and the line says so; the act's `rereads` ask `opencaptures` again, which no longer lists it. */
+  if (a.ok === false && String(a.reason || a.code || "") === "NO_SUCH_SESSION") {
+    const gone = String(a.session || (view.ui && view.ui.finishing && view.ui.finishing.session) || "");
+    cs.set("working", false);
+    cs.set("finishing", null);
+    cs.set("captured", null);
+    cs.set("ended", gone);
+    cs.set("closed", true);
+    return;
+  }
   const address = String((view.ui && view.ui.address) || "");
   /* R54: the document is named by its own title, else its file name, else its host and the day (`titleOf`) */
   const fin = view.ui && view.ui.finishing;
@@ -632,6 +697,7 @@ async function doneAcquire(view, answer, cs) {
   }
   const filed = await view.parts.filedFor(view, cs);
   if (filed === null) { cs.set("promoteRefused", { tab: "address", html: "" }); return; }
+  if (filed.member === false) { cs.set("promoteRefused", { tab: "address", html: (() => { const nm = view.parts.notMemberWords(cs, filed); return cs.w(nm.key, nm.fills); })() }); return; }
   const made = await view.parts.promoteDocument(cs, { doc, title, locator: address, project: filed.id });
   if (made.refused !== undefined) { cs.set("promoteRefused", { tab: "address", html: await view.parts.refusedHtml(view, cs, made.refused) }); return; }
   cs.set("captured", { title, address, bundleId: made.bundleId, filed, sha, ...pend, ...(finished ? { finish: "done" } : {}), ...(waiting || (made.readingPending && !view.parts.readingOf(a, doc).read) ? { readingPending: true } : {}) });
@@ -807,12 +873,12 @@ function checkOutcome(cs, answer, title) {
   const t = String(title || "");
   return cs.w("screen.capture.address.checked." + st, st === "unknown" ? { title: t, note: typeof a.note === "string" ? a.note : "" } : { title: t });
 }
-export { checkOutcome };
+export { checkOutcome, heldTitle };
 
 /* R2: the upload. `statement` composed from the three answers in order, each with its label, at most 2,000 characters;
  * nothing is sent while one is empty, and the screen says which. The file's bytes are the raw body (control-plane R72),
  * under the session header. */
-function sendUpload(view, el, cs) {
+async function sendUpload(view, el, cs) {
   const file = cs.file("ci-file");
   const choice = ["made", "handed", "sent", "downloaded"].find((k) => cs.value(`ci-how-${k}`) === true);
   const where = String(cs.value("ci-where") || "").trim(), what = String(cs.value("ci-what") || "").trim();
@@ -823,6 +889,8 @@ function sendUpload(view, el, cs) {
                      `${cs.w("screen.capture.file.where")}: ${where}`, `${cs.w("screen.capture.file.what")}: ${what}`]
     .join("\n").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'");
   if (Array.from(statement).length > 2000) return { refuse: "screen.capture.file.toolong", fills: { count: Array.from(statement).length } };
+  /* G74 (fix round 7): the same for a file: bytes are not sent for a project the member is neither in nor invited to */
+  if (view.parts.forOf(view).id) { const f = await view.parts.filedFor(view, cs); if (f && f.id && f.member === false) { const nm = view.parts.notMemberWords(cs, f); return { refuse: nm.key, fills: nm.fills }; } }
   /* R27 (control-plane R100): the file's declared media type rides beside `statement` and `name`; an empty type sends none */
   const query = { statement, name: file.name };
   if (typeof file.type === "string" && file.type) query.type = file.type;
@@ -856,6 +924,7 @@ async function doneUpload(view, answer, cs) {
   }
   const filed = await view.parts.filedFor(view, cs);
   if (filed === null) { cs.set("promoteRefused", { tab: "file", html: "" }); return; }
+  if (filed.member === false) { cs.set("promoteRefused", { tab: "file", html: (() => { const nm = view.parts.notMemberWords(cs, filed); return cs.w(nm.key, nm.fills); })() }); return; }
   /* R54: an upload is named by its file's name, or by the reading's title when the answer carries one and the file is a page */
   const isPage = /html/i.test(String(sent.type || "")) || /\.html?$/i.test(name);
   const title = view.parts.titleOf(cs, { reading: isPage ? a.reading : null, doc: {}, address: "", fileName: name || String((doc && doc.name_stated && doc.name_stated.text) || "") });
@@ -989,10 +1058,12 @@ export const CAPTURE_SCREEN = Object.freeze({
   id: "capture",
   reads: captureReads,
   render: renderCapture,
-  parts: Object.freeze({ bundleFor, checkOutcome, copyOf, filedFor, filedHeld, forOf, homeOf, projectOf, promoteDocument, readingOf, refusalHtml, refusedHtml, repairedReading, titleOf, watchFetch }),
+  parts: Object.freeze({ bundleFor, checkOutcome, copyOf, filedFor, filedHeld, forOf, heldTitle, homeOf, notMemberWords, projectOf, promoteDocument, readingOf, refusalHtml, refusedHtml, repairedReading, titleOf, watchFetch }),
   acts: Object.freeze([
     Object.freeze({ op: "acquire", label: "act.acquire.label.capture", send: sendAcquire, done: doneAcquire, failed: failedAcquire, rereads: Object.freeze(["open"]),
-                    refusals: Object.freeze({ /* control-plane R105, R116 (K4326): a timed-out capture says what was kept: held, undetermined, or (nothing) the base words */
+                    /* G72: a session the plane no longer holds is the end of that capture, not a failure: `done` draws it (its line is the screen's own, so the note beside the act is empty) */
+                    successCodes: Object.freeze(["NO_SUCH_SESSION"]),
+                    refusals: Object.freeze({ NO_SUCH_SESSION: function () { return ""; }, /* control-plane R105, R116 (K4326): a timed-out capture says what was kept: held, undetermined, or (nothing) the base words */
                                               ACQUIRE_TIMED_OUT: function (refusal, cs) {
                                                 const key = refusal && (refusal.kept === "held" || refusal.kept === "undetermined") ? "refusal.ACQUIRE_TIMED_OUT." + refusal.kept : "refusal.ACQUIRE_TIMED_OUT";
                                                 return cs.w(cs.w(key) !== key ? key : "refusal.ACQUIRE_TIMED_OUT");

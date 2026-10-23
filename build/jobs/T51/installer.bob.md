@@ -1,6 +1,6 @@
 # BOB to installer (T51)
 
-**Read** · handled J21
+**Read** · handled J22
 
 ## B1 · START
 
@@ -164,3 +164,24 @@ Route A, adopted (K4702). installer-steps owns newgroup/src/steps/: a new job IN
 CHANGE (BOB #262, K4709). INSTALLER-STEPS #7 and your G54 work are merged into tranche/T51 (newgroup on the merged tree: requirements, t50, t51, steps, wizard 198 tests, reds only the inherited R8, R11, R20, R44, R61, R71 and `wizard.test.mjs`; R17 K1541 green).
 One owed act of yours (installer-steps J17): its observability read-back now continues when the plane's settings cannot be read and says so through `opts.note(localize("installer-steps.plane.logsunconfirmed"))`. Pass `opts.note` in your `uploadInstall`/`uploadUpdate` calls (`newgroup/src/index.mjs` about :807, :810, :825, :826, :1207) so the founder sees that sentence on the page where the step's other notes show, and add a test through the real install and update paths that an unreadable read-back shows the note and the run continues (control: a read-back stating `enabled: true` shows none). Merge tranche/T51 first; complete again when done.
 Correction to the above, same CHANGE: the sentence's key is `installer.fleet.logsunconfirmed` (an installer row, like `installer.fleet.why.program`), not `installer-steps.plane.logsunconfirmed`: installer-steps reads it by `word()` (its own CHANGE), and you write the row with `localize("installer.fleet.logsunconfirmed", "The installer could not confirm that your Cloudflare account switched on the logs of your team's Civicsmith.")` in your own source, then pass `opts.note`. The two of you merge together; read the words check's failure count before COMPLETE.
+
+## B21 · START
+
+START · INSTALLER #25 · tranche T51 · fix round 7, cause G83 (K4746, K4747, K4752) · depth 2 (BOB #266 at depth 1)
+
+First: `git fetch origin tranche/T51 job/T51/installer`, work on `job/T51/installer`, never a rebase or force. Model: claude-sonnet-5-5, medium effort.
+
+**Cause G83.** A team's record object ("room") is created by Cloudflare wherever its first `get()` runs (biosmoke8's landed in Frankfurt, its team and files in western North America; PERFORMANCE P19). Bob ruled (K4746, K4747) that a team's room is created near the team: every site obtains the room through `runtime-limits`' one helper, which passes Cloudflare's `locationHint` from the binding `STORE_LOCATION` and names the room by its generation (`STORE_GENERATION`; absent for every existing team, so names are unchanged).
+
+**What you build:** your requirement **R83** (written by BOB, not yet met): `POST /begin` reads the founder's request's `cf` (`continent`, `longitude`), computes the hint by `installer-steps.locationHintFor`, carries it through the install's cookie to `/callback` (as `p` carries the profiles, `newgroup/src/index.mjs:1465`), and hands it to the plane's install upload (`installer-steps` R42). No `cf` or a `null` hint installs exactly as today. **No page, word or dialog changes** (the region shown and the picker are N1273, after the alpha).
+
+**Tests (K4426):** (1) failing-first, T5 (`newgroup/test/g83-begin.test.mjs`): `POST /begin` with a Request whose `cf` is `{continent: "NA", longitude: "-122.4"}` (set as workerd sets it), then `/callback` against the fake account: the plane upload carries `STORE_LOCATION=wnam`; Frankfurt's `cf` → `weur`; no `cf` → no binding and the install completes as today; update mode with a held value restates it. Red before your change. (2) Why missed: no install test asserted a placement. (3) **N** locally beyond T5 (`cf` exists only at the edge); (4) **P**: the first real install after the fix shows the hint in `op=selftest` (BOB's read).
+
+**Your provider** is `installer-steps` (INSTALLER-STEPS #8, started with you; R41, R42). Write against them as written; BOB posts a CHANGE when it is merged: merge `tranche/T51` then, and run your tests; never COMPLETE red on it. The installer's bundle `newgroup/dist/newgroup.bundled.mjs` is BOB's to regenerate.
+**Rules (plan §0, in short):** R-FOUR, R-SEAM, R-ONE, R-NOTMET, R-OLD, R-CLOCK, R-PROXY as `build/plan/fix-round-7-T51.md` §0 states them: read §0 whole. Read `build/plan/fix-round-7-T51-added.md` sections "Adopted revisions" (it wins) and "G83" whole. Read your reading set whole (your requirements both parts, your own code in your `paths`, the tests naming the ids your entries change; `runtime-limits`' Provides R27, R28): if you would have to read a document only in part, stop at once with BLOCKED cause `reading` (K3678). Declare every census op you own (K4208). Before any test run, every directory with a tracked `package-lock.json` has its `node_modules` (K4113: `for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`). A command handing `node --test` a computed file list checks it is non-empty first (K4741). Workers: haiku low for mechanical work, sonnet medium for reading and diagnosis, never above your own model; any act a safety or permission check refuses is never worked around, split, rephrased or retried (K4696): record it and go on. Never edit a generated artifact; name in your record any you make stale (BOB regenerates at the round end). Never contact biosmoke8 or any live deployment. Propose any requirement wording change in your record; BOB writes it. Run your module's tests, then `node build/plan/impact.mjs tranche/T51 HEAD` and the users it names that your change touches, then format, architecture, coverage, words and ownership before COMPLETE.
+
+**Sites (second review, K4754):** the creating upload is `uploadInstall` from `newgroup/src/index.mjs:813` and `:829` (it passes `profiles` today: pass the hint beside it), the cookie is written at `:1465` and read at `/callback`.
+
+## B22 · ANSWER · re J22
+
+Confirmed (K4756): your reading stands. The barrel exports locationHintFor(cf); uploadInstall takes opts.storeLocation (a hint or null/undefined) beside opts.profiles and appends storeLocationBinding(opts.storeLocation); uploadUpdate takes no option and restates the held values itself (R42). Pass the hint only at index.mjs:813 and :829; the cookie field 'sl', written only when non-null. INSTALLER-STEPS #8 is told the same names now. Your stub approach is fine; never commit it.

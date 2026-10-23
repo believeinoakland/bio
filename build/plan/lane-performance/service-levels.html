@@ -51,6 +51,24 @@ code{font:0.85em ui-monospace,Menlo,monospace}
 So a service level has two parts: how Civicsmith stores the team's record, and which Cloudflare plan the team pays for. The first decides how big and how responsive a copy can be. The second adds guarantees.
 </div>
 
+<h2>Does upgrading make it faster?</h2>
+<p><strong>Mostly no.</strong> No Cloudflare plan offers faster processors for Workers or Durable Objects; every plan runs on the same machines. Enterprise differs in billing, limits and support, not in speed. Today's response times come from three things in Civicsmith's own design. All three are fixed by changes that cost nothing on any plan.</p>
+<div class="box warn">
+<strong>Found today: the test team's room is in Frankfurt.</strong>
+<ul>
+<li>Cloudflare creates a team's room near whoever first asks for it, and it never moves. Over the past week, Cloudflare's analytics show 466,628 calls to the test team's room, all in Frankfurt, Germany.</li>
+<li>Each call from the Worker serving a member crosses the Atlantic. Measured from the US east coast, a call costs 110–135 ms; from California it is likely more.</li>
+<li>A screen makes 6–15 such calls one after another, so 1–3 s of a screen's time is travel, not work.</li>
+</ul>
+</div>
+<div class="wrap"><table>
+<tr><th>Where the time goes</th><th>The fix</th><th>Expected gain per screen</th><th>Plan needed</th></tr>
+<tr><td><strong>Distance:</strong> 6–15 one-after-another calls to a room far from the member.</td><td>Create each team's room near the team (a "location hint" at install). Or let Cloudflare run the Worker next to the room ("Smart Placement"), so the member makes one long trip per step instead of many.</td><td>Largest: an estimated 1–2 s off most screens for a California team.</td><td>None: free on every plan.</td></tr>
+<tr><td><strong>Too many calls:</strong> each read makes 2–5 calls (who is asking, the activity window, then the read itself), and a screen makes 10–39 reads.</td><td>One call per read, then one combined read per screen.</td><td>0.5–1 s now; more with combined reads (P11, P15).</td><td>None.</td></tr>
+<tr><td><strong>The room's own work:</strong> some reads scan thousands of rows, and a large file being read can hold the room's single worker.</td><td>Indexes and kept counts (G80), reading work sliced so screens can pass (G82).</td><td>Home and Held mostly; removes the multi-second stalls.</td><td>None.</td></tr>
+</table></div>
+<p>Higher plans earn their cost elsewhere: uptime guarantees, support, larger uploads, and choosing the region where data must stay.</p>
+
 <h2>1. What limits a copy, in the order a growing team meets it</h2>
 <div class="wrap"><table>
 <tr><th>#</th><th>Limit</th><th>Where today's copy stands (measured)</th><th>Does a higher Cloudflare plan lift it?</th></tr>
@@ -107,6 +125,7 @@ So a service level has two parts: how Civicsmith stores the team's record, and w
 <p><small>A team moves up by changing its own Cloudflare plan (its own act, N1265). The move from Level 1 to Level 2 also needs the record moved into the split design, which must be built as an upgrade step the copy runs on its own data.</small></p>
 
 <h2>4. Your decision</h2>
+<div class="box"><strong>Decided by Bob, 2026-10-23: "A for both questions".</strong> Service levels are defined by what a copy can do (A), and a team's room is created near the team, chosen at install (a). BOB records the ruling and plans the work.</div>
 <p><strong>Question:</strong> how should Civicsmith define the service levels a team can be at?</p>
 <ol>
 <li><strong>A. Three levels defined by what the copy can do</strong> (record size, members working at once, upload size), each naming the design stage and the Cloudflare plan it needs, as in section 3. <span class="rec">Recommended.</span>
@@ -115,6 +134,13 @@ So a service level has two parts: how Civicsmith stores the team's record, and w
 <li>It fits your K4635 (one room now, split for the beta), so N1271's capacity study measures against these levels.</li>
 <li>The figures are confirmed by measurement before a team sees them.</li>
 </ul></li>
+<li style="list-style:none;margin-top:14px"><strong>A second question: where a team's room is created.</strong> Today it is wherever the first request happens to come from, which put the test team in Frankfurt.
+<ul>
+<li><strong>(a) Near the team, chosen at install</strong> from the founder's location and shown on the install screen; a team with a legal requirement can pick a region. <span class="rec">Recommended.</span></li>
+<li><strong>(b) One region for all copies</strong> (for example western North America).</li>
+<li><strong>(c) As today:</strong> wherever the first request lands.</li>
+</ul>
+A room cannot move once created, so this also decides whether the test copy is re-created near you. It is a development copy you have said will be wiped.</li>
 <li><strong>B. Levels named after Cloudflare's plans</strong> (Paid / Business / Enterprise). Simpler to say, but it promises what the plans cannot deliver: a team that upgrades without the split record gets guarantees and support, not speed or space.</li>
 <li><strong>C. One level for the alpha; define levels only after N1271's capacity study.</strong> No commitment now, but teams and the installer have nothing to plan around, and the study has no targets.</li>
 </ol>

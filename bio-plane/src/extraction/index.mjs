@@ -1480,8 +1480,10 @@ export class Extraction {
     const piece = this.#one(`SELECT more, read_through, total, words_read FROM capture_text_state WHERE capture_sha=?`, row.capture_sha);
     const progress = piece && (piece.more || piece.total != null)
       ? { more: !!piece.more, read_through: piece.read_through ?? null, total: piece.total ?? null } : null;
-    /* the first piece's reading counted the words of its own piece (reading-pipeline R40); the words read are the capture's so far */
-    if (progress && reading && Number.isFinite(reading.words_total) && Number.isFinite(piece.words_read)) reading = { ...reading, words_read: piece.words_read };
+    /* the first piece's reading counted the words of its own piece (reading-pipeline R40); the words read are the capture's so far. (fix round 7,
+       G71; R90) For any piece-read state: a PDF read by page ranges answers `words_total` null, and its figure was the first piece's. The
+       override reads the state, so an old reading's stale figure is repaired on read, with no write. */
+    if (progress && reading && typeof reading === "object" && Number.isFinite(piece.words_read)) reading = { ...reading, words_read: piece.words_read };
     return { ok: true, found: true, capture_sha: row.capture_sha,
              bundle_id: this.#redactor(viewer)(row.bundle_id),
              content_type: row.content_type, reader_version: row.reader_version,

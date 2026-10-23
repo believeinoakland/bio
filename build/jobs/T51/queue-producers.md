@@ -1,6 +1,6 @@
 # queue-producers (T51)
 
-**Status** · session_01XcQxCDGtXj11iuy1HP8Y8Z · depth 2 · COMPLETE · handled B11
+**Status** · session_018ia9y7957RisU9biUjnUGX · depth 2 · COMPLETE · handled B12
 
 ## J1 · REPORT
 
@@ -253,3 +253,23 @@ COMPLETE, fix round 4, queue-producers (T51), cause C69. Commit 60da3f642a on jo
 **Deferred:** nothing deferred in my module. The old NOTICED pair: not repaired (BOB's answer); the re-walk reads the two stored notices.
 
 Size (session_01XcQxCDGtXj11iuy1HP8Y8Z): test runs 10, module lines 3630 (`bio-plane/src/queue-producers/`: index.mjs, proposals.mjs, words.mjs)
+
+## J5 · COMPLETE
+
+G65 applied (fix round 7). tranche/T51 merged first.
+
+**Changed.** `bio-plane/src/queue-producers/words.mjs` `fillWord`: a grade code is lower-cased with its underscores closed up, so content's `NOT_FOUND` reads the row `queue.fill.grade.notfound` ("neither the passage nor similar text") instead of `queue.fill.grade.not_found`, which has no row and gave "" (the hole in "was read as . Nothing about the reference has changed"). Derived on read; no old records.
+
+**Failing-first (seen red, then green)**, `test/m/queue-producers/feeditems.test.mjs`: (a) "R43 (G65): a newer-capture notice whose grade is NOT_FOUND, as content emits it, …" and (b) "R43 (G65): every grade content can emit has a word row …", which walks `VERSION_NOTICE_GRADES` from content itself. Both failed before the fix (grade NOT_FOUND left a hole); both pass after.
+
+**Platform check:** N. **Census ops:** none owned or changed. **Rows owed to UX-DESIGN:** none (existing row `queue.fill.grade.notfound` used).
+**Requirement lines proposed for BOB:** R43: a grade of any spelling content emits (`A`, `B`, `C`, `NOT_FOUND`, `UNDETERMINED`) is read through its row; no sentence is left with a hole where the grade belongs.
+**A.md:39 duplicates:** not researched per the plan; nothing planned until the re-walk lists notice ids.
+
+**Tests/checks.** queue-producers 154 pass, 0 fail; users queue 210 pass, 0 fail; control-plane 447 pass, 0 fail; `impact.mjs` names 0 further modules. `checks/coverage` 41 of 41, 0 failures; `checks/words queue-producers` 0 failures; `checks/ownership` 0 failures; `checks/run.mjs`: failures only in case-checker and installer-steps, none in my files.
+
+Size (session_018ia9y7957RisU9biUjnUGX): test runs 5, module lines 3189
+
+## J14 · COMPLETE
+
+G65 applied: fillWord closes up a grade's underscores so NOT_FOUND reads queue.fill.grade.notfound. Two failing-first tests (red then green); queue-producers 154, queue 210, control-plane 447 pass; coverage, words, ownership 0 failures. Details in record J5.

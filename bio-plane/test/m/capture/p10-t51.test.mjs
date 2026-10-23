@@ -74,7 +74,7 @@ test("R77 R91 R102 (P10): a screen of 27 documents reads the page as picker rows
   const whole = await w.c.heldCaptures({ viewer: ADMIN, limit: 500 });
   assert.equal(whole.held.length, 27);
   assert.equal(w.calls.exam.size, 27);
-  assert.equal(w.calls.touched.size, 27, "every capture of the page was read");
+  assert.equal(w.calls.touched.size, 27 - shown.length, "every capture of the page was read, but the 10 this instance proved held on the first read (G78)");
   assert.deepEqual(ids(whole), ids(picker), "same rows, same order");
   assert.deepEqual(all.slice().sort(), ids(whole).slice().sort());
 });

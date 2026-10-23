@@ -108,6 +108,10 @@ set a credential.
   `"NO_INSTANCE_AI_CREDENTIAL"`, `"INSTANCE_AI_CREDENTIAL_REVOKED_BY_PUBLICATION"`), stable across calls.
   They are the only values `reason` ever takes, besides `null`.
 
+**Where the platform keeps the team's room (fix round 7 G83; K4746, K4747, K4752)** (`bio-plane/src/store-place.mjs`)
+- **R27** `STORE_HINTS` is the frozen list of Cloudflare's location hints, exactly `wnam`, `enam`, `sam`, `weur`, `eeur`, `apac`, `apac-ne`, `apac-se`, `oc`, `afr`, `me`; `storeHint(env)` answers `env.STORE_LOCATION` when it is exactly one of them, else `null` (an absent, empty, padded or differently cased value is no hint). `storeGeneration(env)` answers `env.STORE_GENERATION` as a whole number when it matches `/^[1-9][0-9]*$/` and is 2 or more, else `1` (so `"02"`, `"2.0"`, `" 2"` are `1`). *(not yet met: T51)*
+- **R28** `storeId(env, name)` answers `env.STORE.idFromName(n)` and `storeStub(env, name)` answers `env.STORE.get(storeId(env, name), {locationHint: h})` when `storeHint(env)` is `h`, else `env.STORE.get(storeId(env, name))` with no second argument; `n` is `name` when `storeGeneration(env)` is `1`, else `` `${name}~g${generation}` ``. The suffix is on the object's name only: the logical names `bio` and `scratch` (a `store=` value, an R2 key prefix such as `bio/captures/`, `bio/published/`, `bio/inbox/`) never change with the generation. These are the only way product code names or obtains the team's room (`bio`, `scratch`): no other file calls `idFromName` on `env.STORE`. A hint is where the hosting platform runs the room, never a jurisdiction (R25). *(not yet met: T51)*
+
 ## Private
 
 ### Uses

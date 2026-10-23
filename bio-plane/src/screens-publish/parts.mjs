@@ -95,6 +95,21 @@ export const PARTS = Object.freeze({
     return code ? cs.w("refusal.uncatalogued") + " <code>" + cs.esc(code) + "</code>" : "";
   },
 
+  /* G60 (fix round 7): the findings a GATE_REFUSED carries (`ratification` R18, R2: `findings`, each `{check, detail, repairs?}`, or
+     `says: {key, vars}` where a finding carries its words), one HTML line for each: its text as data, its check as the reference a
+     member can quote, what repairs it. A finding with neither text nor check is left out. [] when the refusal carries none. */
+  gateLines: function (cs, f) {
+    const str = function (v) { return typeof v === "string" && v.trim() ? v.trim() : ""; };
+    return (f && Array.isArray(f.findings) ? f.findings : []).map(function (x) {
+      if (!x || typeof x !== "object") return "";
+      const check = str(x.check), text = x.says && typeof x.says.key === "string" ? cs.w(x.says.key, x.says.vars || {}) : cs.esc(str(x.detail) || str(x.message));
+      if (!check && !text) return "";
+      const fix = (Array.isArray(x.repairs) ? x.repairs : x.repairs ? [x.repairs] : []).map(function (r) { return str(typeof r === "string" ? r : r && (r.detail || r.says || r.text || r.message)); }).filter(Boolean);
+      return '<span data-gate-finding="' + cs.esc(check) + '">' + text + (check ? ' <code class="meta">' + cs.esc(check) + "</code>" : "")
+        + fix.map(function (r) { return ' <span class="meta" data-repair>' + cs.esc(r) + "</span>"; }).join("") + "</span>";
+    }).filter(Boolean);
+  },
+
   /* What an act said once it was answered, beside the screen's own section: `{key, html, ok}` in `view.ui.said`. */
   said: function (view, key) {
     const s = view.ui.said && view.ui.said[key];
