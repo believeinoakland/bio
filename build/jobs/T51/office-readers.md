@@ -68,3 +68,7 @@ G41 applied (office-readers): xlsx text(parts, {inlineCellsMax}) lists a workboo
 
 - **B9, B10, B11 applied (CHANGE):** (B10, K4646) the entry exports no cap constant and takes `{inlineCellsMax}` as a number of bytes only (`true` no longer means anything); the tests hold reading-pipeline's 512 KiB as their own number. Measure of the cap for BOB: 161.6 B of JSON a cell, so 512 KiB holds about 3,240 cells. (B11, K4647) `cellsIn` numbering is as stated (1-based rows and columns, inclusive; the tests assert it at row 1 and at the last row, 5,000 and 200,000); `next_row` is now absent, not null, when the range was answered whole (R37's text: "`next_row` absent when nothing in range remains"; replace the proposed wording). (B9) no seam test is red: my providers' contract is the option and the slot. Proposed R36 wording: replace "`true` asks for `INLINE_CELLS_MAX_BYTES`, 512 KiB, exported" by "a number of bytes, the caller's figure". Re-ran: office-readers 115 pass, 0 fail under the shim; checks 0 failures; ownership 0 failures.
 - Size (session_01SnAPnyyGhWqgR6sG1fMBdv): test runs 16, module lines 3484
+
+## J6 · COMPLETE
+
+B9-B11 applied: no exported cap constant (option is a number of bytes; measure 161.6 B/cell, 512 KiB = about 3,240 cells); cellsIn numbering per K4647 asserted at row 1 and last row; next_row absent when answered whole. office-readers 115 pass under the shim; checks and ownership 0 failures. Everything else as J5. Size (session_01SnAPnyyGhWqgR6sG1fMBdv): test runs 16, module lines 3484.
