@@ -96,3 +96,27 @@ test("R128 control (review G4): an answer that states nothing carries only the d
   const again = await call(w.env, { op: "projectlist", token: w.S.ann });
   assert.deepEqual(again.json, r.json);
 });
+
+test("R128 (K4822): a module in the Worker states its measure by the door's one hook, `stateTiming(name, ms)`, handed to the plane's door context for a gated and for a public op; it reaches `Server-Timing`, and a refused name or duration is dropped", async () => {
+  const w = world();
+  const gated = await call(w.env, { op: "projectlist", token: w.S.ann, hooks: { ...defaultHooks(), async gatedOp(ctx) {
+    assert.equal(typeof ctx.stateTiming, "function", "the gated door context carries the hook");
+    ctx.stateTiming("gate", 12.4); ctx.stateTiming("commit", 7);
+    ctx.stateTiming("bad name", 1); ctx.stateTiming("body", 5); ctx.stateTiming("do-x", 5); ctx.stateTiming("neg", -1); ctx.stateTiming("nan", Number.NaN); ctx.stateTiming(5, 5);
+    return M.json({ ok: true, result: { ok: true } });
+  } } });
+  const m = byName(gated.headers.get("server-timing"));
+  assert.equal(m.gate?.dur, "12");
+  assert.equal(m.commit?.dur, "7");
+  for (const n of ["bad name", "neg", "nan", "do-x"]) assert.equal(n in m, false, n);
+  assert.notEqual(m.body?.dur, "5", "the door's own `body` is the door's");
+  const pub = await call(w.env, { op: "bootstrap", hooks: { ...defaultHooks(), async publicOp(ctx) {
+    assert.equal(typeof ctx.stateTiming, "function", "the public door context carries it too");
+    ctx.stateTiming("fleet", 41);
+    return M.json({ ok: true });
+  } } });
+  assert.equal(byName(pub.headers.get("server-timing")).fleet?.dur, "41");
+  /* control: a context's hook called with nothing changes nothing, and an op that never calls it carries no module entry */
+  const none = await call(w.env, { op: "projectlist", token: w.S.ann });
+  assert.equal(Object.keys(byName(none.headers.get("server-timing"))).some((k) => ["gate", "commit", "fleet"].includes(k)), false);
+});

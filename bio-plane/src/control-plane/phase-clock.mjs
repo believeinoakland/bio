@@ -72,6 +72,12 @@ export function makeClock(now = () => Date.now()) {
     cold() { return { isolate_ms: Math.max(0, Math.round(now() - ISOLATE_STARTED)), object_ms: objectAge === null ? null : Math.round(objectAge) }; },
     /** R129: the milliseconds the object's route took beyond what the object states it spent itself (transport, compute and queueing); null when either is unknown. */
     queued(route) { return calls.has(route) && inside.has(route) ? Math.max(0, Math.round(calls.get(route) - inside.get(route))) : null; },
+    /** R128 (K4822): the ONE name a module in the Worker states its own measure by, `stateTiming(name, ms)`: handed to the plane's door context (which forwards it to its handlers) and to
+     *  instance-setup's `io`; a name the table of tokens refuses, one that is the door's own, or a duration that is no plain number is dropped, never thrown. */
+    stateTiming(name, ms) {
+      if (typeof name !== "string" || typeof ms !== "number" || !Number.isFinite(ms) || ms < 0 || ms > 1e9) return;
+      this.state(statedEntries(`${name};dur=${Math.round(ms)}`));
+    },
     /** R128: one object answer's body was read to its end by the door: the time it took and its length. */
     bodyRead(ms, bytes) { read.ms += Math.max(0, ms); read.bytes += Math.max(0, bytes); read.any = true; },
     /** `{acquire, reading, promote}`, each `{started_ms, elapsed_ms}` (and `running: true` while it had not ended) or `null` when not reached. */

@@ -420,7 +420,7 @@ function storageAbsent(op, error) {
    so a probe naming nothing still reads `scratch`), and for every other caller `store=scratch` when named and `bio`
    otherwise, the invitation ops' rule. A silence is a silence (REC-52): never "no group is recorded". Moved from
    legacy-index at T19 (its door share). */
-async function groupRead(op, url, env, presentedAi, credential) {
+async function groupRead(op, url, env, presentedAi, credential, stateTiming = undefined) {
   const held = credential.token;
   const heldCls = held ? await classify(held, env) : null;
   const heldScope = heldCls ? scopeFor(heldCls, url) : null;
@@ -428,7 +428,7 @@ async function groupRead(op, url, env, presentedAi, credential) {
     : (url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio");
   const reader = await caseReader(url, env, store, presentedAi.cred, credential);
   if (reader.silent) return storeSilent(reader.silent, reader.correlation);
-  const io = { json, storeSilent, storeRefusal, doAnswer };
+  const io = { json, storeSilent, storeRefusal, doAnswer, ...(stateTiming ? { stateTiming } : {}) };
   return op === "instancegroup" ? instanceGroupOp(env, store, reader, io) : groupIdentityOp(env, store, reader, io);
 }
 
@@ -927,6 +927,8 @@ export function makeFetch(hooks = {}) {
       try { reqBody = JSON.parse((await req.clone().text()) || "null"); } catch { reqBody = null; }
     const credential = presentedCredential({ req, url, body: reqBody });
     seen.credential = credential;
+    /* R128 (K4822): the one name a module in the Worker states its own measure by, handed to the plane's door context and to instance-setup's `io`; the clock keeps it for `Server-Timing` */
+    const stateTiming = (name, ms) => { try { seen.clock?.stateTiming(name, ms); } catch { /* a measure is status, never a gate */ } };
     /* R83 (T47; K3144): the page's mark of a background request, read once */
     const background = url.searchParams.get("background") === "1";
     if (req.method === "OPTIONS")
@@ -1240,7 +1242,7 @@ export function makeFetch(hooks = {}) {
       }
       /* R44 (K921): the template grant's four doors, a recipient's secret or a member's session (above). */
       if (TEMPLATE_GRANT_DOORS.includes(op)) return templateGrantDoor({ req, url, env, op, spec, presentedAi, stub, credential });
-      if (op === "instancegroup" || op === "groupidentity") return groupRead(op, url, env, presentedAi, credential);
+      if (op === "instancegroup" || op === "groupidentity") return groupRead(op, url, env, presentedAi, credential, stateTiming);
       if (op === "knockerconsent") return knockerConsent(req, stub);
       /* R45 (DEC-111, K1170; public-read R18, R10): network-notices' public reads, each asked by its own name, served by
          public-read's door read from the published store (`stub`, `bio`; a `store=scratch` was refused above), with no
@@ -1255,7 +1257,7 @@ export function makeFetch(hooks = {}) {
         return publicReadDoorRead(op, clean, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer });
       }
       /* The public ops whose handlers are their modules' (publication, public-read, instance-setup, capture). */
-      return hooks.publicOp({ req, url, env, op, stub, invStub, fp, presentedAi, credential, source, country });
+      return hooks.publicOp({ req, url, env, op, stub, invStub, fp, presentedAi, credential, source, country, stateTiming });
     }
 
     /* R28: admission R5–R11 in their order (`admit`): the binding class, the agent credential, the session (its export
@@ -2609,7 +2611,7 @@ export function makeFetch(hooks = {}) {
     const deferReading = (document) => op === "acquire" && readingWontFit(document);
     /* R129 (fix round 8, G106): the line that says this request began is out BEFORE the object is asked, for Workers Logs lost the tail of a long firing */
     if (op === "acquire") requestStart(seen, op);
-    const armed = hooks.gatedOp ? await bounded(hooks.gatedOp({ req, url, env, op, cls, viaSession, deferReading: op === "acquire" ? deferReading : undefined, sessMember, sessViewer,
+    const armed = hooks.gatedOp ? await bounded(hooks.gatedOp({ req, url, env, op, cls, viaSession, stateTiming, deferReading: op === "acquire" ? deferReading : undefined, sessMember, sessViewer,
       sessIdentity, sessRights, sessCaps, aiCred, aiViewer, storeName, stub, memberRef,   /* R93: the plane's ask and transcribe; R106: the `ai` caller's viewer */
       trace: trace ?? acquireTrace,   /* K4234: `acquire`'s trace, the key its stages are kept under */
       grantMember: aiCred?.grant ? aiCred.principal : undefined, timings })) : undefined;   /* R53 (K1684): an ask's grant's member; R115: `acquire`'s timings */
