@@ -1,7 +1,7 @@
 /* R11: the bindings the uploads share, and the members a plane is bound to. The binding names are instance-setup's. */
 import { cf, special, approve } from "./api.mjs";
 import { scriptExists } from "./probes.mjs";
-import { word, hasWord } from "../../../bio-plane/src/setup-words/index.mjs";
+import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 import { FLEET_BINDINGS } from "../../../bio-plane/src/setup-fleet.mjs";
 
 /* REC-26 / D-102 again: the instance name IS the worker name, so a Worker's
@@ -164,7 +164,8 @@ const storeLocationBinding = (h) => typeof h === "string" && LOCATION_HINTS.incl
 /* The place the held plane script carries, as the bindings to restate: the values of `STORE_LOCATION` and `STORE_GENERATION` it
    holds, as they are (none held, none restated). A script that does not exist holds none (404). A script whose settings cannot
    be read refuses the act here, before anything is uploaded, since a value not restated is dropped; an `approveAgain` or a
-   `lasting` error is rethrown. Stand-in for the sentence while its row is owed: `installer.fleet.why.program`. */
+   `lasting` error is rethrown. Stand-in for the sentence: `installer.fleet.why.program`; the row owed is `installer-steps.plane.heldplace`, one line
+   for "your Cloudflare account would not show what your team's Civicsmith already holds, so nothing was uploaded". */
 async function heldPlace(token, acct, slug) {
   let s;
   try { s = await cf(token, `/accounts/${acct}/workers/scripts/${slug}/settings`); }
@@ -174,7 +175,7 @@ async function heldPlace(token, acct, slug) {
     s = null;
   }
   if (!s || !Array.isArray(s.bindings))
-    throw new Error(word(hasWord("installer.fleet.heldunread") ? "installer.fleet.heldunread" : "installer.fleet.why.program"));
+    throw new Error(word("installer.fleet.why.program"));
   return s.bindings.filter((b) => b && b.type === "plain_text" && typeof b.text === "string" && (b.name === LOCATION_BINDING || b.name === GENERATION_BINDING))
     .map((b) => ({ type: "plain_text", name: b.name, text: b.text }));
 }
