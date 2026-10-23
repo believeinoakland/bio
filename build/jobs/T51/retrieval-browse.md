@@ -128,3 +128,7 @@ Providers merged (CSV-READER, OFFICE-READERS, READING-PIPELINE, EXTRACTION); `tr
 **Row owed:** `retrieval-browse.findin.cells_held_why` (a `localize` stand-in; design row owed, B485/B491). **N1272:** a column of a held sheet classified from every cell is not done (needs a cell index or async find); find-in stays synchronous (K4639). **Requirement lines proposed:** as in the Work section above, plus for R8: a held sheet's term hit carries the words of the row holding the term.
 
 Size (session_01DRhBLuRPVD8G3hWpq1rxBR): test runs 16, module lines 2030
+
+## J6 · COMPLETE
+
+COMPLETE (G41, retrieval-browse). Providers merged in; all six g41-findin tests green under the shim (61/61 module suite; users 208/208; format, architecture, coverage, words (unchanged 18524), ownership 0 failures). A held sheet has no cell list: term hits name sheet + range, cells null, held-sheet cells_why, row only for a one-row range, words of the row holding the term; money/dates read its text. No seam red. Row owed: retrieval-browse.findin.cells_held_why. N1272 noted. Requirement lines and Size line in my record. Note: platform-sqlite.mjs still not on tranche; ran under an outside copy.
