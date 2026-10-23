@@ -14,6 +14,8 @@ const doc = pdfDoc(path);
 for (const cap of [capFor(doc.bytes / 1048576), ...process.argv.slice(2).map(Number).filter(Boolean)]) {
   const r = await shapeRun({ doc }, { capMB: cap });
   console.log(report("G26 BUDGET-2024-APP", r));
-  if (r.done) console.log(`  pages in text_units: ${r.done.units} of 1354 (every page once: ${r.done.units === 1354}); slowest tick ${Math.max(...r.ticks.map((t) => t.ms))} ms, over 10 s: ${r.ticks.filter((t) => t.ms > 10_000).length}`);
+  /* G41 1A: a blank page (22) or one whose glyphs cannot be decoded (4) has no unit and is NAMED in `unread_pages`: units plus unread pages are the pages (1,328 + 26 = 1,354) */
+  if (r.done) { const un = r.reading && r.reading.unread_pages ? r.reading.unread_pages.length : null;
+    console.log(`  pages in text_units: ${r.done.units} + unread_pages ${un} = ${un == null ? "?" : r.done.units + un} of 1354 (every page once, none dropped silently: ${un != null && r.done.units + un === 1354}); slowest tick ${Math.max(...r.ticks.map((t) => t.ms))} ms, over 10 s: ${r.ticks.filter((t) => t.ms > 10_000).length}`); }
 }
 process.exit(0);
