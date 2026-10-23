@@ -42317,6 +42317,102 @@
    "en": "Only the members of {project}, and those invited to it, can file documents into it. Nothing was filed. Ask an owner of the project to invite you, or file it into a project you are in.",
    "protected": false,
    "note": "DEC-425: B498 G74 promotion: BOB's P17 decision after K4557; DEC-83's pattern, the sentence then the remedy; {project} the project's name, never its id. Proposed key: the job names its own if it differs"
+  },
+  {
+   "key": "screen.install.region.head",
+   "en": "Where your team's record is kept",
+   "protected": false,
+   "note": "DEC-426: B499 installer (K4746 (2)): the section after the team's places; the region SHOWN on the install screen"
+  },
+  {
+   "key": "screen.install.region.near",
+   "en": "Near you: {region}",
+   "protected": false,
+   "note": "DEC-426: B499 installer: the region chosen from the founder's location; {region} one of the .region.* names below, in lower case after the colon"
+  },
+  {
+   "key": "screen.install.region.why",
+   "en": "Your team's record is created in Cloudflare's data centers nearest to where you are installing from, so it answers quickly. It is chosen once, when your team's Civicsmith is installed.",
+   "protected": false,
+   "note": "DEC-426: B499 installer: under the region shown"
+  },
+  {
+   "key": "screen.install.region.legal",
+   "en": "Our team must keep its record in a particular region",
+   "protected": false,
+   "note": "DEC-426: B499 installer (K4746 (2)): the fold for a team with a legal requirement"
+  },
+  {
+   "key": "screen.install.region.field",
+   "en": "Keep the record in",
+   "protected": false,
+   "note": "DEC-426: B499 installer: the region picker's label"
+  },
+  {
+   "key": "screen.install.region.help",
+   "en": "Choose a region only if a law or an agreement your team is bound by says where its record must be kept. Only the European Union choice is a guarantee; the other regions are where Cloudflare places it.",
+   "protected": false,
+   "note": "DEC-426: B499 installer: the picker's help; the EU choice is Cloudflare's jurisdiction restriction, the others its location hints"
+  },
+  {
+   "key": "screen.install.region.wnam",
+   "en": "Western North America",
+   "protected": false,
+   "note": "DEC-426: B499 installer: a region name (wnam)"
+  },
+  {
+   "key": "screen.install.region.enam",
+   "en": "Eastern North America",
+   "protected": false,
+   "note": "DEC-426: B499 installer: a region name (enam)"
+  },
+  {
+   "key": "screen.install.region.sam",
+   "en": "South America",
+   "protected": false,
+   "note": "DEC-426: B499 installer: a region name (sam)"
+  },
+  {
+   "key": "screen.install.region.weur",
+   "en": "Western Europe",
+   "protected": false,
+   "note": "DEC-426: B499 installer: a region name (weur)"
+  },
+  {
+   "key": "screen.install.region.eeur",
+   "en": "Eastern Europe",
+   "protected": false,
+   "note": "DEC-426: B499 installer: a region name (eeur)"
+  },
+  {
+   "key": "screen.install.region.apac",
+   "en": "Asia and the Pacific",
+   "protected": false,
+   "note": "DEC-426: B499 installer: a region name (apac)"
+  },
+  {
+   "key": "screen.install.region.oc",
+   "en": "Oceania",
+   "protected": false,
+   "note": "DEC-426: B499 installer: a region name (oc)"
+  },
+  {
+   "key": "screen.install.region.afr",
+   "en": "Africa",
+   "protected": false,
+   "note": "DEC-426: B499 installer: a region name (afr)"
+  },
+  {
+   "key": "screen.install.region.me",
+   "en": "The Middle East",
+   "protected": false,
+   "note": "DEC-426: B499 installer: a region name (me)"
+  },
+  {
+   "key": "screen.install.region.eu",
+   "en": "Only inside the European Union (a legal requirement)",
+   "protected": false,
+   "note": "DEC-426: B499 installer: the jurisdiction choice (eu)"
   }
  ],
  "rewrite": {

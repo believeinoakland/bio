@@ -53,7 +53,7 @@
   "wizard": 359,
   "elsewhere": 38,
   "places": 6,
-  "screen": 7658,
+  "screen": 7674,
   "signin": 1,
   "forgot": 1,
   "founder": 6,
@@ -96,7 +96,7 @@
   "credential": 1,
   "template": 1,
   "file": 16,
-  "act": 1265,
+  "act": 1267,
   "prompt": 3,
   "term": 3,
   "ceremony": 3,
@@ -235,8 +235,8 @@
   "rail": 17,
   "tab": 2,
   "column": 47,
-  "total": 19076,
-  "protected": 1156
+  "total": 19094,
+  "protected": 1157
  },
  "words": [
   {
@@ -80953,6 +80953,118 @@
    "note": "DEC-425: B498 G74 promotion: BOB's P17 decision after K4557; DEC-83's pattern, the sentence then the remedy; {project} the project's name, never its id. Proposed key: the job names its own if it differs"
   },
   {
+   "key": "screen.install.region.head",
+   "en": "Where your team's record is kept",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer (K4746 (2)): the section after the team's places; the region SHOWN on the install screen"
+  },
+  {
+   "key": "screen.install.region.near",
+   "en": "Near you: {region}",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: the region chosen from the founder's location; {region} one of the .region.* names below, in lower case after the colon"
+  },
+  {
+   "key": "screen.install.region.why",
+   "en": "Your team's record is created in Cloudflare's data centers nearest to where you are installing from, so it answers quickly. It is chosen once, when your team's Civicsmith is installed.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: under the region shown"
+  },
+  {
+   "key": "screen.install.region.legal",
+   "en": "Our team must keep its record in a particular region",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer (K4746 (2)): the fold for a team with a legal requirement"
+  },
+  {
+   "key": "screen.install.region.field",
+   "en": "Keep the record in",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: the region picker's label"
+  },
+  {
+   "key": "screen.install.region.help",
+   "en": "Choose a region only if a law or an agreement your team is bound by says where its record must be kept. Only the European Union choice is a guarantee; the other regions are where Cloudflare places it.",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: the picker's help; the EU choice is Cloudflare's jurisdiction restriction, the others its location hints"
+  },
+  {
+   "key": "screen.install.region.wnam",
+   "en": "Western North America",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: a region name (wnam)"
+  },
+  {
+   "key": "screen.install.region.enam",
+   "en": "Eastern North America",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: a region name (enam)"
+  },
+  {
+   "key": "screen.install.region.sam",
+   "en": "South America",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: a region name (sam)"
+  },
+  {
+   "key": "screen.install.region.weur",
+   "en": "Western Europe",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: a region name (weur)"
+  },
+  {
+   "key": "screen.install.region.eeur",
+   "en": "Eastern Europe",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: a region name (eeur)"
+  },
+  {
+   "key": "screen.install.region.apac",
+   "en": "Asia and the Pacific",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: a region name (apac)"
+  },
+  {
+   "key": "screen.install.region.oc",
+   "en": "Oceania",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: a region name (oc)"
+  },
+  {
+   "key": "screen.install.region.afr",
+   "en": "Africa",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: a region name (afr)"
+  },
+  {
+   "key": "screen.install.region.me",
+   "en": "The Middle East",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: a region name (me)"
+  },
+  {
+   "key": "screen.install.region.eu",
+   "en": "Only inside the European Union (a legal requirement)",
+   "protected": false,
+   "source": "DEC-259",
+   "note": "DEC-426: B499 installer: the jurisdiction choice (eu)"
+  },
+  {
    "key": "refusal.GROUP_SLUG_MALFORMED",
    "en": "A team is recorded by its short name, the same one the installer accepts: 3 to 40 lowercase letters, digits and hyphens, beginning and ending with a letter or a digit. Nothing was recorded.",
    "protected": false,
@@ -120138,6 +120250,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_installregion.label.install",
+   "en": "Keep the record in a region you choose",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.owed_installupdate.label.install",
    "en": "Update it",
    "protected": true,
@@ -124250,6 +124368,12 @@
   {
    "key": "act.owed_installalongside.does",
    "en": "Installs a second Civicsmith in this same account, for another team, under its own short name and address. The one already here is not touched, and neither can read the other's records.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_installregion.does",
+   "en": "Keeps your team's record in the region you choose instead of near you, for a team bound by a law or an agreement on where its record is kept.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

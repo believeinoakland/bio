@@ -6565,3 +6565,18 @@ decided: 2026-10-23 · the design session (P17)
 the design: 10 rows (block "DEC-425"): `refusal.NO_SUCH_SESSION` (G72, "This capture has ended, so there is nothing left to finish. Start it again from Add. Nothing was changed."); `queue.kind.ingest-done`, `.ingest-stopped`, `.fetch-done` (G61, one line each); `screen.ceremony.gate.head` "What Civicsmith's checks found" and `.gate.check` (G60); the Sign step's three reasons (G62) `screen.ceremony.publishat.nozone`, `.notreached` ({reason} as `publish_at_stated` gives it), `.nooffer` (a fault: tell an administrator), never "isn't set … under Settings" where that is not the cause; `refusal.PROMOTE_NOT_A_PARTICIPANT` (G74, BOB's P17 decision after K4557, DEC-83's pattern, {project} by name). Keys not yet named by the code are proposed.
 reasoning recorded in: this entry; `screens/words-drawn.src.py` (block "DEC-425").
 owed: BOB: the jobs' keys where they differ from the proposed ones (renamed here in one line); each check's plain name for G60, if the record holds none; the wording-only lines of round 7 at T52 (later-ux.md).
+
+### DEC-426 · answered
+raised: 2026-10-23 · the UX design session with Bob, on his secondary account with BOB (session_01DvXHQqV1arHFoxUeFp1nmG) (BOB's B499: Bob's K4746 (2), a team's record created near the team, shown on the install screen, a region for a legal requirement; round 7 cause G83)
+for: design (T51, G83; drawn ahead of BOB's HANDOFF)
+question: How the install screen shows where the team's record is kept, and the picker for a team with a legal requirement.
+why it is Bob's: it is not (P17): the drawing and words beneath his ruling.
+provisional: as below.
+alternative: a picker always open; not taken: Bob's default is near the team, and the picker is for the few teams a law binds, so it is folded.
+recommendation: as below.
+reversal cost: low.
+response: none needed (the design's detail).
+decided: 2026-10-23 · the design session (P17)
+the design: on `install`, after "Your team's places", a section "Where your team's record is kept": "Near you: {region}", with why (created in Cloudflare's data centers nearest to where you install from, so it answers quickly; chosen once, at install); a fold "Our team must keep its record in a particular region" with "Keep the record in": the nine regions by plain name and "Only inside the European Union (a legal requirement)", and help saying only the European Union choice is a guarantee, the others are where Cloudflare places it. Owed op `owed:installregion K4746`. 16 rows (block "DEC-426"). K4746 (1), the three service levels, has no screen asked yet.
+reasoning recorded in: this entry; `screens/mock-screens.js` (install); `screens/words-drawn.src.py` (block "DEC-426").
+owed: BOB: the keys and fills as G83's job names them, or a QUESTION; whether "chosen once" is exact (a record's place cannot change after install) and whether a FedRAMP choice is wanted.

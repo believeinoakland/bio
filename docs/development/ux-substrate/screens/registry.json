@@ -36,6 +36,11 @@
      "status": "owed"
     },
     {
+     "op": "owed:installregion K4746",
+     "label": "Keep the record in a region you choose",
+     "status": "owed"
+    },
+    {
      "op": "owed:installupdate K3471",
      "label": "Update it",
      "status": "owed"

@@ -7859,6 +7859,26 @@ w425('screen.ceremony.publishat.notreached', 'Publishing at a set time isn\'t of
 w425('screen.ceremony.publishat.nooffer', 'Publishing at a set time came without a time zone, so it can\'t be scheduled safely, and only "Sign and publish now" is offered. This is a fault in Civicsmith: tell an administrator.', "G62: reason (iii), an offer with an empty zone. Proposed key")
 w425('refusal.PROMOTE_NOT_A_PARTICIPANT', 'Only the members of {project}, and those invited to it, can file documents into it. Nothing was filed. Ask an owner of the project to invite you, or file it into a project you are in.', "G74 promotion: BOB's P17 decision after K4557; DEC-83's pattern, the sentence then the remedy; {project} the project's name, never its id. Proposed key: the job names its own if it differs")
 
+# DEC-426: where a team's record is kept, on the install screen (B499; K4746 (2))
+def w426(key, en, note):
+    W.append(dict(key=key, en=en, protected=False, note='DEC-426: B499 ' + note))
+w426('screen.install.region.head', "Where your team's record is kept", "installer (K4746 (2)): the section after the team's places; the region SHOWN on the install screen")
+w426('screen.install.region.near', 'Near you: {region}', "installer: the region chosen from the founder's location; {region} one of the .region.* names below, in lower case after the colon")
+w426('screen.install.region.why', "Your team's record is created in Cloudflare's data centers nearest to where you are installing from, so it answers quickly. It is chosen once, when your team's Civicsmith is installed.", 'installer: under the region shown')
+w426('screen.install.region.legal', 'Our team must keep its record in a particular region', 'installer (K4746 (2)): the fold for a team with a legal requirement')
+w426('screen.install.region.field', 'Keep the record in', "installer: the region picker's label")
+w426('screen.install.region.help', 'Choose a region only if a law or an agreement your team is bound by says where its record must be kept. Only the European Union choice is a guarantee; the other regions are where Cloudflare places it.', "installer: the picker's help; the EU choice is Cloudflare's jurisdiction restriction, the others its location hints")
+w426('screen.install.region.wnam', 'Western North America', 'installer: a region name (wnam)')
+w426('screen.install.region.enam', 'Eastern North America', 'installer: a region name (enam)')
+w426('screen.install.region.sam', 'South America', 'installer: a region name (sam)')
+w426('screen.install.region.weur', 'Western Europe', 'installer: a region name (weur)')
+w426('screen.install.region.eeur', 'Eastern Europe', 'installer: a region name (eeur)')
+w426('screen.install.region.apac', 'Asia and the Pacific', 'installer: a region name (apac)')
+w426('screen.install.region.oc', 'Oceania', 'installer: a region name (oc)')
+w426('screen.install.region.afr', 'Africa', 'installer: a region name (afr)')
+w426('screen.install.region.me', 'The Middle East', 'installer: a region name (me)')
+w426('screen.install.region.eu', 'Only inside the European Union (a legal requirement)', 'installer: the jurisdiction choice (eu)')
+
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
 assert not dup, 'duplicate keys: ' + ', '.join(dup)
