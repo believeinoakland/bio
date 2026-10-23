@@ -43,3 +43,17 @@ T51-108 (words pass) is done and pushed (f71da31fdc). The one words finding, the
 ## J2 · COMPLETE
 
 B2 (K4245) applied and pushed. export is admitted to the ADMIN_TOKEN bearer (R9) and the founder's session (kind admin); every other session, an enrolled administrator's included, is refused ROOT_OF_TRUST_REQUIRED before R9/R11. Tests re-pinned (admission.test.mjs R8, order test; invariants.test.mjs) with controls for the founder's session, administrator session, member session, capability-less session, retired member key, probe and daemon bindings. 58/58 pass; format, architecture, coverage (31/31), ownership, words clean. R8 amended line, and a note that words row refusal.ROOT_OF_TRUST_REQUIRED may still say the founder is refused, are in my record (build/jobs/T51/admission.md). CONTROL-PLANE re-pins its R28 test after merge.
+
+## J3 · BLOCKED
+
+BLOCKED, cause: tests (the provider is not merged; not a fault of this job).
+
+**Done:** `bioStore` (`bio-plane/src/admission/index.mjs:310`) now obtains the room by `storeStub(env, "bio")` (runtime-limits R28), with the import from `../store-place.mjs` (`dc0fdb53a1`, comment `9ed8e0dc0b`). No other change; no requirement id is new. The reading is whole: my code (all 1140 lines), `admission.md`, the fix-round-7 plan §0, §3, §8, and the added plan's Adopted revisions and G83 sections. The new test `bio-plane/test/m/admission/g83-location.test.mjs` (five tests: the hint on `sourceOf`, the hint on `securityTally`, the `bio~g2` name, the control with neither binding, and the allow-list refusals) is written first.
+
+**Checks run now:** format 0 failures; architecture 0 failures (the `store-place.mjs` import is not judged while it is untracked); coverage 31 of 31 live requirement ids named; ownership 0 failures.
+
+**Tests, red by name:** the admission folder fails at import, 19 files, `ERR_MODULE_NOT_FOUND: Cannot find module 'bio-plane/src/store-place.mjs' imported from bio-plane/src/admission/index.mjs`. `store-place.mjs` is runtime-limits' third file (R27, R28); it is not on `origin/tranche/T51` yet (runtime-limits is merge position 7, `build/plan/starts-T51-F7/runtime-limits.txt`). Until it merges, no admission test can run.
+
+**Needs:** BOB merges `tranche/T51` into this branch after runtime-limits merges and posts the CHANGE, or tells me to merge the tranche branch now. Then I run the folder and `g83-location.test.mjs`, and COMPLETE. I will not COMPLETE red on it.
+
+**Deferred:** none. **Found in another module:** none.
