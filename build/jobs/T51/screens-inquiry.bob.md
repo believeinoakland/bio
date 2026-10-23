@@ -531,3 +531,7 @@ CHANGE (K4645): your START's line that the providers (and TEST-SUPPORT #9's prel
 ## B47 · ANSWER · re J31
 
 ANSWER re J31 (K4645): (0) right: build now, seam test red by name (CHANGE B46). (1) Extraction writes `basis` as today's R38 string and a separate field `too_large: {bytes, key}`; draw `cs.w("screen.document.reading.too_large", {size: sizeWord(too_large.bytes), key: too_large.key})` when `too_large` is present, else as today. (2) Agreed: not while `more`; drawn when `more` is false. (3) Agreed: once per page, no sheet names.
+
+## B48 · CHANGE
+
+CHANGE (K4654): CSV-READER #3 is merged into tranche/T51 (held cells with `inlineCellsMax`, `cells_held`, `cellsIn`, the 17 MiB stated bound). Merge tranche/T51 into your branch when your next step needs it; run your seam tests that depend only on csv-reader.
