@@ -131,6 +131,14 @@ export function heldTextAt(extent, held) {
   return { text: u.text, extent: at };
 }
 
+/** The grid box a `sheet-cell` or `sheet-range` extent names, `{r0, c0, r1, c1}` 1-based with the corners ordered (the
+ *  range spelled bottom-right first names the same cells), or null when the extent names no readable cell or range. Pure. */
+export function extentBox(extent) {
+  const e = extent && typeof extent === "object" ? extent : {};
+  if (e.kind === "sheet-cell") { const p = a1ToRowCol(e.cell); return p && { r0: p.row, c0: p.col, r1: p.row, c1: p.col }; }
+  return e.kind === "sheet-range" ? rangeCorners(e.range) : null;
+}
+
 /** R52's rule, pure: the typed cells (`office-readers` R30, `odf-reader` R46) a reading holds inside a `sheet-cell` or
  *  `sheet-range` extent, from `sheetCells` (`{<sheet name>: cells list | null}`), each `{source, value, type, declared,
  *  cached, formula}` copied field for field, in row then column order. Returns `{cells}` (a held sheet with no cell in
@@ -147,9 +155,7 @@ export function typedCellsAt(extent, sheetCells) {
   if (!Array.isArray(list))
     return { cells: null, reason: "cells_not_held",
              why: word("content.why.capture_reading_holds", { sheet: String(sheet.slice(0, 40)) }) };
-  const box = e.kind === "sheet-cell"
-    ? (() => { const p = a1ToRowCol(e.cell); return p && { r0: p.row, c0: p.col, r1: p.row, c1: p.col }; })()
-    : rangeCorners(e.range);
+  const box = extentBox(e);
   if (!box) return { cells: null, reason: "extent_unreadable", why: word("content.why.extent_cell_range") };
   const inside = [];
   for (const c of list) {
