@@ -1,6 +1,6 @@
 # case-disclosures (T51)
 
-**Status** · session_01JCHNeQistwMeSv51kQxgRA · depth 2 · COMPLETE · handled B7
+**Status** · session_01XeesuXwbodLb8B9vNN8tcd · depth 2 · COMPLETE · handled B10
 
 ## J1 · QUESTION
 
@@ -137,3 +137,56 @@ For BOB:
 3. Generated artifact stale: case-checker/program.mjs carries this module's sentence; yours to regenerate at the round end.
 4. No test or check in case-checker/case-catalogue pins the old repeated lines. No census op of mine changes.
 5. Requirement line for R7 is in my record.
+
+## J9 · QUESTION
+
+QUESTION (my best reading below; I carry on with it).
+
+G50's seam test must call publication's real `assembleCaseContainer` (`bio-plane/src/publication/worker.mjs`), and build the published projection it reads. Both are public-read's files: `modules.json` gives public-read the paths `publication/worker.mjs`, `container.mjs`, `inband.mjs`, and its tests dir holds the world fixture (`test/m/public-read/fixture.mjs`, over publication's fixture) that the existing assembly tests use. `checks/architecture.mjs` will therefore fail on exactly these imports: they are of public-read, which case-disclosures does not declare in uses.
+
+Please add `public-read` to case-disclosures' `uses` in `build/modules.json` (tests only; the module's source imports nothing of it) and to the requirements' Uses line, and tell me when it is on tranche/T51 (I then merge). public-read (112) is earlier than case-disclosures (119), so the order holds. Until then my architecture check shows these failures and nothing else; the test is written and runs meanwhile.
+
+## J10 · REPORT
+
+REPORT: G50 note 2, a finding on reachability (file:line), and the seam test written and pushed.
+
+1. A single leg WITHOUT content_id does not reach both captures. The plan's reading (materials.mjs:16-26, a leg without content_id reaches every register row of its bundle) is true only for a stored leg whose content_id is null, and the plane never stores that for a captured information bundle: inquiry/index.mjs:870-880 mints a content row over the ONE capture content resolves (the first), and writes its id on the leg. Probe: two held captures of one bundle, one leg naming no content_id: after promotion inquiry_basis.content_id is set and materialsJudged answers ONE material. So note 1's wording cannot be met as written.
+2. The collision stays reachable by G47's route: two legs, each citing a passage over its own capture (content_id naming each). materialsJudged then answers two materials of one ref, materialRows two rows. That is what my test builds (both variants). So G50's verdict (a real member can produce it) stands, by two passages, not by one bare leg; the plan text 'A leg without a content_id reaches every register row' should be corrected (it still holds for a leg whose bundle has no resolvable capture, which is not a held case).
+3. The test g50-acts.test.mjs (2 tests: two photos with real-carriage copies, two included documents; the documents carry a direct receipt so they are carried whole) is red today as the plan says: assembleCaseContainer builds a bio-case-file/3 whose check answers path_twice (obscured; document and extracted.txt), and the zip part answers 409. After the providers merge it asserts /4, check [], no path twice, zip 200.
+4. Still needed from you: J9 (public-read in uses). The test imports public-read's fixture and publication/worker.mjs (public-read's paths). architecture shows exactly those two failures, nothing else.
+
+I wait on J9; nothing else is open.
+
+## Fix round 6 · G50 (CASE-DISCLOSURES #18, session_01XeesuXwbodLb8B9vNN8tcd, START B8)
+
+Test-only job; the module's code is unchanged. No census op of mine changes. No new word id.
+
+- Added `bio-plane/test/m/case-disclosures/g50-acts.test.mjs` (names R6, R7): two variants, two photos marked through the real case-carriage (each with its own copy) and two included documents (each with a direct receipt so it is carried whole). It runs `materialsJudged`, `disclosureBlocks` (`materialRows`), the real `holdMaterials`, then publication's real `assembleCaseContainer` over a public-read world carrying the case document and the held files (registered as publication R57 and ratification R39 do, as public-read's own tests stand them in), and asserts: two rows of one ref, two files held, manifest `/4`, `caseFileManifestCheck` `[]`, no path twice, zip served.
+- Fixture: `captures` gained an `ext` option; `w.bucket` is exposed.
+- Seen red today, as planned: the case file is `/3`, the check answers `path_twice` (`obscured`; `document` and `extracted.txt`), the zip part answers 409. Red by name until case-grammar, public-read, case-checker and case-import merge.
+- Reachability (J10): one leg without `content_id` reaches ONE capture, because `inquiry/index.mjs:870-880` mints a content row over the one capture content resolves. The test uses a leg over each capture's passage (G47's route); the collision is reachable that way.
+- Needed `public-read` in uses (J9, answered B9).
+- Suites: case-disclosures 115 tests, 113 pass, the 2 are the seam tests above. checks/run.mjs: format 0, architecture 0, coverage 0, channels 0, words only the accepted `inline 1` at case-checker/spec.mjs:11. ownership 0 failures. setup-words `--check`: stale-rows note only (expected).
+- Generated artifacts made stale: none.
+
+Size (session_01XeesuXwbodLb8B9vNN8tcd): test runs 9, module lines 2447
+
+## J11 · COMPLETE
+
+COMPLETE · G50 (B8), test only. Record: section 'Fix round 6 · G50'.
+
+g50-acts.test.mjs (R6, R7) written: two photos with copies, two included documents, from the member's acts through materialsJudged, materialRows, the real holdMaterials and the real assembleCaseContainer. Red today by name (case file /3, path_twice, zip 409); green once case-grammar, public-read, case-checker and case-import merge. Reachability note in J10 (one bare leg reaches one capture; two passage legs reach both). Module code unchanged; no census op changes; no new word ids. Suite 113/115 (the 2 are this test). checks: format 0, architecture 0, coverage 0, words only the accepted inline 1, ownership 0. No generated artifact made stale.
+
+Size (session_01XeesuXwbodLb8B9vNN8tcd): test runs 9, module lines 2447
+
+### G50 re-run after CHANGE B10 (K4711)
+
+Merged tranche/T51 (case-grammar, public-read, case-checker merged). `g50-acts.test.mjs` is GREEN against the real providers (both variants). case-disclosures 115/115. Users: case-authoring 244, case-account 48, case-inputs 73, case-tensions 26, all pass. checks/run.mjs: format, architecture, coverage, channels 0; words failures are in other modules (installer-steps `installer.fleet.logsunconfirmed`, case-checker spec inline), none in case-disclosures. ownership 0. No code change.
+
+Size (session_01XeesuXwbodLb8B9vNN8tcd): test runs 7, module lines 2447
+
+## J12 · COMPLETE
+
+COMPLETE · B10. tranche/T51 merged; g50-acts.test.mjs is green against the real merged providers (both variants). case-disclosures 115/115; users case-authoring 244, case-account 48, case-inputs 73, case-tensions 26 all pass. checks: format/architecture/coverage/channels 0; the words failures are other modules' (installer-steps logsunconfirmed, case-checker spec inline), none in mine; ownership 0. No code change.
+
+Size (session_01XeesuXwbodLb8B9vNN8tcd): test runs 7, module lines 2447
