@@ -235,3 +235,18 @@ Size (session_012UZ8UWTtyM4aTQWpqvLqwq): test runs 13, module lines 2076
 ## J15 · COMPLETE
 
 COMPLETE (J14): G1 provider done; see record section J14. Named reds accepted at B14.
+
+## G54 (INSTALLER-STEPS #7, B15) · observability
+
+**Cause.** `uploads.mjs` `uploadInstall` and `uploadUpdate` (the two metadata objects) sent no `observability`, so every install and update turned the plane's Workers Logs off; nothing read it back. Tests missed it because no test pinned the metadata's `observability` or the settings. Gap fixed by `newgroup/test/steps/observability.test.mjs`.
+
+**Changed.** `newgroup/src/steps/uploads.mjs`: exported constant `OBSERVABILITY = {enabled: true}` sent in both metadata objects; `observabilityHeld` reads `/workers/scripts/<slug>/settings` after the upload and throws unless `observability.enabled === true`, before the schedule is set. Stand-in sentence `installer.fleet.why.program`; **row owed `installer-steps.plane.observability`** ("your Cloudflare account did not switch on the plane's logs"). No census op changes; no release statement added. Tests: `observability.test.mjs` (4; red before, 3 behaviour reds and the constant arm, green after); `world.mjs` fake keeps and returns `observability` (knob `dropObservability`); `plane.test.mjs` R12/R13/R38 expectations gain the setting and the extra settings call.
+
+**Suites.** `newgroup/test/steps/`: 107 tests, 105 pass, 0 fail (2 parked unmet). Checks: format 0 failures; architecture 0; coverage 0 (installer-steps 40 of 40); words: only the inherited `case-checker/spec.mjs:11`; ownership: 0 failures except `build/requirements/installer-steps.md`, which I reverted (B15: amendments proposed as text). 
+
+**REPORT for BOB (installer's fixture).** The read-back is the specified Route A, and `newgroup/test/fixture.mjs` (installer's) answers the settings GET (:472-476) without `observability` and does not record the upload's, so about 51 installer suite tests that were green before are now red (e.g. R10 `install`, R12 `bind`, R17 update, R38, R44, R46, R59, R67 of `newgroup/test/requirements.test.mjs`/`wizard.test.mjs`; baseline had 15 reds). Test-only fix for INSTALLER #24: in `fixture.mjs` put, remember `meta.observability` per script; in the settings GET add `...(observed ? {observability: observed} : {})`, exactly as `world.mjs` now does here (diff in this branch). Impact set: installer 17/19, journey-check 2/24.
+
+**Proposed requirement line (BOB writes it):**
+- **R40** (T51 G54, fix round 6; K4702; amends R12 and R13) **The plane's Workers Logs are switched on.** Both uploads' metadata (`uploadInstall`, R12; `uploadUpdate`, R13) carry `observability: {enabled: true}`, the exported constant `OBSERVABILITY`, which equals the setting of `bio-plane/wrangler.jsonc`; the account's settings for the plane script (`/workers/scripts/<slug>/settings`) are read back after the upload and, unless they state `observability.enabled` as true, the act stops (`installer.fleet.why.program`, a stand-in; row owed `installer-steps.plane.observability`) before the schedule is set. No release statement carries it, so an older signed release needs nothing. Test: both acts send it; the constant equals the wrangler setting; an account that holds none, or disabled, stops both with nothing after; control: an account that keeps it completes.
+
+Size (session_01WaNWPB8W8wmgcuybTWiVtm): test runs 6, module lines 1951
