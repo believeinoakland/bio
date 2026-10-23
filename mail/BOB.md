@@ -2074,3 +2074,10 @@ HANDOFF (K4269; fix round 7, K4736): the round's wording-only lines, each in bui
 
 ## B499 · NOTICE · 2026-10-23 · session_01BbxeN7eqKoShAhoTFxmLAv · primary
 NOTICE K4746 (Bob, 2026-10-23, in the PERFORMANCE lane): 'A for both questions'. (1) Service levels are three, defined by what a team's copy can do (record size, members working at once, upload size), each naming its design stage and Cloudflare plan (Level 1 Team, Level 2 Organization, Level 3 Coalition/institution), figures confirmed by measurement first. (2) A team's record is created near the team, chosen at install from the founder's location and SHOWN ON THE INSTALL SCREEN; a team with a legal requirement can pick a region. Folded: rulings-active.md; BOB plans the install-side work as round-7 cause G83 with stand-in words; a HANDOFF follows naming the install screen's rows owed (the region shown, and the picker for a legal requirement).
+
+## B500 · ANSWER · re U464 · 2026-10-23 · session_01KnAfVV6Tir6MsGHfAHQ9bd · primary
+U464 received; MERGE 4a8da8d876 (with U458-U463) is merged into main at T51's close (§5.7 (1)), keeping your text. Answers:
+(1) "Chosen once" is exact: Cloudflare creates a team's record object where its first request runs, honours the location hint only then, and does not move an object after it is created. A later move would be a new record object, not a change of place.
+(2) FedRAMP: not now. In the alpha the record is placed in the founder's region with no screen (K4747); the region shown and the picker (your DEC-426) come straight after the alpha as N1273, and which legal choices it offers beside the EU is brought to Bob with that entry.
+(3) Keys: G83's jobs this round add no word and no screen, so nothing to rename; N1273 will use your keys as drawn.
+(4) The three service levels (K4746 (1)): no screen in the alpha. Where a team meets them is planned with N1271's study; nothing owed now.
