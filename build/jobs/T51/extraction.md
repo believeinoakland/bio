@@ -546,3 +546,20 @@ G41 follow-up (K4664, K4669, K4670) done. Branch job/T51/extraction, `tranche/T5
 **Protective bounds set:** none new (CELLS_RANGE_MAX 20,000 as G41). **Rows owed to UX-DESIGN:** none. **Deferred:** none. **Found in other modules:** capture's multipart profiling (the second cause, K4670) is CAPTURE #50's and unchanged here; my fallback covers captures already stored `undetermined` (R-OLD: nothing stored is rewritten). `content/index.mjs:1441` `containerKindOf` still trusts `undetermined` over the container (a latent flaw as K4669 says); nothing reaches it from `cellsAt`.
 
 Size (session_013ZBMsX3r7H8TLywtAcFXZJ): test runs 9, module lines 4193 (`wc -l` over `bio-plane/src/extractrun.mjs` and `bio-plane/src/extraction/*.mjs`).
+
+## J31 · QUESTION
+
+QUESTION (G76, extraction's part: the re-profile of held CSVs and texts). The plan says a held non-HTML text "whose stored reading carries the client_rendered handler" is re-profiled by a profile-only pass. I read the code whole and the premise does not hold:
+
+1. The shell profile (handler `client_rendered`, `handler_label`, `document_kind: "shell"`, its warning `note`) is written once at capture by `acquisition/index.mjs:1877-1895` (`profileRecord`) into the capture's register document, `data/provenance.json` of the bundle, field `profile`. The Document screen reads it from there (`screens-inquiry/document.mjs:543`, `reg0.profile`).
+2. The stored reading carries no handler or profile: I read a CSV through `readHeld` and the reading holds `content_type: "generic"`, `text_container`, `basis`, counts, `provenance`, nothing of `identify`'s answer. So a migration over `readings` cannot find the bad ones by the reading.
+3. I may not write the bundle's `data/provenance.json` (it is capture's and promotion's data, and a write is a bundle version), and extraction mints none (R34).
+
+My best reading, for you to confirm or change (it adds a requirement, so it is yours):
+- Extraction keeps its own table `reading_profiles` (capture_sha, bundle_id keyed, purge-declared R49): the corrected profile record of a held non-HTML text, written by a profile-only pass (R-OLD repair, G8's pattern: `migrateRepairs`-style, owed through `registerOwe`, from a cursor, once per release). The pass finds candidates as held `readings` whose `capture_format` is null/csv/text (or `text_container` csv/text) and whose register document, read with `core.readFile(bundle, "data/provenance.json")` (as `#storedDocument` does), states `profile.handler === "client_rendered"` and a non-HTML format; it hands `identify` the stored head (the sampled view the pipeline hands it) and stores the answer. Units, completeness and the reading are untouched.
+- `op=reading` (`readingFor`) answers `profile: {handler, handler_label, handler_version, document_kind, note, re_profiled: true}` for such a capture, absent for every other; withheld with the bundle.
+- The Document screen (screens-inquiry) and capture's register reads would then prefer `op=reading`'s `profile` over the register document's when present. That is another module's change (screens-inquiry / capture); I name it for you.
+
+The alternative is that capture owns the repair (rewrites the register document's profile) and extraction does nothing for G76; say so and I build nothing for it. The site-profiles fix (G76's provider) is not merged yet, so the failing-first test of the pass will use the fixed `identify` once it is, and is red by name until then.
+
+I carry on with G71 (done, red then green) and G82 (the L run) meanwhile, and will not build G76's pass until you answer.
