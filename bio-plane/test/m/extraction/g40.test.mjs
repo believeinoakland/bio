@@ -9,7 +9,8 @@ import { sha256HexSync } from "../../../src/record-grammar/sha256.mjs";
 import { ReadHooks } from "../../../src/reading-pipeline/index.mjs";
 import { MODULE_ORDER } from "../../../src/membership/index.mjs";
 
-const BIG = 1_000_000;
+/* (G41) a reading is kept under 1 MiB, and a sheet over 512 KiB of cells holds them, so the largest reading a CSV makes is some 700 KB: "large" is 400,000 characters here */
+const BIG = 400_000;
 const register = (rows) => ({ homeOf: (s) => rows.get(s) ?? null, onTestimony: () => ({ ok: true }) });
 const csv = (bytes) => {
   const rows = ["id,name,amount,note"];
@@ -18,7 +19,7 @@ const csv = (bytes) => {
   return rows.join("\n") + "\n";
 };
 /* the fixture the pinned values below were taken on, from the code before G40 */
-const csv4000 = () => ["id,name,amount,note"].concat(Array.from({ length: 4000 }, (_, i) => `${i},"name ${i}",${(i * 37) % 9973}.${i % 100},"council note ${i} budget line"`)).join("\n") + "\n";
+const csv4000 = () => ["id,name,amount,note"].concat(Array.from({ length: 700 }, (_, i) => `${i},"name ${i}",${(i * 37) % 9973}.${i % 100},"council note ${i} budget line"`)).join("\n") + "\n";
 
 async function home(text, { readHooks = null } = {}) {
   const rows = new Map(), evidence = bucket();
@@ -51,9 +52,9 @@ async function counted(w, fn) {
   finally { JSON.stringify = S; JSON.parse = P; TextEncoder.prototype.encode = E; w.core.transact = tx; w.core.afterCommit = ac; }
 }
 
-test("R95 (G40): a 1 MB CSV read through `readHeld` makes its reading's JSON once: one stringify over 1 MB, one digest copy over 1 MB, no parse over 1 MB inside the transaction", async () => {
-  const { w, d, bytes } = await home(csv(1_048_576));
-  assert.ok(bytes.length > 1_000_000);
+test("R95 (G40): a 38 KB CSV (the largest reading a CSV keeps whole is some 700 KB) read through `readHeld` makes its reading's JSON once: one stringify over 1 MB, one digest copy over 1 MB, no parse over 1 MB inside the transaction", async () => {
+  const { w, d, bytes } = await home(csv(38_000));
+  assert.ok(bytes.length > 30_000);
   const { c, out } = await counted(w, () => w.x.readHeld({ sha: d, kind: "reading", storeName: "bio", env: {} }));
   assert.deepEqual([out.ok, out.read], [true, true], JSON.stringify(out));
   const row = w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d);
@@ -66,12 +67,12 @@ test("R95 (G40 control): the row, the history, `reading_sha256`, the history's p
   await w.x.readHeld({ sha: d, kind: "reading", storeName: "bio", env: {} });
   const row = w.one(`SELECT reading, origin FROM readings WHERE capture_sha=?`, d);
   /* taken from the tranche code before G40 after reading-pipeline R35 merged (extraction before and after G40 agree; deterministic: two runs agree) */
-  assert.deepEqual([row.reading.length, sha256HexSync(row.reading)], [2585472, "190adb18a978566d0fe7eb5885ef69ed92121c8a2af54a1bad93885b43b781e0"]);
+  assert.deepEqual([row.reading.length, sha256HexSync(row.reading)], [447739, "b6abedf1b7665e0817c8b6ec3de6075ce71c6352eebef5eae5ba70675f9264ad"]);
   const hist = w.rows(`SELECT reading_sha256, reading, provenance FROM reading_history WHERE capture_sha=?`, d);
   assert.equal(hist.length, 1);
   assert.deepEqual([hist[0].reading_sha256, hist[0].reading === row.reading, sha256HexSync(String(hist[0].provenance))],
-                   ["190adb18a978566d0fe7eb5885ef69ed92121c8a2af54a1bad93885b43b781e0", true, "fd686251d57c441d44c159ea60eba1a1c54ff8efa79394c08a41d21290b0a31d"]);
-  assert.deepEqual(w.rows(`SELECT reading_sha256 FROM composed_readings`).map((r) => r.reading_sha256), ["190adb18a978566d0fe7eb5885ef69ed92121c8a2af54a1bad93885b43b781e0"]);
+                   ["b6abedf1b7665e0817c8b6ec3de6075ce71c6352eebef5eae5ba70675f9264ad", true, "2b31336189092209c93a09728dfd8250aa3cd05a37751e405efee15de6f0be1f"]);
+  assert.deepEqual(w.rows(`SELECT reading_sha256 FROM composed_readings`).map((r) => r.reading_sha256), ["b6abedf1b7665e0817c8b6ec3de6075ce71c6352eebef5eae5ba70675f9264ad"]);
   assert.equal(row.origin, "composed");
   assert.equal(JSON.stringify(JSON.parse(row.reading)), row.reading, "the stored text is JSON.stringify's own");
 });
@@ -98,7 +99,7 @@ test("R95 (G40 control): a hook that mutates its argument leaves the stored row 
   assert.deepEqual([done.ok, done.read], [true, true]);
   await new Promise((r) => setTimeout(r, 20));
   const row = w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading;
-  assert.equal(sha256HexSync(row), "190adb18a978566d0fe7eb5885ef69ed92121c8a2af54a1bad93885b43b781e0", "the stored row is untouched by the first hook's changes");
+  assert.equal(sha256HexSync(row), "b6abedf1b7665e0817c8b6ec3de6075ce71c6352eebef5eae5ba70675f9264ad", "the stored row is untouched by the first hook's changes");
   assert.deepEqual(seen.map((x) => x[0]), [A, B], "both ran, in order");
   assert.equal(seen[0][1], row, "the first hook was handed the reading as written");
   assert.equal(seen[1][1], row, "the second hook is handed the same, not what the first left");
@@ -122,7 +123,7 @@ test("R95 (G40): a registry that says no hook wants the reading's class is hande
   for (const wantsIt of [false, true]) {
     const calls = [], asked = [];
     const registry = { wants: (c) => { asked.push(c); return wantsIt; }, afterRead: async (a) => { calls.push(a); return { ran: wantsIt ? ["events"] : [], failed: [] }; } };
-    const { w, d } = await home(csv(1_048_576), { readHooks: registry });
+    const { w, d } = await home(csv(38_000), { readHooks: registry });
     const { c } = await counted(w, () => w.x.readHeld({ sha: d, kind: "reading", storeName: "bio", env: {} }));
     await new Promise((r) => setTimeout(r, 20));
     assert.deepEqual(asked, ["generic"], "the registry is asked about the reading's class");
@@ -138,7 +139,7 @@ test("R95 (G40): a registry that says no hook wants the reading's class is hande
 test("R95 (G40): the real `ReadHooks` of reading-pipeline R43 with no hook for the class: a large reading is not parsed at all (red until reading-pipeline R43 is merged)", async () => {
   const hooks = new ReadHooks();
   hooks.onRead("events", () => {}, { captureClasses: ["meeting_minutes"] });
-  const { w, d } = await home(csv(1_048_576), { readHooks: hooks });
+  const { w, d } = await home(csv(38_000), { readHooks: hooks });
   const { c } = await counted(w, () => w.x.readHeld({ sha: d, kind: "reading", storeName: "bio", env: {} }));
   await new Promise((r) => setTimeout(r, 20));
   assert.equal(typeof hooks.wants, "function", "R43: ReadHooks.wants(class)");
