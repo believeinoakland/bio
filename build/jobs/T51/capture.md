@@ -637,3 +637,7 @@ QUESTION (CAPTURE #51, B29; my record: 'Fix round 7', G79 item 6). G79 as planne
 BOB ruled J28: the plane's keep owner enters a `reading` row only when no reading is held and a home exists (PLANE #54 carries it). The control-plane G7 seam test (`t51-round6-seam`) stays red by name until plane's change merges. G79, G78, G75 and G73 are built as written above; nothing deferred, no open question.
 
 Size (session_018DeoSKvDLtRvtfBB1oDTG9): test runs 22, module lines 4402
+
+## J29 · COMPLETE
+
+COMPLETE (CAPTURE #51, B29; B30 applied). G79 (no read-back, large keep handed to the ledger), G78 (held objects remembered), G75 (heldat copy.title), G73 (characterization, green) built and pushed; details, red-then-green tests, platform L figures, proposed lines (R103, R77, R96 amended), bounds (HELD_PROVEN_MAX 5000) and the Size line are in my record 'Fix round 7'. Capture suite 294/294; checks: format, architecture, ownership 0 failures. Census ops: none changes. t51-round6-seam G7 red by name until PLANE #54 merges (B30).
