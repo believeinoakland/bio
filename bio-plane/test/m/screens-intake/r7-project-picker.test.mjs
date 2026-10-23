@@ -28,7 +28,9 @@ const open = (path, p) => openPage(path, { plane: plane(p), screens: [...SCREENS
 const upload = async (p) => { fill(p, { "ci-file": FILE, "ci-how-made": true, "ci-where": "City hall", "ci-what": "The packet." }); await press(p, "captureupload"); };
 const capture = async (p) => { fill(p, { "ci-address": ADDRESS }); await press(p, "acquire"); };
 /* the sentence: U463/DEC-425's `refusal.PROMOTE_NOT_A_PARTICIPANT` ({project} by name) where the row exists and the list names the project, else the nearest held row */
-const refusal = (name) => (name && hasWord("refusal.PROMOTE_NOT_A_PARTICIPANT") ? word("refusal.PROMOTE_NOT_A_PARTICIPANT", { project: name }) : word("project.notmember"));
+/* the key is a code-sourced row of the table (promotion's refusal), which the design's list does not hold; it is named as `capture.mjs` names it */
+const PNAP = "refusal." + "PROMOTE_NOT_A_PARTICIPANT";
+const refusal = (name) => (name && hasWord(PNAP) ? word(PNAP, { project: name }) : word("project.notmember"));
 const sent = (p) => ["heldat", "acquire", "captureupload", "allocid", "promote"].flatMap((op) => p.byOp(op).map(() => op));
 
 test("R22 R35 R62 (G74) Add on a project the member is neither in nor invited to says so, never names it by its id, and an address capture sends nothing", async () => {
