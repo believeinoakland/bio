@@ -1,10 +1,9 @@
 /* csv-reader, proposed R16 (G15, K4579): every sheet carries `lineRows`, one 1-based source row number per line of
-   `sheet.text`, whole-file and streamed alike. Each body is built here and its expected row numbers computed by a route
+   `sheet.text`, whole-file and windowed alike. Each body is built here and its expected row numbers computed by a route
    that shares no code with the reader (the row each line was written on). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { csvEntry } from "../../../src/csv-reader/index.mjs";
-import { MEASURED_OOXML_TEXT_BOUND_BYTES } from "../../../src/ooxml.mjs";
 import { csvField, randomText, prng } from "./large.mjs";
 import { enc } from "./fixtures.mjs";
 
@@ -37,11 +36,11 @@ test("R16 (proposed) lineRows: a plain csv's lineRows is 1..n; an empty-only csv
   assert.deepEqual(e.sheets[0].lineRows, []);
 });
 
-test("R16 (proposed) lineRows: a body streamed in pieces (over the bound, cells null) gives each line its true row", async () => {
+test("R16 (proposed) lineRows: a body walked in windows (over 1 MiB, cells held) gives each line its true row", async () => {
   const rand = prng(23);
   const out = [], want = [];
   let bytes = 0;
-  for (let r = 1; bytes <= MEASURED_OOXML_TEXT_BOUND_BYTES + 1024; r++) {
+  for (let r = 1; bytes <= 2.5 * 1024 * 1024; r++) {
     let record;
     if (r > 60 && r % 5 === 0) record = "";                       // an empty record: no line, its row is skipped
     else if (r > 60 && r % 7 === 0) {                              // a quoted field holding a bare line break: two lines, one row
@@ -54,11 +53,10 @@ test("R16 (proposed) lineRows: a body streamed in pieces (over the bound, cells 
     out.push(record);
     bytes += record.length + 2;
   }
-  const t = await csvEntry.text(enc(out.join("\r\n") + "\r\n"));
+  const t = await csvEntry.text(enc(out.join("\r\n") + "\r\n"), { inlineCellsMax: 512 * 1024 });
   assert.equal(t.ok, true);
   const sheet = t.sheets[0];
-  assert.equal(sheet.cells, null);
-  assert.ok(t.piecewise, "read in pieces");
+  assert.ok(sheet.cells === null && sheet.cells_held === true, "cells held");
   assert.equal(sheet.lineRows.length, rowsOfLines(sheet.text));
   assert.deepEqual(sheet.lineRows, want);
   assert.equal(sheet.usedRows, out.length);

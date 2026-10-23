@@ -7,7 +7,7 @@ import * as F from "./fixtures.mjs";
 
 const bytes = (s) => Uint8Array.from(s, (c) => c.charCodeAt(0));
 const MiB = 1024 * 1024;
-const BOUND = 20 * MiB;
+const BOUND = 17 * MiB;   // MEASURED_CSV_TEXT_BOUND_BYTES (G41, K4652)
 /* The ceiling of a read in pieces (R9): over it, and only over it, the text is refused. */
 const CEIL = STREAMED_TEXT_BOUND_BYTES;
 

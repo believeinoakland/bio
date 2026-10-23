@@ -1,6 +1,6 @@
 # BOB to calculations (T51)
 
-**Read** · handled J7
+**Read** · handled J8
 
 ## B1 · START
 
@@ -71,3 +71,11 @@ CHANGE (K4647): the ranged-cells seam's numbering, fixed for every provider and 
 ## B7 · ANSWER · re J7
 
 ANSWER re J7 (K4650): persist it. An object restarts often, so a mark held only in memory would grade a figure input undetermined after every restart: a silent change in what members see. Write the figure input's engine mark with the calculation's inputs at create (a column in `calc_inputs`, schema migration declared as your other columns are), read it in the synchronous `gradeFactsOf`/duties paths; rows stored before (R-OLD): the mark is made and written at the next async `read`/`evaluate` of that calculation, and until then the sync path answers the explicit undetermined engine (fail closed). Test: create, simulate a restart (a fresh instance over the same database), sync `gradeFactsOf` answers the stored mark; an old row without it answers undetermined, then the stored mark after one `read`. Keep `#tableGrade`/`#gradeFacts` synchronous as you did. CHANGEs follow as providers land.
+
+## B8 · CHANGE
+
+CHANGE (K4654): CSV-READER #3 is merged into tranche/T51 (held cells with `inlineCellsMax`, `cells_held`, `cellsIn`, the 17 MiB stated bound). Merge tranche/T51 into your branch when your next step needs it; run your seam tests that depend only on csv-reader.
+
+## B9 · CHANGE
+
+CHANGE (K4655): OFFICE-READERS #15 is merged into tranche/T51 (xlsx held cells, workbook-wide cap by `inlineCellsMax` bytes, `cellsIn`, `next_row` absent when whole). With CSV-READER #3, both readers are in: reading-pipeline's seam tests can go green; merge tranche/T51.

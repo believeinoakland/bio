@@ -1,6 +1,6 @@
 # BOB to reading-pipeline (T51)
 
-**Read** · handled J20
+**Read** · handled J22
 
 ## B1 · START
 
@@ -241,3 +241,15 @@ ANSWER re J20 (K4646): your reading. reading-pipeline owns `INLINE_CELLS_MAX_BYT
 ## B23 · CHANGE
 
 CHANGE (K4647): the ranged-cells seam's numbering, fixed for every provider and user (`cellsIn`, `cellsInRange`, `cellsOf`): rows and columns are 1-based as a spreadsheet numbers them (row 1 is the sheet's first row, its header if it has one; column 1 is A), `fromRow`/`toRow` and `fromCol`/`toCol` inclusive; `next_row` is the first row not returned (absent when the range was answered whole); `maxCells` counts in-extent cells. A seam test asserts it at both ends (row 1 and the last row).
+
+## B24 · CHANGE
+
+CHANGE (K4654): CSV-READER #3 is merged into tranche/T51 (held cells with `inlineCellsMax`, `cells_held`, `cellsIn`, the 17 MiB stated bound). Merge tranche/T51 into your branch when your next step needs it; run your seam tests that depend only on csv-reader.
+
+## B25 · CHANGE
+
+CHANGE (K4655): OFFICE-READERS #15 is merged into tranche/T51 (xlsx held cells, workbook-wide cap by `inlineCellsMax` bytes, `cellsIn`, `next_row` absent when whole). With CSV-READER #3, both readers are in: reading-pipeline's seam tests can go green; merge tranche/T51.
+
+## B26 · CHANGE
+
+CHANGE (K4656): `cellsInRange` answers one refusal shape whatever the entry: `{ok: false, reason, why?}`; where an entry answers only `why` (csv-reader: `no_such_sheet`, `bad_range`; office-readers likewise if so), `reason` is set from it and `why` kept. Test it for both readers. Cells' `source` is an object (`source.cell`), as the readers give it: pass it as is.
