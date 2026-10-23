@@ -1,6 +1,7 @@
 /* docprofile tests (R38): one `readText` over a very large text in a process of its own, so its memory is its alone.
  * Run by memory.test.mjs as `node --expose-gc memory-child.mjs <idle|measure> [pages] [chars-per-page]`.
  *   idle:    nothing read; prints {baseMB}.
+ *   twin:    as measure, with `doctypeForYielding` (R39) in place of `readText`: the same text, a real yield before each type.
  *   measure: the text of the size given (I2's `document` and `pages[]`, the two-byte text a PDF with one character past
  *            U+00FF yields) is built and held in a worker thread, as the caller holds it; after a collection the worker
  *            runs `readText` (synchronously, with a type that scans `ctx.pages` and a fallback) while this thread polls
@@ -31,12 +32,12 @@ if (isMainThread) {
   });
   w.on("error", (e) => { console.error(e); process.exit(1); });
 } else {
-  const { CONFIDENCE, CONTRACT, registerDoctype, readText } = await import("../registry.mjs");
+  const { CONFIDENCE, CONTRACT, registerDoctype, readText, doctypeForYielding } = await import("../registry.mjs");
   const used = () => { const m = process.memoryUsage(); return m.heapUsed + m.arrayBuffers; };
   const { mode, pages: N, per: PER } = workerData;
   if (mode === "idle") { global.gc(); global.gc(); parentPort.postMessage({ idle: true }); }
-  else await measure();
-  async function measure() {
+  else await measure(mode === "twin");
+  async function measure(twin) {
   const line = "Council Resolution 2024-001 \u2014 the fiscal year budget, Section 4.2, adopted by the Board.\n";
   const pages = [];
   for (let i = 0; i < N; i++) {
@@ -65,7 +66,12 @@ if (isMainThread) {
   parentPort.postMessage({ base: true });
   await new Promise((go) => parentPort.once("message", go));
   const t0 = performance.now();
-  const r = readText(supplied, {});
+  /* twin: R39's `doctypeForYielding` over the same text, awaiting a real turn of the loop before each type (the text is long). */
+  let r;
+  if (twin) {
+    const d = await doctypeForYielding({ text: supplied.document, pages: supplied.pages }, { yieldNow: () => new Promise((go) => setImmediate(go)) });
+    r = { chars: supplied.document.length, determined: true, doctype: d, position_parts: pages.length, text_from: "document", parsed: { entities: [], facts: { pages: pages.length } } };
+  } else r = readText(supplied, {});
   const ms = performance.now() - t0;
   parentPort.postMessage({ endMB: Math.max(0, used() - base) / MB, ms, chars: r.chars,
     answers: { determined: r.determined, type: r.doctype.type.key, confidence: r.doctype.confidence, also: r.doctype.also,
