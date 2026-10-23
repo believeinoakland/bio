@@ -240,3 +240,15 @@ test("R23 G54 an edition committed before the ledger (a manifest, no state) read
   assert.deepEqual(owed(s.w), []);
   assert.equal(typeof c.manifest_sha, "string");
 });
+
+test("R23 G54 the reader's thirteen stand-in sentences are held here, one per state without a case file and one per code of the closed set, and are in no answer", async () => {
+  const { CASEFILE_SENTENCES } = await import("../../../src/public-read/index.mjs");
+  const want = ["being_prepared", "retrying", "stopped", "waiting_on_members", ...CASEFILE_CODES.map((c) => `code.${c}`)];
+  assert.deepEqual(Object.keys(CASEFILE_SENTENCES).sort(), want.sort());
+  assert.equal(want.length, 13);
+  for (const v of Object.values(CASEFILE_SENTENCES)) assert.ok(typeof v === "string" && v.length > 10);
+  const s = scene();
+  await recordCaseFileFailure({ stub: stubOf(s.w), cs: cs(s.w), via: "t", step: "build", code: "FINDING_MISSING" });
+  const wire = JSON.stringify(caseFileOf(s.w));
+  for (const v of Object.values(CASEFILE_SENTENCES)) assert.equal(wire.includes(v), false, "no sentence in the public answer");
+});

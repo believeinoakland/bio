@@ -53,6 +53,7 @@ import { word, localize } from "../setup-words/index.mjs";
 import { rowOf } from "./checks.mjs";
 import { WITHHELD_SENTENCE, withholdingOf } from "./courtorders.mjs";
 import { caseFileStateOf } from "./casefile.mjs";
+export { CASEFILE_SENTENCES } from "./casefile-words.mjs";
 import { delivererOf } from "../deliverer.mjs";
 import { PUBLIC_READ_NAME, PUBLIC_READ_PARAM, PUBLIC_READ_OWN_OPS, PUBLIC_READ_RESERVED_PARAMS,
          DOCKET_FEED_MEDIA_TYPE } from "./reads.mjs";
