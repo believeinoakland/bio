@@ -1,6 +1,6 @@
 # installer-steps (T51)
 
-**Status** · session_0197jkkTD4SAwdV2Y8qGeuqb · depth 2 · WAITING ON BOB (J20) · handled B21
+**Status** · session_0197jkkTD4SAwdV2Y8qGeuqb · depth 2 · COMPLETE · handled B21
 
 ## J1 · QUESTION
 
