@@ -53,3 +53,24 @@ READING-ARCHITECTURE #2 read the writer's draft whole against `options-brief.md`
 What review changed (listed in §0): the six writer's notes are each settled (WN1–WN3, WN5, WN6 accepted; WN4 settled as "the kind decides", with any small-file Worker path BOB's after P-M17); C7 and C16 counted consistently with the shared shape; one time row restated; the retired-source figure qualified. One substantive correction: the draft treated the list of kinds read as Bob's open question. K4628 point 1 already sets it for the beta (.doc, .xls, RTF, .eml, .msg, TIFF, HEIC, GIF, WebP and the rest), so under A, B and C those kinds need new JavaScript readers. This is work D avoids, which strengthens D's case. Only kinds beyond his list (TAR, GZ, 7z, RAR) and OCR languages remain open.
 
 **For BOB:** nothing to rule. Facts that bear on the order of work: no live measurement exists. Stage 0's probes (P-M1, P-M2, P-M3, P-M5, P-M6, P-M9; then P-M14, P-M16, P-M4; then P-M17) are BOB's to place and run. Two findings are for GAP.md: RR-F1's "64 MB above idle" cannot hold at the as-built idle (WN6), and the stale part-keyed rows (S2) need a migration nobody has placed.
+
+## RA6 · 2026-10-23 · Deliverable 5 ready: `FOR-BOB.md`
+
+Only what is Bob's under P17, in ten questions. Each has a plain explanation, its options and a recommendation:
+1. **The architecture** (rec. D, staged; C the fallback).
+2. **Money:** accept a container line, capped and reported.
+3. **The alpha against his standard:** ship with today's limits stated to members, and meet the standard by the beta.
+4. **What "or" and "archives 500 MB total" mean:** refused above either limit; 500 MB file, 2 GB unpacked.
+5. **Time:** no promised time now; progress and an "about" estimate.
+6. **Safety:** reading does not wait for the scan in the alpha, and a found threat's text leaves search once signatures exist; no typed passwords for the beta.
+7. **What counts as text:** every part read and searchable, each marked with its kind; Excel dates typed as dates.
+8. **Protective limits inside the standard,** accepted as a class and reported.
+9. **Beyond his list:** add TAR, GZ and 7z and Spanish OCR; not RAR.
+10. **Five smaller screen choices.**
+
+A closing section says what was not asked and why: answered by K4628, K4630, K4562 or K4803; BOB's under P17 (encodings included, since his standard requires them); or queued elsewhere. It covers every question in REQUIREMENTS §6, CHALLENGES §6, SHEET #1's B-1 to B-8 and DOCS #1's Q1 to Q11.
+
+**For BOB:**
+- Render `FOR-BOB.md` for Bob and record his answers as rulings.
+- The lane now waits: deliverable 6 (`GAP.md`) follows only once he confirms an architecture. When he does, start READING-ARCHITECTURE #3 on this branch for it, or send the ruling to this session if it is still open.
+- `STATE.md` is current. No safety check refused any act in this session.
