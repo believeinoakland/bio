@@ -1,0 +1,2044 @@
+{
+ "note": "doctypeFor and readText over each reading of g48-corpus.mjs, all 17 types registered, before G48 (docprofile R5, R19, R38)",
+ "taken_on": "713e63be2e",
+ "readings": {
+  "doctypes:fw18:minutes@held": {
+   "chars": 9217,
+   "type": "meeting_minutes",
+   "confidence": "certain",
+   "signals": [
+    "names itself as minutes on 5 lines, which is page furniture",
+    "motions made, seconded and carried or failed",
+    "4 roll-call vote tally label(s)",
+    "a meeting that convened and adjourned at stated times",
+    "an attendance roster"
+   ],
+   "considered": [
+    {
+     "key": "meeting_minutes",
+     "confidence": "certain",
+     "signals": [
+      "names itself as minutes on 5 lines, which is page furniture",
+      "motions made, seconded and carried or failed",
+      "4 roll-call vote tally label(s)",
+      "a meeting that convened and adjourned at stated times",
+      "an attendance roster"
+     ]
+    }
+   ],
+   "also": [
+    {
+     "key": "meeting_agenda",
+     "confidence": "likely",
+     "signals": [
+      "8 legislation file number line(s)",
+      "Subject:/Recommendation: item blocks",
+      "names itself as an agenda once (2), which a reference also does",
+      "meeting front matter"
+     ]
+    }
+   ],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "meeting_minutes",
+    "confidence": "certain",
+    "also": [
+     {
+      "key": "meeting_agenda",
+      "confidence": "likely",
+      "signals": [
+       "8 legislation file number line(s)",
+       "Subject:/Recommendation: item blocks",
+       "names itself as an agenda once (2), which a reference also does",
+       "meeting front matter"
+      ]
+     }
+    ],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "doctypes:fw18:minutes_council@held": {
+   "chars": 5339,
+   "type": "meeting_minutes",
+   "confidence": "certain",
+   "signals": [
+    "names itself as minutes on 4 lines, which is page furniture",
+    "motions made, seconded and carried or failed",
+    "4 roll-call vote tally label(s)",
+    "an attendance roster"
+   ],
+   "considered": [
+    {
+     "key": "meeting_minutes",
+     "confidence": "certain",
+     "signals": [
+      "names itself as minutes on 4 lines, which is page furniture",
+      "motions made, seconded and carried or failed",
+      "4 roll-call vote tally label(s)",
+      "an attendance roster"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "meeting_minutes",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "doctypes:fw18:agenda@held": {
+   "chars": 4628,
+   "type": "meeting_agenda",
+   "confidence": "certain",
+   "signals": [
+    "5 legislation file number line(s)",
+    "Subject:/Recommendation: item blocks",
+    "names itself as an agenda on 3 lines, which is page furniture",
+    "meeting front matter"
+   ],
+   "considered": [
+    {
+     "key": "meeting_agenda",
+     "confidence": "certain",
+     "signals": [
+      "5 legislation file number line(s)",
+      "Subject:/Recommendation: item blocks",
+      "names itself as an agenda on 3 lines, which is page furniture",
+      "meeting front matter"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "meeting_agenda",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "doctypes:fw18:regulation@held": {
+   "chars": 11788,
+   "type": "regulation",
+   "confidence": "certain",
+   "signals": [
+    "an enacting formula in the operative voice",
+    "a recital chain of 18 WHEREAS clause(s)",
+    "an instrument caption",
+    "10 codification phrase(s)"
+   ],
+   "considered": [
+    {
+     "key": "regulation",
+     "confidence": "certain",
+     "signals": [
+      "an enacting formula in the operative voice",
+      "a recital chain of 18 WHEREAS clause(s)",
+      "an instrument caption",
+      "10 codification phrase(s)"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "regulation",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "doctypes:fw18:staff_report@held": {
+   "chars": 11564,
+   "type": "staff_report",
+   "confidence": "certain",
+   "signals": [
+    "a memorandum header of 4 labels in 79 characters at the top",
+    "3 report template section heading(s)",
+    "a staff sign-off",
+    "names itself as a report on a line of its own"
+   ],
+   "considered": [
+    {
+     "key": "staff_report",
+     "confidence": "certain",
+     "signals": [
+      "a memorandum header of 4 labels in 79 characters at the top",
+      "3 report template section heading(s)",
+      "a staff sign-off",
+      "names itself as a report on a line of its own"
+     ]
+    }
+   ],
+   "also": [
+    {
+     "key": "regulation",
+     "confidence": "certain",
+     "signals": [
+      "an enacting formula in the operative voice",
+      "a recital chain of 6 WHEREAS clause(s)",
+      "an instrument caption",
+      "3 codification phrase(s)"
+     ]
+    }
+   ],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "staff_report",
+    "confidence": "certain",
+    "also": [
+     {
+      "key": "regulation",
+      "confidence": "certain",
+      "signals": [
+       "an enacting formula in the operative voice",
+       "a recital chain of 6 WHEREAS clause(s)",
+       "an instrument caption",
+       "3 codification phrase(s)"
+      ]
+     }
+    ],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "doctypes:fw20:directory_nss@held": {
+   "chars": 2092,
+   "type": "staff_directory",
+   "confidence": "certain",
+   "signals": [
+    "12 distinct contact address(es) at one organisation's domain (oaklandca.gov), 100% of the 12 in the document",
+    "12 distinct phone number(s)",
+    "it names itself in its title line (\"Neighborhood Services Staff Beat & Program Directory\")"
+   ],
+   "considered": [
+    {
+     "key": "staff_directory",
+     "confidence": "certain",
+     "signals": [
+      "12 distinct contact address(es) at one organisation's domain (oaklandca.gov), 100% of the 12 in the document",
+      "12 distinct phone number(s)",
+      "it names itself in its title line (\"Neighborhood Services Staff Beat & Program Directory\")"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "staff_directory",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "doctypes:fw20:directory_nsd@held": {
+   "chars": 813,
+   "type": "staff_directory",
+   "confidence": "certain",
+   "signals": [
+    "11 distinct contact address(es) at one organisation's domain (oaklandca.gov), 100% of the 11 in the document",
+    "11 distinct phone number(s)",
+    "it names itself in its title line (\"Neighborhood Services Division Staff\")"
+   ],
+   "considered": [
+    {
+     "key": "staff_directory",
+     "confidence": "certain",
+     "signals": [
+      "11 distinct contact address(es) at one organisation's domain (oaklandca.gov), 100% of the 11 in the document",
+      "11 distinct phone number(s)",
+      "it names itself in its title line (\"Neighborhood Services Division Staff\")"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "staff_directory",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "doctypes:fw20:directory_cro@held": {
+   "chars": 3151,
+   "type": "staff_directory",
+   "confidence": "likely",
+   "signals": [
+    "40 distinct contact address(es) at one organisation's domain (oaklandnet.com), 100% of the 40 in the document",
+    "40 distinct phone number(s)"
+   ],
+   "considered": [
+    {
+     "key": "staff_directory",
+     "confidence": "likely",
+     "signals": [
+      "40 distinct contact address(es) at one organisation's domain (oaklandnet.com), 100% of the 40 in the document",
+      "40 distinct phone number(s)"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "staff_directory",
+    "confidence": "likely",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "doctypes:fw20:directory_benefits@held": {
+   "chars": 3369,
+   "type": "staff_directory",
+   "confidence": "certain",
+   "signals": [
+    "10 distinct contact address(es) at one organisation's domain (oaklandca.gov), 100% of the 10 in the document",
+    "24 distinct phone number(s)",
+    "it names itself in its title line (\"BENEFITS CONTACTS\")"
+   ],
+   "considered": [
+    {
+     "key": "staff_directory",
+     "confidence": "certain",
+     "signals": [
+      "10 distinct contact address(es) at one organisation's domain (oaklandca.gov), 100% of the 10 in the document",
+      "24 distinct phone number(s)",
+      "it names itself in its title line (\"BENEFITS CONTACTS\")"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "staff_directory",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "doctypes:fw20:neg_candidates@held": {
+   "chars": 2464,
+   "type": "generic",
+   "confidence": "none",
+   "signals": [],
+   "considered": [],
+   "also": [],
+   "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
+   "read": {
+    "determined": true,
+    "type": "generic",
+    "confidence": "none",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "doctypes:fw20:neg_schedule@held": {
+   "chars": 3318,
+   "type": "generic",
+   "confidence": "none",
+   "signals": [],
+   "considered": [],
+   "also": [],
+   "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
+   "read": {
+    "determined": true,
+    "type": "generic",
+    "confidence": "none",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "doctypes:fw20:neg_recycling@held": {
+   "chars": 5187,
+   "type": "generic",
+   "confidence": "none",
+   "signals": [],
+   "considered": [],
+   "also": [],
+   "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
+   "read": {
+    "determined": true,
+    "type": "generic",
+    "confidence": "none",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "doctypes:fw20:neg_wdb@held": {
+   "chars": 851,
+   "type": "staff_roster",
+   "confidence": "likely",
+   "signals": [
+    "18 line(s) carry a name with a title, unit or organisation beside it",
+    "18 of 20 lines carry a name (90%)"
+   ],
+   "considered": [
+    {
+     "key": "staff_roster",
+     "confidence": "likely",
+     "signals": [
+      "18 line(s) carry a name with a title, unit or organisation beside it",
+      "18 of 20 lines carry a name (90%)"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "staff_roster",
+    "confidence": "likely",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "doctypes:fw20:neg_medical@held": {
+   "chars": 1654,
+   "type": "generic",
+   "confidence": "none",
+   "signals": [],
+   "considered": [],
+   "also": [],
+   "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
+   "read": {
+    "determined": true,
+    "type": "generic",
+    "confidence": "none",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "doctypes:pa:agenda@pa": {
+   "chars": 425,
+   "type": "meeting_agenda",
+   "confidence": "certain",
+   "signals": [
+    "4 legislation file number line(s)",
+    "Subject:/Recommendation: item blocks",
+    "names itself as an agenda on 3 lines, which is page furniture",
+    "meeting front matter"
+   ],
+   "considered": [
+    {
+     "key": "meeting_agenda",
+     "confidence": "certain",
+     "signals": [
+      "4 legislation file number line(s)",
+      "Subject:/Recommendation: item blocks",
+      "names itself as an agenda on 3 lines, which is page furniture",
+      "meeting front matter"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "meeting_agenda",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "doctypes:pa:minutes@pa": {
+   "chars": 782,
+   "type": "meeting_minutes",
+   "confidence": "certain",
+   "signals": [
+    "names itself as minutes on 3 lines, which is page furniture",
+    "motions made, seconded and carried or failed",
+    "2 roll-call vote tally label(s)",
+    "a meeting that convened and adjourned at stated times",
+    "an attendance roster"
+   ],
+   "considered": [
+    {
+     "key": "meeting_minutes",
+     "confidence": "certain",
+     "signals": [
+      "names itself as minutes on 3 lines, which is page furniture",
+      "motions made, seconded and carried or failed",
+      "2 roll-call vote tally label(s)",
+      "a meeting that convened and adjourned at stated times",
+      "an attendance roster"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "meeting_minutes",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "doctypes:pa:report@pa": {
+   "chars": 377,
+   "type": "staff_report",
+   "confidence": "certain",
+   "signals": [
+    "a memorandum header of 4 labels in 36 characters at the top",
+    "4 report template section heading(s)",
+    "a staff sign-off",
+    "names itself as a report on a line of its own"
+   ],
+   "considered": [
+    {
+     "key": "staff_report",
+     "confidence": "certain",
+     "signals": [
+      "a memorandum header of 4 labels in 36 characters at the top",
+      "4 report template section heading(s)",
+      "a staff sign-off",
+      "names itself as a report on a line of its own"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "staff_report",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "doctypes:pa:bylaw@pa": {
+   "chars": 382,
+   "type": "regulation",
+   "confidence": "certain",
+   "signals": [
+    "an enacting formula in the operative voice",
+    "a recital chain of 2 WHEREAS clause(s)",
+    "an instrument caption",
+    "2 codification phrase(s)"
+   ],
+   "considered": [
+    {
+     "key": "regulation",
+     "confidence": "certain",
+     "signals": [
+      "an enacting formula in the operative voice",
+      "a recital chain of 2 WHEREAS clause(s)",
+      "an instrument caption",
+      "2 codification phrase(s)"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "regulation",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "doctypes:pa:directory@pa": {
+   "chars": 346,
+   "type": "staff_directory",
+   "confidence": "certain",
+   "signals": [
+    "6 distinct contact address(es) at one organisation's domain (portalder.test), 100% of the 6 in the document",
+    "6 distinct phone number(s)",
+    "it names itself in its title line (\"Harbor Staff Directory\")"
+   ],
+   "considered": [
+    {
+     "key": "staff_directory",
+     "confidence": "certain",
+     "signals": [
+      "6 distinct contact address(es) at one organisation's domain (portalder.test), 100% of the 6 in the document",
+      "6 distinct phone number(s)",
+      "it names itself in its title line (\"Harbor Staff Directory\")"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "staff_directory",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "doctypes:pa:calendar@pa": {
+   "chars": 844,
+   "type": "meeting_calendar",
+   "confidence": "certain",
+   "signals": [
+    "meeting detail links",
+    "calendar address",
+    "a date-range control",
+    "agenda and minutes columns"
+   ],
+   "considered": [
+    {
+     "key": "meeting_calendar",
+     "confidence": "certain",
+     "signals": [
+      "meeting detail links",
+      "calendar address",
+      "a date-range control",
+      "agenda and minutes columns"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "meeting_calendar",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "aspnet_webforms",
+     "kind": "index"
+    }
+   }
+  },
+  "doctypes:pa:calendar_cancelled@pa": {
+   "chars": 710,
+   "type": "meeting_calendar",
+   "confidence": "certain",
+   "signals": [
+    "meeting detail links",
+    "calendar address",
+    "a date-range control",
+    "agenda and minutes columns"
+   ],
+   "considered": [
+    {
+     "key": "meeting_calendar",
+     "confidence": "certain",
+     "signals": [
+      "meeting detail links",
+      "calendar address",
+      "a date-range control",
+      "agenda and minutes columns"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "meeting_calendar",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "aspnet_webforms",
+     "kind": "index"
+    }
+   }
+  },
+  "doctypes:pa:agenda@lk": {
+   "chars": 425,
+   "type": "meeting_agenda",
+   "confidence": "likely",
+   "signals": [
+    "Subject:/Recommendation: item blocks",
+    "names itself as an agenda on 3 lines, which is page furniture",
+    "meeting front matter"
+   ],
+   "considered": [
+    {
+     "key": "meeting_agenda",
+     "confidence": "likely",
+     "signals": [
+      "Subject:/Recommendation: item blocks",
+      "names itself as an agenda on 3 lines, which is page furniture",
+      "meeting front matter"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "meeting_agenda",
+    "confidence": "likely",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "doctypes:pa:minutes@lk": {
+   "chars": 782,
+   "type": "meeting_minutes",
+   "confidence": "certain",
+   "signals": [
+    "names itself as minutes on 3 lines, which is page furniture",
+    "motions made, seconded and carried or failed",
+    "2 roll-call vote tally label(s)",
+    "a meeting that convened and adjourned at stated times",
+    "an attendance roster"
+   ],
+   "considered": [
+    {
+     "key": "meeting_minutes",
+     "confidence": "certain",
+     "signals": [
+      "names itself as minutes on 3 lines, which is page furniture",
+      "motions made, seconded and carried or failed",
+      "2 roll-call vote tally label(s)",
+      "a meeting that convened and adjourned at stated times",
+      "an attendance roster"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "meeting_minutes",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "doctypes:pa:report@lk": {
+   "chars": 377,
+   "type": "generic",
+   "confidence": "none",
+   "signals": [],
+   "considered": [],
+   "also": [],
+   "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
+   "read": {
+    "determined": true,
+    "type": "generic",
+    "confidence": "none",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "doctypes:pa:bylaw@lk": {
+   "chars": 382,
+   "type": "regulation",
+   "confidence": "certain",
+   "signals": [
+    "an enacting formula in the operative voice",
+    "a recital chain of 2 WHEREAS clause(s)",
+    "1 codification phrase(s)"
+   ],
+   "considered": [
+    {
+     "key": "regulation",
+     "confidence": "certain",
+     "signals": [
+      "an enacting formula in the operative voice",
+      "a recital chain of 2 WHEREAS clause(s)",
+      "1 codification phrase(s)"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "regulation",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "doctypes:pa:directory@lk": {
+   "chars": 346,
+   "type": "staff_directory",
+   "confidence": "certain",
+   "signals": [
+    "6 distinct contact address(es) at one organisation's domain (portalder.test), 100% of the 6 in the document",
+    "6 distinct phone number(s)",
+    "it names itself in its title line (\"Harbor Staff Directory\")"
+   ],
+   "considered": [
+    {
+     "key": "staff_directory",
+     "confidence": "certain",
+     "signals": [
+      "6 distinct contact address(es) at one organisation's domain (portalder.test), 100% of the 6 in the document",
+      "6 distinct phone number(s)",
+      "it names itself in its title line (\"Harbor Staff Directory\")"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "staff_directory",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "doctypes:pa:calendar@lk": {
+   "chars": 844,
+   "type": "meeting_calendar",
+   "confidence": "certain",
+   "signals": [
+    "meeting detail links",
+    "calendar address",
+    "a date-range control",
+    "agenda and minutes columns"
+   ],
+   "considered": [
+    {
+     "key": "meeting_calendar",
+     "confidence": "certain",
+     "signals": [
+      "meeting detail links",
+      "calendar address",
+      "a date-range control",
+      "agenda and minutes columns"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "meeting_calendar",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "aspnet_webforms",
+     "kind": "index"
+    }
+   }
+  },
+  "doctypes:pa:calendar_cancelled@lk": {
+   "chars": 710,
+   "type": "meeting_calendar",
+   "confidence": "certain",
+   "signals": [
+    "meeting detail links",
+    "calendar address",
+    "a date-range control",
+    "agenda and minutes columns"
+   ],
+   "considered": [
+    {
+     "key": "meeting_calendar",
+     "confidence": "certain",
+     "signals": [
+      "meeting detail links",
+      "calendar address",
+      "a date-range control",
+      "agenda and minutes columns"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "meeting_calendar",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "aspnet_webforms",
+     "kind": "index"
+    }
+   }
+  },
+  "doctypes:pa:agenda@empty": {
+   "chars": 425,
+   "type": "meeting_agenda",
+   "confidence": "likely",
+   "signals": [
+    "Subject:/Recommendation: item blocks",
+    "names itself as an agenda on 3 lines, which is page furniture",
+    "meeting front matter"
+   ],
+   "considered": [
+    {
+     "key": "meeting_agenda",
+     "confidence": "likely",
+     "signals": [
+      "Subject:/Recommendation: item blocks",
+      "names itself as an agenda on 3 lines, which is page furniture",
+      "meeting front matter"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "meeting_agenda",
+    "confidence": "likely",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "doctypes:pa:minutes@empty": {
+   "chars": 782,
+   "type": "meeting_minutes",
+   "confidence": "certain",
+   "signals": [
+    "names itself as minutes on 3 lines, which is page furniture",
+    "motions made, seconded and carried or failed",
+    "2 roll-call vote tally label(s)",
+    "a meeting that convened and adjourned at stated times",
+    "an attendance roster"
+   ],
+   "considered": [
+    {
+     "key": "meeting_minutes",
+     "confidence": "certain",
+     "signals": [
+      "names itself as minutes on 3 lines, which is page furniture",
+      "motions made, seconded and carried or failed",
+      "2 roll-call vote tally label(s)",
+      "a meeting that convened and adjourned at stated times",
+      "an attendance roster"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "meeting_minutes",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "doctypes:pa:report@empty": {
+   "chars": 377,
+   "type": "generic",
+   "confidence": "none",
+   "signals": [],
+   "considered": [],
+   "also": [],
+   "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
+   "read": {
+    "determined": true,
+    "type": "generic",
+    "confidence": "none",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "doctypes:pa:bylaw@empty": {
+   "chars": 382,
+   "type": "regulation",
+   "confidence": "certain",
+   "signals": [
+    "an enacting formula in the operative voice",
+    "a recital chain of 2 WHEREAS clause(s)",
+    "1 codification phrase(s)"
+   ],
+   "considered": [
+    {
+     "key": "regulation",
+     "confidence": "certain",
+     "signals": [
+      "an enacting formula in the operative voice",
+      "a recital chain of 2 WHEREAS clause(s)",
+      "1 codification phrase(s)"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "regulation",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "doctypes:pa:directory@empty": {
+   "chars": 346,
+   "type": "staff_directory",
+   "confidence": "certain",
+   "signals": [
+    "6 distinct contact address(es) at one organisation's domain (portalder.test), 100% of the 6 in the document",
+    "6 distinct phone number(s)",
+    "it names itself in its title line (\"Harbor Staff Directory\")"
+   ],
+   "considered": [
+    {
+     "key": "staff_directory",
+     "confidence": "certain",
+     "signals": [
+      "6 distinct contact address(es) at one organisation's domain (portalder.test), 100% of the 6 in the document",
+      "6 distinct phone number(s)",
+      "it names itself in its title line (\"Harbor Staff Directory\")"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "staff_directory",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "doctypes:pa:calendar@empty": {
+   "chars": 844,
+   "type": "meeting_calendar",
+   "confidence": "certain",
+   "signals": [
+    "meeting detail links",
+    "calendar address",
+    "a date-range control",
+    "agenda and minutes columns"
+   ],
+   "considered": [
+    {
+     "key": "meeting_calendar",
+     "confidence": "certain",
+     "signals": [
+      "meeting detail links",
+      "calendar address",
+      "a date-range control",
+      "agenda and minutes columns"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "meeting_calendar",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "aspnet_webforms",
+     "kind": "index"
+    }
+   }
+  },
+  "doctypes:pa:calendar_cancelled@empty": {
+   "chars": 710,
+   "type": "meeting_calendar",
+   "confidence": "certain",
+   "signals": [
+    "meeting detail links",
+    "calendar address",
+    "a date-range control",
+    "agenda and minutes columns"
+   ],
+   "considered": [
+    {
+     "key": "meeting_calendar",
+     "confidence": "certain",
+     "signals": [
+      "meeting detail links",
+      "calendar address",
+      "a date-range control",
+      "agenda and minutes columns"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "meeting_calendar",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "aspnet_webforms",
+     "kind": "index"
+    }
+   }
+  },
+  "roster:roster_committee": {
+   "chars": 2485,
+   "type": "staff_roster",
+   "confidence": "certain",
+   "signals": [
+    "32 line(s) carry a name with a title, unit or organisation beside it",
+    "58 of 79 lines carry a name (73%)",
+    "it names itself a roster (\"ROSTER AND ASSIGNED STAFF\")"
+   ],
+   "considered": [
+    {
+     "key": "staff_roster",
+     "confidence": "certain",
+     "signals": [
+      "32 line(s) carry a name with a title, unit or organisation beside it",
+      "58 of 79 lines carry a name (73%)",
+      "it names itself a roster (\"ROSTER AND ASSIGNED STAFF\")"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "staff_roster",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "roster:roster_committee_rev": {
+   "chars": 2492,
+   "type": "staff_roster",
+   "confidence": "certain",
+   "signals": [
+    "32 line(s) carry a name with a title, unit or organisation beside it",
+    "58 of 82 lines carry a name (71%)",
+    "it names itself a roster (\"ROSTER AND ASSIGNED STAFF\")"
+   ],
+   "considered": [
+    {
+     "key": "staff_roster",
+     "confidence": "certain",
+     "signals": [
+      "32 line(s) carry a name with a title, unit or organisation beside it",
+      "58 of 82 lines carry a name (71%)",
+      "it names itself a roster (\"ROSTER AND ASSIGNED STAFF\")"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "staff_roster",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "roster:roster_rps": {
+   "chars": 5179,
+   "type": "staff_roster",
+   "confidence": "certain",
+   "signals": [
+    "131 line(s) carry a name with a title, unit or organisation beside it",
+    "148 of 179 lines carry a name (83%)",
+    "it names itself a roster (\"Reimagining Public Safety - Advisory Board Rosters\")"
+   ],
+   "considered": [
+    {
+     "key": "staff_roster",
+     "confidence": "certain",
+     "signals": [
+      "131 line(s) carry a name with a title, unit or organisation beside it",
+      "148 of 179 lines carry a name (83%)",
+      "it names itself a roster (\"Reimagining Public Safety - Advisory Board Rosters\")"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "staff_roster",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "roster:roster_wdb": {
+   "chars": 851,
+   "type": "staff_roster",
+   "confidence": "likely",
+   "signals": [
+    "18 line(s) carry a name with a title, unit or organisation beside it",
+    "18 of 20 lines carry a name (90%)"
+   ],
+   "considered": [
+    {
+     "key": "staff_roster",
+     "confidence": "likely",
+     "signals": [
+      "18 line(s) carry a name with a title, unit or organisation beside it",
+      "18 of 20 lines carry a name (90%)"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "staff_roster",
+    "confidence": "likely",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "roster:chart_opd": {
+   "chars": 1217,
+   "type": "org_chart",
+   "confidence": "certain",
+   "signals": [
+    "43 unit line(s), 2 post line(s), 2 holder line(s)",
+    "84% of its lines are box labels; its median line is 3 word(s)",
+    "it names itself a chart (\"Organizational Chart\")"
+   ],
+   "considered": [
+    {
+     "key": "org_chart",
+     "confidence": "certain",
+     "signals": [
+      "43 unit line(s), 2 post line(s), 2 holder line(s)",
+      "84% of its lines are box labels; its median line is 3 word(s)",
+      "it names itself a chart (\"Organizational Chart\")"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "org_chart",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "roster:chart_opd_bos": {
+   "chars": 506,
+   "type": "org_chart",
+   "confidence": "likely",
+   "signals": [
+    "13 unit line(s), 5 post line(s), 2 holder line(s)",
+    "74% of its lines are box labels; its median line is 2 word(s)"
+   ],
+   "considered": [
+    {
+     "key": "org_chart",
+     "confidence": "likely",
+     "signals": [
+      "13 unit line(s), 5 post line(s), 2 holder line(s)",
+      "74% of its lines are box labels; its median line is 2 word(s)"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "org_chart",
+    "confidence": "likely",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "roster:chart_cao_2021": {
+   "chars": 1143,
+   "type": "org_chart",
+   "confidence": "certain",
+   "signals": [
+    "0 unit line(s), 4 post line(s), 19 holder line(s)",
+    "49% of its lines are box labels; its median line is 2 word(s)",
+    "it names itself a chart (\"Organizational Chart\")"
+   ],
+   "considered": [
+    {
+     "key": "org_chart",
+     "confidence": "certain",
+     "signals": [
+      "0 unit line(s), 4 post line(s), 19 holder line(s)",
+      "49% of its lines are box labels; its median line is 2 word(s)",
+      "it names itself a chart (\"Organizational Chart\")"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "org_chart",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "roster:chart_cao_2024": {
+   "chars": 2198,
+   "type": "org_chart",
+   "confidence": "certain",
+   "signals": [
+    "4 unit line(s), 20 post line(s), 18 holder line(s)",
+    "69% of its lines are box labels; its median line is 4 word(s)",
+    "it names itself a chart (\"Organizational Chart\")"
+   ],
+   "considered": [
+    {
+     "key": "org_chart",
+     "confidence": "certain",
+     "signals": [
+      "4 unit line(s), 20 post line(s), 18 holder line(s)",
+      "69% of its lines are box labels; its median line is 4 word(s)",
+      "it names itself a chart (\"Organizational Chart\")"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "org_chart",
+    "confidence": "certain",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "roster:chart_opw": {
+   "chars": 17507,
+   "type": "org_chart",
+   "confidence": "likely",
+   "signals": [
+    "38 unit line(s), 180 post line(s), 538 holder line(s)",
+    "71% of its lines are box labels; its median line is 2 word(s)"
+   ],
+   "considered": [
+    {
+     "key": "org_chart",
+     "confidence": "likely",
+     "signals": [
+      "38 unit line(s), 180 post line(s), 538 holder line(s)",
+      "71% of its lines are box labels; its median line is 2 word(s)"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "org_chart",
+    "confidence": "likely",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "roster:neg_cpab_chart": {
+   "chars": 729,
+   "type": "generic",
+   "confidence": "none",
+   "signals": [],
+   "considered": [],
+   "also": [],
+   "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
+   "read": {
+    "determined": true,
+    "type": "generic",
+    "confidence": "none",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "roster:neg_commenters": {
+   "chars": 26881,
+   "type": "generic",
+   "confidence": "none",
+   "signals": [],
+   "considered": [],
+   "also": [],
+   "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
+   "read": {
+    "determined": true,
+    "type": "generic",
+    "confidence": "none",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "roster:neg_signin": {
+   "chars": 4608,
+   "type": "generic",
+   "confidence": "none",
+   "signals": [],
+   "considered": [],
+   "also": [],
+   "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
+   "read": {
+    "determined": true,
+    "type": "generic",
+    "confidence": "none",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "roster:neg_business": {
+   "chars": 6506,
+   "type": "generic",
+   "confidence": "none",
+   "signals": [],
+   "considered": [],
+   "also": [],
+   "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
+   "read": {
+    "determined": true,
+    "type": "generic",
+    "confidence": "none",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "roster:unread_cao_2023": {
+   "chars": 143,
+   "type": "generic",
+   "confidence": "none",
+   "signals": [],
+   "considered": [],
+   "also": [],
+   "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
+   "read": {
+    "determined": true,
+    "type": "generic",
+    "confidence": "none",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "roster:unread_pbd": {
+   "chars": 0,
+   "type": "generic",
+   "confidence": "none",
+   "signals": [],
+   "considered": [],
+   "also": [],
+   "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
+   "read": {
+    "determined": false
+   }
+  },
+  "budget:document-text": {
+   "chars": 17593,
+   "type": "staff_roster",
+   "confidence": "likely",
+   "signals": [
+    "93 line(s) carry a name with a title, unit or organisation beside it",
+    "141 of 352 lines carry a name (40%)"
+   ],
+   "considered": [
+    {
+     "key": "staff_roster",
+     "confidence": "likely",
+     "signals": [
+      "93 line(s) carry a name with a title, unit or organisation beside it",
+      "141 of 352 lines carry a name (40%)"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "staff_roster",
+    "confidence": "likely",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "budget:volume-300k": {
+   "chars": 300000,
+   "type": "generic",
+   "confidence": "none",
+   "signals": [],
+   "considered": [],
+   "also": [],
+   "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
+   "read": {
+    "determined": true,
+    "type": "generic",
+    "confidence": "none",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "budget:a14": {
+   "chars": 13980,
+   "type": "generic",
+   "confidence": "none",
+   "signals": [],
+   "considered": [],
+   "also": [],
+   "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
+   "read": {
+    "determined": true,
+    "type": "generic",
+    "confidence": "none",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "budget:a19": {
+   "chars": 8047,
+   "type": "generic",
+   "confidence": "none",
+   "signals": [],
+   "considered": [],
+   "also": [],
+   "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
+   "read": {
+    "determined": true,
+    "type": "generic",
+    "confidence": "none",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "budget:a24": {
+   "chars": 15557,
+   "type": "generic",
+   "confidence": "none",
+   "signals": [],
+   "considered": [],
+   "also": [],
+   "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
+   "read": {
+    "determined": true,
+    "type": "generic",
+    "confidence": "none",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "budget:bb23": {
+   "chars": 17592,
+   "type": "staff_roster",
+   "confidence": "likely",
+   "signals": [
+    "93 line(s) carry a name with a title, unit or organisation beside it",
+    "141 of 352 lines carry a name (40%)"
+   ],
+   "considered": [
+    {
+     "key": "staff_roster",
+     "confidence": "likely",
+     "signals": [
+      "93 line(s) carry a name with a title, unit or organisation beside it",
+      "141 of 352 lines carry a name (40%)"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "staff_roster",
+    "confidence": "likely",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "budget:fy2013-15-adopted.csv": {
+   "chars": 180491,
+   "type": "staff_roster",
+   "confidence": "likely",
+   "signals": [
+    "430 line(s) carry a name with a title, unit or organisation beside it",
+    "538 of 575 lines carry a name (94%)"
+   ],
+   "considered": [
+    {
+     "key": "staff_roster",
+     "confidence": "likely",
+     "signals": [
+      "430 line(s) carry a name with a title, unit or organisation beside it",
+      "538 of 575 lines carry a name (94%)"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "staff_roster",
+    "confidence": "likely",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "budget:fy2019-21-adopted.csv": {
+   "chars": 151129,
+   "type": "staff_roster",
+   "confidence": "likely",
+   "signals": [
+    "162 line(s) carry a name with a title, unit or organisation beside it",
+    "337 of 367 lines carry a name (92%)"
+   ],
+   "considered": [
+    {
+     "key": "staff_roster",
+     "confidence": "likely",
+     "signals": [
+      "162 line(s) carry a name with a title, unit or organisation beside it",
+      "337 of 367 lines carry a name (92%)"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "staff_roster",
+    "confidence": "likely",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "budget:m-m1-figures.csv": {
+   "chars": 19338,
+   "type": "generic",
+   "confidence": "none",
+   "signals": [],
+   "considered": [],
+   "also": [],
+   "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
+   "read": {
+    "determined": true,
+    "type": "generic",
+    "confidence": "none",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "client_rendered",
+     "kind": "shell"
+    }
+   }
+  },
+  "court:courtlistener-404.html": {
+   "chars": 34060,
+   "type": "generic",
+   "confidence": "none",
+   "signals": [],
+   "considered": [],
+   "also": [],
+   "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
+   "read": {
+    "determined": true,
+    "type": "generic",
+    "confidence": "none",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "court:courtlistener-4214664-p2.html": {
+   "chars": 409951,
+   "type": "courtlistener_docket",
+   "confidence": "likely",
+   "signals": [
+    "a docket header",
+    "entry rows (div#entry-n)"
+   ],
+   "considered": [
+    {
+     "key": "courtlistener_docket",
+     "confidence": "likely",
+     "signals": [
+      "a docket header",
+      "entry rows (div#entry-n)"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "courtlistener_docket",
+    "confidence": "likely",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "court:courtlistener-4214664-p4.html": {
+   "chars": 198696,
+   "type": "courtlistener_docket",
+   "confidence": "likely",
+   "signals": [
+    "a docket header",
+    "entry rows (div#entry-n)"
+   ],
+   "considered": [
+    {
+     "key": "courtlistener_docket",
+     "confidence": "likely",
+     "signals": [
+      "a docket header",
+      "entry rows (div#entry-n)"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "courtlistener_docket",
+    "confidence": "likely",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "court:courtlistener-sign-in.html": {
+   "chars": 33506,
+   "type": "generic",
+   "confidence": "none",
+   "signals": [],
+   "considered": [],
+   "also": [],
+   "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
+   "read": {
+    "determined": true,
+    "type": "generic",
+    "confidence": "none",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "court:cpuc-A2106021-card.html": {
+   "chars": 21178,
+   "type": "cpuc_proceeding",
+   "confidence": "likely",
+   "signals": [
+    "the proceeding card's fields"
+   ],
+   "considered": [
+    {
+     "key": "cpuc_proceeding",
+     "confidence": "likely",
+     "signals": [
+      "the proceeding card's fields"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "cpuc_proceeding",
+    "confidence": "likely",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "court:cpuc-A2106021-documents-p1.html": {
+   "chars": 102631,
+   "type": "cpuc_proceeding",
+   "confidence": "likely",
+   "signals": [
+    "the documents report (Filing Date, Document Type, Filed By, Description)"
+   ],
+   "considered": [
+    {
+     "key": "cpuc_proceeding",
+     "confidence": "likely",
+     "signals": [
+      "the documents report (Filing Date, Document Type, Filed By, Description)"
+     ]
+    }
+   ],
+   "also": [],
+   "why": null,
+   "read": {
+    "determined": true,
+    "type": "cpuc_proceeding",
+    "confidence": "likely",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "court:cpuc-search.html": {
+   "chars": 26022,
+   "type": "generic",
+   "confidence": "none",
+   "signals": [],
+   "considered": [],
+   "also": [],
+   "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
+   "read": {
+    "determined": true,
+    "type": "generic",
+    "confidence": "none",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "court:ecourt-login.html": {
+   "chars": 14180,
+   "type": "generic",
+   "confidence": "none",
+   "signals": [],
+   "considered": [],
+   "also": [],
+   "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
+   "read": {
+    "determined": true,
+    "type": "generic",
+    "confidence": "none",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "court:ecourt-roa-FICTIONAL.html": {
+   "chars": 3410,
+   "type": "generic",
+   "confidence": "none",
+   "signals": [],
+   "considered": [],
+   "also": [],
+   "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
+   "read": {
+    "determined": true,
+    "type": "generic",
+    "confidence": "none",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  },
+  "court:ecourt-search.html": {
+   "chars": 17738,
+   "type": "generic",
+   "confidence": "none",
+   "signals": [],
+   "considered": [],
+   "also": [],
+   "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described",
+   "read": {
+    "determined": true,
+    "type": "generic",
+    "confidence": "none",
+    "also": [],
+    "parse_error": null,
+    "stack": {
+     "handler": "conservative"
+    }
+   }
+  }
+ }
+}

@@ -11,6 +11,7 @@ import { MEASURED_CSV_TEXT_BOUND_BYTES } from "../../../../src/csv-reader/index.
 
 export const D_MB = 39;
 export const TICK_MS_MAX = 10_000;
+export const FIRST_TICK_MS_MAX = 8_000;   /* G48 (K4670, K4679): G37's 10 s bar with a 1.25x margin on the node child */
 export const XLSX_ROWS = 200_000;
 export const MARKS = ["FIRSTROWMARK", "MIDROWMARK", "LASTROWMARK"];
 /** the cap for a file of `bytes` (N MB = MiB the bytes take in the object): 128 + D - N */
@@ -19,6 +20,8 @@ const csvMax = MEASURED_CSV_TEXT_BOUND_BYTES;
 export const CASES = {
   csv4: async () => ({ label: "G41 4 MB CSV", doc: csvDoc(4 * 1048576) }),
   csv8: async () => ({ label: "G41 8 MB CSV", doc: csvDoc(8 * 1048576) }),
+  csv12: async () => ({ label: "G41 12 MB CSV", doc: csvDoc(12 * 1048576) }),
+  csv16: async () => ({ label: "G41 16 MB CSV", doc: csvDoc(16 * 1048576) }),
   csvmax: async () => ({ label: `G41 ${csvMax / 1048576} MB CSV (csv-reader's MEASURED_CSV_TEXT_BOUND_BYTES)`, doc: csvDoc(csvMax - 8192) }),
   xlsx: async () => ({ label: `G41 ${XLSX_ROWS}-row xlsx`, doc: await xlsxRowsDoc(XLSX_ROWS) }),
 };
@@ -37,6 +40,7 @@ export function failures(r) {
   const d = r.done;
   if (d.left.length) f.push(`the ledger still owes ${d.left} after ${d.ticks} ticks`);
   const slow = r.ticks.filter((t) => t.ms >= TICK_MS_MAX); if (slow.length) f.push(`${slow.length} tick(s) at or over 10 s (max ${Math.max(...slow.map((t) => t.ms))} ms)`);
+  if (r.ticks[0] && r.ticks[0].ms > FIRST_TICK_MS_MAX) f.push(`the first tick took ${r.ticks[0].ms} ms, over ${FIRST_TICK_MS_MAX} ms`);
   const mute = r.ticks.filter((t) => !t.readingFor || t.readingFor.error || !(t.readingFor.state || t.readingFor.failure)); if (mute.length) f.push(`readingFor did not state its state at ${mute.length} tick(s), first: ${JSON.stringify(mute[0] && mute[0].readingFor)}`);
   for (const m of MARKS) {
     if (!(d.found[m] >= 1)) f.push(`${m} is not in the index (capture_text_fts rows: ${d.found[m]})`);
