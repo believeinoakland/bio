@@ -8,6 +8,7 @@ import { createHash } from "node:crypto";
 import { world, stubOf, bucket, NOW } from "./fixture.mjs";
 import { bindPublishedPlane, publishedRoutes, assembleCaseContainer } from "../../../src/publication/worker.mjs";
 import { caseFilePath } from "../../../src/case-grammar/index.mjs";
+import { readContainer, readPart } from "../../../src/ooxml.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 bindPublishedPlane({
@@ -57,7 +58,7 @@ function withDraw(draw, run) {
   try { return run(); } finally { if (real) Object.defineProperty(globalThis.crypto, "getRandomValues", real); else delete globalThis.crypto.getRandomValues; }
 }
 
-export async function build(name, materials, { extraBytes = [], copies = [], projectDraw = null } = {}) {
+export async function build(name, materials, { extraBytes = [], copies = [], projectDraw = null, stored = null } = {}) {
   const w = world(), env = { PUBLISHED: bucket() };
   w.doc(DOC); w.doc(PHOTO);
   const original = capOf(w, PHOTO), docSha = capOf(w, DOC);
@@ -74,8 +75,23 @@ export async function build(name, materials, { extraBytes = [], copies = [], pro
   env.PUBLISHED.m.set(`bio/published/${pin}`, enc(w.text(F)));
   for (const b of extraBytes) env.PUBLISHED.m.set(`bio/published/${hex(b)}`, b);
   for (const ref of copies) registerCopy(w, env, ref);
-  const out = await assembleCaseContainer({ env, stub: stubOf(w), storeName: "bio",
-                                            cs: w.p.caseEditionState(CASE, 1, "parks-group"), via: "test" });
+  let out;
+  if (stored) {
+    /* the case file as it was stored at the G50 base: its files in the published bucket, its manifest recorded as it was */
+    const mb = enc(JSON.stringify(stored.manifest, null, 1));
+    assert.equal(hex(mb), stored.manifest_sha);
+    for (const p of stored.parts) {
+      const zip = Buffer.from(p.bytes_b64, "base64"), zc = readContainer(zip);
+      for (const e of zc.entries) if (e.name !== "manifest.json") { const b = (await readPart(zip, zc, e.name)).bytes; env.PUBLISHED.m.set(`bio/published/${hex(b)}`, b); }
+    }
+    env.PUBLISHED.m.set(`bio/published/${stored.manifest_sha}`, mb);
+    const r = w.p.recordCaseManifest({ caseId: CASE, edition: 1, manifest: stored.manifest, manifestSha: stored.manifest_sha, bytes: mb.length });
+    assert.equal(r.ok, true, JSON.stringify(r));
+    out = { manifest_sha: stored.manifest_sha };
+  } else {
+    out = await assembleCaseContainer({ env, stub: stubOf(w), storeName: "bio",
+                                        cs: w.p.caseEditionState(CASE, 1, "parks-group"), via: "test" });
+  }
   assert.equal(typeof out.manifest_sha, "string", `${name}: ${JSON.stringify(out).slice(0, 400)}`);
   const manifest = JSON.parse(dec(await bytesOf(await call(w, env, "publishedbytes", { sha256: out.manifest_sha }))));
   const parts = [];
@@ -95,9 +111,11 @@ export async function build(name, materials, { extraBytes = [], copies = [], pro
 
 
 export const SCENES = {
-  one_capture: () => build("one", ({ original, docSha }) => [docRow(DOC, docSha), copyRow(PHOTO, original)], { copies: [PHOTO], projectDraw: 9558 }),
-  g1: () => build("g1", ({ original, docSha }) => [docRow(DOC, docSha), copyRow(PHOTO, original), docRow(PHOTO, SECOND_SHA)],
-                  { extraBytes: [SECOND], copies: [PHOTO], projectDraw: 5091 }),
-  g2: () => build("g2", ({ docSha }) => [docRow(DOC, docSha), docRow(DOC, OTHER_SHA, { included: false, rests_under: "supporting" })], { projectDraw: 5673 }),
+  one_capture: (o) => build("one", ({ original, docSha }) => [docRow(DOC, docSha), copyRow(PHOTO, original)], { copies: [PHOTO], projectDraw: 9558, ...o }),
+  g1: (o) => build("g1", ({ original, docSha }) => [docRow(DOC, docSha), copyRow(PHOTO, original), docRow(PHOTO, SECOND_SHA)],
+                   { extraBytes: [SECOND], copies: [PHOTO], projectDraw: 5091, ...o }),
+  g2: (o) => build("g2", ({ docSha }) => [docRow(DOC, docSha), docRow(DOC, OTHER_SHA, { included: false, rests_under: "supporting" })], { projectDraw: 5673, ...o }),
 };
-export const buildScene = (name) => SCENES[name]();
+/** The scene built again with the code as it now stands; with `stored` (the golden of the same scene), instead its case
+ *  file as stored at the G50 base is recorded and served. */
+export const buildScene = (name, stored = null) => SCENES[name]({ stored });
