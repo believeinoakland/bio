@@ -349,8 +349,11 @@ export class Finder {
       ? reading.language.split("-")[0].toLowerCase() : null;
     const cells = reading && reading.cells && typeof reading.cells === "object" && !Array.isArray(reading.cells)
       ? reading.cells : null;
+    /* G41 (K4636): the sheets whose typed cells the reading does not list, because they are interpreted from the held file
+       for a range when a member opens or cites it; the reading names them in `cells_held`. Their text is in `units` whole. */
+    const cellsHeld = new Set(reading && Array.isArray(reading.cells_held) ? reading.cells_held.filter((n) => typeof n === "string") : []);
     return { reading: row ? { content_type: row.content_type, value: reading } : null, units, language: lang, cells,
-             grids: new Map() };
+             cellsHeld, grids: new Map() };
   }
 
   /* `money` and `dates`: over the text units, and over a workbook's typed cells where the reading holds them. A
@@ -630,7 +633,10 @@ export class Finder {
                 not_calculated: x.not_calculated });
         continue;
       }
-      add({ kind: "term", words: cutWords(u ? u.text : r.snippet ?? ""), capture_sha: r.capture_sha,
+      /* G41: a held sheet's unit is a block of many rows; its words are the row (line) holding the term, not the block's head. */
+      const line = u && extent && SHEET_EXTENTS.includes(extent.kind) && d.cellsHeld.has(extent.sheet)
+        ? String(u.text).split("\n").find((l) => hasPhrase(tokensOf(l), phrase)) : null;
+      add({ kind: "term", words: cutWords(line ?? (u ? u.text : r.snippet ?? "")), capture_sha: r.capture_sha,
             extent, origin: FIND_ORIGIN, term: String(term) });
     }
   }
@@ -646,10 +652,11 @@ const SHEET_EXTENTS = Object.freeze(["sheet-cell", "sheet-range"]);
    found run across more than one cell. A member reads it beside `cells: null`, as every `why` of this file is (localize,
    at its one use in `placed`). */
 
-/* A sheet's typed cells by row: `row → [{col, n, at, cell}]` in column order, or null where the reading holds none. */
+/* A sheet's typed cells by row: `row → [{col, n, at, cell}]` in column order, or null where the reading holds none (a sheet
+   it names in `cells_held` has no list: `money` and `dates` read its rendered text, a term hit names its range). */
 function gridOf(d, sheet) {
   if (d.grids.has(sheet)) return d.grids.get(sheet);
-  const list = d.cells && Array.isArray(d.cells[sheet]) ? d.cells[sheet] : null;
+  const list = !d.cellsHeld.has(sheet) && d.cells && Array.isArray(d.cells[sheet]) ? d.cells[sheet] : null;
   let grid = null;
   if (list) {
     grid = new Map();
@@ -694,6 +701,10 @@ function placed(item, d) {
   if (item.table) return { ...out, row: null };
   const m = e.kind === "sheet-cell" && typeof e.cell === "string" ? A1.exec(e.cell) : null;
   const row = m && d ? rowOf(d, e.sheet, Number(m[2])) : null;
+  /* G41: a held sheet's match names its sheet and its unit's range (a row only for a one-row range) with no cells, and says
+     why: its cells are made for a range when it is opened or cited. */
+  if (!row && d && d.cellsHeld.has(e.sheet))
+    return { ...out, cells: null, cells_why: localize("retrieval-browse.findin.cells_held_why", "this sheet's text is read whole and searchable; its cells are interpreted for a range when the sheet is opened or cited, so no row of cells is named here"), row: rowNumberOf(e) };
   return row ? { ...out, cells: row.cells, cells_truncated: row.cells_truncated, not_calculated: row.not_calculated, row: Number(m[2]) }
              : { ...out, cells: null, cells_why: localize("retrieval-browse.findin.no_cells_named", "the reading holds no typed cells for this sheet, or the words found run across cells, so no row of cells is named"), row: null };
 }
