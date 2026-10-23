@@ -104,4 +104,4 @@ Record housekeeping: the Status line conflict from my mail start (a restarted jo
 
 **Requirement lines I propose (BOB writes them).** R1: a source range whose cells the provider answers `cells_truncated` (over the cells limit) is refused `SOURCE_NOT_READ` naming it, nothing written, never a short table. R9: an input whose cells could not be read (a failed or truncated `content.cellsAt`) carries `engine: "undetermined"`, `engine_measured: false`, grade undetermined with why, never `engine: null`; the synchronous reads (R19, R30) answer the mark the last asynchronous entry made, and a sheet input not yet made answers it undetermined. Row owed: `calculations.index.its_cells_could_not_be`.
 
-Size (session_015P7YZfAbM7iah2fh9UyBGM): test runs 9, module lines 3,484
+Size (session_015P7YZfAbM7iah2fh9UyBGM): test runs 9, module lines 3,473
