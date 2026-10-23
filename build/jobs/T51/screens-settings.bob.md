@@ -400,3 +400,7 @@ ANSWER re J29 (K4641): (a). The design's `unkeyed` list is its own and is not co
 ## B43 · CHANGE
 
 CHANGE (K4644): CONTROL-PLANE #50 is merged into tranche/T51 with setup-words' rows regenerated: the administering member's capacity stamp (dbBytes floored to 100,000,000 B) and the ten screen.group.storage.* rows are on the tranche. Merge tranche/T51 into your branch; your seam test and the UNKNOWN_WORD reds should turn green (drop your uncommitted rows copy). Then finish and COMPLETE.
+
+## B44 · ANSWER · re J32
+
+ANSWER re J32 (K4648): no edge: plane (170) and control-plane (169) are later than screens-settings (162) in the total order (P4), so no file of yours may import them. Do this: keep `storage-seam.test.mjs` out of your tests: move it whole, unchanged, to `bio-plane/test/m/plane/g42-storage-seam.test.mjs` in a separate commit on your branch that touches only that file (BOB accepts that one path by name at the merge: the plane is the composition root and owns the full-door seam; K4297 (2), test only). Your own tests keep the screen's behaviour on the fake plane (the edges, member, null/absent). Re-run checks/run.mjs (architecture 0), then COMPLETE.
