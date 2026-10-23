@@ -2353,7 +2353,10 @@ export async function owedFetch(cap, entry, opts = {}) {
       made = { sha256: b.document.capture.sha256, since: stampSecond(), answer: { ok: true, existed: b.existed, document: b.document } };
       try {
         cap.saveCaptureSession({ session: entry.session, locator: ld.locator, primarySha: b.document.capture.sha256, primaryFile: b.document.file, base: ld.base,
-          state: { queue: [], opened_by: opener, ...(typeof st.project === "string" ? { project: st.project } : {}), cls: st.cls, store: storeName, fetch_done: made },
+          state: { queue: [], opened_by: opener, ...(typeof st.project === "string" ? { project: st.project } : {}), cls: st.cls, store: storeName,
+                   /* B33: the delivery reads `fetch_pending` to know this was a parked fetch (control-plane records the member's fetch-done by it); saving replaces the state whole, so it is kept */
+                   ...(st.fetch_pending && typeof st.fetch_pending === "object" ? { fetch_pending: { since: st.fetch_pending.since, declared_bytes: st.fetch_pending.declared_bytes, why: st.fetch_pending.why } } : {}),
+                   fetch_done: made },
           ttlMs: OWED_SESSION_TTL_MS });
       } catch { /* delivered below; a failed delivery then fetches again */ }
     }
