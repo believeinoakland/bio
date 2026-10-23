@@ -595,6 +595,8 @@ Every job: medium effort, claude-sonnet-5-5; its suites then `build/plan/impact.
 | 55 | installer (L11, 173) | G54 (the release carries `observability`; INSTALLER #24) | installer |
 | 56 | entities, money, calculations (L5) | G55 tier 1 then tier 2 (ENTITIES #20, MONEY #8, CALCULATIONS #9) | each its own |
 | 57 | scheduler (141), op-grades (143), notice-producers (149), op-declarations (154) | G55 tier 2 (SCHEDULER #41, OP-GRADES #25, NOTICE-PRODUCERS #16; a CHANGE to OP-DECLARATIONS #36) | each its own |
+| 58 | ratification (L8, 116) | G57 (owner: the sweep heals a finding's `bundle.md` by R60; RATIFICATION #32, K4724) | ratification |
+| 59 | plane (L11, 171) | G55 (L residual: the real alarm drives the `ingest` consumer, K4726), then G57 (the plane test, by CHANGE after 58 merges; PLANE #53) | plane |
 
 **BOB's `uses` edges (recorded here, `order.mjs` unchanged):** notice-producers gains `capture`; screens-inquiry already has `provenance`; screens-daily and screens-publish gain nothing (they call the ops). **Cross-job notes:** scheduler's B3/B4 must be merged before plane's seam tests can pass (scheduler is layer 10, before plane; until then they stay red by name). SCHEDULER #39 names one test in `bio-plane/test/m/plane/plane.test.mjs` that encodes "only pulled earlier": BOB fixes it, test only (K4297 (2)). The plane job must run `plane` `release` (R24) knowing it is accepted by name.
 
