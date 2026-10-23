@@ -377,3 +377,13 @@ The failure J17 reported (memory.test.mjs BUDGET-2024-APP, 87 MB heap) did not r
 Checks: format, architecture, channels 0 failures; coverage 6673 of 6673; words 18524, inline 0, plain 0, testcopy 0 (unchanged); ownership 5 files, 0 failures. Pushed.
 Requirement lines proposed: R35 as in J17; R43 stands as written. K4208: no census op changes. No new sentence.
 Size (session_019VpajmgG3BFzWYz8moVQRC): test runs 16, module lines 2230
+
+## J19 · BLOCKED
+
+BLOCKED, cause: providers not merged (needs BOB to merge them to tranche/T51; not a Bob decision).
+
+B20 START says csv-reader #3 and office-readers #15 are merged and TEST-SUPPORT #9's shim is on tranche/T51. After merging origin/tranche/T51 (c7ee6ccfc2 on my branch) none of the three is there:
+- no 'cellsIn' and no INLINE_CELLS_MAX_BYTES anywhere in bio-plane/src (grep over the merged tree finds them only in build/ notes, rulings and mailboxes);
+- bio-plane/test/platform-sqlite.mjs does not exist;
+- origin/job/T51/csv-reader (6fecaae76a), origin/job/T51/office-readers (1ec121a9d9) and origin/job/T51/test-support (e1b7913b6d) are not ancestors of my branch.
+Without the entries' cellsIn I cannot write the failing-first g41-held test through the real merged entries (rule 3), and cannot pass inlineCellsMax at the entry call (D2 part 0). I have changed nothing. Please merge those three jobs into tranche/T51 and ring me; I then merge tranche/T51 and do the whole entry (D2 parts 0 to 3). I did the start fix from B20's FIRST paragraph (stale local branch moved to stale/ and re-checked out; mail start pushed).
