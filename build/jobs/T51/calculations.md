@@ -75,3 +75,19 @@ Size (session_013Qn9ospdGZ85m84zbBg6sF): test runs 6, module lines 3428
 ## J5 · COMPLETE
 
 G24 done at 60e1b785bf. A pattern's denominator now says capped: true and of_total (the whole) whenever its gather stopped at the 2,000 bound (duty transitions, flow instances; posting says capped with of_total null, and its loop now stops at the bound). Failing-first through runPatterns over real duties: 2,500 transitions red (n 2000, unflagged), now capped/of_total 2500; 1,500 control unflagged; same for flow. Calculations 65/65 green (R32 red now passes after merging tranche/T51). checks/run.mjs and ownership: 0 failures. Platform N; new runs only; no new words, no census key change. Nothing deferred. Record: build/jobs/T51/calculations.md, section Round 6 G24.
+
+## J6 · BLOCKED
+
+BLOCKED · cause: provider not merged (your merge order); not tests, not Bob, not context (about 12 % used).
+
+Read in full: the START's reading set (plan section 0 and G41, diagnosis-R6-g41, g40 sections 1-3, rulings K4630-K4642 via grep of the lines, my requirements, calculations/index.mjs sites). Merged tranche/T51 at 4dbc2cc2be into job/T51/calculations. No code changed yet.
+
+What blocks the entry. On tranche/T51 (and on every provider's job branch, which differs from tranche only by mail commits, checked with git diff):
+1. TEST-SUPPORT #9's preload is not on tranche/T51: bio-plane/test/platform-sqlite.mjs does not exist; it sits only on job/T51/test-support (5a7d10faee). The START says: if its file is not yet on tranche/T51, merge it first, and if still not there post BLOCKED naming it. I do not merge another job's branch.
+2. content.cellsAt is still synchronous (content/index.mjs:1286, #officeOf :1273 reads reading.cells only); no cellsOf in extraction, no cells_held / inlineCellsMax anywhere in csv-reader, office-readers, reading-pipeline, extraction. The START says "providers content #18 and extraction #38 are merged"; they are not (their sessions CONTENT #19, EXTRACTION #38 have just started, only START mail commits so far).
+
+So my failing-first tests (a)-(c) through the real merged content and extraction cannot be written red for the stated reason, and an await on a sync cellsAt would change nothing I can prove. I can write the code against the contract now (await content.cellsAt at :380, :688 and in #engineOf with its callers; cells_truncated and failed cellsAt answer an explicit undetermined engine; range over CELLS_RANGE_MAX stated), but I will not claim red/green without the providers.
+
+Smallest thing I need: CONTENT #19 merged into tranche/T51 (with csv-reader, office-readers, reading-pipeline and extraction before it, per your order) and TEST-SUPPORT #9's preload merged. Tell me by CHANGE or RESUME when they are in; I will then merge tranche/T51 and do the entry. If you would rather I start the code now against the contract and add the real-path tests after the merge, say so in an ANSWER.
+
+Record housekeeping: the Status line conflict from my mail start (a restarted job keeps its cursor) was resolved to handled B3 then advanced by mail done to B4.
