@@ -7,17 +7,17 @@ import { PublicRead } from "../../../src/public-read/index.mjs";
 import { STRENGTH_AXES } from "../../../src/strength/arithmetic.mjs";
 import { W } from "./fixture.mjs";
 
-const V1 = "bio-case-file/1", V2 = "bio-case-file/2", V3 = "bio-case-file/3";
+const V1 = "bio-case-file/1", V2 = "bio-case-file/2", V3 = "bio-case-file/3", V4 = "bio-case-file/4";
 /* Every word a specification spells as code: each backticked span's identifiers. */
 const codeOf = (spec) => new Set([...spec.matchAll(/`([^`]+)`/g)].flatMap((m) => [m[1], ...m[1].split(/[^A-Za-z0-9_./-]+/)]));
 
 test("R14: the specifications of bio-case-file/1, /2 and /3 are held with this module, oldest first, each version naming the format it specifies; /3 is the current format", () => {
-  assert.deepEqual(CC.CASE_FILE_SPEC_VERSIONS, [V1, V2, V3]);
+  assert.deepEqual(CC.CASE_FILE_SPEC_VERSIONS, [V1, V2, V3, V4]);
   assert.equal(CG.CASE_FILE_FORMAT, V3);
   for (const v of CC.CASE_FILE_SPEC_VERSIONS) {
     assert.ok(CC.CASE_FILE_SPECS[v].startsWith(`# The case file, format ${v}\n`), v);
     assert.ok(CC.CASE_FILE_SPECS[v].includes(`\`format\`: \`${v}\`.`), v);
-    for (const other of [V1, V2, V3].filter((x) => x !== v)) assert.equal(CC.CASE_FILE_SPECS[v].includes(`\`format\`: \`${other}\`.`), false, `${v} names ${other}`);
+    for (const other of [V1, V2, V3, V4].filter((x) => x !== v)) assert.equal(CC.CASE_FILE_SPECS[v].includes(`\`format\`: \`${other}\`.`), false, `${v} names ${other}`);
   }
   /* /2 says how a /1 case file is read: as written, its manifest naming none of the kinds /2 adds */
   assert.match(CC.CASE_FILE_SPECS[V2], /A `bio-case-file\/1` case file is read as written, by its own specification, which is held beside this one: its manifest names none of the kinds version 2 adds/);
@@ -162,7 +162,7 @@ test("R14 (T40; N798; DEC-185 (1); K2394): bio-case-file/3 names an unmarked pho
   assert.equal(SPEC.includes("an unmarked photo's copy has none"), false);
   /* words only: the format and the versions held are as before; /1 and /2 say nothing of it */
   assert.equal(CG.CASE_FILE_FORMAT, V3);
-  assert.deepEqual(CC.CASE_FILE_SPEC_VERSIONS, [V1, V2, V3]);
+  assert.deepEqual(CC.CASE_FILE_SPEC_VERSIONS, [V1, V2, V3, V4]);
   for (const v of [V1, V2]) assert.equal(CC.CASE_FILE_SPECS[v].includes("obscured_marked"), false, v);
 });
 
@@ -184,16 +184,16 @@ test("R15 (DEC-149): at start the module registers casechecker and casefilespec 
   assert.equal(program.ok, true);
   assert.equal(program.result.program, CC.caseCheckerProgramText().text);
   assert.equal(program.result.sha256, CC.caseCheckerProgramText().sha256);
-  for (const v of [V1, V2, V3]) {
+  for (const v of [V1, V2, V3, V4]) {
     const spec = pr.publicRead("casefilespec", { version: v });
-    assert.deepEqual([spec.ok, spec.result.held, spec.result.version, spec.result.text, spec.result.versions], [true, true, v, CC.CASE_FILE_SPECS[v], [V1, V2, V3]]);
+    assert.deepEqual([spec.ok, spec.result.held, spec.result.version, spec.result.text, spec.result.versions], [true, true, v, CC.CASE_FILE_SPECS[v], [V1, V2, V3, V4]]);
   }
   /* an unknown or absent version is answered with the versions held */
   for (const q of [{ version: "bio-case-file/9" }, {}]) {
     const r = pr.publicRead("casefilespec", q);
     assert.equal(r.ok, true);
     assert.equal(r.result.held, false);
-    assert.deepEqual(r.result.versions, [V1, V2, V3]);
+    assert.deepEqual(r.result.versions, [V1, V2, V3, V4]);
     assert.equal("text" in r.result, false);
   }
   /* DEC-149 (T34-87; K1821): the reader has no credential, so the detail speaks of this group's Civicsmith, never "this copy" */
