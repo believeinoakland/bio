@@ -12,7 +12,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { seeded, V, rowOk } from "./fixture.mjs";
-import { KEY } from "../publication/fixture.mjs";
 import { buildCaseFile } from "../../../src/public-read/casefile.mjs";
 import { serialiseContainer } from "../../../src/container.mjs";
 import { caseFileManifestCheck, CASE_FILE_MANIFEST_PATH, CASE_FILE_FORMAT } from "../../../src/case-grammar/index.mjs";
@@ -20,6 +19,8 @@ import { canonicalJson } from "../../../src/record-grammar/json.mjs";
 
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 const utf8 = (s) => new TextEncoder().encode(s);
+/* a signing key in the wire form the case file lists (any key will do: the checker's verdict is not under test here) */
+const KEY = "AAAAC3NzaC1lZDI1NTE5AAAAIKEY";
 const REF = "INFO-2026-0001-minutes";
 const DOC = "---\nformat: bio-case-document/7\ncase: CASE-2026-0001\n---\nthe case\n";
 /* two captures of one source, both held whole: the address re-fetched after it changed, both captures kept */
