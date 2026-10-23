@@ -271,3 +271,19 @@ COMPLETE (B20). opts.note passed in all five plane upload calls; notes shown on 
 ## J22 · QUESTION
 
 Names between R83 and installer-steps R41/R42 are not written, and installer-steps (job branch tip) has none of them yet. Best reading, which I build on: the barrel `newgroup/src/steps/index.mjs` exports `locationHintFor(cf)` (answers a hint string or null); `uploadInstall(token, acct, slug, secrets, release, opts)` takes `opts.storeLocation` (a hint string or null/undefined) beside `opts.profiles` and appends `storeLocationBinding(opts.storeLocation)`; `uploadUpdate` takes no option (it restates the held value, R42). The installer passes the hint at the two uploadInstall sites only (index.mjs:813, :829); its step-3 and own-hosts re-uploads go through bindMembers/uploadUpdate and restate the held value without my help. The cookie field is `sl` (hint string, written only when non-null), so a cookie without it is today's cookie. Please confirm the option name `storeLocation` to INSTALLER-STEPS #8 or tell me another. Until installer-steps merges, my T5 stays red by name and the module cannot import `locationHintFor`; I will carry on and verify the rest with an uncommitted stub that I remove before every commit.
+
+## J23 · REPORT
+
+R83 built, waiting on installer-steps R41/R42 (no COMPLETE while red on the provider, B21).
+
+DONE (newgroup/src/index.mjs, newgroup/test/g83-begin.test.mjs, newgroup/package.json): `POST /begin` in install mode reads `req.cf` (an object only), takes `locationHintFor(req.cf)` from the steps barrel and writes a non-null string as cookie field `sl`; `/callback`'s install run reads `saved.sl` and passes it as `storeLocation` to `uploadInstall` at both creating sites (the first upload and the no-SELF retry). An update writes no `sl` and passes nothing: uploadUpdate restates the held value (installer-steps R42). No cf, a non-object cf, or a null hint writes nothing: the install is as today. No page, word or dialog changed (words check: 0 failures).
+
+TESTS: T5 `newgroup/test/g83-begin.test.mjs` (R83 x3): wnam for NA/-122.4, weur for Frankfurt, enam, sam; six no-hint cases (no cf, empty, AN, no longitude, bad longitude, non-object) install with no STORE_LOCATION in any plane upload and complete; an update with a Frankfurt cf restates the held wnam, and a script holding none gets none. Seen red before the change (binding null). Added to `npm test`. With an UNCOMMITTED stand-in for installer-steps R41/R42 (saved, not committed: scratchpad stub.patch), T5 is 3/3 green and every other newgroup suite has exactly the failure set it has without my change (20 inherited reds: R8, R11, R20, R33 real-size x5, R44, R55, R61, R71, G54, the wizard). The steps suite 105/109 with the stand-in. RED NOW BY NAME, until installer-steps merges and exports `locationHintFor`: the module does not import (SyntaxError: no export `locationHintFor`), so every installer suite is red for that one reason.
+
+OPTION NAME (J22's question, unanswered): I used `storeLocation` on uploadInstall's opts. If installer-steps names it otherwise, tell me and it is a one-word change at two sites.
+
+CHECKS: format 0 failures; architecture 0; coverage 73 of 73 ids named; ownership 0; words 0 failures; impact (origin/tranche/T51..HEAD): 0 other modules affected. STALE ARTIFACT: `newgroup/dist/newgroup.bundled.mjs` (BOB regenerates, and the bundle-fresh test goes red until then).
+
+Next: on BOB's CHANGE (installer-steps merged), merge tranche/T51, run the suites, check, COMPLETE.
+
+Size (session_01Ts5kJbmZvJNjCoP5V2FiQE): test runs 9, module lines 2166
