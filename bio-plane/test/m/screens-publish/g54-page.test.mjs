@@ -122,7 +122,7 @@ test("R22 G54 (screens-publish) a complete edition with no built case file draws
   }
   const q = await pageOf(caseId, { ...answer, case_file: { state: "retrying", code: "NOT_A_CODE" } });
   assert.ok(main(q).querySelector('[data-casefile-code="NOT_A_CODE"]'), "an unknown code is drawn bare, never English");
-  const v = await pageOf(caseId, { ...answer, verification: { case_file: { state: "stopped", code: "MATERIAL_MISSING" } } });
+  const v = await pageOf(caseId, { ...Object.fromEntries(Object.entries(answer).filter(([k]) => k !== "case_file")), verification: { case_file: { state: "stopped", code: "MATERIAL_MISSING" } } });
   assert.ok(main(v).querySelector('[data-casefile="stopped"]'), "verification.case_file is read too");
 });
 
@@ -134,7 +134,7 @@ test("R22 G54 controls: a built case file, or an edition with a manifest, is dra
   assert.equal(dl(built).length, 1, "the download is offered");
   const retried = await pageOf(caseId, { ...answer, manifest_sha: sha, case_file: { state: "retrying", code: "NO_BUCKET" } });
   assert.equal(main(retried).querySelector("[data-casefile]"), null, "a manifest is there: unchanged");
-  const none = await pageOf(caseId, answer);
+  const none = await pageOf(caseId, { ...Object.fromEntries(Object.entries(answer).filter(([k]) => k !== "case_file")), verification: { container: null } });
   assert.equal(main(none).querySelector("[data-casefile]"), null);
   await press(none, "verify");
   assert.ok(drew(none, "screen.published.verify.none"), "today's answer when nothing is stated");
