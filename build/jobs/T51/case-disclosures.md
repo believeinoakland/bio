@@ -1,6 +1,6 @@
 # case-disclosures (T51)
 
-**Status** · session_01XeesuXwbodLb8B9vNN8tcd · depth 2 · WORKING · handled B7
+**Status** · session_01XeesuXwbodLb8B9vNN8tcd · depth 2 · WAITING ON BOB (J10) · handled B7
 
 ## J1 · QUESTION
 
