@@ -121,3 +121,21 @@ G47 COMPLETE after CHANGE B6: tranche merged, g47-attest all 4 cases green (seam
 ## J7 · REPORT
 
 G50 progress (record: Progress section). Goldens g1/g2 recorded at the base 124e62bfa8 (commit 3d4ec4a24f). Module: files read by capture (fileOfMaterial), /4 specified, pinned spec/fixture tests updated, g50-path.test.mjs written with the real buildCaseFile: its 4 provider-dependent tests are red by name (DUPLICATE_PATH today) until case-grammar and public-read merge; controls green. checks format/architecture/coverage/ownership: 0 failures. Two things for BOB: (1) build/requirements/case-checker.md is outside my paths (ownership refuses it), so the R2/R8/R14/R19 amendments are yours: proposed text is the diff in my record. (2) I wait for case-grammar and public-read to merge on tranche/T51; ring me when both have, and I merge, go green, run the old program.mjs once on a /4 file, and complete.
+
+## Completion (G50, START B7, CHANGE B10; CASE-CHECKER #17)
+
+**Entry applied.** `tranche/T51` merged (case-grammar K4698, public-read `bf6da11cd7`). The module's changes are as listed under Progress above (`readParts` adds `capture`; `fileOfMaterial`; the obscured copy and the project/co-attestation checks capture-aware; `spec.mjs` gains `bio-case-file/4`). Census ops owned or changed: none (G50 changes none). B8's note needed no change: no test of mine uses `/4` as an unknown format (the unknown cases are `/9` and `/5`).
+
+**Tests.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit bio-plane/test/m/case-checker/*.test.mjs`: tests 107, pass 105, fail 2 (R13, R25: inherited, stale `program.mjs`). All eight of `g50-path.test.mjs` are green against the real merged providers (the four that were red by name now pass), the R-OLD verdicts of `g50-old-verdicts.json` byte-equal. Impact set: `case-import` tests 156, pass 156. `checks/run.mjs`: format, architecture, coverage (6686 of 6686), channels 0 failures; words: 6 failures, all `case-checker/spec.mjs` (see below). `build.mjs --check`: stale `rows.mjs` note (expected, not mine). `checks/ownership.mjs`: 0 failures.
+
+**The old reader, run once** (the committed `program.mjs`, text extracted to the scratchpad, not committed; two captures of one `ref`, a `/4` file): it departs at `format` ("the format is bio-case-file/3 (or /2 or /1, read as written), and this manifest states bio-case-file/4") and at every discriminated path ("not a path bio-case-file/3 spells for any file"); every finding `did_not_recreate`. As expected.
+
+**Words (for BOB and the design stream, K3944).** Words check shows 6 inline findings, all `spec.mjs`: line 11 is the inherited accepted one; lines 251, 262, 278, 282, 292 are the five new strings of the `/4` specification (`edit(V3, …)` replacements), the same class as the 27 `spec.mjs` strings judged earlier as wire grammar: the public readable specification for implementers of other checkers, pinned to its format version, whose change is a new version. I did not convert them. BOB settles with the design stream; if a conversion is wanted, say so.
+
+**Requirements:** the R2, R8, R14, R19 amendments are BOB's (B9); the proposed text is in the diff of the Progress section.
+
+**Generated artifacts made stale (manifest §14):** `bio-plane/src/case-checker/program.mjs` (regenerate `node bio-plane/src/case-checker/build-program.mjs`; R13, R25 red until then), the plane bundle `bio-plane/dist/bio-plane.bundled.mjs` and its `.bundle.json`, `release/`.
+
+**Deferred:** none. **Found in other modules:** none.
+
+Size (session_01Hzwm1zycMHWjX8D2N1KFXS): test runs 7, module lines 75
