@@ -49,7 +49,9 @@ import { storeId } from "../store-place.mjs";
  *  synchronous work (runtime-limits' `cpu.mjs`), so no clock in the object counts compute. Compute is `do-<route>` minus `in-<route>` minus the hop
  *  to the object (about 115 to 160 ms); a heavy read whose `in-` is small beside its `do-` was computing, not waiting. */
 export const OBJECT_TIMING_HEADER = "server-timing";
-const objectTiming = (t0) => `object;dur=${Math.max(0, Date.now() - t0)}`;
+/** R96 (fix round 8, G106, G120; control-plane R129): beside it, `object-age;dur=<ms>`, the milliseconds since this object instance started (an instant taken
+ *  when the Store is constructed), so the door can say a request met a cold object (`cold.object_ms`). It is read at the answer, from the same clock. */
+const objectTiming = (t0, startedAt) => `object;dur=${Math.max(0, Date.now() - t0)}, object-age;dur=${Math.max(0, Date.now() - startedAt)}`;
 import { deliverOwedRender } from "../control-plane/index.mjs";
 import { doorbellOf, doorbellOps } from "../doorbell/index.mjs";
 import { fileSafetyOf, fileSafetyOps } from "../file-safety/index.mjs";
@@ -165,6 +167,8 @@ const retiredAnswer = () => new Response(JSON.stringify(retiredBody()), { status
 export class Store extends DurableObject {
   /* R95: a room of another generation is inert (set at construction) */
   #retired = false;
+  /* R96: the instant this instance started, for `object-age;dur` */
+  #startedAt = Date.now();
   constructor(ctx, env) {
     super(ctx, env);
     this.ctx = ctx;
@@ -741,8 +745,8 @@ export class Store extends DurableObject {
     const res = await this.#dispatch(req);
     /* R78 (fix round 5, E10; K4530; fix round 6, G12e): the I/O time this object spent on the route, to its response (a stream's, to its first
        byte), whole milliseconds, as `server-timing: object;dur=<ms>`, which the door reads; compute is not in it. The object sets it; a value carried in is replaced. */
-    try { res.headers.set(OBJECT_TIMING_HEADER, objectTiming(t0)); return res; }
-    catch { const headers = new Headers(res.headers); headers.set(OBJECT_TIMING_HEADER, objectTiming(t0)); return new Response(res.body, { status: res.status, statusText: res.statusText, headers }); }
+    try { res.headers.set(OBJECT_TIMING_HEADER, objectTiming(t0, this.#startedAt)); return res; }
+    catch { const headers = new Headers(res.headers); headers.set(OBJECT_TIMING_HEADER, objectTiming(t0, this.#startedAt)); return new Response(res.body, { status: res.status, statusText: res.statusText, headers }); }
   }
   #dispatch(req) {
     return dispatch(req, { routes: (url, body, grant) => this.routes(url, body, grant), membership: () => membershipOf(this.ctx),
