@@ -39,3 +39,35 @@ Base: `tranche/T51` merged into `job/T51/calculations` at 69bd2b3453 (providers 
 Harness: `bio-plane/test/m/calculations/g55.probe.mjs ROWS MODE` (extends `g45.probe.mjs`; prints work counts beside the wall time; no time is asserted anywhere, R-CLOCK). Command: `node --expose-gc --max-old-space-size=82 --import ./bio-plane/test/platform-sqlite.mjs bio-plane/test/m/calculations/g55.probe.mjs ROWS MODE`.
 Shapes: `mixed` = G45 (a)'s table (one row in 60 resolves and is written, the rest unidentified payers); `resolving` = every row resolves and is written (payer P001, payee P002); `crosswalk` = payer resolved through a captured 2,000-vendor crosswalk (50 distinct payers in the rows, one row in 60 unknown), payee through the scheme.
 
+
+(Copied from CALCULATIONS #9's record, `build/jobs/T51/calculations.md`, by BOB #263 at the round end: the job could not write this file, K4717.)
+
+## Base (nothing held)
+| shape | rows | wall | per row | entity lookups | facts written |
+|---|---|---|---|---|---|
+| mixed | 6,000 | 9.5 s (9.9 s on the G45 probe) | 1.58 ms | 6,100 | 100 |
+| resolving | 3,000 | 16.8 s | 5.60 ms | 6,000 | 3,000 |
+| crosswalk | 3,000 | 12.2 s | 4.08 ms | 2,950 | 2,950 |
+
+Profile (`--cpu-prof`, `resolving`, 1,500 rows, 8.7 s total, inclusive share of samples): `ingestMoney` 92.3 %; `entityByIdentifier` 57.8 % (its `view()` 51.2 %); `recordFact` 34.2 % (its `#validate` 30.1 %, `#view` 24.9 %); `combine` (both callers) **74.4 %**. The entry's cause stands (the combine is the bulk); the mixed-table share it reports (`entityByIdentifier` 90 % of 6,000 mixed rows) is the same code with one lookup a row and no fact.
+
+## Views held (a scratch change in a throwaway worktree: `entities.view()` and `money.#view()` memoised on the profile ids; never committed, the worktree removed)
+| shape | rows | wall | per row | note |
+|---|---|---|---|---|
+| mixed | 6,000 | 0.16 s | 0.027 ms | an unidentified row: entry says about 0.02 ms |
+| resolving | 3,000 | 1.55 s | 0.52 ms | two lookups and one fact a row; entry says 0.29 ms in Miniflare |
+| resolving | 18,098 | 9.6 s | 0.53 ms | entry says 5.3 s in Miniflare |
+| crosswalk | 3,000 | 2.62 s | 0.87 ms | the whole-crosswalk scan per call, 2,000 rows, 2,950 times (before the cache) |
+
+**Where this differs from the entry:** a written row costs 0.52-0.53 ms here (node, held views) against the entry's 0.29 ms (Miniflare), so the entry's inline threshold (about 5,000 rows) would be about 2,800 on this node child (1.5 s / 0.53 ms); the crosswalk branch costs 0.87 ms a row against 0.52 for the same count through a scheme, so the per-row scan is real (1.7x), and the cache removes it. The constants for tier 2 follow the Miniflare measure of check L, not this node one; none is set yet.
+
+#### G55 platform check L (CALCULATIONS #9, after the code; K4717)
+
+**Check L (Miniflare/workerd, real DO SQLite and R2; probe `bio-plane/test/m/calculations/g55-L.probe.mjs`, one process at a time, this machine; the module's services are reached through private routes of a Store subclass on a stub, the door's authentication not driven; the clock is frozen in the object, so ms are the parent's wall time around each fetch; reported, never asserted).**
+- Inline, all rows resolving and written: 500 rows 141 ms; 3,000 rows 432 ms; **10,000 rows 1,275 and 1,261 ms (the worst inline case, ≤ 1.5 s)**; 10,001 rows answers started in 57 ms. About 0.127 ms a written row (the entry measured 0.29 ms with the views held: money's and entities' views are now held, and calculations' cache removes the repeated lookups).
+- Slices: 25,000 resolving rows: 13 ticks, each 2,000 facts in 234-292 ms (the last 1,000 in 137 ms), 3,248 ms in all, 25,000 facts; largest stored value 52,001 B. Mixed 18,098 rows (302 resolve): one tick of 200 ms judging all 18,098; largest stored 135,001 B. Mixed 100,000 rows: act 141 ms, 5 ticks of 225-260 ms (20,000 rows and about 333 facts each), 1.2 s in all, 1,667 facts. A slice of 2,000 facts plus 18,000 unwritten rows is about 0.45 s on this measure: far inside the 10 s bar. `INGEST_SLICE_ROWS` 20,000, `INGEST_SLICE_FACTS` 2,000 and `INGEST_MAX_ATTEMPTS` 3 stay as the entry sets them (pinned by test).
+- A 20 MiB table through slices (BOB asked for this one): 100,000 rows of 190-character payers, 19,990,740 bytes: act 536 ms, 5 ticks of 154-204 ms, 887 ms in all, 100,000 rows listed not written, largest stored value 192,001 B. `INGEST_ROWS_MAX` stays 100,000.
+- Kill between slices: `KILL=2`, the runtime disposed after tick 2 (4,000 facts) and a fresh Miniflare over the persisted store: state `ingesting`, `rows_done` 4,000, then the remaining 11 ticks finished: 25,000 facts, 25,000 distinct source rows (no duplicate).
+- Not driven: the real alarm (SCHEDULER #41 is not merged), the HTTP door and a member's login. The ticks are fired by hand through the route; the scheduler job's own L covers the alarm.
+
+**Result:** `INGEST_INLINE_ROWS` = 10,000 (worst inline case 1.26-1.28 s, under 1.5 s); `INGEST_SLICE_ROWS` 20,000, `INGEST_SLICE_FACTS` 2,000, `INGEST_MAX_ATTEMPTS` 3, `INGEST_CACHE_MAX` 10,000, `INGEST_ROWS_MAX` 100,000 (protective bounds, K1881, reported to Bob at the round end). The real alarm is the scheduler's L (SCHEDULER #41, merged K4717); the HTTP door and a member's login are the re-walk's P (G55 (5)).
