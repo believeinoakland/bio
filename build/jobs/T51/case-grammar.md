@@ -116,3 +116,10 @@ Size (session_01Fki6itUmQ4gkEDi9Uhphep): test runs 14, module lines 3070
 ## J5 · COMPLETE
 
 G47 provider done, pushed. See record 'Completion (G47, fix round 6)'. Optional attestation sha (materials.mjs), bio-case-document/9 + caseDocumentFormatFor (formats.mjs), page joins by sha else ref (complete.mjs). 5 new tests red-then-green; module 173/173; format/architecture/coverage/words/ownership clean. Caused reds in OTHER modules' tests (yours to place): case-catalogue checks.test.mjs:54,306 + ratification converted-c.test.mjs:269 use /9 as the unaccepted format (use /10); public-read R23 and case-authoring R55 x3 deepEqual attestation rows need sha:null. Entry correction: case-checker/index.mjs:67-69 is keyed by the case-FILE format, so an old checker on a /9 document answers a C-41.1 error (loud failure, not 'no specification'); your call whether the case-file format should move too. Proposed R1/R12/R14 lines are in the record. Other impact reds equal the clean tranche's.
+
+## J6 · REPORT
+
+Two more pinned assertions in `test/m/case-grammar/casefile.test.mjs` change with G50, besides the one you named (:243, now the four-format list):
+1. :310, the "departs at `format`" case used `bio-case-file/4` as the unknown format. `/4` is accepted now, so it becomes `bio-case-file/5` (still `format:format`). Note for case-checker: a test that uses `/4` as its unknown format needs the same change (`check.test.mjs:54` pins unknown formats).
+2. :279, the null list for `caseFilePath` had `["obscured", [R, sha("c")]]`. That key is now the discriminated spelling `materials/<ref>/<sha>/obscured`, so it is no longer null. I changed it to `["obscured", [R, "c"]]` (a short sha, still null). The discriminated spelling's own cases are in `g50-path.test.mjs`.
+No other pinned test changes so far. The R-OLD goldens are committed first (5bfb623f94): g1 departs `original_carried` twice (its document and its extracted text), g2 has no departure.
