@@ -254,6 +254,8 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
      `refuseSecretDelete`: a secret's removal refused; `refuseMark`: the install's last mark (INSTALL_COMPLETE) refused. */
   grantedScope = CFG.SCOPES.join(" "), containers = "ok", preApps = [], preClasses = {}, settingsBlind = false,
   refuseSecretDelete = false, refuseMark = false,
+  /* G54: the account states each script's `observability` as the last upload sent it; `observabilityDropped` makes it state none (an upload that lost it). */
+  observabilityDropped = false,
   /* T36: `vpc` the Workers VPC service the operator names (R45), `refuseVpc` an upload naming one refused; `logpush` the
      account's Logpush jobs, or "refused" (R46); `refuseSchedules` a schedule refused (R44). */
   vpc, refuseVpc = false, logpush = [], refuseSchedules = false,
@@ -298,6 +300,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
   const tagged_world = builtInFleet ? builtInAssets() : {};
   let recordedGroup = group === undefined ? slug : group === "silent" ? null : group;
   const seeds = [];
+  const observed = new Map();
   let prefix = subdomain;
   const verOf = (b) => (b || []).find((x) => x.name === "VERSION")?.text || null;
   const membersOf = () => {
@@ -356,6 +359,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
     const kept = (acct.get(name) || []).filter((b) => (meta.keep_bindings || []).includes(b.type)
       && !explicit.some((x) => x.name === b.name));
     acct.set(name, [...explicit, ...kept]);
+    observed.set(name, meta.observability);
     sources.set(name, await init.body.get("index.mjs").text());
     if (name === slug) planePuts.push({ meta, bindings: acct.get(slug), source: await init.body.get("index.mjs").text(), form: init.body });
     return cfok({ id: name });
@@ -473,7 +477,7 @@ export async function run({ slug, mode = "install", ai, cookie: givenCookie, sta
       const name = u.split("/workers/scripts/")[1].split("/")[0];
       if (settingsFail || lookupFail.includes(name)) return cferr("upstream trouble", 500);
       /* Settings name each binding, a secret by its name and type only. */
-      return acct.has(name) ? cfok(settingsBlind ? {} : { bindings: (acct.get(name) || []).map(({ text, ...b }) => (b.type === "plain_text" ? { ...b, text } : b)) })
+      return acct.has(name) ? cfok(settingsBlind ? {} : { ...(observed.get(name) === undefined || observabilityDropped ? {} : { observability: observed.get(name) }), bindings: (acct.get(name) || []).map(({ text, ...b }) => (b.type === "plain_text" ? { ...b, text } : b)) })
         : cferr("not found", 404);
     } },
     { m: (u, mth) => /\/workers\/scripts\/[^/]+$/.test(u) && mth === "PUT", f: putScript },
