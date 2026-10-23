@@ -576,3 +576,7 @@ Owner **extraction** or **plane**, by what L shows (extraction's `bio-plane/src/
 **Run:** your suites, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio plane tranche/T51 job/T51/plane`.
 
 **Record and COMPLETE:** what changed (file:line), each failing-first test red then green, the platform figures, suites and checks, the requirement lines you propose (BOB writes `build/requirements/`), census ops, the rows owed to UX-DESIGN, and `Size (<session id>): test runs <n>, module lines <n>`. Then `mail state --set COMPLETE`, post COMPLETE, and ring BOB (a one-time routine into BOB's session, `run_once_at` the next whole minute; `mail addr --bob`).
+
+## B66 · CHANGE
+
+CHANGE (K4739): SITE-PROFILES, RETRIEVAL and SCHEDULER are merged on tranche/T51 (scheduler's G70 adds per-alarm fields to the sched_beat heartbeat). Merge tranche/T51 into your branch. On the merged tree bio-plane/test/m/plane/l79.test.mjs 'R79 L: a restart over the same storage (the deploy's), then a fire: the row owed is read once in all, and the second boot's fire is a sound one' fails (35 s). Find whether scheduler's change or the tree before it causes it (run it on origin/tranche/T51 at 1c73a7bba7 too); if it is the plane's test or seam, fix it in your job; if scheduler's code, REPORT it with the evidence and BOB routes it.
