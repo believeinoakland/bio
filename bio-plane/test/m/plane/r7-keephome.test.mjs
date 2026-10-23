@@ -21,17 +21,17 @@ async function world(home) {
   await pendingOf(x.ctx).consumer().tick(Date.now() + 1000);
   return { x, whole, rows: pendingOf(x.ctx).list() };
 }
-test("R77 (G79): a keep that ends before the document is filed (no home) ends owing nothing: no keep row, no reading row", async () => {
+test("R77 R94 (G79): a keep that ends before the document is filed (no home) ends owing nothing: no keep row, no reading row", async () => {
   const { x, rows, whole } = await world(false);
   assert.deepEqual(x.read, [whole], "the reading was asked once, in the keep's tick");
   assert.deepEqual(rows, []);
 });
-test("R77 (G79) control: a keep whose document is filed (a home) still reads at once and ends", async () => {
+test("R77 R94 (G79) control: a keep whose document is filed (a home) still reads at once and ends", async () => {
   const { x, rows, whole } = await world(true);
   assert.deepEqual(x.read, [whole]);
   assert.deepEqual(rows, []);
 });
-test("R77 (G79) control: a transient failure of the reading after a keep still leaves the reading owed", async () => {
+test("R77 R94 (G79) control: a transient failure of the reading after a keep still leaves the reading owed", async () => {
   const x = await store({});
   recordOf(x.ctx).evidenceStore = () => ({ putFromParts: async () => ({ ok: true }) });
   extractionOf(x.ctx).readHeld = async () => ({ ok: false, reason: "STORE_DOWN" });

@@ -73,6 +73,12 @@ const people = new Map();
 async function person(handle, role = "member", capabilities = null) {
   if (people.has(handle)) return people.get(handle);
   const adm = await founder();
+  /* making an administrator is "changing administrators", which asks for the password again (C-29.42): the founder
+     gives it first, as the screens do (`reauth`) */
+  if (role === "admin") {
+    const ra = await (await plane("/api/?op=reauth", { method: "POST", headers: { ...adm, "content-type": "application/json" }, body: JSON.stringify({ password: PASSWORD }) })).json();
+    assert.equal(ra.ok, true, "the founder's password again: " + JSON.stringify(ra).slice(0, 300));
+  }
   const added = await (await plane("/api/?op=memberadd", { method: "POST", headers: { ...adm, "content-type": "application/json" },
     body: JSON.stringify({ memberId: handle, cover: `cover of ${handle}`, role, capabilities }) })).json();
   const invite = added.result && (added.result.invite || (added.result.invitation && added.result.invitation.invite));
