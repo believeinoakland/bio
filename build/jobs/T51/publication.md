@@ -104,3 +104,30 @@ Size (session_01QheArVvjbWvvMPvEMfwKVF): test runs 9, module lines 2481
 ## J6 · COMPLETE
 
 G47 (store bound): complete. CASE_DOCUMENT_BYTES_MAX = 1,572,864 B (BOB's constant, not lowered; report to Bob, K1881). storeCaseDocument refuses over-bound as CASE_DOCUMENT_TOO_LARGE {bytes, bound}, writes/throws nothing; reauthorSection refuses only a splice that is over the bound AND larger than stored (reauthored:false, too_large, why); shrinking is allowed. Failing-first g47-bound.test.mjs: red (fail 4) then green (4/4); publication suite 158 (157 pass, 0 fail, 1 todo); format/architecture/coverage/words/ownership 0 failures. Measure (publication-owned steps, 128MB old space, preload): store, casedocument, sign, publishedCaseDocumentText ok at the bound (rss 185MB) and at 1.2x = 1,887,436 B (rss 190MB), under 2,098,176. Not measured: the other modules' steps (their providers are unmerged). Miniflare local DO SQLite did NOT enforce the production value bound (accepted 2.1 MB), so only the preload holds it here. No seam test of mine is red. case-inputs drops why/too_large (CASE-INPUTS #8). No op's census keys change. Requirement line proposed in my record. Details: build/jobs/T51/publication.md section G47.
+
+## G47t · completion (PUBLICATION #36; CHANGE B6, K4677)
+
+**Providers' state.** CASE-CARRIAGE #15 (107) had not merged when I did this: `holdMaterials` answers no `capture_sha` yet. My tests drive the real commit with `case-carriage` real and `holdMaterials` answering the `files` the test names; the one seam test over the real carriage is red by name until #15 merges (below).
+
+**What changed.**
+- `bio-plane/src/publication/schema.mjs`: `published_shas` gains `capture_sha TEXT` in the `CREATE TABLE` (:96) and in `ADDITIVE_COLUMNS` (`["published_shas", "capture_sha", "TEXT"]`, with the comment's form: NULL says no single capture is named). Never back-filled. New export `ATTESTATION_SHA_UPSERT`: the seven-column insert with `ON CONFLICT(sha256,bundle_id,path) DO UPDATE SET capture_sha = NULL WHERE capture_sha IS NOT NULL AND capture_sha IS NOT excluded.capture_sha`.
+- `bio-plane/src/publication/index.mjs` (R57 registration, :1171-1181): a `files` entry of kind `attestation` is inserted with that statement and `capture_sha` (lowercased, null when absent); every other kind keeps its six-column `DO NOTHING` insert, so its `capture_sha` is null. The other five writers are untouched. No reader changes; `public-read`'s `shas:` read keeps its explicit columns.
+- R-OLD: a stored NULL is never filled; new rows only.
+
+**Tests, `test/m/publication/g47t-registry.test.mjs` (red first, then green).** Against the unfixed source: 4 of 6 red (k = 2 case; later editions; migration; seam) and the 2 controls green. With the fix: 5 of 6 green; the seam test stays red.
+- (a) k = 2: each attestation row holds its own capture's sha, a carriage-null token null, every other kind null.
+- (b) edition 2 keeps A's token with A, a token A then B becomes NULL, B's own holds B, the same capture again changes nothing, a later commit never fills a NULL, an entry without the key stores null.
+- Controls: (c) a one-capture case's six old columns of every row as the entries state; (d) R-OLD migration: the old six-column table with a token row migrated, six columns identical, `capture_sha` null, a second boot changes nothing, a later commit never fills the null; (e) `declaredTables()` entry of `published_shas` unchanged (exempt, admin-only, none, stored, bundle).
+- **Seam, red by name:** "R57 R40 seam, over the real case-carriage ..." fails today with `[null]` where the stamped capture's sha is expected; it waits for CASE-CARRIAGE #15 (merge `tranche/T51` again when BOB says it merged).
+
+**L (real Durable Object SQLite).** New `test/m/publication/g47t-miniflare.test.mjs` (the plane's Miniflare pattern, `sandbox.mjs` import, narrowed to the one table): in Miniflare with `useSQLite`, publication's real `schema.mjs` runs on a store whose `published_shas` holds an old six-column row: `migratePublication`'s `ALTER TABLE ... ADD COLUMN` adds the column, the old row reads `capture_sha` null and a second boot changes nothing, and `ATTESTATION_SHA_UPSERT` through the real engine keeps A, clears A-then-B to NULL, and never fills the old null. Passes. I did not extend a full-plane Miniflare suite: the whole-plane k = 2 commit needs the real carriage, which is #15's.
+
+**Census.** No op I own changes its accepted keys or answers. **P:** none.
+
+**Requirement lines proposed (BOB writes `build/requirements/`).** R40: the `published_shas` column list gains `capture_sha` (TEXT, nullable): set only for kind `attestation`, the sha of the one capture the token stamps; NULL for every row written before, every other kind, and a token two different captures name; read by `public-read`. R57: "a kind `attestation` file is registered with its `capture_sha`; a stored capture that differs from the new one is cleared to NULL, a stored NULL is never rewritten to a value, the same capture again changes nothing."
+
+**Deferred.** None. **Found in another module.** Nothing new.
+
+**Checks.** publication suite under the preload: `tests 165, pass 163, fail 1 (the seam above), todo 1`; public-read suite `244/244`. `checks/run.mjs /home/user/bio`: format `0 failures`; architecture `4300 product files ... 0 failures`; coverage `6685 of 6685 ... 0 failures`; words `18524 words ... 0 failures` (no new sentence); channels `0 failures`. Ownership: below.
+
+Size (session_01QheArVvjbWvvMPvEMfwKVF): test runs 17, module lines 2503
