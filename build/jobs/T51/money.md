@@ -1,6 +1,6 @@
 # money (T51)
 
-**Status** · session_01RUnq4fs9yS6fvUi9DZjnt9 · depth 2 · RUNNING until 2026-10-23T06:00:08Z (tests of modules using money plus plane migrate-released (one process per file)) · handled B10
+**Status** · session_01RUnq4fs9yS6fvUi9DZjnt9 · depth 2 · COMPLETE · handled B10
 
 ## J1 · REPORT
 
