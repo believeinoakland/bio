@@ -196,3 +196,7 @@ Size (session_01LrQ9js5UiMGt6HCSH7ugeW): test runs 7, module lines 3002
 **Census ops** I own: none new (no op added or changed). **Rows owed to UX-DESIGN:** none (codes only; ratification and screens-publish word them). **Found in other modules:** none. **Deferred:** none.
 
 Size (session_01FoEGtPsn2WnLGd9CYBxrwS): test runs 6, module lines 3043
+
+## J11 · COMPLETE
+
+G62 retrieval part (fix round 7) complete: zone({why: true}) answers {zone, source, why} (source local-facts|profiles, null with none; why no_profiles|profiles_disagree|no_zone_stated, null with a zone); plain zone() unchanged. Test first, seen red then green: t51-round7.test.mjs (2 tests, R69, with controls). Retrieval suite 185/185; ratification and case-authoring signing 308/308. Checks: format 0, architecture 0, ownership 0; coverage and words reds are other modules' (record-core R89/R90, case-checker, installer-steps). Proposed line for you to write: zone({why:true}) as above. Nothing deferred, no census op, no UX rows. Record: Completion (fix round 7, G62). Size (session_01FoEGtPsn2WnLGd9CYBxrwS): test runs 6, module lines 3043
