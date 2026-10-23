@@ -531,3 +531,9 @@ Entry G55 (`build/plan/fix-round-6-T51.md`), my part: the declaration of `moneyi
 **Deferred.** Nothing. **Found in other modules.** None. Op-grades must grade `moneyingestread` (the plan names it).
 
 Size (session_015mbjCf96bpaBuNz4yP3orh): test runs 14, module lines 3470
+
+## G54 seam · CHANGE B39 (OP-DECLARATIONS #36)
+
+tranche/T51 merged. `t33.test.mjs:99`: `recordcasefile` (publication R15, G54; a store-internal hop reachable from no op) joins `IN_PROCESS.publication` beside `recordcasemanifest`. t33 R19/R6 now fails only on `calculations: moneyingestread`, served by no owner map until CALCULATIONS #9 merges (red by name). No src change; no op's keys change.
+
+Size (session_015mbjCf96bpaBuNz4yP3orh): test runs 3, module lines 0 (tests only)

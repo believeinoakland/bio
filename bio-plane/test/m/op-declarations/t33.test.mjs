@@ -96,7 +96,7 @@ const IN_PROCESS = { inquiry: ["basis", "restson"], entities: ["readingnameplan"
                        /* membership's own hop, called inside `projectCreated` (R6's store-internal list, K1864) */
                        "projectclaimowner"],
                      /* publication's internal hops (its R15; D-734) and its reads served by public-read */
-                     publication: ["recordcasemanifest", "publishedtargets", "casedocfacts", "publishedcasedoctext"] };
+                     publication: ["recordcasemanifest", "recordcasefile", "publishedtargets", "casedocfacts", "publishedcasedoctext"] };
 /* The family ops whose arm another L11 job serves (R6's other half holds at the layer's close): the control plane
    routes these to their owner's in-process services (K1601; action-clocks R2's `clockpropose`, capture-requests R46,
    answers' `ask`), instance-setup builds its two (T33-87). */
