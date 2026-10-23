@@ -360,3 +360,7 @@ COMPLETE (B14, entry 5, R51). Fail closed where bytes are served; scan and safe 
 **Deferred.** None.
 
 Size (session_016eGP24TnGhJiYfns4RdWuR): test runs 12, module lines 2738
+
+## J14 · COMPLETE
+
+COMPLETE (B15, G44, first owner): safe view of a spreadsheet = names + first whole rows by range, cut stated (rows/total_rows/truncated/next_row/reason, sheets_total/sheets_truncated); never a silent empty view: xlsx>20MiB declared, CSV>17MiB, ODS>8MiB declared, any file>20MiB answer SAFE_VIEW_FAILED PREVIEW_NOT_DRAWN|TOO_LARGE with size, bound, format. Failing-first red (heap OOM at the object's cap for the 10 MiB xlsx and 4 MB CSV) then green; module suite 100/101 (R24 accepted); users 902/910 (plane release R24 + journey-check pseudo, tranche-tip). Bounds for Bob (K1881): 1,000 cells/sheet (row cut at 1,000 columns), 20 sheets, 5,000 cells total, ODS 8 MiB declared (margin 1.4-1.8x measured). Answers 45-49 KB. Words: 5 stand-ins in screen-words.mjs + 1 detail; regenerate rows.mjs. No seam reds. Record: build/jobs/T51/file-safety.md. Size (session_016eGP24TnGhJiYfns4RdWuR): test runs 12, module lines 2738.
