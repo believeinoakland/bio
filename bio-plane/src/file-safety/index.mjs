@@ -911,7 +911,7 @@ export class FileSafety {
       }
       /* R51 (G44): a zip or unknown file above GRADE_READ_MAX is never loaded, and the view says why with its size and the bound */
       if (look && look.tooLarge && (format === "zip" || format === "unknown"))
-        return refusal("SAFE_VIEW_FAILED", "The file is above what a safe view reads. Nothing was read.", { captureSha: sha, renderer_reason: "TOO_LARGE", size: look.tooLarge, bound: GRADE_READ_MAX, format });
+        return refusal("SAFE_VIEW_FAILED", localize("file-safety.index.the_file_is_above_what_a_safe_view_reads", "The file is above what a safe view reads. Nothing was read."), { captureSha: sha, renderer_reason: "TOO_LARGE", size: look.tooLarge, bound: GRADE_READ_MAX, format });
       /* DEC-49 REGION is-safe-view-route */
       if (!route && format !== "text")
         return refusal("NO_SAFE_VIEW", localize("file-safety.index.a_safe_view_is_made", "A safe view is made of documents, presentations, spreadsheets and plain text only."), { captureSha: sha, format });
