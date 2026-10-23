@@ -54,3 +54,5 @@ Any member/founder who completes an edition (last member's op=ratify, op=caserat
 2. publication test: a complete edition with manifest_sha null; `publishedcase` (public-read) answers `verification.case_file = {built:false, reason}`/a stated reason, and a screens-publish test asserts the page names the missing case file instead of omitting the button. Fails today: both silent.
 3. scheduler/ratification test: tick with a complete edition and manifest_sha null re-runs assembly once and a second tick does nothing (recordCaseManifest same-hash returns existed). Fails today: nothing re-runs it.
 4. ratification test: two editions to assemble in one act keep both outcomes (D4).
+
+**Reproduction** (K4701): attempted at the builder's shape on the five editions' real bytes, recorded in `diagnosis-R6-g54-cause.md` section 2 (all five build `ok`); the failing step is therefore not the data, and G54's step 0 reproduces the candidates in Miniflare with the deploy's logging naming the cause.
