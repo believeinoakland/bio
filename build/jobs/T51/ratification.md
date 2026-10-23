@@ -216,3 +216,28 @@ Uses: record-core's `textAtSha` now also R57; remove the parenthesis "*(`textAtS
 **Deferred / found elsewhere.** None. The plane's G57 test is a CHANGE to PLANE after this merges, as the START says.
 
 Size (session_01M5oCcG2xs2ePLykgVfVCvq): test runs 14, module lines 3964
+
+## J13 · COMPLETE
+
+COMPLETE · fix round 7, G62 (ratification side) and G59 (parity test), B12. Reading: B12, my requirements whole, `#publishAtOffer`/`caseRatifyPreflight`, publish-schedule's zone read (`schedule.mjs:48-75`), `retrieval.zone()` (`index.mjs:486-518`), `RecordCore.snapPath`, record-grammar `bundle.mjs:570-660`.
+
+**What changed**
+- `bio-plane/src/ratification/index.mjs` `#publishAtOffer` (R44, R58): asks `retrieval.zone({why: true})` (a plain answer is read as before); `publish_at` gains `source` (retrieval's `local-facts`/`profiles`; `profiles` when retrieval threw and the profiles answered; `none` when no zone) and, when not offered, `why` (retrieval's, or `UNREADABLE`); one `console.log` line `{event:"publish_at", offered, source, why}` per pre-flight (no zone text, no name, no secret).
+- `build/requirements/ratification.md`: R44 amended, R58 and R59 new, each marked *(not yet met: T51)* (B4: written in the requirements file; the ownership check lists that one file, accepted at the merge).
+- Tests: `r7-publish-at.test.mjs` (new, R58), `r7-snappath-parity.test.mjs` (new, R59); R44/R18 tests in `schedule.test.mjs` and `preflight.test.mjs` compare the offer without `source`/`why` (those two keys are R58's, asked in its own file).
+
+**Decision for BOB (a detail of mine, P17): the plan's "best-reading fix" (fall back to the profiles when `retrieval.zone()` answers null) is NOT built.** Reading the code, it cannot help and could mislead: retrieval's null is (a) no `jurisdiction_profiles` setting, where the fallback reads the same empty setting; (b) two profiles governing different zones, a deliberate null (`retrieval/index.mjs:497-499`) that `publish-schedule` R1 also answers (`schedule.mjs:67-68`) and refuses `PUBLISH_AT_NO_ZONE`, so a fallback would offer "Publish at…" that the very next act refuses; (c) `combine` null, the fallback's own answer. R44's test "no zone there offers nothing, even with a profile zone" (T50, N1203) states this, and I did not change a stated meaning. Control test: `R58 control`. The cause of the live "isn't set" is still unknown (the plan says so); the new `source`/`why` and the log line are what names it on the redeploy (K4428). The screen's three-case change is screens-publish's.
+
+**Tests, red then green**
+- R58, five cases through the real `caseRatifyPreflight` over stand-in retrieval answers (offer with source; no zone with why; control: null stays final with a profile set; unreadable retrieval falls back to profiles; unreadable and none): each seen red on the tranche, green now.
+- R58 real retrieval case (`R58 the real retrieval ...`): RED BY NAME until retrieval's G62 job merges `zone({why: true})` (the tranche's `zone()` ignores the argument, so `source` is null and `why` absent). Provider: RETRIEVAL.
+- R59 parity (8 names + the all-together/control case): red now for the five dotless/subfolder/dotted-directory names (`snapshots/upload-<sha>`, `a/b/c`, `a.b/c`, `noext`, and the combined case) and green for dotted names; RED BY NAME until record-grammar's G59 job merges. Provider: RECORD-GRAMMAR. The test runs at `checkBundle`'s interface and needs no helper name.
+- Suite: `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/ratification/` from `bio-plane/`: 309 pass, 1 fail before the parity file (the real-retrieval R58 case); with the parity file, the 6 red are the two providers' only. Both providers' branches have no code on the tranche yet (`git diff origin/tranche/T51...origin/job/T51/<m> -- bio-plane/src` empty at my start).
+
+**Checks** (`checks/run.mjs /home/user/bio`): format 0 failures; architecture 0; coverage 1 failure (record-core R89, R90, not mine); words 11 (case-checker spec.mjs inline 6 and newgroup missingkey 5, both inherited by name, none in ratification). `checks/ownership.mjs`: 1 failure, `build/requirements/ratification.md`, accepted per B4.
+
+**Census ops:** none change (`caseratify`'s accepted keys are unchanged; only the pre-flight's answer gains two keys). **Rows owed to UX-DESIGN:** none from this module (no new sentence; `source`/`why` are codes the screen maps).
+
+**For BOB:** when retrieval's and record-grammar's G62/G59 are merged on the tranche, merge it into this branch and the six red tests turn green with no further change of mine; send a CHANGE if any stays red. Also: screens-publish should read `publish_at.source`/`why` (and `publish_at_stated` for the not-reached case, which is case-authoring's).
+
+Size (session_011tm6afKMQNi7iG6sqa1TmS): test runs 8, module lines 3987
