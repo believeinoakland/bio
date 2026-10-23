@@ -66,6 +66,10 @@ test("R52 (G41 b): one cell of a 1 MB CSV's held sheet is one cell", async () =>
   const n = lines.length;
   const got = await content.cellsAt(cite({ kind: "sheet-cell", cell: `D${n}` }));
   assert.deepEqual(shape(got.cells), expectRows(lines, n, n, [4]));
+  /* K4647's numbering at its other end: row 1 is the sheet's first row (the header), column 1 is A. */
+  const head = await content.cellsAt(cite({ kind: "sheet-range", range: "A1:B1" }));
+  assert.deepEqual(shape(head.cells), expectRows(lines, 1, 1, [1, 2]));
+  assert.deepEqual(head.interpreted.from_row, 1);
 });
 
 test("R52 (G41 b2): a column subset and a reversed-corner range of the held sheet answer exactly their cells", async () => {
