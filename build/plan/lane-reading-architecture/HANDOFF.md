@@ -21,3 +21,13 @@ Every Cloudflare limit and capability that bears on reading, quoted verbatim fro
 
 No live measurement was made: the charter forbids a deploy. Which measurements to make, and when, is BOB's.
 
+## RA3 · 2026-10-23 · Deliverable 3 ready: `CHALLENGES.md`
+
+Why reading keeps failing, from the evidence. Sources: the five family reports (PDF, scans, sheets, docs), the diagnoses of rounds 6–8, fix rounds 4–8, every walk and re-walk record, and the audits of partial reads. All were read whole in twelve shares, then synthesised three ways, and the lane read the result whole. §1 is the short answer: eight root mechanisms under 17 failure classes (C1–C17). §2 gives each class's instances, its recurrence, and the requirement or platform fact behind it. §3 is the recurrence table: nearly every fix came back on another path or in another kind. §4 holds the few facts measured live, §5 the causes still unknown (seven of them decide an architecture), §6 the sources' questions for Bob, and §7 17 obligations for OPTIONS.
+
+**For BOB:** two findings bear on the held fix round 8.
+1. The sources' own plans harden today's three read modes. Each recommends a per-kind ceiling below Bob's standard (24 MiB, 1,000 pages, 32 MiB).
+2. C4, C6, C8 and C9 (owed work registered after the answer, inline-vs-background by stored bytes, many paths, document identity) follow from the number of paths, not from any bound.
+
+Evidence grades are mostly Node. No file above 41.5 MB or 1,354 pages, no 50 MB sheet and no archive has ever been read live.
+
