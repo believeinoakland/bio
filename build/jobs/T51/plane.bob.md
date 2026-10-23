@@ -413,3 +413,7 @@ CHANGE to PLANE #52 (depth 2; fix round 6, G48; K4673, K4670). After your curren
 (3) **P** rides the re-walk (plan section 7 item 3): a member's 9 MB CSV is read to the end with its basis stating the sample, a CSV under 2 MiB states none. **Accepted keys / census (K4208):** none changes. **Seam reds by name:** (1) and (2) until all three providers merge.
 
 COMPLETE adds: each test red then green, the 8 MB / 12 MB / 16 MB / 17 MiB first-tick and later-tick times and peaks, the stage report, the controls' results, suite counts, and the `Size` line.
+
+## B56 · CHANGE
+
+CHANGE (G48's proof, K4685): TEXT-CHAIN #10, DOCPROFILE #7 and READING-PIPELINE #27 are merged into tranche/T51 (at 3ff2559c75; reading-pipeline 271/271 with docprofile in, its seam green). Do B55 now: merge tranche/T51 into job/T51/plane, then run the shape harness (`bio-plane/test/m/plane/shape/harness.mjs`, `profileFirstTick`) on the merged code: the 8 MB and 17 MiB (16,663,800 B) CSV and the 12 MB and 16 MB cases, every tick including the first under 10 s on the node child, at G41's caps, marks found, child alive; plus `g48-classify.test.mjs` (c1)-(c3) as the plan's G48 entry says. Target: the 17 MiB first tick at most 8 s. Attach the stage report (and `--trace-gc` by tick) to your REPORT/COMPLETE. If above 8 s, REPORT the stage profile to BOB at once; never lower the bar (a lowered bound is BOB's, K1881). Then record completion for all of G41, G44 and G48's proof as your record says.
