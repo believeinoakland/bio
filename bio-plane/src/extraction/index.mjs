@@ -1164,7 +1164,7 @@ export class Extraction {
       const n = typeof s === "string" ? utf8Bytes(s) : 0;
       if (n > keyBytes) { key = k; keyBytes = n; }
     }
-    const size = `${(bytes / 1048576).toFixed(1)} MiB (${bytes} bytes)`;
+    const size = localize("extraction.index.reading_size", "{mib} MiB ({bytes} bytes)", { mib: (bytes / 1048576).toFixed(1), bytes: String(bytes) });
     const facts = { bytes, key, key_bytes: keyBytes, limit: READING_ROW_MAX_BYTES };
     const basis = localize("extraction.index.reading_too_large",
       "this document's reading is too large to keep whole: {size}; the largest part is {key}", { size, key: key ?? "none" });
