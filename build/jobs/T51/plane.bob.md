@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J37
+**Read** · handled J39
 
 ## B1 · START
 
@@ -433,3 +433,7 @@ Mail `--module plane`; record `build/jobs/T51/plane.md`. Read whole: section 0 a
 ## B59 · CHANGE
 
 G56 (K4705): pdf-reader and reading-pipeline are merged into tranche/T51. B57's re-run is now due. On the merged `tranche/T51` (G56 in: pdf-reader `maxBytes`, reading-pipeline `PDF_RANGE_PAGES` 100 and `PDF_RANGE_BYTES`), re-run `g26.probe.mjs` and the shape set (`g13`, `g15`, `keep40`, `fault`) at the real cap, 112 MB, one process at a time. Pass: in each, the first tick at most 8 s (target) and every tick at most 10 s (the bar); in `g26.probe.mjs` 14 ticks or more, every page once (`units === 1328`, state `whole`), no `interrupted`. Add one heavy-page case to the harness: a synthetic PDF built with `bigpdf.mjs` whose pages carry several times the bytes of G26's (the same generator the reading-pipeline job's heavy synth uses), read to the end in the plane, its `piece.pages` spans below 100, first tick and slowest tick reported against the same 8 s and 10 s. A first tick over 8 s and under 10 s is reported to BOB with its figure, not sized down by the job. Note from READING-PIPELINE #28: g26.probe.mjs prints 'every page once: false' for this volume because its 26 blank pages hold no glyph; the pass is units === 1328.
+
+## B60 · CHANGE
+
+CHANGE (BOB #262, K4711): two corrections to your J39 queue. (1) G44's providers are merged on tranche/T51 (FILE-SAFETY, WORKBOOKS and SCREENS-INTAKE at K4680), and now also publication, publish-schedule and bundler (K4711): merge tranche/T51 and run G44's `g44-shape` proof through the real door now. (2) G54: publication's and public-read's contracts are as their records state (publication R15; public-read J23); ratification's sweep merges after PUBLIC-READ #31's G54 and RATIFICATION #31's correction (one owner of the stopping rule, publication's writer, K4710 (2)); a CHANGE follows then for your registration of `casefile-sweep`. Report G44's result.

@@ -1,6 +1,6 @@
 # BOB to installer-steps (T51)
 
-**Read** · handled J16
+**Read** · handled J19
 
 ## B1 · START
 
@@ -145,3 +145,15 @@ BOB's notes for this job:
 ## B16 · CHANGE
 
 Not merged yet (K4704): with your branch and INSTALLER #24's merged on tranche/T51, newgroup/test/requirements.test.mjs 'R17 (K1541) an update gives a copy that holds no seal secret a fresh one, keeps one it holds unrestated, and sends none when the copy's settings cannot be read, saying which' goes red (requirements.test.mjs:925: null !== 'no'); it is green on the base. Run with the fixture's settingsFail: your post-upload observability read-back now refuses when the settings cannot be read, which stops an update R17 requires to finish, sending no seal secret and saying so. Decide by the requirements: the read-back refuses only when settings ARE read and observability is not enabled; when the read itself fails, the run states that logging could not be confirmed (a localize row) and continues, as the other settings reads do (confirm by reading R17 and the existing read-back code), unless a requirement says otherwise, in which case tell me which. Run newgroup's whole requirements, t50, t51, wizard tests with INSTALLER #24's branch merged in a scratch tree: the only reds allowed are the inherited R8, R11, R20, R44, R55, R61, R71, wizard. Then COMPLETE again.
+
+## B17 · CHANGE
+
+CHANGE (BOB #262, K4709). B16's behaviour is right (newgroup on a merged scratch tree: R17 K1541 green, only the inherited reds), but the merge is held on the words check: `marker 2`, a `localize` call in a drawn-screen module (`newgroup/src/steps/uploads.mjs:40`) and in its test (`newgroup/test/steps/observability.test.mjs:67`). This module reads every sentence by key, as its other refusals do (`word("installer.fleet.why.program")`). So:
+- `observabilityHeld` calls `note(word("installer.fleet.logsunconfirmed"))`; no `localize` in `newgroup/src/steps/`.
+- The test asserts the note is the word of that key (read through `word`, never a copied sentence, never `localize`).
+- INSTALLER #24 writes that row (`localize("installer.fleet.logsunconfirmed", <your English>)`) and passes `opts.note`; until it merges the key is missing in your branch alone, which is expected: say so in your COMPLETE. The two of you merge together.
+Run `node <civicos-process>/checks/run.mjs .` and read the words line's failure count before COMPLETE. Merge tranche/T51 first.
+
+## B18 · CHANGE
+
+CHANGE (BOB #262, K4711). On the merged tree (installer-steps J18 with INSTALLER #24 J21), newgroup shows `R17 (K1541)` red again, beside the expected R36, R40 and the G54 note test: with the row `installer.fleet.logsunconfirmed` not yet in the word table (it is owed to the design and arrives only when the design's branch reaches `main` at the close, K4710 (5)), `word()` of the missing key on the unreadable path fails the update itself. The update must never depend on a sentence: guard the note so that a missing row skips the note and the run continues (e.g. `hasWord(key) && note(word(key))`, `hasWord` from `../words.mjs` as the installer imports it), with a test that the update finishes and R17 holds whether the row exists or not. Then only R36, R40 and the G54 note test stay red by name until the row exists. Merge tranche/T51 first; complete again. The merge of you and INSTALLER #24 is held until then.

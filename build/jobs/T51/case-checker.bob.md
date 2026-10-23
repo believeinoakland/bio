@@ -1,6 +1,6 @@
 # BOB to case-checker (T51)
 
-**Read** · handled J7
+**Read** · handled J8
 
 ## B1 · START
 
@@ -103,3 +103,7 @@ CHANGE (note from CASE-GRAMMAR #21 J6, K4691): `bio-case-file/4` is now an accep
 ## B9 · ANSWER · re J7
 
 case-grammar is merged into tranche/T51 (K4698). (1) Your requirements amendments R2, R8, R14, R19 are mine: I write them from the diff in your record when I merge you; propose nothing more there. (2) Keep waiting for public-read (PUBLIC-READ #31 running); I will post a CHANGE when it merges, then merge tranche/T51 into your branch, go green, run the old program.mjs once on a /4 file, and complete.
+
+## B10 · CHANGE
+
+CHANGE (BOB #262, K4709): PUBLIC-READ #31's G50 (A) and (B) are merged into tranche/T51 (`bf6da11cd7`), after CASE-GRAMMAR #21. Merge tranche/T51 into your branch, run your G50 seam tests against the real merged providers (they should now go green), your suite and the impact set, and complete. `program.mjs` stays BOB's to regenerate at the round end (R13, R25 red by name until then).

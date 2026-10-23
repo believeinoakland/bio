@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import * as O from "../../../src/op-declarations/index.mjs";
 import { explained } from "./help.mjs";
-import { browserActs, OWED_BY_FIX_ROUND, OWED_SERVED_BY_OWNERS } from "./browser.mjs";
+import { browserActs, OWED_BY_FIX_ROUND_AT_43379A1A44, OWED_SERVED_BY_OWNERS } from "./browser.mjs";
 import { T47_SHARES, T47_FAMILIES, REAUTH_ACTS } from "../../../src/op-declarations/t47.mjs";
 import { T51_SHARES } from "../../../src/op-declarations/t51.mjs";
 import * as AFF from "../../../src/affordances.mjs";
@@ -307,7 +307,7 @@ test("R54, R60 (K3062; DEC-198–DEC-217): R21 read against the registry at PR #
      (owed, K3674) is the op declared since T5-11, each read as served with no alias; the installer's four own routes are
      owed and no plane op, so each has no spec (R6) and is named back to BOB (R21). */
   const OWED_T50 = ["actioninquiry", "actionstake", "projectstakeset", "secondlook", "watchitem", "aliaswithdraw"];
-  const LEFT_OUT = ["installalongside", "installremove", "installremoveconfirm", "installupdate", ...OWED_BY_FIX_ROUND];
+  const LEFT_OUT = ["installalongside", "installremove", "installremoveconfirm", "installupdate", ...OWED_BY_FIX_ROUND_AT_43379A1A44];
   /* T51 (R76): the seven DEC-330 browser acts are owed rows read as a class of their own, no op */
   const BROWSER = browserActs(registry);
   /* R80: an owed act an owner declares is read as served by its declaration (`register-owners.mjs`), an op like any other */

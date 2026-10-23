@@ -368,7 +368,7 @@ test("R18: bytes that never read back equal exit 1 after four attempts saying no
     assert.match(mis.stderr, /\[LIMITS_MISMATCH\]/);
     assert.doesNotMatch(mis.stdout, /rollout:/);
 
-    const und = deploy(root, { stub: okStub({ settingsAfterPut: {} }) });
+    const und = deploy(root, { stub: okStub({ settingsAfterPut: { observability: { enabled: true } } }) });
     assert.equal(und.status, 0);
     assert.match(und.stdout, /limits: UNDETERMINED — the script settings state no limits\.subrequests\. The ceiling sent \(500\) is NOT confirmed/);
     assert.doesNotMatch(und.stdout, /verified: limits/);
@@ -381,15 +381,15 @@ test("R18: already-deployed bytes serving the version with matching limits uploa
   try {
     const body = readFileSync(join(root, "bio-plane", ASSET), "utf8");
     const bindings = derivedOnScript(root);
-    const done = deploy(root, { stub: okStub({ scripts: { "alpha-worker": { settings: {} }, [SLUG]: { body, settings: { limits: { subrequests: 500 }, bindings }, schedules: [PLANE_CRON] } },
+    const done = deploy(root, { stub: okStub({ scripts: { "alpha-worker": { settings: {} }, [SLUG]: { body, settings: { limits: { subrequests: 500 }, bindings, observability: { enabled: true } }, schedules: [PLANE_CRON] } },
       serving: { [SLUG]: VERSION } }) });
     assert.equal(done.status, 0, done.stderr);
     assert.deepEqual(anyPut(done), [], "nothing is uploaded and no schedule is set");
-    assert.match(done.stdout, /already byte-identical AND serving 1\.2\.3 AND limits\.subrequests 500 read back AND every derived binding present AND schedules \*\/5 \* \* \* \* held; nothing to do/);
+    assert.match(done.stdout, /already byte-identical AND serving 1\.2\.3 AND limits\.subrequests 500 read back AND every derived binding present AND schedules \*\/5 \* \* \* \* held AND Workers Logs on; nothing to do/);
 
     for (const [label, scripts, serving] of [
-      ["serving an older version", { body, settings: { limits: { subrequests: 500 }, bindings } }, "1.2.2"],
-      ["limits not ours", { body, settings: { limits: { subrequests: 9 }, bindings } }, VERSION],
+      ["serving an older version", { body, settings: { limits: { subrequests: 500 }, bindings, observability: { enabled: true } } }, "1.2.2"],
+      ["limits not ours", { body, settings: { limits: { subrequests: 9 }, bindings, observability: { enabled: true } } }, VERSION],
     ]) {
       const r = deploy(root, { stub: okStub({ scripts: { "alpha-worker": { settings: {} }, [SLUG]: scripts }, serving: { [SLUG]: serving } }) });
       assert.equal(r.status, 0, `${label}: ${r.stderr}`);
@@ -414,7 +414,7 @@ test("R34: a derived binding missing or different on the script makes a deploy o
     const full = derivedOnScript(root);
     const undeclared = { type: "plain_text", name: "JURISDICTION_PROFILES", text: "{\"ca\":1}" };
     const account = (bindings) => okStub({ scripts: { "alpha-worker": { settings: {} },
-      [SLUG]: { body, settings: { limits: { subrequests: 500 }, bindings } } }, serving: { [SLUG]: VERSION } });
+      [SLUG]: { body, settings: { limits: { subrequests: 500 }, bindings, observability: { enabled: true } } } }, serving: { [SLUG]: VERSION } });
     const lacking = full.filter((b) => !(b.type === "service" && b.name === "AGENT"));
     assert.equal(lacking.length, full.length - 1);
     for (const [label, bindings, what] of [
@@ -468,10 +468,10 @@ test("R34 (control): with every derived binding present and the bytes matching, 
     const body = readFileSync(join(root, "bio-plane", ASSET), "utf8");
     const bindings = [...derivedOnScript(root), { type: "plain_text", name: "JURISDICTION_PROFILES", text: "p" }, { type: "secret_text", name: "INSTANCE_AI_TOKEN" }];
     const r = deploy(root, { env: { ...CF, INSTANCE_AI_TOKEN: "x" }, stub: okStub({ scripts: { "alpha-worker": { settings: {} },
-      [SLUG]: { body, settings: { limits: { subrequests: 500 }, bindings }, schedules: [PLANE_CRON] } }, serving: { [SLUG]: VERSION } }) });
+      [SLUG]: { body, settings: { limits: { subrequests: 500 }, bindings, observability: { enabled: true } }, schedules: [PLANE_CRON] } }, serving: { [SLUG]: VERSION } }) });
     assert.equal(r.status, 0, r.stdout + r.stderr);
     assert.deepEqual(anyPut(r), []);
-    assert.match(r.stdout, /AND every derived binding present AND schedules \*\/5 \* \* \* \* held; nothing to do/);
+    assert.match(r.stdout, /AND every derived binding present AND schedules \*\/5 \* \* \* \* held AND Workers Logs on; nothing to do/);
   } finally { rm(root); }
 });
 
@@ -499,7 +499,7 @@ test("R34 (control): settings of a script that exists that cannot be read refuse
 const schedules = (r) => r.calls.filter((c) => c.url.endsWith(`/scripts/${SLUG}/schedules`));
 /** The fixture plane's own script as an account that already holds everything this deploy would send, schedules aside. */
 const settledScript = (root, extra = {}) => ({ body: readFileSync(join(root, "bio-plane", ASSET), "utf8"),
-  settings: { limits: { subrequests: 500 }, bindings: derivedOnScript(root) }, ...extra });
+  settings: { limits: { subrequests: 500 }, bindings: derivedOnScript(root), observability: { enabled: true } }, ...extra });
 
 test("R18: after the script upload the schedules of wrangler.jsonc's triggers.crons are PUT, then read back, and success is stated only after the read-back matches, even where the script PUT clears them", async () => {
   const root = await deployRepo();
@@ -593,7 +593,7 @@ test("R34: identical bytes serving the version with matching limits and bindings
     }
     const held = deploy(root, { stub: okStub({ scripts: { "alpha-worker": { settings: {} }, [SLUG]: settledScript(root, { schedules: [PLANE_CRON] }) }, serving: { [SLUG]: VERSION } }) });
     assert.equal(held.status, 0, held.stdout + held.stderr);
-    assert.match(held.stdout, /AND every derived binding present AND schedules \*\/5 \* \* \* \* held; nothing to do/);
+    assert.match(held.stdout, /AND every derived binding present AND schedules \*\/5 \* \* \* \* held AND Workers Logs on; nothing to do/);
     assert.deepEqual(held.calls.filter((c) => c.method === "PUT"), [], "nothing is uploaded and no schedule is set");
     const unreadable = deploy(root, { stub: okStub({ schedulesGet: 500, scripts: { "alpha-worker": { settings: {} }, [SLUG]: settledScript(root, { schedules: [PLANE_CRON] }) }, serving: { [SLUG]: VERSION } }) });
     assert.doesNotMatch(unreadable.stdout, /nothing to do/, "schedules that cannot be read are not ones that match");

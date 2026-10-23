@@ -301,7 +301,7 @@ const OP_FAMILIES = Object.freeze({
     tabledeclare: "member", bindingadopt: "member", moneyingest: "member", calculationcreate: "open",
     calculationaccept: "member", calculationdraw: "open", recordset: "member", patterngate: "admin",
     patternswitch: "member",
-    table: "read", tablesat: "read", calculationevaluate: "read", calculation: "read", patterns: "read",
+    moneyingestread: "read", table: "read", tablesat: "read", calculationevaluate: "read", calculation: "read", patterns: "read",
     usesfreeze: "member", applicationrecipes: "read",
     spotcheckvisit: "member", spotcheck: "read" } }),
   /* workbooks R15 (K1570): every act a sighted author's, a machine not refused by name (R13); the second check
@@ -2647,7 +2647,9 @@ const UNATTENDED_BY_DECISION = Object.freeze({
    (K4262, B20) `affordances` holds `strengthbarset`'s help under its own name and none for `strengthbar` (no screen sends it,
    and the design gives it no text): `strengthbarset` leaves the unexplained ground and `strengthbar` takes it.
    T51 fix round 4b (R34, plane R77; K4524): `owedwork` (plane's read of what a document still owes, admin and member) is named
-   under the read ground, as a read a screen draws from, until `affordances`' `ACT_HELP` holds a text. */
+   under the read ground, as a read a screen draws from, until `affordances`' `ACT_HELP` holds a text.
+   T51 fix round 6 (G55; calculations): `moneyingestread`, the member's read of a background money ingest, joins the same read
+   ground, as a read a screen draws from (`moneyingest` itself stays under `unexplained`, an act). */
 const ACT_HELP_ABSENT = Object.freeze({
   alias: Object.freeze({ ground: localize("op-declarations.index.an_alias_of_a_declared", "An alias of a declared op (R21): its op's explanation serves it."),
     ops: frozenList([
@@ -2675,7 +2677,7 @@ const ACT_HELP_ABSENT = Object.freeze({
       "interfacewords", "interview", "interviewform", "investigationproposals", "keyedservices", "lawaddresses",
       "lawrelations", "line", "linesof", "lookedat", "matterpromiseduties", "matters", "meaningrows",
       "memberlanguage", "memberties", "milestones", "money", "moneyamountchecks", "moneycheckparams",
-      "moneydetectors", "moneyjunction", "moneynoticed", "moneyof", "moneyset", "moneysummable", "narrowcandidates",
+      "moneydetectors", "moneyingestread", "moneyjunction", "moneynoticed", "moneyof", "moneyset", "moneysummable", "narrowcandidates",
       "notes", "notices", "opencaptures", "originalstate", "overridesof", "owedwork", "partiesof", "patterns",
       "personcredentials", "personinterests", "personstatements", "photomarks", "placewantedstate", "plancomments",
       "planreviewopen", "planreviews", "plantimeline", "powersof", "poweruses", "prepitems", "proceedinglinks",
