@@ -83,7 +83,7 @@ Why Civicsmith is slow for a member is measured and diagnosed in its own session
 
 ## Parallel work: the reading architecture (Bob, 2026-10-23; K4812)
 
-How Civicsmith reads every file type and every large file is designed whole before any further reading fix, in its own session, **READING-ARCHITECTURE** (#1, `session_01Gpv8oKYGd6HrRswr3cXHmy`, started by BOB #269), writing only `build/plan/lane-reading-architecture/` on branch `lane/reading-architecture` (its `CHARTER.md`). It decides nothing: its options reach Bob through BOB. BOB reads its `HANDOFF.md` (entries `RA<n>`) at takeover and at every backstop check.
+How Civicsmith reads every file type and every large file is designed whole before any further reading fix, in its own session, **READING-ARCHITECTURE** (#2, `session_017kq2bRE1EtmVj9y9wY1LTT`, started by BOB #270, K4829; #1 `session_01Gpv8oKYGd6HrRswr3cXHmy` archived), writing only `build/plan/lane-reading-architecture/` on branch `lane/reading-architecture` (its `CHARTER.md`). It decides nothing: its options reach Bob through BOB. BOB reads its `HANDOFF.md` (entries `RA<n>`) at takeover and at every backstop check.
 
 ## Starting a session
 
