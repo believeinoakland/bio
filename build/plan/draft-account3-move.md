@@ -25,7 +25,7 @@
 ## Order of work on the third account (from the handoff)
 
 1. Takeover (§5.1), the channel and lanes read.
-2. Re-walk 7's results into the fix round they need (planned whole, K4426, reviewed); its jobs; one redeploy; a targeted re-walk.
+2. The whole suite's reds classified (K4787: alone, then on one core; fragile test or slow-product defect; none accepted as load); the suite from now on in its own session and container. Re-walk 7's results into the fix round they need (planned whole, K4426, reviewed); its jobs; one redeploy; a targeted re-walk.
 3. PERFORMANCE #2's quiet re-time (R-QUIET).
 4. The room's re-creation (`deploy-test/biosmoke8/wnam-g2/deploy`), Bob's claim, the member made by script.
 5. The PDF envelope (K4785): the cause-family review, the envelope written into the requirements, the generated corpus at the platform's shape (round end, every round), its live subset.
