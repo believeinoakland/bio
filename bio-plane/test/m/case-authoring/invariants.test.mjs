@@ -118,8 +118,10 @@ test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3
   const OWN = Object.values(CHECKS).filter((v) => v && typeof v === "object").flatMap((f) => Object.values(f));
   assert.equal(OWN.some((v) => /^C-82\./.test(v.check)), false, "no C-82 row held here");
   assert.deepEqual([...Object.values(PUBLISH_ACT_CHECKS), ...Object.values(CARRIED_OUTCOME_CHECKS)]
-    .map((v) => v.check).filter((c) => /^C-136\./.test(c)), ["C-136.1", "C-136.2", "C-136.3", "C-136.4", "C-136.5", "C-136.6",
+    .map((v) => v.check).filter((c) => /^C-136\./.test(c)), ["C-136.1", "C-136.2", "C-136.9", "C-136.3", "C-136.4", "C-136.5", "C-136.6",
     "C-136.7", "C-136.8"]);
+  /* R14 (G47): C-136.9, the case document over its bound, is a row of this module's table, its where the region that refuses */
+  assert.equal(PUBLISH_ACT_CHECKS.CASE_DOCUMENT_TOO_LARGE.where, "src/case-authoring/index.mjs #publishCase > is-case-document-too-large");
   assert.equal(Object.values(STATEMENT_ACK_CHECKS).every((v) => v.where.startsWith("src/case-inputs/")), true);
   assert.deepEqual(Object.values(CASE_DISCLOSURE_CHECKS).map((v) => v.check),
     ["C-120.1", "C-120.2", "C-120.3", "C-120.4", "C-120.5", "C-120.6", "C-120.7", "C-120.8", "C-120.10", "C-120.11",
@@ -128,7 +130,7 @@ test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3
   assert.equal(Object.values(CASE_DISCLOSURE_CHECKS).some((v) => v.check === "C-120.9"), false, "withdrawn, never used");
   assert.deepEqual(Object.entries(PUBLISH_ACT_CHECKS).map(([k, v]) => [k, v.check]),
     [["MACHINE_CANNOT_PUBLISH", "C-32.6"], ["NO_STATEMENT", "C-33.14"], ["CALCULATION_NOT_DISCLOSED", "C-136.1"],
-     ["STANDARDS_USE_REFUSED", "C-136.2"]]);
+     ["STANDARDS_USE_REFUSED", "C-136.2"], ["CASE_DOCUMENT_TOO_LARGE", "C-136.9"]]);
   /* R61's new row (T36): its region, and its translation the requirements' own, word for word (case-authoring.md R29) */
   assert.equal(PUBLISH_ACT_CHECKS.STANDARDS_USE_REFUSED.where, "src/case-authoring/index.mjs #publishCase > is-standards-use");
   assert.equal(PUBLISH_ACT_CHECKS.STANDARDS_USE_REFUSED.translation, word("refusal.STANDARDS_USE_REFUSED"));

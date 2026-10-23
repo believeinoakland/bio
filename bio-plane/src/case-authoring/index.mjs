@@ -83,6 +83,7 @@ import { strengthOf, STRENGTH_AXES } from "../strength/index.mjs";
 import { biasOf } from "../bias/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { publicationOf, CASE_SOURCES_CHECKS } from "../publication/index.mjs";
+import * as publicationExports from "../publication/index.mjs";
 /* R72 (T45; N892): a project's scope, project-roster R23's. */
 import { projectRosterOf } from "../project-roster/index.mjs";
 /* R58 (N823; K2438): the waiting edition is `publish-schedule`'s (its R1, read through its R7), since publication's
@@ -1187,6 +1188,21 @@ export class CaseAuthoring {
     const approvalsBlock = approvals.ok !== false && (approvals.rule || approvals.approvals.length)
       ? approvalsLines({ rule: approvals.rule, approvals: approvals.approvals }) : [];
     const docText = approvalsBlock.length ? render(approvalsBlock) : unapproved;
+    /* R14 (G47; K4666, K1881): THE DOCUMENT'S BYTES, measured as built and before any side effect (the reevaluation raise,
+       the standards judgment, the store). Over `publication`'s `CASE_DOCUMENT_BYTES_MAX` the act refuses and nothing is
+       prepared; the member reads the document before signing, so the bound is stated, never a silent cut. */
+    const docBytes = new TextEncoder().encode(docText);
+    const docBound = publicationExports.CASE_DOCUMENT_BYTES_MAX;
+    const materialCount = materialBlocks && Array.isArray(materialBlocks.rows) ? materialBlocks.rows.length : 0;
+    /* DEC-49 REGION is-case-document-too-large */
+    if (Number.isFinite(docBound) && docBytes.length > docBound) {
+      const mb = (n) => (n / 1048576).toFixed(1);
+      return actRefusal("CASE_DOCUMENT_TOO_LARGE", { size: docBytes.length, bound: docBound,
+        materials: materialCount, members: members.length,
+        detail: localize("case-authoring.index.case_document_too_large", "This case document is {size} MB, over the {bound} MB a case document may be, and it names {materials} materials and {members} findings. The record is unchanged and nothing was prepared. Leave out some of the materials or findings and prepare the case again.",
+          { size: mb(docBytes.length), bound: mb(docBound), materials: String(materialCount), members: String(members.length) }) });
+    }
+    /* END DEC-49 REGION is-case-document-too-large */
     /* R61 (N717; K2002, K2129): THE STANDARDS THIS CASE MEASURES AGAINST, JUDGED OVER THE TEXT IT WOULD STORE, the act's
        last refusal (`#standardsUse`). Nothing is written on a refusal: the act's transaction takes back every row. */
     const standardsUse = this.#standardsUse(docText, written, who, when);
@@ -1200,11 +1216,21 @@ export class CaseAuthoring {
     for (const f of written) if (f.reevaluation === null)
       f.reevaluation = run.preflight ? { source: "edition", edition: f.edition, raised_when: "published" }
         : this.reevaluation.raise({ target: f.target, source: "edition", since: when, edition: f.edition, viewer });
-    const docBytes = new TextEncoder().encode(docText);
     /* publication R21: stored unsigned, replacing an unsigned document of this case edition and never a signed one; the
        exclusions are projected in the same write. What this act answers with is what the store holds after the call. */
     const stored = this.publication.storeCaseDocument({ caseId: theCase, edition, text: docText, author: who, at: when,
                                                         draft: boundDraft });
+    /* R14 (G47): a refusal of the store, whatever its reason, is the act's refusal; never a prepared document with no sha. */
+    if (!stored || stored.ok === false || !stored.doc_sha) {
+      const why = stored && stored.reason ? String(stored.reason) : "CASE_DOCUMENT_NOT_STORED";
+      if (why === "CASE_DOCUMENT_TOO_LARGE")
+        return actRefusal("CASE_DOCUMENT_TOO_LARGE", { size: docBytes.length, bound: Number.isFinite(docBound) ? docBound : stored.bound ?? null,
+          materials: materialCount, members: members.length,
+          detail: localize("case-authoring.index.case_document_too_large", "This case document is {size} MB, over the {bound} MB a case document may be, and it names {materials} materials and {members} findings. The record is unchanged and nothing was prepared. Leave out some of the materials or findings and prepare the case again.",
+            { size: (docBytes.length / 1048576).toFixed(1), bound: ((Number.isFinite(docBound) ? docBound : stored.bound ?? 0) / 1048576).toFixed(1), materials: String(materialCount), members: String(members.length) }) });
+      return { ok: false, reason: why, code: why,
+        detail: localize("case-authoring.index.case_document_not_stored", "The case document could not be stored. The record is unchanged and nothing was prepared.") };
+    }
     /* R69 (record-grammar R52): after the document is stored, the member's acceptance of the draft her account began as,
        in its one shape (`case-account` R4's `acceptanceRecorded`), inside this act's transaction; none without a draft. */
     if (drafted.draft) A.acceptanceRecorded({ caseId: theCase, edition, drafted, by: who, at: when });

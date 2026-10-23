@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J36
+**Read** · handled J37
 
 ## B1 · START
 
@@ -417,3 +417,15 @@ COMPLETE adds: each test red then green, the 8 MB / 12 MB / 16 MB / 17 MiB first
 ## B56 · CHANGE
 
 CHANGE (G48's proof, K4685): TEXT-CHAIN #10, DOCPROFILE #7 and READING-PIPELINE #27 are merged into tranche/T51 (at 3ff2559c75; reading-pipeline 271/271 with docprofile in, its seam green). Do B55 now: merge tranche/T51 into job/T51/plane, then run the shape harness (`bio-plane/test/m/plane/shape/harness.mjs`, `profileFirstTick`) on the merged code: the 8 MB and 17 MiB (16,663,800 B) CSV and the 12 MB and 16 MB cases, every tick including the first under 10 s on the node child, at G41's caps, marks found, child alive; plus `g48-classify.test.mjs` (c1)-(c3) as the plan's G48 entry says. Target: the 17 MiB first tick at most 8 s. Attach the stage report (and `--trace-gc` by tick) to your REPORT/COMPLETE. If above 8 s, REPORT the stage profile to BOB at once; never lower the bar (a lowered bound is BOB's, K1881). Then record completion for all of G41, G44 and G48's proof as your record says.
+
+## B57 · ANSWER · re J37
+
+ANSWER (K4693): (a). Your G26 red is a cause of this round, G56, owned by reading-pipeline: the page-range piece sized so a tick's live heap and GC fit the 10 s bar at the 112 MB cap, by measure; the bar is not moved (K4670) and a different machine is not the answer. Keep the 10 s assertion in `g26.probe.mjs` red by name. Stay open: when READING-PIPELINE's G56 merges BOB sends a CHANGE to re-run G26 (and your G41/G44/G48 shape set once more on the merged tranche). Meanwhile record G48's proof (green, 17 MiB first tick 2.6 s) and G41's in your record. Thank you: the stage profile is exactly what the planner needs.
+
+## B58 · CHANGE
+
+CHANGE · G54 (fix round 6; K4701). A new cause for your module, to do in this job after your current entry (and before G26's re-run, B57, which waits for G56): read the G54 entry of `build/plan/fix-round-6-T51.md` whole (and its section 0), merge `tranche/T51` into your branch, then apply your part below. Record it as a new section; complete again when done.
+
+Mail `--module plane`; record `build/jobs/T51/plane.md`. Read whole: section 0 and G54, `diagnosis-R6-g54-cause.md`, rulings K4426, K4565, K4566; `build/requirements/plane.md` (R75 and the scheduler registration), `plane/store.mjs:480-500` and `:700-720`, `plane/pending.mjs` (`consumer()`), `scheduler/index.mjs:386` and `:458-515` (`register`, the hold R27), `plane/wiring.mjs:153-163`. Providers: ratification (`caseFileSweep`, `caseFileWake`), publication, public-read, publish-schedule, bundler. **Step 0, before any fix:** the L reproductions of G54 (4) on the unchanged tree, reported to BOB with ratification's. Your part, G54 (3)(b) "plane": register `casefile-sweep` through `schedulerOf(ctx, env).register("plane", ...)` before the scheduler's start (as `pending-work`, so a restart re-derives its alarm), `finished` counted for a built edition so R27's hold never strands the rest; the through-the-door test of the whole path with the real merged providers (a real `Store` and scheduler, an edition committed through the real act whose assembly fails once, the alarm, the page's `publishedcase`); prove scheduler (141) needs no change. Failing-first: `test/m/plane/g54-sweep.test.mjs` and the Miniflare L checks of G54 (4) (including the killed-mid-sweep restart, the disconnected request, the manifest-only `put` failure and the 500-file, 40 MB edition), seen red before the providers and green after. State plainly in your COMPLETE what P at the re-walk will read (G54 (4) P). Census: confirm none changes. Run `node /home/user/civicos-process/checks/run.mjs /home/user/bio` and report the `fixplan` count. COMPLETE as above.
+
+**Correction (K4704, RATIFICATION #31 J8):** 4783 is repairable, nothing missing: your L run of the sweep should find 4783 and 6227 `built` after the repair, not `stopped`. Read the Correction line at the end of G54's entry.

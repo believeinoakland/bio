@@ -1,6 +1,6 @@
 # BOB to screens-action (T51)
 
-**Read** · handled J24
+**Read** · handled J25
 
 ## B1 · START
 
@@ -327,3 +327,27 @@ Mail with `--module screens-action`; record `build/jobs/T51/screens-action.md` (
 **Your entry.** **G20 (owner for this screen).** `matter.mjs:156, 177`: the document picker reads `heldcaptures` with limit 200 and no "more". Page by the read's `next` or say "showing N of M" with a way to narrow (stand-in words; a drawn-screen module uses the nearest held row). Failing-first: 250 held documents: the picker reaches the 250th or says 200 of 250 (red now: silent at 200).
 
 Run: your suite(s), then the users `node build/plan/impact.mjs tranche/T51 HEAD` names (the users of what you changed; when it names hundreds because of a shared table, run the modules that call your changed service); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio screens-action tranche/T51 job/T51/screens-action`. COMPLETE: what changed (file:line), each failing-first test red then green, suite counts, the requirement lines you propose (BOB writes `build/requirements/`), and the `Size` line.
+
+## B29 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/screens-action tranche/T51 && git branch -m job/T51/screens-action stale/screens-action-local && git checkout -b job/T51/screens-action origin/job/T51/screens-action`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · SCREENS-ACTION #16 · tranche T51 · product believeinoakland/bio · depth 2 (fix round 6, G52; K4686) · reading set per mechanics §6 step 2 (your other tests are run, not read). If you would read a document of your reading set only in part, stop at once: post BLOCKED, cause `reading` (K3678).
+
+Mail with `--module screens-action`; record `build/jobs/T51/screens-action.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis, never opus (K3518). Before tests: every lockfile directory has `node_modules` (K4113). Run your tests from `bio-plane/` with `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/screens-action/`.
+
+**Reds you inherit (accepted by name; yours are not these, run them only as users):** plane `release` R24 and `l77-size` R77 L; file-safety R24; promotion row-census; case-checker R13, R25 (stale `program.mjs` until the round end); `fleetbundles` section 10, agent-worker `requirements`, ocr-worker, `newgroup-bundle-fresh` arms (C)/(D); newgroup R8, R11, R20, R33, R44, R55, R61, R71, `wizard.test.mjs`; words `inline 1` at `case-checker/spec.mjs:11` (until UX-DESIGN's branch lands at the close). screens-intake `t51-fix5` R31 was reported red once under load and is green alone: if you see it, quote its assertion to BOB. A failure not on this list is yours or a bug to report.
+
+**Providers' state.** None needed: the design's words and registry are on the tranche (DEC-419, `f72b2f8a4c`; `setup-words/rows.mjs`).
+
+**Read in full:** `build/plan/fix-round-6-T51.md` section 0 and the G52 entry (it is your entry: apply it exactly); `build/requirements/screens-action.md`; the source files and tests the entry names. BOB fixed screens-publish's four stale fixture reds (test only, K4297 (2)); the contract test named in your entry is your red.
+
+**Rules** (plan section 0): R-FOUR, R-ONE, R-NOTMET (no "not met", deferred or open QUESTION at COMPLETE), R-OLD. Words: you write no new sentence; every text comes from the word table by key; no test copies a sentence (K3810, K3930). Declare every census op you own whose accepted keys change (none expected; K4208).
+
+**Then:** your suite, the impact set (`node build/plan/impact.mjs tranche/T51 HEAD` from the repository root) as users, `checks/run.mjs` (read each arm's own failure count) and `checks/ownership.mjs`.
+
+**Record and COMPLETE:** what changed, the tests red then green, suites and checks, a proposed requirement line where a requirement's text changes, any word key you need that the design's reads list lacks (BOB hands it to UX-DESIGN), and `Size (<session id>): test runs <n>, module lines <n>`. Then `mail state --set COMPLETE`, post COMPLETE, and ring BOB (a one-time routine into BOB's session, `run_once_at` the next whole minute; `mail addr --bob`).
+
+## B30 · ANSWER · re J25
+
+ANSWER: you are right; BOB's START missed the generated registry. Planned as G53 (K4691): a WIZARD-SCRIPTS job re-takes `screen-registry.mjs` at `f72b2f8a4c` and merges before you. Do not merge as is. Hold your branch as it stands (state WAITING ON BOB); when wizard-scripts is merged BOB sends a CHANGE: then merge tranche/T51, re-run suite, impact set and checks, and post COMPLETE. Your proposed R3 line and the five word keys are noted for the merge and the HANDOFF to UX-DESIGN.

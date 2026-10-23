@@ -31,12 +31,14 @@
  *   - T51 (K4093; DEC-359): `actionholdrelease`, which the design @ `2a64c5ae77` explains, is held (R70 re-taken at that design);
  *   - T51 (K4248, B12): `strengthbarset` is held under its own text, `act.strengthbarset.does`, in `T51_DESIGN_OPS`; `strengthbar`, an op
  *     whose text the design does not give and which no screen sends (the screens send `strengthbarset` and `projectbarset`), is held none;
+ *   - T51 (G49, K4680): `capturerequests`, `casedrafts` and `readheld`, whose `act.<op>.does` words the design's reads list now gives, are
+ *     held in `T51_DESIGN_OPS` (`readheld` was a stand-in until its design row landed);
  *   - T51 (R69): the seven browser acts, `BROWSER_ACTS`, are held under their own names from `act.owed_<name>.does`;
  *   - `projectownervotes` has no text in the design and is held none (`op-declarations` names it in `ACT_HELP_ABSENT`, R61);
  *   - `selftest` (FR-40, K4190): the word list holds `act.selftest.does` for the updates screen (DEC-376), but this module's reads
  *     list (R62) does not give it and no act this module draws is `selftest` (instance-setup's probe), so it is held none.
  * A retired op is not held. */
-import { word, localize } from "../setup-words/index.mjs";
+import { word } from "../setup-words/index.mjs";
 import { MEMBERSHIP_CHECKS } from "../membership/index.mjs";
 
 /** T51 (K4248; U421, DEC-387): the declared ops whose `act.<op>.does` words the design's reads list for this module gives (R62), held
@@ -56,10 +58,14 @@ export const T51_DESIGN_OPS = Object.freeze([
   "biasmanifest",
   "captureaccount",
   "capturerequestretry",
+  "capturerequests",
+  "captureseenin",
+  "casedrafts",
   "consequencerecord",
   "consequencerevise",
   "contradictionclarify",
   "contradictiondismiss",
+  "contradictionflag",
   "contradictionoptin",
   "contradictionresolve",
   "contradictionrespond",
@@ -78,6 +84,7 @@ export const T51_DESIGN_OPS = Object.freeze([
   "hypothesisrevise",
   "hypothesiswithdraw",
   "importacceptwithdraw",
+  "inboxlist",
   "inquirydivide",
   "knockerconsent",
   "knocksof",
@@ -87,18 +94,25 @@ export const T51_DESIGN_OPS = Object.freeze([
   "leadshare",
   "linewithdraw",
   "memberpairingset",
+  "moneysets",
   "monitoring",
   "monitorpause",
   "monitorslate",
   "objectivecondition",
+  "officeconfirm",
+  "origins",
   "pdfstructure",
+  "progressions",
   "provenanceroute",
+  "readheld",
   "reattest",
   "reevaluationrecord",
   "reevaluations",
+  "remindersfor",
   "reopen",
   "resolutiondefect",
   "runtime",
+  "scanmirror",
   "selftest",
   "sourceconsent",
   "sourceconsentwithdraw",
@@ -109,6 +123,7 @@ export const T51_DESIGN_OPS = Object.freeze([
   "sweeps",
   "templatesave",
   "transcriptionattest",
+  "transcriptions",
   "triage",
 ]);
 
@@ -118,21 +133,16 @@ export const T51_OWED_OPS = Object.freeze(["expertisewithdraw", "declareorigin",
   "citeimported", "withdrawimported", "projectclose", "importregrade", "rerunstart", "rerunpair", "rerunread", "casedetailsset",
   "casedetails", "namedrequestset", "namedrequests", "sweepset", "sweepratify", "taskdecide"]);
 
-/** T51 (B14; B17, DEC-412 K4458): the declared ops whose `act.<op>.does` rows the word list holds but the design's reads list for this
- *  module does not give yet (R62): each is held under its key, read through `word`, until the reads list is regenerated. `contradictionflag`
- *  (B14) and the nine rows DEC-412 wrote (origins, inboxlist, transcriptions, progressions, remindersfor, moneysets, captureseenin,
- *  scanmirror, officeconfirm) were stand-ins until then. */
-export const T51_LIST_ONLY_OPS = Object.freeze(["contradictionflag", "origins", "inboxlist", "transcriptions", "progressions",
-  "remindersfor", "moneysets", "captureseenin", "scanmirror", "officeconfirm"]);
+/** T51 (B14; B17, DEC-412 K4458; G49): the declared ops whose `act.<op>.does` rows the word list held but the reads list did not give. The
+ *  reads list now gives all ten (`contradictionflag`, origins, inboxlist, transcriptions, progressions, remindersfor, moneysets,
+ *  captureseenin, scanmirror, officeconfirm), so they are held in `T51_DESIGN_OPS`; kept as an empty frozen value for the tests that import it. */
+export const T51_LIST_ONLY_OPS = Object.freeze([]);
 
-/** T51 (B14; B16, fix round 4): the declared ops the word list gives no sentence for. Each is a stand-in: its plain `localize` default, read
- *  under its own key, until the design stream's row lands (R62; setup-words R14). `localize` takes literal ids, so each is written out. Listed
- *  in one QUESTION to BOB; the words check holds these keys to their defaults, not to `hasWord`. `readheld` (fix round 4, extraction R80)
- *  is the one left; its key is `act.readheld.does`, named for BOB's word batch. */
-export const T51_STANDIN_HELP = Object.freeze({
-  readheld: localize("act.readheld.does", "Reads a document this record holds whole but has no reading of yet, or whose reading found nothing. The earlier reading stays in the history. Moves nothing."),
-});
-export const T51_STANDIN_OPS = Object.freeze(Object.keys(T51_STANDIN_HELP));
+/** T51 (B14; B16, fix round 4; G49): the declared ops the word list gave no sentence for, each held under its plain `localize` default
+ *  until the design stream's row landed. None is left: `readheld`'s design row exists (G49), so it is held in `T51_DESIGN_OPS`. Kept as
+ *  empty frozen values for the tests that import them. */
+export const T51_STANDIN_HELP = Object.freeze({});
+export const T51_STANDIN_OPS = Object.freeze([]);
 
 /** The ops held, in the design's order (R48, R61). */
 export const ACT_HELP_OPS = Object.freeze([

@@ -1,6 +1,6 @@
 # public-read (T51)
 
-**Status** · session_01SctGfdzcWmRNmq49hMahxN · depth 2 · COMPLETE · handled B15
+**Status** · session_01GnvpRhqTuRSK7Kr4FmJwte · depth 2 · COMPLETE · handled B20
 
 ## J1 · QUESTION
 
@@ -194,3 +194,42 @@ COMPLETE (B15 START applied; C47 seam, R43). Merged tranche/T51 first.
 **R43 line proposed (met):** drop "*(not yet met: T51)*"; test: `public-read/evidence-names.test.mjs` "R43 …" and `screens-publish/c47-seam.test.mjs`.
 
 Size (session_01SctGfdzcWmRNmq49hMahxN): test runs 7, module lines 2800
+
+## J19 · QUESTION
+
+QUESTION (G47, the timestamp tokens; needs a provider, not mine). Join and filter are done on my side (`index.mjs` caseFileFacts: a row stating `sha` joins that capture's material and is listed only if that capture is included; a row stating none joins by `ref` as before; a null `sha` is dropped from the carried row so earlier case files keep their bytes; tests `g47-attest.test.mjs`, red by name until CASE-GRAMMAR #20 merges, green here against a local stand-in of its reader/writer, not committed).
+
+The tokens cannot be keyed per capture from what the projection holds. `case-carriage` registers each timestamp token (`hold(ref, "attestation", tokenSha, ...)`, index.mjs:231-312, from `#holdTokens(ref, home, sha...)`) in `published_shas` as (sha256 = the token's, bundle_id = the material's `ref`, path = `materials/<token sha>`, kind `attestation`): the capture it stamps is known at that call (`sha`) and not stored. My lookup (`index.mjs` caseFileFacts, the `held` read, bundle_id = `a.ref`) therefore returns every capture's tokens of that `ref` under each co-attestation row: with k = 2 captures both with tokens, capture A's row carries B's token and the reverse. They do collide; I cannot show they cannot.
+
+Smallest thing I need: a stored link from a token to the capture it stamps, written by `case-carriage`'s `hold` for kind `attestation` (it has `sha` there) and carried through publication's `published_shas` registration, e.g. a nullable column `capture_sha` on `published_shas` (set only for kind `attestation`), or a path `materials/<capture sha>/<token sha>`. Then I key the lookup by (ref, row's `sha`) when the row states one, and by ref alone otherwise (earlier documents and rows read as before). Who owns it is yours to place (case-carriage, publication; their requirements say what a registered file's row is). My recommendation: the nullable column, since it keeps every existing `path=('materials/'||sha256)` read unchanged.
+
+Until you answer I carry the tokens as before (all of the ref's, under each row), which is the misattribution the join fix removes for accounts; I have NOT hidden any. I will not COMPLETE with this open; I finish the rest (record, checks) and wait.
+
+## J20 · COMPLETE
+
+COMPLETE (B16 START applied, B17/B18 answered; G47 and G47t). Merged tranche/T51 first.
+
+**What changed.** `bio-plane/src/public-read/index.mjs` caseFileFacts (~:1499-1530): (1) an attestation row stating `sha` (64 hex) joins the material of that `ref` AND capture, takes that capture's signed account, and is listed only if that capture is included (an excluded capture of an included `ref` is excluded); a row stating none joins by `ref` as before. (2) A null `sha` (as case-grammar's reader answers an absent one) is dropped from the carried row, so case files of earlier documents keep their bytes. (3) G47t: a `co_attestation` row stating `sha` reads tokens `AND (capture_sha IS NULL OR capture_sha=?)`, the sha lowercased and used only when 64 hex (any other value reads as none); a row stating none runs today's query. `held` items stay `{sha, text}`; no `capture_sha` in any answer. Census/op keys: none changes (K4208); `casefile.mjs` unchanged.
+
+**Failing-first.** `test/m/public-read/g47-attest.test.mjs` (3 tests, R23): red before the fix (capture A's account under capture C's row, B's row without its own), green after against a local stand-in of case-grammar's reader/writer. `g47t-tokens.test.mjs` (3 tests, R23): real commit of one source with two captures and tokens; control green now (proves the setup holds both tokens); the other two green against local stand-ins (case-grammar `sha`, the column, `capture_sha` written), not committed. Edition-2 case not separately tested: the key is per capture, not per edition.
+
+**Seam tests red by name (committed state):** g47-attest 2 of 3 wait for CASE-GRAMMAR #20 (the row's `sha`); g47t-tokens 2 of 3 wait for CASE-GRAMMAR #20, CASE-CARRIAGE #15 (writes `capture_sha`) and PUBLICATION #36 (the column). The shipped token query assumes the column, as B18 ruled; a row stating `sha` fails with "no such column" until publication merges. BOB posts a CHANGE as each lands.
+
+**Suites.** public-read with the stand-ins 250 pass 0 fail; committed state: only the seam tests above red. publication 153 pass 0 fail (154 tests). screens-publish 5 red, identical on the unchanged tranche (G10/words, photos), not mine. Checks: format 0, architecture 0, coverage 43 of 43, ownership 0 (4 files), `checks/run.mjs` 0 failures, words unchanged (no new sentence).
+
+**Deferred.** `index.mjs` `#editionItems` `originalOf` keys a copied material's original by `ref` (two copied captures of one `ref` keep the last); the case file also gives them one path (`caseFilePath("obscured", ref)`), so both are case-grammar/case-disclosures' format question; not touched.
+
+**Requirement line proposed (BOB writes it):** R23's `attestations` gains: a row states the capture it attests (`sha`) only where its `ref` has two or more captures; it then joins that capture's material and account and is listed only if that capture is included; a `co_attestation` row stating `sha` carries the tokens `publication` held for that capture and those held for no one capture (null); a row stating none joins and carries by `ref` as before, and is carried with no `sha` key. Tests: g47-attest, g47t-tokens.
+
+Size (session_01GnvpRhqTuRSK7Kr4FmJwte): test runs 9, module lines 2784
+
+## J21 · COMPLETE
+
+COMPLETE (B20 CHANGE applied; replaces J20's seam-red status). Merged tranche/T51 (case-grammar #20, case-carriage #15, publication #36, case-disclosures #17 in).
+
+**Seam tests now green:** `g47-attest.test.mjs` 3/3 and `g47t-tokens.test.mjs` 3/3 against the real providers, no stand-ins. No code change since J20; my R23 test rows already omit a null `sha` (the carried row drops it), so the deepEqual of attestation rows stands unchanged (casefile.test R23 co-attestation green).
+
+**Suites (preload).** public-read 250 pass 0 fail. Users: publication 164 pass 0 fail (165 tests); screens-publish + case-authoring 502 pass, 8 red: screens-publish's 5 (R3 x2, R4 R30, R24 x2: G10/words/photos) and case-authoring R55 x3 (case-disclosures R4/R7/R11 arms); all 8 fail identically with the tranche's own public-read `index.mjs` swapped in, so not mine; reported for BOB. Checks: `checks/run.mjs` 0 failures on all five, ownership 0 (4 files).
+
+Requirement line and deferred `originalOf` as in J20. No open QUESTION.
+Size (session_01GnvpRhqTuRSK7Kr4FmJwte): test runs 12, module lines 2784

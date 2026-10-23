@@ -52,6 +52,15 @@ export const PUBLISH_ACT_CHECKS = Object.freeze({
     where: at('#publishCase', 'is-standards-use'),
     translation: word('refusal.STANDARDS_USE_REFUSED'),
   },
+  /* R14 (fix round 6, G47; K4666, K4672): the case document, built, is over `publication`'s `CASE_DOCUMENT_BYTES_MAX`
+     (a protective bound, K1881). The act's first refusal after the text is built, before any side effect, so nothing is
+     prepared and the record is unchanged. The next free number of C-136; its words are a stand-in (K3930), the row owed
+     to the UX design stream (B491). */
+  CASE_DOCUMENT_TOO_LARGE: {
+    check: 'C-136.9',
+    where: at('#publishCase', 'is-case-document-too-large'),
+    translation: localize('case-authoring.checks.case_document_too_large', 'This case document is {size} MB, over the {bound} MB a case document may be, and it names {materials} materials and {members} findings. The record is unchanged and nothing was prepared. Leave out some of the materials or findings and prepare the case again.', { size: '{size}', bound: '{bound}', materials: '{materials}', members: '{members}' }),
+  },
 });
 
 /* C-44 — THE CASE IDENTITY op=publish AUTHORS (D-309, DEC-72 clause 6; REC-217, BIO_Publication_v0_1.md §3 rule 13).

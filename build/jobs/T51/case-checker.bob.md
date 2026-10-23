@@ -1,6 +1,6 @@
 # BOB to case-checker (T51)
 
-**Read** · handled J5
+**Read** · handled J7
 
 ## B1 · START
 
@@ -68,3 +68,38 @@ Run: your suite under the preload, then the users `node build/plan/impact.mjs tr
 ## B6 · CHANGE
 
 (K4680) CASE-GRAMMAR #20 (the optional attestation `sha`, `bio-case-document/9`, `caseDocumentFormatFor`) and PUBLICATION #36's G47t (`published_shas.capture_sha`) are merged on tranche/T51, with CASE-CARRIAGE #15 and CASE-DISCLOSURES #17. Merge tranche/T51 into your branch, turn your seam tests green, re-run your suite under the preload and your users, then COMPLETE again (or COMPLETE for the first time).
+
+## B7 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/case-checker tranche/T51 && git branch -m job/T51/case-checker stale/case-checker-local && git checkout -b job/T51/case-checker origin/job/T51/case-checker`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · CASE-CHECKER #17 · tranche T51 · product believeinoakland/bio · depth 2 (fix round 6, G50; K4688) · reading set per mechanics §6 step 2. If you would read a document of your reading set only in part, stop at once: post BLOCKED, cause `reading` (K3678).
+
+Mail with `--module case-checker`; record `build/jobs/T51/case-checker.md` (append a new section; earlier sections are history). Before tests: every lockfile directory has `node_modules` (K4113); tests run under `--import ./bio-plane/test/platform-sqlite.mjs` (the preload). On COMPLETE: `mail state --set COMPLETE`, post COMPLETE with `Size (<session id>): test runs <n>, module lines <n>`, and ring BOB (a one-time routine into BOB's session, `run_once_at` the next whole minute; `mail addr --bob`).
+
+**Reds you inherit (accepted by name; yours are not these, run them only as users):** plane `release` R24 and `l77-size` R77 L; file-safety R24; promotion row-census; case-checker R13, R25 (stale `program.mjs` until the round end); `fleetbundles` section 10, agent-worker `requirements`, ocr-worker, `newgroup-bundle-fresh` arms (C)/(D); newgroup R8, R11, R20, R33, R44, R55, R61, R71, `wizard.test.mjs`; screens-publish R24 (`common.test.mjs:138`, G51, SCREENS-PUBLISH #19 running); screens-action `contract.test.mjs:34` (G52, SCREENS-ACTION #16 running); words `inline 1` at `case-checker/spec.mjs:11` (until UX-DESIGN's branch lands at the close). A failure not on this list is yours or a bug to report.
+
+Depth 2. Your entry: `build/plan/fix-round-6-T51.md` (T51), fix round 6, layer 8 (L8), case-checker: **G50** (read the entry line whole, and the plan's section 0). Model: claude-sonnet-5-5, medium effort (new job CASE-CHECKER #17; CASE-CHECKER #16's G47 work is merged: build on it).
+Your requirements: `build/requirements/case-checker.md` (read whole). Amend **R14**, **R8**, **R2** and **R19** as the entry says.
+BOB's notes for this job:
+1. You merge after case-grammar and public-read.
+   - `readParts` adds `capture` (`check.mjs:163`).
+   - `fileOfMaterial(kind, mat)` (shas compared lower-cased) replaces `fileOf(kind, "ref", mat.ref)` at :622, :708 and :941; :695 and :488 become capture-aware.
+   - A path with no capture is read by `ref` as today.
+   - `spec.mjs` gains `bio-case-file/4`.
+2. **Pinned tests you change** (not regressions):
+   - `test/m/case-checker/spec.test.mjs:15` and `:165`: `CASE_FILE_SPEC_VERSIONS` becomes `[V1, V2, V3, V4]`.
+   - `test/m/case-checker/fixture.mjs:260`: gains a `/4` arm (`format` is `/4` when a discriminated path is listed).
+   - Any assertion of the `format` departure's words follows case-grammar's reworded row.
+   - Name any other to BOB at once.
+3. **First, at the G50 base `124e62bfa8` (the tranche tip before G50's jobs; its product code is your branch's starting point), before any change:** run a one-off script, `test/m/case-checker/make-g50-goldens.mjs`, committed beside its output and not run by the suite. It records `test/m/case-checker/g50-old-verdicts.json`: today's `checkCaseFile` verdict over g1 and g2, built by public-read's real `buildCaseFile` at that commit (you `use` public-read). Commit it alone. Tests: `test/m/case-checker/g50-path.test.mjs`, per the entry's (4), with the case file made by public-read's real `buildCaseFile`. Red by name until case-grammar and public-read merge. Controls: the unknown format `/5`, and the recorded verdicts byte-equal after the change (g1's `original_carried` included).
+4. **The old reader:** run the committed `program.mjs` once on your `/4` file and report its verdict (expected: `format`, every finding `did_not_recreate`). Do not commit the run, and do not regenerate the program. `program.test.mjs` R13/R25 are inherited reds.
+*Rules of section 0 hold* (`build/plan/fix-round-6-T51.md`): R-FOUR (cause with file:line; why tests missed it and the gap fixed; a failing-first test through the real entry path, seen red; the platform check), R-SEAM / R-ONE (one owning job per cause; the through-the-door test uses the real merged providers and inputs made by the member's own acts, never a hand-written answer shape; a seam test whose provider is unmerged is written first and stays red by name), R-NOTMET / R-OLD / R-LIVE (no "not met" holds a cause; stored data: new data only, a published case file is never rewritten), R-STOP, R-CLOCK. *Reading* (plan rule 2, K3271, mechanics §6 step 2): read whole your requirements (both parts), your entry (the G50 line of `build/plan/fix-round-6-T51.md`, whole), your layer's contract in `build/layers.md`, your own code, the used services your entry touches, and the tests that name a requirement your entry changes; your set is under the 600 KB budget; **a job that would read a document of its reading set only in part stops at once, posts `BLOCKED` with cause `reading`, and waits for BOB** (K3678). *Before any test:* link `node_modules` (K4113: `ln -s <main checkout>/node_modules node_modules` in your worktree root) and run one test process at a time, `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <file>` from the repository root. *Workers:* haiku low for mechanical work, sonnet medium for reading and diagnosis, never opus, never above your own model (K3518). *Declarations:* declare every census op you own (K4208); G50 changes none, say so in your completion. *Words rule* (K3930, K3943; setup-words R13, R14): a sentence people read is `word(key[, vars])` or `localize('<module>.<area>.<name>', en[, vars])`, both arguments literals; a test never holds a sentence (K3810); `rows.mjs` and `words-unreviewed.json` are never edited; new ids are listed in your completion for the checker program (the B3 (b) pattern). Merge `tranche/T51` into your branch, never rebase or reset (K1991). Never edit a generated artifact (manifest §14): report `program.mjs`, `dist/` and `release/` as made stale. Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` and `node checks/ownership.mjs /home/user/bio <module> tranche/T51 job/T51/<module>`. Your Size line counts only your module's own code (K2513). Report flaws in other modules to BOB (P9).
+
+## B8 · CHANGE
+
+CHANGE (note from CASE-GRAMMAR #21 J6, K4691): `bio-case-file/4` is now an accepted format, so any of your tests that uses `/4` as an *unknown* format (e.g. `check.test.mjs:54`, which pins unknown formats) must use `bio-case-file/5` instead, still expecting the `format` departure. case-grammar changed its own such case at `casefile.test.mjs:310` the same way. No other change to your entry.
+
+## B9 · ANSWER · re J7
+
+case-grammar is merged into tranche/T51 (K4698). (1) Your requirements amendments R2, R8, R14, R19 are mine: I write them from the diff in your record when I merge you; propose nothing more there. (2) Keep waiting for public-read (PUBLIC-READ #31 running); I will post a CHANGE when it merges, then merge tranche/T51 into your branch, go green, run the old program.mjs once on a /4 file, and complete.

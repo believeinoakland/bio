@@ -39,7 +39,7 @@ export const COPY = (o = {}) => ({ kind: "review-copy", reader: "member", draft:
   ...o });
 
 export const PREFLIGHT = (o = {}) => ({ wrote: false, ready: false,
-  first: { ok: false, code: "PHOTO_UNCHECKED", reason: "PHOTO_UNCHECKED", translation: "Photo 1 is not yet checked." },
+  first: { ok: false, code: "PHOTO_CHECK_UNWORDED", reason: "PHOTO_CHECK_UNWORDED", translation: "Photo 1 is not yet checked." }, // a code the list holds no word for (every code case-disclosures answers today has a refusal.<CODE> row, DEC-418)
   blockers: [{ ok: false, code: "TENSION_NOT_DISCLOSED", translation: "A contradiction is not yet disclosed." }],
   steps: [{ case: C, edition: 2, pinned: [{ target: "FND-2026-0031", bundleSha: B1 }] }, { roles: {}, required: null }, { tensions: [] },
     { photos: [{ ref: "INFO-2026-0007", sha: PHOTO, taken_by: "dev", relied_on_by: [{ member: "FND-2026-0031", role: "relied" }], state: "unchecked", marks: [], copy: null, refused: false, words: "photo.refused.unchecked" }], unchecked: 1 },
