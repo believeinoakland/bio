@@ -40,7 +40,9 @@ import { formatOf, readActive, sheetsOf, structureFlags, safeViewRoute, ACTIVE_F
          needsWholeFile, wholeCharacters, textView } from "./formats.mjs";
 import { rowKey, SENTENCE_KEYS } from "./words.mjs";
 export { FILE_SAFETY_CHECKS, THREAT_REASONS, PROVIDER_REASON_WORDS } from "./checks.mjs";
-export { SAFE_VIEW_TEXT_MAX } from "./formats.mjs";
+export { SAFE_VIEW_TEXT_MAX, SAFE_VIEW_CELLS_MAX, SAFE_VIEW_SHEETS_MAX, SAFE_VIEW_TOTAL_CELLS_MAX, SAFE_VIEW_INLINE_CELLS_MAX_BYTES,
+         SAFE_VIEW_ODS_DECLARED_MAX, sheetsOf } from "./formats.mjs";
+export { SCREEN_WORDS, SCREEN_WORD_KEYS } from "./screen-words.mjs";
 export { SENTENCE_KEYS } from "./words.mjs";
 export { FINDING_KINDS, NO_PLAIN_DESCRIPTION, findingKind } from "./kinds.mjs";
 export { FILE_SAFETY_TABLES } from "./schema.mjs";
@@ -907,6 +909,9 @@ export class FileSafety {
         if (q && (q.render_state === "queued" || q.render_state === "waiting"))
           return refusal("SAFE_VIEW_PENDING", "The safe view is queued.", { captureSha: sha });
       }
+      /* R51 (G44): a zip or unknown file above GRADE_READ_MAX is never loaded, and the view says why with its size and the bound */
+      if (look && look.tooLarge && (format === "zip" || format === "unknown"))
+        return refusal("SAFE_VIEW_FAILED", "The file is above what a safe view reads. Nothing was read.", { captureSha: sha, renderer_reason: "TOO_LARGE", size: look.tooLarge, bound: GRADE_READ_MAX, format });
       /* DEC-49 REGION is-safe-view-route */
       if (!route && format !== "text")
         return refusal("NO_SAFE_VIEW", localize("file-safety.index.a_safe_view_is_made", "A safe view is made of documents, presentations, spreadsheets and plain text only."), { captureSha: sha, format });
@@ -921,10 +926,13 @@ export class FileSafety {
       }
       if (route === "data") {
         const whole = look.whole ? look.bytes : await this.#bytes(sha);
-        const s = whole ? await sheetsOf(format, whole) : { ok: false, why: (await this.#sizeOf(sha)) > GRADE_READ_MAX ? "TOO_LARGE" : "NOT_FOUND" };
-        if (!s.ok) return refusal("SAFE_VIEW_FAILED", "The spreadsheet's cells could not be read.", { captureSha: sha, renderer_reason: s.why });
+        const size = whole ? null : await this.#sizeOf(sha);
+        /* R51 (G44): a file above GRADE_READ_MAX, and one above what a preview can show, are stated with their size and the bound */
+        const s = whole ? await sheetsOf(format, whole) : { ok: false, why: size > GRADE_READ_MAX ? "TOO_LARGE" : "NOT_FOUND", ...(size > GRADE_READ_MAX ? { size, bound: GRADE_READ_MAX } : {}) };
+        if (!s.ok) return refusal("SAFE_VIEW_FAILED", "The spreadsheet's cells could not be read.", { captureSha: sha, renderer_reason: s.why,
+          ...(s.size !== undefined ? { size: s.size, bound: s.bound, format } : {}) });
         this.#count("safe_views");
-        return { ok: true, kind: "data", derived: true, of: sha, sheets: s.sheets, original };
+        return { ok: true, kind: "data", derived: true, of: sha, sheets: s.sheets, sheets_total: s.sheets_total, sheets_truncated: s.sheets_truncated, original };
       }
       if (!this.#scannerBinding()) return refusal("RENDERER_ABSENT", localize("file-safety.index.your_teams_civicsmith_has_no", "Your team's Civicsmith has no safe view installed. Nothing was rendered."), { captureSha: sha });
       const row = this.#ensureQueued(sha);
