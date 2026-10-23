@@ -482,6 +482,14 @@ export class Calculations {
    * TABLES (R1–R3)
    * ===================================================================== */
 
+  /* R44: whether a capture is a CSV file, as its provenance profile or its reading records (content's container format). */
+  #isCsv(captureSha) {
+    try {
+      const c = this.content.contentContextFor(captureSha);
+      return !!c && !!c.container && c.container.format === "csv";
+    } catch { return false; }
+  }
+
   /* R1: the source's rows: a sheet range's typed cells, a passage's text read as CSV, or a whole document's bytes. */
   async #sourceRows(row) {
     if (row.extent_kind === "sheet-range" || row.extent_kind === "sheet-cell") {
@@ -503,8 +511,11 @@ export class Calculations {
       const engine = got.cells.some((c) => plain(c) && typeof c.formula === "string" && c.formula !== "") ? { name: FILE_ENGINE, version: null } : null;
       return { rows, bytes: null, engine };
     }
+    /* G101 (R44): a CSV document is the file's own stored bytes, never the reading's index (blocks that repeat the header, caps), so the
+       table's sha is the file's: a CSV whose bytes are not held is refused, stated, never made from the index. */
+    const csv = row.extent_kind === "document" && this.#isCsv(row.capture_sha);
     let text = null;
-    try { text = this.content.passageText(row.content_id); } catch { text = null; }
+    if (!csv) { try { text = this.content.passageText(row.content_id); } catch { text = null; } }
     if (typeof text !== "string" && row.extent_kind === "document") {
       const ev = this.record.evidenceStore();
       try {
@@ -512,7 +523,8 @@ export class Calculations {
         if (obj) text = typeof obj.text === "function" ? await obj.text() : new TextDecoder().decode(await obj.arrayBuffer());
       } catch { text = null; }
     }
-    if (typeof text !== "string") return { fault: word("calculations.source_text_held") };
+    if (typeof text !== "string")
+      return { fault: csv ? localize("calculations.index.the_csv_files_own_bytes", "the CSV file's own bytes are not held, and a table is made from the file, never from the index of its reading") : word("calculations.source_text_held") };
     if (text.length > TABLE_MAX_BYTES * 2) return { tooLarge: true };
     return { text };
   }
