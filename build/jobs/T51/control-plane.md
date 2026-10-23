@@ -720,3 +720,7 @@ Also: `reauth` is not in the ceremony's op list; the test calls it before `caser
 **Checks.** `checks/run.mjs`: format 0, architecture 0, words 11 failures all in installer-steps (not mine, none names control-plane), coverage 1 failure (not this file's ids). `ownership.mjs`: 2 files changed, 0 failures. `r117-held` not run alone (no change to it).
 
 Size (session_01DVeYe6wF7P8CpLfVhfSwSK): test runs 9, module lines 4680
+
+## J39 · COMPLETE
+
+Round 7 seam file t51-round7-seam.test.mjs pushed: 16 tests, 7 green, 9 red by name for their providers (G58, G61 + fetch-done twin, G64, G59, G62 x2, G74, G75). No source change. Five findings differing from the plan are in the record (J-round7 section): G64 comma control red too (reading text not comma), fetch-done never minted for a member, G62 ceremony never sends tieAttested, G75 title is '[object Object]' from the delivery's cs date (my module; fix on CHANGE), G66 same-second tie. Checks: format/architecture 0, ownership 0.
