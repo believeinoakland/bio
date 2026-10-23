@@ -1,6 +1,6 @@
 # plane (T51)
 
-**Status** · session_019MQdmdBDvLzCM4txninn2N · depth 2 · COMPLETE · handled B62
+**Status** · session_01SuLrPmukVhtAycT1EbpVTg · depth 2 · COMPLETE · handled B63
 
 ## Record (PLANE #41, T51-125)
 
@@ -653,3 +653,22 @@ WHAT P AT THE RE-WALK WILL READ (G54 (4) P). After the redeploy, within two tick
 OBSERVATIONS (not plane's). Publication records one failed attempt as `attempts` 2 (a `building` and a `failed` each add one), so the first backoff is 30 s, not 15 s. G44's "previewed whole" is read as previewed with the cut stated, since the view cuts a sheet at about 1,000 cells.
 
 Size (session_019MQdmdBDvLzCM4txninn2N): test runs 90, module lines 32
+
+## Record (PLANE #53, B63: G55's alarm residual, K4726)
+
+**What changed.** Tests only, no plane source: `bio-plane/test/m/plane/g55-alarm-l.test.mjs` (workerd/Miniflare) and its entry `g55-alarm-l-entry.mjs` (the plane's real `Store` as a subclass: routes `/g55/seed`, `/g55/session`, `/g55/state`, `/g55/release`; its `alarm()` only counts a firing and, past the binding `G55_GATE`, holds it until released; no route fires a tick). The act goes **through the real door as a member**: the entry lays a session row (a 64-hex token's digest, role `member:bob`, as `credentials.login` stores one; the password flow is not the subject) and the test sends `POST /api?op=moneyingest` and `GET /api?op=moneyingestread` with `Authorization: Bearer`. Real DO SQLite and R2; Miniflare's persisted directories for the restart.
+
+**Test 1** (25,000 resolving rows): the act answers `ingesting`, `rows_total` 25,000, 0 written; with no hand-fired tick the object's own alarm runs it to `done` (bounded by firings, 60, never a time): **14 firings, 25,000 facts, 25,000 distinct `source_row`**, cursor 25,000, the marker `money_ingests` opened once and closed, `moneyingestread` `complete: true` with 25,000 written, notice-producers' `FINDING::ingest-done::<ingest>` raised for Bob, `ingestDue` false and `ingestWake` null; control: once done no further firing and no fact. **Test 2** (kill): the first three firings go through (two slices: 4,000 facts, cursor 4,000, `ingesting`), the fourth is held, the runtime disposed (the kill), a fresh Miniflare over the persisted store: the committed 4,000 survive; the restarted object arms its alarm by itself (a firing reached the gate with nothing hand-fired); released, it finishes in **11 more firings: 25,000 facts, no duplicate**, marker closed, done notice raised.
+**One reading to note.** The alarm is not empty after the ingest in the whole plane: other consumers keep later wakes (about a day off). So the test asserts what scheduler R15 asks of the ingest (not due, no wake, no alarm within 30 s of now, another consumer's later instant allowed), not `getAlarm() === null`.
+
+**Red first.** With `scheduler/index.mjs` temporarily not registering the `ingest` consumer (`if (false && this.#owners.calculations)`, reverted at once; `git status` shows only my two new files), both tests fail: the alarm fires once, the record stays `ingesting` at `next_row` 0 (the first test after 188.7 s of waiting, the second 186.0 s). Green on the tip.
+
+**Suites and checks.** plane non-heavy (54 files, concurrency 4): 338 tests, 337 pass, 1 fail = `release` R24 (accepted). Heavy, each alone: `g54-l` 6/6, `g55-alarm-l` 2/2, `l75` 3/3, `l77-size` 1 of 3 (R77 L twice, accepted), `l77-traffic` 1/1, `l77` 1/1, `l79` 5/5, `t42` 18/18, `t46` 13/13, `worker` 7/7. `checks/run.mjs`: format 0, architecture 0, coverage 6696 of 6696, channels 0; words `inline 6`, `missingkey 5` (the accepted ones, none in plane). `checks/ownership.mjs /home/user/bio plane tranche/T51 job/T51/plane`: 0 failures. Census ops: none change. Deferred: none. Found in other modules: none.
+
+**Proposed requirement line (BOB writes it).** plane **R88** (fix round 6, G55's residual; K4426 (4), K4726; `scheduler` R24, `calculations` R14): **A money ingest over the inline threshold is run to its end by the object's own alarm.** In the real plane on workerd, a member's `moneyingest` of 25,000 resolving rows through the door answers started; the object's alarm, with no tick fired by hand, runs every slice until the record is `done`, with 25,000 facts, no `source.row` twice, the marker closed, `moneyingestread` `complete`, the viewer's `ingest-done` notice raised, and no alarm wanted for the ingest; an object killed after two slices and restarted over its persisted store re-arms its alarm by itself and finishes with no duplicate. Test: `g55-alarm-l.test.mjs` (workerd). Control: once done, no further firing writes a fact.
+
+Size (session_01SuLrPmukVhtAycT1EbpVTg): test runs 5, module lines 0
+
+## J42 · COMPLETE
+
+COMPLETE (PLANE #53, B63): G55's alarm residual. Tests only, no plane source: bio-plane/test/m/plane/g55-alarm-l.test.mjs + g55-alarm-l-entry.mjs (workerd/Miniflare, the real Store, real DO SQLite and R2). The act goes through the real door as a member (a session row laid by the entry, then POST /api?op=moneyingest with a bearer token). 25,000 resolving rows: the object's own alarm, no hand-fired tick, ran 14 firings to done: 25,000 facts, 25,000 distinct source rows, marker closed, moneyingestread complete, the viewer's ingest-done notice raised, the ingest wants no alarm (other consumers keep later wakes, so getAlarm is not null in the whole plane; asserted as scheduler R15 asks). Killed after two slices (4,000 facts) and restarted over the persisted store: re-armed its alarm by itself and finished in 11 more firings, 25,000 facts, no duplicate. Seen red with the ingest consumer unregistered (record stays ingesting at row 0). Plane suite: non-heavy 337 of 338 (release R24 accepted); heavy alone green except l77-size R77 L (accepted). checks/run.mjs: format, architecture, coverage 0; words only the accepted inline 6, missingkey 5; ownership 0. Proposed requirement: plane R88 (text in my record). Census ops: none. Found in other modules: none. Awaiting G57's CHANGE.
