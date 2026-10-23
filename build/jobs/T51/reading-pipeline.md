@@ -578,3 +578,5 @@ Census ops: none (this module declares none). Rows owed to UX-DESIGN: none (no s
 
 1. pdf-reader's merge of `openPdfRange` (BOB's CHANGE): the import made plain, the PDF L check, `pdf-pieces.test.mjs` five of five alone.
 2. `NEEDS BOB` (J28): the refused probe loop, or BOB's word that those figures are taken at the redeploy's P step.
+
+Size (session_01SNN2SB35FYPNhzC5KBpM7p): test runs 33, module lines 3113
