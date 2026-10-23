@@ -54,6 +54,8 @@ async function setup({ mutate = (d) => d, edition = 1, conclusions = true, body 
   const preflight = (o = {}) => w.r.caseRatifyPreflight({ text, signer: "alice", viewer: V("alice"), ...o });
   return { w, P, key, text, docSha, sig, act, commit, preflight };
 }
+/* R58 adds `source` and `why` to `publish_at`: where a zone came from, which these tests do not ask (r7-publish-at.test.mjs does) */
+const withoutWhere = ({ publish_at: p, ...rest }) => { const { source, why, ...kept } = p; return { ...rest, publish_at: kept }; };
 const envelopeless = ({ store, tokenClass, ...rest }) => rest;
 const entry = (pf, reason) => pf.refusals.find((r) => r.reason === reason);
 const reasons = (pf) => pf.refusals.map((r) => r.reason);
@@ -61,7 +63,7 @@ const reasons = (pf) => pf.refusals.map((r) => r.reason);
 test("R18: a document its project's owner, holding an attesting key, may sign is ready — no refusal — and the act commits it", async () => {
   const { preflight, act } = await setup();
   for (const signer of ["alice", V("alice")])
-    assert.deepEqual(preflight({ signer }), { ok: true, ready: true, refusals: [],
+    assert.deepEqual(withoutWhere(preflight({ signer })), { ok: true, ready: true, refusals: [],
       publish_at: { offered: false, zone: null, reason: "PUBLISH_AT_NO_ZONE" } }, signer);
   for (const viewer of [V("alice"), V("bo"), "admin", V("admin"), null])
     assert.deepEqual(preflight({ viewer }).refusals, [], String(viewer));

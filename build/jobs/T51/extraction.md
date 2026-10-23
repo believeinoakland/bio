@@ -1,6 +1,6 @@
 # extraction (T51)
 
-**Status** · session_013ZBMsX3r7H8TLywtAcFXZJ · depth 2 · COMPLETE · handled B43
+**Status** · session_01EEMpAQRdm5Ju5HajHRvsLv · depth 2 · COMPLETE · handled B45
 
 ## J1 · REPORT
 
@@ -546,3 +546,46 @@ G41 follow-up (K4664, K4669, K4670) done. Branch job/T51/extraction, `tranche/T5
 **Protective bounds set:** none new (CELLS_RANGE_MAX 20,000 as G41). **Rows owed to UX-DESIGN:** none. **Deferred:** none. **Found in other modules:** capture's multipart profiling (the second cause, K4670) is CAPTURE #50's and unchanged here; my fallback covers captures already stored `undetermined` (R-OLD: nothing stored is rewritten). `content/index.mjs:1441` `containerKindOf` still trusts `undetermined` over the container (a latent flaw as K4669 says); nothing reaches it from `cellsAt`.
 
 Size (session_013ZBMsX3r7H8TLywtAcFXZJ): test runs 9, module lines 4193 (`wc -l` over `bio-plane/src/extractrun.mjs` and `bio-plane/src/extraction/*.mjs`).
+
+## J31 · QUESTION
+
+QUESTION (G76, extraction's part: the re-profile of held CSVs and texts). The plan says a held non-HTML text "whose stored reading carries the client_rendered handler" is re-profiled by a profile-only pass. I read the code whole and the premise does not hold:
+
+1. The shell profile (handler `client_rendered`, `handler_label`, `document_kind: "shell"`, its warning `note`) is written once at capture by `acquisition/index.mjs:1877-1895` (`profileRecord`) into the capture's register document, `data/provenance.json` of the bundle, field `profile`. The Document screen reads it from there (`screens-inquiry/document.mjs:543`, `reg0.profile`).
+2. The stored reading carries no handler or profile: I read a CSV through `readHeld` and the reading holds `content_type: "generic"`, `text_container`, `basis`, counts, `provenance`, nothing of `identify`'s answer. So a migration over `readings` cannot find the bad ones by the reading.
+3. I may not write the bundle's `data/provenance.json` (it is capture's and promotion's data, and a write is a bundle version), and extraction mints none (R34).
+
+My best reading, for you to confirm or change (it adds a requirement, so it is yours):
+- Extraction keeps its own table `reading_profiles` (capture_sha, bundle_id keyed, purge-declared R49): the corrected profile record of a held non-HTML text, written by a profile-only pass (R-OLD repair, G8's pattern: `migrateRepairs`-style, owed through `registerOwe`, from a cursor, once per release). The pass finds candidates as held `readings` whose `capture_format` is null/csv/text (or `text_container` csv/text) and whose register document, read with `core.readFile(bundle, "data/provenance.json")` (as `#storedDocument` does), states `profile.handler === "client_rendered"` and a non-HTML format; it hands `identify` the stored head (the sampled view the pipeline hands it) and stores the answer. Units, completeness and the reading are untouched.
+- `op=reading` (`readingFor`) answers `profile: {handler, handler_label, handler_version, document_kind, note, re_profiled: true}` for such a capture, absent for every other; withheld with the bundle.
+- The Document screen (screens-inquiry) and capture's register reads would then prefer `op=reading`'s `profile` over the register document's when present. That is another module's change (screens-inquiry / capture); I name it for you.
+
+The alternative is that capture owns the repair (rewrites the register document's profile) and extraction does nothing for G76; say so and I build nothing for it. The site-profiles fix (G76's provider) is not merged yet, so the failing-first test of the pass will use the fixed `identify` once it is, and is red by name until then.
+
+I carry on with G71 (done, red then green) and G82 (the L run) meanwhile, and will not build G76's pass until you answer.
+
+## Fix round 7 (B44, session_01EEMpAQRdm5Ju5HajHRvsLv): G71, G76, G82
+
+**G71 · `words_read` of a PDF read in pieces. Done.** (1) Cause as the plan: `extraction/index.mjs` `readingFor` overrode `words_read` from `capture_text_state` only when the reading's `words_total` was finite, and a PDF read by page ranges answers `words_total` null (reading-pipeline `index.mjs:2284`, `rangeScope`), so the first piece's figure showed. The writer does accumulate `capture_text_state.words_read` for PDF pieces (`indexUnits`, the `prog` arm): confirmed by the test, whose figure equals the words of the units the index holds. (2) Missed: no test read `words_read` after a PDF's later pieces. (3) `test/m/extraction/r7-words-read.test.mjs` (3 tests, R90 R91 R27), real PDF bytes (a 250-page synthetic PDF, `bigpdf.mjs`) through the real range reader, one `readHeld` a tick: RED first, `7200 !== 18000` (the first piece's words, then the pieces' sum) and `7200 !== 14400` midway; GREEN after the fix, 3 of 3. Control: a 5-page PDF read in one piece is whole with its words, and a reading with no piece state is answered as stored. Fix: the override now applies to any piece-read state (`index.mjs` `readingFor`, the `progress` arm), so old PDF readings with a stale figure are repaired on read, with no write (R-OLD). (4) Platform check N.
+
+**G82 · the tick and the object's one thread. L run for extraction's part: the block is not in extraction's piece loops. Nothing built.** The plane's seam (`r7-contention.test.mjs`) is not yet on the tranche; I ran the L run for my part myself with `test/m/extraction/r7-contention-l.probe.mjs` (Miniflare, real workerd, real DO SQLite and R2, the real reader; one object; pings are a cheap read that enters the object, timed by the probe's own clock outside the isolate, R-CLOCK; 12 concurrent every 250 ms while a tick is in flight; 12 with no tick as the baseline). Figures:
+- `text:12` (12,582,912 B, the walker's 12 MB text), 31 ticks: ping with no tick p50 3 ms, p95 5 ms. The first tick 1,169 to 1,488 ms wall (two runs); every later tick 141 to 364 ms, mean about 215 ms. Pings sent while a LATER tick is in flight: p50 36 ms, p95 124 ms, max 125 ms (n 144), well under the plan's 500 ms. Pings sent while the first tick is in flight: p95 928 to 1,249 ms, which is that tick's length.
+- `csv:17` (17,825,858 B): one tick of 1,118 ms (the CSV is read whole by its format entry, no cursor); pings p50 879 ms in that tick.
+- Where the first tick's time sits (node, a profile of the same 12 MB text through `readHeld`, wrappers around `read`, `writeReading`, `indexUnits`): first tick 894 ms = `readDocument` (reading-pipeline's `read`: decode, classify, first piece) 751 ms + `writeReading` 136 ms (of which `indexUnits` 134 ms); each later tick about 215 ms = `read` about 55 ms + `indexUnits` 140 to 175 ms (the SQLite inserts and the FTS triggers of one piece, 4,096 units at most). Extraction's share is therefore at most about 175 ms a tick (136 ms on the first); the long block is the first tick's pipeline `read` (751 ms for 12 MB, 1.1 s for the 17 MiB CSV), which is reading-pipeline's (its R1 per-tick work, diagnosis-R7-reading.md). A slice of `indexUnits` would shorten a block already under the bar, so I build none. For the plane job's seam and BOB: the figure to carry is the first tick's pipeline `read`, not the piece loop; on workerd the real copy's 39 to 45 s ticks were never seen locally (1.1 s at most), so the live cause there (memory pressure, the proxy, or a deploy-only cost) is still the P step's, not shown by L.
+
+**G76 · the held CSVs and texts carrying the shell profile. Waiting on BOB's answer to J31.** The premise of the plan's entry does not hold in extraction's data (the profile is in the capture's register document, not in the stored reading); J31 gives my reading of it and asks BOB to choose. The site-profiles provider (G76) is not yet merged on the tranche, so any test of the re-profile is red by name until then. Nothing built yet.
+
+**Suites so far** (from `bio-plane/`, under the shim): `test/m/extraction/` 328 of 328, 0 fail (the new file included). Size lines come at COMPLETE.
+
+**Checks and users so far:** `format.mjs` 0 failures; `architecture.mjs extraction` 0 failures; `coverage.mjs extraction` 74 of 74 live ids named; `ownership.mjs extraction origin/tranche/T51 job/T51/extraction` 0 failures (4 files); `checks/run.mjs`: the words count shows 11 failures, none in extraction's files (case-checker spec, installer-steps keys). Users that read `words_read`, run: screens-inquiry fr3/fr5-document, plane round6-extraction, screens-intake t51-pending/fix3/fix6: 77 of 77.
+
+## COMPLETE (fix round 7)
+
+Entries applied: G71 (fixed, red then green, `r7-words-read.test.mjs`), G82 (L run: no block in extraction's piece loops; nothing built; figures above), G76 (BOB's ANSWER B45 to J31: new data only, nothing built; held CSVs and texts already stored keep their shell note, stated in the plan; extraction's part closed with no change).
+Deferred: none. Found in other modules: the first tick's pipeline `read` (751 ms for 12 MB, 1.1 s for a 17 MiB CSV) is reading-pipeline's, carried to G68 and the plane's seam. Requirement line proposed (R90 amended): *`readingFor`'s `words_read` is the index state's for any reading read in pieces, a PDF's included.* Census ops: none new. Rows owed to UX-DESIGN: none.
+Tests/checks: extraction 328 of 328; users reading `words_read` 77 of 77; format, architecture, coverage 74 of 74, ownership 0 failures.
+Size (session_01EEMpAQRdm5Ju5HajHRvsLv): test runs 9, module lines 4,195
+
+## J32 · COMPLETE
+
+COMPLETE fix round 7: G71 fixed (red then green); G82 L run shows no block in extraction's piece loops (later ticks p95 124 ms), nothing built; G76 closed with no change per B45. Details in the record.

@@ -477,6 +477,12 @@ function parseDict(buf, s, pos) {
  * checks at load that the second decode is byte-identical to the first and keeps
  * the first for any stream where it is not. */
 
+/** R44's proof of "parsed once": how many times a document was scanned for its objects, how many object streams the open
+ *  decoded (`loadObjectStreams`), and how many times an object stream was decoded again on demand to read one object
+ *  (`_innerBytes`, the few-held cache of R41). A count and nothing else: no answer reads it. */
+const WORK = { scans: 0, objectStreamLoads: 0, innerDecodes: 0 };
+export function pdfWork() { return { ...WORK }; }
+
 /** Parsed objects kept for reuse, counted by the bytes they came from (times
  *  three); the decoded object streams kept, in bytes. */
 const OBJ_CACHE_COST = 1_200_000;
@@ -694,6 +700,7 @@ export class PdfDoc {
    *  finds the same matches in the same order from the bytes (`\s` as
    *  JavaScript means it: the PDF whitespace bytes, and 0x0B and 0xA0). */
   scanTopLevel() {
+    WORK.scans++;
     const b = this._b;
     for (let j = b.indexOf(0x6a); j !== -1; j = b.indexOf(0x6a, j + 1)) {
       if (j < 2 || b[j - 1] !== 0x62 || b[j - 2] !== 0x6f || isWordByte(b[j + 1])) continue; // "obj", then a boundary
@@ -857,6 +864,7 @@ export class PdfDoc {
     if (!data) {
       const st = this._objs.get(stm);
       data = st && st.t === "stream" ? this._decodedSync(st, this._innerLen.get(stm)) : null;
+      if (data) WORK.innerDecodes++;
     }
     if (!data) return null;
     /* room is made before the new one is held, so a 19 MB stream is never held beside the 12 MB one it replaces */
@@ -884,6 +892,7 @@ export class PdfDoc {
          made after they are released, so two copies of a 19 MB stream are never
          held at once. */
       let proof = null;
+      WORK.objectStreamLoads++;
       {
         let data = this._decodedSync(st);   // proved by its own checksum, or null
         const checked = data !== null;
@@ -4419,9 +4428,40 @@ export async function extractPdfStructure(bytes) {
  * The images of the range's own pages give R26's and R34's markers as the whole reading gives them; the one difference is that
  * the whole reading drops them everywhere when a page elsewhere cannot be walked, which a range cannot know. */
 export async function extractPdfRange(bytes, range) {
+  const refused = refusalOf(bytes);
+  if (refused) return refused;
+  return readRange(await loadPdf(bytes), bytes, range);
+}
+
+/** The answer for bytes that are not a PDF, as `extractPdfStructure` gives it; null for a PDF. */
+function refusalOf(bytes) {
   if (!(bytes instanceof Uint8Array)) return { ok: false, container: "pdf", reason: "NOT_BYTES" };
   if (!/%PDF-\d+\.\d+/.test(binaryString(bytes.subarray(0, 1024)))) return { ok: false, container: "pdf", reason: "NOT_A_PDF" };
+  return null;
+}
+
+/* R44 (fix round 7, G68; K4738) — A DOCUMENT OPENED ONCE AND READ BY RANGES MANY TIMES.
+ *
+ * `extractPdfRange` opens the file (R8's read: every `N G obj` scanned, every object stream decoded and its objects
+ * placed) at each call, so a document read in fourteen pieces is opened fourteen times, and for a 23 MB file the opening
+ * is most of every call. `openPdfRange(bytes)` opens it once and answers `{ ok: true, pages, range(...) }`; each `range`
+ * is the page reading `extractPdfRange` makes of the opened document (the same function, `readRange`), so its answer is
+ * the same for the same arguments. What the opened document holds is what one `extractPdfRange` holds while it reads: the
+ * object table (typed arrays), the bounded caches of R41 (parsed objects, decoded object streams) and the bytes the
+ * caller passed in. Nothing a `range` call builds is kept: its fonts and its pages' structures are the call's own, and
+ * its notes (informational, no answer carries them) are dropped at the call's start, so fourteen calls leave the document
+ * as one left it. A caller that holds the opened document between calls (reading-pipeline, per digest) holds that. Bytes
+ * that are not a PDF answer as `extractPdfRange` does, with no `range`. */
+export async function openPdfRange(bytes) {
+  const refused = refusalOf(bytes);
+  if (refused) return refused;
   const doc = await loadPdf(bytes);
+  return { ok: true, pages: doc.pageCount, range: (range) => readRange(doc, bytes, range) };
+}
+
+/** R43's reading of an opened document's pages; the one body of `extractPdfRange` and of an opened document's `range`. */
+async function readRange(doc, bytes, range) {
+  doc.notes.length = 0;
   const total = doc.pageCount;
   const from = Math.max(0, Math.floor(Number(range && range.from)) || 0);
   let asked = range && range.count !== undefined ? Math.floor(Number(range.count)) : total;

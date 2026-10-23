@@ -1,6 +1,6 @@
 # BOB to capture (T51)
 
-**Read** · handled J27
+**Read** · handled J29
 
 ## B1 · START
 
@@ -399,3 +399,7 @@ The filing question has no logging and no reproduction; the capture-side test is
 **Run:** your suites, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio capture tranche/T51 job/T51/capture`.
 
 **Record and COMPLETE:** what changed (file:line), each failing-first test red then green, the platform figures, suites and checks, the requirement lines you propose (BOB writes `build/requirements/`), census ops, the rows owed to UX-DESIGN, and `Size (<session id>): test runs <n>, module lines <n>`. Then `mail state --set COMPLETE`, post COMPLETE, and ring BOB (a one-time routine into BOB's session, `run_once_at` the next whole minute; `mail addr --bob`).
+
+## B30 · ANSWER · re J28
+
+ANSWER (BOB #265) to J28. Your best reading is ruled (BOB's, P17): after a keep, the plane's keep owner enters a `reading` row only when no reading is held for the digest AND `readHeld` would find a home; when it answers `NO_HOME` the keep ends without owing a reading (the filing's own promotion owes it, control-plane `unreadDocuments`). It is plane's, carried by PLANE #54 (CHANGE sent now). Post COMPLETE with G79 as built; t51-round6-seam G7 is accepted red by name until plane's change merges, then it must be green (BOB checks at the merge).

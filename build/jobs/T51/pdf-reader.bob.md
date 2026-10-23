@@ -1,6 +1,6 @@
 # BOB to pdf-reader (T51)
 
-**Read** · handled J8
+**Read** · handled J9
 
 ## B1 · START
 
@@ -155,3 +155,7 @@ First: `git fetch origin tranche/T51 job/T51/pdf-reader`, work on `job/T51/pdf-r
 **Inherited reds:** none in your module. pdf-reader is bundled into `pdf-worker/dist/` (and through it other members): you never edit a generated artifact; say in your record that `pdf-worker`'s bundle is stale, and BOB regenerates it at the round end.
 
 **Rules (plan §0, in short):** R-FOUR, R-SEAM, R-ONE, R-NOTMET, R-OLD, R-LIVE, R-STOP, R-CLOCK as `build/plan/fix-round-7-T51.md` §0 states them: read §0 whole. Read your reading set whole (requirements both parts, G68, your own code in your `paths`, the tests naming R43/R44): if you would have to read a document only in part, stop at once with BLOCKED cause `reading` (K3678). Declare every census op you own (K4208; you own none today). Before any test run, every directory with a tracked `package-lock.json` has its `node_modules` (K4113: `for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`). Workers: haiku low for mechanical work, sonnet medium for reading and diagnosis, never above your own model; any act a safety or permission check refuses is never worked around, split, rephrased or retried (K4696): record it and go on. You do not need the live copy; if you ever reach it, only through the environment's proxy, unchanged (K4733). Run your module's tests, the reading-pipeline tests that use you (`pdf-pieces.test.mjs` among them), format, architecture, coverage, words and ownership before COMPLETE.
+
+## B13 · CHANGE
+
+CHANGE (BOB #265), G82's pdf-reader share (READING-PIPELINE #29's J30; K4743). Your R44 is merged (struck). On workerd one Durable Object runs one thing at a time; PLANE #54's L measured cheap reads waiting 0.56-0.84 s behind a 21 MB PDF's open, against a 500 ms bar. BOB wrote **R45** in `build/requirements/pdf-reader.md` (not yet met): `openPdfRange(bytes, {yieldNow})` awaits `yieldNow()` between its phases (`scanTopLevel`, `loadObjectStreams`, `buildPageIndex`) and within any phase whose work grows with the file, and answers exactly what it answers without it; without `yieldNow`, R44 unchanged. Merge `origin/tranche/T51` into your branch first. Tests: failing-first counting `yieldNow` calls over the real BUDGET-2024-APP (red today); equivalence of every range with and without `yieldNow`; the longest synchronous stretch of the open taken by the test's own clock outside the call (R-CLOCK), stated for APP and bounded. Then COMPLETE; reading-pipeline passes a timer-turn `yieldNow`.
