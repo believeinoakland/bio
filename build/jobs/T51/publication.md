@@ -143,3 +143,7 @@ CASE-CARRIAGE #15 is merged; `tranche/T51` merged into my branch (a merge, not a
 **Requirement lines proposed (BOB writes them)**, as in the section above: R40: `published_shas` gains `capture_sha` (TEXT, nullable): set only for kind `attestation`, the sha of the one capture the token stamps; NULL for rows written before, every other kind, and a token two different captures name; read by `public-read`. R57: "a kind `attestation` file is registered with its `capture_sha`; a stored capture that differs from the new one is cleared to NULL, a stored NULL is never rewritten to a value, the same capture again changes nothing." Plus G47's R21 line (the byte bound) from the first section.
 
 Size (session_01QheArVvjbWvvMPvEMfwKVF): test runs 19, module lines 2503
+
+## J8 · COMPLETE
+
+G47t re-complete (B7): tranche/T51 merged; the seam test over the real case-carriage is green, no seam red remains. Publication 165 (164 pass, 0 fail, 1 todo); public-read 244/244; format/architecture/coverage/words/ownership 0 failures. Proposed lines: R21 (byte bound, first section), R40 (published_shas.capture_sha) and R57 (attestation registration), in my record.
