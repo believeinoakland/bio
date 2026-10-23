@@ -163,3 +163,9 @@ COMPLETE, G55 tier 1 (money). Head: see the pushed branch job/T51/money; tranche
 **Ran:** money 98 of 98 pass. Direct users (money-checks, duties, people, explore, query-language, retrieval-browse, retrieval, calculations, strength, contradiction, intent, corpus-export): 155 files, each run alone, every one `fail 0`. I did not run the full 1,441-file impact set; the change adds one method and alters no answer. Checks: format 0 failures; architecture 0; coverage 6686 of 6686; ownership money 0 (3 files); `checks/run.mjs`: words shows the inherited `case-checker/spec.mjs:11` inline 1 only, none in money. Declarations: no census op changed.
 
 Size (session_01RUnq4fs9yS6fvUi9DZjnt9): test runs 160, module lines 1496
+
+## J10 · COMPLETE
+
+COMPLETE again, after B8 (CHANGE): merged tranche/T51 (entities' G55 tier 1 in) into job/T51/money, pushed. Money suite 98 of 98 pass; coverage 29 of 29; ownership 0 failures (3 files). Nothing in money waited on entities. Tier 1 stands as in J9; tier 2 still waits for BOB's word.
+
+Size (session_01RUnq4fs9yS6fvUi9DZjnt9): test runs 162, module lines 1496
