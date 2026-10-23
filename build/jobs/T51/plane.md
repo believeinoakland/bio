@@ -806,3 +806,13 @@ Size (session_015vZsp754WjWKhCj8FmnyQQ): test runs 6, module lines 52
 ## J50 · COMPLETE
 
 COMPLETE (PLANE #55, B72: R96). Door: publicOp/gatedOp take an optional stateTiming and put it in every handler context (absent when not handed). Store: every answer states 'object;dur=<ms>, object-age;dur=<ms>' (age from the instant of construction). Test r8-timing-hook.test.mjs (R96): seen RED (captureOp receives stateTiming: undefined; object-age;dur absent) then green; control none handed; fix5-r77 R78 shape updated. Plane suite 436: only accepted reds (release R24, l77-size R77 L x2). impact: plane only. Checks: format, architecture, coverage 96/96, words, ownership 0 failures. Stale artifact: bio-plane/dist/bio-plane.bundled.mjs (+manifest). Proposed R96 wording in record. Size (session_015vZsp754WjWKhCj8FmnyQQ): test runs 6, module lines 52.
+
+## Record (PLANE #55, B73, B74: bootstrap caller, two test fixes)
+
+**B73 (1) applied.** `door.mjs` `publicOp`: `caller` for `bootstrapOp` now also carries `viewer`, the session's viewer from `caseReader` (only for a `member` or `admin` session reader, never a `class:` machine identity, absent without a session); the door's `stateTiming` rides in the same io object (R96). Test (`r8-timing-hook.test.mjs`, R96, real door and real object, only admission's session read stood in, in a child): RED before (`language` actual undefined, expected 'es'), green after; a member's bootstrap carries `language` and `words_version`; no session or a machine identity carries neither; an administrator's session carries them too; the report states `fleet` and `facts` entries through the door's hook. **B73 (2) applied (test only):** `compose.test.mjs` R11 writes a member row between the two reads (queue R94's kept derivation is keyed on the record's write counter); 5/5 green (was red).
+
+**B74 applied (test only).** `shape/g41.probe.mjs`: the tick bars (10 s, first tick 8 s) stay as G37/G48 state them and are multiplied by a same-run control (a fixed SHA-256 plus 5e7 integer steps timed in the test process before and after the case, best of three, against an idle reference of 60 ms, never below 1); an idle machine meets the bars as stated. `g41-shape.test.mjs` gains a test of the control (an idle control leaves the bars, a slow one widens them, a slow tick on an idle machine still fails). All 8 pass alone.
+
+**Tests and checks.** Plane suite 438: 435 pass; reds are the accepted ones only (release R24, l77-size R77 L x2). Impact (`origin/tranche/T51`..HEAD): plane only. format, architecture, coverage 96 of 96, words, ownership: 0 failures. Stale generated artifact (BOB regenerates): `bio-plane/dist/bio-plane.bundled.mjs` and manifest.
+
+Size (session_015vZsp754WjWKhCj8FmnyQQ): test runs 14, module lines 70
