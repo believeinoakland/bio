@@ -1,6 +1,6 @@
 # case-grammar (T51)
 
-**Status** · session_01VBNM18B4vfkzoJAakCSzJF · depth 2 · COMPLETE · handled B3
+**Status** · session_01Fki6itUmQ4gkEDi9Uhphep · depth 2 · COMPLETE · handled B5
 
 ## Completion (T51-227, R8)
 
@@ -78,3 +78,41 @@ Checks (process repo): format 175/0 failures; architecture 0 failures; coverage 
 No localize key added, so the checker program gains no word.
 
 Size (session_01VBNM18B4vfkzoJAakCSzJF): test runs 22, module lines 2986
+
+## Completion (G47, fix round 6; CASE-GRAMMAR #20, B5)
+
+**Providers' state.** I am the first of G47's owners; none other had merged when I started. Seam tests of the others stay red by name until they merge (below).
+
+**What changed.**
+- `formats.mjs`: `CASE_DOCUMENT_FORMAT_V9 = "bio-case-document/9"`, first in `CASE_DOCUMENT_FORMATS_ACCEPTED` and in all five predicates (identical to `/8`); `attestationShaOf(row)` (non-empty sentence, else null; never throws) and `caseDocumentFormatFor(attestationRows)` (`/9` when any row has a sha, else `CASE_DOCUMENT_FORMAT` = `/8`). `CASE_DOCUMENT_FORMAT` stays `/8`. `/9` speaks the `team` words and prints "Civicsmith" (words.mjs, complete.mjs unchanged by construction).
+- `materials.mjs`: `MATERIAL_ATTESTATION_SHA_FIELD`; `attestationRow` carries `sha` only when non-null; `materialAttestationLines` writes it after `recorded_in` only on such rows (a row without one is byte for byte as before; `MATERIAL_ATTESTATION_FIELDS` unchanged); `materialsOf` reads `sha` (null when absent).
+- `complete.mjs` `attestOf`: joins by `sha` (case-insensitive) when the row has one, else by `ref`.
+- `index.mjs`: exports `CASE_DOCUMENT_FORMAT_V9`, `caseDocumentFormatFor`, `MATERIAL_ATTESTATION_SHA_FIELD`.
+- Tests: new `g47-attest.test.mjs` (5 tests); existing deepEqual tests gain `sha: null` (casefile.test), and tests that used `/9` as "unknown future format" now use `/10` (blocks, reference, formats), with `/9` added to the accepted/predicate lists.
+
+**Failing first.** All 5 new tests red on the unchanged source (missing field/constant/helper; the page test red at `/8` entry 0: capture 0's entry shows capture 1's co-archive, i.e. every capture shows all lines); green after. Controls: no-sha rows byte for byte as before and read `sha: null`; a no-sha page joins by ref; mixed document; three sources render alike by sha or ref; a stray sha joins nothing.
+
+**Measures.** Module 173/173 (`--import test/platform-sqlite.mjs`). Checks (process repo): format 0, architecture 0, coverage 33 of 33 ids, ownership 10 files 0 failures, `checks/run.mjs` all 0 (words: inline 0, testcopy 0, missingkey 0; I added no sentence). No protective bound set. No census op (module is pure): no accepted keys change. Rows owed to UX-DESIGN: none.
+
+**Impact (60 modules, `impact.mjs origin/tranche/T51 HEAD`), compared to a clean `tranche/T51` worktree.**
+Reds caused by my change, all in other modules' tests (I do not touch them):
+- case-catalogue `checks.test.mjs` (2: R1,R3,R4 family; R1,R4 N538) at :54 and :306-310 and ratification `converted-c.test.mjs:269` (R8): they use `bio-case-document/9` as the unaccepted format for C-41.1; `/9` is accepted now. Use `/10`.
+- public-read R23 (`co-attestation row ...`): the answered attestation rows gain `sha: null`; deepEqual needs the key (public-read's G47 job).
+- case-authoring R55 x3 (case-disclosures R7; R4 R8 R9 R10; R11): deepEqual of read attestation rows gain `sha: null` (case-authoring/case-disclosures jobs).
+Same reds as the clean tranche (not mine): case-checker R13, R25 (stale program); case-authoring R17; affordances 4; screens-publish 5; journey-check 7; screens-action 1; plane R24 1. screens-intake: one red in each run, different tests (mine R49 "existed: true", base R31 E8): looks order/clock dependent, not read.
+All other affected modules green.
+
+**Readers that gate on the format string.** Every reader gates through case-grammar's predicates or `CASE_DOCUMENT_FORMATS_ACCEPTED` (case-catalogue C-41.1, publication, public-read, ratification via case-catalogue): all accept `/9` with no change. None names a literal `/8`. NOT as the entry says: `case-checker/index.mjs:67-69` is `caseFileSpec(version)`, keyed by the case FILE format (`bio-case-file/N`), which `/9` does not change. An old pinned checker given a `/9` document answers C-41.1 error ("a case document declares format ... (got '/9')") from its bundled case-catalogue and skips the attestation checks: a loud failure, never a wrong pass, but not "no specification". BOB decides whether that is enough or the case-file format should move too. The checker's generated `program.mjs` is stale until BOB regenerates it.
+
+**Readers of `material_attestations` (via `materialsOf(fm).attestations`) found.** The entry's list is complete: case-checker `check.mjs:338-340, 446-451, 685-686, 706-707`; public-read `index.mjs:1502-1512` (and `keyedMaterialsOf` :88, which passes the rows through whole, now with `sha`); case-tensions `index.mjs:672-696`; case-disclosures `document.mjs:122-130`; `complete.mjs`. No other.
+
+**Proposed requirement lines (BOB writes).**
+- R12, after the attestation row's field list: "A `material_attestations:` row may also state `sha`, the SHA-256 of the capture it attests, flat, after `recorded_in`; written only when handed a non-empty sentence, so a row without it, and every row signed before it, is written byte for byte as before; `materialsOf` reads it back as `sha`, null when absent. A reader joins an attestation to a material by `sha` when the row has one, else by `ref` (R14's page does)."
+- R1: "`bio-case-document/9` is accepted and states what `/8` states plus R12's attestation `sha`; every predicate holds for it as for `/8`; its words and product name are `/8`'s. `caseDocumentFormatFor(attestationRows)` answers `/9` when any row carries a sha, else `CASE_DOCUMENT_FORMAT` (`/8`), which stays the format in force; the author writes the format through it."
+- R14: "The materials section lists under a material the attestations joined to it by R12's rule."
+
+Size (session_01Fki6itUmQ4gkEDi9Uhphep): test runs 14, module lines 3070
+
+## J5 · COMPLETE
+
+G47 provider done, pushed. See record 'Completion (G47, fix round 6)'. Optional attestation sha (materials.mjs), bio-case-document/9 + caseDocumentFormatFor (formats.mjs), page joins by sha else ref (complete.mjs). 5 new tests red-then-green; module 173/173; format/architecture/coverage/words/ownership clean. Caused reds in OTHER modules' tests (yours to place): case-catalogue checks.test.mjs:54,306 + ratification converted-c.test.mjs:269 use /9 as the unaccepted format (use /10); public-read R23 and case-authoring R55 x3 deepEqual attestation rows need sha:null. Entry correction: case-checker/index.mjs:67-69 is keyed by the case-FILE format, so an old checker on a /9 document answers a C-41.1 error (loud failure, not 'no specification'); your call whether the case-file format should move too. Proposed R1/R12/R14 lines are in the record. Other impact reds equal the clean tranche's.

@@ -35,6 +35,7 @@ profiles that `jurisdictions.combine` gives.
   states all of them rather than letting the first match stand for the whole document. A type
   whose `detect` throws during this pass is reported as an error entry in `also`, never dropped
   and never propagated.
+  (fix round 6, G48; K4685) Each type is asked at most once in one classification: `also` is built from what the walk already asked, plus only the types registered after a winner that stopped the walk at CERTAIN; its entries and their order are those of the independent pass (`alsoFor`).
 - **R6** *(retired: moved to `doctypes` R3, K617, K1505 (1), T33-12)*
 - Errors: never throws, provided no registered type's own `detect` throws outside the `also` pass
   (R5 states what happens there).
@@ -89,11 +90,13 @@ whatever the caller knows (locator, headers, content type, `at`) plus, for the d
   `stack` and `doctype` (as `site-profiles`' `identify` and `doctypeFor` gave them), the content type's own `parsed`
   result or a `parse_error` naming why it has none, and `position_parts`/`position_why` stating
   whether the supplied text carried enough structure to place a reference at all.
+  (fix round 6, G48; K4685) `classified_over {chars, of, head_chars, windows[{from,to}], sheet_heads[{from,to}], heads_used}` is answered only when the type was judged from a view (R38), and `why` then ends with the sentence stating it; `heads_used` is true when the sheets' boundaries were established and their heads kept within the bound.
 - **R20** The content type's reader is handed a total `locate(offset)` function built from the
   supplied text's own segment map (R23); it may place a reference only where `locate` says,
   never at a position it composed itself. (The content types' own share: `doctypes` R7.)
 - **R37** (K1520) `readText` hands the content type's reader the supplied text's structure as `ctx.supplied` beside `text` and `locate`: its pages (a page with no text layer included), `undetermined` markers, `images`, an `ocr` transcription where the caller supplied one, and a sheet's typed `cells` (`office-readers` R30), unchanged.
 - **R38** (fix round 4, C5a/C5b/P8; K4467) **`readText` and `doctypeFor` stay bounded on a very large text.** They hand each type's `detect` and `parse` the supplied text's pages (`ctx.pages`, as R37 hands the reader) beside `text`, and their own work makes no second whole copy of the text beyond the one `flattenText` needs, released before the types run. Measured as heap + array buffers above what the caller holds (a child process, `--expose-gc`): over the reading of `BUDGET-2024-APP` (15.2 MiB, 1,354 pages, 13.6 M characters; pdf-reader's memory test fetches it), `readText` with every registered type adds under 16 MB, and every answer (`type`, `confidence`, `also`, `parsed`) is unchanged on every fixture and on the three govinfo files. Test: that measurement, and the answers compared with the tranche tip's.
+  (fix round 6, G48; K4685) **A large sheet is classified from a stated view.** A sheet (`supplied.sheets` an array) whose flat text is over `CLASSIFY_WHOLE_MAX_CHARS` (2 MiB) is classified from a view of at most `CLASSIFY_VIEW_MAX_CHARS` (1.5 MiB): the sheets' first lines, the first 256 Ki cut at a line end, then 12 windows of 96 Ki of whole lines spread over the rest, the last ending at the text's end (R19 states it); `identify` and every `parse` read the whole text; a bare string, `pages`, `paragraphs`, a PDF's text and a page are classified whole at any size.
 - Errors: never throws; a content type's `parse` throwing is caught and reported as `parse_error`.
 
 **`flattenText(supplied) → {text, source, chars, undetermined, reasons, segments, position_why}`**

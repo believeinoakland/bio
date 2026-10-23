@@ -117,7 +117,7 @@ import { word, localize } from "../setup-words/index.mjs";
 import { delivererOf } from "../deliverer.mjs";
 import { rowOf } from "./checks.mjs";
 import { PUBLICATION_TABLES, PUBLICATION_EXEMPT, PUBLICATION_DECLARATIONS, migratePublication,
-         registerCaseDocumentSha, caseDocumentPath } from "./schema.mjs";
+         registerCaseDocumentSha, caseDocumentPath, ATTESTATION_SHA_UPSERT } from "./schema.mjs";
 import { corpusExportOf } from "../corpus-export/index.mjs";
 import { caseCarriageOf } from "../case-carriage/index.mjs";
 import { caseTensionsOf } from "../case-tensions/index.mjs";
@@ -150,6 +150,10 @@ export { PUBLICATION_SCHEMA, PUBLICATION_TABLES, PUBLICATION_EXEMPT, PUBLICATION
 export const EDITION_STAMP_EFFECTS = Object.freeze(["remove", "redact", "seal", "unseal"]);
 /** R37: the ratified editions one `publishedEditionsOf` read answers. */
 export const EDITIONS_OF_MAX = 500;
+/** R21 (G47; K4666): the most a case document's text may be, in UTF-8 bytes. A protective bound, above the 1 MiB a stored
+ *  row value keeps to (K4639) and 0.5 MiB under the platform's 2,098,176 B bound on a bound value; BOB reports it (K1881). */
+export const CASE_DOCUMENT_BYTES_MAX = 1572864;
+const utf8Exact = (t) => new TextEncoder().encode(t).length;
 /** R41: the cited parts one `caseCitedParts` read answers. */
 export const CITED_PARTS_MAX = 1000;
 /** R42, R43: the page of `restingCapturesOf` and of `ratifiedCases`, its default and its ceiling. */
@@ -483,6 +487,11 @@ export class Publication {
     const id = str(caseArg ?? caseId), ed = Number(edition);
     if (!id || !Number.isInteger(ed) || ed < 1 || typeof text !== "string" || !text)
       return { ok: false, reason: "MALFORMED", detail: localize("publication.index.a_case_document_names_its", "a case document names its case, a positive edition and its text") };
+    /* R21 (G47): a text over the bound is refused before anything is read or written (the prefilter is 3 bytes a UTF-16 unit). */
+    if (text.length * 3 > CASE_DOCUMENT_BYTES_MAX) {
+      const bytes = utf8Exact(text);
+      if (bytes > CASE_DOCUMENT_BYTES_MAX) return { ok: false, reason: "CASE_DOCUMENT_TOO_LARGE", bytes, bound: CASE_DOCUMENT_BYTES_MAX };
+    }
     const docSha = shaOf(text);
     /* R21, R77: a document R77's source answers waiting counts as signed; asked first, in the caller's transaction. */
     const waits = this.#waits(id, ed);
@@ -528,6 +537,14 @@ export class Publication {
     if (!at) return { ok: true, ...held, reauthored: false, why: word("publication.why.case_document_carries", { section: String(section) }) };
     const text = [...all.slice(0, at.f0), ...fmLines, ...all.slice(at.f1, at.b0), ...bodyLines, ...all.slice(at.b1)].join("\n");
     if (text === doc.text) return { ok: true, ...held, reauthored: false };
+    /* R21 (G47): a splice whose result is over the bound AND larger than the stored text is refused; one that shrinks or
+       keeps an over-bound unsigned text is allowed, so a document stored before the bound can be mended. */
+    if (text.length * 3 > CASE_DOCUMENT_BYTES_MAX) {
+      const bytes = utf8Exact(text);
+      if (bytes > CASE_DOCUMENT_BYTES_MAX && bytes > utf8Exact(doc.text))
+        return { ok: true, ...held, reauthored: false, too_large: { bytes, bound: CASE_DOCUMENT_BYTES_MAX },
+                 why: localize("publication.index.the_case_document_would_pass", "the case document would pass {bound} bytes ({bytes}) and was left as it was", { bytes, bound: CASE_DOCUMENT_BYTES_MAX }) };
+    }
     const newSha = shaOf(text);
     this.sql.exec(`UPDATE case_documents SET doc_sha=?, text=? WHERE case_id=? AND edition=? AND doc_sha=?
                    AND sig_armored IS NULL`, newSha, text, id, ed, doc.doc_sha);
@@ -1150,9 +1167,17 @@ export class Publication {
        every file it answers by hash, every write to `published_shas` being this module's. A material this copy cannot
        hold at its stated digest never refuses the commit: it is named, and the case file shows it missing. */
     const held = this.caseCarriage.holdMaterials(docFm, { caseId: id, edition: ed, at: when });
-    for (const f of held.files)
-      this.sql.exec(`INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
-                     ON CONFLICT(sha256,bundle_id,path) DO NOTHING`, f.sha256, f.ref, f.path, f.kind, f.bytes ?? null, when);
+    for (const f of held.files) {
+      /* G47t (K4677): an attestation token records the capture it stamps. A stored capture that differs from the new
+         one is cleared to NULL (the token is shared: edition 2 adds capture B naming edition 1's token); a stored NULL
+         is never rewritten to a value (an old row keeps the ref join); the same capture again changes nothing. */
+      if (f.kind === "attestation") {
+        const cap = typeof f.capture_sha === "string" && f.capture_sha ? f.capture_sha.toLowerCase() : null;
+        this.sql.exec(ATTESTATION_SHA_UPSERT, f.sha256, f.ref, f.path, f.kind, f.bytes ?? null, when, cap);
+      } else
+        this.sql.exec(`INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
+                       ON CONFLICT(sha256,bundle_id,path) DO NOTHING`, f.sha256, f.ref, f.path, f.kind, f.bytes ?? null, when);
+    }
     /* R22 (K1632; public-read R23): EACH CALCULATION'S INPUTS, COMMITTED AS A MATERIAL'S. Every input a `calculations:` row
        names (case-grammar R18) is registered by its SHA-256 at its case-file path, and answered `held: "evidence"`: a
        declared table's canonical bytes are held in the evidence store under that hash (calculations R1), so ratification's

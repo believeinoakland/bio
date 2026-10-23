@@ -18,7 +18,7 @@
  * reassures people about things it has not understood. With no type recognising a
  * document, the registered fallback reports change without describing it, which is
  * noisy and honest; with no fallback registered at all, NO_TYPE below says so. */
-import { makeRegistry } from "../../site-profiles/index.mjs";
+import { makeRegistry, CONFIDENCE } from "../../site-profiles/index.mjs";
 import { CONTRACT } from "./index.mjs";
 import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 
@@ -84,11 +84,12 @@ export function doctypes() { return types.all(); }
  *  recogniser that cannot answer is a different fact from one that answered no. */
 export function doctypeFor(ctx) {
   const r = types.recognise(ctx);
+  const all = types.all();
   /* The shared engine's last resort is the LAST member when none is a fallback; here
      an unrecognised document is never read as a type that did not recognise it. */
-  if (!r.matched) r.member = types.all().find((m) => m.fallback === true) || NO_TYPE;
+  if (!r.matched) r.member = all.find((m) => m.fallback === true) || NO_TYPE;
   const out = { type: r.member, confidence: r.confidence, signals: r.signals, considered: r.considered,
-                also: alsoFor(ctx, r.member.key) };
+                also: alsoOf(ctx, r, all) };
   /* A "no" says which no (R35): nothing recognised, and so the registered fallback's reading. */
   if (r.member === NO_TYPE)
     out.why = localize("docprofile.registry.no_content_type_is_registered_to_recognise", "no content type is registered to recognise documents, so this one is not read as any type: nothing is read from it and what changes in it is not described");
@@ -97,11 +98,27 @@ export function doctypeFor(ctx) {
   return out;
 }
 
+/* `also` for the answer `recognise` just gave, asking no type twice (G48; R5). `recognise` asks the members in order and
+   stops at the first CERTAIN match, and its `considered` holds, for each member that matched, the very `{key, confidence,
+   signals}` entry `alsoFor` builds; so every member up to the winner was already asked, and only those registered AFTER a
+   winner that stopped the walk are left to ask. A winner chosen by rank, and no winner, mean every member was asked. The
+   result is `alsoFor(ctx, winner.key)`'s, entry for entry and in registration order; `alsoFor` below stays as the independent
+   spelling the suite compares it to. */
+function alsoOf(ctx, r, all) {
+  const fallback = new Set(all.filter((m) => m.fallback === true).map((m) => m.key));
+  const out = r.considered.filter((c) => c.key !== r.member.key && !fallback.has(c.key));
+  if (!r.matched || r.confidence !== CONFIDENCE.CERTAIN) return out;
+  const after = all.findIndex((m) => m.key === r.member.key) + 1;
+  return [...out, ...askAll(ctx, all.slice(after), r.member.key)];
+}
+
 /** Every registered type OTHER than `selfKey` whose own `detect` matches this text.
  *  Exported for the suite and for callers that want the fact without a full profile. */
-export function alsoFor(ctx, selfKey) {
+export function alsoFor(ctx, selfKey) { return askAll(ctx, types.all(), selfKey); }
+
+function askAll(ctx, members, selfKey) {
   const out = [];
-  for (const m of types.all()) {
+  for (const m of members) {
     if (m.key === selfKey || m.fallback === true) continue;
     let d;
     try { d = m.detect(ctx) || { match: false }; }

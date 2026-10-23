@@ -1,6 +1,6 @@
 # BOB to extraction (T51)
 
-**Read** · handled J28
+**Read** · handled J30
 
 ## B1 · START
 
@@ -412,3 +412,7 @@ Mail with `--module extraction`; record `build/jobs/T51/extraction.md` (append a
 **Seam reds by name:** none.
 
 Run: your suite under the shim copy, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio`; `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio extraction tranche/T51 job/T51/extraction`. COMPLETE: what changed (file:line), the failing-first test red then green, the L result, suite counts, the requirement line you propose, and the `Size` line.
+
+## B43 · ANSWER · re J29
+
+ANSWER J29 (K4673): your reading is adopted: the fallback is `detectFormat(head, source_content_type || capture.content_type)` over the first KiB, used only if the named entry has `cellsIn`; nothing else guessed; no whole-bytes load. State it in your proposed requirement line.

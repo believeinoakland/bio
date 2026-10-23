@@ -1,0 +1,2896 @@
+{
+ "note": "readText over each reading of g48-readings.mjs, before G48 (docprofile R5, R19, R38)",
+ "taken_at": "2026-10-23",
+ "readings": {
+  "calendar": {
+   "determined": true,
+   "partial": false,
+   "chars": 711,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "string",
+   "position_parts": 0,
+   "position_why": "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said",
+   "stack": {
+    "handler": {
+     "key": "aspnet_webforms",
+     "label": "a page built with ASP.NET WebForms",
+     "version": 1,
+     "textual": true
+    },
+    "confidence": "certain",
+    "signals": [
+     "__VIEWSTATE field",
+     "aspnetForm"
+    ],
+    "considered": [
+     {
+      "key": "aspnet_webforms",
+      "confidence": "certain",
+      "signals": [
+       "__VIEWSTATE field",
+       "aspnetForm"
+      ]
+     }
+    ],
+    "kind": "unknown"
+   },
+   "doctype": {
+    "type": {
+     "key": "stub_meetings",
+     "label": "stub: a list of meetings",
+     "version": 1,
+     "contract": "membership"
+    },
+    "confidence": "certain",
+    "signals": [
+     "the meeting list's range selector"
+    ],
+    "considered": [
+     {
+      "key": "stub_meetings",
+      "confidence": "certain",
+      "signals": [
+       "the meeting list's range selector"
+      ]
+     }
+    ],
+    "also": []
+   },
+   "parsed": {
+    "entities": [
+     {
+      "key": "meeting:1",
+      "kind": "meeting",
+      "label": "Harbor Commission",
+      "facts": {
+       "body": "Harbor Commission",
+       "date": "2026-03-03",
+       "status": "scheduled",
+       "agenda": "11",
+       "minutes": "21"
+      }
+     },
+     {
+      "key": "meeting:2",
+      "kind": "meeting",
+      "label": "Select Board",
+      "facts": {
+       "body": "Select Board",
+       "date": "2026-03-10",
+       "status": "CANCELLED",
+       "agenda": "12",
+       "minutes": null
+      }
+     }
+    ],
+    "facts": {
+     "meetings": 2
+    }
+   },
+   "parse_error": null,
+   "why": "read over a full decode (711 characters)"
+  },
+  "calendar-empty-view": {
+   "determined": true,
+   "partial": false,
+   "chars": 711,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "string",
+   "position_parts": 0,
+   "position_why": "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said",
+   "stack": {
+    "handler": {
+     "key": "aspnet_webforms",
+     "label": "a page built with ASP.NET WebForms",
+     "version": 1,
+     "textual": true
+    },
+    "confidence": "certain",
+    "signals": [
+     "__VIEWSTATE field",
+     "aspnetForm"
+    ],
+    "considered": [
+     {
+      "key": "aspnet_webforms",
+      "confidence": "certain",
+      "signals": [
+       "__VIEWSTATE field",
+       "aspnetForm"
+      ]
+     }
+    ],
+    "kind": "unknown"
+   },
+   "doctype": {
+    "type": {
+     "key": "stub_meetings",
+     "label": "stub: a list of meetings",
+     "version": 1,
+     "contract": "membership"
+    },
+    "confidence": "certain",
+    "signals": [
+     "the meeting list's range selector"
+    ],
+    "considered": [
+     {
+      "key": "stub_meetings",
+      "confidence": "certain",
+      "signals": [
+       "the meeting list's range selector"
+      ]
+     }
+    ],
+    "also": []
+   },
+   "parsed": {
+    "entities": [
+     {
+      "key": "meeting:1",
+      "kind": "meeting",
+      "label": "Harbor Commission",
+      "facts": {
+       "body": "Harbor Commission",
+       "date": "2026-03-03",
+       "status": "scheduled",
+       "agenda": "11",
+       "minutes": "21"
+      }
+     },
+     {
+      "key": "meeting:2",
+      "kind": "meeting",
+      "label": "Select Board",
+      "facts": {
+       "body": "Select Board",
+       "date": "2026-03-10",
+       "status": "CANCELLED",
+       "agenda": "12",
+       "minutes": null
+      }
+     }
+    ],
+    "facts": {
+     "meetings": 2
+    }
+   },
+   "parse_error": null,
+   "why": "read over a full decode (711 characters)"
+  },
+  "calendar-lakemont": {
+   "determined": true,
+   "partial": false,
+   "chars": 711,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "string",
+   "position_parts": 0,
+   "position_why": "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said",
+   "stack": {
+    "handler": {
+     "key": "aspnet_webforms",
+     "label": "a page built with ASP.NET WebForms",
+     "version": 1,
+     "textual": true
+    },
+    "confidence": "certain",
+    "signals": [
+     "__VIEWSTATE field",
+     "aspnetForm"
+    ],
+    "considered": [
+     {
+      "key": "aspnet_webforms",
+      "confidence": "certain",
+      "signals": [
+       "__VIEWSTATE field",
+       "aspnetForm"
+      ]
+     }
+    ],
+    "kind": "unknown"
+   },
+   "doctype": {
+    "type": {
+     "key": "stub_meetings",
+     "label": "stub: a list of meetings",
+     "version": 1,
+     "contract": "membership"
+    },
+    "confidence": "certain",
+    "signals": [
+     "the meeting list's range selector"
+    ],
+    "considered": [
+     {
+      "key": "stub_meetings",
+      "confidence": "certain",
+      "signals": [
+       "the meeting list's range selector"
+      ]
+     }
+    ],
+    "also": []
+   },
+   "parsed": {
+    "entities": [
+     {
+      "key": "meeting:1",
+      "kind": "meeting",
+      "label": "Harbor Commission",
+      "facts": {
+       "body": "Harbor Commission",
+       "date": "2026-03-03",
+       "status": "scheduled",
+       "agenda": "11",
+       "minutes": "21"
+      }
+     },
+     {
+      "key": "meeting:2",
+      "kind": "meeting",
+      "label": "Select Board",
+      "facts": {
+       "body": "Select Board",
+       "date": "2026-03-10",
+       "status": "CANCELLED",
+       "agenda": "12",
+       "minutes": null
+      }
+     }
+    ],
+    "facts": {
+     "meetings": 2
+    }
+   },
+   "parse_error": null,
+   "why": "read over a full decode (711 characters)"
+  },
+  "shell": {
+   "determined": true,
+   "partial": false,
+   "chars": 2544,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "string",
+   "position_parts": 0,
+   "position_why": "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said",
+   "stack": {
+    "handler": {
+     "key": "client_rendered",
+     "label": "an application that builds its pages in the browser",
+     "version": 1,
+     "textual": true,
+     "shell": true,
+     "warning": "This address builds its page in the browser, so what was collected is the empty frame and not the figures. It cannot be relied on as evidence of what the page shows. Collecting it properly needs the page to be rendered first."
+    },
+    "confidence": "certain",
+    "signals": [
+     "an empty mount point",
+     "a hydration payload",
+     "no links and no prose in the body"
+    ],
+    "considered": [
+     {
+      "key": "client_rendered",
+      "confidence": "certain",
+      "signals": [
+       "an empty mount point",
+       "a hydration payload",
+       "no links and no prose in the body"
+      ]
+     }
+    ],
+    "kind": "shell"
+   },
+   "doctype": {
+    "type": {
+     "key": "stub_fallback",
+     "label": "stub: a document of no recognised type",
+     "version": 1,
+     "fallback": true,
+     "contract": "substance"
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "also": [],
+    "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described"
+   },
+   "parsed": {
+    "entities": [],
+    "facts": {}
+   },
+   "parse_error": null,
+   "why": "read over a full decode (2544 characters)"
+  },
+  "pa-items-bare": {
+   "determined": true,
+   "partial": false,
+   "chars": 207,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "string",
+   "position_parts": 0,
+   "position_why": "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said",
+   "stack": {
+    "handler": {
+     "key": "conservative",
+     "label": "an unrecognised document",
+     "version": 1,
+     "conservative": true,
+     "fallback": true,
+     "textual": true
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "why": "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
+   },
+   "doctype": {
+    "type": {
+     "key": "stub_items",
+     "label": "stub: a list of filed items",
+     "version": 1,
+     "contract": "membership"
+    },
+    "confidence": "certain",
+    "signals": [
+     "masthead ×3"
+    ],
+    "considered": [
+     {
+      "key": "stub_items",
+      "confidence": "certain",
+      "signals": [
+       "masthead ×3"
+      ]
+     }
+    ],
+    "also": []
+   },
+   "parsed": {
+    "entities": [
+     {
+      "key": "PA-101",
+      "kind": "item",
+      "label": "PA-101",
+      "facts": {
+       "file": "PA-101"
+      },
+      "occurrences": [
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-102",
+      "kind": "item",
+      "label": "PA-102",
+      "facts": {
+       "file": "PA-102"
+      }
+     },
+     {
+      "key": "PA-103",
+      "kind": "item",
+      "label": "PA-103",
+      "facts": {
+       "file": "PA-103"
+      }
+     }
+    ],
+    "facts": {
+     "also": []
+    }
+   },
+   "parse_error": null,
+   "why": "read over a full decode (207 characters)"
+  },
+  "pa-items-document-pages": {
+   "determined": true,
+   "partial": false,
+   "chars": 207,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "document",
+   "position_parts": 3,
+   "position_why": null,
+   "stack": {
+    "handler": {
+     "key": "conservative",
+     "label": "an unrecognised document",
+     "version": 1,
+     "conservative": true,
+     "fallback": true,
+     "textual": true
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "why": "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
+   },
+   "doctype": {
+    "type": {
+     "key": "stub_items",
+     "label": "stub: a list of filed items",
+     "version": 1,
+     "contract": "membership"
+    },
+    "confidence": "certain",
+    "signals": [
+     "masthead ×3"
+    ],
+    "considered": [
+     {
+      "key": "stub_items",
+      "confidence": "certain",
+      "signals": [
+       "masthead ×3"
+      ]
+     }
+    ],
+    "also": []
+   },
+   "parsed": {
+    "entities": [
+     {
+      "key": "PA-101",
+      "kind": "item",
+      "label": "PA-101",
+      "facts": {
+       "file": "PA-101"
+      },
+      "source": {
+       "kind": "pdf-page",
+       "ref": "p.1",
+       "page": 0,
+       "rect": null
+      },
+      "occurrences": [
+       {
+        "kind": "pdf-page",
+        "ref": "p.1",
+        "page": 0,
+        "rect": null
+       },
+       {
+        "kind": "pdf-page",
+        "ref": "p.3",
+        "page": 2,
+        "rect": null
+       }
+      ]
+     },
+     {
+      "key": "PA-102",
+      "kind": "item",
+      "label": "PA-102",
+      "facts": {
+       "file": "PA-102"
+      },
+      "source": {
+       "kind": "pdf-page",
+       "ref": "p.1",
+       "page": 0,
+       "rect": null
+      }
+     },
+     {
+      "key": "PA-103",
+      "kind": "item",
+      "label": "PA-103",
+      "facts": {
+       "file": "PA-103"
+      },
+      "source": {
+       "kind": "pdf-page",
+       "ref": "p.2",
+       "page": 1,
+       "rect": null
+      }
+     }
+    ],
+    "facts": {
+     "also": []
+    }
+   },
+   "parse_error": null,
+   "why": "read over a full decode (207 characters)"
+  },
+  "pa-items-pages": {
+   "determined": true,
+   "partial": false,
+   "chars": 207,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "pages",
+   "position_parts": 3,
+   "position_why": null,
+   "stack": {
+    "handler": {
+     "key": "conservative",
+     "label": "an unrecognised document",
+     "version": 1,
+     "conservative": true,
+     "fallback": true,
+     "textual": true
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "why": "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
+   },
+   "doctype": {
+    "type": {
+     "key": "stub_items",
+     "label": "stub: a list of filed items",
+     "version": 1,
+     "contract": "membership"
+    },
+    "confidence": "certain",
+    "signals": [
+     "masthead ×3"
+    ],
+    "considered": [
+     {
+      "key": "stub_items",
+      "confidence": "certain",
+      "signals": [
+       "masthead ×3"
+      ]
+     }
+    ],
+    "also": []
+   },
+   "parsed": {
+    "entities": [
+     {
+      "key": "PA-101",
+      "kind": "item",
+      "label": "PA-101",
+      "facts": {
+       "file": "PA-101"
+      },
+      "source": {
+       "kind": "pdf-page",
+       "ref": "p.1",
+       "page": 0,
+       "rect": null
+      },
+      "occurrences": [
+       {
+        "kind": "pdf-page",
+        "ref": "p.1",
+        "page": 0,
+        "rect": null
+       },
+       {
+        "kind": "pdf-page",
+        "ref": "p.3",
+        "page": 2,
+        "rect": null
+       }
+      ]
+     },
+     {
+      "key": "PA-102",
+      "kind": "item",
+      "label": "PA-102",
+      "facts": {
+       "file": "PA-102"
+      },
+      "source": {
+       "kind": "pdf-page",
+       "ref": "p.1",
+       "page": 0,
+       "rect": null
+      }
+     },
+     {
+      "key": "PA-103",
+      "kind": "item",
+      "label": "PA-103",
+      "facts": {
+       "file": "PA-103"
+      },
+      "source": {
+       "kind": "pdf-page",
+       "ref": "p.2",
+       "page": 1,
+       "rect": null
+      }
+     }
+    ],
+    "facts": {
+     "also": []
+    }
+   },
+   "parse_error": null,
+   "why": "read over a full decode (207 characters)"
+  },
+  "pa-items-partial": {
+   "determined": true,
+   "partial": true,
+   "chars": 207,
+   "undetermined": 3,
+   "reasons": [],
+   "text_from": "document",
+   "position_parts": 0,
+   "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
+   "stack": {
+    "handler": {
+     "key": "conservative",
+     "label": "an unrecognised document",
+     "version": 1,
+     "conservative": true,
+     "fallback": true,
+     "textual": true
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "why": "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
+   },
+   "doctype": {
+    "type": {
+     "key": "stub_items",
+     "label": "stub: a list of filed items",
+     "version": 1,
+     "contract": "membership"
+    },
+    "confidence": "certain",
+    "signals": [
+     "masthead ×3"
+    ],
+    "considered": [
+     {
+      "key": "stub_items",
+      "confidence": "certain",
+      "signals": [
+       "masthead ×3"
+      ]
+     }
+    ],
+    "also": []
+   },
+   "parsed": {
+    "entities": [
+     {
+      "key": "PA-101",
+      "kind": "item",
+      "label": "PA-101",
+      "facts": {
+       "file": "PA-101"
+      },
+      "occurrences": [
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-102",
+      "kind": "item",
+      "label": "PA-102",
+      "facts": {
+       "file": "PA-102"
+      }
+     },
+     {
+      "key": "PA-103",
+      "kind": "item",
+      "label": "PA-103",
+      "facts": {
+       "file": "PA-103"
+      }
+     }
+    ],
+    "facts": {
+     "also": []
+    }
+   },
+   "parse_error": null,
+   "why": "read over a PARTIAL decode, stated: 3 undetermined region(s)/code point(s) beside 207 decoded characters"
+  },
+  "pa-items-lakemont-view": {
+   "determined": true,
+   "partial": false,
+   "chars": 207,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "string",
+   "position_parts": 0,
+   "position_why": "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said",
+   "stack": {
+    "handler": {
+     "key": "conservative",
+     "label": "an unrecognised document",
+     "version": 1,
+     "conservative": true,
+     "fallback": true,
+     "textual": true
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "why": "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
+   },
+   "doctype": {
+    "type": {
+     "key": "stub_fallback",
+     "label": "stub: a document of no recognised type",
+     "version": 1,
+     "fallback": true,
+     "contract": "substance"
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "also": [],
+    "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described"
+   },
+   "parsed": {
+    "entities": [],
+    "facts": {}
+   },
+   "parse_error": null,
+   "why": "read over a full decode (207 characters)"
+  },
+  "position-pages": {
+   "determined": true,
+   "partial": false,
+   "chars": 168,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "pages",
+   "position_parts": 3,
+   "position_why": null,
+   "stack": {
+    "handler": {
+     "key": "conservative",
+     "label": "an unrecognised document",
+     "version": 1,
+     "conservative": true,
+     "fallback": true,
+     "textual": true
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "why": "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
+   },
+   "doctype": {
+    "type": {
+     "key": "stub_items",
+     "label": "stub: a list of filed items",
+     "version": 1,
+     "contract": "membership"
+    },
+    "confidence": "certain",
+    "signals": [
+     "masthead ×3"
+    ],
+    "considered": [
+     {
+      "key": "stub_items",
+      "confidence": "certain",
+      "signals": [
+       "masthead ×3"
+      ]
+     }
+    ],
+    "also": []
+   },
+   "parsed": {
+    "entities": [
+     {
+      "key": "PA-910",
+      "kind": "item",
+      "label": "PA-910",
+      "facts": {
+       "file": "PA-910"
+      },
+      "source": {
+       "kind": "pdf-page",
+       "ref": "p.2",
+       "page": 1,
+       "rect": null
+      }
+     },
+     {
+      "key": "PA-844",
+      "kind": "item",
+      "label": "PA-844",
+      "facts": {
+       "file": "PA-844"
+      },
+      "source": {
+       "kind": "pdf-page",
+       "ref": "p.3",
+       "page": 2,
+       "rect": null
+      }
+     }
+    ],
+    "facts": {
+     "also": []
+    }
+   },
+   "parse_error": null,
+   "why": "read over a full decode (168 characters)"
+  },
+  "position-document-off": {
+   "determined": true,
+   "partial": false,
+   "chars": 182,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "document",
+   "position_parts": 0,
+   "position_why": "this producer's document text is not its pages joined, so the page a reference was read on cannot be established from it and is not guessed",
+   "stack": {
+    "handler": {
+     "key": "conservative",
+     "label": "an unrecognised document",
+     "version": 1,
+     "conservative": true,
+     "fallback": true,
+     "textual": true
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "why": "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
+   },
+   "doctype": {
+    "type": {
+     "key": "stub_items",
+     "label": "stub: a list of filed items",
+     "version": 1,
+     "contract": "membership"
+    },
+    "confidence": "certain",
+    "signals": [
+     "masthead ×3"
+    ],
+    "considered": [
+     {
+      "key": "stub_items",
+      "confidence": "certain",
+      "signals": [
+       "masthead ×3"
+      ]
+     }
+    ],
+    "also": []
+   },
+   "parsed": {
+    "entities": [
+     {
+      "key": "PA-910",
+      "kind": "item",
+      "label": "PA-910",
+      "facts": {
+       "file": "PA-910"
+      }
+     },
+     {
+      "key": "PA-844",
+      "kind": "item",
+      "label": "PA-844",
+      "facts": {
+       "file": "PA-844"
+      }
+     }
+    ],
+    "facts": {
+     "also": []
+    }
+   },
+   "parse_error": null,
+   "why": "read over a full decode (182 characters)"
+  },
+  "position-crlf": {
+   "determined": true,
+   "partial": false,
+   "chars": 179,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "pages",
+   "position_parts": 3,
+   "position_why": null,
+   "stack": {
+    "handler": {
+     "key": "conservative",
+     "label": "an unrecognised document",
+     "version": 1,
+     "conservative": true,
+     "fallback": true,
+     "textual": true
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "why": "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
+   },
+   "doctype": {
+    "type": {
+     "key": "stub_items",
+     "label": "stub: a list of filed items",
+     "version": 1,
+     "contract": "membership"
+    },
+    "confidence": "certain",
+    "signals": [
+     "masthead ×3"
+    ],
+    "considered": [
+     {
+      "key": "stub_items",
+      "confidence": "certain",
+      "signals": [
+       "masthead ×3"
+      ]
+     }
+    ],
+    "also": []
+   },
+   "parsed": {
+    "entities": [
+     {
+      "key": "PA-910",
+      "kind": "item",
+      "label": "PA-910",
+      "facts": {
+       "file": "PA-910"
+      },
+      "source": {
+       "kind": "pdf-page",
+       "ref": "p.2",
+       "page": 1,
+       "rect": null
+      }
+     },
+     {
+      "key": "PA-844",
+      "kind": "item",
+      "label": "PA-844",
+      "facts": {
+       "file": "PA-844"
+      },
+      "source": {
+       "kind": "pdf-page",
+       "ref": "p.3",
+       "page": 2,
+       "rect": null
+      }
+     }
+    ],
+    "facts": {
+     "also": []
+    }
+   },
+   "parse_error": null,
+   "why": "read over a full decode (179 characters)"
+  },
+  "position-blank-page": {
+   "determined": true,
+   "partial": false,
+   "chars": 24,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "pages",
+   "position_parts": 2,
+   "position_why": null,
+   "stack": {
+    "handler": {
+     "key": "conservative",
+     "label": "an unrecognised document",
+     "version": 1,
+     "conservative": true,
+     "fallback": true,
+     "textual": true
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "why": "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
+   },
+   "doctype": {
+    "type": {
+     "key": "stub_items",
+     "label": "stub: a list of filed items",
+     "version": 1,
+     "contract": "membership"
+    },
+    "confidence": "likely",
+    "signals": [
+     "ITEMS"
+    ],
+    "considered": [
+     {
+      "key": "stub_items",
+      "confidence": "likely",
+      "signals": [
+       "ITEMS"
+      ]
+     }
+    ],
+    "also": []
+   },
+   "parsed": {
+    "entities": [
+     {
+      "key": "PA-101",
+      "kind": "item",
+      "label": "PA-101",
+      "facts": {
+       "file": "PA-101"
+      },
+      "source": {
+       "kind": "pdf-page",
+       "ref": "p.3",
+       "page": 2,
+       "rect": null
+      }
+     }
+    ],
+    "facts": {
+     "also": []
+    }
+   },
+   "parse_error": null,
+   "why": "read over a full decode (24 characters)"
+  },
+  "paragraphs": {
+   "determined": true,
+   "partial": false,
+   "chars": 34,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "paragraphs",
+   "position_parts": 2,
+   "position_why": null,
+   "stack": {
+    "handler": {
+     "key": "conservative",
+     "label": "an unrecognised document",
+     "version": 1,
+     "conservative": true,
+     "fallback": true,
+     "textual": true
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "why": "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
+   },
+   "doctype": {
+    "type": {
+     "key": "stub_items",
+     "label": "stub: a list of filed items",
+     "version": 1,
+     "contract": "membership"
+    },
+    "confidence": "likely",
+    "signals": [
+     "ITEMS"
+    ],
+    "considered": [
+     {
+      "key": "stub_items",
+      "confidence": "likely",
+      "signals": [
+       "ITEMS"
+      ]
+     }
+    ],
+    "also": []
+   },
+   "parsed": {
+    "entities": [
+     {
+      "key": "PA-101",
+      "kind": "item",
+      "label": "PA-101",
+      "facts": {
+       "file": "PA-101"
+      },
+      "source": {
+       "kind": "doc-para",
+       "ref": "¶142",
+       "para": 141,
+       "run": null
+      }
+     }
+    ],
+    "facts": {
+     "also": []
+    }
+   },
+   "parse_error": null,
+   "why": "read over a full decode (34 characters)"
+  },
+  "plain": {
+   "determined": true,
+   "partial": false,
+   "chars": 11,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "string",
+   "position_parts": 0,
+   "position_why": "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said",
+   "stack": {
+    "handler": {
+     "key": "conservative",
+     "label": "an unrecognised document",
+     "version": 1,
+     "conservative": true,
+     "fallback": true,
+     "textual": true
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "why": "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
+   },
+   "doctype": {
+    "type": {
+     "key": "stub_fallback",
+     "label": "stub: a document of no recognised type",
+     "version": 1,
+     "fallback": true,
+     "contract": "substance"
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "also": [],
+    "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described"
+   },
+   "parsed": {
+    "entities": [],
+    "facts": {}
+   },
+   "parse_error": null,
+   "why": "read over a full decode (11 characters)"
+  },
+  "seam-marker-a": {
+   "determined": true,
+   "partial": false,
+   "chars": 14,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "string",
+   "position_parts": 0,
+   "position_why": "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said",
+   "stack": {
+    "handler": {
+     "key": "conservative",
+     "label": "an unrecognised document",
+     "version": 1,
+     "conservative": true,
+     "fallback": true,
+     "textual": true
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "why": "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
+   },
+   "doctype": {
+    "type": {
+     "key": "g48_marker_a",
+     "label": "g48 g48_marker_a",
+     "version": 1,
+     "contract": "substance"
+    },
+    "confidence": "certain",
+    "signals": [
+     "MARKER-A"
+    ],
+    "considered": [
+     {
+      "key": "g48_marker_a",
+      "confidence": "certain",
+      "signals": [
+       "MARKER-A"
+      ]
+     }
+    ],
+    "also": []
+   },
+   "parsed": {
+    "entities": [],
+    "facts": {
+     "read_by": "g48_marker_a"
+    }
+   },
+   "parse_error": null,
+   "why": "read over a full decode (14 characters)"
+  },
+  "seam-marker-b-first": {
+   "determined": true,
+   "partial": false,
+   "chars": 17,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "string",
+   "position_parts": 0,
+   "position_why": "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said",
+   "stack": {
+    "handler": {
+     "key": "conservative",
+     "label": "an unrecognised document",
+     "version": 1,
+     "conservative": true,
+     "fallback": true,
+     "textual": true
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "why": "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
+   },
+   "doctype": {
+    "type": {
+     "key": "g48_marker_a",
+     "label": "g48 g48_marker_a",
+     "version": 1,
+     "contract": "substance"
+    },
+    "confidence": "certain",
+    "signals": [
+     "MARKER-A"
+    ],
+    "considered": [
+     {
+      "key": "g48_marker_a",
+      "confidence": "certain",
+      "signals": [
+       "MARKER-A"
+      ]
+     }
+    ],
+    "also": [
+     {
+      "key": "g48_marker_b",
+      "confidence": "certain",
+      "signals": [
+       "MARKER-B"
+      ]
+     }
+    ]
+   },
+   "parsed": {
+    "entities": [],
+    "facts": {
+     "read_by": "g48_marker_a"
+    }
+   },
+   "parse_error": null,
+   "why": "read over a full decode (17 characters)"
+  },
+  "seam-maybe": {
+   "determined": true,
+   "partial": false,
+   "chars": 15,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "string",
+   "position_parts": 0,
+   "position_why": "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said",
+   "stack": {
+    "handler": {
+     "key": "conservative",
+     "label": "an unrecognised document",
+     "version": 1,
+     "conservative": true,
+     "fallback": true,
+     "textual": true
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "why": "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
+   },
+   "doctype": {
+    "type": {
+     "key": "g48_maybe",
+     "label": "g48 g48_maybe",
+     "version": 1,
+     "contract": "substance"
+    },
+    "confidence": "likely",
+    "signals": [
+     "MAYBE"
+    ],
+    "considered": [
+     {
+      "key": "g48_maybe",
+      "confidence": "likely",
+      "signals": [
+       "MAYBE"
+      ]
+     }
+    ],
+    "also": []
+   },
+   "parsed": {
+    "entities": [],
+    "facts": {
+     "read_by": "g48_maybe"
+    }
+   },
+   "parse_error": null,
+   "why": "read over a full decode (15 characters)"
+  },
+  "seam-maybe-then-certain": {
+   "determined": true,
+   "partial": false,
+   "chars": 18,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "string",
+   "position_parts": 0,
+   "position_why": "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said",
+   "stack": {
+    "handler": {
+     "key": "conservative",
+     "label": "an unrecognised document",
+     "version": 1,
+     "conservative": true,
+     "fallback": true,
+     "textual": true
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "why": "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
+   },
+   "doctype": {
+    "type": {
+     "key": "g48_marker_b",
+     "label": "g48 g48_marker_b",
+     "version": 1,
+     "contract": "substance"
+    },
+    "confidence": "certain",
+    "signals": [
+     "MARKER-B"
+    ],
+    "considered": [
+     {
+      "key": "g48_marker_b",
+      "confidence": "certain",
+      "signals": [
+       "MARKER-B"
+      ]
+     }
+    ],
+    "also": [
+     {
+      "key": "g48_maybe",
+      "confidence": "likely",
+      "signals": [
+       "MAYBE"
+      ]
+     }
+    ]
+   },
+   "parsed": {
+    "entities": [],
+    "facts": {
+     "read_by": "g48_marker_b"
+    }
+   },
+   "parse_error": null,
+   "why": "read over a full decode (18 characters)"
+  },
+  "seam-two-classes": {
+   "determined": true,
+   "partial": false,
+   "chars": 724,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "string",
+   "position_parts": 0,
+   "position_why": "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said",
+   "stack": {
+    "handler": {
+     "key": "aspnet_webforms",
+     "label": "a page built with ASP.NET WebForms",
+     "version": 1,
+     "textual": true
+    },
+    "confidence": "certain",
+    "signals": [
+     "__VIEWSTATE field",
+     "aspnetForm"
+    ],
+    "considered": [
+     {
+      "key": "aspnet_webforms",
+      "confidence": "certain",
+      "signals": [
+       "__VIEWSTATE field",
+       "aspnetForm"
+      ]
+     }
+    ],
+    "kind": "unknown"
+   },
+   "doctype": {
+    "type": {
+     "key": "stub_meetings",
+     "label": "stub: a list of meetings",
+     "version": 1,
+     "contract": "membership"
+    },
+    "confidence": "certain",
+    "signals": [
+     "the meeting list's range selector"
+    ],
+    "considered": [
+     {
+      "key": "stub_meetings",
+      "confidence": "certain",
+      "signals": [
+       "the meeting list's range selector"
+      ]
+     }
+    ],
+    "also": [
+     {
+      "key": "stub_items",
+      "confidence": "likely",
+      "signals": [
+       "ITEMS"
+      ]
+     }
+    ]
+   },
+   "parsed": {
+    "entities": [
+     {
+      "key": "meeting:1",
+      "kind": "meeting",
+      "label": "Harbor Commission",
+      "facts": {
+       "body": "Harbor Commission",
+       "date": "2026-03-03",
+       "status": "scheduled",
+       "agenda": "11",
+       "minutes": "21"
+      }
+     },
+     {
+      "key": "meeting:2",
+      "kind": "meeting",
+      "label": "Select Board",
+      "facts": {
+       "body": "Select Board",
+       "date": "2026-03-10",
+       "status": "CANCELLED",
+       "agenda": "12",
+       "minutes": null
+      }
+     }
+    ],
+    "facts": {
+     "meetings": 2
+    }
+   },
+   "parse_error": null,
+   "why": "read over a full decode (724 characters)"
+  },
+  "seam-throws-after-winner": {
+   "determined": true,
+   "partial": false,
+   "chars": 17,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "string",
+   "position_parts": 0,
+   "position_why": "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said",
+   "stack": {
+    "handler": {
+     "key": "conservative",
+     "label": "an unrecognised document",
+     "version": 1,
+     "conservative": true,
+     "fallback": true,
+     "textual": true
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "why": "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
+   },
+   "doctype": {
+    "type": {
+     "key": "g48_marker_a",
+     "label": "g48 g48_marker_a",
+     "version": 1,
+     "contract": "substance"
+    },
+    "confidence": "certain",
+    "signals": [
+     "MARKER-A"
+    ],
+    "considered": [
+     {
+      "key": "g48_marker_a",
+      "confidence": "certain",
+      "signals": [
+       "MARKER-A"
+      ]
+     }
+    ],
+    "also": [
+     {
+      "key": "g48_throws",
+      "confidence": null,
+      "signals": [],
+      "error": "g48 boom"
+     }
+    ]
+   },
+   "parsed": {
+    "entities": [],
+    "facts": {
+     "read_by": "g48_marker_a"
+    }
+   },
+   "parse_error": null,
+   "why": "read over a full decode (17 characters)"
+  },
+  "seam-throws-before-nothing": {
+   "determined": true,
+   "partial": false,
+   "chars": 22,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "string",
+   "position_parts": 0,
+   "position_why": "the text arrived as a bare string, which carries no container structure, so where in the document a reference was read cannot be said",
+   "stack": {
+    "handler": {
+     "key": "conservative",
+     "label": "an unrecognised document",
+     "version": 1,
+     "conservative": true,
+     "fallback": true,
+     "textual": true
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "why": "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
+   },
+   "doctype": {
+    "type": {
+     "key": "stub_fallback",
+     "label": "stub: a document of no recognised type",
+     "version": 1,
+     "fallback": true,
+     "contract": "substance"
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "also": [],
+    "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described"
+   },
+   "parsed": {
+    "entities": [],
+    "facts": {}
+   },
+   "parse_error": null,
+   "why": "read over a full decode (22 characters)"
+  },
+  "structure": {
+   "determined": true,
+   "partial": true,
+   "chars": 17,
+   "undetermined": 1,
+   "reasons": [
+    "no_text_layer"
+   ],
+   "text_from": "document",
+   "position_parts": 1,
+   "position_why": null,
+   "stack": {
+    "handler": {
+     "key": "conservative",
+     "label": "an unrecognised document",
+     "version": 1,
+     "conservative": true,
+     "fallback": true,
+     "textual": true
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "why": "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
+   },
+   "doctype": {
+    "type": {
+     "key": "g48_marker_b",
+     "label": "g48 g48_marker_b",
+     "version": 1,
+     "contract": "substance"
+    },
+    "confidence": "certain",
+    "signals": [
+     "MARKER-B"
+    ],
+    "considered": [
+     {
+      "key": "g48_marker_b",
+      "confidence": "certain",
+      "signals": [
+       "MARKER-B"
+      ]
+     }
+    ],
+    "also": []
+   },
+   "parsed": {
+    "entities": [],
+    "facts": {
+     "read_by": "g48_marker_b"
+    }
+   },
+   "parse_error": null,
+   "why": "read over a PARTIAL decode, stated: 1 undetermined region(s)/code point(s): no_text_layer beside 17 decoded characters"
+  },
+  "undetermined-mostly": {
+   "determined": false,
+   "partial": true,
+   "chars": 6,
+   "undetermined": 50,
+   "reasons": [
+    "encrypted"
+   ],
+   "why": "the tier that produced this text could not decode most of it (50 undetermined against 6 decoded: encrypted); a reading over the fragment would silently misrepresent the document"
+  },
+  "undetermined-partial": {
+   "determined": true,
+   "partial": true,
+   "chars": 6,
+   "undetermined": 6,
+   "reasons": [],
+   "text_from": "document",
+   "position_parts": 0,
+   "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
+   "stack": {
+    "handler": {
+     "key": "conservative",
+     "label": "an unrecognised document",
+     "version": 1,
+     "conservative": true,
+     "fallback": true,
+     "textual": true
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "why": "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
+   },
+   "doctype": {
+    "type": {
+     "key": "stub_fallback",
+     "label": "stub: a document of no recognised type",
+     "version": 1,
+     "fallback": true,
+     "contract": "substance"
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "also": [],
+    "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described"
+   },
+   "parsed": {
+    "entities": [],
+    "facts": {}
+   },
+   "parse_error": null,
+   "why": "read over a PARTIAL decode, stated: 6 undetermined region(s)/code point(s) beside 6 decoded characters"
+  },
+  "empty": {
+   "determined": false,
+   "partial": false,
+   "chars": 0,
+   "undetermined": 0,
+   "reasons": [],
+   "why": "no text was supplied, so no reading was attempted"
+  },
+  "not-text": {
+   "determined": false,
+   "partial": false,
+   "chars": 0,
+   "undetermined": 0,
+   "reasons": [],
+   "why": "no text was supplied, so no reading was attempted"
+  },
+  "sheet-csv-small": {
+   "determined": true,
+   "partial": false,
+   "chars": 4929,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "document",
+   "position_parts": 0,
+   "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
+   "stack": {
+    "handler": {
+     "key": "client_rendered",
+     "label": "an application that builds its pages in the browser",
+     "version": 1,
+     "textual": true,
+     "shell": true,
+     "warning": "This address builds its page in the browser, so what was collected is the empty frame and not the figures. It cannot be relied on as evidence of what the page shows. Collecting it properly needs the page to be rendered first."
+    },
+    "confidence": "possible",
+    "signals": [
+     "no links and no prose in the body"
+    ],
+    "considered": [
+     {
+      "key": "client_rendered",
+      "confidence": "possible",
+      "signals": [
+       "no links and no prose in the body"
+      ]
+     }
+    ],
+    "kind": "shell"
+   },
+   "doctype": {
+    "type": {
+     "key": "stub_fallback",
+     "label": "stub: a document of no recognised type",
+     "version": 1,
+     "fallback": true,
+     "contract": "substance"
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "also": [],
+    "why": "no registered content type recognised this document, so it is read as a document of no recognised type: any substantive difference is reported and not described"
+   },
+   "parsed": {
+    "entities": [],
+    "facts": {}
+   },
+   "parse_error": null,
+   "why": "read over a full decode (4929 characters)"
+  },
+  "sheet-csv-items": {
+   "determined": true,
+   "partial": false,
+   "chars": 4935,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "document",
+   "position_parts": 0,
+   "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
+   "stack": {
+    "handler": {
+     "key": "client_rendered",
+     "label": "an application that builds its pages in the browser",
+     "version": 1,
+     "textual": true,
+     "shell": true,
+     "warning": "This address builds its page in the browser, so what was collected is the empty frame and not the figures. It cannot be relied on as evidence of what the page shows. Collecting it properly needs the page to be rendered first."
+    },
+    "confidence": "possible",
+    "signals": [
+     "no links and no prose in the body"
+    ],
+    "considered": [
+     {
+      "key": "client_rendered",
+      "confidence": "possible",
+      "signals": [
+       "no links and no prose in the body"
+      ]
+     }
+    ],
+    "kind": "shell"
+   },
+   "doctype": {
+    "type": {
+     "key": "stub_items",
+     "label": "stub: a list of filed items",
+     "version": 1,
+     "contract": "membership"
+    },
+    "confidence": "likely",
+    "signals": [
+     "ITEMS"
+    ],
+    "considered": [
+     {
+      "key": "stub_items",
+      "confidence": "likely",
+      "signals": [
+       "ITEMS"
+      ]
+     }
+    ],
+    "also": []
+   },
+   "parsed": {
+    "entities": [
+     {
+      "key": "PA-100",
+      "kind": "item",
+      "label": "PA-100",
+      "facts": {
+       "file": "PA-100"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-101",
+      "kind": "item",
+      "label": "PA-101",
+      "facts": {
+       "file": "PA-101"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-102",
+      "kind": "item",
+      "label": "PA-102",
+      "facts": {
+       "file": "PA-102"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-103",
+      "kind": "item",
+      "label": "PA-103",
+      "facts": {
+       "file": "PA-103"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-104",
+      "kind": "item",
+      "label": "PA-104",
+      "facts": {
+       "file": "PA-104"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-105",
+      "kind": "item",
+      "label": "PA-105",
+      "facts": {
+       "file": "PA-105"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-106",
+      "kind": "item",
+      "label": "PA-106",
+      "facts": {
+       "file": "PA-106"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-107",
+      "kind": "item",
+      "label": "PA-107",
+      "facts": {
+       "file": "PA-107"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-108",
+      "kind": "item",
+      "label": "PA-108",
+      "facts": {
+       "file": "PA-108"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-109",
+      "kind": "item",
+      "label": "PA-109",
+      "facts": {
+       "file": "PA-109"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-110",
+      "kind": "item",
+      "label": "PA-110",
+      "facts": {
+       "file": "PA-110"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-111",
+      "kind": "item",
+      "label": "PA-111",
+      "facts": {
+       "file": "PA-111"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-112",
+      "kind": "item",
+      "label": "PA-112",
+      "facts": {
+       "file": "PA-112"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-113",
+      "kind": "item",
+      "label": "PA-113",
+      "facts": {
+       "file": "PA-113"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-114",
+      "kind": "item",
+      "label": "PA-114",
+      "facts": {
+       "file": "PA-114"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-115",
+      "kind": "item",
+      "label": "PA-115",
+      "facts": {
+       "file": "PA-115"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-116",
+      "kind": "item",
+      "label": "PA-116",
+      "facts": {
+       "file": "PA-116"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-117",
+      "kind": "item",
+      "label": "PA-117",
+      "facts": {
+       "file": "PA-117"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-118",
+      "kind": "item",
+      "label": "PA-118",
+      "facts": {
+       "file": "PA-118"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-119",
+      "kind": "item",
+      "label": "PA-119",
+      "facts": {
+       "file": "PA-119"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-120",
+      "kind": "item",
+      "label": "PA-120",
+      "facts": {
+       "file": "PA-120"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-121",
+      "kind": "item",
+      "label": "PA-121",
+      "facts": {
+       "file": "PA-121"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-122",
+      "kind": "item",
+      "label": "PA-122",
+      "facts": {
+       "file": "PA-122"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-123",
+      "kind": "item",
+      "label": "PA-123",
+      "facts": {
+       "file": "PA-123"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-124",
+      "kind": "item",
+      "label": "PA-124",
+      "facts": {
+       "file": "PA-124"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-125",
+      "kind": "item",
+      "label": "PA-125",
+      "facts": {
+       "file": "PA-125"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-126",
+      "kind": "item",
+      "label": "PA-126",
+      "facts": {
+       "file": "PA-126"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-127",
+      "kind": "item",
+      "label": "PA-127",
+      "facts": {
+       "file": "PA-127"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-128",
+      "kind": "item",
+      "label": "PA-128",
+      "facts": {
+       "file": "PA-128"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-129",
+      "kind": "item",
+      "label": "PA-129",
+      "facts": {
+       "file": "PA-129"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-130",
+      "kind": "item",
+      "label": "PA-130",
+      "facts": {
+       "file": "PA-130"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-131",
+      "kind": "item",
+      "label": "PA-131",
+      "facts": {
+       "file": "PA-131"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-132",
+      "kind": "item",
+      "label": "PA-132",
+      "facts": {
+       "file": "PA-132"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-133",
+      "kind": "item",
+      "label": "PA-133",
+      "facts": {
+       "file": "PA-133"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-134",
+      "kind": "item",
+      "label": "PA-134",
+      "facts": {
+       "file": "PA-134"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-135",
+      "kind": "item",
+      "label": "PA-135",
+      "facts": {
+       "file": "PA-135"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-136",
+      "kind": "item",
+      "label": "PA-136",
+      "facts": {
+       "file": "PA-136"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-137",
+      "kind": "item",
+      "label": "PA-137",
+      "facts": {
+       "file": "PA-137"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-138",
+      "kind": "item",
+      "label": "PA-138",
+      "facts": {
+       "file": "PA-138"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-139",
+      "kind": "item",
+      "label": "PA-139",
+      "facts": {
+       "file": "PA-139"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-140",
+      "kind": "item",
+      "label": "PA-140",
+      "facts": {
+       "file": "PA-140"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-141",
+      "kind": "item",
+      "label": "PA-141",
+      "facts": {
+       "file": "PA-141"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-142",
+      "kind": "item",
+      "label": "PA-142",
+      "facts": {
+       "file": "PA-142"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-143",
+      "kind": "item",
+      "label": "PA-143",
+      "facts": {
+       "file": "PA-143"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-144",
+      "kind": "item",
+      "label": "PA-144",
+      "facts": {
+       "file": "PA-144"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-145",
+      "kind": "item",
+      "label": "PA-145",
+      "facts": {
+       "file": "PA-145"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-146",
+      "kind": "item",
+      "label": "PA-146",
+      "facts": {
+       "file": "PA-146"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-147",
+      "kind": "item",
+      "label": "PA-147",
+      "facts": {
+       "file": "PA-147"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-148",
+      "kind": "item",
+      "label": "PA-148",
+      "facts": {
+       "file": "PA-148"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-149",
+      "kind": "item",
+      "label": "PA-149",
+      "facts": {
+       "file": "PA-149"
+      },
+      "occurrences": [
+       null,
+       null,
+       null,
+       null
+      ]
+     }
+    ],
+    "facts": {
+     "also": []
+    }
+   },
+   "parse_error": null,
+   "why": "read over a full decode (4935 characters)"
+  },
+  "sheet-workbook": {
+   "determined": true,
+   "partial": false,
+   "chars": 916,
+   "undetermined": 0,
+   "reasons": [],
+   "text_from": "document",
+   "position_parts": 0,
+   "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
+   "stack": {
+    "handler": {
+     "key": "conservative",
+     "label": "an unrecognised document",
+     "version": 1,
+     "conservative": true,
+     "fallback": true,
+     "textual": true
+    },
+    "confidence": "none",
+    "signals": [],
+    "considered": [],
+    "why": "no handler recognised this document, so it is treated conservatively: nothing is assumed to be decoration and any difference is reported"
+   },
+   "doctype": {
+    "type": {
+     "key": "stub_items",
+     "label": "stub: a list of filed items",
+     "version": 1,
+     "contract": "membership"
+    },
+    "confidence": "likely",
+    "signals": [
+     "ITEMS"
+    ],
+    "considered": [
+     {
+      "key": "stub_items",
+      "confidence": "likely",
+      "signals": [
+       "ITEMS"
+      ]
+     }
+    ],
+    "also": []
+   },
+   "parsed": {
+    "entities": [
+     {
+      "key": "PA-100",
+      "kind": "item",
+      "label": "PA-100",
+      "facts": {
+       "file": "PA-100"
+      },
+      "occurrences": [
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-101",
+      "kind": "item",
+      "label": "PA-101",
+      "facts": {
+       "file": "PA-101"
+      },
+      "occurrences": [
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-102",
+      "kind": "item",
+      "label": "PA-102",
+      "facts": {
+       "file": "PA-102"
+      },
+      "occurrences": [
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-103",
+      "kind": "item",
+      "label": "PA-103",
+      "facts": {
+       "file": "PA-103"
+      },
+      "occurrences": [
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-104",
+      "kind": "item",
+      "label": "PA-104",
+      "facts": {
+       "file": "PA-104"
+      },
+      "occurrences": [
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-105",
+      "kind": "item",
+      "label": "PA-105",
+      "facts": {
+       "file": "PA-105"
+      },
+      "occurrences": [
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-106",
+      "kind": "item",
+      "label": "PA-106",
+      "facts": {
+       "file": "PA-106"
+      },
+      "occurrences": [
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-107",
+      "kind": "item",
+      "label": "PA-107",
+      "facts": {
+       "file": "PA-107"
+      },
+      "occurrences": [
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-108",
+      "kind": "item",
+      "label": "PA-108",
+      "facts": {
+       "file": "PA-108"
+      },
+      "occurrences": [
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-109",
+      "kind": "item",
+      "label": "PA-109",
+      "facts": {
+       "file": "PA-109"
+      },
+      "occurrences": [
+       null,
+       null
+      ]
+     },
+     {
+      "key": "PA-110",
+      "kind": "item",
+      "label": "PA-110",
+      "facts": {
+       "file": "PA-110"
+      }
+     },
+     {
+      "key": "PA-111",
+      "kind": "item",
+      "label": "PA-111",
+      "facts": {
+       "file": "PA-111"
+      }
+     },
+     {
+      "key": "PA-112",
+      "kind": "item",
+      "label": "PA-112",
+      "facts": {
+       "file": "PA-112"
+      }
+     },
+     {
+      "key": "PA-113",
+      "kind": "item",
+      "label": "PA-113",
+      "facts": {
+       "file": "PA-113"
+      }
+     },
+     {
+      "key": "PA-114",
+      "kind": "item",
+      "label": "PA-114",
+      "facts": {
+       "file": "PA-114"
+      }
+     },
+     {
+      "key": "PA-115",
+      "kind": "item",
+      "label": "PA-115",
+      "facts": {
+       "file": "PA-115"
+      }
+     },
+     {
+      "key": "PA-116",
+      "kind": "item",
+      "label": "PA-116",
+      "facts": {
+       "file": "PA-116"
+      }
+     },
+     {
+      "key": "PA-117",
+      "kind": "item",
+      "label": "PA-117",
+      "facts": {
+       "file": "PA-117"
+      }
+     },
+     {
+      "key": "PA-118",
+      "kind": "item",
+      "label": "PA-118",
+      "facts": {
+       "file": "PA-118"
+      }
+     },
+     {
+      "key": "PA-119",
+      "kind": "item",
+      "label": "PA-119",
+      "facts": {
+       "file": "PA-119"
+      }
+     },
+     {
+      "key": "PA-120",
+      "kind": "item",
+      "label": "PA-120",
+      "facts": {
+       "file": "PA-120"
+      }
+     },
+     {
+      "key": "PA-121",
+      "kind": "item",
+      "label": "PA-121",
+      "facts": {
+       "file": "PA-121"
+      }
+     },
+     {
+      "key": "PA-122",
+      "kind": "item",
+      "label": "PA-122",
+      "facts": {
+       "file": "PA-122"
+      }
+     },
+     {
+      "key": "PA-123",
+      "kind": "item",
+      "label": "PA-123",
+      "facts": {
+       "file": "PA-123"
+      }
+     },
+     {
+      "key": "PA-124",
+      "kind": "item",
+      "label": "PA-124",
+      "facts": {
+       "file": "PA-124"
+      }
+     },
+     {
+      "key": "PA-125",
+      "kind": "item",
+      "label": "PA-125",
+      "facts": {
+       "file": "PA-125"
+      }
+     },
+     {
+      "key": "PA-126",
+      "kind": "item",
+      "label": "PA-126",
+      "facts": {
+       "file": "PA-126"
+      }
+     },
+     {
+      "key": "PA-127",
+      "kind": "item",
+      "label": "PA-127",
+      "facts": {
+       "file": "PA-127"
+      }
+     },
+     {
+      "key": "PA-128",
+      "kind": "item",
+      "label": "PA-128",
+      "facts": {
+       "file": "PA-128"
+      }
+     },
+     {
+      "key": "PA-129",
+      "kind": "item",
+      "label": "PA-129",
+      "facts": {
+       "file": "PA-129"
+      }
+     }
+    ],
+    "facts": {
+     "also": []
+    }
+   },
+   "parse_error": null,
+   "why": "read over a full decode (916 characters)"
+  }
+ }
+}

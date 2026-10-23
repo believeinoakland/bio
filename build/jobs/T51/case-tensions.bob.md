@@ -1,6 +1,6 @@
 # BOB to case-tensions (T51)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -21,3 +21,31 @@ Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process reposi
 ## B2 · ANSWER · re J1
 
 ANSWER (K4025): presence-only stands for those two. A word id needs no test of its own (K3965); R1 and R2/R3 are behaviour (the undetermined reason present with its key, the flag never cleared), and the wording is the table's. Once rows.mjs is regenerated at R8's close the rows exist; no further change owed.
+
+## B3 · START
+
+FIRST, if `mail start` cannot push because your container's copy of your branch is behind origin: do not reset or force anything; run `cd /home/user/bio && git fetch origin job/T51/case-tensions tranche/T51 && git branch -m job/T51/case-tensions stale/case-tensions-local && git checkout -b job/T51/case-tensions origin/job/T51/case-tensions`, then re-run `mail start`. If a step is refused, post BLOCKED naming it and wait.
+
+START · CASE-TENSIONS #3 · tranche T51 · product believeinoakland/bio · depth 2 (fix round 6, G47; K4666, K4669) · reading set per mechanics §6 step 2 (your other tests are run, not read)
+
+Mail with `--module case-tensions`; record `build/jobs/T51/case-tensions.md` (append a new section; earlier sections are history). Model claude-sonnet-5-5, medium effort; workers: haiku low for mechanical work, sonnet medium for reading and diagnosis, never opus (K3518). Before tests: every lockfile directory has `node_modules` (K4113). TEST-SUPPORT #9's preload `bio-plane/test/platform-sqlite.mjs` is merged on the tranche (K4666): run your tests with `node --import ./test/platform-sqlite.mjs --test --test-force-exit ...` from `bio-plane/` (`.github/scripts/module-tests.mjs` loads it too); it refuses any bound value over 2,098,176 B as Durable Object SQLite does, and K4639's practice is that a stored row value stays under 1 MiB. At most two suites at once. A document of your reading set you are about to read only in part: stop, post BLOCKED (cause `reading`) (K3678). Your diff touches only your module's paths, tests and your record. Merge `tranche/T51` first, and again when a provider merges.
+
+**Reds you inherit (accepted by name, `build/handoff.md` "Accepted reds"; yours are not these, run them only as users):** plane `release` R24 and `l77-size` R77 L; file-safety R24; promotion row-census; `fleetbundles` section 10, agent-worker `requirements`, ocr-worker, `newgroup-bundle-fresh` arms (C)/(D); newgroup R8, R11, R20, R33, R44, R55, R61, R71, `wizard.test.mjs`; screens-inquiry R96 G6 x2, G8, G14. case-authoring `document.test.mjs` R17 is red under the preload until G47 merges (it is case-authoring's seam test, not yours). case-authoring `document.test.mjs` R17 is red under the preload until G47 merges (the 16,831,411 B document; the job's own case, not a regression); it goes green only with CASE-DISCLOSURES and CASE-AUTHORING. A failure not on this list is yours or a bug to report.
+
+**Providers' state (say it plainly in your record).** G47's owners merge in `modules.json` order: CASE-GRAMMAR #20, PUBLICATION #36, CASE-TENSIONS #3, CASE-DISCLOSURES #17, CASE-INPUTS #8, CASE-AUTHORING #41. None is merged when this is posted; a seam test that needs another stays red by name, and BOB posts a CHANGE as each lands. You wait for CASE-GRAMMAR's `sha` field (a seam test that reads it stays red by name until it merges).
+
+**Read in full:** `build/plan/fix-round-6-T51.md` section 0 and the G47 entry (c1), rulings K4666, K4669, K4672, K4571, K4426, `build/requirements/case-tensions.md` (the capture attestation re-author), `case-tensions/index.mjs` (:505-515 `#splice`, :672-696 `#reauthorCaptureAttestation`), the tests naming it.
+
+**Bob (K4426):** "We need to be rigorous about truely understanding the issues we're experiencing, understanding (and fixing) why they weren't caught in the fixtures, and be confident that we do understand, can properly tes, and have really fixed every issue before we do another deployment." **Bob's focus: an alpha release as quickly and efficiently as possible: do what the entry needs, nothing more.**
+
+**Rules** (plan section 0): R-FOUR, R-SEAM, R-ONE, R-NOTMET (no "not met", deferred or open QUESTION at COMPLETE: name the smallest thing you need and ask BOB now), R-OLD (as the entry says), R-CLOCK (no test asserts a compute time from the object's clock), K4571 (never a silent cut or partial read), K4630. Words: a drawn-screen module reads sentences by key only (K4640); any other module writes a new sentence as `localize(id, en, vars)` stand-ins (K3930), `word(...)` where a row exists; a test never copies a sentence (K3810); rows owed to UX-DESIGN are named in your record. Declare every census op you own whose accepted keys change (K4208): confirm and say none changes if so. The scans rule (K3678) binds you. A protective bound you set is BOB's to report to Bob (K1881): give BOB its numbers at once and name each in your COMPLETE.
+
+**Your entry (G47, the re-author).** `#reauthorCaptureAttestation` (`index.mjs:672-696`) selects the rows to change by `ref` and `by`, so with several captures of one source choosing capture A's level also changes capture B's row. Also select `!r.sha || r.sha.toLowerCase() === cap`; the splice keeps `sha` (rows are spread; CASE-GRAMMAR's `materialAttestationLines` writes it). A document with no `sha` behaves exactly as before. R-OLD: nothing stored changes. Failing-first (red today, seen red): `test/m/case-tensions/g47-reauthor.test.mjs`: a k = 2 document (two captures of one source, `sha` on the rows): choosing A's level leaves B's row untouched (red: both change); control: a document without `sha` unchanged. Seam red by name until CASE-GRAMMAR #20 merges (it writes `sha`). Propose the requirement line.
+
+**Seam reds by name:** the cases that read the `sha` field, until CASE-GRAMMAR #20 merges.
+
+Run: your suite under the preload, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio case-tensions tranche/T51 job/T51/case-tensions`. COMPLETE: what changed (file:line), each failing-first test red then green, the measures this START names, the seam tests still red by name and which provider each waits for, suite counts, the requirement lines you propose (BOB writes them), and the `Size` line.
+
+## B4 · CHANGE
+
+(K4680) CASE-GRAMMAR #20 (the optional attestation `sha`, `bio-case-document/9`, `caseDocumentFormatFor`) and PUBLICATION #36's G47t (`published_shas.capture_sha`) are merged on tranche/T51, with CASE-CARRIAGE #15 and CASE-DISCLOSURES #17. Merge tranche/T51 into your branch, turn your seam tests green, re-run your suite under the preload and your users, then COMPLETE again (or COMPLETE for the first time).

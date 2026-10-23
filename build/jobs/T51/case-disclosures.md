@@ -1,6 +1,6 @@
 # case-disclosures (T51)
 
-**Status** · session_01NhpmPg6Tvjeaftfvxn46LM · depth 2 · COMPLETE · handled B6
+**Status** · session_01JCHNeQistwMeSv51kQxgRA · depth 2 · COMPLETE · handled B7
 
 ## J1 · QUESTION
 
@@ -84,3 +84,56 @@ COMPLETE: CHANGE B6 done (case-grammar R12 merged: tranche/T51 merged into my br
 Applied: the three row round-trip tests (R6/R7 materials, R7 photo, R7 member document) now compare `materialsOf(fm).materials` to the written rows whole, `title` included; the tolerant helper `sameRowsButTitle` is removed. New direct test, in the R7 title test: `materialBlockLines` writes both titles into the case document's lines and `materialsOf` reads the rows back equal, `title` included (null titles too). Red first: the same test run with the pre-merge `case-grammar/materials.mjs` restored fails (file fails, 0 pass); green with the merged one. The restore was undone; no case-grammar file is changed.
 Ran: case-disclosures 105 pass, 0 fail. Users: case-authoring 225/0, case-account 48/0, case-inputs 71/0, review 86/0, case-check 34/0. format, architecture, coverage 33 of 33, words, ownership (7 files): 0 failures.
 Size (session_01NhpmPg6Tvjeaftfvxn46LM): test runs 15, module lines 2427
+
+## Fix round 6 · G47 (CASE-DISCLOSURES #17, session_01JCHNeQistwMeSv51kQxgRA, START B7)
+
+**Providers' state (as of this work).** G47's owners merge in `modules.json` order: CASE-GRAMMAR #20, PUBLICATION #36, CASE-CHECKER #16, CASE-DISCLOSURES #17 (this job), CASE-INPUTS #8, CASE-AUTHORING #41. None of the others was merged on `tranche/T51` when I merged it (92bcf1c38b). So `case-grammar` does not yet write or read the optional `sha` of an attestation row; the front-matter rows therefore carry it only once it merges (seam red by name, below).
+
+**What changed.**
+- `bio-plane/src/case-disclosures/materials.mjs` `materialRows` (:75-111): counts the `ref`s of its `materials` argument over all the materials of the call and sets `sha` (the material's) on each of that material's attestations (member, timestamp, co-archive, project, group) only where its `ref` occurs on two or more materials; a `ref` that occurs once adds no key. The docstring says so.
+- `bio-plane/src/case-disclosures/document.mjs` `carriesBodyLines` (:123-137): prints under a row `att.filter((a) => (a.sha ? a.sha === m.sha : a.ref === m.ref))`. A comment above states the rule. No folding of lines by text.
+- Tests: `test/m/case-disclosures/fixture.mjs` gains `w.captures(id, count)` (one bundle registering `count` captures of one source, each registered at its own instant); new `test/m/case-disclosures/g47-body.test.mjs`, 4 tests, all built by the real `materialRows` through `disclosureBlocks` over real captures (legs naming a content row over each capture), no hand-made array.
+
+**Failing-first, red then green.**
+1. 501 captures of one `ref` (R7, R10): red today (seen): every attestation of the ref lacks `sha` (and the body is 15.6 MB-class by the old join); green: all 1,002 attestations carry their own capture's `sha`, each row prints exactly its two lines (its own registration time, no other capture's), the body is linear in the rows.
+2. Two captures of one source (R7, R10): red (seen): no `sha`; green: each row prints only its own project and group lines.
+3. `materialRows` sets `sha` only on refs occurring twice or more, counted over all materials of the call (two captures of one source plus a third source in one call; and a bare call): red (seen), green.
+4. Control (K4671, K4672): materials of three sources: no attestation states `sha`, and each row prints the lines of its `ref` as before: green before and after (the control); the existing byte pins in `seam.test.mjs` (hashes of `carriesBodyLines` over fixed rows) pass unchanged.
+
+**Measures BOB asked for.** The body for 501 captures of one source is **about 230 KB** (232,527 B in the test, 230,022 B in the measure below; about 460 B a row: the long row sentence plus two attestation lines), linear in the rows. The START's "under 100 KB" does not hold for the body (its 100 KB figure was an estimate), and I did not weaken the claim silently: the test asserts the true property (body ≤ rows × one row's bytes) and a loose 300 KB ceiling. The 15,624,248 B of repeated attestation lines are gone (each row prints its two). Measured at 501 captures of one source (real `disclosureBlocks`): the body section 230,022 B; `case-grammar`'s `materials:`/`material_attestations:` blocks about 164 KB before `sha`, and `sha` adds one 64-character field to each of the 1,002 attestation rows (about 75 KB more, written once `case-grammar` merges). The document's total is the START's 1,208,774 B (which already holds this body once, not 251,000 times) plus about 75 KB: about 1.28 MB, under the 1.5 MiB bound PUBLICATION #36 sets, by a margin of about 1.2x; BOB weighs that margin, not this job (I measured only this module's two sections, not the whole document).
+
+**Seam tests still red by name.** The front matter's `material_attestations:` rows carry `sha` only once `case-grammar` merges `MATERIAL_ATTESTATION_FIELDS`' optional `sha` and `materialAttestationLines` writes it (CASE-GRAMMAR #20); `materialRows` already hands it on. Nothing in this module's suite is red waiting on it; case-authoring's through-the-door test (its `document.test.mjs`, R17) waits on case-grammar, publication, case-checker and this job.
+
+**No pinned old lines.** I searched the product source and tests for the printed line (`Attested:` / `case-disclosures.document.attested_by`): its readers are `case-authoring` (index, tests), `case-checker/program.mjs` (generated) and the words rows. No test of case-checker or case-catalogue pins the repeated lines; every test of the users I ran passes (below).
+
+**Census ops.** None of this module's: it holds no op and no accepted key (R23); none changes.
+
+**Stale generated artifact (found, not mine to write):** `bio-plane/src/case-checker/program.mjs` bundles `case-disclosures` through `case-checker`'s uses (it carries the `Attested:` sentence), so my change stales it. `case-checker` R13 and R25 are red both before and after my change (inherited, as the START says: BOB regenerates at the round end).
+
+**Deferred / found elsewhere.** Nothing deferred. Nothing found in another module beyond the above and the bound's margin.
+
+**Requirement line proposed (BOB writes it): R7, appended.** "(G47; K4669, K4671, K4672) Where the same `ref` occurs on two or more of the materials handed to `materialRows` (captures of one source), each attestation of such a material states its capture's `sha`, and the case document's body prints under a material's row only the attestations that state its `sha`, else those of its `ref`, so a capture's row never shows another capture's timestamp, archive or register line. With one material to a `ref` no attestation states `sha` and the document is byte for byte what it was. Tests: 501 captures of one source print two attestation lines a row, each its own; control: three sources print as before." R10 needs no change (its levels are unchanged; `sha` only joins the row).
+
+**Tests and checks run** (all from `bio-plane/` under `node --import ./test/platform-sqlite.mjs --test --test-force-exit`, one suite at a time):
+- `test/m/case-disclosures/`: tests 113, pass 113, fail 0 (the 4 new included).
+- Users: case-authoring 241/241, case-inputs 71/71, case-account 48/48, case-check 34/34, case-tensions 24/24, case-catalogue 16/16 pass; case-checker 95: 93 pass, 2 fail = R13 and R25, the same two with this module's source at its previous commit.
+- `checks/run.mjs`: format 0 failures, architecture 0, coverage 0 (34 of 34 ids named), channels 0, words 0 failures (inline 0, plain 0, testcopy 0, missingkey 0); my diff adds no string literal to the words count.
+- `checks/ownership.mjs case-disclosures tranche/T51 job/T51/case-disclosures`: 0 failures.
+- `build/plan/impact.mjs origin/tranche/T51 HEAD`: affects 47 of 176 modules (853 of 2,412 test files, through the module graph); I ran the module's direct users above, not all 853.
+
+Size (session_01JCHNeQistwMeSv51kQxgRA): test runs 14, module lines 2447
+
+## J8 · COMPLETE
+
+COMPLETE · G47 (B7). Full account in my record, section "Fix round 6 · G47".
+
+Changed: materials.mjs materialRows (:75-111) sets `sha` on a material's attestations only where its `ref` occurs on 2+ materials of the call; document.mjs carriesBodyLines (:123-137) prints `att.filter((a) => a.sha ? a.sha === m.sha : a.ref === m.ref)`. New test g47-body.test.mjs (4 tests, real materialRows over real captures; fixture gains `w.captures`). Three red then green; the one-capture-per-source control is green before and after, and seam.test's byte pins pass unchanged.
+
+Suites (under the preload): case-disclosures 113/113; users case-authoring 241, case-inputs 71, case-account 48, case-check 34, case-tensions 24, case-catalogue 16, all pass; case-checker 93/95, the 2 reds (R13 stale program, R25) are identical with my source at its previous commit. checks/run.mjs 0 failures (words unchanged), ownership 0.
+
+For BOB:
+1. Numbers: the body for 501 captures of one source is about 230 KB (not under 100 KB: about 460 B a row, linear; the 15.6 MB is gone). With `sha` on the 1,002 attestation rows the document is about 1.28 MB, margin about 1.2x under publication's 1.5 MiB bound. I measured only my module's two sections.
+2. Seam red by name: the front matter carries `sha` only once CASE-GRAMMAR #20 merges; nothing in my suite waits on it.
+3. Generated artifact stale: case-checker/program.mjs carries this module's sentence; yours to regenerate at the round end.
+4. No test or check in case-checker/case-catalogue pins the old repeated lines. No census op of mine changes.
+5. Requirement line for R7 is in my record.

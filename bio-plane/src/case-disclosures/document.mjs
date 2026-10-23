@@ -117,6 +117,8 @@ const travelsAs = (m) => (m.included ? word("case-disclosures.travels_whole_case
   : copyCarried(m.obscured) ? copyWords(m.obscured)
   : word("case-disclosures.included_fingerprint_origin"));
 
+/* R7 (G47): an attestation that states a `sha` belongs to that capture's row alone (captures of one source share a `ref`);
+   one that states none belongs to every row of its `ref`, as before. */
 export function carriesBodyLines(method, materials, group) {
   const rows = materials && Array.isArray(materials.rows) ? materials.rows : [];
   const att = materials && Array.isArray(materials.attestations) ? materials.attestations : [];
@@ -127,7 +129,7 @@ export function carriesBodyLines(method, materials, group) {
       ? [word("case-disclosures.document_observation_case"), "",
          ...rows.flatMap((m) => [
            word("case-disclosures.fingerprint_relied_finding", { ref: String(m.ref), material_kind_words: String(MATERIAL_KIND_WORDS[m.kind] ?? m.kind), sha: String(m.sha), rests_under: travelsAs(m), origin: String(m.rests_under === "load_bearing" ? localize("case-disclosures.document.a_load_bearing", "a load-bearing") : localize("case-disclosures.document.only_a_supporting", "only a supporting")), archived_copy: String(m.origin ?? NOT_STATED), text_sha: String(m.archived_copy ?? localize("case-disclosures.document.none_held", "none held")), first: String(m.text_sha ? localize("case-disclosures.document.extracted_text_sha", "; extracted text {text_sha}", { text_sha: String(m.text_sha) }) : "") }),
-           ...att.filter((a) => a.ref === m.ref).map((a) => localize("case-disclosures.document.attested_by", "  - Attested: {attester}.", { attester: attesterWords(a, group) }))])]
+           ...att.filter((a) => (a.sha ? a.sha === m.sha : a.ref === m.ref)).map((a) => localize("case-disclosures.document.attested_by", "  - Attested: {attester}.", { attester: attesterWords(a, group) }))])]
       : [word("case-disclosures.case_findings_reach")]),
     ""];
 }
