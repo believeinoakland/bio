@@ -87,7 +87,7 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
       /* R21: the chosen jurisdiction profiles, only when some were chosen. */
       ...profilesBinding(opts.profiles),
       /* R42: where the team's room is created, only when the caller was given a hint (the founder's `cf`); none, none. */
-      ...storeLocationBinding(opts.locationHint),
+      ...storeLocationBinding(opts.storeLocation),
       { type: "r2_bucket", name: "CAPTURES", bucket_name: names.captures },
       { type: "r2_bucket", name: "PUBLISHED", bucket_name: names.published },
       ...(opts.noSelf ? [] : [selfBinding(slug)]),

@@ -45,7 +45,7 @@ test("R42: storeLocationBinding answers the plain text for an allowed hint and n
 
 test("R42: the install's creating upload carries STORE_LOCATION when given a hint, and is otherwise exactly the list of R12", async () => {
   const w = account({});
-  await install(await bundle(), { locationHint: "wnam" });
+  await install(await bundle(), { storeLocation: "wnam" });
   const withHint = w.puts.at(-1).meta;
   assert.deepEqual(plain(withHint.bindings, "STORE_LOCATION"), [{ type: "plain_text", name: "STORE_LOCATION", text: "wnam" }]);
   assert.equal(plain(withHint.bindings, "STORE_GENERATION").length, 0, "no generation is invented");
@@ -60,7 +60,7 @@ test("R42: the install's creating upload carries STORE_LOCATION when given a hin
   none.restore();
   for (const bad of ["bogus", "WNAM", ""]) {
     const v = account({});
-    await install(await bundle(), { locationHint: bad });
+    await install(await bundle(), { storeLocation: bad });
     assert.equal(plain(v.puts.at(-1).meta.bindings, "STORE_LOCATION").length, 0, JSON.stringify(bad) + " is not sent");
     v.restore();
   }
@@ -76,7 +76,7 @@ test("R42: an update restates the STORE_LOCATION and STORE_GENERATION the script
   w.restore();
   /* a hint held without a generation restates the hint alone */
   const h = account({ pre: held(["STORE_LOCATION", "enam"]) });
-  await update(await bundle(), { locationHint: "wnam" });
+  await update(await bundle(), { storeLocation: "wnam" });
   assert.deepEqual(plain(lastPlane(h).meta.bindings, "STORE_LOCATION"), [{ type: "plain_text", name: "STORE_LOCATION", text: "enam" }], "a hint given to an update never replaces the held one: a room never moves");
   assert.equal(plain(lastPlane(h).meta.bindings, "STORE_GENERATION").length, 0);
   h.restore();
@@ -93,7 +93,7 @@ test("R42: the install sequence (creating PUT, step-3 re-PUT, own-hosts re-PUT, 
   /* the member the fleet step uploaded is on the account by the time of the re-PUT (a service binding to none is refused) */
   const w = account({ pre: { "pdf-worker-grp": [] } });
   const rel = await bundle();
-  await install(rel, { locationHint: "weur" });
+  await install(rel, { storeLocation: "weur" });
   assert.equal(lastPlane(w).bindings.find((x) => x.name === "STORE_LOCATION")?.text, "weur", "after the creating PUT");
   /* the step-3 re-PUT of bindMembers, with a member added */
   await bindMembers(sink(), session(), "A1", "grp", rel, [], { done: ["pdf-worker"] }, { withR2: true, names: NAMES, writeHosts: true, ownHosts: ["grp.example.workers.dev"] });
@@ -140,7 +140,7 @@ test("R42: an update of a script that exists whose held settings cannot be read 
 
 test("R42: uploadUpdate reads the held place itself, from the caller's slug: it needs nothing from the caller", async () => {
   const w = account({ pre: held(["STORE_LOCATION", "apac"], ["STORE_GENERATION", "3"]) });
-  await update(await bundle(), { held: [], location: "sam", generation: "9" });
+  await update(await bundle(), { held: [], location: "sam", generation: "9", storeLocation: "sam" });
   const b = lastPlane(w).meta.bindings;
   assert.deepEqual(plain(b, "STORE_LOCATION").map((x) => x.text), ["apac"]);
   assert.deepEqual(plain(b, "STORE_GENERATION").map((x) => x.text), ["3"]);
@@ -151,17 +151,17 @@ test("R42: planeInSync treats a held place that differs from what an install wou
   const rel = await bundle();
   for (const texts of [[], [["STORE_LOCATION", "enam"]], [["STORE_LOCATION", "bogus"], ["STORE_GENERATION", "4"]]]) {
     const w = account({});
-    await install(rel, { locationHint: "wnam" });
+    await install(rel, { storeLocation: "wnam" });
     /* make the held place differ from what the install sent, in the account itself */
     const held_ = w.scripts.get("grp").filter((b) => !/^STORE_(LOCATION|GENERATION)$/.test(b.name));
     w.scripts.set("grp", [...held_, ...texts.map(([name, text]) => ({ type: "plain_text", name, text }))]);
     const list = (await heldBindings(session(), "A1", "grp")).list;
-    assert.equal(await planeInSync(session(), "A1", "grp", rel, list, { names: NAMES, members: [], profiles: [], locationHint: "wnam" }), true, JSON.stringify(texts));
+    assert.equal(await planeInSync(session(), "A1", "grp", rel, list, { names: NAMES, members: [], profiles: [], storeLocation: "wnam" }), true, JSON.stringify(texts));
     w.restore();
   }
   /* control: another binding missing still makes it out of sync */
   const c = account({});
-  await install(rel, { locationHint: "wnam" });
+  await install(rel, { storeLocation: "wnam" });
   c.scripts.set("grp", c.scripts.get("grp").filter((b) => b.name !== "BROWSER"));
   const list = (await heldBindings(session(), "A1", "grp")).list;
   assert.equal(await planeInSync(session(), "A1", "grp", rel, list, { names: NAMES, members: [], profiles: [] }), false);
@@ -170,7 +170,7 @@ test("R42: planeInSync treats a held place that differs from what an install wou
 
 test("R41: no upload carries a country, a continent or a longitude: only the hint is sent", async () => {
   const w = account({});
-  await install(await bundle(), { locationHint: locationHintFor({ continent: "EU", longitude: "13.4", country: "DE" }) });
+  await install(await bundle(), { storeLocation: locationHintFor({ continent: "EU", longitude: "13.4", country: "DE" }) });
   const text = JSON.stringify(w.puts.at(-1).meta);
   assert.equal(/Germany|\bDE\b|13\.4|"EU"/.test(text), false, "only the hint is sent");
   assert.equal(plain(w.puts.at(-1).meta.bindings, "STORE_LOCATION")[0].text, "weur");
