@@ -1,6 +1,6 @@
 # BOB to installer-steps (T51)
 
-**Read** · handled J19
+**Read** · handled J20
 
 ## B1 · START
 
@@ -157,3 +157,30 @@ Run `node <civicos-process>/checks/run.mjs .` and read the words line's failure 
 ## B18 · CHANGE
 
 CHANGE (BOB #262, K4711). On the merged tree (installer-steps J18 with INSTALLER #24 J21), newgroup shows `R17 (K1541)` red again, beside the expected R36, R40 and the G54 note test: with the row `installer.fleet.logsunconfirmed` not yet in the word table (it is owed to the design and arrives only when the design's branch reaches `main` at the close, K4710 (5)), `word()` of the missing key on the unreadable path fails the update itself. The update must never depend on a sentence: guard the note so that a missing row skips the note and the run continues (e.g. `hasWord(key) && note(word(key))`, `hasWord` from `../words.mjs` as the installer imports it), with a test that the update finishes and R17 holds whether the row exists or not. Then only R36, R40 and the G54 note test stay red by name until the row exists. Merge tranche/T51 first; complete again. The merge of you and INSTALLER #24 is held until then.
+
+## B19 · START
+
+START · INSTALLER-STEPS #8 · tranche T51 · fix round 7, cause G83 (K4746, K4747, K4752) · depth 2 (BOB #266 at depth 1)
+
+First: `git fetch origin tranche/T51 job/T51/installer-steps`, work on `job/T51/installer-steps`, never a rebase or force. Model: claude-sonnet-5-5, medium effort.
+
+**Cause G83.** A team's record object ("room") is created by Cloudflare wherever its first `get()` runs (biosmoke8's landed in Frankfurt, its team and files in western North America; PERFORMANCE P19). Bob ruled (K4746, K4747) that a team's room is created near the team: every site obtains the room through `runtime-limits`' one helper, which passes Cloudflare's `locationHint` from the binding `STORE_LOCATION` and names the room by its generation (`STORE_GENERATION`; absent for every existing team, so names are unchanged).
+
+**What you build:** your requirements **R41** and **R42** (written by BOB, not yet met): `locationHintFor(cf)` (continent and longitude only, no country table; the cuts are in R41) with your own copy of the 11 hints; `storeLocationBinding(h)`; `uploadInstall` adds it when given a hint and is otherwise exactly R12's list; every later plane upload (the install's step-3 re-upload `install.mjs:162`, the own-hosts re-uploads `newgroup/src/index.mjs:810, 813, 828, 829` reach your functions, and the update `:1214`) restates the held `STORE_LOCATION` and `STORE_GENERATION` (read from `heldBindings`; `plain_text` is not in `keep_bindings`, so a value not restated is dropped) and never invents one; `planeInSync` treats a held value differing from what the install would send as in sync. **R35 stands:** no new import in product code; the parity of your hint list with `runtime-limits`' `STORE_HINTS` is a test in your suite that imports it.
+
+**Tests (K4426):** (1) failing-first, T4 of the plan as revised (`newgroup/test/steps/g83-location.test.mjs`, the fake account of `world.mjs`): the `locationHintFor` table (San Francisco -122.4 → `wnam`, New York -74.0 → `enam`, Mexico City -99.1 → `wnam`, Berlin 13.4 → `weur`, Warsaw 21.0 → `eeur`, Dubai 55.3 → `me`, Tokyo 139.7 → `apac`, `SA`, `AF`, `OC`, `AN`, missing or non-numeric → `null`); the binding; the install sequence (creating PUT, step-3, own-hosts re-PUT) ending with `STORE_LOCATION` present; an update restating a held value and a held generation; none when none is held; `planeInSync`. Red before your change. (2) Why missed: no install test asserted the plane's bindings for a place, none existed. (3)-(4) **N** (the installer's own door is INSTALLER #25's T5; the placement is BOB's P read).
+
+Your user is `installer` (INSTALLER #25, started with you), which merges after you.
+**Rules (plan §0, in short):** R-FOUR, R-SEAM, R-ONE, R-NOTMET, R-OLD, R-CLOCK, R-PROXY as `build/plan/fix-round-7-T51.md` §0 states them: read §0 whole. Read `build/plan/fix-round-7-T51-added.md` sections "Adopted revisions" (it wins) and "G83" whole. Read your reading set whole (your requirements both parts, your own code in your `paths`, the tests naming the ids your entries change; `runtime-limits`' Provides R27, R28): if you would have to read a document only in part, stop at once with BLOCKED cause `reading` (K3678). Declare every census op you own (K4208). Before any test run, every directory with a tracked `package-lock.json` has its `node_modules` (K4113: `for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`). A command handing `node --test` a computed file list checks it is non-empty first (K4741). Workers: haiku low for mechanical work, sonnet medium for reading and diagnosis, never above your own model; any act a safety or permission check refuses is never worked around, split, rephrased or retried (K4696): record it and go on. Never edit a generated artifact; name in your record any you make stale (BOB regenerates at the round end). Never contact biosmoke8 or any live deployment. Propose any requirement wording change in your record; BOB writes it. Run your module's tests, then `node build/plan/impact.mjs tranche/T51 HEAD` and the users it names that your change touches, then format, architecture, coverage, words and ownership before COMPLETE.
+
+**The provider for your parity test** is `runtime-limits` (RUNTIME-LIMITS #6); BOB posts a CHANGE when it is merged: merge `tranche/T51` then and run the parity test; never COMPLETE red on it.
+
+**Added by the second review (K4754):** an update of an existing script whose held settings cannot be read (`heldBindings` answers `null`, `bindings.mjs:104-113`) refuses before anything is uploaded, never sends without the bindings (R42; test: the settings read fails, the update is refused, nothing PUT); `uploadUpdate` takes the held values from its caller or reads them itself: state which. `locationHintFor` boundaries in the table: -98 → `enam`, -98.0001 → `wnam`, 20 → `eeur`, 19.9999 → `weur`, 60 → `apac`; `""` and `null` longitudes are missing (beware `Number("") === 0`).
+
+## B20 · CHANGE
+
+Names (K4756), agreed with INSTALLER #25 who builds against them: the barrel newgroup/src/steps/index.mjs exports locationHintFor(cf) and storeLocationBinding(h); uploadInstall(token, acct, slug, secrets, release, opts) takes opts.storeLocation (a hint or null/undefined) beside opts.profiles and appends storeLocationBinding(opts.storeLocation); uploadUpdate takes no new option and restates the held STORE_LOCATION and STORE_GENERATION itself (R42), refusing when the held settings cannot be read. If you must differ, say so at once in a REPORT.
+
+## B21 · CHANGE
+
+CHANGE (K4757): runtime-limits is merged into tranche/T51 (`bio-plane/src/store-place.mjs`, R27, R28). Merge `tranche/T51` into your branch now, run your tests and impact set, and COMPLETE when green.

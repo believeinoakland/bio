@@ -1,6 +1,6 @@
 # BOB to translations (T51)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -19,3 +19,18 @@ Your context window is the `max_tokens` of `context_usage` in `get_session` (you
 Model and effort: you run at medium effort; any worker you spawn names its model and effort (haiku low for mechanical work, sonnet medium for reading and diagnosis; never opus, never above your own model) (K3518).
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083). Never edit a generated artifact (manifest §14); report one you make stale.
 Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (pull it first; format and architecture 0 failures; the words check shows no finding in your module), `node bio-plane/src/setup-words/build.mjs --check` (read-only; a stale-rows note is expected, a refusal naming your module is not) and `node checks/ownership.mjs /home/user/bio translations tranche/T51 job/T51/translations`. Your Size line counts only your module's own code (K2513).
+
+## B2 · START
+
+START · TRANSLATIONS #2 · tranche T51 · fix round 7, cause G84 (K4753) · depth 2 (BOB #266 at depth 1)
+
+First: `git fetch origin tranche/T51 job/T51/translations`, work on `job/T51/translations`, never a rebase or force. Model: claude-sonnet-5-5, medium effort.
+
+**Cause G84.** Cloudflare refuses a Worker whose top-level code takes over 1 s at deploy (error 10021). The plane's top level measures about 520 ms in Node on the shipped bundle (`build/plan/diagnosis-R7-startup.md`, read it whole), over `plane` R43's 500 ms budget; two load-time passes over the word table (25,805 rows) are the only ones over 20 ms: `translations/index.mjs:36` (~22 ms) and `file-safety/index.mjs:56-57` (~21 ms, one `WORD_ROWS.some` per key). Removing both brings it to about 480 ms.
+
+**What you build:** your requirement **R2** as BOB rewrote it (not yet met): the exported constant `INTERFACE_WORDS` (`bio-plane/src/translations/index.mjs:36`) becomes `interfaceWords()`, built once at its first call and the same frozen array after; `WORD_BY_KEY` (`:39`) likewise lazy; nothing passes over the word list at import. `INTERFACE_WORDS_COMMIT` stays a constant. Re-point every use inside your module and your own tests. **Its one user outside you** is `instance-setup` (`bio-plane/src/setup.mjs:61` re-exports it; `bio-plane/test/m/instance-setup/t50.test.mjs` reads it): BOB tells INSTANCE-SETUP #28 to re-point them once you merge; you merge before it. Say in your record whether any other file imports it (`git grep -n INTERFACE_WORDS`).
+
+**Tests (K4426):** (1) failing-first: importing the module does no pass over `WORD_ROWS` (a child process with a counting proxy, or a timing-free count; red today); `interfaceWords()` deep-equals the old constant over the real table and answers the same array twice. (2) Why missed: no test bounded load-time work (`bundler` R31 only warns). (3)-(4) **N** (BOB measures the plane's start figure at the round end).
+**Rules (plan §0, in short):** R-FOUR, R-SEAM, R-ONE, R-NOTMET, R-OLD, R-CLOCK, R-PROXY as `build/plan/fix-round-7-T51.md` §0 states them: read §0 whole. Read your reading set whole (your requirements both parts, your own code in your `paths`, the tests naming the ids your entries change): if you would have to read a document only in part, stop at once with BLOCKED cause `reading` (K3678). Declare every census op you own (K4208). Before any test run, every directory with a tracked `package-lock.json` has its `node_modules` (K4113: `for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`). A command handing `node --test` a computed file list checks it is non-empty first (K4741). Workers: haiku low for mechanical work, sonnet medium for reading and diagnosis, never above your own model; any act a safety or permission check refuses is never worked around, split, rephrased or retried (K4696): record it and go on. Never edit a generated artifact; name in your record any you make stale (BOB regenerates at the round end). Never contact biosmoke8 or any live deployment. Propose any requirement wording change in your record; BOB writes it. Run your module's tests, then `node build/plan/impact.mjs tranche/T51 HEAD` and the users it names that your change touches, then format, architecture, coverage, words and ownership before COMPLETE.
+
+**Second review (K4755):** your own tests that read `INTERFACE_WORDS`: `bio-plane/test/m/translations/{module,reading,interface-words,draft-account,translations,declared-ops,words}.test.mjs`; re-point each. The import-count test: in a child process wrap `Array.prototype.map` (and the other iteration methods, `Symbol.iterator`) to count calls whose `this` is `setup-words`' `WORD_ROWS`, then import your module: 0 (red today). **L**: that count, and the plane's `measureStart` before and after in your record; **P**: Cloudflare's figure at the redeploy (BOB).
