@@ -25,6 +25,16 @@ import { localize } from "../../bio-plane/src/setup-words/index.mjs";
    check that counts it compares with the same reading the signal was written with. */
 const NO_PROSE = localize("site-profiles.client-rendered.no_links_and_no_prose_in_the", "no links and no prose in the body");
 
+/* Markup exists where the text opens an <html> or <body>, or holds a run of tags. A CSV
+   or plain text has neither, so it is never a shell however large (G76). */
+function hasMarkup(text) {
+  if (/<(?:html|body)\b/i.test(text)) return true;
+  const tag = /<[a-z!\/][^>]*>/gi;
+  let n = 0;
+  while (tag.exec(text)) if (++n >= 10) return true;
+  return false;
+}
+
 export default {
   key: "client_rendered",
   label: localize("site-profiles.client-rendered.an_application_that_builds_its", "an application that builds its pages in the browser"),
@@ -53,7 +63,7 @@ export default {
     const paras = (text.match(/<p\b/gi) || []).length;
     const body = /<body\b[\s\S]*<\/body>/i.exec(text);
     const bodyLen = body ? body[0].length : text.length;
-    if (bodyLen > 2000 && anchors === 0 && paras <= 1) signals.push(NO_PROSE);
+    if (bodyLen > 2000 && anchors === 0 && paras <= 1 && hasMarkup(text)) signals.push(NO_PROSE);
 
     if (signals.includes(NO_PROSE) && signals.length >= 2)
       return { match: true, confidence: CONFIDENCE.CERTAIN, signals };
