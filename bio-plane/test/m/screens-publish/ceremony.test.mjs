@@ -260,7 +260,7 @@ test("R3 R50 (fix round 6, G10) a refusal's placeholder is filled from the refus
   assert.ok(lines[1].includes("INFO-2026-0007"), "the photo is named");
   assert.ok(!lines.some((l) => /[{}]/.test(l)), "no raw placeholder is drawn");
   // control: a refusal that names no field draws no brace either
-  const q = await open(PATH, { plane: { publishpreflight: ok(PREFLIGHT({ first: { ok: false, code: "DOCUMENT_COPY_PENDING", translation: canned }, blockers: [] })) } });
+  const q = await open(PATH, { plane: { publishpreflight: ok(PREFLIGHT({ first: { ok: false, code: "DOCUMENT_COPY_UNWORDED", translation: canned }, blockers: [] })) } });
   assert.ok(!/[{}]/.test(main(q).querySelector("[data-blockers]").textContent), "control: a missing field leaves no brace");
 });
 
