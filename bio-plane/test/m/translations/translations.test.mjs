@@ -234,7 +234,8 @@ test("R1 translationdraftrecord to_language: each word answered is stored as a d
   assert.equal(empty.reason, "ASSISTANT_DRAFT_UNAVAILABLE");
   /* a draft is no state of the word: members read the English, and only the workspace lists it */
   w.say("tom", "es");
-  const seen = w.m.interfaceWords({ viewer: "tom" }).words.find((x) => x.key === ORDINARY.key);
+  assert.deepEqual(w.m.interfaceWords({ viewer: "tom" }).words, [], "the shown words alone, and none is shown");
+  const seen = w.m.interfaceWords({ language: "es", viewer: "tom" }).words.find((x) => x.key === ORDINARY.key);
   assert.deepEqual([seen.text, seen.fallback], [ORDINARY.en, true]);
   assert.equal(w.m.translations({ language: "es", viewer: "tom" }).reason, "TRANSLATION_NOT_GRANTED");
   const ws = w.m.translations({ language: "es", viewer: "admin" }).words.find((x) => x.key === ORDINARY.key);
@@ -317,7 +318,9 @@ test("R4 translationAdopt: refusals in order (MACHINE_CANNOT_TRANSLATE, LANGUAGE
   /* protected, changed from the draft: awaiting, members see the English */
   const p2 = w.m.translationAdopt({ language: "es", key: PROTECTED.key, text: `${es(PROTECTED)}!`, draft: String(idOf(PROTECTED.key)), by: "ruth" });
   assert.deepEqual([p2.state, p2.replaced], ["awaiting", es(PROTECTED)]);
-  assert.deepEqual([shown(PROTECTED.key).text, shown(PROTECTED.key).fallback], [PROTECTED.en, true]);
+  assert.equal(shown(PROTECTED.key), undefined, "R19: an awaiting word is not among the shown words");
+  const awaitingSeen = w.m.interfaceWords({ language: "es", viewer: "tom" }).words.find((x) => x.key === PROTECTED.key);
+  assert.deepEqual([awaitingSeen.text, awaitingSeen.fallback], [PROTECTED.en, true]);
   /* protected, typed without a draft: awaiting */
   const other = interfaceWords().find((x) => x.protected && x.key !== PROTECTED.key && !/\{/.test(x.en));
   assert.equal(w.m.translationAdopt({ language: "es", key: other.key, text: "Escrito", by: "ruth" }).state, "awaiting");
@@ -504,14 +507,19 @@ test("R8 interfaceWords: for the language asked, by default the viewer's own (`i
   const before = counts(w);
   const none = w.m.interfaceWords({ viewer: "tom" });
   assert.equal(none.language, null);
-  assert.ok(none.words.every((x) => x.fallback && x.text === x.en && x.text));
-  assert.deepEqual(none.words.map((x) => x.key), interfaceWords().map((x) => x.key));
+  assert.deepEqual(none.words, [], "with no language set and none named, no word is shown (R19)");
+  const everyEnglish = w.m.interfaceWords({ language: "fr", viewer: "tom" });
+  assert.ok(everyEnglish.words.every((x) => x.fallback && x.text === x.en && x.text));
+  assert.deepEqual(everyEnglish.words.map((x) => x.key), interfaceWords().map((x) => x.key));
   w.say("tom", "pt-BR");
   const own = w.m.interfaceWords({ viewer: "tom" });
   assert.equal(own.language, "pt-BR");
   assert.deepEqual(own.words.find((x) => x.key === ORDINARY.key), { key: ORDINARY.key, text: "Algo", en: ORDINARY.en, fallback: false });
-  assert.deepEqual(own.words.find((x) => x.key === PROTECTED.key), { key: PROTECTED.key, text: PROTECTED.en, en: PROTECTED.en, fallback: true });
-  assert.ok(own.words.every((x) => typeof x.text === "string" && x.text.length > 0), "never blank");
+  assert.deepEqual(own.words, [{ key: ORDINARY.key, text: "Algo", en: ORDINARY.en, fallback: false }], "R19: the shown word alone; the awaiting one is the English and is not sent");
+  const asked = w.m.interfaceWords({ language: "pt-BR", viewer: "tom" });
+  assert.deepEqual(asked.words.find((x) => x.key === PROTECTED.key), { key: PROTECTED.key, text: PROTECTED.en, en: PROTECTED.en, fallback: true });
+  assert.equal(asked.words.length, interfaceWords().length);
+  assert.ok(asked.words.every((x) => typeof x.text === "string" && x.text.length > 0), "never blank");
   /* another language asked: English, word by word */
   assert.ok(w.m.interfaceWords({ language: "fr", viewer: "tom" }).words.every((x) => x.fallback));
   assert.equal(w.m.interfaceWords({ language: "not a tag", viewer: "tom" }).reason, "LANGUAGE_MALFORMED");
