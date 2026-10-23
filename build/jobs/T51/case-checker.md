@@ -1,6 +1,6 @@
 # case-checker (T51)
 
-**Status** · session_01RPHamJS9k22iJs3Y7dJ4XG · depth 2 · WAITING ON BOB (J5) · handled B5
+**Status** · session_01RPHamJS9k22iJs3Y7dJ4XG · depth 2 · WAITING ON BOB (J5) · handled B6
 
 ## Completion (T51-142)
 
