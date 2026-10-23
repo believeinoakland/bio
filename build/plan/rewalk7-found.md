@@ -11,5 +11,16 @@
 - Queue `Server-Timing` 1.5-8.6 s with other work in the object: not a quiet figure (PERFORMANCE #2, R-QUIET).
 - Refused by a safety check: storing bearer tokens in a file (credential materialization); not retried. About 7 signing keys registered for the administrator while finding the dialog (leftovers named in B.md).
 
-## From A
-(pending)
+## From A (area A; FIXED 19, STILL 4, NEW 6 + 2 MINOR; no BLOCKER)
+- **G70 STILL (MAJOR), with a NEW ledger finding:** the first 12 MB text took 32 min to read (five gaps over 60 s, up to 451 s); two later 12 MB texts about 1.5 min (gaps 3-10 s): intermittent. Meanwhile the watchdog fields were present (G58 FIXED) but `alarm_at` was null or overdue for about 16 min, `oldest_overdue` reached 691 s, `last_run` gaps up to 551 s with 13 rows owed, and `stale` stayed false throughout: the alarm stalls and the watchdog neither re-arms it within its 5 minutes nor reports it (Bob's K4565/K4566: "mission-critical bulletproof").
+- **G80 STILL (MAJOR):** 12 concurrent Queue counts 13-20 s, 24 took 23.8 s; `do-queue` 0.75-1.9 s each; a single count 1.9-2.6 s; no tick running.
+- **G82 STILL (MAJOR):** with ticks running Home 7.7 s and Queue 8.3 s; idle 2.2-3.9 s.
+- **NEW (MAJOR, G85/G73 area):** a member pressing a large capture (and 0115, 41.5 MB) is told at about 18 s "The page couldn't be fetched ... Nothing was kept", yet the file was kept (INFO-2026-0480 and others) and `fetch-done` arrived: a false failure sentence. (G85's `fetch-done` itself FIXED for member and founder.)
+- **NEW (MAJOR, scan):** a 30-page scan upload 42.7 s on `captureupload` (OCR inline); its reading stops at 24 pages, pages 25-30 unread, nothing owed or kept an hour later: a silent partial read (Bob's K4571).
+- **NEW (MAJOR, ODS):** an ODS whose `content.xml` is 20 MB took 42.9 s to upload and was never read, nothing owed ("Unread" an hour later); its preview's "not drawn" statement is FIXED.
+- **NEW (MAJOR, speed):** the Document page of a 17 MiB CSV 6.5-10.3 s to its first mark.
+- **G79 STILL (MINOR):** acadia's visitor press `acquire` 15.5 s and 13.2 s, at the 15 s bar.
+- **NEW (MINOR):** a project-less capture says "filed under ." (blank project); the G72 screen printed a raw "CDP No resource with given identifier found" sentence; G74's refusal names "this project", not its name.
+- **Not reached:** G72's RENDER_FAILED path (acadia rendered both times).
+- FIXED: G58 fields, G61, G67/G68/G69/G88, G71, G73's apology, G74 refusal, G75, G76, G78 (0.5-0.8 s from 7.4 s), G79's uploads (40 MB 12.2 s, 24 MiB 11.6 s, 17 MiB 7.6 s), the 221,376-cell xlsx refusal, R7b.
+- Walker's note: A.md was written once near the end, not as it went (the brief's rule; the next brief's walkers are told it is checked).
