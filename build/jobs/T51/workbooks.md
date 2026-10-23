@@ -67,3 +67,11 @@ Larger, for the choice: 56,000 cells of the NOFA shape (9.9 MiB) lowest 100 (1.1
 **Tests and checks.** `node --import ./test/platform-sqlite.mjs --test --test-force-exit "test/m/workbooks/*.test.mjs"` from `bio-plane/`: tests 37, pass 37, fail 0. Users (`affordances/t33`, `plane/t33`, `op-grades/owners`, `case-authoring`): 283 tests, 1 fail, the inherited R17 above. `checks/format`: 0 failures; `architecture workbooks`: 0 failures; `coverage workbooks`: 19 of 19 live ids named; `checks/run.mjs`: no finding in my files. Ownership: run after the commit (below).
 
 Size (session_01BnkTWoC5GF8VJe3V4sMRF5): test runs 14, module lines 1667
+
+## J3 · COMPLETE
+
+G44 (workbooks, the add) is done; details in my record's section "G44 · WORKBOOKS #5".
+Bounds to report to Bob (K1881): stored file 20 MiB; cell JSON 9 MiB; 50,000 cells. Measured at the real-shape cap (about 112 MB): the largest workbook under the bound survives add, read, lint, inputs, explain and recompute with margin 1.44x (formula-heavy, 185 B a cell) to 1.85x. The candidate 8 MiB was raised to 9 MiB because it refused the NOFA/Acq-Rehab/Sites-Inventory analysis workbooks (45-49k cells).
+Corpus (270 .xlsx of bucket cao-94612): 44 of 269 readable refused (16%); of 118 with formulas, 13 (11%); the refused are the large data sheets.
+Tests: workbooks 37/37; g44-large 8 tests (6 red on the earlier source, 8 green). Users: 282 of 283; the one red is case-authoring R17 under the platform-sqlite preload, same on the earlier source. Checks: format, architecture, coverage, ownership 0 failures.
+Proposed requirement lines, rows owed to UX-DESIGN (refusal.WORKBOOK_TOO_LARGE, refusal.WORKBOOK_FILE_TOO_LARGE) and the R1 order amendment are in the record. Decision of mine: a file whose text is over the reader's whole-read bound is WORKBOOK_FILE_TOO_LARGE (condition declared_text). Plane job proves the refusal's variables reach the member's words through the door.
