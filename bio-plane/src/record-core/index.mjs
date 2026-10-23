@@ -1,7 +1,7 @@
 /* record-core — the record's storage (layer 2): id allocation, leases, the append-only history and
    manifest of every promotion, the instance's settings, the evidence store, and purge. It holds no
    member, capability or fence (membership's) and decides nothing about what may be committed
-   (promotion's). Requirements: build/requirements/record-core.md (R1–R88).
+   (promotion's). Requirements: build/requirements/record-core.md (R1–R90).
 
    REACHED THROUGH `recordOf(ctx)`: one instance per Durable Object storage, so every module in the
    object shares one transaction depth, one purge declaration list and one evidence binding. The
@@ -22,7 +22,8 @@
    T42 job (its R55), minted opaque by its form alone and named by its own sentence (R62, R76). T46 (T46-3; N904): the
    strict `getSetting` tells an unreadable setting (`SETTING_UNREADABLE`) from an unset one (R83). T47 (T47-6; N939):
    `setSetting` refuses a value that does not round-trip through JSON, `SETTING_NOT_JSON` under its own row (R84). T48
-   (T48-8; N1018, K3112): `WCD` and `OUTC`, `case-inputs`' opaque prefixes, each named by its own sentence (R62). */
+   (T48-8; N1018, K3112): `WCD` and `OUTC`, `case-inputs`' opaque prefixes, each named by its own sentence (R62). Fix round 7
+   (G80; K4736): the record's write counter, kept by triggers on every declared table, and `writeCount()` (R89, R90). */
 import { checkBundle, createSha256, EXTENSION_ARMS, LEGACY_TYPE_ALIASES, ID_TABLE } from "../record-grammar/index.mjs";
 import { RECORD_SCHEMA } from "./schema.mjs";
 import { RECORD_CORE_CHECKS, PER_ITEM_CHECKS } from "./checks.mjs";
@@ -329,7 +330,7 @@ export class RecordCore {
 
   /** This module's own tables, declared to purge by it (R21), and those purge never clears (R23). */
   static OWN_TABLES = Object.freeze(["files", "history", "manifest", "leases", "bundles"]);
-  static EXEMPT_TABLES = Object.freeze(["seq", "minted_ids", "settings", "tombstones", "derived_stale"]);
+  static EXEMPT_TABLES = Object.freeze(["seq", "minted_ids", "settings", "tombstones", "derived_stale", "record_counter"]);
 
   /** R21 (T33-19): the classes of this module's own tables, declared by it explicitly (R79's tombstones and R77's stale
    *  marks are exempt from purge: an expunge's record outlives every purge, and a mark that outlives its row still
@@ -348,6 +349,7 @@ export class RecordCore {
       own("settings", { ...kept, export: "admin-only", version_chain: true }),
       own("tombstones", { ...kept, export: "yes", version_chain: true }),   /* R79: a removal reaches future exports */
       own("derived_stale", { ...kept, export: "never" }),
+      own("record_counter", { ...kept, export: "never" }),             /* R89: one row, never cleared, never exported */
     ]);
   })();
 
@@ -363,6 +365,7 @@ export class RecordCore {
   #auditFindings = [];    // R68: {module, key, finding}, in registration order
   #auditContexts = [];    // R69: {module, context}, in registration order
   #mintSeeds = [];        // R70: {module, sources}, in registration order
+  #watched = new Set();   // R89: the declared tables whose triggers this instance has seen armed
 
   constructor(storage, { evidence = null, evidencePrefix = "bio/captures/" } = {}) {
     this.#storage = storage;
@@ -422,6 +425,51 @@ export class RecordCore {
       this.#sql.exec(`ALTER TABLE bundles DROP COLUMN classification`);
     for (const [legacy, canonical] of Object.entries(LEGACY_TYPE_ALIASES))
       this.#sql.exec(`UPDATE bundles SET object_type=? WHERE object_type=?`, canonical, legacy);
+    this.#watch();
+  }
+
+  /* ---- the write counter (R89, R90) ---- */
+
+  /** R89 (fix round 7, G80; K4736): ARMS THE COUNTER ON EVERY DECLARED TABLE THAT EXISTS. A trigger on each of insert, update
+   *  and delete steps `record_counter` by one inside the writing statement's own transaction, so a write is counted
+   *  whichever module made it and by whatever path (`commit`, any service here, or plain SQL on a table its owner declared:
+   *  `queue`'s mutes, a question, a deadline, a notice), and one that rolls back is not counted. A trigger is armed once (named
+   *  `rc_w_<table>_<i|u|d>`, kept in the store, so a later boot finds it). A table that already holds rows when its triggers
+   *  are first armed (a write the counter could not have seen) steps the counter once, so a reader that took the counter
+   *  before the arming never reads it equal after. A table not yet made is left for the next call (its owner's `migrate`
+   *  comes after this module's), a virtual table is not armed, and the counter's own table never is. Idempotent; writes no
+   *  record row. */
+  #watch() {
+    const pending = this.#order.filter((d) => d.name !== "record_counter" && !this.#watched.has(d.name));
+    if (!pending.length) return;
+    const made = new Map(this.#rows(`SELECT name, sql FROM sqlite_master WHERE type='table'`).map((r) => [r.name, r.sql]));
+    const armed = new Set(this.#rows(`SELECT name FROM sqlite_master WHERE type='trigger' AND name LIKE 'rc_w_%'`).map((r) => r.name));
+    let fresh = false;
+    for (const { name } of pending) {
+      const ddl = made.get(name);
+      if (typeof ddl !== "string" || /^\s*CREATE\s+VIRTUAL/i.test(ddl)) continue;
+      let created = false;
+      for (const [letter, event] of [["i", "INSERT"], ["u", "UPDATE"], ["d", "DELETE"]]) {
+        const trigger = `rc_w_${name}_${letter}`;
+        if (armed.has(trigger)) continue;
+        this.#sql.exec(`CREATE TRIGGER IF NOT EXISTS "${trigger}" AFTER ${event} ON "${name}" BEGIN UPDATE record_counter SET n = n + 1 WHERE id = 1; END`);
+        created = true;
+      }
+      this.#watched.add(name);
+      if (created && this.#one(`SELECT 1 AS x FROM "${name}" LIMIT 1`)) fresh = true;
+    }
+    if (fresh) this.#sql.exec(`UPDATE record_counter SET n = n + 1 WHERE id = 1`);
+  }
+
+  /** R90 (fix round 7, G80; K4736): THE RECORD'S WRITE COUNTER, as a whole number: how many rows every declared table has
+   *  gained, changed or lost, ever (R89), so two answers with no write between are equal and a later answer is larger once
+   *  any write has committed. Meant as a cache key for what is derived from the record (`queue`'s count); the clock is the
+   *  caller's to add. It writes no record row and asks nothing outside the object's storage. A table declared since the last
+   *  call is armed first (R89's `#watch`), so no write to it goes unseen; a failure to arm is not swallowed, since a counter
+   *  that may have missed a write must not be taken as a key. */
+  writeCount() {
+    this.#watch();
+    return Number(this.#one(`SELECT n FROM record_counter WHERE id = 1`).n);
   }
 
   /* ---- transactions (R32, R66) ---- */
@@ -1469,6 +1517,7 @@ export class RecordCore {
       this.#declared.set(table, d);
       this.#order.push(d);
     }
+    try { this.#watch(); } catch { /* R89: armed by the next `writeCount` or `migrate`, which do not swallow it */ }
     return { ok: true };
   }
 

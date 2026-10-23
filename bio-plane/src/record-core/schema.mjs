@@ -1,5 +1,5 @@
 /* record-core: the DDL of the module's own tables (bundles, files, history, manifest, leases,
-   seq, minted_ids, settings, and T33's tombstones and derived_stale), run by this module's own `migrate()`, first (R71). Whole-line
+   seq, minted_ids, settings, T33's tombstones and derived_stale, and fix round 7's record_counter), run by this module's own `migrate()`, first (R71). Whole-line
    `--` comments only and no semicolon inside a comment: `migrate` strips comment lines and splits
    the text on semicolons. */
 export const RECORD_SCHEMA = `CREATE TABLE IF NOT EXISTS bundles (
@@ -159,4 +159,14 @@ CREATE TABLE IF NOT EXISTS derived_stale (
   marked_at   TEXT NOT NULL,
   PRIMARY KEY (module, table_name, key_json)
 );
+
+-- R89 (fix round 7, G80, K4736): THE RECORD'S WRITE COUNTER, one row. It rises by one for every row any declared table
+-- gains, changes or loses (record-core's triggers, armed on each declared table that exists), inside the writing
+-- transaction, so a change that rolls back takes its step with it and a committed one keeps it. Exempt from purge: it
+-- never falls. A reader (R90) takes it as a cache key for what is derived from the record.
+CREATE TABLE IF NOT EXISTS record_counter (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  n  INTEGER NOT NULL
+);
+INSERT OR IGNORE INTO record_counter (id, n) VALUES (1, 0);
 `;

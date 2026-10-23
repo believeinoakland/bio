@@ -415,7 +415,7 @@ test("R26: the active jurisdiction profiles are the setting jurisdiction_profile
 
 test("R21 R46: tables are declared once; a table declared twice or by two modules is refused with TABLE_DECLARED", () => {
   const { rc } = fresh();
-  for (const t of ["files", "history", "manifest", "leases", "bundles", "seq", "minted_ids", "settings", "tombstones", "derived_stale"]) {
+  for (const t of ["files", "history", "manifest", "leases", "bundles", "seq", "minted_ids", "settings", "tombstones", "derived_stale", "record_counter"]) {
     const r = rc.declarePurge("membership", [t]);
     assert.equal(r.reason, "TABLE_DECLARED"); assert.equal(r.declaredBy, "record-core", `${t} is record-core's own`);
   }
@@ -473,13 +473,15 @@ test("R22 R24 R46: purge of one bundle clears only the rows keyed to it, and rep
 
 test("R22 R23 R24 R46: the whole-store purge clears every declared, non-exempt table and never seq, minted_ids, settings or an exempt table", () => {
   const { s, rc } = purgeFixture();
-  const keep = dump(s, ["files", "history", "manifest", "leases", "bundles", "derived", "pairs", "registry", "partial"]);
+  const keep = dump(s, ["files", "history", "manifest", "leases", "bundles", "derived", "pairs", "registry", "partial", "record_counter"]);
+  const counted = rc.writeCount();
   const r = rc.purge({});
+  assert.ok(rc.writeCount() > counted, "R89: the counter is exempt from purge and, the purge having removed rows, it rose and never fell");
   assert.equal(r.scope, "ALL");
   assert.deepEqual(r.removed, { derived: 2, pairs: 3, registry: 2, partial: 2, files: 2, history: 2, manifest: 4, leases: 2, bundles: 2 });
   for (const t of ["files", "history", "manifest", "leases", "bundles", "derived", "pairs", "registry"]) assert.equal(count(s, t), 0, t);
   assert.equal(count(s, "partial"), 2, "the whole form clears only what the declaration's condition names");
-  assert.deepEqual(dump(s, ["files", "history", "manifest", "leases", "bundles", "derived", "pairs", "registry", "partial"]), keep,
+  assert.deepEqual(dump(s, ["files", "history", "manifest", "leases", "bundles", "derived", "pairs", "registry", "partial", "record_counter"]), keep,
                    "seq, minted_ids, settings, the exempt table and the undeclared one are untouched");
   assert.equal(count(s, "seq"), 1); assert.equal(count(s, "minted_ids"), 1); assert.equal(count(s, "settings"), 1); assert.equal(count(s, "identity"), 1);
   const again = rc.purge({});
@@ -614,7 +616,7 @@ test("R31: every service reads and writes only this module's tables and the cloc
   assert.equal(others(), before, "no other module's table was read into a write or changed (none was declared to purge)");
   // and what it holds: no member, capability or fence table among its own
   const own = rows(s, `SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'other_%' AND name NOT LIKE 'sqlite_%'`).map((r) => r.name).sort();
-  assert.deepEqual(own, ["bundles", "derived_stale", "files", "history", "leases", "manifest", "minted_ids", "seq", "settings", "tombstones"]);
+  assert.deepEqual(own, ["bundles", "derived_stale", "files", "history", "leases", "manifest", "minted_ids", "record_counter", "seq", "settings", "tombstones"]);
 });
 
 test("R29: history and manifest are append-only under every service but purge", () => {
@@ -2136,7 +2138,7 @@ test("R71: migrate runs RECORD_SCHEMA itself and this module's own migrations, s
   const rc = recordOf({ storage: s });
   rc.migrate();
   const tables = () => rows(s, `SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`).map((r) => r.name);
-  assert.deepEqual(tables(), ["bundles", "derived_stale", "files", "history", "leases", "manifest", "minted_ids", "seq", "settings", "tombstones"]);
+  assert.deepEqual(tables(), ["bundles", "derived_stale", "files", "history", "leases", "manifest", "minted_ids", "record_counter", "seq", "settings", "tombstones"]);
   const once = dump(s), schemaOnce = JSON.stringify(rows(s, `SELECT * FROM sqlite_master ORDER BY name`));
   rc.migrate();
   assert.deepEqual(dump(s), once); assert.equal(JSON.stringify(rows(s, `SELECT * FROM sqlite_master ORDER BY name`)), schemaOnce, "running it twice changes nothing");
