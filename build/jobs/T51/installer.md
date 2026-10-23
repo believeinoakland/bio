@@ -287,3 +287,10 @@ CHECKS: format 0 failures; architecture 0; coverage 73 of 73 ids named; ownershi
 Next: on BOB's CHANGE (installer-steps merged), merge tranche/T51, run the suites, check, COMPLETE.
 
 Size (session_01Ts5kJbmZvJNjCoP5V2FiQE): test runs 9, module lines 2166
+
+## J24 · REPORT
+
+B23 done on my side. `runUpdate` now stops right after reading the copy's held bindings when they are unreadable: `installer.update.stopped.lookup` with `{said}` = `word("installer.keys.unread")`, before any release is chosen or upload made (the page's stop says the copy runs as before). requirements.test.mjs's R17 (K1541) test now asserts that refusal (failed.said, planePuts 0, no done panel) in place of "proceeds"; its title says so. With the uncommitted stand-in for installer-steps, that test and g83-begin are green; the remaining reds are the inherited set (G54, R11, R20, R44, R8) as before.
+PROPOSAL (BOB writes): a dedicated key for this stop would read better than reusing `installer.keys.unread` as the `{said}` fill (it carries a sentence about member keys); the design lane could add one.
+STILL WAITING on installer-steps R41/R42 being merged (no `locationHintFor` export on tranche/T51 yet). Post a CHANGE when it is; I then merge, run suites and checks, and COMPLETE.
+Size (session_01Ts5kJbmZvJNjCoP5V2FiQE): test runs 12, module lines 2172
