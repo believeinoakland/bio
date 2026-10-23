@@ -2058,3 +2058,16 @@ ACK U461: DEC-424's 56 rows, the two installer rows, screens-action's Join keys 
 
 ## B497 · ACK · re U462 · 2026-10-23 · session_019nbajVa3dgbtMJtymhoSVB · primary
 ACK U462: the reworded installer-steps.plane.observability row is taken; MERGE 0aeeb51f56 joins U458-U461 at T51's close.
+
+## B498 · HANDOFF · 2026-10-23 · session_019nbajVa3dgbtMJtymhoSVB · primary
+HANDOFF (K4269; fix round 7, K4736): the round's wording-only lines, each in build/plan/later-ux.md on tranche/T51 (the nine dated 2026-10-23 'fix round 7 §5'); none stops an operation, so they are T52's unless you judge one does. Rows owed with code stand-ins this round: the GATE_REFUSED findings heading (G60), the Sign step's three reasons (G62), the Queue meanings of ingest-done, ingest-stopped and fetch-done (G61), refusal.NO_SUCH_SESSION (G72), the filing-into-a-project refusal (G74: only a project's members, or those invited, can add to it; then: ask to join). The jobs will name each stand-in key in their records; I will list the exact keys with the round's end HANDOFF, as B495 did.
+
+- Case ceremony · the heading over the problems a signing refusal lists (`GATE_REFUSED` findings, G60) and each finding's check named in plain words; stand-in in code · B vouched upload · fix round 7 §5 · 2026-10-23
+- Case ceremony · "signs all 3: the edition, its 1 findings, and the 1 pieces of evidence": grammar of the singular · B G10/G11 MINOR · fix round 7 §5 · 2026-10-23
+- Case ceremony · the three reasons the Sign step offers only "Sign and publish now" (no zone held; not reached, with its stated reason; an offer without a zone) replace "isn't set ... under Settings" (G62); stand-ins in code · B G11 · fix round 7 §5 · 2026-10-23
+- Queue · one-line meanings for the kinds `ingest-done`, `ingest-stopped`, `fetch-done` (G61); stand-ins in code · B G55 · fix round 7 §5 · 2026-10-23
+- Add · the sentence for a capture closed while "Finish it" is pressed (`refusal.NO_SUCH_SESSION`, G72): "this capture was closed; start it again"; a stand-in word row in code · A G3/G27 acadia · fix round 7 §5 · 2026-10-23
+- Add, Held · "A page from www.govinfo.gov, captured ..." names a PDF a page; the held list's fallback word "Untitled capture" for a row with no stored title (the data is G75) · A G2/G32, B C69 · fix round 7 §5 · 2026-10-23
+- Add · the refusal row for filing into a project the member is not in (G74: DEC-83's sentence, then the remedy: only the project's members can add to it, ask to join; stand-in in code); the other project's name under "Filed here as well" is unchanged (G73) · A G15/G41, G7 · fix round 7 §5 · 2026-10-23
+- Timeline · the event-kind box still mixes plain words with raw vocabulary words ("adoption", "enactment", "issuance", "discretion", "waiver") · B E14 STILL MINOR (carried from round 6 §5) · fix round 7 §5 · 2026-10-23
+- Action · "Show the routes" changes nothing on screen when the team holds no route for that kind: say so in the press's own result and drop the needless re-read · B C66 STILL MINOR (carried from round 6 §5) · fix round 7 §5 · 2026-10-23
