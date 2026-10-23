@@ -299,3 +299,9 @@ Size (session_01NMAPmXtfQM81PpmWgAWnaY): test runs 14, module lines 3933
 **Deferred:** none. **Found in other modules:** `publication` G54's `recordcasefile` needs a spec in the ops census (R19 above); the completing paths in `ratification` must pass `prior` and call `recordCaseFileFailure` as stated.
 
 Size (session_01NMAPmXtfQM81PpmWgAWnaY): test runs 24, module lines 4108
+
+## J24 · COMPLETE
+
+**COMPLETE again (G54, CHANGE B25).** `tranche/T51` merged (publication's ledger and PUBLISH-SCHEDULE in it); nothing in my code changed. Against the real `publication`, public-read: 298 tests, 298 pass, 0 fail. Users (`impact.mjs`, 916 files besides mine): 7,650 tests, 7,635 pass, 12 fail, all of them also failing on a clean `tranche/T51`, none mine: case-checker R13 and R25 and plane/screens-action reds (your inherited list); seven R29 pseudo-sentence arms (journey-check, pass in isolation); and op-declarations `t33.test.mjs` R19, R6 (a census spec for `recordcasefile`, red on the clean tranche as well, so publication's or op-declarations'). `absent` passes through to publication's writer; public-read never decides `stopped`. format, architecture, coverage public-read (43 of 43), ownership (10 files): 0 failures; words: no new finding. The 13 new word ids and the signatures are as in J23.
+
+Size (session_01NMAPmXtfQM81PpmWgAWnaY): test runs 27, module lines 4108
