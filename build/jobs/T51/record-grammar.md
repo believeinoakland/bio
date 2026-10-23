@@ -1,6 +1,6 @@
 # record-grammar (T51)
 
-**Status** · session_011VXhNRgAkPtLh1zWD7xHc3 · depth 2 · COMPLETE · handled B5
+**Status** · session_01W5LgYyUoKbwf29MJrEqkHm · depth 2 · COMPLETE · handled B7
 
 ## J1 · COMPLETE
 
@@ -106,3 +106,73 @@ T51-171 · record-grammar, CHANGE B5 (test copies of code sentences): done (comm
 - `node checks/run.mjs /home/user/bio`: format 0, architecture 0, channels 0; the one record-grammar line is the report above.
 
 Size (session_011VXhNRgAkPtLh1zWD7xHc3): test runs 12, module lines 4478
+
+## J5 · QUESTION
+
+G59 · fix is done and green; one placement question (QUESTION, replaces nothing).
+
+**Code (bio-plane/src/record-grammar/bundle.mjs, commit b3a087a5a8 + follow-up):** new `snapshotCopyPath(name, key)` derives a copy's path exactly as `RecordCore.snapPath` (cut at the last `/` first, then the last dot of the name; no dot puts the key at the end); used at the C-12.2 snapshot lookup (was :589-590). The reverse mapping (was :651) now accepts the key before the extension's dot OR at the end of the path: `(?:\.|$)`.
+
+**Failing-first, seen RED then green:** `test/m/record-grammar/bundle.test.mjs`, "R40 G59 C-12.2 ..." with names `bundle.md`, `data/x.json`, `snapshots/upload-<64 hex>`, `a/b/c`, `a.b/c`, `a.b/c.d` stored at their record-core paths. RED before the fix: the walker's message exactly (`snapshot '_history/snapshots/upload-<sha minus last char>_<key>f' ... is missing`) plus `history file '...' maps to no manifest entry` for the dotless, subfolder and dotted-directory copies; GREEN after, zero C-12.2, and each copy removed in turn names exactly its own missing path (through `localize`, not a copied sentence).
+
+**QUESTION (the smallest thing I need).** The entry's (a2) parity test (`checkBundle` finds every copy at `RecordCore.snapPath`'s path) cannot be placed by me: in `test/m/ratification/` the ownership check refuses it ("outside record-grammar's paths"), and in `test/m/record-grammar/` the architecture check refuses it (record-core is not earlier than layer 1). I did not work around either. My best reading: have the ratification job (or whichever job BOB names) add it as `bio-plane/test/m/ratification/r7-snappath-parity.test.mjs`; its full text is below and it passes today against my branch (1 pass; red without my fix). Alternatively tell me a placement I own. COMPLETE waits for your answer (R-NOTMET).
+
+Test text:
+
+```js
+/* G59 (fix round 7): the history checker (record-grammar's C-12.2) and the writer (record-core's `RecordCore.snapPath`) must
+   derive a snapshot copy's path one way. record-grammar is layer 1 and cannot import record-core, so this is the test in a
+   module above both: a copy stored at `RecordCore.snapPath`'s path is found by `checkBundle`, whatever the name's shape. */
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { checkBundle, createSha256 } from "../../../src/record-grammar/index.mjs";
+import { localize } from "../../../src/setup-words/index.mjs";
+import { RecordCore } from "../../../src/record-core/index.mjs";
+
+const KEY = "20260101T000000Z_aaaaaaaa";
+const UPLOAD = `snapshots/upload-${"0123456789abcdef".repeat(4)}`;
+const NAMES = ["bundle.md", "data/changes.json", UPLOAD, "a/b/c", "a.b/c", "a.b/c.d", "x.tar.gz", "snapshots/.hidden"];
+const CLEAN = [
+  "---", "id: INFO-2026-0001-a", "object_type: information", "schema: information@1", "title: T", "current_state: collected",
+  "prior_state: null", "created: 2026-01-01T00:00:00Z", "last_updated: 2026-01-01T00:00:00Z", "produced_by:", "  mode: manual",
+  "  capability_tier: t1", "group: g", "references: []", "state_history: []", "annotations_open: 0", "reeval_pending: false",
+  "visuals: []", "---", "## Summary", "", "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
+
+test("R40 G59 the history checker finds every copy at RecordCore.snapPath's path: dotted, dotless, subfolder and dotted-directory names", async () => {
+  const files = new Map([["bundle.md", CLEAN], ["_history/manifest.json", JSON.stringify({ entries: [
+    { key: KEY, kind: "edit", created: "2026-01-01T00:00:00Z", files: [], snapshotted: NAMES }] })]]);
+  for (const n of NAMES) {
+    const p = RecordCore.snapPath(n, KEY);
+    assert.ok(p.startsWith("_history/"), p);
+    files.set(p, "x");
+  }
+  const r = await checkBundle({ folderName: "INFO-2026-0001-a", files, sha256: async (v) => createSha256().update(typeof v === "string" ? new TextEncoder().encode(v) : v).hex() }, {});
+  assert.deepEqual(r.findings.filter((f) => f.check === "C-12.2"), []);
+  /* One copy short: the checker names the path the writer would have stored, not another. */
+  for (const n of NAMES) {
+    const short = new Map(files); short.delete(RecordCore.snapPath(n, KEY));
+    const found = (await checkBundle({ folderName: "INFO-2026-0001-a", files: short, sha256: async () => "" }, {})).findings.filter((f) => f.check === "C-12.2");
+    assert.deepEqual(found.map((f) => f.message), [localize("record-grammar.bundle.snapshot_snappath_recorded_in_manifest", "snapshot '{snapPath}' recorded in manifest entry '{key}' is missing", { snapPath: RecordCore.snapPath(n, KEY), key: KEY })], n);
+  }
+});
+```
+
+## J6 · COMPLETE
+
+G59 · COMPLETE (code commit b3a087a5a8; parity test placement settled by B7).
+
+**Changed.** `bio-plane/src/record-grammar/bundle.mjs`: new `snapshotCopyPath(name, key)` (above `checkHistoryCoherence`) derives a copy's path exactly as `RecordCore.snapPath` does (cut at the last `/`, then the name's last dot; no dot puts the key at the end); used at the C-12.2 snapshot lookup (was :589-590). The reverse mapping (was :653) accepts the key before the extension's dot or at the end of the path: `(?:\.|$)`.
+
+**Failing-first, RED then GREEN.** `test/m/record-grammar/bundle.test.mjs` "R40 G59 C-12.2 ...": names `bundle.md`, `data/x.json`, `snapshots/upload-<64 hex>`, `a/b/c`, `a.b/c`, `a.b/c.d` at their stored copies. RED before the fix: the walker's message (`snapshot '_history/snapshots/upload-<sha minus last char>_<key>f' ... is missing`) plus `history file ... maps to no manifest entry` for the dotless, subfolder and dotted-directory copies. GREEN after: zero C-12.2; removing any one copy names exactly its own path (read through `localize`). The expected.json fixtures (extension-bearing names) are unchanged and still identical.
+
+**(a2) parity test** is ratification's (RATIFICATION #33, its J13), per B7; I added nothing outside my paths. Before B7 I verified the same test against my branch: red without the fix, green with it.
+
+**Platform check:** N for the logic; P at the re-walk (BOB's).
+
+**Tests and checks.** `node --test test/m/record-grammar/`: 104 pass, 0 fail. Users: ratification 304 pass, record-core 160 pass, control-plane 447 pass (0 fail each). format 0; architecture 0 (record-grammar 0); coverage record-grammar 61 of 61 (the whole-tree failures are other modules'); words record-grammar 0 (whole tree unchanged: the 11 failures are other modules'); ownership 3 files, 0 failures.
+
+**Requirement lines proposed (BOB writes them).** Under R40: "`checkHistoryCoherence` (C-12.2) finds a snapshot's copy at the path record-core's `snapPath` stores it: `_history/<dir><name>_<key><ext>`, the key before the last dot of the name after the last `/`, or at the end of a name with no dot; and maps a history file back to its manifest entry whether the key is followed by the extension's dot or ends the name."
+
+**Census ops:** none. **Rows owed to UX-DESIGN:** none. **Deferred / found elsewhere:** none. `case-checker/program.mjs` embeds this code: BOB regenerates it.
+
+Size (session_01W5LgYyUoKbwf29MJrEqkHm): test runs 14, module lines 2562

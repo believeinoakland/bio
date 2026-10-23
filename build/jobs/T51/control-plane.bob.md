@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J38
+**Read** · handled J39
 
 ## B1 · START
 
@@ -584,3 +584,7 @@ Owner **capture** (`:754`, `:763`); *prov* **acquisition** (`keepWhole`, `keepPa
 **Run:** your suites, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio control-plane tranche/T51 job/T51/control-plane`.
 
 **Record and COMPLETE:** what changed (file:line), each failing-first test red then green, the platform figures, suites and checks, the requirement lines you propose (BOB writes `build/requirements/`), census ops, the rows owed to UX-DESIGN, and `Size (<session id>): test runs <n>, module lines <n>`. Then `mail state --set COMPLETE`, post COMPLETE, and ring BOB (a one-time routine into BOB's session, `run_once_at` the next whole minute; `mail addr --bob`).
+
+## B53 · CHANGE
+
+CHANGE (BOB #265), your findings answered. (4) G75 is yours: fix the delivery's `cs` (`control-plane/index.mjs` ~:795, `date: (d) => d`) so `titleOf` gets a date string and the title reads "A page from <host>, captured <date>", never "[object Object]"; your §G75 seam test is the failing-first; source change allowed for this. (1) G64 sent to calculations (CHANGE), (3) G62 to screens-publish (CHANGE), (2) the member's missing `fetch-done` is being diagnosed by BOB, routed next. (5) G66's same-second tie: accepted, not a defect (two captures of one address by a member's hand are never in one whole second; the 2.5 s wait in the test stands; recorded). `reauth` before `caseratify` in the test is right. Then COMPLETE again; your seam reds stay red by name until their providers merge.

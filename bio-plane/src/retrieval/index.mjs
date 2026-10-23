@@ -488,11 +488,20 @@ export class Retrieval {
 
   /** R69: the time zone that governs on this instance: local-facts' governing value (its R2) for the active profiles'
    *  `time_zone`, else the active profiles' own (`jurisdictions` R41, through their combined view), else null. Two
-   *  profiles governing different zones govern none. Never throws. */
-  zone() {
+   *  profiles governing different zones govern none. Never throws. `{why: true}` answers `{zone, source, why}` instead
+   *  of the zone alone (G62's logging): `source` is `local-facts` or `profiles` (null with no zone) and, with no zone,
+   *  `why` a code, `no_profiles`, `profiles_disagree` or `no_zone_stated` (null with one); no sentence. */
+  zone({ why = false } = {}) {
+    const r = this.#zoneRead();
+    return why === true ? r : r.zone;
+  }
+
+  #zoneRead() {
+    const found = (zone, source) => ({ zone, source, why: null });
+    const none = (why) => ({ zone: null, source: null, why });
     let ids = null;
     try { ids = this.record.getSetting("jurisdiction_profiles"); } catch { ids = null; }
-    if (!Array.isArray(ids) || !ids.length) return null;
+    if (!Array.isArray(ids) || !ids.length) return none("no_profiles");
     const ok = (z) => (typeof z === "string" && z !== "" ? z : null);
     try {
       if (this.#localFacts === undefined) {
@@ -507,14 +516,15 @@ export class Retrieval {
           const z = r && r.ok !== false && r.governs ? ok(r.governs.value) : null;
           if (z) zones.add(z);
         }
-        if (zones.size === 1) return [...zones][0];
-        if (zones.size > 1) return null;
+        if (zones.size === 1) return found([...zones][0], "local-facts");
+        if (zones.size > 1) return none("profiles_disagree");
       }
     } catch { /* fall through to the profiles */ }
     try {
       const c = this.#combine ? this.#combine(ids) : null;
-      return c && c.ok && c.view && c.view.time_zone ? ok(c.view.time_zone.value) : null;
-    } catch { return null; }
+      const z = c && c.ok && c.view && c.view.time_zone ? ok(c.view.time_zone.value) : null;
+      return z ? found(z, "profiles") : none("no_zone_stated");
+    } catch { return none("no_zone_stated"); }
   }
 
   /** R61, R62, R68: the relations every compile names: the projection, each registered field (R62), and each live T33

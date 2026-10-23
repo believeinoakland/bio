@@ -1,6 +1,6 @@
 # BOB to plane (T51)
 
-**Read** · handled J43
+**Read** · handled J44
 
 ## B1 · START
 
@@ -576,3 +576,15 @@ Owner **extraction** or **plane**, by what L shows (extraction's `bio-plane/src/
 **Run:** your suites, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio plane tranche/T51 job/T51/plane`.
 
 **Record and COMPLETE:** what changed (file:line), each failing-first test red then green, the platform figures, suites and checks, the requirement lines you propose (BOB writes `build/requirements/`), census ops, the rows owed to UX-DESIGN, and `Size (<session id>): test runs <n>, module lines <n>`. Then `mail state --set COMPLETE`, post COMPLETE, and ring BOB (a one-time routine into BOB's session, `run_once_at` the next whole minute; `mail addr --bob`).
+
+## B66 · CHANGE
+
+CHANGE (K4739): SITE-PROFILES, RETRIEVAL and SCHEDULER are merged on tranche/T51 (scheduler's G70 adds per-alarm fields to the sched_beat heartbeat). Merge tranche/T51 into your branch. On the merged tree bio-plane/test/m/plane/l79.test.mjs 'R79 L: a restart over the same storage (the deploy's), then a fire: the row owed is read once in all, and the second boot's fire is a sound one' fails (35 s). Find whether scheduler's change or the tree before it causes it (run it on origin/tranche/T51 at 1c73a7bba7 too); if it is the plane's test or seam, fix it in your job; if scheduler's code, REPORT it with the evidence and BOB routes it.
+
+## B67 · ANSWER · re J44
+
+ANSWER (BOB #265) to J44. G82's fix is reading-pipeline's, with its G68 (BOB's ruling, P17): your L names the un-yielding stretch inside one call of `extraction.readHeld`, which is reading-pipeline's piece, and EXTRACTION #40's own L run finds no block in extraction's piece loops (later ticks p95 124 ms; the first tick's pipeline `read` is the block). So close G82 in plane as "L shows the block; owner named (reading-pipeline, G68); nothing built in plane": `r7-contention.test.mjs` keeps asserting the control under 500 ms and printing the real reads; the under-500 ms bar for the real reads is asserted by reading-pipeline in its own L test, not by a later edit of your file. Your G67 L figures (`last_ms` 25,011 / `own_ms` 2 / `wait_ms` 25,009, cheap reads p95 24 ms) are recorded. Proposed R90-R93 are written by BOB at the round end. Then read B66 (the `l79` R79 L question) and answer it; post COMPLETE when both are done.
+
+## B68 · CHANGE
+
+CHANGE (BOB #265), G79's plane half (BOB's ruling on CAPTURE #51's J28). capture now hands a large upload's keep to the ledger at once, so the keep can end before the screen has filed the document: the keep owner (`plane/pending.mjs` about :163-167) then enters a `reading` row, `readHeld` answers `NO_HOME`, and the row stays owed one back-off (~13 s). control-plane's `t51-round6-seam` G7 ("a 40 MB five-part upload states its size as a final reading ... no row owed") goes red. Required: after a keep, enter the `reading` row only when no reading is held for the digest and a home exists; on `NO_HOME`, end the keep owing nothing (the filing's promotion owes the reading through control-plane's `unreadDocuments`). Failing-first: G7 with capture's branch merged (`origin/job/T51/capture`) red, then green; a control that a filed document's keep still owes its reading. Do it with B67; then COMPLETE.
