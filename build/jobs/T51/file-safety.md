@@ -364,3 +364,43 @@ Size (session_016eGP24TnGhJiYfns4RdWuR): test runs 12, module lines 2738
 ## J14 · COMPLETE
 
 COMPLETE (B15, G44, first owner): safe view of a spreadsheet = names + first whole rows by range, cut stated (rows/total_rows/truncated/next_row/reason, sheets_total/sheets_truncated); never a silent empty view: xlsx>20MiB declared, CSV>17MiB, ODS>8MiB declared, any file>20MiB answer SAFE_VIEW_FAILED PREVIEW_NOT_DRAWN|TOO_LARGE with size, bound, format. Failing-first red (heap OOM at the object's cap for the 10 MiB xlsx and 4 MB CSV) then green; module suite 100/101 (R24 accepted); users 902/910 (plane release R24 + journey-check pseudo, tranche-tip). Bounds for Bob (K1881): 1,000 cells/sheet (row cut at 1,000 columns), 20 sheets, 5,000 cells total, ODS 8 MiB declared (margin 1.4-1.8x measured). Answers 45-49 KB. Words: 5 stand-ins in screen-words.mjs + 1 detail; regenerate rows.mjs. No seam reds. Record: build/jobs/T51/file-safety.md. Size (session_016eGP24TnGhJiYfns4RdWuR): test runs 12, module lines 2738.
+
+## J15 · COMPLETE
+
+R52 (fix round 7 G84) done at commit b3364426e0 (pushed to job/T51/file-safety; no rebase, no PR).
+
+**Entries applied.** START B16 (R52, cause G84): `index.mjs` `designRow` (was :56-57, one `WORD_ROWS.some` per key, 45 keys) is replaced by one pass: `DESIGN_KEYS`, a Set of the keys whose row has origin "design" (`r[5] === "design"`), gathered by one `WORD_ROWS.filter`; `WORD_KEYS` filters by it. Content and order unchanged (the test below holds it against the old recipe over the real table).
+
+**Tests (new, `test/m/file-safety/`).** `r52-one-pass.test.mjs` (two tests, both named R52) and its child `r52-child.mjs`.
+- Passes over `WORD_ROWS` while the module loads, counted in a child process with the array methods and the iterator wrapped: **red before** ("46 passes over WORD_ROWS … at most one is allowed"), **green after** (1).
+- `WORD_KEYS` deep-equal to the per-key reference over the real table: green before and after.
+
+**One point for BOB (technical, recorded here).** The first lookup of setup-words builds its key table in one pass of its own (`setup-words/index.mjs:9`, `rowsByKey`). It is triggered at load by `record-grammar/document.mjs:22`, so a cold process makes two passes over `WORD_ROWS`: setup-words' one and file-safety's one. The child primes that build before it starts counting, so the counted passes are file-safety's load alone. R52's wording ("passes over WORD_ROWS at most once") does not say whether setup-words' build counts. Its cost is setup-words' and would be changed there (not this module, not touched here). BOB to rule whether R52 means the module's own passes; the job's reading is yes.
+
+**Deferred.** None in this module.
+
+**Found in another module or outside this job.**
+- `test/m/file-safety/rows.test.mjs` R24 (the rows census) is **red on the code before this change too** (checked: the pre-change `index.mjs` fails it the same way). The diff: `refusal.SIGNATURES_RUN_RECENT` (row C-140.44, fix round 3, its words the design's) is in the census but not in the test's expected list. Not weakened, not changed here: BOB to say whether the row or the expected list is right.
+- `journey-check/pseudo.test.mjs` (7 failures) and `plane/release.test.mjs` (1) fail on the pre-change code too. Not this module's.
+- `plane/g41-shape.test.mjs` failed once in a parallel run and passes alone (7 of 7, twice): a timing test under load, not this change.
+- `checks/words.mjs /home/user/bio`: 13 failures, none in file-safety: case-checker `spec.mjs` (6 inline), installer-steps (`installer.fleet.logsunconfirmed`, 5), screens-intake `r7-project-picker.test.mjs` (`refusal.PROMOTE_NOT_A_PARTICIPANT`, 2).
+
+**Generated artifacts.** None made stale (no word row or op changed).
+
+**Ops (K4208).** No op declared, added or changed.
+
+**Platform (L).** Not built here. The bundle's start figure (`measureStart`) is BOB's at the round end, per the START's item (3). The local measure I have: passes over `WORD_ROWS` at load 46 → 1; the diagnosis's 21 ms for this pass is not re-measured.
+
+**No requirement wording change proposed.**
+
+**Tests and checks (summary lines).**
+- `node --test test/m/file-safety/r52-one-pass.test.mjs`: before "1 fail, 1 pass" (46 passes); after "tests 2, pass 2, fail 0".
+- `node --test test/m/file-safety/*.test.mjs` (17 files), after: "tests 103, pass 102, fail 1" (the one is the pre-existing R24 above).
+- Impact (`build/plan/impact.mjs origin/tranche/T51 HEAD`, committed): "affected modules: 11 of 176; affected test files: 147 of 2496". Only file-safety's own `rows.test.mjs` consumes this module's `WORD_KEYS`; the other ten are named because the module's file is shared. Their 130 `bio-plane` test files run together: "tests 938, pass 929, fail 9": 8 fail the same way on the pre-change code (journey-check `pseudo` ×7, plane `release` ×1), and 1 is the timing flake above.
+- `checks/format.mjs /home/user/bio`: "format: 176 modules, 176 requirements files; 0 failures".
+- `checks/architecture.mjs /home/user/bio file-safety`: "architecture: 26 product files, 103 relative imports …; 0 failures".
+- `checks/coverage.mjs /home/user/bio file-safety`: "coverage: 1 modules, 52 of 52 live requirement ids named by a test; 0 failures".
+- `checks/ownership.mjs /home/user/bio file-safety origin/tranche/T51`: "1 files changed by file-safety … ; 0 failures".
+- `checks/words.mjs /home/user/bio`: 13 failures, none in file-safety (above).
+
+**Size (session_01FFRPRUV4obmxBQTQJntsxb): test runs 10, module lines 2739** (`bio-plane/src/file-safety/*.mjs`, all files, at commit b3364426e0).
