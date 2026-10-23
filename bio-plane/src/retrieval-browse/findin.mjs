@@ -633,7 +633,10 @@ export class Finder {
                 not_calculated: x.not_calculated });
         continue;
       }
-      add({ kind: "term", words: cutWords(u ? u.text : r.snippet ?? ""), capture_sha: r.capture_sha,
+      /* G41: a held sheet's unit is a block of many rows; its words are the row (line) holding the term, not the block's head. */
+      const line = u && extent && SHEET_EXTENTS.includes(extent.kind) && d.cellsHeld.has(extent.sheet)
+        ? String(u.text).split("\n").find((l) => hasPhrase(tokensOf(l), phrase)) : null;
+      add({ kind: "term", words: cutWords(line ?? (u ? u.text : r.snippet ?? "")), capture_sha: r.capture_sha,
             extent, origin: FIND_ORIGIN, term: String(term) });
     }
   }
