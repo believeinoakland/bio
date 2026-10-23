@@ -7,7 +7,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { seeded, V } from "./fixture.mjs";
-import { INGEST_INLINE_MAX, INGEST_CHUNK, INGEST_REASON_MAX, calculationsOps } from "../../../src/calculations/index.mjs";
+import { INGEST_INLINE_MAX, INGEST_CHUNK, INGEST_REASON_MAX, INGEST_ROWS_MAX, calculationsOps } from "../../../src/calculations/index.mjs";
 
 const FIELDS = [{ name: "payer", type: "string" }, { name: "payee", type: "string" }, { name: "amount", type: "number" }];
 const ROLES = { payer: { role: "payer", scheme: "ellery_person" }, payee: { role: "payee", scheme: "ellery_person" }, amount: { role: "amount" } };
@@ -209,4 +209,22 @@ test("R24 K4208 (G45): the moneyingest op accepts the same keys, its answer unch
   const r = await ops.moneyingest();
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 200));
   assert.deepEqual(Object.keys(r).sort(), ["asked_by", "binding", "by", "ingest", "not_written", "ok", "written"]);
+});
+
+test("R14 (G45 g): an act of more than INGEST_ROWS_MAX rows is refused INGEST_TOO_LARGE naming the count and the bound before any fact is written, nothing written; exactly the bound is read", async () => {
+  assert.equal(INGEST_ROWS_MAX, 100000);
+  const { w, b } = await setup(30, (i) => (i % 2 ? "P001" : `U${i}`));
+  const before = w.snapshot();
+  const over = await w.c.ingestMoney({ binding: b.binding, rows: Array.from({ length: INGEST_ROWS_MAX + 1 }, (_, i) => i), by: V("bob") });
+  assert.equal(over.ok, false);
+  assert.equal(over.reason, "INGEST_TOO_LARGE");
+  assert.deepEqual([over.rows, over.bound_rows], [INGEST_ROWS_MAX + 1, INGEST_ROWS_MAX]);
+  assert.match(over.detail, /100000/);
+  assert.equal(w.money.calls.length, 0, "no money fact");
+  assert.deepEqual(w.snapshot(), before, "no row, no piece");
+  /* the rows beyond the 30 held are listed not written, cheaply */
+  const at = await w.c.ingestMoney({ binding: b.binding, rows: Array.from({ length: INGEST_ROWS_MAX }, (_, i) => i), by: V("bob") });
+  assert.equal(at.ok, true, JSON.stringify(at).slice(0, 200));
+  assert.equal(at.written.length + at.not_written.length, INGEST_ROWS_MAX);
+  assert.ok(largest(w) < 1024 * 1024);
 });

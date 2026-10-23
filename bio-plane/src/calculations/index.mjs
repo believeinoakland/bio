@@ -104,6 +104,9 @@ export const INGEST_INLINE_MAX = 524288;
 export const INGEST_CHUNK = 256 * 1024;
 /** R14: the most characters of an ingest's stated reason (a protective bound; the statement's sum stays under the platform's). */
 export const INGEST_REASON_MAX = 2000;
+/** R14 (G45): the most rows one act reads, set by measure (the largest count whose act survives the object's memory at the real shape:
+ *  100,000 rows survive, 150,000 do not; a protective bound, K1881). Above it the act is refused INGEST_TOO_LARGE before any fact is written. */
+export const INGEST_ROWS_MAX = 100000;
 const TEXT_CHUNK = 512 * 1024;   /* characters per row of calc_table_bytes, under a Durable Object row's 2 MB */
 
 const str = (v) => (typeof v === "string" ? v.trim() : "");
@@ -1661,6 +1664,8 @@ export class Calculations {
       picked = Array.from({ length: t.size }, (_, i) => i);
     } else if (Array.isArray(rows) && rows.length && rows.every((n) => Number.isSafeInteger(n) && n >= 0)) picked = [...new Set(rows)].sort((x, y) => x - y);
     else return no("NO_ROWS", "name the rows to read into money facts, by number, or every row with rows: \"all\" and a reason. Nothing was written.");
+    if (picked.length > INGEST_ROWS_MAX)
+      return no("INGEST_TOO_LARGE", localize("calculations.index.one_act_reads_at_most", "one act reads at most {bound_rows} rows and this asks for {rows}; list the rows in windows of at most {bound_rows} (rows: [..]). Nothing was written.", { rows: String(picked.length), bound_rows: String(INGEST_ROWS_MAX) }), { rows: picked.length, bound_rows: INGEST_ROWS_MAX });
     const money = this.dep("money");
     if (!money || typeof money.recordFact !== "function") return no("MONEY_NOT_REACHABLE", "the money module is not reachable here. Nothing was written.");
     const roles = parse(b.roles_json);
