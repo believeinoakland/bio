@@ -162,7 +162,7 @@ function holdMember(w, id, text, container) {
   return sha(text);
 }
 /* The case edition over F, resting on `materials`, signed, F published, F's bytes in the bucket; assembled. */
-async function publish(w, env, materials, attestations = []) {
+async function publish(w, env, materials, attestations = [], { assemble = true } = {}) {
   w.member("olive");
   const proj = w.project("Parks", "olive");
   w.inquiry(F, { legs: materials.map((m) => ({ target: m.ref })) });
@@ -172,6 +172,7 @@ async function publish(w, env, materials, attestations = []) {
   assert.equal(signed.ok, true, JSON.stringify(signed).slice(0, 400));
   assert.equal(w.signFinding(F).ok, true);
   env.PUBLISHED.m.set(`bio/published/${pin}`, new TextEncoder().encode(w.text(F)));
+  if (!assemble) return null;
   const out = await assembleCaseContainer({ env, stub: stubOf(w), storeName: "bio",
                                             cs: w.p.caseEditionState(CASE, 1, "parks-group"), via: "test" });
   assert.equal(typeof out.manifest_sha, "string", JSON.stringify(out).slice(0, 400));
@@ -283,19 +284,27 @@ test("R32 a member of a nested archive carries each record and archive outward t
   assert.deepEqual(out.unheld.map((u) => u.what), ["extracted_text"], "nothing of the chain is unheld (the fixture states no extracted text)");
 });
 
-test("R32 bytes that do not hash to the digest registered are not carried and are named in unheld; a material that is not a member carries neither file", async () => {
+test("R32 bytes that do not hash to the digest registered are not carried and are named in unheld; a material that is not a member carries neither file; (G54) no case file is recorded while that archive is missing", async () => {
   const { w, env, archiveSha, memberSha } = scene();
   env.PUBLISHED.m.set(`bio/published/${archiveSha}`, new TextEncoder().encode("not the archive"));
   promote(w, PLAIN, [{ file: "snapshots/plain.txt", capture: { method: "acquire", grade: "B", sha256: sha("plain words"), bytes: 11 } }],
           [{ path: "snapshots/plain.txt", text: "plain words", register: true }]);
   w.receipt(sha("plain words"));   // (T39) fetched by this copy (`provenance` R62), so carried whole
-  const { m, out } = await publish(w, env, [docRow(MEM, memberSha), docRow(PLAIN, sha("plain words"))]);
+  await publish(w, env, [docRow(MEM, memberSha), docRow(PLAIN, sha("plain words"))], [], { assemble: false });
+  const facts = await w.read("casefilefacts", { caseId: CASE, edition: 1 });
+  const read = async (x) => { const o = await env.PUBLISHED.get(`bio/published/${x}`); return o ? new Uint8Array(await o.arrayBuffer()) : null; };
+  const built = await buildCaseFile({ facts, group: "parks-group", read });
+  const m = built.manifest, out = built;
   assert.deepEqual(caseFileManifestCheck(m), []);
   assert.equal(pathOf(m, "archive", MEM).length, 0, "the wrong bytes are never carried under the archive's name");
   assert.equal(pathOf(m, "container", MEM).length, 1, "the record, held at its digest, still travels");
   assert.deepEqual(out.unheld.filter((u) => u.what === "archive"), [{ ref: MEM, sha: archiveSha, what: "archive" }]);
   assert.deepEqual([pathOf(m, "archive", PLAIN), pathOf(m, "container", PLAIN)], [[], []], "no member, neither file");
   assert.ok(m.files.some((f) => f.path === caseFilePath("document", PLAIN)), "the plain material itself is carried");
+  /* G54: the assembly records nothing while a material is missing, and states it */
+  const stated = await assembleCaseContainer({ env, stub: stubOf(w), storeName: "bio", cs: w.p.caseEditionState(CASE, 1, "parks-group"), via: "test" });
+  assert.deepEqual([stated.ok, stated.code, stated.step], [false, "MATERIAL_MISSING", "materials"]);
+  assert.equal(w.row(`SELECT manifest_sha FROM published_cases WHERE case_id=?`, CASE).manifest_sha, null);
   /* negative control: with the right bytes back, the archive travels */
   const w2 = scene();
   const again = await publish(w2.w, w2.env, [docRow(MEM, w2.memberSha)]);

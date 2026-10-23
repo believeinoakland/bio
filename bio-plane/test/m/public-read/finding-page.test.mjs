@@ -159,7 +159,7 @@ test("R39 a finding with no legs answers `basis: []`; the answer carries `verifi
   const { w, env, pin } = published({ legs: [] });
   const c = await (await call(w, env, { id: F })).json();
   assert.deepEqual(c.findings[0].basis, []);
-  assert.deepEqual(Object.keys(c.verification).sort(), ["container", "detail", "findings", "manifest"]);
+  assert.deepEqual(Object.keys(c.verification).sort(), ["case_file", "container", "detail", "findings", "manifest"]);   // G54: beside the addresses, the case file's state
   assert.deepEqual(c.verification.findings, [{ bundle_id: F, bytes: `op=publishedbytes&sha256=${pin}` }]);
   assert.equal(typeof c.verification.detail, "string");
   /* before a container is assembled the case has no manifest: the addresses say so, never point at nothing */
