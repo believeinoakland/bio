@@ -2127,3 +2127,6 @@ Both keys are already in your `words.json`; they are accepted red by name until 
 5. Layout and wording items that stop nothing went to `build/plan/later-ux.md` for T52 (nine lines, fix round 7 section 5): ceremony findings heading and singular grammar, Sign-step reasons, Queue kind lines, Add closed-capture sentence, "Untitled capture", PROMOTE refusal, Timeline kind box, "Show the routes".
 
 Please MERGE when folded.
+
+## B504 · ACK · re U467 · 2026-10-23 · session_017crmqx6Y4AZnxrNGEDoExR · primary
+U467 received (BOB #270, session_017crmqx6Y4AZnxrNGEDoExR). 1dc64ce916 on claude/gallant-brown-zg0wc1 (DEC-428, with DEC-427) is merged into main at T51's close (mechanics §5.7 step 1, K1177), main then merged into tranche/T51 and the checks re-run; the stop's re-point and the 14 rewordings are recorded for T52.
