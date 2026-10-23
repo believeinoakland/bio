@@ -20,7 +20,7 @@ const worldOf = async (db, env = { CAPTURES: multipartBucket(), PUBLISHED: multi
 };
 const editions = async (w, n, base = 4780) => {
   const out = [];
-  for (let i = 0; i < n; i++) { const s = seedEdition(w.ctx, `CASE-2026-${base + i}`); await completeEdition(w.ctx, w.env, s); out.push(s); }
+  for (let i = 0; i < n; i++) { const s = await seedEdition(w.ctx, `CASE-2026-${base + i}`); await completeEdition(w.ctx, w.env, s); out.push(s); }
   return out;
 };
 const built = (w, s) => { const st = stateOf(w.ctx, s); return !!(st && st.complete && st.manifest_sha); };

@@ -17,18 +17,23 @@ const inquiryMd = (id) => ["---", `id: ${id}`, "object_type: inquiry", "schema: 
   "current_state: open", "prior_state: null", `created: "2026-09-27T00:00:00Z"`, `last_updated: "2026-09-27T00:00:00Z"`,
   "references: []", "state_history: []", "surfaced_by: human", 'disposition_reason: ""', "---", "", "## Question", "",
   `Is ${id} answered?`, "", "## Session Log", "", "## Review Notes", ""].join("\n");
-const caseDocText = (caseId, edition, project, target, pin) => ["---", "format: bio-case-document/6", `case_id: ${caseId}`,
+const caseDocText = (caseId, edition, project, target, pin, materials = []) => ["---", "format: bio-case-document/6", `case_id: ${caseId}`,
   `case_edition: ${edition}`, `case_project: ${project}`, "case_roles:", `  - target: ${target}`, `    version_sha: ${pin}`,
   "    edition: 1", "    role: load_bearing", "case_findings:", `  - ${target}`, "case_strength: []", "completeness:",
   "  author: member:olive", `  at: "${NOW}"`, "completeness_excluded: []", "case_citations: []",
-  "method:", '  grading: "grading/1"', '  checks: "1.0.0"', ...materialsLines([]), ...materialAttestationLines([]), "---", "",
+  "method:", '  grading: "grading/1"', '  checks: "1.0.0"', ...materialsLines(materials), ...materialAttestationLines([]), "---", "",
   "## Scope", "", "The question.", "", "## What This Excludes", "", "Nothing else.", "", "## What Was Searched", "", "Everything.", ""].join("\n");
 
 let n = 0;
 const key = () => `k${Date.now()}-${++n}`;
 
-/** an owner, her project, one question and its case edition (document stored, commit made); the finding is not yet signed */
-export function seedEdition(ctx, caseId, edition = 1) {
+const hex = (buf) => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+const shaOf = async (bytes) => hex(await crypto.subtle.digest("SHA-256", bytes));
+
+/** an owner, her project, one question and its case edition (document stored, commit made); the finding is not yet signed.
+ *  `materials` documents of `kib` KiB (random bytes, so the edition is as heavy as stated) and their extracted texts are held in the published bucket
+ *  (`env.PUBLISHED`) and listed in the case document, so the edition's case file has two files for each (ratification's L seed makes them the same way). */
+export async function seedEdition(ctx, caseId, edition = 1, { env = null, materials = 0, kib = 1 } = {}) {
   const record = recordOf(ctx), promotion = promotionOf(ctx), pub = publicationOf(ctx), F = `INQ-2026-${caseId.slice(-4)}`;
   ctx.storage.sql.exec(`INSERT OR IGNORE INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
                         VALUES ('olive', 'Cover olive', 'h_olive', 'member', 'active', '["contribute"]', 't', 't')`);
@@ -38,7 +43,17 @@ export function seedEdition(ctx, caseId, edition = 1) {
   const inq = promotion.promote({ bundleId: F, base: null, snapKey: key(), author: V("alice"),
     files: [{ path: "bundle.md", text: inquiryMd(F) }], meta: { object_type: "inquiry" } });
   if (!inq.ok) throw new Error("inquiry " + JSON.stringify(inq).slice(0, 300));
-  const pin = record.head(F).bundleSha, text = caseDocText(caseId, edition, proj.bundleId, F, pin);
+  const pin = record.head(F).bundleSha, rows = [];
+  for (let i = 0; i < materials; i++) {
+    const bytes = new Uint8Array(kib * 1024);
+    for (let o = 0; o < bytes.length; o += 65536) crypto.getRandomValues(bytes.subarray(o, Math.min(o + 65536, bytes.length)));
+    const t = new TextEncoder().encode(`extracted text of ${caseId} document ${i}\n`.repeat(20));
+    const m = { ref: `INFO-2026-${String(i).padStart(4, "0")}-doc`, kind: "document", sha: await shaOf(bytes), text_sha: await shaOf(t),
+                origin: `https://example.org/${i}`, archived_copy: null, included: true, rests_under: "load_bearing", title: null, obscured: null };
+    await env.PUBLISHED.put(`bio/published/${m.sha}`, bytes); await env.PUBLISHED.put(`bio/published/${m.text_sha}`, t);
+    rows.push(m);
+  }
+  const text = caseDocText(caseId, edition, proj.bundleId, F, pin, rows);
   const stored = pub.storeCaseDocument({ case: caseId, edition, text, author: V("olive"), at: NOW });
   if (!stored.ok) throw new Error("storeCaseDocument " + JSON.stringify(stored).slice(0, 300));
   const signed = record.transact(() => pub.commitCaseEdition({ case: caseId, edition, project: proj.bundleId,
@@ -47,7 +62,7 @@ export function seedEdition(ctx, caseId, edition = 1) {
     sigArmored: "-----BEGIN SSH SIGNATURE-----\nsig\n-----END SSH SIGNATURE-----", attestorKey: KEY, attestorMember: "olive",
     gateVersion: "plane-gate/test", deliveredBy: V("olive"), at: NOW }));
   if (!signed.ok) throw new Error("commitCaseEdition " + JSON.stringify(signed).slice(0, 300));
-  return { caseId, edition, finding: F, pin, project: proj.bundleId };
+  return { caseId, edition, finding: F, pin, project: proj.bundleId, materials: rows.length };
 }
 
 /** the act that completes the edition: the finding's own commit, and its bytes in the published bucket */
