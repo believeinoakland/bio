@@ -42,6 +42,15 @@ const SELF = fileURLToPath(import.meta.url);
 export const OBJECT_MB = 128;
 /** the old-space cap for a file whose bytes the object holds, `heldMiB` of them: the object's 128 less them, no "idle +" */
 export const capFor = (heldMiB) => Math.floor(OBJECT_MB - heldMiB);
+/** a synthetic text PDF (reading-pipeline's `bigpdf.mjs`, the generator its heavy synth uses) written once to the fixture cache and fed as `pdfDoc` feeds a file; `bytes` are about `targetBytes`, so
+ *  `targetBytes / pages` is the bytes a page carries (G26's volume carries 11.8 KB a page). Deterministic text; the padding is random, so the file is made once and kept by its parameters. */
+export async function synthPdfDoc({ pages, linesPerPage = 30, targetBytes = 0 }) {
+  const { tmpdir } = await import("node:os"), { join } = await import("node:path"), { mkdirSync, writeFileSync, existsSync } = await import("node:fs");
+  const dir = process.env.BIO_FIXTURE_CACHE || join(tmpdir(), "bio-test-fixtures"); mkdirSync(dir, { recursive: true });
+  const path = join(dir, `synth-${pages}p-${linesPerPage}l-${targetBytes}b.pdf`);
+  if (!existsSync(path)) { const { synthPdf } = await import("../../reading-pipeline/bigpdf.mjs"); writeFileSync(path, synthPdf({ pages, linesPerPage, targetBytes })); }
+  return { ...pdfDoc(path), pages };
+}
 export const textDoc = (bytes) => ({ kind: "text", bytes, name: "log.txt", type: "text/plain", marks: ["ENDMARKER"] });
 export const csvDoc = (bytes) => ({ kind: "csv", bytes, name: "table.csv", type: "text/csv", marks: ["FIRSTROWMARK", "MIDROWMARK", "LASTROWMARK"] });
 /** a one-sheet workbook of `rows` rows of 3 short cells, streamed (xlsx-gen.mjs); `bytes` is the file's (deflated) length, counted by a pass here */
