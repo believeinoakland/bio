@@ -38,28 +38,37 @@ const sizeOf = (x) => {
   return 0;
 };
 
+/* the order of the Worker's own calls in a request, for a test that asks how many were in flight together or how long a chain was awaited one after another: with the request header
+   `x-wrap-events: 1` every call of the Worker (to the object and to R2) is also listed as [kind, name, startSeq, endSeq] on `x-wrap-events`, the sequence numbers one clock of this
+   request's own (an order, never milliseconds: two calls overlap exactly when neither ended before the other began) */
+const begin = (sink) => (sink.events ? ++sink.seq : 0);
+const finish = (sink, kind, name, s) => { if (sink.events) sink.events.push([kind, name, s, ++sink.seq]); };
+
 /* an R2 bucket whose calls are counted into `sinkOf()` (the request's, or the object's current one); one wrapper for each bucket and kind, for the object keeps what it was
    first handed and refuses another (capture R58), so a binding read twice is the same object twice */
 const wrappers = new WeakMap();
-function bucket(b, name, sinkOf, kind) {
+function bucket(b, name, sinkOf, kind, stable = false) {
   if (!b || typeof b !== "object") return b;
   const own = wrappers.get(b) ?? new Map();
   wrappers.set(b, own);
-  if (own.has(kind)) return own.get(kind);
+  if (stable && own.has(kind)) return own.get(kind);
   const wrapped = new Proxy(b, {
     get(target, key) {
       const v = target[key];
       if (typeof v !== "function") return v;
       return async (...args) => {
         const t0 = Date.now();
+        const first = sinkOf();
+        const s = first && kind === "r2" ? begin(first) : 0;
         const out = await v.apply(target, args);
         const sink = sinkOf();
         if (sink) add(sink, kind, `${name}.${String(key)}`, Date.now() - t0, key === "put" ? sizeOf(args[1]) : out && typeof out === "object" ? sizeOf(out) : 0);
+        if (sink && kind === "r2") finish(sink, "r2", `${name}.${String(key)}`, s);
         return out;
       };
     },
   });
-  own.set(kind, wrapped);
+  if (stable) own.set(kind, wrapped);
   return wrapped;
 }
 
@@ -76,10 +85,11 @@ function namespace(ns, sink) {
             const f = st[k];
             if (k === "fetch" && typeof f === "function") {
               return async (input, init) => {
-                const route = routeOf(input), t0 = Date.now();
+                const route = routeOf(input), t0 = Date.now(), seq = begin(sink);
                 let res;
                 try { res = await f.call(st, input, init); } catch (e) { console.error("wrap-entry: the object's fetch threw", route, String((e && e.stack) || e)); throw e; }
                 add(sink, "do", route, Date.now() - t0);
+                finish(sink, "do", route, seq);
                 try {
                   const inner = res && res.headers && typeof res.headers.get === "function" ? res.headers.get(OBJECT_HEADER) : null;
                   if (inner) for (const [name, e] of Object.entries(JSON.parse(inner))) { const g = (sink.object ??= {}); const x = (g[name] ??= { n: 0, ms: 0, bytes: 0 }); x.n += e.n; x.ms += e.ms; x.bytes += e.bytes; }
@@ -111,7 +121,7 @@ export class Store extends BaseStore {
     const sinkOf = () => objectSink.getStore() ?? null;
     super(ctx, new Proxy(env, {
       get(target, key) {
-        if (key === "CAPTURES" || key === "PUBLISHED") return bucket(target[key], String(key), sinkOf, "r2");
+        if (key === "CAPTURES" || key === "PUBLISHED") return bucket(target[key], String(key), sinkOf, "r2", true);   /* the object keeps what it was first handed (capture R58) */
         return target[key];
       },
     }));
@@ -128,9 +138,10 @@ export class Store extends BaseStore {
 
 export default {
   async fetch(req, env, ctx) {
-    const sink = {};
+    const sink = req.headers.get("x-wrap-events") ? { events: [], seq: 0 } : {};
     const res = await plane.fetch(req, wrapped(env, sink), ctx);
     const headers = new Headers(res.headers);
+    if (sink.events) headers.set("x-wrap-events", JSON.stringify(sink.events));
     const body = JSON.stringify({ do: sink.do ?? {}, rpc: sink.rpc ?? {}, r2: sink.r2 ?? {}, object: sink.object ?? {} });
     headers.set(HEADER, body);
     return new Response(res.body, { status: res.status, statusText: res.statusText, headers });

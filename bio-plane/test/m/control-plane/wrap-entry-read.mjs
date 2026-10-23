@@ -24,3 +24,22 @@ export function r2Calls(calls, method = null) {
   const count = (group) => Object.entries(group).filter(([key]) => !method || key.endsWith(`.${method}`)).reduce((n, [, e]) => n + e.n, 0);
   return count(calls.r2) + count(calls.object);
 }
+
+/** The Worker's calls in the order they began and ended, `[{kind, name, start, end}]`, from an answer to a request that carried the header `x-wrap-events: 1`. */
+export function readEvents(res) {
+  try { return JSON.parse(res.headers.get("x-wrap-events") || "[]").map(([kind, name, start, end]) => ({ kind, name, start, end })); } catch { return []; }
+}
+/** The most calls in flight at once among the events that `pick` keeps (two overlap exactly when neither ended before the other began). */
+export function peak(events, pick = () => true) {
+  const keep = events.filter(pick);
+  let best = 0;
+  for (const e of keep) best = Math.max(best, keep.filter((x) => x.start <= e.start && x.end > e.start).length);
+  return best;
+}
+/** The longest chain of calls awaited one after another: each began after the one before it ended. */
+export function depth(events, pick = () => true) {
+  const keep = events.filter(pick).sort((a, b) => a.start - b.start);
+  const best = [];
+  keep.forEach((e, i) => { best[i] = 1 + Math.max(0, ...keep.slice(0, i).filter((x) => x.end < e.start).map((x) => best[keep.indexOf(x)])); });
+  return Math.max(0, ...best);
+}
