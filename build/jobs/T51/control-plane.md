@@ -697,3 +697,7 @@ B50 done and pushed: STORAGE_WORDS (ten screen.group.storage.* rows, size a func
 **Tests and checks.** control-plane directory: tests 447, pass 446, fail 1 (the seam above, red by name). plane: 351, pass 349, fail 2 (the same two as J32). `impact.mjs origin/tranche/T51 HEAD`: control-plane 69/85, plane 50/58. `checks/run.mjs`: format, architecture, coverage (6674 of 6674), channels, words all 0 failures; words count unchanged (no new sentence). `ownership.mjs`: 0 failures.
 
 Size (session_01AwthwuHLmeRX25rjM7qqN9): test runs 14, module lines 4680
+
+## J38 · COMPLETE
+
+G43, control-plane's half, done and pushed (job/T51/control-plane). deliverOwedRender follows when promoteDocument answers readingDropped; archive.mjs bounds the provenance file (PROV_EMBED_MAX = INLINE_MAX - 65536; drops reading/text_units; promoteArchive onDropped; both callers follow). Tests t51-g43-embed: archive test red before/green after; 1 MiB CSV owed-render seam RED BY NAME (OVERSIZE_INLINE) until SCREENS-INTAKE #19 merges; with a temporary local stand-in for the drop it passes, and fails without my condition. control-plane 447 tests, 446 pass, 1 = that seam; plane 349/351 (same two as J32); checks 0 failures; ownership 0. pull.mjs/capture-requests/monitoring embed no door reading (by reading). Details and proposed R58/R124 lines in the record. Size (session_01AwthwuHLmeRX25rjM7qqN9): test runs 14, module lines 4680.
