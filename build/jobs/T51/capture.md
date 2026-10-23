@@ -585,3 +585,7 @@ Size (session_01Uu76H7JzhRxSdMcBjFLc6j): test runs 17, module lines 4345
 - Unkeyed, deferred, open questions: none. Reading of one control: item 6 above.
 
 Size (session_01L1Y9FNxaoQ4v7iZDkLBJWG): test runs 9, module lines 4366
+
+## J27 · COMPLETE
+
+COMPLETE (CAPTURE #50, B28): G41 second cause fixed. uploadCapture keeps the file's first 64 KiB (UPLOAD_HEAD, a protective bound for K1881) and, for a multipart upload, gives profileOf the ct from acquisition's textTypeOf over that head (a cut trailing code point trimmed); acquisition unchanged (profileOf/detectFormat already honour ct for multipart). Failing-first red then green: g41b-t51.test.mjs (9 MiB csv declared text/csv; 17 MiB x.csv; multi-byte head; controls incl. PDF declared text/csv=pdf, NUL bytes, text/html non-text bytes, multipart PDF no type, one-part CSV). Platform L: g41b-plane.test.mjs through Miniflare, 9 MB CSV in two parts = csv (declared and named), undetermined with neither; red before. Suites: own 284/284; users 400/422, failures not mine (walker missing node_modules, passes 17/17 after npm ci; affordances t36 4 fail identically on unmodified tranche). checks/run: 0 failures; ownership 0. Proposed R107 plus R92/R93 amendment in my record. Reading to confirm: the text/html control is tested with non-text bytes; text bytes declared text/html are html on multipart as on one part. Size line in record.
