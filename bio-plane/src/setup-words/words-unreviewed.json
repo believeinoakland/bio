@@ -24778,21 +24778,21 @@
       "en": "reading-directed: keyed by a capture; at a member's act, the AI reads the pages Civicsmith could not, on the account that pays and within its limits; the text is labeled the AI's reading and undetermined; moves no bundle",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2470
+      "line": 2511
     },
     {
       "id": "extraction.declared.readheld",
       "en": "reading-directed: keyed by a capture's digest; at a member's act, Civicsmith reads a document its record holds whole and holds no reading of, or holds a reading of that found nothing for want of the whole; the reading is machine-made and undetermined, the earlier one kept in the history; moves no bundle",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2475
+      "line": 2516
     },
     {
       "id": "extraction.declared.reading",
       "en": "read: keyed by a capture's digest; its reading, how far a text read in pieces has been read, and its text units a page at a time; writes nothing",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2473
+      "line": 2514
     },
     {
       "id": "extraction.drift.this_text_was_graded_under",
@@ -24848,91 +24848,91 @@
       "en": "a re-read replaces this capture's reading, its text units and the standing of content rows cited under the old one, which is a write to the record and asks the capability a promotion asks.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1951
+      "line": 1992
     },
     {
       "id": "extraction.index.a_transcription_replaces_this_captures",
       "en": "a transcription replaces this capture's reading, its text units and the standing of content rows cited under the old one, which is a write to the record and asks the capability a promotion asks.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2153
+      "line": 2194
     },
     {
       "id": "extraction.index.length_transcription_s_were_graded",
       "en": "{length} transcription(s) were graded under a measurement a later probe found WEAKER. NOTHING HAS BEEN RE-GRADED and nothing will be automatically: this names the work so a member can do it (DEC-4)",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2324
+      "line": 2365
     },
     {
       "id": "extraction.index.no_evidence_store_set_up",
       "en": "your team's Civicsmith has no evidence store set up, so the stored bytes cannot be read again",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1853
+      "line": 1894
     },
     {
       "id": "extraction.index.no_ocr_member_is_bound",
       "en": "no OCR member is bound to this instance (the OCR_WORKER service binding is absent), so there is no tier 3 to reach. Nothing was read, called or written. An instance that installs the member later can re-read this capture then (D-115, D-319).",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1955
+      "line": 1996
     },
     {
       "id": "extraction.index.no_text_provenance_recorded",
       "en": "this reading carries no text provenance, which is not the same as its text not having been transcribed -- nobody recorded how it was produced",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1342
+      "line": 1383
     },
     {
       "id": "extraction.index.ocr_stringify_is_not_a",
       "en": "ocr={stringify} is not a value this op reads. Send ocr=1 to re-read the document with the OCR member, or leave the parameter off for the ordinary read.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1941
+      "line": 1982
     },
     {
       "id": "extraction.index.op_pagetranscribe_writes_this_captures",
       "en": "op=pagetranscribe writes this capture's reading and spends the account that pays for it, and an agent credential cannot declare that as one of its writes. A member can ask for it (D-199).",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2148
+      "line": 2189
     },
     {
       "id": "extraction.index.readheld_no_sha",
       "en": "a read of a held document is about one captured document, named by its fingerprint",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2456
+      "line": 2497
     },
     {
       "id": "extraction.index.reread_candidates_frontier",
       "en": "the content-axis frontier (op=frontier&level=content) lists the captures still below what your team's Civicsmith can read; this one is re-read now",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2066
+      "line": 2107
     },
     {
       "id": "extraction.index.the_ais_part_for_transcribing",
       "en": "the AI's part for transcribing pages has not passed its test bar here (run-rules R19), so it is not switched on. Nothing was read, rendered, sent or written, and no account was looked at.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2159
+      "line": 2200
     },
     {
       "id": "extraction.index.this_record_holds_no_reading",
       "en": "this record holds no reading of that capture that you can see, so there is nothing for a re-read to replace. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 1960
+      "line": 2001
     },
     {
       "id": "extraction.index.this_record_holds_no_reading_2",
       "en": "this record holds no reading of that capture that you can see, so there are no pages for the AI to transcribe. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.",
       "module": "extraction",
       "file": "bio-plane/src/extraction/index.mjs",
-      "line": 2164
+      "line": 2205
     },
     {
       "id": "file-safety.declared.deepercheck",
@@ -43111,7 +43111,7 @@
       "en": "the capture's bytes are not held in the evidence store, so nothing was read",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1930
+      "line": 1942
     },
     {
       "id": "reading-pipeline.index.decoded_glyphs",
@@ -43132,14 +43132,14 @@
       "en": "the {fmt} entry produced no text from these bytes",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2155
+      "line": 2167
     },
     {
       "id": "reading-pipeline.index.entry_not_read_bytes",
       "en": "the {fmt} entry could not read these bytes ({detail}), so nothing is claimed about its text",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 2182
+      "line": 2194
     },
     {
       "id": "reading-pipeline.index.multipart",
@@ -43153,7 +43153,7 @@
       "en": "the document names no capture digest, so there are no bytes to read",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1880
+      "line": 1892
     },
     {
       "id": "reading-pipeline.index.non_textual_large",
@@ -43174,21 +43174,21 @@
       "en": "a placement the structure op reported could not be read as {shape}",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1697
+      "line": 1709
     },
     {
       "id": "reading-pipeline.index.read_one_undivided_string",
       "en": " — no reference carries where it was read: this document was read as one undivided string, which names no part of a container to point at",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1971
+      "line": 1983
     },
     {
       "id": "reading-pipeline.index.reading_not_composed",
       "en": "the reading could not be composed ({detail}), so nothing is claimed about this document's text; it is a failed reading, never an emptied document",
       "module": "reading-pipeline",
       "file": "bio-plane/src/reading-pipeline/index.mjs",
-      "line": 1795
+      "line": 1807
     },
     {
       "id": "reading-pipeline.index.reported_characters",
@@ -46241,6 +46241,76 @@
       "module": "scheduler",
       "file": "bio-plane/src/scheduler/index.mjs",
       "line": 469
+    },
+    {
+      "id": "screen.group.storage.factors.latency",
+      "en": "How much delay you accept when a search has to run in the background instead of at once.",
+      "module": "control-plane",
+      "file": "bio-plane/src/control-plane/storage-words.mjs",
+      "line": 14
+    },
+    {
+      "id": "screen.group.storage.factors.lead",
+      "en": "How large your record can realistically grow depends on four things.",
+      "module": "control-plane",
+      "file": "bio-plane/src/control-plane/storage-words.mjs",
+      "line": 11
+    },
+    {
+      "id": "screen.group.storage.factors.limits",
+      "en": "The limits of the platform itself.",
+      "module": "control-plane",
+      "file": "bio-plane/src/control-plane/storage-words.mjs",
+      "line": 15
+    },
+    {
+      "id": "screen.group.storage.factors.pare",
+      "en": "How far you pare the record, by what your investigations and queries touch.",
+      "module": "control-plane",
+      "file": "bio-plane/src/control-plane/storage-words.mjs",
+      "line": 13
+    },
+    {
+      "id": "screen.group.storage.factors.plan",
+      "en": "The Cloudflare plan your team has and is willing to pay for.",
+      "module": "control-plane",
+      "file": "bio-plane/src/control-plane/storage-words.mjs",
+      "line": 12
+    },
+    {
+      "id": "screen.group.storage.head",
+      "en": "How full your team's record is",
+      "module": "control-plane",
+      "file": "bio-plane/src/control-plane/storage-words.mjs",
+      "line": 6
+    },
+    {
+      "id": "screen.group.storage.size",
+      "en": "Your team's record holds {used} GB of the {limit} GB one record can hold ({percent}%).",
+      "module": "control-plane",
+      "file": "bio-plane/src/control-plane/storage-words.mjs",
+      "line": 7
+    },
+    {
+      "id": "screen.group.storage.unstated",
+      "en": "The size of your team's record is not stated.",
+      "module": "control-plane",
+      "file": "bio-plane/src/control-plane/storage-words.mjs",
+      "line": 8
+    },
+    {
+      "id": "screen.group.storage.warn1",
+      "en": "Your team's record has passed 70% of what one record can hold. Decide what to do before it fills.",
+      "module": "control-plane",
+      "file": "bio-plane/src/control-plane/storage-words.mjs",
+      "line": 9
+    },
+    {
+      "id": "screen.group.storage.warn2",
+      "en": "Your team's record has passed 90% of what one record can hold. At the limit, writes will fail: nothing more can be saved until room is made.",
+      "module": "control-plane",
+      "file": "bio-plane/src/control-plane/storage-words.mjs",
+      "line": 10
     },
     {
       "id": "sheet-worker.contract.loading_the_workbook_took_longer",
