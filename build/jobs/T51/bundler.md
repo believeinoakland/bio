@@ -12,6 +12,8 @@
 
 **Failing first:** with `deploy.mjs` as it was: `g83-g84.test.mjs` 9 tests, 2 pass, 7 fail. With the change and a temporary stand-in for the provider's file (removed, never committed): 9 pass; `bio-plane/test/m/bundler/` plus `deploybindings.test.mjs`: tests 166, pass 166, fail 0.
 
+**Completion (B17, runtime-limits merged, K4757):** merged `tranche/T51`; with the real `store-place.mjs`, `bio-plane/test/m/bundler/` + `deploybindings` + `resolveversion` + `bundle` + `m/runtime-limits/`: tests 200, pass 200, fail 0 (the three provider-dependent tests green). Impact set (`impact.mjs origin/tranche/T51 HEAD`): bundler 5/10 files (all in the run above), plane `limits.test.mjs` 3 of 3 pass. Checks: format 0, architecture (bundler) 0, coverage 42 of 42, ownership 0; `checks/run.mjs`: no finding in bundler's files (others' words/inline/architecture findings are not mine).
+
 **Red by name until runtime-limits merges (R-SEAM):** three tests need the real `bio-plane/src/store-place.mjs` (runtime-limits R27): "R41: runtime-limits' STORE_HINTS exists…", "R41: --store-location and --store-generation are sent…", "R41: every hint of runtime-limits' list is accepted…". On this branch without it: tests 168, pass 165, fail 3, exactly those. When BOB's CHANGE says it has merged: merge `tranche/T51`, rerun.
 
 **Platform check (R-FOUR 4):** L: the stub account only (no deploy is run by a session). P: BOB reads the `test deploy: startup` line in the workflow log at the redeploy. `unreported` means the real answer lacked the field (the plan's G2 rule applies).
