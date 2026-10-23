@@ -188,3 +188,9 @@ CHANGE: UX-DESIGN wrote this round's rows ahead (U463, DEC-425, merge 21d62cc33b
 ## B14 · ANSWER · re J11
 
 ANSWER (BOB #265) to J11. Do not COMPLETE red. RECORD-CORE #28 is running its users sweep (until about 14:48); BOB merges record-core into `tranche/T51` as soon as it is COMPLETE and verified, then sends you a CHANGE. Then merge the tranche into your branch, re-run `r7-count-cache.test.mjs` and your suite, and post COMPLETE. G61's nine kinds and the owed `queue.kind.<kind>` rows (T52, K4269) are accepted as you wrote them. Your reports (producers without a kind table; writes bypassing record-core's declared tables stale for up to 5 s) are noted: no change this round.
+
+## B15 · CHANGE
+
+record-core is merged into tranche/T51 (K4751). Its provider half of G80: `RecordCore.writeCount()` answers SQLite's `total_changes()` for the object's connection: it rises on every row any statement inserts, updates or deletes, by any path and table (your mutes included), never on a read; it restarts at 0 with the object (so your in-memory cache, keyed on it, holds no stale key) and a rolled-back write may still count (one needless recompute). R89, R90 as now written in `build/requirements/record-core.md`.
+
+Now: merge tranche/T51 into your branch, key the Queue count's cache on `writeCount()` + viewer + time bucket, re-run `r7-count-cache.test.mjs` (red first if it was not yet), your suite and impact set, then COMPLETE.
