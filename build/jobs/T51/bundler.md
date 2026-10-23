@@ -369,3 +369,7 @@ Size (session_01K1jpKWZpajq2vS4ukUMM4m): test runs 7, module lines 4461
 ## J16 · REPORT
 
 R41 and R42 are applied and pushed (record: BUNDLER #30). R42: `result.startup_time_ms` of the upload answer (Cloudflare API ref "Upload Worker Module"; wrangler reads the same) is printed as `test deploy: startup <ms> ms` / `unreported` after the upload, in a test deploy only (R40's control forbids a `test deploy:` line without the flag; propose R42 wording "in a test deploy"). R41: `deriveStorePlace`, flags validated before any request, held values kept, `--store-generation 1` removes the held generation. Tests: g83-g84.test.mjs 9 tests (red first 2 pass/7 fail); with a temporary stand-in for runtime-limits' store-place.mjs the module + deploybindings run is 166/166. Without the provider on this branch, 3 tests are red by name (they read the real STORE_HINTS, R27). Checks: format 0, architecture 0 for bundler (one failure is queue-producers', not mine), coverage 42/42, ownership 0. I am not COMPLETE until runtime-limits merges: post CHANGE then; I merge tranche/T51, rerun, and COMPLETE.
+
+## J17 · COMPLETE
+
+R41 and R42 complete on job/T51/bundler. With runtime-limits merged: bundler + deploybindings + resolveversion + bundle + runtime-limits tests 200/200; impact set (plane limits.test.mjs) 3/3. format 0, architecture 0, coverage 42/42, ownership 0. R42 wording proposal: print only in a test deploy (R40 control). Record updated.
