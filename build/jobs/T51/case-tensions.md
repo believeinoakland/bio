@@ -78,3 +78,7 @@ Merged `tranche/T51` (CASE-GRAMMAR #20, PUBLICATION #36 G47t, CASE-CARRIAGE, CAS
 - Proposed R7 line unchanged (see the first G47 section).
 
 Size (session_01TSmueyvUPtNYuxRUg58uBu): test runs 6, module lines 973
+
+## J4 · COMPLETE
+
+G47 complete after B4. Merged tranche/T51. g47-reauthor.test.mjs green (red with the one-line predicate removed, green restored). Suite 26/26 under the preload. Direct users (case-authoring, publication): 406 tests, 3 fail = carries.test.mjs R55 (case-disclosures R7; R4,R8,R9,R10; R11), identical without my change, so case-authoring's own seam awaiting CASE-AUTHORING #41. format/architecture/coverage 12 of 12/words/ownership 0 failures. No census keys change, no protective bound. Details in my record.
