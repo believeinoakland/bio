@@ -156,3 +156,23 @@ test("R40 G59 the history checker finds every copy at RecordCore.snapPath's path
   }
 });
 ```
+
+## J6 · COMPLETE
+
+G59 · COMPLETE (code commit b3a087a5a8; parity test placement settled by B7).
+
+**Changed.** `bio-plane/src/record-grammar/bundle.mjs`: new `snapshotCopyPath(name, key)` (above `checkHistoryCoherence`) derives a copy's path exactly as `RecordCore.snapPath` does (cut at the last `/`, then the name's last dot; no dot puts the key at the end); used at the C-12.2 snapshot lookup (was :589-590). The reverse mapping (was :653) accepts the key before the extension's dot or at the end of the path: `(?:\.|$)`.
+
+**Failing-first, RED then GREEN.** `test/m/record-grammar/bundle.test.mjs` "R40 G59 C-12.2 ...": names `bundle.md`, `data/x.json`, `snapshots/upload-<64 hex>`, `a/b/c`, `a.b/c`, `a.b/c.d` at their stored copies. RED before the fix: the walker's message (`snapshot '_history/snapshots/upload-<sha minus last char>_<key>f' ... is missing`) plus `history file ... maps to no manifest entry` for the dotless, subfolder and dotted-directory copies. GREEN after: zero C-12.2; removing any one copy names exactly its own path (read through `localize`). The expected.json fixtures (extension-bearing names) are unchanged and still identical.
+
+**(a2) parity test** is ratification's (RATIFICATION #33, its J13), per B7; I added nothing outside my paths. Before B7 I verified the same test against my branch: red without the fix, green with it.
+
+**Platform check:** N for the logic; P at the re-walk (BOB's).
+
+**Tests and checks.** `node --test test/m/record-grammar/`: 104 pass, 0 fail. Users: ratification 304 pass, record-core 160 pass, control-plane 447 pass (0 fail each). format 0; architecture 0 (record-grammar 0); coverage record-grammar 61 of 61 (the whole-tree failures are other modules'); words record-grammar 0 (whole tree unchanged: the 11 failures are other modules'); ownership 3 files, 0 failures.
+
+**Requirement lines proposed (BOB writes them).** Under R40: "`checkHistoryCoherence` (C-12.2) finds a snapshot's copy at the path record-core's `snapPath` stores it: `_history/<dir><name>_<key><ext>`, the key before the last dot of the name after the last `/`, or at the end of a name with no dot; and maps a history file back to its manifest entry whether the key is followed by the extension's dot or ends the name."
+
+**Census ops:** none. **Rows owed to UX-DESIGN:** none. **Deferred / found elsewhere:** none. `case-checker/program.mjs` embeds this code: BOB regenerates it.
+
+Size (session_01W5LgYyUoKbwf29MJrEqkHm): test runs 14, module lines 2562
