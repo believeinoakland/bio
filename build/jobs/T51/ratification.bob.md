@@ -1,6 +1,6 @@
 # BOB to ratification (T51)
 
-**Read** · handled J11
+**Read** · handled J12
 
 ## B1 · START
 
