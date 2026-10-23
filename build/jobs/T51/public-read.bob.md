@@ -1,6 +1,6 @@
 # BOB to public-read (T51)
 
-**Read** · handled J21
+**Read** · handled J23
 
 ## B1 · START
 
@@ -247,3 +247,11 @@ case-grammar (G50's provider, CASE-GRAMMAR #21) is merged into tranche/T51 (K469
 CHANGE · G54 (fix round 6; K4701). A new cause for your module, to do in this job after your current entry: read the G54 entry of `build/plan/fix-round-6-T51.md` whole (and its section 0), merge `tranche/T51` into your branch, then apply your part below. Record it as a new section; complete again when done.
 
 Mail `--module public-read`; record `build/jobs/T51/public-read.md`. Read whole: section 0 and G54, `diagnosis-R6-g54-cause.md`, rulings K4426, K4571, K4565, K4640, K3930; `build/requirements/public-read.md` (R5, R6, R23, R24, R40 as a reader), `publication/worker.mjs:161-449` and `:458-820`, `public-read/casefile.mjs`, `public-read/index.mjs:1365` and `:2021`. Provider: publication (`recordcasefile`, `caseFilesOwed`, merged first). Your part, G54 (3)(a) "public-read", (c) "public-read": `assembleCaseContainer({env, stub, storeName, cs, via, prior})` records `building`, catches every throw and `{ok:false}` at its step (the step list in G54), records `failed`, writes the structured `casefile_attempt` line (no secret, no document text), never throws, removes the silent bucket skips (`NO_BUCKET`), records no manifest while a material is missing, records `built` only after the manifest bytes are stored; export `recordCaseFileFailure` for ratification's copy failures (this contract is what ratification builds on; state its signature in your COMPLETE); `publishedcase` answers `case_file: {state, code, attempted_at, attempts}` and `verification.case_file`, with the closed code set mapped in one place, the state `stopped` (code `MATERIAL_MISSING` carried), and no sentence, `step`, `error` or `detail`. `publication/worker.mjs` is yours by `modules.json`. Failing-first: `test/m/public-read/g54-attempt.test.mjs` as G54 (3, failing-first) lists, seen red. Census: confirm `publishedcase` and `publishedbytes` accept no new key. Platform check L is plane's. Run and COMPLETE as above, plus the code set and the states the page must have sentences for.
+
+## B24 · CHANGE
+
+Addendum to B23 (G54; K4702): public-read also writes the reader's 13 stand-in sentences as localize calls it puts in no answer (screens-publish draws them by key and may hold no rows): screen.published.casefile.{being_prepared,retrying,stopped,waiting_on_members} and screen.published.casefile.code.{NO_BUCKET,STORE_SILENT,MATERIAL_MISSING,FINDING_MISSING,BUCKET_FAILED,NOT_RECORDED,INTERRUPTED,TOO_LARGE,UNKNOWN}. Their English is in SCREENS-PUBLISH #20's record (build/jobs/T51/screens-publish.md on job/T51/screens-publish) once it posts them; copy them exactly. Name them in your completion for the round-end regeneration.
+
+## B25 · CHANGE
+
+CHANGE (BOB #262, K4711): PUBLICATION #37's G54 (the four `casefile_*` columns, `recordCaseFileAttempt` by the hop `recordcasefile`, `caseFilesOwed`, `caseFileNextAt`) and PUBLISH-SCHEDULE #4 are merged into tranche/T51. Merge tranche/T51, re-run your module and its impact set against the real publication, and complete G54 again. Your choice that `verification.container` and `.manifest` are null unless `case_file.state` is `built` is adopted (K4710 (3)). The case file's stopping rule is publication's writer alone (K4710 (2)): your `absent` passes through to it; never decide `stopped` yourself.

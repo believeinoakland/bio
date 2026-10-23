@@ -1,6 +1,6 @@
 # BOB to calculations (T51)
 
-**Read** · handled J10
+**Read** · handled J12
 
 ## B1 · START
 
@@ -135,3 +135,22 @@ BOB's notes for this job:
 5. Tests: `test/m/calculations/g55-ingest.test.mjs`, per the entry's (4), each seen red. The `g45-ingest.test.mjs` tests pass unchanged except test (a), which you update if the threshold falls below 18,098 (an inline run answers as today).
 6. L: the probe of the entry's (5).
 *Rules of section 0 hold* (`build/plan/fix-round-6-T51.md`): R-FOUR (cause with file:line; why tests missed it and the gap fixed; a failing-first test through the real entry path, seen red; the platform check), R-SEAM / R-ONE, R-NOTMET / R-OLD / R-LIVE, R-STOP, R-CLOCK. *Reading* (mechanics §6 step 2): read whole your requirements (both parts), your entry (your entry of `build/plan/fix-round-6-T51.md`, whole), your layer's contract in `build/layers.md`, your own code, the used services your entry touches, and the tests that name a requirement your entry changes; **a job that would read a document of its reading set only in part stops at once, posts `BLOCKED` with cause `reading`, and waits for BOB** (K3678). *Before any test:* every lockfile directory has `node_modules` (K4113); run one test process at a time, `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit <file>` from the repository root, then your suite's impact set (`node build/plan/impact.mjs tranche/T51 HEAD`). *Workers:* haiku low for mechanical work, sonnet medium for reading and diagnosis, never opus, never above your own model (K3518); a command refused by a safety check is never retried, split or worked around: stop and post BLOCKED naming it. *Declarations:* declare every census op you own (K4208); say in your completion which changed. *Words rule* (K3930, K3943): a sentence people read is `localize('<module>.<area>.<name>', en)` with literal arguments; a test never holds a sentence (K3810); `rows.mjs` and `words-unreviewed.json` are never edited. Merge `tranche/T51` into your branch, never rebase or reset (K1991). Never edit another module's generated artifact (manifest §14): report what you made stale. Before COMPLETE run `node checks/run.mjs /home/user/bio` from the process repository (format, architecture, coverage 0 failures; words shows no finding in your module, by its own failure count), and `node checks/ownership.mjs /home/user/bio <module> tranche/T51 job/T51/<module>`. Your Size line counts only your module's own code (K2513). Report flaws in other modules to BOB (P9).
+
+## B16 · CHANGE
+
+entities (G55 tier 1, ENTITIES #20) is merged into tranche/T51 (K4703): its view is held while the jurisdiction setting is unchanged, deep-frozen, with viewBuilds(). Merge tranche/T51 into your branch (never rebase) and continue; a seam test waiting on entities should now pass.
+
+## B17 · ANSWER · re J11
+
+Tier 2 confirmed (K4699, K4701; K4704). Build it. Your node measure stands as recorded in your record (I copy it to diagnosis-R6-g55-measure.md); the constants (INGEST_INLINE_ROWS, the slice) are set from check L in Miniflare at the platform's shape, so the worst inline case stays at or under 1.5 s and a slice keeps the 10 s bar with margin; record both measures and the chosen figures. INGEST_CACHE_MAX = 10,000 is adopted. entities is merged (B16); MONEY #8 is running: test (a) stays red by name until it merges.
+
+## B18 · ANSWER · re J12
+
+ANSWER (J12; BOB #262, K4708). Your contracts are adopted as published; MONEY #8 is told (markIngest, `source.ingest` in SOURCE_FIELDS, recordFact synchronous). Deviations (1)-(3) accepted; INGEST_INLINE_ROWS stays provisional until your check L after money's merge. Two small corrections to `ingestNotices` (R14), in this job:
+1. Its comment and requirement say "in the order they finished"; the read orders by rowid (when the ingest started). State it truly (started order). NOTICE-PRODUCERS #16 is told to read from the start each cycle and tell once by key, so no ingest is skipped.
+2. Answer `next: null` on a page that is not full, so a reader's loop ends without one empty read.
+A CHANGE follows when MONEY #8 merges.
+
+## B19 · CHANGE
+
+CHANGE (BOB #262, K4711): MONEY #8's tier 2 is merged into tranche/T51, built to your contract as you spelled it (`markIngest(key, open)` synchronous in your transaction; `source.ingest` accepted on a table-row source; `recordFact` synchronous; refusals `NO_INGEST`, `UNKNOWN_FIELD`; money R31). Merge tranche/T51, turn your two money seams green, run check L in Miniflare and set `INGEST_INLINE_ROWS` and the slice constants from it (the worst inline case at or under 1.5 s), apply B18's two corrections, and complete. NOTICE-PRODUCERS #16 and SCHEDULER #41 are complete against your published shapes and merge after you; op-grades has graded `moneyingestread` (its key `calculations.declared.moneyingestread`: your declaration's `description` must be that key and English, weight `read`, `mutating: false`).

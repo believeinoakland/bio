@@ -34,6 +34,9 @@ export const SCHEDULE_STATES = Object.freeze(["waiting", "published", "stopped",
  *  code, its row (C-122.5; N687) and the row's translation. */
 export const SCHEDULED_CHECK_UNAVAILABLE = Object.freeze(rowOf("SCHEDULED_CHECK_UNAVAILABLE"));
 
+/** R2 (G54): the most entries of a settled row's case file, and the longest code. */
+export const CASE_FILE_MAX = 50, CASE_FILE_CODE_MAX = 64;
+
 const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : "");
 const safeJson = (s, d) => { try { return s == null ? d : JSON.parse(s); } catch { return d; } };
@@ -93,13 +96,35 @@ function resolveAt(p, at) {
   return { ok: true, at: { date, time, zone }, publish_at: b.earliest };
 }
 
+/* R2 (G54): what a publisher said of the case files it assembled, `answer.after.containers`, reduced to the list stored
+   at settle: `[{case, edition, built, code?}]`, each failed one kept before any built one when the list is cut, or
+   `"unknown"` when the publisher gave no list (it threw after its commit, or answered none, or none of it is valid), never
+   null. A publisher's own detail, step or error text never reaches the row. */
+function caseFileOf(answer) {
+  const list = answer && answer.after && Array.isArray(answer.after.containers) ? answer.after.containers : null;
+  if (!list) return "unknown";
+  const valid = [];
+  for (const c of list) {
+    if (!c || typeof c !== "object" || !str(c.case) || !Number.isInteger(c.edition) || typeof c.built !== "boolean") continue;
+    const code = str(c.code).slice(0, CASE_FILE_CODE_MAX);
+    valid.push({ case: str(c.case), edition: c.edition, built: c.built, ...(code ? { code } : {}) });
+  }
+  if (list.length && !valid.length) return "unknown";
+  return [...valid.filter((c) => !c.built), ...valid.filter((c) => c.built)].slice(0, CASE_FILE_MAX);
+}
+
+/* R2 (G54): a published row's stored case file as the entries state it: the list or "unknown" as settled, or
+   "not_recorded" on a row settled before the column held one. */
+const caseFileAtSettle = (r) => (r.case_file == null ? "not_recorded" : safeJson(r.case_file, "unknown"));
+
 /* R4's entry for one row. */
 function entryOf(p, r) {
   const project = projectOf(p, r.case_id, r.edition);
   return { case: r.case_id, edition: Number(r.edition), project, state: r.state, signer: r.signer ?? null,
            set_by: r.set_by ?? null, signed_at: r.signed_at, at: { date: r.at_date, time: r.at_time, zone: r.zone },
            publish_at: r.publish_at, moves: safeJson(r.moves, []), outcome_at: r.outcome_at ?? null,
-           reasons: r.state === "stopped" ? safeJson(r.reasons, []) : null };
+           reasons: r.state === "stopped" ? safeJson(r.reasons, []) : null,
+           ...(r.state === "published" ? { case_file_at_settle: caseFileAtSettle(r) } : {}) };
 }
 
 /* The case's owning project: the `cases` row, else the document's own `case_project`. */
@@ -220,12 +245,16 @@ async function takeOne(p, r, at) {
                                    ...(s && s.cause ? { cause: s.cause } : {}) }))
     : unchecked();
   const state = signed ? "published" : "stopped";
+  /* G54: a signed edition states what its publisher said of the case files at this settle ("unknown" when it said none,
+     or threw after committing); a stopped one committed nothing and has none. The row settles published either way. */
+  const caseFile = signed ? caseFileOf(answer) : null;
   p.record.transact(() => p.sql.exec(
-    `UPDATE scheduled_editions SET state=?, outcome_at=?, reasons=? WHERE seq=? AND state='waiting'`,
-    state, signed ? signed.ratified_at : at, signed ? null : JSON.stringify(stops), r.seq));
+    `UPDATE scheduled_editions SET state=?, outcome_at=?, reasons=?, case_file=? WHERE seq=? AND state='waiting'`,
+    state, signed ? signed.ratified_at : at, signed ? null : JSON.stringify(stops),
+    caseFile === null ? null : JSON.stringify(caseFile), r.seq));
   tell(p);
   return { case: r.case_id, edition: Number(r.edition), state,
-           ...(signed ? { published_at: signed.ratified_at } : { reasons: stops }) };
+           ...(signed ? { published_at: signed.ratified_at, case_file_at_settle: caseFile } : { reasons: stops }) };
 }
 
 /* R2, R9 (C-122.5): the stop of an edition no publisher could check. */

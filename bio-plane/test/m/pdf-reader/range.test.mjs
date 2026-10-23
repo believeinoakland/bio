@@ -99,3 +99,50 @@ test("R43: BUDGET-2024-APP (1,354 pages) is read 100 pages a call in a heap of 1
   assert.ok(got.peakMB < 64, `peak ${got.peakMB.toFixed(1)} MB above idle`);
   assert.ok(got.slowestMs < 10_000, `a call took ${Math.round(got.slowestMs)} ms`);
 });
+
+/* R43's byte bound (fix round 6, G56; K4693): an optional `range.maxBytes` shrinks the pages a call builds to what that many
+ * file bytes carry at the document's own bytes per page, at least one page. Asserted in pages, never in time (R-CLOCK). */
+test("R43: maxBytes shrinks a range to the pages that many bytes carry at the document's bytes per page, never widens it, floors it at one page, and without maxBytes the call is today's", async () => {
+  const bytes = small();
+  const perPage = bytes.length / 7;
+  const none = await extractPdfRange(bytes, { from: 0, count: 7 });
+  assert.equal(none.count, 7);
+  /* absent, or not a finite number above 0: the call equals the call without it, byte for byte */
+  for (const maxBytes of [undefined, null, 0, -5, NaN, Infinity, "1200"]) {
+    assert.deepEqual(await extractPdfRange(bytes, { from: 0, count: 7, maxBytes }), none, `maxBytes ${String(maxBytes)}`);
+  }
+  /* the bound shrinks: 3.5 pages of bytes build 3 pages, which are the first 3 of the unbounded answer */
+  const three = await extractPdfRange(bytes, { from: 0, count: 7, maxBytes: perPage * 3.5 });
+  assert.equal(three.count, 3);
+  assert.equal(three.pages, 7);
+  assert.deepEqual(three.text.pages, none.text.pages.slice(0, 3));
+  assert.deepEqual(Object.keys(three), Object.keys(none), "the answer's shape is unchanged");
+  assert.deepEqual(Object.keys(three.text), Object.keys(none.text));
+  /* the floor: a bound under one page's bytes still builds one page, so a cursor always moves */
+  for (const maxBytes of [1, perPage / 2, perPage * 0.99]) {
+    const one = await extractPdfRange(bytes, { from: 4, count: 7, maxBytes });
+    assert.equal(one.count, 1);
+    assert.deepEqual(one.text.pages, none.text.pages.slice(4, 5));
+  }
+  /* never wider than asked: a bound of the whole file, or far more, leaves a smaller ask as it was */
+  for (const maxBytes of [perPage * 5.5, bytes.length, bytes.length * 1000]) {
+    assert.equal((await extractPdfRange(bytes, { from: 0, count: 2, maxBytes })).count, 2);
+  }
+  assert.equal((await extractPdfRange(bytes, { from: 0, count: 7, maxBytes: perPage * 5.5 })).count, 5);
+  assert.equal((await extractPdfRange(bytes, { from: 5, count: 100, maxBytes: bytes.length * 1000 })).count, 2, "still clamped to the pages left");
+  /* a range with no count is the rest of the document, and the bound applies to it too */
+  assert.equal((await extractPdfRange(bytes, { from: 1, maxBytes: perPage * 2.5 })).count, 2);
+  /* a from at or past the end builds no page, the floor of one does not invent one */
+  assert.equal((await extractPdfRange(bytes, { from: 7, count: 5, maxBytes: 1 })).count, 0);
+  assert.equal((await extractPdfRange(bytes, { from: 3, count: 0, maxBytes: 1 })).count, 0);
+  /* the union of bounded ranges, advancing by the pages built, is the whole reading's pages, each once */
+  const whole = await extractPdfStructure(bytes);
+  const seen = [];
+  for (let from = 0; from < 7;) {
+    const r = await extractPdfRange(bytes, { from, count: 7, maxBytes: perPage * 2.5 });
+    assert.ok(r.count >= 1 && r.count <= 2);
+    seen.push(...r.text.pages);
+    from += r.count;
+  }
+  assert.deepEqual(seen, whole.text.pages);
+});

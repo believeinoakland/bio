@@ -76,6 +76,7 @@ Terms are `publication`'s: a **case**, an **edition**, the **case document**. A 
 
   An edition taken after its time (a late alarm) is checked when it is taken, and keeps both its `publish_at` and its `published_at`.
 
+  *(T51, G54; K4711)* A published answer may carry `after: {containers: [{case, edition, built, code?}]}`, one entry for each case file the publisher assembled (`ratification` R42). When the edition settles `published`, the row stores that list as it stands (an entry keeps only those four keys, its `code` at most 64 characters, the list at most 50 entries with failed ones kept first), or `"unknown"` when the answer gives no list (or the publisher threw after committing), never null, and the `taken` entry and R4's entry of the published edition answer it as `case_file_at_settle`. A row settled before the column existed answers `not_recorded`. It is the state at settle; the current state of an edition's case file is `publication`'s and `public-read`'s, not the row's. A stopped edition has none. The row settles `published` whenever the document is signed, whatever the list says.
 - **R3** (was `publication` R68; DEC-147 (4))
 
   `publishAtMove({case, edition, at, by})` (`op=publishatmove`) and `publishAtCancel({case, edition, by})` (`op=publishatcancel`), by an owner of the case's project (`membership.isProjectOwner`).

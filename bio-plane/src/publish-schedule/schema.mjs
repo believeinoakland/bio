@@ -16,6 +16,8 @@ export const PUBLISH_SCHEDULE_SCHEMA = `
 -- once: 'published' (outcome_at the commit's instant), 'stopped' (reasons, JSON) or 'cancelled' (cancelled_by).
 -- signed_at is the instant of the signature at the ceremony (R5), copied to the published_cases row at the commit. A row that did not publish is working material and
 -- purged with the unsigned document it holds a signature for; a published row keeps when its edition was signed.
+-- case_file (G54, R2): what the publisher said of each case file it assembled AT SETTLE, JSON: a list of {case, edition,
+-- built, code?} or "unknown"; null on a row settled before the column existed (read as not_recorded), never back-filled.
 CREATE TABLE IF NOT EXISTS scheduled_editions (
   seq          INTEGER PRIMARY KEY AUTOINCREMENT,
   case_id      TEXT NOT NULL,
@@ -35,7 +37,8 @@ CREATE TABLE IF NOT EXISTS scheduled_editions (
   moves        TEXT NOT NULL DEFAULT '[]',
   outcome_at   TEXT,
   reasons      TEXT,
-  cancelled_by TEXT
+  cancelled_by TEXT,
+  case_file    TEXT
 );
 CREATE INDEX IF NOT EXISTS scheduled_editions_case ON scheduled_editions(case_id, edition);
 CREATE INDEX IF NOT EXISTS scheduled_editions_due ON scheduled_editions(state, publish_at);
@@ -55,8 +58,17 @@ const CLASSES = Object.freeze({ expunge: "none", export: "admin-only", derive: "
 /** R10: the table, declared with its classes to record-core's `declareTable`. */
 export const PUBLISH_SCHEDULE_DECLARATIONS = Object.freeze(PUBLISH_SCHEDULE_TABLES.map((t) => Object.freeze({ ...t, ...CLASSES })));
 
-/** Creates the table and its indexes; idempotent, every boot. */
+/** Columns a store written before they existed gains at boot: additive and nullable, never back-filled (R2, G54). */
+export const PUBLISH_SCHEDULE_ADDITIVE_COLUMNS = Object.freeze([
+  Object.freeze(["scheduled_editions", "case_file", "TEXT"]),
+]);
+
+/** Creates the table and its indexes, and adds the columns an older store lacks; idempotent, every boot. */
 export function migratePublishSchedule(sql) {
   const bare = PUBLISH_SCHEDULE_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+  for (const [table, column, decl] of PUBLISH_SCHEDULE_ADDITIVE_COLUMNS) {
+    const have = [...sql.exec(`PRAGMA table_info(${table})`)].map((r) => r.name);
+    if (have.length && !have.includes(column)) sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${decl}`);
+  }
 }
