@@ -1,6 +1,6 @@
 # acquisition (T51)
 
-**Status** · session_01WJj3GuTrPYB69f6V7UH6CP · depth 2 · WAITING ON BOB (J31) · handled B31
+**Status** · session_01WJj3GuTrPYB69f6V7UH6CP · depth 2 · COMPLETE · handled B31
 
 ## J1 · REPORT
 
