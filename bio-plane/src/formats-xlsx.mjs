@@ -126,10 +126,6 @@ const XLSX_TWIN_CONTENT_TYPES = new Map([
   ["application/vnd.ms-excel.addin.macroEnabled.12", "xlam"],
 ]);
 
-/* G41 (K4636, K4642): the cap on a workbook's typed cells in the reading, in bytes of their JSON, together over every
- * sheet (reading-pipeline opts in with `{inlineCellsMax}`); set with csv-reader's, by measure (the job record). */
-export const INLINE_CELLS_MAX_BYTES = 512 * 1024;
-
 const WORKBOOK_PART = "xl/workbook.xml";
 const SHARED_STRINGS_PART = "xl/sharedStrings.xml";
 
@@ -955,11 +951,10 @@ async function xlsxStructure(parts) {
  * text(parts) -> the I2 text shape
  * ------------------------------------------------------------------ */
 
-/* G41: the cap on a workbook's cells in the answer, in bytes of their JSON, from the caller's option; null when the
- * caller did not opt in (then every cell is listed, as it always was). `true` asks for the module's own figure. */
+/* G41: the cap on a workbook's cells in the answer, in bytes of their JSON, from the caller's option (the number is
+ * reading-pipeline's, K4646); null when the caller did not opt in (then every cell is listed, as it always was). */
 function inlineCellsCap(opts) {
   const v = opts?.inlineCellsMax;
-  if (v === true) return INLINE_CELLS_MAX_BYTES;
   return typeof v === "number" && Number.isFinite(v) && v >= 0 ? v : null;
 }
 const JSON_ENC = new TextEncoder();
@@ -1125,7 +1120,7 @@ async function xlsxText(parts, opts) {
  * (default CELLS_IN_MAX) cells and whole rows only: the row that would pass it
  * is left to the next call, `next_row` its number, and `rows.to` the last row
  * answered; the first row is answered whole even if alone it is over. `next_row`
- * is null when nothing in range remains. The sheet part is inflated in windows
+ * is absent when the range was answered whole. The sheet part is inflated in windows
  * to its end, so its length and CRC are verified, and only the rows in range
  * are parsed; a part that cannot be read to its end gives `{ ok:false, reason }`.
  * Rows are taken in the order the format requires, ascending: a piece whose
@@ -1225,7 +1220,7 @@ async function xlsxCellsIn(parts, a) {
   }
   const cells = rowColumnOrder(out).map((x) => x.cell);
   const to = nextRow != null ? nextRow - 1 : (a.toRowGiven ? a.toRow : Math.max(a.fromRow, maxRow));
-  return { ok: true, sheet: sheet.name, cells, rows: { from: a.fromRow, to }, next_row: nextRow, undetermined };
+  return { ok: true, sheet: sheet.name, cells, rows: { from: a.fromRow, to }, ...(nextRow != null ? { next_row: nextRow } : {}), undetermined };
 }
 
 /* ------------------------------------------------------------------ *

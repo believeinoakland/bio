@@ -2,7 +2,7 @@
    answers sizes and a few cells only. Not a test. Run with --expose-gc and --max-old-space-size.
      node --expose-gc --max-old-space-size=N g41-peak.mjs <file> text|cellsIn <fromRow> <toRow>  */
 import { readFileSync } from "node:fs";
-import { xlsxEntry, INLINE_CELLS_MAX_BYTES } from "../../../src/formats-xlsx.mjs";
+import { xlsxEntry } from "../../../src/formats-xlsx.mjs";
 
 const [file, job, fromRow, toRow] = process.argv.slice(2);
 const bytes = new Uint8Array(readFileSync(file));
@@ -10,7 +10,7 @@ gc(); gc();
 const idleMB = process.memoryUsage().heapUsed / 1e6;
 let answer;
 if (job === "text") {
-  const t = await xlsxEntry.text(bytes, { inlineCellsMax: INLINE_CELLS_MAX_BYTES });
+  const t = await xlsxEntry.text(bytes, { inlineCellsMax: 512 * 1024 });
   const s = t.sheets[0];
   answer = { ok: t.ok, documentLength: t.document.length, lines: s.text.split("\n").length, lineRows: s.lineRows.length,
     cells: s.cells, cells_held: s.cells_held ?? null, usedRows: s.usedRows, piecewise: t.piecewise ?? null };

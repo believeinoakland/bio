@@ -13,7 +13,10 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as F from "./fixtures.mjs";
 import { bigXlsx, MIB } from "./large.mjs";
-import { xlsxEntry, INLINE_CELLS_MAX_BYTES } from "../../../src/formats-xlsx.mjs";
+import { xlsxEntry } from "../../../src/formats-xlsx.mjs";
+
+/* reading-pipeline's figure (K4646); the entry takes whatever number it is given */
+const INLINE_CELLS_MAX_BYTES = 512 * 1024;
 
 const run = promisify(execFile);
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -95,8 +98,7 @@ test("R36 the cap is the workbook's cells together, in bytes of their JSON: at t
   assert.deepEqual(under.counts, at.counts);
 });
 
-test("R36 a sheet the file could not give has no cells and no marker; the exported cap is 512 KiB", async () => {
-  assert.equal(INLINE_CELLS_MAX_BYTES, 512 * 1024);
+test("R36 a sheet the file could not give has no cells and no marker", async () => {
   const bytes = F.xlsx({ sheets: [{ name: "Bad", data: { rows: [{ r: 1, cells: [{ r: "A1", v: "1" }] }] }, cd: F.CORRUPT },
     { name: "Ok", xml: grid({ rows: 4000, name: "Ok" }).xml }], sharedStrings: sst() });
   const t = await xlsxEntry.text(bytes, { inlineCellsMax: INLINE_CELLS_MAX_BYTES });
@@ -110,7 +112,7 @@ test("R37 cellsIn: rows 4,990 to 5,000 are exactly the cells of the whole read f
   const r = await xlsxEntry.cellsIn(bytes, { sheet: "Sheet", fromRow: 4990, toRow: 5000 });
   assert.equal(r.ok, true);
   assert.deepEqual(r.rows, { from: 4990, to: 5000 });
-  assert.equal(r.next_row, null);
+  assert.ok(!("next_row" in r), "answered whole: no next_row");
   assert.equal(r.cells.length, 44);
   const want = [];
   for (let n = 4990; n <= 5000; n++) want.push(...known("Sheet", n));
@@ -131,13 +133,13 @@ test("R37 cellsIn: a column subset, a sheet named without case or by position, o
   const byIndex = await xlsxEntry.cellsIn(bytes, { sheet: 0, fromRow: 1, toRow: 1 });
   assert.deepEqual(byIndex.cells, known("Sheet", 1));
   const past = await xlsxEntry.cellsIn(bytes, { sheet: "Sheet", fromRow: 5001, toRow: 6000 });
-  assert.deepEqual([past.ok, past.cells, past.next_row], [true, [], null]);
+  assert.deepEqual([past.ok, past.cells, "next_row" in past], [true, [], false]);
   const head = await xlsxEntry.cellsIn(bytes, { sheet: "Sheet", fromRow: 1, toRow: 2 });
   assert.deepEqual(head.cells, [...known("Sheet", 1), ...known("Sheet", 2)]);
   /* no toRow: to the end of the sheet, bounded by maxCells */
   const tail = await xlsxEntry.cellsIn(bytes, { sheet: "Sheet", fromRow: 4999, maxCells: 100 });
   assert.deepEqual(tail.cells, [...known("Sheet", 4999), ...known("Sheet", 5000)]);
-  assert.equal(tail.next_row, null);
+  assert.ok(!("next_row" in tail));
 });
 
 test("R37 cellsIn maxCells: whole rows only, at most maxCells (the first row whole if alone it is over), then next_row says where to go on", async () => {
@@ -156,7 +158,7 @@ test("R37 cellsIn maxCells: whole rows only, at most maxCells (the first row who
   /* exactly maxCells to the end of the range: nothing follows */
   const exact = await xlsxEntry.cellsIn(bytes, { sheet: "Sheet", fromRow: 4999, toRow: 5000, maxCells: 8 });
   assert.equal(exact.cells.length, 8);
-  assert.equal(exact.next_row, null);
+  assert.ok(!("next_row" in exact));
   /* continued by next_row, the pieces are the whole answer */
   const got = [];
   for (let from = 1, guard = 0; from != null && guard < 10; guard++) {
