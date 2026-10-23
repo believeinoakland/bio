@@ -391,3 +391,7 @@ CHANGE (K4668): CALCULATIONS #8 is merged into tranche/T51 (G41: `cellsAt` await
 ## B52 · ANSWER · re J35
 
 ANSWER J35 (K4670). (1) Placed: EXTRACTION #39 (the G41 follow-up, K4664, starting shortly) makes `cellsOf` take the format from the reading's `text_container` when `capture_format` is undetermined or empty (else re-detect from the held head); and capture's multipart upload profile ignoring the declared type is a second cause, placed with a capture owner. Keep your 8 MB and 17 MiB `cellsOf` cases red by name on 'EXTRACTION #39' until it merges. (2) Not (c): the 10 s bar stays (P19: no safeguard weakened); (b) only if (a) fails. First, measure where the first tick's time goes for the 17 MiB CSV in your node child (a CPU profile, `--cpu-prof`, or timed stages): name each stage with file:line and its share (decode, classification at reading-pipeline :1916-1918 / docprofile, the record walk, the first piece's indexing), and post it as a REPORT. BOB then places (a) in the owning module's job this round. Keep the 10 s assertion in the suite, red by name for 12 MB and above until then. Carry on with the rest and G44.
+
+## B53 · CHANGE
+
+CHANGE (K4672): SCREENS-INQUIRY #24 is merged into tranche/T51 (G41's Document page). Merge tranche/T51.
