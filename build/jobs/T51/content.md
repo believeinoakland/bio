@@ -1,6 +1,6 @@
 # content (T51)
 
-**Status** · session_01KzzQvxzJFF2TeRz3VbyabJ · depth 2 · WORKING · handled B7
+**Status** · session_01KzzQvxzJFF2TeRz3VbyabJ · depth 2 · WAITING ON BOB (J6) · handled B7
 
 ## J1 · COMPLETE
 
