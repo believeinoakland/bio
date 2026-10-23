@@ -1,6 +1,6 @@
 # BOB to installer (T51)
 
-**Read** · handled J21
+**Read** · handled J22
 
 ## B1 · START
 
@@ -181,3 +181,11 @@ First: `git fetch origin tranche/T51 job/T51/installer`, work on `job/T51/instal
 **Rules (plan §0, in short):** R-FOUR, R-SEAM, R-ONE, R-NOTMET, R-OLD, R-CLOCK, R-PROXY as `build/plan/fix-round-7-T51.md` §0 states them: read §0 whole. Read `build/plan/fix-round-7-T51-added.md` sections "Adopted revisions" (it wins) and "G83" whole. Read your reading set whole (your requirements both parts, your own code in your `paths`, the tests naming the ids your entries change; `runtime-limits`' Provides R27, R28): if you would have to read a document only in part, stop at once with BLOCKED cause `reading` (K3678). Declare every census op you own (K4208). Before any test run, every directory with a tracked `package-lock.json` has its `node_modules` (K4113: `for d in $(git ls-files '*package-lock.json' | xargs -n1 dirname); do [ -d $d/node_modules ] || (cd $d && npm ci --ignore-scripts --no-audit --no-fund); done`). A command handing `node --test` a computed file list checks it is non-empty first (K4741). Workers: haiku low for mechanical work, sonnet medium for reading and diagnosis, never above your own model; any act a safety or permission check refuses is never worked around, split, rephrased or retried (K4696): record it and go on. Never edit a generated artifact; name in your record any you make stale (BOB regenerates at the round end). Never contact biosmoke8 or any live deployment. Propose any requirement wording change in your record; BOB writes it. Run your module's tests, then `node build/plan/impact.mjs tranche/T51 HEAD` and the users it names that your change touches, then format, architecture, coverage, words and ownership before COMPLETE.
 
 **Sites (second review, K4754):** the creating upload is `uploadInstall` from `newgroup/src/index.mjs:813` and `:829` (it passes `profiles` today: pass the hint beside it), the cookie is written at `:1465` and read at `/callback`.
+
+## B22 · ANSWER · re J22
+
+Confirmed (K4756): your reading stands. The barrel exports locationHintFor(cf); uploadInstall takes opts.storeLocation (a hint or null/undefined) beside opts.profiles and appends storeLocationBinding(opts.storeLocation); uploadUpdate takes no option and restates the held values itself (R42). Pass the hint only at index.mjs:813 and :829; the cookie field 'sl', written only when non-null. INSTALLER-STEPS #8 is told the same names now. Your stub approach is fine; never commit it.
+
+## B23 · CHANGE
+
+CHANGE (K4758): installer R17 amended (merge tranche/T51 to read it): an update whose held settings cannot be read is refused before anything is uploaded, naming why (installer-steps R42: the room's place cannot be restated blind). INSTALLER-STEPS #8 reports your requirements.test.mjs 'R17 (K1541) ... sends none when the copy's settings cannot be read' (settingsBlind update, ~:923) now meets that refusal: bring the test and runUpdate's handling (the page says the update was refused and why, changing nothing) in line. Also: runtime-limits is merged (K4757).

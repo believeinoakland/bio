@@ -6,6 +6,8 @@ import {
   QUEUE_CONDITION_KINDS, QUEUE_OBLIGATION_KINDS, QUEUE_FINDING_KINDS,
 } from "../../../src/queuestate.mjs";
 import { CONDITION_KINDS } from "../../../src/observation-log/vocabulary.mjs";
+import { NOTICE_KINDS } from "../../../src/notice-producers/index.mjs";
+import { QueueProducers } from "../../../src/queue-producers/index.mjs";
 
 /* R1's seventeen, N345's two duties among them (DEC-85's unseen one included), N375's self-registered key, the Action
    layer's three (K608, K614), the litigation hold (K899 (7)), K921's review request and local fact, the unchosen
@@ -53,7 +55,11 @@ const FINDING = ["missing_predecessor", "overdue_successor", "temporal-expectati
   /* T45 (action-producers R9; N881) */
   "member-left-items",
   /* T50 (R57; N1204; notice-producers R24) */
-  "watched-changed"];
+  "watched-changed",
+  /* T51 fix round 7 (G61; notice-producers R27, R28; K4562): a finished background fetch and a finished or stopped ingest;
+     queue-producers R37 (the scheduled edition's findings) and R39 (`wizard-base-updated`) */
+  "fetch-done", "ingest-done", "ingest-stopped", "edition-published-as-scheduled", "scheduled-edition-stopped",
+  "wizard-base-updated"];
 /* observation-log's twenty (R5): its twelve, the five sweep kinds (link-sweep R11, queue-producers R26) and the three
    notice kinds (network-notices R12, R13, queue-producers R27) its R33 added in T23 (K1099); and the overdue action
    clock (K611). */
@@ -66,7 +72,10 @@ const LOOK_CONDITION = ["monitoring-recheck-due", "archive-fallback-eligible", "
   "render-deferred", ...SWEEP_CONDITION, ...NOTICE_CONDITION];
 /* Beside them, the conditions no look carries: the overdue action clock (K611) and the unreadable followed docket
    (queue-producers R35, T31; the reading J1 asks BOB to fold into R5). */
-const QUEUE_ONLY_CONDITION = ["action-clock-overdue", "cited-docket-unreadable"];
+const QUEUE_ONLY_CONDITION = ["action-clock-overdue", "cited-docket-unreadable",
+  /* T51 fix round 7 (G61): queue-producers R37 (a waiting scheduled edition), R38 (an arrived place profile) and
+     action-producers R25 (a request approved and left unsent) */
+  "edition-scheduled", "place-profile-arrived", "request-unsent"];
 const CONDITION = [...LOOK_CONDITION, ...QUEUE_ONLY_CONDITION];
 /* What each of the eight says, as R1 states it: the sentence is observation-log's, and it says this. */
 const NEW_CONDITION_SAYS = {
@@ -209,7 +218,7 @@ test("R5: the condition kinds are observation-log's vocabulary with action-clock
   // every one of observation-log's, with its own sentence, and action-clock-overdue beside them; nothing else
   for (const [k, s] of Object.entries(CONDITION_KINDS)) assert.equal(QUEUE_CONDITION_KINDS[k], s, k);
   assert.deepEqual(sorted(Object.keys(QUEUE_CONDITION_KINDS)), sorted([...Object.keys(CONDITION_KINDS), ...QUEUE_ONLY_CONDITION]));
-  assert.equal(Object.keys(QUEUE_CONDITION_KINDS).length, 22);
+  assert.equal(Object.keys(QUEUE_CONDITION_KINDS).length, 25);
   // T23 (K1099): the eight new kinds are among them, each with observation-log's own sentence
   for (const k of [...SWEEP_CONDITION, ...NOTICE_CONDITION]) {
     assert.ok(k in CONDITION_KINDS, k);
@@ -225,4 +234,29 @@ test("R5: the condition kinds are observation-log's vocabulary with action-clock
   for (const k of QUEUE_ONLY_CONDITION) assert.ok(!(k in CONDITION_KINDS), `observation-log's list is not changed: no look carries ${k}`);
   assert.ok(Object.isFrozen(QUEUE_CONDITION_KINDS));
   for (const k of Object.keys(QUEUE_CONDITION_KINDS)) assert.equal(classOfKind(k), "CONDITION", k);
+});
+
+/* G61 (T51 fix round 7; B.md:22): the catalogue names every kind a producer mints. The producers' own tables agreed with
+   themselves and the catalogue's lists with themselves; nothing held one against the other, so a member who ran an ingest
+   had her whole Queue refused `NO_SUCH_KIND` (R11) on a kind the catalogue did not know. */
+test("R1 (G61): every kind notice-producers and queue-producers mint is named by the catalogue, in the class the producer mints it", () => {
+  const minted = { ...NOTICE_KINDS };
+  for (const [cls, kind] of Object.values(QueueProducers.SCHEDULED_KINDS)) minted[kind] = cls;
+  // the three the walker's ingest and fetch minted (B.md:22), and the others found beside them
+  for (const k of ["ingest-done", "ingest-stopped", "fetch-done"]) assert.ok(k in minted, `${k} is minted`);
+  for (const [kind, cls] of Object.entries(minted)) assert.equal(classOfKind(kind), cls, kind);
+  const missing = Object.keys(minted).filter((k) => classOfKind(k) === null);
+  assert.deepEqual(missing, []);
+  // the two ingest notices and the fetch notice are FINDINGs a recipient disposes of (never muted as an OBLIGATION)
+  for (const k of ["ingest-done", "ingest-stopped", "fetch-done"]) {
+    assert.equal(classOfKind(k), "FINDING", k);
+    assert.ok(QUEUE_FINDING_KINDS[k].trim().length > 0, k);
+  }
+  // kinds queue-producers (R38, R39) and action-producers (R25) mint without a table of their own
+  assert.equal(classOfKind("place-profile-arrived"), "CONDITION");
+  assert.equal(classOfKind("wizard-base-updated"), "FINDING");
+  assert.equal(classOfKind("request-unsent"), "CONDITION");
+  // control: a near-miss is still outside the vocabulary
+  for (const v of ["ingest-finished", "ingest_done", "fetch-complete", "INGEST-DONE", "FINDING::ingest-done"])
+    assert.equal(classOfKind(v), null, v);
 });
