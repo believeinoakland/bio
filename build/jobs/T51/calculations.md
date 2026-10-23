@@ -324,3 +324,7 @@ Requirement line: R44 is met by this change; BOB removes its "not yet met" mark.
 **Suites and checks.** `test/m/calculations/` 114 of 114 (111 before; +3). Users: workbooks, contradiction, screens-investigate calculation, op-grades owners, op-declarations t33, screens-daily find-in, credentials t48: 239 tests, 231 pass, 0 fail (rest skipped). `node build/plan/impact.mjs origin/tranche/T51 HEAD` lists 78 modules, the reds in it (pdf-worker, agent-steps, agent-worker, control-plane, plane, journey-check …) are other modules' and none touches `declareTable`. civicos-process `checks/format.mjs` 0 failures; `architecture.mjs calculations` 0; `coverage.mjs calculations` 44 of 44 ids named, 0; `ownership.mjs` 0 failures; `checks/run.mjs` names no finding in calculations (words included). Census ops: none of mine changes its accepted keys. Deferred: none. Found in other modules: none.
 
 Size (session_01CQKpA3NbmkvjeXYd9nxaAk): test runs 6, module lines 3860
+
+## J16 · COMPLETE
+
+COMPLETE · CALCULATIONS #11 · answers B22 · G101 done: a CSV document source is declared from its stored bytes (R44); bytes not held is refused SOURCE_NOT_READ, nothing written. Failing-first seen red (18100 vs 18098; ok vs refusal) then green. Module 114/114, users 231 pass 0 fail, format/architecture/coverage/ownership 0 failures, no words finding in calculations. One new stand-in sentence calculations.index.the_csv_files_own_bytes (row owed to T52). Please remove R44's not-yet-met mark. Details in build/jobs/T51/calculations.md (Round 8).
