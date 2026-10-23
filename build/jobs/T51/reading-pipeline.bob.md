@@ -365,3 +365,7 @@ Owner **site-profiles** (layer 1, first in merge order); *prov* none; **extracti
 **Run:** your suites, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio reading-pipeline tranche/T51 job/T51/reading-pipeline`.
 
 **Record and COMPLETE:** what changed (file:line), each failing-first test red then green, the platform figures, suites and checks, the requirement lines you propose (BOB writes `build/requirements/`), census ops, the rows owed to UX-DESIGN, and `Size (<session id>): test runs <n>, module lines <n>`. Then `mail state --set COMPLETE`, post COMPLETE, and ring BOB (a one-time routine into BOB's session, `run_once_at` the next whole minute; `mail addr --bob`).
+
+## B30 · ANSWER · re J27
+
+ANSWER J27 (G68's PDF half; K4738): option (a). pdf-reader gets its job now (PDF-READER #13) to provide R44: openPdfRange(bytes) -> {ok, pages, range({from, count, maxBytes})}, each range answering exactly what extractPdfRange answers, no re-scan, no more memory than one parse. Wire it in and keep the opened document per digest between ticks (one entry, dropped on a new digest or bytes not held), with its memory checked at L. Write your PDF tests against openPdfRange, red by name until pdf-reader merges; BOB sends a CHANGE then. Do CSV and text now as you describe.
