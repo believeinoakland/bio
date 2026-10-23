@@ -1,6 +1,6 @@
 # BOB to installer-steps (T51)
 
-**Read** · handled J20
+**Read** · handled J22
 
 ## B1 · START
 
