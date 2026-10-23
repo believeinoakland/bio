@@ -122,3 +122,18 @@ Size (session_01NhpmPg6Tvjeaftfvxn46LM): test runs 15, module lines 2427
 - `build/plan/impact.mjs origin/tranche/T51 HEAD`: affects 47 of 176 modules (853 of 2,412 test files, through the module graph); I ran the module's direct users above, not all 853.
 
 Size (session_01JCHNeQistwMeSv51kQxgRA): test runs 14, module lines 2447
+
+## J8 · COMPLETE
+
+COMPLETE · G47 (B7). Full account in my record, section "Fix round 6 · G47".
+
+Changed: materials.mjs materialRows (:75-111) sets `sha` on a material's attestations only where its `ref` occurs on 2+ materials of the call; document.mjs carriesBodyLines (:123-137) prints `att.filter((a) => a.sha ? a.sha === m.sha : a.ref === m.ref)`. New test g47-body.test.mjs (4 tests, real materialRows over real captures; fixture gains `w.captures`). Three red then green; the one-capture-per-source control is green before and after, and seam.test's byte pins pass unchanged.
+
+Suites (under the preload): case-disclosures 113/113; users case-authoring 241, case-inputs 71, case-account 48, case-check 34, case-tensions 24, case-catalogue 16, all pass; case-checker 93/95, the 2 reds (R13 stale program, R25) are identical with my source at its previous commit. checks/run.mjs 0 failures (words unchanged), ownership 0.
+
+For BOB:
+1. Numbers: the body for 501 captures of one source is about 230 KB (not under 100 KB: about 460 B a row, linear; the 15.6 MB is gone). With `sha` on the 1,002 attestation rows the document is about 1.28 MB, margin about 1.2x under publication's 1.5 MiB bound. I measured only my module's two sections.
+2. Seam red by name: the front matter carries `sha` only once CASE-GRAMMAR #20 merges; nothing in my suite waits on it.
+3. Generated artifact stale: case-checker/program.mjs carries this module's sentence; yours to regenerate at the round end.
+4. No test or check in case-checker/case-catalogue pins the old repeated lines. No census op of mine changes.
+5. Requirement line for R7 is in my record.
