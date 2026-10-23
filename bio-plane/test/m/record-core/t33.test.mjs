@@ -288,7 +288,7 @@ test("R21: record-core declares its own tables with their classes", () => {
     leases: t("clear", "never", "bundle", false), bundles: t("clear", "yes", "bundle", false),
     seq: t("exempt", "admin-only", "group", false), minted_ids: t("exempt", "never", "group", false),
     settings: t("exempt", "admin-only", "group", true), tombstones: t("exempt", "yes", "group", true),
-    derived_stale: t("exempt", "never", "group", false), record_counter: t("exempt", "never", "group", false) });
+    derived_stale: t("exempt", "never", "group", false) });
 });
 
 test("R21: an entry missing a class is TABLE_CLASS_MISSING, one outside it TABLE_CLASS_UNKNOWN, naming the table and the class; the call registers nothing", () => {

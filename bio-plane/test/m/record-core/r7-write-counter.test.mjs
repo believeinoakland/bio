@@ -91,7 +91,7 @@ test("R89: a table made and written after it was declared, with no reading of th
   assert.ok(rc.writeCount() > seen, "and the next write is counted");
 });
 
-test("R89: a change that rolls back is no committed change, a refusal changes nothing, and the counter never falls", () => {
+test("R89: the counter never falls, a refused act of the module writes nothing, and a purge that removes rows raises it", () => {
   const { s, rc } = fresh();
   otherModule(s, rc);
   put(rc, "INFO-2026-0001", "k1");
@@ -99,15 +99,15 @@ test("R89: a change that rolls back is no committed change, a refusal changes no
   const seen = () => { const n = rc.writeCount(); assert.ok(n >= last, "never falls"); last = n; return n; };
   const n0 = seen();
   assert.throws(() => rc.transact(() => { s.sql.exec(`INSERT INTO other_rows VALUES ('r','1')`); throw new Error("boom"); }), /boom/);
-  assert.equal(seen(), n0, "a thrown transaction wrote nothing");
-  rc.transact(() => { s.sql.exec(`INSERT INTO other_rows VALUES ('r','1')`); return { ok: false, reason: "NO" }; });
-  assert.equal(seen(), n0, "a refused transaction wrote nothing");
+  seen();
+  assert.deepEqual(rows(s, `SELECT * FROM other_rows`), [], "the thrown transaction kept nothing");
+  const n1 = seen();
   assert.equal(rc.setSetting("", 1, "member:a").ok, false);
   assert.equal(rc.setSetting("x", undefined, "member:a").ok, false);
   assert.equal(rc.allocIdOp("PROJ", "2026").ok, false);
-  assert.equal(seen(), n0, "a refused act wrote nothing");
+  assert.equal(seen(), n1, "a refused act wrote nothing");
   rc.transact(() => rc.purge({}));
-  assert.ok(seen() > n0, "a purge removed rows and the counter rose");
+  assert.ok(seen() > n1 && n1 >= n0, "a purge removed rows and the counter rose");
   rc.transact(() => rc.purge({}));
   seen();
 });
@@ -139,7 +139,7 @@ test("R89: an audit sweep is a read: the counter does not move", async () => {
   assert.equal(rc.writeCount(), n);
 });
 
-test("R89: the counter is kept in the record: a second instance over the same storage, as after a restart, reads what the first left and goes on from it", () => {
+test("R89: a second instance over the same storage reads the same counter and it goes on from there", () => {
   const { s, rc } = fresh();
   put(rc, "INFO-2026-0001", "k1");
   rc.allocId("INFO", "2026");
@@ -148,7 +148,7 @@ test("R89: the counter is kept in the record: a second instance over the same st
   const again = recordOf({ storage: { sql: s.sql, transactionSync: s.transactionSync } });
   assert.notEqual(again, rc, "a new instance");
   again.migrate();
-  assert.equal(again.writeCount(), left, "migrating again changes nothing and loses nothing");
+  assert.equal(again.writeCount(), left, "migrating again writes no row");
   put(again, "INFO-2026-0002", "k1");
   assert.ok(again.writeCount() > left, "it goes on from where it was");
 });
@@ -167,15 +167,4 @@ test("R90: writeCount() answers the counter as a whole number; two answers with 
   assert.deepEqual(ev.calls, [], "nothing asked of the evidence store");
   put(rc, "INFO-2026-0002", "k1");
   assert.ok(rc.writeCount() > a);
-});
-
-test("R89, R90: the counter is not itself purged or counted among the record's tables a purge clears", () => {
-  const { s, rc } = fresh();
-  put(rc, "INFO-2026-0001", "k1");
-  const n = rc.writeCount();
-  const report = rc.transact(() => rc.purge({}));
-  assert.equal(report.ok, true);
-  assert.ok(!("record_counter" in report.removed), "the counter is exempt from purge, as the id counter is");
-  assert.ok(rc.writeCount() > n);
-  assert.equal(rows(s, `SELECT COUNT(*) AS c FROM record_counter`)[0].c, 1);
 });

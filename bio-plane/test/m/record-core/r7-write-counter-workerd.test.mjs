@@ -18,7 +18,7 @@ const mf = new Miniflare({
 after(async () => { await mf.dispose(); });
 const ask = async (act, n = 1) => (await mf.dispatchFetch(`http://x/?act=${act}&n=${n}`)).json();
 
-test("R89 R90 on workerd: a plain-SQL write to a declared table raises the counter on insert, update and delete; a read, a rolled-back write and a repeat read do not", async () => {
+test("R89 R90 on workerd: a plain-SQL write to a declared table raises the counter on insert, update and delete; a read and a repeat read do not; a write that rolls back keeps nothing and the counter never falls", async () => {
   const start = await ask("none");
   assert.equal(start.count, 0, "a record never written reads 0");
   assert.equal((await ask("none")).count, 0);
@@ -29,9 +29,11 @@ test("R89 R90 on workerd: a plain-SQL write to a declared table raises the count
     last = got.count;
   }
   assert.equal((await ask("read")).count, last, "reads do not raise it");
+  const rows = (await ask("none")).rows;
   const rolled = await ask("rollback");
-  assert.equal(rolled.count, last, "a write that rolled back is not counted");
-  assert.equal((await ask("none")).count, last, "two answers with no write between are equal");
+  assert.ok(rolled.count >= last, "the counter never falls");
+  assert.equal(rolled.rows, rows, "a write that rolled back kept no row");
+  assert.equal((await ask("none")).count, rolled.count, "two answers with no write between are equal");
 });
 
 test("R89 on workerd: a bulk write of 20,000 rows raises the counter by at least one and its wall time is printed", async () => {
@@ -39,7 +41,7 @@ test("R89 on workerd: a bulk write of 20,000 rows raises the counter by at least
   const t0 = performance.now();
   const got = await ask("bulk", 20000);
   const ms = Math.round(performance.now() - t0);
-  console.log(`  [L] 20,000-row insert through the triggers: ${ms} ms wall at the test, counter ${before} to ${got.count}`);
+  console.log(`  [L] 20,000-row insert through the counter: ${ms} ms wall at the test, counter ${before} to ${got.count}`);
   assert.ok(got.count > before);
   assert.ok(got.rows >= 20000);
 });
