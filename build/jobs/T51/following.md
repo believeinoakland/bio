@@ -99,7 +99,7 @@ G21 applied: a followed Legistar body is read whole across ticks by cursor (ever
 
 ## FOLLOWING #13 · G46 (START B4, fix round 6; K4666, K4669, K4571, K4639)
 
-**Providers' state.** None needed: this entry is mine alone; no seam test waits for another job. Merged `tranche/T51` first (52d0a1b…); the container's branch was stale and was replaced from origin as B4 says.
+**Providers' state.** None needed: this entry is mine alone; no seam test waits for another job. Merged `tranche/T51` first (52d18a2f2a); the container's branch was stale and was replaced from origin as B4 says.
 
 **Step 1: does a failed tick leave the capture stored? Yes.** `#take` writes `follow_reads` (`INSERT OR REPLACE`, `index.mjs` `#take`, after the landing) before `#readPortal` inserts the snapshot; the throw of the snapshot insert is caught by `followTick` as `failed` and nothing undoes `follow_reads`. The next tick's `#take` finds `held.capture_sha === sha` (`t.same`) and `#readPortal` answered "unchanged" without writing a snapshot, so a follow that failed once for this cause could never recover.
 
