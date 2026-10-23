@@ -21,7 +21,7 @@ import { normalizeType } from "../record-grammar/types.mjs";
 import { sectionText } from "../record-grammar/document.mjs";
 import { NS_RATIFY, ratifyStatement, caseRatifyStatement } from "../sshsig.mjs";
 import { serialiseContainer, containerEntries } from "../container.mjs";
-import { buildCaseFile, isCaseFileManifest, caseFilePartLayout, caseFileParts, sha256Hex } from "../public-read/casefile.mjs";
+import { buildCaseFile, isCaseFileManifest, caseFilePartLayout, caseFileParts, sha256Hex, CASEFILE_CODES } from "../public-read/casefile.mjs";
 import { inbandQuartet } from "../inband.mjs";
 import { caseDocumentStatesMemberBlocks } from "../case-grammar/index.mjs";
 import { legReaderOf } from "../public-read/legs.mjs";
@@ -154,11 +154,98 @@ const VERIFY_MEMBER_PAIR = " Each finding's `strength` and its own `edition` are
 const OVER_CONTAINER = "this case edition's container manifest (MANIFEST.json), exactly as served at op=publishedbytes&sha256=<this hash>";
 const OVER_CASE_FILE = "this case edition's case file manifest (MANIFEST.json, at the root of every part), exactly as served at op=publishedbytes&sha256=<this hash>";
 
+/* G54 (K4426, K4565, K4566, K4571; R6): THE CASE FILE'S ATTEMPT IS NEVER SILENT. The closed set of codes a failed attempt is
+   stated by (the one place that maps a step and a cause to a code, `casefileCodeOf`), the files one edition may hold in
+   memory at once (an edition over it is `TOO_LARGE`, stated and not attempted), and the cut an error message is logged and
+   stored under. `publishedcase` answers the state and the code only (`../public-read/index.mjs`). */
+export { CASEFILE_CODES };
+export const CASEFILE_FILES_MAX = 4000;
+const ERROR_CUT = 160;
+const cut = (v) => String(v ?? "").slice(0, ERROR_CUT);
+const errorText = (e) => (e == null ? null : cut(`${(e && e.name) || "Error"}: ${(e && e.message) || e}`));
+/* A step and what went wrong at it, to one code of the closed set. */
+function casefileCodeOf(step, out, err) {
+  if (err) return step === "facts" || step === "record" ? "STORE_SILENT" : step === "bucket_put" || step === "manifest_put" || step === "materials" ? "BUCKET_FAILED" : "UNKNOWN";
+  if (out && CASEFILE_CODES.includes(out.code)) return out.code;
+  if (out && out.reason === plane().STORE_SILENT_REASON) return "STORE_SILENT";
+  if (out && out.reason === "CASE_FILE_NOT_ASSEMBLED") return out.finding != null ? "FINDING_MISSING" : "UNKNOWN";
+  if (out && (out.reason === "MANIFEST_NOT_RECORDED" || out.reason === "MANIFEST_EXISTS" || step === "record")) return "NOT_RECORDED";
+  return "UNKNOWN";
+}
+/* The ledger's one writer is `publication`'s (`recordCaseFileAttempt`, reached by the store-internal hop `recordcasefile`);
+   a store that does not answer it leaves the edition owed by its own rule, so this never throws. */
+async function ledger(stub, body) {
+  try {
+    const out = await plane().doAnswer(stub.fetch(new Request("http://do/recordcasefile", { method: "POST", body: JSON.stringify(body) })));
+    return out.answered ? out.result : null;
+  } catch { return null; }
+}
+/* One structured line per attempt (event `casefile_attempt`): no secret and no text of a document, the error cut. */
+function attemptLog(ok, fields) {
+  try { (ok ? console.log : console.error)(JSON.stringify({ event: "casefile_attempt", ok, ...fields })); } catch { /* a log that cannot be written changes nothing */ }
+}
+
+/** G54 (R6): a failure the caller met BEFORE the assembly was reached (ratification's copy of the findings' or the materials'
+ *  bytes threw), recorded as the assembly records its own: `failed` at `step` (default `copy`) with a code of the closed
+ *  set (default `BUCKET_FAILED` for a copy, `UNKNOWN` otherwise; any other value is `UNKNOWN`), one `casefile_attempt` error
+ *  line, and the edition owed. `absent` is the caller's confirmation that a missing material is gone from the evidence store
+ *  (`publication` stops an edition only then). Answers `{ok, state, code, step}`; never throws.
+ *  Signature: `recordCaseFileFailure({ stub, cs, via, step = "copy", error = null, code = null, absent = false })`. */
+export async function recordCaseFileFailure({ stub, cs, via = null, step = "copy", error = null, code = null, absent = false } = {}) {
+  try {
+    const at = step === "copy" || step === "facts" || step === "materials" || step === "build" || step === "bucket_put" || step === "quartet"
+      || step === "record" || step === "manifest_put" ? step : "copy";
+    const c = CASEFILE_CODES.includes(code) ? code : at === "copy" ? "BUCKET_FAILED" : "UNKNOWN";
+    const out = await ledger(stub, { caseId: cs.caseId, edition: cs.edition, state: "failed", absent: absent === true,
+                                     why: { code: c, step: at, ...(error != null ? { error: errorText(error) } : {}) } });
+    attemptLog(false, { case: cs.caseId, edition: cs.edition, via, step: at, code: c, error: errorText(error), recorded: !!(out && out.ok) });
+    return { ok: !!(out && out.ok), state: out && out.state ? out.state : null, code: c, step: at };
+  } catch { return { ok: false, state: null, code: "UNKNOWN", step: "copy" }; }
+}
+
+/** R6 (G54): the case file's assembly, recorded, logged and never thrown. `prior` is what the caller's own copy met,
+ *  `{materials_missing, copy_error, absent}`. It records `building` first, then catches every throw and every statement
+ *  at its step (`facts`, `materials`, `build`, `bucket_put`, `quartet`, `record`, `manifest_put`; `copy` is the caller's),
+ *  records `failed` with a code of `CASEFILE_CODES`, writes one `casefile_attempt` line, and answers the statement. It
+ *  records `built` only after the manifest's own bytes are in the bucket, and records no manifest while a material is
+ *  missing or the bucket is not bound. Answers what `op=ratify` carries as `container`: the manifest's hash, its parts and
+ *  their addresses (plus `case_file: "built"`), or `{ok: false, reason, code, step}`. */
+export async function assembleCaseContainer({ env, stub, storeName, cs, via, maxBytes = undefined, prior = null }) {
+  let step = "facts";
+  const mark = (s) => { step = s; };
+  const base = { case: cs && cs.caseId, edition: cs && cs.edition, via };
+  try {
+    if (prior && prior.copy_error != null) {
+      await recordCaseFileFailure({ stub, cs, via, step: "copy", error: prior.copy_error, code: prior.copy_code ?? null, absent: false });
+      return { ok: false, reason: "CASE_FILE_NOT_BUILT", code: CASEFILE_CODES.includes(prior.copy_code) ? prior.copy_code : "BUCKET_FAILED", step: "copy" };
+    }
+    await ledger(stub, { caseId: cs.caseId, edition: cs.edition, state: "building" });
+    let out = null, err = null;
+    try { out = await assembleOnce({ env, stub, storeName, cs, via, maxBytes, mark, prior }); } catch (e) { err = e; }
+    if (!err && out && out.manifest_sha) {
+      const done = await ledger(stub, { caseId: cs.caseId, edition: cs.edition, state: "built" });
+      attemptLog(true, { ...base, step: "manifest_put", code: null, files: out.files ?? null, bytes: out.bytes ?? null, recorded: !!(done && done.ok) });
+      return { ...out, case_file: "built" };
+    }
+    const code = casefileCodeOf(step, out, err);
+    const failedStep = out && typeof out.step === "string" ? out.step : step;
+    const files = out && Number.isInteger(out.files) ? out.files : null;
+    const rec = await ledger(stub, { caseId: cs.caseId, edition: cs.edition, state: "failed", absent: prior && prior.absent === true,
+      why: { code, step: failedStep, ...(err ? { error: errorText(err) } : {}), ...(files != null ? { files } : {}) } });
+    attemptLog(false, { ...base, step: failedStep, code, error: errorText(err), files, recorded: !!(rec && rec.ok) });
+    return out && out.ok === false ? { ...out, code, step: failedStep } : { ok: false, reason: "CASE_FILE_NOT_BUILT", code, step: failedStep };
+  } catch (e) {
+    attemptLog(false, { ...base, step, code: "UNKNOWN", error: errorText(e), recorded: false });
+    return { ok: false, reason: "CASE_FILE_NOT_BUILT", code: "UNKNOWN", step };
+  }
+}
+
 /* REC-44 / DEC-34: THE CASE CONTAINER, assembled the moment a case edition COMPLETES — every member
    finding ratified at the version the case pinned. D-442 moved it out of the op=ratify block VERBATIM
    so op=caseratify can call it too (see the call sites). `cs` is `#caseEditionState`'s answer. Returns
    what op=ratify always answered as `container`. */
-export async function assembleCaseContainer({ env, stub, storeName, cs, via, maxBytes = undefined }) {
+async function assembleOnce({ env, stub, storeName, cs, via, maxBytes = undefined, mark = () => {}, prior = null }) {
+  mark("facts");
   /* R6, R23 (DEC-112 (3)): AN EDITION WHOSE SIGNED DOCUMENT IS `/6` IS PACKAGED AS ITS CASE FILE (`case-grammar` R13),
      and a `/7` one, read as `/6` (N538), likewise,
      everything it carries read from the published projection (`casefilefacts`) and the published bucket. An edition
@@ -168,7 +255,7 @@ export async function assembleCaseContainer({ env, stub, storeName, cs, via, max
     `http://do/casefilefacts?${new URLSearchParams({ caseId: cs.caseId, edition: String(cs.edition) })}`));
   if (!fOut.answered)
     return { ok: false, reason: plane().STORE_SILENT_REASON, op: `${via}/casefilefacts`, detail: plane().STORE_SILENT_DETAIL };
-  if (fOut.result && fOut.result.ok) return assembleCaseFile({ env, stub, storeName, cs, via, facts: fOut.result, maxBytes });
+  if (fOut.result && fOut.result.ok) return assembleCaseFile({ env, stub, storeName, cs, via, facts: fOut.result, maxBytes, mark, prior });
         const manifest = {
           /* REC-47 bumps 2 -> 3, and the bump is deliberate rather than
              bookkeeping. The container gains `bias_acknowledgement`, which is a
@@ -391,10 +478,12 @@ export async function assembleCaseContainer({ env, stub, storeName, cs, via, max
            it states the exchange instead. The `MANIFEST_NOT_RECORDED` fallback
            survives for the answered path, where it describes a store that said
            `ok:false` without a reason of its own. */
+        mark("record");
         const recOut = await plane().doAnswer(stub.fetch(new Request("http://do/recordcasemanifest", {
           method: "POST", body: JSON.stringify({ caseId: cs.caseId, edition: cs.edition,
                                                  manifest, manifestSha: mSha, bytes: mBytes.length }) })));
         const rec = recOut.result;
+        mark("manifest_put");
         if (recOut.answered && rec && rec.ok && typeof env.PUBLISHED?.put === "function") {
           const key = `${storeName}/published/${mSha}`;
           if (!(await env.PUBLISHED.head(key))) await env.PUBLISHED.put(key, mBytes);
@@ -414,17 +503,34 @@ export async function assembleCaseContainer({ env, stub, storeName, cs, via, max
    each is served by hash (R5, R24); the manifest's own bytes go to the bucket once it is recorded, as the container's
    always did. The manifest's hash is the in-band quartet's (R7), the one hasher. Answers what `op=ratify` carries as
    `container`: the manifest's hash, its parts and their addresses, or the statement of what was not built. */
-async function assembleCaseFile({ env, storeName, cs, stub, via, facts, maxBytes }) {
+async function assembleCaseFile({ env, storeName, cs, stub, via, facts, maxBytes, mark = () => {}, prior = null }) {
   const key = (sha) => `${storeName}/published/${sha}`;
+  const statement = (code, step, extra = {}) => ({ ok: false, reason: "CASE_FILE_NOT_BUILT", code, step, ...extra });
+  /* G54 (ii): a missing bucket binding is a stated failure and nothing is recorded; it was skipped in silence, with the
+     manifest recorded over files never stored. */
+  mark("bucket_put");
+  const b = env.PUBLISHED;
+  if (!b || typeof b.get !== "function" || typeof b.head !== "function" || typeof b.put !== "function")
+    return statement("NO_BUCKET", "bucket_put");
+  /* G54: one edition's bytes are held in memory at once; an edition of more files than the bound is stated, not attempted. */
+  mark("build");
+  const estimate = (facts.materials || []).reduce((n, m) => n + 2 + (m.archives || []).length, 0) + (facts.obscured || []).length
+    + (facts.attestations || []).length + (facts.findings || []).length * 4 + (facts.calculations || []).reduce((n, c) => n + 1 + (c.inputs || []).length, 0);
+  if (estimate > CASEFILE_FILES_MAX) return statement("TOO_LARGE", "build", { files: estimate });
   const read = async (sha) => {
-    if (typeof env.PUBLISHED?.get !== "function") return null;
-    const o = await env.PUBLISHED.get(key(sha));
+    const o = await b.get(key(sha));
     return o ? new Uint8Array(await o.arrayBuffer()) : null;
   };
   const built = await buildCaseFile({ facts, group: cs.group ?? null, read, ...(maxBytes ? { maxBytes } : {}) });
   if (!built.ok) return built;
-  if (typeof env.PUBLISHED?.put === "function")
-    for (const f of built.files) if (!(await env.PUBLISHED.head(key(f.sha256)))) await env.PUBLISHED.put(key(f.sha256), f.content);
+  /* G54 (iii): no case file is recorded while a material it lists is missing (an `unheld` entry that names a well-formed sha and has no `why`: a row
+     that states no extracted text, or a sha that is no sha, names nothing that could be held; one with a `why` is by design: an original carried as its copy, an archive that holds one). It stays owed, stated and retried. */
+  mark("materials");
+  const missing = built.unheld.filter((u) => !u.why && !u.unspellable && !u.unregistered && /^[0-9a-fA-F]{64}$/.test(String(u.sha ?? ""))).length + (prior && Array.isArray(prior.materials_missing) ? prior.materials_missing.length : 0);
+  if (missing) return statement("MATERIAL_MISSING", "materials", { files: built.files.length, missing });
+  mark("bucket_put");
+  for (const f of built.files) if (!(await b.head(key(f.sha256)))) await b.put(key(f.sha256), f.content);
+  mark("quartet");
   const { bytes: mBytes, quartet: inband } = await inbandQuartet({
     subject: built.manifest,
     over: OVER_CASE_FILE,
@@ -432,19 +538,20 @@ async function assembleCaseFile({ env, storeName, cs, stub, via, facts, maxBytes
     author: (cs.document && cs.document.attestor && cs.document.attestor.member) ?? null,
     bar: cs.bar ?? null });
   const mSha = inband.hash.sha256;
+  mark("record");
   const recOut = await plane().doAnswer(stub.fetch(new Request("http://do/recordcasemanifest", {
     method: "POST", body: JSON.stringify({ caseId: cs.caseId, edition: cs.edition,
                                            manifest: built.manifest, manifestSha: mSha, bytes: mBytes.length }) })));
   const rec = recOut.result;
-  if (recOut.answered && rec && rec.ok && typeof env.PUBLISHED?.put === "function"
-      && !(await env.PUBLISHED.head(key(mSha)))) await env.PUBLISHED.put(key(mSha), mBytes);
   if (!recOut.answered)
     return { ok: false, reason: plane().STORE_SILENT_REASON, op: `${via}/recordcasemanifest`, detail: plane().STORE_SILENT_DETAIL };
   if (!(rec && rec.ok)) return { ok: false, ...(rec || { reason: "MANIFEST_NOT_RECORDED" }) };
+  mark("manifest_put");
+  if (!(await b.head(key(mSha)))) await b.put(key(mSha), mBytes);
   const parts = built.manifest.parts.map((p) => ({ index: p.index, sha256: p.sha256, bytes: p.bytes,
     zip: `op=publishedbytes&sha256=${mSha}&format=zip&part=${p.index}` }));
   return { manifest_sha: mSha, format: built.manifest.format, parts: parts.length, part_addresses: parts,
-           files: built.files.length, findings: facts.findings.length,
+           files: built.files.length, findings: facts.findings.length, bytes: built.files.reduce((n, f) => n + f.bytes, 0),
            complete_edition: built.files.find((f) => f.kind === "complete_edition")?.sha256 ?? null,
            unheld: built.unheld, zip: parts[0].zip, inband };
 }
@@ -816,8 +923,11 @@ export async function publishedRoutes({ op, url, env, stub }) {
 
   return P.json({ ok: true, ...c, findings,
     verification: {
-      container: c.manifest_sha ? `op=publishedbytes&sha256=${c.manifest_sha}&format=zip` : null,
-      manifest: c.manifest_sha ? `op=publishedbytes&sha256=${c.manifest_sha}` : null,
+      /* G54: a manifest recorded over bytes never stored (`case_file` is not `built`) is not a download: the addresses are
+         given only for a case file that is built, and the state and code say what it is otherwise */
+      container: c.manifest_sha && (!c.case_file || c.case_file.state === "built") ? `op=publishedbytes&sha256=${c.manifest_sha}&format=zip` : null,
+      manifest: c.manifest_sha && (!c.case_file || c.case_file.state === "built") ? `op=publishedbytes&sha256=${c.manifest_sha}` : null,
+      case_file: c.case_file ?? null,
       findings: findings.map((f) => ({ bundle_id: f.bundle_id,
                                        bytes: `op=publishedbytes&sha256=${f.bundle_sha}` })),
       detail: localize("public-read.worker.tamper_evident_not_tamper_proof", "tamper-EVIDENT, not tamper-proof: every part is named by sha256 in the manifest, the manifest answers by its own sha256, and EACH FINDING's signature covers that finding's own record sha. Nothing here prevents a modified copy; everything here makes one detectable by anyone holding it, without the cooperation of this team's Civicsmith."),

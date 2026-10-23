@@ -52,6 +52,7 @@ import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { rowOf } from "./checks.mjs";
 import { WITHHELD_SENTENCE, withholdingOf } from "./courtorders.mjs";
+import { caseFileStateOf } from "./casefile.mjs";
 import { delivererOf } from "../deliverer.mjs";
 import { PUBLIC_READ_NAME, PUBLIC_READ_PARAM, PUBLIC_READ_OWN_OPS, PUBLIC_READ_RESERVED_PARAMS,
          DOCKET_FEED_MEDIA_TYPE } from "./reads.mjs";
@@ -1117,7 +1118,8 @@ export class PublicRead {
        bytes, each file of the manifest, the manifest itself. A whole edition withheld answers its identity, its editions
        and its orders, and none of its content. */
     const cRow = theCase
-      ? this.#one(`SELECT manifest, signed_at, published_at FROM published_cases WHERE case_id=? AND edition=?`, theCase, ed)
+      ? this.#one(`SELECT manifest, signed_at, published_at, casefile_state, casefile_attempts, casefile_attempted_at, casefile_why
+                   FROM published_cases WHERE case_id=? AND edition=?`, theCase, ed)
       : null;
     const manifestHeld = cRow && cRow.manifest ? safeJson(cRow.manifest) : null;
     const index = this.#withheldIndex();
@@ -1376,6 +1378,12 @@ export class PublicRead {
              /* R8: the evidence package's block, computed at this read by the module that provides it. */
              evidence_package: this.#evidencePackage(theCase, ed, findings),
              manifest_sha: state.manifest_sha, manifest,
+             /* G54 (K4426, K4565): the case file's state and a stable code only, never a sentence, a step, an error or a detail
+                (the op is public; those stay in the row and the log). Null for a ratified bundle that is no case. The page's
+                words for each state and code are `screens-publish`'s. */
+             case_file: theCase && cRow ? caseFileStateOf({ complete: state.complete, manifest_sha: state.manifest_sha ?? null,
+               state: cRow.casefile_state ?? null, attempts: cRow.casefile_attempts ?? null, attempted_at: cRow.casefile_attempted_at ?? null,
+               why: cRow.casefile_why ?? null }) : null,
              files,
              editions: editions.map((e) => e.edition),
              /* R20: each case edition's row carries its own stamp, or null, so a reader of any edition sees which
