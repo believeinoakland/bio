@@ -137,3 +137,11 @@ For BOB:
 3. Generated artifact stale: case-checker/program.mjs carries this module's sentence; yours to regenerate at the round end.
 4. No test or check in case-checker/case-catalogue pins the old repeated lines. No census op of mine changes.
 5. Requirement line for R7 is in my record.
+
+## J9 · QUESTION
+
+QUESTION (my best reading below; I carry on with it).
+
+G50's seam test must call publication's real `assembleCaseContainer` (`bio-plane/src/publication/worker.mjs`), and build the published projection it reads. Both are public-read's files: `modules.json` gives public-read the paths `publication/worker.mjs`, `container.mjs`, `inband.mjs`, and its tests dir holds the world fixture (`test/m/public-read/fixture.mjs`, over publication's fixture) that the existing assembly tests use. `checks/architecture.mjs` will therefore fail on exactly these imports: they are of public-read, which case-disclosures does not declare in uses.
+
+Please add `public-read` to case-disclosures' `uses` in `build/modules.json` (tests only; the module's source imports nothing of it) and to the requirements' Uses line, and tell me when it is on tranche/T51 (I then merge). public-read (112) is earlier than case-disclosures (119), so the order holds. Until then my architecture check shows these failures and nothing else; the test is written and runs meanwhile.
