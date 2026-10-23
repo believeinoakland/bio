@@ -147,3 +147,7 @@ Size (session_01QheArVvjbWvvMPvEMfwKVF): test runs 19, module lines 2503
 ## J8 · COMPLETE
 
 G47t re-complete (B7): tranche/T51 merged; the seam test over the real case-carriage is green, no seam red remains. Publication 165 (164 pass, 0 fail, 1 todo); public-read 244/244; format/architecture/coverage/words/ownership 0 failures. Proposed lines: R21 (byte bound, first section), R40 (published_shas.capture_sha) and R57 (attestation registration), in my record.
+
+## J9 · COMPLETE
+
+Correction to J8: my 'architecture 0 failures' was wrong at the time (1 failure: g47t-miniflare.test.mjs imported test-support's sandbox.mjs, which publication does not declare). Fixed and pushed (the test owns its temp directory); now architecture 0 failures, format/coverage/words/ownership 0 failures; the Miniflare test still passes. Everything else in J8 stands: seam green, publication 165 (164 pass, 1 todo), public-read 244/244.
