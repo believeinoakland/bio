@@ -61,3 +61,7 @@ Size (session_01BXkX7UvYkvSAS5FNme8396): test runs 2, module lines 972.
 **Proposed requirement line (R7, BOB writes it):** When several captures of one source share a `ref`, choosing one capture's level re-authors only the attesting member rows that carry that capture's `sha` (or carry none); rows of other captures are kept as written.
 
 Size (session_01TSmueyvUPtNYuxRUg58uBu): test runs 3, module lines 973
+
+## J3 · COMPLETE
+
+G47 done on job/T51/case-tensions. index.mjs #reauthorCaptureAttestation: 'mine' also requires (!r.sha || r.sha.toLowerCase() === cap); sha kept by the splice; no-sha documents unchanged; no census keys change; no protective bound. New test g47-reauthor.test.mjs: control green; k=2 test RED BY NAME until CASE-GRAMMAR #20 merges (its line builder drops sha today, so I could not see red-then-green on the code change alone). Suite 26 tests, 25 pass, 1 seam red. format/architecture/coverage(12 of 12)/words/ownership 0 failures. Proposed R7 line and Size in my record.
