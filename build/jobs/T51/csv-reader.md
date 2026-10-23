@@ -80,3 +80,7 @@ I will not change the bound or R9 until you answer. Everything else of the entry
 - **R16** wording: "read-in-pieces path" becomes "windowed path".
 
 Size (session_015f6Az85H4GFawFsXC3ch9y): test runs 30, module lines 990
+
+## J4 · COMPLETE
+
+csv-reader #3 COMPLETE, G41 D1. Held cells (inlineCellsMax opt-in, cells_held), cellsIn slot, windowed walk with no record list, chunked text; bound 17 MiB with a stated final refusal above it and the pieces band dropped (K4652). Failing-first red then green (g41-held 10/11 red, g41-memory SIGABRT), plane/shape L: 16.99 MiB read whole at cap 150, 17.01 stated. csv-reader 55 pass; office-readers 105, format-registry 43, workbooks 29; file-safety R24 red on the unchanged entry too. Checks 0 failures. Proposed R6/R9/R16/R17/R18/R19 lines, measures and the tick-time note (14.8 s here) are in my record. Size: test runs 30, module lines 990.
