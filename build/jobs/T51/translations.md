@@ -26,7 +26,7 @@
 - Users the impact names that read this op: `instance-setup/t50`, `control-plane/t37-door` and `t51-interfacewords`, `plane/t50`, `screens-settings/translations`, `op-grades/t37`: 38 tests, 38 pass. `node build/plan/impact.mjs origin/tranche/T51 HEAD`: 8 modules affected (instance-setup 26/26, answer-envelope 5/5, store-door 6/6, signin-door 2/2, screens-action 2/30, control-plane 70/87, plane 59/73, translations); I ran the files above, not the whole set.
 - `checks/format.mjs`: 0 failures. `architecture` 0. `coverage` 20 of 20 live ids, 0. `words` 0. `ownership` (1 file as of the first commit) 0.
 
-Size (session_0127cgdteY6TNWkhQcKQFfuz): test runs 6, module lines 1030
+Size (session_0127cgdteY6TNWkhQcKQFfuz): test runs 6, module lines 1019
 
 ## Completion, fix round 7, G84 (TRANSLATIONS #2, session_01D3PnCpi1vCRCeUDnt7Sw8P, START B2)
 
