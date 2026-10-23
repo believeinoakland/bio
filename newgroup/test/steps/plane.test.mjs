@@ -486,7 +486,8 @@ test("R38: the upload carries the release's Blob as it is, never turned into a s
   assert.deepEqual(seen, [], "no whole-body copy was asked of the release's Blob");
   assert.equal(part.size, MB29.length, "the part is the module's bytes, once");
   seen.length = 0;
-  sequence([cfok({}), cfok({ observability: { enabled: true } }), cfok({})]);
+  /* R42: the update reads the held settings first (the place it restates), then uploads, reads the logs setting, sets the schedule */
+  sequence([cfok({ bindings: [] }), cfok({}), cfok({ observability: { enabled: true } }), cfok({})]);
   await uploadUpdate(session(), "A1", "grp", true, rel, { secrets: SECRETS, names: NAMES });
   assert.deepEqual(seen, [], "the update's upload likewise");
 });
