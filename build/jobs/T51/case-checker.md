@@ -86,3 +86,7 @@ Merged `tranche/T51` (CASE-GRAMMAR #20's `sha` and `bio-case-document/9`, PUBLIC
 **Ran.** Module under the preload: tests 99, pass 97, fail 2 (R13, R25: the stale generated `program.mjs`, BOB regenerates at the round end). Users: case-import 156/156, case-account 48/48, case-check 34/34, filings 164/164, case-disclosures 113/113, case-inputs 73/73; case-authoring 238/241, its three R55 reds (case-disclosures R4/R7/R11 seams) fail identically on a clean checkout of `origin/tranche/T51`, so they are not this job's (CASE-AUTHORING is last in the merge order). `checks/run.mjs`: format, architecture, coverage 0 failures (27 of 27 module ids); words: the one `inline 1` at `spec.mjs:11`, handed to UX-DESIGN (B5). `checks/ownership.mjs`: 6 files, 0 failures.
 
 Size (session_01RPHamJS9k22iJs3Y7dJ4XG): test runs 22, module lines 2179
+
+## J6 · COMPLETE
+
+G47 COMPLETE after CHANGE B6: tranche merged, g47-attest all 4 cases green (seam closed). Module 99 tests: 97 pass, 2 red = R13/R25 (stale program.mjs, yours). Users pass (case-import, case-account, case-check, filings, case-disclosures, case-inputs); case-authoring's 3 R55 reds fail identically on clean tranche/T51 (not mine). format/architecture/coverage/ownership 0 failures; words only the inline 1 at spec.mjs:11 (UX-DESIGN, B5). Record: build/jobs/T51/case-checker.md.
