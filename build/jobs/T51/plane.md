@@ -730,3 +730,5 @@ What I need, the smallest thing: your ruling on who owns G82's fix, so that the 
 ## J45 · REPORT
 
 REPORT (B66): l79's restart test does not reproduce: green twice on the merged tree and once on the tranche tip's plane source (15-18 s). Cause: its 30 s wait for the object's own alarm after a Miniflare reboot is too close to the 15-17 s it takes alone; under host load it passes. Not scheduler's code. Fixed in the plane's test (wait bound 90 s, assertion unchanged), pushed. G82's QUESTION J44 is still open: I need your ruling on who owns the piece slicing.
+
+Ringing BOB for J45 failed: BOB's session (session_019nbajVa3dgbtMJtymhoSVB) is archived. The pushed entries J44 (G82 owner QUESTION, still open) and J45 are the message; BOB's backstop reads them.
