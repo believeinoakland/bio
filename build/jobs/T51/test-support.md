@@ -1,6 +1,6 @@
 # test-support (T51)
 
-**Status** · session_01NsoiLyHMoVNrYC5YG4oMt4 · depth 2 · RUNNING until 2026-10-23T00:46:52Z (module-tests.mjs under platform-sqlite preload) · handled B6
+**Status** · session_01NsoiLyHMoVNrYC5YG4oMt4 · depth 2 · RUNNING until 2026-10-23T01:45:03Z (baseline of the red modules without the preload) · handled B6
 
 ## J1 · COMPLETE
 
