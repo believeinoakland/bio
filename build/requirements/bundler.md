@@ -97,6 +97,8 @@ Builds each member of the fleet (the plane and the workers) into one bundled art
 
 - **R41** (fix round 7 G83; K4752; `runtime-limits` R27) `deploy.mjs` takes `--store-location <hint>` and `--store-generation <n>`, each validated (`runtime-limits.storeHint`'s list; a whole number of 2 or more), refused by name otherwise (`[BAD_STORE_LOCATION]`, `[BAD_STORE_GENERATION]`) before anything is uploaded, and emits each as a `plain_text` binding; absent, none is emitted, and a held value it does not derive is kept (R34's rule). *(not yet met: T51)*
 
+- **R42** (fix round 7 G84; K4753) `deploy.mjs` prints, on its `test deploy:` line, the start-up figure Cloudflare's upload answer states for the uploaded script (`startup_time_ms`, or the field the answer actually carries, named) and `unreported` when the answer carries none; it never fails a deploy on it. *(not yet met: T51)*
+
 ## Private
 
 ### Uses
