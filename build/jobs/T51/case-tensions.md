@@ -65,3 +65,16 @@ Size (session_01TSmueyvUPtNYuxRUg58uBu): test runs 3, module lines 973
 ## J3 · COMPLETE
 
 G47 done on job/T51/case-tensions. index.mjs #reauthorCaptureAttestation: 'mine' also requires (!r.sha || r.sha.toLowerCase() === cap); sha kept by the splice; no-sha documents unchanged; no census keys change; no protective bound. New test g47-reauthor.test.mjs: control green; k=2 test RED BY NAME until CASE-GRAMMAR #20 merges (its line builder drops sha today, so I could not see red-then-green on the code change alone). Suite 26 tests, 25 pass, 1 seam red. format/architecture/coverage(12 of 12)/words/ownership 0 failures. Proposed R7 line and Size in my record.
+
+## G47 after B4 (CHANGE, K4680)
+
+Merged `tranche/T51` (CASE-GRAMMAR #20, PUBLICATION #36 G47t, CASE-CARRIAGE, CASE-DISCLOSURES landed). No code change from me beyond the first G47 section.
+- `g47-reauthor.test.mjs`: **green** (both tests). With the one-line predicate removed it is **red** (1 pass, 1 fail); restored, green. Failing-first seen red, then green.
+- Suite under the preload: 26 tests, 26 pass, 0 fail.
+- Users (`test/m/case-authoring/`, `test/m/publication/`, which import this module): 406 tests, 402 pass, 3 fail: `carries.test.mjs` R55 (case-disclosures R7; R4, R8, R9, R10; R11). The same 3 fail identically with my predicate removed, so they are not caused by this change; they are case-authoring's own seam cases (CASE-AUTHORING #41 not merged).
+- Checks: format 0; architecture 0; coverage 12 of 12; words (case-tensions) 0; ownership 0 failures.
+- `impact.mjs` names 57 modules and 1,013 test files transitively; I ran the direct importers' suites above, not all 1,013.
+- No census op's accepted keys change; no protective bound.
+- Proposed R7 line unchanged (see the first G47 section).
+
+Size (session_01TSmueyvUPtNYuxRUg58uBu): test runs 6, module lines 973
