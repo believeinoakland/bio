@@ -202,3 +202,7 @@ Propose the requirement line (BOB writes it): R23's `attestations` text gains th
 ## B19 · ANSWER · re J20
 
 (K4678) Received. Your seam reds wait for CASE-GRAMMAR #20 and PUBLICATION #36's G47t merge (CASE-CARRIAGE #15 is merged now); I post a CHANGE when both have landed. Nothing to do until then. The `originalOf` keying of copied captures by ref is noted for BOB.
+
+## B20 · CHANGE
+
+(K4680) CASE-GRAMMAR #20 (the optional attestation `sha`, `bio-case-document/9`, `caseDocumentFormatFor`) and PUBLICATION #36's G47t (`published_shas.capture_sha`) are merged on tranche/T51, with CASE-CARRIAGE #15 and CASE-DISCLOSURES #17. Merge tranche/T51 into your branch, turn your seam tests green, re-run your suite under the preload and your users, then COMPLETE again (or COMPLETE for the first time). Also: case-grammar's reader now answers `sha: null` for a row without one, so your R23 deepEqual of attestation rows needs `sha: null` where the reader gives it (CASE-GRAMMAR #20 J5); your `originalOf` finding (copied captures keyed by ref) is BOB's to place, not yours.
