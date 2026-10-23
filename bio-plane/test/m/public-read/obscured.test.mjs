@@ -60,7 +60,7 @@ function registerCopy(w, env, ref, bytes = COPY) {
 /* The case edition over F, resting on `materials`, signed and published, F's bytes in the bucket; `before` runs after the
    commit and before the assembly (where R57's registration and R39's copy land). A commit refusal from `case-carriage`'s
    lapsed marks (`publication` R57, T37) is not this module's: the world's photos carry no marks, so it is answered none. */
-async function publish(w, env, materials, { edition = 1, before = () => {}, zip: withZip = true } = {}) {
+async function publish(w, env, materials, { edition = 1, before = () => {} } = {}) {
   if (w.p.caseCarriage && typeof w.p.caseCarriage.marksLapsed === "function") w.p.caseCarriage.marksLapsed = () => [];
   if (edition === 1) w.member("olive");
   const proj = edition === 1 ? w.project("Parks", "olive") : w.p.caseEditionState(CASE, 1).project;
@@ -76,13 +76,11 @@ async function publish(w, env, materials, { edition = 1, before = () => {}, zip:
                                             cs: w.p.caseEditionState(CASE, edition, "parks-group"), via: "test" });
   assert.equal(typeof out.manifest_sha, "string", JSON.stringify(out).slice(0, 400));
   const m = JSON.parse(dec(await bytesOf(await call(w, env, "publishedbytes", { sha256: out.manifest_sha }))));
-  const fm = parseFrontmatter(w.row(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, CASE, edition).text).data;
-  /* G50: the zip is read apart, so a case file the zip refuses (a repeated path) does not hide what is asserted without it. */
-  if (!withZip) return { out, m, rows: materialsOf(fm).materials };
   const zip = await bytesOf(await call(w, env, "publishedbytes", { sha256: out.manifest_sha, format: "zip", part: 1 }));
   const zc = readContainer(zip);
   assert.equal(zc.ok, true);
   const read = async (name) => (await readPart(zip, zc, name)).bytes;
+  const fm = parseFrontmatter(w.row(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, CASE, edition).text).data;
   return { out, m, read, names: zc.entries.map((e) => e.name), rows: materialsOf(fm).materials };
 }
 function scene() {
