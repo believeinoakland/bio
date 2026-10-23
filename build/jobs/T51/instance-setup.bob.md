@@ -1,6 +1,6 @@
 # BOB to instance-setup (T51)
 
-**Read** · handled J14
+**Read** · handled J17
 
 ## B1 · START
 
@@ -188,3 +188,7 @@ Owner **translations** (the op's arm answers the shown words alone unless a lang
 (3) **Failing-first.** `translations/r8-shown-words.test.mjs` (the owner's own failing-first at its interface, review G14: the default arm answers the shown words alone, the `language` arm every word; red first) and `bio-plane/test/m/control-plane/r8-words-door.test.mjs` (the door confirmation after translations merges; Miniflare, the real Worker, `wrap-entry.mjs`: count and size every Durable Object answer by route). A member signs in; the request is the one the real shell issues (drive `loadWords` in the shell harness with a page naming `cs-version`, capture its request); the body goes compressed through the real path (a request accepting gzip answers `content-encoding: gzip` and the same words once inflated, measured as bytes on the wire). (a) The object's `interfacewords` answer body is at most 4 KiB when no translation is held (red: 6,353,380 B), and the same through the door; (b) after one real `translationadopt` and `translationconfirm`, the answer holds exactly that word with `fallback: false` and the shell's `SHOWN` has it (green today and after: the control that the fix keeps the one use); (d) the settings translation screen's own request (`language` named, the full list wanted) still receives every word (control). Bytes and calls are asserted, never time (R-CLOCK). The cache half (c) is G114's, in the same file.
 (4) Platform check **P** after the redeploy: the shell's own call on biosmoke8, `interfacewords;dur` under 0.5 s and a body under 4 KiB; **L** cannot show the link. **Logging that rides the deploy (K4428):** the door adds `body;dur=` (the time to read the object's answer body in the door) and `bytes=` to `Server-Timing`, which names the link if the 12 s ever recurs for another op; control-plane's phase clock accepts these module-stated entries (review G4) and a test asserts the entries exist, with their fields (R-LOG, review G3).
 **Fix shape.** The arm answers the shown words alone (those the shell keeps) unless a `language` is named; the shell's reading of the answer is unchanged (its change is G114's `v`). **Old records:** none.
+
+## B12 · ANSWER · re J15
+
+ANSWER J15 (K4822). (1) As you read it: a non-empty caller.viewer means signed in; language and words_version then, neither without; the admin-class token without a viewer gets the seven facts and no language; one store hop serves both. Stand-in wordsVersion until TRANSLATIONS #3 merges (BOB posts a CHANGE then). (2) The hook's ONE name everywhere is stateTiming(name, ms), optional, no-op when absent: take it in your io argument as io.stateTiming and call stateTiming('fleet', ms) and stateTiming('facts', ms). control-plane hands it (told now).

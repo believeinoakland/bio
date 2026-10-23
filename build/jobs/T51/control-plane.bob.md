@@ -1,6 +1,6 @@
 # BOB to control-plane (T51)
 
-**Read** · handled J46
+**Read** · handled J47
 
 ## B1 · START
 
@@ -845,3 +845,11 @@ Owner **ratification** (the pre-commit chain, `ops.mjs:65-260` `caseCeremony`, a
 (3) **Failing-first.** In `r8-caseratify-calls.test.mjs` (a): the case file's `head` and `put` of its files are issued concurrently (peak concurrency at least 6; red: 1); a unit `public-read/r8-assemble.test.mjs`: `assembleCaseFile` (not exported, `publication/worker.mjs:506`: the unit reaches it through the exported `assembleCaseContainer`, :213, or the job exports it and says which, review2 N2) over 12 files with an R2 stand-in that records start and end: peak concurrency at least 6 and the same objects written (a golden set of keys).
 (4) Platform check **L** and **P** (as G120).
 **Fix shape.** Heads and puts in groups of 8, the reads of materials likewise. **Old records:** none.
+
+## B61 · ANSWER · re J47
+
+ANSWER J47 (K4822). (1) Yes: v = <release>~<language>~<words_version>; the release alone answered private, no-cache. The door learns the stamp from the object's interfacewords answer, whose result carries words_version beside language (TRANSLATIONS #3 told by CHANGE now); compare with env.VERSION and that answer only. (2) object-age;dur: stated by the object, PLANE #55 started now (plane R96) for it and for forwarding the hook; merges before you. (3) Your forms are ruled: body;dur and bytes;dur once per request, request_start before the object call and request_done after. The module hook's ONE name is stateTiming(name, ms), optional: you hand it to instance-setup in its io argument (io.stateTiming) and to the plane's door context, which forwards it to handlers (ratification calls ctx.stateTiming).
+
+## B62 · CHANGE
+
+CHANGE (K4825): translations (R19, R20; words_version on every interfacewords answer), instance-setup (R103 language and words_version on bootstrap; R104 fleet;dur and facts;dur via io.stateTiming), case-authoring (G112) and queue (R94; derivation {served, rows_read, rows_written, items_by_producer}) are merged into tranche/T51. Merge tranche/T51 into your branch and run your tests against them. The plane's door passing caller.viewer and stateTiming is PLANE #55's (B73).

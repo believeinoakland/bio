@@ -112,7 +112,7 @@ Terms are `publication`'s (a case, an edition, the case document, a pin, the pub
 
 #### T51 fix round 8 (K4817; `build/plan/fix-round-8-T51.md`)
 
-- **R44** (fix round 8, G121; K4817) **The case file is assembled in groups.** The case file's `head` and `put` of its files, and its reads of materials, run in groups of 8; the same objects are written. Test: over 12 files, peak concurrency at least 6 and the same keys written. *(not yet met: T51)*
+- **R44** (fix round 8, G121; K4817) **The case file is assembled in groups.** The case file's `head` and `put` of its files, and its reads of materials, run in groups of 8; the same objects are written. Test: over 12 files, peak concurrency at least 6 and the same keys written.
 
 ## Private
 
