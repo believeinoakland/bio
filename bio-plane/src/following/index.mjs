@@ -62,13 +62,13 @@ import { parse as parseLegistar, KEY as LEGISTAR_KEY } from "../../../legistar-r
 import { FOLLOWING_TABLES, migrateFollowing } from "./schema.mjs";
 import { legistarBodyId, eventsAddress, itemsAddress, votesAddress, mattersAddress, matterAddress, enactmentOf } from "./legistar.mjs";
 import { noticeRule, meetingsOf, dueBefore } from "./meetings.mjs";
-import { portalKey, readDataset, diffRows } from "./snapshot.mjs";
+import { portalKey, readDataset, diffRows, storedRows } from "./snapshot.mjs";
 import { followRefusal } from "./checks.mjs";
 
 export { FOLLOWING_SCHEMA, FOLLOWING_TABLES, migrateFollowing } from "./schema.mjs";
 export { legistarSystems, bodySchemes, legistarBodyId } from "./legistar.mjs";
 export { noticeRule, meetingsOf, dueBefore, MEETING_HORIZON_MONTHS } from "./meetings.mjs";
-export { portalKey, readDataset, diffRows } from "./snapshot.mjs";
+export { portalKey, readDataset, diffRows, storedRows, PORTAL_ROWS_INLINE_MAX, PORTAL_PART_CHARS } from "./snapshot.mjs";
 export { FOLLOWING_CHECKS, followRefusal } from "./checks.mjs";
 
 export const FOLLOWING_MODULE = "following";
@@ -78,6 +78,11 @@ export const FOLLOW_CONSUMER = "following";
 export const FOLLOW_TICK_BATCH = 50;
 /** R2: fetches one body's read makes in one tick (its events, items, votes and matters), beyond which it says so. */
 export const BODY_READ_FETCHES = 200;
+/** R10 (G46, K1881): the capture size above which a portal's answer is not parsed into a snapshot: the tick holds the decoded
+ *  text, the parsed rows and their JSON at once, and the diff two snapshots' rows, in one object. The snapshot is written with
+ *  no rows and a stated reason; the capture is held whole and cited. Set by measure: a 4 MiB capture of 62-byte rows ticks and diffs
+ *  at a node cap of 134 MB (x1.2 = 161, under the object's 163 at that size); 5 MiB needs 184 and 8 MiB 246. */
+export const PORTAL_PARSE_MAX_BYTES = 4 * 1024 * 1024;
 /** R12: the cadences a follow may name: daily (the default) or longer, from monitoring's intervals (its R14). */
 export const FOLLOW_CADENCES = Object.freeze(["daily", "weekly", "monthly"]);
 export const FOLLOW_KINDS = Object.freeze(["body", "register", "person-query", "portal", "policy"]);
@@ -834,16 +839,43 @@ export class Following {
   async #readPortal(f, s, nowMs) {
     const t = await this.#take(f, s.address, nowMs, { title: word("following.title.portal_snapshot", { address: s.address }) });
     if (t.failed) return { read: { follow: Number(f.follow_id), kind: "portal", outcome: "failed" }, failed: [{ follow: Number(f.follow_id), ...t.failed }], outcome: "failed" };
-    if (t.same) return { read: { follow: Number(f.follow_id), kind: "portal", outcome: "unchanged", capture: t.sha }, outcome: "unchanged" };
+    /* G46 (R-OLD): a capture held without its snapshot (a read that failed after `#take` held it) is written once, not answered unchanged */
+    if (t.same && this.#one(`SELECT 1 AS n FROM portal_snapshots WHERE follow_id=? AND capture_sha=?`, f.follow_id, t.sha))
+      return { read: { follow: Number(f.follow_id), kind: "portal", outcome: "unchanged", capture: t.sha }, outcome: "unchanged" };
     const bytes = await this.#bytes(t.sha);
-    const ds = bytes ? readDataset(new TextDecoder("utf-8", { fatal: false }).decode(bytes)) : { why: word("following.why.snapshot_bytes_read") };
-    const seq = Number(this.#one(`SELECT COALESCE(max(seq), 0) + 1 AS n FROM portal_snapshots WHERE follow_id=?`, f.follow_id).n);
+    let ds;
+    if (!bytes) ds = { why: word("following.why.snapshot_bytes_read") };
+    else if (bytes.length > PORTAL_PARSE_MAX_BYTES)
+      ds = { why: localize("following.index.snapshot_over_parse_bound", "this answer is {size} MB ({bytes} bytes), above the {bound} MB a snapshot can be compared at; the capture holds all of it",
+                           { size: (bytes.length / 1048576).toFixed(2), bytes: String(bytes.length), bound: String(PORTAL_PARSE_MAX_BYTES / 1048576) }) };
+    else ds = readDataset(new TextDecoder("utf-8", { fatal: false }).decode(bytes));
     const at = instant(nowMs);
-    this.#sql.exec(`INSERT INTO portal_snapshots (follow_id, seq, capture_sha, bundle_id, at, rows, why) VALUES (?,?,?,?,?,?,?)`,
-                   f.follow_id, seq, t.sha, t.bundle, at, ds.rows ? JSON.stringify(ds.rows) : null, ds.why || null);
+    const stored = ds.rows ? storedRows(ds.rows) : { value: null, pieces: [] };
+    /* the snapshot row and its pieces are one write: a throw leaves neither (G46) */
+    const write = () => {
+      const seq = Number(this.#one(`SELECT COALESCE(max(seq), 0) + 1 AS n FROM portal_snapshots WHERE follow_id=?`, f.follow_id).n);
+      this.#sql.exec(`INSERT INTO portal_snapshots (follow_id, seq, capture_sha, bundle_id, at, rows, why) VALUES (?,?,?,?,?,?,?)`,
+                     f.follow_id, seq, t.sha, t.bundle, at, stored.value, ds.why || null);
+      stored.pieces.forEach((chunk, part) => this.#sql.exec(`INSERT INTO portal_snapshot_parts (follow_id, seq, part, bundle_id, chunk) VALUES (?,?,?,?,?)`,
+                                                            f.follow_id, seq, part, t.bundle, chunk));
+      return seq;
+    };
+    const seq = typeof this.record.transact === "function" ? this.record.transact(write) : write();
     return { read: { follow: Number(f.follow_id), kind: "portal", outcome: "captured", capture: t.sha, snapshot: seq },
              captured: [{ kind: "portal", follow: Number(f.follow_id), address: s.address, capture: t.sha, bundle: t.bundle, snapshot: seq,
                           valid: vintage(at) }], outcome: "captured" };
+  }
+
+  /* R10, R11 (G46): a snapshot's rows as a list: whole in `rows`, or joined from its pieces; null when it holds none (a reason
+     stands in `why`) or its pieces are not all held. */
+  #rowsOf(snap) {
+    if (!snap.rows) return null;
+    const v = json(snap.rows);
+    if (Array.isArray(v)) return v;
+    if (!v || typeof v !== "object" || !Number.isInteger(v.parts)) return null;
+    const chunks = this.#rows(`SELECT chunk FROM portal_snapshot_parts WHERE follow_id=? AND seq=? ORDER BY part`, snap.follow_id, snap.seq);
+    if (chunks.length !== v.parts) return null;
+    return json(chunks.map((c) => c.chunk).join("")) || null;
   }
 
   /** R8: a register behind an account or a fee, refreshed only by the act of the member whose credential it uses. */
@@ -1667,10 +1699,11 @@ export class Following {
     const key = (json(f.subject) || {}).key;
     const base = { ok: true, follow: Number(f.follow_id), key, from: { seq: a.seq, at: a.at, valid: vintage(a.at) }, to: { seq: b.seq, at: b.at, valid: vintage(b.at) },
                    note: word("following.note.difference_between_two_answers") };
-    const unread = [a, b].filter((x) => !x.rows);
+    const rowsA = this.#rowsOf(a), rowsB = this.#rowsOf(b);
+    const unread = [[a, rowsA], [b, rowsB]].filter(([, r]) => !r).map(([x]) => x);
     if (unread.length) return { ...base, added: [], removed: [], changed: [],
       undetermined: unread.map((x) => ({ key: null, snapshot: x.seq, why: x.why || word("following.why.snapshot_read_rows") })) };
-    return { ...base, ...diffRows(json(a.rows) || [], json(b.rows) || [], key) };
+    return { ...base, ...diffRows(rowsA, rowsB, key) };
   }
 
   /** R10: a portal's snapshots, each a vintage whose validity is its capture instant (`civil-time` `validAt`). */

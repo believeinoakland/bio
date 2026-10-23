@@ -117,14 +117,14 @@ test("R10 negative controls: a /5 document without working_on names no notice; n
 });
 
 test("R30 workingOnOf is the one reading of working_on: the notice id for every format from /5 whose value is a notice reference, null for none, for a value that is not one, and for any earlier format", () => {
-  const FROM5 = [V5, "bio-case-document/6", "bio-case-document/7", CASE_DOCUMENT_FORMAT];
+  const FROM5 = [V5, "bio-case-document/6", "bio-case-document/7", CASE_DOCUMENT_FORMAT, "bio-case-document/9"];
   for (const format of FROM5) {
     assert.equal(caseDocumentRequiresTensionSection({ format }), true, format);
     assert.equal(workingOnOf(fmOf(doc(format, workingOnLines(NOTICE)))), NOTICE, format);
     assert.equal(workingOnOf(fmOf(doc(format))), null, `${format}: none carried`);
   }
   /* control: a /4 document carrying a well-formed working_on answers null, as every format the predicate does not hold for */
-  for (const format of [...OLDER, "bio-case-document/9", "Bio-case-document/7"]) {
+  for (const format of [...OLDER, "bio-case-document/10", "Bio-case-document/7"]) {
     assert.equal(caseDocumentRequiresTensionSection({ format }), false);
     assert.equal(workingOnOf(fmOf(doc(format, workingOnLines(NOTICE)))), null, String(format));
   }

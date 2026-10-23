@@ -28,7 +28,8 @@
  *                           no label of its own. An optional field of `/7`, with no new format (K2206): a row without
  *                           it is written and read exactly as before, and an absent label reads null.
  *   material_attestations:  one row per attestation of a material: `ref`, `by_kind` (`member`, `co_attestation`,
- *                           `project`, `group`), `by`, `level`, `at`, `signature`, `recorded_in`.
+ *                           `project`, `group`), `by`, `level`, `at`, `signature`, `recorded_in`, and (G47, optional)
+ *                           `sha`, the capture it is of; absent, read null and joined to the material by `ref`.
  *   accepted_work:          one row per (member, leg) whose chain reaches another group's finding (`inquiry-grammar`
  *                           R11's ref): who accepted which edition, when and why, its result and gaps, its pair.
  *   accepted_work_flags:    one row per open flag on that work the case discloses.
@@ -38,7 +39,7 @@
  * A `group` row's signature is the literal `case`: the case document's own signature covers it. A `project` row's is
  * null. Pure; the readers never throw. */
 
-import { caseDocumentRequiresMaterials } from "./formats.mjs";
+import { caseDocumentRequiresMaterials, attestationShaOf } from "./formats.mjs";
 import { fmSafe } from "./blocks.mjs";
 
 const val = (v) => (v === undefined || v === null || v === "null" ? null : v);
@@ -89,6 +90,12 @@ export const MATERIAL_FIELDS = Object.freeze(["ref", "kind", "sha", "text_sha", 
   "rests_under"]);
 export const MATERIAL_ATTESTATION_FIELDS = Object.freeze(["ref", "by_kind", "by", "level", "at", "signature",
   "recorded_in"]);
+/** R12 (G47; K4669, K4672): the optional flat field after `recorded_in`, the `sha` of the capture the attestation is of, so
+ *  a case of several captures of one source joins each attestation to its capture and not to the source (`ref`) alone.
+ *  Written only when the row is handed one (a non-empty sentence), so a row without it, and every row written before it,
+ *  is written byte for byte as before and reads `sha: null`; a document carrying any declares `/9` (`./formats.mjs`).
+ *  `MATERIAL_ATTESTATION_FIELDS` is unchanged. */
+export const MATERIAL_ATTESTATION_SHA_FIELD = "sha";
 /** R12: what a material is, how it rests, and who attests it. */
 export const MATERIAL_KINDS = Object.freeze(["document", "observation"]);
 export const MATERIAL_RESTS_UNDER = Object.freeze(["load_bearing", "supporting"]);
@@ -148,10 +155,11 @@ const attestationRow = (r) => {
   const level = byKind === "member" ? oneOf(r.level, ATTESTATION_LEVELS) : null;
   /* K1317 (6): until a member's level is chosen, the row states none and carries no identity. */
   const anonymous = byKind === "member" && (level === null || ANONYMOUS_ATTESTATION_LEVELS.includes(level));
+  const capture = attestationShaOf(r);
   return { ref: r.ref ?? null, by_kind: byKind, by: anonymous ? null : r.by ?? null, level, at: r.at ?? null,
            signature: byKind === "group" ? GROUP_ATTESTATION_SIGNATURE
              : byKind === "project" || anonymous ? null : r.signature ?? null,
-           recorded_in: r.recorded_in ?? null };
+           recorded_in: r.recorded_in ?? null, ...(capture === null ? {} : { [MATERIAL_ATTESTATION_SHA_FIELD]: capture }) };
 };
 
 /** R12 (K1317): the `materials:` block's lines, from `[{ref, kind, sha, text_sha, origin, archived_copy, included,
@@ -174,7 +182,11 @@ export function materialsLines(rows) {
  *  with no `by` and no `signature`; a `group` row's signature is `case`; a `project` row's null. `[]` when none. It is
  *  the run `SECTIONS.attestations` locates, so the act that records a member's level re-writes it whole. */
 export function materialAttestationLines(rows) {
-  return rowsBlock("material_attestations", objects(rows).map(attestationRow), MATERIAL_ATTESTATION_FIELDS);
+  const written = objects(rows).map(attestationRow);
+  if (!written.length) return ["material_attestations: []"];
+  return ["material_attestations:", ...written.flatMap((r) => [...MATERIAL_ATTESTATION_FIELDS,
+    ...(MATERIAL_ATTESTATION_SHA_FIELD in r ? [MATERIAL_ATTESTATION_SHA_FIELD] : [])]
+    .map((f, i) => `${i ? "   " : "  -"} ${f}: ${scalar(r[f])}`))];
 }
 
 /** R12: both blocks' lines, from `{materials, attestations}` (`materialsLines`, then `materialAttestationLines`). */
@@ -185,7 +197,7 @@ export function materialBlockLines(given) {
 
 /** R12: the two blocks read back from a `/6` document's front matter, in the document's order: `{materials: [{ref,
  *  kind, sha, text_sha, origin, archived_copy, included, rests_under, title, obscured}], attestations: [{ref, by_kind, by, level, at,
- *  signature, recorded_in}]}`; a block the document does not carry answers null, and a document carrying neither (or
+ *  signature, recorded_in, sha}]}`; a block the document does not carry answers null, and a document carrying neither (or
  *  any other format) answers null. `included` reads true only when the bytes say true. `obscured` is `{copy, label, marked,
  *  kind}` for a `document` row stating either flat field, else null (T37); a copy not stated reads null, undetermined, a
  *  label not stated reads null, a copy that carries none (an unmarked photo's, T38), and a kind not stated, or not one of
@@ -200,7 +212,8 @@ export function materialsOf(fm) {
       materials: has("materials")
         ? objects(d.materials).map((r) => ({ ...read(r, MATERIAL_FIELDS), included: bool(r.included) === true,
                                              title: str(r[MATERIAL_TITLE_FIELD]), obscured: obscuredRead(r) })) : null,
-      attestations: has("material_attestations") ? objects(d.material_attestations).map((r) => read(r, MATERIAL_ATTESTATION_FIELDS)) : null,
+      attestations: has("material_attestations")
+        ? objects(d.material_attestations).map((r) => ({ ...read(r, MATERIAL_ATTESTATION_FIELDS), sha: str(r[MATERIAL_ATTESTATION_SHA_FIELD]) })) : null,
     };
   } catch {
     return null;

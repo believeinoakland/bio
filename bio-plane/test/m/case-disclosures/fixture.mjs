@@ -240,6 +240,24 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
                                         captureSha: c.sha, retrieved: T0, via: "direct" });
       return c.sha;
     },
+    /** An information bundle registering `count` captures of one source (G47: the same `ref` on `n` materials), each with
+     *  its own bytes, its text indexed whole, registered at its own instant (`registered` = `at(i)`), so each capture's
+     *  attestation lines are its own. Answers the captures' shas in order. */
+    captures(id, count, { at = (i) => `2026-09-27T${String(1 + (i % 20)).padStart(2, "0")}:${String(i % 60).padStart(2, "0")}:00Z` } = {}) {
+      const cs = Array.from({ length: count }, (_, i) => { const text = `bytes ${i} of ${id}`; return { path: `snapshots/c${i}.txt`, text, sha: sha(text) }; });
+      const r = promotion.promote({ bundleId: id, base: null, snapKey: `k${++n}`, author: V("alice"),
+        files: [{ path: "bundle.md", text: infoMd(id) }, ...cs.map((c) => ({ path: c.path, text: c.text })),
+                { path: "data/provenance.json", text: JSON.stringify({ documents: cs.map((c) => provDoc(c)) }) }],
+        meta: { object_type: "information" },
+        register: cs.map((c) => ({ sha256: c.sha, path: c.path, encoding: "utf8", bytes: Buffer.byteLength(c.text) })) });
+      if (!r.ok) throw new Error(`fixture captures refused: ${JSON.stringify(r).slice(0, 400)}`);
+      cs.forEach((c, i) => {
+        w.indexText(c.sha, id);
+        evidence.set(c.sha, Buffer.from(c.text, "utf8"));
+        st.sql.exec(`UPDATE register SET registered=? WHERE capture_sha=?`, at(i), c.sha);
+      });
+      return cs.map((c) => c.sha);
+    },
     /** A content row over `capture` in `bundle` (content R45's read contract). */
     content(id, capture, bundle, ref = `the page of ${bundle}`, extent = "{}") {
       st.sql.exec(`INSERT INTO content (content_id, capture_sha, bundle_id, extent_kind, extent, ref, minted_by, at, stale)

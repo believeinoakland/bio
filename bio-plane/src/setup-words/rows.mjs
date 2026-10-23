@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (18524 design words, 1112 protected; SHA-256
-   24f0ffdeb236000f948540c221752da2e833674406dba6c952a7a2a67abe2c5b) followed by 7232 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   24f0ffdeb236000f948540c221752da2e833674406dba6c952a7a2a67abe2c5b) followed by 7242 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -22126,6 +22126,7 @@ export const WORD_ROWS = Object.freeze([
   ["file-safety.index.signatures_run_stopped","The last check for signatures stopped before it finished. It will be resumed shortly.",null,null,false,"code"],
   ["file-safety.index.signatures_run_under_way","A check for signatures is under way.",null,null,false,"code"],
   ["file-safety.index.signatures_run_verify","A check for signatures is under way: it is checking that the new signatures are genuine.",null,null,false,"code"],
+  ["file-safety.index.the_file_is_above_what_a_safe_view_reads","The file is above what a safe view reads. Nothing was read.",null,null,false,"code"],
   ["file-safety.index.the_text_could_not_be","The text could not be read.",null,null,false,"code"],
   ["file-safety.index.warned_must_be_exactly","warned must be exactly {own_device: true, no_macros: true}. Nothing was served.",null,null,false,"code"],
   ["file-safety.index.your_teams_civicsmith_could_not","Your team's Civicsmith could not read the files waiting for a safe view. Nothing was rendered, made or counted.",null,null,false,"code"],
@@ -22512,6 +22513,7 @@ export const WORD_ROWS = Object.freeze([
   ["following.index.relied_on_not_offered","something else still relies on this watch, so it is not offered for keeping or stopping",null,null,false,"code"],
   ["following.index.render_true_or_false","render is true or false",null,null,false,"code"],
   ["following.index.second_looks_names_item","a read of an item's second looks names the item",null,null,false,"code"],
+  ["following.index.snapshot_over_parse_bound","this answer is {size} MB ({bytes} bytes), above the {bound} MB a snapshot can be compared at; the capture holds all of it",null,null,false,"code"],
   ["following.index.snapshots_same_follow","both snapshots are of this follow, by their sequence numbers",null,null,false,"code"],
   ["following.index.this_register_charges_price_the","this register charges {price}; the refresh runs only once that price is accepted as shown",null,null,false,"code"],
   ["following.index.watch_already_ended","that watch has already ended",null,null,false,"code"],
@@ -24352,6 +24354,7 @@ export const WORD_ROWS = Object.freeze([
   ["publication.index.stampsof_names_a_case_and","stampsOf names a case and a positive edition",null,null,false,"code"],
   ["publication.index.statements_this_case_document_makes","{count} statement(s) this case document makes about a source are no longer what may be published of that source, so nothing was committed. What is published under a consent stays published; this edition was not, and a new preparation leaves the detail out.",null,null,false,"code"],
   ["publication.index.that_entry_is_not_a","that entry is not a posted court-order entry of this case with this effect, so nothing was stamped",null,null,false,"code"],
+  ["publication.index.the_case_document_would_pass","the case document would pass {bound} bytes ({bytes}) and was left as it was",null,null,false,"code"],
   ["publication.index.the_court_order_source_gives","the court-order source gives the door courtOrderOf",null,null,false,"code"],
   ["publication.index.the_court_order_source_is","the court-order source is already registered by {module}",null,null,false,"code"],
   ["publication.index.the_project_this_case_belongs","the project this case belongs to is a counsel matter",null,null,false,"code"],
@@ -24950,6 +24953,8 @@ export const WORD_ROWS = Object.freeze([
   ["reevaluation.index.work_products_unread","the cases a project owns, or their ratified editions, could not be read, so a wp_retraction cause may be missing; that is not the same as none",null,null,false,"code"],
   ["refusal.MONEY_BAD_PERIOD","That period is not one this team's money records can read.",null,null,false,"code"],
   ["refusal.SIGNATURES_RUN_UNDER_WAY","Your team's Civicsmith is already checking for new signatures, so it did not start another check. Look again in a few minutes.",null,null,false,"code"],
+  ["refusal.WORKBOOK_FILE_TOO_LARGE","This file is {size} MB, more than the {bound} MB that can be added as a workbook. The original is unchanged.",null,null,false,"code"],
+  ["refusal.WORKBOOK_TOO_LARGE","This workbook has {cells} cells, more than the {bound_cells} that can be held and read here.",null,null,false,"code"],
   ["retrieval-browse.browse.marks_another_shape","the registered read of watches and flags answered another shape than its contract's",null,null,false,"code"],
   ["retrieval-browse.browse.marks_not_registered","no module has registered the watches and flags, so watched and flagged are not read",null,null,false,"code"],
   ["retrieval-browse.browse.marks_not_registered_list","no module has registered the watches and flags, so which items are watched or flagged is not read",null,null,false,"code"],
@@ -25161,6 +25166,11 @@ export const WORD_ROWS = Object.freeze([
   ["screen.group.storage.unstated","The size of your team's record is not stated.",null,null,false,"code"],
   ["screen.group.storage.warn1","Your team's record has passed 70% of what one record can hold. Decide what to do before it fills.",null,null,false,"code"],
   ["screen.group.storage.warn2","Your team's record has passed 90% of what one record can hold. At the limit, writes will fail: nothing more can be saved until room is made.",null,null,false,"code"],
+  ["screen.open-file.safe.cut","Showing rows {from} to {to} of {total}. The original file holds the rest.",null,null,false,"code"],
+  ["screen.open-file.safe.cut.more","Showing rows {from} to {to}; the sheet goes on. The original file holds the rest.",null,null,false,"code"],
+  ["screen.open-file.safe.notdrawn","This file is {size} MB, more than a preview can show ({bound} MB). The original is unchanged and holds every cell.",null,null,false,"code"],
+  ["screen.open-file.safe.sheet.unreadable","The sheet {name} could not be shown. The original file holds it.",null,null,false,"code"],
+  ["screen.open-file.safe.sheetscut","Showing {shown} of {total} sheets. The original file holds the rest.",null,null,false,"code"],
   ["sheet-worker.contract.loading_the_workbook_took_longer","loading the workbook took longer than the time budget, so evaluation was not started",null,null,false,"code"],
   ["sheet-worker.contract.no_capture_with_that_sha_in","no capture with that sha in that store",null,null,false,"code"],
   ["sheet-worker.contract.recompute_is_not_enabled_here","workbook recompute is not enabled on this instance; an administrator enables it after the release deploys this member",null,null,false,"code"],
