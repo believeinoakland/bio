@@ -1,6 +1,6 @@
 # publication (T51)
 
-**Status** · session_01SuyGTiBzRae5USVsWZvCRa · depth 2 · COMPLETE · handled B3
+**Status** · session_01QheArVvjbWvvMPvEMfwKVF · depth 2 · COMPLETE · handled B3
 
 ## J1 · COMPLETE
 
@@ -72,3 +72,35 @@ T51 fix round 5, E4's provider half (plan merge 6): complete.
 - No platform check is needed: the field is a parse of a document already read (N).
 
 Size (session_01SuyGTiBzRae5USVsWZvCRa): test runs 5, module lines 2464
+
+## G47 · completion (PUBLICATION #36, session_01QheArVvjbWvvMPvEMfwKVF; fix round 6, START B5)
+
+**Providers' state.** At my start none of G47's other owners had merged (CASE-GRAMMAR #20, CASE-CHECKER #16, CASE-DISCLOSURES #17, CASE-INPUTS #8, CASE-AUTHORING #41). Mine needs none of them: the bound is at the store and the re-author, and publication's tests drive it directly. No seam test of mine is red by name.
+
+**What changed.** `bio-plane/src/publication/index.mjs`:
+- new export `CASE_DOCUMENT_BYTES_MAX = 1572864` (1.5 MiB), beside `EDITIONS_OF_MAX` (:155).
+- `storeCaseDocument` (:491-494): after the MALFORMED check and before the hash, the SQL and any read, a text over the bound answers `{ok: false, reason: "CASE_DOCUMENT_TOO_LARGE", bytes, bound}`, writes nothing, throws nothing. Prefilter on `text.length * 3` (no byte count when it cannot exceed), then the exact UTF-8 count (`TextEncoder`).
+- `reauthorSection` (:542-547): after the unchanged-text check, a splice whose result is over the bound AND larger (in bytes) than the stored text answers `{ok: true, ..., reauthored: false, too_large: {bytes, bound}, why}`, the stored text unchanged. `why` is `localize("publication.index.the_case_document_would_pass", en, {bytes, bound})`. A splice that shrinks or keeps an over-bound unsigned text is allowed. A signed or moved document is refused as before (its own `why`), before its size is looked at.
+- R-OLD: new documents only; a stored document is never rewritten; none over the bound can exist (the write threw).
+
+**Failing-first.** `bio-plane/test/m/publication/g47-bound.test.mjs`, four tests naming R21: (a) the bound + 1 B refused with `{bytes, bound}`, no row, no throw; exactly the bound stored; 2-, 3- and 4-byte characters counted in bytes; a refused replace leaves the stored unsigned text; (b) a growing splice past the bound refused with `too_large` and `why` (compared with `localize` by equality, no copied sentence), the text unchanged; a small splice is allowed; (c) a shrinking splice of an over-bound unsigned text is allowed, a growing one refused; (d) controls: a normal document stored byte for byte, a signed document never touched. RED on the unfixed code: with the constant inlined, `pass 0, fail 4` (e.g. `actual: {ok: true, ... stored: true}`, expected `CASE_DOCUMENT_TOO_LARGE`); as written, the import of the constant fails. GREEN after: `tests 4, pass 4, fail 0`.
+
+**Measures (K1881: give BOB these numbers).** Bound set: **1,572,864 B**, BOB's constant, not lowered. It is above R17's measured ~1.24 MB times 1.2 (= 1.49 MB). In a child with `--max-old-space-size=128` under the preload, a document padded to exactly the bound: `storeCaseDocument` ok, `caseDocument` ok, `commitCaseEdition` (signing) ok, `publishedCaseDocumentText` returns all 1,572,864 B; 57 ms, rss 185 MB. At 1.2x the bound (1,887,436 B, written past the bound by SQL, since the store refuses it): the same four steps answer, 60 ms, rss 190 MB; 1.2x is still under the platform's 2,098,176 B. These are the steps publication owns. The act's renders, `casedocfacts`, `caseratify`'s parse, `case-check` and the public page belong to other modules, whose G47 providers have not merged: not measured here, and the bound stays to be confirmed by case-authoring #41's seam run at k = 501. **Platform check L:** Miniflare's DO SQLite (local) accepted a 1.5 MiB, a 1.2x and a 2,098,187 B text in one row without refusing: it does not enforce the production bound, so only the preload (`platform-sqlite.mjs`) holds it here.
+
+**Callers of `reauthorSection` read.** `case-inputs` (`index.mjs:879-886`) drops the `why` and `too_large` (CASE-INPUTS #8 fixes it, as the entry says); `case-tensions` (`#splice`, :508-514) passes the answer through whole; `case-authoring` calls `storeCaseDocument` only (`index.mjs:1206`, uses `stored.doc_sha`; CASE-AUTHORING #41 reads `ok: false`). No other caller in `bio-plane/src` presents `reauthored: false` as success.
+
+**Census.** No op I own changes its accepted keys: `storeCaseDocument` and `reauthorSection` are services (the latter a case-tensions provider door), not ops; `op=casedocument` is unchanged.
+
+**Words.** One new sentence, `localize("publication.index.the_case_document_would_pass", ...)`; the refusal `CASE_DOCUMENT_TOO_LARGE` carries no sentence of mine (case-authoring's row).
+
+**Requirement lines proposed (BOB writes `build/requirements/`).** In R21, after "never throw on a signed or moved document": "`storeCaseDocument` refuses a text over `CASE_DOCUMENT_BYTES_MAX` (1,572,864 UTF-8 bytes; K4666) as `{ok: false, reason: "CASE_DOCUMENT_TOO_LARGE", bytes, bound}`, writing nothing and throwing nothing; `reauthorSection` refuses only a splice whose result is over the bound and larger than the stored text, answering `{ok: true, ..., reauthored: false, too_large: {bytes, bound}, why}`, the stored text unchanged, so an unsigned document stored larger can still be mended by a splice that shrinks or keeps it."
+
+**Deferred.** None. **Found in another module.** Nothing new beyond the entry's list.
+
+**Checks.** `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/publication/*.test.mjs`: `tests 158, pass 157, fail 0, todo 1` (the todo was there). `checks/run.mjs /home/user/bio`: format `0 failures`; architecture `4297 product files ... 0 failures`; coverage `6685 of 6685 live requirement ids named by a test; 0 failures`; channels `0 failures`; words `18524 words ... 0 failures` (inline 0, plain 0, testcopy 0). Users: the change only adds a refusal at a size no existing test reaches; the readers' suites run in their own jobs once the providers merge. Ownership: run below.
+
+Size (session_01QheArVvjbWvvMPvEMfwKVF): test runs 9, module lines 2481
+
+## J6 · COMPLETE
+
+G47 (store bound): complete. CASE_DOCUMENT_BYTES_MAX = 1,572,864 B (BOB's constant, not lowered; report to Bob, K1881). storeCaseDocument refuses over-bound as CASE_DOCUMENT_TOO_LARGE {bytes, bound}, writes/throws nothing; reauthorSection refuses only a splice that is over the bound AND larger than stored (reauthored:false, too_large, why); shrinking is allowed. Failing-first g47-bound.test.mjs: red (fail 4) then green (4/4); publication suite 158 (157 pass, 0 fail, 1 todo); format/architecture/coverage/words/ownership 0 failures. Measure (publication-owned steps, 128MB old space, preload): store, casedocument, sign, publishedCaseDocumentText ok at the bound (rss 185MB) and at 1.2x = 1,887,436 B (rss 190MB), under 2,098,176. Not measured: the other modules' steps (their providers are unmerged). Miniflare local DO SQLite did NOT enforce the production value bound (accepted 2.1 MB), so only the preload holds it here. No seam test of mine is red. case-inputs drops why/too_large (CASE-INPUTS #8). No op's census keys change. Requirement line proposed in my record. Details: build/jobs/T51/publication.md section G47.
