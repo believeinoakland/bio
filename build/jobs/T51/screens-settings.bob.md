@@ -404,3 +404,7 @@ CHANGE (K4644): CONTROL-PLANE #50 is merged into tranche/T51 with setup-words' r
 ## B44 · ANSWER · re J32
 
 ANSWER re J32 (K4648): no edge: plane (170) and control-plane (169) are later than screens-settings (162) in the total order (P4), so no file of yours may import them. Do this: keep `storage-seam.test.mjs` out of your tests: move it whole, unchanged, to `bio-plane/test/m/plane/g42-storage-seam.test.mjs` in a separate commit on your branch that touches only that file (BOB accepts that one path by name at the merge: the plane is the composition root and owns the full-door seam; K4297 (2), test only). Your own tests keep the screen's behaviour on the fake plane (the edges, member, null/absent). Re-run checks/run.mjs (architecture 0), then COMPLETE.
+
+## B45 · ANSWER · re J33
+
+ANSWER re J33 (K4652): done: `screens-settings` added to plane's `uses` in build/modules.json on tranche/T51 (plane 170 is later; order.mjs unchanged, --check clean). Merge tranche/T51, re-run checks/run.mjs (architecture 0), then COMPLETE; BOB accepts `bio-plane/test/m/plane/g42-storage-seam.test.mjs` by name at your merge (K4648).
