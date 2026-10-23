@@ -9,7 +9,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import * as O from "../../../src/op-declarations/index.mjs";
-import { browserActs, OWED_BY_FIX_ROUND } from "./browser.mjs";
+import { browserActs, OWED_BY_FIX_ROUND_AT_43379A1A44 } from "./browser.mjs";
 import { AI_GRANT_OPS, credentialsOps } from "../../../src/credentials/index.mjs";
 import { caseCarriageOps } from "../../../src/case-carriage/index.mjs";
 
@@ -197,7 +197,7 @@ test("R21 (T37; N776, DEC-180, DEC-182; K2159, K2171): on PR #14's registry ever
   /* T46 (R52): every owed act of PR #28's registry is declared (infolevelset, owed with no spec until T46, is R50's); (T50,
      R73) the five PR #36 owes whose ops T49 left out are declared now; the registry also owes the installer's four own
      routes (K3471, installer R62), no plane op, named, with no spec */
-  const LEFT_OUT = ["installalongside", "installremove", "installremoveconfirm", "installupdate", ...OWED_BY_FIX_ROUND];
+  const LEFT_OUT = ["installalongside", "installremove", "installremoveconfirm", "installupdate", ...OWED_BY_FIX_ROUND_AT_43379A1A44];
   /* T51 (R76): the seven DEC-330 browser acts are owed rows read as a class of their own, no op */
   const BROWSER = browserActs(registry);
   assert.deepEqual(owed.filter((op) => !Object.hasOwn(OPS, op)).sort(), [...LEFT_OUT, ...BROWSER].sort());

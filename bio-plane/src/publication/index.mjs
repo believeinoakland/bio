@@ -154,6 +154,37 @@ export const EDITIONS_OF_MAX = 500;
  *  row value keeps to (K4639) and 0.5 MiB under the platform's 2,098,176 B bound on a bound value; BOB reports it (K1881). */
 export const CASE_DOCUMENT_BYTES_MAX = 1572864;
 const utf8Exact = (t) => new TextEncoder().encode(t).length;
+/** R15 (G54; K4426, K4565, K4566): the case file's ledger on `published_cases`. The states a caller writes (`stopped` is
+ *  the writer's own: it follows the bound below), the steps an attempt names (`why.step`; the log's `step`), and the
+ *  provisional constants the sweep's backoff and bound are made of (set by the job; pinned by `g54-casefile.test.mjs`). */
+export const CASEFILE_STATES = Object.freeze(["building", "failed", "stopped", "built"]);
+export const CASEFILE_STEPS = Object.freeze(["facts", "copy", "materials", "build", "bucket_put", "quartet", "record", "manifest_put"]);
+/** `MATERIAL_MISSING` failures in a row, with the evidence store's absence confirmed, after which an edition is `stopped`. */
+export const CASEFILE_MISSING_MAX_ATTEMPTS = 6;
+/** A never-attempted edition is due this long after `ratified_at`, so a sweep does not race the request still copying. */
+export const CASEFILE_GRACE_MS = 120000;
+/** A `building` is waited on at least this long; a `failed` waits `min(FIRST * 2^(attempts-1), MAX)`. */
+export const CASEFILE_BUILDING_WAIT_MS = 120000;
+export const CASEFILE_BACKOFF_FIRST_MS = 15000;
+export const CASEFILE_BACKOFF_MAX_MS = 3600000;
+/** The editions one `caseFilesOwed` read answers at most, and the bound on a stored `casefile_why`, in UTF-8 bytes, and on
+ *  the error name and message it carries, in characters (the row bound is 2,098,176 B). */
+export const CASEFILES_OWED_MAX = 100;
+export const CASEFILE_WHY_BYTES_MAX = 1024;
+export const CASEFILE_TEXT_MAX = 160;
+const CASEFILE_CODE = /^[A-Z][A-Z0-9_]{0,39}$/;
+/** R15 (G54): a caller's `why`, reduced to its known keys and cut to the bounds; null when it names no code or step. */
+function caseFileWhy(why, bounded = true) {
+  if (!why || typeof why !== "object") return null;
+  if (typeof why.code !== "string" || !CASEFILE_CODE.test(why.code) || !CASEFILE_STEPS.includes(why.step)) return null;
+  const out = { code: why.code, step: why.step };
+  for (const k of ["error", "detail"]) if (typeof why[k] === "string" && why[k]) out[k] = why[k].slice(0, CASEFILE_TEXT_MAX);
+  for (const k of ["bytes", "files", "run"]) if (Number.isInteger(why[k]) && why[k] >= 0) out[k] = why[k];
+  if (bounded) for (const k of ["detail", "error"])
+    if (new TextEncoder().encode(JSON.stringify(out)).length > CASEFILE_WHY_BYTES_MAX) delete out[k];
+  return out;
+}
+const backoffMs = (attempts) => Math.min(CASEFILE_BACKOFF_FIRST_MS * 2 ** (Math.max(1, Number(attempts) || 1) - 1), CASEFILE_BACKOFF_MAX_MS);
 /** R41: the cited parts one `caseCitedParts` read answers. */
 export const CITED_PARTS_MAX = 1000;
 /** R42, R43: the page of `restingCapturesOf` and of `ratifiedCases`, its default and its ceiling. */
@@ -2266,6 +2297,100 @@ export class Publication {
     });
   }
 
+  /* R15 (G54; K4426, K4565, K4566, K4571): the one writer of the case file's ledger, the four `casefile_*` columns of
+     `published_cases`. `building` and `failed` add one to `casefile_attempts` (a `building` left by a cancelled request or a
+     memory kill is therefore already an attempt); `built` is written only on an edition whose manifest is recorded (the
+     caller puts the manifest's own bytes first) and adds none. `stopped` is this writer's own: a `failed` whose
+     `why.code` is `MATERIAL_MISSING`, with `absent: true` (the caller's probe of the evidence store confirmed the object
+     gone), that is the `CASEFILE_MISSING_MAX_ATTEMPTS`th in a row (counted in `why.run`) is stored `stopped`. A built or
+     stopped edition is not rewritten by a late `building` or `failed`; a `built` is accepted over anything. It is a
+     store-internal hop (`recordcasefile`), no caller's op, and `recordCaseManifest` leaves these columns alone. */
+  recordCaseFileAttempt({ caseId, edition, state, why = null, at = null, absent = false } = {}) {
+    const ed = Number(edition);
+    const whyOf = state === "built" ? null : caseFileWhy(why);
+    if (typeof caseId !== "string" || !caseId.trim() || !Number.isInteger(ed) || ed < 1
+        || !["building", "failed", "built"].includes(state)
+        || (at != null && !(typeof at === "string" && Number.isFinite(Date.parse(at))))
+        || (state === "failed" && !whyOf) || (why != null && state === "building" && !whyOf))
+      return { ok: false, reason: "MALFORMED" };
+    return this.record.transact(() => {
+      const c = this.#one(`SELECT manifest_sha, casefile_state, casefile_attempts, casefile_why FROM published_cases
+                           WHERE case_id=? AND edition=?`, caseId, ed);
+      if (!c) return { ok: false, reason: "NO_SUCH_CASE_EDITION", caseId, edition: ed };
+      const when = at ?? this.#when();
+      const attempts = Number(c.casefile_attempts) || 0;
+      if (state === "built") {
+        if (!c.manifest_sha) return { ok: false, reason: "NO_MANIFEST", caseId, edition: ed };
+        if (c.casefile_state === "built") return { ok: true, caseId, edition: ed, state: "built", attempts, existed: true };
+        this.sql.exec(`UPDATE published_cases SET casefile_state='built', casefile_attempted_at=?, casefile_why=NULL
+                       WHERE case_id=? AND edition=?`, when, caseId, ed);
+        return { ok: true, caseId, edition: ed, state: "built", attempts };
+      }
+      if (c.casefile_state === "built" || c.casefile_state === "stopped")
+        return { ok: true, caseId, edition: ed, state: c.casefile_state, attempts, existed: true };
+      let prev = null;
+      try { prev = c.casefile_why ? JSON.parse(c.casefile_why) : null; } catch { prev = null; }
+      const missingBefore = prev && prev.code === "MATERIAL_MISSING" ? Number(prev.run) || 0 : 0;
+      let next = state, kept = whyOf;
+      if (state === "failed" && whyOf.code === "MATERIAL_MISSING") {
+        kept = caseFileWhy({ ...whyOf, run: missingBefore + 1 });
+        if (absent === true && missingBefore + 1 >= CASEFILE_MISSING_MAX_ATTEMPTS) next = "stopped";
+      } else if (state === "building" && !whyOf && prev) kept = prev;   // a `building` keeps the run it interrupts
+      else if (state === "building" && whyOf && prev && prev.code === "MATERIAL_MISSING" && whyOf.code === "MATERIAL_MISSING")
+        kept = caseFileWhy({ ...whyOf, run: missingBefore });
+      this.sql.exec(`UPDATE published_cases SET casefile_state=?, casefile_attempts=?, casefile_attempted_at=?, casefile_why=?
+                     WHERE case_id=? AND edition=?`, next, attempts + 1, when, kept ? JSON.stringify(kept) : null, caseId, ed);
+      return { ok: true, caseId, edition: ed, state: next, attempts: attempts + 1 };
+    });
+  }
+
+  /* R15 (G54): the complete case editions owing a case file, each with the instant it is next due, oldest due first.
+     One rule, here: an edition is owed when it is complete (`caseEditionState`) and not `stopped` and either has no
+     manifest or has a ledger state that is not `built`. It is due at `ratified_at` + `CASEFILE_GRACE_MS` while never
+     attempted, else at `casefile_attempted_at` + `min(FIRST * 2^(attempts-1), MAX)` (a `building` waits at least
+     `CASEFILE_BUILDING_WAIT_MS`). An edition with a manifest and no ledger state is built and never owed (R-OLD). */
+  #caseFilesOwing() {
+    const out = [];
+    for (const r of this.#rows(
+      `SELECT case_id, edition, ratified_at, manifest_sha, casefile_state, casefile_attempts, casefile_attempted_at, casefile_why
+         FROM published_cases WHERE casefile_state IS NOT 'stopped'
+          AND (manifest_sha IS NULL OR casefile_state IN ('building', 'failed')) ORDER BY case_id, edition`)) {
+      const s = this.caseEditionState(r.case_id, Number(r.edition));
+      if (!s || !s.complete) continue;
+      const ratified = Date.parse(s.ratified_at ?? r.ratified_at);
+      let base = ratified + CASEFILE_GRACE_MS;
+      if (r.casefile_state) {
+        const attempted = Date.parse(r.casefile_attempted_at);
+        const wait = backoffMs(r.casefile_attempts);
+        if (Number.isFinite(attempted)) base = attempted + (r.casefile_state === "building" ? Math.max(CASEFILE_BUILDING_WAIT_MS, wait) : wait);
+      }
+      if (!Number.isFinite(base)) continue;
+      let why = null;
+      try { why = r.casefile_why ? JSON.parse(r.casefile_why) : null; } catch { why = null; }
+      out.push({ case: r.case_id, edition: Number(r.edition), manifest_sha: r.manifest_sha ?? null, state: r.casefile_state ?? null,
+                 attempts: Number(r.casefile_attempts) || 0, attempted_at: r.casefile_attempted_at ?? null, why,
+                 ratified_at: s.ratified_at ?? r.ratified_at ?? null, due: base });
+    }
+    return out.sort((a, b) => a.due - b.due || (a.case < b.case ? -1 : a.case > b.case ? 1 : a.edition - b.edition));
+  }
+
+  /** R15 (G54): the editions owed a case file and due at `now` (default the module's clock), oldest due first, at most `limit`
+   *  (default and ceiling `CASEFILES_OWED_MAX`); each carries the instant it was due (`next_at`). Writes nothing but
+   *  `caseEditionState`'s completion stamp; never throws. */
+  caseFilesOwed({ now = null, limit = null } = {}) {
+    try {
+      const t = typeof now === "number" ? now : Date.parse(now ?? this.#when());
+      if (!Number.isFinite(t)) return [];
+      return this.#caseFilesOwing().filter((x) => x.due <= t).slice(0, pageOf(limit, CASEFILES_OWED_MAX))
+        .map(({ due, ...x }) => ({ ...x, next_at: new Date(due).toISOString() }));
+    } catch { return []; }
+  }
+
+  /** R15 (G54): the earliest instant an owed case file is due (an ISO string, as `publishWake`), null when none is owed. */
+  caseFileNextAt() {
+    try { const o = this.#caseFilesOwing(); return o.length ? new Date(o[0].due).toISOString() : null; } catch { return null; }
+  }
+
   /* REC-22 / R4: the PUBLISHED GRAPH, written inside the publishing act's own
      transaction from the RATIFIED BYTES (the control plane reads references[]
      and the division disclosure out of the document the signature covers and
@@ -2766,6 +2891,8 @@ export function publicationOps(p, url, body) {
        itself since T33-90; this module no longer spreads them (N597). */
     /* REC-44: internal only, and no caller's op (R15). */
     recordcasemanifest: () => p.recordCaseManifest(b),
+    /* G54: the case file's ledger, internal like the manifest's and no caller's op (R15). */
+    recordcasefile: () => p.recordCaseFileAttempt(b),
     publishedtargets: () => p.publishedTargets(q("ids")),
     excludedby: () => p.excludedBy(q("id"), q("viewer")),
     /* REC-130: both carry the viewer the control plane STAMPS, and fail closed on its absence. */

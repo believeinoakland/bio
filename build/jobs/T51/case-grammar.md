@@ -1,6 +1,6 @@
 # case-grammar (T51)
 
-**Status** · session_01Fki6itUmQ4gkEDi9Uhphep · depth 2 · COMPLETE · handled B5
+**Status** · session_01AWTXz3dDga9C9mXYok9S8p · depth 2 · COMPLETE · handled B6
 
 ## Completion (T51-227, R8)
 
@@ -116,3 +116,62 @@ Size (session_01Fki6itUmQ4gkEDi9Uhphep): test runs 14, module lines 3070
 ## J5 · COMPLETE
 
 G47 provider done, pushed. See record 'Completion (G47, fix round 6)'. Optional attestation sha (materials.mjs), bio-case-document/9 + caseDocumentFormatFor (formats.mjs), page joins by sha else ref (complete.mjs). 5 new tests red-then-green; module 173/173; format/architecture/coverage/words/ownership clean. Caused reds in OTHER modules' tests (yours to place): case-catalogue checks.test.mjs:54,306 + ratification converted-c.test.mjs:269 use /9 as the unaccepted format (use /10); public-read R23 and case-authoring R55 x3 deepEqual attestation rows need sha:null. Entry correction: case-checker/index.mjs:67-69 is keyed by the case-FILE format, so an old checker on a /9 document answers a C-41.1 error (loud failure, not 'no specification'); your call whether the case-file format should move too. Proposed R1/R12/R14 lines are in the record. Other impact reds equal the clean tranche's.
+
+## J6 · REPORT
+
+Two more pinned assertions in `test/m/case-grammar/casefile.test.mjs` change with G50, besides the one you named (:243, now the four-format list):
+1. :310, the "departs at `format`" case used `bio-case-file/4` as the unknown format. `/4` is accepted now, so it becomes `bio-case-file/5` (still `format:format`). Note for case-checker: a test that uses `/4` as its unknown format needs the same change (`check.test.mjs:54` pins unknown formats).
+2. :279, the null list for `caseFilePath` had `["obscured", [R, sha("c")]]`. That key is now the discriminated spelling `materials/<ref>/<sha>/obscured`, so it is no longer null. I changed it to `["obscured", [R, "c"]]` (a short sha, still null). The discriminated spelling's own cases are in `g50-path.test.mjs`.
+No other pinned test changes so far. The R-OLD goldens are committed first (5bfb623f94): g1 departs `original_carried` twice (its document and its extracted text), g2 has no departure.
+
+## Completion (G50, fix round 6; CASE-GRAMMAR #21, B6)
+
+**Entries applied.** G50, case-grammar's share (105), all of START's note 2:
+- `casefile.mjs`: `CASE_FILE_FORMAT_V4 = "bio-case-file/4"`; `CASE_FILE_FORMATS_ACCEPTED` is `[V4, V3, V2, V1]`; `CASE_FILE_FORMAT` stays `bio-case-file/3` (the format written when no path states a capture). `KINDS_LACKED[V4] = []`. `caseFilePath(kind, [ref, sha])` for `document`, `extracted_text`, `observation`, `obscured`: `materials/<ref>/<sha>/<leaf>`, the sha lower-cased, null for a bad ref or a sha that is not 64 hex after lower-casing; a ref alone is spelled as before. `caseFileEntryOf` answers `{kind, ref, capture}` for such a path (a 4-segment `materials/<ref>/<seg>/<leaf>`: `archives`/`containers` is a chain, 64 lower-case hex with a material leaf is a capture, anything else null); a plain path answers no `capture` key. New: `caseFileFormatFor(paths)`, `refsOnSeveralRows(rows)` (a `Set`), `materialFileKey(row, several, format)` (`[ref, lower(sha)]` under `/4` for a ref in `several`, else `ref`). All exported through `index.mjs`.
+- `caseFileManifestCheck`: five new departures (`path_format`, `format_unused`, and under `/4` with the rows `capture_missing`, `capture_needless`, `capture_unnamed`); the three copy rules by `(ref, capture)` where a path states a capture; every other format judged exactly as before.
+- `complete.mjs`: the copy is read at `materialFileKey(x, several, cf.format)`, so a `/4` file renders each row's copy line from its own file.
+- Words: the `format` departure names the accepted list (see ruling 1). Census ops: none declared, none changed (G50 changes none).
+
+**Rulings of detail (BOB may overrule; none changes a requirement's meaning).**
+1. **The reworded `format` sentence has a new id, `case-grammar.casefile.format-accepted`** (vars `{accepted, value}`), and the old call is gone. Why: `localize` reads the generated list first and `en` only when it holds no row, so rewording the existing id `case-grammar.casefile.format` would have kept showing the old English (and needed its old vars) until `rows.mjs` is regenerated, and `rows.mjs` is not mine to edit. A new id works at once; regeneration drops the old row. Owed to UX-DESIGN as a stand-in change: BOB's §5 line is the sentence "the format is one of {accepted}, each read as written, and this manifest states {value}" (`{accepted}` = "bio-case-file/4, bio-case-file/3, bio-case-file/2, bio-case-file/1").
+2. `path_format` is judged against the effective format, as `kind_format` is: a manifest of an unaccepted format (say `/5`) departs at `format` and its capture paths are `path_format` too (read as `/3`).
+3. On a ref with one row, a path under a capture that no row names answers both `capture_needless` and `capture_unnamed` (each is true); with no row of the ref at all, `capture_unnamed` only.
+4. Under `/4`, a path that states no capture (`archive`, `container`, and a plain `document` or `extracted_text`) is `original_carried` only when the ref has rows and every row is a copy; a path under a capture is judged by its own row. A `/3`, `/2` or `/1` manifest keeps `copies.has(ref)` (g1 still departs, twice).
+5. `obscured_copy_missing` under `/4` for a ref on several rows is judged per row, by its capture; a plain copy file for such a ref (itself `capture_missing`) carries no row's copy.
+6. `materialFileKey` takes `several` as the `Set` `refsOnSeveralRows` answers, or `true`; a row whose `sha` is not a string gives `[ref, null]`, which `caseFilePath` spells as null (public-read's `unheld`). Unaccepted or absent `format` spells the plain ref.
+7. Left as it was: `complete.mjs`'s join of `sources:` rows to a material by `r.capture === x.sha` (not a path or copy join; changing its case would alter byte-pinned renders of an upper-case row).
+
+**R-FOUR.** (1) Cause: `caseFilePath` took one segment, the ref (`casefile.mjs:108-123` before), so two rows of one ref gave one path, and the copy rules and the edition's lookup (`complete.mjs:309`) were keyed by ref. (2) Missed: no test had two `materials:` rows of one ref carrying files (every fixture had one copy per ref; `path_twice` was only tested on a hand-duplicated entry). Gap fixed: `g50-path.test.mjs` (12 tests) builds `/3` and `/4` manifests from the document's real rows and the real `materialsOf`. (3) Failing-first: with `casefile.mjs`, `complete.mjs` and `index.mjs` put back to the base, 11 of the 12 fail (the 12th is the golden test, green at both ends by design); with the change, all 12 pass. (4) Platform check: N (pure module, no store or clock).
+
+**Pinned tests I changed** (casefile.test.mjs): `:243` the accepted list (named in START); `:310` the "unknown format" case used `bio-case-file/4`, now `bio-case-file/5` (reported at once, J6); `:279` `["obscured", [R, sha("c")]]` was in the list that must answer null and is now a valid discriminated key, so it is `["obscured", [R, "c"]]` (reported at once, J6). No assertion of the `format` departure's words existed. The `/6`, `/7` and `/7-pre-T37` goldens and every other existing test pass unchanged.
+
+**Goldens (R-OLD).** `make-g50-goldens.mjs` and `g50-old-goldens.json` were committed first (5bfb623f94), recorded by the base code at `124e62bfa8`: g1 `original_carried` ×2 with the rows (document and extracted text), `[]` without; g2 `[]` both ways. After the change the test rebuilds both files from the same facts and the manifest, both checks and the complete edition are equal to the recorded ones.
+
+**Readers of case-file paths and of the version string.** The entry's list is complete; I found no other (grep over `bio-plane/src`, `site`, `docs`, `requirements`): case-grammar `casefile.mjs`, `complete.mjs`; public-read `casefile.mjs`, `index.mjs` (`withholdChains`, `publishedcase`, `#editionItems`); case-checker `check.mjs`, `spec.mjs`, `program.mjs` (generated); case-import `index.mjs`; publication `index.mjs`, `worker.mjs`. `docs/development/ux-substrate/screens/words-reads*.json` mention the path in prose only.
+
+**Requirements (BOB's to write).** R13 is built as: the format written is `bio-case-file/4` for a case file with at least one path under a capture and `/3` otherwise; `/1`–`/4` are read as written, each by its own spelling; the five departures; the copy rules by (ref, capture). R14: the copy is read at its row's path under `/4`. New exports for Provides: `CASE_FILE_FORMAT_V4`, `caseFileFormatFor`, `refsOnSeveralRows`, `materialFileKey`, `caseFileEntryOf`'s `capture`.
+
+**New ids for the checker program (B3 (b)).** `case-grammar.casefile.` + `format-accepted, path-format, format-unused, capture-missing, capture-needless, capture-unnamed`. Retired: `case-grammar.casefile.format` (no longer called; its row drops at regeneration). `rows.mjs` and `words-unreviewed.json` need regenerating for these six.
+
+**Stale by this change (generated, never edited by me).** `bio-plane/src/case-checker/program.mjs` (it embeds `casefile.mjs`), `bio-plane/dist/bio-plane.bundled.mjs`, `release/bio-plane.bundled.mjs`, `setup-words/rows.mjs` and `words-unreviewed.json`. `build.mjs --check` is stale from before this job (first difference `calculations.index.a_reason_is_at_most`, another job's words); my six ids and the dropped one add to it.
+
+**Deferred.** None. **Found in other modules.** Nothing new; as the entry says, nothing of public-read (B) is to be built into `dist/` or deployed before case-checker has merged.
+
+**Tests and checks.** `node --import ./bio-plane/test/platform-sqlite.mjs --test --test-force-exit` from `bio-plane`: case-grammar 185 of 185 (before this job 173; +12 in `g50-path.test.mjs`). Users run once each, all pass: public-read casefile, obscured, archives, photos, calculations (31); case-checker check, spec, account, standards-offline, words (69); case-import real (5); publication t33 (8). `checks/run.mjs`: format 0, architecture 0, coverage 6686 of 6686, words: one finding, the inherited `inline` at `case-checker/spec.mjs:11`, none in case-grammar. `checks/ownership.mjs` (case-grammar, vs `tranche/T51`): 0 failures.
+
+Size (session_01AWTXz3dDga9C9mXYok9S8p): test runs 33, module lines 3126
+
+## J7 · COMPLETE
+
+G50 (105) done: `bio-case-file/4` with the capture in the path for a ref on several rows, the five departures, the copy rules by (ref, capture), the complete edition's copy read at its row's path. Details, rulings and the new ids are in my record (Completion G50, fix round 6).
+
+- Failing-first: with the base code 11 of the 12 new tests in `g50-path.test.mjs` are red; the 12th is the R-OLD golden test, byte-equal before and after (g1 departs `original_carried` twice as at the base, g2 none).
+- case-grammar 185 of 185. Users run and pass: public-read (casefile, obscured, archives, photos, calculations), case-checker (check, spec, account, standards-offline, words), case-import real, publication t33.
+- `checks/run.mjs`: format 0, architecture 0, coverage complete; words shows only the inherited `inline` at `case-checker/spec.mjs:11`. ownership 0 failures.
+- For your decision: the reworded `format` sentence has a NEW id, `case-grammar.casefile.format-accepted`. The list wins over the code's English for an existing id, so rewording `case-grammar.casefile.format` would have shown the old words until `rows.mjs` is regenerated. §5 line for UX-DESIGN: "the format is one of {accepted}, each read as written, and this manifest states {value}". Overrule and I will re-key it.
+- New ids for the checker program: `case-grammar.casefile.` + format-accepted, path-format, format-unused, capture-missing, capture-needless, capture-unnamed. The old `.format` row drops at regeneration.
+- Stale (generated, not touched): `case-checker/program.mjs`, `dist/`, `release/`, `setup-words` rows and `words-unreviewed.json`.
+- Pinned tests changed: `casefile.test.mjs` :243 (named), :310 (`/4` was the unknown-format case, now `/5`) and :279 (an obscured `[ref, sha]` key is now valid, not null).
+- Census ops: none changed.
+
+Size (session_01AWTXz3dDga9C9mXYok9S8p): test runs 33, module lines 3126

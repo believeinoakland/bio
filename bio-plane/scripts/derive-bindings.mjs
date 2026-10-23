@@ -201,3 +201,43 @@ export function schedulesReadBack(held, want) {
     ? { verdict: "MATCH", why: `schedules ${show(held)} read back` }
     : { verdict: "MISMATCH", why: `the script holds ${held.length ? held.join(" | ") : "none"}, the config declares ${show(want)}` };
 }
+
+/* ---- G54 (K4426): Workers Logs are DECLARED, carried and read back ----
+ *
+ * `observability: { enabled: true }` lives in wrangler.jsonc, and a raw script upload that does not send it turns Workers
+ * Logs OFF on the script (measured on biosmoke8: the 2026-10-20 03:35Z upload reset them, so no line named why two case
+ * files were never built). The release path does not run wrangler, so a setting written only in the config never reaches a
+ * deployed plane: deriveObservability is the one copy, as deriveLimits is for the ceiling.
+ *
+ * THE REFUSAL: a config that does not turn Workers Logs on is REFUSED BY NAME, because sending no `observability` is not
+ * "unchanged", it is off. A key this derivation does not carry (a sampling rate, a sub-setting) is refused too, never
+ * dropped, and never defaulted: nothing is sent that the config does not state. */
+const KNOWN_OBSERVABILITY_KEYS = new Set(["enabled"]);
+
+/** The `observability` object deploy.mjs sends in the upload metadata: `{ enabled: true }`. */
+export function deriveObservability(cfg) {
+  const o = cfg && cfg.observability;
+  if (!o || typeof o !== "object" || Array.isArray(o) || o.enabled !== true) {
+    throw new Error(
+      "REFUSED [NO_OBSERVABILITY]: wrangler.jsonc does not state `observability: { enabled: true }`, and a script upload that "
+      + "sends none turns the script's Workers Logs off (G54). Turn them on in the config; the deploy sends what it states.");
+  }
+  const unknown = Object.keys(o).filter((k) => !KNOWN_OBSERVABILITY_KEYS.has(k));
+  if (unknown.length) {
+    throw new Error(
+      `REFUSED [UNKNOWN_OBSERVABILITY_KEY]: wrangler.jsonc's observability declares ${unknown.join(", ")}, `
+      + "which this derivation does not carry. Teach deriveObservability the key in the same change.");
+  }
+  return { enabled: true };
+}
+
+/** Read the deployed script's settings back against what was sent. Three honest answers: MATCH (the settings report Workers
+ *  Logs enabled), MISMATCH (they report it off, or state none: the platform reports an off script without the key), or
+ *  UNREADABLE (the settings could not be read: never read as a match). Only `enabled` was sent, so only it is compared. */
+export function observabilityReadBack(settings, want) {
+  if (!settings || typeof settings !== "object") return { verdict: "UNREADABLE", why: "the script settings could not be read" };
+  const got = settings.observability;
+  if (!got || typeof got !== "object") return { verdict: "MISMATCH", why: "the script settings state no observability, which is how the platform reports Workers Logs off" };
+  if (got.enabled !== want.enabled) return { verdict: "MISMATCH", why: `settings say observability.enabled ${JSON.stringify(got.enabled ?? null)}, the config sent ${want.enabled}` };
+  return { verdict: "MATCH", why: `observability.enabled ${got.enabled} read back` };
+}

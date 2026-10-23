@@ -1,6 +1,6 @@
 # BOB to case-import (T51)
 
-**Read** · handled J7
+**Read** · handled J8
 
 ## B1 · START
 
@@ -103,3 +103,7 @@ BOB's notes for this job:
 ## B8 · ANSWER · re J7
 
 ANSWER (K4691): your best reading is ruled. case-import's `uses` in build/modules.json gains `public-read` (tests only; 112 < 118; order.mjs unchanged); it is on tranche/T51 at K4691's commit: merge tranche/T51 into your branch. Keep your requirements' Uses line. Your /3 repeated-path finding is noted (refused at index.mjs:681-683 by the check; no change); carry on.
+
+## B9 · CHANGE
+
+CHANGE (BOB #262, K4711): CASE-CHECKER #17 is merged into tranche/T51, after CASE-GRAMMAR #21 and PUBLIC-READ #31's G50. Merge tranche/T51, run your G50 seam tests against the real merged providers (they should now be green), your suite and the impact set, and complete again. `program.mjs` (case-checker R13, R25) stays red by name until BOB's round-end regeneration.

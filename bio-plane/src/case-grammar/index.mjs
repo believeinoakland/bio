@@ -49,10 +49,10 @@ export { METHOD_FIELDS, methodBlockLines, methodOf, MATERIAL_FIELDS, MATERIAL_TI
          MATERIAL_RESTS_UNDER, ATTESTATION_BY_KINDS, ATTESTATION_LEVELS, ANONYMOUS_ATTESTATION_LEVELS,
          GROUP_ATTESTATION_SIGNATURE, materialsLines, materialAttestationLines, materialBlockLines, materialsOf, ACCEPTED_WORK_FIELDS, ACCEPTED_WORK_FLAG_FIELDS,
          PAIR_AXES, pairLine, pairOf, acceptedWorkBlockLines, acceptedWorkOf } from "./materials.mjs";
-export { CASE_FILE_FORMAT, CASE_FILE_FORMAT_V2, CASE_FILE_FORMAT_V1, CASE_FILE_FORMATS_ACCEPTED, CASE_FILE_MANIFEST_PATH, CASE_FILE_PROV_PATH,
+export { CASE_FILE_FORMAT, CASE_FILE_FORMAT_V4, CASE_FILE_FORMAT_V2, CASE_FILE_FORMAT_V1, CASE_FILE_FORMATS_ACCEPTED, CASE_FILE_MANIFEST_PATH, CASE_FILE_PROV_PATH,
          CASE_FILE_KINDS, CASE_FILE_V2_KINDS, CASE_FILE_V3_KINDS, CASE_FILE_ORIGINAL_KINDS, CASE_FILE_SINGLE_KINDS, CASE_FILE_OPTIONAL_SINGLE_KINDS, CASE_FILE_MANIFEST_FIELDS,
          CASE_FILE_KEY_FIELDS, CASE_FILE_PART_FIELDS, CASE_FILE_FILE_FIELDS, caseFilePath, caseFileEntryOf,
-         casePartDigest, caseFileManifestCheck } from "./casefile.mjs";
+         caseFileFormatFor, refsOnSeveralRows, materialFileKey, casePartDigest, caseFileManifestCheck } from "./casefile.mjs";
 export { GRADING_FACT_FIELDS, PASSAGE_FIELDS, gradingFactsLines, passagesLines, gradingFactsOf, passagesOf,
          extractedTextOf } from "./facts.mjs";
 export { BAR_AXES, STANDING_ROLE_WORDS, standingOf } from "./standing.mjs";
