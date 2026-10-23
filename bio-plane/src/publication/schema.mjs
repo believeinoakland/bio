@@ -100,6 +100,7 @@ CREATE TABLE IF NOT EXISTS published_shas (
   kind      TEXT NOT NULL,
   bytes     INTEGER,
   published TEXT NOT NULL,
+  capture_sha TEXT,
   PRIMARY KEY (sha256, bundle_id, path)
 );
 CREATE INDEX IF NOT EXISTS published_shas_sha ON published_shas(sha256);
@@ -546,7 +547,17 @@ const ADDITIVE_COLUMNS = [
      at its commit (a JSON list; `[]` for an edition whose members target no standard). NULL for an edition committed
      before T35, read as not recorded and never filled. */
   ["published_cases", "criteria", "TEXT"],
+  /* G47t (K4677): the capture a kind `attestation` token stamps, so a reader shows capture B's token under B and not
+     under A when a case holds two captures of one source. NULL says no single capture is named: every row written
+     before this, every kind but `attestation`, and a token two different captures share. Never back-filled. */
+  ["published_shas", "capture_sha", "TEXT"],
 ];
+
+/** G47t (K4677): the registration of a kind `attestation` token: a stored capture that differs from the new one is cleared
+ *  to NULL (the token is shared), a stored NULL is never rewritten to a value, the same capture again changes nothing. */
+export const ATTESTATION_SHA_UPSERT = `INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published,capture_sha) VALUES (?,?,?,?,?,?,?)
+  ON CONFLICT(sha256,bundle_id,path) DO UPDATE SET capture_sha = NULL
+  WHERE capture_sha IS NOT NULL AND capture_sha IS NOT excluded.capture_sha`;
 
 /* D-734 (BOB #36, D-731 (b)): the path a ratified case document's hash is registered under in `published_shas`. */
 export const caseDocumentPath = (edition) => `case-document-edition-${Number(edition)}.md`;

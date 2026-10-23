@@ -1,6 +1,6 @@
 # capture (T51)
 
-**Status** · session_01Uu76H7JzhRxSdMcBjFLc6j · depth 2 · COMPLETE · handled B27
+**Status** · session_01L1Y9FNxaoQ4v7iZDkLBJWG · depth 2 · COMPLETE · handled B28
 
 ## J1 · COMPLETE
 
@@ -561,3 +561,31 @@ COMPLETE (CAPTURE #49, B27 CHANGE applied; J25 stands, this adds one item). Push
 Tests and checks after this change: capture + cap13 + d57: 279 tests, 278 pass, 1 fail (the G32 test, red by name until acquisition's `opts.heldSha` merges). Users (the 47 files of plane, control-plane, extraction, capture-requests naming `acquire`): 372 tests, 368 pass, the same 4 failures as before and on `tranche/T51` without my commits (E3 41.5 MB, R117 C5b, R120/R121, R125 (b)). `checks/run.mjs`: format, architecture, coverage (58 of 58 for capture), words 0 failures. `checks/ownership.mjs`: 8 files, 0 failures.
 
 Size (session_01Uu76H7JzhRxSdMcBjFLc6j): test runs 17, module lines 4345
+
+## G41b · a multipart upload is profiled from its declared type or name (R107 proposed; B28)
+
+1. Root cause (as the START says, confirmed): `uploadCapture` computed `ct` only `if (!multipart)`, so a file over one 8 MiB part reached `profileOf` with `ct` null; a CSV has no magic, so its format was `undetermined` although the upload declared `text/csv` (or was named `x.csv`).
+2. Acquisition is not an owner: read `profileOf` (acquisition/index.mjs:1857-1900) and `detectFormat` (formats.mjs:115): for a multipart, `profileOf` already calls `detectFormat(head, ct || null)` (:1887), so a given `ct` is honoured (pass 1, the bytes' signature, outranks it; pass 2 uses `ct`). Nothing in acquisition changes; R102's `textTypeOf` is used as it is.
+3. Change (`bio-plane/src/capture/index.mjs`): the stream keeps the file's first `UPLOAD_HEAD` (64 KiB, chosen, not measured; a protective bound for BOB's K1881 report) bytes as they arrive; for a multipart upload `ct = textTypeOf({bytes: withoutCutCodePoint(head), type, name})` (the same rule, over the head, less a UTF-8 code point cut at its end); `profileOf` then judges the format from the first part's sniff, and from `ct` where the sniff names none. `source_content_type` and `declared_by` are recorded as for one part (a declared type as the uploader's declaration; a name gives `ct` only, `source_content_type` null).
+4. Failing-first, seen red then green: `g41b-t51.test.mjs` (real `uploadCapture`, 9 MiB and 17 MiB files in 2 and 3 real parts, no stub): a 9 MiB CSV declared `text/csv` is `csv` (red: `undetermined`); a 17 MiB `x.csv` with no type is `csv`; text with multi-byte characters whose head ends inside a character is `csv` (red without the trim, shown by disabling it). Controls (held before and after): the one-part CSV byte for byte as before; non-text bytes (a NUL) declared `text/csv` stay `undetermined`, the declaration recorded; non-text bytes declared `text/html` are not `html`; a PDF-magic file declared `text/csv` is `pdf`; a multipart PDF with no type is `pdf` (R101); a declared non-text type is not overridden by a `.csv` name; neither type nor text name: `undetermined`.
+5. Platform check **L** (`g41b-plane.test.mjs`, real workerd under Miniflare, real DO SQLite and R2, `op=captureupload` through the door with a member session): a 9 MB CSV in two parts is `csv` declared `text/csv` and `csv` named `x.csv`, and `undetermined` with neither; red before the change (the first assertion), green after. **P** rides G41's re-walk (a 9 MB CSV uploaded by a member).
+6. My reading of one control, for BOB to confirm or correct: "a multipart upload declared `text/html` whose bytes are not HTML is not profiled `html`" is tested with bytes that are not text. A file whose bytes ARE text and declared `text/html` is profiled `html` on a multipart as on one part (R92: the declaration settles a text file the bytes' signature does not name; one part does so today, checked), so the two cases agree.
+7. R-OLD: new uploads only. No op's accepted keys change (nothing to re-declare, K4208). No sentence a member reads is added (`unkeyed` untouched). No other module's artifact is made stale.
+
+## Requirement lines proposed (BOB writes `build/requirements/capture.md`)
+- R92 and R93 (amend): drop "within one part": "(T51 fix round 6, G41; R107) For a file held in parts the rule is applied to its first 64 KiB (less a code point cut at their end); see R107."
+- R107 (new): "(T51 fix round 6, G41 follow-up; K4670; amends R92, R93, R101) **A file held in parts is profiled from its declared type or name as one part is.** `uploadCapture` of a file over one 8 MiB part judges, by `acquisition`'s `textTypeOf` (R102), the first 64 KiB of the file (`UPLOAD_HEAD`), less a UTF-8 code point cut at their end; when the head is text, the declared text type, or with none the `.txt`, `.md` or `.csv` name, is the content type `profileOf` is given, so a CSV over one part is profiled `csv`. The first part's byte signature still decides first (a PDF declared `text/csv` is `pdf`), a declaration is recorded as the uploader's and a name is not, and a head that is not text, or a declared type that is not text, leaves the profile as R101 has it. New uploads only. Test: `g41b-t51.test.mjs`; platform: `g41b-plane.test.mjs`."
+- Provides: nothing else changes.
+
+## Tests and checks (G41b)
+- Own suite under the preload (capture + cap13 + d57): 284 tests, 284 pass, 0 fail (includes the 4 + 1 new).
+- Users: the 47 test files outside my module that name `uploadCapture` or `captureupload`: 422 tests, 400 pass, 22 fail, none mine: `journey-check/walker` (17) failed only because its `node_modules` was missing in this container, and passes 17/17 after `npm ci` there (K4113); `affordances/t36` (4, `readheld` has no design sentence / ACT_HELP) fail identically on the unmodified tranche `capture/index.mjs` (4 fail, 10 pass), so not caused by this change; one remaining suite-level file load error was the same walker.
+- `checks/run.mjs`: format 0, architecture 0, coverage 0 (6685 of 6685), words 0 failures with `unkeyed` unchanged (no sentence added). `checks/ownership.mjs /home/user/bio capture tranche/T51 job/T51/capture`: 0 failures.
+- Protective bound set, for BOB to report to Bob (K1881): `UPLOAD_HEAD` = 64 KiB (the head of a file held in parts that is judged as text), chosen, not measured.
+- Unkeyed, deferred, open questions: none. Reading of one control: item 6 above.
+
+Size (session_01L1Y9FNxaoQ4v7iZDkLBJWG): test runs 9, module lines 4366
+
+## J27 · COMPLETE
+
+COMPLETE (CAPTURE #50, B28): G41 second cause fixed. uploadCapture keeps the file's first 64 KiB (UPLOAD_HEAD, a protective bound for K1881) and, for a multipart upload, gives profileOf the ct from acquisition's textTypeOf over that head (a cut trailing code point trimmed); acquisition unchanged (profileOf/detectFormat already honour ct for multipart). Failing-first red then green: g41b-t51.test.mjs (9 MiB csv declared text/csv; 17 MiB x.csv; multi-byte head; controls incl. PDF declared text/csv=pdf, NUL bytes, text/html non-text bytes, multipart PDF no type, one-part CSV). Platform L: g41b-plane.test.mjs through Miniflare, 9 MB CSV in two parts = csv (declared and named), undetermined with neither; red before. Suites: own 284/284; users 400/422, failures not mine (walker missing node_modules, passes 17/17 after npm ci; affordances t36 4 fail identically on unmodified tranche). checks/run: 0 failures; ownership 0. Proposed R107 plus R92/R93 amendment in my record. Reading to confirm: the text/html control is tested with non-text bytes; text bytes declared text/html are html on multipart as on one part. Size line in record.

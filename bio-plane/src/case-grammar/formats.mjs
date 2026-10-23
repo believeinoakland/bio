@@ -26,8 +26,15 @@
    K3820 (R33; T51-136): THE FORMAT MOVES TO /8, FOR ONE REASON ONLY. The words a reader reads say "team" where they said
    "group", and a published `/7` case must re-render and re-spell byte for byte, so the words are chosen by the document's
    own format (`caseWordsOf`, `./words.mjs`): `/7` and earlier keep "group", `/8` says "team". `/8` states exactly what
-   `/7` states, and `/7` stays accepted. op=publish authors /8 only. */
+   `/7` states, and `/7` stays accepted. op=publish authors /8 only.
+   G47 (R1, R12; K4669, K4672): THE FORMAT /9 IS DECLARED BY A DOCUMENT THAT NEEDS IT, NEVER AUTHORED BY DEFAULT. A
+   `material_attestations:` row may carry the `sha` of the capture it attests (R12), so a case of several captures of one
+   source joins each attestation to its capture. A checker pinned before the field joins by `ref` alone and would give a
+   wrong verdict on such a document; it answers "no specification" for a format it does not hold, so a document that
+   carries any attestation `sha` declares `/9` (`caseDocumentFormatFor`) and one that carries none keeps `/8` and its
+   bytes. `/9` states what `/8` states, plus that field, and speaks the same words. */
 export const CASE_DOCUMENT_FORMAT = "bio-case-document/8";
+export const CASE_DOCUMENT_FORMAT_V9 = "bio-case-document/9";
 /* DEC-124: /7 is identical in fields to /6, and /8 (K3820, R33) identical to /7: the formats differ in the words only. */
 export const CASE_DOCUMENT_FORMAT_V7 = "bio-case-document/7";
 /* DEC-112 (3): /6 states the method and materials blocks; /7 is identical to it in fields. */
@@ -41,28 +48,46 @@ export const CASE_DOCUMENT_FORMAT_V4 = "bio-case-document/4";
 export const CASE_DOCUMENT_FORMAT_V3 = "bio-case-document/3";
 export const CASE_DOCUMENT_FORMAT_V2 = "bio-case-document/2";
 export const CASE_DOCUMENT_FORMAT_LEGACY = "bio-case-document/1";
-export const CASE_DOCUMENT_FORMATS_ACCEPTED = Object.freeze([CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5,
+export const CASE_DOCUMENT_FORMATS_ACCEPTED = Object.freeze([CASE_DOCUMENT_FORMAT_V9, CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5,
   CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2, CASE_DOCUMENT_FORMAT_LEGACY]);
 const formatOf = (fm) => { try { return fm && typeof fm === "object" ? fm.format : undefined; } catch { return undefined; } };
 /* Does the document state its members' frozen blocks itself (rule 12: /2 and later), or were they in the members' own
    bytes (/1)? ONE predicate for the gate, the committer and every per-case reader. Pure; never throws. */
 export const caseDocumentStatesMemberBlocks = (fm) =>
-  [CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4,
-    CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2].includes(formatOf(fm));
+  [CASE_DOCUMENT_FORMAT_V9, CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5,
+    CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3, CASE_DOCUMENT_FORMAT_V2].includes(formatOf(fm));
 /* REC-188: obliged to carry the bias manifest and the statement's acknowledgement list (C-41.13): /3 and later. */
 export const caseDocumentRequiresDisclosures = (fm) =>
-  [CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4,
-    CASE_DOCUMENT_FORMAT_V3].includes(formatOf(fm));
+  [CASE_DOCUMENT_FORMAT_V9, CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5,
+    CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3].includes(formatOf(fm));
 /* REC-219: obliged to state the pending adoptions (C-41.14) and the citation edges with their versions (C-41.15): /4
    and later. */
 export const caseDocumentRequiresV4Disclosures = (fm) =>
-  [CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5, CASE_DOCUMENT_FORMAT_V4]
-    .includes(formatOf(fm));
+  [CASE_DOCUMENT_FORMAT_V9, CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5,
+    CASE_DOCUMENT_FORMAT_V4].includes(formatOf(fm));
 /* N345: obliged to carry the tension section (`case_tensions`, `case_tension_sentences`), and the one gate of every `/5`
-   block's reader: /5, /6, /7 and /8. */
+   block's reader: /5, /6, /7, /8 and /9. */
 export const caseDocumentRequiresTensionSection = (fm) =>
-  [CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5].includes(formatOf(fm));
+  [CASE_DOCUMENT_FORMAT_V9, CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V5]
+    .includes(formatOf(fm));
 /* DEC-112 (3): obliged to carry R11's `method:` block and R12's `materials:` and `material_attestations:` blocks: /6
-   /7 and /8. */
+   /7, /8 and /9. */
 export const caseDocumentRequiresMaterials = (fm) =>
-  [CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMAT_V6].includes(formatOf(fm));
+  [CASE_DOCUMENT_FORMAT_V9, CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V7, CASE_DOCUMENT_FORMAT_V6].includes(formatOf(fm));
+
+/* G47 (R12): the `sha` an attestation row is written with, one spelling for the writer (`./materials.mjs`) and for the
+   format a document declares: a non-empty sentence; anything else (absent, null, a number, blank) is no `sha`. Never
+   throws. */
+export const attestationShaOf = (row) => {
+  try { const v = row && typeof row === "object" ? row.sha : null; return typeof v === "string" && v.trim() ? v : null; }
+  catch { return null; }
+};
+/** G47 (R1, R12): the format a case document declares, given the rows of its `material_attestations:` block: `/9` when
+ *  any row carries a `sha`, else `CASE_DOCUMENT_FORMAT` (`/8`), so a document with none keeps today's bytes and a checker
+ *  pinned before the field answers "no specification" for the one that needs it. Pure; never throws. */
+export const caseDocumentFormatFor = (attestationRows) => {
+  try {
+    return Array.isArray(attestationRows) && attestationRows.some((r) => attestationShaOf(r) !== null)
+      ? CASE_DOCUMENT_FORMAT_V9 : CASE_DOCUMENT_FORMAT;
+  } catch { return CASE_DOCUMENT_FORMAT; }
+};

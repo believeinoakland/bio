@@ -107,3 +107,7 @@ CHANGE to CALCULATIONS #8 (depth 2; fix round 6, G45; K4666). G41 is COMPLETE an
 **Seam reds by name:** none.
 
 Run: your suite under the preload, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names; `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio calculations tranche/T51 job/T51/calculations`. COMPLETE: what changed (file:line), each failing-first test red then green, the measures this START names, the seam tests still red by name and which provider each waits for, suite counts, the requirement lines you propose (BOB writes them), and the `Size` line.
+
+## B14 · RESUME
+
+(backstop, K4678) Your record reads WORKING with nothing pushed for 20 minutes and your session is idle, last noting 'waiting on two large-table measurements'. If those runs are no longer alive (an idle container loses untracked processes, K4207), re-run them as session-tracked background tasks, record the figures and post COMPLETE for G45. Your context is about 40 % of the window: if it passes half, finish the current step, note the next, and post BLOCKED (context).

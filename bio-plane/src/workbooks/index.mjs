@@ -35,6 +35,13 @@ export { workbooksOps, WORKBOOKS_OPS } from "./ops.mjs";
 export const RECOMPUTE_STATUSES = Object.freeze(["agrees", "differs", "partial", word("workbooks.recomputed")]);
 export const CHECK_OUTCOMES = Object.freeze(["agrees", "disagrees", "could_not_check"]);
 export const NOT_RECOMPUTED = word("workbooks.recomputed");
+/** R1 (G44; K1881, K4662): the protective bounds of the add, BOB's, reported to Bob. A capture stored above
+ *  `WORKBOOK_FILE_MAX_BYTES` is refused before any byte loads; a workbook's cells are listed only while their JSON is
+ *  within `WORKBOOK_CELLS_MAX_BYTES`, and a workbook of more than `WORKBOOK_CELLS_MAX` cells is refused, so the
+ *  whole lifecycle (add, read, lint, inputs, recompute) survives the Durable Object's memory (measured). */
+export const WORKBOOK_FILE_MAX_BYTES = 20 * 1024 * 1024;
+export const WORKBOOK_CELLS_MAX_BYTES = 9 * 1024 * 1024;
+export const WORKBOOK_CELLS_MAX = 50000;
 /** R6: how many cells each recorded list keeps; the counts are always whole, and a cut list says how many it left. */
 export const LIST_MAX = 2000;
 /** R8: the meaning every recompute statement carries. */
@@ -58,6 +65,17 @@ const str = (v) => (typeof v === "string" ? v.trim() : "");
 const json = (v) => JSON.stringify(v ?? null);
 const parse = (s) => { try { return JSON.parse(s); } catch { return null; } };
 const refusal = (reason, detail, extra = {}) => ({ ok: false, reason, detail, ...extra });
+const megabytes = (n) => (n / 1e6).toFixed(1);
+/* R1: a capture or a file over its bound: `condition` says which bound fired, `stored_size` or `declared_text`. */
+const fileTooLarge = (size, bound, condition) => refusal("WORKBOOK_FILE_TOO_LARGE",
+  localize("refusal.WORKBOOK_FILE_TOO_LARGE", "This file is {size} MB, more than the {bound} MB that can be added as a workbook. The original is unchanged.",
+           { size: megabytes(size), bound: megabytes(bound) }),
+  { size: megabytes(size), bound: megabytes(bound), size_bytes: size, bound_bytes: bound, condition });
+/* R1, R2: a workbook of more cells than can be held and read; `condition` is `cell_count` or `cell_bytes`. */
+const cellsTooLarge = (cells, condition) => refusal("WORKBOOK_TOO_LARGE",
+  localize("refusal.WORKBOOK_TOO_LARGE", "This workbook has {cells} cells, more than the {bound_cells} that can be held and read here.",
+           { cells: String(cells), bound_cells: String(WORKBOOK_CELLS_MAX) }),
+  { cells, bound_cells: WORKBOOK_CELLS_MAX, condition });
 const cut = (list) => (list.length > LIST_MAX ? { list: list.slice(0, LIST_MAX), left: list.length - LIST_MAX } : { list, left: 0 });
 
 /* The calculations contract, read through one adapter each (J1): a table `{sha, fields, rows, grade_facts}` or null;
@@ -97,6 +115,7 @@ export class Workbooks {
     this.content = content || null;
     this.calculations = calculations;
     this.engine = typeof recompute === "function" ? recompute : null;
+    this.#ownBytes = typeof bytesOf !== "function";
     this.bytesOf = typeof bytesOf === "function" ? bytesOf : (sha) => this.#evidenceBytes(sha);
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
     migrateWorkbooks(this.sql);
@@ -104,6 +123,7 @@ export class Workbooks {
     if (d && d.ok === false && d.reason !== "TABLE_DECLARED") throw new Error(`workbooks: ${d.reason}`);
   }
 
+  #ownBytes = true;
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { for (const r of this.sql.exec(q, ...a)) return r; return null; }
 
@@ -171,28 +191,43 @@ export class Workbooks {
                         WHERE capture_sha=? AND project=? ORDER BY sheet, r, c`, wb.capture_sha, wb.project);
   }
 
+  /** R1 (R-OLD): the stored cells counted, not loaded; above the bound the read answers it stated, never a crash. */
+  #tooLarge(wb) {
+    const n = this.#one(`SELECT COUNT(*) AS n FROM workbook_cells WHERE capture_sha=? AND project=?`, wb.capture_sha, wb.project).n;
+    return n > WORKBOOK_CELLS_MAX ? cellsTooLarge(n, "cell_count") : null;
+  }
+
+  /** R1: whether the capture is held and how big it is, from the evidence store's heads alone: the whole's, else the
+   *  sum of the parts its home names. `held` null when the store cannot say; `size` null when it states none. */
+  async #stored(sha, home) {
+    const store = this.record.evidenceStore && this.record.evidenceStore();
+    if (!store || typeof store.head !== "function") return { held: null, size: null };
+    try {
+      const h = await store.head(sha);
+      if (h) return { held: true, size: Number.isFinite(Number(h.size)) ? Number(h.size) : null };
+      let parts = null;
+      try { const p = this.provenance.partsNamed(home.bundleId, sha); parts = p && p.state === "named" ? p.parts : null; } catch { parts = null; }
+      const unknown = { held: this.#ownBytes ? false : null, size: null };
+      if (!parts || !parts.length) return unknown;
+      for (const p of parts) if (!(await store.head(p.sha256))) return unknown;
+      return { held: true, size: parts.reduce((n, p) => n + p.bytes, 0) };
+    } catch { return { held: null, size: null }; }
+  }
+
   /* ================================================================ R1 */
 
-  /** R1: hold a workbook. Refusals in order: NO_SHA, CAPTURE_NOT_HELD, NOT_A_WORKBOOK, NO_QUESTION, NO_PERIOD,
-   *  NO_PROJECT. A repeat answers `already: true`. */
+  /** R1: hold a workbook. Refusals in order: NO_SHA, CAPTURE_NOT_HELD (by the store's head), NO_QUESTION, NO_PERIOD,
+   *  NO_PROJECT, then a repeat (`already: true`), then the size and cell refusals: WORKBOOK_FILE_TOO_LARGE for a capture
+   *  stored above `WORKBOOK_FILE_MAX_BYTES` (before any byte loads) or a file whose text the reader will not read,
+   *  NOT_A_WORKBOOK, WORKBOOK_TOO_LARGE above `WORKBOOK_CELLS_MAX` cells. The cheap refusals pay no read. */
   async addWorkbook({ captureSha, question, period, project, by } = {}) {
     const sha = str(captureSha).toLowerCase();
     if (!SHA_RE.test(sha)) return refusal("NO_SHA", "a workbook is named by its capture's sha256, 64 hex characters");
     const home = this.#home(sha);
     const notHeld = () => refusal("CAPTURE_NOT_HELD", "no capture with this sha is held in this record");
     if (!home || !this.#sees(home.bundleId, by)) return notHeld();
-    let bytes = null;
-    try { bytes = await this.bytesOf(sha); } catch { bytes = null; }
-    if (!bytes) return notHeld();
-    let text, structure;
-    try { text = await xlsxEntry.text(bytes); } catch (e) { text = { ok: false, reason: `unreadable: ${e && e.message}` }; }
-    const sheets = text && text.ok && Array.isArray(text.sheets) ? text.sheets : null;
-    if (!sheets || !sheets.length || sheets.some((s) => !Array.isArray(s.cells))) {
-      const marks = (sheets || []).flatMap((s) => s.undetermined || []).concat(text && Array.isArray(text.undetermined) ? text.undetermined : []);
-      const why = !text || !text.ok ? text?.reason || "not an xlsx workbook"
-        : marks.map((m) => (m && typeof m === "object" ? m.why || JSON.stringify(m) : String(m)))[0] || "no cells were read";
-      return refusal("NOT_A_WORKBOOK", "office-readers gives no cells for this capture", { why });
-    }
+    const stored = await this.#stored(sha, home);
+    if (stored.held === false) return notHeld();
     if (!str(question)) return refusal("NO_QUESTION", "a workbook answers a question; state it");
     if (period === undefined || period === null || (typeof period === "string" && !period.trim())
         || (typeof period === "object" && !Object.values(period).some((v) => typeof v === "string" && v.trim())))
@@ -202,6 +237,27 @@ export class Workbooks {
     if (!info || info.type !== "project" || !this.#sees(p, by)) return refusal("NO_PROJECT", "name a project this workbook is added to");
     if (this.#one(`SELECT 1 AS x FROM workbooks WHERE capture_sha=? AND project=?`, sha, p))
       return { ok: true, already: true, capture_sha: sha, project: p };
+    if (stored.size !== null && stored.size > WORKBOOK_FILE_MAX_BYTES) return fileTooLarge(stored.size, WORKBOOK_FILE_MAX_BYTES, "stored_size");
+    let bytes = null;
+    try { bytes = await this.bytesOf(sha); } catch { bytes = null; }
+    if (!bytes) return notHeld();
+    let text, structure;
+    try { text = await xlsxEntry.text(bytes, { inlineCellsMax: WORKBOOK_CELLS_MAX_BYTES }); } catch (e) { text = { ok: false, reason: `unreadable: ${e && e.message}` }; }
+    const sheets = text && text.ok && Array.isArray(text.sheets) ? text.sheets : null;
+    const marks = (sheets || []).flatMap((s) => s.undetermined || []).concat(text && Array.isArray(text.undetermined) ? text.undetermined : []);
+    const guard = marks.find((m) => m && typeof m === "object" && m.why === "over_size_bound" && Number.isFinite(Number(m.size)) && Number.isFinite(Number(m.bound)));
+    if (guard) return fileTooLarge(Number(guard.size), Number(guard.bound), "declared_text");
+    const pieces = text && text.piecewise;
+    if (pieces && Number.isFinite(Number(pieces.declared)) && Number.isFinite(Number(pieces.bound)))
+      return fileTooLarge(Number(pieces.declared), Number(pieces.bound), "declared_text");
+    if (sheets && sheets.some((s) => s.cells === null && s.cells_held === true)) return cellsTooLarge(text.counts?.cells ?? 0, "cell_bytes");
+    if (!sheets || !sheets.length || sheets.some((s) => !Array.isArray(s.cells))) {
+      const why = !text || !text.ok ? text?.reason || "not an xlsx workbook"
+        : marks.map((m) => (m && typeof m === "object" ? m.why || JSON.stringify(m) : String(m)))[0] || "no cells were read";
+      return refusal("NOT_A_WORKBOOK", "office-readers gives no cells for this capture", { why });
+    }
+    const listed = sheets.reduce((n, s) => n + s.cells.length, 0);
+    if (Math.max(listed, text.counts?.cells ?? 0) > WORKBOOK_CELLS_MAX) return cellsTooLarge(Math.max(listed, text.counts?.cells ?? 0), "cell_count");
     try { structure = await xlsxEntry.structure(bytes); } catch { structure = null; }
     const items = structure && structure.evidentiary && Array.isArray(structure.evidentiary.items) ? structure.evidentiary.items : [];
     const hidden_rows = {}, hidden_cols = {};
@@ -362,6 +418,8 @@ export class Workbooks {
   async inputsOf({ captureSha, project, viewer } = {}) {
     const wb = await this.#workbook(captureSha, project, viewer);
     if (!wb) return this.#absent(captureSha, project);
+    const big = this.#tooLarge(wb);
+    if (big) return big;
     const { list } = this.#inputs(wb, this.#cells(wb));
     return { ok: true, capture_sha: wb.capture_sha, project: wb.project, inputs: list,
              counts: { inputs: list.length, bound: list.filter((x) => x.bound).length, unbound: list.filter((x) => !x.bound).length } };
@@ -373,6 +431,8 @@ export class Workbooks {
   async recompute({ captureSha, project, by } = {}) {
     const wb = await this.#workbook(captureSha, project, by);
     if (!wb) return this.#absent(captureSha, project);
+    const big = this.#tooLarge(wb);
+    if (big) return big;
     let answer = null, why = null, reason = null;
     if (!this.engine) { reason = "NO_ENGINE"; why = word("workbooks.why.engine_bound"); }
     else {
@@ -417,6 +477,8 @@ export class Workbooks {
   async lint({ captureSha, project, viewer } = {}) {
     const wb = await this.#workbook(captureSha, project, viewer);
     if (!wb) return this.#absent(captureSha, project);
+    const big = this.#tooLarge(wb);
+    if (big) return big;
     const findings = this.#lint(wb, this.#cells(wb));
     return { ok: true, capture_sha: wb.capture_sha, project: wb.project, findings,
              counts: Object.fromEntries(LINT_KINDS.map((k) => [k, findings.filter((f) => f.kind === k).length])) };
@@ -427,6 +489,8 @@ export class Workbooks {
     const wb = await this.#workbook(captureSha, project, by);
     if (!wb) return this.#absent(captureSha, project);
     if (!str(note)) return refusal("NO_NOTE", "a note says what the member found; write it");
+    const big = this.#tooLarge(wb);
+    if (big) return big;
     const f = finding && typeof finding === "object" ? finding : {};
     const held = this.#lint(wb, this.#cells(wb)).find((x) => x.kind === f.kind && x.cell === f.cell);
     if (!held) return refusal("NO_SUCH_FINDING", "lint gives no such finding for this workbook", { kind: f.kind ?? null, cell: f.cell ?? null });
@@ -521,6 +585,8 @@ export class Workbooks {
   async readWorkbook({ captureSha, project, viewer } = {}) {
     const wb = await this.#workbook(captureSha, project, viewer);
     if (!wb) return this.#absent(captureSha, project);
+    const big = this.#tooLarge(wb);
+    if (big) return big;
     const cells = this.#cells(wb);
     const inputs = this.#inputs(wb, cells);
     const bindings = await this.#bindings(wb, viewer);

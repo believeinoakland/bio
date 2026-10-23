@@ -126,7 +126,7 @@ test("R8 an included member is carried with its container record, its archive an
     { sha256: memberSha, ref: MEM, path: `materials/${memberSha}`, kind: "document", bytes: Buffer.byteLength(MEMBER_TEXT) },
     { sha256: sha(record), ref: MEM, path: `materials/${sha(record)}`, kind: "container", bytes: Buffer.byteLength(record) },
     { sha256: archiveSha, ref: MEM, path: `materials/${archiveSha}`, kind: "archive", bytes: zip.length },
-    { sha256: hex(token), ref: MEM, path: `materials/${hex(token)}`, kind: "attestation", bytes: token.length }]);
+    { sha256: hex(token), ref: MEM, path: `materials/${hex(token)}`, kind: "attestation", bytes: token.length, capture_sha: memberSha }]);
   /* only the extracted text is unheld (no index was set): nothing of R8 is */
   assert.deepEqual(r.unheld.map((u) => u.kind), ["extracted_text"]);
   /* the container record is the block as stated, in canonical JSON, readable by R3 under its kind */

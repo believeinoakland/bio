@@ -108,6 +108,17 @@ CREATE TABLE IF NOT EXISTS portal_snapshots (
   PRIMARY KEY (follow_id, seq)
 );
 
+-- R10, R17 (G46): a snapshot whose rows JSON is over PORTAL_ROWS_INLINE_MAX holds a marker in portal_snapshots.rows and its
+-- text here in chunks, in order by part; written with its snapshot row in one transaction.
+CREATE TABLE IF NOT EXISTS portal_snapshot_parts (
+  follow_id   INTEGER NOT NULL,
+  seq         INTEGER NOT NULL,
+  part        INTEGER NOT NULL,
+  bundle_id   TEXT,
+  chunk       TEXT NOT NULL,
+  PRIMARY KEY (follow_id, seq, part)
+);
+
 -- R20, R21: every version a policy watch has seen at its address, in the order seen: the policy's own text capture
 -- first (seq 1, its receipt's first retrieval), then each read whose bytes differed from the one before. Never
 -- edited or removed: a later version is a new row beside the earlier ones.
@@ -155,6 +166,7 @@ export const FOLLOWING_TABLES = Object.freeze([
   t("per_meeting_links", { keys: ["bundle_id"], sight: "bundle", version_chain: true }),
   t("per_meeting_captures", { keys: ["bundle_id"], sight: "bundle" }),
   t("portal_snapshots", { keys: ["bundle_id"], sight: "source" }),
+  t("portal_snapshot_parts", { keys: ["bundle_id"], sight: "source" }),
   t("policy_versions", { keys: ["bundle_id"], sight: "source" }),
   t("follow_ends", { keys: [], sight: "group" }),
   t("watch_links", { keys: ["home"], sight: "bundle" }),
