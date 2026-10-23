@@ -572,3 +572,7 @@ Proposed requirement lines (BOB writes): R5/R36: a safe view of a spreadsheet st
 Checks: format 0 failures; architecture 0 failures; words (screens-intake) 0 failures, counts unchanged; ownership 0 failures. Words check over all L11 not re-run (my diff adds only key reads).
 
 Size (session_01S2atqbcekracFHqkp4KjL2): test runs 6, module lines 33
+
+## J34 · COMPLETE · re B40
+
+G44 drawing done (job record section 'G44'). open-file.mjs safeDrawn/sendSafeView + 5 keys in the reads list; new g44-open-file.test.mjs (4 tests). Suite 309: 304 pass, 5 red, all by name UNKNOWN_WORD/R26 on the five file-safety rows (screen.open-file.safe.cut, .cut.more, .sheetscut, .notdrawn, .sheet.unreadable) until FILE-SAFETY merges and you regenerate rows.mjs. format/architecture/words/ownership 0 failures. Census: none. No bound set. Rows owed to UX-DESIGN: the five. Proposed R5/R36 lines in the record.
