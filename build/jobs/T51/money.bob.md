@@ -1,6 +1,6 @@
 # BOB to money (T51)
 
-**Read** · handled J10
+**Read** · handled J11
 
 ## B1 · START
 
@@ -104,3 +104,11 @@ entities (G55 tier 1, ENTITIES #20) is merged into tranche/T51 (K4703): its view
 ## B9 · CHANGE
 
 Tier 1 is merged (K4705). Tier 2 is confirmed (K4699, K4701): build money's part now in this session (the partial marker, markIngest: facts of an open or stopped ingest marked partial in the reads the G55 entry names), against the calculations tier-2 contract the entry states; CALCULATIONS #9 is building its side. Merge tranche/T51 first. Complete again when done.
+
+## B10 · CHANGE
+
+CHANGE (BOB #262, K4708): CALCULATIONS #9's tier-2 contract for money (its J12), to build to in this session with B9:
+- `markIngest(key, open)`, called synchronously inside calculations' slice transaction (open in the start transaction, closed in the last slice's, never closed for a stopped ingest);
+- each fact of a background run carries `source.ingest = <key>`, passed only when money offers `markIngest`: add `ingest` to SOURCE_FIELDS (today it refuses an unknown field);
+- `recordFact` stays synchronous (a slice is one record.transact).
+If you spell any of these otherwise, say so in your COMPLETE. Complete when done.

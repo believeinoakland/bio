@@ -27,6 +27,7 @@ import { WIZARD_HTML, updateHtml, publisherFooter, PROFILE_CHOICES, ASSISTANT_OF
   ASSET_PREFIX, UPDATE_WORDS, versionOk, NO_RELEASE_CHOSEN, NO_RELEASE_BEGIN, existsPanel, removePanel, removedPanel } from "./ui.mjs";
 /* R72: every sentence a key holds is read by key; R66, R71: the way to Cloudflare waits out what waiting can mend. */
 import { word } from "./words.mjs";
+import { localize } from "../../bio-plane/src/setup-words/index.mjs";
 /* R80 (N1240; K624): every act on the account and the fleet is `installer-steps`', reached through its barrel with arguments only.
    R62–R65, R69, R70: what the account holds and the names a copy's parts carry are among them. */
 import { CF_API, RELEASE_LATEST, RELEASE_TAGGED, Session, patiently, WAIT_BOUND_MINUTES,
@@ -797,6 +798,8 @@ async function installRun(emit0, code, saved, guard) {
      bindings); bytes that match with a binding missing are uploaded, never skipped (S7). */
   const held = (await bindingsOf(api, slug));
   const sync = held ? await planeInSync(token, acct.id, slug, release, held, { names, members: present, profiles }) : false;
+  const planeNotes = [];
+  const note = planeNote(planeNotes);
   try {
     if (held && sync) {
       completed.push(word("installer.partial.what.software"));
@@ -804,10 +807,10 @@ async function installRun(emit0, code, saved, guard) {
       emit.ok("install", word("installer.install.inplace"));
     } else if (held) {
       completed.push(word("installer.partial.what.connections"));
-      await uploadUpdate(token, acct.id, slug, true, release, { names, members: present, secrets, profiles });
+      await uploadUpdate(token, acct.id, slug, true, release, { names, members: present, secrets, profiles, note });
       emit.ok("install");
     } else {
-      await uploadInstall(token, acct.id, slug, secrets, release, { members: present, profiles, names });
+      await uploadInstall(token, acct.id, slug, secrets, release, { members: present, profiles, names, note });
       emit.ok("install");
     }
   } catch (e) {
@@ -822,8 +825,8 @@ async function installRun(emit0, code, saved, guard) {
        an install is never refused over something it can complete later. */
     let degraded = false;
     try {
-      if (held) await uploadUpdate(token, acct.id, slug, true, release, { names, members: present, secrets, profiles, noSelf: true });
-      else await uploadInstall(token, acct.id, slug, secrets, release, { noSelf: true, members: present, profiles, names });
+      if (held) await uploadUpdate(token, acct.id, slug, true, release, { names, members: present, secrets, profiles, noSelf: true, note });
+      else await uploadInstall(token, acct.id, slug, secrets, release, { noSelf: true, members: present, profiles, names, note });
       degraded = true;
     } catch (e2) { if (special(e2)) throw e2; /* the original refusal is the one worth reporting */ }
     selfRefused = degraded;
@@ -924,9 +927,12 @@ async function installRun(emit0, code, saved, guard) {
   /* F12: the telling says "run the installer again" only when the mark failed (the copy is unfinished, so a run resumes and records it). */
   const told = recorded === "recorded" ? "" : groupNotice("refused", slug, undefined, markLag !== null);
   emit.done(successPanel(base, secrets, !!st, verdict, saved.vpc, checks, parts,
-    [...(retiredParts.length ? [word("installer.update.retired", { parts: retiredParts.join(", ") })] : []), ...(markLag ? [markLag] : [])], told));
+    [...(retiredParts.length ? [word("installer.update.retired", { parts: retiredParts.join(", ") })] : []), ...(markLag ? [markLag] : []), ...planeNotes], told));
 }
 
+/* G54: the plane's upload reads the account's settings back for the logs it switched on; when they cannot be read the upload goes on and
+   the step says so through `opts.note`, and the founder reads it among the run's other notes (the final panel, the update's page). */
+const planeNote = (notes) => (said) => { if (!notes.includes(said)) notes.push(said); };
 const NO_KEY = word("installer.success.nokey");
 /* R45 (T36): the security-tools paragraph of the final panel and the update's last screen: where the organization's own
    tools are added (setup-page R30), that the installer takes none, and what the operator's VPC choice did. */
@@ -1204,7 +1210,8 @@ async function updateRun(emit00, code, saved, guard) {
   const seal = held && held.get(SEAL_BINDING) !== "secret_text" ? rand(32) : undefined;
   /* R67: the deployment the copy runs now, so an update whose new version never answers can put it back. */
   const previous = await currentDeployment(token, acct.id, slug);
-  try { await uploadUpdate(token, acct.id, slug, withR2, release, { members: present, instanceAi, seal, ownHosts, names }); emit.ok("up"); }
+  const planeNotes = [];
+  try { await uploadUpdate(token, acct.id, slug, withR2, release, { members: present, instanceAi, seal, ownHosts, names, note: planeNote(planeNotes) }); emit.ok("up"); }
   catch (e) {
     if (special(e)) throw e;
     emit.no("up");
@@ -1293,6 +1300,7 @@ ${lagList(verdict)}<p>${esc(word("installer.update.lagging.after"))}</p></div>`
 <p style="margin:0" class="small">${esc(UPDATE_WORDS.doneNote(version))}</p></div>`)
     + told
     /* R74: a part of an earlier release that this one no longer uses is named once and left in place. */
+    + planeNotes.map((n) => `<div class="notice"><p style="margin:0">${esc(n)}</p></div>`).join("")
     + (retiredParts.length ? `<div class="notice" id="retired-parts"><p style="margin:0">${esc(word("installer.update.retired", { parts: retiredParts.join(", ") }))}</p></div>` : "")
     + securityToolsNote(saved.vpc)
     + (base ? `<div class="ng-acts"><a class="cs-btn" data-tone="primary" id="update-back" href="${esc(base)}/">${esc(UPDATE_WORDS.back)}</a></div>` : "")));

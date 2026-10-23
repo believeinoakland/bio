@@ -1,6 +1,6 @@
 # public-read (T51)
 
-**Status** · session_01GnvpRhqTuRSK7Kr4FmJwte · depth 2 · COMPLETE · handled B20
+**Status** · session_01NMAPmXtfQM81PpmWgAWnaY · depth 2 · COMPLETE · handled B21
 
 ## J1 · QUESTION
 
@@ -233,3 +233,39 @@ COMPLETE (B20 CHANGE applied; replaces J20's seam-red status). Merged tranche/T5
 
 Requirement line and deferred `originalOf` as in J20. No open QUESTION.
 Size (session_01GnvpRhqTuRSK7Kr4FmJwte): test runs 12, module lines 2784
+
+## J22 · COMPLETE
+
+**COMPLETE (G50, public-read; PUBLIC-READ #31).**
+
+**Entries applied (G50 (A) and (B), commits in order).**
+- `590c83d958` the R-OLD goldens, committed alone before any change: `test/m/public-read/make-g50-goldens.mjs` (a one-off, not run by the suite) and the JSON it recorded at the base `124e62bfa8`, `g50-old-goldens.json`: the one-capture case of `obscured.test.mjs`, g1 (a `ref` with a copy beside an included document) and g2 (a `ref` with an included and an excluded row), each with its stored manifest, every part's bytes, its complete edition and the files an order on the included document withholds.
+- `78bb792864` **(A), committed alone** (`index.mjs` `#editionItems`): a copy is joined to its originals by its own hash, `Map<copySha, Set<originalSha>>` from the signed rows, lower-cased; the `ref` is read by `caseFileEntryOf(f.path)`, never by splitting the path. Needs no provider.
+- `9c384c8103` **(B)**: `caseFileFacts` adds `capture` (the row's `sha` lower-cased; a copied row's is its original's) to each entry of a `ref` on two or more rows, or `capture: null, capture_invalid: true` for a sha that is not 64 hex; `buildCaseFile` spells `[ref, capture]` paths for the four kinds, names every file of a `capture_invalid` entry in `unheld` and never spells it plain, lists an identical (path, sha256) once, and states the format through `caseFileFormatFor` when a path states a capture (else `bio-case-file/3`, as before); `#editionItems` knows a captured file also by its kind's ref-level path and a copy also by its capture's `document` path; `withholdChains` keeps the directory prefix rule byte for byte for a one-row `ref` and every `/1`-`/3` manifest, and for a `ref` on several rows of a `/4` manifest matches the first link exactly (the `containers/<capture>.json` of the withheld document, the member in its path, no record text read) and falls back to the ref level for every other archive and record, leaving only another capture's own first-link record out. It never under-withholds and may over-withhold a sibling capture's outward chain (BOB records this in `build/rulings.md`).
+- `65881aff31` the L probe (below).
+- Not built into `dist/`; nothing deployed. `casefilefacts` is internal and is in no `DECLARED_OPS` (`index.mjs` declares `verify` only); `declared-ops.test.mjs` does not name it and pins no answer shape of it. G50 changes no census op and adds no sentence (no word row, no `localize`), so there are no new ids for the checker program.
+
+**Cause (R-FOUR).** (A) `public-read/index.mjs` `#editionItems` built `originalOf = Map<ref, sha>` by `Map.set`, so k copied rows of one `ref` kept only the last original; run on two copies, `seal [A]` answered 200, 200 and `seal [B]` answered 451, 451. (B) `caseFilePath(kind, ref)` took one segment, so two included or copied rows of one `ref` gave two entries one path (`casefile.mjs` :120/:124/:145 at the base). Missed because no test had two `materials:` rows of one `ref` that carry files, and `obscured.test.mjs`' R28 test put the order on the document path, which withholds the copy whichever hash is stored. Gap fixed: `g50-copies.test.mjs` (the member's rows through the real assembly, the real store, `publishedbytes`, `publishedcase`, the real check), with the goldens above.
+
+**Failing first, seen red.** Against `590c83d958`'s code (before (A)): the (A) tests red as the entry states (`seal [A]` 200, 200; `seal [B]` 451, 451); against that code the (B) arms red at the repeated path. The other arms are controls and were green.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/public-read/` under the preload, with `tranche/T51` merged (CASE-GRAMMAR #21 in it, B22): 280 tests, 280 pass, 0 fail (30 new in `g50-copies.test.mjs`). Before the provider merged, run against its job branch's code applied locally and never committed: 280/280; with no provider the module loaded and exactly the 22 G50 tests that assemble a `ref` on two rows were red, every other test green.
+- Users: `build/plan/impact.mjs origin/tranche/T51 HEAD` names 53 modules, 916 test files besides this module's: 7,660 tests, 7,646 pass, 11 fail. Four are on your inherited list (case-checker R13, R25; screens-action `contract.test.mjs` R1–R6; plane `release` R24). The other seven (R29 pseudo-sentence arms in `journey-check`) pass in isolation on my branch and fail nowhere else I ran: the files that held the four gave the same 4 failures, 125 pass, on a clean `tranche/T51` copy and on my branch. I take the seven as order-dependent in the large run and not mine.
+- Process repo: format 0 failures; architecture public-read 0; coverage public-read 43 of 43 ids named, 0; ownership public-read 8 files, 0 failures; `checks/run.mjs`: all 0 except words `inline 1` at `case-checker/spec.mjs:11` (inherited). `setup-words/build.mjs --check` is stale at `calculations.index.a_reason_is_at_most` (not mine; my module added no word).
+- `obscured.test.mjs` is unchanged (I split its `publish` for a moment and put it back: `g50-copies.test.mjs` has its own harness that never reads the zip).
+
+**Platform check L** (`test/m/public-read/g50-l.probe.mjs`, workerd under Miniflare, the real `assembleCaseContainer` and `publishedRoutes`, a real R2 binding, a SQLite Durable Object that stands in for the store: it answers `casefilefacts`, `verify`, `withheld` and records the manifest as `recordCaseManifest` does, so the object's own CPU is not what it measures): k = 501 held captures of one `ref`, 2 files each.
+- Assembly (1 invocation): bucket get 1002, head 1011, put 6; object calls 2 (casefilefacts 1, recordcasemanifest 1); 2,016 SHA-256 digests; subrequests (bucket + object calls) 2,021; wall 1.4 s; workerd CPU 1.5 s; 1,010 files in 1 part; format `/4`; 0 unheld.
+- Stored manifest: 239,643 B against the value bound 2,098,176 B (11% of it); 1,011 `published_shas` rows.
+- Serve of part 1 (`publishedbytes&format=zip&part=1`): 200, 968,522 B; bucket get 1,011; object calls 3; 1,011 digests; subrequests 1,014; wall 0.8 s; CPU 0.9 s.
+- Against ceilings: nothing passes the ceiling the plane pins (`wrangler.jsonc` `limits.subrequests` 10,000; 2,021 is 20% of it). Both counts are above 1,000, the Cloudflare default before February 2026 (the file's own comment), so an instance deployed without that pin would meet its ceiling at about k = 250 captures in the zip serve and 500 in the assembly. Local workerd enforces no subrequest limit, so this is a count, not a refusal. The case assembles today with the collision at the same cost, so none of it is G50's.
+
+**Requirement lines I propose (BOB writes them).**
+- R23, replacing "The case file states `bio-case-file/3`": "The case file states `bio-case-file/4` when a `ref` is on two or more rows of the case document's `materials:` block (counted over every row, carried or not) and the case file carries a `document`, `extracted_text`, `observation` or `obscured` file for it, else `bio-case-file/3`. For such a `ref` each of those files is carried under its row's capture (`case-grammar` R13), the row's `sha` lower-cased (a copied row's is its original's); a row whose `sha` is not 64 hex has no capture to spell, so its files are named in `unheld` and none is carried at a plain path. An identical (path, SHA-256) is listed once (an archive two captures share)."
+- R28, after its sentence on a carried archive member: "A copy carried for a material is withheld by an order naming its own path, its `ref`'s `document` path, its capture's `document` path, its own hash, or the hash of an original it was made from, and never by `ref` alone: a `ref` on two copied rows has two originals, and an order naming one withholds that capture's copy only. A `document` file's own `container` record and archives are withheld with it: for a `ref` on one row, or in a `/1`-`/3` case file, every archive and record under the document's directory; for a `ref` on several rows of a `/4` case file, the record whose member is the document's capture, exactly, and every other archive and record of the `ref` at the ref level (so a sibling capture's outward chain may be withheld too, never the reverse)."
+- Uses: `case-grammar`'s `caseFileEntryOf` (now answering `capture`), `caseFileFormatFor`, `refsOnSeveralRows` (a test pins that the facts' count agrees with it).
+
+**Deferred:** none. **Found in other modules:** none new (the in-tree checker's `fileOf` by ref and `program.mjs` stay stale until case-checker #17 and BOB's regeneration, as the entry says).
+
+Size (session_01NMAPmXtfQM81PpmWgAWnaY): test runs 14, module lines 3933

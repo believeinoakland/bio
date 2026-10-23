@@ -31,6 +31,11 @@
      ]
     },
     {
+     "op": "owed:installcheck DEC-415",
+     "label": "Check my account",
+     "status": "owed"
+    },
+    {
      "op": "owed:installupdate K3471",
      "label": "Update it",
      "status": "owed"
@@ -676,6 +681,15 @@
      "modules": [
       "file-safety"
      ]
+    },
+    {
+     "op": "scanmirror",
+     "label": "Check for new signatures now",
+     "status": "declared",
+     "onTranche": "origin/tranche/T51",
+     "modules": [
+      "file-safety"
+     ]
     }
    ],
    "journeys": [
@@ -1022,6 +1036,15 @@
      "modules": [
       "entities",
       "op-declarations"
+     ]
+    },
+    {
+     "op": "officeconfirm",
+     "label": "Confirm this office",
+     "status": "declared",
+     "onTranche": "origin/tranche/T51",
+     "modules": [
+      "entities"
      ]
     }
    ],
@@ -1922,6 +1945,24 @@
       "connections",
       "op-declarations"
      ]
+    },
+    {
+     "op": "owed:followfrom DEC-409",
+     "label": "Follow this item into another dimension",
+     "status": "owed"
+    },
+    {
+     "op": "explore",
+     "label": "Explore connections",
+     "status": "declared",
+     "modules": [
+      "explore"
+     ]
+    },
+    {
+     "op": "owed:registersearch DEC-406",
+     "label": "Search the registers",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -2467,6 +2508,16 @@
       "op-declarations",
       "progressions"
      ]
+    },
+    {
+     "op": "owed:followfrom DEC-409",
+     "label": "Follow this item into another dimension",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registersearch DEC-406",
+     "label": "Search the registers",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -3455,6 +3506,16 @@
       "entities",
       "op-declarations"
      ]
+    },
+    {
+     "op": "owed:followfrom DEC-409",
+     "label": "Follow this item into another dimension",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registersearch DEC-406",
+     "label": "Search the registers",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -3702,6 +3763,35 @@
      "modules": [
       "progressions"
      ]
+    },
+    {
+     "op": "owed:followfrom DEC-409",
+     "label": "Follow this item into another dimension",
+     "status": "owed"
+    },
+    {
+     "op": "search",
+     "label": "Search",
+     "status": "declared",
+     "modules": [
+      "agent-worker",
+      "op-declarations",
+      "retrieval",
+      "screens-daily"
+     ]
+    },
+    {
+     "op": "explore",
+     "label": "Explore connections",
+     "status": "declared",
+     "modules": [
+      "explore"
+     ]
+    },
+    {
+     "op": "owed:registersearch DEC-406",
+     "label": "Search the registers",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -3833,6 +3923,35 @@
      "modules": [
       "hypotheses"
      ]
+    },
+    {
+     "op": "owed:followfrom DEC-409",
+     "label": "Follow this item into another dimension",
+     "status": "owed"
+    },
+    {
+     "op": "search",
+     "label": "Search",
+     "status": "declared",
+     "modules": [
+      "agent-worker",
+      "op-declarations",
+      "retrieval",
+      "screens-daily"
+     ]
+    },
+    {
+     "op": "explore",
+     "label": "Explore connections",
+     "status": "declared",
+     "modules": [
+      "explore"
+     ]
+    },
+    {
+     "op": "owed:registersearch DEC-406",
+     "label": "Search the registers",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -3991,6 +4110,47 @@
       "op-declarations",
       "promotion"
      ]
+    },
+    {
+     "op": "owed:explorecontinue K4403",
+     "label": "Keep looking",
+     "status": "owed"
+    },
+    {
+     "op": "owed:followfrom DEC-409",
+     "label": "Follow this item into another dimension",
+     "status": "owed"
+    },
+    {
+     "op": "search",
+     "label": "Search",
+     "status": "declared",
+     "modules": [
+      "agent-worker",
+      "op-declarations",
+      "retrieval",
+      "screens-daily"
+     ]
+    },
+    {
+     "op": "owed:registersearch DEC-406",
+     "label": "Search the registers",
+     "status": "owed"
+    },
+    {
+     "op": "owed:exploreall DEC-409",
+     "label": "List every connection between two ends",
+     "status": "owed"
+    },
+    {
+     "op": "owed:explorepath DEC-409",
+     "label": "Find the most direct path",
+     "status": "owed"
+    },
+    {
+     "op": "owed:exploreshorter DEC-409",
+     "label": "See a shorter path, or keep your own chain",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -4246,6 +4406,14 @@
    "purpose": "The bound start-and-send flow: refusals first, reason in place, approve then record the send (DEC-115).",
    "acts": [
     {
+     "op": "projectjoin",
+     "label": "Join",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
      "op": "optionstartpreview",
      "label": "See what starting does",
      "status": "declared",
@@ -4381,6 +4549,14 @@
    "purpose": "A records request: the office by role, what is wanted, the law, the text, approving and recording the send.",
    "acts": [
     {
+     "op": "projectjoin",
+     "label": "Join",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
+    {
      "op": "addresseesuggest",
      "label": "Choose the office",
      "status": "declared",
@@ -4451,6 +4627,14 @@
    "frame": "working",
    "purpose": "One action: replies, deadlines, the law it goes under, its risk tier, pressure, holds; a question opened when no reply is recorded.",
    "acts": [
+    {
+     "op": "projectjoin",
+     "label": "Join",
+     "status": "declared",
+     "modules": [
+      "op-declarations"
+     ]
+    },
     {
      "op": "actionmove",
      "label": "Move the action",
@@ -5616,6 +5800,113 @@
     }
    ],
    "journeys": []
+  },
+  {
+   "id": "registers",
+   "name": "Public registers",
+   "frame": "working",
+   "purpose": "The public registers the team holds (campaign finance, economic interests, lobbyists, licenses, company officers), bringing one in whole, searching and citing a row, watching a named filer, license or docket, outside alerts, and the assisted asking that comes after the alpha.",
+   "acts": [
+    {
+     "op": "owed:registerimport DEC-406",
+     "label": "Bring in a register",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registerlist DEC-406",
+     "label": "List the registers the team holds",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registersearch DEC-406",
+     "label": "Search the registers",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registerrowcite DEC-406",
+     "label": "Cite a row as evidence",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registerwatch DEC-406",
+     "label": "Watch a filer, license or docket by its number",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registerwatchstop DEC-406",
+     "label": "Stop watching",
+     "status": "owed"
+    },
+    {
+     "op": "owed:alertconnect DEC-406",
+     "label": "Connect an outside alert service",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registerask DEC-406",
+     "label": "Ask across the registers",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registermatch DEC-406",
+     "label": "Propose matches to the team's subjects",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registerwatchpropose DEC-406",
+     "label": "Propose watches",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registerfilter K4403",
+     "label": "Choose which rows of a register to bring in",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registerdelta K4403",
+     "label": "See what an import would add",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registerpreread K4403",
+     "label": "Read a register ahead, for the team",
+     "status": "owed"
+    },
+    {
+     "op": "owed:registerpropose K4403",
+     "label": "Propose a register that is not listed",
+     "status": "owed"
+    },
+    {
+     "op": "owed:followfrom DEC-409",
+     "label": "Follow this item into another dimension",
+     "status": "owed"
+    },
+    {
+     "op": "search",
+     "label": "Search",
+     "status": "declared",
+     "modules": [
+      "agent-worker",
+      "op-declarations",
+      "retrieval",
+      "screens-daily"
+     ]
+    },
+    {
+     "op": "explore",
+     "label": "Explore connections",
+     "status": "declared",
+     "modules": [
+      "explore"
+     ]
+    }
+   ],
+   "journeys": [
+    10,
+    12,
+    14
+   ]
   }
  ]
 }
