@@ -333,3 +333,15 @@ COMPLETE G39 (BUNDLER #27). Pure-ASCII fleet bundles in fleet-bundle.mjs: asciiO
 **Stale artifacts I made:** none (no bundle input changed: `deploy.mjs` and `derive-bindings.mjs` are scripts, not bundle inputs). The previous round's note stands: BOB regenerates the bundles at the round end.
 
 Size (session_01K1jpKWZpajq2vS4ukUMM4m): test runs 7, module lines 4461
+
+## J15 · COMPLETE
+
+COMPLETE · BUNDLER #29 · G54 (3)(d), answering B14 (addressed to #28; I took it whole).
+
+What changed: `derive-bindings.mjs` gains `deriveObservability` and `observabilityReadBack`. `deploy.mjs` sends `meta.observability` ({enabled: true}, derived from wrangler.jsonc). After the bytes and the limits it reads the settings back and refuses success on `[OBSERVABILITY_MISMATCH]` / `[OBSERVABILITY_UNREADABLE]`. A byte-identical deploy is a metadata deploy while Workers Logs are off. `--dry-run` prints it. Details with file:line are in build/jobs/T51/bundler.md.
+
+Failing-first `test/m/bundler/g54-observability.test.mjs`: red (the file cannot load; then 1 pass, 5 fail on the unchanged deploy.mjs), then 6/6 green. Bundler suite 156/156; users (plane limits, deploybindings) 4/4; checks format/architecture/coverage/ownership 0 failures; words shows only the inherited `inline 1` at case-checker/spec.mjs:11, count unchanged at 18524.
+
+Facts: `newgroup/src/steps/uploads.mjs` sends no `observability` (:32 and :98) and its `limits` ride the release (`release.limits`, :37, :103); `release-assemble.mjs` has no `limits` and needs no change, so the installer (merge 173) takes it with the control-plane statement. Census ops: none. Words: none. Requirement lines proposed (R15, R18, R34, R40) are in my record. Pre-step: I ran `npm ci` in agent-runner, sheet-worker and file-scanner (K4113); without it two real-fleet bundler tests fail identically with or without my change.
+
+Size (session_01K1jpKWZpajq2vS4ukUMM4m): test runs 7, module lines 4461
