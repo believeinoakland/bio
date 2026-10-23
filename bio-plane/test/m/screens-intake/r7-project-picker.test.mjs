@@ -31,7 +31,7 @@ const capture = async (p) => { fill(p, { "ci-address": ADDRESS }); await press(p
 const refusal = (name) => (name && hasWord("refusal.PROMOTE_NOT_A_PARTICIPANT") ? word("refusal.PROMOTE_NOT_A_PARTICIPANT", { project: name }) : word("project.notmember"));
 const sent = (p) => ["heldat", "acquire", "captureupload", "allocid", "promote"].flatMap((op) => p.byOp(op).map(() => op));
 
-test("R22 R35 (G74) Add on a project the member is neither in nor invited to says so, never names it by its id, and an address capture sends nothing", async () => {
+test("R22 R35 R62 (G74) Add on a project the member is neither in nor invited to says so, never names it by its id, and an address capture sends nothing", async () => {
   for (const [projects, name] of [[[], ""], [[row({ participation: null, mine: { in: false, owner: false } })], "Yosemite"]]) {
     const p = await open(`/app/capture/address/${PROJ}`, { image: false, projects });
     assert.equal(main(p).querySelectorAll("[data-notmember]").length, 1, "the page says it before anything is pressed");
@@ -43,7 +43,7 @@ test("R22 R35 (G74) Add on a project the member is neither in nor invited to say
   }
 });
 
-test("R22 R35 (G74) the same for a file: its bytes are not sent for a project the member is not in", async () => {
+test("R22 R35 R62 (G74) the same for a file: its bytes are not sent for a project the member is not in", async () => {
   const p = await open(`/app/capture/file/${PROJ}`, { image: false, projects: [] });
   await upload(p);
   assert.deepEqual(sent(p), [], "nothing is sent, so nothing is stored under a project she cannot see");
@@ -51,7 +51,7 @@ test("R22 R35 (G74) the same for a file: its bytes are not sent for a project th
   assert.equal(text(p).includes(PROJ), false);
 });
 
-test("R22 R35 (G74) controls: a joined member files and the project is named by its name; an invited member who has not joined files too, named by the list's name", async () => {
+test("R22 R35 R62 (G74) controls: a joined member files and the project is named by its name; an invited member who has not joined files too, named by the list's name", async () => {
   const joined = await open(`/app/capture/file/${PROJ}`, { image: true, projects: [row()] });
   assert.equal(main(joined).querySelectorAll("[data-notmember]").length, 0);
   await upload(joined);
@@ -69,7 +69,7 @@ test("R22 R35 (G74) controls: a joined member files and the project is named by 
   assert.equal(text(invited).includes(PROJ), false);
 });
 
-test("R22 R35 (G74) a member's project whose front matter states no title is filed but never named by its id; a page with no project files nowhere as before", async () => {
+test("R22 R35 R62 (G74) a member's project whose front matter states no title is filed but never named by its id; a page with no project files nowhere as before", async () => {
   const bare = await openPage(`/app/capture/address/${PROJ}`, { plane: { ...plane({ image: true, projects: [row()] }), image: ok({ "bundle.md": `---\nid: ${PROJ}\n---\n` }) }, screens: [...SCREENS, DOCUMENT_STUB] });
   await capture(bare);
   assert.equal(bare.byOp("promote").length, 1);

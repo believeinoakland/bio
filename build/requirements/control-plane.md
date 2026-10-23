@@ -285,7 +285,7 @@ Each op below is routed through its owner's own map (R26's pattern) with the sta
 - **R30** No credential, session token, secret or stack appears in any answer, except the one minting answer of `admission` R13 and the answers `membership` gives once by design (T34; DEC-133): an invitation (its R13, R101, R104), the website key at its creation (R99) and the join link at its enabling or replacement (R102, R103), each relayed as given and never logged or repeated by this module.
 - **R31** *(retired: moved to `op-declarations` R6, K617)*
 - **R32** (re-worded at the split, K1974) Each check moves here as an invariant with its test (K6): C-69.1, C-68.2–C-68.4 and C-66.6, whose codes this module raises; their rows are held in `answer-envelope` (its R8). C-69.2 and the Worker's internal-error row are `answer-envelope`'s invariants (its R3, R5), and the store's internal-error row and C-69.5 `store-door`'s (its R6, R4). (C-38.1–C-38.8, C-78.1–C-78.3, C-29.6–C-29.10, C-32.17 and C-64.4 moved to `admission` R14 with the gates that raise them, K617, K624.)
-- **R33** No place is named in this module's behaviour or outward text.
+- **R33** No place is named in this module's behaviour or outward text. A Cloudflare location hint is where the hosting platform runs the team's room, not a jurisdiction and not a place the product acts on (fix round 7, G3; K4752).
 
 ### Satisfies
 

@@ -132,7 +132,7 @@ set a credential.
 - **R24** `report()` never states a duration for synchronous work: `measured_ms` is always `null`, and
   `note` says why, rather than reporting a zero that would read as a measurement.
 - **R25** No place is named in this module (`build/layers.md`, "No jurisdiction in the product"). It holds
-  no local fact of any jurisdiction, and none of its behaviour depends on one.
+  no local fact of any jurisdiction, and none of its behaviour depends on one. A Cloudflare location hint is where the hosting platform runs the team's room, not a jurisdiction and not a place the product acts on (fix round 7, G3; K4752).
 
 No check in `bio-plane/checks/bio-checks.mjs` names `cpu.mjs`, `tokens.mjs`, or any function or constant
 of either file — this module owns no C-numbered check today.
