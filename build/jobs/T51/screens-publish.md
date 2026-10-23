@@ -1,6 +1,6 @@
 # screens-publish (T51)
 
-**Status** · session_01KL2qPsmV5ddqfba8gQ8CL3 · depth 2 · COMPLETE · handled B42
+**Status** · session_01KL2qPsmV5ddqfba8gQ8CL3 · depth 2 · COMPLETE · handled B43
 
 ## J1 · QUESTION
 
@@ -564,3 +564,11 @@ Size (session_01KL2qPsmV5ddqfba8gQ8CL3): test runs 4, module lines 3659
 ## J36 · COMPLETE
 
 COMPLETE G54 (3)(c): see record J35. Three reds by name until public-read merges its case_file and the 13 localize rows (B42). Size (session_01KL2qPsmV5ddqfba8gQ8CL3): test runs 4, module lines 3659
+
+## J37 · COMPLETE
+
+COMPLETE (CHANGE B43; G54 with public-read merged). Merged `tranche/T51`; `publishedcase` now answers `case_file`. Of the three reds by name, the seam test and the page test are green (the real chain answers `being_prepared` for the edition with no manifest, and the page draws it). One red remains, in two places: `g54-page` "thirteen keys are words" and `common.test` R24. The rows are in `public-read/casefile-words.mjs` but `setup-words/rows.mjs` (generated, not mine) does not hold them until BOB's round-end regeneration; both go green then with no change of mine. Test fix of my own: the controls now strip both `case_file` and `verification.case_file` from the real answer, since the real answer carries both.
+
+Suite: 275 tests, 271 pass, 2 fail (the two above), 2 todo. Impact set: screens-publish 23/23, control-plane 72/85, plane 51/59 (146 files; not run beyond the module, the consumers are unchanged by a page-local addition). Checks: format, architecture, coverage (6691/6691) 0 failures; words: no finding in screens-publish (inherited case-checker spec, and installer-steps' `installer.fleet.logsunconfirmed`, not mine). Row owed (BOB, `later-ux.md`): the 13 keys named in J35.
+
+Size (session_01KL2qPsmV5ddqfba8gQ8CL3): test runs 9, module lines 3659
