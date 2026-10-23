@@ -476,3 +476,7 @@ Merged tranche/T51 first (6eb35d19b8). Entry: G53 in `build/plan/fix-round-6-T51
 **Deferred:** none. **Found in other modules:** none beyond the 44b/44c reds above. **Words:** no new member-facing sentence. Declarations: no census op changed.
 
 Size (session_01H5ogzKbBJfic7Cqb8K8bF6): test runs 14, module lines 2866
+
+## J22 · COMPLETE
+
+COMPLETE · G53 (fix round 6): registry re-taken at f72b2f8a4c (84 screens, 609 acts: 448 declared, 83 function, 78 owed), vendored file equals the tranche's design file (commit-equality test t52g53, seen red then green), projectjoin admitted by checkScreens on start-send/request/action (scratch tree with screens-action merged: control-plane+plane 745/746, only plane release R24 accepted). Module suite 137/137. Impact: other reds are 44b/44c's and G52's held contract.test:34 only. Library and doors unchanged. R50 text proposed in my record. Checks: format/architecture/coverage 0, ownership 0, words only case-checker inline 1. Size (session_01H5ogzKbBJfic7Cqb8K8bF6): test runs 14, module lines 2866
