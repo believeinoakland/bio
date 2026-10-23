@@ -746,3 +746,7 @@ Ringing BOB for J45 failed: BOB's session (session_019nbajVa3dgbtMJtymhoSVB) is 
 **Suites.** Plane suite: reds are only `release` R24, `l77-size` R77 L twice (accepted) and the `g48` c1 above. Checks rerun below.
 
 Size (session_01DF6wNQ8rKsb7yeYo9gZnev): test runs 22, module lines 148
+
+## J46 · COMPLETE
+
+COMPLETE (PLANE #54, B65-B68). G58 founder's owedwork carries the five watchdog fields (+K4566 hardening); G67 row's own time (last_ms/own_ms/wait_ms, L: 25 s OCR wait stated apart); G69 last_mem NULL when unmeasured, keeps_last holds the last run; G82 closed as ruled (control asserted <500 ms, real reads printed; owner reading-pipeline); B66 l79 not reproducible, test wait bound 90 s; B68 a keep with no home owes nothing (G7 red with capture merged, green after; two older tests re-pointed to the ruling). Plane suite reds: release R24, l77-size R77 L x2 (accepted) and g48-classify c1, which is another module's (fw18 now 'conservative' where the record has 'client_rendered'; appeared with the tranche merge; for BOB to route). Checks: format, architecture, coverage 89/89, ownership 0 failures. Proposed lines R90-R94 are in the record. Size (session_01DF6wNQ8rKsb7yeYo9gZnev): test runs 22, module lines 148.
