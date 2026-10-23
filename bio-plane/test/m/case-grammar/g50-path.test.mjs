@@ -8,7 +8,6 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
-import { word } from "../../../src/setup-words/index.mjs";
 import * as CG from "../../../src/case-grammar/index.mjs";
 import { caseDocument, manifestFor, editionInput, OBSCURED_LABEL } from "./casefile-fixture.mjs";
 import { sha } from "./helpers.mjs";
@@ -260,9 +259,9 @@ test("R13 G50 the format departure names the accepted list (the reworded row), a
   const m = { ...f.manifest, format: "bio-case-file/5" };
   const d = CG.caseFileManifestCheck(m).find((x) => x.rule === "format");
   assert.equal(d.at, "format");
-  assert.equal(d.detail, word("case-grammar.casefile.format", { accepted: CG.CASE_FILE_FORMATS_ACCEPTED.join(", "), current: CG.CASE_FILE_FORMAT,
-    v2: CG.CASE_FILE_FORMAT_V2, v1: CG.CASE_FILE_FORMAT_V1, value: JSON.stringify("bio-case-file/5") }));
-  assert.match(d.detail, /bio-case-file\/5/);
+  for (const accepted of CG.CASE_FILE_FORMATS_ACCEPTED) assert.equal(d.detail.includes(accepted), true, `names ${accepted}`);
+  assert.equal(d.detail.includes(JSON.stringify("bio-case-file/5")), true, "and the format it was handed");
+  assert.equal(d.detail.indexOf(V4) < d.detail.indexOf("bio-case-file/1"), true, "newest first");
   /* every departure of the five is named with a sentence, at a place and a rule */
   const seen = new Set();
   const whole = wholeRow(B_BYTES, "b");

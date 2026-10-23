@@ -255,7 +255,7 @@ export function caseFileManifestCheck(manifest, given = {}) {
     for (const k of Object.keys(manifest))
       if (!CASE_FILE_MANIFEST_FIELDS.includes(k)) no(k, "unknown_field", localize("case-grammar.casefile.unknown-field", "the manifest has no field {field} in {format}", { field: shown(k), format }));
     if (!CASE_FILE_FORMATS_ACCEPTED.includes(manifest.format))
-      no("format", "format", localize("case-grammar.casefile.format", "the format is one of {accepted}, each read as written, and this manifest states {value}", { accepted: CASE_FILE_FORMATS_ACCEPTED.join(", "), current: CASE_FILE_FORMAT, v2: CASE_FILE_FORMAT_V2, v1: CASE_FILE_FORMAT_V1, value: shown(manifest.format) }));
+      no("format", "format", localize("case-grammar.casefile.format-accepted", "the format is one of {accepted}, each read as written, and this manifest states {value}", { accepted: CASE_FILE_FORMATS_ACCEPTED.join(", "), value: shown(manifest.format) }));
     if (typeof manifest.group !== "string" || !SLUG.test(manifest.group))
       no("group", "group", localize("case-grammar.casefile.group", "the source group is named by its slug, and this manifest states {value}", { value: shown(manifest.group) }));
     if (typeof manifest.case !== "string" || !SEGMENT.test(manifest.case))
