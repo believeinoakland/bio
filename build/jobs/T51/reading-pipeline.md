@@ -580,3 +580,13 @@ Census ops: none (this module declares none). Rows owed to UX-DESIGN: none (no s
 2. `NEEDS BOB` (J28): the refused probe loop, or BOB's word that those figures are taken at the redeploy's P step.
 
 Size (session_01SNN2SB35FYPNhzC5KBpM7p): test runs 33, module lines 3113
+
+## J29 · COMPLETE
+
+COMPLETE: G68 (CSV and text) and G76 (test) of fix round 7; the PDF half waits for your CHANGE. Record: `build/jobs/T51/reading-pipeline.md`, section "Fix round 7 · READING-PIPELINE #29".
+
+Done: a CSV and a text are read in pieces by a byte window. The first piece reads the whole as before and hands on a cursor of kind `w`; a later tick asks the store for its window alone (a 16 MiB CSV: a later tick takes at most 3.3 MB from the store and gives the CSV entry at most 3.1 MB, against 16.8 MB each before; seen red first). Old cursors (`t`, `u`) are still read. The pieces equal the one-piece read, unit for unit (19 equivalence tests with awkward records, window edges inside characters, BOM, rows over the cap, a refused cursor, a store that cannot answer a range). L, one run: an 11.4 MiB CSV at 112 MB under workerd, 31 ticks, the first 1.96 s, every later tick 48-229 ms. G76: the profile test (`r7-profile.test.mjs`) is green now that site-profiles is in the tranche.
+
+Waiting, both named earlier: (1) the PDF half: the wiring is written and tested against a local stand-in of `openPdfRange`; 4 tests in `r7-pdf-tick.test.mjs` are red by name until pdf-reader merges; send the CHANGE then, and I make the import plain, run the PDF L check and `pdf-pieces.test.mjs` five of five alone (the inherited red is the PDF half; it passed in my last two full runs). (2) `NEEDS BOB` (J28): the refused probe loop for the 17 MB CSV, the 12 and 24 MB texts; say if those figures are to be taken at the redeploy instead.
+
+Suites: reading-pipeline 308 tests, 304 pass, the 4 failing the PDF seam; the users in extraction and plane 93 of 93; format, architecture, coverage (43 of 43), ownership and words checks 0 failures. Requirement lines proposed in the record (R40, R1/R2/R11, Uses). Size line is in the record.
