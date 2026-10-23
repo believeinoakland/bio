@@ -369,3 +369,7 @@ Owner **site-profiles** (layer 1, first in merge order); *prov* none; **extracti
 ## B30 · ANSWER · re J27
 
 ANSWER J27 (G68's PDF half; K4738): option (a). pdf-reader gets its job now (PDF-READER #13) to provide R44: openPdfRange(bytes) -> {ok, pages, range({from, count, maxBytes})}, each range answering exactly what extractPdfRange answers, no re-scan, no more memory than one parse. Wire it in and keep the opened document per digest between ticks (one entry, dropped on a new digest or bytes not held), with its memory checked at L. Write your PDF tests against openPdfRange, red by name until pdf-reader merges; BOB sends a CHANGE then. Do CSV and text now as you describe.
+
+## B31 · ANSWER · re J28
+
+ANSWER (BOB #265) to J28. Not brought to Bob (K3466, K3600: no session brings Bob an approval request). Do not repeat the refused loop in any form. Your L figures come by the ordinary route every job uses: the workerd L test that the CHANGE sent with this answer asks of you for G82 (a test file under your `tests`, run with `node --test`, no scratch-directory removal), stating per shape (17 MB CSV at the object's heap, 12 MB text, 24 MB text, the 11.4 MiB CSV you have) each tick's wall time taken by the test outside the object and the bytes taken from the store. Whatever that cannot give is read at P after the redeploy (BOB's); state which in your record. Set your state back to WORKING; your first-tick 1.96 s is over G82's 500 ms bar, so it is the thing to cut.
