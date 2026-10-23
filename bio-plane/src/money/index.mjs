@@ -44,6 +44,8 @@ const NOT_STATED = word("screen.money.notstated");
 const MOVING_EVENTS = Object.freeze(["payment", "transfer"]);
 /* How deep a chain of facts citing facts is followed to its capture. */
 const SOURCE_DEPTH_MAX = 32;
+/* R31: an ingest key, at most. */
+const INGEST_KEY_MAX = 200;
 
 /* R1, R6: the fields a write may carry, and a party's. Every other field is refused (R6: no field marks a fact as
    the group's own). `fact_id`, `grade` and `at` are the module's to assign, never a caller's. */
@@ -51,7 +53,7 @@ const FIELDS = new Set(["amount", "as_read", "currency", "sign", "precision", "k
   "basis", "period", "from", "to", "codes", "balance_class", "buys", "concerns", "source", "method", "question", "by"]);
 const PARTY_FIELDS = new Set(["entity", "fund", "account", "as_written", "identifier"]);
 const PERIOD_FIELDS = new Set(["from", "to", "precision", "zone", "fiscal", "body"]);
-const SOURCE_FIELDS = new Set(["capture_sha", "extent", "content_id", "fact", "table", "row", "binding"]);
+const SOURCE_FIELDS = new Set(["capture_sha", "extent", "content_id", "fact", "table", "row", "binding", "ingest"]);
 /* R2 (T35; K1941): retrieval R73's match, the found extent's one shape; only its capture and extent are taken. */
 const FOUND = "search";
 const BUYS_FIELDS = new Set(["quantity", "unit", "what"]);
@@ -178,7 +180,7 @@ export class Money {
     const cls = { expunge: "none", export: "yes", derive: "stored", version_chain: false, purge: "clear" };
     const bySource = ["money_facts", "money_codes", "money_concerns", "money_withdrawals"]
       .map((name) => ({ name, keys: ["sight_bundle"], sight: "source", ...cls }));
-    const group = ["money_sets", "money_set_acts", "money_set_proposals", "money_fund_types"]
+    const group = ["money_sets", "money_set_acts", "money_set_proposals", "money_ingests", "money_fund_types"]
       .map((name) => ({ name, keys: [], sight: "group", ...cls }));
     const r = this.#record.declareTable("money", [...bySource, ...group]);
     if (r && r.ok === false) throw new Error(`money: record-core refused its tables: ${r.reason} (${r.table})`);
@@ -232,6 +234,32 @@ export class Money {
 
   /** R30 (G55): how many times this instance has built the jurisdiction view. */
   viewBuilds() { return this.#builds; }
+
+  /* ---- R31 (G55): the partial marker ---- */
+
+  /** R31: `calculations` opens an ingest (`open` true) in the transaction that starts it and closes it (`open` false) in
+   *  the last slice's, with the last facts. A key not opened stays unmarked; one never closed (a stopped ingest) keeps
+   *  its facts marked. Idempotent; joins the caller's transaction. */
+  markIngest(key, open) {
+    if (!filled(key) || key.length > INGEST_KEY_MAX)
+      return refusal("NO_INGEST", localize("money.index.an_ingest_is_marked_by", "an ingest is marked by its key, a non-empty string of at most {max} characters", { max: String(INGEST_KEY_MAX) }));
+    if (typeof open !== "boolean")
+      return refusal("NO_INGEST", localize("money.index.an_ingest_is_marked_open", "an ingest is marked open (true) or closed (false)"));
+    const at = this.#now();
+    if (open) this.#sql.exec(`INSERT INTO money_ingests (ingest_key, open, opened_at) VALUES (?,1,?) ON CONFLICT(ingest_key) DO UPDATE SET open=1, closed_at=NULL`, key, at);
+    else this.#sql.exec(`UPDATE money_ingests SET open=0, closed_at=? WHERE ingest_key=?`, at, key);
+    return { ok: true, ingest: key, open };
+  }
+  /* A fact of an open or stopped ingest is answered partial, with the key and the sentence; any other, unchanged. */
+  #partial(row) {
+    if (!row.source_ingest) return null;
+    const m = this.#one(`SELECT open FROM money_ingests WHERE ingest_key=?`, row.source_ingest);
+    if (!m || !m.open) return null;
+    return { partial: true, ingest: row.source_ingest,
+             partial_says: localize("money.ingest.partial", "This fact was written by an ingest of a table that has not finished, or was stopped. Do not read what is held so far as the whole table. Ingest: {ingest}", { ingest: String(row.source_ingest) }) };
+  }
+  /* The open ingests among facts' rows, for a read that answers ids and not facts (summable, reconcile). */
+  #partialKeys(rows) { return [...new Set(rows.map((r) => this.#partial(r)).filter(Boolean).map((p) => p.ingest))]; }
 
   /* ---- the period (Terms; R1) ---- */
 
@@ -500,6 +528,9 @@ export class Money {
     const k = Object.keys(x).find((f) => !SOURCE_FIELDS.has(f));
     if (k) return refusal("UNKNOWN_FIELD", localize("money.index.a_source_has_no_field", "a source has no field {k}", { k: String(k.slice(0, 40)) }), { field: k });
     const tableForm = x.table !== undefined || x.row !== undefined || x.binding !== undefined;
+    /* R31 (G55): the key of the background ingest that reads this row, a table row's alone. */
+    if (x.ingest !== undefined && (!tableForm || !filled(x.ingest) || x.ingest.length > INGEST_KEY_MAX))
+      return refusal("UNKNOWN_FIELD", localize("money.index.a_source_ingest_is_the_key", "a source's ingest is the key of the ingest that read a table row, a non-empty string of at most {max} characters, and only a table row source has one", { max: String(INGEST_KEY_MAX) }), { field: "ingest" });
     const forms = [x.capture_sha !== undefined || x.extent !== undefined, x.content_id !== undefined, x.fact !== undefined, tableForm]
       .filter(Boolean).length;
     if (forms === 0) return refusal("NO_SOURCE", localize("money.index.a_source_is_capture_sha_extent_2", "a source is {capture_sha, extent}, {content_id}, {table, row, binding} or {fact}", { content_id: "{content_id}", fact: "{fact}" }));
@@ -523,7 +554,8 @@ export class Money {
         return notHeld(`a binding ${x.binding.slice(0, 60)} a member adopted for the table ${x.table.slice(0, 60)}`
           + `${this.#calculations ? "" : " (calculations is not wired here)"}`);
       capture = b.capture_sha; extent = null;
-      table = { table: x.table, row: typeof x.row === "string" ? x.row : JSON.stringify(x.row), binding: x.binding };
+      table = { table: x.table, row: typeof x.row === "string" ? x.row : JSON.stringify(x.row), binding: x.binding,
+                ingest: x.ingest === undefined ? null : x.ingest };
     } else if (x.content_id !== undefined) {
       const c = typeof x.content_id === "string" ? this.#one(`SELECT capture_sha, extent FROM content WHERE content_id=?`, x.content_id) : null;
       if (!c) return notHeld(`the content ${String(x.content_id).slice(0, 64)}`);
@@ -567,6 +599,7 @@ export class Money {
       source_capture_sha: src.capture ?? null, source_extent: src.extent ? JSON.stringify(src.extent) : null,
       source_content_id: src.contentId ?? null, source_table: src.table ? src.table.table : null,
       source_row: src.table ? src.table.row : null, source_binding: src.table ? src.table.binding : null,
+      source_ingest: src.table ? src.table.ingest : null,
       source_fact: src.fact ?? null, method: v.method, question: v.question,
       grade_reading: src.grade ?? null, grade_basis: src.grade_basis ?? null,
       by, at, sight_bundle: src.sight ?? null, withdrawn_at: null, projected_key: projectedKey,
@@ -677,6 +710,7 @@ export class Money {
     const capture = this.#rootCapture(row);
     const source = sourceOf(row);
     return {
+      ...this.#partial(row),
       fact_id: row.fact_id,
       amount: row.precision === "range" ? { low: unsigned(row.sign === "-" ? row.amount_high : row.amount_low), high: unsigned(row.sign === "-" ? row.amount_low : row.amount_high) } : unsigned(row.amount),
       as_read: row.as_read, currency: row.currency, sign: row.sign, precision: row.precision, kind: row.kind, phase: row.phase,
@@ -736,13 +770,13 @@ export class Money {
       const capture = captureSha.trim();
       const g = this.#gate("f.sight_bundle", viewer);
       const items = [];
-      for (const r of this.#rows(`SELECT f.fact_id, f.source_extent, f.by, f.at, f.withdrawn_at FROM money_facts f
+      for (const r of this.#rows(`SELECT f.fact_id, f.source_extent, f.source_ingest, f.by, f.at, f.withdrawn_at FROM money_facts f
            WHERE f.source_capture_sha=? AND f.source_fact IS NULL AND (${g.sql})`, capture, ...g.args)) {
         const own = r.source_extent ? JSON.parse(r.source_extent) : { kind: "document" };
         const relation = asked === null ? null : extentRelation(asked, own);
         if (asked !== null && !["same", "narrower", "wider"].includes(relation)) continue;
         items.push({ module: "money", record: r.fact_id, kind: "money_fact", field: "source", extent: JSON.parse(canonicalExtent(own)),
-                     relation, by: r.by, at: r.at, withdrawn: !!r.withdrawn_at, order: canonicalExtent(own) });
+                     relation, by: r.by, at: r.at, withdrawn: !!r.withdrawn_at, ...this.#partial(r), order: canonicalExtent(own) });
       }
       items.sort((a, b) => (a.order < b.order ? -1 : a.order > b.order ? 1 : a.record < b.record ? -1 : a.record > b.record ? 1 : 0));
       return { ok: true, module: "money", capture_sha: capture, items: items.slice(0, lim).map(({ order: _o, ...i }) => i),
@@ -807,7 +841,8 @@ export class Money {
     const interfund = rows.filter((r) => r.kind === "transfer" && r.from_fund && r.to_fund)
       .map((r) => ({ fact_id: r.fact_id, from_fund: r.from_fund, to_fund: r.to_fund, interfund: true,
                      says: word("money.says.transfer_between_two") }));
-    return { ok: true, interfund, says: word("money.says.facts_summed_sum") };
+    const open = this.#partialKeys(rows);
+    return { ok: true, interfund, says: word("money.says.facts_summed_sum"), ...(open.length ? { partial: true, ingests: open } : {}) };
   }
   #facts(ids, viewer) {
     if (!Array.isArray(ids) || !ids.length) return refusal("NO_FACTS", localize("money.index.name_the_money_facts_by", "name the money facts by their ids"));
@@ -844,8 +879,10 @@ export class Money {
       if (x.precision !== y.precision) push("rounding", x.precision, y.precision);
       else push("amount", x.amount ?? { low: x.amount_low, high: x.amount_high }, y.amount ?? { low: y.amount_low, high: y.amount_high });
     }
+    const open = this.#partialKeys([x, y]);
     return { ok: true, a: x.fact_id, b: y.fact_id, consistent: differs.length === 0, amounts, differs,
-             says: differs.length ? word("money.says.two_readings_differ") : word("money.says.two_readings_consistent") };
+             says: differs.length ? word("money.says.two_readings_differ") : word("money.says.two_readings_consistent"),
+             ...(open.length ? { partial: true, ingests: open } : {}) };
   }
 
   /* ---- R12, R13: money sets ---- */
@@ -975,11 +1012,11 @@ export class Money {
     const adjustments = this.#rows(`SELECT f.fact_id, f.sign, f.amount, f.amount_low, f.amount_high, f.as_read, f.phase, f.withdrawn_at
         FROM money_facts f WHERE f.adjusts=? AND (${g.sql}) ORDER BY f.at, f.fact_id`, row.fact_id, ...g.args)
       .map((a) => ({ fact_id: a.fact_id, sign: a.sign, amount: a.amount ?? { low: a.amount_low, high: a.amount_high }, as_read: a.as_read,
-                     phase: a.phase, withdrawn: !!a.withdrawn_at }));
+                     phase: a.phase, withdrawn: !!a.withdrawn_at, ...this.#partial(this.#factRow(a.fact_id)) }));
     const from = end("from"), to = end("to");
     const gaps = [...(from.stated ? [] : ["from"]), ...(to.stated ? [] : ["to"]), ...(moved.state === "undetermined" ? ["moved"] : []),
                   ...(row.basis === "undetermined" ? ["basis"] : [])];
-    return { from, to, moved, ...(compared === null ? {} : { compared, budget_only: compared.length === 0 }),
+    return { ...this.#partial(row), from, to, moved, ...(compared === null ? {} : { compared, budget_only: compared.length === 0 }),
              adjustments, ...(adjustments.length ? { adjustments_says: word("money.adjustments_says") } : {}),
              ...(row.withdrawn_at ? { withdrawn: true } : {}), gaps };
   }
@@ -1187,6 +1224,7 @@ export class Money {
         money: { kind: r.kind, phase: r.phase, ...(r.stage ? { stage: r.stage } : {}), fund: r.from_fund ?? r.to_fund ?? null,
                  period: valid, grades_stated: { reading: r.grade_reading, ends } },
         ...(v === "in" ? {} : { undetermined: { why: v.why } }),
+        ...this.#partial(r),
       });
     }
     const after = isObj(page) && typeof page.after === "string" ? page.after : null;
