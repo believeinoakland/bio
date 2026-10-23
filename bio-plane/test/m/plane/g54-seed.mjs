@@ -1,7 +1,7 @@
 /* G54 (fix round 6), the plane's seed: a case edition the way a ceremony's store half and the completing act leave it in the record (the modules' own commits:
    `storeCaseDocument`, `commitCaseEdition`, `commitEdition`), over the real `Store` of `fixture.mjs`; ported from ratification's `g54-entry.mjs` (the L seed), which runs the
    same calls inside workerd. `seedEdition(ctx, caseId)` leaves the edition not yet complete (its finding unsigned); `completeEdition(ctx, env, seed)` signs the finding, the act that
-   completes it, and puts the finding's bytes in the published bucket. Nothing here is a hand-made row. */
+   completes it, and puts the finding's bytes in the published bucket. Nothing here is a hand-made row. `findingMd(id)` (G57) swaps the finding's text for one the ratify gate admits. */
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { publicationOf } from "../../../src/publication/index.mjs";
@@ -33,15 +33,15 @@ const shaOf = async (bytes) => hex(await crypto.subtle.digest("SHA-256", bytes))
 /** an owner, her project, one question and its case edition (document stored, commit made); the finding is not yet signed.
  *  `materials` documents of `kib` KiB (random bytes, so the edition is as heavy as stated) and their extracted texts are held in the published bucket
  *  (`env.PUBLISHED`) and listed in the case document, so the edition's case file has two files for each (ratification's L seed makes them the same way). */
-export async function seedEdition(ctx, caseId, edition = 1, { env = null, materials = 0, kib = 1 } = {}) {
-  const record = recordOf(ctx), promotion = promotionOf(ctx), pub = publicationOf(ctx), F = `INQ-2026-${caseId.slice(-4)}`;
+export async function seedEdition(ctx, caseId, edition = 1, { env = null, materials = 0, kib = 1, findingMd = inquiryMd, findingSuffix = "" } = {}) {
+  const record = recordOf(ctx), promotion = promotionOf(ctx), pub = publicationOf(ctx), F = `INQ-2026-${caseId.slice(-4)}${findingSuffix}`;
   ctx.storage.sql.exec(`INSERT OR IGNORE INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
                         VALUES ('olive', 'Cover olive', 'h_olive', 'member', 'active', '["contribute"]', 't', 't')`);
   const proj = promotion.promote({ base: null, snapKey: key(), author: V("olive"), ownerMemberId: "olive",
     files: [{ path: "bundle.md", text: projMd(`Team ${caseId}`) }], meta: { object_type: "project" } });
   if (!proj.ok) throw new Error("project " + JSON.stringify(proj).slice(0, 300));
   const inq = promotion.promote({ bundleId: F, base: null, snapKey: key(), author: V("alice"),
-    files: [{ path: "bundle.md", text: inquiryMd(F) }], meta: { object_type: "inquiry" } });
+    files: [{ path: "bundle.md", text: findingMd(F) }], meta: { object_type: "inquiry" } });
   if (!inq.ok) throw new Error("inquiry " + JSON.stringify(inq).slice(0, 300));
   const pin = record.head(F).bundleSha, rows = [];
   for (let i = 0; i < materials; i++) {
