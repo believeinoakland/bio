@@ -13,7 +13,8 @@
  * catalogue and rows in `./checks.mjs`. The legacy code's comments moved with it, shortened where they only restated
  * the code; the commit's own SQL is `publication`'s (its R22) and its comments went with it. In T18 (N400, K636) the
  * bulk release (`Store.release`, R20–R27) moved here from `store.mjs` as `./release.mjs`, and in T19 (K653 BOB-3) the
- * bulk retirement (`Store.retire`, R28–R31, R33) as `./retire.mjs`.
+ * bulk retirement (`Store.retire`, R28–R31, R33) as `./retire.mjs`. In T51 (G54, R57) `./casefile.mjs` holds the case-file
+ * sweep (`caseFileSweep`, `caseFileWake`), which builds the case file of a complete edition every completing path left owed.
  *
  * REACHED as `ratificationOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the
  * first call. At creation it creates `publish-schedule` and registers R42 as its publisher (its R2; R43 here), and it

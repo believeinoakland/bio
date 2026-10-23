@@ -14,6 +14,8 @@ import { caseRatifyOp, ratifyOp, publishAtOp } from "../../../src/ratification/o
 import * as ratification from "../../../src/ratification/index.mjs";
 import { word } from "../../../src/setup-words/index.mjs";
 import * as publicationWorker from "../../../src/publication/worker.mjs";
+import { publicationOps } from "../../../src/publication/index.mjs";
+import { publicReadOf, publicReadOps } from "../../../src/public-read/index.mjs";
 
 const { caseConclusionRowLines, CASEFILE_SWEEP_EDITIONS, CASEFILE_SWEEP_FILES, CASEFILE_SWEEP_BYTES,
         CASEFILE_TOO_LARGE_FILES, CASEFILE_MISSING_MAX_ATTEMPTS } = ratification;
@@ -431,8 +433,44 @@ test("G54 SEAM (public-read, PUBLIC-READ #31): public-read provides recordCaseFi
   assert.equal(typeof publicationWorker.assembleCaseContainer, "function");
 });
 
-test("G54 SEAM (publication, public-read): the real ledger and the real assembly — an edition laid by the real commit with no case file is owed, one tick builds it through the real assembly, and the next tick calls it 0 times", async () => {
-  const s = await house();
-  assert.equal(typeof s.w.realPub.caseFilesOwed, "function", "publication's owed read");
-  assert.equal(typeof publicationWorker.recordCaseFileFailure, "function", "public-read's recorder");
+test("G54 SEAM (publication, public-read): the real ledger and the real assembly — editions laid by the real commit with no case file are owed, one tick builds two of them through the real assembly (copying first), the next builds the third, and a tick after that calls the assembly 0 times", async () => {
+  /* the real providers: publication's ledger (steer nothing), public-read's assembly over a store door that answers the ops the
+     assembly asks, a published bucket holding each finding's bytes as the act's copy left them */
+  const holder = {};
+  const captures = new Map(), published = new Map();
+  const env = { CAPTURES: bucketOver(captures), PUBLISHED: bucketOver(published) };
+  const door = { async fetch(u, init) {
+    const req = u instanceof Request ? u : new Request(u, init);
+    const url = new URL(req.url), op = url.pathname.slice(1);
+    const body = req.method === "POST" ? JSON.parse((await req.text()) || "{}") : null;
+    const w = holder.w;
+    const pr = publicReadOf(w.host, { publication: w.realPub, docket: {} });
+    const ops = { ...publicationOps(w.realPub, url, body), ...publicReadOps(pr, url) };
+    if (!ops[op]) return Response.json({ ok: false, error: `unknown op ${op}` }, { status: 400 });
+    return Response.json({ ok: true, result: await ops[op]() });
+  } };
+  publicationWorker.bindPublishedPlane({
+    json: (o, status = 200) => ({ status, body: o }), STORE_SILENT_REASON: "STORE_DID_NOT_ANSWER", STORE_SILENT_DETAIL: "the store did not answer",
+    PUBLISHED_STORE: "s", storeSilent: (op) => ({ status: 502, body: { ok: false, reason: "STORE_DID_NOT_ANSWER", op } }),
+    requiredArgument: (op, argument, shape, error) => ({ ok: false, reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error }),
+    doAnswer: async (res) => { let out = null; try { out = await (await res).json(); } catch { out = null; }
+                               return out && out.ok === true ? { answered: true, result: out.result } : { answered: false }; } });
+  const s = await house({ worker: { env, storeName: "s", stub: door } });
+  holder.w = s.w;
+  for (let i = 1; i <= 3; i++) {
+    const e = await s.edition(i);
+    const r = await s.act(caseRatifyOp, e.body(), {}, (p) => { p.ctx.assembleCaseContainer = async () => ({ ok: false, reason: "CASE_FILE_NOT_ASSEMBLED" }); });
+    assert.equal(r.status, 200, JSON.stringify(r.body).slice(0, 300));
+    published.set(`s/published/${e.member.sha}`, new TextEncoder().encode(s.w.record.readFile(e.q, "bundle.md").text));
+  }
+  const owedNow = s.w.realPub.caseFilesOwed({ now: Date.now() + 3_600_000, limit: 10 });
+  assert.equal(owedNow.length, 3, "all three are owed past their grace");
+  const t1 = await s.w.r.caseFileSweep(Date.now() + 3_600_000);
+  assert.deepEqual(t1.built.map((b) => b.case), s.editions.slice(0, 2).map((e) => e.caseId), JSON.stringify(t1));
+  for (const e of s.editions.slice(0, 2)) assert.match(String(s.w.realPub.caseEditionState(e.caseId, 1).manifest_sha), /^[0-9a-f]{64}$/);
+  const t2 = await s.w.r.caseFileSweep(Date.now() + 3_600_000);
+  assert.deepEqual(t2.built.map((b) => b.case), [s.editions[2].caseId]);
+  const t3 = await s.w.r.caseFileSweep(Date.now() + 3_600_000);
+  assert.deepEqual([t3.built, t3.failed, t3.stopped], [[], [], []], "nothing owed: the assembly called 0 times");
+  assert.equal(s.w.r.caseFileWake(Date.now() + 3_600_000), null);
 });
