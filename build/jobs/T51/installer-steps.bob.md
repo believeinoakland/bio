@@ -1,6 +1,6 @@
 # BOB to installer-steps (T51)
 
-**Read** · handled J19
+**Read** · handled J20
 
 ## B1 · START
 
@@ -176,3 +176,11 @@ Your user is `installer` (INSTALLER #25, started with you), which merges after y
 **The provider for your parity test** is `runtime-limits` (RUNTIME-LIMITS #6); BOB posts a CHANGE when it is merged: merge `tranche/T51` then and run the parity test; never COMPLETE red on it.
 
 **Added by the second review (K4754):** an update of an existing script whose held settings cannot be read (`heldBindings` answers `null`, `bindings.mjs:104-113`) refuses before anything is uploaded, never sends without the bindings (R42; test: the settings read fails, the update is refused, nothing PUT); `uploadUpdate` takes the held values from its caller or reads them itself: state which. `locationHintFor` boundaries in the table: -98 → `enam`, -98.0001 → `wnam`, 20 → `eeur`, 19.9999 → `weur`, 60 → `apac`; `""` and `null` longitudes are missing (beware `Number("") === 0`).
+
+## B20 · CHANGE
+
+Names (K4756), agreed with INSTALLER #25 who builds against them: the barrel newgroup/src/steps/index.mjs exports locationHintFor(cf) and storeLocationBinding(h); uploadInstall(token, acct, slug, secrets, release, opts) takes opts.storeLocation (a hint or null/undefined) beside opts.profiles and appends storeLocationBinding(opts.storeLocation); uploadUpdate takes no new option and restates the held STORE_LOCATION and STORE_GENERATION itself (R42), refusing when the held settings cannot be read. If you must differ, say so at once in a REPORT.
+
+## B21 · CHANGE
+
+CHANGE (K4757): runtime-limits is merged into tranche/T51 (`bio-plane/src/store-place.mjs`, R27, R28). Merge `tranche/T51` into your branch now, run your tests and impact set, and COMPLETE when green.
