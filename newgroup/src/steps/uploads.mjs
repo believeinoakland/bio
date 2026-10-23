@@ -22,6 +22,17 @@ async function cronsOf(release) {
 }
 const setPlaneSchedules = (token, acct, slug, crons) => setSchedules(token, acct, slug, crons);
 
+/* R40 (G54, K4702) — THE PLANE'S WORKERS LOGS. A script upload that states no `observability` leaves the logs off, so both
+   metadata objects carry this one setting (the installer's constant, pinned by a test to the plane's `wrangler.jsonc`), and
+   the account's settings are read back once the script is there: a plane that does not hold `enabled: true` stops the act.
+   Stand-in for the sentence: `installer.fleet.why.program`; the row owed is `installer-steps.plane.observability`, one line
+   for "your Cloudflare account did not switch on the plane's logs". */
+export const OBSERVABILITY = Object.freeze({ enabled: true });
+async function observabilityHeld(token, acct, slug) {
+  const s = await cf(token, `/accounts/${acct}/workers/scripts/${slug}/settings`);
+  if (s?.observability?.enabled !== true) throw new Error(word("installer.fleet.why.program"));
+}
+
 /* `opts.noSelf` exists for ONE reason: an install PUT names a service binding to
    the script the same PUT creates, and nothing here can prove Cloudflare accepts
    that self-reference without a real install, which is deploy-gated. So the
@@ -73,11 +84,13 @@ async function uploadInstall(token, acct, slug, secrets, release, opts = {}) {
       /* DIST-6: the members this account already holds (none on a fresh account — see BINDING_OF). */
       ...memberBindings(opts.members, names),
     ],
+    observability: { ...OBSERVABILITY },
     /* SQLite backend is the irreversible choice, made correctly, once. */
     migrations: { new_tag: "v1", new_sqlite_classes: ["Store"] },
   };
   const put = await cf(token, `/accounts/${acct}/workers/scripts/${slug}`,
     { method: "PUT", body: uploadForm(meta, release.blob) });
+  await observabilityHeld(token, acct, slug);
   await setPlaneSchedules(token, acct, slug, crons);
   return put;
 }
@@ -169,9 +182,11 @@ async function uploadUpdate(token, acct, slug, withR2, release, opts = {}) {
        added here in the same change, or an update will silently DELETE the
        binding from a working instance and re-inert its monitoring. */
     keep_bindings: ["secret_text", "durable_object_namespace", ...(withR2 ? [] : ["r2_bucket"])],
+    observability: { ...OBSERVABILITY },
   };
   const put = await cf(token, `/accounts/${acct}/workers/scripts/${slug}`,
     { method: "PUT", body: uploadForm(meta, release.blob) });
+  await observabilityHeld(token, acct, slug);
   await setPlaneSchedules(token, acct, slug, crons);
   return put;
 }
