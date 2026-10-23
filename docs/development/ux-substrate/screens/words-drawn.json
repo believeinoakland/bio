@@ -41869,10 +41869,10 @@
    "note": "DEC-423: B492 screens-inquiry (G41; extraction R97): a reading over 1 MiB stated with its size and its largest part; replaces the code-origin stand-in. {size} as extraction.index.reading_size gives it; {key} must reach the member as a plain name (its text, its pages, its cells, the names and dates found in it), never a field name: owed by BOB, the keys that can occur. Not screen.document.reading.toolarge (DEC-419: a file too large to read at all)"
   },
   {
-   "key": "screen.document.reading.part.text",
+   "key": "screen.document.reading.part.text_units",
    "en": "its text",
    "protected": false,
-   "note": "DEC-423: B492 G41: the {key} fill of screen.document.reading.too_large when the largest part is the text"
+   "note": "DEC-423: B492 G41 (B493): the {key} fill of screen.document.reading.too_large when the largest part is text_units"
   },
   {
    "key": "screen.document.reading.part.pages",
@@ -41897,6 +41897,30 @@
    "en": "one part of what was read",
    "protected": false,
    "note": "DEC-423: B492 G41: the {key} fill for any other key"
+  },
+  {
+   "key": "screen.document.reading.part.facts",
+   "en": "the names and dates found in it",
+   "protected": false,
+   "note": "DEC-423: B492 G41 (B493): the {key} fill when the largest part is facts"
+  },
+  {
+   "key": "screen.document.reading.part.references",
+   "en": "the references found in it",
+   "protected": false,
+   "note": "DEC-423: B492 G41 (B493): the {key} fill when the largest part is references"
+  },
+  {
+   "key": "screen.document.reading.part.tables",
+   "en": "its tables",
+   "protected": false,
+   "note": "DEC-423: B492 G41 (B493): the {key} fill when the largest part is tables (an office reader lists them)"
+  },
+  {
+   "key": "screen.document.reading.too_large.lost",
+   "en": "Until it is read again in smaller pieces, its words can't be searched or cited.",
+   "protected": false,
+   "note": "DEC-423: B492 G41 (B493; extraction R97): drawn after screen.document.reading.too_large; such a reading keeps no text, names or cells"
   }
  ],
  "rewrite": {

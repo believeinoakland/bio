@@ -7767,11 +7767,15 @@ w422('screen.document.sheet.fold', 'When the document is a spreadsheet', "(2) G4
 def w423(key, en, note):
     W.append(dict(key=key, en=en, protected=False, note='DEC-423: B492 ' + note))
 w423('screen.document.reading.too_large', 'Civicsmith read this document, but what it read is too large to keep: {size}, most of it in {key}. The document itself is kept whole, and you can open it.', "screens-inquiry (G41; extraction R97): a reading over 1 MiB stated with its size and its largest part; replaces the code-origin stand-in. {size} as extraction.index.reading_size gives it; {key} must reach the member as a plain name (its text, its pages, its cells, the names and dates found in it), never a field name: owed by BOB, the keys that can occur. Not screen.document.reading.toolarge (DEC-419: a file too large to read at all)")
-w423('screen.document.reading.part.text', 'its text', 'G41: the {key} fill of screen.document.reading.too_large when the largest part is the text')
+w423('screen.document.reading.part.text_units', 'its text', 'G41 (B493): the {key} fill of screen.document.reading.too_large when the largest part is text_units')
 w423('screen.document.reading.part.pages', 'its pages', 'G41: the {key} fill when the largest part is the pages')
 w423('screen.document.reading.part.cells', 'its cells', 'G41: the {key} fill when the largest part is the cells')
 w423('screen.document.reading.part.entities', 'the names and dates found in it', 'G41: the {key} fill when the largest part is the entities')
 w423('screen.document.reading.part.other', 'one part of what was read', 'G41: the {key} fill for any other key')
+w423('screen.document.reading.part.facts', 'the names and dates found in it', 'G41 (B493): the {key} fill when the largest part is facts')
+w423('screen.document.reading.part.references', 'the references found in it', 'G41 (B493): the {key} fill when the largest part is references')
+w423('screen.document.reading.part.tables', 'its tables', 'G41 (B493): the {key} fill when the largest part is tables (an office reader lists them)')
+w423('screen.document.reading.too_large.lost', 'Until it is read again in smaller pieces, its words can\'t be searched or cited.', 'G41 (B493; extraction R97): drawn after screen.document.reading.too_large; such a reading keeps no text, names or cells')
 
 keys = [x['key'] for x in W]
 dup = sorted({k for k in keys if keys.count(k) > 1})
