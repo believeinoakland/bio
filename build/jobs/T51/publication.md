@@ -181,3 +181,7 @@ Correction to J8: my 'architecture 0 failures' was wrong at the time (1 failure:
 - `checks/ownership.mjs /home/user/bio publication tranche/T51 job/T51/publication`: 5 files changed by publication; 0 failures.
 
 Size (session_01B2MtWpS48XnZkx7Fbo2FBa): test runs 9, module lines 4645 (physical lines of src/publication/*.mjs and deliverer.mjs, comments included)
+
+## J10 · COMPLETE
+
+G54 (publication) complete: four casefile_* columns on published_cases, recordCaseFileAttempt (hop recordcasefile), caseFilesOwed, caseFileNextAt. g54-casefile.test.mjs 9/9 (red on old tree), L Miniflare test green; publication 175 (174 pass, 0 fail, 1 todo); checks 0 failures except inherited words inline 1. FOUND IN OTHER MODULE: op-declarations t33.test.mjs IN_PROCESS.publication must gain 'recordcasefile' (R19/R6 red by name). journey-check pseudo R29 red is environment (playwright-core missing). Record section 'G54 · completion' holds R15/R40 lines. Size (session_01B2MtWpS48XnZkx7Fbo2FBa): test runs 9, module lines 4645.
