@@ -47,7 +47,7 @@ import { membershipOf } from "../membership/index.mjs";
 import { caseTensionsOf, caseDocumentBlocks, whatChangedOf, lensOf, LENS_HEAD,
          lensClosingSentencesOf, workingOnOf, methodOf, materialsOf, standingOf, gradingFactsOf, passagesOf,
          caseDocumentRequiresMaterials, caseDocumentStatesMemberBlocks } from "../case-grammar/index.mjs";
-import { caseFilePath, calculationsOf, timelineOf, signedCitations } from "../case-grammar/index.mjs";
+import { caseFilePath, caseFileEntryOf, calculationsOf, timelineOf, signedCitations } from "../case-grammar/index.mjs";
 import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { word, localize } from "../setup-words/index.mjs";
 import { rowOf } from "./checks.mjs";
@@ -1681,20 +1681,30 @@ export class PublicRead {
     if (HEX64.test(String(manifestSha ?? ""))) items.push({ sha256: manifestSha, paths: ["manifest.json", "MANIFEST.json"] });
     const files = manifest && Array.isArray(manifest.files) ? manifest.files
       : manifest && Array.isArray(manifest.parts) ? manifest.parts : [];
-    /* R28 with R23 (T37; K2145's reading): an obscured copy is the material's own copy (a photo with areas covered, a
-       member document cleaned), so an order naming the material (its `document` path under the row's ref, or its
-       original's hash) withholds the copy too. */
-    const originalOf = new Map();
+    /* R28 with R23 (T37; K2145's reading; fix round 6, G50 (A)): an obscured copy is the material's own copy (a photo with
+       areas covered, a member document cleaned), so an order naming the material (its `document` path under the row's ref)
+       or an original it was made from (that original's hash) withholds the copy too. A copy is joined to its originals by
+       its OWN hash, from the signed rows, never by `ref`: a `ref` on two copied rows has two originals, and an order
+       naming one capture's original withholds that capture's copy and no other. A `Set`, so that two rows with the same
+       copy bytes withhold both originals' copy. */
+    const originalsOfCopy = new Map();
     if (files.some((f) => f && f.kind === "obscured")) {
       const signed = signedParts(doc);
       const rows = signed ? (materialsOf(signed.fm) || {}).materials : null;
-      for (const r of Array.isArray(rows) ? rows : []) if (r && r.obscured != null && typeof r.ref === "string") originalOf.set(r.ref, r.sha);
+      for (const r of Array.isArray(rows) ? rows : []) {
+        if (!r || r.obscured == null) continue;
+        const copy = String(r.obscured.copy ?? "").toLowerCase(), original = String(r.sha ?? "").toLowerCase();
+        if (!HEX64.test(copy) || !HEX64.test(original)) continue;
+        if (!originalsOfCopy.has(copy)) originalsOfCopy.set(copy, new Set());
+        originalsOfCopy.get(copy).add(original);
+      }
     }
     for (const f of files) {
       if (!f || typeof f.sha256 !== "string") continue;
-      const ref = f.kind === "obscured" && typeof f.path === "string" ? f.path.split("/")[1] : null;
+      const entry = f.kind === "obscured" ? caseFileEntryOf(f.path) : null;
+      const ref = entry && entry.kind === "obscured" ? entry.ref : null;
       items.push({ sha256: f.sha256, paths: ref ? [f.path, caseFilePath("document", ref),
-        ...(HEX64.test(String(originalOf.get(ref) ?? "")) ? [originalOf.get(ref)] : [])] : [f.path] });
+        ...(originalsOfCopy.get(f.sha256.toLowerCase()) || [])] : [f.path] });
     }
     for (const f of (state && state.findings) || []) {
       if (typeof f.bundle_sha === "string")
