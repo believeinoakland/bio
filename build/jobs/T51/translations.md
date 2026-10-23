@@ -1,6 +1,6 @@
 # translations (T51)
 
-**Status** · session_0127cgdteY6TNWkhQcKQFfuz · depth 2 · WORKING · handled B2
+**Status** · session_0127cgdteY6TNWkhQcKQFfuz · depth 2 · COMPLETE · handled B2
 
 ## Completion, fix round 8, G113 and G114 (TRANSLATIONS #3, session_0127cgdteY6TNWkhQcKQFfuz, START B3)
 
