@@ -83,7 +83,9 @@ test("R77 (C16): `bundle_id` answers that one document's row only, the store rea
   const all = await f.c.heldCaptures({ viewer: "member:m1", now: NOW });
   const heads = b.calls.length;
   assert.equal(heads, 1, "the list asks the store only about the document held in parts (INFO-A2); the others are recorded as held in one part (R77, fix round 5)");
-  const one = await f.c.heldCaptures({ viewer: "member:m1", now: NOW, bundle_id: "INFO-A2" });
+  /* G78: an instance remembers an object it has seen held, so the read for the one document is made by an instance that has drawn nothing before */
+  const g = world({ evidence: b });
+  const one = await g.c.heldCaptures({ viewer: "member:m1", now: NOW, bundle_id: "INFO-A2" });
   assert.deepEqual(one.held, [all.held.find((x) => x.bundle_id === "INFO-A2")], "the same row the list gives");
   assert.deepEqual([one.truncated, one.next], [false, null]);
   assert.equal(b.calls.length - heads, 1, "the store was read for that row alone");
@@ -122,7 +124,11 @@ test("R77 (C14): a picker row answers `whole` from the size the register recorde
   assert.equal(full.held.find((x) => x.bundle_id === "INFO-A2").whole, true);
   assert.equal(b.calls.length, 2, "a full list asks the store for each document held in parts (INFO-A2) or with no recorded size (INFO-B1)");
   b.calls.length = 0;
-  const single = await f.c.heldCaptures({ viewer: "member:m1", now: NOW, bundle_id: "INFO-A2" });
+  /* G78: the full list proved INFO-A2 held, so this instance asks no more; an instance that has drawn nothing asks for the row alone */
+  assert.equal((await f.c.heldCaptures({ viewer: "member:m1", now: NOW, bundle_id: "INFO-A2" })).held[0].whole, true);
+  assert.equal(b.calls.length, 0);
+  const g = world({ evidence: b });
+  const single = await g.c.heldCaptures({ viewer: "member:m1", now: NOW, bundle_id: "INFO-A2" });
   assert.equal(single.held[0].whole, true);
   assert.equal(b.calls.length, 1);
 });

@@ -11,7 +11,7 @@ const AT = "2026-10-09T12:00:00Z";
 const setup = () => { const b = bucket(); const f = fresh({ evidence: b, env: { INSTANCE_NAME: "inst", VERSION: "9.9.9" } }); return { ...f, b }; };
 const varied = (n) => { const u = new Uint8Array(n); for (let i = 0; i < n; i++) u[i] = (i * 31 + (i >> 8)) & 255; return u; };
 
-test("R86 (C5; acquisition R10): a file over 16 MiB (three parts) is kept whole under its own digest as well as in its parts, and its document reads back whole; a single part is unchanged; a part gone at read-back is UPLOAD_NOT_STORED and writes nothing", async () => {
+test("R86 (C5; acquisition R10): a file over 16 MiB (three parts) is kept whole under its own digest as well as in its parts, and its document reads back whole; a single part is unchanged; a store that will not take the whole is UPLOAD_NOT_STORED and writes nothing (G79: no part is read back)", async () => {
   const { c, b, rows } = setup();
   const big = varied(16 * MiB + 5);
   const r = await c.uploadCapture({ bytes: big, statement: STATEMENT, by: "m1", at: AT });
@@ -27,11 +27,11 @@ test("R86 (C5; acquisition R10): a file over 16 MiB (three parts) is kept whole 
   const small = te.encode("the budget memo");
   assert.equal((await one.c.uploadCapture({ bytes: small, statement: STATEMENT, by: "m1", at: AT })).ok, true);
   assert.equal(one.b.calls.filter((x) => x[0] === "put").length, 1);
-  /* a part gone at read-back: refused, nothing written */
+  /* a store that will not take the whole (no part is read back, G79): refused, nothing written */
   const miss = setup();
-  const parts = [sha(big.subarray(0, 8 * MiB)), sha(big.subarray(8 * MiB, 16 * MiB)), sha(big.subarray(16 * MiB))];
-  const get = miss.b.get.bind(miss.b);
-  miss.b.get = async (k) => (k.endsWith(parts[2]) ? null : get(k));
+  const put = miss.b.put.bind(miss.b);
+  miss.b.put = async (k, bytes, o) => { if (k.endsWith(sha(big))) throw new Error("bucket refused the whole"); return put(k, bytes, o); };
+  assert.equal(miss.b.calls.filter((x) => x[0] === "get").length, 0);
   const before = JSON.stringify(miss.rows("SELECT * FROM captured_locators"));
   const rr = await miss.c.uploadCapture({ bytes: big, statement: STATEMENT, by: "m1", at: AT });
   assert.deepEqual([rr.ok, rr.reason, rr.document], [false, "UPLOAD_NOT_STORED", undefined]);
