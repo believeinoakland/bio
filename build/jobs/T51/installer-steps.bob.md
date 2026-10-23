@@ -1,6 +1,6 @@
 # BOB to installer-steps (T51)
 
-**Read** · handled J17
+**Read** · handled J18
 
 ## B1 · START
 
@@ -153,3 +153,7 @@ CHANGE (BOB #262, K4709). B16's behaviour is right (newgroup on a merged scratch
 - The test asserts the note is the word of that key (read through `word`, never a copied sentence, never `localize`).
 - INSTALLER #24 writes that row (`localize("installer.fleet.logsunconfirmed", <your English>)`) and passes `opts.note`; until it merges the key is missing in your branch alone, which is expected: say so in your COMPLETE. The two of you merge together.
 Run `node <civicos-process>/checks/run.mjs .` and read the words line's failure count before COMPLETE. Merge tranche/T51 first.
+
+## B18 · CHANGE
+
+CHANGE (BOB #262, K4711). On the merged tree (installer-steps J18 with INSTALLER #24 J21), newgroup shows `R17 (K1541)` red again, beside the expected R36, R40 and the G54 note test: with the row `installer.fleet.logsunconfirmed` not yet in the word table (it is owed to the design and arrives only when the design's branch reaches `main` at the close, K4710 (5)), `word()` of the missing key on the unreadable path fails the update itself. The update must never depend on a sentence: guard the note so that a missing row skips the note and the run continues (e.g. `hasWord(key) && note(word(key))`, `hasWord` from `../words.mjs` as the installer imports it), with a test that the update finishes and R17 holds whether the row exists or not. Then only R36, R40 and the G54 note test stay red by name until the row exists. Merge tranche/T51 first; complete again. The merge of you and INSTALLER #24 is held until then.

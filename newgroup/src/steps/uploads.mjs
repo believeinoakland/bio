@@ -4,7 +4,7 @@ import { rand, uploadForm } from "./bytes.mjs";
 import { scriptHash, releaseSha } from "./readback.mjs";
 import { planeCronsOfStream } from "./statements.mjs";
 import { setSchedules } from "./containers.mjs";
-import { word } from "../../../bio-plane/src/setup-words/index.mjs";
+import { word, hasWord } from "../../../bio-plane/src/setup-words/index.mjs";
 import { selfBinding, BROWSER_BINDING, memberBindings, instanceAiBinding, sealBinding, profilesBinding, ownHostsBinding, SEAL_BINDING, PROFILES_BINDING } from "./bindings.mjs";
 
 /* R39 (K4566; fix round 6, G1) — THE PLANE'S SCHEDULE. The plane's one cron is the watchdog that heals a stalled object, and
@@ -37,7 +37,8 @@ async function observabilityHeld(token, acct, slug, note) {
   try { s = await cf(token, `/accounts/${acct}/workers/scripts/${slug}/settings`); }
   catch (e) { if (special(e)) throw e; s = null; }
   if (!s || !Array.isArray(s.bindings)) {
-    if (typeof note === "function") note(word("installer.fleet.logsunconfirmed"));
+    /* the update never depends on a sentence: a key whose row is not in the table yet says nothing, and the act goes on */
+    if (typeof note === "function" && hasWord("installer.fleet.logsunconfirmed")) note(word("installer.fleet.logsunconfirmed"));
     return;
   }
   if (s.observability?.enabled !== true) throw new Error(word("installer.fleet.why.program"));
