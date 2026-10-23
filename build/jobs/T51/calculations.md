@@ -1,6 +1,6 @@
 # calculations (T51)
 
-**Status** · session_01JvAUJPqBqefbQpFDLeiHqB · depth 2 · WORKING · handled B14
+**Status** · session_01JvAUJPqBqefbQpFDLeiHqB · depth 2 · WAITING ON BOB (J11) · handled B14
 
 ## J1 · REPORT
 
