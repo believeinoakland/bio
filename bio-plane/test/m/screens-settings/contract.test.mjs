@@ -83,7 +83,8 @@ test("R39 words by key: the module holds no row, every key it reads is a word of
   // the keys the requirements name besides the reads list
   for (const k of ["refusal.UPDATE_SKIP_NO_REASON", "member.founder.unnamed", "member.founder.unnamed.help", "connect.ifnot", "connect.notnow", "refusal.reference", "updates.running.release_setup", "updates.earlier.installed_setup"])
     assert.ok(hasWord(k), k);
-  assert.equal((reads.unkeyed ?? []).length, 0, "no string stays in source");
+  /* the design's own `unkeyed` list is not counted (K4641): an entry stands only with its reason (a non-empty `why`) */
+  for (const u of reads.unkeyed ?? []) assert.ok(typeof u.why === "string" && u.why.trim() !== "", `${u.file}:${u.line} stays in source with no reason`);
 });
 
 test("R39 what a screen draws for a sample of its keys equals word(key, vars)", async () => {

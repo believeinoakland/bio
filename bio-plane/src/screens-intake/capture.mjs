@@ -125,7 +125,20 @@ async function promoteDocument(cs, o) {
     "source:", "  locator: " + JSON.stringify(locator), "  authority: member-entered", "  retrieved: " + now,
     "monitoring:", "  enabled: false", "  frequency: none", "---", "",
     "## Summary", "", title, "", "## Provenance Notes", "", "## Session Log", "", "## Review Notes", ""].join("\n");
-  const prov = JSON.stringify({ documents: [doc] }, null, 1);
+  /* G43 (K4649, K4651): promotion refuses a file over its `INLINE_MAX` (1,048,576 B, `promotion`; no edge to it from here, and this module is served to the
+     browser, so the bound is local, with room for the rest of the file; control-plane's suite fails if promotion's moves). A door-read document embeds
+     its reading and units whole, so over the bound the file is composed again without them: the document is promoted unread and followed as a deferred
+     large file is. `prov.length` first (a code unit is never fewer than one byte), then the UTF-8 length. */
+  const PROV_EMBED_MAX = 1048576 - 65536; /* inside the function: the page is served function by function */
+  let prov = JSON.stringify({ documents: [doc] }, null, 1), readingDropped = false;
+  /* B39 (K4657): and a reading whose units the door cut (a unit `truncated`, units over the bound or skipped) is not the document's whole reading however small
+     its file: promotion's projection would keep it as if whole and the rest of the text would never be read */
+  const cut = (Array.isArray(doc.text_units) && doc.text_units.some((u) => u && u.truncated === true)) || doc.text_units_over_bound === true || Number(doc.text_units_skipped) > 0;
+  if (cut || prov.length > PROV_EMBED_MAX || len(prov) > PROV_EMBED_MAX) {
+    const { reading: _r, text_units: _u, text_units_over_bound: _o, text_units_skipped: _k, ...unread } = doc;
+    prov = JSON.stringify({ documents: [unread] }, null, 1);
+    readingDropped = true;
+  }
   const parts = Array.isArray(doc.parts) && doc.parts.length ? doc.parts : null;
   const atts = Array.isArray(doc.attestations) ? doc.attestations : [];
   const files = [{ path: "bundle.md", text, bytes: len(text), sha256: await cs.digest(text) },
@@ -150,7 +163,7 @@ async function promoteDocument(cs, o) {
   const p = done && (done.result || done);
   if (!p || p.ok === false) return { refused: why(p) };
   /* R57: the door reads a document stored with no reading after `promote` (control-plane R123); its answer says when that reading follows */
-  return { bundleId: p.bundleId || id, readingPending: p.reading_pending === true };
+  return { bundleId: p.bundleId || id, readingPending: p.reading_pending === true, ...(readingDropped ? { readingDropped: true } : {}) };
 }
 
 /* R1–R3: the page. The tab body carries no class: the design's `st` is its mock's state switch (hidden unless a `main`
@@ -265,7 +278,9 @@ function renderCapture(cs, view) {
     const keyed = (k, f, alt) => { const t = cs.w(k, f); return t === k ? alt() : t; };
     const fetchingLine = (b, f, why) => {
       const size = b !== null ? mb(b) : "", project = f && f.id ? f.title : "";
-      const head = keyed("screen.capture.fetch.pending", { size, project }, () => `<b>${cs.w("screen.capture.address.working.head")}</b>${size ? " " + size : ""}${project ? " \u00b7 " + cs.w("capture.filed.project", { project }) : ""}`);
+      const stand = () => `<b>${cs.w("screen.capture.address.working.head")}</b>${size ? " " + size : ""}${project ? " \u00b7 " + cs.w("capture.filed.project", { project }) : ""}`;
+      /* the row's sentence needs both fills; a capture with no size stated or no project to file under keeps the stand-in, which says neither */
+      const head = size && project ? keyed("screen.capture.fetch.pending", { size, project }, stand) : stand();
       const wh = why ? cs.w("screen.capture.fetch.why", { why: String(why) }) : "";
       return `<p class="mk-note" role="status" data-fetching>${head}${wh && wh !== "screen.capture.fetch.why" ? " " + wh : ""}</p>`;
     };

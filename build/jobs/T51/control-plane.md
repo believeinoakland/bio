@@ -1,6 +1,6 @@
 # control-plane (T51)
 
-**Status** · session_01UfCsV2Sdg2bv4LCfMXB99A · depth 2 · COMPLETE · handled B47
+**Status** · session_01AwthwuHLmeRX25rjM7qqN9 · depth 2 · COMPLETE · handled B51
 
 ## J1 · QUESTION
 
@@ -649,3 +649,55 @@ Size (session_01UfCsV2Sdg2bv4LCfMXB99A): test runs 9, module lines 4625
 ## J33 · COMPLETE · re B48
 
 G30, control-plane's half, applied and pushed (job/T51/control-plane). page() (control-plane/index.mjs:888-896) writes one console.log line per page: {event:'control-plane.page', ...pageWork(), ms}. Failing-first t51-page-log.test.mjs through the real GET / door: twenty pages, twenty lines, scripts/hashes/checks 1 on every line; red 0 !== 20 before, green after; control: /version, favicon, unknown op log none. Platform check N. Suite: control-plane 439/439 pass; impact names control-plane and plane; plane 351 tests, 2 fail IDENTICALLY on origin/tranche/T51 without my change (release.test.mjs R24 words rule; l77-size R77 L memory gate, alone 74.9s red on both trees): not mine, BOB's to place. checks/run.mjs: 0 failures all five, coverage 6667/6667, words count unchanged; ownership 0 failures. Proposed requirement line (control-plane R126) is in my record. Size (session_01UfCsV2Sdg2bv4LCfMXB99A): test runs 9, module lines 4625.
+
+## J34 · COMPLETE · re B49
+
+G42, control-plane's half (K4635, K4638), applied and pushed (job/T51/control-plane).
+
+**What changed.** `control-plane/index.mjs`: `op=stats` stamps `capacity=1` for class `admin` or an administering member's session (`viaSession && sessRights.administer`, the `memberlist` judgment), else 0; at the answer, for the administering member alone (not class `admin`), a numeric `result.dbBytes` is floored to a whole `STATS_GRAIN` 100,000,000 B (null stays null, absent stays absent); ADMIN_TOKEN and the founder keep the exact figure; a member and the probe get none. `test/m/control-plane/record.mjs`: `databaseSize` settable (`setSize(n)`).
+
+**Failing-first.** `stats.test.mjs` (door, a store answering as record-core's `stats` does, `dbBytes` only on `capacity=1`): red before (dee stamped `0`, `dbBytes` undefined where 10,500,000,000 expected), green after; sizes 10,573,212,345 / 99,999,999 / 100,000,000 / 0 / null; dee exact-vs-floored, founder and ADMIN_TOKEN exact, ann and the probe absent even when sending `capacity=1`; the stamp test updated (dee `1`). **L** `stats-capacity.test.mjs` (Miniflare, the real Worker and Store, host-governor pattern): `op=stats` as `T.admin` answers a non-zero `dbBytes`, nine 126 KiB leads grow it by over 1,000,000 B, the founder reads it equal to the admin's, an administering member (ruth) floored to a multiple of 100,000,000 and equal to floor of the admin's, a member and the probe none; red before (ruth `dbBytes` undefined), green after.
+
+**Outside my paths, by your START.** `bio-plane/test/stats-disclosure.test.mjs` (record-core's): B1's arm for ruth (an admin-role member) now expects `dbBytes` present and a multiple of 100 MB; 31 pass, 0 fail. `ownership.mjs` lists exactly that one file as outside control-plane's paths: BOB accepts it at the merge (or the arm moves to record-core). The `dbbytesmember`/`dbbytesall` arms named in the file's header comment are `nc-rec129.mjs`, deleted at T20 (no file to update).
+
+**Proposed requirement lines (BOB writes them).** Amend **R40**: "`op=stats` is stamped `capacity=1` for the `admin` class (the ADMIN_TOKEN binding and the founder's session) and for an administering member's session, else `capacity=0`, beside its `viewer` (R17); a caller's `capacity` never reaches the store, in either direction. For an administering member alone, `dbBytes` is answered floored to a whole 100,000,000 B (null stays null); the ADMIN_TOKEN and the founder read it exact; a member and the probe none (G42, K4638)."
+
+**Tests and checks.** `node --test --test-force-exit bio-plane/test/m/control-plane/`: tests 441, pass 441, fail 0. impact set (`impact.mjs origin/tranche/T51 HEAD`: record-core 1/10, control-plane 69/83, plane 50/58): record-core tests 196/196; plane tests 351, pass 349, fail 2, the same two as before my change (`l77-size.test.mjs` R77 L, `release.test.mjs` R24), recorded at J32. `checks/run.mjs`: format, architecture, coverage, channels, words all 0 failures. Ownership: as above.
+
+Size (session_01YAZZqemwaGayLxQo7ovcWS): test runs 9, module lines 4630
+
+## J35 · COMPLETE · re B49
+
+G42 control-plane half done and pushed; see record J34 (door and Miniflare L tests red then green; control-plane 441/441; one file outside my paths, record-core's stats-disclosure.test.mjs B1 arm, edited per your START: accept at merge). Proposed R40 amendment is in J34.
+
+## J36 · COMPLETE · re B50
+
+The gauge's ten words (K4640) added as code-origin rows: `bio-plane/src/control-plane/storage-words.mjs` exports `STORAGE_WORDS` (frozen), each a `localize(id, en)` with the ids and English as B50 gave; `size` is a function of `{used, limit, percent}` (`localize` fills its variables at the call, so it cannot run bare at load). Screens-settings reads the rows by key. Test `storage-words.test.mjs` (names R40): the ten entries, `size` fills its three variables; no English copied. `setup-words/build.mjs --check`: only the expected stale-rows note (first stale word `screen.group.storage.factors.latency`; rows.mjs not committed). `checks/run.mjs`: format, architecture, coverage, channels, words 0 failures. Proposed requirement: R40's G42 line also says "the gauge's ten sentences are control-plane's code-origin rows, `screen.group.storage.*`".
+
+Size (session_01YAZZqemwaGayLxQo7ovcWS): test runs 11, module lines 4645
+
+## J37 · COMPLETE · re B50
+
+B50 done and pushed: STORAGE_WORDS (ten screen.group.storage.* rows, size a function of used/limit/percent) in control-plane/storage-words.mjs, test storage-words.test.mjs; words check 0; setup-words --check reports only the stale-rows note. See J36.
+
+## G43, control-plane's half (CONTROL-PLANE #51, B51; K4649, K4651)
+
+**Entries applied.** (1) `deliverOwedRender` (`control-plane/index.mjs:810`) follows the reading (`readHeld`, else `pendingadd`) when `made.readingDropped === true` as well as when the original document carries none. (2) `archive.mjs`: `PROV_EMBED_MAX = promotion's INLINE_MAX - 65,536` (imports `INLINE_MAX`, which promotion exports for this use; control-plane uses promotion), `embedded(doc)` files a document whose provenance text is over it without `reading`, `text_units`, `text_units_over_bound`, `text_units_skipped` (indent 2 unchanged; a document with none of those keys is filed whole); `promoteArchive` takes `onDropped({sha, document})`, called per document filed without its reading; the answer's shape is unchanged. `index.mjs` `promoteFiled` (both callers: acquire's `promoteAcquired`, and `op=unpack`) follows those with `followEntries`. A 1 MB CSV acquired as an archive member cannot reach this path with a reading (unpack's documents carry none, `unpack.mjs`), but acquire's answer for the archive's own document can (the door reads it), so the bound is applied rather than argued away.
+
+**Failing-first.** `t51-g43-embed.test.mjs`. (a) R58 archive test: archive document and first member carry 1.5 MB / 2 MiB readings; red before (no bound existed: the 2 MiB reading went into `data/provenance.json`; the file fails to load without `PROV_EMBED_MAX`), green after: every provenance file is within the bound, no reading embedded, `readheldfor` and `pendingadd` asked for exactly the two digests whose reading was left out, `promoted` keys unchanged; control: readings that fit are embedded byte-identical and nothing is followed. (b) `promoteArchive` unit: `onDropped` only for the dropped one; a large non-reading field is filed whole. (c) Equality: `INLINE_MAX` is 1,048,576 and the door's bound 65,536 below it. (d) **Seam, red by name until SCREENS-INTAKE #19 merges:** `R124 (G43; K4651): an owed render of a 1 MiB CSV ...` (real `extraction.read` of a 1 MiB CSV with `LASTROWMARK` in the last row, real `promoteDocument`, real promotion): refused `OVERSIZE_INLINE` today. With a local, uncommitted stand-in for the provider's drop (undone), it passes (104 s), and with my `readingDropped` condition removed it fails (neither read nor owed): so the delivery change is what makes it green. Control: a render whose reading fits is filed with it and followed by nothing. The "last row found" half of the plan's test is screens-intake's seam (its tests, K4651 (e)); mine asserts read-or-owed and the file bound.
+
+**L.** The Miniflare real-DO/R2 form is screens-intake's seam (K4651 (e)); mine uses the real record, extraction and promotion in process (the file's pattern). No Miniflare test added here.
+
+**Other embedders, by reading (4).** `store-door/pull.mjs:56` files `doc` from a pulled knock (capture's document, made by capture/acquisition, never passed through the door's reading: the door reads only in `readUploaded` and the acquire handler); `capture-requests/index.mjs:1089` and `monitoring/index.mjs:2582` file the daemon's own captures, which `readHeld` reads afterwards. None carries a door reading; none changed.
+
+**Deferred:** none. **Found in other modules:** none new; plane's two reds (`release.test.mjs` R24 words rule, `l77-size.test.mjs` R77 L) are unchanged from J32/J33.
+
+**Proposed requirement lines (BOB writes them).** R58: "A document the door files from an archive (an acquire's `document`, a member) whose `data/provenance.json` would exceed promotion's inline bound less 65,536 B is filed without its `reading`, `text_units`, `text_units_over_bound` and `text_units_skipped`, and its reading follows by the ledger (G43)." R124: "The delivery follows the reading of a document whose promotion answers `readingDropped`, as one filed with none."
+
+**Tests and checks.** control-plane directory: tests 447, pass 446, fail 1 (the seam above, red by name). plane: 351, pass 349, fail 2 (the same two as J32). `impact.mjs origin/tranche/T51 HEAD`: control-plane 69/85, plane 50/58. `checks/run.mjs`: format, architecture, coverage (6674 of 6674), channels, words all 0 failures; words count unchanged (no new sentence). `ownership.mjs`: 0 failures.
+
+Size (session_01AwthwuHLmeRX25rjM7qqN9): test runs 14, module lines 4680
+
+## J38 · COMPLETE
+
+G43, control-plane's half, done and pushed (job/T51/control-plane). deliverOwedRender follows when promoteDocument answers readingDropped; archive.mjs bounds the provenance file (PROV_EMBED_MAX = INLINE_MAX - 65536; drops reading/text_units; promoteArchive onDropped; both callers follow). Tests t51-g43-embed: archive test red before/green after; 1 MiB CSV owed-render seam RED BY NAME (OVERSIZE_INLINE) until SCREENS-INTAKE #19 merges; with a temporary local stand-in for the drop it passes, and fails without my condition. control-plane 447 tests, 446 pass, 1 = that seam; plane 349/351 (same two as J32); checks 0 failures; ownership 0. pull.mjs/capture-requests/monitoring embed no door reading (by reading). Details and proposed R58/R124 lines in the record. Size (session_01AwthwuHLmeRX25rjM7qqN9): test runs 14, module lines 4680.

@@ -1,6 +1,6 @@
 # csv-reader (T51)
 
-**Status** · session_01Wy8nnMT1rzDSVKrq9QgRXP · depth 2 · COMPLETE · handled B2
+**Status** · session_015f6Az85H4GFawFsXC3ch9y · depth 2 · COMPLETE · handled B7
 
 ## Completion
 
@@ -35,3 +35,52 @@ csv-reader COMPLETE. Files: bio-plane/src/csv-reader/index.mjs (865 lines), bio-
 ## J2 · COMPLETE
 
 csv-reader #2 COMPLETE, G15 lineRows. index.mjs csvText: sheets[0].lineRows, one 1-based row (record number, as cells/usedRows count it) per line of sheet.text; whole-file and streamed paths. Red-then-green through csvEntry.text: line-rows.test.mjs (3 tests: empty rows + quoted line break; plain and empty-only; >20 MiB streamed body) - all red before (lineRows undefined), green after. text.test.mjs R5 exact-shape assertion now includes lineRows. csv-reader 42 pass; office-readers 104 pass (unchanged). checks: format, architecture, coverage, words (268/1982 unchanged), ownership 0 failures. Nothing imports csv-reader yet, so no users to run. Proposed R16 text and note on the START's 'streamed 1 MB' (streaming is only over 20 MiB; both paths tested) in my record. No deferral, REPORT or question. Size: test runs 8, module lines 884.
+
+## J3 · QUESTION
+
+QUESTION (replaces none) — the largest CSV the plane reads whole is 17 MiB, not 20, and the START's "lower the bound, refuse at N+1" does not fit R6/R9 as written. Best reading below; I carry on with everything else.
+
+MEASURED (plane/shape harness, csvDoc(N MiB), cap 167 - N, i.e. 128 + 39 - N; reading-pipeline's call patched in a scratch worktree only to pass {inlineCellsMax: 512 KiB}, so cells are held and no record list is kept; csv-reader as committed on my branch):
+- survives: N = 4, 8, 12, 16, 17, 17.5. dies (SIGABRT, heap): 17.75, 18, 19, 19.9 (20,900,000 B), 21. At 24 MiB the plane's own hand-off gate (25,165,824 B) states the file and no entry runs.
+- 19.9 MiB needs a cap of 156-160 here (147 given): about 10 MB short.
+- csv-reader's own share is small and is not where it dies: a 20.9 MB body needs old space 47 MB in a bare node (16 idle) = 31 MB above idle (before this job: 53, and with records and every cell it was 14.9 MB per MB of file). Heap after the entry returns is idle 87.7 + 20.7 (text 19.5 + lineRows); the object dies in the stages after the entry (reading-pipeline's row-block units and classification copy the text), which are not this module's.
+- So lowering MEASURED_CSV_TEXT_BOUND_BYTES alone changes nothing at the plane: R6/R9 read a body over the bound, up to ooxml's 32 MiB ceiling, in pieces (cells null), and that band dies in the plane the same way (21 MiB did) because the text is still held whole downstream.
+
+OPTIONS
+A. Change no bound; report the numbers (done here). The plane keeps dying on 17.75-24 MiB CSVs (read three times, then "the object stopped", plane R77) until reading-pipeline stops holding the text several times, which is its job's and N1267's.
+B. (my recommendation for the alpha, K1881) Set MEASURED_CSV_TEXT_BOUND_BYTES to 17 MiB (17,825,792 B; half a MiB under the largest that fit) and make a body over it a STATED, final refusal with its size (the marker R6 already carries, `final: true`, metric body_bytes), up to the ceiling, instead of reading in pieces; the pieces band for csv (R9, F7) is dropped from csv-reader (its code and large-text test go; a 30 MB body is stated, not read). Needs R6 and R9 amended by you; the plane then states 17-24 MiB CSVs instead of dying, and a later round re-raises the figure when downstream holds the text once.
+C. Keep the pieces band (R9) and lower the constant only so the marker names 17 MiB: no behaviour change, no protection.
+
+I will not change the bound or R9 until you answer. Everything else of the entry (cap, cells_held, cellsIn, windowed walk, memory test) proceeds on the figures above; B is a small change afterwards (the constant, one branch, one test at 17 MiB + 1).
+
+## Fix round 6, wave 6 (CSV-READER #3, session_015f6Az85H4GFawFsXC3ch9y): G41 `D1` held cells
+
+- **Cause (rule 1).** `csvParts` kept every record (`walkRecords`, 14.9 MB per MB of file) and `csvText` made one object per cell (about 221 B in memory, 147 B as JSON), so a 1 MB CSV read stored 11.27 MB of cells and died of memory (`diagnosis-R6-g40.md` 3.2, `-g41.md` 1.1).
+- **Why the tests missed it (rule 2).** Sheet tests used a few rows; the large tests were over the 20 MiB bound and asserted `cells` null; nothing measured a body at the object's cap. Gap fixed: `g41-held.test.mjs` (1 MB harness body through the entry) and `g41-memory.test.mjs` (an `--expose-gc` child at a 64 MB old space).
+- **Changed (`bio-plane/src/csv-reader/index.mjs`).**
+  - `csvParts`: a body over `SHEET_WINDOW_MIN_BYTES` (64 KiB, exported; records of a body that size are about 1 MB) keeps no records; UTF-16 validity found in windows (`validUtf16`); `forEachRecord` walks the held body in 1 MiB windows (or the kept list for a small body).
+  - `csvText(parts, opts)`: `{inlineCellsMax}` (bytes, the caller's number, B5) lists cells only while the sheet's cells JSON is `<=` it (`listCell`), else `cells: null`, `cells_held: true`; no option lists every cell. Text built in 2,048-line chunks (`CSV_TEXT_CHUNK_LINES`): the 20.9 MB body's own peak fell from 53 to 47 MB cap in a bare node.
+  - new optional slot `csvEntry.cellsIn(partsOrBytes, {sheet, fromRow, toRow, fromCol, toCol, maxCells})` (`csvCellsIn`); `typedCell` shared with `text`.
+  - K4652 (B7): `MEASURED_CSV_TEXT_BOUND_BYTES` = 17 MiB (17,825,792); a body over it, up to ooxml's ceiling, is a stated final refusal (`why: over_size_bound`, size, `boundName: MEASURED_CSV_TEXT_BOUND_BYTES`, `metric: body_bytes`, `final: true`, plus `encoding` for UTF-16); over the ceiling `textPlan`'s guard as before. The pieces band (`piecewise`, `text_read_in_pieces`, the 10,000-listing of unreadable cells, `cells` null by stream) is removed with its tests.
+- **Failing-first (rule 3), through `csvEntry.text/cellsIn/parts`.** Run against the entry as it was (HEAD at the START, scratch worktree): `g41-held` 10 of 11 red (cellsIn absent, cells listed, no `cells_held`; the control green), `g41-memory` red (SIGABRT at a 64 MB old space). Green with the change: 11 and 1. K4652's tests (bound 17 MiB; harness body of the bound read whole; +1 byte stated with size; 30 MB stated, not read) are in `large-text.test.mjs`.
+- **Platform check (rule 4, L).** `plane/shape` harness, `csvDoc`, cap 167 − N (128 + 39 − N), reading-pipeline's call patched in a scratch worktree to pass `{inlineCellsMax: 512 KiB}` (not committed): survives N = 4, 8, 12, 16, 16.99, 17, 17.5 MiB; dies 17.75, 18, 19, 19.9 (needs cap 156-160), 21; 17.01 MiB is stated (units 0, the child lives); 24 MiB is the plane's own gate. Tick 1 of a 17 MiB body is 14.8 s here (this machine is 1.4 to 1.5 times slower than the job machines; `diagnosis-R6-g40.md` 2): the plane test's "every tick under 10 s" may need that read to be timed on its machine. A plane test of "the bound" must use a body of at most 17 MiB: `csvDoc(17 MiB)` is 17 MiB plus a row and is stated.
+- **Measures.** Cell: 147 B of JSON, so 512 KiB holds 3,566 cells. csv-reader alone at 20.9 MB: lowest cap 47 MB in a bare node (idle 16): 31 MB. `cellsIn` rows 1-100: 27 ms; the last 100 rows of a 20.9 MB body (338,174 rows): 367 ms (4 MB: 73 ms), under K4354's 2 s, so no block cache is needed for csv.
+- **Found in other modules.** reading-pipeline: `reading-pipeline/index.mjs` still reads `piecewise` from the csv answer and `text()` takes no option yet (G41 D2, its job); the object dies above 17.5 MiB in its row-block units and classification (the copies), N1267.
+- **R-OLD.** Computed at read time; stored readings unchanged.  **Words.** No new sentence; words check unchanged (dev 268, unkeyed 1982).  **Census ops.** None owned.
+- **Ran.** `node --import <copy of the shim> --test --test-force-exit bio-plane/test/m/csv-reader/` 55 pass, 0 fail (the shim copy from `job/T51/test-support`, kept outside the tree). Users: office-readers 105 pass, format-registry 43, workbooks 29; file-safety 89 pass, 1 fail (R24, red identically on the unchanged entry, accepted by name in plan section 4). `checks/run.mjs`: format 0, architecture 0, coverage 6674 of 6674, channels 0, words 0 failures; `ownership.mjs` 9 files, 0 failures.
+- **Seam (K4647 numbering).** 1-based rows and columns, inclusive ranges, `next_row` the first row not returned and absent when the range is whole, `maxCells` counts in-extent cells; asserted at row 1 and the last row in `g41-held.test.mjs`. No seam test red by name.
+
+### Proposed requirement lines (BOB writes `build/requirements/csv-reader.md`)
+
+- **R6 amended** (K4652): the size guard compares the BODY's byte length (after any BOM) against `MEASURED_CSV_TEXT_BOUND_BYTES`, **17 MiB** (17,825,792), measured at the plane's real shape (17.5 MiB read, 17.75 not). Over it, up to ooxml's ceiling, `structure()` and `text()` carry the marker `{ok:false, text:"undetermined", why:"over_size_bound", size, bound, boundName:"MEASURED_CSV_TEXT_BOUND_BYTES", metric:"body_bytes", final:true}` (and `encoding` for a UTF-16 body) in `undetermined`, `sheets: []`; over the ceiling `textPlan`'s guard. The dialect still stands.
+- **R9 replaced**: a body is never read in pieces: no `piecewise`, no `text_read_in_pieces`, no listing cap on unreadable cells. (Test: `large-text.test.mjs`.)
+- **R17** (G41, K4636, K4642) Held cells. `text(partsOrBytes, opts)`: with `opts.inlineCellsMax` (bytes; reading-pipeline's number) the sheet lists `cells` only while their JSON is at most it; past it `cells` is `null` and the sheet carries `cells_held: true`; `lineRows`, `text`, `usedRows`, `counts.cells` are those of the whole read. Without the option every cell is listed and there is no marker; a sheet whose cells fit has no marker. Test: `g41-held.test.mjs`.
+- **R18** Optional slot `cellsIn(partsOrBytes, {sheet, fromRow, toRow, fromCol, toCol, maxCells})` (async; `sheet` absent, `0` or `"csv"`): `{ok:true, cells, rows:{from,to}, next_row?}`, the typed cells of exactly those rows and columns in row then column order, each identical to `text()`'s (an unreadable field a cell with null value). It stops after `toRow`, or before the row that would pass `maxCells` (whole rows; a first row alone over `maxCells` is given whole): then `next_row` is that row and `rows.to` the row before. `toRow`/`toCol`/`maxCells` absent mean no limit. Never throws: `{ok:false, why}` with `no_such_sheet`, `bad_range`, `empty_body`, `decoder_unavailable:<enc>`, or the R6 marker. Call shape for reading-pipeline and extraction: `entry.cellsIn(bytes, {sheet: "csv", fromRow, toRow, maxCells})`, then continue from `next_row`. Test: `g41-held.test.mjs`.
+- **R19** A body of any size up to the bound is read without a record list (walked in 1 MiB windows over 64 KiB, `SHEET_WINDOW_MIN_BYTES`), holding about its text: an 8 MiB body reads in a 64 MB old space (lowest surviving 33 MB). Test: `g41-memory.test.mjs`.
+- **R16** wording: "read-in-pieces path" becomes "windowed path".
+
+Size (session_015f6Az85H4GFawFsXC3ch9y): test runs 30, module lines 990
+
+## J4 · COMPLETE
+
+csv-reader #3 COMPLETE, G41 D1. Held cells (inlineCellsMax opt-in, cells_held), cellsIn slot, windowed walk with no record list, chunked text; bound 17 MiB with a stated final refusal above it and the pieces band dropped (K4652). Failing-first red then green (g41-held 10/11 red, g41-memory SIGABRT), plane/shape L: 16.99 MiB read whole at cap 150, 17.01 stated. csv-reader 55 pass; office-readers 105, format-registry 43, workbooks 29; file-safety R24 red on the unchanged entry too. Checks 0 failures. Proposed R6/R9/R16/R17/R18/R19 lines, measures and the tick-time note (14.8 s here) are in my record. Size: test runs 30, module lines 990.

@@ -259,6 +259,8 @@ export function groupTable(over = {}) {
     // corpus-export R1, R2: the copy is the answer itself (a manifest); the list is the copies taken, newest first
     export: (q, b) => env({ ok: true, at: "2026-10-20T10:00:00Z", scope: "working-corpus", counts: { bundles: 40, files: 120, tables: 15, rows: 900 }, logged: true, verify: "v" }),
     exportlog: env({ ok: true, exports: EXPORTS, limit: 200, truncated: false }),
+    // record-core R64's figures through the caller's sight: an administrator without the capacity stamp is answered no `dbBytes` (G42)
+    stats: env({ documents: 12, observationsNonLead: 3 }),
     ...over,
   };
 }

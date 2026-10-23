@@ -1,6 +1,6 @@
 # BOB to calculations (T51)
 
-**Read** · handled J5
+**Read** · handled J8
 
 ## B1 · START
 
@@ -59,3 +59,31 @@ Mail with `--module calculations`; record `build/jobs/T51/calculations.md` (appe
 Merge order of G41: TEST-SUPPORT #9 (the shim, running; merged at its COMPLETE), then CSV-READER #3, OFFICE-READERS #15, READING-PIPELINE #26, EXTRACTION #38, CONTENT #18, RETRIEVAL-BROWSE #4, CALCULATIONS #8, SCREENS-INQUIRY #24, and last PLANE #52 (the shape proof). EVENTS, PROGRESSIONS, CONTRADICTION and STORE-DOOR need no job: `extraction.readingOf` is unchanged, and BOB runs their suites as users after EXTRACTION #38 merges.
 
 Run: your suite under the shim, then the users `node build/plan/impact.mjs tranche/T51 HEAD` names (run the modules that call your changed services if it names hundreds); `node /home/user/civicos-process/checks/run.mjs /home/user/bio` (no finding in your files; the words count must not rise); `node /home/user/civicos-process/checks/ownership.mjs /home/user/bio calculations tranche/T51 job/T51/calculations`. COMPLETE: what changed (file:line), each failing-first test red then green, the measures this START names, the seam tests still red by name (none expected) and which provider each waits for, suite counts, the requirement lines you propose (BOB writes them), and the `Size` line.
+
+## B5 · ANSWER · re J6
+
+ANSWER re J6 (K4644): start now against the contract (section 0 R-SEAM: a seam test whose provider is unmerged is written first and stays red by name). Write the code (the awaits at :380, :688 and in #engineOf with its callers, the undetermined engine on cells_truncated or a failed cellsAt, the range bound stated) and the real-path tests now, red by name until CONTENT #19 (after csv-reader, office-readers, reading-pipeline, extraction) and TEST-SUPPORT #9 merge; BOB posts a CHANGE as each lands, you merge the tranche and see them turn green. Set your state WORKING.
+
+## B6 · CHANGE
+
+CHANGE (K4647): the ranged-cells seam's numbering, fixed for every provider and user (`cellsIn`, `cellsInRange`, `cellsOf`): rows and columns are 1-based as a spreadsheet numbers them (row 1 is the sheet's first row, its header if it has one; column 1 is A), `fromRow`/`toRow` and `fromCol`/`toCol` inclusive; `next_row` is the first row not returned (absent when the range was answered whole); `maxCells` counts in-extent cells. A seam test asserts it at both ends (row 1 and the last row).
+
+## B7 · ANSWER · re J7
+
+ANSWER re J7 (K4650): persist it. An object restarts often, so a mark held only in memory would grade a figure input undetermined after every restart: a silent change in what members see. Write the figure input's engine mark with the calculation's inputs at create (a column in `calc_inputs`, schema migration declared as your other columns are), read it in the synchronous `gradeFactsOf`/duties paths; rows stored before (R-OLD): the mark is made and written at the next async `read`/`evaluate` of that calculation, and until then the sync path answers the explicit undetermined engine (fail closed). Test: create, simulate a restart (a fresh instance over the same database), sync `gradeFactsOf` answers the stored mark; an old row without it answers undetermined, then the stored mark after one `read`. Keep `#tableGrade`/`#gradeFacts` synchronous as you did. CHANGEs follow as providers land.
+
+## B8 · CHANGE
+
+CHANGE (K4654): CSV-READER #3 is merged into tranche/T51 (held cells with `inlineCellsMax`, `cells_held`, `cellsIn`, the 17 MiB stated bound). Merge tranche/T51 into your branch when your next step needs it; run your seam tests that depend only on csv-reader.
+
+## B9 · CHANGE
+
+CHANGE (K4655): OFFICE-READERS #15 is merged into tranche/T51 (xlsx held cells, workbook-wide cap by `inlineCellsMax` bytes, `cellsIn`, `next_row` absent when whole). With CSV-READER #3, both readers are in: reading-pipeline's seam tests can go green; merge tranche/T51.
+
+## B10 · CHANGE
+
+CHANGE (K4657): READING-PIPELINE #26 is merged into tranche/T51 (`cellsInRange`, `cells_held`, the cap passed at the entry call; refusals `{ok:false, reason, why?}`), with both readers. Extraction's `cellsOf` seam can go green now; merge tranche/T51.
+
+## B11 · CHANGE
+
+CHANGE (K4661): EXTRACTION #38 is merged into tranche/T51 (the 1 MiB row guard, the stated too-large reading with `too_large`, `cellsOf` R98, the code-origin rows `screen.document.cells_held` and `screen.document.reading.too_large`; setup-words rows regenerated). Merge tranche/T51 into your branch; your extraction seam tests can go green now. Run under the shim (test-support's `platform-sqlite.mjs`, still outside the tree until TEST-SUPPORT #9 merges).
