@@ -58,3 +58,7 @@ Size (session_01XjFJQ53dT8DEubR4duSRf2): test runs 8, module lines 988
 ## J1 · COMPLETE
 
 T51-105 applied: R17 (not_drafted[].why as {key, vars}), words.mjs, all 12 words findings and 7 plain ones converted to localize (no REPORT needed). Tests 32/32, format/architecture/coverage/ownership/words 0 failures for translations. Found elsewhere: screens-settings 2 tests red at the tip without my changes (interface-shell R38 registry test; R39 words by key); screens-settings reads why as {key, vars} now. Details in build/jobs/T51/translations.md.
+
+## J2 · COMPLETE
+
+G84 / R2 applied: INTERFACE_WORDS is now interfaceWords(), lazy and frozen, key map lazy; 0 passes over WORD_ROWS by this module at import (1 before; failing-first test seen red). translations 38/38; format, architecture, coverage (18 of 18), words, ownership 0 failures. Only other users: instance-setup's setup.mjs:61 and test/m/instance-setup/t50.test.mjs; until INSTANCE-SETUP #28 re-points them setup.mjs does not link, so instance-setup, answer-envelope, store-door, signin-door (and chains through the plane) fail at import. Plane measureStart not taken (that chain does not link from source; bundle is yours to regenerate). Found elsewhere: record-grammar/document.mjs:22 calls word() at load, building setup-words' key table (one WORD_ROWS.map at import). Details: build/jobs/T51/translations.md.
