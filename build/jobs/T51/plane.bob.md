@@ -349,3 +349,7 @@ Run: your suite under the shim, then the users `node build/plan/impact.mjs tranc
 ## B44 · CHANGE
 
 CHANGE (K4645): your START's line that the providers (and TEST-SUPPORT #9's preload) are already merged is wrong: the G41 jobs all started together. Build now against the contract the STARTs state; write your real-path seam tests now, red by name until each provider merges (plan section 0, R-SEAM); run under a copy of the shim kept outside the tree until `bio-plane/test/platform-sqlite.mjs` is on tranche/T51. Merge order stays csv-reader, office-readers, reading-pipeline, extraction, content, retrieval-browse, calculations, screens-inquiry, plane: a provider COMPLETEs first with its own tests green. BOB posts a CHANGE as each provider and the preload merge; then merge tranche/T51 and turn your seam tests green. Set your state WORKING (not BLOCKED). **The too-large reading's shape (K4645):** extraction writes `failure: "final"`, `basis` its R38 sentence as today, and beside it `too_large: {bytes: <size of the largest bound value>, key: <its key>}`; readers read the field, never the English.
+
+## B45 · CHANGE
+
+CHANGE (K4654): CSV-READER #3 is merged into tranche/T51 (held cells with `inlineCellsMax`, `cells_held`, `cellsIn`, the 17 MiB stated bound). Merge tranche/T51 into your branch when your next step needs it; run your seam tests that depend only on csv-reader.
