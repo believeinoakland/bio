@@ -836,9 +836,15 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
       /* R80 (N1083; K3297): options as words by key, `[value, key, on]`, or as record data, `{value, text, on}`, the text drawn as data,
          HTML-escaped and never read as a key; the legend a word key or `{text}`; each box sits beside its own words */
       checks(id, legendKey, options, o = {}) {
+        /* G77 (fix round 7): a box is identified by its value, not by its place, so the box a redraw draws for a value is the one the member
+           had (the ids of a stepping group, Previous and Next, never trade); two options of one value take their place as well */
+        const seen = new Set();
         const opt = (x, i) => {
           const [v, text, on] = Array.isArray(x) ? [x[0], w(x[1]), x[2]] : [x.value, typeof x.key === "string" ? w(x.key, x.fills) : esc(x.text), x.on];
-          return '<label><input type="' + (o.radio ? "radio" : "checkbox") + '" name="' + esc(id) + '" id="' + esc(id) + "-" + i + '" value="' + esc(v) + '"' + (on ? " checked" : "") + "> <span>" + text + "</span></label>";
+          let tag = String(v).replace(/[^\w-]/g, "_");
+          if (seen.has(tag)) tag += "-" + i;
+          seen.add(tag);
+          return '<label><input type="' + (o.radio ? "radio" : "checkbox") + '" name="' + esc(id) + '" id="' + esc(id) + "-" + esc(tag) + '" value="' + esc(v) + '"' + (on ? " checked" : "") + "> <span>" + text + "</span></label>";
         };
         const redraw = typeof o.redraw === "string" && o.redraw ? ' data-shell="choice" data-redraw="' + esc(o.redraw) + '"' : "";
         return '<fieldset class="cs-field" id="' + esc(id) + '"' + redraw + '><legend>' + wordOrData(legendKey) + "</legend>" + (options || []).map(opt).join("") + "</fieldset>";
@@ -1468,6 +1474,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     const restore = (id, v) => {
       const el = doc.getElementById(id);
       if (!el || el.getAttribute("data-shell") === "pick") return;
+      /* G77 (fix round 7): a group of boxes that redraws on a change (`data-redraw`) is drawn from the screen's own state; what the member
+         had checked is put back nowhere, or a box the member pressed would be checked again in the screen it just changed */
+      if (el.closest && el.closest("fieldset[data-redraw]")) return;
       if ("checked" in v) { if (el.checked === !!DRAWN[id]) el.checked = v.checked; }
       else { const d = drawnValue(el); if (d === "" || d === (DRAWN[id] === undefined ? "" : DRAWN[id])) el.value = v.value; }
     };
@@ -2670,6 +2679,12 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   /* FRAME_VAL: what the frame holds of each (kept or answered); FRAME_DONE: settled (held, answered, or answered with nothing of use); FRAME_KEPT: those
      drawn from the store; FRAME_FRESH: those the plane has answered in this page; FRAME_CHECKED: the one asking-again of the kept ones is done */
   let FRAME_VAL = {}, FRAME_DONE = new Set(), FRAME_KEPT = new Set(), FRAME_FRESH = new Set(), FRAME_CHECKED = false;
+  /* G81 (fix round 7; BOB's decision): of the six, two are constants of the team (`groupidentity`, `infolevel`): a page load in the tab that holds one
+     answered less than a day ago draws from it and asks it no more; the other four are asked again once on every load, as they can change under the
+     member (another administrator turns the assistant off, a subscription lapses, the group key is turned on). FRAME_AT: when the plane last answered each
+     (page clock, kept with the answer); a kept answer without a time, or from the future, is asked again. */
+  const FRAME_CONSTANT = ["groupidentity", "infolevel"], FRAME_DAY = 24 * 3600 * 1000;
+  let FRAME_AT = {};
   /* a short tag of the session's token, so the store names the session without holding anything that opens it (R3: the token is held by the record alone) */
   function tagOf(str) {
     let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
@@ -2680,15 +2695,16 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   }
   const frameWho = () => (S && ME && ME.member ? String(ME.member) + "|" + tagOf(S.t) : null);
   /* R124: the store is cleared when the record is written or cleared (sign-in, sign-out, an end) and when the page locks; what the page holds goes with it */
-  function frameDrop() { FRAME_VAL = {}; FRAME_DONE = new Set(); FRAME_KEPT = new Set(); FRAME_FRESH = new Set(); tab.del(FRAME_KEY); }
+  function frameDrop() { FRAME_VAL = {}; FRAME_DONE = new Set(); FRAME_KEPT = new Set(); FRAME_FRESH = new Set(); FRAME_AT = {}; tab.del(FRAME_KEY); }
   /* a kept level is dropped when the member changes it, so the next load asks */
-  function frameForget(name) { delete FRAME_VAL[name]; FRAME_KEPT.delete(name); frameSave(); }
+  function frameForget(name) { delete FRAME_VAL[name]; delete FRAME_AT[name]; FRAME_KEPT.delete(name); frameSave(); }
   function frameSave() {
     const who = frameWho();
     if (!who) return;
     const reads = {};
-    for (const n of FRAME_NAMES) if (FRAME_VAL[n]) reads[n] = FRAME_VAL[n];
-    if (Object.keys(reads).length) tab.set(FRAME_KEY, JSON.stringify({ who, reads })); else tab.del(FRAME_KEY);
+    const at = {};
+    for (const n of FRAME_NAMES) if (FRAME_VAL[n]) { reads[n] = FRAME_VAL[n]; if (Number.isFinite(FRAME_AT[n])) at[n] = FRAME_AT[n]; }
+    if (Object.keys(reads).length) tab.set(FRAME_KEY, JSON.stringify({ who, reads, at })); else tab.del(FRAME_KEY);
   }
   /* what the store holds for this member and this session, each read through `min`; a store of another member or session is dropped, and so is one that is not ours */
   function frameKept() {
@@ -2700,6 +2716,9 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (!o || typeof o !== "object" || o.who !== who || !o.reads || typeof o.reads !== "object") { tab.del(FRAME_KEY); return {}; }
     const out = {};
     for (const n of FRAME_NAMES) { const v = o.reads[n]; const m = v && typeof v === "object" ? FRAME_READS[n].min(v) : null; if (m) out[n] = m; }
+    /* when each was answered, for the constants only; anything but a number is none */
+    FRAME_AT = {};
+    for (const n of FRAME_CONSTANT) { const t = o.at && typeof o.at === "object" ? o.at[n] : null; if (out[n] && typeof t === "number" && Number.isFinite(t)) FRAME_AT[n] = t; }
     return out;
   }
   /* R7, R17, R20, R60: the frame's state from what it holds of one read */
@@ -2744,7 +2763,7 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
     if (!ME) return;
     const m = a.kind === "ok" && a.value && typeof a.value === "object" ? FRAME_READS[name].min(a.value) : null;
     const was = FRAME_VAL[name] === undefined ? null : JSON.stringify(FRAME_VAL[name]), first = !FRAME_DONE.has(name);
-    if (m) { FRAME_VAL[name] = m; FRAME_DONE.add(name); FRAME_FRESH.add(name); frameSave(); }
+    if (m) { FRAME_VAL[name] = m; FRAME_DONE.add(name); FRAME_FRESH.add(name); if (FRAME_CONSTANT.includes(name)) FRAME_AT[name] = Date.now(); frameSave(); }
     /* a first read that answered nothing of use is settled; a kept one that is asked again and does not answer keeps what it held */
     else FRAME_DONE.add(name);
     if (!first && (!m || JSON.stringify(m) === was)) return;
@@ -2766,9 +2785,11 @@ export function shellProgram(D, SCREENS, win, GUIDE) {
   function frameBoot() {
     /* R7 (E12; K4530 ruling on J21): the queue count is asked once the screen's own reads are known (`countQueue`, from `show`), not here */
     COUNT_DUE = true;
-    FRAME_VAL = {}; FRAME_DONE = new Set(); FRAME_KEPT = new Set(); FRAME_FRESH = new Set(); FRAME_CHECKED = false;
+    FRAME_VAL = {}; FRAME_DONE = new Set(); FRAME_KEPT = new Set(); FRAME_FRESH = new Set(); FRAME_CHECKED = false; FRAME_AT = {};
     const kept = frameKept();
     for (const n of FRAME_NAMES) if (kept[n]) { FRAME_VAL[n] = kept[n]; FRAME_DONE.add(n); FRAME_KEPT.add(n); }
+    /* G81: a constant kept less than a day is as good as answered in this page: never asked again by this load */
+    for (const n of FRAME_CONSTANT) if (FRAME_KEPT.has(n) && Date.now() - FRAME_AT[n] >= 0 && Date.now() - FRAME_AT[n] < FRAME_DAY) FRAME_FRESH.add(n);
     for (const n of FRAME_NAMES) if (FRAME_KEPT.has(n)) frameApply(n);
     for (const n of FRAME_NAMES) if (!FRAME_DONE.has(n)) frameAsk(n);
   }

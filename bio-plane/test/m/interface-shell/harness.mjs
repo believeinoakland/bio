@@ -156,7 +156,7 @@ export function fakeIndexedDB(dbs = new Map()) {
  * Boot the page at `path` with `screens` registered, over `plane` (an op's answer, or `(req) => answer`).
  * `session` is the record R32 keeps in localStorage (null for none); `testInstance` is `interfacePage`'s option (R58); `tabs` (from `tabs()`) shares one localStorage
  * among pages, each told of the others' writes by the storage event; `idb` is the IndexedDB stand-in's store.
- * Answers `{doc, win, requests, root, clock, settle, click, fire, back, assigned, store, local, byOp, location, ...}`:
+ * Answers `{doc, win, requests, root, clock, settle, click, choose, fire, back, assigned, store, local, byOp, location, ...}`:
  * `store` is the tab's sessionStorage, `local` its localStorage.
  */
 export async function boot({ screens = [], plane = {}, session = SESSION, path = "/app", hash = "", phone = false, local = {}, localThrows = false, tabStore = null, tabThrows = false, html, run = true, tabs: group = null, idb = new Map(), guide = null, testInstance = false, version = null, declared = collectOwnerRows() } = {}) {
@@ -242,10 +242,25 @@ export async function boot({ screens = [], plane = {}, session = SESSION, path =
   doc.createElement = (t) => { const el = origCreate(t); if (t === "a") el.click = () => files.push({ name: el.getAttribute("download"), url: el.getAttribute("href"), blob: (objectUrls.find((u) => u.url === el.getAttribute("href")) || {}).blob, released: false }); return el; };
   doc.defaultView = win;
   const root = () => doc.getElementById("cs-root");
-  const fire = (el, type, init = {}) => el.dispatchEvent(new Event(type, { bubbles: true, target: el, ...init }));
+  /* the browser's radio-group semantics (G77, fix round 7): a radio that is chosen unchecks the others of its name; `choose` is a member's click
+     on a box, which fires `change` only when the box was not already checked (a checked radio pressed again changes nothing) */
+  const fire = (el, type, init = {}) => {
+    if ((type === "change" || type === "click") && el.localName === "input" && el.type === "radio" && el.getAttribute("name") && (type === "change" || !el.checked)) {
+      for (const o of doc.querySelectorAll('input[type="radio"]')) if (o !== el && o.getAttribute("name") === el.getAttribute("name")) o.checked = false;
+      el.checked = true;
+    }
+    return el.dispatchEvent(new Event(type, { bubbles: true, target: el, ...init }));
+  };
+  const choose = async (el) => {
+    if (typeof el === "string") el = root().querySelector(el);
+    if (!el) throw new Error("nothing to choose");
+    if (!(el.type === "radio" && el.checked)) { if (el.type !== "radio") el.checked = !el.checked; else fire(el, "click"); fire(el, "change"); }
+    await settle();
+    return el;
+  };
   const click = async (el) => { if (typeof el === "string") el = root().querySelector(el); if (!el) throw new Error("nothing to click"); fire(el, "click"); await settle(); return el; };
   const back = async (path2) => { go(path2); for (const f of listeners.popstate || []) f({}); await settle(); };
-  const page = { doc, win, html, requests, polls, root, clock, settle, click, fire, back, assigned, store, local: localMap, location, objectUrls, files, idb };
+  const page = { doc, win, html, requests, polls, root, clock, settle, click, choose, fire, back, assigned, store, local: localMap, location, objectUrls, files, idb };
   if (group) group.pages.push(page);
   if (run) {
     /* the page's clock is the fake one: `Date.now()` advances with `clock.tick` (cs.now, K3002) */
