@@ -340,3 +340,16 @@ test("R97 (G41): the two Document-page sentences are code-origin rows, read by k
   const said = SCREEN_WORDS.tooLarge({ size: "2.4 MiB", key: "cells" });
   assert.ok(said.includes("2.4 MiB") && said.includes("cells") && !said.includes("{"), said);
 });
+
+test("R98 (G41, K4647): rows and columns are 1-based and inclusive at both ends: row 1 is the header, column 1 is A, the last row is the sheet's last, and `next_row` is the first row not returned", async () => {
+  const rows = csvRows(1_048_576);
+  const { w, d } = await home(csvText(rows), { ct: "text/csv", format: "csv", fromText: true });
+  await readAll(w, d);
+  const first = await w.x.cellsOf(d, "csv", { fromRow: 1, toRow: 1, fromCol: 1, toCol: 1 });
+  assert.deepEqual(first.cells, [cellOf("csv", 1, 0, "id")], "row 1, column 1 is A1, the header's first cell");
+  assert.deepEqual(first.interpreted, { sheet: "csv", from_row: 1, to_row: 1 });
+  const last = await w.x.cellsOf(d, "csv", { fromRow: rows.length, toRow: rows.length, fromCol: 4, toCol: 4 });
+  assert.deepEqual(last.cells, [cellOf("csv", rows.length, 3, rows[rows.length - 1][3])], "the last row, column 4 is D");
+  const cut = await w.x.cellsOf(d, "csv", { fromRow: 1, toRow: rows.length });
+  assert.equal(cut.next_row, cut.interpreted.to_row + 1, "next_row is the first row not returned");
+});
