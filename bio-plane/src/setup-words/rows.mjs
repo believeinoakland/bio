@@ -1,6 +1,6 @@
 /* GENERATED: do not edit by hand. setup-words R10, R15 (R1's rule; DEC-179, DEC-257; K3366, K3930): the interface's word
    list, docs/development/ux-substrate/screens/words.json (18524 design words, 1112 protected; SHA-256
-   24f0ffdeb236000f948540c221752da2e833674406dba6c952a7a2a67abe2c5b) followed by 7281 sentences written first in code, each [key, en, note, means, protected, origin]: key,
+   24f0ffdeb236000f948540c221752da2e833674406dba6c952a7a2a67abe2c5b) followed by 7284 sentences written first in code, each [key, en, note, means, protected, origin]: key,
    en, note (or null) and protected as the file gives them, means the en of the word's sibling .means or .does entry
    (the nearest dotted prefix of at least two segments holding one), or null, origin "design" (a row of the file) or
    "code" (a localize(id, en) call whose id the file lacks). WORDS_COMMIT is the first 10 hex digits of that SHA-256. The list
@@ -19797,6 +19797,7 @@ export const WORD_ROWS = Object.freeze([
   ["calculations.index.the_provisions_standard_is_held","the provision's standard is held {v1}, not as its own words, so it is not a measure an act is held against (standards R34). Nothing was written.",null,null,false,"code"],
   ["calculations.index.the_quantity_named_stands_for","the quantity named stands for a judgment, not a measured quantity; a figure standing for importance, suspicion, significance or severity never orders a ranking (K1471, K1473). Nothing was written.",null,null,false,"code"],
   ["calculations.index.the_ranking_counts_rows_of","the ranking counts rows of {length} kinds ({kinds}) as one measure; a measure across mixed kinds of link is refused, a count of one kind is a fact (K1471). Nothing was written.",null,null,false,"code"],
+  ["calculations.index.the_source_reads_as_one","the source reads as one cell per line (delimiter found: {delimiter}), and the declared header has {columns} columns; check the file's separator or the header you declared. Nothing was written.",null,null,false,"code"],
   ["calculations.index.the_standard_holds_no_target","the standard holds no target (standards R42): a metric, a threshold, a period and a definition. Nothing was written.",null,null,false,"code"],
   ["calculations.index.v1_is_a_hypothesis_hunches","\"{v1}\" is a hypothesis: hunches and hypotheses are held in the working inquiry and are never a calculation's input or threshold (K1467). Nothing was written.",null,null,false,"code"],
   ["calculations.index.your_teams_civicsmith_has_no","your team's Civicsmith has no evidence store set up, so a table's bytes cannot be held. Nothing was written.",null,null,false,"code"],
@@ -23112,6 +23113,7 @@ export const WORD_ROWS = Object.freeze([
   ["instance-setup.declared.updatestart","release-directed: keyed by a verified release notice, reached from Settings › Updates and the administrators' queue; an administrator's choice, recorded with who and when; installs nothing (the installer installs, with Cloudflare's consent)",null,null,false,"code"],
   ["instance-setup.livefire.confined_to_the_scratch_namespace","Confined to the scratch namespace. Live state is unreachable from this token class.",null,null,false,"code"],
   ["instance-setup.livefire.r2_mb_mb_round_trip","R2 {mb}MB round trip read back its own length",null,null,false,"code"],
+  ["instance-setup.selftest.store_place_note","store_location and store_generation are what this copy is configured with for where its team's room is first created and which room it uses. They do not say where the room runs.",null,null,false,"code"],
   ["instance-setup.setup.a_draft_carries_no_project","a draft carries no project, and the account resolved for this one is a project's, so nothing was drafted and {what}.",null,null,false,"code"],
   ["instance-setup.setup.answered_http_status_without_a","answered HTTP {status} without a version",null,null,false,"code"],
   ["instance-setup.setup.capture_not_legistar","capture {sha} is not a Legistar {endpoint} list. Nothing was seeded.",null,null,false,"code"],
@@ -24978,6 +24980,7 @@ export const WORD_ROWS = Object.freeze([
   ["reevaluation.index.visible_to_chains","the version chains here are the ones visible to you; a version filed in a project you were not invited to is not in them",null,null,false,"code"],
   ["reevaluation.index.work_products_unread","the cases a project owns, or their ratified editions, could not be read, so a wp_retraction cause may be missing; that is not the same as none",null,null,false,"code"],
   ["refusal.MONEY_BAD_PERIOD","That period is not one this team's money records can read.",null,null,false,"code"],
+  ["refusal.PROMOTE_NOT_A_PARTICIPANT","Only the members of {project}, and those invited to it, can file documents into it. Nothing was filed. Ask an owner of the project to invite you, or file it into a project you are in.",null,null,false,"code"],
   ["refusal.SIGNATURES_RUN_UNDER_WAY","Your team's Civicsmith is already checking for new signatures, so it did not start another check. Look again in a few minutes.",null,null,false,"code"],
   ["refusal.WORKBOOK_FILE_TOO_LARGE","This file is {size} MB, more than the {bound} MB that can be added as a workbook. The original is unchanged.",null,null,false,"code"],
   ["refusal.WORKBOOK_TOO_LARGE","This workbook has {cells} cells, more than the {bound_cells} that can be held and read here.",null,null,false,"code"],
