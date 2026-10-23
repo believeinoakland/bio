@@ -107,6 +107,9 @@ export const INGEST_REASON_MAX = 2000;
 /** R14 (G45): the most rows one act reads, set by measure (the largest count whose act survives the object's memory at the real shape:
  *  100,000 rows survive, 150,000 do not; a protective bound, K1881). Above it the act is refused INGEST_TOO_LARGE before any fact is written. */
 export const INGEST_ROWS_MAX = 100000;
+/** R14 (G55): the most party resolutions one ingest act keeps (the cache dies with the act; a protective bound on its memory, the act's
+ *  heap being the platform's: a payer past it is looked up each time, as before). */
+export const INGEST_CACHE_MAX = 10000;
 const TEXT_CHUNK = 512 * 1024;   /* characters per row of calc_table_bytes, under a Durable Object row's 2 MB */
 
 const str = (v) => (typeof v === "string" ? v.trim() : "");
@@ -1624,25 +1627,42 @@ export class Calculations {
       adopted_by: b.adopted_by, adopted_at: b.adopted_at };
   }
 
-  /* A party value resolved to an entity through its column's identifier: an entity scheme or a captured crosswalk. */
-  #resolveParty(spec, value) {
+  /* A party value resolved to an entity through its column's identifier: an entity scheme or a captured crosswalk.
+     G55: `cache` is the one act's (a Map `ingestMoney` makes at its start and drops at its end): an answer is kept under its column's
+     way to resolve and the trimmed value, so a payer repeated down a table is looked up once. A lookup that threw, or answered a
+     promise, is not an answer and is never kept (a kept null would read as "not registered" for every later row of that payer).
+     At most INGEST_CACHE_MAX answers are kept; a value past it is looked up each time, as before. */
+  #resolveParty(spec, value, cache = null) {
     if (!value || !String(value).trim()) return { why: word("calculations.why.cell_empty") };
     const entities = this.dep("entities");
+    const at = String(value).trim();
     if (spec.scheme) {
-      let e = null;
-      try { e = entities ? entities.entityByIdentifier({ scheme: spec.scheme, id: String(value).trim() }) : null; } catch { e = null; }
-      if (e && typeof e.then === "function") e = null;
-      if (plain(e) && e.undetermined) return { why: word("calculations.why.through_scheme_undetermined", { value: String(String(value).slice(0, 64)), scheme: String(spec.scheme), why: String(e.why || word("calculations.why.entity")) }) };
-      const id = typeof e === "string" ? e : plain(e) ? (e.entity_id ?? e.entityId ?? null) : null;
-      return id ? { entity: id } : { why: word("calculations.why.resolves_registered_entity", { value: String(String(value).slice(0, 64)), scheme: String(spec.scheme) }) };
+      const key = cache ? `s\u0000${spec.scheme}\u0000${at}` : null;
+      if (key !== null && cache.has(key)) return cache.get(key);
+      let e = null, answered = true;
+      try { e = entities ? entities.entityByIdentifier({ scheme: spec.scheme, id: at }) : null; } catch { e = null; answered = false; }
+      if (e && typeof e.then === "function") { e = null; answered = false; }
+      let out;
+      if (plain(e) && e.undetermined) out = { why: word("calculations.why.through_scheme_undetermined", { value: String(String(value).slice(0, 64)), scheme: String(spec.scheme), why: String(e.why || word("calculations.why.entity")) }) };
+      else {
+        const id = typeof e === "string" ? e : plain(e) ? (e.entity_id ?? e.entityId ?? null) : null;
+        out = id ? { entity: id } : { why: word("calculations.why.resolves_registered_entity", { value: String(String(value).slice(0, 64)), scheme: String(spec.scheme) }) };
+      }
+      if (key !== null && answered && cache.size < INGEST_CACHE_MAX) cache.set(key, out);
+      return out;
     }
     if (spec.crosswalk) {
+      const key = cache ? `c\u0000${spec.crosswalk.table}\u0000${spec.crosswalk.from}\u0000${spec.crosswalk.to}\u0000${at}` : null;
+      if (key !== null && cache.has(key)) return cache.get(key);
       const t = this.#heldTableSync(spec.crosswalk.table);
       const hit = [];
-      if (t) for (const r of t.objects()) if (String(r[spec.crosswalk.from]).trim() === String(value).trim()) hit.push(String(r[spec.crosswalk.to]).trim());
+      if (t) for (const r of t.objects()) if (String(r[spec.crosswalk.from]).trim() === at) hit.push(String(r[spec.crosswalk.to]).trim());
       const ids = [...new Set(hit)];
-      if (ids.length === 1 && idPattern("ENT").test(ids[0])) return { entity: ids[0] };
-      return { why: ids.length > 1 ? word("calculations.why.maps_entities_crosswalk", { value: String(String(value).slice(0, 64)), ids: String(ids.length) }) : word("calculations.why.crosswalk_maps_entity", { value: String(String(value).slice(0, 64)) }) };
+      const out = ids.length === 1 && idPattern("ENT").test(ids[0]) ? { entity: ids[0] }
+        : { why: ids.length > 1 ? word("calculations.why.maps_entities_crosswalk", { value: String(String(value).slice(0, 64)), ids: String(ids.length) }) : word("calculations.why.crosswalk_maps_entity", { value: String(String(value).slice(0, 64)) }) };
+      /* a crosswalk table not held is not an answer about the value */
+      if (key !== null && t && cache.size < INGEST_CACHE_MAX) cache.set(key, out);
+      return out;
     }
     return { why: localize("calculations.index.an_id_space_normalises", "an id space normalises a value but names no entity; declare the column's entity scheme or a captured crosswalk") };
   }
@@ -1672,6 +1692,7 @@ export class Calculations {
     const declared = parse(this.#one(`SELECT roles_json FROM calc_tables WHERE sha=?`, b.table_sha).roles_json) || {};
     const val = (row, role) => (typeof roles[role] === "string" ? String(row[roles[role]] ?? "").trim() : roles[role] ? roles[role].value : null);
     const written = [], notWritten = [];
+    const resolved = new Map();   /* G55: this act's party resolutions, dropped with it */
     /* the picked rows, read in one pass over the held table (ascending, as picked is) */
     const want = new Set(picked);
     const rowAt = new Map();
@@ -1680,15 +1701,15 @@ export class Calculations {
     for (const i of picked) {
       const row = rowAt.get(i);
       if (!row) { notWritten.push({ row: i, reason: "NO_SUCH_ROW", detail: "the table holds no such row" }); continue; }
-      const payer = this.#resolveParty(declared[roles.payer] || {}, row[roles.payer]);
+      const payer = this.#resolveParty(declared[roles.payer] || {}, row[roles.payer], resolved);
       if (!payer.entity) { notWritten.push({ row: i, reason: "PAYER_NOT_IDENTIFIED", detail: payer.why }); continue; }
-      const payee = this.#resolveParty(declared[roles.payee] || {}, row[roles.payee]);
+      const payee = this.#resolveParty(declared[roles.payee] || {}, row[roles.payee], resolved);
       if (!payee.entity) { notWritten.push({ row: i, reason: "PAYEE_NOT_IDENTIFIED", detail: payee.why }); continue; }
       let fund = null;
       if (typeof roles.fund === "string" && String(row[roles.fund] ?? "").trim()) {
         const spec = declared[roles.fund] || {};
         const raw = String(row[roles.fund]).trim();
-        const r = spec.scheme || spec.crosswalk ? this.#resolveParty(spec, raw)
+        const r = spec.scheme || spec.crosswalk ? this.#resolveParty(spec, raw, resolved)
           : idPattern("ENT").test(raw) ? { entity: raw } : { why: word("calculations.why.names_registered_fund", { raw: String(raw.slice(0, 64)) }) };
         if (!r.entity) { notWritten.push({ row: i, reason: "FUND_NOT_IDENTIFIED", detail: r.why }); continue; }
         fund = r.entity;
