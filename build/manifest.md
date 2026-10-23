@@ -81,6 +81,10 @@ Every feature and journey that does not need the assistant is walked in its own 
 
 Why Civicsmith is slow for a member is measured and diagnosed in its own session, **PERFORMANCE** (#1, `session_015HB1ABUMedpZ4X94giQAiz`, sonnet, started by BOB #241), writing only `build/plan/lane-performance/` (its `CHARTER.md`). It changes no code and decides nothing: each finding (`P<n>` in its `HANDOFF.md`) reaches the plan through BOB, who reads it at takeover and at every backstop check.
 
+## Parallel work: the reading architecture (Bob, 2026-10-23; K4812)
+
+How Civicsmith reads every file type and every large file is designed whole before any further reading fix, in its own session, **READING-ARCHITECTURE** (#1, `session_01Gpv8oKYGd6HrRswr3cXHmy`, started by BOB #269), writing only `build/plan/lane-reading-architecture/` on branch `lane/reading-architecture` (its `CHARTER.md`). It decides nothing: its options reach Bob through BOB. BOB reads its `HANDOFF.md` (entries `RA<n>`) at takeover and at every backstop check.
+
 ## Starting a session
 
 - **ROOT** (mechanics §2, K156): started by Bob, the parent of every BOB; reads `roles/ROOT.md`. Current, on Bob's **primary** account: **ROOT #7**, `session_01NBNGB2ziVqiZg4ewLgRSWm` (started by Bob 2026-10-17, replacing ROOT #5 past 55%; K3653), replaced (by Bob) when its context passes 55% of its window (Bob, 2026-10-11, K2679). ROOT #5 `session_0187SrKsqhqzSTqwDk2hzcXy` is archived. On the **third** account, where the work runs since BOB #269 (K4786-K4790): **ROOT #9**, `session_01GndWUi5ubGmXCVVnFqtJAi` (started by Bob 2026-10-23; K4789), which started BOB #269. On the **secondary** account, superseded by ROOT #9 and unreachable from the third: **ROOT #8**, `session_01R3hvN64bYHG3vPQmYmaeLR` (started by Bob 2026-10-20; K4213), which started BOB #232 to #268; ROOT #6 `session_01FXbdTJZyPp3Bhcv7pfVSR1` (2026-10-07; K2022) is superseded. Sessions on one account are unreachable from the other. Earlier ROOTs are archived (rulings K693–K2022).
