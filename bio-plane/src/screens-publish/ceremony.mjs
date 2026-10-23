@@ -91,7 +91,11 @@ export const CEREMONY = Object.freeze({
     const mine = ui.attested || { disc: [], words: {}, sa: [], why: {}, bias: "" };
 
     // R3's reads: the checks against the bar, what will be disclosed, and an edition waiting to publish.
-    const pre = P.later(cs, view, "preflight", "publishpreflight", { body: args });
+    // G62 (B46): once the member has attested the ties and the edition is prepared (this page's own `publish`, or the draft's record),
+    // the pre-flight carries `tieAttested: true` as `caseratify` will, so the signing check is reached and the time offered
+    const mineEd = all.find(function (x) { return x && x.draft_id === draft; });
+    const tied = !!ui.prepared || !!(mineEd && mineEd.editions && Number(mineEd.editions.prepared) > 0);
+    const pre = P.later(cs, view, "preflight", "publishpreflight", { body: tied ? Object.assign({}, args, { tieAttested: true }) : args });
     const ten = P.later(cs, view, "tensions", "publishtensions", { body: { project: args.project, draft: draft } });
     const found = P.findingsOf(copy);
     // C46: a finding is named by its title, where the draft's copy states one, never by its id
@@ -387,7 +391,7 @@ export const CEREMONY = Object.freeze({
         sign += (timed ? '<fieldset class="cs-field"><legend>' + cs.w("screen.ceremony.when") + "</legend>"
           + '<p class="help">' + cs.w("screen.ceremony.when.help", { zone: zone }) + "</p>"
           + cs.field("ce-date", "screen.ceremony.when.date", { type: "date" }) + cs.field("ce-time", "screen.ceremony.when.time", { type: "time" }) + "</fieldset>"
-          : untimed ? '<p class="mk-note" role="status" data-publish-at-none="' + why + '"' + (pa && typeof pa.source === "string" ? ' data-source="' + cs.esc(pa.source) + '"' : "") + ">" + noTime + "</p>" : "")
+          : untimed ? '<p class="mk-note" role="status" data-publish-at-none="' + why + '"' + (pa && typeof pa.source === "string" ? ' data-source="' + cs.esc(pa.source) + '"' : "") + (pa && typeof pa.why === "string" ? ' data-why="' + cs.esc(pa.why) + '"' : "") + ">" + noTime + "</p>" : "")
           + cs.state(doc, function (d) {
             const list = P.sitting(d, prepared) || [];
             // E4 (fix round 5, C48): said before the press as well: the page could not read what the edition pins
@@ -462,7 +466,7 @@ export const CEREMONY = Object.freeze({
         const at = view.parts.attested(view, cs);
         if (at.refuse) return { refuse: at.refuse };
         view.ui.attested = at.held; view.ui.attestedBody = at.body;
-        return { body: Object.assign(view.parts.caseArgs(copy, view.ui.draftId || ""), at.body) };
+        return { body: Object.assign(view.parts.caseArgs(copy, view.ui.draftId || ""), at.body, view.ui.prepared ? { tieAttested: true } : {}) };
       },
       done: function (view, answer, cs) { if (!view.parts.refused(cs, view, "publishpreflight", answer)) view.parts.forget(view); }, // D29
     },
