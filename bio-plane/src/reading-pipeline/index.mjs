@@ -9,7 +9,9 @@
    (`textUnitsOfText`; R33, T50: a text with no blank line split at its line breaks), R34 (T50) its `title`. T33-23 adds the opt-in after-read hook (R25–R27, `hooks.mjs`), which
    `read` never reaches. R37 (fix round 4b): a failed reading says whether its cause is `transient` or `final`; the units
    budget binds the acquire answer only; OCR past its per-request pages states its cursor and owes the rest; a whole above
-   what the object can hold is never loaded. */
+   what the object can hold is never loaded. G68 (fix round 7): a piece after the first of a text or a CSV is read from the
+   byte window of the object its cursor names, not from the whole object (R40, `textWindowTick`, `csvWindowTick`), and a PDF
+   read in page ranges is kept open between its pieces (pdf-reader's `openPdfRange`). */
 import { layerChain, appendStep, describeChain, checkChain, checkAnchor, applyConfidenceFloor, mergedChain,
          convertedChain, readingSource, mergeTier2Text, tier2Note, glyphCount, stepCovers } from "../textchain.mjs";
 import { getFormat, readingDialect, detectFormat } from "../formats.mjs";
