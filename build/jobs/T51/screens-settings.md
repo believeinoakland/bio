@@ -1,6 +1,6 @@
 # screens-settings (T51)
 
-**Status** · session_01LW6V3mNSxPRyfn48u2tZEY · depth 2 · COMPLETE · handled B42
+**Status** · session_01LW6V3mNSxPRyfn48u2tZEY · depth 2 · COMPLETE · handled B43
 
 ## J1 · QUESTION
 
@@ -423,3 +423,8 @@ Size (session_01LW6V3mNSxPRyfn48u2tZEY): test runs 14, module lines 5417
 
 COMPLETE (G42). `group` reads `stats` once for an administrator and draws the record's size against 10 GB (GB, whole percent, floored), a warning from 70 %, a second from 90 %, each naming the four factors; null = not stated; absent = nothing; a member sends no `stats`. Failing-first red then green recorded; seam test through the real Worker door and record-core with a settable `databaseSize`. New keys (rows owed, B491): screen.group.storage.{head,size,unstated,warn1,warn2,factors.lead,factors.plan,factors.pare,factors.latency,factors.limits}. Proposed line: R79 in my record. Also: `keys.mjs` synced to words-reads.json (73 keys), R39's test accepts an `unkeyed` entry with a `why` (K4641).
 RED BY NAME (B41): (a) the ten gauge tests and R39 fail UNKNOWN_WORD until CONTROL-PLANE #50's rows are on the tranche and rows.mjs regenerated (green with an uncommitted rows copy); (b) the administering member's seam test until CONTROL-PLANE #50 merges. Suite 259/270 (those 11). Impact set: the same 12 failures as the untouched tranche tip, none mine. checks/run.mjs and ownership 0 failures. Size: test runs 14, module lines 5417.
+
+## After B43 (CHANGE, K4644)
+
+Merged `tranche/T51` (CONTROL-PLANE #50 and the ten `screen.group.storage.*` rows are on it); no uncommitted rows copy. screens-settings 270 tests, 270 pass, 0 fail: the ten gauge tests, R39 and the administering member's seam (door floors `dbBytes` to 100 MB) are green. `checks/run.mjs` and ownership 0 failures. Both reds named in B41 are cleared.
+Size (session_01LW6V3mNSxPRyfn48u2tZEY): test runs 16, module lines 5417
