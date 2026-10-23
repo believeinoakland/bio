@@ -7,7 +7,8 @@
    file whose manifest lists one path twice is refused `IMPORT_NOT_A_CASE_FILE` at the check and never reaches the store; the
    third test holds that. A file this plane writes under `/4` lists no path twice (public-read's discriminated paths), so the
    store drops nothing: the first test holds that both files are stored. The case file is made by `public-read`'s real
-   `buildCaseFile`; the first two tests are red by name until case-grammar's `/4` and public-read's writer merge. */
+   `buildCaseFile` over facts in the shape `PublicRead.caseFileFacts` answers for a `ref` on several rows (each row
+   carries its `capture`, its sha lower-cased; the seam from the member's acts is case-disclosures' G50 test); the first two tests are red by name until case-grammar's `/4` and public-read's writer merge. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -28,11 +29,11 @@ const CAPTURES = [
   { sha: sha("minutes, as first captured"), bytes_text: "minutes, as first captured", text: "text of the first capture" },
   { sha: sha("minutes, as re-captured"), bytes_text: "minutes, as re-captured", text: "text of the second capture" },
 ];
-const materialOf = (c) => ({ ref: REF, kind: "document", sha: c.sha, bytes_text: c.bytes_text, text_sha: sha(c.text), extracted_text: c.text,
+const materialOf = (c, several) => ({ ref: REF, ...(several ? { capture: c.sha } : {}), kind: "document", sha: c.sha, bytes_text: c.bytes_text, text_sha: sha(c.text), extracted_text: c.text,
                              origin: "https://example.org/minutes", archived_copy: null, included: true, rests_under: "load_bearing", archives: [] });
 const factsOf = (captures) => ({ case: "CASE-2026-0001", edition: 1,
   document: { text: DOC, doc_sha: sha(DOC), sig_armored: null, key_b64: KEY },
-  findings: [], grading: {}, passages: {}, materials: captures.map(materialOf), obscured: [], attestations: [], calculations: [] });
+  findings: [], grading: {}, passages: {}, materials: captures.map((c) => materialOf(c, captures.length > 1)), obscured: [], attestations: [], calculations: [] });
 
 /** The parts of a built case file as stored ZIPs: the manifest at the root and each file at its path, once. */
 function zipOf(manifest, files) {
