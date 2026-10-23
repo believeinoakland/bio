@@ -1,0 +1,2583 @@
+{
+ "recorded_on": "job/T51/reading-pipeline 63d73af2a8 (tranche/T51 tip)",
+ "whole_bound": 2097152,
+ "cases": {
+  "csv-100k": {
+   "chars": 100000,
+   "budget": 524288,
+   "pieces": [
+    {
+     "ask": null,
+     "answer": {
+      "reading": {
+       "content_type": "unregistered",
+       "reader_version": 0,
+       "read_from_text": true,
+       "found": false,
+       "entities": [],
+       "facts": {},
+       "text_source": [
+        {
+         "step": "layer",
+         "tier": 1,
+         "container": "csv",
+         "cap": null,
+         "measured_by": "unmeasured: a text layer is itself an unverified transcription (CPDF-9, the MEASUREMENTS ledger 2026-08-03)",
+         "calibration": null
+        }
+       ],
+       "text_tier": 1,
+       "text_container": "csv",
+       "basis": "the unregistered reader could not parse the csv text-layer text (the unregistered content type declares no reader), so nothing is claimed about its entities",
+       "position_parts": 0,
+       "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
+       "words_total": 20305,
+       "words_read": 20305,
+       "title": null,
+       "page_count": null,
+       "page_boxes": null,
+       "container_extent": {
+        "container": "csv",
+        "levels": [
+         "sheets",
+         "images"
+        ],
+        "sheets": [
+         {
+          "name": "csv",
+          "rows": null,
+          "cols": null,
+          "usedRows": 2032,
+          "usedCols": 4
+         }
+        ],
+        "paragraphs": null,
+        "slides": null,
+        "images": []
+       },
+       "text_chars": 99999,
+       "text_glyphs": 79695,
+       "text_undetermined": 0,
+       "metadata": null,
+       "cells": {
+        "csv": null
+       },
+       "cells_held": [
+        "csv"
+       ],
+       "dialect": {
+        "delimiter": "comma",
+        "encoding": "us-ascii",
+        "confidence": {
+         "delimiter": "certain",
+         "encoding": "certain"
+        },
+        "signals": {
+         "delimiter": [
+          "comma occurs 3 time(s) outside quotes on every one of the first 50 complete lines"
+         ],
+         "encoding": [
+          "no byte >= 0x80 in the first 100000 bytes",
+          "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically"
+         ]
+        },
+        "undetermined": []
+       }
+      },
+      "more": false,
+      "cursor": null,
+      "read_through": 99999,
+      "total": 99999,
+      "piece": {
+       "units": 1,
+       "words": 20305,
+       "units_total": 1
+      },
+      "units": {
+       "n": 1,
+       "sha": "777dcdf94e5a6e7bb2ec741a7316c68f0d3a1a506c55385f8e7708580ffdf578"
+      }
+     }
+    }
+   ]
+  },
+  "csv-under-bound": {
+   "chars": 2097151,
+   "budget": 524288,
+   "pieces": [
+    {
+     "ask": null,
+     "answer": {
+      "reading": {
+       "content_type": "unregistered",
+       "reader_version": 0,
+       "read_from_text": true,
+       "found": false,
+       "entities": [],
+       "facts": {},
+       "text_source": [
+        {
+         "step": "layer",
+         "tier": 1,
+         "container": "csv",
+         "cap": null,
+         "measured_by": "unmeasured: a text layer is itself an unverified transcription (CPDF-9, the MEASUREMENTS ledger 2026-08-03)",
+         "calibration": null
+        }
+       ],
+       "text_tier": 1,
+       "text_container": "csv",
+       "basis": "the unregistered reader could not parse the csv text-layer text (the unregistered content type declares no reader), so nothing is claimed about its entities",
+       "position_parts": 0,
+       "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
+       "words_total": 405215,
+       "words_read": 78594,
+       "title": null,
+       "page_count": null,
+       "page_boxes": null,
+       "container_extent": {
+        "container": "csv",
+        "levels": [
+         "sheets",
+         "images"
+        ],
+        "sheets": [
+         {
+          "name": "csv",
+          "rows": null,
+          "cols": null,
+          "usedRows": 40523,
+          "usedCols": 4
+         }
+        ],
+        "paragraphs": null,
+        "slides": null,
+        "images": []
+       },
+       "text_chars": 2097151,
+       "text_glyphs": 1691937,
+       "text_undetermined": 0,
+       "metadata": null,
+       "cells": {
+        "csv": null
+       },
+       "cells_held": [
+        "csv"
+       ],
+       "dialect": {
+        "delimiter": "comma",
+        "encoding": "us-ascii",
+        "confidence": {
+         "delimiter": "certain",
+         "encoding": "certain"
+        },
+        "signals": {
+         "delimiter": [
+          "comma occurs 3 time(s) outside quotes on every one of the first 50 complete lines"
+         ],
+         "encoding": [
+          "no byte >= 0x80 in the first 1048576 bytes",
+          "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically"
+         ]
+        },
+        "undetermined": []
+       }
+      },
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjN9",
+      "read_through": 393140,
+      "total": 2097551,
+      "piece": {
+       "units": 3,
+       "words": 78594,
+       "units_total": 17
+      },
+      "units": {
+       "n": 3,
+       "sha": "45b3320290864e09639a7c5ccb59fe3bcc10c09c9354f71734be103438b3d660"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjN9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjZ9",
+      "read_through": 786266,
+      "total": 2097551,
+      "piece": {
+       "units": 3,
+       "words": 75970
+      },
+      "units": {
+       "n": 3,
+       "sha": "0ba80bd84f113648785e3557c375c722349f5e3782efbc1275452135232f037b"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjZ9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjl9",
+      "read_through": 1179424,
+      "total": 2097551,
+      "piece": {
+       "units": 3,
+       "words": 75160
+      },
+      "units": {
+       "n": 3,
+       "sha": "4267cc90f4eeb08fe8667104984af6d65a9137e9dbcc07ea52f8451ff44cfcb6"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjl9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjEyfQ",
+      "read_through": 1572586,
+      "total": 2097551,
+      "piece": {
+       "units": 3,
+       "words": 75160
+      },
+      "units": {
+       "n": 3,
+       "sha": "c5e82b3176155bc3c18d4eb9c0ce4b6f652a68ecdd67e2ab8645a546008a1665"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjEyfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjE1fQ",
+      "read_through": 1965727,
+      "total": 2097551,
+      "piece": {
+       "units": 3,
+       "words": 75150
+      },
+      "units": {
+       "n": 3,
+       "sha": "57013128b2bc782d0bee91a59208f5e2415a8278d3c7f6e8f805dde16fbf39f4"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiNTRkNTFhYTY4ZmUwZDhjOTAxYzE0NTVhNTY4NmFiOGU5ZGIyYWMyNzE0OTI1ZDEwZGNjOGRjY2E3NjdhZTc0NSIsImsiOiJ1IiwibiI6MTcsImkiOjE1fQ",
+     "answer": {
+      "more": false,
+      "cursor": null,
+      "read_through": 2097551,
+      "total": 2097551,
+      "piece": {
+       "units": 2,
+       "words": 25181
+      },
+      "units": {
+       "n": 2,
+       "sha": "c5bd18f163195adc3e46b74be5724fdb2dc7584218bf1e0978bcc23ed4c76df2"
+      }
+     }
+    }
+   ]
+  },
+  "csv-3m": {
+   "chars": 3000000,
+   "budget": 524288,
+   "pieces": [
+    {
+     "ask": null,
+     "answer": {
+      "reading": {
+       "content_type": "unregistered",
+       "reader_version": 0,
+       "read_from_text": true,
+       "found": false,
+       "entities": [],
+       "facts": {},
+       "text_source": [
+        {
+         "step": "layer",
+         "tier": 1,
+         "container": "csv",
+         "cap": null,
+         "measured_by": "unmeasured: a text layer is itself an unverified transcription (CPDF-9, the MEASUREMENTS ledger 2026-08-03)",
+         "calibration": null
+        }
+       ],
+       "text_tier": 1,
+       "text_container": "csv",
+       "basis": "the unregistered reader could not parse the csv text-layer text (the unregistered content type declares no reader), so nothing is claimed about its entities",
+       "position_parts": 0,
+       "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
+       "words_total": 577845,
+       "words_read": 78594,
+       "title": null,
+       "page_count": null,
+       "page_boxes": null,
+       "container_extent": {
+        "container": "csv",
+        "levels": [
+         "sheets",
+         "images"
+        ],
+        "sheets": [
+         {
+          "name": "csv",
+          "rows": null,
+          "cols": null,
+          "usedRows": 57786,
+          "usedCols": 4
+         }
+        ],
+        "paragraphs": null,
+        "slides": null,
+        "images": []
+       },
+       "text_chars": 2999999,
+       "text_glyphs": 2422155,
+       "text_undetermined": 0,
+       "metadata": null,
+       "cells": {
+        "csv": null
+       },
+       "cells_held": [
+        "csv"
+       ],
+       "dialect": {
+        "delimiter": "comma",
+        "encoding": "us-ascii",
+        "confidence": {
+         "delimiter": "certain",
+         "encoding": "certain"
+        },
+        "signals": {
+         "delimiter": [
+          "comma occurs 3 time(s) outside quotes on every one of the first 50 complete lines"
+         ],
+         "encoding": [
+          "no byte >= 0x80 in the first 1048576 bytes",
+          "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically"
+         ]
+        },
+        "undetermined": []
+       }
+      },
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjN9",
+      "read_through": 393140,
+      "total": 3000549,
+      "piece": {
+       "units": 3,
+       "words": 78594,
+       "units_total": 23
+      },
+      "units": {
+       "n": 3,
+       "sha": "45b3320290864e09639a7c5ccb59fe3bcc10c09c9354f71734be103438b3d660"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjN9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjZ9",
+      "read_through": 786266,
+      "total": 3000549,
+      "piece": {
+       "units": 3,
+       "words": 75970
+      },
+      "units": {
+       "n": 3,
+       "sha": "0ba80bd84f113648785e3557c375c722349f5e3782efbc1275452135232f037b"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjZ9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjl9",
+      "read_through": 1179424,
+      "total": 3000549,
+      "piece": {
+       "units": 3,
+       "words": 75160
+      },
+      "units": {
+       "n": 3,
+       "sha": "4267cc90f4eeb08fe8667104984af6d65a9137e9dbcc07ea52f8451ff44cfcb6"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjl9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEyfQ",
+      "read_through": 1572586,
+      "total": 3000549,
+      "piece": {
+       "units": 3,
+       "words": 75160
+      },
+      "units": {
+       "n": 3,
+       "sha": "c5e82b3176155bc3c18d4eb9c0ce4b6f652a68ecdd67e2ab8645a546008a1665"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEyfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE1fQ",
+      "read_through": 1965727,
+      "total": 3000549,
+      "piece": {
+       "units": 3,
+       "words": 75150
+      },
+      "units": {
+       "n": 3,
+       "sha": "57013128b2bc782d0bee91a59208f5e2415a8278d3c7f6e8f805dde16fbf39f4"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE1fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE4fQ",
+      "read_through": 2358888,
+      "total": 3000549,
+      "piece": {
+       "units": 3,
+       "words": 75160
+      },
+      "units": {
+       "n": 3,
+       "sha": "a8ea0b63477b4d6804a7ec30a87f1444c5f9d6b59b65604da4d20c86ef68832d"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE4fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIxfQ",
+      "read_through": 2751995,
+      "total": 3000549,
+      "piece": {
+       "units": 3,
+       "words": 75150
+      },
+      "units": {
+       "n": 3,
+       "sha": "2d996f113a00ae549644a61e6f2bc8326470de23d7129cdcfc253a720d22b350"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIxfQ",
+     "answer": {
+      "more": false,
+      "cursor": null,
+      "read_through": 3000549,
+      "total": 3000549,
+      "piece": {
+       "units": 2,
+       "words": 47501
+      },
+      "units": {
+       "n": 2,
+       "sha": "d2ccf81e4680a538a432bf0c853e8801a23fa17d2735109d34b8a73c398e78ca"
+      }
+     }
+    }
+   ]
+  },
+  "csv-3m-small-budget": {
+   "chars": 3000000,
+   "budget": 153600,
+   "maxUnits": 2,
+   "pieces": [
+    {
+     "ask": null,
+     "answer": {
+      "reading": {
+       "content_type": "unregistered",
+       "reader_version": 0,
+       "read_from_text": true,
+       "found": false,
+       "entities": [],
+       "facts": {},
+       "text_source": [
+        {
+         "step": "layer",
+         "tier": 1,
+         "container": "csv",
+         "cap": null,
+         "measured_by": "unmeasured: a text layer is itself an unverified transcription (CPDF-9, the MEASUREMENTS ledger 2026-08-03)",
+         "calibration": null
+        }
+       ],
+       "text_tier": 1,
+       "text_container": "csv",
+       "basis": "the unregistered reader could not parse the csv text-layer text (the unregistered content type declares no reader), so nothing is claimed about its entities",
+       "position_parts": 0,
+       "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
+       "words_total": 577845,
+       "words_read": 26494,
+       "title": null,
+       "page_count": null,
+       "page_boxes": null,
+       "container_extent": {
+        "container": "csv",
+        "levels": [
+         "sheets",
+         "images"
+        ],
+        "sheets": [
+         {
+          "name": "csv",
+          "rows": null,
+          "cols": null,
+          "usedRows": 57786,
+          "usedCols": 4
+         }
+        ],
+        "paragraphs": null,
+        "slides": null,
+        "images": []
+       },
+       "text_chars": 2999999,
+       "text_glyphs": 2422155,
+       "text_undetermined": 0,
+       "metadata": null,
+       "cells": {
+        "csv": null
+       },
+       "cells_held": [
+        "csv"
+       ],
+       "dialect": {
+        "delimiter": "comma",
+        "encoding": "us-ascii",
+        "confidence": {
+         "delimiter": "certain",
+         "encoding": "certain"
+        },
+        "signals": {
+         "delimiter": [
+          "comma occurs 3 time(s) outside quotes on every one of the first 50 complete lines"
+         ],
+         "encoding": [
+          "no byte >= 0x80 in the first 1048576 bytes",
+          "us-ascii, not utf-8: every 8-bit superset decodes these bytes identically"
+         ]
+        },
+        "undetermined": []
+       }
+      },
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjF9",
+      "read_through": 131043,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 26494,
+       "units_total": 23
+      },
+      "units": {
+       "n": 1,
+       "sha": "5b83a42402ce17ec90b4c7214e77f0800e6f52adf9f3c93d10a1410c6206968f"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjF9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjJ9",
+      "read_through": 262095,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 26050
+      },
+      "units": {
+       "n": 1,
+       "sha": "a64cf6895204cd54cb361c258b0965f053fbfeebc6d37c0d8747505db93a18bc"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjJ9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjN9",
+      "read_through": 393140,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 26050
+      },
+      "units": {
+       "n": 1,
+       "sha": "4021b017188a2e03f9699758dab82547cde6b83ac7702bedba8b2fd5d172d40e"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjN9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjR9",
+      "read_through": 524198,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25870
+      },
+      "units": {
+       "n": 1,
+       "sha": "de9a4248010b525edafb68ad869dc5136889e87c3188ea50e0784aae41b1f034"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjR9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjV9",
+      "read_through": 655230,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "35ed13400d67e78dc262d823a07ed414d8b4ffd456314ef628d59a7c69d9ea0f"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjV9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjZ9",
+      "read_through": 786266,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "0a31249e8a704c524aed21d64b2b058dae7773293b3fb211be8638f8d0a814bc"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjZ9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjd9",
+      "read_through": 917310,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "4d8556e2b04766bfab8a918484f4ac02cc6757311fcac77ddf759b2920ec963d"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjd9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjh9",
+      "read_through": 1048356,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "dcc083da67ecaf12e91ffea81e4373f9317c6a63974e3a05d3d0011bfd24e390"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjh9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjl9",
+      "read_through": 1179424,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25060
+      },
+      "units": {
+       "n": 1,
+       "sha": "cbd509807455a0486887e5ab6465ffec972858fa1c23861af8b4d34004f59a5a"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjl9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEwfQ",
+      "read_through": 1310472,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "d3ad59d6c1a5e9f82e8ae2138a8c7299065f340aff937c1c0c561f6bf7562354"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEwfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjExfQ",
+      "read_through": 1441522,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "4c4b5352de0859e73dd179786f581830cc0547fd2effb7b383f56de8542cd856"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjExfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEyfQ",
+      "read_through": 1572586,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25060
+      },
+      "units": {
+       "n": 1,
+       "sha": "86ee5657e7718de1ab2cff9a70f3d5a95c3f1cde0efe7828103da39445443fe2"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEyfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEzfQ",
+      "read_through": 1703632,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "935ed03857626677a5e1ce0afdd545c9639ea7c147f44fa55d7c34f44ece7dcf"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjEzfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE0fQ",
+      "read_through": 1834683,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "5f3a6f4baee1e54fecb975af05a4ab199e63df10340353d1606eed4f78bb20f0"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE0fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE1fQ",
+      "read_through": 1965727,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "eb4b9fa08ce7db4c9ae08cfbc0d95002eb3d2241b572ebc1ffea50f42d087916"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE1fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE2fQ",
+      "read_through": 2096796,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25060
+      },
+      "units": {
+       "n": 1,
+       "sha": "e688ea73d2ef0fc270af6403012cc8e4b1fcb35942d12e18510122122c200608"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE2fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE3fQ",
+      "read_through": 2227841,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "bb507a1bef24da960970ac0a6d607e09e4c5c40703ca2f00397e78e14bdf4ac2"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE3fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE4fQ",
+      "read_through": 2358888,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "ef72d590250a7cc22761feb5c2c622cf6b64d170a002f0cbac37eb8f4c5d8611"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE4fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE5fQ",
+      "read_through": 2489909,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "782e3640624b610459d47dd91f15dae52912a2bac1fb561d8e6ea7c78a6c1838"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjE5fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIwfQ",
+      "read_through": 2620951,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "26e757e5b0849598ca7a4700504aacc1d8302cb6c5c3ec015f7768918934b7fb"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIwfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIxfQ",
+      "read_through": 2751995,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "28b9b73502551e35893c4c759753ed456418f6ac54bd75d2c2f30d0a34eaa63a"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIxfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIyfQ",
+      "read_through": 2883032,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 25050
+      },
+      "units": {
+       "n": 1,
+       "sha": "2ee76758ece5624fccf9d17900974c5af51166134637145bbb6d6e51a6728344"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiZTAzNTliNDIzMzEwZmUzMjBmOTIxN2VhMWE2OTU0YjU2OWEyMDhkMjI1NGE3OGU2YWQ5MTFmMzM0Njg4NTk1ZiIsImsiOiJ1IiwibiI6MjMsImkiOjIyfQ",
+     "answer": {
+      "more": false,
+      "cursor": null,
+      "read_through": 3000549,
+      "total": 3000549,
+      "piece": {
+       "units": 1,
+       "words": 22451
+      },
+      "units": {
+       "n": 1,
+       "sha": "6d654d702bc8a5c33d87175282a2a34696e187099e48892c524202b89a64dfdb"
+      }
+     }
+    }
+   ]
+  },
+  "workbook-two-sheets": {
+   "chars": 0,
+   "budget": 524288,
+   "pieces": [
+    {
+     "ask": null,
+     "answer": {
+      "reading": {
+       "content_type": "unregistered",
+       "reader_version": 0,
+       "read_from_text": true,
+       "found": false,
+       "entities": [],
+       "facts": {},
+       "text_source": [
+        {
+         "step": "layer",
+         "tier": 1,
+         "container": "g48wb",
+         "cap": null,
+         "measured_by": "unmeasured: a text layer is itself an unverified transcription (CPDF-9, the MEASUREMENTS ledger 2026-08-03)",
+         "calibration": null
+        }
+       ],
+       "text_tier": 1,
+       "text_container": "g48wb",
+       "basis": "the unregistered reader could not parse the g48wb text-layer text (the unregistered content type declares no reader), so nothing is claimed about its entities",
+       "position_parts": 0,
+       "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
+       "words_total": 63202,
+       "words_read": 63202,
+       "title": null,
+       "page_count": null,
+       "page_boxes": null,
+       "container_extent": {
+        "container": "xlsx",
+        "levels": [
+         "sheets"
+        ],
+        "sheets": [
+         {
+          "name": "Fund",
+          "rows": null,
+          "cols": null,
+          "usedRows": 9179,
+          "usedCols": 3
+         },
+         {
+          "name": "Grant",
+          "rows": null,
+          "cols": null,
+          "usedRows": 30,
+          "usedCols": 3
+         }
+        ],
+        "paragraphs": null,
+        "slides": null
+       },
+       "text_chars": 1,
+       "text_glyphs": 276404,
+       "text_undetermined": 0,
+       "metadata": null,
+       "cells": {
+        "Fund": null,
+        "Grant": null
+       }
+      },
+      "more": false,
+      "cursor": null,
+      "read_through": 339636,
+      "total": 339636,
+      "piece": {
+       "units": 4,
+       "words": 63202,
+       "units_total": 4
+      },
+      "units": {
+       "n": 4,
+       "sha": "9541840e18fc6131f1a23f30c89eafbcbdf0641e2d93ac57e47d3150da4d88f9"
+      }
+     }
+    }
+   ]
+  },
+  "pdf": {
+   "chars": 0,
+   "budget": 524288,
+   "pieces": [
+    {
+     "ask": null,
+     "answer": {
+      "reading": {
+       "content_type": "unregistered",
+       "reader_version": 0,
+       "read_from_text": true,
+       "found": false,
+       "entities": [],
+       "facts": {},
+       "text_source": [
+        {
+         "step": "layer",
+         "tier": 1,
+         "container": "pdf",
+         "cap": null,
+         "measured_by": "unmeasured: a text layer is itself an unverified transcription (CPDF-9, the MEASUREMENTS ledger 2026-08-03)",
+         "calibration": null
+        }
+       ],
+       "text_tier": 1,
+       "text_container": "pdf",
+       "basis": "the unregistered reader could not parse the pdf text-layer text (the unregistered content type declares no reader), so nothing is claimed about its entities",
+       "position_parts": 6,
+       "position_why": null,
+       "words_total": null,
+       "words_read": 4320,
+       "title": null,
+       "page_count": 6,
+       "page_boxes": null,
+       "container_extent": {
+        "container": "pdf",
+        "levels": [
+         "images"
+        ],
+        "images": null,
+        "images_why": "a placement the structure op reported could not be read as {page, rect}"
+       },
+       "text_chars": 31187,
+       "text_glyphs": null,
+       "text_undetermined": 0,
+       "metadata": null
+      },
+      "more": false,
+      "cursor": null,
+      "read_through": 6,
+      "total": 6,
+      "piece": {
+       "units": 6,
+       "words": 4320,
+       "pages": [
+        0,
+        6
+       ]
+      },
+      "units": {
+       "n": 6,
+       "sha": "9b93bf39495c787b4276edecfdcd52ee3334d83a50bbf1164fb8df6975f78b4e"
+      }
+     }
+    }
+   ]
+  },
+  "text-capture": {
+   "chars": 0,
+   "budget": 524288,
+   "pieces": [
+    {
+     "ask": null,
+     "answer": {
+      "reading": {
+       "content_type": "unregistered",
+       "reader_version": 0,
+       "read_from_text": false,
+       "found": false,
+       "entities": [],
+       "facts": {},
+       "title": null,
+       "basis": "the unregistered content type declares no reader, so this document has no reading",
+       "text_source": [
+        {
+         "step": "layer",
+         "tier": null,
+         "container": "text",
+         "cap": null,
+         "measured_by": "unmeasured: a text layer is itself an unverified transcription (CPDF-9, the MEASUREMENTS ledger 2026-08-03)",
+         "calibration": null
+        }
+       ],
+       "text_container": "text",
+       "words_total": 4400,
+       "words_read": 4400,
+       "text_chars": 26578,
+       "text_glyphs": 21780,
+       "text_undetermined": null,
+       "metadata": null
+      },
+      "more": false,
+      "cursor": null,
+      "read_through": 26578,
+      "total": 26578,
+      "piece": {
+       "units": 400,
+       "words": 4400,
+       "units_total": 400
+      },
+      "units": {
+       "n": 400,
+       "sha": "26329c07b73f32892b36e2f4e363285846889f111084c4b91f42a00cbc7020fa"
+      }
+     }
+    }
+   ]
+  },
+  "sheet-long-rows": {
+   "chars": 0,
+   "budget": 153600,
+   "pieces": [
+    {
+     "ask": null,
+     "answer": {
+      "reading": {
+       "content_type": "unregistered",
+       "reader_version": 0,
+       "read_from_text": true,
+       "found": false,
+       "entities": [],
+       "facts": {},
+       "text_source": [
+        {
+         "step": "layer",
+         "tier": 1,
+         "container": "g48long",
+         "cap": null,
+         "measured_by": "unmeasured: a text layer is itself an unverified transcription (CPDF-9, the MEASUREMENTS ledger 2026-08-03)",
+         "calibration": null
+        }
+       ],
+       "text_tier": 1,
+       "text_container": "g48long",
+       "basis": "the unregistered reader could not parse the g48long text-layer text (the unregistered content type declares no reader), so nothing is claimed about its entities",
+       "position_parts": 0,
+       "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
+       "words_total": 17665,
+       "words_read": 17496,
+       "title": null,
+       "page_count": null,
+       "page_boxes": null,
+       "container_extent": {
+        "container": "xlsx",
+        "levels": [
+         "sheets"
+        ],
+        "sheets": [
+         {
+          "name": "Edge",
+          "rows": null,
+          "cols": null,
+          "usedRows": 2543,
+          "usedCols": 3
+         }
+        ],
+        "paragraphs": null,
+        "slides": null
+       },
+       "text_chars": 354463,
+       "text_glyphs": 334299,
+       "text_undetermined": 0,
+       "metadata": null,
+       "cells": {
+        "Edge": null
+       }
+      },
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiNzY1ODE2ODZkYTMyNzRkODBlODk4NjQ3NmY2OGMzYzU0ZmEzMzE1NzcxODRmMjYzMjE2NTQ2ZWM2Mzg3ZDc5YiIsImsiOiJ1IiwibiI6NSwiaSI6MX0",
+      "read_through": 91657,
+      "total": 354506,
+      "piece": {
+       "units": 1,
+       "words": 17496,
+       "units_total": 5
+      },
+      "units": {
+       "n": 1,
+       "sha": "101afe7bf5e847a522de744b94a9d149237d907341bcba8eca27e23d303176d0"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiNzY1ODE2ODZkYTMyNzRkODBlODk4NjQ3NmY2OGMzYzU0ZmEzMzE1NzcxODRmMjYzMjE2NTQ2ZWM2Mzg3ZDc5YiIsImsiOiJ1IiwibiI6NSwiaSI6MX0",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiNzY1ODE2ODZkYTMyNzRkODBlODk4NjQ3NmY2OGMzYzU0ZmEzMzE1NzcxODRmMjYzMjE2NTQ2ZWM2Mzg3ZDc5YiIsImsiOiJ1IiwibiI6NSwiaSI6M30",
+      "read_through": 223407,
+      "total": 354506,
+      "piece": {
+       "units": 2,
+       "words": 161
+      },
+      "units": {
+       "n": 2,
+       "sha": "5f8af8cb943dd49491fe3e526fb3a4a2cebe15d7071f652447c47f4393c3e93a"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiNzY1ODE2ODZkYTMyNzRkODBlODk4NjQ3NmY2OGMzYzU0ZmEzMzE1NzcxODRmMjYzMjE2NTQ2ZWM2Mzg3ZDc5YiIsImsiOiJ1IiwibiI6NSwiaSI6M30",
+     "answer": {
+      "more": false,
+      "cursor": null,
+      "read_through": 354506,
+      "total": 354506,
+      "piece": {
+       "units": 2,
+       "words": 4
+      },
+      "units": {
+       "n": 2,
+       "sha": "855621f0a2d3abee5ae1efc4bd46693767ece8ba51a6824b1c775b5ecadd5312"
+      }
+     }
+    }
+   ]
+  },
+  "sheet-long-rows-lineRows": {
+   "chars": 0,
+   "budget": 153600,
+   "pieces": [
+    {
+     "ask": null,
+     "answer": {
+      "reading": {
+       "content_type": "unregistered",
+       "reader_version": 0,
+       "read_from_text": true,
+       "found": false,
+       "entities": [],
+       "facts": {},
+       "text_source": [
+        {
+         "step": "layer",
+         "tier": 1,
+         "container": "g48longr",
+         "cap": null,
+         "measured_by": "unmeasured: a text layer is itself an unverified transcription (CPDF-9, the MEASUREMENTS ledger 2026-08-03)",
+         "calibration": null
+        }
+       ],
+       "text_tier": 1,
+       "text_container": "g48longr",
+       "basis": "the unregistered reader could not parse the g48longr text-layer text (the unregistered content type declares no reader), so nothing is claimed about its entities",
+       "position_parts": 0,
+       "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
+       "words_total": 17665,
+       "words_read": 17496,
+       "title": null,
+       "page_count": null,
+       "page_boxes": null,
+       "container_extent": {
+        "container": "xlsx",
+        "levels": [
+         "sheets"
+        ],
+        "sheets": [
+         {
+          "name": "Edge",
+          "rows": null,
+          "cols": null,
+          "usedRows": 2543,
+          "usedCols": 3
+         }
+        ],
+        "paragraphs": null,
+        "slides": null
+       },
+       "text_chars": 354463,
+       "text_glyphs": 334299,
+       "text_undetermined": 0,
+       "metadata": null,
+       "cells": {
+        "Edge": null
+       }
+      },
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiNWY0M2VkNTE4MDg5ZTQ4MTMwZmMzODdiYThlMTU0OGE0MTkwZDFjMDA4ODAxYjg0MjBiZmFjMzEwM2E3MTU3ZSIsImsiOiJ1IiwibiI6NSwiaSI6MX0",
+      "read_through": 91657,
+      "total": 354506,
+      "piece": {
+       "units": 1,
+       "words": 17496,
+       "units_total": 5
+      },
+      "units": {
+       "n": 1,
+       "sha": "7f805033ac849773c4594bed68f3240d20772c1c56623b5768f3a43fcb965c79"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiNWY0M2VkNTE4MDg5ZTQ4MTMwZmMzODdiYThlMTU0OGE0MTkwZDFjMDA4ODAxYjg0MjBiZmFjMzEwM2E3MTU3ZSIsImsiOiJ1IiwibiI6NSwiaSI6MX0",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiNWY0M2VkNTE4MDg5ZTQ4MTMwZmMzODdiYThlMTU0OGE0MTkwZDFjMDA4ODAxYjg0MjBiZmFjMzEwM2E3MTU3ZSIsImsiOiJ1IiwibiI6NSwiaSI6M30",
+      "read_through": 223407,
+      "total": 354506,
+      "piece": {
+       "units": 2,
+       "words": 161
+      },
+      "units": {
+       "n": 2,
+       "sha": "f2679d69769c17c283e86fe7fc7ec34da07ad60968c078b882edb057d1c79d0d"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiNWY0M2VkNTE4MDg5ZTQ4MTMwZmMzODdiYThlMTU0OGE0MTkwZDFjMDA4ODAxYjg0MjBiZmFjMzEwM2E3MTU3ZSIsImsiOiJ1IiwibiI6NSwiaSI6M30",
+     "answer": {
+      "more": false,
+      "cursor": null,
+      "read_through": 354506,
+      "total": 354506,
+      "piece": {
+       "units": 2,
+       "words": 4
+      },
+      "units": {
+       "n": 2,
+       "sha": "1fb96c6fa1b16552ff1b19b7919a9bf9066cc257d56644096d33297e8d459b3b"
+      }
+     }
+    }
+   ]
+  },
+  "sheet-blank-lines": {
+   "chars": 0,
+   "budget": 153600,
+   "pieces": [
+    {
+     "ask": null,
+     "answer": {
+      "reading": {
+       "content_type": "unregistered",
+       "reader_version": 0,
+       "read_from_text": true,
+       "found": false,
+       "entities": [],
+       "facts": {},
+       "text_source": [
+        {
+         "step": "layer",
+         "tier": 1,
+         "container": "g48blank",
+         "cap": null,
+         "measured_by": "unmeasured: a text layer is itself an unverified transcription (CPDF-9, the MEASUREMENTS ledger 2026-08-03)",
+         "calibration": null
+        }
+       ],
+       "text_tier": 1,
+       "text_container": "g48blank",
+       "basis": "the unregistered reader could not parse the g48blank text-layer text (the unregistered content type declares no reader), so nothing is claimed about its entities",
+       "position_parts": 0,
+       "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
+       "words_total": 53332,
+       "words_read": 30282,
+       "title": null,
+       "page_count": null,
+       "page_boxes": null,
+       "container_extent": {
+        "container": "xlsx",
+        "levels": [
+         "sheets"
+        ],
+        "sheets": [
+         {
+          "name": "Edge",
+          "rows": null,
+          "cols": null,
+          "usedRows": 12002,
+          "usedCols": 3
+         }
+        ],
+        "paragraphs": null,
+        "slides": null
+       },
+       "text_chars": 238379,
+       "text_glyphs": 183713,
+       "text_undetermined": 0,
+       "metadata": null,
+       "cells": {
+        "Edge": null
+       }
+      },
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiNzI5ZTdhOTUxMjJjYzBmZjQ1NzQzMzQzNjc0NWMxODI0N2M1ZWMzOGFmNzY1ODU2NzMwODg2YzAwZGY5NzgwNSIsImsiOiJ1IiwibiI6MiwiaSI6MX0",
+      "read_through": 149216,
+      "total": 270387,
+      "piece": {
+       "units": 1,
+       "words": 30282,
+       "units_total": 2
+      },
+      "units": {
+       "n": 1,
+       "sha": "11442eb38e94d9becd8df628b23287593c04181137451789278ce11bec37cdd3"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiNzI5ZTdhOTUxMjJjYzBmZjQ1NzQzMzQzNjc0NWMxODI0N2M1ZWMzOGFmNzY1ODU2NzMwODg2YzAwZGY5NzgwNSIsImsiOiJ1IiwibiI6MiwiaSI6MX0",
+     "answer": {
+      "more": false,
+      "cursor": null,
+      "read_through": 270387,
+      "total": 270387,
+      "piece": {
+       "units": 1,
+       "words": 23050
+      },
+      "units": {
+       "n": 1,
+       "sha": "63d0ec0a09b73731505f00674f318046800f5ff15c572388388437881f65bf06"
+      }
+     }
+    }
+   ]
+  },
+  "sheet-big-header": {
+   "chars": 0,
+   "budget": 153600,
+   "pieces": [
+    {
+     "ask": null,
+     "answer": {
+      "reading": {
+       "content_type": "unregistered",
+       "reader_version": 0,
+       "read_from_text": true,
+       "found": false,
+       "entities": [],
+       "facts": {},
+       "text_source": [
+        {
+         "step": "layer",
+         "tier": 1,
+         "container": "g48bighead",
+         "cap": null,
+         "measured_by": "unmeasured: a text layer is itself an unverified transcription (CPDF-9, the MEASUREMENTS ledger 2026-08-03)",
+         "calibration": null
+        }
+       ],
+       "text_tier": 1,
+       "text_container": "g48bighead",
+       "basis": "the unregistered reader could not parse the g48bighead text-layer text (the unregistered content type declares no reader), so nothing is claimed about its entities",
+       "position_parts": 0,
+       "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
+       "words_total": 23994,
+       "words_read": 2,
+       "title": null,
+       "page_count": null,
+       "page_boxes": null,
+       "container_extent": {
+        "container": "xlsx",
+        "levels": [
+         "sheets"
+        ],
+        "sheets": [
+         {
+          "name": "Edge",
+          "rows": null,
+          "cols": null,
+          "usedRows": 3000,
+          "usedCols": 3
+         }
+        ],
+        "paragraphs": null,
+        "slides": null
+       },
+       "text_chars": 183647,
+       "text_glyphs": 159654,
+       "text_undetermined": 0,
+       "metadata": null,
+       "cells": {
+        "Edge": null
+       }
+      },
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiM2Q4ZDQzM2QzNzIyZWRhMGM2MTVlN2JlNjRiYTYxOGZlNDNiNTIzZGMwNTU1MWNlNmMyMmVlNWU0OWE3ZTA4NyIsImsiOiJ1IiwibiI6MywiaSI6MX0",
+      "read_through": 70007,
+      "total": 323661,
+      "piece": {
+       "units": 1,
+       "words": 2,
+       "units_total": 3
+      },
+      "units": {
+       "n": 1,
+       "sha": "cf4ce70b0e4726a1d432a57320bc961b940a354b16d51276e40157adb8bb22d6"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiM2Q4ZDQzM2QzNzIyZWRhMGM2MTVlN2JlNjRiYTYxOGZlNDNiNTIzZGMwNTU1MWNlNmMyMmVlNWU0OWE3ZTA4NyIsImsiOiJ1IiwibiI6MywiaSI6MX0",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiM2Q4ZDQzM2QzNzIyZWRhMGM2MTVlN2JlNjRiYTYxOGZlNDNiNTIzZGMwNTU1MWNlNmMyMmVlNWU0OWE3ZTA4NyIsImsiOiJ1IiwibiI6MywiaSI6Mn0",
+      "read_through": 201043,
+      "total": 323661,
+      "piece": {
+       "units": 1,
+       "words": 13200
+      },
+      "units": {
+       "n": 1,
+       "sha": "5391eeadedc119b53169a4a2ed56fa5bb65f7a94554be66d4f674f9975b8d1ff"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiM2Q4ZDQzM2QzNzIyZWRhMGM2MTVlN2JlNjRiYTYxOGZlNDNiNTIzZGMwNTU1MWNlNmMyMmVlNWU0OWE3ZTA4NyIsImsiOiJ1IiwibiI6MywiaSI6Mn0",
+     "answer": {
+      "more": false,
+      "cursor": null,
+      "read_through": 323661,
+      "total": 323661,
+      "piece": {
+       "units": 1,
+       "words": 10792
+      },
+      "units": {
+       "n": 1,
+       "sha": "050ac6a8ed1acaf226d9f92453f4d94c09cc300dfb777d33d05ff7eb46344a26"
+      }
+     }
+    }
+   ]
+  },
+  "sheet-huge-header": {
+   "chars": 0,
+   "budget": 153600,
+   "pieces": [
+    {
+     "ask": null,
+     "answer": {
+      "reading": {
+       "content_type": "unregistered",
+       "reader_version": 0,
+       "read_from_text": true,
+       "found": false,
+       "entities": [],
+       "facts": {},
+       "text_source": [
+        {
+         "step": "layer",
+         "tier": 1,
+         "container": "g48hugehead",
+         "cap": null,
+         "measured_by": "unmeasured: a text layer is itself an unverified transcription (CPDF-9, the MEASUREMENTS ledger 2026-08-03)",
+         "calibration": null
+        }
+       ],
+       "text_tier": 1,
+       "text_container": "g48hugehead",
+       "basis": "the unregistered reader could not parse the g48hugehead text-layer text (the unregistered content type declares no reader), so nothing is claimed about its entities",
+       "position_parts": 0,
+       "position_why": "this producer emitted document text with no itemised pages or paragraphs beside it, so where in the document a reference was read cannot be said",
+       "words_total": 12002,
+       "words_read": 2,
+       "title": null,
+       "page_count": null,
+       "page_boxes": null,
+       "container_extent": {
+        "container": "xlsx",
+        "levels": [
+         "sheets"
+        ],
+        "sheets": [
+         {
+          "name": "Edge",
+          "rows": null,
+          "cols": null,
+          "usedRows": 1501,
+          "usedCols": 3
+         }
+        ],
+        "paragraphs": null,
+        "slides": null
+       },
+       "text_chars": 185180,
+       "text_glyphs": 173179,
+       "text_undetermined": 0,
+       "metadata": null,
+       "cells": {
+        "Edge": null
+       }
+      },
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjF9",
+      "read_through": 130007,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 2,
+       "units_total": 54
+      },
+      "units": {
+       "n": 1,
+       "sha": "ecf1186cf5241de52b70ab37be73f97f8782efdffbb55ba49dd8b6c2676a20ac"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjF9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjJ9",
+      "read_through": 261074,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 264
+      },
+      "units": {
+       "n": 1,
+       "sha": "14e97bbd70603e1e395d937f300dae242d2d076ca12439599221162a762430dd"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjJ9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjN9",
+      "read_through": 392137,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 256
+      },
+      "units": {
+       "n": 1,
+       "sha": "54a52450141c7e68fb6c0ebae678f1fa9922d2731696e33b76ee4b7aea36204e"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjN9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjR9",
+      "read_through": 523200,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 256
+      },
+      "units": {
+       "n": 1,
+       "sha": "552fe6b53e53067360d84abcfa6dcab501174a85787e3d9f6bb8c4212f0bed09"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjR9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjV9",
+      "read_through": 654243,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "e24b03b1c681d521fe84e7eabe1eb4fbce4ce1d48931ca05695a4a6c323624a9"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjV9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjZ9",
+      "read_through": 785294,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "96de15c4ddbcfc7692607db633e8b9be006ad8ea49a48261a72ea2eaaf9e66cd"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjZ9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjd9",
+      "read_through": 916345,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "ec3d98aa73c09e48756bfc1377ef2d80571b34e98da1b3a7cbd7c89a78f097a3"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjd9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjh9",
+      "read_through": 1047396,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "6aec33807885d61b01223a4801df107eb8fe24e08607fb83edc4e62fd07a5c50"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjh9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjl9",
+      "read_through": 1178447,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "f542eccfb2981c89678e679df72ae9546a020d19173c8c1d546798aa16a064f5"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjl9",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjEwfQ",
+      "read_through": 1309498,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "e4a61a4a9cd042b1a3344b2e1e4d3a62c0acce1ab63c3d4af1dd0a74326cef02"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjEwfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjExfQ",
+      "read_through": 1440549,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "2a810abf007031e50ea95317d06f5eb1cec676297ae8a67240fd8714013f2903"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjExfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjEyfQ",
+      "read_through": 1571600,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "85fe704a19b095b9c757957c5fba5466b0a622c0f66c7222e1c95d1ac36c3e31"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjEyfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjEzfQ",
+      "read_through": 1702651,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "c98b2843bf48a2bbd4c567d5c3b62669b1f549fb85c60f85a2788dd36a57d6a9"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjEzfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjE0fQ",
+      "read_through": 1833702,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "2071082c8369f9a18eff689cfdf3222ed9fe714af2f94cdf39f3bed4893a7caa"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjE0fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjE1fQ",
+      "read_through": 1964753,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "0bc8370a3482247f50f18c4a465af30d3bb7529df7236ba597813bd8e9928dce"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjE1fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjE2fQ",
+      "read_through": 2095804,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "02cc7a52aa2fa66d94d169d870e00dd19d76148280b9ce33f5956ecbd1a69af7"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjE2fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjE3fQ",
+      "read_through": 2226855,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "3d89e00d91421f7af51d7ebfad014b832055d1e340b00a4c73e9db5bed69003b"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjE3fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjE4fQ",
+      "read_through": 2357906,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "8b1fcf3d838a9401bdf08ef42ce89f17109eb040f2fe5ed4b9a3899ec897b228"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjE4fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjE5fQ",
+      "read_through": 2488957,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "82d44e7ca66de7291c21d36ce3be9503221ee21f0a4fe5ea8121ef89e67b6862"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjE5fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjIwfQ",
+      "read_through": 2620008,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "da6ceda4785f48aebf11fcb599762c524ea0d8bf8468be4ab902e1d9830af9f2"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjIwfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjIxfQ",
+      "read_through": 2751059,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "57f100575d15d840cb487f7f0327d2ccf779073d7b6f460cfd01179c5157bb36"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjIxfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjIyfQ",
+      "read_through": 2882110,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "e0c7f4a9af15aea3b67516b5e4362429149c717885d333ebcde2135ed9039fa2"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjIyfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjIzfQ",
+      "read_through": 3013161,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "e7317c3f89e778b4ad19731b968957cf8f1711de8a2eca6d49df8a94b00f5a84"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjIzfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjI0fQ",
+      "read_through": 3144212,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "ed39be5d991489402f93e3a235e723aa33488ab550cccfc4d0b786162a20c318"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjI0fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjI1fQ",
+      "read_through": 3275263,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "800c2d1f5f0975a6b59186260a573367fb4428af861b0377dba3ab0cbdfd2343"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjI1fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjI2fQ",
+      "read_through": 3406314,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "496afbdb6c15362d2d503f499e1bf1a007fe8394c6275e47b0b5796a716df6b4"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjI2fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjI3fQ",
+      "read_through": 3537365,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "8dcf46100d6c38d401f40a63ff3c4e4e2acd52e5c536bdc7a9f8bc0baba53ab9"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjI3fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjI4fQ",
+      "read_through": 3668416,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "8c4b5e1f763c12c7022df8a4de3f63c5fad624658b7ff61e67e37ce0ec913535"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjI4fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjI5fQ",
+      "read_through": 3799467,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "b8d89863dc2bde516f769c0e239cc2eeb32a28bae8b1f022365bce10b58c4ee8"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjI5fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjMwfQ",
+      "read_through": 3930518,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "527e4eaa3db3a4b7bb9a715e4b98c6450790c48821b1930468fa6ccc3572e0bc"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjMwfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjMxfQ",
+      "read_through": 4061569,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "0748211a11f7decde8a0eae652e5bdc7e669a717fd5f9dea9de722bd43d97e5c"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjMxfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjMyfQ",
+      "read_through": 4192620,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "82f3f3944478ac61b4be91d18bb2df572e29be279b04fbcab7db1bda2fddd7c8"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjMyfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjMzfQ",
+      "read_through": 4323671,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "b61d96b517af741b88787e2f89eb6cad1de9e0ad515b93a7b093310b0df05208"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjMzfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjM0fQ",
+      "read_through": 4454722,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "0de2a7fd1f72a73217e411d4c1f413bc67f646c09bf559a939354bd971d84e43"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjM0fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjM1fQ",
+      "read_through": 4585773,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 232
+      },
+      "units": {
+       "n": 1,
+       "sha": "13dc123dc3de531da54800cf407bb50ccae2590f64fc282354ff25974532b3ae"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjM1fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjM2fQ",
+      "read_through": 4716822,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 216
+      },
+      "units": {
+       "n": 1,
+       "sha": "bacb02033b35da9ee9152995b281fff215703f77cffb955406d55ceeca57c48d"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjM2fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjM3fQ",
+      "read_through": 4847882,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 216
+      },
+      "units": {
+       "n": 1,
+       "sha": "27fcd531c88d344e98860704f4e3bbeaabe0e7d6794bb3ccb876f8c7d17ec624"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjM3fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjM4fQ",
+      "read_through": 4978942,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 216
+      },
+      "units": {
+       "n": 1,
+       "sha": "cb1faa62ca4b8f689d481139de8a83aabd2458cb94eb98c78b305a1840c27095"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjM4fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjM5fQ",
+      "read_through": 5110002,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 216
+      },
+      "units": {
+       "n": 1,
+       "sha": "6a37ed7119f71df5fe57f81602ea1a98618c7eae50eb22ad525aab4edce4cb05"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjM5fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjQwfQ",
+      "read_through": 5241062,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 216
+      },
+      "units": {
+       "n": 1,
+       "sha": "0cd72e2b59bb4c7dc90f3de4b7659e5cbcb39341a9178a6051feff1c1b475c49"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjQwfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjQxfQ",
+      "read_through": 5372122,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 216
+      },
+      "units": {
+       "n": 1,
+       "sha": "a4b695777287c190e11ac0fa19cf64ea18e4c8dcb489111d2c823193cf3209f2"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjQxfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjQyfQ",
+      "read_through": 5503182,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 216
+      },
+      "units": {
+       "n": 1,
+       "sha": "1f8122f9dad70c89b899406e3dd3fe8cdcc80ddebc1b9686e58c1d024a294d16"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjQyfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjQzfQ",
+      "read_through": 5634242,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 216
+      },
+      "units": {
+       "n": 1,
+       "sha": "45131d702e9084f83cc828273071906226a0ac6392ad776da04a06b5f78249a9"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjQzfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjQ0fQ",
+      "read_through": 5765302,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 216
+      },
+      "units": {
+       "n": 1,
+       "sha": "6b5f26bdcaf995d2248e8e113d5c1f63b7d6cb358ab51759f9e0d1f856ce2fce"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjQ0fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjQ1fQ",
+      "read_through": 5896362,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 216
+      },
+      "units": {
+       "n": 1,
+       "sha": "c060ec05cc736f6972df3a04a4d787504e91fdefff2fa28661cf9dfd27d6d921"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjQ1fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjQ2fQ",
+      "read_through": 6027422,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 216
+      },
+      "units": {
+       "n": 1,
+       "sha": "e9994760eacd8dd3aee770dfaf236da7e9ea24fa730d2eba1f0af89e57825a22"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjQ2fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjQ3fQ",
+      "read_through": 6158482,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 216
+      },
+      "units": {
+       "n": 1,
+       "sha": "66225cb484a307600a1aca76546b4adfba86ea8b1c0ab16f67ae03a6eadf24ac"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjQ3fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjQ4fQ",
+      "read_through": 6289542,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 216
+      },
+      "units": {
+       "n": 1,
+       "sha": "b147002785fe9e49e73ab3b980cb4c863266361c7a9f08bb754aa78aac0e2191"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjQ4fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjQ5fQ",
+      "read_through": 6420602,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 216
+      },
+      "units": {
+       "n": 1,
+       "sha": "11aae8c97fcbcf8d37f889a8932b43bbdfbde4ae52e3c71849253be235fdb517"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjQ5fQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjUwfQ",
+      "read_through": 6551662,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 216
+      },
+      "units": {
+       "n": 1,
+       "sha": "7b3df846a1b93c6cd4a85646cbf0c72e26a3a0eb9f346720020f8eba282a5943"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjUwfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjUxfQ",
+      "read_through": 6682722,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 216
+      },
+      "units": {
+       "n": 1,
+       "sha": "354989bfeb978e875c5ecbbcb608dc81c93d36afd107ab541f566af688f28427"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjUxfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjUyfQ",
+      "read_through": 6813782,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 216
+      },
+      "units": {
+       "n": 1,
+       "sha": "eac6988a50f6ce4deac0413d015348a161c9ff23e8bee4ea813423445024a9b7"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjUyfQ",
+     "answer": {
+      "more": true,
+      "cursor": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjUzfQ",
+      "read_through": 6944842,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 216
+      },
+      "units": {
+       "n": 1,
+       "sha": "205e8f8d74d6d44dfb661f16555cf83dae405506a46d4b5f1ac9c3c2c492ce0a"
+      }
+     }
+    },
+    {
+     "ask": "eyJ2IjoxLCJzIjoiYTRlZTM3MDk4ODI2ZGFlOGY5M2I0Nzg1N2MyN2JmZTA1M2UwODllYzAzNTVjYjRhY2RkODkzODRmYWI5OTJkYyIsImsiOiJ1IiwibiI6NTQsImkiOjUzfQ",
+     "answer": {
+      "more": false,
+      "cursor": null,
+      "read_through": 7075551,
+      "total": 7075551,
+      "piece": {
+       "units": 1,
+       "words": 144
+      },
+      "units": {
+       "n": 1,
+       "sha": "78f7ab7d9eaffc1902e4862c4f407cc1a4cdc5cd6cf3e328b8fb2e24efee67e7"
+      }
+     }
+    }
+   ]
+  }
+ }
+}
