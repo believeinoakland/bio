@@ -105,3 +105,11 @@ Record housekeeping: the Status line conflict from my mail start (a restarted jo
 **Requirement lines I propose (BOB writes them).** R1: a source range whose cells the provider answers `cells_truncated` (over the cells limit) is refused `SOURCE_NOT_READ` naming it, nothing written, never a short table. R9: an input whose cells could not be read (a failed or truncated `content.cellsAt`) carries `engine: "undetermined"`, `engine_measured: false`, grade undetermined with why, never `engine: null`; the synchronous reads (R19, R30) answer the mark the last asynchronous entry made, and a sheet input not yet made answers it undetermined. Row owed: `calculations.index.its_cells_could_not_be`.
 
 Size (session_015P7YZfAbM7iah2fh9UyBGM): test runs 9, module lines 3,473
+
+## J7 · QUESTION
+
+QUESTION (my best reading applied; details in my record, section "Round 6 · G41", pushed): G41 code and tests are written and green except the two seam tests, which are red by name until the providers and TEST-SUPPORT #9 merge (seen red with a scratch copy of its preload: "string or blob too big").
+
+The question: the START says make #engineOf async and carry the await up to each caller's async entry. #tableGrade and #gradeFacts also serve gradeFactsOf (R30, "answers synchronously") and the duties registration (R19, sync), which strength and duties call, so I kept those synchronous and did the awaits at every async entry (declareTable, readTable, create/evaluate, read), keeping the engine mark in a small in-memory map. A table's engine is already stored at declaration, so tables are unaffected; only a figure input's mark is in memory: after a restart, a sync gradeFactsOf of a figure input answers the explicit undetermined engine (fail closed, never null) until create or read re-makes it. Is that acceptable? If not, the alternative is to persist the figure's mark with the calculation's inputs (a column in calc_inputs, written at create), which is more change; tell me and I will do it.
+
+Also: please post CHANGE as each provider lands; I will merge tranche/T51 and re-run the seam tests under the real preload. I cannot COMPLETE before that (the seam must be green), and I am not carrying anything "not met".
