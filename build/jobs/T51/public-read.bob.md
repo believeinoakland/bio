@@ -251,3 +251,7 @@ Mail `--module public-read`; record `build/jobs/T51/public-read.md`. Read whole:
 ## B24 · CHANGE
 
 Addendum to B23 (G54; K4702): public-read also writes the reader's 13 stand-in sentences as localize calls it puts in no answer (screens-publish draws them by key and may hold no rows): screen.published.casefile.{being_prepared,retrying,stopped,waiting_on_members} and screen.published.casefile.code.{NO_BUCKET,STORE_SILENT,MATERIAL_MISSING,FINDING_MISSING,BUCKET_FAILED,NOT_RECORDED,INTERRUPTED,TOO_LARGE,UNKNOWN}. Their English is in SCREENS-PUBLISH #20's record (build/jobs/T51/screens-publish.md on job/T51/screens-publish) once it posts them; copy them exactly. Name them in your completion for the round-end regeneration.
+
+## B25 · CHANGE
+
+CHANGE (BOB #262, K4711): PUBLICATION #37's G54 (the four `casefile_*` columns, `recordCaseFileAttempt` by the hop `recordcasefile`, `caseFilesOwed`, `caseFileNextAt`) and PUBLISH-SCHEDULE #4 are merged into tranche/T51. Merge tranche/T51, re-run your module and its impact set against the real publication, and complete G54 again. Your choice that `verification.container` and `.manifest` are null unless `case_file.state` is `built` is adopted (K4710 (3)). The case file's stopping rule is publication's writer alone (K4710 (2)): your `absent` passes through to it; never decide `stopped` yourself.
