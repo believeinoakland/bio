@@ -138,3 +138,19 @@ Fix round 6, G55 tier 2: the consumer `ingest` (START B6). `tranche/T51` merged 
 - Census ops: none declared or changed by scheduler.
 
 Size (session_018N7Bmi8XF4uXxoG5G6hHKL): test runs 12, module lines 928
+
+## Fix round 7 · G70 (SCHEDULER #42, session_01Avk4ZxytfuErZjqjRYMN2B, depth 2)
+
+**What changed.** `bio-plane/src/scheduler/index.mjs`: `onAlarm` (about :578-:600) and `#reconcile` (about :644-:660). Every firing now writes, in the one heartbeat put it already made (`sched_beat`), `scheduled_for` (what the alarm was set for: this instance's last `setAlarm`, else the heartbeat's `next_set_for` after a restart), `started` (the firing's `now`), `ended` (`max(Date.now(), now)` after the reconcile), `next_set_for` (the reconcile's `nextAt`, null when deleted) and `gap_ms` (`started` minus the previous firing's `ended`, null for the first), and prints one line `{"scheduler_alarm": {...}}` with the same five fields. `#alarmFor` records each `setAlarm`/`deleteAlarm` the reconcile makes. No pace, no reconcile rule, no consumer changed (R1/R4/R16 untouched), as the entry says. No new storage key, no table (R18).
+
+**(1) Cause:** unknown, as `diagnosis-R7-reading.md` records; this logging names it on the one redeploy (K4428). Best reading, unproven: the platform's re-arm latency after a long alarm or a held wake.
+**(2) Gap fixed:** no test read alarm-to-alarm times; `r7-pace.test.mjs` now reads them through `onAlarm`, the heartbeat and the log line.
+**(3) Failing-first:** `test/m/scheduler/r7-pace.test.mjs` (2 tests, names R28). RED before the change (`AssertionError: the first firing has no earlier end to be a gap from`; `no alarm after the last tick`, 0 of 2 pass), GREEN after (2 of 2). Two existing assertions in `spent.test.mjs` (R28/R29) deep-equaled the heartbeat's three keys; they now compare those three exactly and read `started` beside them (nothing weakened).
+**(4) Platform check:** P, BOB's: after the redeploy read `sched_beat` (and the `scheduler_alarm` lines) for the 12 MB text on the copy; the gap is `gap_ms` and `started - scheduled_for` (platform delay before the handler ran) versus `ended - started` (the firing). L (Miniflare) shows only shape and tick count.
+
+**Tests and checks.** `node --import ./test/platform-sqlite.mjs --test --test-force-exit test/m/scheduler/`: tests 163, pass 163, fail 0. User `plane`: `test/m/plane/watchdog.test.mjs` tests 10, pass 10. `impact.mjs origin/tranche/T51 HEAD` (run before commit): affected modules 0 of 176. format 0 failures; architecture 0 failures; coverage 29 of 29 live ids named, 0 failures; ownership: 1 files changed by scheduler (before my record), 0 failures. `checks/run.mjs`: 11 failures, none in my files (case-checker spec.mjs inline words, installer `installer.fleet.logsunconfirmed` missingkey in newgroup, record-core R89 R90 uncovered); words count not raised by me (no new string literal in a held-word surface; the log line is a key, not a sentence).
+
+**Requirement line proposed (BOB writes it).** R28, append: "(G70; K4428) Every firing also records in the heartbeat `{scheduled_for, started, ended, next_set_for, gap_ms}` (what the alarm was set for, the firing's start and end, what the firing set next or null, and the time since the previous firing ended or null) and prints them as one structured line; it changes no pace."
+**Deferred:** none. **Other modules:** none found. **Generated artifacts:** `bio-plane/dist/bio-plane.bundled.mjs` carries scheduler source; stale after this; BOB regenerates (I changed none). **Census ops:** none. **Rows owed to UX-DESIGN:** none (no sentence).
+
+Size (session_01Avk4ZxytfuErZjqjRYMN2B): test runs 7, module lines 941
