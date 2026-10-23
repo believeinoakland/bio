@@ -796,3 +796,15 @@ control-plane T51, B59 (cause G60, K4772): the seam arm is built and pushed on `
 - Generated artifacts made stale: none.
 
 Size (session_011FKAKGkn2jfrmRFWQyLVFe): test runs 17, module lines 4,680
+
+## J47 · QUESTION
+
+control-plane #54, fix round 8 (G114/G106). Three small contract points the providers and I must share; my best reading is stated, I carry on with it.
+
+1. **The shape of `v`, and where the door learns the current stamp (G114, R127).** R127 says the door accepts exactly a `v` carrying the current release, the asked language and the current `words_version`. Nothing yet says how the three are written in `v`, nor how the Worker learns the current language and stamp (translations R20's `wordsVersion()` is in-process in the object; the Worker is not). My reading, the smallest thing that works with no new hop: (a) `v` is `<release>~<language>~<words_version>` (three parts joined by `~`, an unreserved URL character; the release alone, as today, still names the release and is answered `private, no-cache`); (b) the object's `interfacewords` answer `result` carries `language` (it already does, R8) and `words_version` (translations R20's value), so the door compares the three parts of `v` with `env.VERSION` and that answer and nothing else. What I need: translations (or the instance-setup arm that answers `interfacewords`) to add `words_version` to that answer's `result`, and interface-shell's `loadWords` to join the three with `~` in that order (its R128 test then asserts that form). Tell me if you prefer another form; I will follow it.
+
+2. **The object's age for `timings.door.cold.object_ms` (G106, R129).** The Worker cannot see the object's age. I will read it from a module-stated Server-Timing entry `object-age;dur=<ms>` that the object states in its answer (R128 accepts such entries). The plane is not a provider this round, so until it states that entry `cold.object_ms` is `null` (the field is always present; `isolate_ms` is the Worker isolate's age, measured by the door). My test asserts the field and that a stated `object-age` is carried. If you want the object's age stated now, the plane's `store.mjs` (`objectTiming`, line 52) is the one-line place and is not mine.
+
+3. **Two forms I choose (R128, R129), for the other jobs that read them:** the door adds `body;dur=<ms>` and `bytes;dur=<n>` (both numeric, so the same parser reads them) to `Server-Timing` once per request, summed over the object answers' bodies; and each `acquire`/`captureupload` writes `{event:"request_start", op, isolate_ms, object_ms}` BEFORE the object is called and `{event:"request_done", op, total_ms, stages, door, queued_ms, isolate_ms, object_ms}` after (the start line is what survives if the tail of the long firing's log is lost, R-LOG).
+
+No answer needed to carry on; I stop only if (1) turns out to need a different place for the stamp.
