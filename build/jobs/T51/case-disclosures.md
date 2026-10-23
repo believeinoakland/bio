@@ -170,3 +170,11 @@ Test-only job; the module's code is unchanged. No census op of mine changes. No 
 - Generated artifacts made stale: none.
 
 Size (session_01XeesuXwbodLb8B9vNN8tcd): test runs 9, module lines 2447
+
+## J11 · COMPLETE
+
+COMPLETE · G50 (B8), test only. Record: section 'Fix round 6 · G50'.
+
+g50-acts.test.mjs (R6, R7) written: two photos with copies, two included documents, from the member's acts through materialsJudged, materialRows, the real holdMaterials and the real assembleCaseContainer. Red today by name (case file /3, path_twice, zip 409); green once case-grammar, public-read, case-checker and case-import merge. Reachability note in J10 (one bare leg reaches one capture; two passage legs reach both). Module code unchanged; no census op changes; no new word ids. Suite 113/115 (the 2 are this test). checks: format 0, architecture 0, coverage 0, words only the accepted inline 1, ownership 0. No generated artifact made stale.
+
+Size (session_01XeesuXwbodLb8B9vNN8tcd): test runs 9, module lines 2447
