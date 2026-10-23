@@ -1,6 +1,6 @@
 # affordances (T51)
 
-**Status** · session_015vmccEdn9WywiaxqonRTPj · depth 2 · COMPLETE · handled B18
+**Status** · session_015vmccEdn9WywiaxqonRTPj · depth 2 · COMPLETE · handled B20
 
 ## J1 · QUESTION
 
