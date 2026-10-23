@@ -169,3 +169,10 @@ test("R91: an object restarted over the same database starts from 0 again and st
     second.db.close();
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });
+
+test("R91: an instance made over a storage that holds no SQL, as the grammar seam's in-memory users make one, is made and registers as before", () => {
+  const rc = recordOf({});
+  assert.deepEqual(rc.registerGrammar("a", { ids: ["C-1.1"], arm: () => {} }), { ok: true, module: "a", ids: ["C-1.1"] });
+  const other = recordOf({ storage: { sql: "not a connection", transactionSync: (fn) => fn() } });
+  assert.ok(other, "a storage whose sql is not an object is made too");
+});

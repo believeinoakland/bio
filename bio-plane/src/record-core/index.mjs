@@ -366,6 +366,7 @@ export class RecordCore {
   static { sqlOf = (rc) => rc.#sql; }
 
   #watched = new Set();   // R91: the bookkeeping tables already given their triggers
+  #base = 0;              // R91: the tally when this connection began
   #storage; #sql; #declared = new Map(); #order = []; #evidence; #evidencePrefix; #firstBoot;
   #gates = new Map();     // R78: table → {module, checks}, one registration per table
   #held = [];             // R66: one list per open `transact`, outermost first, of what `afterCommit` held
@@ -380,10 +381,13 @@ export class RecordCore {
   constructor(storage, { evidence = null, evidencePrefix = "bio/captures/" } = {}) {
     this.#storage = storage;
     this.#sql = storage.sql;
-    if (!BASELINES.has(this.#sql)) {
-      let n0 = 0;
-      try { n0 = this.#tally(); } catch { /* no tally table yet: this store has never counted one */ }
-      BASELINES.set(this.#sql, n0);
+    /* R91: the tally when this connection began, one for every instance over the same `sql`; a storage stand-in that holds no
+       object for `sql` has its own. */
+    const shared = this.#sql !== null && (typeof this.#sql === "object" || typeof this.#sql === "function");
+    if (shared && BASELINES.has(this.#sql)) this.#base = BASELINES.get(this.#sql);
+    else {
+      try { this.#base = this.#tally(); } catch { this.#base = 0; }     /* no tally table yet: this store has never counted one */
+      if (shared) BASELINES.set(this.#sql, this.#base);
     }
     /* R54, D-436: THE STORE'S FIRST BOOT, witnessed here, when the instance is made — before the store's schema
        pass or `migrate` creates or alters a table — since storage that has never held the record's schema has no
@@ -468,7 +472,7 @@ export class RecordCore {
   writeCount() {
     this.#watchBookkeeping();
     const total = Number(this.#one(`SELECT total_changes() AS n`).n);
-    try { return Math.max(0, total - 2 * Math.max(0, this.#tally() - BASELINES.get(this.#sql))); }
+    try { return Math.max(0, total - 2 * Math.max(0, this.#tally() - this.#base)); }
     catch { return total; }
   }
 
