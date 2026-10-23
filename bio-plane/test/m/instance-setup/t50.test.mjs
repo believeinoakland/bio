@@ -9,14 +9,14 @@ import { boot, frame, providers, storage, applyRecordSchema } from "./fixture.mj
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { world as credentialsWorld } from "../credentials/fixture.mjs";
 import { aiAccountsOf } from "../../../src/ai-accounts/index.mjs";
-import { InstanceSetup, INSTANCE_SETUP_TABLES, INSTANCE_SETUP_TABLE_DECLARATIONS, INTERFACE_WORDS,
+import { InstanceSetup, INSTANCE_SETUP_TABLES, INSTANCE_SETUP_TABLE_DECLARATIONS, interfaceWords,
          instanceSetupOps } from "../../../src/setup.mjs";
-import { translationsOf, translationsOps, INTERFACE_WORDS as TRANSLATIONS_WORDS } from "../../../src/translations/index.mjs";
+import { translationsOf, translationsOps, interfaceWords as translationsWords } from "../../../src/translations/index.mjs";
 import { list as jList, get as jGet, combine as jCombine } from "../../../../jurisdictions/index.mjs";
 
 const TABLES = ["translation_grants", "translation_drafts", "translation_adoptions", "translation_confirmations",
                 "translation_undos", "translation_marks", "translation_readings"];
-const ORDINARY = INTERFACE_WORDS.find((w) => !w.protected && !/\{/.test(w.en));
+const ORDINARY = interfaceWords().find((w) => !w.protected && !/\{/.test(w.en));
 const jurisdictions = { list: jList, get: jGet, combine: jCombine };
 
 async function world() {
@@ -51,7 +51,7 @@ test("R94 the nine translation routes are `translations`' alone: instance-setup'
   assert.equal(ws.result.words.find((x) => x.key === ORDINARY.key).state, "shown");
   const iw = await callT(T, "interfacewords?language=es&viewer=sam");
   assert.deepEqual(iw.result.words.find((x) => x.key === ORDINARY.key), { key: ORDINARY.key, text: "Algo", en: ORDINARY.en, fallback: false });
-  const asked = await callT(T, "translationdraft?by=ruth", { language: "es", direction: "to_language", keys: [INTERFACE_WORDS[1].key, INTERFACE_WORDS[2].key] });
+  const asked = await callT(T, "translationdraft?by=ruth", { language: "es", direction: "to_language", keys: [interfaceWords()[1].key, interfaceWords()[2].key] });
   assert.equal(asked.result.reason, "ASSISTANT_DRAFT_UNAVAILABLE");
   const rec = await callT(T, "translationdraftrecord?by=ruth", { language: "es", direction: "to_language", words: asked.result.words,
     keys: asked.result.words.map((x) => x.key), draft: { words: asked.result.words.map((x) => ({ key: x.key, text: `ES ${x.en}` })) } });
@@ -116,7 +116,7 @@ test("R94 this module's declaration lists none of the seven translation tables a
   for (const t of TABLES) assert.equal(has(t), undefined, `${t} is not created by this module's migrate`);
   translationsOf(ctx);
   for (const t of TABLES) assert.ok(has(t), `${t} is created by translations, at its construction`);
-  assert.equal(INTERFACE_WORDS, TRANSLATIONS_WORDS);
+  assert.equal(interfaceWords(), translationsWords());
 });
 
 test("R99 the module exports no readingLanguage and holds no translation delegate; control: translations' readingLanguage still answers the plane's ask", async () => {
