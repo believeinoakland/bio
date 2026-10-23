@@ -227,13 +227,21 @@ export class CaseCarriage {
     let rows = null;
     try { const m = materialsOf(fm); rows = m && Array.isArray(m.materials) ? m.materials : null; } catch { rows = null; }
     rows = Array.isArray(rows) ? rows.filter((m) => m && typeof m === "object") : [];
-    const seen = new Set(), named = new Set();
+    const seen = new Set(), named = new Map(), stamped = new Map();
+    let capture = null;   // G47t: the capture the material being held is for (an archive's tokens: the member's)
     const hold = (ref, kind, sha, text, bytes, derived = false) => {
       const inline = typeof text === "string";
       const size = inline ? te.encode(text).length : Number.isInteger(bytes) ? bytes : null;
-      if (!named.has(`${sha}\u0000${ref}`)) {
-        named.add(`${sha}\u0000${ref}`);
-        files.push({ sha256: sha, ref, path: `materials/${sha}`, kind, bytes: size });
+      const key = `${sha}\u0000${ref}`;
+      if (!named.has(key)) {
+        const entry = { sha256: sha, ref, path: `materials/${sha}`, kind, bytes: size };
+        if (kind === "attestation") { entry.capture_sha = capture; stamped.set(key, new Set([capture])); }
+        named.set(key, entry);
+        files.push(entry);
+      } else if (kind === "attestation") {
+        /* G47t: a token two different captures name is shared (null), whatever the order they name it in */
+        const by = stamped.get(key);
+        if (by) { by.add(capture); if (by.size > 1) named.get(key).capture_sha = null; }
       }
       if (seen.has(sha)) return;
       seen.add(sha);
@@ -243,6 +251,7 @@ export class CaseCarriage {
     const images = new Map();   // R8: archive → whether it holds an image, judged once per call
     for (const m of rows) {
       const ref = str(m.ref), sha = str(m.sha).toLowerCase(), kind = m.kind;
+      capture = sha;
       if (!(m.included === true || m.included === "true")) {
         const ob = obscuredOf(m);
         if (ob) this.#holdCopy(ref, sha, ob, hold, unheld);
