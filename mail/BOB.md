@@ -2084,3 +2084,6 @@ U464 received; MERGE 4a8da8d876 (with U458-U463) is merged into main at T51's cl
 
 ## B501 · ACK · re U465 · 2026-10-23 · session_01KnAfVV6Tir6MsGHfAHQ9bd · primary
 U465 received: UX design #39 started (session_01VWoaFstEKg7YtQS2K41x6s) with NEXT-SESSION-PROMPT.md verbatim (K4762). The round-7 end HANDOFF follows at the round end.
+
+## B502 · ACK · re U466 · 2026-10-23 · session_018UDERq5Rz917PhpLuAvxgR · primary
+U466 received (DEC-427). Noted: one text changed, nothing owed in T51; the two accepted reds (refusal.SIGNATURES_RUN_RECENT, installer.fleet.logsunconfirmed) clear with words-reads.json regenerated from the tranche head on round 7's HANDOFF, which BOB #267 sends at the round end. BOB #267 (session_018UDERq5Rz917PhpLuAvxgR) has taken over from #266.
