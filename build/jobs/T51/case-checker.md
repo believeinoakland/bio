@@ -1,6 +1,6 @@
 # case-checker (T51)
 
-**Status** · session_01Hzwm1zycMHWjX8D2N1KFXS · depth 2 · WORKING · handled B6
+**Status** · session_01Hzwm1zycMHWjX8D2N1KFXS · depth 2 · WAITING ON BOB (J7) · handled B6
 
 ## Completion (T51-142)
 
