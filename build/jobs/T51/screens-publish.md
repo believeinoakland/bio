@@ -560,3 +560,7 @@ COMPLETE (G54 (3)(c), B41, answer B42).
 **Not drawn / census:** no census op changed. Nothing found in another module beyond B42's placement. Nothing deferred.
 
 Size (session_01KL2qPsmV5ddqfba8gQ8CL3): test runs 4, module lines 3659
+
+## J36 · COMPLETE
+
+COMPLETE G54 (3)(c): see record J35. Three reds by name until public-read merges its case_file and the 13 localize rows (B42). Size (session_01KL2qPsmV5ddqfba8gQ8CL3): test runs 4, module lines 3659
