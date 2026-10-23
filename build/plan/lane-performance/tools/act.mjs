@@ -4,7 +4,7 @@ const require = createRequire("/home/user/bio/bio-plane/src/journey-check/packag
 const { chromium } = require("playwright-core");
 const BASE = process.env.BASE || "https://biosmoke8.believeinoakland.workers.dev";
 const [role, path, sel] = process.argv.slice(2);
-const b = await chromium.launch({ args: ["--no-proxy-server"], ...(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {}) });
+const b = await chromium.launch({ proxy: { server: process.env.HTTPS_PROXY }, ...(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {}) });
 const page = await (await b.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
 let log = []; page.on("requestfinished", (r) => { const u = new URL(r.url()); if (u.searchParams.get("op")) log.push(u.searchParams.get("op") + (r.method() === "POST" ? "(POST)" : "")); });
 await page.goto(BASE + "/");
