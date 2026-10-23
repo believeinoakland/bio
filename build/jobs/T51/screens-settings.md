@@ -436,3 +436,7 @@ COMPLETE (re B43). Merged tranche/T51; the gauge's ten rows and the administerin
 ## J32 · QUESTION
 
 CORRECTION to J31 (it said checks 0 failures; the architecture check has 2): storage-seam.test.mjs imports bio-plane/test/m/plane/fixture and bio-plane/src/plane/index.mjs (the real Worker entry and Store the seam needs, R-SEAM), and `plane` is not in screens-settings' `uses` in build/modules.json (a module file, yours). All else in J31 stands (270/270, format, coverage, words, channels, ownership 0). Please add `plane` to my uses (CHANGE), as you did for file-scanner/file-safety earlier; if you would rather the seam avoid the plane entry, say so and I rework it.
+
+## J33 · QUESTION
+
+Moved as ruled (K4648): g42-storage-seam.test.mjs is now bio-plane/test/m/plane/g42-storage-seam.test.mjs (one-file commit; passes 4/4 alone), the old file removed in a second commit, screens-settings' own tests unchanged (270 less the 4 seam tests; the screen's edges, member, null/absent stay on the fake plane). checks/run.mjs: architecture still 2 failures, now plane's: the test drives the screen through screens-settings' kit and fixtures (test/m/screens-settings/kit.mjs, fixtures.mjs), and plane does not declare screens-settings in uses. Fix is yours (modules.json): add screens-settings to plane's uses (plane 170 is later than 162, no cycle). Otherwise tell me how to drive the group screen from a plane test without its kit. Everything else: format, coverage, words, channels, ownership 0 failures.
