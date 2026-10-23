@@ -4,7 +4,7 @@ import { rand, uploadForm } from "./bytes.mjs";
 import { scriptHash, releaseSha } from "./readback.mjs";
 import { planeCronsOfStream } from "./statements.mjs";
 import { setSchedules } from "./containers.mjs";
-import { word, localize } from "../../../bio-plane/src/setup-words/index.mjs";
+import { word } from "../../../bio-plane/src/setup-words/index.mjs";
 import { selfBinding, BROWSER_BINDING, memberBindings, instanceAiBinding, sealBinding, profilesBinding, ownHostsBinding, SEAL_BINDING, PROFILES_BINDING } from "./bindings.mjs";
 
 /* R39 (K4566; fix round 6, G1) — THE PLANE'S SCHEDULE. The plane's one cron is the watchdog that heals a stalled object, and
@@ -30,14 +30,14 @@ const setPlaneSchedules = (token, acct, slug, crons) => setSchedules(token, acct
 export const OBSERVABILITY = Object.freeze({ enabled: true });
 /* Refused only when the settings ARE read (they state their bindings) and the setting is not enabled. A read that fails, or
    answers nothing readable, is unknown, never "off" (as `heldBindings`): the act continues and `opts.note` is told, in words,
-   that the logs could not be confirmed (row owed `installer-steps.plane.logsunconfirmed`); an approval or a lasting wait is
+   that the logs could not be confirmed (row `installer.fleet.logsunconfirmed`, written by `installer`); an approval or a lasting wait is
    rethrown as everywhere. */
 async function observabilityHeld(token, acct, slug, note) {
   let s;
   try { s = await cf(token, `/accounts/${acct}/workers/scripts/${slug}/settings`); }
   catch (e) { if (special(e)) throw e; s = null; }
   if (!s || !Array.isArray(s.bindings)) {
-    if (typeof note === "function") note(localize("installer-steps.plane.logsunconfirmed", "The installer could not confirm that your Cloudflare account switched on the logs of your team's Civicsmith."));
+    if (typeof note === "function") note(word("installer.fleet.logsunconfirmed"));
     return;
   }
   if (s.observability?.enabled !== true) throw new Error(word("installer.fleet.why.program"));
