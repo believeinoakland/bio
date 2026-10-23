@@ -6,7 +6,7 @@
    changing must move the next count. Driven at the module's interface (`queueFeed`, the ops map as the plane calls it). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, NOW, iso } from "./world.mjs";
+import { world, NOW, iso, plainCount } from "./world.mjs";
 import { Queue } from "../../../src/queue/index.mjs";
 
 const FACTS = { objective_gap: { bound: 50, truncated: false }, contradiction: { bound: 50, truncated: false }, dispositions: [] };
@@ -36,10 +36,10 @@ function setup({ withCounter = true } = {}) {   // withCounter: true (a scripted
 test("R93 (G80): a count asked again for the same viewer with no write between is the answer already made, and recomputes nothing", () => {
   const { state, count, list } = setup();
   const first = count();
-  assert.deepEqual(first, { ok: true, member: "alice", count: 3 });
+  assert.deepEqual(plainCount(first), { ok: true, member: "alice", count: 3 });
   assert.equal(state.produced, 1);
   assert.equal(state.tasked, 1);
-  for (let i = 0; i < 24; i += 1) assert.deepEqual(count(), first);
+  for (let i = 0; i < 24; i += 1) assert.deepEqual(plainCount(count()), plainCount(first));
   assert.equal(state.produced, 1, "the producers' read was made once for 25 counts");
   assert.equal(state.tasked, 1, "so was tasks'");
   assert.equal(first.count, list(), "the kept count is the list's length");
@@ -141,16 +141,16 @@ test("R93 (G80): a project's decision on a finding moves the next count of its m
   assert.ok(w.feed("alice").items.some((i) => i.id === id), "the finding is open for both projects");
   asked = 0;
   const open = count();
-  assert.equal(count(), open); assert.equal(asked, 1);
+  assert.equal(count(), open); assert.equal(asked, 0, "the list just made is the derivation the count is served from (R94)");
   const decide = (project) => w.q.proposeDispose({ project, finding: id, to: "dismissed", reason: "seen", decidedBy: "alice",
     viewer: "member:alice", identity: "member:alice" });
   assert.equal(decide("PRJ-A").ok, true);
   assert.equal(count(), open, "one of two projects decided: the finding stays for the other");
-  assert.equal(asked, 2, "but the count was recomputed");
+  assert.equal(asked, 1, "but the count was recomputed");
   assert.equal(decide("PRJ-B").ok, true);
   assert.equal(count(), open - 1, "both projects decided: it leaves the count");
-  assert.equal(asked, 3);
-  assert.equal(count(), open - 1); assert.equal(asked, 3);
+  assert.equal(asked, 2);
+  assert.equal(count(), open - 1); assert.equal(asked, 2);
 });
 
 test("R93 (G80): the clock enters the feed, so a count is kept for one bucket of it and recomputed after", () => {
@@ -185,17 +185,26 @@ test("R93 (G80, control): a refusal is not kept: the next count is made, and ans
   assert.equal(refused.ok, false);
   assert.equal(refused.reason ?? refused.code, "NO_SUCH_KIND");
   state.items = [];
-  assert.deepEqual(count(), { ok: true, member: "alice", count: 1 });   // no counter moved; the refusal was not kept
+  assert.deepEqual(plainCount(count()), { ok: true, member: "alice", count: 1 });   // no counter moved; the refusal was not kept
 });
 
-test("R93 (G80, control): the list, the muted list and the other readings are never served from the count's keeping", () => {
+test("R94 (G116, control; replaces R93's pin that the list is made on every ask): the list is served from the derivation the count kept, and a list a to-do write has just changed is not served stale", () => {
   const { state, count, w } = setup();
   count();
   const a = w.q.queueFeed({ ...alice, limit: 500 });
   const b = w.q.queueFeed({ ...alice, limit: 500 });
-  assert.equal(state.produced, 3, "the list is made on every ask");
+  assert.equal(state.produced, 1, "the count, the list and the list again are one derivation");
   assert.equal(a.items.length, b.items.length);
   assert.deepEqual(w.q.queueFeed({ ...alice, muted: true }).muted, []);
+  // a to-do's write between two list reads: the record's counter moves, and the next list holds it
+  w.task("TASK-2026-0007-z", "INF-2", { assignee: "alice" }); state.writes += 1;
+  const c = w.q.queueFeed({ ...alice, limit: 500 });
+  assert.equal(c.items.length, a.items.length + 1, "the new to-do is in the list asked next");
+  assert.ok(c.items.some((i) => i.id === "TASK-2026-0007-z"));
+  assert.equal(state.produced, 2);
+  // and one a to-do's resolve has just removed
+  w.run(`DELETE FROM tasks WHERE id='TASK-2026-0007-z'`); state.writes += 1;
+  assert.equal(w.q.queueFeed({ ...alice, limit: 500 }).items.some((i) => i.id === "TASK-2026-0007-z"), false);
 });
 
 test("R93 (G80, seam: record-core R89, R90): a write through the record's own paths moves the counter the cache reads", () => {

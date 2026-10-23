@@ -31,7 +31,12 @@ test("R53: op=queue with now a year ahead, in the query or the body, answers the
   const { w, asked } = clocked();
   const plain = ask(w, "");
   assert.equal(plain.ok, true, JSON.stringify(plain));
+  /* each ask is made afresh (a write of this member's own moves the signature, R94), so the instant the producers were handed is
+     the one of each ask and not of a kept derivation */
+  const again = () => assert.equal(w.q.queueSnooze({ member: "alice", case: "INQ-1", until: iso(NOW + 10 * DAY), viewer: "member:alice" }).ok, true);
+  again();
   const ahead = ask(w, `&now=${YEAR_AHEAD}`);
+  again();
   const inBody = ask(w, "", { now: YEAR_AHEAD, nowMs: YEAR_AHEAD });
   assert.deepEqual(untimed(ahead), untimed(plain), "a query `now` is never read");
   assert.deepEqual(untimed(inBody), untimed(plain), "a body `now` is never read");
