@@ -1,6 +1,6 @@
 # control-plane (T51)
 
-**Status** · session_01AwthwuHLmeRX25rjM7qqN9 · depth 2 · COMPLETE · handled B51
+**Status** · session_01DVeYe6wF7P8CpLfVhfSwSK · depth 2 · COMPLETE · handled B58
 
 ## J1 · QUESTION
 
@@ -701,3 +701,76 @@ Size (session_01AwthwuHLmeRX25rjM7qqN9): test runs 14, module lines 4680
 ## J38 · COMPLETE
 
 G43, control-plane's half, done and pushed (job/T51/control-plane). deliverOwedRender follows when promoteDocument answers readingDropped; archive.mjs bounds the provenance file (PROV_EMBED_MAX = INLINE_MAX - 65536; drops reading/text_units; promoteArchive onDropped; both callers follow). Tests t51-g43-embed: archive test red before/green after; 1 MiB CSV owed-render seam RED BY NAME (OVERSIZE_INLINE) until SCREENS-INTAKE #19 merges; with a temporary local stand-in for the drop it passes, and fails without my condition. control-plane 447 tests, 446 pass, 1 = that seam; plane 349/351 (same two as J32); checks 0 failures; ownership 0. pull.mjs/capture-requests/monitoring embed no door reading (by reading). Details and proposed R58/R124 lines in the record. Size (session_01AwthwuHLmeRX25rjM7qqN9): test runs 14, module lines 4680.
+
+## Fix round 7 (CONTROL-PLANE #52, B52): the seam file
+
+**Done.** `bio-plane/test/m/control-plane/t51-round7-seam.test.mjs` (Miniflare plane, round 6's pattern; members enrolled through the door: `memberadd`, `enroll`, `login`): 16 tests, 7 green, 9 red by name until their providers merge. No source change (no door fault found).
+
+**Red by name (expected):** G58 (founder's `owedwork` has none of the five fields: `{ok, owed}` only; provider plane); G61 (member's `op=queue` 400 NO_SUCH_KIND `ingest-done`; provider queue); G61 twin (see finding 2); G64 (see finding 1); G59 (409 GATE_REFUSED C-12.2 on the vouched upload; provider record-grammar and regenerated case-checker; control: unvouched signs, green); G62 (two tests, finding 3); G74 (outsider's `promote` accepted; both controls, a joined and an invited member, green; providers promotion, screens-intake); G75 (finding 4).
+**Green today:** G63 (`moneyingest` over 12,000 rows after a plane restart answers `ingesting` under 2 s; the test prints it beside a trivial act: the floor decides, no calculations change by this evidence), G66 (finding 5), G79 (24 MiB and 40 MB uploads; a smoke only, the failing-first is capture's `r7-upload-t51`).
+
+**Findings for BOB (each differs from the plan's reading):**
+1. G64: the comma control is RED too. A CSV uploaded and filed reaches `declareTable` as the document's reading text, which is not comma-separated (every row is one cell: 121 rows for 120 data rows, `payee` and `amount` empty). So the cause is wider than a tab file; calculations' delimiter detection fixes it only if it also covers this reading text. The test checks comma, tab, semicolon, pipe and the one-cell refusal.
+2. G61 twin: an enrolled member who opens a large capture gets NO `fetch-done` item at all in the Queue after the fetch is filed (3 minutes polled; the Queue answers 200 with other items). So the producer does not mint it for a member (notice-producers `#fetchDone`, or capture's `fetchesDone` opener), a cause beyond the catalogue hole. Not diagnosed further here.
+3. G62: the ceremony's `publishpreflight` body never sends `tieAttested`, so `first` is `TIE_ATTESTATION_MISSING`, the Sign step's `publish_at` is null with `publish_at_stated` "not reached", and the screen draws "isn't set". With `tieAttested: true` the zone is `America/Los_Angeles` (offered). Likely the walker's cause: the pre-flight request, not the zone. Test 1 asserts the ceremony's call (red); test 2 the `tieAttested` call (zone green, `source` red until ratification adds it).
+4. G75: the plan's null / "Untitled capture" was not reproduced. What is red: for an address naming no file, the delivery's `cs` (`control-plane/index.mjs` ~:795, `date: (d) => d`) fills `titleOf`'s `{ date: { html: cs.date(day) } }`, so the title reads "A page from www.example.gov, captured [object Object]" in the held row and the filed bundle. A defect in MY module (the delivery's `cs`); it is not fixed here because the START says no source change; I can fix it on a CHANGE.
+5. G66: green, but the second capture must come in a later second than the first: two captures of one address in the same second answered `versionnotice` `no_newer_capture`, so no item. The test waits 2.5 s. A tie-break gap in the chain (stamps are whole seconds): BOB's ruling.
+Also: `reauth` is not in the ceremony's op list; the test calls it before `caseratify` (REAUTH_DUE otherwise).
+
+**Checks.** `checks/run.mjs`: format 0, architecture 0, words 11 failures all in installer-steps (not mine, none names control-plane), coverage 1 failure (not this file's ids). `ownership.mjs`: 2 files changed, 0 failures. `r117-held` not run alone (no change to it).
+
+Size (session_01DVeYe6wF7P8CpLfVhfSwSK): test runs 9, module lines 4680
+
+## J39 · COMPLETE
+
+Round 7 seam file t51-round7-seam.test.mjs pushed: 16 tests, 7 green, 9 red by name for their providers (G58, G61 + fetch-done twin, G64, G59, G62 x2, G74, G75). No source change. Five findings differing from the plan are in the record (J-round7 section): G64 comma control red too (reading text not comma), fetch-done never minted for a member, G62 ceremony never sends tieAttested, G75 title is '[object Object]' from the delivery's cs date (my module; fix on CHANGE), G66 same-second tie. Checks: format/architecture 0, ownership 0.
+
+## B53 (CHANGE): G75 fixed
+
+The delivery's `cs` (`control-plane/index.mjs` ~:795) now unwraps `{html}` variables for `word` and formats `date` as a UTC "October 23, 2026" (it returned the ISO string, and `word` printed the `{html}` object): the held row and the filed bundle read "A page from www.example.gov, captured October 23, 2026". §G75's seam test (red before) is green; its small-PDF control stays green. G66's same-second tie accepted (B53); `reauth` before `caseratify` is right.
+
+Control-plane directory after merging tranche/T51: tests 463, pass 457, fail 6. The six are the seam sections red by name for providers not merged: G58, G61 (ingest-done), G61 twin (fetch-done, BOB diagnosing), G64 (calculations CHANGE), G62 x2 (screens-publish CHANGE). G59 and G74 now pass (their providers have merged).
+
+Size (session_01DVeYe6wF7P8CpLfVhfSwSK): test runs 11, module lines 4690
+
+## J40 · COMPLETE
+
+B53 done: G75 fixed in the delivery's cs (date formatted, html vars unwrapped); seam G75 green. Control-plane dir 463 tests, 457 pass, 6 red by name (G58, G61, G61 twin, G64, G62 x2); G59 and G74 now green. Record updated.
+
+## J41 · REPORT
+
+G83 re-point done and pushed (5 sites via storeStub; t51-g83-location.test.mjs 13 tests, 7 red before, all green with a local stand-in of runtime-limits' store-place.mjs, which is NOT committed: my branch imports ../store-place.mjs and is red until runtime-limits merges; waiting for your CHANGE, no COMPLETE). Also found, not mine and independent of G83 (same on HEAD before my change): after merging tranche/T51 two round-6 seam tests fail: t51-round6-seam G7 (40 MB five-part upload now leaves a reading row owed; the test asserts none) and G2 (15.9 MB fetch_pending flow). Likely capture/acquisition's G79 change (keep handed to the ledger / owed row) or reading-pipeline; the test pins the round-6 behaviour. Tell me whether to amend the round-6 assertions. Seam round 7: G64 and G59/G74 now pass; remaining red: G58, G61 x2, G62 x2.
+
+## J42 · QUESTION
+
+G83 done on the merged tranche (store-place.mjs in): t51-g83-location 13/13 (7 red before). Control-plane dir after merge: 476 tests, 473 pass, 3 fail: G58 and G62 (round-7 seam sections, providers plane / screens-publish unmerged: accepted red by name) and t51-round6-seam G7 (40 MB five-part upload: a reading row is owed, why NO_HOME, attempts 1, where the test says none). G7 fails the same on the pre-G83 commit, so it came with the tranche merge. My reading: with capture's G79 (keep handed to the ledger) the 40 MB upload's document carries no stated reading any more, so the door's promote follow (followEntries, readingWontFit -> pendSha, index.mjs:2682) owes a row that the ledger then clears; the stated final reading itself is still made (the test's first assertions pass). QUESTION: is a transient owed row the intended contract after G79 (then I amend G7 to wait until the row clears, my test file), or must a stated-final upload owe nothing (then followEntries must skip a capture whose stated reading is held, and I need to know which read says 'stated final held': readingHeld refuses readings with a failure)? Best reading: amend G7 to wait for the row to clear. I will do that on your word and COMPLETE; checks: format 0, architecture/coverage/words failures none name control-plane, ownership 0.
+
+## J43 · REPORT
+
+After merging tranche/T51 (B56): control-plane dir 476 tests, 473 pass, 3 red: G7 (round 6, red by name until PLANE #54), G58 (plane), and G62. G61 x2, G2, G59, G64, G74, G75, G66 are green. G62 is still red and is a finding, not a test to amend: the test 'R105 (G62): with the instance's profile oakland-alameda chosen, the Sign step's pre-flight, asked as the ceremony asks it ...' (t51-round7-seam.test.mjs:453) asks publishpreflight with body {draft, project, biasAcknowledgement} exactly as src/screens-publish/ceremony.mjs sends it (the ceremony never sends tieAttested; only its publish act does). ACTUAL: first = {ok:false, reason:TIE_ATTESTATION_MISSING, check C-120.16}; the Sign step's publish_at = null with publish_at_stated 'Whether this edition can be published at a set time is not known yet: the signing check is not reached, so only publishing now is described here.' EXPECTED: publish_at {offered:true, zone:'America/Los_Angeles'}. The companion test (same pre-flight with tieAttested:true) is green on the zone and on publish_at.source. So the walker's 'time zone isn't set' is the pre-flight not reaching the signing check because the ceremony's read omits the tie attestation (ceremony.mjs ~:77 P.later(cs, view, 'preflight', 'publishpreflight', {body: args})); fix is screens-publish sending tieAttested with the read when the member has attested, or case-authoring not gating publish_at on it. Route as you see fit; I do not COMPLETE with G62 red unless you say so. G83: t51-g83-location 13/13 on the merged helper.
+
+## G83 (B54, B55): the five room sites
+
+`control-plane/index.mjs` obtains the room only through `storeStub(env, name)` (runtime-limits R28) at the five sites (AI grant admission `bio`, the delivery's owed row, the `bio` stub, the scratch stub, the request's forward); logical names unchanged. Harness `env.gets` records each `get()`'s id, options and stack. `t51-g83-location.test.mjs` (names R33): 13 tests, 7 red before, all green with the merged helper: hint `wnam` on every control-plane get(); generation 2 gives `bio~g2`/`scratch~g2` and no bare name, the delivery's `store=` stays `bio`; neither binding gives today's calls; `WNAM`, `bogus`, empty, ` wnam` pass no options. Why missed: no test recorded `get()`'s arguments. Platform check N. No requirement wording proposed. No generated artifact made stale.
+
+## Completion (B55, B57)
+
+Control-plane directory after merging tranche/T51: 476 tests, 473 pass, 3 red by name (K4764): round-6 G7 (until PLANE #54's keep-owner change, NO_HOME owes nothing), round-7 G58 (plane), round-7 G62 (screens-publish; actual value in J43: `TIE_ATTESTATION_MISSING`, `publish_at` null). Checks: format 0; architecture, coverage and words show failures none of which names control-plane; ownership 0. Impact set: control-plane 71/87, plane 54/66 (run by their jobs).
+
+Size (session_01DVeYe6wF7P8CpLfVhfSwSK): test runs 15, module lines 4695
+
+## J44 · COMPLETE
+
+G83 done (5 sites via storeStub, t51-g83-location 13/13, 7 red before). Control-plane dir 476 tests, 473 pass; red by name per K4764: round-6 G7 (PLANE #54), G58 (plane), G62 (screens-publish; actual value in J43). Checks: format 0, ownership 0, no architecture/coverage/words finding names control-plane. Record updated.
+
+## B58 (CHANGE, K4765): G62's seam test rebuilt
+
+The G62 test was stale: since B46 the ceremony sends `tieAttested: true` once the Ties step is confirmed. `t51-round7-seam.test.mjs` now builds the pre-flight body with the ceremony's own `PARTS.caseArgs(copy, draft)` from the draft's real `reviewcopy`, the declared bias, and `tieAttested: true` exactly when the edition is prepared. Test 1 (prepared): `publish_at` is `{offered: true, zone: "America/Los_Angeles"}` with a `source` (local-facts or profiles): green. Control (a draft not yet prepared): `TIE_ATTESTATION_MISSING`, `publish_at` null with `publish_at_stated`: green. The old "tie attested" companion is folded into test 1.
+
+Control-plane directory: 476 tests, 474 pass, 2 red by name: round-6 G7 (until PLANE #54) and round-7 G58 (plane). Checks as at J44.
+
+Size (session_01DVeYe6wF7P8CpLfVhfSwSK): test runs 17, module lines 4695
+
+## J45 · COMPLETE
+
+B58 done: G62 seam test now builds the pre-flight body with the ceremony's own PARTS.caseArgs + tieAttested when prepared; green (zone America/Los_Angeles with source), control TIE_ATTESTATION_MISSING green. Control-plane dir 476 tests, 474 pass; red by name only G7 (PLANE #54) and G58 (plane). Record updated.
