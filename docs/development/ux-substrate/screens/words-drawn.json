@@ -42146,9 +42146,9 @@
   },
   {
    "key": "installer-steps.plane.observability",
-   "en": "The program was uploaded, but your Cloudflare account did not switch on its logs (Workers Logs), so this step stopped there. Without logs a problem could go unseen. Switch on Workers Logs for the program in your Cloudflare account, then run the update again.",
+   "en": "The new version of your team's Civicsmith is in place, but your Cloudflare account did not switch on its logs (Workers Logs), so the update stopped before it finished. Without logs a problem could go unseen. Switch on Workers Logs for it in your Cloudflare account, then run the update again to finish it.",
    "protected": false,
-   "note": "DEC-424: B495 newgroup steps/uploads.mjs R40: the refusal when the program's settings were read back and its logs are off; replaces the stand-in installer.fleet.why.program; UNSURE whether an update leaves the earlier program running"
+   "note": "DEC-424: B495 newgroup steps/uploads.mjs R40: the refusal when the program's settings were read back and its logs are off; replaces the stand-in installer.fleet.why.program; the new script is already uploaded and runs, the steps after it are not taken (B496), so never 'Nothing was changed.'"
   },
   {
    "key": "money.index.a_fiscal_key_is_a",
