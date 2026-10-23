@@ -104,6 +104,19 @@ export const PARTS = Object.freeze({
     return s ? (s.ok ? "<" + tag + ' class="mk-note" role="status" data-said="' + key + '">' : "<" + tag + ' class="cs-gap" data-gap="refused" role="alert" data-said="' + key + '">')
       + s.html + "</" + tag + ">" : "";
   },
+  /* G54 (3)(c): why an edition has no case file to download, from `publishedcase`'s `case_file` (or `verification.case_file`): the
+     state's sentence and the code's, each read by key (a key the word table lacks draws the bare code, never English). "" when the
+     answer states none, when it is built, or when the edition has a manifest (unchanged then). */
+  casefileSaid: function (cs, e) {
+    const v = e && e.verification && typeof e.verification === "object" ? e.verification : {};
+    const c = e && e.case_file && typeof e.case_file === "object" ? e.case_file : v.case_file && typeof v.case_file === "object" ? v.case_file : null;
+    if (!c || c.state === "built" || /^[0-9a-f]{64}$/.test(String(e.manifest_sha || ""))) return "";
+    const say = function (key, bare) { const t = cs.w(key); return cs.esc(t === key ? bare : t); };
+    const state = String(c.state || ""), code = String(c.code || "");
+    if (!["being_prepared", "retrying", "stopped", "waiting_on_members"].includes(state)) return "";
+    return '<span data-casefile="' + cs.esc(state) + '">' + say("screen.published.casefile." + state, state) + "</span>"
+      + (code ? ' <span data-casefile-code="' + cs.esc(code) + '">' + say("screen.published.casefile.code." + (/^[A-Z_]+$/.test(code) ? code : "UNKNOWN"), code) + "</span>" : "");
+  },
   say: function (cs, view, key, html, ok) {
     const s = view.ui.said || (view.ui.said = {});
     s[key] = { html: html, ok: ok !== false };

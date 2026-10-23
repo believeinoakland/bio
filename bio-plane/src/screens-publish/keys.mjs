@@ -142,6 +142,8 @@ export const SCREEN_KEYS = Object.freeze({
     "refusal.NO_SUCH_CASE", "refusal.NO_PUBLISHED_EDITION",
     "screen.case-editor.details.name.area", "screen.case-editor.details.name.contact", "screen.case-editor.details.name.related", "screen.case-editor.details.name.relationships",
     "state.loading", "state.empty", "state.failed", "refusal.uncatalogued", "screen.published.name", "screen.published.purpose",
+    "screen.published.casefile.being_prepared", "screen.published.casefile.retrying", "screen.published.casefile.stopped", "screen.published.casefile.waiting_on_members",
+    "screen.published.casefile.code.NO_BUCKET", "screen.published.casefile.code.STORE_SILENT", "screen.published.casefile.code.MATERIAL_MISSING", "screen.published.casefile.code.FINDING_MISSING", "screen.published.casefile.code.BUCKET_FAILED", "screen.published.casefile.code.NOT_RECORDED", "screen.published.casefile.code.INTERRUPTED", "screen.published.casefile.code.TOO_LARGE", "screen.published.casefile.code.UNKNOWN",
     "act.verify.label.published", "act.verify.does", "act.publishedcase.label.published", "act.publishedcase.does",
     "screen.published.below", "screen.published.dated", "screen.published.download", "screen.published.download.done",
     "screen.published.download.failed", "screen.published.edition", "screen.published.evidence",

@@ -527,3 +527,36 @@ Size (session_01TAAJFf7btHo6fZZ7TSeWfZ): test runs 5, module lines 3639
 
 1. **Where do the 13 stand-in sentences live? G54 (3)(c) says "a `localize` stand-in" in screens-publish; the words check refuses that.** `checks/words.mjs` fails `marker` for any `localize` call in a drawn-screen module (`DRAWN_MODULES` = `screens-*`; I tried it: 13 marker failures), and R24 says this module has no rows of its own (`common.test` asserts `SCREEN_WORDS` is empty). The completion rule needs 0 words findings in my module. My reading: the module holds only the keys, listed in `published`'s `words`, and draws each with `cs.w(key)` (a key the word table lacks draws the bare code, never English). The 13 `localize` rows, `screen.published.casefile.{being_prepared,retrying,stopped,waiting_on_members}` and `screen.published.casefile.code.{NO_BUCKET,STORE_SILENT,MATERIAL_MISSING,FINDING_MISSING,BUCKET_FAILED,NOT_RECORDED,INTERRUPTED,TOO_LARGE,UNKNOWN}`, then sit in a non-drawn module and reach `rows.mjs` on its regeneration. Recommendation: public-read holds them (it owns the closed code set and the states), as a table of `localize` calls it does not put in any answer; I can also send you the 13 English lines for any other home. Until the rows exist, `common.test` R24 ("every key it lists is a word") is red by name and the page test draws the bare code; once they exist everything is green with no code change of mine.
 2. **`built` has no key.** One with a case file is byte for byte unchanged, so the page never draws a sentence for `built`; I add no key for it.
+
+## J35 · COMPLETE
+
+COMPLETE (G54 (3)(c), B41, answer B42).
+
+**Cause / gap.** `published.mjs` drew the download only with a `manifest_sha` and answered the verify press "nothing to check" (`screen.published.verify.none`) when there was none, so a complete edition with no case file said nothing. Tests never read an edition without one.
+
+**Changed.** `parts.mjs` `casefileSaid` reads `case_file` (else `verification.case_file`) and draws the state's sentence and the code's by key (`data-casefile`, `data-casefile-code`) beside the acts, only for `being_prepared`, `retrying`, `stopped`, `waiting_on_members` and only with no manifest; `published.mjs` draws it and the verify press answers it (nothing sent). An unheld key draws the bare code, never English; an unlisted code reads `.code.UNKNOWN`. `keys.mjs`: the 13 keys listed in `published`'s words. A built edition, one with a manifest, or an answer with no `case_file` is unchanged (tested). New test `test/m/screens-publish/g54-page.test.mjs` (4 tests, from the real chain: publication + public-read + case-authoring).
+
+**Red then green.** Page test red on the unchanged code (verified by stashing), green after. Reds by name, until public-read adds `case_file` and writes the rows (B42): `g54-page` "(public-read R23 seam)" and "R24 G54 the thirteen casefile keys … are words", and `common.test` R24 (the 13 listed keys are not words yet).
+
+**The 13 English lines for public-read (`localize(id, en)`, owed to UX-DESIGN, for `later-ux.md`):**
+- `screen.published.casefile.being_prepared` — This edition is complete and signed. Its case file is being prepared and will be offered here when it is ready.
+- `screen.published.casefile.retrying` — This edition is complete and signed, but its case file could not be built yet. It will be tried again.
+- `screen.published.casefile.stopped` — This edition is complete and signed, and its case file cannot be built because a material is no longer held.
+- `screen.published.casefile.waiting_on_members` — This edition is not complete yet, so it has no case file. It is waiting for the rest of its signatures.
+- `screen.published.casefile.code.NO_BUCKET` — The place where published files are kept was not available.
+- `screen.published.casefile.code.STORE_SILENT` — The record did not answer.
+- `screen.published.casefile.code.MATERIAL_MISSING` — A material the case file lists is not held.
+- `screen.published.casefile.code.FINDING_MISSING` — The text of a finding could not be found.
+- `screen.published.casefile.code.BUCKET_FAILED` — A file of the case file could not be stored.
+- `screen.published.casefile.code.NOT_RECORDED` — The list of the case file's files could not be recorded.
+- `screen.published.casefile.code.INTERRUPTED` — An earlier attempt to build it was interrupted.
+- `screen.published.casefile.code.TOO_LARGE` — The case file is too large to build in one piece.
+- `screen.published.casefile.code.UNKNOWN` — It could not be built, for a reason not yet known.
+
+**Proposed requirement line (R22, BOB writes):** "(G54) An edition with no built case file draws, where the download is not drawn, the sentence for its `case_file` state (`screen.published.casefile.<state>`) and for its code (`.code.<CODE>`), from `publishedcase`'s `case_file` or `verification.case_file`; the verify press answers them in place of `screen.published.verify.none`; with a manifest, a built state or no `case_file` it is unchanged." Also: `being_prepared` covering a `building` older than 2 minutes is public-read's state, not drawn differently here.
+
+**Suites / checks.** screens-publish: 275 tests, 270 pass, 3 fail (the three reds by name above), 2 todo (R35 press, K3717). Impact set: not run (the module's only consumers are the shell tests unchanged by a page-local addition). `checks/run.mjs`: format, architecture, coverage (6686/6686), channels 0 failures; words 1 failure, the inherited `case-checker/spec.mjs:11`, marker 0 and none in screens-publish. Ownership 0 failures.
+
+**Not drawn / census:** no census op changed. Nothing found in another module beyond B42's placement. Nothing deferred.
+
+Size (session_01KL2qPsmV5ddqfba8gQ8CL3): test runs 4, module lines 3659
