@@ -266,7 +266,7 @@ Terms. A **screen** is a registry screen (`docs/development/ux-substrate/screens
 
 #### T51 fix round 8 (K4817; `build/plan/fix-round-8-T51.md`)
 
-- **R128** (fix round 8, G114; K4814 (1), K4817) **The words request names the release, the language and the stamp.** `loadWords` names in `v` the release (`cs-version`), the viewer's language and the `words_version` read from `bootstrap` (`instance-setup` R103), so a change of language or of the stamp changes `v`; a load made before `bootstrap` has answered names the release alone. What the shell keeps of the answer is unchanged. Test: the request names all three; a language change or a changed stamp changes `v`. *(not yet met: T51)*
+- **R128** (fix round 8, G114; K4814 (1), K4817) **The words request names the release, the language and the stamp.** `loadWords` names in `v` the release (`cs-version`), the viewer's language and the `words_version` read from `bootstrap` (`instance-setup` R103), so a change of language or of the stamp changes `v`; a load made before `bootstrap` has answered names the release alone. What the shell keeps of the answer is unchanged. Test: the request names all three; a language change or a changed stamp changes `v`.
 
 ## Private
 
