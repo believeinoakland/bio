@@ -79,3 +79,33 @@ G83 change applied on job/T51/ai-runs (commit 625c07d7). Not COMPLETE: the suite
 - Seam: `#ownNamespace` assumes admission's `scopeFor` routes by `storeId` (the same room name). Until admission's job (merge 154) lands, the scope routes by `idFromName`, so a generation-named room would not match in the rare case the object's id came from there. Admission owns that; noted, nothing changed here.
 - Deferred: none. Other modules: none found beyond the seam above. Generated artifacts: none touched.
 - The `#ownNamespace` doc comment still says `scopeFor` routes to `idFromName("bio")`; left for the admission job's words.
+
+## J5 · COMPLETE
+
+G83 is done in ai-runs: the job is COMPLETE on job/T51/ai-runs (head ff8923d2), with runtime-limits' CHANGE (K4757) merged.
+
+**Entries applied (START B3, CHANGE B4)**
+- `bio-plane/src/ai-runs/index.mjs`: the own-namespace comparison (`#ownNamespace`) uses `storeId(this.env, name)`; the `bio` look-up from the scratch object (`#credentialLook`) uses `storeStub(this.env || {}, "bio")`. Import from `../store-place.mjs`. Logical names and R2 prefixes unchanged.
+- `bio-plane/test/m/ai-runs/g83-location.test.mjs`: three tests (R18, R28), failing first (the hint and generation cases were red before the change; the no-binding control was green).
+
+**Deferred:** none. **Other modules:** none needing a change. **Generated artifacts:** none touched.
+
+**Checks (at ff8923d2)**
+- `node --test test/m/ai-runs/`: 137 tests, 137 pass, 0 fail.
+- format: 176 modules, 176 requirement files, 0 failures.
+- architecture ai-runs: 28 product files, 100 relative imports, 0 naming no tracked file, 0 failures.
+- coverage ai-runs: 59 of 59 live requirement ids named by a test, 0 failures.
+- ownership ai-runs (tranche/T51 to job/T51/ai-runs): 3 files changed by ai-runs, 0 failures.
+- words ai-runs: 5,742 literals, 0 failures.
+- impact (`node build/plan/impact.mjs origin/tranche/T51 HEAD`): 55 of 176 modules affected. The tool reports the shared table change (`DECLARED_OPS` in ai-runs/index.mjs). The users' suites that fail are listed below; none is caused by this change.
+
+**Impacted users (job branch alone, then the tranche tip):**
+- `scheduler`, `queue`, `screens-wizards`: pass.
+- `affordances` R55 (sever/reinstate): fails on the tranche tip too. Not this change.
+- `control-plane` R123, R125 (40 MB five-part upload): fails on the tranche tip too. Not this change.
+- `plane` R84 G41 (200,000-row xlsx), R86 G48 (c1), R24 (DEC-149 words): each fails on the tranche tip too. Not this change.
+- `plane` R77 L (two cases) and R79 L: failed in my parallel run, pass alone on the job branch. Load-sensitive timing tests; not this change.
+
+**For BOB:** the five pre-existing failures above (affordances R55; control-plane R123; plane R84, R86, R24) are on the tranche tip now. Each is reported here, not fixed (they are other modules'). The timing tests (plane R77 L, R79 L) need a quiet run to show green; they failed only under parallel load.
+
+**Size (session_01XtbBmQVJFxMDuhJvHpZXHZ): test runs 11, module lines 3812** (`bio-plane/src/ai-runs/*.mjs`).
